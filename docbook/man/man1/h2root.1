@@ -1,0 +1,153 @@
+.\"
+.\" $Id: h2root.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\"
+.TH H2ROOT 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+h2root \- convert PAW HBOOK files to ROOT files
+.SH SYNOPSIS
+.B h2root 
+.I file.hbook  file.root [compress] [tolower] [lrecl]
+.SH DESCRIPTION
+.B h2root 
+you can use to convert your 
+.B HBOOK/PAW 
+histograms or ntuples files into 
+.B ROOT 
+files. To use this program, you type the shell script command: 
+.sp 1
+.RS
+.B h2root 
+.I hbookfile 
+.I rootfile
+.RE
+.sp 1
+If you do not specify the second parameter, a file name is
+automatically generated for you. If 
+.I hbookfile 
+is of the form 
+.IR file.hbook , 
+then the 
+.B ROOT 
+file will be 
+called 
+.IR file.root . 
+.PP
+This program converts 
+.B HBOOK 
+histograms into 
+.B ROOT 
+objects of the class 
+.IR TH1F . 
+.B HBOOK 
+profile histograms are converted into 
+.B ROOT 
+profile histograms (see class 
+.IR TProfile ). 
+.B HBOOK
+row-wise and column-wise ntuples are automatically converted to 
+.B ROOT 
+Trees(see 
+.IR TTree ). 
+Some 
+.B HBOOK 
+column-wise ntuples may not be fully converted in case one of the
+columns is an array with fix dimensions (eg. `var[6]') or is a
+multi-dimensional array.  
+.PP
+.B HBOOK 
+integer identifiers are converted into 
+.B ROOT 
+named objects by prefixing the integer identifier with the letter `h'
+if the identifier is a positive integer and by `h_' if it is a
+negative integer identifier.  
+.PP 
+In case of row-wise or column-wise ntuples, each column is converted
+to a branch of a Tree.  
+.B 
+Note that 
+.B h2root 
+is able to convert 
+.B HBOOK
+files containing several levels of sub-directories. 
+.B 
+Once you have converted your file, you can look at it and draw
+histograms or process ntuples using the 
+.B ROOT 
+interactive module. You can also use the 
+.B ROOT 
+browser (see 
+.IR TBrowser )
+to inspect this file.  
+.PP 
+The chapter 
+.I How to read a Tree 
+explains two ways to read a Tree. ROOT includes the function 
+.I TTree::MakeCode 
+to automatically generate the code for a skeleton analysis
+function. With 
+.SH OPTIONS
+.TP       
+.B compress 
+= 1 by default (use 0 for no compression)
+.TP
+.B tolower  
+= 1 by default (use 0 to keep case of column names)
+.TP      
+.B lrecl 
+= 0 by default (must be specified if >8092)
+.SH "SEE ALSO"
+.RS
+.IR root(1) ,
+.I g2root(1) 
+.RE
+and
+.RS 
+.I The ROOT Users Guide
+.RE
+avaliable from the main 
+.B ROOT
+website:
+.RS
+.I http://root.cern.ch
+.RE
+.PP
+.B h2root 
+is documented fully on  
+.RS
+.I http://root.cern.ch/root/HowtoConvert.html
+.RE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR 
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" $Log: h2root.1,v $
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
+.\" Revision 1.1  2000/12/08 17:41:00  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
+.\"

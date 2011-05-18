@@ -1,0 +1,19 @@
+Package: libroot-net-auth@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Provides: root-authentication
+Homepage: http://root.cern.ch
+Description: Authentication extension for ROOT
+ This package contains the basic authentication algorithms used by ROOT.
+
+Package: libroot-net-auth-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net-auth@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Authentication extension for ROOT
+ This package contains the basic authentication algorithms used by ROOT.
+

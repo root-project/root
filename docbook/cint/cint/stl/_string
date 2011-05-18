@@ -1,0 +1,71 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// string
+
+#ifndef G__STRING
+#define G__STRING
+
+#if !defined(G__STRING_DLL) && !defined(G__NOCINTDLL)
+#pragma include_noerr <string.dll>
+#endif
+
+#ifdef __MAKECINT__
+
+#include <prec_stl/string>
+
+#else // __MAKECINT__
+
+#pragma ifdef G__STRING_DLL
+
+
+#include <iostream>
+std::ostream& operator<<(std::ostream& ost,const std::string& x) {
+  ost << x.c_str() ;
+  return(ost);
+}
+
+std::istream& operator>>(std::istream& ist,std::string& x) {
+  std::string y; //bug workaround, dummy to void bytecode compilation
+  char buf[1001];
+  ist >> buf;
+  x = buf;
+  return(ist);
+}
+
+
+#pragma else // G__STRING_DLL
+
+#include <bstring.h>
+
+
+#ifdef G__BORLAND
+#include <iostream>
+std::ostream& operator<<(std::ostream& ost,const std::string& x) {
+  ost << x.c_str() ;
+  return(ost);
+}
+
+std::istream& operator>>(std::istream& ist,std::string& x) {
+  std::string y; //bug workaround, dummy to void bytecode compilation
+  char buf[1001];
+  ist >> buf;
+  x = buf;
+  return(ist);
+}
+#endif // G__BORLAND
+
+#pragma endif // G__STRING_DLL
+
+int G__ateval(const std::string& x) {
+  std::cout << "(string " << &x << ")\"" << x << "\"" << std::endl;
+  return(1);
+}
+
+#endif // __MAKECINT__
+
+#endif

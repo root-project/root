@@ -1,0 +1,14 @@
+This directory contains the ROOT Matrix Linear Algebra package
+BEGIN_HTML
+ Several documents describing the linear algebra classes are listed below:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/14LinearAlgebra.pdf">The Chapter about the Linear Algebra classes in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoCreateMatrix.html">How to Create and Fill a matrix
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoInvertMatrix.html">How to Invert a matrix
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoPerformLinearFit.html">How to perform a Linear Fit
+      </A></li>
+</ul>
+END_HTML

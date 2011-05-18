@@ -1,0 +1,573 @@
+# -*- mode: makefile -*-
+#
+# Makefile containing platform dependencies for ROOT based projects.
+#
+# Copyright (c) 2000 Rene Brun and Fons Rademakers
+#
+# Author: Fons Rademakers, 29/2/2000
+
+ARCH         := $(shell root-config --arch)
+PLATFORM     := $(shell root-config --platform)
+
+CXX           =
+ObjSuf        = o
+SrcSuf        = cxx
+ExeSuf        =
+DllSuf        = so
+OutPutOpt     = -o # keep whitespace after "-o"
+
+ROOTCFLAGS   := $(shell root-config --cflags)
+ROOTLDFLAGS  :=
+#$(shell root-config --ldflags)
+ROOTLIBS     := $(shell root-config --libs)
+ROOTGLIBS    := $(shell root-config --glibs)
+HASTHREAD    := $(shell root-config --has-thread)
+
+ifeq ($(ARCH),hpuxacc)
+# HP-UX 10.x with aCC
+CXX           = aCC
+CXXFLAGS      = -O4 +Z
+LD            = aCC
+LDFLAGS       = -O2 -z
+SOFLAGS       = -b
+endif
+
+ifeq ($(ARCH),hpuxia64acc)
+# HP-UX 11i 1.5 (IA-64) with aCC
+CXX           = aCC
+CXXFLAGS      = +DD64 -O +Z
+LD            = aCC
+LDFLAGS       = +DD64 -O -z
+SOFLAGS       = -b
+endif
+
+ifeq ($(ARCH),hpuxegcs)
+# HP-UX 10.x with g++
+CXXFLAGS      = -O -fPIC
+CXX           = g++
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -fPIC -shared
+endif
+
+ifeq ($(ARCH),hurddeb)
+# GNU/Hurd
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),aix)
+# IBM AIX xlC 4.x
+CXX           = xlC
+CXXFLAGS      = -O
+LD            = xlC
+LDFLAGS       = -O
+SOFLAGS       =
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
+
+ifeq ($(ARCH),aix5)
+# IBM AIX xlC 5.x
+CXX           = xlC
+CXXFLAGS      = -O
+LD            = xlC
+LDFLAGS       = -O
+SOFLAGS       = 
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
+
+ifeq ($(ARCH),aixegcs)
+# IBM AIX with GCC
+CXX           = g++
+CXXFLAGS      = -O2
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),solaris)
+# Solaris CC
+CXX           = /opt/SUNWspro/bin/CC
+CXXFLAGS      = -O2 -KPIC
+LD            = /opt/SUNWspro/bin/CC
+LDFLAGS       = -O
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),solarisCC5)
+# Solaris CC 5.0
+CXX           = CC
+CXXFLAGS      = -O2 -KPIC
+LD            = CC
+LDFLAGS       = -O2
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),solarisgcc)
+# Solaris gcc
+CXX           = g++
+CXXFLAGS      = -O2 -fPIC
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),solariskcc)
+# Solaris kcc
+CXX           = KCC --one_instantiation_per_object
+CXXFLAGS      = -O4 -KPIC
+LD            = KCC
+LDFLAGS       = -O4
+SOFLAGS       = 
+endif
+
+ifeq ($(ARCH),solarisx86)
+# Solaris CC on Intel
+CXX           = CC
+CXXFLAGS      = -O4 -KPIC
+LD            = CC
+LDFLAGS       = -O4
+SOFLAGS       = -G
+endif
+
+ifeq ($(ARCH),sgicc)
+# SGI
+CXX           = CC -n32  -I/usr/include/CC.sgi
+CXXFLAGS      = -O2
+LD            = CC -n32 -LANG:std  -I/usr/include/CC.sgi
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),sgicc64)
+# SGI
+CXX           = CC -64  -I/usr/include/CC.sgi
+CXXFLAGS      = -O2
+LD            = CC -64 -LANG:std -I/usr/include/CC.sgi
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),sgiegcs)
+# SGI 6.x with EGCS
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O2 -Wl,-u,__builtin_new -Wl,-u,__builtin_delete -Wl,-u,__nw__FUiPv
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),sgin32egcs)
+# SGI 6.x with EGCS for n32 ABI
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O2 -L/usr/lib32 -Wl,-woff,134
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),sgikcc)
+# SGI with KCC
+CXX           = KCC -n32 --one_instantiation_per_object
+CXXFLAGS      = -O2
+LD            = KCC -n32
+LDFLAGS       = -O2
+SOFLAGS       =
+endif
+
+ifeq ($(ARCH),alphaegcs)
+# Alpha/OSF with egcs
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -Wl,-expect_unresolved,* -shared
+endif
+
+ifeq ($(ARCH),alphakcc)
+# Alpha/OSF with kai compiler (not yet valid)
+CXX           = KCC --one_instantiation_per_object
+CXXFLAGS      = -O2 -fPIC
+LD            = KCC
+LDFLAGS       = -O2
+SOFLAGS       = -Wl,-expect_unresolved,* -shared
+endif
+
+ifeq ($(ARCH),alphacxx6)
+# Alpha/OSF with cxx6
+CXX           = cxx
+CXXFLAGS      = -O2
+LD            = cxx
+LDFLAGS       = -O2
+SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym
+endif
+
+ifeq ($(ARCH),linuxrh51)
+# Linux with gcc 2.7.2.x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxrh42)
+# Linux with gcc 2.7.2.x (RedHat 4.2)
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxdeb)
+# Linux with gcc 2.7.2.x
+CXX           = g++
+CXXFLAGS      = -O1 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O1
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxdeb2)
+# Linux with gcc 2.7.2.x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxdeb2ppc)
+# Debian/Linux on the PowerPC
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxsuse6)
+# Linux with gcc 2.7.2.x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -W -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linux)
+# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+CXX           = g++
+CXXFLAGS      = -ggdb -O -pipe -Wall -W -Wunused -Woverloaded-virtual -fPIC -Wshadow
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxkcc)
+# Linux with the KAI compiler
+CXX           = KCC --one_instantiation_per_object
+CXXFLAGS      = -O -fPIC +K0
+LD            = KCC
+LDFLAGS       = -O $(shell root-config --cflags)
+SOFLAGS       =
+endif
+
+ifeq ($(ARCH),linuxicc)
+# Linux with Intel icc compiler
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+CXX           = icc
+CXXFLAGS      = -O -fPIC -wd1476
+LD            = icpc
+LDFLAGS       = -O
+SOFLAGS       = -shared
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+endif
+endif
+endif
+
+ifeq ($(ARCH),linuxppcegcs)
+# MkLinux with egcs/glibc
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxia64gcc)
+# Itanium Linux with gcc 2.9x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxia64sgi)
+# Itanium Linux with sgiCC
+CXX           = sgiCC
+CXXFLAGS      = -O -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = gsgiCC
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxia64ecc)
+# Itanium Linux with Intel icc (was ecc)
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+CXX           = icc
+CXXFLAGS      = -O -fPIC -Wshadow -wd1476
+LD            = icpc
+LDFLAGS       = -O
+SOFLAGS       = -shared
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+endif
+endif
+endif
+
+ifeq ($(ARCH),linuxx8664gcc)
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
+#CXX           = g++4 
+CXX           = g++
+CXXFLAGS      = -g -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+#LD            = g++4 
+LD            = g++
+LDFLAGS       = -g -O2
+SOFLAGS       = -g -shared
+endif
+
+ifeq ($(ARCH),linuxppc64gcc)
+# PPC64 Linux with gcc 3.x
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxx8664icc)
+# AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc compiler
+CXX           = icc
+CXXFLAGS      = -O2 -fPIC -Wshadow -wd1476 -wd1572
+LD            = icpc
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxalphaegcs)
+# Alpha Linux with egcs
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),linuxarm)
+# ARM Linux with egcs
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),mklinux)
+# MkLinux with libc5
+CXX           = g++
+CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared
+endif
+
+ifeq ($(ARCH),freebsd)
+# FreeBSD with libc5
+CXX           = g++
+CXXFLAGS      = -O2 -pipe -W -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),freebsd4)
+# FreeBSD with glibc
+CXX           = g++
+CXXFLAGS      = -O2 -pipe -W -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O2
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),openbsd)
+# OpenBSD with libc
+CXX           = g++
+CXXFLAGS      = -O -pipe -W -Wall -fPIC -Wshadow -Woverloaded-virtual
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared -Wl,-x
+endif
+
+ifeq ($(ARCH),macosx)
+# MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+CXX           = c++
+CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
+LDFLAGS       = -O2 -bind_at_load
+# The SOFLAGS will be used to create the .dylib,
+# the .so will be created separately
+DllSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+else
+UNDEFOPT      = suppress
+LD            = c++
+endif
+SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+endif
+
+ifeq ($(ARCH),macosxicc)
+# MacOS X with cc (GNU cc 2.95.2 and gcc 3.3)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+CXX           = c++
+CXXFLAGS      = -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
+LDFLAGS       = -O2 -bind_at_load
+# The SOFLAGS will be used to create the .dylib,
+# the .so will be created separately
+DllSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+else
+UNDEFOPT      = suppress
+LD            = c++
+endif
+SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+endif
+
+ifeq ($(ARCH),macosx64)
+# MacOS X >= 10.4 with gcc 64 bit mode (GNU gcc 4.*)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+CXX           = c++
+CXXFLAGS      = -m64 -O2 -pipe -Wall -W -Woverloaded-virtual -Wshadow
+LDFLAGS       = -m64 -O2 -bind_at_load
+# The SOFLAGS will be used to create the .dylib,
+# the .so will be created separately
+DllSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,12),12)
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
+SOFLAGS       = -m64 -dynamiclib -single_module -undefined dynamic_lookup
+endif
+endif
+
+ifeq ($(ARCH),macosxxlc)
+# MacOS X with IBM xlC compiler
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+CXX           = xlC
+CXXFLAGS      = -O
+LDFLAGS       = -O -Wl,-bind_at_load
+# The SOFLAGS will be used to create the .dylib,
+# the .so will be created separately
+DllSuf        = dylib
+ifeq ($(MACOSX_MINOR),4)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.4 xlC
+else
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.3 xlC
+else
+UNDEFOPT      = suppress
+LD            = xlC
+endif
+endif
+SOFLAGS       = -qmkshrobj -single_module -undefined $(UNDEFOPT)
+endif
+
+ifeq ($(ARCH),win32)
+# Windows with the VC++ compiler
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+CXX           = cl
+CXXOPT        = -O2
+#CXXOPT        = -Z7
+CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
+                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
+LD            = link
+LDOPT         = -opt:ref
+#LDOPT         = -debug
+LDFLAGS       = $(LDOPT) -pdb:none -nologo
+SOFLAGS       = -DLL
+
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+
+ifeq ($(ARCH),win32old)
+# Windows with the VC++ compiler
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+CXX           = cl
+CXXOPT        = -O2
+#CXXOPT        = -Z7
+CXXFLAGS      = $(CXXOPT) -G5 -GR -GX -MD -DWIN32 -D_WINDOWS -nologo \
+                -DVISUAL_CPLUSPLUS -D_X86_=1 -D_DLL
+LD            = link
+LDOPT         = -opt:ref
+#LDOPT         = -debug
+LDFLAGS       = $(LDOPT) -pdb:none -nologo
+SOFLAGS       = -DLL
+
+
+
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+
+ifeq ($(ARCH),win32gcc)
+# Windows with gcc
+DllSuf        = dll
+ExeSuf        = .exe
+CXX           = g++
+CXXFLAGS      = -O -pipe -Wall -Woverloaded-virtual -I/usr/X11R6/include
+LD            = g++
+LDFLAGS       = -O -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc \
+		-L/usr/X11R6/lib 
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+
+ifeq ($(CXX),)
+$(error $(ARCH) invalid architecture)
+endif
+
+CXXFLAGS     += $(ROOTCFLAGS)
+LDFLAGS      += $(ROOTLDFLAGS)
+LIBS          = $(ROOTLIBS) $(SYSLIBS)
+GLIBS         = $(ROOTGLIBS) $(SYSLIBS)

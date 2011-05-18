@@ -1,0 +1,350 @@
+# -*- mode: makefile -*-
+#
+# Makefile definitions included by the top Makefile
+
+# The macro below is expanded when 'realpath' is not built-in.
+# Built-in 'realpath' is available on GNU Make 3.81.
+realpath = $(shell cd $(1); pwd)
+
+ROOT_SRCDIR    := $(call realpath, @top_srcdir@)
+ROOT_OBJDIR    := $(call realpath, @top_builddir@)
+
+ifndef ROOT_SRCDIR
+$(error Error determining ROOT_SRCDIR)
+endif
+ifndef ROOT_OBJDIR
+$(error Error determining ROOT_OBJDIR)
+endif
+
+# The macro below strips off the source dir path to make a relative path name
+stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
+
+ARCH           := @architecture@
+HOST           := @host@
+@rootbuild@
+USECONFIG      := @useconfig@
+MKLIBOPTIONS   := @mkliboption@
+
+EXTRA_CFLAGS   := -Iinclude @cflags@
+EXTRA_CXXFLAGS := -Iinclude @cflags@
+EXTRA_LDFLAGS  := @ldflags@
+WINRTDEBUG     := @winrtdebug@
+
+GLBPATCHFLAGS  := @glbpatchcflags@
+EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@
+
+BINDIR         := @bindir@
+LIBDIR         := @libdir@
+INCDIR         := @incdir@
+ETCDIR         := @etcdir@
+MANDIR         := @mandir@
+DATADIR        := @datadir@
+ELISPDIR       := @elispdir@
+TTFFONTDIR     := @ttffontdir@
+MACRODIR       := @macrodir@
+SRCDIR         := @srcdir@
+ICONPATH       := @iconpath@
+CINTINCDIR     := @cintincdir@
+DOCDIR         := @docdir@
+TESTDIR        := @testdir@
+TUTDIR         := @tutdir@
+ACLOCALDIR     := @aclocaldir@
+
+BUILDX11       := @buildx11@
+X11LIBDIR      := @x11libdir@
+XPMLIBDIR      := @xpmlibdir@
+XPMLIB         := @xpmlib@
+XFTLIB         := @enable_xft@
+
+EXCEPTIONS     := @exceptions@
+EXPLICITLINK   := @explicitlink@
+
+ENABLETHREAD   := @enable_thread@
+OSTHREADFLAG   := @threadflag@
+OSTHREADLIBDIR := @threadlibdir@
+OSTHREADLIB    := @threadlib@
+
+BUILTINFREETYPE:= @builtinfreetype@
+
+BUILTINPCRE    := @builtinpcre@
+
+BUILTINZLIB    := @builtinzlib@
+ZLIBLIBDIR     := @zliblibdir@
+ZLIBCLILIB     := @zliblib@
+ZLIBINCDIR     := $(filter-out /usr/include, @zlibincdir@)
+
+BUILDGL        := @buildgl@
+OPENGLLIBDIR   := @opengllibdir@
+OPENGLULIB     := @openglulib@
+OPENGLLIB      := @opengllib@
+OPENGLINCDIR   := $(filter-out /usr/include, @openglincdir@)
+
+BUILDLDAP      := @buildldap@
+LDAPLIBDIR     := @ldaplibdir@
+LDAPCLILIB     := @ldaplib@
+LDAPINCDIR     := $(filter-out /usr/include, @ldapincdir@)
+
+BUILDMYSQL     := @buildmysql@
+MYSQLLIBDIR    := @mysqllibdir@
+MYSQLCLILIB    := @mysqllib@
+MYSQLINCDIR    := $(filter-out /usr/include, @mysqlincdir@)
+
+BUILDORACLE    := @buildoracle@
+ORACLELIBDIR   := @oraclelibdir@
+ORACLECLILIB   := @oraclelib@
+ORACLEINCDIR   := $(filter-out /usr/include, @oracleincdir@)
+
+BUILDPGSQL     := @buildpgsql@
+PGSQLLIBDIR    := @pgsqllibdir@
+PGSQLCLILIB    := @pgsqllib@
+PGSQLINCDIR    := $(filter-out /usr/include, @pgsqlincdir@)
+
+BUILDSAPDB     := @buildsapdb@
+SAPDBLIBDIR    := @sapdblibdir@
+SAPDBCLILIB    := @sapdblib@
+SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
+
+BUILDODBC      := @buildodbc@
+ODBCLIBDIR     := @odbclibdir@
+ODBCCLILIB     := @odbclib@
+ODBCINCDIR     := $(filter-out /usr/include, @odbcincdir@)
+
+BUILDQT        := @buildqt@
+BUILDQTGSI     := @buildqtgsi@
+QTLIBDIR       := @qtlibdir@
+QTLIB          := @qtlib@
+QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
+QTVERS	       := @qtvers@
+QTMOCEXE       := @qtmocexe@
+
+BUILDRFIO      := @buildrfio@
+SHIFTLIBDIR    := @shiftlibdir@
+SHIFTLIB       := @shiftlib@
+SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
+SHIFTCFLAGS    := @shiftcflags@
+
+BUILDCASTOR    := @buildcastor@
+CASTORLIBDIR   := @castorlibdir@
+CASTORCLILIB   := @castorlib@
+CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
+CASTORCFLAGS   := @castorcflags@
+
+BUILDDCAP      := @builddcap@
+DCAPLIBDIR     := @dcaplibdir@
+DCAPLIB        := @dcaplib@
+DCAPINCDIR     := $(filter-out /usr/include, @dcapincdir@)
+
+BUILDFTGL      := @buildftgl@
+FTGLLIBDIR     := @ftgllibdir@
+FTGLLIBS       := @ftgllibs@
+FTGLINCDIR     := $(filter-out /usr/include, @ftglincdir@)
+ifeq ($(BUILDFTGL), yes)
+FTGLCPPFLAGS   := -DBUILTIN_FTGL
+endif
+
+BUILDGLEW      := @buildglew@
+GLEWLIBDIR     := @glewlibdir@
+GLEWLIBS       := @glewlibs@
+GLEWINCDIR     := $(filter-out /usr/include, @glewincdir@)
+ifeq ($(BUILDGLEW), yes)
+GLEWCPPFLAGS   := -DBUILTIN_GLEW
+endif
+
+BUILDGFAL      := @buildgfal@
+GFALLIBDIR     := @gfallibdir@
+GFALCLILIB     := @gfallib@
+GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
+
+BUILDGLITE     := @buildglite@
+GLITELIBDIR    := @glitelibdir@
+GAWLIB         := @glitelib@
+GAW_CPPFLAGS   := $(filter-out /usr/include, @gaw_cppflags@)
+
+BUILDMEMSTAT   := @buildmemstat@
+
+BUILDBONJOUR   := @buildbonjour@
+DNSSDLIBDIR    := @dnssdlibdir@
+DNSSDLIB       := @dnssdlib@
+DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
+BONJOURCPPFLAGS := @bonjourcppflags@
+
+BUILDCHIRP     := @buildchirp@
+CHIRPLIBDIR    := @chirplibdir@
+CHIRPCLILIB    := @chirplib@
+CHIRPINCDIR    := $(filter-out /usr/include, @chirpincdir@)
+
+BUILDHDFS      := @buildhdfs@
+HDFSLIBDIR     := @hdfslibdir@
+HDFSCLILIB     := @hdfslib@
+HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
+JNIINCDIR      := $(filter-out /usr/include, @jniincdir@) $(filter-out /usr/include, @jniincdir@/linux)
+JVMCLILIB      := @jvmlib@
+JVMLIBDIR      := @jvmlibdir@
+
+BUILDALIEN     := @buildalien@
+ALIENLIBDIR    := @alienlibdir@
+ALIENCLILIB    := @alienlib@
+ALIENINCDIR    := $(filter-out /usr/include, @alienincdir@)
+
+BUILDASIMAGE   := @buildasimage@
+BUILTINASIMAGE := @builtinafterimage@
+ASEXTRALIB     := @asextralib@
+ASEXTRALIBDIR  := @asextralibdir@
+ASJPEGINCDIR   := $(filter-out /usr/include, @asjpegincdir@)
+ASPNGINCDIR    := $(filter-out /usr/include, @aspngincdir@)
+ASTIFFINCDIR   := $(filter-out /usr/include, @astiffincdir@)
+ASGIFINCDIR    := $(filter-out /usr/include, @asgifincdir@)
+ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
+ASLIB          := @asimagelib@
+ASLIBDIR       := @asimagelibdir@
+
+BUILDFPYTHIA6    := @buildpythia6@
+FPYTHIA6LIBDIR   := @pythia6libdir@
+FPYTHIA6LIB      := @pythia6lib@
+FPYTHIA6CPPFLAGS := @pythia6cppflags@
+
+BUILDFPYTHIA8    := @buildpythia8@
+FPYTHIA8INCDIR   := @pythia8incdir@
+FPYTHIA8LIBDIR   := @pythia8libdir@
+FPYTHIA8LIB      := @pythia8lib@
+
+BUILDFFTW3     := @buildfftw3@
+FFTW3LIBDIR    := @fftw3libdir@
+FFTW3LIB       := @fftw3lib@
+FFTW3INCDIR    := $(filter-out /usr/include, @fftw3incdir@)
+
+BUILDFITSIO    := @buildfitsio@
+CFITSIOLIBDIR  := @cfitsiolibdir@
+CFITSIOLIB     := @cfitsiolib@
+CFITSIOINCDIR  := $(filter-out /usr/include, @cfitsioincdir@)
+
+BUILDGVIZ      := @buildgviz@
+GRAPHVIZLIBDIR := @gvizlibdir@
+GRAPHVIZLIB    := @gvizlib@
+GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
+GRAPHVIZCFLAGS := @gvizcflags@
+
+BUILDPYTHON    := @buildpython@
+PYTHONLIBDIR   := @pythonlibdir@
+PYTHONLIB      := @pythonlib@
+PYTHONINCDIR   := $(filter-out /usr/include, @pythonincdir@)
+PYTHONLIBFLAGS := @pythonlibflags@
+
+BUILDRUBY      := @buildruby@
+RUBYLIBDIR     := @rubylibdir@
+RUBYLIB        := @rubylib@
+RUBYINCDIR     := $(filter-out /usr/include, @rubyincdir@)
+
+BUILDXML       := @buildxml@
+XMLLIBDIR      := @xmllibdir@
+XMLCLILIB      := @xmllib@
+XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
+
+BUILDXRD       := @buildxrd@
+XRDINCDIR      := @xrdincdir@
+XRDLIBDIR      := @xrdlibdir@
+XRDADDOPTS     := @xrdaddopts@
+EXTRA_XRDFLAGS := @extraxrdflags@
+XRDVERSION     := @xrdversion@
+
+SRPLIBDIR      := @srplibdir@
+SRPLIB         := @srplib@
+SRPINCDIR      := $(filter-out /usr/include, @srpincdir@)
+
+BUILDSRPUTIL   := @buildsrputil@
+SRPUTILLIBDIR  := @srputillibdir@
+SRPUTILLIB     := @srputillib@
+SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
+
+AFSLIB         := @afslib@
+AFSLIBDIR      := @afslibdir@
+AFSINCDIR      := @afsincdir@
+AFSEXTRACFLAGS := @afsextracflags@
+AFSSHARED      := @afsshared@
+
+ALLOCLIB       := @alloclib@
+ALLOCLIBDIR    := @alloclibdir@
+
+BUILDKRB5      := @buildkrb5@
+KRB5LIB        := @krb5lib@
+KRB5LIBDIR     := @krb5libdir@
+KRB5INCDIR     := $(filter-out /usr/include, @krb5incdir@)
+KRB5INIT       := @krb5init@
+
+COMERRLIB      := @comerrlib@
+COMERRLIBDIR   := @comerrlibdir@
+
+RESOLVLIB      := @resolvlib@
+
+CRYPTOLIB      := @cryptolib@
+CRYPTOLIBDIR   := @cryptolibdir@
+
+BUILDGLOBUS    := @buildglobus@
+GLOBUSLIB      := @globuslib@
+GLOBUSLIBDIR   := @globuslibdir@
+GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
+BUILDXRDGSI    := @buildxrdgsi@
+
+BUILDMONALISA  := @buildmonalisa@
+MONALISALIBDIR := @monalisalibdir@
+MONALISACLILIB := @monalisalib@
+MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
+
+SSLLIB         := @ssllib@
+SSLLIBDIR      := @ssllibdir@
+SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
+SSLSHARED      := @sslshared@
+
+SHADOWFLAGS    := @shadowpw@
+SHADOWLIB      :=
+SHADOWLIBDIR   :=
+
+BUILDGENVECTOR := @buildgenvector@
+
+BUILDMATHMORE  := @buildmathmore@
+GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
+GSLLIBDIR      := @gsllibdir@
+GSLLIBS        := @gsllibs@
+GSLVERSION     := @gslversion@
+
+BUILDCLING     := @buildcling@
+
+BUILDCINTEX    := @buildcintex@
+
+BUILDREFLEX    := @buildreflex@
+
+BUILDROOFIT    := @buildroofit@
+
+BUILDMINUIT2   := @buildminuit2@
+
+BUILDUNURAN    := @buildunuran@
+
+BUILDGDML      := @buildgdml@
+
+BUILDTABLE     := @buildtable@
+
+BUILDTMVA      := @buildtmva@
+
+BUILDCLARENS   := @buildclarens@
+CLARENSINC     := $(filter-out -I/usr/include, @clarensincdir@)
+CLARENSLIBS    := @clarenslibs@
+
+BUILDPEAC      := @buildpeac@
+
+CURSESINCDIR   := $(filter-out -I/usr/include, -I@cursesincdir@)
+CURSESLIBDIR   := @curseslibdir@
+CURSESHDR      := @curseshdr@
+CURSESLIB      := @curseslib@
+BUILDEDITLINE  := @buildeditline@
+
+CPPUNIT        := @cppunit@
+GCCXML         := @gccxml@
+
+ROOTDICTTYPE   := @dicttype@
+
+INSTALL        := cp -dpR
+INSTALLDATA    := cp -dpR
+INSTALLDIR     := mkdir -p
+RSYNC          := rsync -au
+
+ROOTDRPMREL    := 1

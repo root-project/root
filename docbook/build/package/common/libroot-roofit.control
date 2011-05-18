@@ -1,0 +1,37 @@
+Package: libroot-roofit@libvers@
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, root-fitter
+Homepage: http://roofit.sourceforge.net/
+Replaces: root-plugin-roofit  (<< 5.09.01-1)
+Description: ROOT extension for modeling expected distribtions - libraries
+ The RooFit packages provide a toolkit for modeling the expected
+ distribution of events in a physics analysis. Models can be used to
+ perform likelihood fits, produce plots, and generate "toy Monte
+ Carlo" samples for various studies. The RooFit tools are integrated
+ with the object-oriented and interactive ROOT graphical environment.
+ .
+ RooFit has been developed for the BaBar collaboration, a high energy
+ physics experiment at the Stanford Linear Accelerator Center, and is
+ primarily targeted to the high-energy physicists using the ROOT
+ analysis environment, but the general nature of the package make it
+ suitable for adoption in different disciplines as well.
+
+Package: libroot-roofit-dev
+Architecture: any
+Section: libdevel
+Homepage: http://roofit.sourceforge.net/
+Depends: libroot-roofit@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev, libroot-tree-dev
+Description: ROOT extension for modeling expected distribtions - development
+ The RooFit packages provide a toolkit for modeling the expected
+ distribution of events in a physics analysis. Models can be used to
+ perform likelihood fits, produce plots, and generate "toy Monte
+ Carlo" samples for various studies. The RooFit tools are integrated
+ with the object-oriented and interactive ROOT graphical environment.
+ .
+ RooFit has been developed for the BaBar collaboration, a high energy
+ physics experiment at the Stanford Linear Accelerator Center, and is
+ primarily targeted to the high-energy physicists using the ROOT
+ analysis environment, but the general nature of the package make it
+ suitable for adoption in different disciplines as well.
+

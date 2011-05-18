@@ -1,0 +1,54 @@
+# $Id: $
+
+############################   RULES   #######################################
+
+.SUFFIXES: .cxx .h
+
+$(BINDIR)/%Cint.o : %Cint.cxx
+	@echo $*Cint.cxx
+	@[ -d $(dir $(BINDIR)) ] || mkdir -p $(dir $(BINDIR))
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+ifeq ($(CXXVERBOSE),)
+	@$(CXX) $(filter-out -O%, $(CXXFLAGS)) -c $*Cint.cxx -o $(BINDIR)/$*Cint.o
+else
+	$(CXX) $(filter-out -O%, $(CXXFLAGS)) -c $*Cint.cxx -o $(BINDIR)/$*Cint.o
+endif
+
+$(BINDIR)/%.o : %.cxx
+	@echo $*.cxx
+	@[ -d $(dir $(BINDIR)) ] || mkdir -p $(dir $(BINDIR))
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+ifeq ($(CXXVERBOSE),)
+	@$(CXX) $(CXXFLAGS) -c $*.cxx -o $(BINDIR)/$*.o
+else
+	$(CXX) $(CXXFLAGS) -c $*.cxx -o $(BINDIR)/$*.o
+endif
+
+$(BINDIR)/%.o : $(BINDIR)/%.cxx
+	@echo $^
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+ifeq ($(CXXVERBOSE),)
+	@$(CXX) $(CXXFLAGS) -c $^ -o $(BINDIR)/$*.o
+else
+	$(CXX) $(CXXFLAGS) -c $^ -o $(BINDIR)/$*.o
+endif
+
+$(BINDIR)/%.o : %.c
+	@echo $*.c
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -c $*.c -o $(BINDIR)/$*.o
+
+$(BINDIR)/%.o : %.f
+	@echo $*.f
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@$(F77) $(FFLAGS) -c $*.f -o $(BINDIR)/$*.o
+
+$(BINDIR)/%.o : %.F
+	@echo $*.F
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@$(F77) $(FFLAGS) -c $*.F -o $(BINDIR)/$*.o
+
+
+
+
+

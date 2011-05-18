@@ -1,0 +1,36 @@
+/* XPM */
+static char *bld_AlignLeft_d[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        8            1",
+/* colors */
+". c #979b96",
+"# c #c9cfcc",
+"a c #cececc",
+"b c #dadada",
+"c c #c2c2c2",
+"d c #b6b6b6",
+"e c #cfcccc",
+"f c #d0cecc",
+/* pixels */
+"#####################",
+"#####################",
+"ddeeeeeeeeeeeeeeeeeed",
+"ee..................e",
+"ee.faaaaabbbbbbbbbb.e",
+"ee.cccccccccccccccc.e",
+"ee..................e",
+"ee.faaabbbbbbbb.eeeed",
+"ee.cccccccccccc.e####",
+"ee..............d####",
+"ee.ffaabbbb.eddd#####",
+"ee.cccccccc.eddd#####",
+"ee..............d####",
+"ee.ffaabbbbbbbb.e####",
+"ee.cccccccccccc.eeeed",
+"ee..................e",
+"ee.ffaaaaabbbbbbbbb.e",
+"ee.cccccccccccccccc.e",
+"ee..................e",
+"ddeeeeeeeeeeeeeeeeee#",
+"#####################"
+};

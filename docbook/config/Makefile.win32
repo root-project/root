@@ -1,0 +1,129 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for Windows with MS Visual C++ compiler in Cygwin environment
+
+PLATFORM      = win32
+
+OPTFLAGS      = -O2 
+DEBUGFLAGS    = -Z7
+
+# Compiler version:
+ifeq ($(VC_MAJOR),)
+   # Visual Studio 2005 set VS_UNICODE_OUTPUT to redirect the output
+   # of cl directly to its log mechanism.
+   VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$(NF-2) }' | \
+                   cut -d'.' -f1)
+   VC_MINOR     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$(NF-2) }' | \
+                   cut -d'.' -f2)
+   VC_MICRO     := $(shell unset VS_UNICODE_OUTPUT ; cl.exe 2>&1 | \
+                   awk '{ if (NR==1) print $$(NF-2) }' | \
+                   cut -d'.' -f3)
+endif
+
+BUILDING_WITHIN_IDE = $(VS_UNICODE_OUTPUT)
+
+# these define the build compatibility
+ifeq (yes,$(WINRTDEBUG))
+  BLDCXXFLAGS = -MDd -GR
+  BLDCFLAGS   = -MDd
+  BLDF77FLAGS = -MDd
+else
+  BLDCXXFLAGS = -MD -GR
+  BLDCFLAGS   = -MD
+  BLDF77FLAGS = -MD
+endif
+
+ifneq (,$(findstring $(VC_MAJOR),14 15 16))
+  BLDCXXFLAGS+= -EHsc- -W3 -wd4244
+  BLDCFLAGS  += -EHsc- -W3
+  DEBUGFLAGS  = -Z7
+
+  ifeq (yes,$(WINRTDEBUG))
+    BLDCXXFLAGS += -RTC1
+    BLDCFLAGS   += -RTC1
+  endif
+else
+ifeq ($(VC_MINOR),10)
+  BLDCXXFLAGS+= -G5 -EHsc-
+  BLDCFLAGS  += -G5 -EHsc-
+  BLDF77FLAGS+= -G5
+else
+ifeq ($(VC_MINOR),00)
+  BLDCXXFLAGS+= -Zm200
+  BLDCFLAGS  += -Zm200
+endif
+endif
+endif
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+CINTOPT       = $(DEBUGFLAGS)
+LDOPT        += -debug
+F77OPT        = -debug -nopdbfile
+else
+OPT           = $(OPTFLAGS)
+LDOPT         =
+F77OPT        = -optimize:0 -nopdbfile -recursive 
+endif
+
+ifeq (yes,$(WINRTDEBUG))
+  LDOPT      += -nodefaultlib:msvcrt.lib
+endif
+
+NOOPT         =
+
+# Compiler:
+CXX           = $(ROOT_SRCDIR)/build/win/cl.sh
+CC            = $(ROOT_SRCDIR)/build/win/cl.sh
+CPPPREP       = cl.exe -E -C -nologo
+CXXFLAGS      = -nologo -FIw32pragma.h \
+                $(BLDCXXFLAGS) $(EXTRA_CXXFLAGS) -D_WIN32
+CXXOUT        = -Fo
+CFLAGS        = -nologo -I$(ROOT_SRCDIR)/build/win -FIw32pragma.h -FIsehmap.h \
+                $(BLDCFLAGS) $(EXTRA_CFLAGS) -D_WIN32
+CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT)
+CINTCFLAGS   := $(CFLAGS) $(CINTOPT)
+
+# Linker:
+LD            = $(ROOT_SRCDIR)/build/win/ld.sh
+LDFLAGS       = -nologo -ignore:4049,4075,4089,4217,4221 -incremental:no \
+                $(LDOPT) $(EXTRA_LDFLAGS) 
+SOFLAGS       = -DLL
+HAVEDYNAMICBASE := $(shell unset VS_UNICODE_OUTPUT ; \
+                     $(LD) /? 2>&1 | grep DYNAMICBASE > /dev/null)
+ifneq ($(HAVEDYNAMICBASE),)
+  SOFLAGS += -DYNAMICBASE
+endif
+SOEXT         = dll
+EXEEXT        = .exe
+
+# System libraries:
+SYSLIBS       = advapi32.lib
+XLIBS         =
+CILIBS        =
+CRYPTLIBS     =
+
+# Fortran:
+ifneq ($(findstring build/win/f77.sh,$(F77)),)
+F77           = $(ROOT_SRCDIR)/build/win/f77.sh
+F77FLAGS      = -nologo -4Nportlib $(BLDF77FLAGS) -recursive
+F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
+F77LIBS       =
+endif
+
+# Extras
+ifeq ($(CONFIGURE),yes)
+showcxx:
+	@echo "$(CXX)"
+
+showcc:
+	@echo "$(CC)"
+
+showld:
+	@echo "$(LD)"
+
+showf77:
+	@echo "$(ROOT_SRCDIR)/build/win/f77.sh"
+endif

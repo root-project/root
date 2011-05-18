@@ -1,0 +1,110 @@
+
+This document explains CINT error message, warning messsage and note.
+
+
+General Information: =====================================================
+
+Error:
+    Error: message indicates cint execution error that may cause from bad
+   source code or some external factor.  
+    When this type of message is displayed, execution of the interpreted 
+   program is stopped. 
+
+Limitation:
+    Limitation: message indicates cint execution error due to limitation of
+   cint implemetaion. 
+    In most of the cases, execution of the interpreted program is stopped. 
+
+Warning:
+    Warning: is a notification of non-critical error or limitation.
+
+Note:
+    Note: is just a notification about cint limitation. Note: is harmless.
+   Normally, you can ignore them.
+
+Internal error:
+cint internal error:
+    This kind of message, which indicates error of cint implementation, 
+   should not be displayed.
+
+
+makecint or rootcint messages: ===========================================
+
+Note: Link requested for undefined class [ClassName] 
+    If class name is declared but not class definition is not given, and
+   that class is precompiled into dictionary, makecint or rootcint displays
+   this message. A user can only refer to name of the class. This message
+   is usually harmless.
+
+    // user.h
+    class MyClass;
+
+    $ makecint -mk Makefile -dl user.dll -H user.h
+    $ make -f Makefile
+    Note: Link requested for undefined class MyClass
+
+
+Note: operator new() masked [HexNumber]
+Note: operator delete() masked [HexNumber]
+    When making cint dictionary or interface method source code, it usually
+   overloads global new and delete operators. If you have yourown new/delete
+   operator, you may want to elimitate new and delete from the dictionary
+   source code. Above message indicates, status of new/delete operator 
+   masking.  Mask flag is shown as hex number. 
+
+    #define G__IS_OPERATOR_NEW      0x01
+         Global operator new is found in user header file. Cint automatically
+        stops generating operator new function in the dictionary.
+
+    #define G__IS_OPERATOR_DELETE   0x02
+         Global operator delete is found in user header file. Cint 
+        automatically stops generating operator delete function in the 
+        dictionary.
+
+    #define G__MASK_OPERATOR_NEW    0x04
+         Cint does not generate operator new function in the dictionary
+        because it is explicitly masked by -M0x4 command line option.
+
+    #define G__MASK_OPERATOR_DELETE 0x08
+         Cint does not generate operator new function in the dictionary
+        because it is explicitly masked by -M0x8 command line option.
+
+    #define G__NOT_USING_2ARG_NEW   0x10
+         Cint uses operator new function with 1 argument in dictionary
+        source code.
+
+    From cint5.14.60, a new scheme is introduced. In the new method, 
+   following flags dominates others. This scheme is intended to fix 
+   problems associated with global operator new/delete.
+    Before 5.14.59, -M0x1c or -M0x10 was needed for HP-UX aCC, Solaris
+   CC5 and few other compilers. From 5.14.60, this option is not 
+   needed for those platforms any more.
+
+    #define G__DUMMYARG_NEWDELETE        0x100
+	  If this flag is set, a new operator new/delete scheme
+	 is turned on. With this scheme, cint dictionary generates
+	 following functions.
+
+            void* operator new(size_t size,[DLLID]_tag* p);
+            void operator delete(void *p,[DLLID]_tag* x);
+            static void G__operator_delete(void *p);
+
+    #define G__DUMMYARG_NEWDELETE_STATIC 0x200
+          This flag makes operator new a static function. So,
+	 following functions will be generated.
+
+            static void* operator new(size_t size,[DLLID]_tag* p);
+            static void operator delete(void *p,[DLLID]_tag* x);
+            static void G__operator_delete(void *p);
+
+
+ Default value is 0x100 for pure CINT and 0x1c for ROOTCINT.
+
+
+class [ClassName] in [FILE] line [LINE] original base of virtual func
+    This message indicates this class is the grand root of polymorphic
+   inheritance. The message is displayed purely as information. No harm.
+
+
+==========================================================================
+

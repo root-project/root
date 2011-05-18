@@ -1,0 +1,429 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// lib/prec_stl/list
+
+#pragma ifndef PREC_STL_LIST
+#pragma define PREC_STL_LIST
+#pragma link off global PREC_STL_LIST;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
+
+// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Got some ideas from Scott Snyder, Fermi-lab
+// Modified by Masaharu Goto
+// SGI KCC porting by Philippe Canal, Fermi-lab
+
+#include <_iterator>
+#include <_memory>
+
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+template<class T,class Allocator=std::allocator<T> >
+#elif defined(G__GNUC) && !defined(G__KCC)
+
+#if (G__GNUC_VER>=2095)
+template<class T,class Allocator=allocator<T> >
+#else
+template<class T,class Allocator=alloc>
+#endif
+
+#elif defined(G__HPUX)
+template<class T,class Allocator=allocator>
+#else
+template<class T,class Allocator=std::allocator<T> >
+#endif
+class list {
+ public:
+  typedef T value_type;
+  typedef Allocator allocator_type;
+#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
+  typedef void* void_pointer;
+  //typedef __list_node<T> list_node;
+  //typedef simple_alloc<list_node, Alloc> list_node_allocator;
+  //typedef list_node* link_type;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef size_t size_type;
+  typedef ptrdiff_t difference_type;
+#else
+  typedef typename Allocator::pointer               pointer;
+  typedef typename Allocator::const_pointer         const_pointer;
+  typedef typename Allocator::reference             reference;
+  typedef typename Allocator::const_reference       const_reference;
+  typedef typename Allocator::size_type             size_type;
+  typedef typename Allocator::difference_type       difference_type;
+#endif
+
+  class iterator 
+#if defined(G__VISUAL) 
+# if (G__MSC_VER>=1300) && (G__MSC_VER<1600)
+	: public _Bidit<T, difference_type, const_pointer, const_reference>
+# elif (G__MSC_VER<1600)
+    	: public _Bidit<T,difference_type>
+# endif
+#elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
+#elif (G__GNUC_VER>=3001)
+#elif defined(G__INTEL_COMPILER)
+#elif defined(G__KCC)
+#elif defined(G__AIX)
+#elif defined(G__ALPHA)
+#else
+  	: public bidirectional_iterator<T,difference_type> 
+#endif
+	{
+   public:
+    iterator() ;
+    iterator(const iterator& x) ;
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__ALPHA)
+    iterator& operator=(const iterator& x) ;
+#endif
+    T& operator*() const ;
+#ifndef G__OLDIMPLEMENTATION2019
+    T* operator->() const ;
+#endif
+    iterator& operator++();
+    iterator operator++(int a);
+    iterator& operator--();
+    iterator operator--(int a);
+    bool operator==(const iterator& x) ;
+#ifndef G__HPUX
+    bool operator!=(const iterator& x) ;
+#endif
+#if defined(G__VISUAL) && (G__MSC_VER>=1600)
+	private:
+	void* _Ptr;
+#endif
+  };
+#ifdef G__HPUX
+  friend bool operator!=(const list::iterator& x,const list::iterator& y)const;
+#endif
+
+#if 0
+  typedef reverse_iterator<iterator> reverse_iterator;
+#else
+  class reverse_iterator 
+#if defined(G__VISUAL)
+# if (G__MSC_VER>=1300) && (G__MSC_VER<1600)
+	: public _Bidit<T, difference_type, const_pointer, const_reference>
+# elif (G__MSC_VER<1600)
+	: public _Bidit<T,difference_type> 
+# endif
+#elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
+#elif (G__GNUC_VER>=3001)
+#elif defined(G__INTEL_COMPILER)
+#elif defined(G__KCC)
+#elif defined(G__AIX)
+#elif defined(G__ALPHA)
+#else
+  	: public bidirectional_iterator<T,difference_type> 
+#endif
+	{
+   public:
+    reverse_iterator(const reverse_iterator& x) ;
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__ALPHA)
+    reverse_iterator& operator=(const reverse_iterator& x) ;
+#endif
+    T& operator*() const ;
+#ifndef G__OLDIMPLEMENTATION2019
+    T* operator->() const ;
+#endif
+    reverse_iterator& operator++();
+    reverse_iterator operator++(int a);
+    reverse_iterator& operator--();
+    reverse_iterator operator--(int a);
+#if defined(G__VISUAL) && (G__MSC_VER>=1600) 
+	private:
+		void* _Ptr;
+#endif
+  };
+#endif
+  friend bool operator==(const list::reverse_iterator& x
+                        ,const list::reverse_iterator& y) const;
+  friend bool operator!=(const list::reverse_iterator& x
+                        ,const list::reverse_iterator& y) const;
+
+  typedef const iterator const_iterator;
+  typedef const reverse_iterator const_reverse_iterator;
+
+#if 0
+  friend bidirectional_iterator_tag 
+    iterator_category(bidirectional_iterator<T,distance_type>& x);
+  //friend bidirectional_iterator_tag 
+  //  iterator_category(list::iterator& x);
+  //friend bidirectional_iterator_tag 
+  //  iterator_category(list::reverse_iterator& x);
+#endif
+
+  list() ;
+  iterator begin() ;
+  iterator end() ;
+  reverse_iterator rbegin() ;
+  reverse_iterator rend() ;
+#ifdef G__CONSTNESSFLAG
+  const_iterator begin(void) const;
+  const_iterator end(void) const;
+  const_reverse_iterator rbegin(void) const;
+  const_reverse_iterator rend(void) const;
+#endif
+  bool empty() const ;
+  size_type size() const ;
+  size_type max_size() const ;
+  T& front() const ;
+  T& back() const ;
+  void swap(list& x) ;
+  iterator insert(iterator position,const T& x);
+  void insert(iterator position,T* first,T* last);
+  void insert(iterator position,iterator first,iterator last);
+  void insert(iterator position,size_type n,const T& x);
+  void push_front(const T& x);
+  void push_back(const T& x);
+  void resize(size_type n);
+  void resize(size_type n, T v);
+  void erase(iterator position);
+  void erase(iterator first,iterator last);
+  void clear() ;
+  void pop_front();
+  void pop_back();
+  list(size_type n,const T& value=T()) ;
+#if 0
+  template <class InputIterator>
+    deque(InputIterator first, InputIterator last,
+         const Allocator& = Allocator());
+#else
+#if (defined(G__GNUC) && !defined (G__KCC))
+  list(const T* first,const T* last) ;
+#endif
+  list(const_iterator first, const_iterator last) ;
+#endif
+  list(const list& x) ;
+  ~list() ;
+  list& operator=(const list& x) ;
+  void splice(iterator position,list& x);
+  void splice(iterator position,list& x,iterator i);
+  void splice(iterator position,list& x,iterator first,iterator last);
+  void remove(const T& value);
+  void unique();
+  void merge(list& x);
+  void reverse();
+  void sort();
+
+  friend bool operator==(const list& x, const list& y);
+  friend bool operator< (const list& x, const list& y);
+  friend bool operator!=(const list& x, const list& y);
+  friend bool operator> (const list& x, const list& y);
+  friend bool operator>=(const list& x, const list& y);
+  friend bool operator<=(const list& x, const list& y);
+
+  // specialized algorithms:
+#ifndef G__GNUC
+  // doesn't work on egcs nor VC++5.0
+  //friend void swap(list& x, list& y);
+#endif
+
+#pragma ifndef G__NOALGORITHM
+  // Generic algorithm
+#if defined(G__GNUC) || defined(G__BORLAND) || defined(G__KCC)
+
+  // input iter
+  friend list::iterator 
+    find(list::iterator first,list::iterator last,const T& value);
+  // forward iter
+  friend list::iterator 
+    find_end(list::iterator first1,list::iterator last1,
+	     list::iterator first2,list::iterator last2);
+  friend list::iterator 
+    find_first_of(list::iterator first1,list::iterator last1,
+	          list::iterator first2,list::iterator last2);
+  friend list::iterator 
+    adjacent_find(list::iterator first,list::iterator last);
+  // input iter
+#if !defined(G__BORLAND)
+  friend list::difference_type
+    count(list::iterator first,list::iterator last,const T& value);
+#endif
+#if 0
+  friend pair<list::iterator,list::iterator>
+    mismatch(list::iterator first1,list::iterator last1,
+             list::iterator first2);
+#endif
+  friend bool
+    equal(list::iterator first1,list::iterator last1,
+          list::iterator first2);
+  // forward iter
+  friend list::iterator
+    search(list::iterator first1,list::iterator last1,
+           list::iterator first2,list::iterator last2);
+  friend list::iterator
+    search_n(list::iterator first,list::iterator last
+             ,list::size_type count,const T& value);
+  // input and output iter -> forward iter
+  friend list::iterator
+    copy(list::iterator first,list::iterator last,
+         list::iterator result);
+  // bidirectional iter
+  friend list::iterator
+    copy_backward(list::iterator first,list::iterator last,
+                  list::iterator result);
+  // just value_type
+  friend void swap(T& a,T& b);
+  // forward iter
+  friend list::iterator
+    swap_ranges(list::iterator first1,list::iterator last1,
+                list::iterator first2);
+  friend void iter_swap(list::iterator a,list::iterator b);
+  friend void replace(list::iterator first,list::iterator last,
+                      const T& old_value,const T& new_value);
+  // input, output iter -> forward iter
+  friend list::iterator 
+    replace_copy(list::iterator first,list::iterator last,
+                 list::iterator result,
+                 const T& old_value,const T& new_value);
+  // forward iter
+  friend void
+    fill(list::iterator first,list::iterator last,const T& value);
+#if (G__GNUC>=3) || defined (G__KCC)
+  friend void
+    fill_n(list::iterator first,list::size_type n,const T& value);
+#endif
+  friend list::iterator
+    remove(list::iterator first,list::iterator last,const T& value);
+  // input,output iter -> forward iter
+  friend list::iterator
+    remove_copy(list::iterator first,list::iterator last,
+                list::iterator result,const T& value);
+  friend list::iterator
+    unique(list::iterator first,list::iterator last);
+  friend list::iterator 
+    unique_copy(list::iterator first,list::iterator last,
+                list::iterator result);
+  friend void reverse(list::iterator first,list::iterator last);
+  friend list::iterator
+     reverse_copy(list::iterator first,list::iterator last,
+                  list::iterator result);
+  // forward iter
+  friend void rotate(list::iterator first,list::iterator mid,
+                     list::iterator last);
+  // forward iter
+  friend list::iterator 
+    rotate_copy(list::iterator first,list::iterator mid,
+                list::iterator last,list::iterator result);
+#if 0
+  // randomaccess iter
+  friend void random_shuffle(list::iterator first,list::iterator last);
+  // randomaccess iter
+  friend void sort(list::iterator first,list::iterator last);
+  friend void stable_sort(list::iterator first,list::iterator last);
+  friend void partial_sort(list::iterator first,list::iterator mid,
+                           list::iterator last);
+  friend list::iterator
+    partial_sort_copy(list::iterator first,list::iterator last,
+                      list::iterator result_first,
+                      list::iterator result_last);
+  friend void nth_element(list::iterator first,list::iterator nth,
+                          list::iterator last);
+#endif
+  // forward iter
+  friend list::iterator 
+    lower_bound(list::iterator first,list::iterator last,const T& value);
+  friend list::iterator 
+    upper_bound(list::iterator first,list::iterator last,const T& value);
+#if 0
+  friend pair<list::iterator,list::iterator>
+    equal_range(list::iterator first,list::iterator last,const T& value);
+#endif
+  friend bool binary_search(list::iterator first,list::iterator last,
+                            const T& value);
+  friend list::iterator merge(list::iterator first1,list::iterator last1,
+                                list::iterator first2,list::iterator last2,
+                                list::iterator result);
+  friend void inplace_merge(list::iterator first,list::iterator middle,
+                            list::iterator last);
+  friend bool includes(list::iterator first1,list::iterator last1,
+                       list::iterator first2,list::iterator last2);
+  friend list::iterator 
+    set_union(list::iterator first1,list::iterator last1,
+              list::iterator first2,list::iterator last2,
+              list::iterator result);
+  friend list::iterator 
+    set_intersection(list::iterator first1,list::iterator last1,
+                     list::iterator first2,list::iterator last2,
+                     list::iterator result);
+  friend list::iterator 
+    set_difference(list::iterator first1,list::iterator last1,
+                   list::iterator first2,list::iterator last2,
+                   list::iterator result);
+  friend list::iterator 
+    set_symmetric_difference(list::iterator first1,list::iterator last1,
+                             list::iterator first2,list::iterator last2,
+                             list::iterator result);
+#if 0
+  // random access
+  friend void push_heap(list::iterator first,list::iterator last);
+  friend void pop_heap(list::iterator first,list::iterator last);
+  friend void make_heap(list::iterator first,list::iterator last);
+  friend void sort_heap(list::iterator first,list::iterator last);
+#endif
+  // min,max, just value_type
+  friend const T& min(const T& a,const T& b);
+  friend const T& max(const T& a,const T& b);
+  // forward iter
+  friend list::iterator 
+    min_element(list::iterator first,list::iterator last);
+  friend list::iterator 
+    max_element(list::iterator first,list::iterator last);
+  // input iter
+  friend bool
+    lexicographical_compare(list::iterator first1,list::iterator last1,
+                            list::iterator first2,list::iterator last2);
+  // bidirectional iter
+  friend bool next_permutation(list::iterator first,list::iterator last);
+  friend bool prev_permutation(list::iterator first,list::iterator last);
+
+#elif defined(G__VISUAL)
+  friend void reverse(list::iterator first,list::iterator last);
+#if 0
+  friend void sort(list::iterator first,list::iterator last);
+#endif
+
+  friend list::iterator 
+    find(list::iterator first,list::iterator last,const T& value);
+  friend list::iterator
+    search(list::iterator first1,list::iterator last1,
+           list::iterator first2,list::iterator last2);
+  friend list::iterator
+    copy(list::iterator first,list::iterator last,
+         list::iterator result);
+  friend void
+    fill(list::iterator first,list::iterator last,const T& value);
+#if 0
+  friend list::iterator
+    remove(list::iterator first,list::iterator last,const T& value);
+  friend list::iterator
+    unique(list::iterator first,list::iterator last);
+#endif
+
+#endif // G__GNUC || G__BORLAND
+#pragma endif // G__NOALGORITHM
+
+  // Generic algorithm
+  //friend void reverse(list::iterator first,list::iterator last);
+  //friend void reverse(list::reverse_iterator first,list::reverse_itetator last);
+
+
+  // iterator_category resolution
+  //friend bidirectional_iterator_tag iterator_category(list::iterator x);
+};
+
+#pragma endif
+

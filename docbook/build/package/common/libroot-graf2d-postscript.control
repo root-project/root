@@ -1,0 +1,17 @@
+Package: libroot-graf2d-postscript@libvers@
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Postscript/PDF renderer library for ROOT
+ This package contains a library for ROOT, which allows rendering 
+ postscript and PDF output. 
+
+Package: libroot-graf2d-postscript-dev
+Architecture: any
+Section: libdevel
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Depends: libroot-graf2d-postscript@libvers@ (= ${binary:Version}), libroot-graf2d-graf-dev, ${shlibs:Depends}
+Description: Postscript/PDF renderer library for ROOT
+ This package contains a library for ROOT, which allows rendering 
+ postscript and PDF output. 
+

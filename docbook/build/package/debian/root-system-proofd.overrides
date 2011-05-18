@@ -1,0 +1,2 @@
+root-system-proofd: binary-without-manpage usr/bin/proofserv.bin
+root-system-proofd: binary-without-manpage usr/bin/proofserv.exe

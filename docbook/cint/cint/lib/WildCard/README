@@ -1,0 +1,190 @@
+lib/WildCard/README
+
+ This directory includes WildCard interpreter, a marriage of C/C++ and Tcl/Tk
+interpreters.  Now it works on HP-UX, Linux and Windows-NT/9x. Windows-NT/9x
+version is in lib/wintcldl directory. This directory is dedicated to UNIX
+environment.
+
+ This version should be good for Tcl4.1/Tk7.5 to Tcl/Tk8.3. Please report to
+the author if you find problems.
+
+What you need:=============================================================
+
+ What you need to run WildCard are
+
+    + libtcl.sl
+    + libtk.sl
+    + cint5.11.tar.gz  or later
+    + C++ compiler desirable
+
+Compile: ==================================================================
+
+ After you install cint 5.11.10 or later, you can do below.
+
+ 1) Edit 'setup' script
+   Please set INCLD ad LIB variables properly. Especially library and include
+   paths.
+
+ 2) Run setup
+        $ sh ./setup
+  After this , you can re-compile by 'make'.
+
+
+Hint and trouble shooting: ================================================
+
+ 1) Ignore warning message from cint
+   When you do 'sh ./setup' , you will see warning messages as shown below.
+  Ignore all of them. These are harmless.
+
+    Warning: File "TCLTK.h" already loaded
+    Warning: File "TKMACRO.h" already loaded
+    Warning: File "TCLMACRO.h" already loaded
+    Warning: Link requested for undefined class Tcl_Channel_ FILE: LINE:0
+    Warning: Link requested for undefined class Tcl_Command_ FILE: LINE:0
+                   .
+                   .
+
+ 2) Linker error , undefined reference, add #pragma link statement in TCLTK.h
+   If you have linker errors that there are undefined references or unresolved
+  symbols, edit TCLTK.h and add '#pragma link off' statement around line 100.
+  For example, if you get following linker error,
+
+    G__c_wildc.o(.text+0xcb7f): undefined reference to `Tk_UpdatePointer'
+
+  add following line to the TCLTK.h. 
+
+    #pragma link off function Tk_UpdatePointer;
+
+  This line must be enclosed by #ifdef __MAKECINT__ and #endif.
+
+What WildCard can do ======================================================
+ WildCard has full functionality of CINT and Tcl/Tk interpreters. You can
+enjoy 100% compatibility from cint and wish in one environment. Take a look
+at wildc.wc and calc.wc examples. To start wildc interpreter, use following
+command.
+
+   $ wildc wildc.wc
+
+To monitor what is going on
+
+   $ wildc -T wildc.wc
+
+
+WildCard Commands ========================================================
+
+How to start WildCard:
+	WildCard interpreter can be started by 'wildc' command. You can give
+	mixed C/C++ and Tcl/Tk script. WildCard interpreter usually accepts
+        source code with .wc extension.
+
+    Example:
+	$ wildc grcalc.wc            # starts C/C++ interpreter
+
+
+How to debug WildC script:
+        You can give -S, -s, -t, -T and -b debug option to the wildc. 
+        Debugger works in the same way as CINT. You can set break point, 
+        step through and trace your source code.
+
+    Example:
+        $ wildc -S grcalc.wc
+
+        You MUST USE 'p WildCard_Exit()' to terminate process in the debug
+        mode. Otherwise, behavior is not guaranteed.
+
+    Example:
+        wildc> p WildCard_Exit()
+
+
+In Tcl:
+
+  ceval {C/C++ expression}
+	ceval can be used in Tcl/Tk script to evaluate C/C++ expression. 
+	Result is returned as form of string.
+
+    Example:
+	ceval 1+2
+	ceval printf("abc\n");
+	button .b -text "button"
+	bind .b <Button-1> {ceval CallBack()}
+
+In C/C++:
+
+  #pragma tcl <interp> <link variable list>
+  #pragma endtcl
+	#pragma tcl statement starts Tcl/Tk interpreter. 
+	If it appears within a function, Tcl/Tk script will be evaluated 
+	when the function is executed.
+	If it appears in a global scope, Tcl/Tk script will be immediately 
+	evaluated. #pragma endtcl can be omitted in global scope. In this
+	case, WildCard_MainLoop() is implicitly called to start X11 event
+	loop.
+
+    Example:
+	f() {
+	  #pragma tcl interp
+	    # tcl/tk commands evaluated when f() is called
+	  #pragma endtcl
+	}
+	#pragma tcl interp
+	  # tcl/tk commands evaluated when source code loading
+	#pragma endtcl
+	#pragma tcl interp
+	  # tcl/tk commands evaluated when source code loading 
+	  # and implicitly calls WildCard_MainLoop() because #pragma
+	  # endtcl is omitted.
+
+
+	A parameter <interp> must be a valid Tcl_Interp* object. A global
+	object 'interp' is preregistered in the WildCard environment for
+	user's convenience.
+	After the <interp> you can list up arbitrary number of C/C++ variables
+	to link to Tcl/Tk interpreters. Variables must be type of int, double
+	or char* and must be a simple object name. Variables are unlinked at
+	#pragma endtcl.
+
+    Example:
+        f(char *color) {
+	  static int i=0;
+	  #pragma tcl interp color i
+	    button -.b$i -text "Button Test" -bg $color
+	  #pragma endtcl
+	  ++i;
+	}
+
+
+  WildCard_MainLoop();
+  WildCard_Exit();
+	WildCard_MainLoop() and WildCard_Exit() are API function for the
+	WildCard interpreter. WildCard_MainLoop() starts X11 event loop
+	to get mouse and keyboard events. The events are handled by Tcl/Tk
+	interpreter.
+	WildCard_Exit() must be used to quit WildCard interpreter. exit()
+	will not work.
+
+    Example:
+        void DrawGraphics() {
+	  #pragma tcl interp
+	    button .b -text "Exit"
+	    bind .b <Button-1> {ceval Exit_CallBack()}
+	    pack .b
+	  #pragma endtcl
+	}
+        void Exit_CallBack() { WildCard_Exit(); }
+	main() {
+	  DrawGraphics();
+          WildCard_MainLoop();
+	}
+
+  Tcl_xxx()
+  Tk_xxx()
+	The WildCard interpreter embeds all of the Tcl/Tk methods as 
+	precompiled library. You can access Tcl/Tk intrinsics from
+	C/C++ interpreter. You don't need to use them in most of the cases.
+
+    Example:
+        int i; 
+	Tcl_LinkVar(interp,"i",(char*)(&i),TCL_LINK_INT);
+	    // parenthesis around (&i) is needed in WildCard.
+
+

@@ -1,0 +1,37 @@
+===========================================================
+Building pcre on Windows
+===========================================================
+
+Usage: 
+   nmake -f Makefile.msc CFG="libpcre - Win32 Release"
+or for the debug version:
+   nmake -f Makefile.msc CFG="libpcre - Win32 Debug"
+
+When changing the version of pcre, please change the 
+version in these two lines in Makefile.msc:
+
+SRCDIR  = pcre-X.X
+LIBRARY = libpcre-X.X
+===========================================================
+
+===========================================================
+In case of problem, here is a couple of things to check:
+===========================================================
+
+In case of an undefined symbol, check in which file the 
+missing symbol is. if it is in pcre.h.in, compare the file 
+pcre.h in this directory (win32) and pcre.h.in the pcre 
+distribution to see if any definition has changed or has 
+been added. If it is the case, modify pcre.h and try again
+
+In case of unresolved external symbol, check in which 
+source file (from the pcre distribution) the symbol is
+and make sure this file is in the list of object files 
+in Makefile.msc:
+OBJS =   "../$(SRCDIR)/pcre_chartables.obj" \
+[...]
+         "../$(SRCDIR)/pcreposix.obj"
+
+If the file is missing, just add it in the list with the 
+same format than the others
+===========================================================

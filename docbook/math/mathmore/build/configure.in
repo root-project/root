@@ -1,0 +1,50 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl Author: Paul F. Kunz <Paul_Kunz@slac.stanford.edu>
+dnl
+
+AC_INIT(src/SpecFuncMathMore.cxx)
+AM_CONFIG_HEADER(config.h)
+AC_CONFIG_AUX_DIR(config)
+AM_INIT_AUTOMAKE(MathMore, 5.22.00)
+
+dnl Checks for programs.
+AC_PROG_CXX
+
+AC_LANG_CPLUSPLUS
+
+dnl Force libtool to use C++ compiler when checking for PIC 
+CC=$CXX
+
+AM_PROG_LIBTOOL
+
+#dnl Checks for libraries.
+#dnl Get the path to the standard C++ library
+#PFK_CXX_LIB_PATH
+
+#dnl check STD C++ library
+#AC_CHECK_LIB(stdc++, main, LIBSTDCPP="lstdc++", LIBSTDCPP=)
+#AC_SUBST(LIBSTDCPP)
+
+dnl Turn on -Wall if compiling with gcc
+AC_COMPILE_WARNINGS
+
+dnl Look for GSL
+AC_HAVE_GSL
+AM_CONDITIONAL(GSLEXIST, test x$have_gsl = xyes )
+
+dnl AC_DEFINE(HAVE_PKG_GSL,"no")
+dnl AC_caolan_CHECK_PACKAGE(GSL, gsl_sf_bessel_Inu, gsl , gsl/gsl_sf_bessel.h)
+
+dnl Check for gmake and use it
+AC_CHECK_PROG(GMAKE, gmake, gmake, make)
+AC_SUBST(GMAKE)
+
+AC_PROG_RANLIB
+
+
+AC_OUTPUT(Makefile src/Makefile inc/Makefile inc/Math/Makefile inc/Math/GenVector/Makefile test/Makefile doc/doxyconfig doc/Makefile)
+
+AC_MSG_RESULT([
+    MathMore project now configured.
+])

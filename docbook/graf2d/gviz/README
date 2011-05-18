@@ -1,0 +1,28 @@
+The graphviz package is used by the TGraphStruct class to represent structural
+information as diagrams of abstract graphs and networks.
+
+This package can be downloaded from http://www.graphviz.org/.
+
+To find graphviz the ROOT's configure file looks in standard locations. It is
+possible to define a specific location using the configure flags:
+
+--with-gviz-incdir="the directory where gvc.h is"
+--with-gviz-libdir="the directory where the libgvc library is"
+
+To install graphviz it is recommended to use the following configure flags:
+
+--enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here" 
+
+On 64 bits machines, the ROOT sources are compiled with the option -m64.
+In that case graphviz should be also compiled in 64 bits mode. It might be the
+default option, but on some machine it is not. In that case the environment
+variable CC should be defined as:
+
+CC="gcc -m64"
+
+before doing configure. 
+
+On Windows machines it recommended to not install graphviz but to download the
+pre-installed version from http://www.graphviz.org/. The ROOT configure command
+remains the same.
+

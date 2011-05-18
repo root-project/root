@@ -1,0 +1,82 @@
+// Matrix and Vector Functions doc
+
+/**
+
+\page MatVecFunctions Matrix and Vector Operators and Functions
+
+
+<h2>Matrix and Vector Operators </h2>
+<p>The ROOT::Math::SVector and  ROOT::Math::SMatrix  classes defines the following operators described below. The<em> m1,m2,m3</em> are vectors or matrices of the same type (and size) and <em>a</em> is a scalar value: </p>
+<pre>
+m1 == m2           <em>// returns whether m1 is equal to m2 (element by element comparison) </em> 
+m1 != m2           <em>// returns whether m1 is NOT equal to m2 (element by element comparison) </em> 
+m1 &lt; m2            <em>// returns whether m1 is less than m2 (element wise comparison)</em>
+m1 &gt; m2            <em>// returns whether m1 is greater than m2 (element wise comparison)</em>
+<em>// in the following m1 and m3 can be general and m2 symmetric, but not vice-versa</em>
+m1 += m2           <em>// add m2 to m1</em>
+m1 -= m2           <em>// subtract m2 to m1 </em>
+m3 = m1 + m2       <em>// addition </em>
+m1 - m2            <em>// subtraction</em>
+
+<em>// Multiplication and division via a scalar value a</em> 
+m3 = a*m1; m3 = m1*a; m3 = m1/a;  
+</pre>
+
+<h3>Vector-Vector multiplication</h3>
+The <em>operator *</em> defines an element by element multiplication between vectors. For the standard 
+vector-vector multiplication, \f$ a = v^T v \f$, (dot product) one must use the ROOT::Math::Dot function. 
+In addition, the Cross (only for vector sizes of 3), ROOT::Math::Cross,  and the Tensor product, ROOT::Math::TensorProd, are defined. 
+<br>
+<h3>Matrix - Vector multiplication</h3>
+The  <em>operator *</em> defines the matrix-vector multiplication, \f$ y_i = \sum_{j} M_{ij} x_j\f$: 
+<pre>
+<em>// M is a  N1xN2 matrix, x is a N2 size vector, y is a N1 size vector</em>
+y = M * x        
+</pre>
+It compiles only if the matrix and the vectors have the right sizes. 
+<br>
+<strong>Matrix - Matrix  multiplication </strong>
+The  <em>operator *</em> defines the matrix-matrix multiplication, 
+\f$ C_{ij} = \sum_{k} A_{ik} B_{kj}\f$: 
+<pre>
+<em>// A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix</em>
+C = A * B    
+</pre> 
+The operation compiles only if  the matrices have the right size. 
+In the case that A and B are symmetric matrices, C is a general one, since their product is not guaranteed to be symmetric.   
+
+
+
+
+<h3>Matrix and Vector Functions</h3>
+
+The most used matrix functions are: 
+<ul>
+<li><strong>ROOT::Math::Transpose</strong>(M) : return the transpose matrix, \f$ M^T \f$</li>
+<li><strong>ROOT::Math::Similarity</strong>( v, M) : returns the scalar value resulting from the matrix- vector product \f$ v^T M v \f$ 
+</li>
+<li><strong>ROOT::Math::Similarity</strong>( U, M) : returns the matrix resulting from the product \f$ U  M U^T \f$. If M is symmetric, the returned resulting matrix  is also symmetric</li>
+<li><strong>ROOT::Math::SimilarityT</strong>( U, M) : returns the matrix resulting from the product \f$ U^T  M U \f$. If M is symmetric, the returned resulting matrix  is also symmetric</li>
+</ul>
+See \ref MatrixFunctions for the documentation of all existing matrix functions in the package.
+<br>  
+The major Vector functions are: 
+<ul>
+<li><strong>ROOT::Math::Dot</strong>( v1, v2) : returns the scalar value resulting from the vector dot product</li>
+<li><strong>ROOT::Math::Cross</strong>( v1, v2) : returns the vector cross product for two vectors of size 3. Note that the Cross product is not defined for other vector sizes</li>
+<li><strong>ROOT::Math::Unit</strong>( v) : returns unit vector. One can use also the <em>v.Unit()</em> method. </li>
+<li><strong>ROOT::Math::TensorProd</strong>(v1,v2) : returns a general matrix M of size N1xN2 resulting from the <a href="http://en.wikipedia.org/wiki/Tensor_product">Tensor Product</a> between the vector v1 of size N1) and v2 of size N2 </li>
+</ul>
+See \ref VectFunction for the  list and documentation of all of them. 
+
+
+
+<h3>Matrix and Vector I/O</h3>
+One can print (or write in an output stream)  Vectors (and also Matrices) using the Print method or the << operator, like: 
+<pre>
+v.Print(std::cout);
+std::cout << v << std::endl;
+</pre>
+In the ROOT distribution, the CINT dictionary is generated for SMatrix and SVector for double types and sizes up to 5. This allows the storage of them in a ROOT file.  
+
+*/

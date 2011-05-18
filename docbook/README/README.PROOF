@@ -1,0 +1,137 @@
+
++------------------------------------------------------------------------------------+
+| NB: This legacy README file refers to a PROOF installation using the discontinued  |
+|     'proofd' daemon.                                                               |
+|     Reference documentation about the currently supported and developed daemon     |
+|     based on the SCALLA/XROOTD framework, can be found at                          |
+|                  http://root.cern.ch/drupal/content/proof                          |
++------------------------------------------------------------------------------------+
+
+Installing and using the Parallel ROOT Facility -- PROOF
+========================================================
+
+PROOF allows the parallel execution of ROOT scripts and the
+parallel analysis of ROOT trees on a heterogeneous cluster.
+
+To install and use PROOF on a cluster do the following:
+
+0) Make sure each node in the cluster has /usr/local/root
+   or /opt/root. This can be directly an un-tared binary
+   distribution of ROOT or a link to a centrally installed
+   copy of ROOT.
+
+
+1) Add to /etc/services the lines:
+
+   proofd          1093/tcp
+   rootd           1094/tcp
+
+
+2) Add to /etc/inetd.conf the lines:
+
+   proofd stream tcp nowait root /usr/local/root/bin/proofd proofd -i /usr/local/root
+   rootd stream tcp nowait root /usr/local/root/bin/rootd rootd -i
+
+   Or when using xinetd add the following two files to /etc/xinetd.d:
+
+   # file name: rootd
+   # default: on
+   # description: The rootd daemon allows remote access to ROOT files.
+   service rootd
+   {
+        disable = no
+        socket_type             = stream
+        wait                    = no
+        user                    = root
+        server                  = /usr/local/root/bin/rootd
+        server_args             = -i /usr/local/root
+        log_on_success          += DURATION USERID
+        log_on_failure          += USERID
+   }
+
+   # file name: proofd
+   # default: on
+   # description: The proofd daemon is used to startup PROOF.
+   service proofd
+   {
+        disable = no
+        socket_type             = stream
+        wait                    = no
+        user                    = root
+        server                  = /usr/local/root/bin/proofd
+        server_args             = -i /usr/local/root
+        log_on_success          += DURATION USERID
+        log_on_failure          += USERID
+   }
+
+   In above examples correct daemon path to reflect your setup.
+
+   Restart (x)inetd or force it to re-read the config file
+   (kill -1 <inetd.pid>).
+
+
+3) (Optional) add to /etc/syslog.conf on the master node the line:
+
+   local5,local6.debug     /usr/local/root/proof/log/proof.log
+
+   and all slave nodes:
+
+   local5,local6.debug     @master.cern.ch
+
+   where master.cern.ch is domain name of the master node.
+   All PROOF syslog messages will be collected on the master node.
+   Just make one node in the cluster the master, all others are slaves.
+   And change on all nodes the line:
+
+   *.info;mail.none;news.none;authpriv.none  /var/log/messages
+
+   to:
+
+   *.info;local5,local6,mail.none;news.none;authpriv.none  /var/log/messages
+
+   Create an empty /usr/local/root/proof/log/proof.log.
+
+   Restart syslogd or force it to re-read the config file
+   (kill -1 <syslogd.pid>).
+
+
+4) Edit /usr/local/root/proof/etc/proof.conf to reflect your cluster
+   configuration. See the example proof.conf file for more information.
+   Use hostnames consistent with the configuration of the hosts
+   (fully qualified or non-qualified names).
+
+
+5) This is all. To test PROOF try the following:
+
+   % root
+   root [1] TProof::Open("<master.node.ch>")
+   root [2] gProof->Print()
+   <shows information on the master and all active slave servers>
+   root [3] .q
+
+6) (Optional) Edit /usr/local/root/proof/etc/motd  (Message of the day)
+   The contents of this file will be displayed in the client when a
+   PROOF session is started.
+
+7) (Optional) To disable the use of the cluster temporarily you can
+   create the file /usr/local/root/proof/etc/noproof. When a user
+   tries to start a PROOF session the contents of the file will be
+   displayed and no session will be started.
+
+==================================
+
+The /usr/local/root/proof/utils directory contains some useful
+shell scripts for managing your cluster. They use the file
+/usr/local/root/proof/etc/cluster.conf to define the hosts they
+operate on.
+
+(As an alternative, some people are happy using dsh (distributed
+shell) from http://dsh.sourceforge.net)
+
+Files distributed with /usr/local/root/proof/utils/push:
+
+/etc/passwd
+/etc/group
+/etc/exports
+/etc/services
+/etc/inetd.conf

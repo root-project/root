@@ -1,0 +1,41 @@
+#              $Id$
+
+#------------------------------------------------------------------------------#
+#                 R u l e s   f o r   g e n e r i c   g c c                    #
+#------------------------------------------------------------------------------#
+
+TYPECC     = g++
+TYPELD     = g++
+
+GCC_MAJOR    := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f1)
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+
+#TYPEMISC   = -m32 -D_POSIX_SOURCE -D_REENTRANT -D_GNU_SOURCE -Wall
+TYPEMISC   = -m32 -D_REENTRANT -D_GNU_SOURCE -Wall -D__macos__ $(CFTRACE)
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+TYPEMISC  += -D__DARWIN_UNIX03=1
+endif
+TYPECF32   =
+TYPECF64   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+TYPELINK   = -undefined dynamic_lookup -multiply_defined suppress 
+TYPEOPT    = $(TYPEMISC) -O2
+TYPEDBG    = $(TYPEMISC) -g
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+TYPELDSO   = $(TYPELINK) -dynamiclib -single_module -m32
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module -m32
+TYPESHLIB  = so
+TYPEDYLIB  = so
+else
+TYPELDSO   = $(TYPELINK) -bundle -m32
+TYPELDDY   = $(TYPELINK) -dynamiclib -single_module -m32
+TYPESHLIB  = so
+TYPEDYLIB  = dylib
+endif
+
+# In MacOSx the threading functions should come libc.
+#TYPELIBS   =  $(PTHREAD) -ldl -lc 
+TYPELIBS   =  -ldl -lc
+
+ifeq ($(GCC_MAJOR),4)
+TYPEMISC  += -Wno-deprecated
+endif

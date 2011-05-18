@@ -1,0 +1,14 @@
+Package: root-system-proofd
+Architecture: any
+Pre-Depends: openbsd-inetd | inet-superserver
+Depends: root-system-common, lsb-base (>= 3.0-6), ${shlibs:Depends}
+Recommends: root-system-bin, libroot-dev, root-file-server | root-system-rootd
+Description: Parallel ROOt Facility - distributed, parallel computing
+ This package contains the PROOF server.  proofd is the core daemon of
+ the PROOF (Parallel ROOt Facility) system for distributed parallel
+ computing. Installing this package on a machine, makes it possible
+ for the machine to participate in a parallel computing farm (cluster
+ or via the Internet), either as a master or a slave, using a
+ transparent interface.
+
+

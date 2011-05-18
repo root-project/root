@@ -1,0 +1,57 @@
+# PROOF config file. It has a very simple format:
+#
+# master <hostname> [image=<imagename>] [workdir=<workingdirectory>]
+# worker <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
+#                   [workdir=<workingdirectory>]
+# submaster <hostname> [image=<imagename>] [port=<portnumber>]
+#                      [config=<conffilename>]
+# condorworker <virtualmachinename> [image=<imagename>] [perf=<perfindex>]
+#                                   [workdir=<workingdirectory>]
+# user <username> on <hostname>
+#
+# For each node in the cluster that can run a master add a "master" line.
+# For each node in the cluster that can run a worker add a "worker" line.
+# A single node can run multiple workers (e.g. an SMP machine). In that case
+# repeat the worker line N times, where N is the number of CPU's in the machine.
+# Perfindex is a number specifying the relative speed of each CPU in the
+# cluster. Say, the fastest CPU is 100, a CPU 30% slower has perf=70. The
+# perfindex is used for load balancing. By default perf=100. The perfindex
+# is mostly an indication since the parallel algorithm is adaptive and will
+# adjust itself to the current load on each machine.
+# Image is used to tell the system that system images are shared between
+# nodes/CPU's in the cluster. For example if all nodes share a common user
+# directory, like with AFS, set image=afs (<imagename> is arbitrary but should
+# be unique for each different image). By default imagename is the hostname.
+# Port is used to tell PROOF to connect to the workers on the specified
+# port (in case proofd was started by the user instead of via inetd).
+#
+# For condorworkers the special image IGNORE can be used to exclude
+# a worker from the set of active workers. The worker (Condor VM) will
+# be suspended and resumed. This supports situations where there a more
+# VMs then CPUs.
+# 
+# Users can be redirected to have their master server run on a pre-determined
+# node. For that use the "user" line.
+#
+# For backward compatibility it is still possible to specify the methods
+# used for worker authentication as a list following the 'worker <hostname>'
+# (e.g. worker <hostname> uidgid usrpwd srp), this is however deprecated.
+# Authentication directives are specified via $ROOTSYS/etc/system.rootauthrc
+# and/or $HOME/.rootauthrc files. See $ROOTSYS/etc/system.rootauthrc for details.
+#
+
+#master pcna49a image=nfs
+
+#worker pcna49a  perf=100 image=nfs
+#worker pcna49b  perf=100 image=nfs
+#worker pcna49c  perf=100 image=nfs
+#worker pcna49d  perf=100 image=nfs
+#worker pcna49e  perf=75 image=nfs
+
+#user rdm on pcna49d
+
+
+master localhost
+
+worker localhost
+worker localhost

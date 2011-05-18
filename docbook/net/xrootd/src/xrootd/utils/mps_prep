@@ -1,0 +1,453 @@
+#!/usr/bin/env perl
+
+#   $Id$
+
+#
+# mps_prep [add|del|list|ll] [reqid [usrid prty func fn [fn...]]]
+#
+# If no parameters are specified, input mode is entered where
+# +, -, ?, ll will invoke the corresponding add, del, list, ll
+# functions.
+
+require 'getopts.pl';		        # option parsing
+use Fcntl;
+
+$isMPS = substr(($0 =~ m|([^/]*)$|)[0],0,4) eq 'mps_' ;
+$SSD = ($isMPS ? 'mps' : 'ooss');
+
+# a) We always include the two default locations for 'use' statements.
+# b) If the current working directory is not the location of the program,
+#    we add the path to the program (as intuited by the execution path)
+#    to @INC. The eval() defers this until run-time.
+# c) Finally, we defer all use statements to run-time which is when we
+#    have properly established @INC. Again, eval is used for the deferral.
+#    At the moment we have no dependant use statement here.
+#
+use lib '/opt/xrootd/utils';
+use lib '/usr/etc/ooss';
+($ppath) = $0 =~ m:^(\S*)/\S*$:;
+if ($ppath) {eval 'use lib $ppath;';}
+eval 'use ooss_name2name'; die "'use ooss_name2name' failed: $@\n" if ($@); 
+
+# OS-dependent commands
+#
+$CMDecho     = '/bin/echo';
+$CMDls       = '/bin/ls';
+
+$| = 1;                                 # unbuffer STDOUT
+$cfgfn =   ($isMPS ? '/opt/xrootd/etc/xrootd.cf'
+                   : '/usr/etc/ooss/ooss_mps.cf'); # (-c) default configuration file
+$cflg = 0;
+$cftag = 'pstg';			# configuration file tag
+$debug = 0;				# (-x) default debug level
+$errlogfn = "/var/adm/$SSD/logerr";	# default file for error logging
+$globalfh = 'FILE0000';
+$logfn = '-';                           # (-l) default log file
+$mailcmd = (-x '/usr/ucb/mail' ? '/usr/ucb/mail'
+                               : '/bin/mail');		# default mail command
+$prtyfn = "/var/adm/$SSD/PreStageQ/stageRequests";	
+
+$ERR   = 0;				# set debug levels
+$CTL   = 1;
+$FILE  = 2;
+$PROC  = 3;
+$DEBUG = 4;
+$LOCK_SH = 1;				# values for flock
+$LOCK_EX = 2;
+$LOCK_NB = 4;
+$LOCK_UN = 8;
+$LOCKNOERR = 0;				# ignore errors in getlock
+$LOCKERR   = 1;				# report errors in getlock
+
+$pstgpid = 0;
+
+# Process parameters
+if (! &Getopts('c:f:l:wx:p:')) {
+   logerr("Missing or invalid argument"); 
+   exit 1;
+   }
+if (defined($opt_l)) {			# log file name
+   $logfn = "$opt_l";
+   }
+if (defined($opt_c)) {			# configuration file path
+    $cfgfn = "$opt_c";
+   }
+readConfig($cfgfn);			# read the config
+
+if (defined($opt_f)) {			# filename for priority stage-ins
+   $prtyfn = "$opt_f";
+   }
+if (defined($opt_x)) {			# debug level
+   $debug = "$opt_x";
+   }
+if (defined($opt_p)) {
+   $discardpfx = "$opt_p";
+   }
+
+$parm = shift;
+if ("$parm" eq '') {
+    # This is the pipe-oriented way of functioning
+    # Time to start the PreStage process, looking
+    # at the same config file
+    # We assume that mps_PreStage lies in the same dir as mps_prep
+    my (@thispath) = split(/\//, $0);
+    pop @thispath;
+    push @thispath, "mps_PreStage";
+    my ($mypstpath) = join("/", @thispath);
+    
+    @pstgargs = ($mypstpath, "-c", $cfgfn);
+    fork_prestage(@pstgargs);
+
+    do_input();
+
+    kill 15, $pstgpid;
+}
+elsif ("$parm" eq 'add') {
+    $cflg = 1;
+    add_queue("@ARGV");
+}
+elsif ("$parm" eq 'del') {
+    $cflg = 1;
+    do_del("@ARGV");
+}
+elsif ("$parm" eq 'list') {
+    do_list(0);
+}
+elsif ("$parm" eq 'll') {
+    do_list(1);
+}
+else {
+    logerr("$parm is an invalid function");
+    exit 1;
+}
+
+#===================================================================
+# Subroutine to fork an mps_PreStage process
+#===================================================================
+sub fork_prestage {
+my(@cmdline) = @_;
+
+# Fork a process to stage-in file.
+if ($pstgpid = fork) {		# parent
+   return;
+   }
+elsif (defined $pstgpid) {		# child
+    exec(@cmdline);
+   exit 0;
+   }
+else {
+   logit("fork_stagein: fork failed for $action: $!\n") if $debug >= $ERR;
+   }
+}
+#===================================================================
+sub add_queue {
+    my($data) = @_;
+    my($LOCK_fh,$fh,$fn);
+    my($reqid,$usrid,$prty,$func,@files) = split(' ',$data);
+    if ("$func" eq '') {
+	logerr("Missing parameters for add function");
+	return 1;
+    }
+    if ($prty !~ /^\d$/) {
+	logerr("Invalid priority \"$prty\" for add function");
+	return 1;
+    }
+    my($file) = "$prtyfn.$prty";
+    $func = 'wq' if ("$func" eq 'qw'); # temporary hack for xrootd
+    # Get lock for this request queue
+    $LOCK_fh  = getlock(">>$file.lock", $LOCK_EX, $LOCKERR);
+    return if !$LOCK_fh;
+
+    $fh  = getlock(">>$file", $LOCK_EX, $LOCKNOERR);
+    if (!$fh) {
+        unlock($LOCK_fh, "$file.lock");
+	logerr("Unable to access $file");
+	return 1;
+    }
+    my($exists) = (-s "$file") + (-s "$file.old");
+    foreach $fn (@files) {
+	if ($fn =~ /^\+/) {   # if fn starts with a '+', treat as input file
+	    if (! open(FILE,"$fn")) {
+		logerr("Unable to read file $fn");
+		next;
+	    }
+	    @temp = <FILE>;
+	    close(FILE);
+	    foreach $fn (@temp) {
+		$tmpid = ($usrid =~ m|^file://|) ? "$usrid"."?lfn=$fn" : $usrid;
+		$fn =~ s/^$discardpfx//;
+		$fn = none2mss($fn);
+		print $fh "$reqid $tmpid $func $fn\n";
+	    }
+	}
+	else {
+	    $tmpid = ($usrid =~ m|^file://|) ? "$usrid"."?lfn=$fn" : $usrid;
+		$fn =~ s/^$discardpfx//;
+		$fn = none2mss($fn);
+		print $fh "$reqid $tmpid $func $fn\n";
+	}
+    }
+    unlock($fh, "$file");
+    unlock($LOCK_fh, "$file.lock");
+    wakeup("/tmp/$SSD" . "_prestage.pid") if defined($opt_w) && !$exists;
+    return 0;
+}
+#===================================================================
+sub do_del {
+    my($reqid) = @_;
+    my($LOCK_fh,$prty,@prtys);
+
+    if ("$reqid" eq '') {
+	logerr("Required requestid parameter is missing");
+    }
+
+    @prtys = get_prtys();
+    foreach $prty (@prtys) {
+	$LOCK_fh  = getlock(">>$prtyfn.$prty.lock", $LOCK_EX, $LOCKERR);
+	return if !$LOCK_fh;
+	do_del_req("$prtyfn.$prty",$reqid);
+	do_del_req("$prtyfn.$prty.old",$reqid);
+	unlock($LOCK_fh, "$prtyfn.$prty.lock");
+    }
+}
+#===================================================================
+sub do_del_req {
+    my($file,$reqid) = @_;
+    my($fh, @data);
+
+    if (-f "$file") {
+	$fh  = getlock("+<$file", $LOCK_EX, $LOCKNOERR);
+	if ($fh) {
+	    @data = <$fh>;
+	    $found = 0;
+	    for ($i=0; $i <= $#data; $i++) {
+		my($oldid,$x) = split(' ',$data[$i],2);
+		if ("$reqid" eq "$oldid") {
+		    splice(@data, $i, 1);
+		    $found++;
+		    $i--;
+		}
+	    }
+	    if ($found) {
+		open(TEMP, ">$file.del");
+		print(TEMP @data);
+		close(TEMP);
+		rename("$file.del", $file);
+	    }
+	    unlock($fh, "$file");
+	}
+    }
+}
+#===================================================================
+sub do_input {
+    my($data,$func);
+    while ($data = <STDIN>) {
+	chomp($data);
+	($func,$data) = split(' ',$data,2);
+	if ("$func" eq '+') {
+	    add_queue($data);
+	}
+	elsif ("$func" eq '-') {
+	    do_del($data);
+	}
+	elsif ("$func" eq '?') {
+	    do_list(0);
+	    print("\n");
+	}
+	elsif ("$func" eq 'll') {
+	    do_list(1);
+	}
+	elsif ("$func" eq '#') {
+	    do_list(2);
+	}
+	else {
+	    logerr("Ignoring input $func $data");
+	}
+    }
+}
+
+
+#===================================================================
+sub do_list {
+    my($lflg) = @_;
+    my($LOCK_fh,$prty,@prtys);
+
+    @prtys = get_prtys();
+    $numfiles = 0;
+    foreach $prty (@prtys) {
+	$LOCK_fh  = getlock("$prtyfn.$prty.lock", $LOCK_SH, $LOCKERR);
+	return if !$LOCK_fh;
+	do_list_fn("$prtyfn.$prty",$lflg);
+	do_list_fn("$prtyfn.$prty.old",$lflg);
+	unlock($LOCK_fh, "$prtyfn.$prty.lock");
+    }
+    print("$numfiles\n") if $lflg == 2;
+}
+#===================================================================
+sub do_list_fn {
+    my($file,$lflg) = @_;
+    my($fh);
+    if (-f "$file") {
+	$fh  = getlock("$file", $LOCK_SH, $LOCKNOERR);
+	if ($fh) {
+	    @data = <$fh>;
+	    foreach $data (@data) {
+		if ($lflg == 1) {
+		    print("$data");
+		}
+		else {  # only list or count filenames
+		    my($x,$x,$func,$fn,$x) = split(' ', $data, 6);
+		    next if "$func" eq '*';
+		    if ($lflg == 2) {
+			$numfiles++;
+		    }
+		    else {
+			$fn = mss2none($fn);
+			print("$fn\n") if $fn;
+		    }
+		}
+	    }
+	    unlock($fh, "$file");
+	}
+    }
+}
+#===================================================================
+sub Flock {
+my($fh, $flags) = @_;
+my($lk_type, $lk_mode, $lk_parms);
+
+# Determine lock mode.
+if ($flags & $LOCK_NB) {	# non-blocking request
+   $lk_mode = F_SETLK;
+   }
+else {
+   $lk_mode = F_SETLKW;		# wait for lock
+   }
+# Determine lock type.
+if ($flags & $LOCK_UN) {	# unlock request
+   $lk_type = F_UNLCK;
+   }
+elsif ($flags & $LOCK_SH) {	# shared lock
+   $lk_type = F_RDLCK;
+   }
+else {
+   $lk_type = F_WRLCK;		# exclusive lock
+   }
+# Construct the parameter list and perform lock function.
+$lk_parms = pack('sslllll', $lk_type, 0, 0, 0, 0, 0, 0);
+return fcntl($fh, $lk_mode, $lk_parms);
+}
+#===================================================================
+sub get_prtys {
+    my($data,$prty,@prtys);
+    my(@data) = `$CMDls -1r $prtyfn.?.lock 2>&1`;
+    return if $?;
+    foreach $data (@data) {
+        ($prty) = $data =~ /$prtyfn\.(\d)\.lock/;
+	push(@prtys,$prty);
+    }
+    return @prtys;
+}
+#===================================================================
+sub getlock {
+my($file, $flag, $errflg) = @_;
+my($fh) = $globalfh++;
+if (!open($fh, "$file")) {
+   logerr("getlock: open failed for $file, $!",'gl') if $errflg;
+   return '';
+   }
+if (!Flock($fh, $flag)) {
+   logerr("getlock: flock failed for $file, $!",'gl') if $errflg && $! != 11;
+   close($fh);
+   return '';
+   }
+logit("getlock: locking file $file, flags $flag") if $debug >= $DEBUG;
+return $fh;      
+}
+
+#===================================================================
+sub logerr {
+local($text,$etype) = @_;
+local(@t) = localtime(time);
+$etype = 'oth' if !defined($etype);
+
+# Put error message in error log file which will be mailed periodically
+# to the administrator in the main processing loop to avoid mail flooding.
+$ERR_fh  = getlock(">>$errlogfn", $LOCK_EX, $LOCKNOERR);
+if ($ERR_fh) {
+   printf($ERR_fh "%02d:%02d:%02d [%s-%s-%d] %s\n", $t[2], $t[1], $t[0], $cftag, $etype, $$, $text);
+   unlock($ERR_fh, "$errlogfn");
+   }
+else {			# Couldn't open error log
+   logit("logerr: Could not get lock for $errlogfn");
+   `$CMDecho "\n$text" | $mailcmd -s "PreStage error on $host" $adminuser`;
+   }
+logit("$text") if $cflg || ($debug >= $DEBUG);
+}
+#===================================================================
+sub logit {
+local($text) = @_;
+local(@t) = localtime(time);
+open(LOG, ">>$logfn");
+printf(LOG "%02d:%02d:%02d [%6d] %s\n", $t[2], $t[1], $t[0], $$, $text);
+close(LOG);
+}
+#===================================================================
+
+sub readConfig {
+local($cfgFN) = @_;
+return unless(open(CONFIG, $cfgFN)); 
+$mtime_cfgfn = (stat("$cfgFN"))[9];
+logit("readConfig: processing file $cfgFN") if $debug >=$DEBUG;    
+while( <CONFIG> ) {
+   s/#.*$//;       #remove comments
+   if (/=/) {                           # var = val
+      ($var,$val) = /(\S*?)\s*=\s*(.*)/;
+      }
+   else {                               # var val (no equal sign)
+      ($var,$val) = /(\S*)\s*(.*)/;
+      }
+   $var =~ tr/ \t\n//d;			#remove whitespaces
+   $val =~ s/^\s*//;			#remove leading whitespaces
+   $val =~ s/\s*$//;			#remove trailing whitespaces
+   if ($var =~ /^(\S*)\.(\S*)\.(\S*)$/) {
+      ($sys,$ssys,$var) = ($1,$2,$3);
+      next if ("$ssys" ne "$cftag");	# skip if not for our subsys
+      }
+   elsif ( $var =~ /^(\S*)\.(\S*)$/ ) {
+      ($sys,$var) = ($1,$2);
+      }
+   else {
+      next;				# skip comments, errors
+      }
+   next if ("$sys" ne "$SSD");		# skip if not for ooss
+   eval '$' . "$var = " .'"' . "$val" . '"' ;
+   logit("readConfig: $var = $val") if $debug >=$DEBUG;
+   }
+close(CONFIG);
+}
+
+sub reReadConfig {
+readConfig($cfgfn);
+}
+#===================================================================
+sub unlock {
+my($fh, $file) = @_;
+
+if (!Flock($fh, $LOCK_UN)) {
+   logerr("unlock: flock failed for $file, $!",'ul');
+   }
+close($fh);
+logit("unlock: unlocking file $file") if $debug >= $DEBUG;
+}
+#=============================================================================
+sub wakeup {
+    my($pidfn) = @_;
+    if (-s "$pidfn") {
+	open(PID, "$pidfn");
+	my($pid) = <PID>;
+	close(PID);
+	chop($pid);
+	`/bin/kill -USR1 $pid`;
+    }
+}

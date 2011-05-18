@@ -1,0 +1,108 @@
+<hr/>
+<a name="io"></a>
+<h3>I/O</h3>
+
+<ul>
+<li>Unset the kIsReferenced bit before cloning an object in order to avoid the (incorrect/unwanted) registration of the clone.
+</li>
+<li>Repaired writing Foreign class in XML files
+</li>
+<li>Extend TDirectoryFile so it can now be derived from.
+</li>
+<li>In MakeProject
+    <ul><li>properly test whether a StreamerElement describe a base class (stl container were not handled correctly).</li>
+    <li>Remove requirement to have '.' in the PATH to execute the build.</li></ul>
+</li>
+<li>
+Add a new optional parameter to TDirectory::Append: <i><b>replace</b></i>.<br />
+If replace is true (the default is false), the Append will
+first remove from the directory any existing object and
+print the message:
+<pre>
+   Replacing existing OldClass: thename (Potential memory leak).
+</pre>
+</li>
+<li>Add a new option parameter to TDirectory::CloneObject: 'autoadd'
+If autoadd is true (the default), CloneObject will call the
+object 'DirectoryAutoAdd' function (if any)
+</li>
+<li>In TDirectory::CloneObject add support for multiple inheritance
+from TObject where TObject is not the left most base class.</li>
+</ul>
+<h4>Schema Evolution</h4>
+<ul>
+<li>Fix schema evolution problem in TTree::Draw by extending support in
+TStreamerInfo::ReadValueAux to 'converted' numerical types, (
+<a href="http://root.cern.ch/phpBB2/viewtopic.php?t=6225">see issue in ROOT forum</a>)
+<br />
+<br />
+</li>
+<li>When reading more than one TStreamerInfo for the same versioned
+class, we now use the highest possible class version as the current
+version of the class.  Practically, we update the class version
+when reading new (higher versioned) StreamerInfo until the Class
+is actually used (i.e. TClass::GetClassVersion is call directly
+or indirectly).
+<br />
+In particular, if a file has several StreamerInfos for the same
+versioned class, we will use the highest version number as the
+'current' class version (as opposed to the lowest until now).
+<br />
+<br />
+</li>
+<li>
+For backward compatibility TStreamerInfo::BuildCheck compares the checksum of
+the on-file StreamerInfo not only to the current value of the class checksum
+but also to the checksum calculated using the older algorithms.
+<br />
+This patch extends this test to also be done when comparing 2 on-file StreamerInfos.
+<br />
+This removes spurrious warning message when loading 2 older files which
+were written with 2 different version of the TClass CheckSum algorithm
+(and the in-memory class's version is greater than both TStreamerInfos'
+class version).
+<br />
+<br />
+</li>
+<li>Extend support of TStreamerInfo::ReadValueAux to 'converted' numerical types, hence solving TTree::Draw's schema evolution problem (see http://root.cern.ch/phpBB2/viewtopic.php?t=6225)
+</li>
+</ul>
+
+<p />
+<h4>DirectoryAutoAdd</h4>
+Use the new DirectoryAutoAdd facility for the classes:
+<pre>        TTree, TH1, TEventList, TEntryList, TGraph2D</pre>
+(and hence their derived classes).
+<br />
+The instances of those classes are now added automatically 
+to the current directory only when Constructe'd with arguments or Clone'd
+and to the directory they are read from when their are stored
+directly in a TKey. <i>[Note: the default constructor never adds
+the object to the current directory]</i>
+<br />
+The directory auto add can still be disabled for instance
+of TH1 and TGraph2D by setting <b>TH1::AddDirectory</b>.
+<br />
+Additionally one can disable the directory auto add for
+a specific class by doing:
+<pre>
+    TClass::GetClass("myclass")->SetDirectoryAutoAdd(0)
+</pre>
+However you might want to also be able to restore the
+behavior in which case you ought to do:
+<pre>
+    TClass *cl = TClass::GetClass("myclass");
+    ROOT::DirAutoAdd_t func = cl->GetDirectoryAutoAdd();
+    cl->SetDirectoryAutoAdd(0);
+</pre>
+TROOT::ReadingObject is marked as deprecated.. It is still
+set (as it was) but is no longer used by the above mention
+classes.
+<br />
+<b>NOTE</b>:  One side effect of this change, is that instance
+of TTree, TH1, TEventList, TEntryList, TGraph2D that are
+retrieved from a TMessage (i.e. from a socket) no longer
+auto register themselves to the current ROOT directory.
+<br />
+<br/>
+<hr/>

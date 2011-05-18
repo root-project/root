@@ -1,0 +1,204 @@
+#!/bin/sh
+#
+#  $Id$
+#
+# (C) 2003 by the Board of Trustees of the Leland Stanford, Jr., University
+#                          All Rights Reserved
+# Produced by Andrew Hanushevsky for Stanford University under contract
+#            DE-AC03-76-SFO0515 with the Deprtment of Energy
+
+# Syntax: StartXRD [-c cfile] [-D] [-v] [oth]
+
+# Where:  -c  specifies the configuration file to be used.
+#         -D  turns on script debugging.
+#         -f  does not use an arbitrary port even when it is possible to do so.
+#         -s  is the service name whose port number is to be used by xrootd.
+#         -v  produces verbose output.
+#         oth Any other single letter options to be passed to the executable.
+
+#
+# Set default values
+#
+. $0.cf
+
+VERBOSE=0
+
+# Change TEST to be /bin/echo to see what will be executed
+#
+TEST=
+
+umask 002
+
+##############################################################################
+#                           s u b r o u t i n e s                            #
+##############################################################################
+
+Debug () {
+    if test $VERBOSE -eq 1; then
+       echo $1
+    fi
+    }
+  
+MustExist () {
+    Debug "Checking existence of $1 $3 ..."
+    if test ! -${2} $3 ; then
+       Notify "$1 $3 not found."
+    fi
+    }
+
+Writable () {
+    Debug "Checking writability of $1 $2 ..."
+    if test ! -w $2 ; then
+       Notify "$1 $2 is not writable by $MYNAME."
+    fi
+    }
+  
+Wait4File () {
+    Debug "Checking file $2 ..."
+    tcnt=$count
+    until test -${1} $2 -o $tcnt -eq 0; do
+          echo StartXRD: File $2 not found\; waiting $time seconds...
+          sleep $time
+          tcnt=`/usr/bin/expr $tcnt - 1`
+    done
+    if [ $tcnt -le 0 ]; then
+       Notify "File $2 not found."
+    fi
+    }
+
+Notify () {
+    echo StartXRD: $1
+    exit 4
+    }
+
+##############################################################################
+#                          m a i n   p r o g r a m                           #
+##############################################################################
+
+# Pick up options
+#
+XRDOPTIONS=
+XRDPARMS=$*
+XRDPORT=
+XRDLOGSFX=
+
+while test -n "$1"; do
+     if [ "$1" = "-c" ]; then
+        if [ -z "$2" ]; then
+           Notify "Configuration file not specified."
+        fi
+        if [ ! -r "$2" ]; then
+           Notify "Configuration file '$2' not found."
+        fi
+        XRDCONFIGFN=$2
+        shift
+   elif [ "$1" = "-D" ]; then
+        set -x
+   elif [ "$1" = "-t" ]; then
+        TEST=echo
+   elif [ "$1" = "-v" ]; then
+        VERBOSE=1
+   else
+        XRDOPTIONS="$XRDOPTIONS $1"
+     fi
+   shift
+   done
+
+# Establish location of the XRD executable and libraries
+#
+  XRDBASE=`(cd $XRDBASE; pwd)`
+  Debug "XRDBASE has been set to '$XRDBASE'"
+  if [ $? != 0 ]; then
+     exit 4
+  fi
+
+  XRDPROG=$XRDBASE/bin/$XRDARCH/xrootd
+  XRDLIBBASE=$XRDBASE/lib/$XRDARCH
+  PROGRAM=$XRDCFG/$PROGRAM
+  if [ "$XRDCONFIGFN" = "" ]; then
+     XRDCONFIGFN=$XRDCFG/$XRDCONFIG
+  fi
+
+  if [ -z "$LD_LIBRARY_PATH" ]; then
+     LD_LIBRARY_PATH=$XRDLIBBASE
+     else
+     LD_LIBRARY_PATH=$XRDLIBBASE:$LD_LIBRARY_PATH
+  fi
+  export LD_LIBRARY_PATH
+
+# Verify that we are not executing this script as root (if we are, switch)
+#
+if [ $MYNAME = root ]; then
+   if [ $XRDUSER != root ]; then
+      $TEST export LD_LIBRARY_PATH
+      $TEST exec su $XRDUSER -c "$PROGRAM $XRDPARMS"
+   fi
+   elif [ $MYNAME != $XRDUSER ]; then
+        Notify "Attempt to start $XRDUSER XRD as user $MYNAME."
+fi
+
+# Establish the port number to be used. Treat this as an explicit override of the main config file.
+#
+  if [ "x$XRDPORT" != "x" ]; then
+     XRDPORT="-p $XRDPORT"
+  fi
+
+# Set the log file name
+#
+XRDLOGFILE=$XRDLOGDIR/$XRDLOGFN
+
+# Just in case we don't have the basic directories, try to create them
+#
+$TEST mkdir -m 0744 -p $XRDLOGDIR $XRDHOMEDIR 2> /dev/null
+
+# Verify that all required directories are present
+#
+for FN in $XRDLIBBASE $XRDLOGDIR $XRDHOMEDIR
+    do
+    MustExist Directory d $FN
+done
+
+# Verify that all owned directories are writable
+#
+for FN in $XRDLOGDIR $XRDHOMEDIR
+    do
+    Writable Directory $FN
+done
+  
+# Verify that all required readable files are present
+#
+for FN in $XRDCONFIGFN
+    do
+    Wait4File r $FN
+done
+  
+# Verify that all required executable files are present
+#
+for FN in $XRDPROG
+    do
+    Wait4File x $FN
+done
+
+# Export the variables required in the config file
+#
+$TEST export XRDCFG
+$TEST export XRDBASE
+$TEST export XRDLIBBASE
+
+# Set appropriate limits
+#
+$TEST ulimit -n $MAXFD
+$TEST ulimit -c unlimited
+
+# Now start the daemon
+#
+echo Starting xrootd ...
+$TEST cd $XRDHOMEDIR
+$TEST $XRDPROG $XRDOPTIONS $XRDPORT -l $XRDLOGFILE -c $XRDCONFIGFN &
+stat=$?
+
+# Check if we were successful
+#
+if test $stat -gt 0 ; then
+   Notify "$XRDPROG returned a status of ${stat}."
+   fi

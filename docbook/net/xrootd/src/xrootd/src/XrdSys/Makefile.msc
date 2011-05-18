@@ -1,0 +1,128 @@
+# Makefile.msc for XrdClient on Win32/NMAKE
+# Author: Bertrand Bellenot, 03/03/2006
+!IF "$(CFG)" == ""
+CFG = Win32 Debug
+!MESSAGE No configuration specified. Defaulting to Win32 Debug.
+!ENDIF 
+
+!IF "$(CFG)" != "Win32 Release" && "$(CFG)" != "Win32 Debug"
+!MESSAGE Invalid configuration "$(CFG)" specified.
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "Makefile.msc" CFG="Win32 Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "Win32 Release" (based on "Win32 (x86) Static Library")
+!MESSAGE "Win32 Debug" (based on "Win32 (x86) Static Library")
+!MESSAGE 
+!ERROR An invalid configuration is specified.
+!ENDIF 
+
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE 
+NULL=nul
+!ENDIF 
+
+!IF  "$(CFG)" == "Win32 Release"
+OUTDIR = ./Release
+!ELSEIF  "$(CFG)" == "Win32 Debug"
+OUTDIR = ./Debug
+!ENDIF 
+
+LIBDIR = ../../lib
+
+OutPutOpt = -out:
+
+####### Target
+
+TARGET   = libXrdSys.lib
+
+# Compiling
+CXX      = cl
+
+# Linking applications
+LD       = link.exe
+LDOPT    = -lib /nologo /out:$(LIBDIR)/$(TARGET)
+
+#############################################################################
+
+####### Compiler, tools and options
+
+#CXXFLAGS = -Z7 -G5 -GR -GX -MD -DWIN32 -DWINDOWS -D_WINDOWS -nologo -DVISUAL_CPLUSPLUS -D_X86_=1 -Fo"$(OUTDIR)/"
+!IF  "$(CFG)" == "Win32 Release"
+CXXFLAGS = /nologo /MD /W3 /EHsc /O2 /I "./" /D "_WIN32" /D "WIN32" /D "_LIB" /D "NDEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"$(OUTDIR)/" /FD /c
+LDFLAGS  = 
+!ELSEIF  "$(CFG)" == "Win32 Debug"
+CXXFLAGS = /nologo /MDd /W3 /EHsc /Z7 /Od /I "./" /D "_WIN32" /D "WIN32" /D "_LIB" /D "_DEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"$(OUTDIR)/" /FD /RTC1 /c
+LDFLAGS  =
+!ENDIF 
+
+# Check if nmake version is 8.xx or 9.xx
+!if ([nmake /? 2>&1 | findstr /c:"Version 8\." > nul ] == 0) || \
+    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
+MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
+MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
+EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
+!else
+MT_EXE        = 
+MT_DLL        = 
+EXTRAFLAGS    = /G6 /wd4244 /wd4996 /wd4273 /wd4355 /wd4800
+!endif
+
+######################
+INCPATH  =  -I.. -I../../pthreads-win32/include
+LFLAGS   =
+
+####### Files
+
+HEADERS =   XrdSysDir.hh XrdSysPriv.hh XrdSysError.hh \
+            XrdSysLogger.hh XrdSysPlatform.hh XrdWin32.h \
+            XrdSysPlugin.hh \
+            XrdSysPthread.hh XrdSysTimer.hh XrdSysSemWait.hh \
+            XrdSysXSLock.hh
+
+SOURCES =   XrdSysDir.cc XrdSysPriv.cc XrdWin32.cc \
+            XrdSysError.cc XrdSysLogger.cc \
+            XrdSysPlatform.cc XrdSysPlugin.cc   \
+            XrdSysPthread.cc XrdSysTimer.cc       \
+            XrdSysXSLock.cc
+
+OBJECTS =   $(OUTDIR)/XrdSysDir.obj $(OUTDIR)/XrdSysPriv.obj \
+            $(OUTDIR)/XrdWin32.obj \
+            $(OUTDIR)/XrdSysError.obj $(OUTDIR)/XrdSysLogger.obj \
+            $(OUTDIR)/XrdSysPlatform.obj $(OUTDIR)/XrdSysPlugin.obj   \
+            $(OUTDIR)/XrdSysPthread.obj $(OUTDIR)/XrdSysTimer.obj     \
+            $(OUTDIR)/XrdSysXSLock.obj
+
+####### Build rules
+
+all:  lib
+
+lib:  $(TARGET)
+
+"$(OUTDIR)" :
+    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
+
+$(TARGET) : "$(OUTDIR)" $(OBJECTS)
+    $(LD) $(LDOPT) @<<
+  $(LDFLAGS) $(OBJECTS)
+<<
+
+clean:
+   -rm -f $(OBJECTS)
+   -rm -f $(TARGET)
+
+####### Compile
+
+####### Implicit rules
+
+.SUFFIXES: .cc .obj .lib
+
+.cc{$(OUTDIR)}.obj:
+   $(CXX) -c $(CXXFLAGS) $(EXTRAFLAGS) $(INCPATH) -c $<
+

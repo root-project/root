@@ -1,0 +1,10 @@
+This directory contains the Python - ROOT interface classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/19PythonRuby.pdf">The Chapter about Python and Ruby interfaces  in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoPyROOT.html">How to use ROOT with Python
+    </a></li>
+</ul>
+END_HTML

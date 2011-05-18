@@ -1,0 +1,27 @@
+<br> 
+<hr> 
+<a name="bindings"></a> 
+<h3>MATLAB</h3>
+A MATLAB/ROOT interface has been developped by Johannes Kissel. 
+It is a data interface for reading and writing ROOT files from within MATLAB 
+just as you do with MATLAB files. For more information, see <a href="http://root.cern.ch/phpBB2/viewtopic.php?t=7376"> this announcement at the <b>ROOT Forum</b></a>.
+
+<h3>PyROOT</h3>
+
+<p>
+Support for python 2.6 has been added. Older versions will compile fine, but will
+have problems when using the buffer interface for C arrays.
+</p>
+
+<p>
+For user convenience, code was added to load a custom rootlogon.py/.C, if available.
+This code is loaded on first use of the ROOT module, and the python rootlogon.py is
+loaded as a module.
+</p>
+
+<p>
+The language was improved by added a _creates property to all MethodProxy methods.
+By setting this value to True, objects returned by such methods will be owned (and
+reference counted) by the python interpreter.
+By default, the Clone() and DrawClone() methods will have _create equal to True.
+</p>

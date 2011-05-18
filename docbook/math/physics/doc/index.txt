@@ -1,0 +1,9 @@
+This directory contains all the Physics Vectors  classes.
+BEGIN_HTML
+ Several documents describing these classes are listed below:
+<ul>
+<li>The main histogram class is documented in class TGeoManager.</li>
+<li><a href="ftp://root.cern.ch/root/doc/17PhysicsVectors.pdf">The Chapter about the Physics Vectors classes in the Users Guide
+    </a></li>
+</ul>
+END_HTML

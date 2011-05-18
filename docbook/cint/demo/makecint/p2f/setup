@@ -1,0 +1,13 @@
+
+#
+#
+#
+
+makecint -mk Makefile -o p2f `cint-config --cflags` -H p2f.h -C++ p2f.C
+make -f Makefile
+
+cint -I$CINTSYSDIR p2f.C test.C
+p2f test.C
+
+make clean
+rm G__*

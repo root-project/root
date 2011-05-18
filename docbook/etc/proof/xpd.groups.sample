@@ -1,0 +1,30 @@
+###
+### Example of file defining groups in PROOF.
+### The availability and location of this file is communicated to XProofd
+### by the directive 'xpd.groupfile <group_file_path>'.
+###
+
+###
+### Definition of groups.
+### A user can be part of many groups; the default group is defined by the
+### first occurence, so the order is important.
+# group tpc ernst,pippo,mst
+# group ecal abd,karl,ernst
+
+###
+### Define group properties.
+### A property is defined by a name, a nominal value and an effective value
+### (values must be integers); the syntax is 
+###     property  <group> <name> <nominal_value> [<effective_value>]
+### The defaul effective value is the nominal value.
+### It is up to the application to give a meaning to the values.
+### Example: properties of group 'tpc'
+# property tpc priority 200
+# property tpc diskquota 100
+
+### Example: properties of group 'ecal'
+# property ecal priority 100
+# property ecal diskquota 30
+
+### Include a file with other directives (5.27/04 and higher only)
+# include /path/sub-group.file

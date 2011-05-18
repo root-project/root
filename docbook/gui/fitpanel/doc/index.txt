@@ -1,0 +1,9 @@
+This directory contains the classes forming the user interface of the Fit Panel in ROOT.
+BEGIN_HTML
+ See the chapter about the Fit Panel on page 68 at:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/5FittingHistograms.pdf">The Chapter about fitting histograms
+    </a></li>
+<li>Detailed information about the main features is included in TFitEditor class.</li>
+</ul>
+END_HTML

@@ -1,0 +1,103 @@
+#!/bin/sh
+
+
+#--- Help function -------------
+printhelp()
+{
+   echo "   "
+   echo "  pq2-rm"
+   echo "   "
+   echo "  Purpose: remove one or more datasets"
+   echo "   "
+   echo "  Syntax:"
+   echo "           pq2-rm [-h|--help] [-v] [-k] [(-d|--dataset=)] datasetname"
+   echo "                   [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
+   echo "   "
+   echo "   -h | --help   Print this help"
+   echo "   -v            Verbose mode"
+   echo "   -k            Keep temporary files"
+   echo "   datasetname:  Name of the dataset to be removed; it accepts the '*' wild card: in"
+   echo "                 such a case the full path - as shown by pq2-ls - should be given in"
+   echo "                 quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
+   echo "                 for data servers, it must include the directory."
+   echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
+   echo "   tmpdir        Directory for temporary files [/tmp/<user>]."
+   echo "   "
+}
+
+PQ2=`which pq2 2> /dev/null`
+if test "x$PQ2" = "x" ; then
+   echo "Unknown command 'pq2'"
+   exit 1
+fi
+
+DBGOPT=""
+KEEPOPT=""
+SRVURL=""
+DSNAME=""
+TDIR=$TMPDIR
+#
+# Parse long options first
+other_args=
+short_opts=
+for i in $@ ; do
+   opt=""
+   case $i in
+      --*) opt=`echo "$i" | sed 's/--//'` ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
+   esac
+   if test ! "x$opt" = "x" ; then
+      case "$opt" in
+         *=*) oarg=`echo "$opt" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+         *) oarg= ;;
+      esac ;
+      case $opt in
+         dataset=*) DSNAME="-d $oarg" ;;
+         help)      printhelp ; exit ;;
+         keep)      KEEPOPT="-k" ;;
+         tmp=*)     TDIR="$oarg" ;;
+         url=*)     SRVURL="-u $oarg" ;;
+      esac
+   fi
+done
+
+if test ! "x$short_opts" = "x" ; then
+   while getopts d:t:u:hkv i $short_opts ; do
+      case $i in
+      d) DSNAME="-d $OPTARG" ;;
+      h) printhelp ; exit ;;
+      v) DBGOPT="-v" ;;
+      k) KEEPOPT="-k" ;;
+      t) TDIR="$OPTARG" ;;
+      u) SRVURL="-u $OPTARG" ;;
+      \?) printhelp; exit 1 ;;
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
+   done
+
+   # Fill empty fields with any non-prefixed argument
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="-d $other_args"
+   fi
+fi
+
+
+if test "x$DSNAME" = "x"; then
+   echo "Some arguments are missing (d:$DSNAME)!"
+   printhelp
+   exit
+fi
+
+# Run
+export TMPDIR="$TDIR"; $PQ2 rm $DBGOPT $KEEPOPT $DSNAME $SRVURL
+

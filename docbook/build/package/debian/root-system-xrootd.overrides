@@ -1,0 +1,4 @@
+root-system-xrootd: binary-without-manpage usr/bin/xrdgsiproxy.bin
+root-system-xrootd: binary-without-manpage usr/bin/xrdpwdadmin.bin
+root-system-xrootd: binary-without-manpage usr/bin/xrd.bin
+root-system-xrootd: binary-without-manpage usr/bin/xrdcp.bin

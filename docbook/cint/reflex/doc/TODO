@@ -1,0 +1,4 @@
+Windows MSVC builds should run tests with 0 errors in static or shared library modes
+GCCXML and PythonInterp are currently optional, they should be enforced
+Find the python, genreflex.py, and gccxml final locations at install/runtime time so package users don't get stuck with hard-coded values that don't exist
+Create a FindReflex module for use by others 

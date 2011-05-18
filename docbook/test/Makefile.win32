@@ -1,0 +1,606 @@
+# Makefile.win32 for root tests on Win32/NMAKE
+
+!if "$(CFG)" == ""
+!if ([findstr /c:"--build=debug" $(ROOTSYS)\bin\root-config > nul ] == 0)
+CFG = Win32 Debug
+!if ([findstr /c:"--disable-winrtdebug" $(ROOTSYS)\bin\root-config > nul ] == 0)
+RUNTIME = Release
+!else
+RUNTIME = Debug
+!endif
+!message No configuration specified: Defaulting to Win32 Debug 
+!message With $(RUNTIME) Runtime DLL (Taken from ROOT config).
+!message .
+!else
+CFG = Win32 Release
+RUNTIME = Release
+!message No configuration specified: Defaulting to Win32 Release
+!message With $(RUNTIME) Runtime DLL (Taken from ROOT config).
+!message .
+!endif
+!else
+!if "$(CFG)" == "Win32 Release"
+RUNTIME = Release
+!elseif "$(CFG)" == "Win32 Debug"
+RUNTIME = Debug
+!endif 
+!endif 
+
+!if "$(CFG)" != "Win32 Release" && "$(CFG)" != "Win32 Debug"
+!message Invalid configuration "$(CFG)" specified.
+!message You can specify a configuration when running NMAKE
+!message by defining the macro CFG on the command line. For example:
+!message 
+!message NMAKE /f "Makefile.msc" CFG="Win32 Debug"
+!message 
+!message Possible choices for configuration are:
+!message 
+!message "Win32 Release" (based on "Win32 (x86) Library")
+!message "Win32 Debug" (based on "Win32 (x86) Library")
+!message 
+!error An invalid configuration is specified.
+!endif 
+
+ObjSuf        = obj
+SrcSuf        = cxx
+ExeSuf        = .exe
+DllSuf        = dll
+OutPutOpt     = -out:
+
+# Win32 system with Microsoft Visual C/C++
+!include <win32.mak>
+CC            = $(cc)
+CXX           = $(cc)
+CXXFLAGS      = -nologo -EHsc- -GR -DWIN32 -W3 -D_WIN32 -D_WINDOWS \
+                -I$(ROOTSYS)/include -wd4244 \
+                -FIw32pragma.h
+LD            = $(link)
+
+!if "$(CFG)" == "Win32 Release"
+CXXOPT        = -O2 -MD
+LDOPT         = -opt:ref
+!elseif "$(CFG)" == "Win32 Debug"
+!if "$(RUNTIME)" == "Debug"
+CXXOPT        = -Z7 -MDd
+!else
+CXXOPT        = -Z7 -MD
+!endif
+LDOPT         = -debug
+!endif
+
+# Check if nmake version is 8.xx or 9.xx
+!if ([nmake /? 2>&1 | findstr /c:"Version 8\." > nul ] == 0) || \
+    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
+MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
+MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
+EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
+!else
+MT_EXE        = 
+MT_DLL        = 
+EXTRAFLAGS    = -G5
+!endif
+
+
+LDFLAGS       = $(LDOPT) $(conlflags) -nologo -include:_G__cpp_setupG__Hist \
+                -include:_G__cpp_setupG__Graf -include:_G__cpp_setupG__G3D \
+                -include:_G__cpp_setupG__GPad -include:_G__cpp_setupG__Tree \
+                -include:_G__cpp_setupG__Rint -include:_G__cpp_setupG__PostScript \
+                -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics
+SOFLAGS       = $(dlllflags:-pdb:none=)
+ROOTLIBS      = $(ROOTSYS)\lib\libCore.lib \
+                $(ROOTSYS)\lib\libCint.lib $(ROOTSYS)\lib\libHist.lib \
+                $(ROOTSYS)\lib\libGraf.lib $(ROOTSYS)\lib\libGraf3d.lib \
+                $(ROOTSYS)\lib\libGpad.lib $(ROOTSYS)\lib\libTree.lib \
+                $(ROOTSYS)\lib\libRint.lib $(ROOTSYS)\lib\libPostscript.lib \
+                $(ROOTSYS)\lib\libMatrix.lib $(ROOTSYS)\lib\libPhysics.lib \
+                $(ROOTSYS)\lib\libNet.lib $(ROOTSYS)\lib\libRIO.lib \
+                $(ROOTSYS)\lib\libMathCore.lib
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(LIBS) $(ROOTSYS)\lib\libGui.lib $(ROOTSYS)\lib\libGraf.lib \
+                $(ROOTSYS)\lib\libGpad.lib
+LIBSALL       = $(ROOTLIBS)
+EVENTLIB      = libEvent.lib
+
+
+#------------------------------------------------------------------------------
+
+EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
+EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
+EVENTSO       = libEvent.$(DllSuf)
+EVENT         = Event$(ExeSuf)
+EVENTLIB      = libEvent.lib
+
+EVENTMTO      = EventMT.$(ObjSuf) EventMTDict.$(ObjSuf)
+EVENTMTS      = EventMT.$(SrcSuf) EventMTDict.$(SrcSuf)
+EVENTMTSO     = libEventMT.$(DllSuf)
+EVENTMTLIB    = libEventMT.lib
+
+MAINEVENTO    = MainEvent.$(ObjSuf)
+MAINEVENTS    = MainEvent.$(SrcSuf)
+
+HWORLDO       = hworld.$(ObjSuf)
+HWORLDS       = hworld.$(SrcSuf)
+HWORLD        = hworld$(ExeSuf)
+
+CTORTUREO     = ctorture.$(ObjSuf)
+CTORTURES     = ctorture.$(SrcSuf)
+CTORTURE      = ctorture$(ExeSuf)
+
+HSIMPLEO      = hsimple.$(ObjSuf)
+HSIMPLES      = hsimple.$(SrcSuf)
+HSIMPLE       = hsimple$(ExeSuf)
+
+MINEXAMO      = minexam.$(ObjSuf)
+MINEXAMS      = minexam.$(SrcSuf)
+MINEXAM       = minexam$(ExeSuf)
+
+TSTRINGO      = tstring.$(ObjSuf)
+TSTRINGS      = tstring.$(SrcSuf)
+TSTRING       = tstring$(ExeSuf)
+
+TCOLLEXO      = tcollex.$(ObjSuf)
+TCOLLEXS      = tcollex.$(SrcSuf)
+TCOLLEX       = tcollex$(ExeSuf)
+
+TCOLLBMO      = tcollbm.$(ObjSuf)
+TCOLLBMS      = tcollbm.$(SrcSuf)
+TCOLLBM       = tcollbm$(ExeSuf)
+
+VVECTORO      = vvector.$(ObjSuf)
+VVECTORS      = vvector.$(SrcSuf)
+VVECTOR       = vvector$(ExeSuf)
+
+VMATRIXO      = vmatrix.$(ObjSuf)
+VMATRIXS      = vmatrix.$(SrcSuf)
+VMATRIX       = vmatrix$(ExeSuf)
+
+STRESSLO      = stressLinear.$(ObjSuf)
+STRESSLS      = stressLinear.$(SrcSuf)
+STRESSL       = stressLinear$(ExeSuf)
+
+STRESSGO      = stressGraphics.$(ObjSuf)
+STRESSGS      = stressGraphics.$(SrcSuf)
+STRESSG       = stressGraphics$(ExeSuf)
+
+STRESSGUIO    = stressGUI.$(ObjSuf)
+STRESSGUIS    = stressGUI.$(SrcSuf)
+STRESSGUI     = stressGUI$(ExeSuf)
+STRESSGUILIBS = $(ROOTSYS)\lib\libASImage.lib $(ROOTSYS)\lib\libASImageGui.lib \
+                $(ROOTSYS)\lib\libRecorder.lib $(ROOTSYS)\lib\libGuiHtml.lib
+
+!if exist("$(ROOTSYS)\lib\libGenVector.lib")
+STRESSVECO   = stressVector.$(ObjSuf)
+STRESSVECS   = stressVector.$(SrcSuf)
+STRESSVEC    = stressVector$(ExeSuf)
+
+STRESSMATHO   = stressMathCore.$(ObjSuf) 
+STRESSMATHS   = stressMathCore.$(SrcSuf) 
+STRESSMATHLIBS = $(ROOTSYS)\lib\libGenVector.lib
+
+TRACKMATHSRC = TrackMathCoreDict.$(SrcSuf)
+TRACKMATHOBJ = TrackMathCoreDict.$(ObjSuf)
+TRACKMATHLIB = libTrackMathCoreDict.$(DllSuf)
+ 
+STRESSMATH    = stressMathCore$(ExeSuf)
+!endif
+
+!if exist("$(ROOTSYS)\lib\libMathMore.lib")
+STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
+STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
+STRESSMATHMORELIBS = $(ROOTSYS)\lib\libMathMore.lib  
+STRESSMATHMORE    = stressMathMore$(ExeSuf)
+!endif
+
+!if exist("$(ROOTSYS)\lib\libTMVA.lib")
+STRESSTMVAO   = stressTMVA.$(ObjSuf)
+STRESSTMVAS   = stressTMVA.$(SrcSuf)
+STRESSTMVALIBS = $(ROOTSYS)\lib\libTMVA.lib
+STRESSTMVA    = stressTMVA$(ExeSuf)
+!endif
+
+VLAZYO        = vlazy.$(ObjSuf)
+VLAZYS        = vlazy.$(SrcSuf)
+VLAZY         = vlazy$(ExeSuf)
+
+GUITESTO      = guitest.$(ObjSuf)
+GUITESTS      = guitest.$(SrcSuf)
+GUITEST       = guitest$(ExeSuf)
+
+GUIVIEWERO    = guiviewer.$(ObjSuf) guiviewerDict.$(ObjSuf)
+GUIVIEWERS    = guiviewer.$(SrcSuf) guiviewerDict.$(SrcSuf)
+GUIVIEWER     = guiviewer$(ExeSuf)
+
+HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
+HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
+HELLOSO       = Hello.$(DllSuf)
+
+ACLOCKO       = Aclock.$(ObjSuf) AclockDict.$(ObjSuf)
+ACLOCKS       = Aclock.$(SrcSuf) AclockDict.$(SrcSuf)
+ACLOCKSO      = Aclock.$(DllSuf)
+
+TETRISO       = Tetris.$(ObjSuf) TetrisDict.$(ObjSuf)
+TETRISS       = Tetris.$(SrcSuf) TetrisDict.$(SrcSuf)
+TETRISSO      = Tetris.$(DllSuf)
+
+STRESSO       = stress.$(ObjSuf)
+STRESSS       = stress.$(SrcSuf)
+STRESS        = stress$(ExeSuf)
+
+STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
+STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
+STRESSGEOMETRY    = stressGeometry$(ExeSuf)
+
+STRESSSHAPESO   = stressShapes.$(ObjSuf)
+STRESSSHAPESS   = stressShapes.$(SrcSuf)
+STRESSSHAPES    = stressShapes$(ExeSuf)
+
+!if exist("$(ROOTSYS)\lib\libRooFit.lib")
+STRESSROOFITO  = stressRooFit.$(ObjSuf)
+STRESSROOFITS  = stressRooFit.$(SrcSuf)
+STRESSROOFIT   = stressRooFit$(ExeSuf)
+!endif
+
+STRESSFITO    = stressFit.$(ObjSuf)
+STRESSFITS    = stressFit.$(SrcSuf)
+STRESSFIT     = stressFit$(ExeSuf)
+
+!if exist("$(ROOTSYS)\lib\libUnuran.lib")
+!if exist("$(ROOTSYS)\lib\libminuit2.lib")
+STRESSHISTOFITO    = stressHistoFit.$(ObjSuf)
+STRESSHISTOFITS    = stressHistoFit.$(SrcSuf)
+STRESSHISTOFIT     = stressHistoFit$(ExeSuf)
+!endif
+!endif
+
+STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
+STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
+STRESSENTRYLIST  = stressEntryList$(ExeSuf)
+
+STRESSHEPIXO  = stressHepix.$(ObjSuf)
+STRESSHEPIXS  = stressHepix.$(SrcSuf)
+STRESSHEPIX   = stressHepix$(ExeSuf)
+
+STRESSSPO     = stressSpectrum.$(ObjSuf)
+STRESSSPS     = stressSpectrum.$(SrcSuf)
+STRESSSP      = stressSpectrum$(ExeSuf)
+
+STRESSPROOFO  = stressProof.$(ObjSuf)
+STRESSPROOFS  = stressProof.$(SrcSuf)
+STRESSPROOF   = stressProof$(ExeSuf)
+
+TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
+TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
+TBENCHSO      = TBench.$(DllSuf)
+
+BENCHO        = bench.$(ObjSuf)
+BENCHS        = bench.$(SrcSuf)
+BENCH         = bench$(ExeSuf)
+
+TESTBITSO     = testbits.$(ObjSuf)
+TESTBITSS     = testbits.$(SrcSuf)
+TESTBITS      = testbits$(ExeSuf)
+
+QPRANDOMO     = QpRandomDriver.$(ObjSuf)
+QPRANDOMS     = QpRandomDriver.$(SrcSuf)
+QPRANDOM      = QpRandomDriver$(ExeSuf)
+
+THREADSO      = threads.$(ObjSuf)
+THREADSS      = threads.$(SrcSuf)
+THREADS       = threads$(ExeSuf)
+
+STRESSITERO    = stressIterators.$(ObjSuf)
+STRESSITERS    = stressIterators.$(SrcSuf)
+STRESSITER     = stressIterators$(ExeSuf)
+
+STRESSHISTO   = stressHistogram.$(ObjSuf)
+STRESSHISTS   = stressHistogram.$(SrcSuf)
+STRESSHIST    = stressHistogram$(ExeSuf)
+
+
+OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
+                $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
+                $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
+                $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
+                $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
+                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
+                $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSITERO) $(STRESSHISTO) \
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO) $(STRESSGUIO) \
+
+PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
+                $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+                $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
+                $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
+                $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
+                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) \
+                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSITER) $(STRESSHIST) \
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO) $(STRESSGUI) \
+
+
+all:            $(PROGRAMS)
+
+$(EVENTSO):     $(EVENTO)
+                BINDEXPLIB  $* $(EVENTO) > $*.def
+                lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def $(OutPutOpt)$(EVENTLIB)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $*.exp $(LIBS) $(OutPutOpt)$(EVENTSO)
+                $(MT_DLL)
+                @echo "$(EVENTSO) done"
+
+$(EVENTMTSO):   $(EVENTMTO)
+                BINDEXPLIB  $* $(EVENTMTO) > $*.def
+                lib -nologo -MACHINE:IX86 $(EVENTMTO) -def:$*.def $(OutPutOpt)$(EVENTMTLIB)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTMTO) $*.exp $(LIBS) $(OutPutOpt)$(EVENTMTSO)
+                $(MT_DLL)
+                @echo "$(EVENTMTSO) done"
+
+$(EVENT):       $(EVENTSO) $(MAINEVENTO)
+                $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$(EVENT)
+                $(MT_EXE)
+                @echo "$(EVENT) done"
+
+$(HWORLD):      $(HWORLDO)
+                $(LD) $(LDFLAGS) $(HWORLDO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(CTORTURE):    $(CTORTUREO)
+                $(LD) $(LDFLAGS) $(CTORTUREO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(HSIMPLE):     $(HSIMPLEO)
+                $(LD) $(LDFLAGS) $(HSIMPLEO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(MINEXAM):     $(MINEXAMO)
+                $(LD) $(LDFLAGS) $(MINEXAMO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(TSTRING):     $(TSTRINGO)
+                $(LD) $(LDFLAGS) $(TSTRINGO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(TCOLLEX):     $(TCOLLEXO)
+                $(LD) $(LDFLAGS) $(TCOLLEXO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(TCOLLBM):     $(TCOLLBMO)
+                $(LD) $(LDFLAGS) $(TCOLLBMO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(VVECTOR):     $(VVECTORO)
+                $(LD) $(LDFLAGS) $(VVECTORO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(VMATRIX):     $(VMATRIXO)
+                $(LD) $(LDFLAGS) $(VMATRIXO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(VLAZY):       $(VLAZYO)
+                $(LD) $(LDFLAGS) $(VLAZYO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSL):     $(STRESSLO)
+                $(LD) $(LDFLAGS) $(STRESSLO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSG):     $(STRESSGO)
+                $(LD) $(LDFLAGS) $(STRESSGO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSGUI):   $(STRESSGUIO)
+                $(LD) $(LDFLAGS) $(STRESSGUIO) $(GLIBS) $(STRESSGUILIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSSP):    $(STRESSSPO)
+                $(LD) $(LDFLAGS) $(STRESSSPO) $(LIBS) $(ROOTSYS)\lib\libSpectrum.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+!if exist("$(ROOTSYS)\lib\libGenVector.lib")
+$(STRESSVEC):   $(STRESSVECO)
+                $(LD) $(LDFLAGS) $(STRESSVECO) $(LIBS) $(ROOTSYS)\lib\libGenVector.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(TRACKMATHLIB):  $(TRACKMATHOBJ)
+                  $(LD) $(SOFLAGS) $(LDFLAGS) $(TRACKMATHOBJ) $(LIBS) $(ROOTSYS)\lib\libGenVector.lib $(OutPutOpt)$@
+                  $(MT_DLL)
+                  @echo "$@ done"
+
+$(STRESSMATH):    $(STRESSMATHO) $(TRACKMATHLIB)
+                  $(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(ROOTSYS)\lib\libGenVector.lib $(OutPutOpt)$@
+                  $(MT_EXE)
+                  @echo "$@ done"
+!endif
+
+!if exist("$(ROOTSYS)\lib\libMathMore.lib")
+$(STRESSMATHMORE): $(STRESSMATHMOREO)
+                   $(LD) $(LDFLAGS) $(STRESSMATHMOREO) $(LIBS) $(ROOTSYS)\lib\libMathMore.lib  $(OutPutOpt)$@
+                   $(MT_EXE)
+                   @echo "$@ done"
+!endif
+
+!if exist("$(ROOTSYS)\lib\libTMVA.lib")
+$(STRESSTMVA): $(STRESSTMVAO)
+                   $(LD) $(LDFLAGS) $(STRESSTMVAO) $(LIBS) $(ROOTSYS)\lib\libTMVA.lib $(OutPutOpt)$@
+                   $(MT_EXE)
+                   @echo "$@ done"
+!endif
+
+$(TESTBITS):    $(TESTBITSO)
+                $(LD) $(LDFLAGS) $(TESTBITSO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(THREADS):     $(THREADSO)
+                $(LD) $(LDFLAGS) $(THREADSO) $(LIBS) $(ROOTSYS)\lib\libThread.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(QPRANDOM):    $(QPRANDOMO)
+                $(LD) $(LDFLAGS) $(QPRANDOMO) $(LIBS) $(ROOTSYS)\lib\libQuadp.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(GUITEST):     $(GUITESTO)
+                $(LD) $(LDFLAGS) $(GUITESTO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(GUIVIEWER):   $(GUIVIEWERO)
+                $(LD) $(LDFLAGS) $(GUIVIEWERO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESS):      $(STRESSO) $(EVENT)
+                $(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
+                $(LD) $(LDFLAGS) $(STRESSGEOMETRYO) $(LIBS) $(ROOTSYS)\lib\libGeom.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSSHAPES):  $(STRESSSHAPESO)
+                $(LD) $(LDFLAGS)  $(STRESSSHAPESO) $(LIBS) $(ROOTSYS)\lib\libGeom.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+!if exist("$(ROOTSYS)\lib\libRooFit.lib")
+$(STRESSROOFIT):  $(STRESSROOFITO)
+                $(LD) $(LDFLAGS)  $(STRESSROOFITO) $(LIBS) $(ROOTSYS)\lib\libRooFit.lib  $(ROOTSYS)\lib\libRooFitCore.lib  $(ROOTSYS)\lib\libHtml.lib  $(ROOTSYS)\lib\libThread.lib  $(ROOTSYS)\lib\libMinuit.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+!endif
+
+$(STRESSFIT):   $(STRESSFITO)
+                $(LD) $(LDFLAGS) $(STRESSFITO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+!if exist("$(ROOTSYS)\lib\libUnuran.lib")
+!if exist("$(ROOTSYS)\lib\libminuit2.lib")
+$(STRESSHISTOFIT): $(STRESSHISTOFITO)
+                   $(LD) $(LDFLAGS) $(STRESSHISTOFITO) $(LIBS) $(ROOTSYS)\lib\libUnuran.lib $(OutPutOpt)$@
+                   $(MT_EXE)
+                   @echo "$@ done"
+!endif
+!endif
+
+$(STRESSENTRYLIST): $(STRESSENTRYLISTO)
+                    $(LD) $(LDFLAGS) $(STRESSENTRYLISTO) $(LIBS) $(OutPutOpt)$@
+                    @echo "$@ done"
+
+$(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
+                $(STRESSSP) $(STRESS)
+                $(LD) $(LDFLAGS) $(STRESSHEPIXO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSPROOF): $(STRESSPROOFO)
+                $(LD) $(LDFLAGS) $(STRESSPROOFO) $(LIBS) $(ROOTSYS)\lib\libProof.lib $(ROOTSYS)\lib\libThread.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(BENCH):       $(BENCHO) $(TBENCHSO)
+                $(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+Hello:          $(HELLOSO)
+$(HELLOSO):     $(HELLOO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(HELLOO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_DLL)
+
+Aclock:         $(ACLOCKSO)
+$(ACLOCKSO):    $(ACLOCKO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(ACLOCKO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_DLL)
+
+Tetris:         $(TETRISSO)
+$(TETRISSO):    $(TETRISO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(TETRISO) $(GLIBS) $(OutPutOpt)$@
+                $(MT_DLL)
+
+$(TBENCHSO):    $(TBENCHO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+                $(MT_DLL)
+
+$(STRESSITER):  $(STRESSITERO) 
+                $(LD) $(LDFLAGS) $(STRESSITERO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSHIST):  $(STRESSHISTO)
+                $(LD) $(LDFLAGS) $(STRESSHISTO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+clean:
+      @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk *.manifest >nul 2>&1
+
+distclean:      clean
+      @del /q *.exe *.root *.ps *.lib *.dll >nul 2>&1
+
+###
+Event.$(ObjSuf): Event.h
+MainEvent.$(ObjSuf): Event.h
+
+EventDict.$(SrcSuf): Event.h EventLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Event.h EventLinkDef.h
+
+EventMTDict.$(SrcSuf): EventMT.h EventLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c EventMT.h EventLinkDef.h
+
+Hello.$(ObjSuf): Hello.h
+HelloDict.$(SrcSuf): Hello.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Hello.h
+
+Aclock.$(ObjSuf): Aclock.h
+AclockDict.$(SrcSuf): Aclock.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Aclock.h
+
+Tetris.$(ObjSuf): Tetris.h
+TetrisDict.$(SrcSuf): Tetris.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Tetris.h
+
+TBench.$(ObjSuf): TBench.h
+TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c TBench.h benchLinkDef.h
+
+guiviewer.$(ObjSuf): guiviewer.h
+guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c guiviewer.h guiviewerLinkDef.h
+
+stressMathCore.$(ObjSuf): TrackMathCore.h
+TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
+   @echo "Generating dictionary $@ using rootcint ..."
+   @rootcint -f $@ -c TrackMathCore.h TrackMathCoreLinkDef.h
+
+.$(SrcSuf).$(ObjSuf):
+        $(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(CXXOPT) -c $<
+

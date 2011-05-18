@@ -1,0 +1,797 @@
+Installation of ROOT from source
+================================
+
+Contents:
+=========
+
+	1.    Getting the source
+	2.    Getting ready to build
+	3.    Choosing the installation method
+	3.1.  Environment driven build
+	3.2.  Fixed locations build
+	3.3.  Redhat packages
+	3.4.  Debian GNU/Linux packages
+	4.    Installation Location
+	5.    Makefile targets
+	6.    Installing optional add-on libraries
+	6.1.  Using the environment
+	6.2.  Using "configure" flags
+	7.    Information on third party software
+	7.1.  Posix Thread usage
+	7.2.  OpenGL library
+	7.3.  SHIFT managed tape I/O
+	7.4.  ZEBRA file conversion tools
+	7.5.  MySQL client
+	7.6.  PostGreSQL Client
+	7.7.  SapDB Client
+	7.8.  Pythia Event Generators
+	7.9.  Venus Event Generators
+	7.10. Secure Remote Password (SRP) Authentication
+	7.11. AFS Authentication
+	7.12. Kerberos Authentication
+	7.13. Globus Authentication
+	7.14. SSH Authentication
+
+1. Getting the source:
+======================
+
+To install ROOT from source you first have to get the tar file
+containing the source. This tar file can be found in the usual
+ROOT download area (ftp://root.cern.ch/root). The files are named
+root-<version>.source.tar.gz.
+
+Here's a short summary:
+
+1) Get access to the FTP area (substitute any FTP client and appropriate
+   email address below):
+
+     prompt% ftp root.cern.ch
+     User: anonymous
+     Password: <your-email-address>
+
+2) Go to the directory, and prepare for binary transfer of files:
+
+     ftp> cd /root
+     ftp> bin
+
+3) Get the sources tar-ball (substitute the appropriate version
+   number), and exit FTP client:
+
+     ftp> get root-<version>.source.tar.gz
+     ftp> bye
+
+4) Unpack the distribution:
+
+     prompt% gzip -dc root-<version>.source.tar.gz | tar -xf -
+
+An alternative approach is to use our public Subversion repository to get
+the latest version. See URL:
+   http://root.cern.ch/twiki/bin/view/ROOT/SubversionHowto
+
+Here's a short summary:
+
+1a) Get a specific version (>= 2.25/00), e.g.: version 2.25/03:
+
+     prompt% svn co http://root.cern.ch/svn/root/tags/v2-25-03 root
+
+1b) Alternatively, checkout the head (development version) of the sources:
+
+     prompt% svn co http://root.cern.ch/svn/root/trunk root
+
+In both cases you should have a subdirectory called "root" in the
+directory you ran the above commands in.
+
+
+2. Getting ready to build:
+==========================
+
+You may want to compile features into ROOT, which depends on third
+party libraries. Make sure you meet all demands for additional
+features before trying to enable them (see below).
+
+If you are using some Un*x, you need to have libXpm installed. On very
+few systems libXpm.a is not available. In that case get the pre-built
+version from:
+
+   ftp://root.cern.ch/root/xpm.
+
+Then use either environment variable XPM or "configure" flags
+"--with-xpm-libdir=<dir>" to specify where you installed libXpm, if you
+didn't install it in some generally searched directory (see more below).
+
+If you are using Windows make sure you've installed Cygwin
+
+   http://sources.redhat.com/cygwin/
+
+and that it is setup correctly, see:
+
+   http://root.cern.ch/root/Cygwin.html
+
+Before proceeding read the complete document.  Note: With the advent
+of Cygwin 1.0 your system is mostly setup correctly by the setup.exe
+program.
+
+
+3. Choosing the installation method:
+====================================
+
+There are two main methods of installing ROOT from source.  As an
+alternative, you can build either a set of Debian GNU/Linux or Redhat
+Linux packages.
+
+3.1. Environment driven build:
+------------------------------
+
+You want to install in a generic directory, depending on environment
+variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
+
+   1) get the sources of the latest ROOT (see above)
+
+   2) set ROOTSYS to the `root' directory:
+      sh family:
+        export ROOTSYS=<path>/root
+      csh family
+        setenv ROOTSYS <path>/root
+
+   3) now type the build commands:
+      all shells:
+        ./configure --help
+        ./configure <arch>        [change arch appropriately]
+        gmake                     [or, make -j2 for dual CPU machines]
+        gmake install             [when run directory is not $ROOTSYS]
+
+   4) add $ROOTSYS/bin to PATH and $ROOTSYS/lib to LD_LIBRARY_PATH:
+      sh family:
+        export PATH=$ROOTSYS/bin:$PATH
+        export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+        export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH (MacOS X only)
+      csh family:
+        setenv PATH ${ROOTSYS}/bin:${PATH}
+        setenv LD_LIBRARY_PATH ${ROOTSYS}/lib:${LD_LIBRARY_PATH}
+        setenv DYLD_LIBRARY_PATH ${ROOTSYS}/lib:${DYLD_LIBRARY_PATH} (MacOS X)
+        rehash
+
+   5) try running root:
+      all shells:
+
+        root
+
+3.2. Fixed locations build:
+---------------------------
+
+You want to install ROOT in a fixed location, not depending on
+ROOTSYS. Typically you want to do this when installing in a location
+like `/usr/local/bin' or even `/usr/bin'. This allows you, and all
+others on your system, to run ROOT without having to setup ROOTSYS and
+special PATH and LD_LIBRARY_PATH variables.
+
+This scheme also makes it easier to make ROOT
+distributions/installations that fit with an existing system. E.g., it
+is trivial to install ROOT via a RedHat (.rpm) or Debian GNU/Linux
+(.deb) package (see also below).
+
+It's _strongly_ recommended to enable version numbers in sonames (if
+possible) using this method (see --enable-soversion below). Also,
+using the --enable-rpath option to "configure" you can set the load
+path to the ROOT libraries on the applications. However, this is not
+recommended if you have some other way (like /etc/ld.so.conf) of
+making the dynamic loader aware of where you installed the ROOT
+libraries.
+
+   1) get the sources of latest ROOT (see above)
+
+   2) now type the build commands:
+      all shells:
+        ./configure --help
+        ./configure <arch> --prefix=/usr/local [change arch appropriately]
+        gmake                   [or, make -j2, for dual CPU machines]
+        gmake install           [su to root if --prefix points to a system dir]
+
+   3) try running root:
+
+      sh family:
+
+        root
+      csh family:
+
+        rehash
+        root
+
+3.3. Redhat packages:
+---------------------
+Get the sources for a specific release from Subversion or from a tar-ball, as
+outlined above and cd into the source directory. Then just do
+
+        make redhat
+
+This will create a RPM spec file in the source tree. To build the
+packages do:
+
+1) Make a tar-ball of the source tree:
+
+        cd ../
+        tar -czvf root-v<version>.source.tar.gz 
+
+  where <version>=<major>.<minor>.<revision> is the version number of
+  ROOT (see the file build/version_number).
+
+2)
+  A) If you have system privileges, you can now do:
+
+        cp root_v<version>.source.tar.gz /usr/src/redhat/SOURCES/
+
+     or where ever RPM looks for source archives.
+
+  B) However, if you don't have system privileges, you should set up a
+     build area by having the file ~/.rpmrc with a contents like:
+
+        %macrofiles: /usr/lib/rpm/macros:<your home dir>/.rpmmac
+
+     and a file <your home dir>/.rpmmac with a contents like:
+
+        %_topdir <some where you can write>/redhat
+
+     Then you should make the appropiate directories:
+
+        mkdir <some where you can write>/redhat
+        mkdir <some where you can write>/redhat/SOURCES
+        mkdir <some where you can write>/redhat/BUILD
+        mkdir <some where you can write>/redhat/RPMS
+        mkdir <some where you can write>/redhat/SRPMS
+        mkdir <some where you can write>/redhat/SPECS
+
+     and finally copy the source tar-ball:
+
+        cp root_v<version>.source.tar.gz \
+           <some where you can write>/redhat/SOURCES
+
+3) Wether you have system privileges or not, you can now build the RPM
+   packages by issuing (Red Hat 7.3 or less):
+
+       rpm -ba root.spec
+
+   or (Red Hat 8.0 or above):
+
+       rpmbuild -ba root.spec
+
+  If you left the spec file in the source tree, you can build directly
+  from the tar-ball.  You still need to have a proper build area
+  setup, as outlined above.  All you need to do is:
+
+       rpm -ta root_v<version>.source.tar.gz        (Red Hat 7.3-)
+       rpmbuild -ta root_v<version>.source.tar.gz   (Red Hat 8.0+)
+
+Per default the binaries will be build in /tmp/rootrpm, but one may
+change that at build time by passing the option --buildroot too rpm.
+
+Please refer to man-page rpm(1) and http://www.rpm.org for more
+information on RPM.
+
+Please note, that all possible packages may not be specified in the
+spec file.  See also build/package/common/README.
+
+3.4. Debian GNU/Linux packages:
+-------------------------------
+Get the sources for a specific release from Subversion or from a tar-ball, as
+outlined above and cd into the source directory. Then just do
+
+        make debian
+
+The packages will be build in "../".
+
+Please note, that all possible packages may not be specified in the
+debian directory file.  See also build/package/common/README.
+
+4. Installation Location:
+=========================
+
+By default, the system will be installed depending on the ROOTSYS
+environment variable. In that case the whole package will live under
+the directory ROOTSYS points to.
+
+Using the fixed location mode (section 3.2), the default `--prefix'
+path is `/usr/local', which will result in the ROOT files to be
+installed in `/usr/local/bin', `/usr/local/lib', etc. You can specify
+an installation prefix other than `/usr/local' by giving `configure'
+the option `--prefix=PATH'. For more detailed location specifications
+see `configure --help'.
+
+Here's the complete list:
+
+* prefix (/usr/local)
+  Installation prefix. This will prefix any installation directory not
+  explicitly specified.
+* bindir (<prefix>/bin)
+  This is where the ROOT applications (root, cint, rootcint, etc.)
+  will be installed.
+* libdir (<prefix>/lib/root)
+  Library installation directory. All the class libraries of ROOT will
+  be installed into this directory. You should make your dynamic
+  linker aware of this directory. On Linux - and some other Un*ces -
+  this directory can be added to /etc/ld.so.conf and ldconfig should
+  be run afterward (you need to be root - the user - to do
+  this). Please note, that this directory should probably not be
+  something like /usr/lib or /usr/local/lib, since you'll most likely
+  get a name clash with ROOT libraries and other libraries
+  (e.g. libMatrix.so); rather use something like /usr/local/lib/root
+* incdir (<prefix>/include/root)
+  Header installation directory. All the header (declaration) files
+  for the ROOT classes will be installed into this directory. This
+  should be parallel to libdir, for consistency.
+* etcdir (/etc/root)
+  Configuration files installation directory. The system-wide
+  system.rootrc and root.mimes will be installed into this directory.
+* mandir (<prefix>/share/man/man1)
+  Installation directory for the ROOT man(1) pages. This should be
+  somewhere searched by man(1). On most Un*x you can set the search
+  path for man(1) via environment variable MANPATH. On some systems, a
+  special configuration file /etc/manpath.config exist and should be
+  used. See also man(1) - type man man in the prompt - on your
+  system.
+* datadir (<prefix>/share/root)
+  Top-level data installation directory. Under this directory, various
+  data files needed by ROOT will be installed, either in
+  subdirectories, or directly.
+* proofdir (<datadir>/proof)
+  PROOF utilities directory. Various PROOF utility scripts as well as
+  example configurations are installed into this directory.
+* macrodir (<datadir>/macros)
+  Macro installation directory. Macros - properly called scripts -
+  provided by the ROOT system are installed into this directory. ROOT
+  - the application -  will always search this directory for scripts.
+* cintincdir (<datadir>/cint)
+  CINT data directory. In this directory, the CINT runtime headers
+  will be installed, both the standard headers, as well as
+  pre-processed once.
+* iconpath (<datadir>/icons)
+  Icon installation directory. The icons used by the TBrowser and other
+  classes will be installed into this directory. The user can specify
+  additional directories in using the "--with-sysicondir" option.
+* srcdir (<datadir>/src)
+  Sources installation directory. Currently not used!
+* docdir (<prefix>/doc/root)
+  Documentation, like the LICENCE, README, etc. files will be
+  installed into this directory.
+* testdir (<docdir>/test)
+  The test applications and libraries will be installed here.
+* tutdir (<docdir>/tutorial)
+  All the tutorials will be installed in this directory.
+
+
+5. Makefile targets:
+====================
+
+The Makefile system and supported make targets are explained in the
+BUILDSYSTEM file.
+
+
+6. Installing optional add-on libraries:
+========================================
+
+There are two ways in which you can specify additional features to
+build into the ROOT system:
+
+6.1. Using the environment:
+---------------------------
+
+If you want to compile the ROOT optional add-on libraries to handle
+True Type fonts, OpenGL graphics, SRP authentication, MySQL access,
+RFIO access and event generator interfaces (Pythia, Pythia6 and
+Venus) you can either specify the options as environment variables.
+For example:
+
+  # Used during build of ROOT can be overridden in ./configure
+  export ROOTBUILD=debug      # see $ROOTSYS/README/BUILDSYSTEM
+  export CERNLIB=~/cernlib    # must contain libpacklib.a libkernlib.a
+  export RFIO=~/shift/lib     # CERN's SHIFT library, must
+                              # contain libshift.a
+  export OPENGL=~/Mesa        # must contain include/ lib/
+  export SRP=~/src/srp        # must contain include/ lib/
+  #export AFS=                # must contain include/ lib/
+  #export XPM=                # must contain libXpm
+  #export MYSQL=              # must contain include/ lib/
+  #export PYTHIA=             # must contain libPythia
+  #export PYTHIA6=            # must contain libPythia6
+  #export VENUS=              # must contain libVenus
+  #export TABLE=yes           # to build the Table contrib library
+
+The ROOTBUILD environment variable is special and architecture
+dependent. To get an idea of which values it can take, take a look in
+the config/Makefile.<architecture> corresponding to your
+architecture.
+
+
+6.2. Using "configure" flags:
+-----------------------------
+
+You can also specify additional features and external linking using
+command line options - or flags - to the configure script.
+
+A special flag is "--build=<option list>" which correspond to the
+ROOTBUILD environment variable, as described above.
+
+The flags consist of two classes:
+
+1) --enable-<feature>/--disable-<feature> flags:
+   These flags enables/disables support for the corresponding feature
+   <feature>. Specifying such a flag will make the configure script
+   look for third-party libraries, headers, etc. at default
+   locations.
+
+   If you find that the default locations does not work with some
+   standard path e.g., on OS <Foo>, library lib<Bar>, is in general
+   installed in path <Baz>, but "configure" doesn't look there, please
+   file a bug report with rootbugs@root.cern.ch.
+
+   If, for some reason, you have installed some third-party library
+   outside it's usual location, you can make "configure" look for it
+   using the corresponding "--with-<feature dir>" option (see below).
+
+   By default, all features are enabled, except for a few cases (noted
+   below).
+
+   Here's a list of supported features:
+
+   * shared
+     Use shared 3rd party libraries if possible. Some platforms assume
+     this by default, others do not support it at all. Default is true.
+   * rpath
+     Set library path on executables. This is only supported on some
+     platforms. Default is false.
+   * soversion
+     Include the major version number of ROOT in the soname of the
+     shared libraries. This means that you'll have an additional check
+     on whether your applications are linked to the proper runtime
+     libraries. It's strongly encouraged to use this option. This
+     options is only supported on some platforms. Default is false.
+   * table
+     Build Table contributed library, including new containers and
+     extended 3D geometry descriptions. Default is false.
+   * thread
+     Compile ROOT thread safe, as well as a thread API library. This
+     options is strongly recommended. This requires the system library
+     libpthread (Posix threads). Default is false, except for the
+     "linux" architecture.
+   * opengl
+     OpenGL (3D rendering and visualisation) support. This is
+     especially powerful if you have a 3D accelerated card and a
+     proper OpenGL interface for your graphics system. This requires
+     the third party libraries libGL and libGLU - or libMesaGL and
+     libMesaGLU, as well header files for these libraries. For
+     platforms with native OpenGL support (Windows), this is always
+     enabled, even if the --disable-opengl flag is set. Default is true.
+   * cern
+     Build h2root and g2root utilities to convert ZEBRA files with
+     HBOOK histograms and/or Ntuple, and GEANT geometries
+     respectively, into ROOT structures in ROOT files. This requires
+     the third-party libraries libkernlib and libpacklib from the
+     CERNLIB distribution. Default is true.
+   * mysql
+     Build a thin MySQL client for ROOT. This requires the third-party
+     library libmysqlclient and header files. Note that there may be
+     licensing issues regarding linking against libmysqlclient.
+     Default is true.
+   * psql
+     Build a thin PostGreSQL client for ROOT. This requires the
+     third-party library libpsql and header files.
+     Default is true.
+   * sapdb
+     Build a thin SapDB client for ROOT. This requires the
+     third-party library libsql and header files.
+     Default is true.
+   * shift
+     Interface to SHIFT managed tape robots. This option requires you
+     get the libshift.a from CERN. Please note, that this library is
+     only available as a static library (archive), and will always be
+     statically linked in. There may be licensing issues involved.
+     Default is true.
+   * pythia
+     Build thin wrapper for the Pythia Event Generator (version
+     5). This requires the third party library libPythia. Default is true.
+   * pythia6
+     Build thin wrapper for the Pythia Event Generator (version
+     6). This requires the third party library libPythia6. Default is true.
+   * venus
+     Build thin wrapper for the Venus Event Generator. This requires
+     the third party library libVenus. Default is true.
+   * srp
+     Build daemons rootd and proofd with SRP support. This requires
+     the full third-party SRP distribution to be installed and build.
+     Default is true.
+   * afs
+     Build daemons rootd and proofd with AFS support. This requires
+     the third-party AFS libs and objects. Default is false.
+
+2) --with-<feature dir>=<dir> flags:
+   If "configure" isn't able to find some third-party library, header,
+   or other file, corresponding to one of the above features, you can
+   force it to look for these files in specific directories, using the
+   "--with-" options.
+
+   Using a "--with-<feature dir>=<dir>" will make "configure" look for
+   whatever needed by <feature> in <dir>, and will also enable the
+   corresponding feature. Hence, you do not need to specify
+   "--enable-<feature>" if you give an "--with-<featuredir>=<dir>".
+   The inverse - of course - isn't true.
+
+   Here is a list of "--with-" flags:
+
+   * xpm-libdir
+     Directory containing libXpm.{so,a}. This option is special, since
+     this doesn't correspond to any feature, as described
+     above. However, the XPM library is needed on Un*x, and if
+     installed somewhere non-standard, this option may help you.
+   * thread-libdir
+     Directory containing libpthread.{so,a} (Posix thread
+     library). It's highly unlikely that you need to specify this
+     option, since libpthread is completely standard on Un*x, and
+     should be found by "configure".
+   * sys-iconpath
+     Extra icon path for TBrowser, etc. This, again doesn't correspond
+     to any feature, but provides you with way of getting the TBrowser
+     and others to look for additional icons in some system-wide
+     directory.
+   * opengl-incdir
+     Directory containing GL/gl.h (note the sub-directory), needed by
+     feature opengl.
+   * opengl-libdir
+     Directory containing libGL.{so,a} and libGLU.{so,a} -
+     alternatively libMesaGL.{so,a} and libMesaGLU.{so,a} - needed by
+     feature opengl.
+   * mysql-incdir
+     Directory containing mysql.h, needed by feature mysql.
+   * mysql-libdir
+     Directory containing libmysqlclient.{so,a}, needed by feature mysql.
+   * pythia-libdir
+     Directory containing libPythia.{so,a}, needed by feature pythia.
+   * pythia6-libdir
+     Directory containing libPythia6.{so,a}, needed by feature pythia6.
+   * venus-libdir
+     Directory containing libVenus.{so,a}, needed by feature venus.
+   * cern-libdir
+     Directory containing libpacklib.{so,a} and libkernlib.{so,a},
+     needed by feature cern, for the ZEBRA file converters.
+   * shift-libdir
+     Directory containing libshift.a, needed for feature shift.
+   * krb5
+     Kerberos5 ditribution location
+   * krb5-incdir
+     Kerberos5 support, location of krb5.h
+   * krb5-libdir
+     Kerberos5 support, location of libkrb5
+   * srp-incdir
+     Path to header files for regular SRP library (not utilities)
+     This is needed for building the daemons rootd and proofd with
+     SRP support (authentication).
+   * srp-libdir
+     Path to regular SRP library (not utilities). This is needed for
+     building the daemons rootd and proofd with SRP support
+     (authentication).
+   * srp
+     Top directory of the SRP (Secure Remote Passwd). This directory
+     must contain:
+          base/libmisc/libmisc.a
+          base/lib/libshadow.a
+          base/lib/pwauth.h
+          libsrp/libsrp.a
+          libsrp/t_server.h
+     And alternatively
+          lib/libgmp.a
+          lib/libcrack.a
+     This is needed to build the utility programs for managing ROOT
+     related SRP access.
+   * afs
+     Top directory of the AFS distribution. This directory must
+     contain:
+          lib/libubik.a
+          lib/librxkad.a
+          lib/libdes.a
+          lib/librx.a
+          lib/liblwp.a
+          lib/afs/libkauth.a
+          lib/afs/libprot.a
+          lib/afs/libauth.a
+          lib/afs/libsys.a
+          lib/afs/libcmd.a
+          lib/afs/libcom_err.a
+          lib/afs/libaudit.a
+          lib/afs/util.a
+     This is needed for building the daemons rootd and proofd with
+     AFS support (authentication).
+   * globus
+     Path to Globus Tool Kit installation, usually pointed to by the
+     variable GLOBUS_LOCATION; the specification of this path supersedes
+     the one defined by such variable.
+     This directory must contain:
+          include/openssl/x509.h
+          include/openssl/pem.h
+          include/globus_gss_assist.h
+          lib/libglobus_gss_assist_<flavour>
+          lib/libglobus_gssapi_gsi_<flavour>
+          lib/libssl_<flavour>
+          lib/libcrypto_<flavour>
+     'configure' will also look for
+          etc/globus-user-env.sh
+          bin/grid-proxy-init
+     and issue a warning if they are missing, since in such a case
+     automatic credential initialization will not be available.
+   * globus-patch
+     Path to Globus Tool Kit sources; need for applying the experimental
+     patch (see README.GLOBUS)
+
+
+7. Information on third party software:
+=======================================
+
+The optional add-ons are not necessary for the proper functioning of
+ROOT but we advice you to at least get the True Type fonts since they
+hugely increase the appearance of text on the screen.
+
+
+7.1. Posix Thread usage:
+------------------------
+To build the library providing thread support you need to have the
+library libpthread.{a,so} and header files installed. This is usually
+the case for any Un*x OS. For architecture "linux" thread support
+will always be build.
+
+
+7.2. OpenGL library:
+--------------------
+On how to get an open source version of OpenGL see:
+
+   http://www.mesa3d.org
+
+For prebuilt versions see:
+
+   ftp://root.cern.ch/root/opengl/
+
+Most Linux distributions come with a Mesa package, providing the
+needed headers and libraries. Also, the OpenGL libraries are already
+in XFree86 version 4 or above.
+
+
+7.3. SHIFT managed tape I/O:
+----------------------------
+To build the library providing CERN RFIO (remote I/O) support you need
+to get the "libshift.a" library from CERN. You can get pre-build
+libraries from
+
+  http://root.cern.ch/root/shift
+
+or you can download the full source from
+
+  http://savannah.cern.ch/files/?group=castor
+
+7.4. ZEBRA file conversion tools:
+---------------------------------
+To build the HBOOK and Geant3 conversion programs `h2root' and
+`g2root' you need the CERNLIB components "libpacklib.{a,so}" and
+"libkernlib.{a,so}" from CERN. You can get it from
+
+  ftp://asisftp.cern.ch/cernlib
+
+
+7.5. MySQL client:
+------------------
+To build the MySQL interface library you need to install MySQL first. See:
+
+   http://www.mysql.com/
+
+
+7.6. PostGreSQL Client:
+-----------------------
+To build the PostGreSQL interface you need to install PostGreSQL
+first. See
+
+   http://www.postgresql.org
+
+
+7.7.  SapDB Client:
+-------------------
+To build the SapDB interface you need to install the SapDB calling
+interface first, which can be found in the rpm sapdb-callif-xxxx. See
+
+   http://www.sapdb.org
+
+
+7.8. Pythia Event Generators:
+-----------------------------
+To build the event generator interfaces for Pythia and Pythia6, you
+first have to get the pythia libraries. You can get pre-build
+libraries from:
+
+   ftp://root.cern.ch/root/pythia/
+
+or you can download the source from the same directory. The original
+sources can be found via Lunds FTP server.
+
+More information is avaliable from:
+
+   http://www.thep.lu.se/~torbjorn/Pythia.html
+
+
+7.9. Venus Event Generators:
+----------------------------
+To build the event generator interface for Venus, you need to have the
+Venus libraries.  The sources can be downloaded from 
+
+    ftp://root.cern.ch/root/venus/
+
+7.10. Secure Remote Password (SRP) Authentication:
+--------------------------------------------------
+To build the strong authentication module used by rootd and proofd,
+you first have to install the SRP (Secure Remote Password)
+system. See:
+
+   http://srp.stanford.edu/
+
+Please note, that the library "libsrp-dev" as distributed by Standford
+is not enough to build the two utility program in the srputil
+directory of the ROOT source tree.
+
+
+7.11. AFS Authentication:
+-------------------------
+To build rootd and proofd with support for AFS authentication, you
+first have to install AFS client libraries system. There are a few AFS
+distributions avaliable.
+
+* OpenAFS
+  IBMs OpenSource AFS distribution - see
+
+    http://www.openafs.org
+
+* Transarc AFS
+  IBMs commercial AFS ditribution - see
+
+    http://www.transarc.ibm.com/Support/afs
+
+
+7.12. Kerberos Authentication:
+------------------------------
+To build the Kerberos authentication module used by rootd and proofd,
+you first have to install Kerberos V on your machine. See:
+
+   http://web.mit.edu/kerberos/www/
+
+for details and downloads.
+If the installation directory is different from the standard ones
+(typically /usr/kerberos) the --with-krb5=<krb5_dir> flag must be
+used to tell configure where to look for Kerberos. Alternatrively
+the --with-krb5-incdir and --with-krb5-libdir can be specified
+individually.
+
+
+7.13. Globus Authentication:
+----------------------------
+To build the Globus authentication module used by rootd and proofd,
+you first have to make sure that the Globus Tool Kit is installed
+on the machine. See:
+
+   http://www.globus.org/
+
+for details and downloads.
+Globus Tool Kit is available only for a subset of Unix platforms.
+The variable GLOBUS_LOCATION should be defined as the directory
+containing Globus lib, include and bin. For compilation purposes
+you can pass this directory to the configure script with the option
+--with-globus-dir=<globus_dir>. An experimental path is available
+for versions 2.2.3 and 2.2.4 of the Globus Tool Kit to fix a small
+bug preventing full functionallity of the root implementation; this
+is activated by setting --with-globus-patch-dir=<globus_src_dir>
+where <globus_src_dir> is the globus tool kit source,
+
+
+7.14. SSH Authentication:
+-------------------------
+There is no need to build special modules for SSH authentication.
+
+
+
+
+
+
+Local Variables:
+      mode: text 
+End:

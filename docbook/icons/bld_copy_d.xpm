@@ -1,0 +1,41 @@
+/* XPM */
+static char *bld_copy_d[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21       13            1",
+/* colors */
+". c #979d9c",
+"# c #cccccc",
+"a c #cbcbcb",
+"b c #e4e4e4",
+"c c #d8d8d8",
+"d c #cecfcc",
+"e c #e6e6e6",
+"f c #dadada",
+"g c #cecece",
+"h c #9b9c9c",
+"i c #9c9c98",
+"j c #969c98",
+"k c #ccd3cc",
+/* pixels */
+"hhiiiiiiiiih#########",
+"hhiiiiiiiiih#########",
+"ii.........ih########",
+"ii.cabbbjfijih#######",
+"ii.hafdkjkfi.ih######",
+"ii.cabbhiiiiiiiiih###",
+"ii.hafdi.........ih##",
+"ii.cabbi.cabbbjfijih#",
+"ii.hafdi.hagedjkfi.ih",
+"ii.cabbi.cabbbjkkf.ih",
+"ii.hafdi.hagediiii.ih",
+"ii.cabbi.cabbbbbbb.ih",
+"ii.hafdi.hagedkkkd.ih",
+"ii.cabbi.cabbbbbbb.ih",
+"ii.....i.hagedkkkd.ih",
+"hhiiiiii.cabbbbbbb.ih",
+"##hhhhhi.hagedkkkd.ih",
+"#######i.cabbbbbbb.ih",
+"#######i...........ih",
+"#######hiiiiiiiiiiihh",
+"########hhhhhhhhhhhh#"
+};

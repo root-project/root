@@ -1,0 +1,125 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// include/_iostream
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+	{return(std::endl(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+	{return(std::ends(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+	{return(std::flush(ostr));}
+
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+	{return(std::ws(istr));}
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+	{return(std::WS(istr));}
+
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_IOFLAGS& f) {
+   ostr.setf(f.flag, f.mask);
+  return ostr;
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_IOFLAGS& f) {
+  istr.setf(f.flag, f.mask);
+  return istr;
+}
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(ostr);
+}
+std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(istr);
+}
+
+#ifdef G__NATIVELONGLONG
+std::ostream& operator<<(std::ostream& ostr,long long i) {
+  char buf[200];
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#pragma else
+  if (ostr.flags() & ios_base::hex)
+#pragma endif
+     sprintf(buf,"%llx",i);
+  else
+     sprintf(buf,"%lld",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,unsigned long long i) {
+  char buf[200];
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#pragma else
+  if (ostr.flags() & ios_base::hex)
+#pragma endif
+     sprintf(buf,"%llx",i);
+  else
+     sprintf(buf,"%llu",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,long double i) {
+  char buf[200];
+  sprintf(buf,"%Lg",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,long long &i) {
+  char buf[200];
+  istr >> buf ;
+  sscanf(buf,"%lld",&i);
+  return(istr);
+}
+std::istream& operator>>(std::istream& istr,unsigned long long &i) {
+  char buf[200];
+  istr >> buf ;
+#pragma ifndef G__TMPLTIOS
+  if (ostr.flags() & ios::hex)
+#pragma else
+  if (ostr.flags() & ios_base::hex)
+#pragma endif
+     sscanf(buf,"%llx",&i);
+  else
+     sscanf(buf,"%llu",&i);
+  return(istr);
+}
+std::istream& operator>>(std::istream& istr,long double &i) {
+  char buf[200];
+  istr >> buf ;
+  sscanf(buf,"%Lg",&i);
+  return(istr);
+}
+#endif
+
+// Value evaluation
+//template<class T> int G__ateval(const T* x) {return(0);}
+//template<class T> int G__ateval(const T& x) {return(0);}
+int G__ateval(const char* const &x) {return(0);}
+//int G__ateval(const void* const &x) {return(0);}
+int G__ateval(double x) {return(0);}
+int G__ateval(float x) {return(0);}
+int G__ateval(bool x) {return(0);}
+int G__ateval(char x) {return(0);}
+int G__ateval(short x) {return(0);}
+int G__ateval(int x) {return(0);}
+int G__ateval(long x) {return(0);}
+int G__ateval(unsigned char x) {return(0);}
+int G__ateval(unsigned short x) {return(0);}
+int G__ateval(unsigned int x) {return(0);}
+int G__ateval(unsigned long x) {return(0);}
+
+#if defined(G__ROOT) && !defined(__MAKECINT__)
+class TString;
+int G__ateval(const TString& x) {
+  //std::cout << "(class TString " << &x << ")\"" << x << "\"" << std::endl;
+  std::cout << "(class TString)" << "\"" << x << "\"" << std::endl;
+  return(1);
+}
+#endif

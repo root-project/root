@@ -1,0 +1,77 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// lib/prec_stl/bitset
+
+#pragma ifndef PREC_STL_BITSET
+#pragma define PREC_STL_BITSET
+#pragma link off global PREC_STL_BITSET;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Modified by Masaharu Goto
+
+template<size_t N> 
+class bitset {
+ public:
+  // bit reference:
+  class reference {
+    friend class bitset;
+    reference();
+   public:
+    ~reference();
+    reference& operator=(bool x);             // for b[i] = x;
+    reference& operator=(const reference&);   // for b[i] = b[j];
+    bool operator~() const;                   // flips the bit
+    operator bool() const;                    // for x = b[i];
+    reference& flip();                        // for b[i].flip();
+  };
+
+  // _lib.bitset.cons_ constructors:
+  bitset();
+  bitset(unsigned long val);
+#if 0
+  template<class charT, class traits, class Allocator>
+   explicit bitset(
+      const basic_string<charT,traits,Allocator>& str,
+      typename basic_string<charT,traits,Allocator>::size_type pos = 0,
+      typename basic_string<charT,traits,Allocator>::size_type n =
+      basic_string<charT,traits,Allocator>::npos);
+#endif
+  // _lib.bitset.members_ bitset operations:
+  bitset& operator&=(const bitset& rhs);
+  bitset& operator|=(const bitset& rhs);
+  bitset& operator^=(const bitset& rhs);
+  bitset& operator<<=(size_t pos);
+  bitset& operator>>=(size_t pos);
+  bitset& set();
+  bitset& set(size_t pos, int val = true);
+  bitset& reset();
+  bitset& reset(size_t pos);
+  bitset  operator~() const;
+  bitset& flip();
+  bitset& flip(size_t pos);
+  // element access:
+  reference operator[](size_t pos);         // for b[i];
+  unsigned long  to_ulong() const;
+#if 0
+  template <class charT, class traits, class Allocator>
+   basic_string<charT, traits, Allocator> to_string() const;
+#endif
+  size_t count() const;
+  size_t size()  const;
+  bool operator==(const bitset& rhs) const;
+  bool operator!=(const bitset& rhs) const;
+  bool test(size_t pos) const;
+  bool any() const;
+  bool none() const;
+  bitset operator<<(size_t pos) const;
+  bitset operator>>(size_t pos) const;
+};
+
+#pragma endif

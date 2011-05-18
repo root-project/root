@@ -1,0 +1,43 @@
+<br> 
+<hr> 
+<a name="tree"></a> 
+<h3>Tree</h3>
+<ul>
+<li>Restore support for IsAutoDelete in a TBranchElement (IsAutoDelete is an explicit request by the user to have the object deleted/newed each time GetEntry is called).</li>
+<li>Allow .root in the name of directory in TChain::Add and TChain::AddFile (however in this case the root file must be ending .root.)</li>
+<li>Improve support for <i>circular</i> TTree friendship in LoadTree.</li>
+<li>Insure that the in-memory tree (not attached to a file) are saved in their new style (i.e. each basket saved separately) and prevent the printing of the misleading error message:
+<pre>Error in : Cannot create key without file </pre></li>
+<li>Repaired TTreeSQL:
+The existing code was not compatible with the change made in TTree to reduce the number of baskets in memory.</li>
+
+<li>If the TreeFriend is entered via a TTree*, properly detect that it is in the same file and do <I><B>not</B></I> record the filename (since we will alway know where to find it.)</li>
+<li>Add "," in the list of special characters replaced by "_" in the TTree::MakeClass
+and TTree::MakeCode functions.</li>
+
+<li>The fast cloning now explicitly rejects trying to merge TTrees with different split level</li>
+<li>The fast cloning now supports the case where one of the branch in the output tree in
+not present and also supports the case where branch are not the same order.</li>
+<li>New bit flag <tt>kMapObject</tt> [<tt>mybranch->ResetBit(kMapObject)</tt>] to explicitly disable the
+    object registration during streaming within a branch (Use only if you are sure that there
+	  is not a pointer pointing back to the nesting object within this branch).
+</li>
+<li>Fix <tt>tree->Draw("s1.value");</tt>
+	  when the top level branch does not have a trailing dot
+	  (and hence the real branch name is only 'value').</li>
+</ul>
+<li>Fixed support for vector&lt;bool&gt; and vector&lt;string&gt; </li>
+<li>Added support for top level object that do not inherit from TObject _AND_ have a custom streamer (like std::string and TString);</li>
+
+<h3>Tree Viewer</h3>
+<ul>
+<li>In <tt>TParallelCoordVar</tt> the "average marker" for candle plots was not painted at
+    the right place in case of horizontal view.
+<li> Protection added in:
+<tt>TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)</tt>
+          in case <tt>nentries &gt; tree-&gt;GetEstimate()</tt>
+          in such case a warning is printed and <tt>fNentries</tt> is set to
+          <tt>tree-&gt;GetEstimate()</tt>
+          instead of <tt>nentries</tt>.
+
+</ul>

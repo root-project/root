@@ -1,0 +1,28 @@
+#
+# lib/vcstream/Makefileold
+#
+CP         = cp
+MV	   = mv
+
+CINTSYSDIR = ../..
+
+SRCCPPIFC     = $(CINTSYSDIR)/src/vcstrmold.cxx
+SRCCPPIFH     = $(CINTSYSDIR)/src/vcstrmold.h
+CPPIFC     = vcstrmold.cxx
+CPPIFH     = vcstrmold.h
+
+CPPHEADER  = \
+		iostrm.h \
+		fstrm.h \
+		stdiostr.h \
+		strstrm.h 
+
+
+$(SRCCPPIFC) : $(CPPIFC)
+	$(MV) $(CPPIFC) $(SRCCPPIFC)		
+	$(MV) $(CPPIFH) $(SRCCPPIFH)		
+
+
+$(CPPIFC) : $(CPPHEADER)
+	cint -M0x0 -Z0 -n$(CPPIFC) -NG__stream $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT -c-1 $(IPATH) $(MACRO) $(CPPHEADER)
+

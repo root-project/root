@@ -1,0 +1,6 @@
+which cint.exe > /dev/null 2>&1 && EXEEXT=.exe
+makecint -mk Makefile -m `cint-config --cflags` -o UserMain$EXEEXT -H UserMain.h -C++ UserMain.cxx
+make
+./UserMain
+make clean
+rm Makefile

@@ -1,0 +1,44 @@
+<?xml encoding="UTF-8"?>
+
+<!ELEMENT lcgdict ((class*, function*, operator*, selection*, exclusion*)+)>
+<!ATTIST lcgdict >
+
+<!ELEMENT class               ((field*, method*)*) >
+<!ATTLIST class 
+          name                CDATA                         #IMPLIED
+          pattern             CDATA                         #IMPLIED 
+>
+
+<!ELEMENT function            EMPTY >
+<!ATTLIST function 
+          name                CDATA                         #IMPLIED 
+          pattern             CDATA                         #IMPLIED 
+>
+
+<!ELEMENT operator            EMPTY >
+<!ATTLIST operator 
+          name                CDATA                         #IMPLIED
+          pattern             CDATA                         #IMPLIED
+>
+
+<!ELEMENT selection           ((class*, function*, operator*)+) >
+<!ATTLIST selection 
+>
+
+<!ELEMENT exclusion           ((class*, function*, operator*)+) >
+<!ATTLIST exclusion 
+>
+
+<!ELEMENT field               EMPTY >
+<!ATTLIST field
+          name                CDATA                         #IMPLIED
+          comment             CDATA                         #IMPLIED
+>
+
+<!ELEMENT method              EMPTY >
+<!ATTLIST method
+          name                CDATA                         #IMPLIED 
+>
+
+
+

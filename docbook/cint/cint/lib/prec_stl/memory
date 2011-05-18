@@ -1,0 +1,268 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// lib/prec_stl/memory
+
+#pragma ifndef PREC_STL_MEMORY
+#pragma define PREC_STL_MEMORY
+#pragma link off global PREC_STL_MEMORY;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// Implemented by Scott Snyder, Fermi-lab
+// Modified by Masaharu Goto
+// SGI KCC porting by Philippe Canal, Fermi-lab
+
+#include <stddef.h>
+
+#if defined(G__ANSIISOLIB)
+#undef G__GNUC
+#undef G__HPUX
+#endif
+
+//////////////////////////////////////////////////////////////////////
+#if (G__GNUC>=3) || defined(G__BORLANDCC5) || (defined(G__VISUAL)&&(G__MSC_VER>=1300))
+
+template <class _Tp>
+class allocator {
+  //typedef alloc _Alloc;          // The underlying allocator.
+public:
+  typedef size_t     size_type;
+  typedef ptrdiff_t  difference_type;
+#ifndef G__OLDIMPLEMENTATION2032
+  typedef typename _Tp*      pointer;
+  typedef const typename  _Tp * const_pointer;
+#else
+  typedef _Tp*       pointer;
+  typedef const _Tp* const_pointer;
+#endif
+  typedef _Tp&       reference;
+  typedef const _Tp& const_reference;
+  typedef _Tp        value_type;
+
+  template <class _Tp1> struct rebind {
+    typedef allocator<_Tp1> other;
+  };
+
+  allocator() ;
+  allocator(const allocator&) ;
+  //template <class _Tp1> allocator(const allocator<_Tp1>&) ;
+  ~allocator() ;
+
+  pointer address(reference __x) const ;
+  const_pointer address(const_reference __x) const ;
+
+  // __n is permitted to be 0.  The C++ standard says nothing about what
+  // the return value is when __n == 0.
+  _Tp* allocate(size_type __n, const void* = 0) ;
+
+  // __p is not permitted to be a null pointer.
+  void deallocate(pointer __p, size_type __n);
+
+  size_type max_size() const ;
+
+  void construct(pointer __p, const _Tp& __val) ;
+  void destroy(pointer __p) ;
+};
+
+template<>
+class allocator<void> {
+public:
+  typedef size_t      size_type;
+  typedef ptrdiff_t   difference_type;
+  typedef void*       pointer;
+  typedef const void* const_pointer;
+  typedef void        value_type;
+
+  template <class _Tp1> struct rebind {
+    typedef allocator<_Tp1> other;
+  };
+};
+//////////////////////////////////////////////////////////////////////
+#elif defined(G__GNUC) && !defined (G__KCC) 
+
+template<int inst>
+class __malloc_alloc_template {
+ public:
+  static void * allocate(size_t n);
+  static void deallocate(void *p, size_t /* n */);
+  static void * reallocate(void *p, size_t /* old_sz */, size_t new_sz);
+#if defined(G__GNUC_VER) && (G__GNUC_VER >= 2095)
+  static void (* __set_malloc_handler(void (*f)()))();
+#else
+  static void (* set_malloc_handler(void (*f)()))();
+#endif
+};
+
+
+#ifndef G__OLDIMPLEMENTATION1782
+
+# ifdef __USE_MALLOC
+
+typedef __malloc_alloc_template<0> malloc_alloc;
+typedef malloc_alloc alloc;
+
+# else
+
+template <class T> class allocator<T>;
+class alloc;
+
+class single_client_alloc;
+//typedef __default_alloc_template<__NODE_ALLOCATOR_THREADS, 0> alloc;
+//typedef __default_alloc_template<false, 0> single_client_alloc;
+
+# endif
+
+#else /* 1782 */
+
+typedef __malloc_alloc_template<0> malloc_alloc;
+typedef malloc_alloc alloc;
+
+#endif  /* 1782 */
+
+
+//////////////////////////////////////////////////////////////////////
+#elif defined(G__HPUX) 
+
+class allocator {
+};
+
+//////////////////////////////////////////////////////////////////////
+#else // non gcc, non HPUX compiler
+
+template <class T>
+class allocator
+{
+public:
+  typedef size_t      size_type;
+  typedef ptrdiff_t   difference_type;
+  typedef T*          pointer;
+  typedef const T*    const_pointer;
+  typedef T&          reference;
+  typedef const T&    const_reference;
+  typedef T           value_type;
+#ifdef G__KCC
+   allocator();
+#endif
+  // template members don't really work with cint yet...
+#if 0
+  template <class U> struct rebind { typedef allocator<U> other; };
+#endif
+#if 0
+  pointer address(reference _X) const ;
+  const_pointer address(const_reference _X) const;
+#else
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC) || defined(G__STLPORT_VERSION)
+  pointer address(T& _X) const ;
+  const_pointer address(const T& _X) const;
+#endif
+#endif
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC) || defined(G__STLPORT_VERSION)
+  pointer allocate(size_type _N, const void *);
+#else
+  pointer allocate(size_type _N, void *);
+#endif
+  //char  *_Charalloc(size_type _N);
+#if !defined(G__KCC) && !defined(G__BORLANDCC5) && !defined(G__INTEL_COMPILER) && !(defined (G__SGI)&&!defined(G__GNU)) && !defined(G__AIX) && !defined(G__ALPHA) && !defined(G__STLPORT_VERSION)
+  void deallocate(void *_P, size_type);
+#else
+  void deallocate(T *_P, size_type); //???
+#endif
+#if !defined(G__BORLAND) && !defined(G__SUNPRO_CC) || defined(G__STLPORT_VERSION)
+  void construct(pointer _P, const T& _V);
+  void destroy(pointer _P);
+  size_type max_size() const;
+#endif
+
+  friend bool operator==(const allocator<T>& x, const allocator<T>& y);
+  friend bool operator!=(const allocator<T>& x, const allocator<T>& y);
+};
+
+#if 0
+template<class _Ty, class _U> inline
+ bool operator==(const allocator<_Ty>&, const allocator<_U>&)
+  {return (true); }
+template<class _Ty, class _U> inline
+ bool operator!=(const allocator<_Ty>&, const allocator<_U>&)
+  {return (false); }
+#endif
+
+// specialized tempatel class allocator<void>
+class allocator<void> {
+ public:
+	typedef void _Ty;
+	typedef _Ty *pointer;
+	typedef const _Ty *const_pointer;
+	typedef _Ty value_type;
+};
+
+
+#endif // G__GNUC
+//////////////////////////////////////////////////////////////////////
+
+/**********************************************************************
+* auto_ptr
+**********************************************************************/
+template <class X> class auto_ptr {
+private:
+  X* ptr;
+  //template<class Y> struct auto_ptr_ref { };
+public:
+  typedef X element_type;
+  explicit auto_ptr(X* p = 0) : ptr(p) {}
+  auto_ptr(auto_ptr& a) {ptr=a.ptr;}
+  
+  // this implementation may not be correct
+  template <class T> auto_ptr(auto_ptr<T>& a) {ptr=a.release();}
+  
+#if 0
+  // this does not exist in standard.
+  template <class T> auto_ptr(T* a) {
+    ptr=a;
+  }
+#endif
+  
+  auto_ptr& operator=(auto_ptr& a) {
+    if (a.ptr != ptr) {
+      delete ptr;
+      ptr = a.ptr;
+    }
+    return(*this);
+  }
+  
+  // this implementation may not be correct
+  template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
+    if (a.ptr != ptr) {
+       delete ptr;
+       ptr = a.release();
+    }
+    return(*this);
+  }
+  
+  ~auto_ptr() { delete ptr; }
+  
+  X& operator*() const { return *ptr; }
+  X* operator->() const { return ptr; }
+  X* get() const { return ptr; }
+  X* release() { X *old = ptr; ptr = 0; return 0; }
+#if 0
+  // My g++, VC++, BC++ does not support this so far.
+  void reset(X* p=0) {
+    if(p!=ptr) { 
+      delete ptr;  
+      ptr = p; 
+    }
+  }
+#endif
+
+  // auto_ptr conversions
+  //auto_ptr(auto_ptr_ref<X>& x) { }
+  //template<class Y> operator auto_ptr_ref<Y>() { return auto_ptr_ref<Y>(); }
+  //template<class Y> operator auto_ptr<Y>() { return auto_ptr<T>(); }
+};
+
+#pragma endif

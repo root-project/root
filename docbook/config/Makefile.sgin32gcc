@@ -1,0 +1,50 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for SGI IRIX 6.4 and 6.5 with gcc compiler for n32 ABI
+# contributed by Martin Weber
+
+PLATFORM      = sgi
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -fsigned-char -Wall -fPIC -DIRIX64 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fsigned-char -Wall -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -fsigned-char -Wall -fPIC -DG__REGEXP1 \
+                -DG__UNIX -DG__SIGNEDCHAR -DG__SHAREDLIB -DG__OSFDLL \
+                -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -fsigned-char -Wall -fPIC -DG__REGEXP1 -DG__SIGNEDCHAR \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
+                -DG__REDIRECTIO $(EXTRA_CFLAGS)
+COMPILER      = gnu
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) -lm -lgen -L/usr/lib32
+SOFLAGS       = -shared
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -L/usr/lib32 -lXext -lX11
+CILIBS        = -lm -lgen
+
+# Fortran:
+
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
+
+# Extras

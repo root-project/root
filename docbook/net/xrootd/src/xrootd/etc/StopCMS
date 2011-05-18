@@ -1,0 +1,131 @@
+#!/bin/sh
+#
+#  $Id$
+#
+# (C) 2003 by the Board of Trustees of the Leland Stanford, Jr., University
+#                          All Rights Reserved
+# Produced by Andrew Hanushevsky for Stanford University under contract
+#            DE-AC03-76-SFO0515 with the Deprtment of Energy
+#Syntax:   StopCMS
+
+# The following snippet is from the StartXRD.cf file.
+#
+MYOS=`uname | awk '{print $1}'`
+if [ "$MYOS" = "SunOS" ]; then
+MYNAME=`/usr/ucb/whoami`
+else
+MYNAME=`whoami`
+fi
+CONDCHK=0
+
+##############################################################################
+#                           s u b r o u t i n e s                            #
+##############################################################################
+
+Emsg () {
+    echo StopCMS: $1
+    exit 4
+    }
+
+Terminate() {
+    cmspid=$1
+    killpid=$2
+
+    # Verify that we can kill this process
+    #
+      if [ $MYNAME != root ]; then
+         set -- `ps -p $cmspid -o user`
+         if [ $2 != $MYNAME ]; then
+            Emsg "User $MYNAME can't kill process $cmspid started by $2."
+         fi
+      fi
+
+    # Now kill the process
+    #
+      set -- `kill -9 $killpid 2>&1`
+      if [ $? -ne 0 ]; then
+         shift 2
+         Emsg "Unable to kill process $cmspid; $*."
+         fi
+    }
+
+Check(){
+    cmspid=$1
+
+    # Check if the process is indeed dead
+    #
+      FOO=`ps -p $cmspid`
+      if [ $? -eq 0 ]; then
+         sleep 1
+         FOO=`ps -p $cmspid`
+         if [ $? -eq 0 ]; then
+         echo "pid $cmspid is still alive..."
+         echo $FOO
+         fi
+      fi
+
+    }
+
+##############################################################################
+#                          m a i n   p r o g r a m                           #
+##############################################################################
+
+# Pick up options
+#
+while test -n "$1"; do
+     if test -n "'$1'" -a "'$1'" = "'-D'"; then
+        set -x
+   elif test -n "'$1'" -a "'$1'" = "'-c'"; then
+        CONDCHK=1
+   else
+        echo StopCMS: Invalid option - $1.
+     fi
+   shift
+   done
+
+# find the process number assigned to the CMS
+#
+  set -- `ps -e -o pid -o comm | grep '.*cmsd$' | awk '{print $1}'`
+
+  if [ -z "$1" ]; then
+     msg="Unable to find CMS process number"
+     if [ $CONDCHK -ne 1 ]; then
+        Emsg "$msg; is it running?"
+     fi
+     echo StopCMS: $msg\; continuing.
+     exit 0
+  fi
+
+# Kill each process that we have found
+#
+  for cmspid do
+      Terminate $cmspid $cmspid
+      done
+
+# Make Sure they are dead
+#
+  sleep 1
+  for cmspid do
+      Check $cmspid
+      done
+
+# find and kill the process numbers assigned to the performance monitor
+#
+  set --  ''
+  set -- `ps -e -o pid -o args | grep 'XrdOlbMonPerf' | grep -v grep | awk '{print $1}'`
+
+  if [ ! -z "$1" ]; then
+     for cmspid do
+         Terminate $cmspid -$cmspid
+     done
+  fi
+  set --  ''
+  set -- `ps -e -o pid -o args | grep 'XrdCmsMonPerf' | grep -v grep | awk '{print $1}'`
+
+  if [ ! -z "$1" ]; then
+     for cmspid do
+         Terminate $cmspid -$cmspid
+     done
+  fi
+
+  echo StopCMS: CMS stopped.

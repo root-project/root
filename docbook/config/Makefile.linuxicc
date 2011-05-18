@@ -1,0 +1,109 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for Linux with glibc and Intel icc >= v8 compiler
+
+PLATFORM      = linux
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         = -O0
+else
+OPT           = $(OPTFLAGS)
+NOOPT         = -O0
+endif
+
+# Compiler:
+CXX           = icc
+CC            = icc
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION
+CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) -restrict \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION
+
+# Linker:
+LD            = icpc
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# Compiler version:
+ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+
+ifeq ($(ICC_MAJOR),9)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+ICC_GE_9      = 9
+endif
+
+ifeq ($(ICC_MAJOR),10)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+ICC_GE_9      = 10
+ifneq ($(ICC_MINOR),0)
+ICC_GE_101    = 101
+endif
+endif
+
+ifeq ($(ICC_MAJOR),11)
+CXXFLAGS     += -m32 -wd1572 -wd279
+CFLAGS       += -m32 -wd1572 -wd279
+CINTCXXFLAGS += -m32 -wd1572 -wd279
+CINTCFLAGS   += -m32 -wd1572 -wd279
+LDFLAGS      += -m32
+ICC_GE_9      = 11
+ICC_GE_101    = 110
+endif
+
+ifeq ($(ICC_MAJOR),12)
+CXXFLAGS     += -m32 -wd1572 -wd279
+CFLAGS       += -m32 -wd1572 -wd279
+CINTCXXFLAGS += -m32 -wd1572 -wd279
+CINTCFLAGS   += -m32 -wd1572 -wd279
+LDFLAGS      += -m32
+ICC_GE_9      = 12
+ICC_GE_101    = 120
+endif
+
+# System libraries:
+SYSLIBS       = -limf -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB) -rdynamic
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
+CILIBS        = -limf -lm -ldl -rdynamic
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+ifeq ($(F77),ifort)
+F77           = ifort
+F77FLAGS      = -fPIC
+ifeq ($(ICC_MAJOR),12)
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|compiler/lib|') \
+                -lifcore
+F77FLAGS     += -m32
+else
+ifeq ($(ICC_MAJOR),11)
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|lib/ia32|') \
+                -lifcore
+F77FLAGS     += -m32
+else
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore
+endif
+endif
+endif
+
+# Extras

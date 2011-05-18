@@ -1,0 +1,84 @@
+# @(#)root/mathcore:$Id$
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+#
+
+# The following is set, otherwise it would follow GNU conventions.
+AUTOMAKE_OPTIONS = foreign
+
+math_genvectordir = $(includedir)/Math/GenVector
+
+
+math_genvector_HEADERS =               \
+         3DConversions.h               \
+         3DDistances.h                 \
+         AxisAngle.h                   \
+         AxisAnglefwd.h                \
+         BitReproducible.h             \
+         Boost.h                       \
+         BoostX.h                      \
+         BoostY.h                      \
+         BoostZ.h                      \
+         Boostfwd.h                    \
+         BoostXfwd.h                   \
+         BoostYfwd.h                   \
+         BoostZfwd.h                   \
+         Cartesian2D.h                 \
+         Cartesian3D.h                 \
+         Cartesian2Dfwd.h              \
+         Cartesian3Dfwd.h              \
+         Cylindrical3D.h               \
+         Cylindrical3Dfwd.h            \
+         CylindricalEta3D.h            \
+         CylindricalEta3Dfwd.h         \
+         CoordinateSystemTags.h	       \
+         DisplacementVector2D.h        \
+         DisplacementVector3D.h        \
+         DisplacementVector2Dfwd.h     \
+         DisplacementVector3Dfwd.h     \
+         eta.h                         \
+         etaMax.h                      \
+         EulerAngles.h                 \
+         EulerAnglesfwd.h              \
+         GenVector_exception.h         \
+         GenVectorIO.h                 \
+         LorentzRotation.h             \
+         LorentzRotationfwd.h          \
+         LorentzVector.h               \
+         LorentzVectorfwd.h            \
+	 Plane3D.h                     \
+         Polar2D.h                     \
+         Polar3D.h                     \
+         Polar2Dfwd.h                  \
+         Polar3Dfwd.h                  \
+         PositionVector2D.h            \
+         PositionVector3D.h            \
+         PositionVector2Dfwd.h         \
+         PositionVector3Dfwd.h         \
+         PtEtaPhiE4D.h                 \
+         PtEtaPhiE4Dfwd.h              \
+         PtEtaPhiM4D.h                 \
+         PtEtaPhiM4Dfwd.h              \
+         PxPyPzE4D.h                   \
+         PxPyPzE4Dfwd.h                \
+         PxPyPzM4D.h                   \
+         PxPyPzM4Dfwd.h                \
+         Quaternion.h                  \
+         Quaternionfwd.h               \
+         Rotation3D.h                  \
+         Rotation3Dfwd.h               \
+         RotationX.h                   \
+         RotationXfwd.h                \
+         RotationY.h                   \
+         RotationYfwd.h                \
+         RotationZ.h                   \
+         RotationZfwd.h                \
+         RotationZYX.h                 \
+         RotationZYXfwd.h              \
+         Transform3D.h                 \
+         Translation3D.h               \
+         VectorUtil.h                 
+
+

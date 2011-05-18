@@ -1,0 +1,134 @@
+#
+# $Id$
+#
+# The following is a sample xrootd configuration. The relevant prefixes are:
+#
+# acc    - Access Control
+# cms    - Cluster Management Service
+# ofs    - Open File    System
+# oss    - Open Storage System
+# sec    - Security
+# xrd    - Extended Request Daemon
+# xrootd - Xrootd Service
+
+#-----------------------------------------------
+
+# The Common Section (applies to every component)
+#
+
+# Tell everyone who is the redirection manager
+#
+all.manager kanrdr-a+ 3121
+
+# Identify which machines will be redirecting clients
+#
+all.role manager if kanrdr-a+
+
+# Identify which machines clients will be redirected to (need not be inclusive)
+#
+all.role server  if kan0*
+
+# Finally, we need to indicate processing options by path. For instance,
+# which ones are exported (i.e., visible) and which ones are migratable (which
+# will indicate the logical paths (i.e., lfn's) that should exist in the MSS.)
+#
+all.export /store nodread mig
+
+#-----------------------------------------------
+
+# The Open Storage System Section
+#
+
+# Indicate where we have mounted filesystems that can be used for space
+# The cache directive will also be used by the cmsd. So, we need not repeat it.
+#
+oss.cache public /kanga/cache*
+
+# While we highly recommend that you avoid path prefixing, here we indicate
+# the actual way files are physically name (i.e., the lfn to pfn mapping). The
+# localroot is how we name this on the data server while remoteroot tells the
+# system the corresponding name in the Mass Storage System.
+#
+oss.localroot /kanga
+oss.remoteroot /kanga
+
+# Since we are using a Mass Storage System we need to indicate how MSS meta-data
+# information is retrieved (mssgwcmd) and how files are retrieved (stagecmd).
+# The xfr directive will limit the sumber of simultaneous stages to eight.
+#
+oss.msscmd   /usr/etc/ooss/pudc -f -c /usr/etc/ooss/rxhpss.cf
+oss.stagecmd /usr/etc/ooss/ooss_Stage
+oss.xfr 8
+
+#-----------------------------------------------
+
+# The XRD Section
+#
+# Generally, xrd defaults are fine. So, no need to change them.
+#
+
+#-----------------------------------------------
+
+# The Xrootd Section
+#
+# Here we load the extended file system support for xrootd
+#
+xrootd.fslib /opt/xrootd/lib/libXrdOfs.so
+
+#-----------------------------------------------
+
+# The Cluster Management Section
+#
+
+# Managers use the allow and sched directives.
+# Servers  use the allow and perf  directives.
+#
+# Indicate which hosts are allowed to connect to the cmsd (even if localhost)
+#
+cms.allow host kan*.slac.stanford.edu
+cms.allow host bbr-rdr*.slac.stanford.edu
+
+# To use load based scheduling, specify a load formula using sched
+#
+cms.sched cpu 100
+
+# To effect load based scheduling, we must start a performance monitor
+#
+cms.perf int 180 pgm /opt/xrootd/etc/XrdOlbMonPerf 120
+
+#-----------------------------------------------
+
+# The MPS Section
+#
+# Here code the relevant dorectives to control migration, purge, and staging
+# Most of the defaults are likely wrong. The typical ones to specify are:
+#
+# Where error messages go via mail and how often they should go
+#
+mps.adminuser = sys-hpss
+
+# For migration, how long to wait between runs, how long a failure is to be
+# recognized (after which the operation is retried). how often purge should
+# run, and the high/low purge thesholds.
+#
+mps.migr.rmfail_time = 129600
+mps.migr.waittime = 600
+mps.purg.waittime = 3600
+mps.purg.lousedpct = 80
+mps.purg.hiusedpct = 80
+
+# For pre-stage, we generally want to indicate the maximum number allowed
+# at one time and the command to use to transfer data from the mss
+#
+mps.pstg.max_pstg_proc = 3
+mps.pstg.pstgcmd = /opt/xrootd/utils/mps_Stage -i
+
+# Generally, for all component, we need to indicate who the MSS transfer user
+# is, the target host and port. Usually, we limit retries to two.
+#
+mps.xfrhost = babarmss
+mps.xfruser = objysrv
+mps.xfrport = 2021
+mps.stage.max_retry = 2
+
+#-----------------------------------------------

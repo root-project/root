@@ -1,0 +1,155 @@
+#####################################################################
+#
+# Preamble 
+#
+# Macro definitions
+%define ver    @version@
+%define rel    @release@
+%define _prefix        @prefix@
+%define _sysconfdir    @etcdir@
+%define _defaultdocdir %_prefix/share/doc
+%define _rootdir       @rootdir@
+
+######################################################################
+#
+# Header 
+#
+Name:         rootd@arcomp@
+Version:      %{ver}
+Release:      %{rel}
+Copyright:    ROOT Software Terms and Conditions (see package)
+Packager:     Gerri Ganis <Gerardo.Ganis@cern.ch>
+Distribution: ROOT
+Vendor:       ROOT Team
+URL:          http://root.cern.ch
+Source:       ftp://root.cern.ch/root/root_v%{ver}.source.tar.gz
+Group:        ROOT
+BuildRoot:    /tmp/rootdrpm
+Prefix:       %{_prefix}
+Summary:      @short@
+Conflicts:    root-system-rootd 
+
+#---------------------------------------------------------------------
+# Less concise description
+%description
+@long@
+
+#---------------------------------------------------------------------
+# Install
+%install
+rm -rf $RPM_BUILD_ROOT%{_prefix}
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/bin
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/share/man/man1
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+
+# The rootd executable
+install -s -m 755 %{_rootdir}/bin/rootd $RPM_BUILD_ROOT%{_prefix}/bin/rootd
+# Small application used internally for backward compatibility in SSH auth
+install -s -m 755 %{_rootdir}/bin/ssh2rpd $RPM_BUILD_ROOT%{_prefix}/bin/ssh2rpd
+# The rootd man page
+install -m 644 %{_rootdir}/man/man1/rootd.1 $RPM_BUILD_ROOT%{_prefix}/share/man/man1/rootd.1
+gzip $RPM_BUILD_ROOT%{_prefix}/share/man/man1/rootd.1
+# The system.rootdaemonrc man page
+install -m 644 %{_rootdir}/man/man1/system.rootdaemonrc.1 $RPM_BUILD_ROOT%{_prefix}/share/man/man1/system.rootdaemonrc.1
+gzip $RPM_BUILD_ROOT%{_prefix}/share/man/man1/system.rootdaemonrc.1
+# The access control configuration file with local CERN rules
+install -m 644 %{_rootdir}/etc/system.rootdaemonrc $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
+# Add CERN local rules
+echo "#"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
+echo "# CERN local rules for RFIO compatibility"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
+echo "*.cern.ch:rootd usrpwd ssh uidgid"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
+# The start script; will make it relocatable in the post-install
+install -m 755 %{_rootdir}/etc/daemons/rootd.rc.d $RPM_BUILD_ROOT/etc/rc.d/init.d/rootd
+#---------------------------------------------------------------------
+# Files that go into this package 
+%files
+%attr(0755, root, root) %{_prefix}/bin/rootd 
+%attr(0755, root, root) %{_prefix}/bin/ssh2rpd
+%attr(0644, root, root) %{_prefix}/share/man/man1/rootd.1.gz 
+%attr(0644, root, root) %{_prefix}/share/man/man1/system.rootdaemonrc.1.gz 
+%attr(0644, root, root) %config(noreplace) %{_sysconfdir}/system.rootdaemonrc
+%attr(0755, root, root) /etc/rc.d/init.d/rootd
+
+#---------------------------------------------------------------------
+# Pre installation script - only body
+#%pre
+
+# end of script
+#---------------------------------------------------------------------
+# Post installation script - only body
+%post
+#
+# If using inetd.conf, add relevant lines to the configuration file,
+# if not already present 
+if [ -f /etc/inetd.conf ] ; then 
+   if ! grep -qs ^rootd /etc/inetd.conf ; then 
+     echo 'rootd stream tcp nowait root %{_prefix}/bin/rootd rootd -i' \
+       >> /etc/inetd.conf
+   fi
+fi
+#
+# If using xinetd, add a relevant entry in the config dir
+if [ -d /etc/xinetd.d ] ; then 
+   # remove existing rootd entry
+   if [ -f /etc/xinetd.d/rootd ] ; then 
+      rm -f /etc/xinetd.d/rootd
+   fi
+   # Create the file
+   cat > /etc/xinetd.d/rootd << EOF
+# default: on
+# description: The rootd daemon (ROOT file server)
+#
+service rootd
+{
+        disable         = no
+        flags           = REUSE
+        socket_type     = stream
+        wait            = no
+        user            = root
+        server          = %{_prefix}/bin/rootd
+        server_args     = -i
+}
+EOF
+fi
+#
+# Make sure that port 1094 is assigned to rootd in /etc/services 
+if ! grep -qs "^rootd" /etc/services ; then
+    echo "rootd           1094/tcp # ROOT file access daemon"  >> /etc/services
+fi
+#
+# Make sure that the rootd location is correct in /etc/rc.d/init.d/rootd
+sed -e "s|/usr/local|$RPM_INSTALL_PREFIX|" < /etc/rc.d/init.d/rootd > /etc/rc.d/init.d/rootd.tmp
+mv /etc/rc.d/init.d/rootd.tmp /etc/rc.d/init.d/rootd
+chmod 0755 /etc/rc.d/init.d/rootd
+#
+# end of script
+#---------------------------------------------------------------------
+# Pre removal 
+%preun
+#
+# Stop the service
+#
+/etc/rc.d/init.d/rootd stop
+#
+# Remove entries from /etc/inetd.conf
+if [ -f /etc/inetd.conf ] ; then 
+   if ! grep -qs ^rootd /etc/inetd.conf ; then 
+      sed '/^rootd.*/d' < /etc/inetd.conf > /etc/inetd.conf.rpmnew
+      mv /etc/inetd.conf.rpmnew /etc/inetd.conf
+   fi
+fi
+#
+# Remove entry from /etc/xinetd.d
+if [ -d /etc/xinetd.d ] ; then 
+   rm -f /etc/xinetd.d/rootd
+fi
+#
+# Do not remove antries from /etc/services, since the numbers _are_ 
+# assigned IANA, so there's no need 
+#
+# end of script
+#---------------------------------------------------------------------
+# Post removal - only body
+# end of script        
+

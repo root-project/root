@@ -1,0 +1,10 @@
+This directory contains the TMVA Multi-Variate-Analysis classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://tmva.sourceforge.net">The full description of the Multi Variate Analysis package
+    </a></li>
+<li><a href="http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf">The TMVA Users Guide</a></li>
+<li><a href="http://tmva.sourceforge.net/optionRef.html">The TMVA Options Reference</a></li>
+</ul>
+END_HTML

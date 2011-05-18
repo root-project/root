@@ -1,0 +1,18 @@
+Package: libroot-net@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Net library for ROOT
+ This package contains the Net library for ROOT. 
+
+Package: libroot-net-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-net@libvers@ (= ${binary:Version}), libroot-math-mathcore-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Net library for ROOT
+ This package contains the Net library for ROOT. 
+

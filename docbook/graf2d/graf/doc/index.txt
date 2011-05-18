@@ -1,0 +1,21 @@
+BEGIN_HTML
+ This directory contains all the low level graphics classes.
+<p>
+ Several documents describing these classes are listed below:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/4Graphs.pdf">The Chapter about the Graph classes in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/9Graphics.pdf">The Chapter about Graphics and GUI in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-draw-objects">How to Draw objects
+    </a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-pick-objects">How to Pick objects
+      </A></li>
+<li><a href="http://root.cern.ch/drupal/content/how-create-axis-time-units">How to create an axis with Time units
+      </A></li>
+<li><a href="http://root.cern.ch/drupal/content/how-create-or-modify-style">How to Create or Modify a style
+      </A></li>
+<li><a href="http://root.cern.ch/drupal/content/how-use-postscript-interface">How to use the Postscript interface
+      </A></li>
+</ul>
+END_HTML

@@ -1,0 +1,21 @@
+#              $Id$
+
+#------------------------------------------------------------------------------#
+#              R u l e s   f o r   s u n C C   x 8 6                           #
+#------------------------------------------------------------------------------#
+
+TYPECC     = CC
+TYPELD     = CC
+
+TYPEMISC   = -KPIC -DSUNCC -D__solaris__ -DSUNX86 $(CFTRACE) @sunstlport@
+SUNMT      = -D_REENTRANT -mt -D_POSIX_PTHREAD_SEMANTICS
+TYPECF32   =
+TYPECF64   = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+TYPEOPT    = $(TYPEMISC) $(SUNMT)
+TYPEDBG    = $(TYPEMISC) $(SUNMT) -g -xs
+TYPELDSO   = -G
+TYPESHLIB  = so
+
+TYPELIBS   =  -lposix4 -lsocket -lnsl $(PTHREAD) -ldl @suncstd@
+TYPELIBMT  =  -lumem
+TYPELIBSF  =  -lsendfile

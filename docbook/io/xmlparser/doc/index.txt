@@ -1,0 +1,8 @@
+BEGIN_HTML
+This directory contains classes that provide and interface to the libxml2
+XML parser. Both DOM and SAX parser interfaces are provided.
+See:
+<ul>
+<li><a href="http://www.xmlsoft.org">For more on libxml2</a></li>
+</ul>
+END_HTML

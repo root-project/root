@@ -1,0 +1,134 @@
+#!/bin/sh
+#
+#  $Id$
+#
+
+# Set 'time' to be number of seconds to wait for a required file to appear
+# This is only meaningful for files in AFS or NFS
+#
+time=60
+
+# Set 'count' to be the maximum number of times to wait for a required file
+# This is only meaningful for files in AFS or NFS
+#
+count=30
+
+# Set XRDUSER to be the username to "su" to if the script is run as root
+#
+XRDUSER=fabrizio
+
+# Set XRDBASE to be the base directory where xrootd has
+# been installed or compiled.
+# The default is the upper dir with respect to where this script resides
+#
+parent=`dirname $0`
+parent=`cd $parent ; pwd`
+XRDBASE=`dirname $parent`
+
+# In the case where configure.classic has not been invoked with the
+# option --no-arch-subdirs, we have arch subdirs.
+# Set XRDARCH to the architecture you want to start xrootd on
+# This default behavior takes the default architecture if it detects such a schema
+XRDARCH=
+if test -x $XRDBASE/bin/arch ; then  
+  XRDARCH=arch
+  else
+  if test -x $XRDBASE/bin/arch_dbg ; then
+    XRDARCH=arch_dbg
+  fi
+fi
+
+# Set XRDCFG to be the name of the default directory where config data and
+# scripts are to be found
+XRDCFG=$XRDBASE/etc
+
+# Set XRDCONFIG the default config file name. The start script uses
+# '$XRDCFG/$XRDCONFIG' as the configuration file.
+#
+XRDCONFIG=xrootd.cf
+
+# Set 'XRDHOMEDIR' to be the working directory when xrootd is started
+# Set 'CMSHOMEDIR' to be the working directory when cmsd   is started
+#
+XRDHOMEDIR=$XRDBASE/core
+CMSHOMEDIR=$XRDBASE/core
+
+# Set 'XRDLOGDIR' to be the directory where log files are placed and
+# Set 'XRDLOGFN'  to be the base log file name for xrootd.
+# Set 'CMSLOGFN'  to be the base log file name for cmsd.
+# ---> If you want to use the automatic logfile rotation sheme, set each LOGFN
+#      variable to '<cfile> -k num | sz[k|m|g]'. For example, a 7 day rotation
+#      for cmslog: CMSLOGFN='cmslog -k 7'. The -k option is documented in the
+#      XRD/Xrootd and cmsd configuration reference under command line options.
+#
+XRDLOGDIR=$XRDBASE/logs
+XRDLOGFN=xrdlog
+CMSLOGFN=cmslog
+
+#-#-#-#-#-#-#-#   F I L E  R E S I D E N C Y  M A N A G E R  #-#-#-#-#-#-#-#-#
+
+# The following sets the start-up command and command line parameters for
+# each daemon. Add as needed (e.g., log file options, instance name, etc)
+
+# The following are common options
+#
+LDLIBPATH=$XRDBASE/lib/$XRDARCH
+
+# Options that need to be set:
+#
+# CONFG_ -> What configuration file to use
+# HFILE_ -> The file who's presence prevents the component's [re]start
+# HOMED_ -> Where the home directory is (where core files will go)
+# LOGFN_ -> Where the log is to be written (full path with filename)
+# START_ -> What program to start
+
+# Set options for purge
+#
+HFILE_PURGE='/var/adm/frm/HOLD_PURGE'
+HOMED_PURGE='/var/adm/frm/core/purg'
+LOGFN_PURGE='/var/adm/frm/logs/purglog'
+START_PURGE="$XRDBASE/bin/$XRDARCH/frm_purged"
+PARMS_PURGE="-c $XRDCFG/$XRDCONFIG -l $LOGFN_PURGE"
+
+# Set options for xfrd
+#
+HFILE_TRANSFER='/var/adm/frm/HOLD_TRANSFER'
+HOMED_TRANSFER='/var/adm/frm/core/xfr'
+LOGFN_TRANSFER='/var/adm/frm/logs/xfrlog'
+START_TRANSFER="$XRDBASE/bin/$XRDARCH/frm_xfrd"
+PARMS_TRANSFER="-c $XRDCFG/$XRDCONFIG -l $LOGFN_TRANSFER"
+
+#-#-#-#-#-#-#-#-#   E N D   O F   C O N F I G U R A T I O N   #-#-#-#-#-#-#-#-#
+
+
+# The following logic tries to set variables as follows:
+
+# MYOS    - the current os name
+# MAXFD   - the file descriptor limit
+# MYNAME  - the current username
+# PROGRAM - the name of the start script
+#
+MYOS=`uname | awk '{print $1}'`
+if [ "$MYOS" = "SunOS" ]; then
+
+MAXFD=`ulimit -H -n`
+MYNAME=`/usr/ucb/whoami`
+else
+
+if [ "$MYOS" = "Darwin" ]; then
+MAXFD=1024
+else
+
+MAXFD=`ulimit -H -n | grep files | awk '{print $3}'`
+if [ "$MAXFD" = "" ]; then
+MAXFD=`ulimit -H -n`
+fi
+
+fi
+
+MYNAME=`whoami`
+fi
+
+############################################
+PROGRAM=`echo $0 | awk '{n=split($0,x,"/"); print x[n]}'`
+

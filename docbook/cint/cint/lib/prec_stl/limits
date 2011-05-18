@@ -1,0 +1,20 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// lib/prec_stl/limits
+
+#pragma ifndef PREC_STL_LIMITS
+#pragma define PREC_STL_LIMITS
+#pragma link off global PREC_STL_LIMITS;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// to be implemented
+
+#pragma endif
+
+

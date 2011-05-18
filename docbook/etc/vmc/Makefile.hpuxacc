@@ -1,0 +1,39 @@
+# -*- mode: makefile -*-
+# $Id$
+
+# HP (with aCC) platform dependent definitions
+
+# The compilers
+CXX           = $(shell root-config --cxx)
+CC            = $(shell root-config --cc)
+F77	      = $(shell root-config --f77)
+
+# Global optimisation
+OPT	      = -O
+
+# Shared library suffix
+SL	      = sl
+
+# AWK
+AWK	      = awk
+
+# The options
+CXXOPTS       = $(OPT) +Z -z +W70,495,740,749,823,829 -Dextname
+COPT          = $(OPT)
+FOPT          = $(OPT) +ppu +Z
+
+# CERNLIB defines
+
+CLIBDEFS      = -DCERNLIB_HPUX -DCERNLIB_BLDLIB -DCERNLIB_CZ
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS) +z -Ae 
+CLIBFOPT      = $(CLIBDEFS) -WF,-P
+
+LD            = $(shell root-config --ld)
+LDFLAGS       = $(OPT) -z -Wl,+s -Wl,-E
+
+SHLD	      = $(LD)
+SOFLAGS       = -b /usr/lib/libm.sl 
+
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(ROOTLIBS) -L/usr/lib/X11R6 -lX11 

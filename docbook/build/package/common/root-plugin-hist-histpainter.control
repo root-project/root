@@ -1,0 +1,8 @@
+Package: root-plugin-hist-histpainter
+Architecture: any
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Depends: ${shlibs:Depends}
+Description: Histogram painter plugin for ROOT
+ This package a painter of histograms for ROOT.
+

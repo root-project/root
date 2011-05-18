@@ -1,0 +1,23 @@
+BEGIN_HTML
+<p><hr><p>
+Collections are a key feature of the ROOT system. Many, if not most, of
+the applications you write will use collections. If you have used
+polymorphic C++ collections before, some of this material will be review.
+However, much of this tutorial covers aspects of collections specific to
+the ROOT system. In this tutorial the following features will be demonstrated:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/16CollectionClasses.pdf">Chapter about Collections in the Users Guide</a>
+<li><a href="http://root.cern.ch/root/html/examples/tcollex.C.html">Using collections</a>
+<li>How to create instances of collections
+<li>The difference between lists, ordered collections, hashtables, maps, etc.
+<li>How to add and remove elements of a collection
+<li>How to search a collection for a specific element
+<li>How to access and modify collection elements
+<li>How to iterate over a collection
+<li>How to manage memory for collections and collection elements
+<li>How collection elements are tested for equality (<tt>IsEqual()</tt>)
+<li>How collection elements are compared (<tt>Compare()</tt>) in case of sorted collections
+<li>How collection elements are hashed (<tt>Hash()</tt>) in hash tables
+</ul>
+END_HTML
+

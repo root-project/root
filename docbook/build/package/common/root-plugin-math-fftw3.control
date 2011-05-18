@@ -1,0 +1,8 @@
+Package: root-plugin-math-fftw3
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://fftw.org/
+Description: FFTw plugin for ROOT
+ This package contains the Fast Fourier Transform extension for ROOT.
+ It uses the very fast fftw (version 3) library.
+

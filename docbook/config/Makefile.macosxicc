@@ -1,0 +1,162 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for MacOS X, using Intel icc >= 9.1 compiler
+
+PLATFORM      = macosx
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         = -O0
+else
+OPT           = $(OPTFLAGS)
+NOOPT         = -O0
+endif
+
+# OS version
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+MACOSX_CPU   := $(shell uname -p)
+FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
+ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
+MACOSXVERS    = 10.$(MACOSX_MINOR)
+else
+MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
+endif
+
+# Compiler:
+CXX           = icc
+CC            = icc
+CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
+CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+                -DG__STD_EXCEPTION
+CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+                -DG__STD_EXCEPTION
+
+# Compiler version:
+ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+endif
+endif
+
+ifeq ($(ICC_MAJOR),9)
+CXXFLAGS     += -wd1572 -wd873 -wd672
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572 -wd873
+CINTCFLAGS   += -wd1572
+ICC_GE_9      = 9
+endif
+
+ifeq ($(ICC_MAJOR),10)
+CXXFLAGS     += -wd1572 -wd873 -wd672
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572 -wd873
+CINTCFLAGS   += -wd1572
+ICC_GE_9      = 10
+ifneq ($(ICC_MINOR),0)
+ICC_GE_101    = 101
+endif
+endif
+
+ifeq ($(ICC_MAJOR),11)
+CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
+CFLAGS       += -wd1572 -wd279
+CINTCXXFLAGS += -wd1572 -wd873 -wd279
+CINTCFLAGS   += -wd1572 -wd279
+ICC_GE_9      = 11
+ICC_GE_101    = 110
+endif
+
+ifeq ($(ICC_MAJOR),12)
+CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
+CFLAGS       += -wd1572 -wd279
+CINTCXXFLAGS += -wd1572 -wd873 -wd279
+CINTCFLAGS   += -wd1572 -wd279
+ICC_GE_9      = 12
+ICC_GE_101    = 120
+endif
+
+# Linker:
+LD            = icpc
+LDFLAGS       = $(OPT) -mmacosx-version-min=$(MACOSXVERS)
+
+FORCELINK     = no
+
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+ifeq ($(USECONFIG),FALSE)
+SOFLAGS       = -dynamiclib -single_module \
+                -undefined dynamic_lookup -install_name @rpath/
+else
+SOFLAGS       = -dynamiclib -single_module \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
+endif
+else
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
+SOFLAGS       = -dynamiclib -single_module \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
+endif
+endif
+ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
+ifeq ($(ICC_MAJOR),11)
+SOEXT         = so
+# not yet supported by icc 10.x xilibtool
+else
+SOEXT         = dylib
+endif
+else
+SOEXT         = dylib
+endif
+
+# System libraries:
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(OSTHREADLIBDIR) \
+                $(OSTHREADLIB) -ldl $(ALLOCLIBDIR) $(ALLOCLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
+CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
+
+# Fortran:
+ifeq ($(F77),ifort)
+F77           = ifort
+F77FLAGS      = -fPIC
+ifeq ($(ICC_MAJOR),12)
+ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|compiler/lib|') \
+                -lifcore
+else
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|compiler/lib|') \
+                -lifcore
+endif
+else
+ifeq ($(ICC_MAJOR),11)
+ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|lib/ia32|') \
+                -lifcore
+else
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|lib/intel64|') \
+                -lifcore
+endif
+else
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore
+endif
+endif
+endif
+
+# Override default in Makefile.config
+INSTALL      := /bin/cp -pPR
+INSTALLDATA  := /bin/cp -pPR
+
+# Extras

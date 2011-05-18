@@ -1,0 +1,31 @@
+You will find the Clust Name Space daemon that must run on each data server in
+the bin subdirectory of this package. It is called XrdCnsd. Some architectures
+have been pre-compiled. If you do not find the one you need or you wish to
+recompile the xrootd package. The easiest way to do this is to first execute
+"configure.classic --build=debug --disable-mon --disable-perlint" on the host
+for whose architecture you would like to have binaries. The "disable" entries
+turn off compilation for components we have found to be problematic on some
+architectures.
+
+Typiclly, you will need two configuration files. The first is used for the
+standard xrootd cluster (i.e., the redirector and all of the data servers).
+The file "example.xrdcluster.cfg" gives you a template typically used for the
+Atlas experiment. It equally applicable for other experiments. After modifying
+the file and distributing it to all nodes, start the xrootd and cmsd with the
+configuration file in the start way (see StartXRD and StartCMS scripts in the
+Xrd/Xrootd Reference): 
+
+http://xrootd.slac.stanford.edu/doc/xrd_config/xrd_config.htm
+
+For very simple installations you can use a stripped down version of the start
+scripts that will start xrootd and cmsd in one go assuming standard defaults.
+See the xrdcluster.sh in this directory.
+
+The second configuration file is used when you start the xrootd that maintains
+the shadow namespace for the cluster. This xrootd usually runs on the same
+host as the redirector but uses a different port number and log directories.
+The file "example.cns.cfg" gives you a template typically used for the
+Atlas experiment. It equally applicable for other experiments. After modifying
+the file, use it to start the "special" namespace xrootd. Again, you can use
+the StartXRD script (specifying a unique instance name via the -n option) or
+the simpler all-in-one start-up script in this directory called "cns.sh".

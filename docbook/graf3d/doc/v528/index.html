@@ -1,0 +1,230 @@
+<br/> 
+<hr/> 
+<a name="graf3d"></a> 
+
+<h3>3D Graphics Primitives</h3>
+<h4>TPolyMarker3D</h4>
+<ul>
+<li>TPolyMarker3D::PaintH3 entered an infinite loop in case of huge
+bin content </li>
+</ul>
+
+<h3>OpenGL</h3>
+
+<h4>Major changes</h4>
+
+<ul>
+
+<li>GL in Pad: It is now possible to save a PadGL into a binary image file
+  (gif, png, jpg etc...).</li>
+
+<li>Improve behaviour of <tt>TGLEventHandler</tt> and make it consistent:
+<ol>
+  <li>Process only one mouse button (the first pressed) at any
+  time. </li>
+  <li>All selections take effect on button release.</li>
+  <li>Precsion modifiers Shift and Control can thus be pressed at any
+  time for controlling rate of rotation, translation or zooming.</li>
+</ol>
+</li>
+
+<li>Add support for multiple secondary-selection and partial
+  highlightning of secondary-selectable sub-items. This requires new
+  signals to be emitted from <tt>TGLViewer</tt>:
+<pre>
+   virtual void MouseOver  (TObject *obj, UInt_t state); // *SIGNAL*
+   virtual void ReMouseOver(TObject *obj, UInt_t state); // *SIGNAL*
+   virtual void UnMouseOver(TObject *obj, UInt_t state); // *SIGNAL*
+</pre>
+  <tt>TGLEventHandler</tt> emits them when needed. For example see <tt>TEveDigitSet</tt>
+  and its sub-classes <tt>TEveQuadSet</tt> and <tt>TEveBoxSet</tt>.
+</li>
+
+<li>It is now possible to enforce all tesselations of geometry shapes
+  to only use triangles via static function <tt>void
+  TGLFaceSet::EnforceTriangles()</tt>. This is needed to export TGeo
+  shapes and CSG meshes to external triangle-mesh libraries that can
+  not handle arbitrary polygons.</li>
+
+<li>Add support for full-scene anti-aliasing (the actual benefits
+  depend on graphics card / driver). It is controlled via rootrc,
+  e.g.:
+<pre>
+   OpenGL.Framebuffer.Multisample: 4
+</pre>
+</li>
+
+</ul>
+
+<h4>Minor changes</h4>
+
+<ul>
+
+<li>Extend configurability of GL event-handler to allow inversion of
+controls from scene-centric to viewer-centric. The following rootrc
+variables control the behaviour:
+<pre>
+   OpenGL.EventHandler.ViewerCentricControls:  1
+   OpenGL.EventHandler.ArrowKeyFactor:        -1.0
+   OpenGL.EventHandler.MouseDragFactor:       -1.0
+   OpenGL.EventHandler.MouseWheelFactor:      -1.0
+</pre>
+</li>
+
+<li>Add camera auto-rotation support. Controls are available from the
+  "Extras" tab of <tt>TGLViewer</tt> GUI editor. Implemented in class
+  <tt>TGLAutoRotator</tt>, can be sub-classed and attached to a viewer via
+  <tt>TGLViewer::SetAutoRotator()</tt> method.</li>
+
+<li>Added new overlay element class <tt>TGLCameraGuide</tt> that shows the
+orientation of major axes. To use, call this on a <tt>TGLViewer</tt> object:
+<pre>
+   gl_viewer->AddOverlayElement(new TGLCameraGuide(0.9, 0.1, 0.08));
+</pre>
+</li>
+
+<li>Fix an issue with GL-clip object not being properly updated after
+a scene update.</li>
+
+<li>Hide / show menu-bar with a time-out (default 400ms). This can be
+adjusted by calling static method:<pre>
+  TGLSAViewer::SetMenuHidingTimeout(200);</pre>
+To disable menu hiding for Eve viewers, where it is enabled by
+  default, set the following rootrc variable:<pre>
+  Eve.Viewer.HideMenus: off</pre>
+</li>
+
+</ul>
+
+
+<h3>EVE</h3>
+
+<h4>Major changes</h4>
+
+<ul>
+
+<li>Implement central infractructure to allow eve-elements to support
+internal multiple selection and highlightning of their sub-parts.
+<br/>
+Use this in <tt>TEveDigitSet</tt> and its sub-classes <tt>TEveQuadSet</tt> and
+<tt>TEveBoxSet</tt>.
+<ul>
+<li><tt>TEveSecondarySelectable</tt>: New secondary base-class for elements
+  supporting internal multiple selection / highlight.</li>
+
+<li><tt>TEveViewer</tt> - Add functions to handle additional mouse-over signals
+  from <tt>TGLViewer</tt>.</li>
+
+<li><tt>TEveElement</tt> - Add 3 new functions:<pre>
+    virtual TString  GetHighlightTooltip();
+    virtual void     UnSelected();
+    virtual void     UnHighlighted();
+</pre></li>
+
+<li><tt>TEveDigitSet</tt>, <tt>TEveQuadSet</tt>, <tt>TEveBoxSet</tt>
+<ul>
+  <li>Sub-class <tt>TEveDigitSet</tt> from <tt>TEveSecondarySelectable</tt>.</li>
+  <li>Implement functions needed for internal selection.</li>
+  <li>Add common base-class <tt>TEveDigitSetGL</tt> for quad and box-set GL rendering.</li>
+  <li>Move anti-flickering controls from <tt>TEveQuadSet</tt> to <tt>TEveDigitSet</tt> and
+    implement it also in <tt>TEveBoxSetGL</tt>.</li>
+</ul>
+</li>
+
+<li><tt>TEveChunkManager</tt>: Add support for restricted iteration.
+  <tt>TEveChunkManager::iterator</tt> accepts set&lt;Int_t&gt; for that purpose.</li>
+</ul></li>
+
+
+<li><tt>TEveElement</tt>: Extensions for configurable selection / highlight /
+  color / transparency propagation between compounds and elements. The
+  following options can be activated:
+<ul>
+  <li><tt>ImplySelectAllChildren()</tt> - to highlight / imply-select all
+    children of an compound;</li>
+
+  <li><tt>TakeAnyParentAsMaster()</tt> - to upwards propagate mouse-selection to
+    any compound parent;</li>
+
+  <li><tt>ApplyMainColorToAllChildren()</tt> / <tt>ApplyMainColorToMatchingChildren()</tt>
+    to request color propagation to all / matching children of a compound;</li>
+
+  <li><tt>ApplyMainTransparencyToAllChildren()</tt> / <tt>ApplyMainTransparencyToMatchingChildren()</tt>
+    to request transparency propagation to all / matching children of a compound.</li>
+</ul>
+These flags are stored as bit pattern of CompoundColorSelectionBits enum.
+</li>
+
+<li><tt>TEveElement</tt>: propagate transparency to projected replicas. As this
+  is implemented in the base-class, it works for all projectable classes.</li>
+
+<li>
+<tt>TEveVector</tt>, <tt>TEveVector4</tt> and <tt>TEveVector2</tt> are now typedefs to float
+specialization of corresponding templates. Double versions use 'D' as
+postfix, 'F' postfix is another alias for float versions, e.g.:<pre>
+    typedef TEveVectorT&lt;Float_t&gt;  TEveVector;
+    typedef TEveVectorT&lt;Float_t&gt;  TEveVectorF;
+    typedef TEveVectorT&lt;Double_t&gt; TEveVectorD;
+</pre></li>
+
+<li>All projectable classes now take into account their transformation
+  matrix. The projected versions are still stored in global
+  coordinates.</li>
+
+<li><tt>TEveShape</tt> -- a new abstract base-class for 2D/3D shapes that
+  require fill / outline color, line-width and various flags
+  controlling the area / outline drawing.</li>
+
+<li><tt>TEveGeoShape</tt> and projected classes: subclass from <tt>TEveShape</tt>. Add
+  support for <tt>TGeoCompositeShapes</tt>. In 2D projected class
+  (<tt>TEvePolygonSetProjected</tt>) improve detection of duplicate polygons
+  and add support for detection of minimal-outline (triggered via
+  <tt>Bool_t TEveShape::fMiniOutline</tt>).</li>
+
+<li><tt>TEveBox</tt>: New class to draw a simple cuboid with minimal memory
+  usage. It is projectable.</li>
+
+<li><tt>TEveBoxSet</tt>: for box-type <tt>kBT_FreeBox</tt> assure proper face
+  orientation at registration time and calculate normals when
+  rendering.
+
+<li><tt>TEveJetCone</tt> is now projectable.</li>
+
+<li>Several performance improvements when dealing with large
+  collections of EVE objects. Profiled with simulated heavy-ion
+  data. In particular, for destruction of self-contained sub-hierarchies of objects
+  one can use <tt>TEveElement::Annihilate()</tt> and
+  <tt>TEveElement::AnnihilateElements()</tt>. See class docs for constraints.</li>
+
+</ul>
+
+<h4>Minor changes</h4>
+
+<ul>
+
+<li>Add support for projecting a new child (all children) of an
+element after the element and its old children have already been
+projected. This is provided by the following virtual functions in
+<tt>TEveElement</tt>:<pre>
+  void ProjectChild(TEveElement* el, Bool_t sameDepth=kTRUE);
+  void ProjectAllChildren(Bool_t same_depth=kTRUE);
+</pre></li>
+
+<li>Several improvements in drawing of <tt>TEveCalo</tt> axes and labels.</li>
+
+<li><tt>TEveTrackPropagator</tt>. Fix some issues with Runge-Kutta track
+  propagator. Move in controls specifying how to plot tracks that get
+  split in RhoZ projection.</li>
+
+<li>Fix rendering of <tt>TEveJetCone</tt>: normals at apex were not changing as they should.</li>
+
+<li>Support single-color for <tt>TEveDigitSet</tt> (call <tt>TEveDigitSet::UseSingleColor()</tt>).</li>
+
+<li>Always add children of an element to the GUI list-tree. There was
+  a problem when elements having children were added to the list-tree,
+  the children were not added.</li>
+
+<li><tt>TEveLine</tt> has its own icon now. The icon for <tt>TEvePointSet</tt> was used
+  before and this caused confusion.</li>
+
+</ul>

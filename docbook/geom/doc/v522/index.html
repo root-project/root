@@ -1,0 +1,12 @@
+<br> 
+<hr> 
+<a name="geom"></a> 
+<h3>Geometry</h3>
+Improvement of the standard overlap checker. The previous method was checking points on the visual mesh of volume shape against all possible overlapping partners.
+The new method checks more points (currently 1000, in future configurable) on the volume outline or surface. This minimizes the number of non-detectable overlap
+configurations.<br>
+The interface to activate the new checking method is the same as before:<br><br>
+   <em>gGeoManager->CheckOverlaps(ovlp);</em><br>
+   where <strong><em>ovlp</em></strong> is the overlap tolerance (default 0.01 cm)<br><br>
+An example of overlap that was not detected before but is now:<br><br>
+<img src="geom_prev3.gif" width="585" height="638" border="0" alt="">

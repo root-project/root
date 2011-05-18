@@ -1,0 +1,39 @@
+# @(#)root/mathcore:$Id: test_Makefile.am 21158 2007-12-03 17:01:35Z moneta $
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+
+check_PROGRAMS =  coordinates3D  coordinates4D rotationApplication testGenVector testBoost testIterator 
+
+coordinates3D_SOURCES =  CoordinateTraits.h  coordinates3D.cxx
+
+coordinates4D_SOURCES =  CoordinateTraits.h  coordinates4D.cxx
+
+rotationApplication_SOURCES =  RotationTraits.h  rotationApplication.cxx
+
+testGenVector_SOURCES = testGenVector.cxx
+
+testBoost_SOURCES = testBoost.cxx
+
+testIterator_SOURCES = testIterator.cxx
+
+
+INCLUDES = -I$(top_srcdir)/inc -DNO_SMATRIX
+
+coordinates3D_LDADD =  $(top_builddir)/src/libGenVector.la
+
+coordinates4D_LDADD =  $(top_builddir)/src/libGenVector.la
+
+rotationApplication_LDADD =  $(top_builddir)/src/libGenVector.la
+
+testGenVector_LDADD =  $(top_builddir)/src/libGenVector.la
+
+testBoost_LDADD =  $(top_builddir)/src/libGenVector.la
+
+testIterator_LDADD =  $(top_builddir)/src/libGenVector.la
+
+
+
+
+

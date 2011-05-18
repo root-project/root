@@ -1,0 +1,52 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+#ifndef PREC_STL_EXCEPTION
+#define PREC_STL_EXCEPTION
+#pragma link off global PREC_STL_EXCEPTION;
+
+//namespace std {
+
+class exception;
+class bad_exception;
+
+/////////////////////////////////////////////////////////////////////////
+
+class exception {
+ public:
+  exception() /* throw() */ ;
+  exception(const exception& x) /* throw() */ ;
+  exception& operator=(const exception& x) /* throw() */ ;
+  virtual ~exception() /* throw() */ ;
+  virtual const char* what() const /* throw() */;
+};
+
+/////////////////////////////////////////////////////////////////////////
+class bad_exception : public exception {
+ public:
+  bad_exception() /* throw() */ ;
+  bad_exception(const bad_exception&) /* throw() */ ;
+  bad_exception& operator=(const bad_exception&) /* throw() */ ;
+  virtual ~bad_exception() /* throw() */ {}
+  virtual const char* what() const /* throw() */ ;
+};
+
+class bad_cast: public exception {};
+
+typedef void (*unexpected_handler)();
+unexpected_handler set_unexpected(unexpected_handler f) /* throw() */ ;
+void unexpected();
+typedef void (*terminate_handler)();
+terminate_handler set_terminate(terminate_handler f) /* throw() */ ;
+void terminate();
+#ifndef G__BORLAND
+bool uncaught_exception();
+#endif
+
+//}
+
+#endif

@@ -1,0 +1,75 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+
+#pragma ifndef PREC_STL_CLIMITS
+#pragma define PREC_STL_CLIMITS
+#pragma link off global PREC_STL_CLIMITS;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
+
+
+#include <cstddef>
+
+
+enum float_round_style {
+  round_indeterminate       = -1,
+  round_toward_zero         =  0,
+  round_to_nearest          =  1,
+  round_toward_infinity     =  2,
+  round_toward_neg_infinity =  3
+};
+enum float_denorm_style {
+  denorm_indeterminate = -1,
+  denorm_absent = 0,
+  denorm_present = 1
+};
+
+template<class T> class numeric_limits {
+ public:
+  static const bool is_specialized = false;
+  static T min() throw();
+  static T max() throw();
+  static const int  digits = 0;
+  static const int  digits10 = 0;
+  static const bool is_signed = false;
+  static const bool is_integer = false;
+  static const bool is_exact = false;
+  static const int  radix = 0;
+  static T epsilon() throw();
+  static T round_error() throw();
+  
+  static const int  min_exponent = 0;
+  static const int  min_exponent10 = 0;
+  static const int  max_exponent = 0;
+  static const int  max_exponent10 = 0;
+  
+  static const bool has_infinity = false;
+  static const bool has_quiet_NaN = false;
+  static const bool has_signaling_NaN = false;
+  static const float_denorm_style has_denorm = denorm_absent;
+  static const bool has_denorm_loss = false;
+  static T infinity() throw();
+  static T quiet_NaN() throw();
+  static T signaling_NaN() throw();
+  static T denorm_min() throw();
+  
+  static const bool is_iec559 = false;
+  static const bool is_bounded = false;
+  static const bool is_modulo = false;
+  
+  static const bool traps = false;
+  static const bool tinyness_before = false;
+  static const float_round_style round_style = round_toward_zero;
+};
+
+#pragma endif

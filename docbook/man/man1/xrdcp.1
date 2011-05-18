@@ -1,0 +1,174 @@
+.\"
+.\" $Id: xrdcp.1,v 1.1 2005/11/21 11:25:37 rdm Exp $
+.\"
+.TH XRDCP 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+xrdcp \- XRootD utility to copy files to/from nodes
+.SH SYNOPSIS
+.B xrdcp
+.I  SOURCE
+.I  DEST
+.RI [ OPTIONS ]
+.SH "DESCRIPTION"
+.B Xrdcp 
+is a 
+.BI cp -like(1) 
+tool to copy files:
+.TP
+*
+\fIFROM\fR an \fBxrootd\fR system \fITO\fR a local file system
+.TP
+*
+\fIFROM\fR an \fBxrootd\fR system \fITO\fR an \fBxrootd\fR system
+(even the same) 
+.TP
+*
+\fIFROM\fR a local file system \fITO\fR an \fBxrootd\fR system
+.SH "OPTIONS"
+.TP
+.BI \-d LEVEL
+Set the debug level
+.TP
+.BI \-D "param value"
+Set parameter \fIparam\fR to string or integer \fIvalue\fR.
+.TP
+.B \-np
+No progress bar
+.TP
+.B \-s
+Silent mode, no summary or progress bar
+.TP
+.B \-OS
+Adds some opaque information to any \fISOURCE\fR \fBxrootd\fR URL
+.TP
+.B \-OD
+Adds some opaque information to any \fIDEST\fR \fBxrootd\fR URL
+.TP
+.B \-f
+Force overwrite destination.
+.TP
+.B \-force 
+At least one reconnection attempts to retry file up to 1 week, to
+block until \fBxrdcp\fR is executed.
+.TP
+.B \-R
+Recursive copy directories.
+.SH "PARAMETERS"
+Here is the list of the internal parameters of XrdClient, with their meaning.
+The parameters names are case sensitive.
+.TP
+.BR ConnectTimeout " (default: 60)"
+The timeout value for connection attempts at the init of an instance.
+Any timeout will be internally treated as a recoverable error, and
+handled in some way, typically retrying. Note that a connection
+attempt may fail before this time.
+.TP
+.BR RequestTimeout " (default: 60)"
+The timeout value for send/receive attempts. Any timeout will be
+internally treated as a recoverable error, and handled in some way,
+typically auto-redirecting to the first redirector encountered.
+.TP
+.BR MaxRedirectcount " (default: 255)"
+If a client gets redirected or auto-redirected more times than this
+number in the last RedirCntTimeout seconds, the pending operation will
+be abandoned.
+.TP
+.BR RedirCntTimeout " (default: 3600)"
+See up.
+.TP
+.BR DebugLevel " (default: 0)"
+Verbosity of the printed output.
+.br
+-1 = no printing at all
+.br
+0 = print only errors, and a few more.
+.br
+1 = really basic trace of what's happening
+.br
+2 = trace of what is the client doing
+.br
+3 = Ultra-verbose: dump every data exchange
+.br
+4 = Hyper-verbose: dump everything flowing through sockets
+.TP
+.BR ReconnectTimeout " (default: 10)"
+The timeout value for re-connection attempts. Any timeout will be
+internally treated as a recoverable error, and handled in some way,
+typically retrying. Note that a connection attempt may fail before
+this time. 
+.TP
+.BR FirstConnectMaxCnt " (default: 150)"
+How many times the connection on initialization will be retried, in
+the case of error.
+.TP
+.BR StartGarbageCollectorThread " (default: 1)"
+A really paranoid parameter. If set to 0, the physical/logical
+connections are no more closed if inactive. 
+.TP
+.BR GoAsync " (default: 1)"
+Choose between the sync/async internal architecture. The sync one is
+unable to handle unsolicited responses, and will never be. 
+.TP
+.BR ReadCacheSize " (default: 4000000)"
+The max size of the read cache. One cache per instance. Set to 0 to
+disable caching. 
+.TP
+.BR ReadAheadSize " (default: 800000)"
+The size of the blocks requested and populating the cache.
+.TP
+.BR RedirDomainAllowRE " (default: Internally computed to allow only operations on the local domain.)"
+Given a list of \fB|\fR-separated regexps for the domains to ALLOW
+REDIR to, match every entry with domain. If NO match is found, deny
+access. Only \fB*\fR is allowed in the regexps, and only at the
+beginning or the end of the single exprs
+.TP
+.BR RedirDomainDenyRE " (default: Internally computed to allow only operations on the local domain.)"
+Given a list of \fB|\fR-separated regexps for the domains to DENY
+REDIR to, match every entry with domain. If ANY match is found, deny
+access. Only \fB*\fR is allowed in the regexps, and only at the
+beginning or the end of the single exprs
+.TP
+.BR ConnectDomainAllowRE " (default: Internally computed to allow only operations  on the local domain.)"
+Given a list of \fB|\fR-separated regexps for the domains to ALLOW
+CONNECT to, match every entry with domain. If NO match is found, deny
+access. Only \fB*\fR is allowed in the regexps, and only at the
+beginning or the end of the single exprs
+.TP
+.BR ConnectDomainDenyRE " (default: Internally computed to allow only operations on the local domain.)"
+Given a list of \fB|\fR-separated regexps for the domains to DENY
+CONNECT to, match every entry with domain. If ANY match is found, deny
+access. Only \fB*\fR is allowed in the regexps, and only at the
+beginning or the end of the single exprs
+
+.SH "SEE ALSO"
+\fIroot\fR(1), \fIxrootd\fR(1)
+.PP
+See also the \fBROOT\fR webpages:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fR
+.UE
+.SH "ORIGINAL AUTHORS"
+G. Ganis
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" EOF
+.\"

@@ -1,0 +1,147 @@
+# Makefile.msc for XrdClient on Win32/NMAKE
+# Author: Bertrand Bellenot, 03/03/2006
+!IF "$(CFG)" == ""
+CFG = Win32 Debug
+!MESSAGE No configuration specified. Defaulting to Win32 Debug.
+!ENDIF 
+
+!IF "$(CFG)" != "Win32 Release" && "$(CFG)" != "Win32 Debug"
+!MESSAGE Invalid configuration "$(CFG)" specified.
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "Makefile.msc" CFG="Win32 Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "Win32 Release" (based on "Win32 (x86) Static Library")
+!MESSAGE "Win32 Debug" (based on "Win32 (x86) Static Library")
+!MESSAGE 
+!ERROR An invalid configuration is specified.
+!ENDIF 
+
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE 
+NULL=nul
+!ENDIF 
+
+!IF  "$(CFG)" == "Win32 Release"
+MODCFG = "Win32 Release"
+OUTDIR = /Release
+!ELSEIF  "$(CFG)" == "Win32 Debug"
+MODCFG = "Win32 Debug"
+OUTDIR = /Debug
+!ENDIF 
+
+LIBDIR = ./lib
+BINDIR = ./bin
+
+MAKE         = nmake.exe
+
+XRDSYSDIR    = src/XrdSys
+XRDOUCDIR    = src/XrdOuc
+XRDNETDIR    = src/XrdNet
+XRDCLIENTDIR = src/XrdClient
+
+XRDSYSOUTDIR    = $(XRDSYSDIR)$(OUTDIR)
+XRDOUCOUTDIR    = $(XRDOUCDIR)$(OUTDIR)
+XRDNETOUTDIR    = $(XRDNETDIR)$(OUTDIR)
+XRDCLIENTOUTDIR = $(XRDCLIENTDIR)$(OUTDIR)
+XRDCPDIR        = $(XRDCLIENTDIR)$(OUTDIR)
+
+XRDSYSLIB    = $(LIBDIR)/libXrdSys.lib
+XRDOUCLIB    = $(LIBDIR)/libXrdOuc.lib
+XRDNETLIB    = $(LIBDIR)/libXrdNet.lib
+XRDCLIENTLIB = $(LIBDIR)/libXrdClient.lib
+XRDCP        = $(BINDIR)/xrdcp.exe
+
+LIBS : src\XrdVersion.hh $(LIBDIR) $(XRDSYSLIB) $(XRDOUCLIB) $(XRDNETLIB) $(XRDCLIENTLIB) $(BINDIR) $(XRDCP)
+
+.PHONY: $(LIBS) all
+
+all: $(LIBS)
+
+src\XrdVersion.hh:
+   if not exist src\XrdVersion.hh genversion.bat
+
+"$(LIBDIR)" :
+    if not exist "$(LIBDIR)/$(NULL)" mkdir "$(LIBDIR)"
+
+"$(BINDIR)" :
+    if not exist "$(BINDIR)/$(NULL)" mkdir "$(BINDIR)"
+
+$(XRDSYSLIB):
+   cd ./src/XrdSys
+   $(MAKE) -f Makefile.msc CFG=$(MODCFG)
+   cd..
+   cd..
+
+$(XRDOUCLIB):
+   cd ./src/XrdOuc
+   $(MAKE) -f Makefile.msc CFG=$(MODCFG)
+   cd..
+   cd..
+
+$(XRDNETLIB):
+   cd ./src/XrdNet
+   $(MAKE) -f Makefile.msc CFG=$(MODCFG)
+   cd..
+   cd..
+
+$(XRDCLIENTLIB): src\XrdVersion.hh $(XRDNETLIB) $(XRDOUCLIB) $(XRDSYSLIB)
+   cd ./src/XrdClient
+   $(MAKE) -f Makefile.msc CFG=$(MODCFG)
+   cd..
+   cd..
+
+TARGET   = xrdcp.exe
+
+!IF  "$(CFG)" == "Win32 Release"
+OUTDIR = /Release
+CXXFLAGS = /nologo /MD /W3 /EHsc /O2 /D "_WIN32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"./src/XrdClient$(OUTDIR)/" /FD /c
+LDFLAGS = 
+!ELSEIF  "$(CFG)" == "Win32 Debug"
+OUTDIR = /Debug
+CXXFLAGS = /nologo /MDd /W3 /EHsc /Z7 /Od /D "_WIN32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "WINDOWS" /Fo"./src/XrdClient$(OUTDIR)/" /FD /RTC1 /c
+LDFLAGS = -debug
+!ENDIF 
+
+# Check if nmake version is 8.xx or 9.xx
+!if ([nmake /? 2>&1 | findstr /c:"Version 8\." > nul ] == 0) || \
+    ([nmake /? 2>&1 | findstr /c:"Version 9\." > nul ] == 0)
+MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
+MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
+EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+EXTRAFLAGS    = /wd4244 /wd4996 /wd4273 /wd4355 /wd4800 /D_CRT_SECURE_NO_DEPRECATE
+!else
+MT_EXE        = 
+MT_DLL        = 
+EXTRAFLAGS    = /G6 /wd4244 /wd4996 /wd4273 /wd4355 /wd4800
+!endif
+
+LIBS     = $(LIBDIR)/libXrdClient.lib
+
+INCPATH  =  -I"./src" -I./pthreads-win32/include
+
+$(XRDCPDIR)/Xrdcp.obj:  $(XRDCLIENTDIR)/Xrdcp.cc
+   cl $(CXXFLAGS) $(EXTRAFLAGS) $(INCPATH) $(XRDCLIENTDIR)/Xrdcp.cc
+
+$(XRDCP):  $(XRDCPDIR)/Xrdcp.obj
+   link $(LDFLAGS) /nologo /out:$(BINDIR)/$(TARGET) $(LIBS) $(XRDCPDIR)/Xrdcp.obj
+   $(MT_EXE)
+
+clean :
+	-@erase /q /s *.obj
+	-@erase /q /s *.def
+	-@erase /q /s *.ilk
+	-@erase /q /s *.idb
+	-@erase /q /s *.exp
+	-@erase /q /s *.manifest
+	-@erase /q src\XrdVersion.hh
+
+distclean:: clean
+	-@erase /q /s *.pdb
+	-@erase /q "$(LIBDIR)\*.*"
+	-@erase /q "$(BINDIR)\*.*"

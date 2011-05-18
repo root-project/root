@@ -1,0 +1,146 @@
+Manual Data Model Evolution Capabilities - the user documentation
+
+1. Overview
+
+   The automatic data model schema evolution implemented in ROOT makes it possible
+to read back the serialized data object in the situation when the definition of
+the classes those objects represent changed slightly (some of the data members were
+removed or some new ones added). It is also possible to manually specify the rules
+for more sophisticated data transformations done while reading to load the serialized
+objects into data structures that changed quite significantly.
+
+   ROOT provides two interface enabling users to specify the conversion rules. The
+first way is to define a rule in the dictionary file and the second way is to insert
+it to the TClass object using the C++ API.
+
+   There are two types of conversion rules. The first of them, the normal rules, are
+the ones that should be used in the most of the cases. They provide a buffered input
+data and an address of the in-memory target object and allow user to specify the
+conversion function mapping the data being read to the output format. The second type
+of the rules, the raw rules, also provide the pointer to the target object but the
+input is a raw TBuffer object containing the input data member declared as an input
+to the rule. This type of a rule is provided mainly to handle the file format changes
+that couldn't have been handled otherwise and in general should not be used unless there
+is no other option.
+
+2. The dictionaries
+
+   The most convenient place to specify the conversion rules is a dictionary. One can
+do that either in CINT's LinkDef file or in the selection xml file being fed to genreflex.
+The syntax of the rules is the following:
+
+   * For CINT dictionaries:
+
+#pragma read                                              \
+    sourceClass="ClassA"                                  \
+    source="double m_a; double m_b; double m_c"           \
+    version="[4-5,7,9,12-]"                               \
+    checksum="[12345,123456]"                             \
+    targetClass="ClassB"                                  \
+    target="m_x"                                          \
+    embed="true"                                          \
+    include="iostream,cstdlib"                            \
+    code="{m_x = onfile.m_a * onfile.m_b * onfile.m_c; }" \
+
+
+#pragma readraw           \
+      sourceClass="TAxis" \
+      source="fXbins"     \
+      targetClass="TAxis" \
+      target="fXbins"     \
+      version="[-5]"      \
+      include="TAxis.h"   \
+      code="\
+{\
+Float_t * xbins=0; \
+Int_t n = buffer.ReadArray( xbins ); \
+fXbins.Set( xbins ); \
+}"
+
+
+   * For REFLEX dictionaries:
+
+<ioread sourceClass="ClassA"
+        source="double m_a; double m_b; double m_c"
+        version="[4-5,7,9,12-]"
+        checksum="[12345,123456]"
+        targetClass="ClassB"
+        target="m_x"
+        embed="true"
+        include="iostream,cstdlib">
+<![CDATA[
+   m x = onfile.m a * onfile .m b * onfile .m c;
+]] >
+</ioread>
+
+<ioreadraw sourceClass="TAxis"
+           source="fXbins"
+           targetClass="TAxis"
+           target="fXbins"
+           version="[-5]"
+           include="TAxis.h">
+<![CDATA[
+      Float_t *xbins = 0;
+      Int_t n = buffer.ReadArray( xbins ) ;
+      fXbins.Set( xbins );
+]] >
+</ioreadraw>
+
+   The vairables in the rules have the following meaning:
+
+  * sourceClass - The field defines the on-disk class that is the input for the rule.
+  * source      - A semicolon-separated list of values defining the source class data members
+                  that need to be cached and accessible via object proxy when the rule is
+                  executed. The values are either the names of the data members or the type-name
+                  pairs (separated by a space). If types are specified then the ondisk structure
+                  can be generated and used in the code snippet defined by the user.
+  * version     - A list of versions of the source class that can be an input for this rule.
+                  The list has to be enclosed in a square bracket and be a comma-separated
+                  list of versions or version ranges. The version is an integer number, whereas
+                  the version range is one of the following:
+     – "a-b" - a and b are integers and the expression means all the numbers between
+               and including a and b
+     – "-a"  - a is an integer and the expression means all the version numbers smaller
+               than or equal to a
+     – "a-"  - a is an integer and the expression means all the version numbers greater
+               than or equal to a
+  * checksum    - A list of checksums of the source class that can be an input for this
+                  rule. The list has to be enclosed in a square brackets and is a
+                  comma-separated list of integers.
+  * targetClass - The field is obligatory and defines the name of the in-memory class that
+                  this rule can be applied to.
+  * target      - A semicolon-separated list of target class data member names that this rule
+                  is capable of calculating.
+  * embed       - This property tells the system if the rule should be written in the output
+                  file is some objects of this class are serialized.
+  * include     - A list of header files that should be included in order to provide the func-
+                  tionality used in the code snippet; the list is comma delimited.
+  * code        - An user specified code snippet
+
+   The user can assume that in the provided code snippet the following variables
+will be defined:
+
+    The user provided code snippets have to consist of valid C++ code. The system can do
+some preprocessing before wrapping the code into function calls and declare some variables to
+facilitate the rule definitions. The user can expect the following variables being predeclared:
+
+   * newObj     - variable representing the target in-memory object, it’s type is that of the
+                  target object
+   * oldObj     - in normal conversion rules, an object of TVirtualObject class representing the
+                  input data, guaranteed to hold the data members declared in the source property
+                  of the rule
+   * buffer     - in raw conversion rules, an object of TBuﬀer class holding the data member
+                  declared in source property of the rule
+   * names of the data members of the target object declared in the target property of the
+                  rule declared to be the appropriate type
+   * onfile.xxx - in normal conversion rules, names of the variables of basic types declared
+                  in the source property of the rule
+
+3. The C++ API
+
+   The schema evolution C++ API consists of two classes: ROOT::TSchemaRuleSet and ROOT::TSchemaRule.
+Objects of the TSchemaRule class represent the rules and their fields have exactly the same
+meaning as the ones of rules specified in the dictionaries. TSchemaRuleSet objects
+manage the sets of rules and ensure their consistency. There can be no conflicting
+rules in the rule sets. The rule sets are owned by the TClass objects corresponding to the
+target classes defined in the rules and can be accessed using TClass::{Get|Adopt}SchemaRules

@@ -1,0 +1,30 @@
+/* XPM */
+static char *label_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"21 21 3 1",
+"  c Gray0",
+". c #b3cece",
+"X c None",
+/* pixels */
+"XXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXX  XXXXXXXXX",
+"XXXXXXXXX   XXXXXXXXX",
+"XXXXXXXXX   XXXXXXXXX",
+"XXXXXXXX     XXXXXXXX",
+"XXXXXXXX     XXXXXXXX",
+"XXXXXXXX      XXXXXXX",
+"XXXXXXX  X    XXXXXXX",
+"XXXXXXX  X     XXXXXX",
+"XXXXXX  XX     XXXXXX",
+"XXXXXX          XXXXX",
+"XXXXX           XXXXX",
+"XXXXX  XXXXX    XXXXX",
+"XXXX   XXXXX     XXXX",
+"XXX    XXXXX      XXX",
+"XXX     XXX       XXX",
+"XXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXX"
+};

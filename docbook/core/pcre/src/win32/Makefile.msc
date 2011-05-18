@@ -1,0 +1,81 @@
+# Makefile.msc for libpcre on Win32/NMAKE
+# Author: Bertrand Bellenot, 28/11/2005
+
+#
+# Library definitions
+#
+SRCDIR  = pcre-7.8
+LIBDIR  = ./
+LIBRARY = libpcre-7.8
+LIBDLL  = $(LIBDIR)\$(LIBRARY).dll
+LIBLIB  = $(LIBDIR)\$(LIBRARY).lib
+
+!IF "$(CFG)" == ""
+CFG=libpcre - Win32 Debug
+!MESSAGE No configuration specified. Defaulting to libpcre - Win32 Debug.
+!ENDIF 
+
+CC = cl.exe
+!IF  "$(CFG)" == "libpcre - Win32 Release"
+
+CFLAGS = /nologo /W3 /O2 /I "./" /I "Win32" /D "HAVE_CONFIG_H" /D "_WIN32" /D "WIN32" /D "_LIB" /D "NDEBUG" /D "_WINDOWS" /D "SUPPORT_UTF8" /D "SUPPORT_UCP" /D POSIX_MALLOC_THRESHOLD=10 /D "NO_RECURSE" /Fo"../$(SRCDIR)/" /FD $(NMCXXFLAGS) /c
+ALL_CFLAGS = $(CFLAGS)
+LDFLAGS = /nologo /machine:I386 /out:$(LIBLIB)
+
+!ELSEIF  "$(CFG)" == "libpcre - Win32 Debug"
+
+CFLAGS = /nologo /W3 /Gm /Z7 /Od /I "./" /I "Win32" /D "HAVE_CONFIG_H" /D "_WIN32" /D "WIN32" /D "_LIB" /D "_DEBUG" /D "_WINDOWS" /D "SUPPORT_UTF8" /D "SUPPORT_UCP" /D POSIX_MALLOC_THRESHOLD=10 /D "NO_RECURSE" /Fo"../$(SRCDIR)/" /FD $(NMCXXFLAGS) /c
+ALL_CFLAGS = $(CFLAGS)
+LDFLAGS = /nologo /machine:I386 /out:$(LIBLIB)
+!ENDIF 
+
+LD = link.exe -lib
+
+INTDIR=..\
+
+OBJS =   "../$(SRCDIR)/pcre_chartables.obj" \
+         "../$(SRCDIR)/pcre_compile.obj" \
+         "../$(SRCDIR)/pcre_config.obj" \
+         "../$(SRCDIR)/pcre_dfa_exec.obj" \
+         "../$(SRCDIR)/pcre_exec.obj" \
+         "../$(SRCDIR)/pcre_fullinfo.obj" \
+         "../$(SRCDIR)/pcre_get.obj" \
+         "../$(SRCDIR)/pcre_globals.obj" \
+         "../$(SRCDIR)/pcre_info.obj" \
+         "../$(SRCDIR)/pcre_maketables.obj" \
+         "../$(SRCDIR)/pcre_newline.obj" \
+         "../$(SRCDIR)/pcre_ord2utf8.obj" \
+         "../$(SRCDIR)/pcre_refcount.obj" \
+         "../$(SRCDIR)/pcre_study.obj" \
+         "../$(SRCDIR)/pcre_tables.obj" \
+         "../$(SRCDIR)/pcre_try_flipped.obj" \
+         "../$(SRCDIR)/pcre_ucd.obj" \
+         "../$(SRCDIR)/pcre_valid_utf8.obj" \
+         "../$(SRCDIR)/pcre_version.obj" \
+         "../$(SRCDIR)/pcre_xclass.obj" \
+         "../$(SRCDIR)/pcreposix.obj"
+
+ALL : ../$(SRCDIR)/pcre.h $(LIBLIB)
+
+..\$(SRCDIR)\pcre.h : .\pcre.h
+	copy .\pcre_chartables.c ..\$(SRCDIR)\pcre_chartables.c
+	copy .\pcre.h ..\$(SRCDIR)\pcre.h
+	copy .\config.h ..\$(SRCDIR)\config.h
+
+$(LIBLIB) : $(OBJS)
+	$(LD) $(LDFLAGS) $(OBJS)
+
+.SUFFIXES: .c .obj
+.c.obj:
+	$(CC) $(NMCXXFLAGS) $(ALL_CFLAGS) -c $< 
+# -o $@
+
+clean :
+	-@erase /q "..\$(SRCDIR)\*.obj"
+
+distclean:: clean
+	-@erase /q "$(LIBDIR)\*.lib"
+	-@erase /q "$(LIBDIR)\*.pdb"
+	-@erase /q "$(LIBDIR)\*.idb"
+	-@erase /q "$(LIBDIR)\*.exp"
+	-@erase /q "$(LIBDIR)\*.ilk"

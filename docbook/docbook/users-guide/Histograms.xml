@@ -1,0 +1,1671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Histograms</title>
+<para>This chapter covers the functionality of the histogram classes. We begin with an overview of the histogram classes and their inheritance relationship. Then we give instructions on the histogram features.</para>
+<para>We have put this chapter ahead of the graphics chapter so that you can begin working with histograms as soon as possible. Some of the examples have graphics commands that may look unfamiliar to you. These are covered in the chapter “Input/Output”.</para>
+
+<sect1>
+<title>The Histogram Classes</title>
+<para>ROOT supports the following histogram types:</para>
+<para>1-D histograms:</para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TH1C</code></emphasis>: are histograms with one byte per channel. Maximum bin content = 255</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1S</code></emphasis>: are histograms with one short per channel. Maximum bin content = 65 535</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1I</code></emphasis>: are histograms with one integer per channel. Maximum bin content = 2147483647</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1F</code></emphasis>: are histograms with one float per channel.  Maximum precision 7 digits</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1D</code></emphasis>: are histograms with one double per channel. Maximum precision 14 digits</para></listitem>
+</itemizedlist>
+<para>2-D histograms:</para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TH2C</code></emphasis>: are histograms with one byte per channel. Maximum bin content = 255</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH2S</code></emphasis>: are histograms with one short per channel. Maximum bin content = 65 535</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH2I</code></emphasis>: are histograms with one integer per channel. Maximum bin content = 2147483647</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH2F</code></emphasis>: are histograms with one float per channel.  Maximum precision 7 dig</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH2D</code></emphasis>: are histograms with one double per channel. Maximum precision 14 digits</para></listitem>
+</itemizedlist>
+<para>3-D histograms:</para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TH3C</code></emphasis>: are histograms with one byte per channel. Maximum bin content = 255</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH3S</code></emphasis>: are histograms with one short per channel. Maximum bin content = 65 535</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH3I</code></emphasis>: are histograms with one integer per channel. Maximum bin content = 2147483647</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH3F</code></emphasis>: are histograms with one float per channel. Maximum precision 7 digits</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH3D</code></emphasis>: are histograms with one double per channel. Maximum precision 14 digits </para></listitem>
+</itemizedlist>
+<para>Profile histograms: </para>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TProfile</code></emphasis>: one dimensional profiles</para></listitem>
+<listitem><para><emphasis role="bold"><code>TProfile2D</code></emphasis>: two dimensional profiles</para></listitem>
+</itemizedlist>
+<para>Profile histograms are used to display the mean value of Y and its RMS for each bin in X. Profile histograms are in many cases an elegant replacement of two-dimensional histograms. The inter-relation of two measured quantities X and Y can always be visualized with a two-dimensional histogram or scatter-plot. If Y is an unknown but single-valued approximate function of X, it will have greater precisions in a profile histogram than in a scatter plot. </para>
+
+<figure><title>The class hierarchy of histogram classes</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0600002E.png" width="370.55pt" depth="183.7pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para/>
+<para>All histogram classes are derived from the base class <emphasis role="bold"><code>TH1</code></emphasis>. The figure above shows the class hierarchy.</para>
+<para>The <emphasis role="bold"><code>TH*C</code></emphasis> classes also inherit from the array class <emphasis role="bold"><code>TArrayC</code></emphasis>.</para>
+<para>The <emphasis role="bold"><code>TH*S</code></emphasis> classes also inherit from the array class <emphasis role="bold"><code>TArrayS</code></emphasis>.</para>
+<para>The <emphasis role="bold"><code>TH*F</code></emphasis> classes also inherit from the array class <emphasis role="bold"><code>TArrayF</code></emphasis>.</para>
+<para>The <emphasis role="bold"><code>TH*D</code></emphasis> classes also inherit from the array class <emphasis role="bold"><code>TArrayD</code></emphasis><code>.</code></para>
+</sect1>
+
+<sect1>
+<title>Creating Histograms</title>
+<para>Histograms are created with constructors:</para>
+
+<programlisting language="c++">
+TH1F *h1 = new TH1F("h1","h1 title",100,0,4.4);
+TH2F *h2 = new TH2F("h2","h2 title",40,0,4,30,-3,3);
+</programlisting>
+
+<para>The parameters of the <emphasis role="bold"><code>TH1</code></emphasis> constructor are the name of the histogram, the title, the number of bins, the x minimum, and x maximum. Histograms may also be created by:</para>
+<itemizedlist>
+<listitem><para>Calling the Clone method of an existing histogram (see below) </para></listitem>
+<listitem><para>Making a projection from a 2-D or 3-D histogram (see below)</para></listitem>
+<listitem><para>Reading a histogram from a file</para></listitem>
+</itemizedlist>
+<para>When a histogram is created, a reference to it is automatically added to the list of in-memory objects for the current file or directory. This default behavior can be disabled for an individual histogram or for all histograms by setting a global switch. Here is the syntax to set the directory of the histogram <code>h</code>:</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// to set the in-memory directory for the current histogram h</code></emphasis>
+h-&gt;SetDirectory(0); 
+<emphasis role="italic"><code>// global switch to disable</code></emphasis>
+TH1::AddDirectory(kFALSE);
+</programlisting>
+
+<para>When the histogram is deleted, the reference to it is removed from the list of objects in memory. In addition, when a file is closed, all
+histograms in memory associated with this file are automatically deleted. See the chapter “Input/Output”.</para>
+</sect1>
+
+<sect1>
+<title>Fixed or Variable Bin Size</title>
+<para>All histogram types support fixed or variable bin sizes. 2-D histograms may have fixed size bins along X and variable size bins along Y or vice-versa. The functions to fill, manipulate, draw, or access histograms are identical in both cases. </para>
+<para>To create a histogram with variable bin size one can use this constructor:</para>
+
+<programlisting language="c++">
+<code>TH1(const char name,const *title,Int_t nbins,*xbins) </code>
+</programlisting>
+
+<para>The parameters to this constructor are:</para>
+<itemizedlist>
+<listitem><para><code>title</code>: histogram title</para></listitem>
+<listitem><para><code>nbins</code>: number of bins</para></listitem>
+<listitem><para><code>xbins</code>: array of low-edges for each bin. It is an array of size <code>nbins+1</code></para></listitem>
+</itemizedlist>
+<para>Each histogram always contains three <emphasis role="bold"><code>TAxis</code></emphasis> objects: <code>fXaxis</code>, <code>fYaxis,</code> and <code>fZaxis</code>. To access the axis parameters first get the axis from the histogram <code>h</code>, and then call the <emphasis role="bold"><code>TAxis</code></emphasis> access methods.</para>
+
+<programlisting language="c++">
+TAxis *xaxis = h-&gt;GetXaxis();
+Double_t binCenter = xaxis-&gt;GetBinCenter(bin);
+</programlisting>
+
+<para>See the class <emphasis role="bold"><code>TAxis</code></emphasis> for a description of all the access methods. The axis range is always stored internally in double precision.</para>
+
+<sect2>
+<title>Bin Numbering Convention</title>
+<para>For all histogram types: <code>nbins</code>, <code>xlow</code>, <code>xup</code></para>
+<para>Bin# 0 contains the underflow.</para>
+<para>Bin# 1 contains the first bin with low-edge (<code>xlow</code> INCLUDED).</para>
+<para>The second to last bin (bin# <code>nbins</code>) contains the upper-edge (<code>xup</code> EXCLUDED).</para>
+<para>The Last bin (bin# <code>nbins+1)</code> contains the overflow.</para>
+<para>In case of 2-D or 3-D histograms, a "global bin" number is defined. For example, assuming a 3-D histogram <code>h</code>  with <code>binx</code>, <code>biny</code>, <code>binz</code>, the function returns a global/linear bin number.</para>
+
+<programlisting language="c++">
+Int_t bin = h-&gt;GetBin(binx,biny,binz);
+</programlisting>
+
+<para>This global bin is useful to access the bin information independently of the dimension.</para>
+</sect2>
+
+<sect2>
+<title>Re-binning</title>
+<para>At any time, a histogram can be re-binned via the <emphasis role="bold"><code>TH1</code></emphasis><code>::Rebin()</code> method. It returns a new histogram with the re-binned contents. If bin errors were stored, they are recomputed during the re-binning.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Filling Histograms</title>
+<para>A histogram is typically filled with statements like:</para>
+
+<programlisting language="c++">
+h1-&gt;Fill(x);
+h1-&gt;Fill(x,w);    <emphasis role="italic"><code>//with weight</code></emphasis>
+h2-&gt;Fill(x,y);
+h2-&gt;Fill(x,y,w);
+h3-&gt;Fill(x,y,z);
+h3-&gt;Fill(x,y,z,w);
+</programlisting>
+
+<para>The <code>Fill</code> method computes the bin number corresponding to the given x, y or z argument and increments this bin by the given weight.
+The <code>Fill()</code> method returns the bin number for 1-D histograms or global bin number for 2-D and 3-D histograms.
+If <emphasis role="bold"><code>TH1</code></emphasis><code>::Sumw2()</code> has been called before filling, the sum of squares is also stored.
+One can increment a bin number directly by calling <emphasis role="bold"><code>TH1</code></emphasis><code>::AddBinContent()</code>,
+replace the existing content via <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBinContent()</code>, and access the bin content of a
+given bin via <emphasis role="bold"><code>TH1</code></emphasis><code>::GetBinContent()</code> .</para>
+
+<programlisting language="c++">
+Double_t binContent = h-&gt;GetBinContent(bin);
+</programlisting>
+
+<sect2>
+<title>Automatic Re-binning Option</title>
+<para>By default, the number of bins is computed using the range of the axis. You can change this to re-bin automatically by setting the automatic re-binning option:</para>
+
+<programlisting language="c++">
+<code>h-&gt;SetBit(TH1::kCanRebin);</code>
+</programlisting>
+
+<para>Once this is set, the <code>Fill()</code> method will automatically extend the axis range to accommodate the new value specified in the <code>Fill()</code> argument. The used method is to double the bin size until the new value fits in the range, merging bins two by two. The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code>  method extensively uses this automatic binning option when drawing histograms of variables in <emphasis role="bold"><code>TTree</code></emphasis> with an unknown range. The automatic binning option is supported for 1-D, 2-D and 3-D histograms. During filling, some statistics parameters are incremented to compute the mean value and root mean square with the maximum precision.  In case of histograms of type <emphasis role="bold"><code>TH1C</code></emphasis>, <emphasis role="bold"><code>TH1S</code></emphasis>, <emphasis role="bold"><code>TH2C</code></emphasis>, <emphasis role="bold"><code>TH2S</code></emphasis>, <emphasis role="bold"><code>TH3C</code></emphasis>, <emphasis role="bold"><code>TH3S</code></emphasis> a check is made that the bin contents do not exceed the maximum positive capacity (127 or 65 535). Histograms of all types may have positive or/and negative bin contents.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Random Numbers and Histograms</title>
+<para><emphasis role="bold"><code>TH1</code></emphasis><code>::FillRandom()</code> can be used to randomly fill a histogram using the contents of an existing <emphasis role="bold"><code>TF1</code></emphasis> function or another <emphasis role="bold"><code>TH1</code></emphasis> histogram (for all dimensions). For example, the following two statements create and fill a histogram 10 000 times with a default Gaussian distribution of <code>mean</code> <code>0</code> and <code>sigma</code> <code>1</code>:</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h1("h1","Histo from a Gaussian",100,-3,3);</code></emphasis>
+root[] <emphasis role="bold"><code>h1.FillRandom</code></emphasis><emphasis role="bold"><code>("gaus",10000);</code></emphasis>
+</programlisting>
+
+<para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetRandom()</code> can be used to get a random number distributed according the contents of a histogram. To fill a histogram following the distribution in an existing histogram you can use the second signature of <emphasis role="bold"><code>TH1</code></emphasis><code>::FillRandom()</code>. Next code snipped assumes that <code>h</code> is an existing histogram (<emphasis role="bold"><code>TH1</code></emphasis>).</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h2("h2","Histo</code></emphasis><emphasis role="bold"><code> from existing histo</code></emphasis><emphasis role="bold"><code>",100,-3,3);</code></emphasis>
+root[] <emphasis role="bold"><code>h2.</code></emphasis><emphasis role="bold"><code>FillRandom(</code></emphasis><emphasis role="bold"><code>&amp;</code></emphasis><emphasis role="bold"><code>h</code></emphasis><emphasis role="bold"><code>1</code></emphasis><emphasis role="bold"><code>,1000);</code></emphasis>
+</programlisting>
+
+<para>The distribution contained in the histogram <code>h</code><code>1</code> (<emphasis role="bold"><code>TH1</code></emphasis>) is integrated over the channel contents. It is normalized to one. The second parameter (1000) indicates how many random numbers are generated.</para>
+<para>Getting 1 random number implies: </para>
+<itemizedlist>
+<listitem><para>Generating a random number between 0 and 1 (say<code> r1</code>)</para></listitem>
+<listitem><para>Find the bin in the normalized integral for <code>r1</code> </para></listitem>
+<listitem><para>Fill histogram channel </para></listitem>
+</itemizedlist>
+<para>You can see below an example of the <emphasis role="bold"><code>TH1</code></emphasis><code>::GetRandom()</code> method which can be used to get a random number distributed according the contents of a histogram.</para>
+
+<programlisting language="c++">
+<code>void getrandomh() {</code>
+<code>   TH1F *source = new TH1F("source","source hist",100,-3,3);</code>
+<code>   source-&gt;FillRandom("gaus",1000);</code>
+<code>   TH1F *final = new TH1F("final","final hist",100,-3,3);</code>
+<emphasis role="italic"><code>// continued…</code></emphasis>
+<code>   for (Int_t i=0;i&lt;10000;i++) {</code>
+<code>      final-&gt;Fill(source-&gt;GetRandom());</code>
+<code>    }</code>
+<code>    TCanvas *c1 = new TCanvas("c1","c1",800,1000);</code>
+<code>    c1-&gt;Divide(1,2);</code>
+<code>    c1-&gt;cd(1);</code>
+<code>    source-&gt;Draw();</code>
+<code>    c1-&gt;cd(2);</code>
+<code>    final-&gt;Draw();</code>
+<code>    c1-&gt;cd();</code>
+<code>}</code>
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Adding, Dividing, and Multiplying</title>
+<para>Many types of operations are supported on histograms or between histograms:</para>
+<itemizedlist>
+<listitem><para>Addition of a histogram to the current histogram</para></listitem>
+<listitem><para>Additions of two histograms with coefficients and storage into the current histogram</para></listitem>
+<listitem><para>Multiplications and divisions are supported in the same way as additions.</para></listitem>
+<listitem><para>The <code>Add</code>, <code>Divide</code> and <code>Multiply</code> methods also exist to add, divide or multiply a histogram by a function.</para></listitem>
+</itemizedlist>
+<para>Histograms objects (not pointers) <emphasis role="bold"><code>TH1F</code></emphasis> <code>h1</code> can be multiplied by a constant using: </para>
+
+<programlisting language="c++">
+h1.Scale(const)
+</programlisting>
+
+<para>A new histogram can be created without changing the original one by doing: </para>
+
+<programlisting language="c++">
+TH1F h3 = 8*h1;
+</programlisting>
+
+<para>To multiply two histogram objects and put the result in a 3rd one do: </para>
+
+<programlisting language="c++">
+TH1F h3 = h1*h2;
+</programlisting>
+
+<para>The same operations can be done with histogram pointers <emphasis role="bold"><code>TH1F</code></emphasis> <code>*h1</code>, <emphasis role="bold"><code>*h2</code></emphasis> following way: </para>
+
+<programlisting language="c++">
+h1-&gt;Scale(const)
+TH1F h3 = 8*(*h1);
+TH1F h3 = (*h1)*(*h2);
+</programlisting>
+
+<para>Of course, the <emphasis role="bold"><code>TH1</code></emphasis> methods <code>Add</code>, <code>Multiply</code> and <code>Divide</code> can be used instead of these operators.</para>
+<para>If a histogram has associated error bars (<emphasis role="bold"><code>TH1</code></emphasis><code>::Sumw2()</code> has been called), the resulting error bars are also computed assuming independent histograms. In case of divisions, binomial errors are also supported.</para>
+</sect1>
+
+<sect1>
+<title>Projections</title>
+<para>One can make:</para>
+<itemizedlist>
+<listitem><para>a 1-D projection of a 2-D histogram or profile. See <emphasis role="bold"><code>TH2</code></emphasis><code>::ProfileX</code>, <emphasis role="bold"><code>TH2</code></emphasis><code>::ProfileY,</code> <emphasis role="bold"><code>TProfile</code></emphasis><code>::ProjectionX</code>, <emphasis role="bold"><code>TProfile2D</code></emphasis><code>::ProjectionXY</code>, <emphasis role="bold"><code>TH2</code></emphasis><code>::ProjectionX</code>, <emphasis role="bold"><code>TH2</code></emphasis><code>::ProjectionY</code>.</para></listitem>
+<listitem><para>a 1-D, 2-D or profile out of a 3-D histogram see <emphasis role="bold"><code>TH3</code></emphasis><code>::ProjectionZ</code>, <emphasis role="bold"><code>TH3</code></emphasis><code>::Project3D</code>.</para></listitem>
+</itemizedlist>
+<para>These projections can be fit via: <emphasis role="bold"><code>TH2</code></emphasis><code>::FitSlicesX</code>, <emphasis role="bold"><code>TH2</code></emphasis><code>::FitSlicesY</code>, <emphasis role="bold"><code>TH3</code></emphasis><code>::FitSlicesZ</code>.</para>
+
+<sect2>
+<title>Drawing Histograms</title>
+<para>When you call the <code>Draw</code> method of a histogram (<emphasis role="bold"><code>TH1</code></emphasis><code>::Draw</code>) for the first time, it creates a <emphasis role="bold"><code>THistPainter</code></emphasis> object and saves a pointer to painter as a data member of the histogram. The <emphasis role="bold"><code>THistPainter</code></emphasis> class specializes in the drawing of histograms. It allows logarithmic axes (x, y, z) when the CONT drawing option is using. The <emphasis role="bold"><code>THistPainter</code></emphasis> class is separated from the histogram so that one can have histograms without the graphics overhead, for example in a batch program. The choice to give each histogram has its own painter rather than a central singleton painter, allows two histograms to be drawn in two threads without overwriting the painter's values. When a displayed histogram is filled again, you do not have to call the <code>Draw</code> method again. The image is refreshed the next time the pad is updated. A pad is updated after one of these three actions:</para>
+<itemizedlist>
+<listitem><para>A carriage control on the ROOT command line </para></listitem>
+<listitem><para>A click inside the pad</para></listitem>
+<listitem><para>A call to <emphasis role="bold"><code>TPad</code></emphasis><code>::Update()</code></para></listitem>
+</itemizedlist>
+<para>By default, the <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw</code> clears the pad before drawing the new image of the histogram. You can use the <code>"SAME"</code> option to leave the previous display in tact and superimpose the new histogram. The same histogram can be drawn with different graphics options in different pads. When a displayed histogram is deleted, its image is automatically removed from the pad. To create a copy of the histogram when drawing it, you can use <emphasis role="bold"><code>TH1</code></emphasis><code>::DrawClone()</code>. This will clone the histogram and allow you to change and delete the original one without affecting the clone. You can use <emphasis role="bold"><code>TH1</code></emphasis><code>::DrawNormalized()</code> to draw a normalized copy of a histogram. </para>
+
+<programlisting language="c++">
+TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
+</programlisting>
+
+<para>A clone of this histogram is normalized to norm and drawn with option. A pointer to the normalized histogram is returned. The contents of the histogram copy are scaled such that the new sum of weights (excluding under and overflow) is equal to <code>norm</code>.</para>
+<para>Note that the returned normalized histogram is not added to the list of histograms in the current directory in memory. It is the user's responsibility to delete this histogram. The <code>kCanDelete</code> bit is set for the returned object. If a pad containing this copy is cleared, the histogram will be automatically deleted. See “Draw Options” for the list of options.</para>
+</sect2>
+
+<sect2>
+<title>Setting the Style</title>
+<para>Histograms use the current style <emphasis role="italic"><emphasis role="bold"><code>gStyle,</code></emphasis></emphasis> which is the global object of class <emphasis role="bold"><code>TStyle</code></emphasis>. To change the current style for histograms, the <emphasis role="bold"><code>TStyle</code></emphasis> class provides a multitude of methods ranging from setting the fill color to the axis tick marks. Here are a few examples:</para>
+
+<programlisting language="c++">
+<code>void SetHistFillColor(Color_t color = 1)</code>
+<code>void SetHistFillStyle(Style_t styl = 0)</code>
+<code>void SetHistLineColor(Color_t color = 1)</code>
+<code>void SetHistLineStyle(Style_t styl = 0)</code>
+<code>void SetHistLineWidth(Width_t width = 1)</code>
+</programlisting>
+
+<para>When you change the current style and would like to propagate the change to a previously created histogram you can call <emphasis role="bold"><code>TH1</code></emphasis><code>::UseCurrentStyle()</code>. You will need to call <code>UseCurrentStyle()</code> on each histogram. When reading many histograms from a file and you wish to update them to the current style, you can use <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis><code>::ForceStyle</code> and all histograms read after this call will be updated to use the current style. See “Graphics and the Graphical User Interface”. When a histogram is automatically created as a result of a <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code>, the style of the histogram is inherited from the tree attributes and the current style is ignored. The tree attributes are the ones set in the current <emphasis role="bold"><code>TStyle</code></emphasis> at the time the tree was created. You can change the existing tree to use the current style, by calling <emphasis role="bold"><code>TTree</code></emphasis><code>::UseCurrentStyle()</code>.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Draw Options</title>
+<para> The following draw options are supported on all histogram classes:</para>
+<itemizedlist>
+<listitem><para>"<code>AXIS</code>": Draw only the axis.</para></listitem>
+<listitem><para>"<code>HIST</code>": When a histogram has errors, it is visualized by default with error bars. To visualize it without errors use <code>HIST</code> together with the required option (e.g. "<code>HIST</code>         <code>SAME C</code>").</para></listitem>
+<listitem><para>"<code>SAME</code>": Superimpose on previous picture in the same pad.</para></listitem>
+<listitem><para>"<code>CYL</code>": Use cylindrical coordinates.</para></listitem>
+<listitem><para>"<code>POL</code>": Use polar coordinates.</para></listitem>
+<listitem><para>"<code>SPH</code>": Use spherical coordinates.</para></listitem>
+<listitem><para>"<code>PSR</code>": Use pseudo-rapidity/phi coordinates.</para></listitem>
+<listitem><para>"<code>LEGO</code>": Draw a lego plot with hidden line removal.</para></listitem>
+<listitem><para>"<code>LEGO1</code>": Draw a lego plot with hidden surface removal.</para></listitem>
+<listitem><para>"<code>LEGO2</code>": Draw a lego plot using colors to show the cell contents.</para></listitem>
+<listitem><para>"<code>SURF</code>": Draw a surface plot with hidden line removal.</para></listitem>
+<listitem><para>"<code>SURF1</code>": Draw a surface plot with hidden surface removal.</para></listitem>
+<listitem><para>"<code>SURF2</code>": Draw a surface plot using colors to show the cell contents.</para></listitem>
+<listitem><para>"<code>SURF3</code>": Same as <code>SURF</code> with a contour view on the top.</para></listitem>
+<listitem><para>"<code>SURF4</code>": Draw a surface plot using <code>Gouraud</code> shading.</para></listitem>
+<listitem><para>“<code>SURF5</code>”:Same as <code>SURF3</code> but only the colored contour is drawn. Used with option <code>CYL</code>, <code>SPH</code> or <code>PSR</code> it allows to draw colored contours on a sphere, a cylinder or in a pseudo rapidly space. In Cartesian or polar coordinates, option <code>SURF3</code> is used.</para></listitem>
+</itemizedlist>
+<para> The following options are supported for 1-D histogram classes:</para>
+<itemizedlist>
+<listitem><para>"<code>AH</code>": Draw the histogram, but not the axis labels and tick marks</para></listitem>
+<listitem><para>"<code>B</code>": Draw a bar chart</para></listitem>
+<listitem><para>"<code>C</code>": Draw a smooth curve through the histogram bins</para></listitem>
+<listitem><para>"<code>E</code>": Draw the error bars</para></listitem>
+<listitem><para>"<code>E0</code>": Draw the error bars including bins with 0 contents</para></listitem>
+<listitem><para>"<code>E1</code>":Draw the error bars with perpendicular lines at the edges</para></listitem>
+<listitem><para>"<code>E2</code>": Draw the error bars with rectangles</para></listitem>
+<listitem><para>"<code>E3</code>": Draw a fill area through the end points of the vertical error bars</para></listitem>
+<listitem><para>"<code>E4</code>": Draw a smoothed filled area through the end points of the error bars</para></listitem>
+<listitem><para>"<code>L</code>": Draw a line through the bin contents</para></listitem>
+<listitem><para>"<code>P</code>": Draw a (poly)marker at each bin using the histogram's current marker style  </para></listitem>
+<listitem><para>"<code>P0</code>":Draw current marker at each bin including empty bins</para></listitem>
+<listitem><para>"<code>PIE</code>":Draw a Pie Chart</para></listitem>
+<listitem><para>"<code>*H</code>": Draw histogram with a * at each bin</para></listitem>
+<listitem><para>"<code>LF2</code>":Draw histogram as with option "<code>L</code>" but with a fill area. Note that "<code>L</code>” also draws a fill area if the histogram fill color is set but the fill area corresponds to the histogram contour. </para></listitem>
+<listitem><para>"<code>9</code>”:Force histogram to be drawn in high resolution mode. By default, the histogram is drawn in low resolution in case the number of bins is greater than the number of pixels in the current pad</para></listitem>
+<listitem><para>“<code>][</code>“:Draw histogram without the vertical lines for the first and the last bin. Use it when superposing many histograms on the same picture.</para></listitem>
+</itemizedlist>
+<para>The following options are supported for 2-D histogram classes:</para>
+<itemizedlist>
+<listitem><para>"<code>ARR</code>": Arrow mode. Shows gradient between adjacent cells</para></listitem>
+<listitem><para>"<code>BOX</code>": Draw a box for each cell with surface proportional to contents</para></listitem>
+<listitem><para>"<code>BOX1</code>": A sunken button is drawn for negative values, a raised one for positive values</para></listitem>
+<listitem><para>"<code>COL</code>": Draw a box for each cell with a color scale varying with contents</para></listitem>
+<listitem><para>"<code>COLZ</code>": Same as "<code>COL</code>" with a drawn color palette</para></listitem>
+<listitem><para>"<code>CONT</code>": Draw a contour plot (same as <code>CONT0</code>)</para></listitem>
+<listitem><para>"<code>CONTZ</code>": Same as "<code>CONT</code>" with a drawn color palette</para></listitem>
+<listitem><para>"<code>CONT0</code>": Draw a contour plot using surface colors to distinguish contours</para></listitem>
+<listitem><para>"<code>CONT1</code>": Draw a contour plot using line styles to distinguish contours</para></listitem>
+<listitem><para>"<code>CONT2</code>": Draw a contour plot using the same line style for all contours</para></listitem>
+<listitem><para>"<code>CONT3</code>": Draw a contour plot using fill area colors</para></listitem>
+<listitem><para>"<code>CONT4</code>": Draw a contour plot using surface colors (<code>SURF</code> option at theta = 0)</para></listitem>
+<listitem><para><code>"CONT5":</code>Use Delaunay triangles to compute the contours</para></listitem>
+<listitem><para>"<code>LIST</code>": Generate a list of <emphasis role="bold"><code>TGraph</code></emphasis> objects for each contour</para></listitem>
+<listitem><para>"<code>FB</code>": To be used with <code>LEGO</code> or <code>SURFACE</code>, suppress the Front-Box</para></listitem>
+<listitem><para>"<code>BB</code>": To be used with <code>LEGO</code> or <code>SURFACE</code>, suppress the Back-Box</para></listitem>
+<listitem><para>"<code>A</code>": To be used with <code>LEGO</code> or <code>SURFACE</code>, suppress the axis</para></listitem>
+<listitem><para>"<code>SCAT</code>": Draw a scatter-plot (default)</para></listitem>
+<listitem><para>“<code>SPEC</code>”Use <emphasis role="bold"><code>TSpectrum2Painter</code></emphasis> tool for drawing</para></listitem>
+<listitem><para>"<code>TEXT</code>":Draw bin contents as text (format set via <code>gStyle-&gt;SetPaintTextFormat)</code>.</para></listitem>
+<listitem><para>"<code>TEXTnn</code>" :Draw bin contents as text at angle <code>nn</code> (<code>0&lt;nn&lt;90</code>).</para></listitem>
+<listitem><para>"<code>[cutg]</code>":Draw only the sub-range selected by the <emphasis role="bold"><code>TCutG</code></emphasis> name "<code>cutg</code>".</para></listitem>
+<listitem><para>"<code>Z</code>":The "<code>Z</code>" option can be specified with the options: <code>BOX</code>, <code>COL</code>, <code>CONT</code>, <code>SURF</code>, and <code>LEGO</code> to display the color palette with an axis indicating the value of the corresponding color on the right side of the picture. </para></listitem>
+</itemizedlist>
+<para>The following options are supported for 3-D histogram classes:</para>
+<itemizedlist>
+<listitem><para>"         ": Draw a 3D scatter plot.</para></listitem>
+<listitem><para>"<code>BOX</code>": Draw a box for each cell with volume proportional to contents</para></listitem>
+<listitem><para>"<code>LEGO</code>": Same as "<code>BOX</code>"</para></listitem>
+<listitem><para>"<code>ISO</code>": Draw an iso surface</para></listitem>
+<listitem><para>"<code>FB</code>": Suppress the Front-Box</para></listitem>
+<listitem><para>"<code>BB</code>": Suppress the Back-Box</para></listitem>
+<listitem><para>"<code>A</code>": Suppress the axis</para></listitem>
+</itemizedlist>
+<para>Most options can be concatenated without spaces or commas, for example, if <code>h</code> is a histogram pointer:</para>
+
+<programlisting language="c++">
+h-&gt;Draw("E1SAME");
+h-&gt;Draw("e1same");
+</programlisting>
+
+<para>The options are not case sensitive. The options <code>BOX</code>, <code>COL</code> and <code>COLZ</code> use the color palette defined in the current style (see <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>). The options <code>CONT</code>, <code>SURF</code>, and <code>LEGO</code> have by default 20 equidistant contour levels, you can change the number of levels with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetContour</code>. You can also set the default drawing option with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetOption</code>. To see the current option use <emphasis role="bold"><code>TH1</code></emphasis><code>::GetOption</code>. For example:</para>
+
+<programlisting language="c++">
+<code>h-&gt;SetOption("lego");</code>
+<code>h-&gt;Draw();  </code><emphasis role="italic"><code>// will use the lego option</code></emphasis>
+<code>h-&gt;Draw("scat")        </code><emphasis role="italic"><code>// will use the scatter plot option</code></emphasis>
+</programlisting>
+
+<sect2>
+<title>The SCATter Plot Option</title>
+<para>By default, 2D histograms are drawn as scatter plots. For each cell (<code>i,j</code>) a number of points proportional to the cell content are drawn. A maximum of 500 points per cell are drawn. If the maximum is above 500 contents are normalized to 500.</para>
+</sect2>
+
+<sect2>
+<title>The ARRow Option</title>
+<para>The <code>ARR</code> option shows the gradient between adjacent cells. For each cell (<code>i,j</code>) an arrow is drawn. The orientation of the arrow follows the cell gradient</para>
+</sect2>
+
+<sect2>
+<title>The BOX Option</title>
+<para>For each cell <code>(i,j)</code> a box is drawn with surface proportional to contents. The size of the box is proportional to the absolute value of the cell contents. The cells with negative contents are drawn with an X on top of the boxes. With option <code>BOX1</code> a button is drawn for each cell with surface proportional to contents’ absolute value. A sunken button is drawn for negative values, a raised one for positive values.</para>
+</sect2>
+
+<sect2>
+<title>The ERRor Bars Options</title>
+<itemizedlist>
+<listitem><para><code>”E” </code> Default. Draw only error bars, without markers</para></listitem>
+<listitem><para><code>”E0”</code> Draw also bins with 0 contents (turn off the symbols clipping).</para></listitem>
+<listitem><para><code>”E1” </code>Draw small lines at the end of error bars</para></listitem>
+<listitem><para><code>”E2” </code>Draw error rectangles</para></listitem>
+<listitem><para><code>”E3” </code>Draw a fill area through the end points of vertical error bars</para></listitem>
+<listitem><para><code>”E4” </code>Draw a smoothed filled area through the end points of error bars</para></listitem>
+</itemizedlist>
+
+<figure><title>The "E1" bars' option</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0300002F.png" width="280.55pt" depth="181.25pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>Note that for all options, the line and fill attributes of the histogram are used for the errors or errors contours.  Use <code>gStyle-&gt;SetErrorX(dx)</code> to control the size of the error along x. The parameter <code>dx</code> is a percentage of bin width for errors along <code>X</code>. Set <code>dx=0</code> to suppress the error along <code>X</code>. Use <code>gStyle-&gt;SetEndErrorSize(np)</code> to control the size of the lines at the end of the error bars (when option 1 is used). By default <code>np=1</code> (<code>np</code> represents the number of pixels).</para>
+</sect2>
+
+<sect2>
+<title>The Color Option</title>
+<para>For each cell (<code>i,j</code>) a box is drawn with a color proportional to the cell content. The color table used is defined in the current style (<emphasis role="italic"><emphasis role="bold"><code>gStyle</code></emphasis></emphasis>). The color palette in <emphasis role="bold"><code>TStyle</code></emphasis> can be modified with <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>.</para>
+
+<figure><title>Different draw options</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000030.jpg" width="280.55pt" depth="200.5pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>The TEXT Option</title>
+<para>For each cell <code>(i,j)</code> the cell content is printed. The text attributes are:</para>
+<itemizedlist>
+<listitem><para>Text font =    current font set by <emphasis role="bold"><code>TStyle</code></emphasis> </para></listitem>
+<listitem><para>Text size=    0.02* pad-height * marker-size</para></listitem>
+<listitem><para>Text color=    marker color</para></listitem>
+</itemizedlist>
+
+<figure><title>The TEXT option</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000031.jpg" width="253.25pt" depth="181.85pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>The CONTour Options</title>
+<para/>
+<para/>
+<para>The following contour options are supported:</para>
+<itemizedlist>
+<listitem><para><code>"CONT":</code>Draw a contour plot (same as CONT0)</para></listitem>
+<listitem><para><code>"CONT0":</code>Draw a contour plot using surface colors to distinguish contours</para></listitem>
+<listitem><para><code>"CONT1":</code>Draw a contour plot using line styles to distinguish contours</para></listitem>
+<listitem><para><code>"CONT2":</code>Draw a contour plot using the same line style for all contours</para></listitem>
+<listitem><para><code>"CONT3":</code>Draw a contour plot using fill area colors</para></listitem>
+<listitem><para><code>"CONT4":</code>Draw a contour plot using surface colors (SURF option at theta = 0); see also options "<code>AITOFF</code>", "<code>MERCATOR</code>", etc. below</para></listitem>
+<listitem><para><code>"CONT5":</code>Use Delaunay triangles to compute the contours</para></listitem>
+</itemizedlist>
+
+<figure><title>Different contour options</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000032.jpg" width="262.55pt" depth="189.3pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para/>
+<para>The default number of contour levels is 20 equidistant levels. It can be changed with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetContour</code>. When option "<code>LIST</code>" is specified together with option "<code>CONT</code>", all points used for contour drawing, are saved in the <emphasis role="bold"><code>TGraph</code></emphasis> object and are accessible in the following way:</para>
+
+<programlisting language="c++">
+TObjArray *contours = gROOT-&gt;GetListOfSpecials()-&gt;FindObject("contours");
+Int_t ncontours = contours-&gt;GetSize();
+TList *list = (TList*)contours-&gt;At(i);
+</programlisting>
+
+<para>Where "<code>i</code>" is a contour number and list contains a list of <emphasis role="bold"><code>TGraph</code></emphasis> objects. For one given contour, more than one disjoint poly-line may be generated. The <emphasis role="bold"><code>TGraph</code></emphasis> numbers per contour are given by <code>list-&gt;GetSize().</code> Here we show how to access the first graph in the list.</para>
+
+<programlisting language="c++">
+TGraph *gr1 = (TGraph*)list-&gt;First();
+</programlisting>
+<itemizedlist>
+<listitem><para>"<code>AITOFF</code>": Draw a contour via an AITOFF projection</para></listitem>
+<listitem><para>"<code>MERCATOR</code>": Draw a contour via a Mercator projection</para></listitem>
+<listitem><para>“<code>SINUSOIDAL</code>": Draw a contour via a Sinusoidal projection</para></listitem>
+<listitem><para>"<code>PARABOLIC</code>": Draw a contour via a Parabolic projection</para></listitem>
+</itemizedlist>
+<para>The tutorial macro <code>earth.C</code> uses these four options and produces the following picture:</para>
+
+<figure><title>The <code>earth.C</code> macro output</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000033.png" width="253.25pt" depth="196.15pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>The LEGO Options</title>
+<para>In a lego plot, the cell contents are drawn as 3D boxes, with the height of the box proportional to the cell content. </para>
+
+<figure><title>"LEGO" and "SURF" options</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000034.jpg" width="253.85pt" depth="181.25pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<itemizedlist>
+<listitem><para>"<code>LEGO</code>": Draw a lego plot with hidden line removal</para></listitem>
+<listitem><para>"<code>LEGO1</code>": Draw a lego plot with hidden surface removal</para></listitem>
+<listitem><para>"<code>LEGO2</code>": Draw a lego plot using colors to show the cell contents</para></listitem>
+</itemizedlist>
+<para>A lego plot can be represented in several coordinate systems; the default system is Cartesian coordinates. Other possible coordinate systems are <code>CYL</code>, <code>POL</code>, <code>SPH</code>, and<code> PSR</code>.</para>
+<itemizedlist>
+<listitem><para>"<code>CYL</code>": Cylindrical coordinates: x-coordinate is mapped on the angle; y-coordinate - on the cylinder length.</para></listitem>
+<listitem><para>"<code>POL</code>": Polar coordinates: x-coordinate is mapped on the angle; y-coordinate - on the radius.</para></listitem>
+<listitem><para>"<code>SPH</code>": Spherical coordinates: x-coordinate is mapped on the latitude; y-coordinate - on the longitude.</para></listitem>
+<listitem><para>"<code>PSR</code>": PseudoRapidity/Phi coordinates:  x-coordinate is mapped on Phi.</para></listitem>
+</itemizedlist>
+<para>With <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code> the color palette can be changed. We suggest you use palette 1 with the call:</para>
+
+<programlisting language="c++">
+gStyle-&gt;SetPalette(1);
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>The SURFace Options</title>
+<para>In a surface plot, cell contents are represented as a mesh. The height of the mesh is proportional to the cell content. A surface plot can be represented in several coordinate systems. The default is Cartesian coordinates, and the other possible systems are <code>CYL</code>, <code>POL</code>, <code>SPH</code>, and <code>PSR</code>. The following picture uses <code>SURF1</code>. With <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>         the color palette can be changed. We suggest you use palette 1 with the call:</para>
+
+<programlisting language="c++">
+gStyle-&gt;SetPalette(1);
+</programlisting>
+
+<figure><title>Different surface options</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000035.jpg" width="244.55pt" depth="175.05pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<itemizedlist>
+<listitem><para>"<code>SURF</code>": Draw a surface plot with hidden line removal</para></listitem>
+<listitem><para>"<code>SURF1</code>": Draw a surface plot with hidden surface removal</para></listitem>
+<listitem><para>"<code>SURF2</code>": Draw a surface plot using colors to show the cell contents</para></listitem>
+<listitem><para>"<code>SURF3</code>": Same as <code>SURF</code> with a contour view on the top</para></listitem>
+<listitem><para>"<code>SURF4</code>": Draw a surface plot using <code>Gouraud</code> shading</para></listitem>
+<listitem><para>"<code>SURF5</code>": Same as <code>SURF3</code> but only the colored contour is drawn. Used with options <code>CYL</code>, <code>SPH</code> or <code>PSR</code> it allows to draw colored contours on a sphere, a cylinder or in a pseudo rapidly space. In Cartesian or polar coordinates, option <code>SURF3</code> is used.</para></listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>The BAR Options</title>
+<para>When the option "<code>bar</code>" or "<code>hbar</code>" is specified, a bar chart is drawn.</para>
+<para>The options for vertical bar chart are "<code>bar</code>", "<code>bar0</code>", "<code>bar1</code>", "<code>bar2</code>", "<code>bar3</code>", "<code>bar4</code>". </para>
+
+<figure><title>Vertical bar charts</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000036.jpg" width="229.65pt" depth="117.95pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<itemizedlist>
+<listitem><para>The bar is filled with the histogram fill color.</para></listitem>
+<listitem><para>The left side of the bar is drawn with a light fill color.</para></listitem>
+<listitem><para>The right side of the bar is drawn with a dark fill color.</para></listitem>
+<listitem><para>The percentage of the bar drawn with either the light or dark color is:</para></listitem>
+<listitem><para>0 per cent for option <code>"bar"</code> or <code>"bar0"</code></para></listitem>
+<listitem><para>10 per cent for option <code>"bar1"</code></para></listitem>
+<listitem><para>20 per cent for option <code>"bar2"</code></para></listitem>
+<listitem><para>30 per cent for option <code>"bar3"</code></para></listitem>
+<listitem><para>40 per cent for option <code>"bar4"</code></para></listitem>
+</itemizedlist>
+<para>Use <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBarWidth()</code> to control the bar width (default is the bin width). Use <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBarOffset</code> to control the bar offset (default is 0). See the example <code>$ROOTSYS/tutorials/hist/hbars.C</code></para>
+<para>The options for the horizontal bar chart are "<code>hbar</code>", "<code>hbar0</code>", "<code>hbar1</code>", "<code>hbar2</code>", "<code>hbar3</code>", and "<code> hbar4</code>".</para>
+<itemizedlist>
+<listitem><para>A horizontal bar is drawn for each bin.</para></listitem>
+<listitem><para>The bar is filled with the histogram fill color.</para></listitem>
+<listitem><para>The bottom side of the bar is drawn with a light fill color.</para></listitem>
+<listitem><para>The top side of the bar is drawn with a dark fill color.</para></listitem>
+<listitem><para>The percentage of the bar drawn with either the light or dark color is:</para></listitem>
+<listitem><para>0 per cent for option "<code>hbar</code>" or "<code>hbar0</code>"</para></listitem>
+<listitem><para>10 per cent for option "<code>hbar1</code>"</para></listitem>
+<listitem><para>20 per cent for option "<code>hbar2</code>"</para></listitem>
+<listitem><para>30 per cent for option "<code>hbar3</code>"</para></listitem>
+<listitem><para>40 per cent for option "<code>hbar4</code>"</para></listitem>
+</itemizedlist>
+<para>Use <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBarWidth</code> to control the bar width (default is the bin width). Use <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBarOffset</code> to control the bar offset (default is 0). See the example <code>$ROOTSYS/tutorials/hist/hbars.C</code></para>
+
+<figure><title>Horizontal bar charts</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000037.jpg" width="238.35pt" depth="114.2pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>The Z Option: Display the Color Palette on the Pad</title>
+<para>The "<code>Z</code>" option can be specified with the options: <code>COL</code>, <code>CONT</code>, <code>SURF</code>, and <code>LEGO</code> to display the color palette with an axis indicating the value of the corresponding color on the right side of the picture. If there is not enough space on the right side, you can increase the size of the right margin by calling <emphasis role="bold"><code>TPad</code></emphasis><code>::SetRightMargin()</code>. The attributes used to display the palette axis values are taken from the Z axis of the object. For example, you can set the labels size on the palette axis with:</para>
+
+<programlisting language="c++">
+<code>hist-&gt;GetZaxis()-&gt;SetLabelSize();</code>
+</programlisting>
+
+<sect3>
+<title>Setting the Color Palette</title>
+<para>You can set the color palette with <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>, e.g.</para>
+<programlisting language="c++">
+gStyle-&gt;SetPalette(ncolors,colors);
+</programlisting>
+<para>For example, the option <code>COL</code> draws a 2-D histogram with cells represented by a box filled with a color index, which is a function of the cell content. If the cell content is N, the color index used will be the color number in <code>colors[N]</code>. If the maximum cell content is greater than <code>ncolors</code>, all cell contents are scaled to <code>ncolors</code>.
+If <code>ncolors&lt;=0</code>, a default palette of 50 colors is defined. This palette is recommended for pads, labels. It defines:</para>
+<itemizedlist>
+<listitem><para>   Index 0 to 9: shades of gray </para></listitem>
+<listitem><para>   Index 10 to 19:shades of brown</para></listitem>
+<listitem><para>   Index 20 to 29:shades of blue</para></listitem>
+<listitem><para>   Index 30 to 39: shades of red</para></listitem>
+<listitem><para>   Index 40 to 49:basic colors</para></listitem>
+</itemizedlist>
+<para>The color numbers specified in this palette can be viewed by selecting the menu entry Colors in the View menu of the canvas menu bar. The color's red, green, and blue values can be changed via <emphasis role="bold"><code>TColor</code></emphasis><code>::SetRGB</code>. If <code>ncolors == 1</code> &amp;&amp; <code>colors == 0</code>, a pretty palette with a violet to red spectrum is created. We recommend you use this palette when drawing lego plots, surfaces, or contours. If <code>ncolors &gt; 0</code> and <code>colors == 0</code>, the default palette is used with a maximum of <code>ncolors</code>.</para>
+</sect3>
+
+<sect3>
+<title>TPaletteAxis</title>
+<para>A <emphasis role="bold"><code>TPaletteAxis</code></emphasis> object is used to display the color palette when drawing 2D histograms.
+The object is automatically created when drawing a 2D histogram when the option "<code>z</code>" is specified. It is added to the histogram list of functions.
+It can be retrieved and its attributes can be changed with: </para>
+
+<programlisting language="c++">
+TPaletteAxis *palette=(TPaletteAxis*)h-&gt;FindObject("palette");
+</programlisting>
+
+<para>The palette can be interactively moved and resized. The context menu can be used to set the axis attributes. It is possible to select a range on the axis, to set the min/max in z. </para>
+</sect3>
+</sect2>
+
+<sect2>
+<title>The SPEC Option</title>
+<para>The “SPEC” option offers a large set of options/attributes to visualize 2D histograms thanks to "operators" following the "SPEC" keyword. For example, to draw the 2-D histogram <code>h2</code> using all default attributes except the viewing angles, one can do:</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC a(30,30,0)");
+</programlisting>
+
+<para>The operators' names are case unsensitive (i.e. one can use "a" or "A") and their parameters are seperated by  coma ",". Operators can be put in any order in the option and must be separated by a space " ". No space characters should be put in an operator. All the available operators are described below.</para>
+<para>The way how a 2D histogram will be painted is controled by 2 parameters: the "Display modes groups" and the "Display Modes". "Display modes groups" can take the following values:</para>
+<itemizedlist>
+<listitem><para>0 = Simple  - simple display modes using one color only</para></listitem>
+<listitem><para>1 = Light  - the shading is carried out according to the position of the fictive light source</para></listitem>
+<listitem><para>2 = Height - the shading is carried out according to the channel contents</para></listitem>
+<listitem><para>3 = LightHeight - combination of two previous shading algorithms (one can control the weight   between both algorithms).</para></listitem>
+</itemizedlist>
+<para>"Display modes" can take the following values:</para>
+<para>1 = Points2 = Grid3 = Contours4 = Bars5 = LinesX6 = LinesY</para>
+<para>7 = BarsX8 = BarsY9 = Needles10 = Surface11 = Triangles</para>
+<para>These parameters can be set by using the "<code>dm</code>" operator in the option.</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC dm(1,2)");
+</programlisting>
+
+<para>The above example draws the histogram using the "Light Display mode group" and  the "Grid Display mode". The following table summarizes all the possible combinations of both groups:</para>
+<informaltable frame="all">
+<tgroup cols="12">
+<colspec colwidth="1127*" colname="column-1"/>
+<colspec colwidth="717*" colname="column-2"/>
+<colspec colwidth="557*" colname="column-3"/>
+<colspec colwidth="672*" colname="column-4"/>
+<colspec colwidth="587*" colname="column-5"/>
+<colspec colwidth="767*" colname="column-6"/>
+<colspec colwidth="767*" colname="column-7"/>
+<colspec colwidth="707*" colname="column-8"/>
+<colspec colwidth="707*" colname="column-9"/>
+<colspec colwidth="877*" colname="column-10"/>
+<colspec colwidth="837*" colname="column-11"/>
+<colspec colwidth="701*" colname="column-12"/>
+<tbody>
+<row>
+<entry rowsep="1" colsep="1">
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Points</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Grid</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Cont-ours</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Bars</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>LinesX</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>LinesY</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>BarsX</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>BarsY</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Needles</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Surface</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>Trian-gles</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>Simple </para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>Light </para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>Height </para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+</row>
+<row>
+<entry rowsep="1" colsep="1">
+<para>LightHeight </para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>-</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+<entry rowsep="1" colsep="1">
+<para>x</para>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<para/>
+<para>The "Pen Attributes" can be changed using <code>pa(color,style,width)</code>. Next example sets line color to 2, line type to 1 and line width to 2. Note that if <code>pa()</code> is not specified, the histogram line attributes are used:</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC dm(1,2) pa(2,1,2)");
+</programlisting>
+
+<para>The number of "Nodes" can be changed with <code>n(nodesx,nodesy)</code>. Example:</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC n(40,40)");
+</programlisting>
+
+<para>Sometimes the displayed region is rather large. When displaying all channels the pictures become very dense and complicated. It is very difficult to understand the overall shape of data. "<code>n(nx,ny)</code>" allows to change the density of displayed channels. Only the channels coinciding with given nodes are displayed.</para>
+<para>The visualization "Angles" can be changed with "<code>a(alpha,beta,view)</code>": "<code>alpha</code>" is the angle between the bottom horizontal screen line and the displayed space on the right side of the picture and "<code>beta</code>" on the left  side, respectively. One can rotate the 3-d space around the vertical axis using the "<code>view</code>" parameter. Allowed values are 0, 90, 180 and 270 degrees.</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
+</programlisting>
+
+<para>The operator         "<code>zs(scale)</code>"         changes the scale of the Z-axis. The possible values are: 0 = Linear (default),  1 = Log, 2 = Sqrt. If <code>gPad-&gt;SetLogz()</code> has been set, the log scale on Z-axis is set automatically, i.e. there is no need for using the <code>zs()</code> operator. Note that the X and Y axis are always linear. </para>
+<para>The operator "<code>ci(r,g,b</code>)" defines the colors increments (<code>r</code>, <code>g</code> and <code>b</code> are floats). For sophisticated shading (Light, Height and LightHeight Display Modes Groups) the color palette starts from the basic pen color (see <code>pa()</code>  function). There is a predefined number of color levels (256). Color in every level is calculated by adding the increments of the <code>r</code>, <code>g</code>, <code>b</code> components to the previous level. Using this function one can change the color increments between two neighboring color levels. The function does not apply on the Simple Display Modes Group. The default values are: (1,1,1).</para>
+<para>The operator “<code>ca(color_algorithm)</code>" allows to choose the Color Algorithm. To define the colors one can use one of the following color algorithms (RGB, CMY, CIE, YIQ, HVS models). When the level of a component reaches the limit value one can choose either smooth transition (by decreasing the limit value) or a sharp modulo transition (continuing with 0 value). This allows various visual effects. One can choose from the following set of the algorithms: </para>
+<para>0 = RGB Smooth,   1 = RGB Modulo,     2 = CMY Smooth,   3 = CMY Modulo,     4 = CIE Smooth</para>
+<para>5 = CIE Modulo,   6 = YIQ Smooth,      7 = YIQ Modulo,     8 = HVS Smooth, 9 = HVS Modulo</para>
+<para>This function does not apply on Simple display modes group. Default  value is 0. Example choosing CMY Modulo to paint the 2D histogram:</para>
+
+<programlisting language="c++">
+h2-&gt;Draw("SPEC c1(3) dm(0,1) a(30,30,0)");
+</programlisting>
+
+<para>The operator "<code>lp(x,y,z)</code>" sets the light position. In Light and LightHeight display modes groups the color palette is calculated according to the fictive light source position in 3-d space. Using this function one can change the source's position and thus achieve various graphical effects. This function does not apply for  Simple and Height display modes groups. Default is: <code>lp(1000,1000,100)</code>.</para>
+<para>The operator "<code>s(shading,shadow)</code>" allows to set the shading. The surface picture is composed of triangles. The edges of the neighboring triangles can be smoothed (shaded). The shadow can be painted as well. The function does not apply on Simple display modes group. The possible values for shading are: 0 = Not Shaded,    1 = Shaded. The possible values for shadow are: 0 = Shadows are not painted, 1 = Shadows are painted.  Default values: <code>s(1,0)</code>.</para>
+<para>The operator "<code>b(bezier)</code>" sets the Bezier smoothing. For Simple display modes group and for Grid, LinesX and LinesY display modes one can smooth data using Bezier smoothing algorithm. The function does not apply on other display modes groups and display modes. Possible values are: 0 = No bezier smoothing, 1 = Bezier smoothing. Default value is: <code>b(0)</code>.</para>
+<para>The operator "<code>cw(width)</code>" sets the contour width. This function applies only on for the Contours display mode. One can change the width between horizontal slices and thus their density. Default value: <code>cw(50)</code>.</para>
+<para>The operator "<code>lhw(weight)</code>" sets the light height weight. For LightHeight display modes group one can change the weight between both shading algorithms. The function does not apply on other display modes groups. Default value is <code>lhw(0.5)</code>. </para>
+<para>The operator "<code>cm(enable,color,width,height,style)</code>" allows to draw a marker on each node. In addition to the surface drawn using any above given algorithm one can display channel marks. One can control the color as well as the width, height (in pixels) and the style of the marks. The parameter <code>enable</code> can be set to    0 =  Channel marks are not drawn or 1 =  Channel marks drawn. The possible styles are: </para>
+<para>1 = Dot,     2 = Cross,     3 = Star,     4 = Rectangle,     5 = X,     6 = Diamond,     7 = Triangle.</para>
+<para>The operator "<code>cg(enable,color)</code>" channel grid. In addition to the surface drawn using any above given algorithm one can display grid using the color parameter. The parameter enable can be set to: 0 = Grid not drawn,  1 = Grid drawn. </para>
+<para>See the example in <code>$ROOTSYS/tutorials/spectrum/spectrumpainter.C</code>.</para>
+
+<figure><title>The picture produced by spectrumpainter.C macro</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000038.png" width="343.85pt" depth="266.9pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>3-D Histograms</title>
+<para>By default a 3D scatter plot is drawn. If the "BOX" option is specified, a 3D box with a volume proportional to the cell content is drawn.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Drawing a Sub-range of a 2-D Histogram</title>
+
+<figure><title>The picture produced by fit2a.C macro</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000039.jpg" width="243.95pt" depth="165.7pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>Using a <emphasis role="bold"><code>TCutG</code></emphasis> object, it is possible to draw a 2D histogram sub-range. One must create a graphical cut (mouse or C++) and specify the name of the cut between ‘<code>[</code>‘ and ‘<code>]</code>’ in the Draw option. </para>
+<para>For example, with a <emphasis role="bold"><code>TCutG</code></emphasis> named "<code>cutg</code>", one can call:</para>
+
+<programlisting language="c++">
+myhist-&gt;Draw("surf1 [cutg]");
+</programlisting>
+
+<para>Or, assuming two graphical cuts with name "<code>cut1</code>" and "<code>cut2</code>", one can do:</para>
+
+<programlisting language="c++">
+h1.Draw("lego");
+h2.Draw("[cut1,-cut2],surf,same");
+</programlisting>
+
+<para>The second <code>Draw</code> will superimpose on top of the first lego plot a subset of <code>h2</code> using the "<code>surf</code>" option with:</para>
+<itemizedlist>
+<listitem><para>  all the bins inside <code>cut1</code></para></listitem>
+<listitem><para>  all the bins outside <code>cut2</code></para></listitem>
+</itemizedlist>
+<para>Up to 16 cuts may be specified in the cut string delimited by <code>"[..]"</code>. Currently only the following drawing options are sensitive to the cuts option: <code>col</code>, <code>box</code>, <code>scat</code>, <code>hist</code>, <code>lego</code>, <code>surf</code> and <code>cartesian</code> coordinates only. See a complete example in the tutorial <code>$ROOTSYS/tutorials/fit/fit2a.C</code>. </para>
+</sect1>
+
+<sect1>
+<title>Superimposing Histograms with Different Scales</title>
+<para>The following script creates two histograms; the second histogram is the bins integral of the first one. It shows a procedure to draw the two histograms in the same pad and it draws the scale of the second histogram using a new vertical axis on the right side.</para>
+
+<figure><title>Superimposed histograms with different scales</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0300003A.png" width="243.95pt" depth="140.9pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<programlisting language="c++">
+void twoscales() {
+TCanvas *c1 = new TCanvas("c1","different scales hists",600,400);
+<emphasis role="italic"><code>//create, fill and draw h1</code></emphasis>
+gStyle-&gt;SetOptStat(kFALSE);
+TH1F *h1 = new TH1F("h1","my histogram",100,-3,3);
+for (Int_t i=0;i&lt;10000;i++) h1-&gt;Fill(gRandom-&gt;Gaus(0,1));
+h1-&gt;Draw();
+c1-&gt;Update();
+<emphasis role="italic"><code>//create hint1 filled with the bins integral of h1</code></emphasis>
+TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
+Float_t sum = 0;
+for (Int_t i=1;i&lt;=100;i++) {
+sum += h1-&gt;GetBinContent(i);
+hint1-&gt;SetBinContent(i,sum);
+}
+<emphasis role="italic"><code>   //scale hint1 to the pad coordinates</code></emphasis>
+Float_t rightmax = 1.1*hint1-&gt;GetMaximum();
+Float_t scale = gPad-&gt;GetUymax()/rightmax;
+hint1-&gt;SetLineColor(kRed);
+hint1-&gt;Scale(scale);
+hint1-&gt;Draw("same");
+<emphasis role="italic"><code>//draw an axis on the right side</code></emphasis>
+TGaxis *axis = new TGaxis(gPad-&gt;GetUxmax(),gPad-&gt;GetUymin(),gPad-&gt;GetUxmax(),
+gPad-&gt;GetUymax(),0,rightmax,510,"+L");
+axis-&gt;SetLineColor(kRed);
+axis-&gt;SetLabelColor(kRed);
+axis-&gt;Draw();
+}
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Statistics Display</title>
+<para>By default, a histogram drawing includes the statistics box. Use         <emphasis role="bold"><code>TH1</code></emphasis><code>::SetStats(kFALSE)</code> to eliminate the statistics box. If the statistics box is drawn, <code>gStyle-&gt;SetOptStat(mode)</code> allow you to select the type of displayed information<code>.</code> The parameter <code>mode</code> has up to nine digits that can be set OFF (0) or ON as follows:
+<code>mode = ksiourmen</code> (<code>default = 000001111</code>)</para>
+<itemizedlist>
+<listitem><para><code>n</code>= 1  the name of histogram is printed</para></listitem>
+<listitem><para><code>e</code>= 1  the number of entries</para></listitem>
+<listitem><para><code>m</code>= 1  the mean value</para></listitem>
+<listitem><para><code>m</code>= 2  the mean and mean error values</para></listitem>
+<listitem><para><code>r</code>= 1  the root mean square (RMS)</para></listitem>
+<listitem><para><code>r</code>= 2  the RMS and RMS error</para></listitem>
+<listitem><para><code>u</code>= 1  the number of underflows </para></listitem>
+<listitem><para><code>o</code>= 1  the number of overflows </para></listitem>
+<listitem><para><code>i</code>= 1  the integral of bins </para></listitem>
+<listitem><para><code>s</code>= 1  the skewness </para></listitem>
+<listitem><para><code>s</code>= 2  the skewness and the skewness error</para></listitem>
+<listitem><para><code>k</code>= 1  the kurtosis</para></listitem>
+<listitem><para><code>k</code>= 2  the kurtosis and the kurtosis error</para></listitem>
+</itemizedlist>
+<para>Never call <code>SetOptStat(0001111)</code>, but <code>SetOptStat(1111)</code>, because <code>0001111</code> will be taken as an octal number.</para>
+<para>The method <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetOptStat(Option_t *option)</code> can also be called with a character string as a parameter. The parameter <code>option</code> can contain:</para>
+<itemizedlist>
+<listitem><para><code>n</code>for printing the name of histogram</para></listitem>
+<listitem><para><code>e</code>the number of entries</para></listitem>
+<listitem><para><code>m</code>the mean value</para></listitem>
+<listitem><para><code>M</code>the mean and mean error values</para></listitem>
+<listitem><para><code>r</code>the root mean square (RMS)</para></listitem>
+<listitem><para><code>R</code>the RMS and RMS error</para></listitem>
+<listitem><para><code>u</code>the number of underflows </para></listitem>
+<listitem><para><code>o</code>the number of overflows </para></listitem>
+<listitem><para><code>i</code>the integral of bins </para></listitem>
+<listitem><para><code>s</code>the skewness </para></listitem>
+<listitem><para><code>S</code>the skewness and the skewness error</para></listitem>
+<listitem><para><code>k</code>the kurtosis</para></listitem>
+<listitem><para><code>K</code>the kurtosis and the kurtosis error</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+<code>gStyle-&gt;SetOptStat("ne");    </code><emphasis role="italic"><code>// prints the histogram name and number of entries</code></emphasis>
+<code>gStyle-&gt;SetOptStat("n");     </code><emphasis role="italic"><code>// prints the histogram name</code></emphasis>
+<code>gStyle-&gt;SetOptStat("nemr");  </code><emphasis role="italic"><code>// the default value </code></emphasis>
+</programlisting>
+
+<para>With the option <code>"same"</code>, the statistic box is not redrawn. With the option <code>"sames"</code>, it is re-drawn. If it hides the previous statistics box, you can change its position with the next lines (where <code>h</code> is the histogram pointer):</para>
+
+<programlisting language="c++">
+root[] <emphasis role="bold"><code>TPaveStats</code></emphasis><emphasis role="bold"><code> *s = (TPaveStats*)h-&gt;GetListOfFunctions()-&gt;FindObject("stats");</code></emphasis>
+root[] <emphasis role="bold"><code>s-&gt;SetX1NDC (newx1);</code></emphasis>  <emphasis role="italic"><code>//new x start position</code></emphasis>
+root[] <emphasis role="bold"><code>s-&gt;SetX2NDC (newx2); </code></emphasis><emphasis role="italic"><code>//new x end position</code></emphasis>
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Setting Line, Fill, Marker, and Text Attributes</title>
+<para>The histogram classes inherit from the attribute classes: <emphasis role="bold"><code>TAttLine</code></emphasis>, <emphasis role="bold"><code>TAttFill</code></emphasis>, <emphasis role="bold"><code>TAttMarker</code></emphasis> and <emphasis role="bold"><code>TAttText</code></emphasis>. See the description of these classes for the list of options.</para>
+</sect1>
+
+<sect1>
+<title>Setting Tick Marks on the Axis</title>
+<para>The <emphasis role="bold"><code>TPad</code></emphasis><code>::SetTicks()</code> method specifies the type of tick marks on the axis. Let <code>tx=gPad-&gt;GetTickx()</code>         and<code> ty=gPad-&gt;GetTicky()</code>. </para>
+<itemizedlist>
+<listitem><para><code>tx</code> = 1; tick marks on top side are drawn (inside)</para></listitem>
+<listitem><para><code>tx</code> = 2; tick marks and labels on top side are drawn</para></listitem>
+<listitem><para><code>ty</code> = 1; tick marks on right side are drawn (inside)</para></listitem>
+<listitem><para><code>ty</code> = 2; tick marks and labels on right side are drawn</para></listitem>
+<listitem><para><code>tx=ty=0</code>by default only the left Y axis and X bottom axis are drawn</para></listitem>
+</itemizedlist>
+<para>Use <emphasis role="bold"><code>TPad</code></emphasis><code>::SetTicks(tx,ty)</code> to set these options. See also the methods of <emphasis role="bold"><code>TAxis</code></emphasis> that set specific axis attributes. If multiple color-filled histograms are drawn on the same pad, the fill area may hide the axis tick marks. One can force the axis redrawing over all the histograms by calling:</para>
+
+<programlisting language="c++">
+gPad-&gt;RedrawAxis();
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Giving Titles to the X, Y and Z Axis</title>
+<para>Because the axis title is an attribute of the axis, you have to get the axis first and then call <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetTitle</code>. </para>
+
+<programlisting language="c++">
+h-&gt;GetXaxis()-&gt;SetTitle("X axis title");
+h-&gt;GetYaxis()-&gt;SetTitle("Y axis title");
+</programlisting>
+
+<para>The histogram title and the axis titles can be any <emphasis role="bold"><code>TLatex</code></emphasis> string. The titles are part of the persistent histogram. For example if you wanted to write E with a subscript (T) you could use this:</para>
+
+<programlisting language="c++">
+h-&gt;GetXaxis()-&gt;SetTitle("E_{T}");
+</programlisting>
+
+<para>For a complete explanation of the Latex mathematical expressions, see "Graphics and the Graphical User Interface". It is also possible to specify the histogram title and the axis titles at creation time. These titles can be given in the "title" parameter. They must be separated by "<emphasis role="bold">;</emphasis>":</para>
+
+<programlisting language="c++">
+TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
+</programlisting>
+
+<para>Any title can be omitted:</para>
+
+<programlisting language="c++">
+TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
+TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
+</programlisting>
+
+<para>The method <code>SetTitle</code> has the same syntax:</para>
+
+<programlisting language="c++">
+h-&gt;SetTitle("Histogram title;An other X title Axis");
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Making a Copy of an Histogram</title>
+<para>Like for any other ROOT object derived from <emphasis role="bold"><code>TObject</code></emphasis>, the <code>Clone</code> method can be used. This makes an identical copy of the original histogram including all associated errors and functions:</para>
+
+<programlisting language="c++">
+TH1F *hnew = (TH1F*)h-&gt;Clone(); <emphasis role="italic"><code>// renaming is recommended, because otherwise you </code></emphasis>
+hnew-&gt;SetName("hnew");          <emphasis role="italic"><code>// will have two histograms with the same name</code></emphasis>
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Normalizing Histograms</title>
+<para>You can scale a histogram (<emphasis role="bold"><code>TH1</code></emphasis> <code>*h</code>) such that the bins integral is equal to the normalization parameter norm:</para>
+
+<programlisting language="c++">
+Double_t scale = norm/h-&gt;Integral();
+h-&gt;Scale(scale);
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Saving/Reading Histograms to/from a File</title>
+<para>The following statements create a ROOT file and store a histogram on the file. Because <emphasis role="bold"><code>TH1</code></emphasis> derives from <emphasis role="bold"><code>TNamed</code></emphasis>, the key identifier on the file is the histogram name:</para>
+
+<programlisting language="c++">
+TFile f("histos.root","new");
+TH1F h1("hgaus","histo from a gaussian",100,-3,3);
+h1.FillRandom("gaus",10000);
+h1-&gt;Write();
+</programlisting>
+
+<para>To read this histogram in another ROOT session, do:</para>
+
+<programlisting language="c++">
+TFile f("histos.root");
+TH1F *h = (TH1F*)f.Get("hgaus");
+</programlisting>
+
+<para>One can save all histograms in memory to the file by: </para>
+
+<programlisting language="c++">
+file-&gt;Write();
+</programlisting>
+
+<para>For a more detailed explanation, see “Input/Output”.</para>
+</sect1>
+
+<sect1>
+<title>Miscellaneous Operations</title>
+<itemizedlist>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::KolmogorovTest(</code><emphasis role="bold"><code>TH1</code></emphasis><code>*</code>         <code>h2,Option_t *option)</code> is statistical test of compatibility in shape between two histograms. The parameter <code>option</code> is a character string that specifies:</para></listitem>
+<listitem><para>"<code>U</code>" include Underflows in test  (also for 2-dim)</para></listitem>
+<listitem><para>"<code>O</code>" include Overflows (also valid for 2-dim)</para></listitem>
+<listitem><para>"<code>N</code>" include comparison of normalizations</para></listitem>
+<listitem><para>"<code>D</code>" put out a line of "Debug" printout</para></listitem>
+<listitem><para>"<code>M</code>" return the maximum Kolmogorov distance instead of <code>prob</code></para></listitem>
+<listitem><para>"<code>X</code>" run the pseudo experiments post-processor with the following procedure: it makes pseudo experiments based on random values from the parent distribution and compare the KS distance of the pseudo experiment to the parent distribution. Bin the KS distances in a histogram, and then take the integral of all the KS values above the value obtained from the original data to Monte Carlo distribution. The number of pseudo-experiments NEXPT is currently fixed at 1000. The function returns the integral. Note that this option "<code>X</code>" is much slower.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::Smooth</code> - smoothes the bin contents of a 1D histogram.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::Integral(Option_t *opt)-</code> returns the integral of bin contents in a given bin range. If the option "<code>width</code>" is specified, the integral is the sum of the bin contents multiplied by the bin width in <code>x</code>.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetMean(int axis)</code> - returns the mean value along axis.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetRMS(int axis)</code> - returns the Root Mean Square along axis.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetEntries()</code> - returns the number of entries.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetAsymmetry(</code><emphasis role="bold"><code>TH1</code></emphasis><code>*</code>         <code>h2,Double_t c2,Double_t dc2)</code> - returns an histogram containing the asymmetry of this histogram with <code>h2</code>, where the asymmetry is defined as: </para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+Asymmetry = (h1 - h2)/(h1 + h2)    <emphasis role="italic"><code>//where h1 = this</code></emphasis>
+</programlisting>
+<itemizedlist>
+<listitem><para>It works for <code>1D</code>, <code>2D</code>, etc. histograms. The parameter <code>c2</code> is an optional argument that gives a relative weight between the two histograms, and <code>dc</code><code>2</code> is the error on this weight.  This is useful, for example, when forming an asymmetry between two histograms from two different data sets that need to be normalized to each other in some way.  The function calculates the errors assuming Poisson statistics on <code>h1</code> and <code>h2</code> (that is, <code>dh=sqrt(h)</code>). In the next example we assume that <code>h1</code> and <code>h2</code> are already filled:</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+h3 = h1-&gt;GetAsymmetry(h2)
+</programlisting>
+<itemizedlist>
+<listitem><para>Then <code>h3</code> is created and filled with the asymmetry between <code>h1</code> and <code>h2</code>; <code>h1</code> and <code>h2</code> are left Intact. </para></listitem>
+<listitem><para>Note that the user’s responsibility is to   ménage the created histograms.</para></listitem>
+<listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::Reset()</code> - resets the bin contents and errors of a histogram</para></listitem>
+</itemizedlist>
+</sect1>
+
+<sect1>
+<title>Alphanumeric Bin Labels</title>
+<para>By default, a histogram axis is drawn with its numeric bin labels. One can specify alphanumeric labels instead.</para>
+
+<sect2>
+<title>Option 1: SetBinLabel</title>
+<para>To set an alphanumeric bin label call:</para>
+
+<programlisting language="c++">
+<code>TAxis::SetBinLabel(bin,label);</code>
+</programlisting>
+
+<para>This can always be done before or after filling. Bin labels will be automatically drawn with the histogram.</para>
+
+<figure><title>Histograms with alphanumeric bin labels</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0600003B.png" width="297.95pt" depth="165.7pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>See example in <code>$ROOTSYS/tutorials/hist/hlabels1.C</code>, <code>hlabels2.C</code></para>
+</sect2>
+
+<sect2>
+<title>Option 2: Fill</title>
+<para>You can also call a <code>Fill()</code> function with one of the arguments being a string:</para>
+
+<programlisting language="c++">
+<code>hist1-&gt;Fill(somename,weigth);</code>
+<code>hist2-&gt;Fill(x,somename,weight);</code>
+<code>hist2-&gt;Fill(somename,y,weight);</code>
+<code>hist2-&gt;Fill(somenamex,somenamey,weight);</code>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Option 3: TTree::Draw</title>
+<para>You can use a char* variable type to histogram strings with <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code>.</para>
+
+<programlisting language="c++">
+<emphasis role="italic"><code>// here "Nation" and "Division" are two char* branches of a Tree</code></emphasis>
+tree.Draw("Nation::Division");
+</programlisting>
+
+<figure><title>Using a *char variable type in TTree::Draw</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200003C.jpg" width="198.6pt" depth="145.25pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>There is an example in <code>$ROOTSYS/tutorials/tree/cernstaff.C.</code></para>
+<para>If a variable is defined as <code>char*</code> it is drawn as a string by default. You change that and draw the value of <code>char[0]</code> as an
+integer by adding an arithmetic operation to the expression as shown below.</para>
+
+<programlisting language="c++">
+<code>tree.Draw("MyChar + 0"); </code>
+<emphasis role="italic"><code>//this will draw the integer value of MyChar[0] where "MyChar" is char[5]</code></emphasis>
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>Sort Options</title>
+<para>When using the options 2 or 3 above, the labels are automatically added to the list (<emphasis role="bold"><code>THashList</code></emphasis>) of labels for a given axis. By default, an axis is drawn with the order of bins corresponding to the filling sequence. It is possible to reorder the axis alphabetically or by increasing or decreasing values. The reordering can be triggered via the <emphasis role="bold"><code>TAxis</code></emphasis> context menu by selecting the menu item "<code>LabelsOption</code>" or by calling directly. </para>
+
+<programlisting language="c++">
+<code>TH1::LabelsOption(option,axis) </code>
+</programlisting>
+
+<para>Here <code>axis</code> may be X, Y, or Z. The parameter <code>option</code> may be:</para>
+<itemizedlist>
+<listitem><para>"<code>a</code>" sort by alphabetic order</para></listitem>
+<listitem><para>"<code>&gt;</code>" sort by decreasing values</para></listitem>
+<listitem><para>"<code>&lt;</code>" sort by increasing values</para></listitem>
+<listitem><para>"<code>h</code>" draw labels horizontal</para></listitem>
+<listitem><para>"<code>v</code>" draw labels vertical</para></listitem>
+<listitem><para>"<code>u</code>" draw labels up (end of label right adjusted)</para></listitem>
+<listitem><para>"<code>d</code>" draw labels down (start of label left adjusted)</para></listitem>
+</itemizedlist>
+<para>When using the option second above, new labels are added by doubling the current number of bins in case one label does not exist yet. When the filling is terminated, it is possible to trim the number of bins to match the number of active labels by calling:</para>
+
+<programlisting language="c++">
+<code>TH1::LabelsDeflate(axis) </code>
+</programlisting>
+
+<para>Here <code>axis</code> may be X, Y, or Z. This operation is automatic when using <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code>. Once bin labels have been created, they become persistent if the histogram is written to a file or when generating the C++ code via <code>SavePrimitive</code>.</para>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Histogram Stacks</title>
+<para>A <emphasis role="bold"><code>THStack</code></emphasis> is a collection of <emphasis role="bold"><code>TH1</code></emphasis> (or derived) objects. Use <emphasis role="bold"><code>THStack</code></emphasis><code>::Add(</code><emphasis role="bold"><code>TH1</code></emphasis><code> *h)</code> to add a histogram to the stack. The <emphasis role="bold"><code>THStack</code></emphasis> does not own the objects in the list. </para>
+
+<figure><title>Stacked histograms</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0300003D.png" width="234.6pt" depth="132.85pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para>By default, <emphasis role="bold"><code>THStack</code></emphasis><code>::Draw</code>         draws the histograms stacked as shown in the left pad in the picture above. If the option <code>"nostack” is</code> used, the histograms are superimposed as if they were drawn one at a time using the <code>"same" </code>draw option<code>.</code> The right pad in this picture illustrates the <emphasis role="bold"><code>THStack</code></emphasis> drawn with the <code>"nostack"</code> option.</para>
+
+<programlisting language="c++">
+<code>hs-&gt;Draw("nostack");</code>
+</programlisting>
+
+<para>Next is a simple example, for a more complex one see $<code>ROOTSYS/tutorials/hist/hstack.C.</code></para>
+
+<programlisting language="c++">
+<code>{ THStack hs("hs","test stacked histograms");</code>
+<code>  TH1F *h1 = new TH1F("h1","test hstack",100,-4,4);</code>
+<code>  h1-&gt;FillRandom("gaus",20000);</code>
+<code>  h1-&gt;SetFillColor(kRed);</code>
+<code>  hs.Add(h1);</code>
+<code>  TH1F *h2 = new TH1F("h2","test hstack",100,-4,4);</code>
+<code>  h2-&gt;FillRandom("gaus",15000);</code>
+<code>  h2-&gt;SetFillColor(kBlue);                                 </code>
+<code>hs.Add(h2);</code>
+<code>  TH1F *h3 = new TH1F("h3","test hstack",100,-4,4);</code>
+<code>  h3-&gt;FillRandom("gaus",10000);</code>
+<code>  h3-&gt;SetFillColor(kGreen);</code>
+<code>  hs.Add(h3);</code>
+<code>  TCanvas c1("c1","stacked hists",10,10,700,900);</code>
+<code>  c1.Divide (1,2);</code>
+<code>  c1.cd(1);</code>
+<code>  hs.Draw();</code>
+<code>  c1.cd(2);</code>
+<code>  hs-&gt;Draw("nostack");</code>
+<code>}</code>
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>Profile Histograms</title>
+<para>Profile histograms are in many cases an elegant replacement of two-dimensional histograms. The relationship of two quantities X and Y can be visualized by a two-dimensional histogram or a scatter-plot; its representation is not particularly satisfactory, except for sparse data. If Y is an unknown [but single-valued] function of X, it can be displayed by a profile histogram with much better precision than by a scatter-plot. Profile histograms display the mean value of Y and its RMS for each bin in X. The following shows the contents [capital letters] and the values shown in the graphics [small letters] of the elements for bin j. When you fill a profile histogram with <emphasis role="bold"><code>TProfile</code></emphasis><code>.Fill[x,y]</code>:</para>
+<itemizedlist>
+<listitem><para><code>H[j]</code> will contain for each bin <code>j</code> the sum of the y values for this bin</para></listitem>
+<listitem><para><code>L[j]</code> contains the number of entries in the bin <code>j</code></para></listitem>
+<listitem><para><code>e[j]</code> or <code>s[j]</code> will be the resulting error depending on the selected option. See “Build Options“.</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+<code>E[j]  =  sum Y**2</code>
+<code>L[j]  =  number of entries in bin J</code>
+<code>H[j]  =  sum Y</code>
+<code>h[j]  =  H[j] / L[j]</code>
+<code>s[j]  =  sqrt[E[j] / L[j] - h[j]**2]</code>
+<code>e[j]  =  s[j] / sqrt[L[j]]</code>
+</programlisting>
+
+<para>In the special case where <code>s[j]</code> is zero, when there is only one entry per bin, <code>e[j]</code> is computed from the average of the <code>s[j]</code> for all bins. This approximation is used to keep the bin during a fit operation. The <emphasis role="bold"><code>TProfile</code></emphasis> constructor takes up to eight arguments. The first five parameters are similar to <emphasis role="bold"><code>TH1D</code></emphasis> constructor. </para>
+
+<programlisting language="c++">
+<code>TProfile(const char *name,const char *title,Int_t nbinsx,</code>
+<code>         Double_t xlow, Double_t xup, Double_t ylow, Double_t yup,</code>
+<code>         Option_t *option)</code>
+</programlisting>
+
+<para>All values of <code>y</code> are accepted at filling time. To fill a profile histogram, you must use <emphasis role="bold"><code>TProfile</code></emphasis><code>::Fill</code> function.
+Note that when filling the profile histogram the method <emphasis role="bold"><code>TProfile</code></emphasis><code>::Fill</code> checks if the variable <code>y</code> is between
+<code>fYmin</code> and <code>fYmax</code>. If a minimum or maximum value is set for the Y scale before filling, then all values below <code>ylow</code> or above <code>yup</code> will
+be discarded. Setting the minimum or maximum value for the Y scale before filling has the same effect as calling the special <emphasis role="bold"><code>TProfile</code></emphasis>
+constructor above where <code>ylow</code> and <code>yup</code> are specified.</para>
+
+<sect2>
+<title>Build Options</title>
+<para>The last parameter is the build option. If a bin has N data points all with the same value Y, which is the case when dealing with integers, the spread in Y for that bin is zero, and the uncertainty assigned is also zero, and the bin is ignored in making subsequent fits. If <code>SQRT(Y)</code> was the correct error in the case above, then <code>SQRT(Y)/SQRT(N)</code> would be the correct error here. In fact, any bin with non-zero number of entries N but with zero spread (<code>spread = s[j]</code>) should have an uncertainty <code>SQRT(Y)/SQRT(N)</code>. Now, is <code>SQRT(Y)/SQRT(N)</code> really the correct uncertainty? That it is only in the case where the Y variable is some sort of counting statistics, following a Poisson distribution. This is the default case. However, Y can be any variable from an original <code>NTUPLE</code>, and does not necessarily follow a Poisson distribution. The computation of errors is based on Y = values of data points; N = number of data points.</para>
+<itemizedlist>
+<listitem><para><code>' '</code> - the default is blank, the errors are:</para></listitem>
+<listitem><para><code>spread/SQRT(N)</code>for a non-zero spread</para></listitem>
+<listitem><para><code>SQRT(Y)/SQRT(N)</code> for a spread of zero and some data points</para></listitem>
+<listitem><para><code>0</code>for no data points </para></listitem>
+<listitem><para>‘<code>s</code>’ - errors are:</para></listitem>
+<listitem><para><code>spread </code> for a non-zero spread</para></listitem>
+<listitem><para><code>SQRT(Y)</code>  for a Spread of zero and some data points </para></listitem>
+<listitem><para><code>0</code>  for no data points</para></listitem>
+<listitem><para>‘<code>i</code>’ - errors are:</para></listitem>
+<listitem><para><code>spread/SQRT(N)</code>for a non-zero spread</para></listitem>
+<listitem><para><code>1/SQRT(12*N)</code> for a Spread of zero and some data points</para></listitem>
+<listitem><para><code>0</code>for no data points </para></listitem>
+<listitem><para>‘<code>G</code>’ - errors are:</para></listitem>
+<listitem><para><code>spread/SQRT(N)</code> for a non-zero spread</para></listitem>
+<listitem><para><code>sigma/SQRT(N)</code> for a spread of zero and some data points</para></listitem>
+<listitem><para><code>0 </code> for no data points</para></listitem>
+</itemizedlist>
+<para>The option '<code>i</code>' is used for integer Y values with the uncertainty of ±0.5, assuming the probability that Y takes any value between Y-0.5 and Y+0.5 is uniform (the same argument  for Y uniformly distributed between Y and Y+1). An example is an ADC measurement. The '<code>G</code> ' option is useful, if all Y variables are distributed according to some known Gaussian of standard deviation Sigma. For example when all Y's are experimental quantities measured with the same instrument with precision Sigma. The next figure shows the graphic output of this simple example of a profile histogram. </para>
+
+<programlisting language="c++">
+<code>{</code>
+<emphasis role="italic"><code> // Create a canvas giving the coordinates and the size</code></emphasis>
+<code> TCanvas *c1 = new TCanvas("c1","Profile example",200,10,700,500);</code>
+<emphasis role="italic"><code>// Create a profile with the name, title, the number of bins, the </code></emphasis>
+<emphasis role="italic"><code>  // low and high limit of the x-axis and the low and high limit</code></emphasis>
+<emphasis role="italic"><code>  // of the y-axis. No option is given so the default is used.</code></emphasis>
+<code>  hprof = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);</code>
+<emphasis role="italic"><code> // Fill the profile 25000 times with random numbers </code></emphasis>
+<code>  Float_t px, py, pz;</code>
+<code>  for ( Int_t i=0; i&lt;25000; i++) {</code>
+<emphasis role="italic"><code>// Use the random number generator to get two numbers following a</code></emphasis>
+<emphasis role="italic"><code>     //gaussian distribution with mean=0 and sigma=1</code></emphasis>
+<code>     gRandom-&gt;Rannor(px,py);</code>
+</programlisting>
+
+<programlisting language="c++">
+<code>     pz = px*px + py*py;</code>
+<code>     hprof-&gt;Fill(px,pz,1);</code>
+<code>  }</code>
+<code>  hprof-&gt;Draw();</code>
+<code>}</code>
+</programlisting>
+
+<figure><title>A profile histogram example</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0300003E.png" width="262.55pt" depth="172.55pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+
+<sect2>
+<title>Drawing a Profile without Error Bars</title>
+<para>To draw a profile histogram and not show the error bars use the "<code>HIST</code>" option in the <emphasis role="bold"><code>TProfile</code></emphasis><code>::Draw</code> method. This will draw the outline of the <emphasis role="bold"><code>TProfile</code></emphasis>.</para>
+</sect2>
+
+<sect2>
+<title>Create a Profile from a 2D Histogram</title>
+<para>You can make a profile from a histogram using the methods <emphasis role="bold"><code>TH2</code></emphasis><code>::ProfileX</code> and <emphasis role="bold"><code>TH2</code></emphasis><code>::ProfileY</code>. </para>
+</sect2>
+
+<sect2>
+<title>Create a Histogram from a Profile</title>
+<para>To create a regular histogram from a profile histogram, use the method <emphasis role="bold"><code>TProfile</code></emphasis><code>::ProjectionX</code> .This example instantiates a <emphasis role="bold"><code>TH1D</code></emphasis> object by copying the <code>TH1D</code> piece of <emphasis role="bold"><code>TProfile</code></emphasis>.</para>
+
+<programlisting language="c++">
+<code>TH1D *sum = myProfile.ProjectionX()</code>
+</programlisting>
+
+<para>You can do the same with a 2D profile using the method <emphasis role="bold"><code>TProfile2D</code></emphasis><code>::ProjectionXY</code>.</para>
+</sect2>
+
+<sect2>
+<title>Generating a Profile from a TTree</title>
+<para>The <code>'prof'</code> and <code>'profs'</code> options in the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method generate a profile histogram (<emphasis role="bold"><code>TProfile</code></emphasis>), given a two dimensional expression in the tree, or a <emphasis role="bold"><code>TProfile2D</code></emphasis> given a three dimensional expression. See “Trees”. Note that you can specify <code>'prof'</code>or <code>'profs'</code>: <code>'prof'</code>generates a <emphasis role="bold"><code>TProfile</code></emphasis> with error on the mean, <code>'profs'</code>         generates a <emphasis role="bold"><code>TProfile</code></emphasis> with error on the spread. </para>
+</sect2>
+
+<sect2>
+<title>2D Profiles</title>
+<para>The class for a 2D Profile is called <emphasis role="bold"><code>TProfile2D</code></emphasis>. It is in many cases an elegant replacement of a
+three-dimensional histogram. The relationship of three measured quantities X, Y and Z can be visualized by a three-dimensional
+histogram or scatter-plot; its representation is not particularly satisfactory, except for sparse data. If Z is an unknown (but single-valued)
+function of (X,Y), it can be displayed with a <emphasis role="bold"><code>TProfile2D</code></emphasis> with better precision than by a scatter-plot.
+A <emphasis role="bold"><code>TProfile2D</code></emphasis> displays the mean value of Z and its RMS for each cell in X, Y. The following shows the cumulated
+contents (capital letters) and the values displayed (small letters) of the elements for cell<code> i,j</code>. </para>
+<para>When you fill a profile histogram with <emphasis role="bold"><code>TProfile2D</code></emphasis><code>.Fill</code>   <code>[x,y,z]</code>:</para>
+<itemizedlist>
+<listitem><para><code>E[i,j]</code> contains for each bin <code>i,j</code> the sum of the z values for this bin</para></listitem>
+<listitem><para><code>L[i,j]</code> contains the number of entries in the bin j</para></listitem>
+<listitem><para><code>e[j]</code> or <code>s[j]</code> will be the resulting error depending on the selected option. See “Build Options“.</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+<code>E[i,j]  =  sum z</code>
+<code>L[i,j]  =  sum l</code>
+<code>h[i,j]  =  H[i,j ] / L[i,j]</code>
+<code>s[i,j]  =  sqrt[E[i,j] / L[i,j]- h[i,j]**2]</code>
+<code>e[i,j]  =  s[i,j] / sqrt[L[i,j]]</code>
+</programlisting>
+
+<para>In the special case where <code>s[i,j] </code>is zero, when there is only one entry per cell, <code>e[i,j]</code> is computed from the average
+of the <code>s[i,j]</code> for all cells. This approximation is used to keep the cell during a fit operation.</para>
+
+<programlisting language="c++">
+<code>{</code>
+<emphasis role="italic"><code> // Creating a Canvas and a TProfile2D</code></emphasis>
+<code>  TCanvas *c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);</code>
+<code>  hprof2d  = new TProfile2D("hprof2d","Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);</code>
+
+<emphasis role="italic"><code>  // Filling the TProfile2D with 25000 points</code></emphasis>
+
+<code>  Float_t px, py, pz;</code>
+<code>  for (Int_t i=0; i&lt;25000; i++) {</code>
+<code>     gRandom-&gt;Rannor(px,py);</code>
+<code>     pz = px*px + py*py;</code>
+<code>     hprof2d-&gt;Fill(px,py,pz,1);</code>
+<code>  }</code>
+
+<code>  hprof2d-&gt;Draw();</code>
+<code>}</code>
+</programlisting>
+
+<figure><title>A TProfile2D histogram example</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0800003F.png" width="279.95pt" depth="209.15pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect2>
+</sect1>
+
+<sect1>
+<title> Iso Surfaces</title>
+<para>Paint one Gouraud shaded 3d iso surface though a 3d histogram at the value computed as follow: </para>
+<para><code>SumOfWeights/(NbinsX*NbinsY*NbinsZ)</code>.</para>
+
+<figure><title>Iso surfaces</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000040.png" width="198.6pt" depth="135.3pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para/>
+
+<programlisting language="c++">
+void hist3d() {
+TH3D *h3=new TH3D(« h3 », »h3 »,20,-2,2,20,-2,2,20,0,4);
+Double_t x,y,z;
+for (Int_t i=0; i&lt;10000; i++) {
+gRandom-&gt;Rannor(x,y);
+z=x*x+y*y;
+h3-&gt;Fill(x,y,z);
+}
+h3-&gt;Draw(“iso”);
+}
+</programlisting>
+
+</sect1>
+
+<sect1>
+<title>3D Implicit Functions</title>
+
+<programlisting language="c++">
+<code>TF3 *fun3 = new TF3(“fun3”, “sin(x*x+y*y+z*z-36”,-2,2,-2,2,-2,2);</code>
+<code>Fun3-&gt;Draw();</code>
+</programlisting>
+
+<figure><title>3D implicit function</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000041.png" width="198.6pt" depth="132.85pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect1>
+
+<sect1>
+<title>TPie</title>
+<para>The <emphasis role="bold"><code>TPie</code></emphasis> class allows to create a Pie Chart representation of a one dimensional data set. The data can come from an array of <code>Double_t</code> (or <code>Float_t</code>) or from a 1D-histogram. The possible options to draw a <emphasis role="bold"><code>TPie</code></emphasis> are:</para>
+<itemizedlist>
+<listitem><para> "<code>R</code>"Paint the labels along the central "<code>R</code>"adius of slices.</para></listitem>
+<listitem><para> "<code>T</code>"Paint the labels in a direction "<code>T</code>"angent to circle that describes the TPie.</para></listitem>
+<listitem><para> "<code>3D</code>"Draw the pie-chart with a pseudo 3D effect.</para></listitem>
+<listitem><para> "<code>NOL</code>"No OutLine: do not draw the slices' outlines; any property over the slices' line is ignored.</para></listitem>
+</itemizedlist>
+<para>The method <code>SetLabelFormat()</code> is used to customize the label format. The format string must contain one of these modifiers:</para>
+<itemizedlist>
+<listitem><para>- <code>%txt</code>: to print the text label associated with the slice</para></listitem>
+<listitem><para>- <code>%val</code> : to print the numeric value of the slice</para></listitem>
+<listitem><para>- <code>%frac</code> : to print the relative fraction of this slice</para></listitem>
+<listitem><para>- <code>%perc</code> : to print the % of this slice</para></listitem>
+</itemizedlist>
+<programlisting language="c++">
+mypie-&gt;SetLabelFormat("%txt (%frac)");
+</programlisting>
+
+<para>See the macro <code>$ROOTSYS/tutorials/graphics/piechart.C</code>.</para>
+
+<figure><title>The picture generated by tutorial macro piechart.C</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000042.png" width="289.85pt" depth="279.3pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+</sect1>
+
+<sect1>
+<title>The User Interface for Histograms</title>
+<para>The classes <emphasis role="bold"><code>T</code></emphasis><emphasis role="bold"><code>H1</code></emphasis><emphasis role="bold"><code>Editor</code></emphasis> and <emphasis role="bold"><code>T</code></emphasis><emphasis role="bold"><code>H2</code></emphasis><emphasis role="bold"><code>Editor</code></emphasis> provides the user interface for setting histogram’s attributes and rebinning interactively.</para>
+
+<sect2>
+<title>TH1Editor</title>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/03000043.png" width="216.6pt" depth="157.65pt"/></imageobject></inlinemediaobject>  <inlinemediaobject><imageobject><imagedata fileref="pictures/03000044.png" width="216.6pt" depth="158.9pt"/></imageobject></inlinemediaobject></para>
+<para>Style Tab:</para>
+<para>Titlesets the title of the histogram.</para>
+<para>Plotdraw a 2D or 3D plot; according to the dimension, different drawing possibilities can be set.</para>
+<para>Erroradd different error bars to the histogram (no errors, simple, etc.).   </para>
+<para>Addfurther things which can be added to the histogram (None, simple/smooth line, fill area, etc.)</para>
+<para><emphasis role="italic"><code>2-D Plot</code></emphasis>:</para>
+<para>Simple Drawingdraw a simple histogram without errors (= "HIST" draw option). In combination with some other draw options an outer line is drawn on top of the histogram</para>
+<para>Show markersdraw a marker on to of each bin (="P" draw option).</para>
+<para>Draw bar chartdraw a bar chart (="B" draw option).   </para>
+<para>Bar optiondraw a bar chart (="BAR" draw option); if selected, it will show an additional interface elements for bars: width, offset, percentage and the possibility to draw horizontal bars.</para>
+<para/>
+<para>
+<emphasis role="italic"><code>3</code></emphasis>
+<emphasis role="italic"><code>-D Plot:</code></emphasis></para>
+<para>Addset histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf, Surf1…5).</para>
+<para>Coordsset the coordinate system (Cartesian, Spheric, etc.).</para>
+<para>Errorsame as for 2D plot.</para>
+<para>Barset the bar attributes: width and offset.</para>
+<para>Horizontal Bar    draw a horizontal bar chart.</para>
+<para>The Binning tab has two different layouts. One is for a histogram, which is not drawn from an ntuple. The other one is available for a histogram, which is drawn from an ntuple. In this case, the rebin algorithm can create a rebinned histogram from the original data i.e. the ntuple.</para>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000045.png" width="280.55pt" depth="193.05pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000046.png" width="63.3pt" depth="192.4pt"/></imageobject></inlinemediaobject>
+</para>
+<para>To see the differences do:</para>
+
+<programlisting language="c++">
+TFile f("hsimple.root");
+hpx-&gt;Draw("BAR1");        <emphasis role="italic"><code>// non ntuple histogram</code></emphasis>
+ntuple-&gt;Draw("px");       <emphasis role="italic"><code>// ntuple histogra</code></emphasis>m
+</programlisting>
+
+<para>
+<emphasis role="italic"><code>Non ntuple histogram:</code></emphasis></para>
+<para>Rebin with a slider and the number of bins (shown in the field below the slider). The number of bins can be changed to any number, which divides the number of bins of the original histogram. A click on the Apply button will delete the origin histogram and will replace it by the rebinned one on the screen. A click on the Ignore button will restore the origin histogram.</para>
+<para>
+<emphasis role="italic"><code>Histogram drawn from an ntuple:</code></emphasis></para>
+<para>Rebin - With the slider, the number of bins can be enlarged by a factor of 2,3,4,5 (moving to the right) or reduced by a factor of 1/2, 1/3, 1/4, 1/5. </para>
+<para>BinOffset with a BinOffset slider - the origin of the histogram can be changed within one binwidth. Using this slider the effect of binning the data into bins can be made visible (statistical fluctuations).</para>
+<para>Axis Range - with a double slider it is possible to zoom into the specified axis range. It is also possible to set the upper and lower limit in fields below the slider.</para>
+<para>Delayed drawing - all the Binning sliders can set to delay draw mode. Then the changes on the histogram are only updated, when the Slider is released. This should be activated if the redrawing of the histogram is time consuming.</para>
+</sect2>
+
+<sect2>
+<title>TH2Editor</title>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/03000047.png" width="221.6pt" depth="156.4pt"/></imageobject></inlinemediaobject> <inlinemediaobject><imageobject><imagedata fileref="pictures/03000048.png" width="219.7pt" depth="155.8pt"/></imageobject></inlinemediaobject></para>
+<para>Style Tab:</para>
+<para>Titleset the title of the histogram</para>
+<para>Histogramchange the draw options of the histogram.</para>
+<para>Plotdraw a 2D or 3D plot of the histogram; according to the dimension, the drawing possibilities are different.</para>
+<para/>
+<para><emphasis role="italic"><code>2-D Plot</code></emphasis>:</para>
+<para>Contour draw a contour plot (None, Cont0...5)</para>
+<para>Cont # set the number of Contours;</para>
+<para>Arrow set the arrow mode and shows the gradient between adjacent cells;</para>
+<para>Col a box is drawn for each cell with a color scale varying with contents;</para>
+<para>Text draw bin contents as text;</para>
+<para>Boxa box is drawn for each cell with surface proportional to contents;</para>
+<para>Scat draw a scatter-plot (default);</para>
+<para>Palette the color palette is drawn.</para>
+<para>
+<emphasis role="italic"><code>3</code></emphasis>
+<emphasis role="italic"><code>-D Plot:</code></emphasis></para>
+<para>Type set histogram type to Lego or surface plot; draw (Lego, Lego1.2, Surf, Surf1…5)</para>
+<para>Coords set the coordinate system (Cartesian, Spheric, etc.);</para>
+<para>Cont # set the number of Contours (for e.g. Lego2 draw option);</para>
+<para>Errors draw errors in a Cartesian lego plot;</para>
+<para>Palette draw the color palette;</para>
+<para>Front draw the front box of a Cartesian lego plot;</para>
+<para>Back draw the back box of a Cartesian lego plot;</para>
+<para>Bar change the bar attributes: the width and offset.</para>
+<para/>
+<para>Rebinning Tab: </para>
+<para>The Rebinning tab has two different layouts. One is for a histogram that is not drawn from an ntuple; the other one is available for a histogram, which is drawn from an ntuple. In this case, the rebin algorithm can create a rebinned histogram from the original data i.e. the ntuple. To see the differences do for example:</para>
+
+<programlisting language="c++">
+TFile f("hsimple.root");
+hpxpy-&gt;Draw("Lego2");              // non ntuple histogram
+ntuple-&gt;Draw("px:py","","Lego2");  // ntuple histogram
+</programlisting>
+
+<para>Non-ntuple histogram:</para>
+<para>Rebin with sliders (one for the x, one for the y-axis) and the number of bins (shown in the field below them can be changed to any number, which divides the number of bins of the original histogram. Selecting the Apply button will delete the origin histogram and will replace it by the rebinned one on the screen. Selecting the Ignore the origin histogram will be restored.</para>
+<para/>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/03000049.png" width="351.95pt" depth="207.95pt"/></imageobject></inlinemediaobject>  <inlinemediaobject><imageobject><imagedata fileref="pictures/0300004A.png" width="69.5pt" depth="194.9pt"/></imageobject></inlinemediaobject></para>
+<para/>
+<para/>
+<para>Histogram drawn from an ntuple:</para>
+<para>Rebin with the sliders the number of bins can be enlarged by a factor of 2,3,4,5 (moving to the right) or reduced by a factor of 1/2, 1/3, 1/4, 1/5. BinOffset with the BinOffset slider the origin of the histogram can be changed within one binwidth. Using this slider the effect of binning the data into bins can be made visible (=&gt; statistical fluctuations).</para>
+<para>Axis Range - with a double slider that gives the possibility for zooming. It is also possible to set the upper and lower limit in fields below the slider.</para>
+<para>Delayed drawing - all the binning sliders can be set to delay draw mode. Then the changes on the histogram are only updated, when the Slider is released. This should be activated if the redrawing of the histogram is too time consuming.</para>
+<para/>
+</sect2>
+</sect1>
+</chapter>
+
+
+

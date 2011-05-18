@@ -1,0 +1,36 @@
+<p>Reflex is ROOT's (or actually CINT's) reflection database. It knows everything about all classes, types, and members in the system.
+We are currently in the process of a major update of Reflex, including changes in the API and its internal structures.
+Bare with us - you will get proper documentation once this upgrade is finished. Until then this is what you need to know:</p>
+
+<h3>Filling Reflex</h3>
+<p>Reflex is a container - it does not know anything by itself.
+You can use genreflex, a python script wrapping <a href="http://gccxml.org">GCCXML</a>, or <tt>rootcint -reflex</tt> or regular <a href="http://root.cern.ch/root/RootCintMan.html">rootcint</a> and Cintex, by calling <tt>Cintex::Enable()</tt>.
+In the near future, CINT will use Reflex directly; any dictionary loaded by CINT will automatically populate Reflex.</p>
+
+<h3>Retrieving data</h3>
+<p>The main user interface to the Reflex data consists of
+<dl>
+<dt><a href="ROOT__Reflex__Type.html"><tt>ROOT::Reflex::Type</tt></a></dt>
+<dd>represents any type, from basic ones like <tt>int</tt> to e.g. <tt>ROOT::Reflex::Type</tt> itself.</dd>
+<dt><a href="ROOT__Reflex__Scope.html"><tt>ROOT::Reflex::Scope</tt></a></dt>
+<dd>represents a namespace, class, struct, union, etc - anything that can have members, e.g. the global scope <tt>::</tt> or <tt>ROOT::Reflex::Type</tt>.</dd>
+<dt><a href="ROOT__Reflex__Member.html"><tt>ROOT::Reflex::Member</tt></a></dt>
+<dd>represents a data or function member of a scope.</dd>
+</dl>
+</p>
+<p>Note that conversions exist, e.g. <tt>ROOT::Reflex::Member</tt> is both a scope and a type, thus a <tt>ROOT::Reflex::Scope</tt> representing <tt>ROOT::Reflex::Member</tt> can be converted to a <tt>ROOT::Reflex::Type</tt>. 
+Just check the list of member functions for these types - they are easy to understand.</p>
+
+<h3>Example</h3>
+Once you have filled your reflection data into Reflex you can e.g. query it for the first parameter of the function <tt><a href="ROOT__Reflex__Scope.html">ROOT::Reflex::Scope</a>::<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:SubTypeByName">SubTypeByName()</a></tt>:
+<div class="code"><code class="inlinecode">using ROOT::Reflex; <span class="comment">// save typing</span><br/>
+&nbsp;<br/>
+<a href="ROOT__Reflex__Scope.html">Scope</a>  s = <a href="ROOT__Reflex__Scope.html">Scope</a>::<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:ByName">ByName("ROOT::Reflex::Scope");</a> <span class="comment">// the scope containing the member we want to query</span><br/>
+<a href="ROOT__Reflex__Member.html">Member</a> m = s.<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:FunctionMemberByName">FunctionMemberByName</a>("SubTypeByName"); <span class="comment">// get the function member</span><br/>
+<a href="ROOT__Reflex__Type.html">Type</a>  mt = m.<a href="ROOT__Reflex__Member.html#ROOT__Reflex__Member:TypeOf">TypeOf()</a>; <span class="comment">// we need its type</span><br/>
+<a href="ROOT__Reflex__Type.html">Type</a> arg = mt.<a href="ROOT__Reflex__Type.html#ROOT__Reflex__Type:FunctionParameterAt">FunctionParameterAt(0)</a>; <span class="comment">// the type of the first function parameter</span><br/>
+&nbsp;<br/>
+cout << arg.<a href="ROOT__Reflex__Type.html#ROOT__Reflex__Type:Name">Name(SCOPED | QUALIFIED)</a> << endl; <span class="comment">// print the scoped and qualified name</span></code></div>
+<div style="clear: both;"></div>
+<p>&nbsp;</p>
+<h3>Class reference</h3>

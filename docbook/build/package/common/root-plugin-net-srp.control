@@ -1,0 +1,9 @@
+Package: root-plugin-net-srp
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://srp.stanford.edu
+Description: SRP plugin for ROOT
+ This package contains the SRP (Secure Remote Protocol) utility plug-in 
+ for ROOT. This package provides some tools for SRP authentication 
+ with ROOT.
+

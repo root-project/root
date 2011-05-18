@@ -1,0 +1,164 @@
+
+<br>
+<hr>
+<a name="tmva"></a>
+<h3>TMVA</h3>
+    <ul>
+      <li>
+        <strong>Dataset preparation:</strong> 
+        <ul>
+          <li>
+            <em>Preselection:</em> Preselection cuts now work on
+            arrays. Previously used TEventlists (only event wise
+            pass/fail) were replaced by TreeFormulas (sensitive to array
+            position).  Thanks to Arnaud Robert (LPNHE) for his
+            contributions.
+            
+          <li>
+            <em>Tree assignment to signal/background:</em> Signal and
+            background trees can now be assigned individually to training
+            and test purposes. This is achieved by setting the third
+            parameter of the Factory::AddSignalTree/AddBackgroundTree()
+            methods to "Train" or "Test" (const string). The only
+            restriction is that either none or all signal (background)
+            trees need to be specified with that option. It is possible to
+            mix the two modes, for instance one can assign individual
+            training and test trees for signal, but not for background.
+          <li>
+            <em>Direct tree building:</em> For increased flexibility,
+            users can also directly input signal and background,
+            training and test events to TMVA, instead of letting TMVA
+            interpret user-given trees. Note that either one of the
+            two approaches must be chosen (no mix). The syntax of the
+            new calls is described in the macros/TMVAnalysis.C test
+            macro.  --> The User runs the event loop, copies for each
+            event the input variables into a std:vector, and "adds"
+            them to TMVA, using the dedicated calls:
+            factory->AddSignalTrainingEvent( vars, signalWeight );
+            (and replacing "Signal" by "Background", and "Training" by
+            "Test").  After the event loop, everything continues as in
+            the standard method.
+        </ul>
+        
+      <li>
+        <strong>Methods:</strong> 
+        <ul>
+          <li>
+            <em>Simulated Annealing in Cuts,FDA:</em> Entirely new
+            Simulated Annealing (SA) algorithm for global minimisation
+            in presence of local minima (optionally used in cut
+            optimisation (MethodCuts) and the Function Discriminant
+            (MethodFDA)). The SA algorithm features two approaches,
+            one starting at minimal temperature (ie, from within a
+            local minimum), slowly increasing, and another one
+            starting at high temperature, slowly decreasing into a
+            minimum.  Code developed and written by Kamil Bartlomiej
+            Kraszewski, Maciej Kruk and Krzysztof Danielowski from IFJ
+            and AGH/UJ, Krakow, Poland.
+          <li>
+            <em>Cuts:</em> Added printouts, quoting the explicit cut
+            application for given signal efficiency. In case of
+            transformations of the input variables, the full expressions
+            are given. Added warning to Fisher in case of variable
+            normalisation.            
+          <li>            
+            <em>Cuts:</em> Added physical limits to min/max cuts if
+            smart option is used.
+          <li>
+            <em>BDT:</em> removed hard-coded weight file name; now,
+            paths and names of weight files are written as TObjStrings
+            into ROOT target file, and retrieved for plotting;
+            available weight files (corresponding to target used) can
+            be chosen from pop-up GUI.
+          <li>
+            <em>BDT:</em> Changes in handling negative weights in BDT
+            algorithm. Events with negative weights now get their
+            weight reduced (*= 1/boostweight) rather than increased
+            (*= boostweight) as the other events do. Otherwise these
+            events tend to receive increasingly stronger boosts,
+            because their effects on the separation gain are as if
+            background events were selected as signal and vice versa
+            (hence the events tend to be "wanted" in signal nodes, but
+            are boosted as if they were misclassified). In addition,
+            the separation indices are protected against negative S or
+            S+B returning 0.5 (no separation at all) in case that
+            occurs.
+          <li>
+            <em>BDT:</em> In addition there is a new BDT option to
+            ignore events with negative event weights for the
+            training. This option could be used as a cross check of a
+            "worst case" solution for Monte Carlo samples with
+            negative weights. Note that the results of the testing
+            phase still include these events and are hence objective.
+          <li>
+            <em>BDT:</em> Added randomised trees: similar to the
+            "Random Forests" technique of Leo Breiman and Adele
+            Cutler, it uses the "bagging" algorithm and bases the
+            determination of the best node-split during the training
+            on a random subset of variables only, which is
+            individually chosen for each split.
+          <li>
+            <em>BDT:</em> Move to TRandom2 for the "bagging" algorithm
+            and throw random weights according to Poisson
+            statistics. (This way the random weights are closer to a
+            resampling with replacement algorithm.)
+          <li>
+            <em>TMlpANN:</em> Extended options to
+            TMultilayerPerceptron learning methods.  Added example for
+            reader application: TMVApplication.py
+        </ul>
+
+      <li>
+        <strong>GUI:</strong> 
+        <ul>
+          <li>
+            <em>Parallel Coordinates:</em> New GUI button for Parallel
+            Coordinate plotting.
+        </ul>
+      <li>
+        <strong>Application:</strong> 
+        <ul>
+          <li>
+            Added Python example for reader application: TMVApplication.py
+          </li>
+        </ul>
+
+      <li>
+        <strong>Bug fixes:</strong> 
+        <ul>
+          <li>
+            <em>TMlpANN:</em> fixed crash with ROOT>=5.17 when using
+            large number of test events; also corrected bias in cross
+            validation: before the test events were used, which led to
+            an overestimated performance evaluation in case of a small
+            number of degrees of freedom; separate now training tree
+            in two parts for training and validation with configurable
+            ValidationFraction
+          <li>
+            <em>Cuts:</em> Corrected inconsistency in MethodCuts:
+            the signal efficiency written out into the weight file does
+            not correspond to the center of the bin within which the
+            background rejection is maximised (as before) but to the
+            lower left edge of it. This is because the cut optimisation
+            algorithm determines the best background rejection for all
+            signal efficiencies belonging into a bin. Since the best
+            background rejection is in general obtained for the lowest
+            possible signal efficiency, the reference signal efficiency
+            is the lowest value in the bin.
+          <li>
+            <em>Cuts:</em> Fixed Cuts (optimisaton) method -> event
+            with smallest value was not included in search for optimal
+            cut (thanks to Dimitris Varouchas, LAL-Orsay, for helping
+            us detecting the problem).
+          <li>
+            <em>Genetic Algorithm:</em> Corrected configurable random
+            seed in GeneticAlgorithm (thanks to David Gonzalez Maline,
+            CERN, for pointing this out)
+          <li>
+            <em>GUI:</em> Fixes in input-variable and MVA plotting:
+            under/over-flow numbers given on plots were not properly
+            normalised; the maximum histogram ranges have been
+            increased to avoid cut-offs. Thanks to Andreas Wenger,
+            Zuerich, for pointing these out.
+        </ul>
+    </ul>

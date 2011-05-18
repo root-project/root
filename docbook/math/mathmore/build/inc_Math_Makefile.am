@@ -1,0 +1,85 @@
+# @(#)root/mathcore:$Id$
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+#
+
+# The following is set, otherwise it would follow GNU conventions.
+AUTOMAKE_OPTIONS = foreign
+
+mathdir = $(includedir)/Math
+
+math_HEADERS =           	       \
+         Chebyshev.h                   \
+         Derivator.h                   \
+         DistFuncMathMore.h            \
+         GSLFunctionAdapter.h          \
+         GSLIntegrator.h               \
+         GSLMCIntegrator.h             \
+         GSLMinimizer1D.h              \
+         GSLMinimizer.h                \
+         GSLNLSMinimizer.h             \
+	 GSLRndmEngines.h	       \
+         GSLRootFinder.h               \
+         GSLRootFinderDeriv.h          \
+         GSLRootHelper.h               \
+         GSLSimAnMinimizer.h           \
+         GSLSimAnnealing.h             \
+         IntegrationTypes.h            \
+         InterpolationTypes.h          \
+         Interpolator.h                \
+         KelvinFunctions.h             \
+         MCIntegrationTypes.h          \
+         MCParameters.h                \
+         NumGradFunction.h             \
+         ParamFunction.h               \
+         Polynomial.h                  \
+         QuantFuncMathMore.h           \
+	 Random.h                      \
+         RootFinder.h                  \
+         RootFinderAlgorithms.h        \
+         SpecFuncMathMore.h            \
+         VavilovAccurateCdf.h          \	
+         VavilovAccurate.h             \
+         VavilovAccurate.h             \
+         VavilovAccuratePdf.h          \
+         VavilovAccurateQuantile.h     \
+         VavilovFast.h                 \
+         Vavilov.h                 
+
+
+
+# add mathcore files 
+
+math_HEADERS +=           	        \
+	 AdaptiveIntegratorMultiDim.h   \
+         AllIntegrationTypes.h          \
+         DistFunc.h                     \
+         DistFuncMathCore.h             \
+         Error.h                        \
+         FitMethodFunction.h            \
+         Functor.h                      \
+         IFunction.h                    \
+         IFunctionfwd.h                 \
+         IParamFunction.h               \
+         IParamFunctionfwd.h            \
+         Integrator.h                   \
+         IntegratorMultiDim.h           \
+         Math.h                         \
+         Minimizer.h                    \
+         OneDimFunctionAdapter.h        \
+         PdfFunc.h                      \
+         PdfFuncMathCore.h              \
+         ProbFunc.h                     \
+         ProbFuncMathCore.h             \
+         QuantFunc.h                    \
+         QuantFuncMathCore.h            \
+         SpecFunc.h                     \
+         SpecFuncMathCore.h             \
+         Util.h                         \
+         VirtualIntegrator.h            \
+         WrappedFunction.h              \
+         WrappedParamFunction.h
+
+#SUBDIRS = GenVector

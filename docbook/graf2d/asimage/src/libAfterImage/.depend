@@ -1,0 +1,150 @@
+./asimage.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h \
+		asimage.h \
+		ascmap.h
+
+./ascmap.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		import.h \
+		export.h \
+		imencdec.h \
+		ascmap.h
+
+./asfont.o : \
+		win32/config.h \
+		config.h \
+		asfont.h \
+		asimage.h \
+		asvisual.h
+
+./asimagexml.o : \
+		win32/config.h \
+		config.h \
+		afterimage.h \
+		imencdec.h \
+		pixmap.h
+
+./asstorage.o : \
+		win32/config.h \
+		config.h \
+		zlib/zlib.h \
+		asstorage.h \
+		afterimage.h
+
+./asvisual.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h
+
+./blender.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h
+
+./bmp.o : \
+		asimage.h \
+		imencdec.h \
+		bmp.h
+
+./char2uni.o : \
+		win32/config.h \
+		config.h \
+		char2uni.h
+
+./draw.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		asimage.h \
+		draw.h \
+		afterimage.h
+
+./export.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		imencdec.h \
+		xcf.h \
+		xpm.h \
+		ungif.h \
+		import.h \
+		export.h \
+		ascmap.h \
+		bmp.h
+
+./imencdec.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h \
+		asimage.h \
+		imencdec.h
+
+./import.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		imencdec.h \
+		bmp.h \
+		ximage.h \
+		xcf.h \
+		xpm.h \
+		ungif.h \
+		import.h \
+		asimagexml.h \
+		transform.h
+
+./pixmap.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h \
+		asimage.h \
+		imencdec.h \
+		ximage.h \
+		transform.h \
+		pixmap.h
+
+./transform.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h \
+		asimage.h \
+		imencdec.h \
+		transform.h
+
+./ungif.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		ascmap.h \
+		ungif.h
+
+./xcf.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		xcf.h
+
+./ximage.o : \
+		win32/config.h \
+		config.h \
+		asvisual.h \
+		blender.h \
+		asimage.h \
+		imencdec.h \
+		ximage.h
+
+./xpm.o : \
+		win32/config.h \
+		config.h \
+		asimage.h \
+		ascmap.h \
+		xpm.h

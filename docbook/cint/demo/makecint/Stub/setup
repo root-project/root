@@ -1,0 +1,25 @@
+#
+# setup and test
+#
+
+######################################################################
+# Archived library test
+######################################################################
+
+# Create Makefile
+makecint -mk Makefile -o Stub -H Src.h -C++ Src.C -i++ Stub.h
+
+# Compile 
+make clean
+make
+
+# Test
+cint Src.C Stub.C # All interpreted
+./Stub Stub.C       # class Complex precompiled
+
+
+cint Src.C Stub.C > cint.out
+./Stub Stub.C       > cc.out
+diff cint.out cc.out
+rm *.out
+

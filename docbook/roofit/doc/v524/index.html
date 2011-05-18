@@ -1,0 +1,751 @@
+<br> 
+<hr> 
+<a name="roofit"></a> 
+<h3>RooFit</h3>
+
+This release of ROOT contains RooFit version 3.00. A summary of new features is listed below
+
+<h4>RooFit Web documentation moved to ROOT web site</h4>
+The starting point for online RooFit documentation (Users Manual,
+tutorials, slides etc) is now moved to the ROOT website<br><br>
+<a href="http://root.cern.ch/drupal/content/roofit"><tt>http://root.cern.ch/drupal/content/roofit</tt></a>
+
+<h4>Error visualization</h4>
+It is now possible to visualize the effect of the uncertainties on parameters from a fit
+on any p.d.f. or function projection. To do so use the new <tt>VisualizeError()</tt> argument
+in a plotOn call
+
+<pre>
+    RooFitResult* fr = pdf->fitTo(*data,Save(),...) ;
+    pdf->plotOn(frame,VisualizeError(*fr),...) ;
+</pre>
+
+Two techniques for error visualization are implemented. The default is
+linear error progation, and results in an error band that is by
+construction symmetric. The linear error is calculated as 
+<pre>
+
+   error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
+  
+   where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2,
+  
+           with f(x) = the plotted curve
+                'da' = error taken from the fit result
+          Corr(a,a') = the correlation matrix from the fit result
+                  Z = requested significance 'Z sigma band'
+  
+</pre>
+The linear method is fast (requires 2*N evaluations of the curve,
+where N is the number of parameters), but may not be accurate in the
+presence of strong correlations (~>0.9) and at Z>2 due to linear and
+Gaussian approximations made.
+<br><br>
+Alternatively, errors can be visualized using a sampling method. In
+this method a number of curves is calculated with variations of the
+parameter values, as sampled from a multi-variate Gaussian p.d.f. that
+is constructed from the fit results covariance matrix.  The error(x)
+is determined by calculating a central interval that capture N% of the
+variations for each valye of x, where N% is controlled by Z (i.e. Z=1
+gives N=68%). The number of sampling curves is chosen to be such that
+at least 100 curves are expected to be outside the N% interval. Intervals from
+the sampling method can be asymmetric, and may perform better in the
+presence of strong correlations, but may take (much) longer to
+calculate. The sampling method also assumes that the uncertainty on the
+parameters can modeled by a multi-variate Gaussian distribution.
+<br><br>
+A complete example is provided in a new tutorial macro <tt>rf610_visualerror.C</tt>,
+the output of which is shown below. 
+<br><br>
+   <img src="roofit_524_visualerror.gif" alt="Graphics Output of macro rf610_visualerror">
+<br><br>
+It is also possible to visualize partial errors (from a subset of the parameters),
+as shown above.
+
+
+<h4>Binned dataset generation</h4>
+
+A new method <tt>RooAbsPdf::generateBinned()</tt> has been implemented
+that samples binned datasets (<tt>RooDataHist</tt>) from any
+p.d.f. 
+<pre>
+   RooDataHist* data = pdf.generateBinned(x,10000) ; 
+</pre>
+This binned generation interface samples the p.d.f. at each bin
+center and applies a Poisson fluctuation to each sampled value. 
+The binning of the returned <tt>RooDataHist</tt> is controlled by the default
+binning associated with the observables generated. To set the number
+of bins in x to 200, do e.g. <tt>x.setBins(200)</tt> prior to the call
+to <tt>generateBinned()</tt>
+<br><br>
+The binned dataset generation method does not (yet) support the concept of
+prototype datasets.
+
+
+<h4>New minimizer interface to Minuit2, GSLMinimizer etc...</h4>
+
+A new minimizer interface, <tt>RooMinimizer</tt> has been added (contribution
+from Alfio Lazarro). The new minimizer is similar in functionality to
+the existing class <tt>RooMinuit</tt>, but supports the new ROOT abstract
+minimizer interface and supports multiple minimizer packages and algorithms
+through that interface.
+<br><br>
+The present interface of <tt>RooMinimizer</tt> is identical to that of <tt>RooMinuit</tt>
+with two extensions
+<ul>
+<li> The <tt>setMinimizer(const char*)</tt> method allows to choose between "minuit" and "minuit2") 
+     as implementation for <tt>migrad(),hesse(),minos()</tt> etc...
+<li> The <tt>minimizer(const char* package, const char* alg)</tt> provides a completely generic interface
+     to all minimizers, where <tt>package</tt> is the package (minuit,GSLminimizer) and <tt>alg</tt> is the algorithm (migrad) to be used
+</ul>
+By default, <tt>RooMinuit</tt> is still used when <tt>RooAbsPdf::fitTo()</tt> is called, but can be overridden with
+a <tt>Minimizer()</tt> named argument
+<pre>
+   // Minimization with MINUIT/MIGRAD through RooMinuit
+   pdf->fitTo(data) ; 
+
+   // Minimization with MINUIT/MIGRAD through RooMinimizer 
+   pdf->fitTo(data,Minimizer("minuit")) ; 
+
+   // Minimization with MINUIT2/MIGRAD through RooMinimizer 
+   pdf->fitTo(data,Minimizer("minuit2")) ; 
+
+   // Minimization with GSLMultiMin/conjugatefr through RooMinimizer
+   pdf->fitTo(data,Minimizer("GSLMultiMin","conjugatefr")) ; 
+</pre>
+
+Note that installation of GSL and the ROOT MathMore package is needed to access the GSL Minimizers and that the GSL
+Minimizer do not implement error analysis.
+
+
+<h4>New numeric integration algorithms available</h4>
+
+<p>RooFit can now interface all MathCore numeric intergration
+algorithms. In this release <tt>ROOT::Math::AdaptiveIntegratorMultiDim</tt>,
+which implements the 'Genz & Malik' algorithm has been interfaced
+in <tt>RooAdaptiveIntegratorND</tt> and is now the default numeric integrator
+for numeric integrations in two or more dimensions.
+
+<p>This new default integrator has much improved stability and speed
+for relatively smooth p.d.f.s in two or three dimensions and can
+generally be used well for p.d.f. normalization integrals without
+causing MINUIT converge problems due to numeric precision issues.
+
+<p>In future release some more numeric integrators will be migrated to
+a MathCore implementation.
+
+<h4>Interface to TFoam adaptive MC sampler added</h4>
+
+<p>RooFit can now use the <tt>TFoam</tt> adaptive MC sampler for event generation of p.d.f.s that
+do not have an internal generator. The <tt>TFoam</tt> generator adaptively subdivides the 
+observable space and is generally more efficient both warmup and generation than the original
+<tt>RooAcceptReject</tt> algorithm. In its current interface in RooFit, <tt>TFoam</tt> cannot
+handle problems yet with discrete observables or conditional observables. For those problems
+the original <tt>RooAcceptReject</tt> generator is still used.
+
+<p>The choice of MC sampling algorithm can be steered through class <tt>RooNumGenConfig</tt>, which
+is similar in style and structure, to <tt>RooNumIntConfig</tt> which configures the choice of
+numeric integration algorithm.
+
+<p>A new tutorial macro <tt>rf902_numgenconfig.C</tt> has been added to <tt>$ROOTSYS/tutorials/roofit</tt>
+to illustrate the use of the steering.
+
+<p>A macro that demonstrates of the power of these newly interface numeric algorithms is provided at the
+end of the RooFit section of the release notes.
+
+<h4>Optional persistent caching of numeric integrals</h4>
+
+<p>For p.d.f.s with numeric integrals that remain difficult or very time consuming,
+a new persistent caching technique is now available that allows to precalculate
+these integrals and store their values for future use. This technique works transparently
+for any p.d.f. stored in a <tt>RooWorkspace</tt>.
+
+<p>One can store numeric integral values for problems with zero, one or two floating parameters.
+In the first case, the value is simply stored. In cases with one or two floating parameters
+a grid (histogram) of integral values is stored, which are interpolated to return integral
+values for each value of the parameters.
+
+<p>A new tutorial macro <tt>rf903_numintcache.C</tt> has been added to <tt>$ROOTSYS/tutorials/roofit</tt>
+to illustrate the use of this feature.
+
+
+<h4>Representation of function and p.d.f. derivatives</h4>
+
+<p>A new class has been added that can represent the derivative of any p.d.f or function w.r.t. any
+parameter or observable. To construct e.g. a first order derivative of a Gaussian p.d.f, do
+<pre>
+    RooAbsReal* dgdx = gauss.derivative(x,1) ; 
+</pre>
+<p>A more complete example is available in the new tutorial macro <tt>rf111_derivatives.C</tt>
+<br><br>
+   <img src="roofit_524_derivatives.gif" alt="Graphics Output of macro rf111_derivatives">
+<br><br>
+
+
+
+<h4>Improved handling of chi-squared fits</h4>
+
+<p>Chi-squared fits can now be performed through the same style of interface as likelihood fits,
+through the newly added method <tt>RooAbsReal::chi2FitTo(const RooDataHist&,...)</tt>.
+
+<p>Functions that can be fitted with chi-squared minimization are any <tt>RooAbsReal</tt> based function
+as well as <tt>RooAbsPdf</tt> based p.d.f.s. In case of non-extended p.d.f.s the probability density
+calculated by the p.d.f. is multiplied with the number of events in the histogram to adjust
+the scale of the function. In case of extended p.d.f.s, the adjustment is made with the expected
+number of events, rather than the observed number of events.
+
+Tutorial macro <tt>rf602_chi2fit.C</tt> has been updated to use this new interface.
+
+
+<h4>Chi-squared fits to X-Y datasets now possible</h4>
+
+<p>In addition to the ability to perform chi-squared fits to histograms it is now also possible
+to perform chi-squared fits to unbinned datasets containing a series of X and Y values
+with associated errors on Y and optionally on X.
+
+<p>These 'X-Y' chi-squared fits are interfaced through newly added method 
+<tt>RooAbsReal::chi2FitTo(const RooDataSet&,...)</tt>. By default the event weight is
+interpreted as the 'Y' value, but an <tt>YVar()</tt> argument can designate any other
+dataset column as Y value. If X errors are defined, one can choose to integrate the fitted
+function over the range of the X errors, rather than taking the central value by adding
+an <tt>Integrate(kTRUE)</tt> argument to <tt>chi2FitTo()</tt>
+
+<p>Two new arguments, <tt>StoreError(const RooArgSet&)</tt> and <tt>StoreAsymError(const RooArgSet&)</tt> 
+have been added to the <tt>RooDataSet</tt> constructor to simplify the process of storing the errors
+of X and Y variables along with their values in a dataset.
+
+<p>The newly added tutorial macro <tt>rf609_xychi2fit.C</tt> illustrates the use of all this
+new functionality.
+
+<h4>Uniform interface for creation of (profile likelihoods) and chi-squared from p.d.f.s</h4>
+
+<p>It is now recommended to use the method <tt>RooAbsPdf::createNLL(RooAbsData&,...)</tt> to
+create a likelihood from a p.d.f and a dataset rather than constructing a <tt>RooNLLVar</tt>
+object directly. This is because part of the likelihood construction functionality such a using
+multiple <tt>Range()</tt>s, or the inclusion for constraint terms are only available through
+<tt>createNLL()</tt>.
+
+<p>To promote the consistency of this interface, a similar method <tt>RooAbsReal::createChi2()</tt>
+has been added to construct chi-squared functions of a dataset and a function or p.d.f.
+
+<p>Along the same lines, it is recommended to use <tt>RooAbsReal::createProfile()</tt> rather
+than constructing a <tt>RooProfileLL</tt> object directly as the former will efficiently
+recast a profile of a profile into a single profile object.
+
+<h4>Multivariate Gaussian modeling of parameters estimates from a fit</h4>
+
+<p>You can now construct a multivariate Gaussian p.d.f on the parameters of a model that 
+represents the result of a fit, from any <tt>RooFitResult</tt> object.
+<pre>
+   RooAbsPdf* paramPdf = fitresult->createHessePdf(RooArgSet(a,b)) ;
+</pre>
+<p>The returned object is an instance of the newly added class <tt>RooMultiVarGaussian</tt>, that can
+model correlated Gaussian distributions in an arbitrary number of dimensions, given a 
+vector of mean values and a covariance matrix. Class <tt>RooMultivarGaussian</tt> implements analytical
+integration as well as analytical partial integrals over the first 31 dimensions (if you have
+that many) and implements in effect internal generation strategy for its observables
+
+<p>A new tutorial macro <tt>rf608_fitresultaspdf.C</tt> has been added to illustrate the use MV Gaussians constructed from a <tt>RooFitResult</tt>
+
+<h4>Improved functionality of RooFFTConvPdf</h4>
+
+<p>The FFT convolution operator p.d.f. class <tt>RooFFTConvPdf</tt> has been substantially upgraded
+for improved performance has several new options
+
+<ul>
+<li>For the overflow buffering, which aims to reduce cylical spillover from the FFT convolution, 
+a choice of three algorithms is now provided:
+<ol>
+<li> Extend the p.d.f. somewhat beyond its original domain (the new default)
+<li> Fill the buffer 50/50 with the value of the p.d.f at the upper/lower bound of the convolution observable (the previous default)
+<li> Mirror the p.d.f. over the boundary
+</ol>
+
+The new default algorithm provides a more sensible result for p.d.f.s with significant
+spillover issues, provided that the p.d.f. can be continuated beyond its original domain.<br><br>
+
+<li>Convolution in non-observables is also explicitly supported now. One can e.g. construct a p.d.f 
+of the form G(x) = Int[dy] ( F(x,y) (*) H(y) ). A new tutorial macro <tt>rf211_paramconv</tt> illustrates 
+how such convolutions can be constructed<br><br>
+
+<li>It is now also possible to express FFT convolutions in terms of other observables than the
+convolution observable itself. A common occurrence of that situation is a (circular) convolution a polar
+angle theta, for a p.d.f. that is ultimately expressed in terms of cos(theta). 
+A new tutorial macro <tt>rf210_angularconv</tt> illustrates how to convolutions of angular observable
+with or without an optional cosine transformation for the final observable.
+</ul>
+
+
+<br><br>
+   <img src="roofit_524_convolution.gif" alt="Graphics Output of macro rf210_angularconv">
+<br><br>
+
+
+
+<h4>Option for improved calculation of errors in weighted likelihood fits</h4>
+
+A new option <tt>SumW2Error()</tt> has been added to <tt>RooAbsPdf::fitTo()</tt> that will
+perform an improved error calculation for weighted unbinned likelihood fits. In their unmodified
+form, an ML fit to a weighted dataset will correctly estimate the parameters, but the errors will
+scale with the sum of the weights, rather than the number of the events in the dataset (i.e.
+if you double all event weights, all parameter errors will go down with sqrt(2)). In chi-squared
+fits event weights can processed correctly by using both the sum of the weights and the 
+sum of the weights-squared for each bin. The newly added option <tt>SumW2Error()</tt> implements a similar
+strategy for (unbinned) weighted ML fits by applying a correction to the covariance matrix
+as follows
+<pre>
+   V' = V C-1 V
+</pre>
+where <tt>V</tt> is the covariance matrix from the fit to weighted data, and <tt>C-1</tt> is the inverse of the
+covariance matrix calculated from a similar likelihood that constructed with the event weights applied squared
+
+<h4>Redesign of RooFit dataset class structure</h4>
+
+The original class structure of RooFit featured an abstract dataset
+class <tt>RooAbsData</tt>.  Inheriting from that was a single class
+<tt>RooTreeData</tt>, which implemented datasets with a ROOT
+<tt>TTree</tt>-based storage implementation, and inheriting from that
+two classes <tt>RooDataSet</tt> , representing unbinned data, and
+<tt>RooDataHist</tt>, representing binned data. A main problem with
+this structure was that the implementation of the storage technology
+(<tt>TTree</tt>) and the data representation (binned vs unbinned) were
+intertwined. 
+<br><br>
+Starting with version 3.00, the class structure has been
+rearranged: Now classes <tt>RooDataSet</tt> and <tt>RooDataHist</tt> inherit directly
+from class <tt>RooAbsData</tt>, and class <tt>RooAbsData</tt> now owns an object that
+inherits from <tt>RooAbsDataStore</tt> that implements the storage of the
+data. This new class structure allows multiple data storage implementations to
+be applied efficiently to both <tt>RooDataSet</tt> and <tt>RooDataHist</tt>
+At present a single implementation of <tt>RooAbsDataStore</tt> exists,
+class <tt>RooTreeDataStore</tt>, that contains the storage implementation
+formerly implement in class <tt>RooTreeData</tt>. Methods in class <tt>RooTreeData</tt>
+that were not specific to the storage technology have been moved to
+class <tt>RooAbsData</tt>.
+<br><br>
+If your user code only uses the classes <tt>RooDataSet</tt>,<tt>RooDataHist</tt> and <tt>RooAbsData</tt>
+nothing will change: Existing <tt>RooDataSet</tt>s and <tt>RooDataHist</tt>s
+(that inherit from <tt>RooTreeData</tt>) can be read in <i>without problems</i> in
+RooFit 3.00 and will be converted on the fly to the new dataset structure
+in memory.
+<br><br>
+<i>User code that explicitly uses <tt>RooTreeData</tt> pointers should
+be changed to <tt>RooAbsData</tt> pointers</i>. This change should be transparent
+for all uses, with the exception of the <tt>RooTreeData::tree()</tt> method. 
+Explicit access to tree implementation can still be obtained
+through the <tt>RooTreeDataStore::tree()</tt> method. (A pointer to the datastore
+can be obtained through the <tt>RooAbsData::store()</tt> method.)
+Note that in future releases it is no longer guaranteed that all datasets are implemented
+with a plain <tt>TTree</tt> implementation, so any user code that uses the tree
+implementation directly should implement checks that the implementation
+is indeed tree-based (<tt>data->store()->InheritsFrom(RooTreeDataStore::Class())==kTRUE)</tt>).
+<br><br>
+In future release additional implementations of <tt>RooAbsDataStore</tt> will
+be provided that will support new dataset functionality such as the
+ability to construct 'joint' dataset from two input datasets without
+the need to copy the input data and 'filtered' datasets that represent
+a reduced view (in dimensions or by selecting events) of a dataset
+without the need to copy content.
+
+
+<h4>Various workspace improvements</h4>
+
+A number of smaller and larger improvements has been made to the <tt>RooWorkspace</tt> class.
+
+<ul>
+<li><p><b>Direct interactive access to contents from CINT</b> - 
+One can now directly access the contents of any <tt>RooWorkspace</tt> 
+on the ROOT commandline through CINT if the <tt>RooWorkspace::exportToCint()</tt> call is made. 
+In CINT, all workspace objects will appear as correctly typed references to workspace objects in
+a C++ namespace with the same name as the <tt>RooWorkspace</tt> object. 
+
+<p>Given e.g. a workspace <tt>w</tt>, with a Gaussian p.d.f <tt>gauss</tt> in terms of variables 
+<tt>x,m,s</tt> one can now do
+<pre>
+   RooWorkspace w("w",kTRUE) ; // workspace with CINT interface activated
+   // ... fill workspace with RooGaussian gauss(x,m,s) ...
+   RooPlot* frame = w::x.frame() ;
+   w::gauss.plotOn(frame) ;
+</pre>  
+to access the workspace contents. Each reference has the correct type, e.g. <tt>w::gauss</tt> is
+a <tt>RooGaussian&</tt>. If a workspace is deleted from memory, the corresponding CINT namespace
+is removed as well. <i>Note that this feature is strictly available in interpreted C++ only</i>
+
+<p>A new tutorial macro has been added to illustrate this functionality in more detail: <tt>rf509_wsinteractive.C</tt>.<br><br>
+
+<li><p><b>writeToFile</b> -- A new utility method <tt>RooWorkspace::writeToFile()</tt> has been added
+to simplify the process of saving a workspace to file<br><br>
+
+<li><p><b>Named sets and parameter snapshots</b> -- It is now possible to define and retrieve 
+named <tt>RooArgSet</tt>s of objects that live in the workspace through methods 
+<tt>defineSet()</tt> and <tt>set()</tt>.
+
+<p>While named sets merely group objects logically, methods <tt>loadSnapshot</tt> and 
+<tt>saveSnapshot</tt> allow to make copies of the values, errors and 'constant' status of 
+sets of variable objects that live in the workspace. 
+
+<p>A newly added tutorial macro <tt>rf510_namedsets.C</tt> illustrates the functionality of both
+of these features.<br><br>
+
+<li><b>Improved printing of contents</b> -- Many operator p.d.f. and function components now show
+a more intuitive natural representation of their contents (these changes are mostly in the
+respective p.d.f.s, but are most relevant in the context of a workspace).<br><br> 
+
+</ul>
+
+
+<h4>New object factory interface to workspace to facilitate script driven model definition</h4>
+
+<p>A object factory has been added to RooFit to simplify the proces of creating p.d.f. 
+and function expressions consisting of multiple objects. The factory has two goals:
+the first is to provide a back-end for higher level factories and tools to process
+the creation of objects. The second is to provide a simple end-user language to
+populate a <tt>RooWorkspace</tt> with function and p.d.f. objects. 
+
+<p>For the latter purpose the object creation language is executed through the <tt>factory()</tt> method
+of a workspace object. 
+
+<pre>
+   RooWorkspace w("w") ;
+   RooAbsArg* arg = w.factory("expression_goes_here") ;
+</pre>
+
+<i>Basic Syntax</i><br>
+The rules at its simplest level are as follows
+
+<ul>
+<li> Expressions with square brackets create variables (discrete and continuous)
+<pre>
+    "m[-10,10]"    - Creates a RooRealVar named 'm' with range [-10,10]
+    "m[5,-10,10]"  - Idem, but with initial value 5
+    "m[5]"         - Creates a constant RooRealVar with name 'm' and value 5.
+
+    "tagCat[Lep,Kao,NT1,NT2]" -- Creates a RooCategory with name tagCat and labeled states Lep,Kao,NT1,NT2
+    "b0flav[B0=1,B0bar=-1]"   -- Creates a RooCategory with name b0flav and states B0 and B0bar with explicit index assignments
+</pre>
+
+
+
+<li> Expressions with parentheses create <tt>RooAbsArg</tt> function objects of any type
+<pre>
+    "RooGaussian::g(x,m,s)"  -- Create a RooGaussian named g with variables x,m,s
+                                This expression maps 1-1 to a createArg() call
+
+    "Gaussian::g(x,m,s)"     -- Idem. The 'Roo' prefix on any class may be omitted
+                                
+    "Gaussian(x,m,s)"        -- Create a RooGaussian with an automatically assigned name with variables x,m,s
+
+</pre>
+
+<li> Expressions with curly brackets creates <tt>RooArgSet</tt>s or <tt>RooArgList</tt>s <tt>"{x,y,z}"</tt>
+</ul>
+
+<i>Compound expressions</i><br>
+
+<p>The real power of this language is that all these expressions may be nested to result in a compact
+and readable expression that creates an entire p.d.f. and its components
+
+<pre>
+   "Gaussian::g(x[-10,10],m[-10,10],3)"  
+</pre>
+
+<p>Creates a <tt>RooGaussian</tt> named 'g', its observables 'x' with range [-10,10], 
+its parameter 'm' with range [-10,10]' and a constant width of 3.
+
+<pre>
+   "SUM::model( f[0.5,0,1] * Gaussian( x[-10,10], m[0], 3] ),
+                             Chebychev( x, {a0[0.1],a1[0.2],a2[-0.3]}))"
+</pre>
+
+<p>Create a <tt>RooAddPdf</tt> model of a <tt>RooGaussian</tt> and a <tt>RooChebychev</tt> (which
+are implicitly named <tt>model_0</tt> and <tt>model_1</tt>), its observable <tt>x</tt> and its 
+parameters <tt>m,a0,a1,a2,Nsig</tt> and <tt>Nbkg</tt>
+
+<p>Note that each object may be created only once (with [] or () brackets) but may be referenced multiple
+times in the expression by just giving the name.  Here is a much more complicated example:
+
+<pre>
+  "PROD::sig(BMixDecay::sig_t( dt[-20,20], mixState[mixed=1,unmix=-1], tagFlav[B0=1,B0bar=-1],
+                                             tau[1.54], dm[0.472], w[0.05], dw[0],
+                                             AddModel({GaussModel(dt,biasC[-10,10],sigmaC[0.1,3],dterr[0.01,0.2]),
+                                                       GaussModel(dt,0,sigmaT[3,10]),
+                                                       GaussModel(dt,0,20)},{fracC[0,1],fracT[0,1]}),
+                                             DoubleSided ),
+             Gaussian::sig_m( mes[5.20,5.30], mB0[5.20,5.30], sigmB0[0.01,0.05] )"
+</pre>
+
+<p>This create a double-sided Bmixing decay p.d.f. with observables <tt>dt</tt>,
+per-event error <tt>dterr</tt> and all its parameters, convoluted with a triple
+gaussian resolution model and multiplied with a Gaussian p.d.f. in the
+energy substituted mass. (In plain RooFit this would have required at
+least 23 lines of code).
+
+<p>A series of three new tutorial macros has been added to illustrate the
+various features of the object factory
+
+<ul>
+<li><tt>rf511_wsfactory_basic.C</tt> - Basic factory concepts
+<li><tt>rf512_wsfactory_oper.C</tt> - Using operator p.d.f.s in the factory
+<li><tt>rf513_wsfactory_tools.C</tt> - Advanced example using interfaced high level tools
+</ul>
+
+<p>A formal transaction model is used to commit composite objects into
+the workspace. If an error is detected in the expression, no objects
+will be committed to the workspace, thus leaving no 'partial builds'.
+
+<h4> Compact demo of several new major features</h4>
+
+The macro below demonstrates in a couple of lines a number of major new features in RooFit 3.00: Use of
+<ul>
+<li> workspace factory to quickly create and store (compiled) models
+<li> workspace CINT interface to easily access contents in a typesafe way
+<li> new adaptive ND numeric integration technique to normalize arbitrary p.d.f. in fast 
+     and reliable way
+<li> new adapative TFoam sampling technique to efficiently generate toy MC data from strongly
+     peaked datasets
+<li> parallel processing in likelihood construction and use of profile likelihood operator
+     to represent profile likelihoods as regular RooFit functions
+</ul>
+
+<pre>
+  void demo()  
+  {
+    <b>// Construct compiled 2-D model that requires numeric integration for normalization</b>
+    RooWorkspace w("w",1) ;
+    w.factory("CEXPR::model('1/((x-a)*(x-a)+0.001)+1/((y-b)*(y-b)+0.001)',x[-1,1],y[-1,1],a[-5,5],b[-5,5])") ;
+
+    <b>// Generate data from model (using TFoam adaptive sampling algorithm)</b>
+    RooDataSet* d = w::model.generate(RooArgSet(w::x,w::y),1000) ;
+    w::model.fitTo(*d) ; 
+
+    <b>// Make 2D plot on (x,y)</b>
+    TH2* hh = w::model.createHistogram("x,y",40,40) ;
+    hh->SetLineColor(kBlue) ;
+
+    <b>// Make Projection on x (integrate over y)</b>
+    RooPlot* framex = w::x.frame(Title("Data and p.d.f. projected on X")) ;
+    d->plotOn(framex) ;
+    w::model.plotOn(framex) ;
+
+    <b>// Construct likelihood, profile likelihood in a, and draw the latter</b>
+    RooAbsReal* nll = w::model.createNLL(*d,NumCPU(2)) ;
+    RooAbsReal* pll = nll->createProfile(w::a) ;
+    RooPlot* framea = w::a.frame(Title("Profile likelihood in parameter a")) ;
+    pll->plotOn(framea) ;
+  
+    <b>// Construct 2D cumulative distribution function from p.d.f.</b>
+    RooAbsReal* cdfxy = w::model.createCdf(RooArgSet(w::x,w::y),ScanNoCdf()) ;
+    TH2* hhcdf = cdfxy->createHistogram("x,y",40,40) ;
+    hhcdf->SetLineColor(kRed) ;
+
+    TCanvas* c = new TCanvas("c","c",650,650) ;  c->Divide(2,2) ;
+    c->cd(1) ; hh->Draw("surf") ;  c->cd(2) ; framex->Draw() ;
+    c->cd(3) ; framea->Draw()   ;  c->cd(4) ; hhcdf->Draw("surf") ;
+  }
+</pre>
+Plot that results from above macro
+<br><br>
+<img src="roofit_524_demo.gif" alt="Graphics Output of demo macro">
+<br><br>
+
+<h4>Miscellaneous small improvements</h4>
+<ul>
+<li>Utility function <tt>bindFunction()</tt> and <tt>bindPdf</tt> that can bind
+    external C++ functions as RooFit functions or p.d.f.s now can also take
+    <tt>ROOT::Math::Functor</tt> objects as input arguments, which allows the
+    binding of function methods of classes.<br><br>
+
+<li>By default datasets are no cloned for fit operations to save time and memory.
+    This change in procedure should save some time and memory, especially in toy MC
+    studies where the overhead in setting up the likelihood can dominate the total
+    time spent in fitting. The data cloning behavior of <tt>RooAbsPdf::fitTo()</tt>
+    and <tt>RooAbsPdf::createNLL()</tt> can be explicitly set through the <tt>CloneData()</tt> 
+    named argument<br><br>
+
+<li> It is now possible to construct a <tt>RooSimultaneous</tt> p.d.f. from other
+     <tt>RooSimultaneous</tt> p.d.f.s, provided the constructor form is used that takes
+     all input p.d.f.s. In this constructor simultaneous-of-simultaneous p.d.f.s are automatically
+     recast to an equivalent top-level simultaneous p.d.f
+     Sim of sim now possible<br><br>
+
+<li> Several improvements were made in the internal handling of datasets that
+     will speedup certain data intensive operations<br><br>
+</ul>
+
+
+<br>
+<hr>
+<a name="roostats"></a>
+<h3>RooStats</h3>
+
+
+<h4>New Tutorials</h4>
+
+Several new tutorials were added for RooStats
+<ul>
+<li><tt>rs101_limitexample.C</tt> Demonstrates use of Frequentist, 
+Bayesian, and Likelihood intervals for a simple number counting experiment
+ with uncertainty on signal and background rates.</li>
+<li><tt>rs301_splot.C</tt> Demonstrates use of RooStats sPlot
+implementation</li>
+<li><tt>rs401c_FeldmanCousins.C</tt> Demonstrates use of
+FeldmanCousins interval calculator with a Poisson problem, reproduces
+resulst from table IV and V of the original
+paper Phys.Rev.D57:3873-3889,1998.</li>
+<li><tt>rs401d_FeldmanCousins.C</tt> Demonstrates use of
+FeldmanCousins interval calculator with the neutrino oscillation toy
+example described in the original paper Phys.Rev.D57:3873-3889,1998.
+Reproduces figure 12.</li>
+<li><tt>rs_bernsteinCorrection.C</tt> Demonstrates use of
+BernsteinCorrection class, which corrects a nominal PDF with a polynomial
+to agree with observed or simulated data.</li>
+</ul>
+
+<h4>TestStatistic interface and implementations</h4>
+<p>We added a new interface class called <tt>TestStatistic</tt>. It defines the
+method <tt>Evaluate(data, parameterPoint)</tt>, which returns a double.  This
+class can be used in conjunction with the <tt>ToyMCSampler</tt> class to generate
+sampling distributions for a user-defined test statistic.  </p>
+<p>The following concrete implementations of the <tt>TestStatistic</tt> interface
+are currently available</p>
+<ul>
+<li><tt>ProfileLikelihoodTestStat</tt>Returns the log of profile
+likelihood ratio.  Generally a powerful test statistic. </li>
+<li><tt>NumEventsTestStat</tt>Returns the number of events in the
+dataset.  Useful for number counting experiments.</li>
+<li><tt>DebuggingTestStat</tt> Simply returns a uniform random number
+between 0,1.  Useful for debugging.</li>
+</ul>
+
+<h4>SamplingDistribution and the TestStatSampler interface and
+implementations</h4>
+<p>We introduced a ``result'' or data model class called
+<tt>SamplingDistribution</tt>, which holds the sampling distribution of an
+arbitrary real valued test statistic.  The class also can return the
+inverse of the cumulative distribution function (with or without
+interpolation).  </p>
+<p>We introduced an interface for any tool that can produce a
+<tt>SamplingDistribution</tt>, called <tt>TestStatSampler</tt>.  The interface is
+essentially GetSamplingDistribution(parameterPoint) which returns a
+SamplingDistribution based on a given probability density function.  We
+foresee a few versions of this tool based on toy Monte Carlo, importance
+sampling, Fourier transforms, etc.  The following concrete implementation
+of the TestStatSampler interface are currently available</p>
+<ul>
+<li><tt>ToyMCSampler</tt>Uses a Toy Monte Carlo approach to build the
+sampling distribution.  The pdf's generate method to generate is used to
+generate toy data, and then the test statistic is evaluated at the
+requested parameter point. </li>
+<li><tt>DebuggingSampler</tt> Simply returns a uniform distribution
+between 0,1.  Useful for debugging.</li>
+</ul>
+
+
+<h4>NeymanConstruction and FeldmanCousins</h4>
+<p>A flexible framework for the Neyman Construction was added in this
+release. The NeymanConstruction is a concrete implementation of the
+IntervalCalculator interface, but it needs several
+additional components to be specified before use. The design
+factorizes the choice of the parameter points to be tested, the choice of
+the test statistic, and the generation of sampling distribution into
+separate parts (described above).  Finally, the <tt>NeymanConstruction</tt> class
+is simply in charge of using these parts (strategies) and constructing
+the confidence belt and confidence intervals.  The <tt>ConfidenceBelt</tt> class
+is still under development, but the current version works fine for
+producing <tt>ConfidenceIntervals</tt>.  We are also working to make this class
+work with parallelization approaches, which is not yet complete.</p>
+<p>The <tt>FeldmanCousins</tt> class is a separate concrete implementation of the
+<tt>IntervalCalculator</tt> interface.  It uses the <tt>NeymanConstruction</tt> internally,
+and enforces specific choices of the test statistic and ordering
+principle to realize the Unified intervals described by Feldman and
+Cousins in their paper Phys.Rev.D57:3873-3889,1998.
+</p>
+<p>
+In an extension to the technique discussed in Feldman and Cousins paper, 
+the <tt>FeldmanCousins</tt> class also performs a "profile construction" if their are nuisance parameters.
+In this case, the parameters of interest are scanned in a regular grid.  For each point in the grid
+the calculator finds the best fit value of the nuisance parameters (given the data).  The construction
+is then only performed in this subspace of the parameters.  As a result, the number of points in the 
+construction only scales in the number of parameters of interest, not in the number of nuisance parameters.
+</p>
+
+<h4>Markov Chain Monte Carlo Interval</h4>
+<p>A flexible framework for Markov Chain Monte Carlo  was added in this
+release. The <tt>MCMCCalculator</tt> is a concrete implementation of the
+<tt>IntervalCalculator</tt> interface.  To use it one needs to specify the <tt>ProposalFunction</tt>. 
+There is a base class for ProposalFunctions and one concrete implementation: <tt>UniformProposal</tt>. 
+Support for other proposal functions will be added in the next release.
+The <tt>MCMCCalculator</tt> scans the space of the parameters of interest and nuisance parameters and
+produces a Bayesian posterior.  In this version, the prior must be added to the model initially,
+otherwise a flat prior is assumed.  The <tt>MCMCCalculator</tt> returns an <tt>MCMCInterval</tt>, which produces
+the smallest interval by taking a contour of the posterior.  This first version only supports 
+1,2, and 3 dimensional intervals, but will be generalized in the next release.
+</p>
+<p>
+In addition to the MCMC implementation in RooStats, one can export their model and dataset into a workspace,
+ and then use the Bayesian Analysis Toolkit (BAT) for the MCMC.  There is a wrapper available.
+</p>
+
+<h4>Redesigned SPlot class</h4>
+<p>The RooStats SPlot implementation works with any RooAbsPdf.  The class has been redesigned for more 
+convenient use.  It also adds some helper functions to check that the sum of sWeights over species is 1 for each event and 
+the sum over events for a given species equals the yield for that species.
+</p>
+
+<h4>Plotting classes</h4>
+<p>We have added new plotting classes: <tt>SamplingDistPlot</tt> and <tt>LikelihoodIntervalPlot</tt>.  
+In 1-d LikelihoodIntervalPlot shows the profile likelihood ratio and the upper/lower limits 
+of the interval for the parameter of interest.  In 2-d, the LikelihoodIntervalPlot shows
+the contour of the profile likelihood ratio for the parameters of interest.
+</p>
+
+
+
+<h4>Bernstein Correction</h4>
+<p>
+BernsteinCorrection is a utility in RooStats to augment a nominal PDF
+with a polynomial 
+correction term.  This is useful for incorporating systematic variations
+to the nominal PDF.  
+The Bernstein basis polynomails are particularly appropriate because they
+are positive definite. 
+</p>
+<p>
+This tool was inspired by the work of Glen Cowan together with Stephan
+Horner, Sascha Caron, 
+Eilam Gross, and others.  
+The initial implementation is independent work.  The major step forward
+in the approach was 
+to provide a well defined algorithm that specifies the order of
+polynomial to be included 
+in the correction.  This is an emperical algorithm, so in addition to the
+nominal model it 
+needs either a real data set or a simulated one.  In the early work, the
+nominal model was taken
+to be a histogram from Monte Carlo simulations, but in this
+implementation it is generalized to an
+arbitrary PDF (which includes a RooHistPdf).  The algorithm basically
+consists of a 
+hypothesis test of an nth-order correction (null) against a n+1-th order
+correction (alternate). 
+The quantity q = -2 log LR is used to determine whether the n+1-th order
+correction is a major 
+improvement to the n-th order correction.  The distribution of q is
+expected to be roughly 
+\chi^2 with one degree of freedom if the n-th order correction is a good
+model for the data. 
+ Thus, one only moves to the n+1-th order correction of q is relatively
+large.  The chance that 
+one moves from the n-th to the n+1-th order correction when the n-th
+order correction 
+(eg. a type 1 error) is sufficient is given by the Prob(\chi^2_1 >
+threshold).  The constructor 
+of this class allows you to directly set this tolerance (in terms of
+probability that the n+1-th
+ term is added unnecessarily).
+</p>
+
+<h4>HybridCalculator</h4>
+<p> Add as a new test statistics the profile likelihood ratio.  Will be redesigned to use TestStatSampler and TestStatistic in next release.
+</p>
+
+

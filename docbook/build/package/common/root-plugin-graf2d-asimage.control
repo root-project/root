@@ -1,0 +1,9 @@
+Package: root-plugin-graf2d-asimage
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: AfterImage plugin for ROOT
+ This package contains the AfterImage plug-in for ROOT, which allows
+ you to store output graphics in many formats, including JPEG, PNG,
+ SVG, etc.
+
+

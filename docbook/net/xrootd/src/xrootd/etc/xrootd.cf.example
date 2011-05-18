@@ -1,0 +1,100 @@
+#
+# A very simple config script to start a local xrootd+cmsd node
+#
+# 20071219, Fabrizio Furano
+
+
+
+##################
+#
+# Variables. Some of them are taken from the environment
+# and set by the StartXXX scripts
+
+// Leading path for the installed distribution
+set MyXrootdPath=$XRDBASE
+
+// Leading path for the xrootd libraries
+set MyXrootdLibBase=$XRDLIBBASE
+
+// where to find alternate scripts and cfg file
+set MyScriptsPath=$XRDCFG
+
+
+##################
+
+
+#				#
+#	COMMON section          #
+#				#
+
+# This is a sample script, so any path is good to export
+all.export / r/w
+
+all.role server
+
+# Note: if-fi does not support nesting
+
+# The global meta manager (if any) should match this
+if metamanagerhost*
+all.role meta manager
+all.manager meta metamanagerhost 1213
+fi
+
+# The manager node of the local cluster we are dealing with
+if managerhost*
+all.role manager
+all.manager managerhost 1213
+
+# Uncomment and complete if you have a meta manager
+#all.manager meta metamanagerhost 1213
+fi
+
+# All (and only) the data servers have to match this
+# Use the proper aggergatingn2n lib to set up a facultative prefix for paths
+# in the case you want to aggregate clusters with different storage path prefixes,
+# and making all of them subscribe to a global meta manager
+# Uncomment and fill the manager host name if you run a manager in your cluster
+if *
+all.role server
+
+# Preferred for clusters
+#xrd.port any
+
+#all.manager managerhost 1213
+
+#oss.namelib libXrdAggregatingName2Name.so /my/funny/facultative/local/cluster/storage/prefix
+fi
+
+
+#				#
+#	XRD Daemon section	#
+#				#
+
+xrd.protocol xrootd * 
+
+
+#				#
+#    	 XROOTD Section		#  		
+#				#
+
+xrootd.fslib $(MyXrootdLibBase)/libXrdOfs.so
+
+#				#
+#	  CMSD Section		#
+#				#
+
+
+cms.delay servers 1 startup 10
+cms.sched cpu 10 io 90
+cms.perf int 3m pgm $(MyXrootdPath)/etc/XrdOlbMonPerf 110
+
+# Specify how server are selected for file creation
+olb.space linger 0 recalc 10 min 1g 2g
+
+#				#
+#    	OFS and OSS Section	#
+#				#
+
+oss.alloc * * 80
+
+

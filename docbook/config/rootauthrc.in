@@ -1,0 +1,239 @@
+#
+#  etc/system.rootauthrc
+#
+#  NB: this file contains system defaults read only in the case the 
+#      $HOME/.rootauthrc is non-existing or non-readable. Its content 
+#      can be included in the the private $HOME/.rootauthrc using the 
+#      include directive (see below). The location of the private file
+#      can be changed by setting the environment variable ROOTAUTHRC
+#      to the appropriate absolute file pathname.
+#
+#  This file contains information about authentication methods available for
+#  authentication vis-a-vis of a given host. It allows to define host specific
+#  methods and defaults for the info (username, certificates, ...) to be used.
+#  The information specified here superseeds the one found in .rootrc.
+#  
+#  Format:
+#    - lines starting with '#' are comment lines.
+#
+#    - lines of the form 'include <file>' allow to include other files
+#      of this kind which are expanded exactly at the point where the 
+#      'include' appears; environment variables are supported, eg
+#      include $ROOTSYS/etc/system.rootauthrc
+#
+#    - lines of the form:
+#
+#         <host> [user <username>] <key> <info>
+#
+#      where <host> is the host(s) identifier (see below), <key> is an 
+#      option key and <info> is the relevant info whose format depends 
+#      on <key>; 'user' indicates the username to whom the information
+#      applies; if absent, the info applies to all users.
+#
+#      <host>:
+#         - hosts can specified either with their name (e.g. pcepsft43), 
+#           their FQDN (e.g. pcepsft43.cern.ch) or their IP address 
+#           (e.g. 137.138.99.73).
+#         - if <host>=default or <host>='*' the following <key> <info> 
+#           applies to all hosts, unless host-specific entries are found.
+#         - the '*' character can be used in the any field of the name to 
+#           indicate a set of machines or domains, e.g. pcepsft*.cern.ch 
+#           applies to all 'pcepsft' machines in the domain 'cern.ch'
+#           (to indicate all 'lxplus' machines you should use 'lxplus*.cern.ch'
+#           because internally the generic lxplus machine has a real name of
+#           the form lxplusnnn.cern.ch; you can also use 'lxplus' if you
+#           don't care about domain name checking)
+#         - a whole domain can be indicated by its name, eg 'cern.ch', 
+#           'cnaf.infn.it' or '.ch'
+#         - truncated IP address can also be used to indicate a set of
+#           machines; they are interpreted as the very first or very last 
+#           part of the address; for example, to select 137.138.99.73, 
+#           any of these is valid: '137.138.99', '137.138', '137`, '99.73'; 
+#           or with wild cards: '137.13*' or '*.99.73`; however, '138.99' 
+#           is invalid because ambigous.
+#         - host names can be followed by :rootd or :proofd to define directives
+#           applying only to the given service
+#
+#      <key> <info>:
+#         - valid keys are 'list' and 'method';
+#         - if <key>=list, <info> contains the list of codes or short names for 
+#           methods that can/should be tried for authentication wrt to <host>, 
+#           in order of preference.
+#           Available methods are:
+#
+#              Method                        short name      code
+#
+#              UsrPwd                         usrpwd          0
+#              SRP                            srp             1
+#              Kerberos                       krb5            2
+#              Globus                         globus          3
+#              SSH                            ssh             4
+#              UidGid                         uidgid          5   (insecure)
+#
+#           Example of a valid 'list' line:
+#
+#              default          list  4 
+#              lxplus*.cern.ch  list  ssh 3 krb5
+#
+#           The first line defines as default method SSH, this is equivalent
+#           of setting:
+#
+#              Rootd.Authentication    4
+#              Proofd.Authentication   4
+#
+#           in the .rootc file.
+#
+#           The second line adds Globus and Kerberos as available methods
+#           for authentication to the lxplus machines (in addition to SSH):
+#           SSH the preferred first, Kerberos the last option. 
+#
+#           Having a line 'list' for a host is non mandatory: methods can
+#           also be defined directly via 'method' lines (see below); in
+#           such a case the first 'method' line will define the preferred
+#           method and so on.
+#
+#         - if <key>=method, <info> contains 
+#              + a method code  --> mandatory, must be in the valid range
+#              + a prompt flag  --> optional, identified by the key 'pt:',
+#                                   e.g. pt:yes
+#                                   values: 'yes' or 1, 'no' or '0'
+#              + a reuse flag   --> optional, identified by the key 'ru:',
+#                                   e.g. ru:no
+#                                   values: 'yes' or 1, 'no' or '0'
+#              + some relevant information for authentication (optional,
+#                see below)
+#
+#           The 'prompt' flag defines whether the user should be prompted
+#           for the relevant authentication details each time an 
+#           authentication with the corresponding method is attempted.
+#           Default is 'yes', superseeded by the related entry in '.rootrc' .
+#           The 'reuse' flag determines if a successful authentication will
+#           be later re-used without prompting (e.g. when the user tries
+#           to access the same host with same method during the same
+#           session: this allows to speed up operation in case of multiple
+#           access). Default is 'yes' for methods 0 (UsrPwd), 3 (Globus)
+#           and 4 (SSH), superseeded by the related entries in '.rootrc';
+#           feature not yet implemented for methods 1 (SRP) and 2 (Kerberos). 
+#           No additional info is needed by method 5 (UidGid): this method
+#           sends to the remote host the (uid,gid) of the current process;
+#           'reuse' will be af no advantage and 'prompt' is not allowed for
+#           security reasons. The format for the default info depends on
+#           the method:
+#
+#              Method                       Format info
+#
+#              UsrPwd                       us:<username> cp:<crypt_option>
+#              SRP                          us:<username> 
+#              Kerberos                     pp:<principal> us:<username>(<principal>) 
+#              Globus                       cd:<user_certkey_dir> 
+#                                           cf:<usercert_file>
+#                                           kf:<userkey_file>
+#                                           ad:<authorities_dir>
+#              SSH                          us:<username>
+#              UidGid
+#
+#
+#           The key 'us' allows to specify a target username different from
+#           the local username (which is the default target username); the 
+#           value specified via 'us' is superseeded by any user information
+#           passed through the constructor, e.g. <user> in TFTP("<user>@<host>").
+#
+#           The additional keys for UsrPwd specify:
+#              'cp' whether to encrypt the password with a public key (default)
+#                   or not (slighty faster), values are 'yes' or '1' for YES,
+#                   'no' or '0' for NO (case sensitive);
+#
+#
+#           For Kerberos, the default principal is the one associated to
+#           the local user in the Kerberos realm. A different principal
+#           can be specified via the key 'pp', access to which must be granted
+#           remotely via .k5login . For backward compatibility, the principal 
+#           can also be specified via the 'us' key (it must be in its full 
+#           form <username>@<KERBEROS.REALM>, otherwise the string pointed by
+#           'us' is interpreted as target username).
+#
+#           The keys for Globus allow to specify only partial changes of 
+#           the defaults:
+#              'cd' defines the directory containing the user certificate
+#                   and private key files;
+#              'cf' defines the user certificate file
+#              'kf' defines the user private key file
+#              'ad' defines the directory containing credentials for
+#                   recognized Certificate Authorities
+#                   (the CA signing the remote host certificate must have
+#                   an entry here)
+#           All these files and directories can be specified as absolute
+#           paths (starting with '/') or as relative to the getenv("HOME")
+#           directory (starting with '~/') or relative to the local '.globus'
+#           directory. Defaults are:
+#              cd:~/.globus
+#              cf:usercert.pem
+#              kf:userkey.pem
+#              ad:/etc/grid-security/certificates
+#
+#           NB: for all the mentioned keys, there should be NO space between
+#           the key and the value, e.g. 'us: qwerty' will result in 
+#           <username>=""
+#
+#           Example of valid 'method' lines:
+#
+#              default list 4 0 1
+#              default    method  ssh pt:yes us:qwerty
+#              default    method  3 pt:0 
+#              default user asdfgh  method  usrpwd pt:1 ru:no 
+#              lxplus*.cern.ch  method  3 pt:no  ad:certificates
+#              pcepsft43.cern.ch  user poiuyt method globus pt:no \
+#                                 cd:~/CA/HubCA/poiuyt ad:certificates
+#              include    local/pceple19.rootauthrc
+#              include $ROOTSYS/etc/system.rootauthrc
+#              localhost:proofd list  uidgid 
+#              pcepsft43.cern.ch  user asdfgh method 2 pt:no pp:asdkrb@LOC.KRB.REALM
+#            
+#           The first line states that, unless differently specified, 
+#           the first method to be tried for autentication is SSH,
+#           followed in case of failure by UsrPwd and SRP. 
+#           The second line specifies that when a SSH authentication is
+#           attempted, the user will be prompted for the remote username,
+#           with 'qwerty' as default. The third line states that for 
+#           Globus the user will not be prompted and the credentials
+#           and related files will be looked for in the default places.
+#           The fourth line specifies that, for UsrPwd authentication, user
+#           'asdfgh' will get a prompt with default username 'asdfgh' and
+#           that a successful authentication will not be reused
+#           The fifth line tells that for Globus to lxplus, the user 
+#           will still not be prompted, but the credentials for the 
+#           CA signing the remote certificate will be looked
+#           for in ~/.globus/certificates.
+#           The sixth line tells that for Globus authentication on 
+#           pcepsft43 of user poiuyt, the usercert.pem and userkey.pem
+#           files are looked for in directory ~/CA/HubCA/poiuyt, 
+#           and the credentials for the CA signing the remote certificate
+#           in ~/.globus/certificates.
+#           The seventh directive includes the content of the file 
+#           pceple19.rootauthrc located in the subdirectory local of the
+#           directory where the intercative root session was started. 
+#           The eight directive includes the content of the system 
+#           defaults.
+#           The ninth line states that when accessing slaves on the local
+#           host, the uidgid method should be used.
+#           The tenth line states that the krb5 method should be used for
+#           accessing account 'asdfgh' at pcepsft43.cern.ch, with kerberos
+#           credentials for principal adskrb@LOC.KRB.REALM .
+#
+#    - Finally, also supported are lines of the form:
+#
+#         proofserv <host1>[:<user1>][:<method1>[:...[:<methodn>]]] \
+#                   <host2>[:<user2>][:<method1>[:...[:<methodn>]]] \
+#                   ... <hostn>[:<usern>][:<method1>[:...[:<methodn>]]]
+#
+#      which are active only for PROOF sessions and specify the list of hosts 
+#      for which the authentication info should be transmitted to the slaves
+#      of the PROOF cluster; these directives are useful, for example, in
+#      the case of data servers external to the PROOF cluster that you may
+#      want to access via a given 'user' and a given authentication 'method'; 
+#      'user' and 'method' are not mandatory; for each <host> (an user, method)
+#      specified with 'proofserv' all the information that can be collected 
+#      from the rest of the .rootauthrc file is sent to slaves via the master
+#            
+#
+default list usrpwd ssh @havesrp@ @havekrb5@ @haveglobus@ uidgid 

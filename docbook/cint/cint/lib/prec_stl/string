@@ -1,0 +1,336 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// lib/prec_stl/string
+
+#pragma ifndef PREC_STL_STRING
+#pragma define PREC_STL_STRING
+#pragma link off global PREC_STL_STRING;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_CC)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
+
+// string class wrapper , by Masaharu Goto
+// Template is on purposely avoided.
+
+#include <stddef.h>
+#include <iostream>
+
+#if (defined (G__VISUAL) && (G__MSC_VER>=1310)) || (G__GNUC_VER>=3001)
+// for reverse_iterator
+#include <iterator>
+#endif
+
+#if (defined(G__VISUAL) && (G__MSC_VER==1300)) || defined (G__AIX)
+template<class _Ty, class _D, class _Pt, class _Rt,
+        class _Pt2, class _Rt2>
+        class _Ptrit;
+#endif
+
+//////////////////////////////////////////////////////////////////////////
+class string {
+ public:
+  typedef char value_type;
+  typedef char* pointer;
+  typedef const char* const_pointer;
+  typedef char& reference;
+  typedef const char& const_reference;
+  typedef ptrdiff_t difference_type;
+  typedef size_t size_type;
+  typedef int traits_type;
+
+#if defined(G__KCC) 
+  typedef typename Allocator::pointer		   iterator;
+  typedef const iterator const_iterator;
+#elif (defined(G__AIX) && (G__AIX<0))
+  typedef _Ptrit<value_type, difference_type, pointer,
+                  reference, pointer, reference> iterator;
+  typedef _Ptrit<value_type, difference_type, const_pointer,
+                  const_reference, pointer, reference> const_iterator;
+#elif defined(G__INTEL_COMPILER)
+  typedef char* iterator;
+  typedef const char* const_iterator;
+#elif (G__GNUC_VER>=3001) 
+  class iterator {
+   public:
+      iterator();
+      explicit iterator(const pointer& __i) ;
+      // Allow iterator to const_iterator conversion
+      template<typename _Iter> inline iterator(const iterator& __i);
+
+      // Forward iterator requirements
+      reference operator*() const ;
+      pointer operator->() const ;
+      iterator& operator++();
+      iterator operator++(int) ;
+      
+      // Bidirectional iterator requirements
+      iterator& operator--() ;
+      iterator operator--(int) ;
+      
+      // Random access iterator requirements
+      reference operator[](const difference_type& __n) const;
+      iterator& operator+=(const difference_type& __n);
+      iterator operator+(const difference_type& __n) const;
+      iterator& operator-=(const difference_type& __n);
+      iterator operator-(const difference_type& __n) const;
+      const pointer& base() const ;
+  };
+  typedef const iterator const_iterator;
+#elif (G__GNUC_VER>=3000)
+  typedef char* iterator;
+  typedef const char* const_iterator;
+#elif (defined(G__VISUAL) && (G__MSC_VER==1300))
+  typedef _Ptrit<value_type, difference_type, pointer,
+                  reference, pointer, reference> iterator;
+  typedef _Ptrit<value_type, difference_type, const_pointer,
+                  const_reference, pointer, reference> const_iterator;
+#elif (defined(G__VISUAL) && G__MSC_VER>=1310)
+	// CLASS const_iterator
+	class const_iterator
+#if (G__MSC_VER<1600)
+		: public _Ranit<value_type, difference_type, 
+                                const_pointer, const_reference>
+#endif
+	{	// iterator for nonmutable string
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef string::value_type value_type;
+		typedef string::difference_type difference_type;
+		typedef string::pointer pointer;
+		typedef string::const_reference reference;
+
+		const_iterator();
+
+  #if (G__MSC_VER<1400)
+		const_iterator(const_pointer _Ptr);
+  #else
+                const_iterator(const_pointer _Ptr, const string* _Pstring );
+  #endif
+
+		const_reference operator*() const;
+		const_pointer operator->() const;
+		const_iterator& operator++();
+		const_iterator operator++(int);
+		const_iterator& operator--();
+		const_iterator operator--(int);
+		const_iterator& operator+=(difference_type _Off);
+		const_iterator operator+(difference_type _Off) const;
+		const_iterator& operator-=(difference_type _Off);
+		const_iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		const_reference operator[](difference_type _Off) const;
+		bool operator==(const const_iterator& _Right) const;
+		bool operator!=(const const_iterator& _Right) const;
+		bool operator<(const const_iterator& _Right) const;
+		bool operator>(const const_iterator& _Right) const;
+		bool operator<=(const const_iterator& _Right) const;
+		bool operator>=(const const_iterator& _Right) const;
+		friend const_iterator operator+(difference_type _Off,
+			const const_iterator& _Right);
+	private:
+		const_pointer _Myptr;	// offset of element in string
+	};
+
+        // CLASS iterator
+	class iterator
+		: public const_iterator
+	{	// iterator for mutable string
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef string::value_type value_type;
+		typedef string::difference_type difference_type;
+		typedef string::pointer pointer;
+		typedef string::reference reference;
+
+		iterator();
+  #if (G__MSC_VER<1400)
+		iterator(pointer _ptr);
+  #else
+                iterator(pointer _ptr, const string *_Pstring);
+  #endif
+		reference operator*() const;
+		//_Tptr operator->() const;
+		pointer operator->() const;
+		iterator& operator++();
+		iterator operator++(int);
+		iterator& operator--();
+		iterator operator--(int);
+		iterator& operator+=(difference_type _Off);
+		iterator operator+(difference_type _Off) const;
+		iterator& operator-=(difference_type _Off);
+		iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		reference operator[](difference_type _Off) const;
+		friend iterator operator+(difference_type _Off,
+			const iterator& _Right);
+	};
+
+#else
+  typedef char* iterator;
+  typedef const char* const_iterator;
+#endif
+
+#if (defined (G__VISUAL) && (G__MSC_VER>=1310)) || (G__GNUC_VER>=3001)
+   typedef std::reverse_iterator<iterator> reverse_iterator;
+   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+#endif
+
+# if defined(G__GNUC_VER) && (G__GNUC_VER>=3000) && !defined(G__INTEL_COMPILER)
+  static const size_t npos = -1;
+#else
+  enum { npos=-1 };
+#endif
+  string() ;
+  //string(size_t size,capacity cap) ;
+  string(const string& str) ;
+  string(const string& str,size_t pos,size_t n) ;
+  string(const char* s,size_t n) ;
+  string(const char* s) ;
+  string(size_t rep, char c);
+  //string(const vector<char>& vec);
+  ~string() ;
+  string& operator=(const string& str);
+  string& operator=(const char* s);
+  string& operator=(char c);
+  string& operator+=(const string& rhs);
+  string& operator+=(const char* s);
+  string& operator+=(char c);
+  //vector<char> operator vector<char>(void) const;
+  string& append(const string& str);
+  string& append(const string& str,size_t pos,size_t n);
+  string& append(const char* s,size_t n);
+  string& append(const char* s);
+  string& append(size_t rep, char c);
+  string& assign(const string& str);
+  string& assign(const string& str,size_t pos,size_t n);
+  string& assign(const char* s,size_t n);
+  string& assign(const char* s);
+  string& assign(size_t rep, char c);
+  string& insert(size_t pos1,const string& str);
+  string& insert(size_t pos1,const string& str,size_t pos2,size_t n);
+  string& insert(size_t pos,const char* s,size_t n);
+  string& insert(size_t pos,const char* s);
+  string& insert(size_t pos,size_t rep,char c);
+  //string& remove(size_t pos=0,size_t n=npos);
+  string& replace(size_t pos1,size_t n1,const string& str);
+  string& replace(size_t pos1,size_t n1,const string& str,size_t pos2,size_t n2);
+  string& replace(size_t pos,size_t n1,const char* s,size_t n2);
+  string& replace(size_t pos,size_t n1,const char* s);
+  string& replace(size_t pos,size_t n,size_t rep,char c);
+  //char get_at(size_t pos) const;
+  //void put_at(size_t pos,char c);
+  const char& operator[](size_t pos) const;
+  char& operator[](size_t pos);
+  const char& at(size_t pos) const;
+  char& at(size_t pos);
+  const char* c_str(void) const;
+  const char* data(void) const;
+  size_t length(void) const;
+  void resize(size_t n,char c);
+  void resize(size_t n);
+  int size();
+  //size_t reserve(void) const;
+  void reserve(size_t res_arg);
+  size_t copy(char* s,size_t n,size_t pos=0) /* const */;
+  size_t find(const string& str,size_t pos=0) const;
+  size_t find(const char* s,size_t pos,size_t n) const;
+  size_t find(const char* s,size_t pos=0) const;
+  size_t find(char c,size_t pos=0) const;
+  size_t rfind(const string& str,size_t pos=npos) const;
+  size_t rfind(const char* s,size_t pos,size_t n) const;
+  size_t rfind(const char* s,size_t pos=npos) const;
+  size_t rfind(char c,size_t pos=npos) const;
+  size_t find_first_of(const string& str,size_t pos=0) const;
+  size_t find_first_of(const char* s,size_t pos,size_t n) const;
+  size_t find_first_of(const char* s,size_t pos=0) const;
+  size_t find_first_of(char c,size_t pos=0) const;
+  size_t find_last_of(const string& str,size_t pos=npos) const;
+  size_t find_last_of(const char* s,size_t pos,size_t n) const;
+  size_t find_last_of(const char* s,size_t pos=npos) const;
+  size_t find_last_of(char c,size_t pos=npos) const;
+  size_t find_first_not_of(const string& str,size_t pos=0) const;
+  size_t find_first_not_of(const char* s,size_t pos,size_t n) const;
+  size_t find_first_not_of(const char* s,size_t pos=0) const;
+  size_t find_first_not_of(char c,size_t pos=0) const;
+  size_t find_last_not_of(const string& str,size_t pos=npos) const;
+  size_t find_last_not_of(const char* s,size_t pos,size_t n) const;
+  size_t find_last_not_of(const char* s,size_t pos=npos) const;
+  size_t find_last_not_of(char c,size_t pos=npos) const;
+  string substr(size_t pos=0,size_t n=npos) const;
+  int compare(const string& str) const;
+  //int compare(size_type pos1,size_type n1,const string& str,size_type n2) const;
+  int compare(const char* s) const ;
+  //int compare(size_type pos1,size_type n1,const char* s,size_type n2=npos)const;
+  //operator char*() ;
+
+  string& erase(size_t pos=0, size_t n=npos);
+  iterator erase(iterator pos);
+  iterator erase(iterator first, iterator last);
+
+#if defined(G__TMPLTIOS) && !(defined(G__VISUAL) && (G__MSC_VER==1300))
+  iterator begin();
+  const_iterator begin() const;
+  iterator end();
+  const_iterator end() const;
+  size_type capacity() const;
+#ifndef G__VISUAL
+  void clear();
+#endif
+  bool empty() const;
+  size_t max_size() const;
+#endif
+};
+
+bool operator==(const string& a,const string& b) ;
+bool operator!=(const string& a,const string& b) ;
+bool operator<(const string& a,const string& b) ;
+bool operator>(const string& a,const string& b) ;
+bool operator<=(const string& a,const string& b) ;
+bool operator>=(const string& a,const string& b) ;
+string operator+(const string& a,const string& b) ;
+string operator+(char a,const string& b) ;
+string operator+(const string& a,char b) ;
+
+//#ifdef G__ROOT
+bool operator==(const string& a,const char *b) ;
+bool operator!=(const string& a,const char *b) ;
+bool operator<(const string& a,const char *b) ;
+bool operator>(const string& a,const char *b) ;
+bool operator<=(const string& a,const char *b) ;
+bool operator>=(const string& a,const char *b) ;
+string operator+(const string& a,const char *b) ;
+
+bool operator==(const char *a,const string& b) ;
+bool operator!=(const char *a,const string& b) ;
+bool operator<(const char *a,const string& b) ;
+bool operator>(const char *a,const string& b) ;
+bool operator<=(const char *a,const string& b) ;
+bool operator>=(const char *a,const string& b) ;
+string operator+(const char *a,const string& b) ;
+//#endif
+
+typedef string cstring;
+
+void swap(string& lhs,string& rhs);
+istream& operator>>(istream& is, string& st);
+ostream& operator<<(ostream& is, const string& st);
+istream& getline(istream& is,string& st);
+istream& getline(istream& is,string& st,char delim);
+
+
+#if (G__GNUC_VER>=3001) && !defined(G__INTEL_COMPILER) 
+bool operator==(const string::iterator& _Left, const string::iterator& _Right);
+bool operator!=(const string::iterator& _Left, const string::iterator& _Right);
+#endif
+
+#pragma endif 
+

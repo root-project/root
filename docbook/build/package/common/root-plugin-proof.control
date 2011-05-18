@@ -1,0 +1,10 @@
+Package: root-plugin-proof
+Architecture: any
+Depends: ${shlibs:Depends}
+Suggests: root-plugin-netx, root-plugin-xproof
+Description: PROOF plugin for ROOT
+ This package contains the proof plug-in for ROOT.  This provides a
+ client to use in a PROOF environment.
+ .
+ ROOT web-site: http://root.cern.ch
+

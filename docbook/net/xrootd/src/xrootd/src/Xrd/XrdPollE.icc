@@ -1,0 +1,272 @@
+/******************************************************************************/
+/*                                                                            */
+/*                          X r d P o l l E . i c c                           */
+/*                                                                            */
+/* (c) 2008 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+
+//         $Id$
+
+const char *XrdPollECVSID = "cvsid: $Id$";
+
+#ifndef __macos__
+#include <malloc.h>
+#endif
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
+
+#include "XrdSys/XrdSysError.hh"
+#include "Xrd/XrdLink.hh"
+#include "Xrd/XrdPollE.hh"
+#include "Xrd/XrdScheduler.hh"
+
+/******************************************************************************/
+/*                           G l o b a l   D a t a                            */
+/******************************************************************************/
+
+extern XrdSysError    XrdLog;
+
+extern XrdScheduler   XrdSched;
+
+extern XrdOucTrace    XrdTrace;
+  
+/******************************************************************************/
+/*                             n e w P o l l e r                              */
+/******************************************************************************/
+  
+XrdPoll *XrdPoll::newPoller(int pollid, int maxfd)
+{
+   int pfd, bytes, alignment, pagsz = getpagesize();
+   struct epoll_event *pp;
+
+// Open the /dev/poll driver
+//
+   if ((pfd = epoll_create(maxfd)) < 0)
+      {XrdLog.Emsg("Poll", errno, "create epoll device"); return 0;}
+   fcntl(pfd, F_SETFD, FD_CLOEXEC);
+
+// Calculate the size of the poll table and allocate it
+//
+   bytes     = maxfd * sizeof(struct epoll_event);
+   alignment = (bytes < pagsz ? 1024 : pagsz);
+   if (!(pp = (struct epoll_event *)memalign(alignment, bytes)))
+      {XrdLog.Emsg("Poll", ENOMEM, "create poll table");
+       close(pfd);
+       return 0;
+      }
+
+// Create new poll object
+//
+   memset((void *)pp, 0, bytes);
+   return (XrdPoll *)new XrdPollE(pp, maxfd, pfd);
+}
+ 
+/******************************************************************************/
+/*                            D e s t r u c t o r                             */
+/******************************************************************************/
+  
+XrdPollE::~XrdPollE()
+{
+   if (PollTab) free(PollTab);
+   if (PollDfd >= 0) close(PollDfd);
+}
+  
+/******************************************************************************/
+/*                               D i s a b l e                                */
+/******************************************************************************/
+
+void XrdPollE::Disable(XrdLink *lp, const char *etxt)
+{
+
+// Simply return if the link is already disabled
+//
+   if (!lp->isEnabled) return;
+
+// If Linux 2.6.9 we use EPOLLONESHOT to automatically disable a polled fd.
+// So, the Disable() method need not do anything. Prior kernels did not have
+// this mechanism so we need to do this manually.
+//
+#ifndef EPOLLONESHOT
+   struct epoll_event myEvents = {0, (void *)lp};
+
+// Enable this fd. Unlike solaris, epoll_ctl() does not block when the pollfd
+// is being waited upon by another thread.
+//
+   if (epoll_ctl(PollDfd, EPOLL_CTL_MOD, lp->FDnum(), &myEvents))
+      {XrdLog.Emsg("Poll", errno, "disable link", lp->ID); return;}
+#endif
+
+// Trace this event
+//
+   lp->isEnabled = 0;
+   TRACEI(POLL, "Poller " <<PID <<" async disabling link " <<lp->FD);
+
+// Check if this link needs to be rescheduled. If so, the caller better have
+// the link opMutex lock held for this to work!
+//
+   if (etxt && Finish(lp, etxt)) XrdSched.Schedule((XrdJob *)lp);
+}
+
+/******************************************************************************/
+/*                                E n a b l e                                 */
+/******************************************************************************/
+
+int XrdPollE::Enable(XrdLink *lp)
+{
+   struct epoll_event myEvents = {ePollEvents, {(void *)lp}};
+
+// Simply return if the link is already enabled
+//
+   if (lp->isEnabled) return 1;
+
+// Enable this fd. Unlike solaris, epoll_ctl() does not block when the pollfd
+// is being waited upon by another thread.
+//
+   lp->isEnabled = 1;
+   if (epoll_ctl(PollDfd, EPOLL_CTL_MOD, lp->FDnum(), &myEvents))
+      {XrdLog.Emsg("Poll", errno, "enable link", lp->ID); 
+       lp->isEnabled = 0;
+       return 0;
+      }
+
+// Do final processing
+//
+   TRACE(POLL, "Poller " <<PID <<" enabled " <<lp->ID);
+   numEnabled++;
+   return 1;
+}
+
+/******************************************************************************/
+/*                               E x c l u d e                                */
+/******************************************************************************/
+  
+void XrdPollE::Exclude(XrdLink *lp)
+{
+
+// Make sure this link is not enabled
+//
+   if (lp->isEnabled) 
+      {XrdLog.Emsg("Poll", "Detach of enabled link", lp->ID);
+       Disable(lp);
+      }
+}
+
+/******************************************************************************/
+/*                               I n c l u d e                                */
+/******************************************************************************/
+  
+int XrdPollE::Include(XrdLink *lp)
+{
+   struct epoll_event myEvent = {0, {(void *)lp}};
+   int rc;
+
+// Add this fd to the poll set
+//
+   if ((rc = epoll_ctl(PollDfd, EPOLL_CTL_ADD, lp->FDnum(), &myEvent)) < 0)
+      XrdLog.Emsg("Poll", errno, "include link", lp->ID);
+
+// All done
+//
+   return rc == 0;
+}
+
+/******************************************************************************/
+/*                                 r e m F D                                  */
+/******************************************************************************/
+  
+void XrdPollE::remFD(XrdLink *lp, unsigned int events)
+{
+   struct epoll_event myEvents = {0, {(void *)lp}};
+   static const char *why;
+
+// It works out that ONESHOT mode or even CTL_MOD requests do not necessarily
+// prevent epoll_wait() from returning on an error event. So, we must manually
+// remove the fd from the set and assume the logic was actually correct. If it
+// wasn't then the client will eventually timeout and retry the request.
+//
+   if (events & EPOLLHUP) why = "Sever";
+      else if (events & EPOLLERR) why = "Error";
+              else why = "Disabled";
+   XrdLog.Emsg("Poll", why, "event occured for", lp->ID);
+
+   if (epoll_ctl(PollDfd, EPOLL_CTL_DEL, lp->FDnum(), &myEvents))
+      XrdLog.Emsg("Poll", errno, "exclude link", lp->ID);
+}
+
+/******************************************************************************/
+/*                                 S t a r t                                  */
+/******************************************************************************/
+  
+void XrdPollE::Start(XrdSysSemaphore *syncsem, int &retcode)
+{
+   int i, numpolled, num2sched;
+   XrdJob *jfirst, *jlast;
+   const short pollOK = EPOLLIN | EPOLLPRI;
+   XrdLink *lp;
+
+// Indicate to the starting thread that all went well
+//
+   retcode = 0;
+   syncsem->Post();
+
+// Now start dispatching links that are ready
+//
+   do {do {numpolled = epoll_wait(PollDfd, PollTab, PollMax, -1);}
+          while (numpolled < 0 && errno == EINTR);
+       if (numpolled == 0) continue;
+       if (numpolled <  0)
+          {XrdLog.Emsg("Poll", errno, "poll for events");
+           abort();
+          }
+       numEvents += numpolled;
+
+       // Checkout which links must be dispatched (no need to lock)
+       //
+       jfirst = jlast = 0; num2sched = 0;
+       for (i = 0; i < numpolled; i++)
+           {if ((lp = (XrdLink *)PollTab[i].data.ptr))
+               if (!(lp->isEnabled)) remFD(lp, PollTab[i].events);
+                  else {lp->isEnabled = 0;
+                        if (!(PollTab[i].events & pollOK))
+                           Finish(lp, x2Text(PollTab[i].events));
+                        lp->NextJob = jfirst; jfirst = (XrdJob *)lp;
+                        if (!jlast) jlast=(XrdJob *)lp;
+                        num2sched++;
+#ifndef EPOLLONESHOT
+                        PollTab[i].events  = 0;
+                        if (epoll_ctl(PollDfd,EPOLL_CTL_MOD,lp->FDnum(),&PollTab[i]))
+                           XrdLog.Emsg("Poll", errno, "disable link", lp->ID);
+#endif
+                       } else XrdLog.Emsg("Poll", "null link event!!!!");
+           }
+
+       // Schedule the polled links
+       //
+       if (num2sched == 1) XrdSched.Schedule(jfirst);
+          else if (num2sched) XrdSched.Schedule(num2sched, jfirst, jlast);
+      } while(1);
+}
+
+/******************************************************************************/
+/*                                x 2 T e x t                                 */
+/******************************************************************************/
+  
+char *XrdPollE::x2Text(unsigned int events)
+{
+   if (events & EPOLLERR) return strdup("socket error");
+
+   if (events & EPOLLHUP) return strdup("client disconnected");
+
+  {char buff[64];
+   sprintf(buff, "unusual event (%.4x)", events);
+   return strdup(buff);
+  }
+  return (char *)0;
+}

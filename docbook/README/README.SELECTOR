@@ -1,0 +1,256 @@
+==============================================================================
+TSelector Documentation
+==============================================================================
+
+Overview of the TSelector class
+-------------------------------
+
+The TSelector is a framework for analyzing event like data. The user
+derives from the TSelector class and implements the member functions
+with specific analysis algorithms. When running the analysis, ROOT
+calls the member functions in a well defined sequence and with well
+defined arguments. By following the model this analysis class can be
+used to process data sequentialy on a local workstation and in batch
+or in parallel using PROOF.
+
+ROOT can generate a skeleton class for a given TTree. This skeleton
+class is a good a starting point for the analysis class. It is
+recommended that users follow this method.
+
+When running with PROOF a number of "slave" processes are used to
+analyze the events. The user creates a PROOF session from the client
+workstation which allocates a number of slaves. The slaves instantiate
+an object of the users analysis class. Each slave processes a fraction
+of the events as determined by the relative performance of the servers
+on which the slaves are running. The PROOF system takes care of distributing
+the work. It calls the TSelector functions in each slave. It also
+distributes the input list to the slaves. This is a TList with streamable
+objects provided in the client. After processing the events PROOF combines
+the partial results of the slaves and returns the consolidated objects
+(e.g. histograms) to the client session.
+
+The two sequences below show the order in which the TSelector member
+functions are called when either processing a tree or chain on a single
+workstation or when using PROOF to process trees or collections of keyed
+objects on a distributed system. When running on a sequential query
+the user calls TTree::Process() and TChain::Process(), when using PROOF
+the user calls TDSet::Process() (a few other entry points are available
+as well). Each of the member functions is described in detail after the
+call sequences.
+
+
+Local, sequential query:
+
+
+Begin()
+SlaveBegin()
+Init()
+   Notify()
+      Process()
+      ...
+      Process()
+   ...
+   Notify()
+      Process()
+      ...
+      Process()
+SlaveTerminate()
+Terminate()
+
+
+Distributed, parallel query, using PROOF:
+
+++ CLIENT Session ++       ++ (n) SLAVES ++
+Begin()
+                           SlaveBegin()
+                           Init()
+                              Notify()
+                                 Process()
+                                 ...
+                                 Process()
+                           ...
+                           Init()
+                              Notify()
+                                 Process()
+                                 ...
+                                 Process()
+                           ...
+                           SlaveTerminate()
+Terminate()
+
+
+
+==============================================================================
+Main Framework Functions
+==============================================================================
+
+The Begin() and SlaveBegin() member functions
+---------------------------------------------
+
+The Begin() function is called at the start of the query. It always runs
+in the client ROOT session. The SlaveBegin() function is either called
+in the client or when running with PROOF, on each of the slaves.
+All initialization that is needed for Process() (see below) must therefore
+be put in SlaveBegin(). Code which needs to access the local client
+environment, e.g. graphics or the filesystem must be put in Begin().
+When running with PROOF the input list (fInput) is distributed to the
+slaves after Begin() returns and before SlaveBegin() is called.
+This way objects on the client can be made available to the
+TSelector instances in the slaves.
+
+The tree argument is deprecated. (In the case of PROOF the tree is not
+available on the client and 0 will be passed. The Init() function should
+be used to implement operations depending on the tree)
+
+Signature:
+
+   virtual void Begin(TTree *tree);
+
+   virtual void SlaveBegin(TTree *tree);
+
+
+The Init() member function
+--------------------------
+
+The Init() function is called when the selector needs to initialize
+a new tree or chain. Typically here the branch addresses of the tree
+will be set. It is normaly not necessary to make changes to the generated
+code, but the routine can be extended by the user if needed. Init() will
+be called many times when running with PROOF.
+
+Signature:
+
+   virtual void        Init(TTree *tree)
+
+
+The Notify() member function
+----------------------------
+
+The Notify() function is called when a new file is opened. This can be either
+for a new TTree in a TChain or when when a new TTree is started when using
+PROOF. Typically here the branch pointers will be retrieved. It is normaly
+not necessary to make changes to the generated code, but the routine
+can be extended by the user if needed.
+
+Signature:
+
+   virtual Bool_t      Notify()
+
+
+The Process() member function
+-----------------------------
+
+The Process() function is called for each entry in the tree (or possibly
+keyed object in the case of PROOF) to be processed. The entry argument
+specifies which entry in the currently loaded tree is to be processed.
+It can be passed to either TTree::GetEntry() or TBranch::GetEntry()
+to read either all or the required parts of the data. When processing
+keyed objects with PROOF, the object is already loaded and is available
+via the fObject pointer.
+
+This function should contain the "body" of the analysis. It can contain
+simple or elaborate selection criteria, run algorithms on the data
+of the event and typically fill histograms.
+
+Signature:
+
+   virtual Bool_t      Process(Int_t entry)
+
+
+The SlaveTerminate() and Terminate() member functions
+-----------------------------------------------------
+
+The SlaveTerminate() function is called after all entries or objects
+have been processed. When running with PROOF it is executed by
+each of the slaves. It can be used to do post processing before the
+partial results of the slaves are merged. After SlaveTerminate()
+the objects in the fOutput lists in the slaves are combined by the
+PROOF system and returned to the client ROOT session.
+The Terminate() function is the last function to be called during
+a query. It always runs on the client, it can be used to present
+the results graphically or save the results to file.
+
+Signature:
+
+   virtual void        SlaveTerminate()
+
+   virtual void        Terminate()
+
+
+==============================================================================
+Utility Functions
+==============================================================================
+
+The Version() member function
+-----------------------------
+
+The Version() function is introduced to manage API changes in the
+TSelector class. Version zero, uses the ProcessCut() and ProcessFill()
+pair rather then Process(). Version one uses Process(), introduces
+the SlaveBegin() / SlaveTerminate() functions and clarifies the role
+of Init() and Notify().
+
+Signature:
+
+   virtual int Version();
+
+
+The SetInputList() member function
+----------------------------------
+
+Setter for the input list of objects to be transfered to the
+remote PROOF servers. The input list is transfered after the execution
+of the Begin() function, so objects can still be added in Begin() to
+this list. These objects are then available during the selection process
+(e.g. predefined histograms, etc.). Does not transfer ownership.
+
+Signature:
+
+   virtual void        SetInputList(TList *input)
+
+
+The GetOutputList() member function
+-----------------------------------
+
+Getter for the output list of objects to be transfered back to the
+client. The output list on each slave is transfered back to the client
+session after the execution of the SlaveTerminate() function. The PROOF
+master server merges the objects from the slave output lists in a single
+output list (merging partial objects into a single one). Ownership remains
+with the selector. Each query will clear this list.
+
+Signature:
+
+   virtual TList      *GetOutputList()
+
+
+The SetObject() member function
+-------------------------------
+
+Setter for the object to be processed (internal use only).
+
+Signature:
+
+   virtual void        SetObject(TObject *obj)
+
+
+The SetOption() member function
+-------------------------------
+
+Setter for the query option string (internal use only).
+
+Signature:
+
+   virtual void        SetOption(const char *option)
+
+
+The GetOption() member function
+-------------------------------
+
+Getter for the option string that was passed by the user to
+Tree::Process() or TDSet::Process().
+
+Signature:
+
+   virtual const char *GetOption()
+

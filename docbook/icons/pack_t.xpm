@@ -1,0 +1,23 @@
+/* XPM */
+static char*pack_t[]={
+"16 16 4 1",
+"b c #c0c000",
+"# c #000000",
+". c #0000c0",
+"a c #ffffc0",
+"....########....",
+"...###aaaa###...",
+"..##aaaaaaaa##..",
+"..#aaaaaaaaaa##.",
+".##aaaaaaaaaa##.",
+"##a##aaaaaa##b##",
+"##aaa##aa##bbb##",
+"##aaaaa##bbbbb##",
+"##aaaaaabbbbbb##",
+"##aaaaaabbbbbb##",
+"##aaaaaabbbbbb##",
+"##aaaaaabbbbbb##",
+"##baaaaabbbbb##.",
+".###baaabbb###..",
+"...###bab####...",
+"....#######....."};

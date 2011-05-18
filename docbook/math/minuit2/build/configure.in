@@ -1,0 +1,54 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl Author: Paul F. Kunz <Paul_Kunz@slac.stanford.edu>
+dnl
+
+AC_INIT(src/VariableMetricBuilder.cxx)
+AM_CONFIG_HEADER(config.h)
+AC_CONFIG_AUX_DIR(config)
+AM_INIT_AUTOMAKE(Minuit2, 5.24.00)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+
+AC_LANG_CPLUSPLUS
+
+dnl Force libtool to use C++ compiler when checking for PIC 
+dnl   for solaris
+CC=$CXX
+
+dnl disable static building
+dnl AM_DISABLE_STATIC
+AM_PROG_LIBTOOL
+
+dnl Checks for libraries.
+dnl Get the path to the standard C++ library
+PFK_CXX_LIB_PATH
+
+dnl check STD C++ library
+AC_CHECK_LIB(stdc++, main, LIBSTDCPP="lstdc++", LIBSTDCPP=)
+dnl substitute this value 
+AC_SUBST(LIBSTDCPP)
+
+dnl Turn on -Wall if compiling with gcc
+AC_COMPILE_WARNINGS
+
+dnl Check for gmake and use it
+AC_CHECK_PROG(GMAKE, gmake, gmake, make)
+AC_SUBST(GMAKE)
+
+AC_PROG_RANLIB
+
+AC_OPENMP
+CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+CXXFLAGS="$CXXFLAGS $OPENMP_CXXFLAGS"
+
+dnl files to be generated 
+AC_OUTPUT(Makefile inc/Makefile inc/Minuit2/Makefile inc/Math/Makefile src/Makefile 
+  doc/Doxyfile doc/Makefile test/Makefile test/MnSim/Makefile 
+  test/MnTutorial/Makefile )
+
+AC_MSG_RESULT([
+    Minuit2 project now configured.
+])

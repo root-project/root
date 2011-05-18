@@ -1,0 +1,48 @@
+You can execute the scripts in $ROOTSYS/tutorials (or sub-directories)
+by setting your current directory in the script directory or from any
+user directory with write access.
+Several tutorials create new files. If you have write access to
+the tutorials directory, the new files will be created in the tutorials
+directory, otherwise they will be created in the user directory.
+
+You can start by executing the standard ROOT demos with a session like
+  root > .x demos.C
+or
+  root > .x $ROOTSYS/tutorials/demos.C
+
+You can execute the standard ROOT graphics benchmark with
+  root > .x benchmarks.C
+or
+  root > .x $ROOTSYS/tutorials/benchmarks.C
+
+The $ROOTSYS/tutorials directory include several sub-directories
+
+-fft:      Fast Fourier Transform with the fftw package
+-fit:      Several examples illustrating minimization/fitting 
+-foam:     Random generator in multi-dimensional space
+-geom:     Examples of use of the geometry package (TGeo classes)
+-gl:       Visualisation with OpenGL
+-graphics: Basic graphics
+-graphs:   Use of TGraph, TGraphErrors, etc
+-gui:      Scripts to create Graphics User Interface
+-hist:     Histograming
+-image:    Image Processing
+-io:       Input/Output
+-math:     Maths and Statistics functions
+-matrix:   Matrices (TMatrix) examples
+-mlp:      Neural networks with TMultiLayerPerceptron
+-net:      Network classes (client/server examples)
+-physics:  LorentzVectors, phase space
+-pyroot:   python tutorials
+-pythia:   Example with pythia6
+-quadp:    Quadratic Programming
+-ruby:     ruby tutorials
+-smatrix:  Matrices with a templated package
+-spectrum: Peak finder, background, deconvolutions
+-splot:    Example of the TSplot class (signal/background estimator)
+-sql:      Interfaces to SQL (mysql, oracle, etc)
+-thread:   Using Threads
+-tmva:     Examples of the MultiVariate Analysis classes
+-tree:     Creating Trees, Playing with Trees
+-unuran:   Interface with the unuram random generator library
+-xml:      Writing/Reading xml files

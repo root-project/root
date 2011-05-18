@@ -1,0 +1,87 @@
+<br/> 
+<hr/> 
+<a name="math"></a> 
+<h3>Math Libraries</h3>
+
+<h4>TMath</h4>
+<ul>
+<li>Add 2 new functions to compare floating points:
+<pre>
+Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
+//return kTRUE if absolute difference between af and bf is less than epsilon
+Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
+//return kTRUE if relative difference between af and bf is less than relPrec
+</pre></li>
+</ul>
+
+<h4>TMatrix</h4>
+
+ Various changes to the  Sparse Matrix  classes:
+  <ul>
+    <li>Fixed Savannah bugs 45807,45502 and 45415</li>
+    <li>added a Streamer function to TMatrixTSparse to remove a memory
+    leak.</li>
+    <li>Added vector functionality as proposed by Peter D Barnes from LNL
+  (<a href="http://root.cern.ch/phpBB2/viewtopic.php?t=8351">http://root.cern.ch/phpBB2/viewtopic.php?t=8351</a>).
+    <pre>
+double   s = v1 * M * v2;  // Mult Function : e.g., physics matrix element 
+TMatrixD M = v1' * v2      // outer product of v1 and v2
+ </pre>
+</li>
+  </ul>
+
+<h4>SMatrix</h4>
+<ul>
+  <li>Use specialized structures for building automatically static
+  tables for mapping the indices conversion from standard row-wise one to the
+  compact one used internally for storing the memory of a symmetrix matrix. This change gives an
+  improvements of around 10-20% in the Kalman filter test (<tt>testKalman.cxx</tt>) and in the matrix operations test.</li>
+</ul>
+
+<h4>Minuit</h4>
+<ul>
+  <li>Implement in the <tt>TMinuitMinimizer</tt> class the method <tt>SetPrecision()</tt> using the <tt>"SET EPS"</tt> Minuit command</li>
+  <li>Fix a problem when using the user provided gradient in <tt>TMinuitMinimizer</tt>. The gradient calculation is always forced, i.e. Minuit will always use the derivatives calculations provided by the user. This is now the same behavior as in <tt>Minuit2Minimizer</tt>.</li>
+  <li>Implement in <tt>TMinuitMinimizer</tt> a method to retrieve the variable name given the index.</li>
+  <li>Fix a printout in <tt>TMinuit::mnscan</tt> and a problem observed with valgrind.</li>
+</ul>
+
+<h4>Minuit2</h4>
+  <ul>
+    <li>Fix a bug in <tt>MnFunctionCross</tt>. </li>
+    <li>Add a protection against very small step sizes which can cause
+  <em>nan</em> values in  <tt>InitialGradientCalculator</tt>.</li>
+    <li> Implement a new function in the <tt>MnUserTransformation</tt> class, <tt>FindIndex(name)</tt>,  which returns <tt>-1</tt> when the parameter name does not exist.</li>
+    <li> Implement new methods in <tt>Minuit2Minimizer</tt> as requested by the Minimizer interface:
+    <tt>SetPrecision(double eps)</tt> to change the precision value used internally in Minuit2 (in MnPrecision),  <tt>VariableName(index)</tt> to return the name of a variable (parameter) given an index, and <tt>VariableIndex(name)</tt> to return the index of a variable given a name.</li>
+<li> Set a  status code in <tt>Minuit2Minimizer</tt> according to the following convention:
+    <br/><tt>status = minimizeStatus + 10 * minosStatus + 100 * hesseStatus</tt>.<br/>
+    See the <tt>Minuit2Minimizer</tt> reference documentation for the possible values of <tt>minimizeStatus</tt> , <tt>minosStatus</tt> and <tt>hesseStatus</tt>.</li>
+    <li> In MnHesse. when the inversion of the hessian matrix failed, return MnInvertFailed instead of MnHesseFailed.</li>
+</ul>
+
+<h4>Mathcore Fitting classes</h4>
+<ul>
+<li>Fix the fitting with the integral option in multi-dimensions.</li>
+<li>Force the gradient calculation when requested in the minimizer
+  classes and avoid to perform the check when using TMinuit. This was
+  already the case in Minuit2.</li>
+<li>Add new class <tt>ROOT::Fit::SparseData</tt> for dealing with binned sparse data. This class automatically merges the empty region, so they can be considered,  whenever possible as a larger single bin. This improves the performances when doing likelihood fits on the sparse data.</li>
+<li>Fix the likelihood fits for variable bin histograms. Now a correct normalization is applied according to the bin volume.</li>
+<li>Add new methods in Minimizer class :
+<ul>
+<li><tt>Minimizer::SetPrecision(double eps)</tt>  to change in the minimizer the precision on which the objective functions are evaluated. By default the numerical double precision is used inside the minimizers. This method should be used only if the precision in the function evaluation is worse than the double precision.</li>
+  <li><tt>std::string Minimizer::VariableName (unsigned int index)</tt> to return a name of the minimizer  variable (i.e. a fitting parameter) given the integer index. Return an empty string if the variable is not found or of the minimizer does not re-implement this method.</li>
+  <li><tt>int Minimizer::VariableIndex(const std::string &amp; name)</tt> to return the index of a variable given a name. Return -1 if the variable is not found or if the specific minimizer does not re-implement this function.</li>
+</ul></li>
+
+  <li><tt>ROOT::Fit::FitResult</tt>: fix a problem in the I/O, the function pointer is now made temporary and cannot be stored. Change also the <tt>Print()</tt> method to print now the results also when the fit is invalid (when it did not converge correctly).</li>
+  
+  </ul>
+
+<h4>Unuran</h4>
+<ul>
+ <li>Add a new version 1.5.0. The new version implements a new method <tt>PINV</tt>,
+  that is a quite fast numerical inversion method that only requires only the density function of the distribution.
+  </li>
+  </ul>

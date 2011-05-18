@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>PROOF: Parallel Processing</title>
+<para>The Parallel ROOT Facility, PROOF, is an extension of ROOT allowing transparent analysis of large sets of ROOT files in parallel on remote computer clusters or multi-core computers. The main design goals for the PROOF system are:</para>
+<para><emphasis role="italic">Transparency</emphasis> : there should be as little difference as possible between a local ROOT based analysis session and a remote parallel PROOF session, both being interactive and giving the same results.</para>
+<para><emphasis role="italic">Scalability</emphasis> : the basic architecture should not put any implicit limitations on the number of computers that can be used in parallel.</para>
+<para><emphasis role="italic">Adaptability</emphasis> : the system should be able to adapt itself to variations in the remote environment (changing load on the cluster nodes, network interruptions, etc.).</para>
+<para>Being an extension of the ROOT system, PROOF is designed to work on objects in ROOT data stores, though, for the time being, it mainly addresses the case of  <emphasis role="bold"><code>TTree</code></emphasis> based object collections.</para>
+<para>PROOF is primarily meant as an interactive alternative to batch systems for Central Analysis Facilities and departmental workgroups (Tier-2’s). However, thanks to a multi-tier architecture allowing multiple levels of masters, it can be easily adapted to wide range virtual clusters distributed over geographically separated domains and heterogeneous machines (GRIDs). </para>
+<para>While pure interactivity might not always be possible when performing a complicated analysis on a very large data set, PROOF still tries to give the user the interactive experience with something we call "interactive batch". With "interactive batch" the user can start very long running queries, disconnect the client and at any time, any location and from any computer reconnect to the query to monitor its progress or retrieve the results. This feature gives it a distinct advantage over purely batch based solutions, that only provide an answer once all sub-jobs have been finished.</para>
+<para/>
+
+<figure><title>The Multi-tier structure of a PROOF cluster</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/03000200.png" width="234.6pt" depth="173.8pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para/>
+<para>Details about the PROOF system and the way to use it can be found at
+<uri xmlns:xlink="http://root.cern.ch/twiki/bin/view/ROOT/PROOF">PROOFWiki</uri>
+<footnote><para> http://root.cern.ch/twiki/bin/view/ROOT/PROOF</para></footnote></para>
+<para>The PROOF development is a joint effort between CERN and MIT.</para>
+</chapter>
+
+
+

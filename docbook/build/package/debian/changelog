@@ -1,0 +1,684 @@
+root-system (5.21.07-2) unstable; urgency=low
+
+  * Discovery of s390x implemented - should check if this works also in 
+    terms of code (Closes: #487935)
+  * Do not modify rootd user after creation.  Perhaps this fixes 
+    #498398
+  * FTBFS with GCC 4.4: wrong #elif - fixed upstream (Closes: #505015)
+  * can FTBFS due to incomplete calls to open - fixed upstream 
+    (Closes: #502873)
+  * incomplete ftgl-dev => libftgl-dev transition fixed 
+    (Closes: #498677)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 03 Dec 2008 10:45:16 +0100
+
+root-system (5.21.07-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 28 Nov 2008 19:28:17 +0100
+
+root-system (5.21.05-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 07 Oct 2008 09:26:04 +0200
+
+root-system (5.19.05-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 14 May 2008 23:16:12 +0200
+
+root-system (5.19.03-2) unstable; urgency=low
+
+  * Moved root-plugin-graf3d-gl to libroot-graf3d-gl and 
+    libroot-graf3d-dev, since the code needs to be callable for custom 
+    EVE implementations of quads, etc. 
+  * Fixed problem with startup URL - points to 
+    http://localhost/doc/root/html - implies recommendation of a 
+    web-server.  Aparently, the TGHtml gui element does not really know 
+    how to resolve relative links from a "file:///" URL.
+  * Added "--etcdir" option to root-config script - should be useful
+    for VMC and the like implementations.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 08 May 2008 08:09:44 +0200
+
+root-system (5.19.03-1) unstable; urgency=low
+
+  * New upstream version (Closes: #478956)
+  * Added prober build dependencies on fortran compiler on all 
+    platforms (Closes: #429186)
+  * With the kind help of Thiemo Seufer <ths@networkno.de>, 
+    Dirk Van Hertem <dirk.vanhertem@ieee.org>, and Boris <boris@mogwitz.eu>
+    we managed to get ROOT to compile on mips/mipsel.   This is a new ROOT 
+    platform too. (Closes: #434855, #425257)
+  * Fixed GSL version recognision. (Closes: #450507, #450508)
+  * ROOT now builds against Qt 4. (Closes: #476324)
+  * Fixed download URL of TTF files (Closes: #451510)
+  * Split package root-system-xrootd into 2 packages: root-system-xrootd and 
+    root-plugin-net-xrootd.  
+  * Follow new source directory structure in package structure.  Several new
+    packages that split older libroot<version> package.  
+  * libroot-proof replaces root-plugin-proof
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 02 May 2008 08:21:48 +0200
+
+root-system (5.17.07-1) unstable; urgency=low
+
+  * New upstream version
+  * Fixed problem with libroot-python-dev being uninstallable on 
+    ubuntu.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 09 Dec 2007 14:17:30 +0100
+
+root-system (5.17.05-6) unstable; urgency=low
+
+  * Fix configure to allow GSL > 1.9 (Closes: #450507)
+  * Builds on hppa, mips, mipsel (Closes: #434855, 425257)
+  * All linux platforms will use gfortran by default (Closes: #429186)
+  * Use proper GCC 4 I/O bits fixed upstream (Closes: #441333)
+  * ttf-root-installer: Suggest proper URL for font downloading
+    (Closes: #451510)
+  * Add missing libRooFitCore to libroot-roofit package.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 23 Nov 2007 17:15:52 +0100
+
+root-system (5.17.05-5) unstable; urgency=low
+
+  * Fixes to Qt discovery and code in qtgsi.
+  * Better support for MIPS (thanks to Thiemo Seufer 
+    <ths@networkno.de> of Debian)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 07 Nov 2007 09:40:11 +0100
+
+root-system (5.17.05-4) unstable; urgency=low
+
+  * Upstream fix to TGX11::DrawPolyMarker.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 06 Nov 2007 14:17:06 +0000
+
+root-system (5.17.05-3) unstable; urgency=low
+
+  * Do not try to make libFTGL nor put it in the libRGL.rootmap file, 
+    since we use the system libftgl_pic.a to link in the functionality. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 01 Nov 2007 23:05:53 +0000
+
+root-system (5.17.05-2) unstable; urgency=low
+
+  * Forgot top copy over the changes in makelist script, so that 
+    standard library container dictionaries was missing.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 31 Oct 2007 00:21:41 +0000
+
+root-system (5.17.05-1) unstable; urgency=low
+
+  * New development release. 
+  * Add proper fortran dependencies and discovery code (Closes: #429186).
+  * Add archicture discovery for mips (Closes: #434855).
+  * Add archicture discovery for hppa (Closes: #425257).
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 23 Oct 2007 15:06:37 +0200
+
+root-system (5.16.00-2) unstable; urgency=low
+
+  * Fix missing lib*Dict.so for precompiled dictionaries of standard 
+    library containers, like vector, map, etc. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 23 Oct 2007 12:28:42 +0200
+
+root-system (5.16.00-1) unstable; urgency=low
+
+  * New upstream version.  This is a production version, so it's 
+    targeted at unstable. 
+  * Fix some stuff on dependencies and the like. 
+  * Updated README.Debian for new package names.
+  * Added gfortran switch for amd64 et al (Closes: #429186).
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 26 Jul 2007 23:34:19 +0200
+ 
+root-system (5.15.07-4) experimental; urgency=low
+
+  * Attempt to fix broken Python dependencies on Ubuntu.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 14 May 2007 17:17:50 +0200
+
+root-system (5.15.07-3) experimental; urgency=low
+
+  * [Kevin] Corrected some english in the control file
+  * [Kevin] Removed root-system dependency on libroot. 
+  * [Kevin] Removed postinst stubs for root-system-{rootd,proofd}
+  * [Kevin] Removed various directories from root-system.
+  * [Kevin] Fixed script name in /etc/init.d/root-system-{rootd,proofd}.
+    Perhaps it's time to look into 'upstart' scripts?
+  * Fixed package names in README.Debian.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 12 May 2007 10:43:24 +0200
+
+root-system (5.15.07-2) experimental; urgency=low
+
+  * Previous source package broken due to tar-balls not unpacked.
+  * Fixes for new lib*.rootmap instead of global system.rootmap.
+  * Fixes for new ld.so.conf.d/ scheme of configuring ld.so's search path.
+  * Split off unuran into it's own package libroot-unuran, since it is 
+    GPL'ed. 
+	
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 11 May 2007 02:04:02 +0200
+
+root-system (5.15.07-1) experimental; urgency=low
+
+  * New version.  
+  * New source package name to please FTP-masters. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 01 May 2007 22:18:01 +0200
+
+root (5.13.05-7) experimental; urgency=low
+
+  * New release.  take out /usr/lib/root/<version> from
+    /etc/root/system.rootrc as it may cause problems.  Should have no
+    consequence to the users. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu,  2 Nov 2006 10:19:18 +0100
+
+root (5.13.05-6) experimental; urgency=low
+
+  * Fix to Qt plug-in to allow fixed directory builds.  
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 30 Oct 2006 12:19:24 +0100
+
+root (5.13.05-5) experimental; urgency=low
+
+  * Added man page for xrd. 
+  * [Kevin] Fixed some broken dependencies in the [X]Proofd packages. I moved
+    the libXrdProofd library into the root-plugin-xproof package as it seems
+    to be used by the client only. 
+  * [Kevin] Fixed up some man pages. 
+  * [Kevin] Fixed some spelling errors in descriptions. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 28 Oct 2006 12:16:50 +0200
+
+root (5.13.05-4) experimental; urgency=low
+
+  * [Kevin] Fixed up the README.Debian file for an imminent upload to
+    experimental. 
+  * [Kevin] Removed some autotools generated files from the libAfterImage
+    directory in the source package. 
+  * [Kevin] Corrected a typo in the debian/rules clean target. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 27 Oct 2006 10:15:25 +0200
+
+root (5.13.05-3) experimental; urgency=low
+
+  * [Kevin] Use system libungif if possible. 
+  * [Kevin] Removed some files left after clean in libAfterImage. 
+  * [Kevin] Fixed up the initd scripts with Required-{start,stop}
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 26 Oct 2006 11:17:44 +0200
+
+root (5.13.05-2) experimental; urgency=low
+
+  * [Kevin] Fix missing install of libSpectrum and libFitPanel. 
+  * [Kevin] Fix duplicate build-depends
+  * [Kevin] Fix missing install of PyCintex.py
+  * [Kevin] Fix unpacking of tar-balls for asimage and xrootd.
+  * [Kevin] Fix init missing info. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 24 Oct 2006 12:43:14 +0200
+
+root (5.13.05-1) experimental; urgency=low
+
+  * New upstream development version.
+  * [Kevin] Remove cruft left behind after removing ttf-root-installer
+  * [Kevin] Install RadioNuclides.txt
+  * [Kevin] Fix build dependency on python-support.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 23 Oct 2006 12:13:11 +0200
+
+root (5.13.03-1) experimental; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 31 Aug 2006 00:45:21 +0200
+
+root (5.13.02-1) experimental; urgency=low
+
+  * New upstream version
+  * [Kevin] First attempt at complying with the Python policy.
+  * Python seems ok.  We install for one  version only - the one we were
+    compiled against. 
+  * Made init.d scripts use LSB functions (except start-stop-daemon is still
+    used, since the normal one isn't OK).  daemons depend on lsb-base. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 31 Aug 2006 00:33:04 +0200
+
+root (5.13.01-4) experimental; urgency=low
+
+  * copyrights fixed by Fons.
+  * Try to fix TBrowser option.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 24 Aug 2006 19:44:28 +0200
+
+root (5.13.01-3) experimental; urgency=low
+
+  * Fixed reference to CINT copyright statement and license.
+  * Fixed some problems in the xrootd build.
+  * Fixed a bug in some reflex code.
+  * Added 32x32 xpm icon.
+  * Make sure python scripts do not contain a she-bang. 
+  * RSA and ALICE license issues have been solved, but Fons hasn't 
+    uploaded the new files yet.  The Krb5 export restriction is still
+    unresolved.   The old Zip license issue should have been solved,
+    but the change to the license statement has been put in CVS yet. 
+    Hence, the copyright file contains the old license and coppyright
+    statements. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 23 Aug 2006 16:45:47 +0200
+
+root (5.13.01-2) experimental; urgency=low
+
+  * Added the package `libroot-tmva', to avoid bad dependencies.
+  * Fixed problem with PostGreSQL plugin missing
+  * Permanently fixed man page problems in RPMs (added glob star to all
+    man pages in the file lists).
+  * Some other minor fixes.
+  * Better desktop integration for both RPMs and DEBs.
+  * Added `-fail-on-missing' to make the building fail if a dependency
+    isn't found.
+  * Added third-party copyrights and licenses to the copyright file.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 21 Aug 2006 17:00:57 +0200
+
+root (5.13.01-1) experimental; urgency=low
+
+  * New upstream version
+  * Added TMVA to the libroot package. 
+  * Also put GDML files into the libroot-python package.
+  * Upstream should have fixed a number of copyright statements.
+  * It seems that the RSA problem persists - sigh!
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 31 Jul 2006 15:42:12 +0200
+
+root (5.11.03-6) experimental; urgency=low
+
+  * Fixes to allow compilation with prefix != /usr for RPMs 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 11 May 2006 09:02:43 +0200
+
+root (5.11.03-5) experimental; urgency=low
+
+  * Fixed to RPM building.  Make sure SYSV init scripts is installed.
+  * Make sure we use the same configure arguments when we make the spec file,
+    as are used by the spec file.
+  * Add this changelog to the spec file.
+  * Build-depend on GSL.
+  * Build more packages by default.
+  * Fixes to RPM SYSV init scripts
+  * Fixed to ttf-root-installer RPM post install and pre remove scripts.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon,  8 May 2006 16:48:47 +0200
+
+root (5.11.03-4) experimental; urgency=low
+
+  * Fixes to RPM creation.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun,  7 May 2006 14:18:37 +0200
+
+root (5.11.03-3) experimental; urgency=low
+
+  * Added libraries libReflex and libCintex to libroot, and the
+    corresponding headers and development libraries to libroot-dev.
+    The Python scripts are added to libroot-dev.  This means, that
+    ROOT now always build-depends and depends on Python.
+  * Added gccxml as a Suggests to libroot-dev for `rootcint -gccxml'.
+  * The library libCintex is temporary.
+  * Added krb5-user | heimdal-clients as build-dependency for 
+    root-plugin-krb5.  The configure script need to know where kinit is. 
+    The same packages are also added as run-time dependency.
+  * Fixed root-rootd and root-xrootd and root-proofd to not bark when
+    upgrading and the servers are not running.  Thanks to Kevin.
+  * Fixed some minor mistakes in `ttf-root-installer.copyright'.  Again,
+    Thanks to Kevin. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 25 Apr 2006 02:19:39 +0200
+
+root (5.11.03-2) experimental; urgency=low
+
+  * Minor fixes.  Typos in the font generation script, lingering temp file,
+    remove build code, lingering source directory, better copyright file,
+    and so on.
+  * Fixes to ODBC interface to use SQL{U}LEN consistently where specified
+    by the ODBC prototypes.   This should remove any problems with 
+    i386/ia64/amd64/windows.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 22 Apr 2006 03:15:21 +0200
+
+root (5.11.03-1) experimental; urgency=low
+
+  * fixes to Proof library loading.  Missing `#include "config.h"' added.
+  * Fix to ODBC plugin.
+  * Added print-out to s050000l.pe.
+  * Fixed symbol.ttf font in TImageDump.
+  * Fixed FSF address in root-common.copyright
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 20 Apr 2006 22:17:08 +0200
+
+root (5.11.02-1) experimental; urgency=low
+
+  * New upstream version.
+  * New scheme to make package file lists.
+  * Using new GPL'ed `symbol.tff'
+  * Fix it so that the font installer package doesn't overwrite and delete 
+    the already installed `symbol.ttf'.
+  * Fixed free font table in TTF.cxx to include the GPL'ed symbol.ttf.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 20 Apr 2006 02:20:08 +0200
+
+root (5.11.01-9) unstable; urgency=low
+
+  * Added plugin package root-plugin-odbc - ODBC database connectivty.
+  * [Kevin] Fixed spelling errors in description of libroot-mathmore
+  * [Kevin] Fixed call to dh_makeshlibs
+  * [Kevin] Fixed maxdb build on amd64
+  * [Kevin] Fixed some dependencies of root-plugin-peac and root-proofd
+  * [Kevin] Fixed some code problems in SapDB code (again!)
+  * Leave in `symbol.ttf' in the root-common package, because it will soon 
+    be replaced by a GPL'ed one. 
+  * Added a specific copyright file for root-common due to the new
+    symbol.ttf font. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 19 Apr 2006 02:25:10 +0200
+
+root (5.11.01-8) unstable; urgency=low
+
+  * Various fixes from Kevin
+  * Added overrides for various extension packages 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 15 Apr 2006 12:25:12 +0200
+
+root (5.11.01-7) unstable; urgency=low
+
+  * Fixed a problem with transition of libroot-fftw to root-plugin-fftw3 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 13 Apr 2006 15:26:10 +0200
+
+root (5.11.01-6) unstable; urgency=low
+
+  * Package libroot-fftw made a plugin by Fons.  Now it's called
+    root-plugin-fftw.
+  * Small fixes from Kevin.
+  * Default ZipMode is now 1 (checked in debian/rules).
+  * Implemented a configure switch to use system Zlib.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 12 Apr 2006 15:39:11 +0200
+
+root (5.11.01-5) unstable; urgency=low
+
+  * Added new package libroot-fftw, and libroot-fftw-dev.   Extension 
+    packages with libraries to interface FFTw.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 11 Apr 2006 18:01:26 +0200
+
+root (5.11.01-4) unstable; urgency=low
+
+  * Added packages libroot-mathmore5.11 and libroot-mathmore-dev.
+  * Also build libMathCore.  This is put in libroot5.11 and libroot-dev. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun,  2 Apr 2006 15:15:16 +0200
+
+root (5.11.01-3) unstable; urgency=low
+
+  * Fixed installation of PROOF configuration examples to new location. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 31 Mar 2006 12:12:56 +0200
+
+root (5.11.01-2) unstable; urgency=low
+
+  *  Some fixes upstream
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 22 Mar 2006 15:11:49 +0100
+
+root (5.11.01-1) unstable; urgency=low
+
+  * New upstream version.  No changes to the debian part.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 21 Mar 2006 01:59:33 +0100
+
+root (5.10.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu,  2 Mar 2006 10:09:35 +0100
+
+root (5.09.01-10) unstable; urgency=low
+
+  * Removed dangling code directory in `minuit2/src' 
+  * Set `Root.Zlib=1' in `/etc/root/system.rootrc' per default. 
+  * Fixed some minor bugs in wrapper scripts and SYSV init scripts.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 24 Feb 2006 11:47:18 +0100
+
+root (5.09.01-9) unstable; urgency=low
+
+  * Initial release. (Closes: #325306: RFP: root -- An object oriented
+    data analysis framework - Debian Bug report logs)
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 23 Feb 2006 15:25:22 +0100
+
+root (5.09.01-8) unstable; urgency=low
+
+  * Added some lintian overrides.
+  * Moved some shared configuration files to root-common.
+  * Fixed problems in init scripts.
+  * Fixed problem with wrappers using `root-config'.
+  * Removed some unused configuation scripts.
+  * Install xinetd files as examples.
+  * Removed /usr/share/root/proof/etc/*.sample and install them as
+    examples instead.
+  * Made `Replaces' and `Conflicts' dependencies on older packages
+    be version specific to static version numbers.  We don't want 
+    libroot-roofit to conflict with root-plugin-rootfit for all time. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 15 Feb 2006 23:11:28 +0100
+
+root (5.09.01-7) unstable; urgency=low
+
+  * [Kevin] Fixed a problem with libXrdProof.so symlinks in root-xrootd. 
+  * [Kevin] Made a wrapper script that calls proofserv with LD_LIBRARY_PATH 
+    set to the plugin directory.   This should be fixed upstream.
+  * [Kevin] Made wrapper scripts that calls xrdpwdadmin and xrdgsiproxy with
+    LD_LIBRARY_PATH set to plugin-script. 
+  * [Kevin] Fixed problem in man page of xrdcp.  
+  * Corrected kfreebsd-gnu to kfreebsd-i386. 
+  * [Kevin] Fixed problem in proofserv man page. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 15 Feb 2006 04:33:07 +0100
+
+root (5.09.01-6) unstable; urgency=low
+
+  * Fixed a problem in the rules file with a errornous backslash.
+  * Make configure output config.log for debugging.
+  * [Kevin] Build depend on libmysqlclient15-dev instead of older 12 or 14.
+  * [Kevin] Fix typo's in description of libroot-minuit.
+  * [Kevin] Use `-s' instead of `-a'.
+  * [Kevin] Fix a logic error in ttf-root-installer.
+  * [Kevin] Moved dependency of fonts from libroot to root-common.
+  * [Kevin] Removed all mention of root-cint
+  * [Kevin] Fixed problem with `set -e' in root-rootd.postrm.
+  * [Kevin] Set sticky bit on `/var/cache/rootd/{tmp,pub}' so users can
+    not overwrite each others files (root-rootd.preinst).
+  * Make sure that libHbook is linked against libg2c.so and not libg2c.a 
+    which made `lintian' complain about `shlib-with-non-pic-code'.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 14 Feb 2006 01:10:54 +0100
+
+root (5.09.01-5) unstable; urgency=low
+
+  * root-plugin-minuit moved to libroot-minut{,-dev} 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue,  7 Feb 2006 18:21:50 +0100
+
+root (5.09.01-4) unstable; urgency=low
+
+  * Fixed some build-dependencies.  In partiucular, libsqlod75-dev is only
+    available on certain platforms, and libpacklib1-dev is not available on
+    GNU/kFreeBSD. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 15 Jan 2006 12:43:38 +0100
+
+root (5.09.01-3) unstable; urgency=low
+
+  * Fixed some build dependencies.
+  * Fixed some non-POSIX /bin/sh code
+  * Fixed Python module location
+  * Added libafterimage-dev build-dependencies - eventually we'll use the
+    normal libafterimage-dev, but currently that's disabled up-stream.
+  * Added the executable xproofd to the root-proofd package, along with
+    it's man(1) page.
+  * Removed build-depends on libxpm4-dev, as that pulls in libxaw7-dev,
+    which is not really what we need.  Instead the build-depends is now
+    libxpm.
+  * The TTF installer package now depends on msttcorefonts, and makes 
+    mostly symbolic links to files in that package.  Hence, we only need
+    to get and install `symbol.ttf' and `windings.ttf'.
+  * Revived the package root-plugin-sapdb as root-plugin-maxdb.  Thanks to
+    Ricardo Yanez for pointing out libsqlod to me. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 13 Jan 2006 09:27:52 +0100
+
+root (5.09.01-2) unstable; urgency=low
+
+  * Added the package root-common to hold common files
+  * Replaced root-plugin-clarens, root-plugin-ldap, root-plugin-mlp
+    root-plugin-python, root-plugin-quadp, root-plugin-roofit,
+    root-plugin-ruby with two packages, a run-time library package
+    (libroot-<...><version>) and a development package (libroot-<...>-dev).
+    This is because developers may want to link against these libraries.
+  * Removed the package root-cint, and moved libraries to libroot, headers
+    and the like to libroot-dev, and programs to root-bin.  The
+    alternatives still exists for cint and makecint.
+  * Applied a patch that allows ROOT to use DFSG free TTF's rather than
+    the MS Core Fonts.
+  * Put a symlink to ruby extension library in ruby load directory.
+    These are in the _development_ package.
+  * Put a symlink to Python script and extension library in Python
+    load directory. These are in the _development_ package.
+  * Fixed some dependency issues, and similar - thanks to Kevin McCarty
+    for all his help on this. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 11 Jan 2006 01:16:25 +0100
+
+root (5.09.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon,  9 Jan 2006 21:49:48 +0100
+
+root (5.08.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 15 Dec 2005 14:59:41 +0100
+
+root (5.06.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 16 Nov 2005 10:46:04 +0100
+
+root (5.05.01-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 12 Oct 2005 00:41:44 +0200
+
+root (5.04.00-2) unstable; urgency=low
+
+  * Some new stuff to handle the libraries and plugins installed by the
+    packages.   For the plugin packages, we do not install the link 
+    libraries in /usr/lib/root, but in /usr/lib/root/<version>, as these
+    libraries are really plugins and should not be linked against.  
+    However, we do need to install the `lib<Name>.so.<version>' in
+    /usr/lib/root, as some may incrementally link against these.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Wed, 21 Sep 2005 22:07:12 +0200
+
+root (5.04.00-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 20 Sep 2005 22:34:53 +0200
+
+root (5.03.01-2) unstable; urgency=low
+
+  * New upstream version
+  * Make links in /usr/lib/root/<version> to shared libraries, so that
+    we can have many versions of the libraries installed, and we do not
+    need libroot-dev
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 15 Aug 2005 00:46:18 +0200
+
+root (5.01.01-1) unstable; urgency=low
+
+  * New upstream
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 23 May 2005 13:42:03 +0200
+
+root (4.03.03-1) unstable; urgency=low
+
+  * New upstream ROOT version
+  * New package root-plugin-oracle 
+  * Package root-plugin-xml now contains an XML parser, not the XML I/O 
+	
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sun, 20 Mar 2005 16:28:37 +0100
+
+root (4.03.02-1) unstable; urgency=low
+
+  * New packaging scripts
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 21 Feb 2005 16:28:37 +0100
+
+root (3.03.05-1) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Mon, 13 May 2002 13:32:54 +0200
+
+root (3.02.06-1) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Wed,  9 Jan 2002 04:08:19 +0100
+
+root (3.02.04-1) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Tue,  8 Jan 2002 03:16:39 +0100
+
+root (3.02.00-1) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Thu, 15 Nov 2001 21:34:26 +0100
+
+root (3.00.06-1) unstable; urgency=low
+
+  * Bumped Debian GNU/Linux version with ROOT
+
+ -- Christian Holm <cholm@nbi.dk>  Sat, 24 Mar 2001 16:12:08 +0100
+
+root (3.00.04-1) unstable; urgency=low
+
+  * Bump version to 3.00/04 
+
+ -- Christian Holm <cholm@nbi.dk>  Fri, 16 Feb 2001 23:59:40 +0100
+
+root (2.26.00-1) unstable; urgency=low
+
+  * Initial Release.
+  * 
+
+ -- Christian Holm <cholm@nbi.dk>  Fri, 16 Feb 2001 23:59:04 +0100
+
+

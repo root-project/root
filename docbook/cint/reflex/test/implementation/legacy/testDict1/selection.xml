@@ -1,0 +1,10 @@
+<lcgdict>
+  <class pattern="Reflex::*"/>
+  <enum  pattern="Reflex::*"/>
+<exclusion>
+  <class name="Reflex::PropertyList">
+    <method name="HasKey"/>
+    <method name="PropertySize"/>
+  </class>
+</exclusion>
+</lcgdict>

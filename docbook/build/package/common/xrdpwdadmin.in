@@ -1,0 +1,11 @@
+#!/bin/sh
+
+rootplugins=@prefix@/lib/root/@libvers@
+rootbindir=@prefix@/bin
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$rootplugins
+
+exec $rootbindir/xrdpwdadmin.bin "$@"
+
+# EOF
+

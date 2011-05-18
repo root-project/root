@@ -1,0 +1,18 @@
+Package: libroot-io@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Input/output of ROOT objects - runtime library
+ This package provides I/O routines for ROOT objects. 
+
+Package: libroot-io-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-io@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev, root-plugin-proof
+Conflicts: libroot-dev (<< 5.19.01-1), root-plugin-proof (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Input/output of ROOT objects - development files
+ This package provides I/O routines for ROOT objects. 
+

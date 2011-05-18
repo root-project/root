@@ -1,0 +1,20 @@
+Package: libroot-math-mathmore@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: GSL interface library for ROOT
+ This package contains the MathMore library for ROOT.  This provides 
+ a partial GNU Scientific Library interface for ROOT.
+
+Package: libroot-math-mathmore-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-mathmore@libvers@ (= ${binary:Version}), libroot-core-dev, libgsl0-dev
+Conflicts: libroot-mathmore-dev (<< 5.19.01-1)
+Replaces: libroot-mathmore-dev
+Homepage: http://root.cern.ch
+Description: Mathmore plugin for ROOT
+ This package contains the MathMore library for ROOT.  This provides 
+ a partial GNU Scientific Library interface for ROOT.
+

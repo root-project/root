@@ -1,0 +1,2 @@
+@sysconfdir@/root
+@sysconfdir@/ld.so.conf.d

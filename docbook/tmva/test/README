@@ -1,0 +1,126 @@
+Dear TMVA User,
+
+this README contains three sections
+
+  + Overview 
+  + How to run the example
+  + The TMVA GUI
+
+Overview
+========
+
+  This directory contains two files that illustrate the usage of the
+  TMVA package to perform a MultiVariate Analysis. It also contains a
+  GUI for easy access to the training result.
+
+  An MV analysis is executed in two steps, the training of the MVA
+  methods, and the application of the best suited MVA method to your
+  dataset. These two steps are shown in the files TMVAClassification.C and
+  TMVAClassificationApplication.C, respectively.
+
+  The example uses some toy data (tmva_example.root) that comes with
+  the sourceforge distribution or is available on the ROOT web. The
+  example files contains a signal and a background tree with four
+  variables.
+
+
+  TMVAClassification.C
+  -------------
+
+  TMVAClassification.C explains the usage of the TMVA::Factory class, which
+  is the framework for the whole training process. The following steps
+  are taken:
+
+  1st: The factory is created (a name for the project is specified,
+  which will help with the bookkeeping of different training cycles)
+
+  2nd: The input data trees are made available to the factory ( one
+  can also use text files as input, also shown in this example ). The
+  sizes of the training and the testing data samples are also specified.
+
+  3rd: The variables that are selected to be used in the MVA are
+  declared to the factory
+
+  4th: The factory needs to transfer the input data into the local
+  data structure used for the training and testing
+
+  5th: Methods are than booked with the factory. For each method
+  number of options can be set that steer the training behavior. The
+  options are described in greater detail in the method classes and
+  can be looked at in the CVS web-viewer
+
+  6th: The training of all methods on the training data sample is run
+  by the factory. The training results for each method are stored in
+  the directory weights/
+
+  7th: The testing of all methods on the testing data sample is run by
+  the factory. The test results are stored in a root file (filename
+  specified in the Factory constructor)
+
+  8th: The performance of all methods is analyzed by the factory. The
+  performance results are stored in the root file (see last step)
+
+
+  TMVAClassificationApplication.C 
+  ----------------
+
+  TMVAClassificationApplication.C explains the usage of the TMVA::Reader class, which
+  is to be used to evaluate your data with the trained MVA
+  methods. The following steps are taken:
+
+  1st: The reader is created.
+
+  2nd: A set of local variables is created and declared to the reader.
+
+  3rd: The method(s) - which means the name of the weight files
+  created in the training process - are booked with the reader.
+
+  4th: Your event loop:
+     - The values of the local variables are set (either by assignment
+     of, as in the example, by setting the BranchAddresses of your
+     datatree)
+     - the reader is asked to evaluate the MVA, the result of which is
+     used to separate signal from background
+
+
+How to run the example
+======================
+
+  First, TMVAClassification.C needs to be run to perform the training. You
+  can edit TMVAClassification.C (boolean flags at the head of the file) to
+  enable (disable) the methods you would (not) like to use. Then run
+
+  > root TMVAClassification.C
+
+  Add the end a file TMVA.root is written, and a GUI opens. Once
+  TMVA.root exists, the GUI can also be started via
+
+  > root TMVAGui.C
+
+  You can also run
+
+  > root TMVAClassificationApplication.C 
+
+  which evaluates the methods on the signal data from the toy
+  tmva_example.root and writes the result to TMVApp.root. However,
+  TMVAClassificationApplication is more of a pedagogical example for 
+  the usage of TMVA inside your own analysis framework.
+
+The TMVA GUI
+============
+
+  The GUI provides easy access to a large number of macros that plot
+  various distributions and correlations of the input data, the MVA
+  method output distributions and the performance comparison plot
+  (background rejection versus efficiency). It can be used once the
+  training is run, and is started with
+
+  > root TMVAGui.C
+
+  or
+
+  > root TMVAGui.C\(\"MyTMVA.root\"\)
+
+  in case you had directed your training output to a different root
+  file (2nd argument of the TMVA::Factory constructor)
+

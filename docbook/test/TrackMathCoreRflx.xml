@@ -1,0 +1,64 @@
+<lcgdict>
+
+
+<!--
+<class name="ROOT::Math::PxPyPzE4D<Double32_t>" >
+  <field name="fX" iotype="Double32_t" />
+  <field name="fY" iotype="Double32_t" />
+  <field name="fZ" iotype="Double32_t" />
+  <field name="fT" iotype="Double32_t" />
+</class>
+
+
+
+<class name="ROOT::Math::Cartesian3D<Double32_t>" >
+  <field name="fX" iotype="Double32_t" />
+  <field name="fY" iotype="Double32_t" />
+  <field name="fZ" iotype="Double32_t" />
+</class>
+<class name="ROOT::Math::MatRepStd<Double32_t,4,4>"> 
+  <field name="fArray" iotype="Double32_t [16]" />
+</class>
+<class name="ROOT::Math::MatRepSym<Double32_t,6>">
+  <field name="fArray" iotype="Double32_t [21]" />
+</class>
+
+<class name="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepStd<Double32_t,4,4> >"> 
+  <field name="fRep" iotype="ROOT::Math::MatRepStd<Double32_t,4,4>" />
+</class>
+
+<class name="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >" >
+  <field name="fRep" iotype="ROOT::Math::MatRepSym<Double32_t,6>" />
+</class>
+
+
+<class pattern="ROOT::Math::LorentzVector<ROOT::Math::PxPy*>" />
+<class pattern="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D*>" />
+
+-->
+
+<class name ="TrackD">
+</class>
+<class name ="TrackErrD">
+</class>
+
+ <class name ="TrackD32">
+  <field name="fPos" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+  <field name="fVec" iotype="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >" />
+</class>
+
+ <class name ="TrackErrD32">
+  <field name="fPos" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+  <field name="fVec" iotype="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >" />
+  <field name="fMat" iotype="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepStd<Double32_t,4,4> >" />
+  <field name="fSymMat" iotype="ROOT::Math::SMatrix<Double32_t,6,6,ROOT::Math::MatRepSym<Double32_t,6> >" />
+</class>
+
+<class name="std::vector<TrackD>" />
+<class name="std::vector<TrackErrD>" />
+
+<class name="VecTrack<TrackD>" />
+<class name="VecTrack<TrackErrD>" />
+
+ 
+</lcgdict>

@@ -1,0 +1,6 @@
+This directory contains the RooFit toolkit classes. For documentation see: 
+BEGIN_HTML
+<ul>
+<li><a href="http://root.cern.ch/drupal/content/roofit">The RooFit Toolkit for Data Modeling</a></li>
+</ul>
+END_HTML

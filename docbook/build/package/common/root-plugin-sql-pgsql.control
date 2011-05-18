@@ -1,0 +1,11 @@
+Package: root-plugin-sql-pgsql
+Architecture: any
+Depends: ${shlibs:Depends}
+Provides: root-db-client
+Description: PostgreSQL client plugin for ROOT
+ This package contains the PostGreSQL plug-in for ROOT.  This plugin
+ provides a thin client (interface) to PostGreSQL servers. Using this
+ client, one can obtain information from a PostGreSQL database into the
+ ROOT environment.
+
+

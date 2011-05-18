@@ -1,0 +1,264 @@
+.\"
+.\" $Id: root-config.1,v 1.5 2005/09/07 10:23:23 rdm Exp $
+.\"
+.TH GENREFLEX "1" "Version 5" "ROOT"
+.SH NAME
+genreflex \- Generates the LCG dictionary file for each header file
+.SH SYNOPSIS
+.B genreflex 
+.I headerfile1.h 
+.RI [ headerfile2.h ] 
+.RI [ options ] 
+.RI [ "preprocesor options" ]
+.SH DESCRIPTION
+Generates the LCG dictionary file for each header file
+.SH OPTIONS
+.TP
+\fB\-s\fR \fIfile\fR, \fB\-\-selection_file=\fR\fIfile\fR
+Class selection file to specify for which classes the dictionary 
+will be generated
+Format (XML):
+.RS 
+.nf 
+
+<lcgdict>
+  [<selection>]
+    <class [name="classname"] [pattern="wildname"] 
+           [file_name="filename"] [file_pattern="wildname"]
+           [id="xxxx"] [type="vector"]/>
+    <class name="classname" >
+      <field name="m_transient" transient="true"/>
+      <field name="m_anothertransient" transient="true"/>
+      <properties prop1="value1" [prop2="value2"]/>
+    </class>
+    <function [name="funcname"] [pattern="wildname"] />
+    <enum [name="enumname"] [patter="wildname"] />
+    <variable [name="varname"] [patter="wildname"] />
+  [</selection>]
+  <exclusion>
+    <class [name="classname"] [pattern="wildname"]>
+      <method name="unwanted" />
+    </class>
+  </exclusion>
+  \&...
+</lcgdict>
+
+.fi
+.RE
+See also the section 
+.B SELECTION FILE SYNTAX
+below.
+.TP
+\fB\-o\fR \fIfile\fR, \fB\-\-output\fR \fIfile\fR
+Output file name. If an existing directory is specified instead of a file,
+then a filename will be build using the name of the input file and will
+be placed in the given directory. <headerfile>_rflx.cpp
+.TP
+.B \-\-pool
+Generate minimal dictionary required for POOL persistence
+.TP
+.B \-\-deep
+Generate dictionary for all dependend classes
+.TP
+.BR \-\-split\fR " (OBSOLETE)"
+Generate separate file for stub functions. Option sometimes needed on
+Windows. 
+.TP
+.BR \-\-reflex " (OBSOLETE)"
+Generate Reflex dictionaries.
+.TP
+.B \-\-comments
+Add end\-of\-line comments in data and functions members as a property
+called "comment" 
+.TP
+.B \-\-no_membertypedefs
+Disable the definition of class member \fBtypedefs\fR
+.TP
+.B \-\-fail_on_warnings
+The genreflex command fails (retuns the value 1) if any warning
+message is issued 
+.TP
+.BI \-\-gccxmlpath= path
+Path path where the \fBgccxml\fR(1) tool is installed. If not defined
+the standard PATH environ variable is used 
+.TP
+.BI \-c " file\fR, \fI" \-\-capabilities= file
+Generate the capabilities file to be used by the SEAL Plugin
+Manager. This file lists the names of all classes for which the
+reflection is formation is provided. 
+.TP
+.BI \-\-rootmap= file
+Generate the rootmap file to be used by ROOT/CINT. This file lists the
+names of all classes for which the reflection is formation is
+provided. 
+.TP
+.BI \-\-rootmap\-lib= library
+Library name for the rootmap file.
+.TP
+.B \-\-debug
+Print extra debug information while processing. Keep intermediate
+files 
+.TP
+.B \-\-quiet
+No not print informational messages
+.TP
+.BR \-h ", " \-\-help
+Print help
+.PP
+Try "genreflex \fB\-\-help\fR" for more information.
+.SH "SELECTION FILE SYNTAX"
+.SS <lcgdict>
+.TP 
+Sub elements: 
+.B <selection> <exclusion> <class> <function>
+.TP
+Attributes: 
+none
+.P
+The root element of the xml file. It has to be present.  
+.SS <selection>
+.TP
+Sub elements: 
+.B <class> <function>
+.TP
+Attributes: 
+none
+.P
+The selection element is only mandatory if the \fB<exclusion>\fR
+element is used in the same file. Otherwise all sub-elements of
+\fB<lcgdict>\fR are supposed to be included in the dictionary. 
+.SS <exclusion>
+.TP
+Sub elements: 
+.B <class> <function>
+.TP 
+Attributes: 
+none
+.P
+If a 
+.B <selection> 
+element is present it is also possible to exclude types following the
+same patterns as for selection
+.SS <class>
+.TP
+Sub elements: 
+.B <field> <properties> <method>
+.TP 
+Attributes:
+.RS 
+.TP 
+.I name 	
+The exact name of the class to be filtered
+.I pattern 	
+A pattern matching a set of classes
+.TP
+.I file_name 	
+The exact file name to be filtered. All classes contained in the file
+will be selected 
+.TP
+.I file_pattern
+A pattern matching a set of files
+.TP
+.I id 	
+The class ID (used for POOL persistence)
+.TP
+.I type 	
+The class type (used for POOL persistence)
+.RE
+.P
+All classes matching the patterns or names in the attributes will be
+selected. The 
+.IR name ", " pattern ", " file_name ", and " file_pattern
+attributes are mutual exclusive. 
+.SS <function>
+.TP 
+Sub elements: 
+none
+.TP 
+Attributes:
+.RS
+.TP 
+.I name
+The exact name of the function
+.TP
+.I pattern
+A pattern matching a set of functions
+.RE
+.P
+All function matching the attributes of the function element will be
+selected and dictionaries will be created for them. The 
+.IR name and pattern
+attributes are mutual exclusive. 
+.SS <field>
+.TP
+Sub elements: 
+none
+.TP
+Attributes:
+.RS
+.TP
+.I name
+The exact name of the field
+.TP
+.I transient
+If set to true a property (transient/true) will be set for this member
+(used for POOL persistence) 
+.RE
+.P
+The 
+.B <field> 
+element is mainly used for POOL persistence to mark if some of the
+data members of a class shall be skipped when the class is written to
+a persistent medium 
+.SS <method>
+.TP 
+Sub elements: 
+none
+.TP 
+Attributes:
+.RE
+.TP
+.I name
+The name of the method to be excluded
+.RE
+.P
+The 
+.B <method> 
+element is used to exclude the dictionary generation from classes
+which match the given attributes. 
+
+.SH "SEE ALSO"
+.IR root (1), 
+.IR rootcint (1),
+.IR gccxml (1)
+.PP
+See also the \fBROOT\fR webpages:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fR
+.UE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" EOF
+.\"

@@ -1,0 +1,134 @@
+.\"
+.\" $Id: xrd.1,v 1.2 2006/02/28 16:38:23 rdm Exp $
+.\"
+.TH XRD 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+xrd \- interactive XRootD ftp-like client
+.SH SYNOPSIS
+.B xrd
+.I  HOST
+.RI [ OPTIONS ]
+.SH "DESCRIPTION"
+.B Xrd 
+is a 
+.BI ftp -like(1) 
+tool to interact with an \fBxrootd\fR server. 
+.PP
+Commands are 
+.TP
+.BI cd " directory"
+Change directory.
+.TP
+.BI envputint " variable integer"
+Set an environment variable \fIvariable\fR to an integer value
+\fBinteger\fR. 
+.TP
+.BI envputstr " variable string"
+Set an environment variable \fIvariable\fR to a string value
+\fBstring\fR. 
+.TP 
+.B help
+Show interactive help.
+.TP
+.B exit
+Exit the client
+.TP
+.BI connect " [host:[port]]"
+Connect to the specified host.
+.TP
+.BI dirlist " [directory]"
+Lists the contents of the specified directory or current directory if
+no argument is given.
+.TP
+.BI stat " file-or-directory"
+Get information on a file or directory. 
+.TP
+.BI existsfile " file"
+Checks if a file exists on the server. 
+.TP
+.BI existsdir " directory"
+Checks if a directory exists on the server. 
+.TP
+.BI getchecksum " file"
+Computes and returns the check sum of a file. 
+.TP
+.BI isfileonline " file"
+Tells if the specified file is online.
+.TP
+.BI mv " file1 file2"
+Moves \fIfile1\fR to \fIfile2\fB on the same server.
+.TP
+.BI mkdir " directory [user] [group] [other]"
+Creates a directory with optional permissions.
+.TP
+.BI chmod " file-or-directory user group other"
+Modifies file permissions.
+.TP 
+.BI rm " file"
+Removes a file.
+.TP
+.BI rmdir " directory" 
+Removes a directory.
+.TP 
+.BI prepare " file"
+Stages a file in.
+.TP
+.BI cat " file [xrdcp parameters]" 
+Outputs a file on standard output using 
+.BR xrdcp (1). 
+\fIfile\fR can be a \fBroot://\fR
+.TP
+.BI  cp " file-or-directory file-or-directory [xrdcp parameters]"
+Copies a file using \fBxrdcp\fR(1). \fIfile-or-directory\fR are always
+relative to the current remote path. Also, they can be \fBroot://\fR URLs
+specifying any other host
+.SH "OPTIONS"
+.TP
+.BI \-d LEVEL
+Set the debug level
+.TP
+.BI \-DI "param value"
+Set parameter \fIparam\fR to an integer \fIvalue\fR. Override the
+default value of an internal \fBXrdClient\fR setting.
+.TP
+.BI \-DS "param value"
+Set parameter \fIparam\fR to a string \fIvalue\fR.  Override the
+default value of an internal \fBXrdClient\fR setting.
+.TP
+.B \-O
+Adds some opaque information to any used \fBxrootd\fR url.
+.TP
+.B \-h
+Show help. 
+.SH "SEE ALSO"
+\fIroot\fR(1), \fIxrootd\fR(1)
+.PP
+See also the \fBROOT\fR webpages:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fR
+.UE
+.SH "ORIGINAL AUTHORS"
+Fabrizio Furano
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" EOF
+.\"

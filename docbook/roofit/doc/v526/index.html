@@ -1,0 +1,338 @@
+<br/> 
+<hr/> 
+<a name="roofit"></a> 
+<h3>RooFit</h3>
+
+<h4>New infrastructure for toy MC studies</h4>
+
+A new class <tt>RooStudyManager</tt> has been added that is intended
+to replace the present <tt>RooMCStudy</tt> framework for toy MC
+studies on the time scale of ROOT release 5.26.
+<p>
+The present <tt>RooMCStudy</tt> is a small monolithic driver to
+execute 'generate-and-fit' style MC studies for a given pdf.  It
+provides some room for customization, through modules inheriting from
+<tt>RooAbsMCStudyModule</tt> that can modify the standard behavior, but its
+design limits the amount of flexibility.</p>
+<p>In the new <tt>RooStudyManager</tt> design, the functionality of
+<tt>RooMCStudy</tt> has been split into two classes: class
+<tt>RooStudyManager</tt> which manages the logistics of running
+repetitive studies and class <tt>RooGenFitStudy</tt> which implements
+the functionality of the 'generate-and-fit'-style study of <tt>RooMCStudy</tt>.
+The new design has two big advantages:</p>
+
+<ol>
+<li>Complete freedom in the design of studies, either by tailoring the behavior of <tt>RooGenFitStudy</tt> or
+by using another study module that inherits from <tt>RooAbsStudy</tt>, and the data that they return.</li>
+<li>More flexibility in the mode of execution. The new study manager can execute all study
+modules inlines, as was done in <tt>RooMCStudy</tt>), but also parallelized through PROOF (at present
+only PROOF-lite is support, as well as in batch</li>
+</ol>
+
+The code fragment below illustrates the use of the new study manager
+
+<pre>
+  // Create workspace with p.d.f
+  RooWorkspace* ww = new RooWorkspace("ww") ;
+  ww-&gt;factory("Gaussian::g(x[-10,10],mean[-10,10],sigma[3,0.1,10])") ;
+
+  RooGenFitStudy gfs ;
+  gfs.setGenConfig("g","x",NumEvents(1000)) ;
+  gfs.setFitConfig("g","x",PrintLevel(-1)) ;
+
+  RooStudyManager mgr(*ww,gfs) ;
+
+  mgr.run(1000) ; // execute 1000 toys inline
+  mgr.runProof(10000,"") ; // execute 10000 toys through PROOF-lite
+
+  gfs.summaryData()-&gt;Print() ;
+</pre>
+
+
+
+<h4>Workspace and factory improvements</h4>
+
+The workspace class <tt>RooWorkspace</tt> has been augmented with several
+new features
+<ul>
+<li>The <tt>import()</tt> method now supports a new argument <tt>RenameAllVariablesExcept(const char* suffix, const char keepList)</tt> which
+    will rename all variables of the imported function by extended them with a supplied suffix,
+    except for a given list of variables, which are not renamed.<br/><br/></li>
+<li>A new utility function <tt>importFromFile()</tt> has been added, which is similar to import, except that it take a string
+     specifier for the object to be imported rather than a reference. The string is expected to be of the form 
+     <tt>fileName:workspaceName:objectName</tt> and simplifies import of objects from other workspaces on file. The <tt>importFromFile</tt>
+      accepts all arguments accepted by the standard <tt>import()</tt> method.<br/><br/></li>
+<li> Generic objects (inheriting from <tt>TObject</tt>) can now also be stored in the workspace under an alias name, rather
+     under their own name, which simplifies management of objects of types like <tt>TMatrixD</tt> that do not have a settable name.
+<pre>
+   ws.import(matrix,"cov_matrix") ;
+</pre></li>
+
+<li>New accessors have been added that return a <tt>RooArgSet</tt> of all elements of the workspace of a given type, e.g.
+    <tt>allVars()</tt>, <tt>allPdfs()</tt>.<br/><br/></li>
+
+<li>
+    The <tt>Print()</tt> method now accepts option "t", which prints the contents tree-style instead of a flat list of components,
+    as ilustrated below
+<pre>
+*** Print() ***
+
+p.d.f.s
+-------
+RooProdPdf::bkg[ ptBkgPdf * mllBkgPdf * effBkgPdf|pt ] = 0.267845
+RooEfficiency::effBkgPdf[ cat=cut effFunc=effBkg ] = 0.76916
+RooEfficiency::effSigPdf[ cat=cut effFunc=effSig ] = 0.899817
+RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
+RooPolynomial::mllBkgPdf[ x=mll coefList=(mbkg_slope) ] = 0.775
+RooGaussian::mllSigPdf[ x=mll mean=msig_mean sigma=msig_sigma ] = 1
+RooExponential::ptBkgPdf[ x=pt c=pbkg_slope ] = 0.449329
+RooExponential::ptSigPdf[ x=pt c=psig_slope ] = 0.818731
+RooProdPdf::sig[ ptSigPdf * mllSigPdf * effSigPdf|pt ] = 0.736708
+
+functions
+--------
+RooFormulaVar::effBkg[ actualVars=(pt,ab,mb,sb) formula="0.5*@1*(1+TMath::Erf((@0-@2)/@3))" ] = 0.76916
+RooFormulaVar::effSig[ actualVars=(pt,as,ms,ss) formula="0.5*@1*(1+TMath::Erf((@0-@2)/@3))" ] = 0.899817
+
+*** Print("t") ***
+
+p.d.f.s
+-------
+RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
+  RooProdPdf::sig[ ptSigPdf * mllSigPdf * effSigPdf|pt ] = 0.736708
+    RooExponential::ptSigPdf[ x=pt c=psig_slope ] = 0.818731
+    RooGaussian::mllSigPdf[ x=mll mean=msig_mean sigma=msig_sigma ] = 1
+    RooEfficiency::effSigPdf[ cat=cut effFunc=effSig ] = 0.899817
+      RooFormulaVar::effSig[ actualVars=(pt,as,ms,ss) formula="0.5*@1*(1+TMath::Erf((@0-@2)/@3))" ] = 0.899817
+  RooProdPdf::bkg[ ptBkgPdf * mllBkgPdf * effBkgPdf|pt ] = 0.267845
+    RooExponential::ptBkgPdf[ x=pt c=pbkg_slope ] = 0.449329
+    RooPolynomial::mllBkgPdf[ x=mll coefList=(mbkg_slope) ] = 0.775
+    RooEfficiency::effBkgPdf[ cat=cut effFunc=effBkg ] = 0.76916
+      RooFormulaVar::effBkg[ actualVars=(pt,ab,mb,sb) formula="0.5*@1*(1+TMath::Erf((@0-@2)/@3))" ] = 0.76916
+</pre>
+</li>
+<li> The workspace factory can now access all objects in the generic object store of the workspace, e.g.
+<pre>
+   TMatrixDSym* cov 
+   RooWorkspace w("w") ;
+   w.import(*cov,"cov") ;
+   w.factory("MultiVarGaussian::mvg({x[-10,10],y[-10,10]},{3,5},cov)") ;
+</pre></li>
+<li> The workspace factory now correctly identifies and matches typedef-ed names in factory constructor
+     specifications.<br/><br/></li>
+
+<li> All objects created by the factory and inserted by the workspace get a string attribute "factory_tag",
+     that contains the reduced factory string that was used to create that object, e.g.
+<pre>
+    RooWorkspace w("w") ;
+    w.factory("Gaussian::g(x[-10,10],m[0],s[3])") ;
+    cout &lt;&lt; w.pdf("g")-&gt;getStringAttribute("factory_tag") &lt;&lt; endl ;
+    <b>RooGaussian::g(x,m,s)</b>
+</pre></li>
+<li>Previously all factory orders that would create objects with names of objects that already existed always
+    resulted in an error. Now, this will only happen if the factory tag of the existing object is different
+    from the tag of the existing object
+<pre>
+    w.factory("Gaussian::g(x[-10,10],m[0],s[3])") ;
+    w.factory("Chebychev::g(x[-10,10],{0,1,2})") ; // Now OK, x has identical spec, existing x will be used.
+</pre></li>
+</ul>  
+
+
+
+<h4>Improvements to functions and pdfs</h4>
+
+<ul>
+<li><i>Addition to, reorganization of morphing operator classes.</i><br/> The existing class <tt>RooLinearMorph</tt> which
+   implements 'Alex Read' morphing has been renamed <tt>RooIntegralMorph</tt>. A new class <tt>RooMomentMorph</tt>
+   has been added (contribution from Max Baak and Stefan Gadatsch) that implements a different morphing algorithm 
+   based on shifting the mean and variance of the input pdfs. The new moment morphing class can also interpolate 
+   between multiple input templates and works with multi-dimensional input pdfs. One of the appealing features
+   is that no expensive calculations are required to calculate in the interpolated pdfs shapes after the pdf
+   initialization. An extension that allows morphing in two parameters is foreseen for the next root release.<br/><br/></li>
+
+<li><i>Progress indication in plot projections</i><br/>
+  The <tt>RooAbsReal::plotOn()</tt> now accepts a new argument <tt>ShowProgress()</tt> that will print a dot for every
+  function evaluation performed in the process of creating the plot. This can be useful when plotting very expensive
+  functions such as profile likelihoods<br/><br/></li>
+
+<li><i>Automatic handling of constraint terms</i><br/>
+  It is no longer necessary to add a <tt>Constrain()</tt> argument to <tt>fitTo()</tt> calls to have internal constraints
+  applied. Any pdf term appearing in a product that does not contain an observable <i>and</i> shares one or more parameters
+  with another pdf term in the same product that does contain an observable is automatically picked up as a constraint term.
+  For example given a dataset D(x) which defines variable x as observable, the default logic works out as follows
+<pre>
+    F(x,a,b)*G(a,a0,a1) --&gt; G is constraint term (a also appears in F(x))
+    F(x,a,b)*G(y,c,d) --&gt; G is dropped (factorizing term)
+</pre>
+  A <tt>Constrain(y)</tt> term in the above example will still force term <tt>G(y,c,d)</tt> to be interpreted as constraint term<br/><br/></li>
+
+<li><i>Automatic caching of numeric integral calculations</i><br/>
+  Integrals that require numeric integrations in two of more dimensions are now automatically cached in the expensive object store.
+  The expensive object store allows to cache such values between difference instance of integral objects that represent the
+  same configuration. If integrals are created from an object (function or pdf) that live in a <tt>RooWorkspace</tt> the 
+  expensive object cache of the workspace will be used instead of the global store instance, and values stored in the workspace
+  store will also be persisted if the workspace is persisted. The global caching behavior of integral objects can be 
+  controlled through <tt>RooRealIntegral::setCacheAllNumeric(Int_t nDimNumMin)</tt>.</li>
+</ul>
+
+
+<h4>Miscellaneous improvements data classes</h4>
+
+<ul>
+
+<li> The <tt>RooAbsData::tree()</tt> method has been restored. It will only return a <tt>TTree*</tt> pointer for datasets
+     that are based on a <tt>RooTreeDataStore</tt> implementation, i.e. not for the composite datasets mentioned below<br/><br/></li>
+
+<li> A new composite data storage class <tt>RooCompositeDataStore</tt> has been added that allows to construct composite
+     <tt>RooDataSet</tt> objects without copying the input data. 
+<pre>
+   // Make 2 input datasets and an index category
+   RooWorkspace w("w",kTRUE) ;
+   w-&gt;factory("Gaussian::g(x[-10,10],m[-10,10],s[3,0.1,10])")
+   w-&gt;factory("Uniform::u(x)")
+   w-&gt;factory("index[S,B]")
+   RooDataSet* d1 = w::g.generate(w::x,1000)
+   RooDataSet* d2 = w::u.generate(w::x,1000)
+
+   // Make monolithic composite dataset (copies input data)
+   RooDataSet d12("d12","d12",w::x,Index(w::index),Import("S",*d1),Import("B",*d2))
+
+   //-----------------------------------------------------------------------------
+   // NEW: make virtual composite dataset (input data is linked, no data is copied)
+   RooDataSet d12a("d12a","d12a",w::x,Index(w::index),Link("S",*d1),Link("B",*d2))
+   //-----------------------------------------------------------------------------
+
+   // Fit composite dataset to dummy model
+   w-&gt;factory("SUM::model(fsig[0,1]*g,u)")
+   w::model.fitTo(d12a)
+</pre></li>
+  For virtual composite dataset it is also possible to join a mix of binned and unbinned datasets
+  (representation as a <tt>RooDataSet</tt> with weights)
+
+<li><b>The setWeightVar() method has been deprecated as it is very difficult to support on-the-fly redefinition
+       of the event weight variable in the new data store scheme</b>. To declare a data set weighed,
+       use the WeightVar() modifier of the constructor instead,e.g.:
+<pre>
+    RooDataSet wdata("wdata","wdata",RooArgSet(x,y,wgt),WeightVar(wgt)) ;
+</pre> 
+
+<li>
+  The <tt>RooHist</tt> class that represents data as a histogram in a <tt>RooPlot</tt> has been modified
+  so that it can show approximate Poisson errors for non-integer data. Thes approximate
+  error are calculated from interpolation of the error bars of the nearest integers. NB: A weighted dataset
+  plotted with <tt>RooAbsData::plotOn()</tt> will be default show sum-of-weights-squared errors. Only
+  when Poisson error are forced through a <tt>DataError(RooAbsData::Poisson)</tt> argument these
+  approximate Poisson error bars are shown</li>
+</ul>
+
+
+<h4>Miscellaneous improvements other</h4>
+
+<ul>
+<li> The RooFit messagee service class <tt>RooMsgService</tt> has been augmented with a stack that
+     can store its configurate state information. A call to <tt>saveState()</tt> will save the
+     present configuration, which can be restored through a subsequent call to restoreState().<br/><br/></li>
+
+<li> In addition to the method <tt>RooAbsArg::printCompactTree()</tt> which is mostly intende for
+     debugging, a new method <tt>RooAbsArg::printComponentTree()</tt> has been added that prints
+     the tree structure of a pdf in a more user-friendly content oriented way. The printing 
+     of the leaf nodes (the variables) is omitted in this method to keep the output compact.</li>
+</ul>
+
+
+<a name="roostats"></a> 
+<h3>RooStats</h3>
+
+This release contains significant bug fixes and it is strongly
+reccomended to update to this version if using older ones. 
+
+<h4>Major Changes in LimitCalculator and HypoTestCalculator classes: usage of ModelConfig class</h4>
+
+<ul>
+<li>
+The RooStats calculator interfaces have been changed to use the <tt>ModelConfig</tt> class.
+All the setter methods with the parameter lists, pdf instances and name have been removed from the interfaces.
+The <tt>SetWorkspace(RooWorkspace &amp; )</tt> has also been removed, while a <tt>SetModel(const ModelConfig &amp;)</tt>
+function is introduced.
+<br/>
+  </li>
+  <li>
+Users are supposed to pass all the model information using the
+  <tt>ModelConfig</tt> class rather than  via the
+  <tt>RooWorkspace</tt> or specifying directly the pdf and parameter
+  objects in the constructors. 
+Setter methods using pdf instances and parameter lists are maintained in the derived classes, like the <tt>ProfileLikelihoodCalculator</tt> or the <tt>HybridCalculator</tt>, but those passing a string for the name of the pdf have been removed.
+<br/>
+  </li>
+<li>  
+All the calculator classes do not keep anymore a pointer to the workspace, but they contain pointers to the pdf, the data and the parameters required to run the calculator. These pointers are managed outside by the users or by the  <tt>RooWorkspace</tt>. They can be passed either directly to the classes, for example  via the constructor, or by using the <tt>ModelConfig</tt> class. The <tt>ModelConfig</tt> class acts as an interface to the Workspace in order to load and store all the
+needed information. 
+</li>
+</ul>
+
+
+<h4>ProfileLikelihoodCalculator, LikelihoodInterval</h4>
+<ul>
+  <li>The Minos algorithm of Minuit is used now to find the limit of the likelihood intervals instead of searching directly the roots of the RooProfileLL class. Minos is used via the <tt>ROOT::Math::Minimizer</tt> interface. By default TMinuit is used, one can also use Minuit2 by doing <tt>ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2")</tt>.</li>
+  <li>The <tt>LikelihoodInterval</tt> class now provides now two new methods, <tt>FindLimits</tt> which finds both the upper and lower interval bounds, and <tt>GetContourPoints</tt> to find the 2D contour points defining the likelihood interval. GetContourPoints is now used by the LikelihoodIntervalPlot class to draw the 2D contour.
+  </li>
+  <li>New tutorials  have been added: <tt>rs501_ProfileLikelihoodCalculator_limit.C</tt> and <tt>rs502_ProfileLikelihoodCalculator_significance.C</tt> for getting the interval limits and significance using the ProfileLikelihoodCalculator. The tutorials can be run on a set of Poisson data or Gaussian over flat with model considering optionally the nuisance parameters. The data can be generated with the <tt>rs500</tt> tutorials.</li>
+</ul>
+
+  <h4>HybridCalculator</h4>
+<ul>
+ <li>In the constructor the signature passing a name and a title string has been removed, for being consistent with all the other calculator classes. Name and title can be set optionally using the SetName and SetTitle methods. Please note that this change is not backward compatible.</li>
+ <li>Add the option to use binned generation (via <tt>SetGenerateBinned</tt>).</li>
+  <li>An estimated of the error in the obtained p values is  now computed in the <tt>HybridResult</tt> class thanks to Matthias Wolf. The errors can be obtained with <tt>HybridResult::CLbError()</tt>, <tt>HybridResult::CLsplusbError()</tt> or <tt>HybridResult::CLsError()</tt>.</li>
+  <li>A new tutorial has been added for showing the usage of the hybrid calculator: <tt>rs505_HybridCalculator_significance.C</tt></li>
+  </ul>
+
+  
+<h4>new class HypoTestInverter</h4>
+<ul>
+<li>
+  New class for performing an hypothesis test inversion by scanning
+  the hypothesis test results of the <tt>HybridCalculator</tt> for
+  various values of the parameter of interest. An upper (or lower) limit  can be derived by looking at the
+  confidence level curve of the result as function of the parameter of
+  interest,  where it intersects the desired confidence level.</li>
+  <li>
+The class implements the <tt>IntervalCalculator</tt> interface and returns an <tt>HypoTestInverterResult</tt> class. The result is a SimpleInterval, which via the method <tt>UpperLimit</tt> returns to the user the upper limit value.
+</li>
+<li>The <tt>HypoTestInverter</tt> implements various option for performing the scan. <tt>HypoTestInverter::RunFixedScan</tt> will scan using a fixed grid the parameter of interest. <tt>HypoTestInverter::RunAutoScan</tt> will perform an automatic scan to find optimally the curve and it will stop when the desired precision is obtained.
+The confidence level value at a given point can also be done via  <tt>HypoTestInverter::RunOnePoint</tt>.</li>
+<li>The class can scan the CLs+b values (default) or alternatively CLs (if the
+method <tt>HypoTestInverter::UseCLs</tt> has been called).</li>
+<li>The estimated error due to the MC toys statistics from the <tt>HybridCalculator</tt> is propagated into the limits obtained from the <tt>HypoTestResult</tt>
+<li>A new tutorial <tt>rs801_HypoTestInverter.C</tt> has been added in the <tt>tutorials/roostats</tt> directory to show the usage of this class.</li>
+</ul>
+
+
+
+<h4>New class BayesianCalculator</h4>
+<ul>
+  <li>
+New class for calculating Bayesian interval using numerical integration. It implements the IntervalCalculator interface and returns as result a SimpleInterval. 
+</li>
+<li>The <tt>BayesianCalculator::GetInterval()</tt> method returns a <tt>SimpleInterval</tt> which contains the lower and upper value of the bayesian interval obtained from the posterior probability for the given confidence level.</li>
+<li>The class return also the posterior pdf (<tt>BayesianCalculator::GetPosteriorPdf()</tt>) obtained from integrating (marginalizing) on the nuisance parameters.</li>
+<li>It works currently only for one-dimensional problems by relying on RooFit for performing analytical or numerical integration.</li>
+<li>A plot of the posterior and the desired interval can be obtained using  <tt>BayesianCalculator::GetPosteriorPlot()</tt>.</li>
+<li>A new tutorial <tt>rs701_BayesianCalculator.C</tt> has been added in the <tt>tutorials/roostats</tt> directory to show the usage of this class.</li>
+</ul>
+
+
+
+  <h4>MCMCCalculator</h4>
+  <ul>
+ <li>Add possibility to specify the prior function in the constructor of the class to have a signature similar to the <tt>BayesianCalculator</tt> class. When no prior is specified it is assumed is part of the global model (pdf) passed to the class.</li>
+</ul>
+  
+<h4>Improvements and Bug fixes</h4>
+<ul>
+  <li>
+Various improvements and fixes have been applied also to all the calculator classes. Internally now the <tt>RooArgSet</tt> objects are used by value instead of a pointer.</li>
+  <li>All the calculator have a consistent way for being constructed, either by passing pdf pointers and the set defining the parameters or by passing a reference to a  <tt>ModelConfig</tt> class.</li>
+  <li>The result classes are now more consistent and have similar constructors. In addition to a default constructor, all of them can be constructed by passing first a name and then all the quantities (objects or values) needed for the specific result type. The title can eventually be set using the <tt>SetTitle</tt> method inherited from TNamed.</li>
+ </ul>

@@ -1,0 +1,420 @@
+! 2005-09-16 Stefan
+	* gendict2.py : Change proposed by Markus for generation of extern C functions (no demangling possible)
+	* gendict(2).py: several changes in the implementation of additional (_x??) functions avoiding a warning
+	  by gcc4. Pointers to members cannot be casted to pointers to functions.
+
+! 2005-09-01 Stefan
+	* added selection functionality from within c++, credits to Scott Snyder (snyder@fnal.gov)
+
+! 2005-08-12 Stefan
+  - fix bug #8075 overview: lcgdict [Reflex] badly placed blanks in type names
+    gendict2.py: changed normalization function for type names. The rule is types 
+    don't contain spaces except
+	- two closing angular braces e.g. "std::vector<std::list<int> >"
+	- a cv-qualifier and a type name e.g. "const int"
+	- types which consist of more than one word e.g. "unsigned int"
+
+! 2005-07-25 Pere
+  - Added the posobility to add "comments" without change the source file. This is needed for 
+    ROOT I/O, which is based on comments to customize I/O for data members 
+    
+  <class name="MyClass">
+    <field name="data" comment="this is an emulated comment" />
+  </class> 
+
+
+! 2005-07-18 Pere
+  - Added handling of pseudo-default constructors (needed by Geant4 I/O)
+    If a constructor has the signature void(__void__&) is replaced by a default
+    constructor is not already there.
+
+! 2005-07-07 Pere
+  - Fixed the mistake introduced by Stefan to add "const" in argument types
+  - Changed normalizeClass() in gendict.py and gendict2.py to handle also non-templated types
+    Somehow "long int" was not mormalized to "long".
+    
+! 2005-06-16 Stefan
+  - gendict2.py : fixed bug #9079 overview: incorrect treatments of comments containing double quotes
+
+! 2005-06-10 Pere
+  - gendict2.py : added building enums if they are referenced in classes
+
+! 2005-06-01 Stefan
+  - gendict2.py : proper generation of pointer to function member types
+  - gendict.py: added functionality for pointer to member (function).  
+
+! 2005-05-25 Stefan
+  - gendicts.py: lots of changes for unnamed types and function pointer handling
+	- new entry in self.transtable "." -> "_" for unnamed types 
+	- new function isUnnamedType to check for unnamed types
+	- in genClassDict, don't generate members for unnamed structs/classes
+	- better checking for OffsetOf calculation (i.e. for templated classes instantiated with a function pointer)
+	- if a member is an unnamed union, try to get the first union member for the offset calculation
+
+! 2005-05-17 Stefan
+  - gendict2.py: corrected generation of typenames for multi-dimensional arrays and pointers to typedefs to functions	
+
+! 2005-05-03 Pere
+   -gendict2.py: - support for pointer to member 
+
+! 2005-04-29 Stefan
+   -gendict2.py: - skipping gathering of comments for "artificial" members
+	         - skipping bit-field data members (see ISO/IEC 14882:2003 9.6 [class.bits])
+
+! 2005-04-26 Stefan
+   - gendict2.py: fixed bug #8291 overview: [Reflex] Class properties don't make it to the class. 
+     (concerns only generated class id properties which were added too late in the generated code)
+	
+! 2005-04-25 Pere Mato
+   - gendict2.py: Improved normalizeFragment(name) to deal with space after comma
+     fixed bug #8075 overview: lcgdict [Reflex] badly placed blanks in type names
+   - Fixed bug #8073 overview: LCGDICT [Reflex] does not understand C++ compiler primitives
+   - Fixed bug #8071 overview: LCGDICT ignores transient flag
+
+! 2005-04-24 Pere Mato
+   - gendict2.py: Added to method normalizeFragment(name) the replacement of equivalent primitive type
+   like short int ->  short
+   
+! 2005-04-07 Pere Mato
+   - gendict(2).py: support for virtual inheritance (it requires new pathed gccxml 0.6.0_patch2)
+     lcgdict ads an extra function "getBasesTable" to provide a table with all base classes of a given class
+     The generated function looks like:
+     
+     stub function generated is as follows:
+     void* __ClassL_dict::method_x0( void*, const std::vector<void*>&, void*)
+     {
+       static vector<pair<Base, int> > s_bases;
+       s_bases.push_back(make_pair(Base( getType<::ClassK >(), baseOffset<::ClassL,::ClassK >::get(),PUBLIC), 0));
+       s_bases.push_back(make_pair(Base( getType<::ClassC >(), baseOffset<::ClassL,::ClassC >::get(),VIRTUAL |PUBLIC), 1));
+       return &s_bases;
+      }
+      
+! 2005-04-04 Pere Mato
+   - gendict2.py: generate "TypeBuilder" statements with "normalized" STL names
+ 
+ ! 2005-03-03 Stefan Roiser, Lassi Tuura
+   - BuildFile: generating TWO dictionaries (Reflex & Reflection) at the same time
+   - lcgdict.py: generating reflex files with extenstion _rflx.cpp
+   - gencapa.py: adding capability "LCGReflex/<classname>" for Reflex dictionaries
+
+! 2005-03-01 Stefan Roiser, Pere Mato
+  - gendict2.py: removed angular brackets from stubfunction calls for template operators
+  - gendict2.py: added generation of typedefs and enums in classes
+
+! 2005-02-23 Pere Mato
+  - gccdemangler.py: fixed the problem shown by Jacek that "symbols" were remembered across 
+                     invocations
+
+! 2005-02-21 Pere Mato
+  - gendict2.py: changed to generate always the templated name (using demangle) for templated functions
+
+! 2005-02-14 Pere Mato
+  - gendict2.py: changed operator and converter  names to prefix them with "operator"
+
+! 2005-01-06 Pere Mato
+  - gendict2.py: added CollectionProxy stuff for the Reflex version
+
+! 2005-01-05 Stefan Roiser
+  - fixed modifiers of Classbuilder
+
+! 2004-12-16 Pere Mato
+  - gendict2.py: added more method modifiers for OPERATOR and CONVERTER
+
+-1.5.3----------------------------------------------------------------------------------------------------
+! 2004-12-01 Pere Mato
+  - gendict.py: changes to generate new collection proxy functions on containers (from Markus)
+
+! 2004-11-30 Stefan Roiser
+  - Two small changes in gendict2.py to support Reflex after the change to the object oriented model
+
+! 2004-11-12 Pere Mato
+  - Added the posibility to obtain the end-of-line comment and add it as a member property
+  - Added new swicth --comments in lcgdict to enable above functionality
+  - test_Reflex_generate.cpp: added the printout of the comment property as comment
+
+! 2004-11-04 Stefan Roiser
+  - Fixed bug #5323 overview: Typedef::fullName() isn't "full".
+
+! 2004-10-22 Stefan Roiser
+  - Fixed bug #5275 overview: Stub functions for methods on objects in the std namespace, are broken
+  - Fixed bug #5253 overview: Remove "using namespace seal::reflex;" from dictionary source. ( small fix concerning base classes )
+	
+-1.4.2----------------------------------------------------------------------------------------------------
+
+! 2004-10-21 Pere Mato, Stefan Roiser
+  - Fixed bug that did not allow to exclude methods using a pattern (reported by RD Schaffer)
+  - Fixed bug #5253 overview: Remove "using namespace seal::reflex;" from dictionary source.
+  - Fixed bug #5254 overview: OffsetOf macro confused by multiple template arguments.
+
+! 2004-10-13 Pere Mato
+  - added the posibility to "select" or "exclude" classes based on the file name (or pattern) 
+    where they are defined. Added new attributes in the "class" element.
+    
+    <class file_name = "full_file_name"/>
+    <class file_pattern = "wildcard_file_name" />
+    
+    Fixed bug #5119 overview: lcgdict should provide a means excluding just a single class, 
+    from a given header.
+    
+
+! 2004-10-11 Stefan Roiser
+  - renamed call to FunctionBuilder2 to FunctionBuilder
+  - casting 1st argument of FunctionBuilder (FunctionTypeBuilder) to (const Type *)
+
+! 2004-10-06 Pere Mato, Stefan Roiser
+  - Added support for Functions and Operators
+    <function name=xxx/>
+
+! 2004-10-06 Stefan Roiser
+  - Changed flag -v2/--version to --reflex for dictionary generation for Reflex
+
+! 2004-10-05 Pere Mato
+  - Fixed bug #3986 overview: lcgdict command should terminate if gccxml fails
+  - Fixed bug #5036 overview: --pool does not work anymore for root 4 (pool 2.0.0)
+
+! 2004-08-03 Pere Mato
+  - Added a number of corrections to gendict2.py to conform with the lastest version
+    of the Reflex package.
+
+! 2004-06-22 Stefan Roiser
+  - Added new file gendict2.py for generation of new dictionaries (according
+  to Reflex package)
+  - Added new switch '-v' '--version' to switch between dictionary versions in
+  lcgdict.py
+  - Changes to lcgdict.py to execute new dictionary generation 
+
+-1.4.0----------------------------------------------------------------------------------------------------
+! 2004-06-15 Pere Mato
+  - Added new option --capabilities to lcgdict command.
+  - Added file gencapa.py to generate capabilties file with option is set
+  - No capabiltities file is generated by default. 
+
+! 2004-05-04 Pere Mato
+  - Added test for checking if a class has virtual function table
+
+! 2004-05-03 Pere Mato
+  - Fixed some problems with the support for templated methods. Including now constructors/operators etc.
+
+! 2004-04-26 Pere Mato
+  - Fixed [bugs #3135] lcgdict does not work for classes with customized new/delete operators
+    The generated code is now using the global placement new operator instead of the class one
+    ::new(mem) XXXX instead of new(mem) XXXX
+  - Added support for templated methods. It will only work properly from gcc_xml 0.6.0
+    The templated methods will be added as members of the class with the full templated name. The
+    name is extracted demangling module.
+  - Added gccdemangler.py module. It is not yet fully working but it support the simple clases correctly.
+  - Added complex.h and test_complex.cpp to test operator new and templated method functionality
+  
+-1.3.4----------------------------------------------------------------------------------------------------
+! 2004-02-25 Pere Mato
+  - selclass.py: fixed a bug that presented to set transient attributes using a pattern specification
+                 in addition done some simplyfication and optimization of the code.
+
+! 2004-02-24 Pere Mato
+  - gendict.py, lcgdict.py: adapted to generate "seal capabilities" with the 
+    list of available classes for each dictionary library
+ 
+! 2004-02-23 Pere Mato
+  - gendict.py: adapted to support new version of gccxml (0.6.0) with the followong changes:
+    * The class virtual tables do not appear as variables in the .xml output file
+    * Typedef types are used without translation to their final type.
+
+! 2003-12-16 Pere Mato
+  - gendict.py: possibility to add container id "contid" in selection file.
+
+! 2003-12-16 Pere Mato
+  - Protected the inclusion of <string> when generating the dictionary for string
+
+! 2003-12-12 Pere Mato, Stefan Roiser
+  - Changed the way dictionary classes get instantiated and classes resolved. They are accumulated
+    al the end of the .cpp file in a annonymous namespace. The method Class::resolvePending() is
+    only called once per file.
+  - Corrected bug detected by Markus concerning transient fields when class name contained spaces 
+    
+! 2003-12-09 Pere Mato
+  - Included <string> in generated dict files (for WIN32) to avoid the undefined reference std::locale::id::_Id_cnt
+    when compiled optimized (reported by Ioannis)
+
+! 2003-12-05 Pere Mato
+  - Added "const" in the cast of stub functions in case the method is const
+
+! 2003-11-18 Pere Mato
+  - Added modifications from Markus to handle hash tables and sets on Windows
+  
+! 2003-11-18 Pere Mato
+  - BUGFIX: [ Bug #1868 ] Handling of private copy constructors
+    The copy constructors are filtered if any base classes declares a private copy constructor.
+  - BUGFIX: [ Bug #1869 ] Class defining operator new()
+    Workaround found based in the next selection feature.
+  - FEATURE: New tags <selection/> and <exclusion/> in selection files to select/exclude classes, fields or methods from the 
+    generated output. The default is <selection/>
+  - BuildFile: Removed -O0 since it is now affordable to compile with the default -O2  
+  
+! 2003-11-06 Pere Mato, Stefan Roiser
+  - BUGFIX: [ Bug #1808 ] --pool generates too many constructors
+  - Added new --split option to separate the function stubs from the rest. This should overcome
+    the problem with Windows for private/protected functions
+    
+
+! 2003-11-05 Pere Mato
+  - Fix the order of building test libraries (by adding a BuildFile)
+
+! 2003-11-03 Pere Mato
+  - BUGFIX: [ Bug #1376 ] filling vector is inefficient
+
+
+! 2003-10-30 Pere Mato
+	* Correct bug concerning method arguments. The signature (int,int) was
+	  wrongly generated
+
+! 2003-10-08 Pere Mato, Stefan Roiser
+	* several small changes for icc compliance
+
+! 2003-10-7  Pere Mato
+
+	* cmt/requirements: modified to build on Windows
+	* cmt/fragments: added dictionary fragments
+
+! 2003-10-02 Pere Mato
+  - BUGFIX: [ Bug #1581 ] no error issue if class declaration not found
+     
+! 2003-09-03 Pere Mato
+  - BUGFIX: Fixed bug that prevented SealDict to compile. The "const" should not
+	    be removed from arguments of function types.
+
+! 2003-08-06 Pere Mato
+  - BUGFIX: Fixed the problem when compiling a dictionary with a class
+            with the name "C". There was a clash between the class name 
+            and the used local ClassBuilder instance name.
+
+! 2003-08-05 Pere Mato
+  - FEATURE: Implemented request 
+             [ Bug #1185 ] can I specify full output file name for lcgdict?
+
+! 2003-07-25 Pere Mato
+  - FEATURE: Support for optional arguments in functions/methods. The generated stub
+             covers all possible number of arguments
+  - FEATURE: Enum types are converted to "int"s. It is not guaranteed that it will
+             work in all circustances.
+  - FEATURE  Set optimization level to -O0 for buiding dictionaries 
+	
+! 2003-06-25 Pere Mato
+  - FEATURE: Warnings are issued if the dictionary for a concrete selected class (from selction file) is not generated. Requested by Bill Tanenbaum et al.
+
+! 2003-06-04 Pere Mato
+  - BUGFIX: Issue a warning when data members are references. This is not 
+    supported (yet?)
+
+! 2003-06-03 Pere Mato
+  - BUGFIX: Const data members are of a given type and not of a const type for which
+            we do not have reflection information
+  - BUGFIX: Fixed methods returning by value. The static copy of the return value
+            was not updated.
+  - FEATURE: For "abstract" classes added a ABSTRACT modifier
+  - FEATURE: Handling long long
+
+! 2003-05-16 Pere Mato
+  - FEATURE: Added proper class/field/method modifiers
+             Added VIRTUAL modifier to classes that have virtual table defined
+
+! 2003-05-14 Pere Mato
+  - BUGFIX. The normalized class name failed on cases like A::B<C::D>::F<G,H>
+
+! 2003-05-14 Pere Mato
+  - Bug #543 FIXED. Compare class names in the selection ignoring whitespaces
+  
+! 2003-05-13 Pere Mato
+  - Adapted simple test to CPPUNIT
+
+! 2003-05-12 Pere Mato
+  - FEATURE: Added the possibility to specify what data members to be transient/persistent
+
+! 2003-05-05 Pere Mato
+  - BUGFIX: when a method returns a by value type that do not have a default
+            constructor.
+
+! 2003-04-30 Stefan Roiser
+  - BUGFIX: the case when classes were enhanced which initially had no members 
+
+! 2003-04-03 Pere Mato
+  - Modified test "simple" to use SharedLibrary to load the dictionary
+  - Fixed a bug related to function pointers as arguments of methods/functions
+  - Adapted the dictionary generation to the new function stub signature 
+	(void*, const std::vector<void*>&)
+
+! 2003-04-02 Pere Mato
+  - Added new extension methods to support POOL in the follwing lines:
+  Basically Markus requires a couple of methods to be added in each 
+  "container-like" class: writeData(...) and readData(...). The old "allocate" 
+  and "elements" will be removed.
+  - The signature of these two methods is (void (*element)(const void*, const
+   std::vector<void*>&), void (*size)(size_t&, const std::vector<void*>&)  ). 
+   So, he is providing to these methods a couple of "call-backs" as  argumuments
+   such that the implementation will have to call them for each element in the
+   container-like object. 
+  - The implementation of these methods will depend on the kind of container-like 
+  we are dealing.
+  - All containers will be classified accordingly with the their capabilities in 
+  terms of iterators and filling operations as follows:
+    "vector" -> std::vector, std::list, std::dequeue
+    "set"    -> std::set, std::multiset
+    "queue"  -> std::queue
+    "stack"  -> std::stack
+    "map"    -> std::map, std::multimap
+  - End-user containers can also be classified in the same way.
+
+! 2003-04-01 Pere Mato
+  - Added STL name normalization (removing default template arguments)
+  
+! 2003-03-14 Pere Mato
+  - Added --gccxmlpath in the lcg command to allow the script to work without using PATH.
+    Fixes problem reported by Dirk (Bug#262)
+
+! 2003-02-17 Pere Mato
+  - Added directory /dict to speficy the building of test dictionaries
+  - Removed /test/clhep test
+  - Fixed /test/simple to make it work
+	
+! 2003-02-17 Pere Mato
+  - Added option --deep to generate the dictionary for all the depending classes
+    starting form the defined in the local input header file. It follows
+    dependencies for data members and base classes only. (sufficient for persistency)
+  - Improved option -s [--selection_file] to specify the classes required in
+    the format:
+    <lcgdict>
+       <class name="A"/>
+       <class name="std::pair&lt;double,std::string&gt;" 
+              id="01366d42-c04e-11d1-b1c0-00c04fc2f3ef"/>
+       <class pattern="std::vector&lt;*&gt;" type="vector"/>
+    </lcgdict>
+    
+! 2003-02-14 Pere Mato
+  - Added option --pool to generate only the information for data members and 
+    constructors/destructors for all classes
+  - Added option -o to select the output directory
+  - Added option -s to specify a file containing the list of classes to generate
+    Exact classnames should be specified
+    
+! 2003-02-13 Pere Mato
+  - Fixed some bugs reported by Markus
+  - Append treatment for typedef to include them into the list of classes to
+    generate the dictionary
+
+! 2003-02-11 Pere Mato
+  - Added extra functions (allocate, elements) for vector and list
+  - Added default constructor if constructor with optional arguments exists
+  - Support for arrays added
+
+! 2003-02-11 Pere Mato
+  - Added extra functions (allocate, elements) for vector and list
+  - Added default constructor if constructor with optional arguments exists
+  - Support for arrays added
+  
+! 2003-02-10 Pere Mato
+  - Fixed problem with destructors.
+  - Handling operator methods
+  - Some re-factoring
+
+! 2003-02-07 Pere Mato, Stefan Roiser
+  - Very first commit
+

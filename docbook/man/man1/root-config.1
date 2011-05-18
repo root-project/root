@@ -1,0 +1,238 @@
+.\"
+.\" $Id: root-config.1,v 1.4 2005/03/21 21:42:21 rdm Exp $
+.\"
+.TH ROOT-CONFIG 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+root-config \- ROOT utility for your Makefiles
+.SH SYNOPSIS
+.B root-config
+.I "[options]"
+.SH "DESCRIPTION"
+Put lines like 
+.RS 
+.nf 
+
+CFLAGS = $(shell root-config \-\-cflags)
+LIBS   = $(shell root-config \-\-libs)
+GLIBS  = $(shell root-config \-\-glibs)
+
+%Cint.cxx:Include.h LinkDef.h
+        rootcint \-f $@ \-c $^ 
+
+.fi
+.RE
+in you Makefile.
+.PP
+You may also find the \fIautomake\fR(1), \fIautoconf\fR(1), and
+\fIlibtool\fR(1) macro file \fI/usr/share/aclocal/root.m4\fR
+useful.  If that macro file isn't installed where \dIaclocal\fR will
+find it, copy the contents to your local \fIacinclude.m4\fR file.  In
+the directories you use \fBROOT\fR libraries, have in your
+\fIMakefile.am\fR file: 
+.RS 
+.nf 
+
+lib_LTLIBRARIES         = libFoo.la
+pkginclude_HEADERS      = Foo.h
+noinst_HEADERS          = FooCint.h
+libFoo_la_SOURCES       = Foo.cxx FooCint.cxx   
+libFoo_la_LDFLAGS       = \-version-info 1:0 \-R @ROOTLIBDIR@
+libFoo_la_LDADD         = \-lCore \-lCint @ROOTAUXLIBS@
+
+BUILT_SOURCES           = FooCint.cxx FooCint.h 
+
+AM_CPPFLAGS             = \-I@ROOTINCDIR@
+AM_LDFLAGS              = \-L@ROOTLIBDIR@
+CLEANFILES              = *Cint.cxx *Cint.h *~ core 
+
+%Cint.cxx %Cint.h:Include.h LinkDef.h
+        @ROOTCINT@ \-f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
+
+.fi
+.RE
+where you should substitute \fBFoo\fR with whatever, and list the
+appropiate source files in the \fB_SOURCES\fR variable. In you
+\ficonfigure.in\fR file, put:
+.RS
+.nf
+
+AC_PROG_CC
+AC_PROG_CXX
+ROOT_PATH
+AM_PROG_LIBTOOL
+
+.fi
+.RE
+along with any other macros you may need. 
+.PP
+Note that the \fBROOT_PATH\fR macro takes three optional arguments:
+the minimal \fBROOT\fR version to use, action if \fBROOT\fR is found,
+and action if \fBROOT\fR isn't found.  Some examples are 
+.RS
+.nf
+
+ROOT_PATH(3.03/05, , AC_MSG_ERROR(Your ROOT version is too old))
+ROOT_PATH(, AC_DEFUN(HAVE_ROOT))
+
+.fi
+.RE
+For example, if you want to compile some part of your source tree
+conditionally on wether \fBROOT\fR is present or not, you can put in
+your \fIconfigure.in\fR file 
+.RS
+.nf
+
+ROOT_PATH(,
+[
+  AC_DEFUN(HAVE_ROOT)
+  have_root=yes  
+])
+AM_CONDITIONAL(GOT_ROOT, test "x$have_root" = "xyes")
+
+.fi
+.RE
+And then in some \fIMakefile.am\fR
+.RS
+.nf
+
+EXTRA_SOURCES		= root_depenent_source.cc
+if GOT_ROOT
+LIBFOOXTRA              = root_depenent_source.cc
+else
+LIBFOOXTRA              =
+endif
+
+lib_LTLIBRARIES         = libFoo.la
+libFoo_la_SOURCES	= Foo.cc  $(LIBFOOXTRA)
+
+.fi
+.RE
+The full list of substitution variables are:
+.TP
+.B ROOTCONF
+full path to \fIroot-config\fR
+.TP
+.B ROOTEXEC
+full path to \fIroot\fR
+.TP
+.B ROOTCINT
+full path to \fIrootcint\fR
+.TP
+.B ROOTLIBDIR
+Where the \fBROOT\fR libraries are 
+.TP
+.B ROOTINCDIR
+Where the \fBROOT\fR headers are 
+.TP
+.B ROOTCFLAGS
+Extra compiler flags
+.TP
+.B ROOTLIBS
+\fBROOT\fR basic libraries 
+.TP
+.B ROOTGLIBS
+\fBROOT\fR basic + GUI libraries
+.TP
+.B ROOTAUXLIBS
+Auxilary libraries and linker flags for \fBROOT\fR
+.TP
+.B ROOTAUXCFLAGS
+Auxilary compiler flags 
+.TP
+.B ROOTRPATH
+Same as \fBROOTLIBDIR\fR
+.SH OPTIONS 
+.TP 
+.B \-\-help
+Gives a short list of options avaliable, and exit
+.TP
+.B \-\-version 
+Report the version number of installed \fBROOT\fR, and exit. 
+.TP
+.BI \-\-prefix =<prefix>
+If no arguments is given, reports where \fBROOT\fR is installed. With
+an argument of =\fI<prefix>\fR, set the base of the subsequent options
+to \fI<prefix>\fR. If \fB\\-\-exec-prefix\fR is passedwith an argument,
+that argument overrides the argument given to \fB\\-\-prefix\fR for the
+library path. 
+.TP
+.BI \-\-exec-prefix =<prefix>
+If no argument is given, report where the libraries are installed. If
+an argument is given, use that as the installation base directory for
+the libraries. This option does not affect the include path. 
+.TP
+.B \-\-libdir
+Print the directory where the ROOT libraries are installed. 
+.TP
+.B \-\-incdir
+Print the directory where the ROOT headers are installed. 
+.TP
+.B \-\-libs
+Output a line suitable for linking a program agains the \fBROOT\fR
+libraries. No graphics libraries are output. 
+.TP
+.B \-\-glibs
+As above, but also output for the graphics libraries. 
+.TP
+.B \-\-cflags
+Output a line suitable for compiling a source file againd the
+\fBROOT\fR header (class declararion) files. 
+.TP
+.B \-\-new 
+Put the \fBlibNew.so\fR library in the library lists.  This option
+\fImust\fR be given before options \fB\-\-libs\fR and \fB\-\-glibs\fR. 
+.TP
+.B \-\-nonew 
+Compatiblity option. Does nothing. 
+.TP
+.B \-\-auxlibs
+Print auxiliary libraries and/or system linker flags.
+.TP
+.B \-\-noauxlibs
+Do not print auxiliary libraries and/or system linker flags in the
+output of \fB\-\-libs\fR and \fB\-\-glibs\fR. 
+.B \-\-auxcflags
+Print auxiliary compiler flags.
+.TP
+.B \-\-noauxcflags
+Do not print auxiliary compiler flags in the output of
+\fB\-\-cflags\fR.
+.TP
+.B \-\-noldflags
+Do not print library path link option in output of \fB\-\-libs\fR and
+\fB\-\-glibs\fR. 
+.SH "SEE ALSO"
+\fIroot\fR(1), \fIroot-cint\fR(1)
+.PP
+See also the \fBROOT\fR webpages:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fR
+.UE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" EOF
+.\"

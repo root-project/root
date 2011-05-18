@@ -1,0 +1,331 @@
+#!/bin/sh
+
+
+#--- Help function -------------
+printhelp()
+{
+   echo "   "
+   echo "  pq2-ana-dist"
+   echo "   "
+   echo "  Purpose:  analyse the file distribution of a dataset (or a set of datasets) over the file"
+   echo "            servers, eiher in terms of files or of file sizes. The output is a text file with"
+   echo "            the the file movements needed to make the file distribution even in the chosen"
+   echo "            metrics to be used in input to pq2-redistribute."
+   echo "            Optionally the internal objects can be saved so that they can be used as starting"
+   echo "            point for a subsequent run."
+   echo "            Also an histogram and a plot can be saved to visualize the file distribution."
+   echo "   "
+   echo "  Syntax:"
+   echo "           pq2-ana-dist [-h|--help] [-v] [-k|--keep] [(-d|--dataset=)] datasets"
+   echo "                            --plot=fileplot.fmt"
+   echo "                            --fout=outfile --fin=infile"
+   echo "                            -s servers (--servers=servers)"
+   echo "                            -e excsrvs (--exclude=excsrvs)"
+   echo "                            -i ignsrvs (--ignore=ignsrvs)"
+   echo "                            -m metrics (--metrics=metrics)"
+   echo "                            -f filemv (--filemv=filemv)"
+   echo "                            -t tmpdir (--tmp=tmpdir)"
+   echo "                            -u serviceurl (--url=serviceurl)"
+   echo "   "
+   echo "   -h | --help   Print this help"
+   echo "   -v            Verbose mode"
+   echo "   -k | --keep   Keep temporary files"
+   echo "   fileplot.fmt  Create distribution plot in format 'fmt'and save it in fileplot.fmt:"
+   echo "                 Available formats: png (default), eps, ps, pdf, svg, gif, xpm, jpg, tiff"
+   echo "   outfile       Save per-server distrbution of this run into 'outfile' (ROOT file)"
+   echo "   infile        Start from per-server distribution read from 'infile'"
+   echo "                 (ROOT file output of a previous run with --fout=outfile)"
+   echo "   datasets      Comma-separated list of datasets to be analysed; the '*' wild card in"
+   echo "                 the items (in such a case the full string - as shown by pq2-ls - should"
+   echo "                 be given in quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo "   servers       Commas-separated list of servers to be used (-s) in the analysis;"
+   echo "                 a '+' in front of the list adds the specified servers to the existing"
+   echo "                 ones: this can be useful when determining file movements to empty or"
+   echo "                 new servers"
+   echo "   excsrvs       Commas-separated list of servers to be excluded from the target servers;"
+   echo "                 this can be used, for example, to determine the files movements to drain a server"
+   echo "   ignsrvs       Commas-separated list of servers to be ignored in the analysis; this"
+   echo "                 can be used, for example, to skip redirector urls"
+   echo "   metrics       Metric to be used to calculate the degree of evenness: "
+   echo "                 'F' to use the number of files (default), 'S' to use the file size"
+   echo "   filemv        File with the file movement directives to be input to pq2-redistribute"
+   echo "                 Default is 'datasetname' with the first '/' dropped, the others changed"
+   echo "                 into '-' and any '*' changed to '-star-', with extension '.txt' "
+   echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
+   echo "                 for data servers, it must include the directory."
+   echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
+   echo "   tmpdir        Directory for temporary files [/tmp/<user>]."
+   echo "   "
+}
+
+PQ2=`which pq2 2> /dev/null`
+if test "x$PQ2" = "x" ; then
+   echo "Unknown command 'pq2'"
+   exit 1
+fi
+
+DBGOPT=""
+KEEPOPT=""
+SRVURL=""
+DSNAME=""
+DSNARG=""
+FILEMV=""
+FILEOPT=""
+METRICS="-m F"
+NEWSRVS=""
+IGNSRVS=""
+EXCSRVS=""
+PLOT=""
+INFILE=""
+OUTFILE=""
+ADD="no"
+TDIR=$TMPDIR
+#
+# Parse long options first
+other_args=
+short_opts=
+for i in $@ ; do
+   opt=""
+   case $i in
+      --*) opt=`echo "$i" | sed 's/--//'` ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
+   esac
+   if test ! "x$opt" = "x" ; then
+      case "$opt" in
+         *=*) oarg=`echo "$opt" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+         *) oarg= ;;
+      esac ;
+      case $opt in
+         dataset=*) DSNAME="$oarg"; DSNARG="-d $oarg" ;;
+         exclude)   EXCSRVS="-e $oarg" ;;
+         filemv=*)  FILEMV="$oarg" ; FILEOPT="-f $oarg" ;;
+         help)      printhelp ; exit ;;
+         ignore=*)  IGNSRVS="-i $oarg" ;;
+         infile=*)  INFILE="--infile $oarg" ;;
+         keep)      KEEPOPT="-k" ;;
+         metrics=*) METRICS="-m $oarg" ;;
+         outfile=*) OUTFILE="--outfile $oarg" ;;
+         plot=*)    PLOT="--plot $oarg" ;;
+         plot)      PLOT="--plot" ;;
+         servers=*) NEWSRVS="-s $oarg" ;;
+         tmp=*)     TDIR="$oarg" ;;
+         url=*)     SRVURL="-u $oarg" ;;
+      esac
+   fi
+done
+
+if test ! "x$short_opts" = "x" ; then
+   while getopts d:e:f:i:m:s:t:u:hkv i $short_opts ; do
+      case $i in
+      d) DSNAME="$OPTARG"; DSNARG="-d $OPTARG" ;;
+      e) EXCSRVS="-e $OPTARG" ;;
+      f) FILEMV="$OPTARG" ; FILEOPT="-f $OPTARG" ;;
+      h) printhelp ; exit ;;
+      i) IGNSRVS="-i $OPTARG" ;;
+      k) KEEPOPT="-k" ;;
+      m) METRICS="-m $OPTARG" ;;
+      s) NEWSRVS="-s $OPTARG" ;;
+      t) TDIR="$OPTARG" ;;
+      u) SRVURL="-u $OPTARG" ;;
+      v) DBGOPT="-v" ;;
+      \?) printhelp; exit 1 ;;
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
+   done
+
+   # Fill empty fields with any non-prefixed argument
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="$other_args"
+      DSNARG="-d $other_args"
+   fi
+fi
+
+
+if test "x$TDIR" = "x" || test ! -d $TDIR ; then
+   emsg="$TDIR"
+   if test ! "x$TDIR" = "x/tmp" ; then
+      TDIR="/tmp"
+      if test ! -d $TDIR ; then
+         emsg="$emsg $TDIR"
+         echo ">>>> temporary directories '$emsg' not found!"
+         exit
+      fi
+   else
+      echo ">>>> temporary directory $TDIR not found!"
+      exit
+   fi
+fi
+if test ! "x$PLOT" = "x" && test ! "x$INFILE" = "x"; then
+   echo "Creating distribution plot from $INFILE ..."
+else
+   if test "x$DSNAME" = "x"; then
+      echo "Some arguments are missing (d:$DSNAME)!"
+      printhelp
+      exit
+   fi
+   if test ! "x$INFILE" = "x"; then
+      ADD="yes"
+      echo "Adding distribution info about '$DSNAME' to the one found in $INFILE ..."
+   fi
+fi
+
+# Run
+if test "x$ADD" = "xno" && test -f "$FILEIO" ; then
+   echo "Removing existing $FILEIO ..."
+   rm -fr $FILEIO
+fi
+FILETMP=
+if test ! "x$PLOT" = "x"; then
+   FILETMP="$TDIR/pq2-ana-dist.tmp"
+   if test -f "$FILETMP" ; then
+      rm -fr $FILETMP
+   fi
+fi
+export TMPDIR="$TDIR"; $PQ2 ana-dist $DBGOPT $KEEPOPT $DSNARG $NEWSRVS $EXCSRVS $IGNSRVS $METRICS $FILEOPT $INFILE $OUTFILE $PLOT $SRVURL
+
+
+if test "x$PLOT" = "x"; then
+   echo "no plot requested - exit"
+   exit
+fi
+if test ! -f $FILETMP; then
+   echo "Plot requested but no '$FILETMP' found - exit"
+   exit
+fi
+
+while read -r fh fp mt; do
+   echo "histfile: $fh, plotfile: $fp, metrics: $mt"
+done < $FILETMP
+
+if test -f $TDIR/pq2PlotDist.C ; then
+   rm -f $TDIR/pq2PlotDist.C
+fi
+
+cat > $TDIR/pq2PlotDist.C << EOF
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TH1D.h"
+#include "TLine.h"
+#include "TString.h"
+#include "TStyle.h"
+
+void pq2PlotDist(const char *fin, const char *fout, const char *met) {
+
+   // Read the histogram
+   TFile *f = TFile::Open(fin);
+   if (!f) {
+      Printf("problems opening the file '%s'", fin);
+      return;
+   }
+   TH1D *h1d = (TH1D *) f->Get("DistInfoHist");
+   if (!h1d) {
+      Printf("histogram 'DistInfoHist' not found in '%s'", fin);
+      delete f;
+      return;
+   }
+   // Number of bins
+   Int_t nbx = h1d->GetNbinsX();
+   if (nbx < 1) {
+      Printf("histogram 'DistInfoHist' has no bins");
+      delete f;
+      return;
+   }
+   // Create the canvas
+   gStyle->SetOptFit(0);
+   gStyle->SetOptStat(0);
+   TCanvas *c1 = new TCanvas("c1","Dist",100,100,800,600);
+   c1->SetBorderMode(0);
+   c1->SetBorderSize(2);
+   c1->SetFrameFillColor(0);
+   c1->SetFrameBorderMode(0);
+   c1->SetFrameFillColor(0);
+   c1->SetFrameBorderMode(0);
+   // Get average over the bins
+   Double_t yavg = h1d->Integral() / nbx;
+   // Get min and max
+   Double_t ymin = h1d->GetMinimum();
+   Double_t ymax = h1d->GetMaximum();
+   // Calculate min and max for the plot
+   Double_t dmx = (ymax - yavg > yavg - ymin) ? ymax - yavg : yavg - ymin;
+   Double_t ymip = (yavg - dmx - 0.1*yavg > 0) ? yavg - dmx - 0.1*yavg : 0;
+   Double_t ymxp = yavg + dmx + 0.1*yavg;
+   h1d->SetMinimum(ymip);
+   h1d->SetMaximum(ymxp);
+   h1d->SetLineColor(38);
+   h1d->SetLineWidth(3);
+   h1d->GetYaxis()->SetTitle(met);
+   h1d->GetYaxis()->CenterTitle(true);
+   h1d->GetYaxis()->SetTitleOffset(1.2);
+   // Plot
+   TString title = TString::Format("dataset(s): %s", h1d->GetTitle());
+   h1d->SetTitle(title);
+   h1d->DrawCopy();
+
+   // Draw average
+   TLine *lavg = new TLine(0.5, yavg, nbx + 0.5, yavg);
+   lavg->SetLineColor(50);
+   lavg->SetLineWidth(2);
+   lavg->Draw();
+   TLatex *tavg = new TLatex(nbx + 0.65, yavg,"Average");
+   tavg->SetTextAlign(12);
+   tavg->SetTextColor(50);
+   tavg->SetTextSize(0.03146853);
+   tavg->SetLineWidth(2);
+   tavg->Draw();
+
+   // Draw average + 10%
+   TLine *lp10 = new TLine(0.5, yavg*1.1, nbx + 0.5, yavg*1.1);
+   lp10->SetLineColor(50);
+   lp10->SetLineWidth(2);
+   lp10->SetLineStyle(2);
+   lp10->Draw();
+   TLatex *tp10 = new TLatex(nbx + 0.65, yavg*1.1,"+10%");
+   tp10->SetTextAlign(12);
+   tp10->SetTextColor(50);
+   tp10->SetTextSize(0.03146853);
+   tp10->SetLineWidth(2);
+   tp10->Draw();
+
+   // Draw average - 10%
+   TLine *lm10 = new TLine(0.5, yavg*0.9, nbx + 0.5, yavg*0.9);
+   lm10->SetLineColor(50);
+   lm10->SetLineWidth(2);
+   lm10->SetLineStyle(2);
+   lm10->Draw();
+   TLatex *tm10 = new TLatex(nbx + 0.65, yavg*0.9,"-10%");
+   tm10->SetTextAlign(12);
+   tm10->SetTextColor(50);
+   tm10->SetTextSize(0.03146853);
+   tm10->SetLineWidth(2);
+   tm10->Draw();
+
+   // Update the canvas
+   c1->Modified();
+   c1->Update();
+   // Save it
+   if (fout) {
+      c1->SaveAs(fout);
+   }
+   // Cleanup
+   delete f;
+}
+EOF
+
+# Run the macro
+root -q -l -b $TDIR/pq2PlotDist.C\(\"$fh\",\"$fp\",\"$mt\"\)
+
+# Cleanup
+#rm -f $FILETMP
+
+
+
+

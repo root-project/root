@@ -1,0 +1,106 @@
+# $Id: MakeExe,v 1.1 2003/12/08 12:20:21 brun Exp $
+# 
+# Makefile for building Geant3 example
+# The example name has to be provided in TARGET variable
+# 
+
+############################### geant321 Makefile #############################
+
+ifeq ($(PLATFORM),)
+PLATFORM = $(shell root-config --arch)
+endif
+
+EXEDIR  = $(shell pwd)
+BINDIR  = ../tgt_$(PLATFORM)/examples
+CONFDIR = ../config
+
+ifeq ($(ROOTSYS),)
+ROOT_INCDIR = $(shell root-config --incdir)
+ROOT_BINDIR = $(shell root-config --prefix)/bin
+else
+ROOT_INCDIR = $(ROOTSYS)/include
+ROOT_BINDIR = $(ROOTSYS)/bin
+endif
+
+# Include machine specific definitions
+#
+include $(CONFDIR)/Makefile.$(PLATFORM)
+
+
+############################### Sources #######################################
+
+include $(CONFDIR)/MakeRules
+
+
+# Sources
+
+FSRC	:= $(TARGET).F
+CXXSRC	:= gmain.cxx
+SRCS	:= $(FSRC) $(CXXSRC)
+
+
+# Objects
+
+FOBJ	:= $(patsubst %.F,$(BINDIR)/%.o,$(FSRC))
+CXXOBJ	:= $(patsubst %.cxx,$(BINDIR)/%.o,$(CXXSRC))
+OBJS	:= $(FOBJ) $(CXXOBJ)
+
+
+# C++ compilation flags
+
+CXXFLAGS := $(CXXOPTS) $(CLIBCXXOPTS) $(CLIBDEFS) \
+		-I. -I$(ROOT_INCDIR) -I../TGeant3
+
+# C compilation flags
+
+#CFLAGS      := $(COPT) $(CLIBCOPT) $(CLIBDEFS) -I.
+
+# FORTRAN compilation flags
+
+FFLAGS	:= $(FOPT) $(CLIBFOPT) $(CLIBDEFS) -I.
+
+DEPINC	+= -I. -I$(ROOT_INCDIR)
+
+############################### Libraries #######################################
+
+# CERNLIB
+#
+LDLIBS1 += -L$(CERNLIB) -lpacklib -lg2c
+
+# geant3_+vmc
+#
+LDLIBS2 += -L../lib/tgt_$(PLATFORM)/ -lgeant321
+
+# Pythia6
+#
+#LDLIBS3 += $(PYTHIA6)/libPythia6.so
+LDLIBS3 += -L$(PYTHIA6) -lPythia6
+
+# ROOT
+#
+LDLIBS4 += $(shell $(ROOT_BINDIR)/root-config --glibs) \
+		-lVMC -lPhysics -lEG -lEGPythia6 -lGeom  
+
+LDLIBS = $(LDLIBS4) $(LDLIBS3) $(LDLIBS2) $(LDLIBS1)
+
+
+############################### Targets #######################################
+
+
+PROGRAM	= $(EXEDIR)/$(TARGET)
+
+default:  depend $(PROGRAM)
+
+$(EXEDIR)/$(TARGET):	$(BINDIR)/$(TARGET)
+$(BINDIR)/$(TARGET):	$(OBJS)
+
+depend:		$(SRCS)
+
+TOCLEAN		= $(BINDIR)
+TOCLEANALL	= $(BINDIR)
+
+include $(CONFDIR)/MakeMacros
+
+############################### Dependencies ##################################
+
+-include $(BINDIR)/Make-depend

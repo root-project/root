@@ -1,0 +1,147 @@
+/*****************************************************************************/
+/*                                                                           */
+/*                              XrdMonTimer.icc                              */
+/*                                                                           */
+/* (c) 2005 by the Board of Trustees of the Leland Stanford, Jr., University */
+/*                            All Rights Reserved                            */
+/*       Produced by Jacek Becla for Stanford University under contract      */
+/*              DE-AC02-76SF00515 with the Department of Energy              */
+/*****************************************************************************/
+
+// $Id$
+
+#include <iostream>
+using std::cerr;
+using std::endl;
+
+/**
+ **  Starts the timer.
+ **  Returns 0 on success.
+ **/
+inline int
+XrdMonTimer::start()
+{
+    if ( timerOn() ) {
+        cerr << "start: XrdMonTimer already started" << endl;
+        return -1;
+    }
+
+    return gettimeofday(&_tbeg, 0);
+}
+
+/**
+ **  Stops the timer.
+ **  Returns total elapsed time (sum of all deltas
+ **  between "starts" and "stops"), or -1 on error.
+ **/
+inline double
+XrdMonTimer::stop()
+{
+    if ( ! timerOn() ) {
+        cerr << "stop: XrdMonTimer not started" << endl;
+        return -1;
+    }
+
+    calcElapsed();
+    resetTBeg();
+
+    return _elapsed;
+}
+
+
+/**
+ **  Calculates elapsed time (from last "start" till now)
+ **  and adds it to the current total elapsed time.
+ **  Return elapsed time on success (or -1)
+ **/
+inline double
+XrdMonTimer::calcElapsed()
+{
+    if ( ! timerOn() ) {
+        cerr << "findElapsed: timer not started" << endl;
+        return -1;
+    }
+
+    struct timeval now;
+    int ret = gettimeofday(&now, 0);
+    if ( 0 == ret ) {
+        _elapsed += calcDif(_tbeg, now);
+    } else {
+        return -1;
+    }
+
+    return _elapsed;
+}
+
+
+inline double
+XrdMonTimer::calcDif(const timeval& start, const timeval& stop) const
+{
+    struct timeval result;
+
+    result.tv_sec  = stop.tv_sec  - start.tv_sec;
+    result.tv_usec = stop.tv_usec - start.tv_usec;
+
+    if ( result.tv_usec < 0 ) {
+        result.tv_sec--;
+        result.tv_usec += 1000000;
+    }
+
+    return convert2Double(result);
+}
+
+
+inline double
+XrdMonTimer::convert2Double(const timeval& t) const
+{
+    return (double)t.tv_sec +
+          ((double)(t.tv_usec/1000))/1000.0;
+}
+
+inline void
+XrdMonTimer::resetTBeg()
+{
+    _tbeg.tv_sec  = 0;
+    _tbeg.tv_usec = 0;
+}
+
+inline void
+XrdMonTimer::resetTElapsed()
+{
+    _elapsed = 0;
+}
+
+inline void
+XrdMonTimer::reset()
+{
+    resetTBeg();
+    resetTElapsed();
+}
+
+inline int 
+XrdMonTimer::isOn(const struct timeval& t) const
+{
+    return 0 != t.tv_sec || 0 != t.tv_usec;
+}
+
+// Returns true (1) if timer is currently started.
+inline int
+XrdMonTimer::timerOn() const
+{
+    return isOn(_tbeg);
+}
+
+
+/**
+ **  Returns total elapsed time (sum of deltas between
+ **  all "starts" and "stops"). If counter is currently 
+ **  started and not stopped that interval will not be
+ **  included.
+ **/
+
+inline double 
+XrdMonTimer::getElapsed() const
+{
+    return _elapsed;
+}
+

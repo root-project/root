@@ -1,0 +1,716 @@
+/* ROOT CSS, Axel 2007-02-07 */
+
+/*** Generic layout ***/
+body {
+   font-family: Arial,Verdana,sans-serif;
+   color: inherit;
+   background-color: #8596AA;
+   min-width: 750px;
+   margin: 0;
+   padding: 20px 0;
+}
+#body_content {
+   background-color: #FFFFFF;
+   width: 818px;
+   font-size: 82%;
+   line-height: 130%;
+   margin: 0 auto;
+   padding: 3px 16px;
+}
+
+/* links */
+a {
+   text-decoration: none;
+}
+a:link {
+   color: #336299;
+   background-color: inherit;
+   text-decoration: none;
+}
+a:visited {
+   color: #336299;
+   background-color: inherit;
+}
+a:active {
+   color: #336299;
+   background-color: inherit;
+   border: dotted 1px #0000ff;
+}
+a:hover {
+   color: #336299;
+   text-decoration: underline;
+}
+
+/* headers */
+h1, h2, h3, h4 {
+   color: inherit;
+}
+h1 {
+   font-size: 2em;
+   line-height: 1.5em;
+   margin: 0;
+}
+h2 {
+   font-size: 1.3em;
+   margin: 1.5em 1.5em;
+}
+h3 {
+   font-size: 1em;
+}
+
+#footer {
+  margin-top: 1em;
+  font-size: 75%;
+  line-height: 110%;
+  border: 1px solid #CCCCCC;
+  padding: 0.7em;
+  /*text-align: center;*/
+}
+#footer em {
+  padding: 1em;
+  font-style: normal;
+}
+
+/* tabbed divs */
+div.tabs {
+   padding-left: 1em;
+   margin-top: 3em;
+   margin-left: 2em;
+}
+a.tab {
+   border-top: solid 1px Gray;
+   border-left: solid 1px Gray;
+   border-right: solid 1px Gray;
+   border-bottom: solid 0px Black;
+   color: #444444;
+   background-color: #eeeeee;
+   padding: 1px 0.4em 1px 0.4em;
+   margin-bottom: 1px;
+   position: relative;
+   top: -1px;
+}
+* html a.tab {
+   /* IE only, fix pos bug */
+   top: -2px;
+}
+a.tab:hover {
+   color: inherit;
+}
+a.tabsel {
+   border-top: solid 2px Black;
+   border-left: solid 2px Black;
+   border-right: solid 2px Black;
+   border-bottom: solid 3px White;
+   padding: 1px 0.4em 0px 0.4em;
+   position: relative;
+   top: -1px;
+   background-color: White;
+   color: Black;
+   font-weight: bold;
+   font-style: normal;
+}
+* html a.itabsel {
+   /* IE only, fix pos bug */
+   top: -2px;
+}
+a.tabsel:hover {
+   text-decoration: none;
+   cursor: default;
+}
+a.tabsel:active {
+   color: Black;
+   background-color: inherit;
+   border-left: solid 2px Black;
+   border-right: solid 2px Black;
+   border-top: solid 2px Black;
+   border-bottom: solid 3px White;
+}
+div.tabcontent {
+   border: solid 2px Black;
+   display: table;
+   margin: 0em 2em 0em 2em;
+   padding: 0.5em 0.5em 0.5em 0.5em;
+   background-color: #fff;
+}
+div.tabwidth {
+   width: 28em;
+   height: 0pt;
+}
+div.tabvisible, div.tabhidden {
+}
+
+div.tabvisible {
+   display: block;
+   margin-left: auto;
+   margin-right: auto;
+}
+div.tabhidden {
+   display: none;
+   margin-left: auto;
+   margin-right: auto;
+}
+
+div.clear {
+   clear: both;
+}
+
+/* links on top of page */
+#root_header {
+   background: #336299 url(http://root.cern.ch/drupal/sites/all/themes/newsflash/images/blue/root-banner.png) no-repeat scroll 0 0;
+  margin:0px -13px;
+}
+#root_header img {
+  margin: 10px;
+}
+
+#toplinks {
+   font-size: 90%;
+   border-top: 1px solid #FFFFFF;
+   width: 844px;
+   color: #FFFFFF;
+   margin: 1px -13px 3px -13px;
+   background-color: #2E4A6B;
+}
+div.descrhead {
+   text-align:right;
+   padding: 0;
+   margin: 0;
+   height: 1.5em;
+}
+span.descrtitle {
+   display: inline-block;
+   width: 6em;
+   padding: 0 14px;
+   font-weight: bold;
+   white-space: nowrap;
+}
+div.descrheadcontent {
+   display: inline-block;
+   text-align: left;
+   margin: 0 auto 0 0;
+   padding: 0 0;
+   float: left;
+}
+a.descrheadentry {
+   color: #FFFFFF;
+   text-decoration: none;
+   margin: 0;
+   font-weight: lighter;
+   border: none;
+   border-left: solid 1px #dddddd;
+   padding: 0px 14px;
+   white-space: nowrap;
+   display: inline-block;
+   width: 100px;
+}
+a.descrheadentry:visited {
+   color: #dddddd;
+   text-decoration: inherit;
+}
+a.descrheadentry:hover {
+   color: #ffffff;
+   background-color: #336299;
+   text-decoration: none;
+}
+div.location {
+   clear: both;
+   margin-bottom: 0.5em;
+   padding-bottom: 0.5em;
+   padding-top: 3px;
+   font-size: 80%;   
+}
+
+/* convert */
+table.descrtitle {
+   width: 100%;
+}
+a.contextheadentry {
+   text-decoration: none;
+   font-size: small;
+   font-weight: normal;
+}
+a.contextheadentry:visited {
+   color: #FFFFFF;
+   background-color: inherit;
+   text-decoration: inherit;
+}
+a.contextheadentry:hover {
+   color: #FFFFFF;
+   background-color: #336299;
+   text-decoration: underline;
+}
+td.contextheadentry {
+   color: #FFFFFF;
+   background-color: inherit;
+   margin-left: 0.0em;
+   margin-right: 0.0em;
+   border-bottom: none;
+   padding-left: 0.3em;
+   padding-right: 0.3em;
+   width: 40%;
+   text-align: left;
+}
+
+a.contextheadarrow {
+   font-size:xx-large;
+   text-decoration: none;
+   color: inherit;
+   padding-left: 0.3em;
+   padding-right: 0.3em;
+}
+a.contextheadarrow:hover {
+   color: #FFFFFF;
+   background-color: #336299;
+}
+
+#contexttitle div {
+   margin-top: -0.9em;
+   margin-bottom: -0.5em;
+}
+#contexttitle a {
+   color: #FFFFFF;
+}
+
+#contextheadentry_next {
+   border-left: dotted 1px #FFFFFF;
+   text-align: right;
+}
+#contextheadarrow_next {
+   border-left: none;
+}
+#divcontextheadarrow_up {
+   margin-top: -0.4em;
+}
+#contextheadarrow_up {
+   border-left: dotted 1px #FFFFFF;
+}
+#contextheadentry_up {
+   width: 20%;
+}
+#toplinks h1 {
+   font-size: x-large;
+   padding: 0.5em 0em 0em 0em;
+   margin: 0.3em 1em 0.1em 1em;
+}
+
+/* TOC */
+div.toc {
+   font-weight: bold;
+   font-size: small;
+   border: solid 1px Gray;
+   margin-left: 3em;
+   padding-top: 1em;
+   padding-left: 1em;
+   padding-right: 2em;
+   float: left;
+   clear: left;
+}
+ul.toc {
+   font-weight: normal;
+   list-style: none;
+   padding-left: 2em;
+}
+
+
+/*** Index pages ***/
+a.linkeddoc {
+   padding-right: 3em;
+   text-align: center;
+   font-style: italic;
+}
+#furtherreading {
+   margin-left: 3em;
+   margin-bottom: 2em;
+}
+
+#indx {
+   padding-left: 2em;
+   margin-left: 0px;
+}
+#indx li {
+   list-style: none;
+   padding: 0;
+   border: none;
+}
+#indx li.idxl0 {
+   background-color: #EEF4F9;
+}
+#indx span.typename {
+   display: inline-block;
+   font-weight: bold;
+   margin-left: 0em;
+   padding-right: 2em;
+   min-width: 10em;
+}
+
+#indxShortX, #indxModules {
+   border: 1px solid #CCCCCC;
+   background-color: #F5F5E9;
+   margin: 4px 0;
+   color: #000000;
+   padding: 8px 2em;
+}
+#indxShortX h4, #indxModules h4 {
+   font-size: 1.2em;
+   line-height: 1.5em;
+   margin: 0;
+}
+#indxShortX a, #indxModules a {
+   font-weight: bold;
+   display: inline-block;
+   padding: 0px 0.5em;
+}
+
+#searchform {
+   display: inline-block;
+}
+
+#searchform input {
+  display: inline-block;
+  border: 1px solid #336699;
+  vertical-align: middle;
+  width: 12em;
+  font-size: 0.9em;
+}
+
+#searchlink {
+  font-size: 0.8em;
+  vertical-align: middle;
+  background-color: ButtonFace;
+  border-style: outset;
+  border-width: 1px;
+  padding: 1px 8px 1px 8px;
+  text-decoration: none;
+  color: ButtonText;
+  margin: 0 0 0 0.1em;
+}
+
+/*** Class doc pages ***/
+div.classdescr {
+   background: #FFFFF6 url(http://root.cern.ch/drupal/sites/all/themes/newsflash/images/info.png) no-repeat scroll 15px 30px;
+   border-bottom: 3px solid #FEC201;
+   border-top: 3px solid #FEC201;
+   padding: 10px 15px 10px 54px;
+}
+div.classdescr pre {
+   margin: 0;
+   padding: 0;
+}
+div.code {
+   margin-bottom: 0.5em;
+   margin-top: 0.5em;
+   padding: 0.5em;
+   border: solid 1px #ffff77;
+   color: inherit;
+   background-color: #ffffdd;
+   float: left;
+}
+
+table.inhtree {
+   color: inherit;
+   background-color: White;
+   border: solid 1px Black;
+   width: 97%;
+}
+#functions {
+   margin-top: 4em;
+   margin-left: 0em;
+   color: inherit;
+   background-color: White;
+   clear: both;
+}
+#datamembers {
+   margin-top: 4em;
+   margin-left: 0em;
+   margin-bottom: 6em;
+   color: inherit;
+   background-color: White;
+}
+div.access {
+   border-left: solid 3pt black;
+   padding-left: 1em;
+   margin-left: 0em;
+   margin-bottom: 1em;
+}
+#funcpubl {
+   border-left-color: #77ff77;
+}
+#datapubl {
+   border-left-color: #77ff77;
+}
+#enumpubl {
+   border-left-color: #77ff77;
+}
+#funcprot {
+   border-left-color: #ffff00;
+}
+#dataprot {
+   border-left-color: #ffff00;
+}
+#enumprot {
+   border-left-color: #ffff00;
+}
+#funcpriv {
+   border-left-color: #ff7777;
+}
+#datapriv {
+   border-left-color: #ff7777;
+}
+#enumpriv {
+   border-left-color: #ff7777;
+}
+
+table.func, table.data /* but not table.data! */ {
+   width: 100%;
+} 
+tr.func, tr.data {
+   white-space: nowrap;
+}
+tr.datainh {
+   display: none;
+   white-space: nowrap;
+}
+tr.funcinh {
+   display: none;
+   white-space: nowrap;
+}
+span.baseclass {
+   color: #aaaaaa;
+   font-weight: normal;
+}
+td.funcret, td.datatype {
+   text-align: right;
+   padding: 0px 0.5em 0px 0.5em;
+   margin: 0px 0px 0px 0px;
+   white-space: nowrap;
+   width: 10%;
+}
+a.funcname {
+   font-weight: bolder;
+   margin-right: 0.4em;
+}
+td.funcname {
+   white-space: normal;
+   text-indent: -2em;
+   padding: 0px 0px 0px 2em;
+   margin: 0px 0px 0px 0px;
+   width: 100%;
+   width: 80%;
+}
+span.funcprop
+{
+	margin-left: 1em;
+	background-color: #FFFFCC;
+	border: solid 1px #FFFF33;
+	font-size: 80%;
+	font-weight: bold;
+}
+td.dataname {
+   font-weight: bolder;
+   vertical-align: top;
+   padding: 0px 0.5em 0px 0px;
+   min-width: 10em;
+}
+td.datadesc {
+   padding: 0px 0px 0px 0.5em;
+   border-left: 2px solid #FEC201;
+   white-space: normal;
+   color: inherit;
+   background-color: #FFFFF6;
+   width: 70%;
+}
+
+/* class charts */
+div.classcharts {
+   border: solid 2px Black;
+   display: table;
+   margin: 0em 2em 4em 2em;
+}
+div.classchartswidth {
+   width: 28em;
+   height: 0pt;
+}
+img.classcharts {
+   display: block;
+   border: none;
+   margin-left: auto;
+   margin-right: auto;
+}
+
+/* function documentation */
+div.funcdoc {
+   width: 97%;
+   margin-bottom: 3em;
+   border-left: 0.3em solid #eeeeff;
+   padding: 0.1em 0.3em 0.3em 0.3em;
+   color: inherit;
+}
+div.funccomm {
+   border: solid 1px #cccccc;
+   padding-top: 0.5em;
+   padding-bottom: 0.5em;
+   padding-left: 0.5em;
+   background-color: White;
+   margin: 0.3em 0px 0.3em 0.5em;
+}
+
+/* toolbox */
+#followpage {
+   font-size: small;
+   border: solid 2px Gray;
+   position: fixed;
+   top: 3em;
+   right: 1em;
+   z-index: 2;
+   color: Black; /*InfoText;*/
+   background-color: #FFFFE1; /*InfoBackground;*/
+   filter: alpha (opacity=20);
+   -moz-opacity: .2;
+   opacity: .2;
+}
+* html #followpage {
+   position: absolute;
+   float: right;
+   right: 1em;
+   top: 4em;
+   filter: alpha (opacity=100);
+   -moz-opacity: 1;
+   opacity: 1;
+}
+#followpage:hover {
+   filter: alpha (opacity=90);
+   -moz-opacity: .9;
+   opacity: .9;
+}
+
+#followpagecontenthide {
+   display: none;
+}
+#followpagetitle {
+   font-size: inherit;
+   font-weight: normal;
+   margin-bottom: 0.3em;
+   border-bottom: solid 1px Gray;
+   background-color: Gray;
+   font-size: medium;
+   color: White;
+   text-align: center;
+   padding-right: 1.1em;
+}
+* html #followpagetitle {
+   width: auto;
+}
+#dispopt {
+   margin: 0.3em 0.3em 0px 0.3em;
+   padding-top: 0.3em;
+   border-top: solid 1px Gray;
+   padding-bottom: 0.3em;
+   border-bottom: solid 1px Gray;
+}
+#formdispopt {
+   margin: 0px 0.3em 0px 0.3em;
+}
+div.libinfo {
+   margin: 0px 0.3em 0px 0.3em;
+}
+#followlinks {
+   text-align: center;
+   margin: 0.3em 0.3em 0.3em 0.3em;
+}
+a.followpagedisp {
+   color: Black;
+   background-color: #cccccc;
+   width: 1em;
+   position: absolute;
+   right: 0.1em;
+   top: 0.1em;
+   font-weight: bold;
+   font-size: x-small;
+   font-family: Courier;
+   text-decoration: none;
+   padding-left: 0.3em;
+   padding-right: 0.3em;
+}
+
+a.followpagedisp:hover {
+   background-color: White;
+}
+
+#followpageshower {
+   display: none;
+   position: relative;
+   top: 0em;
+   left: 0em;
+}
+#followpagehider {
+   display: inline;
+}
+#followpagecontent {
+   display: block;
+}
+
+img.latex {
+   vertical-align: middle;
+}
+
+/* Source pages */
+span.comment, span.keyword, span.cpp, span.string {
+   font-weight: normal;
+}
+span.comment {
+   background-color: #eeeeee;
+   color: Green;
+}
+span.keyword {
+   color: Black;
+   background-color: inherit;
+}
+span.cpp {
+   color: Gray;
+   background-color: inherit;
+}
+span.string {
+   color: Teal;
+   background-color: inherit;
+}
+#codeAndLineNumbers {
+   margin-left: -32px;
+   font-size: 110%;
+}
+pre.listing {
+   margin: 5px 0px 0px 45px;
+   padding-left: 1.2em;
+   line-height: normal;
+   float: left;
+   height: 0;
+}
+div.linenums {
+   width: 0em;
+   display: block;
+}
+div.ln {
+   font-family: monospace;
+   line-height: normal;
+   width: 50px;
+   text-align: right;
+   height: 100%;
+   border-right: 1px solid #aaaaaa;
+}
+a.ln {
+   display: inline-block;
+   height: 100%;
+   text-decoration:none;
+   color: #CE9201;
+   font-size: 80%;
+   margin: 0;
+   padding: 0 0.2em 0 0;
+}
+span.lnfile {
+   font-size:1%;
+   display: inline-block;
+   overflow: hidden;
+   width: 1px;
+   color: #fff;
+   margin: 0;
+   padding: 0;
+}

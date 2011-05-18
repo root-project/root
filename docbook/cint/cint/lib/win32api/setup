@@ -1,0 +1,11 @@
+mv ../../include/windows.h ../../include/_windows.h
+mv ../../include/winsock.h ../../include/_winsock.h
+rm  -f ../../include/win32api.dll
+
+makecint -mk Makewin -dl win32api.dll -h +P cintwin.h -P winfunc.h -l Gdi32.lib -l Advapi32.lib -l Comdlg32.lib -cint -Z0
+make -f Makewin 
+rm -f *.def *.obj *.pdb *.exp
+
+mv win32api.dll* ../../include
+mv ../../include/_windows.h ../../include/windows.h
+mv ../../include/_winsock.h ../../include/winsock.h

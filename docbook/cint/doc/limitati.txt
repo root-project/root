@@ -1,0 +1,703 @@
+Limitation of CINT
+
+  Cint accepts most of K&R and ANSI C/C++ language construct but not perfect. 
+ In fact, Cint is not aimed to be a 100% ANSI/ISO compliant C/C++ language
+ processor. It rather is a portable script language environment which is
+ close enough to the standard C++. This document describes major differences
+ from the standard. 
+
+# General information:
+
+ + How to workaround Cint limitation
+   If you have unsupported features in your source code, that part must be 
+  escaped by "#ifndef __CINT__" for cint and "#ifndef __MAKECINT__" for
+  makecint. The macro __CINT__ is defined both in cint and makecint.
+  __MAKECINT__ is defined only in makecint.
+
+ + Simple expression recommended
+   Because ANSI/ISO C++ standard is a huge document, it is impractical to 
+  describe every details of differences in this document.  Only major 
+  differences and cautions are described. To avoid unnecessary confusion,
+  please use simple expression whenever possible. 
+
+
+# Scope:
+
+ + Function scope
+   Variables can be declared in global or function scope.
+   Unlike ANSI, local variable has function scope. If a local variable is 
+  once declared in a function, it will be alive until execution gets out 
+  from the function even if it is declared within sub-block. In ANSI C, local 
+  variables have block scope.
+
+	void func()
+	{
+	  int i;
+	  for(i=0;i<10;i++) {
+	    int n;      /* block scope */
+	    printf("n=%d\\n",n++);
+	  }
+	  /* n is still alive here in cint, n should be already
+	  dead in ANSI C */ 
+	}
+
+ + In function typedef and class declaration/definition 
+   You can not define a new type in a function neither with typedef or
+  class/struct declaration.
+
+        void func() {
+          typedef int int32;       // BAD in cint
+          class A { /* ... */ };   // BAD in cint
+        }
+
+
+# Fundamental types
+ + long long , unsigned long long
+   'long long' is supported by an optional library which can be compiled
+  in lib/longlong. There are some platforms which can not compile this
+  library. 'long long' is implemented as a wrapper class G__longlong with
+  limited capability.
+   'unsigned long long' is simply handled as 'long long'. Cint will not
+  distinguish between 'long long' and 'unsigned long long'.
+
+ + bool
+   'bool' is supposed to be a fundamental type in C++ standard. But in 
+  Cint, bool is defined as enum in $CINTSYSDIR/include/bool.h. boo.h is
+  automatically loaded by cint when it sees declaration using bool. In
+  most cases, it works without problem. 
+   There is a known problem, however, if you check bool with ERTTI API.
+
+
+        #include <ertti.h>
+        #include <iostream.h>
+        int main() {
+          G__TypeInfo t("bool");
+          if(t.Property()&G__BIT_ISFUNDAMENTAL) {
+            // this is supposed to be true, but not in cint
+            cout << "bool is a fundamental type" << endl;
+          }
+          if(t.Property()&G__BIT_ISENUM) {
+            // cint takes this case
+            cout << "bool is an enum" << endl;
+          }
+          return(0);
+        }
+
+
+# Pointer declaration
+   When declaring pointer, space character is needed somewhere in the 
+  declaration. For example,
+
+       int* p1;   // OK
+       int *p2;   // OK
+       int * p3;  // OK
+       int*p3;    // Cint parsing limitation, space character needed
+
+  This is Cint limitation. For pointer to pointer, cint may not understand
+  too many levels of redirection. If you have many levels of pointer 
+  redirection, it is recommended to have space character between type name
+  and '*'.
+
+       int ****p4; // OK
+       int**** p5; // Cint parsing limitation
+   
+
+# Class/struct alignment:
+   Each C/C++ compiler or interpreter has unique class/struct alignment 
+  and padding rule. When class or struct is precompiled, cint mirrors 
+  compiler's alignment. Alignment of precompiled class/struct is identical
+  to compiler you use.
+  If class or struct is interpreted, cint uses very conservative alignment
+  and padding rule which may not match to other C/C++ processing system.
+
+
+# bit-field:
+   Bit-fields in precompiled class and struct can not be accessed from the
+  interpreter. 
+
+
+# Variable argument:
+   Variable argument is supported from Cint 5.14.69.  <stdarg.h> must be
+  included to use variable argument. Cint accepts both form of declaration.
+ 
+       void foo1(char *fmt, ...);
+       void foo2(char *fmt ...);
+
+  Above declarations are handled identically. Function is mached only by name.
+  Types and number of arguments are not used as function mathcing criteria.
+
+ + Calling interpreted function with variable arguments
+   A function with variable arguments can be interpreted by the Cint 
+  interpreter. For doing this, va_list, va_start, va_arg and va_end 
+  can be used. For example,
+
+       #include <stdio.h>
+       #include <stdarg.h>
+       void foo2(char *fmt ...) {
+         va_list ap;
+         va_start(ap, argn);
+         for(int i=0;i<argn;i++) {
+	   double d = va_arg(ap,double);
+           printf("%g ",d);
+         }
+         printf("\n");
+         va_end(ap);
+       }
+
+ + Calling compiled function with variable arguments
+   Argument values for variable arguments must be put into function call 
+  stack. For each computer platform, specific byte layout must be emulated 
+  by Cint. Because byte layout is not publicly informed, this capability 
+  may not be portable to all platforms. At this moment, this capbility is
+  only supported for Intel architecture(Linux & Win32), HP-UX and Solaris. 
+  Support for PowerPC looks quite difficult, if not possible.
+  Need more investigation for other platforms.
+
+ + ANSI C library functions
+  In order to suport variable argument, cint needs to know stack layout
+  which is machine dependent and not known.
+
+   Cint supports following library functions as special cases. Please note
+  that scanf function has limitation in number of arguments.
+
+        ostream& ostream::format(char *format ...); 
+        int fprintf(FILE *fp,char *format ...);
+        int printf(char *format ...);
+        int sprintf(char* string,char *format ...);
+        int fscanf(FILE *fp,char *format ...);     // only upto 12 arguments
+        int scanf(char *format ...);               //         "
+        int sscanf(char *string,char *format ...); //         "
+
+   Note that null characters can not be inserted in a file or string using
+   the scanf/printf routine from the interpreter for example with
+        fprintf(f, "%c%c%c%c", 44, 0, 44, 0);
+   the resulting file will only containg the comma characters.
+
+# switch statement and default: label
+   Cint requires default: label to appear at the end of switch statement.
+  If you put case label after default: ,  switch statement does not work
+  properly. For example,
+
+        int n = 1;
+
+        switch(n) {
+        case 0: 
+          printf("zero\n");
+	  break;
+        case 1: 
+          printf("one\n");    // 'one' is printed both with cint and g++
+	  break;
+        default: 
+          printf("many\n");
+	  break;
+        }
+
+        switch(n) {
+        case 0: 
+          printf("zero\n");
+	  break;
+        default: 
+          printf("many\n");  // Cint prints 'many'
+	  break;
+        case 1: 
+          printf("one\n");   // But g++ prints 'one' 
+	  break;
+        }
+
+
+# Library function:
+
+ + ANSI C library function
+   Most of ANSI C standard library functions are built in. However, following 
+  ones are not supported.
+
+	int setjmp(jmp_buf environment)
+	void longjmp(jmp_buf environment,int rval)
+	typename *va_arg(va_list listptr,typename)
+	void va_end(va_list listptr)
+	void va_start(va_list listptr,type rightparm)
+	int vfprintf(FILE *fp,const char *format, va_list arguments)
+	int vprintf(const char *format, va_list arguments)
+	int vsprintf(char *string,const char *format, va_list arguments)
+
+ + Optional POSIX, Win32, TCP/IP libraries
+   Cint does not contain non ANSI functions by default. But you can use them
+  by building optional libraries. Small subset of POSIX, Win32 and TCP/IP 
+  libraries can be build under lib/posix, lib/win32api and  lib/socket
+  directory. Please read README.txt in each directory.
+
+ + STL
+   Cint source package comes with an old STL (HP reference implementation) 
+  which is in stl directory. You can interpret string, vector and list 
+  containers and several generic algorithms.
+   Small subset of precompiled STL containers can be built under lib/dll_stl 
+  directory. Read lib/dll_stl/README.txt and run setup script there. You
+  can precompile STL containers by yourself too. Simple example is in
+  demo/makecint/stl directory.  STL dummy headers are in lib/prec_stl
+  directory.
+   Please understand that there are many limitations for using STL on Cint.
+  STL is so complex that it is very difficult to document all limitations.
+
+# Operator:
+
+ + Power operator
+   Power operator '@' is the original extension. It can be used both 
+  integer and floating point. This extension is made for convenience of
+  scientific application.  
+
+  Before cint5.15.25, '**' notation was also used as power operator. This
+  extension has been eliminated in order to avoid confusions in following 
+  expression.
+  
+     int a=1,b=2,c;
+     int *p = &b;
+     c = a**b; // Use parenthesis a*(*b), although completely legal
+
+
+ + sizeof
+   Sizeof must be used with '()'.  If size of and its' operand is separated
+  by space , without '()', cint will not produce correct result.
+
+   Cint returns 0 for sizeof unnamed union if it is precompiled. If the
+  code is interpreted, Cint can return appropriate number.
+
+
+ + '.*' and '->*' 
+   Pointer to member access operator '.*' and '->*' are newly supported from
+  cint5.14.9. You need to define G__PTR2MEMFUNC macro in platform dependency
+  file in order to turn this feature on. Use of pointer to member access
+  operator is not recommended because it is premature.
+
+
+ + Unsupported operators
+   Sequencing operator ',' is not supported. Operation of ',' is hard coded
+  in Cint core and can not be modified by operator overloading. Also,
+  expression like 'expr1,expr2,expr3' does not work properly.
+
+
+
+# Array declaration
+  Cint supports array declaration. There are original enhancements and 
+ recommendations.
+
+ + constness of array dimension
+   Variable dimension is not allowed in C/C++. Cint has special capability to
+  allow it only in interactive command and '{ ... }' style macro.
+
+     void f() {
+       int n=5;
+       float a[n]; // this is error now
+     }
+
+     $ cint
+     cint> .
+     cint> int n=5;
+     cint> float a[n];  // this is allowed, special extension
+
+ + constness of array dimension - recommendation
+   Constness is not enough for valid array dimension. C/C++ requests
+  array dimension to be defined in following ways.
+
+     int g() { return 5; }
+     #define n0 5          // GOOD: macro             recommended
+     int n1=5;             // BAD : non-const static
+     static int n2=5;      // BAD : non-const file-scope static
+     const int n3=5;       // GOOD: static const      recommended
+     const int n4=g();     // BAD : static const initialized for process
+     void f() {
+       int n5=5;           // BAD : non-const
+       static int n6=5;    // BAD : non-const static
+       const int n7=5;     // GOOD: static const      not recommended
+       static const n8=5;  // GOOD: static const      not recommended
+       const int n9=g();   // BAD : non-static const
+       float a[n?];
+     }
+
+   Looks pretty inconsistent, but this is C++. All of above behaviors are
+   implemented in cint5.14.5. Having array dimension constant in local 
+   scope works properly, but it complicates the situation. It has to 
+   be "static const" anyway , it is recommended to declare it in global
+   scope.
+
+ + constness and staticness of array
+   Following code works on cint. But if you try to be safe, const or
+  static array in local scope is not recommended.
+
+    const int nx=5;
+    const float ax[5]={1,2,3,4,5};           // Recommend this
+    void f() {
+      const int n=5;                         // not recommended
+      float a1[n];                           // This is fine
+      const float a2[n] = {1,2,3,4,5};       // not recommended
+      static float a3[n];                    // not recommended
+      static const float a4[n]={1,2,3,4,5};  // not recommended
+    }
+
+# Preprocessor statements:
+
+   Cint has limitations in handling define macros in default mode. Following
+  limitations applies. You can avoid following limitations by using
+  preprocessor prior to interpretation by -p or +P,-P command line option.
+  Read also cint(1) for use of -p and +P,-P options.
+
+ + Macro definition:
+   The biggest syntax limitation of cint is associated with define macro.
+  Cint can only handle simple define macros. Some complex use of macros
+  has to be handled by separate preprocessor by -p or +P,-P options.
+
+	#define	  ON    1       /* Fine */
+	#define  f(x)  (x-1)    /* OK, but not recommended */
+	#define  bool  int      /* OK, but not recommended */
+	#define  DECL_B  int b  /* May not work */ 
+
+
+# Operator overloading
+
+ + Unsupported operators for overloading
+   Following operators can not be overloaded.
+
+	new , delete , unary &
+
+   The operator new is already overloaded in cint as follows. So, you don't
+  need to overload new anyway in the interpreter environment. This is already
+  done for both interpreted and precompiled classes.
+
+       void* operator new(size_t size,void* arena) {return(arena);}
+
+ + Explicit operator function call
+   Operator function can not be called explicitly by name because of parse rule
+  limitation. 
+
+	complex a=complex(1,5),b=complex(-1,3.1),c=complex(0,0);
+	c = operator+(a,b);  // BAD operator function can not be called
+			     // explicitly.
+	c = a+b;  // OK
+
+
+# operator= overloading
+
+   In Cint, if you define operator= for a class, class that is derived 
+  from it must have operator=. In ANSI/ISO standard, this is not necessary.
+
+       class A {
+        public:
+         A& operator=(const A& x);
+       };
+
+       class B : public A {
+        public:
+         B& operator=(const B& x); // this is needed in cint
+       };
+
+
+# Templates
+
+   Cint can run simple STL programs. Following limitations apply.
+
+ + Explicit type conversion
+   Explicit type conversion for template class can not be used because of 
+  parsing limitation. Use typedef if you want to do so.
+
+	// suppose you have 
+	ary<double,100> a;
+	a = ary<double,100>(3.14);  // can't handle this
+
+ + Scope resolution operator
+   Template class name can not be used with scope operator to resolve 
+  ambiguity. Use typedef if you want to do so.
+
+
+	intary10.ary<int,10>::disp(); // can't handle this
+
+
+ + Member function template
+   Member function template works in Cint with limitation. Member function
+  template must be defined within a class definition as inline function.
+
+	template<class T> class A {
+	  T dat;
+	 public:
+          template<class E> A(E& x) { dat = x; }    // OK
+	  template<class E> void Set(E& x) {dat=x;} // OK
+	};
+
+
+ + Partial template specialization
+   Partial template specialization is not supported. For example,
+
+
+	// this template is fine
+	template <class Iterator>
+	struct iterator_traits {
+  	  typedef typename Iterator::iterator_category iterator_category;
+  	  typedef typename Iterator::value_type        value_type;
+  	  typedef typename Iterator::difference_type   difference_type;
+  	  typedef typename Iterator::pointer           pointer;
+  	  typedef typename Iterator::reference         reference;
+	};
+
+	// template partial specialization not supported
+	template <class T>
+	struct iterator_traits<T*> {
+  	  typedef random_access_iterator_tag iterator_category;
+  	  typedef T                          value_type;
+  	  typedef ptrdiff_t                  difference_type;
+  	  typedef T*                         pointer;
+  	  typedef T&                         reference;
+	};
+
+
+
+# STL 
+   Supporting templates and supporting STL are quite different subject. STL
+  is a very complex template library which many compiler makers have trouble
+  with. Cint supports STL in limited way.
+
+ + Using precompiled STL containers
+   vector, list, deque, map and string container classes can be precompiled
+  if they are instantiated. Please refer to lib/prec_stl/README.txt and
+  lib/dll_stl/README.txt for more detail.  It is recommended to use 
+  precompiled STL containers rather than interpreting them.
+
+ + Interpret STL containers
+   Cint can interpret vector, string and some simple list container classes.
+  But this is not recommended. It is very slow and has many troubles.
+  Interpreted STL implementation is based on old 1994 HP reference 
+  implementation.
+
+ + Qualified template paremeters and default arguments
+   Cint is unable to handle template parameters of STL types that have
+   "std::" prepended. I.e. MyTemplate<complex<double> > works, but
+   MyTemplate<std::complex<double> > doesn't.
+
+
+
+# Reference member
+   Reference type member is not supported
+
+	class A {
+	 private:
+	  int& refa; // Limitation
+	};
+
+
+# Reference to pointer to pointer
+   Reference to pointer to pointer is not supported
+
+        int** &a; // Limitation
+
+
+# Array reference
+   Array reference is not supported by Cint.
+
+	void func(int (&ary)[5]); // Limitation
+
+
+# Function overloading
+   Cint implements function overloading resolution. It behaves quite similar
+  to what is defined in ANSI/ISO standard, but not 100% correct. If you find
+  strange behavior, it is recommended to remove ambiguous function calls.
+  Some of those limitations are described below.
+
+ + Pointer to function as argument
+   Cint has problem resolving function overloading with pointer to function
+  as an argument. Suppose you have following functions,
+
+	void f(int (*p2f)(double));
+	void f(void *p);
+
+  Cint may not resolve above functions correctly. This is due to Cint's 
+  complication of handling pointer to interpreted function and pointer to
+  compiled function. 
+ 
+
+# Pointer to function
+   It is recommended to avoid pointer to function in interpreted code whenever
+  possible. Implementation of pointer to function is very slow. 
+
+ + Mixing interpreted and compiled pointer to function
+   In many cases, user wants to mix interpreted and compiled pointer to 
+  function. Interpreted pointer to function is not compatible with compiled 
+  pointer to function. There is a special trick to do so. Please refer 
+  doc/ref.txt for the detail. Search for the item G__isinterpretedp2f and 
+  read it carefully. Please limit use of such trick to where it is inevitable.
+
+
+# Pointer to member
+ + Pointer to member function
+   Pointer to member function is newly supported from cint5.14.9. This feature
+  is normally turned off. In order to activate, you need to define 
+  G__PTR2MEMFUNC macro in platform dependency file and re-compile Cint.
+   This feature is only experimental and not recommended for use in general.
+   Interpreted pointer to member function and compiled pointer to member
+  function are completely different objects. Mixing those concepts will cause
+  fatal error.  For example, following code works as long as everything is
+  interpreted. However, it will cause fatal error if you precompile g() 
+  and interpret main().
+
+
+     class A {
+      public:
+       void f() { }
+     };
+
+     typedef void (A::*A_p2mf)(void);
+
+     void g(A *pa,A_p2mf x) { (pa->*x)(); }
+
+     main() {
+       A a;
+       A_p2mf pf = &A::f;
+       (a.*pf)();
+     }
+
+ + Pointer to data member
+   Pointer to data member is not supported.
+
+
+# Exception handling
+   Exception handling is implemented but with limitations. Object destruction
+  may not be done properly in complex case. It is recommended not to use 
+  Exception Handling in interpreted code. For example, if you interpret 
+  following code, Cint will crash at ~A() because Cint can not handle
+  object destruction if exception is thrown in a constructor.
+  
+     class A {
+       int *d;
+       int s;
+      public:
+       A(int sz) : s(sz) { 
+         if(s<0) throw exception(); 
+         d = new int[s];
+       }
+       ~A() { delete[] d; } // causes problem here
+     };
+
+     void f() {
+       A a(3);
+       A b(-1);  // exception is thrown
+       A c(4);
+     }
+
+     int main() {
+       try {
+       }
+       catch(exception& x) {
+         printf("This is a std::exception '%s'\n",z.what()); 
+       }
+       return 0;
+     }
+
+   Workaround to this problem is to either precompile class A , or to
+  change implementation of class A as follows.
+
+     class A {
+       int *d;
+       int s;
+      public:
+       A(int sz) : s(0) { 
+         if(s<0) throw exception(); 
+         d = new int[sz];
+         s = sz; // s is set at the end of the constructor 
+       }
+       ~A() {if(s) delete[] d;} // use s as a protection 
+     };
+
+   Exception thrown in compiled code can be caught by Cint if Cint is
+  compiled with -DG__STD_EXCEPTION. Refer to platform/README.txt for more
+  detail.
+
+
+# namespace
+   namespace is implemented with some limitation. 'namespace std' is ignored
+  and it is merged with global scope. Using directive can not be used in
+  global scope. Other than those, namespace works reasonably well.
+
+
+# dynamic_cast, static_cast, reinterpret_cast, const_cast
+   dynamic_cast, static_cast, reinterpret_cast and const_cast are parsed by
+  cint but behave the same as C style '(T)v' casting.
+
+	dynamic_cast<T>(v)       same as   (T)v
+	static_cast<T>(v)        same as   (T)v
+	reinterpret_cast<T>(v)   same as   (T)v
+	const_cast<T>(v)         same as   (T)v
+
+
+# RTTI
+   RTTI library is implemented based on ANSI/ISO resolution proposal 95 spring.
+  This specification may have been changed in final ANSI/ISO standard.
+
+
+# Multi-Language
+   Cint can handle multi-byte character sets in comment and string constant.
+  Cint attempts to judge between S-JIS and EUC automatically. This algorithm 
+  works for most cases, but not perfect. In S-JIS, half-size kana character 
+  must not be used. There may be other corner cases that the algorithm 
+  makes wrong judgment.
+   Cint can not take JIS and Unicode.
+
+
+# KNOWN BUGS
+
+ + static class object
+
+   There is a bug in CINT interpreter declaring static class object in a 
+  function.
+
+
+    func() {
+      static InterpretedClass a;           // FIxed in 5.13.77
+      static InterpretedClass b(initval);  // FIxed in 5.13.77
+      static InterpretedClass b=initval;   // CINT BUG, CAUSES ERROR
+      static CompiledClass d;              // FIxed in 5.13.77
+      static CompiledClass e(initval);     // FIxed in 5.13.77
+      static CompiledClass f=initval;      // FIxed in 5.13.77
+      static int g;                        // Work fine
+      static int h(1);                     // Work fine
+      static int i=1;                      // Work fine
+    }
+
+
+# Special language extensions
+
+   There are special language extension Cint allows for user's convenience.
+  Those extensions are potentially illegal in standard C/C++. Please note
+  that if you use Cint's unique extensions, the code will not work with 
+  C/C++ compilers.
+
+   - Direct comparison of string constants
+       char *p = "abc";
+       if(p=="abc")  printf("true\n");  // true
+
+   - Using string constant in switch statement
+       char *p="abc";
+       switch(p) {
+       case "abc": printf("match abc\n"); break;
+       case "def": printf("match def\n"); break;
+       default:    printf("unmatch\n"); break;
+       }
+
+   - Power operator
+       double a = 2**3;  // power
+       double b = 2@3;   // power
+
+   - Dynamic array allocation with non const integer as an index
+     (This is allowed only from command interface. If this appears in a
+      source code, cint detects it as an error.)
+       cint> int n=5;
+       cint> float a[n];  
+
+    (This list is not complete.)
+
+# BUGS
+   Report bugs and requirements to cint@pcroot.cern.ch. Bugs tend to 
+  be fixed very quickly. Any kind of comments or messages will be appreciated.
+
+# SEE ALSO
+	doc/cint.txt doc/makecint.txt doc/bytecode.txt
+
+# AUTHOR
+
+  Masaharu Goto (cint@pcroot.cern.ch)
+  Copyright (c) 1995~2002 Masaharu Goto

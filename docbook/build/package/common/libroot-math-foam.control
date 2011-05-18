@@ -1,0 +1,27 @@
+Package: libroot-math-foam@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: A Compact Version of the Cellular Event Generator
+ The general-purpose self-adapting Monte Carlo (MC) event
+ generator/simulator mFOAM (standing for mini-FOAM) is a new compact
+ version of the FOAM program, with a slightly limited functionality
+ with respect to its parent version. On the other hand, mFOAM is
+ easier to use for the average user. 
+
+Package: libroot-math-foam-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-foam@libvers@ (= ${binary:Version}), libroot-hist-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: A Compact Version of the Cellular Event Generator
+ The general-purpose self-adapting Monte Carlo (MC) event
+ generator/simulator mFOAM (standing for mini-FOAM) is a new compact
+ version of the FOAM program, with a slightly limited functionality
+ with respect to its parent version. On the other hand, mFOAM is
+ easier to use for the average user. 
+  
+

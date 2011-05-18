@@ -1,0 +1,23 @@
+#---------------------------------------------------------------------
+# Post removal - only body
+# rm -rf /var/spool/rootd
+#
+# Remove the user rootd and the group if possible 
+#
+userdel -r rootd
+reason=$?
+if [ $reason -ne 0 ] ; then 
+    # Could not remove user. Ignore. 
+    echo "Couldn't remove user rootd, check it. Reason"
+    case $reason in 
+    1)  echo "can't update password file"    ;;
+    2)  echo "bad command syntax"            ;;
+    6)  echo "specified user doesn't exist"  ;;
+    8)  echo "user currently logged in"      ;;
+    10) echo "can't update group file"       ;; 
+    12) echo "can't remove home directory"   ;;
+    *)  echo "Unknown"                       ;;
+    esac
+fi
+# end of script        
+

@@ -1,0 +1,31 @@
+/* XPM */
+static char *vseparator_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"21 21 4 1",
+"  c #7b7b7b",
+". c #b3cece",
+"X c Gray100",
+"o c None",
+/* pixels */
+"ooooooooooooooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"oooooooooo Xooooooooo",
+"ooooooooooooooooooooo"
+};

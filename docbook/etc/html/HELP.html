@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!--                                             -->
+<!-- Author: ROOT team (rootdev@pcroot.cern.ch)  -->
+<!--                                             -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Help for ROOT's Reference Guide</title>
+<meta name="rating" content="General" />
+<meta name="objecttype" content="Manual" />
+<meta name="keywords" content="software development, oo, object oriented, unix, x11, windows, c++, html, rene brun, fons rademakers, cern" />
+<meta name="description" content="ROOT - An Object Oriented Framework For Large Scale Data Analysis." />
+<link rel="stylesheet" type="text/css" href="ROOT.css" id="ROOTstyle" />
+<script type="text/javascript" src="ROOT.js"></script>
+</head>
+<body  onload="javascript:SetValuesFromCookie();">
+<div class="dropshadow">
+<div class="withshadow"><h1>Help for ROOT's Reference Guide</h1></div>
+</div>
+<div class="toc">
+Contents
+<ul class="toc">
+<li class="toc"><a href="#parts">Parts of the Reference Guide</a>
+   <ul class="toc">
+   <li class="toc"><a href="#parts_types">Type Index</a></li>
+   <li class="toc"><a href="#parts_classes">Class Index</a></li>
+   <li class="toc"><a href="#parts_inh">Inheritance</a></li>
+   </ul>
+</li>
+<li class="toc"><a href="#modules">Modules</a>
+   <ul class="toc">
+   <li class="toc"><a href="#modules_what">What they are</a></li>
+   <li class="toc"><a href="#modules_list">List of Modules</a></li>
+   <li class="toc"><a href="#modules_libdep">Modules' Library Dependencies</a></li>
+   </ul>
+</li>
+<li class="toc"><a href="#class">Class Reference</a>
+   <ul class="toc">
+   <li class="toc"><a href="#class_sect">Sections</a></li>
+   <li class="toc"><a href="#class_links">Link Box</a></li>
+   <li class="toc"><a href="#class_info">Info Box</a></li>
+   <li class="toc"><a href="#class_mem">List of Data and Function Members</a>
+      <ul class="toc">
+      <li class="toc"><a href="#class_mem_disp">Display Options</a></li>
+      <li class="toc"><a href="#class_mem_access">Access (public / protected / private)</a></li>
+      <li class="toc"><a href="#class_mem_inh">Inheritance</a></li>
+      </ul>
+   </li>
+   <li class="toc"><a href="#charts">Class Charts</a>
+      <ul class="toc">
+      <li class="toc"><a href="#charts_inh">Inheritance</a></li>
+      <li class="toc"><a href="#charts_inhmem">Inherited Members</a></li>
+      <li class="toc"><a href="#charts_inc">Includes</a></li>
+      <li class="toc"><a href="#charts_lib">Libraries</a></li>
+      </ul>
+   </li>
+   <li class="toc"><a href="#memfunc">Member Function Documentation</a></li>
+   </ul>
+</li>
+</ul>
+</div>
+<div style="clear:both;"></div>
+
+<h2><a id="parts"></a>Parts of the Reference Guide</h2>
+
+<h3><a id="parts_types"></a>Type Index</h3>
+All basic types and typedefs are documented in the <a href="./ListOfTypes.html">Type Index</a>.
+
+<h3><a id="parts_classes"></a>Class Index</h3>
+All classes and namespaces are listed alphabetically in the <a href="./ClassIndex.html">Class Index</a>,
+along with a short info of what they are used for.
+You can jump to a class's entry using the shortcuts ontop of the page.
+They are optimized for quick access: they are distributed evenly, and short.
+Classes are grouped in modules; these, too, are listed ontop of the list of classes.
+
+<h3><a id="parts_inh"></a>Inheritance</h3>
+All classes along with their derived and base classes are shown in the 
+<a href="./ClassInheritance.html">Class Hierarchy</a>.
+The documentation for each class also shows the inheritance diagram.
+The class hierarchy is meant to give an overview of available classes
+and their relations.
+
+<h2><a id="modules"></a>Modules</h2>
+<h3><a id="modules_what"></a>What they are</h3>
+Classes are grouped into modules. For ROOT, this is done on a per-directory basis:
+each module corresponds to a sub-directory. In other cases one module might represent
+one library. Either way, modules are meant to combine similar or related classes, 
+allowing users to find classes close by context. If you need some functionality that
+you cannot find in a class you know, you might want to check for classes in the same
+module - maybe one of them does what you need.
+
+<h3><a id="modules_list"></a>List of Modules</h3>
+Modules are listed ontop of the <a href="./ClassIndex.html">Class Index</a> and as part
+of the <a href="./LibraryDependencies.html">Library Dependencies Chart</a>.
+
+<h3><a id="module_libdep"></a>Modules' Library Dependencies</h3>
+Each module is assumed to be part of a library. The dependencies of libraries are 
+not only relevant for linking, but often reflect also the contextual dependencies.
+The dependencies of all modules are shown in the
+<a href="./LibraryDependencies.html">Library Dependencies Chart</a>.
+
+<h2><a id="class"></a>Class Reference</h2>
+Pages like the one for <a href="http://root.cern.ch/root/html/TH2.html">TH2</a> are 
+class references. They document the use and functionality of a class.
+
+<h3><a id="class_sect"></a>Sections</h3>
+Each class reference page has a class documentation, which documents what the class
+can be used for, and gives hints on how to use it. This allows you to figure out 
+whether a certain class is appropriate for what you try to do. The page then lists 
+all available members; they define a class's functionality and its interaction with 
+your code. The next item is a tabbed set of charts, which allow you to study the
+class's inheritance diagram, what members get inherited from where, and which members
+are re-implemented, which files get indirectly included by including the class's
+header, and which libraries this class depends on. The remainder of the page contains
+the functions' documentation. And there is a little tool box floating around, which
+gives you some display options and a link to this help page.
+
+We will now go through all these parts in detail.
+
+<h3><a id="class_links"></a>Link Box</h3>
+On the top of the page you can find a list of links. The first line contains the current
+"location", giving the home page, the module name, and the class name.
+The second line links to generic pages, like ROOT's home page, the 
+<a href="#parts_classes">Class Index</a>, and the <a href="#parts_inh">Class Hierarchy</a>.
+The last line allows you to jump to the sections of the current page and a colored
+version of the class's header and source file.
+
+<h3><a id="class_info"></a>Info Box</h3>
+There is a little info box, usually floating on the right side of the page
+(update your browser if it's not). It shows the name of the class you are currently
+looking at, which library you have to link against to get access to the class, and
+which header file you have to #include.
+
+It also contains options that influence how
+the list of members is displayed. you can show or hide non-public methods. If you
+just want to use ROOT you should hide them - you cannot access protected or private
+members anyway. And you can select whether member that are inherited from a base class
+should be shown. Again, if you just want to use ROOT you should probably show them,
+as you often want to use them whether they are defined in the current class or in one
+of its base classes. Whatever you set these options to should be stored in a cookie,
+so you will have the same setting next time you look at the class documentation.
+
+The two links in the bottom of the box get you to the top of the page and to this help
+page. You can hide the info box by clicking on the little "-" in the top right corner
+of the box, and show it again by clicking on the "+".
+
+<h3><a id="class_mem"></a>List of Data and Function Members</h3>
+<p>The central part of a class are its members. Some are available to you; some
+are hidden from you, because they are only meant to be used internally.
+As an example, a class might allow you to set, access, and print its values, or store 
+them into a file. 
+Because methods should have reasonable names, often the method name itself is already 
+a hint on what it does.
+If you want to get a <a href="http://root.cern.ch/root/html/TNamed.html">TNamed</a>'s
+name, you will immediately see TNamed::GetName() in its list of functions.
+A click on this name will send you to the documentation for the method.
+If you <a href="class_mem_disp">enabled the display of inherited members</a> you will see 
+some members with a class name prefix. It tells you where this method has been defined.</p>
+
+<h4><a id="class_mem_disp"></a>Display Options</h4>
+The <a href="#class_info">info box</a> contains options that influence how
+the list of members is displayed: you can e.g. show or hide non-public methods. If you
+just want to use ROOT you should hide them - you cannot access protected or private
+members anyway. And you can select whether member that are inherited from a base class
+should be shown. Again, if you just want to use ROOT you should probably show them,
+as you often want to use them whether they are defined in the current class or in one
+of its base classes. Whatever you set these options to should be stored in a cookie,
+so you will have the same setting next time you look at the class documentation.
+
+<h4><a id="class_mem_access"></a>Access (public / protected / private)</h4>
+Not all members are available to everyone (check any C++ introduction to learn why).
+Public members have a green bar on their left, protected ones have a yellow one, and 
+private members are marked with a red bar. Of course you won't see any protected or
+private members if you hide them in the <a href="#class_mem_disp">display options</a>.
+
+<h4><a id="class_mem_inh"></a>Inheritance</h4>
+You can often access members of a class's base classes, just as if they are defined
+in the derived class. A <a href="http://root.cern.ch/root/html/TH1.html">histogram</a>,
+for example, has a name, and you can access it using GetName() as defined in its base 
+class <a href="http://root.cern.ch/root/html/TNamed.html">TNamed</a>. If you want to see
+all available members, and not just the ones defined in the current class, in the
+<a href="#class_mem_disp">display options</a>. They will be prefixed with the name of
+the class they are defined in.
+
+<h3><a id="charts"></a>Class Charts</h3>
+The class charts are shown in a tabbed box; click on the names ontop to select a tab.
+
+<h4><a id="charts_inh"></a>Inheritance</h4>
+This chart shows the inheritance hierarchy for the current class. Arrows point to
+base classes. You can click the classes to get to their reference page.
+
+<h4><a id="charts_inhmem"></a>Inherited Members</h4>
+The second chart shows a list of all members of all base classes. You can see at what
+level they are defined or at what level they are defined. Members that are accessible
+(public) have a green background, protected ones have a yellow background, and private
+members have a red background. Members with a dark gray background are re-implemented
+or hidden by a derived class.
+
+<h4><a id="charts_inc"></a>Includes</h4>
+The Includes chart shows which files are indirectly included by including the class's
+header. Most headers will #include some files, so by #including that header you also 
+#include the #included files, and so on. A illegible chart often means you should
+read a bit on the C++ trick known as "forward declaration". Including too many headers
+has some nasty consequences, like compile time, additional dependencies, etc.
+
+<h4><a id="charts_lib"></a>Libraries</h4>
+Each class is assumed to be in a library. That library might depend on other libraries.
+The fourth chart shows the dependencies of these libraries. You will need to link against
+all of these if you write your own program.
+
+<h3><a id="memfunc"></a>Member Function Documentation</h3>
+Each function should be documented by the developer of the class. The documentation can
+contain HTML, pictures, and example code. It should explain what the function does,
+what it expects as parameters, what it returns, and what can make it fail. Short functions
+can have their source displayed. You can click on the function name to jump to a
+colored version of the function's source.
+
+<p>&nbsp;</p>
+<br />
+<!--SIGNATURE-->
+<em>Author: <a href="http://consult.cern.ch/xwho?Axel.Naumann">Axel Naumann</a></em><br />
+<em>Last update: 2007-01-12</em><br />
+<em>Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.</em><br />
+<hr />
+<h4>
+This page has been hand crafted. If you have any comments or suggestions about the page layout send a mail to <a href="mailto:rootdev@root.cern.ch">ROOT support</a>, or contact <a href="mailto:rootdev@root.cern.ch">the developers</a> with any questions or problems regarding ROOT.
+</h4>
+</body>
+</html>

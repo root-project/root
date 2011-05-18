@@ -1,0 +1,159 @@
+    $Id$
+
+The XrdPosix package allows standard POSIX I/O calls to either vector the I/O 
+to local files or to xrootd served files. In order to use this package you must 
+use the provided POSIX/Xrootd wrapper. You can use the dynamic wrapper or the
+static wrapper. The dynamic wrapper provides the fastest and easiest way of
+using xrootd with your application as well as with most Unix commands. The
+static wrapper provides you with precise control over its deployment and
+consequently is safer and much faster.
+
+               ***** XROOTD Virtual Mount Points *****
+
+Normally, all requests are directed to the Unix filesystem. However, when
+using the xrootd POSIX interface (dynamic or static) paths that are formed as:
+
+      "root://<server:port>//<path>" or "xroot://<server:port>//<path>"
+
+are vectored to the xrootd identified in the url.
+
+You need not use URL syntax (it may not be possible for some applications).
+There is an environmental variable that you can use to dynamically construct
+the URL for you:
+
+XROOTD_VMP   = <server>[:<port>]:<path>[=[<newpath>]] [ . . . ]
+
+Where: <server>   is the DNS name or ip-address of the server
+       <port>     is the optional port number
+       <path>     is the path prefix that applies to the server. It must start
+                  with a slash. Any path whose prefix matches <path> will cause 
+                  the path to be converted to an xroot URL and then vectored to 
+                  <server>.
+       =          Removes <path> from the url path. This is useful when you
+                  define a rooted virtual mount point. If equals (=) is not
+                  specified, <path> is retained in the URL.
+       =<newpath> substitutes <newpath> for <path> in the comstrcuted URL.
+
+You can specify more than one path token. Each token is independent and can
+refer to any server. Each path token must be separated by one or more blanks.
+You will need to quote a list of tokens. Tokens are matched in reverse order
+of specification.
+
+Example: setenv XROOTD_VMP x.domain.org:1094:/xrootd/=/kanga/
+
+         Input:  /xrootd/myfile
+         Result: root://x.domain.org:1094//kanga/myfile
+
+Example: setenv XROOTD_VMP 'x.domain.org:1094:/xrootd foo:/xrdtest='
+
+         Input:  /xrootd/myfile
+         Result: root://x.domain.org:1094//xrootd/myfile
+
+         Input: /xrdtest/myfile
+         output: root://foo//myfile
+
+                            *** DYNAMIC WRAPPER ***
+
+The dynamic wrapper consistest of a pre-load library (libXrdPosixPreload.so)
+and the run-time linkable library (libXrdPosix.so) used by the pre-load library.
+
+You need to set two environmental variables:
+
+LD_LIBRARY_PATH <the directory path to libXrdPosix.so and libXrdSec.so>
+LD_PRELOAD <the full path of libXrdPosixPreload.so>
+
+Then any command or application you run may optionally vector I/O to an
+xrootd server. See below how pathnames selectively vector the I/O.
+
+WARNING! In general, it is not a good idea to permanently set these variable.
+We *strongly* urge you to write a wrapper script (say xrdrun) that does the
+following:
+
+#!/bin/sh
+LD_LIBRARY_PATH=<the directory path to libXrdPosix.so>
+LD_PRELOAD=<the full path of libXrdPosixPreload.so>
+export LD_LIBRARY_PATH LD_PRELOAD
+$*
+
+This will isolate the use of the wrapper to desired instances.
+
+Most Unix command will work against an xrootd server. However, some, like 'ls'
+that assumes a directory structure, may fail (you can still do an ls against
+an individual xroot file). Additionally, since the shell expands filename
+globbing, using meta characters in the filename will not work. We encourage
+you to play around and see how you like using Unix commands with xrootd files.
+
+                    *** SPECIAL ENVIRNMENTAL VARIABLE ***
+
+The following setenv (Unix environmental variable) can be set to change
+operational characteristics:
+
+XRDPOSIX_DEBUG   - Debug value or 0, 1, 2, or 3. The higher the more info.
+                   Default is 0.
+XRDPOSIX_RASZ    - Read ahead size any integer value 0 or more.
+                   Default is  1048576 ( 1 megabyte).
+XRDPOSIX_RCSZ    - Read cache size any integer value 0 or more.
+                   Default is 10000000 (10 megabytes) per file.
+                            *** STATIC WRAPPER ***
+
+The static wrapper is used to control exactly which programs and under which
+circumstances will use the xrootd POSIX interface. While you need not change any
+filesystem calls, you must include "XrdPosix.hh" and recompile any code that
+uses *any* Unix filesystem calls (see the list below). Additionally, your code
+*must* be compiled for 64 bit file offsets, multi-threading enabled (even if
+you don't use threads), and linked with libXrdPosix.so. For example:
+
+Solaris:
+CC  <your cc files> -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_REENTRANT \
+                    -mt -L<libpath> -lXrdPosix -o <whatever>
+
+Linux:
+g++ <your cc files> -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_REENTRANT \
+                    -L<libpath> -lXrdPosix -o <whatever>
+
+This will: a) Use 64-bit file offsets (32-bit offsets are also supported),
+           b) Enable multithreading, and
+           d) Dynamically link shared library libXrdPosix.so.
+
+When you execute your program, you must set the environmental variable
+LD_LIBRARY_PATH to include the location of libXrdPosix.so and libXrdSec.so.
+
+WARNING! The XrdPosix.hh include file uses "#define" to redefine POSIX system
+calls to use the correspodning xrootd calls. This means that *any* function
+definition, even if buried in a class, that duplicates one of these calls will
+also be redefined. Generally, this produces a compilation error but sometimes
+not. If your program stops working, check for naming conflicts.
+
+                 **** SUPPORTED STATIC POSIX INTERFACES ****
+
+The XrdPosix.hh file redefines the standard POSIX calls:
+
+int     access(const char *path, int amode);
+int     close(int fildes);
+int     closedir(DIR *dirp);
+off_t   lseek(int fildes, off_t offset, int whence);
+int     fcntl(int fildes, int cmd, /* arg */ ...);
+int     fstat(int fildes, struct stat *buf);
+int     fsync(int fildes);
+int     mkdir(const char *path, mode_t mode);
+int     open(const char *path, int oflag, ...);
+DIR*    opendir(const char *path);
+ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+ssize_t read(int fildes, void *buf, size_t nbyte);
+ssize_t readv(int fildes, const struct iovec *iov, int iovcnt);
+struct dirent   readdir(DIR *dirp);
+struct dirent64 readdir(DIR *dirp);
+int     readdir_r  (DIR *dirp, struct dirent   *entry, struct dirent   **result);
+int     readdir64_r(DIR *dirp, struct dirent64 *entry, struct dirent64 **result);
+void    rewinddir(DIR *dirp);
+int     rmdir(const char *path);
+void    seekdir(DIR *dirp, long loc);
+int     stat(const char *path, struct stat *buf);
+ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+int     telldir(DIR *dirp);
+int     unlink(const char *path);
+ssize_t write(int fildes, const void *buf, size_t nbyte);
+ssize_t writev(int fildes, const struct iovec *iov, int iovcnt);
+
+Since XrdClient is multi-threaded, all of the Posix simulation methods are
+thread-safe. Therefore, you can use this package in a multi-threaded program.

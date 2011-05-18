@@ -1,0 +1,9 @@
+BEGIN_HTML
+<p>
+The base classes of the ROOT system provide the core of the system. They
+are available to all other classes. They range from a set of abstract
+interfaces (TVirtualXXXXX classes), to a wide range of basic utility
+classes providing basic services like strings, regular experssion,
+timers, date/time, md5 checksumming, signal/slots event handling,
+plugin handler, run-config resource processor, etc. etc.
+END_HTML

@@ -1,0 +1,774 @@
+#!/usr/bin/env perl
+
+#  $Id$
+#
+# mps_PreStage
+#	-b basedir		base directory for local filesystem
+#	-c config file path
+#	-f prty_filename	filename for stagein requests
+#	-h mssdir		base directory for mass storage system filesystem
+#	-i			ignore "stop" file
+#	-L resource		resource name for global reservation system
+#	-l log_filename		filename for log file
+#       -r cfgfile              configuration file path
+#	-w wait_time		sleep interval in seconds between checks
+#	-x debug_level		message logging control 
+#
+# Signals:
+#
+#	The main wait loop can be interrupted via a SIGUSR1 to cause
+#	a new cycle to be started.
+#
+#	A SIGCONT will cause the configuration file to be re-processed
+#	which provides a way of dynamically changing global variables.
+#
+#	(c) 1998, Stanford University/SLAC, William Weeks
+
+use Socket;
+require 'getopts.pl';		# option parsing
+use POSIX "sys_wait_h";
+use Fcntl;
+
+$isMPS = substr(($0 =~ m|([^/]*)$|)[0],0,4) eq 'mps_' ;
+$SSD = ($isMPS ? 'mps' : 'ooss');
+$XFR = ($isMPS ? 'xfr' : 'pftp');
+
+# a) We always include the two default locations for 'use' statements.
+# b) If the current working directory is not the location of the program,
+#    we add the path to the program (as intuited by the execution path)
+#    to @INC. The eval() defers this until run-time.
+# c) Finally, we defer all use statements to run-time which is when we
+#    have properly established @INC. Again, eval is used for the deferral.
+#
+use lib '/opt/xrootd/utils';
+use lib '/usr/etc/ooss';
+($ppath) = $0 =~ m:^(\S*)/\S*$:;
+if ($ppath) {eval 'use lib $ppath;';}
+eval 'use ooss_MonP'; die "'use ooss_MonP' failed: $@\n" if ($@);
+eval 'use ooss_name2name'; die "'use ooss_name2name' failed: $@\n" if ($@); 
+
+# OS-dependent commands
+#
+$CMDkill     = '/bin/kill';
+$CMDecho     = '/bin/echo';
+$CMDhostname = '/bin/hostname';
+
+# default values for command options
+$basedir = '';				# (-b) default base local directory
+$cfgfn =   ($isMPS ? '/opt/xrootd/etc/xrootd.cf'
+                   : '/usr/etc/ooss/ooss_mps.cf'); # (-r) default configuration file
+$debug = 0;				# (-x) default debug level
+$logfn = "/var/adm/$SSD/logs/slog";	# (-l) default log file
+$mssdir = '';				# (-h) default base mass storage system directory
+$prtyfn = "/var/adm/$SSD/PreStageQ/stageRequests";	
+					# (-f) default file for stagein requests
+$waittime = 300;			# (-w) default wait interval
+
+# Site dependent global variables
+$adminuser = ($isMPS ? 'sys-mps' : 'sys-hpss');		# user to receive mail about errors
+$errlogfn = "/var/adm/$SSD/logerr";	# default file for error logging
+$errlogintvl = 3600;			# default interval in seconds for sending E-mail
+$flipflop = 1;                          # initialize counter
+$fliprate = 2;                          # flip rate is 1/n, default 1/2 = 50%
+$mailcmd = (-x '/usr/ucb/mail' ? '/usr/ucb/mail'
+                               : '/bin/mail');		# default mail command
+$max_pstg_proc = 1;			# default max number of concurrent stage-ins
+$pstgcmd = ($isMPS ? '/opt/xrootd/utils/mps_Stage'
+                   : '/usr/etc/ooss/ooss_Stage');	# path for stagein command
+$stoppstg = "/var/adm/$SSD/STOPPSTG";	# existence of file will stop stage-ins
+$stoppsta = "/var/adm/$SSD/STOPPSTA";	# stop stage-ins set by purge
+$max_retry = 1;				# maximum number of retries for stage-ins
+$waitchld = 2;                          # seconds to wait for child to exit
+$waitpoll = 3;                          # polling interval while staging active
+ 
+# Initialize global variables
+$cftag = 'pstg';			# configuration file tag
+$globalfh = 'FILE0000';
+$myname = ($0 =~ m|([^/]*)$|)[0];
+$num_pstg_proc = 0;			# number of active stage-in processes
+$ppid = $$;				# save parent pid
+chop($host = `$CMDhostname`);
+
+$ERR   = 0;				# set debug levels
+$CTL   = 1;
+$FILE  = 2;
+$PROC  = 3;
+$DEBUG = 4;
+
+$LOCK_SH = 1;				# values for flock
+$LOCK_EX = 2;
+$LOCK_NB = 4;
+$LOCK_UN = 8;
+$LOCKNOERR = 0;				# ignore errors in getlock
+$LOCKERR   = 1;				# report errors in getlock
+
+$SIG{CONT} = 'reReadConfig';
+$SIG{USR1} = 'wakeup';
+
+# Process parameters
+logit("Starting $myname @ARGV");
+if (! &Getopts('b:c:f:h:iL:l:w:x:')) {
+   logerr("Missing or invalid argument"); 
+   exit 1;
+   }
+
+if (defined($opt_l)) {			# log file name
+   $logfn = "$opt_l";
+   }
+if (defined($opt_c)) {			# configuration file path
+    $cfgfn = "$opt_c";
+   }
+readConfig($cfgfn);			# read the config
+
+if (defined($opt_b)) {			# base directory for local file system
+   $basedir = "$opt_b";
+   }
+if (defined($opt_f)) {			# filename for priority stage-ins
+   $prtyfn = "$opt_f";
+   }
+if (defined($opt_h)) {			# base directory for mass storage system
+   $mssdir = "$opt_h";
+   }
+if (defined($opt_i)) {			# ignore/override STOP file
+   $stoppstg = '';
+   }
+if (defined($opt_L)) {			# resource name for global reservation system
+   $resource = "$opt_L";
+   }
+if (defined($opt_w)) {			# wait interval in seconds
+   $waittime = "$opt_w";
+   }
+if (defined($opt_x)) {			# debug level
+   $debug = "$opt_x";
+   }
+
+if ($savepid_fn) {			# only if defined in configuration file
+   open(SAVE, ">$savepid_fn");
+   print SAVE "$$\n";
+   close(SAVE);
+   }
+
+$doPoke=1;
+if (!Monitor(5 * $waittime, "$0",@ARGV)) {
+   logerr("Monitoring process for $myname did not start",'mon');
+   $doPoke=0;
+   }
+
+# Main processing loop
+#	Cleanup child processes for stage-in tasks
+#	Initiate stage-in processes
+#	Send any error messages to administrator
+
+while (1) {
+logit("Starting new cycle, pstg proc = $num_pstg_proc") if $debug >= $CTL;
+Poke() if $doPoke;     # Let monitor know we are running
+
+# Check to see if configuration file has changed
+$mtime = (stat("$cfgfn"))[9];
+readConfig($cfgfn) if $mtime > $mtime_cfgfn ;	# read the config file again
+
+# cleanup any child processes that have terminated
+foreach $file (keys(%migpid)) {
+   logit("Checking pid $migpid{$file} for file $file") if $debug >= $PROC;
+   if (waitpid($migpid{"$file"},WNOHANG)) {
+      my($rc) = $?;
+      logit("file=$file, rc=$rc, reqid=$ident{$file}");
+      if ($rc) {			# stagein failed
+         $failed{$ident{$file}} .= "$file\n";
+         }
+      delete($migpid{"$file"});	# remove from table
+      delete($ident{"$file"});
+      $num_pstg_proc--;		# decrement count
+      }
+   }
+# Look for work to do and process it
+if (!(-e $stoppstg) && !(-e $stoppsta)) {
+   getaction();
+   for ($i=0; $i <= $#action; $i++) {
+      ($fn, $reqid, $usrid, $func, $file, $owner) = split(' ', $action[$i], 6);
+      if ($func =~ /^(r|w)/) {
+         next if $num_pstg_proc >= $max_pstg_proc; 
+         next if $migpid{"$file"};		# skip if stage-in in progress
+         fork_stagein("$action[$i]");		# OK! stage-in file
+         }
+      elsif ("$func" eq "*") {
+         next if $pending{$reqid};
+         notifyuser('DONE', "$action[$i]");
+         delitemfile("$action[$i]");
+         }
+      }   
+   } # if (!(-e $stoppstg))
+     
+# Check to see if there are any error messages that need to be sent to
+# the administrator.
+if (-f "$errlogfn") {			# is there a error log file?
+   $last_Email_time = (stat("$errlogfn.last"))[9];
+   if ((time - $last_Email_time) > $errlogintvl) {
+      $ERR_fh  = getlock("+<$errlogfn", $LOCK_EX | $LOCK_NB, $LOCKNOERR);
+      if ($ERR_fh) {
+         open(TEMP,">$errlogfn.last");
+         close(TEMP);
+         my($subject) = SLine($ERR_fh, $host);
+         `$mailcmd -s "$subject" $adminuser < $errlogfn`;
+         unlink("$errlogfn");
+         unlock($ERR_fh, "$errlogfn");
+         }
+      }
+   }
+# if stage-ins are pending, check more frequently
+$sleeptim = $num_pstg_proc ? $waitpoll : $waittime - $waitchld;
+sleep $sleeptim;
+# wait for stage-in process to terminate. Assumes prior
+# sleep was terminated by SIGUSR1.
+sleep $waitchld;		
+} # while (1)
+exit;
+
+#===================================================================
+# Subroutine to delete request from a file
+#
+# Input: filename to update
+#        item to delete
+#===================================================================
+sub delitemfile {
+my($action) = @_;
+my($OLD_fh, @data, $i);
+local *TEMP;
+my($file, $item) = split(' ', $action, 2);
+
+if (-f "$file") {
+   $OLD_fh  = getlock("+<$file", $LOCK_EX, $LOCKNOERR);
+   if ($OLD_fh) {
+      @data = <$OLD_fh>;
+      for ($i=0; $i <= $#data; $i++) {
+         if ("$item\n" eq "$data[$i]") {
+            splice(@data, $i, 1);
+            open(TEMP, ">$file.del");
+            print(TEMP @data);
+            close(TEMP);
+            rename("$file.del", $file);
+            last;
+            }
+         }   
+      unlock($OLD_fh, "$file");
+      }
+   else {
+      logerr("delitemfile: Unable to remove \"$item\" from $file",'rm');
+      }   
+   }
+else {		# Strange, file does not exit, ignore for now
+   logit("delitemfile: File does not exist, $file");
+   }
+}
+
+#===================================================================
+# Subroutine to stage-in file using pftp
+#
+# Input: file name to stage-in
+#===================================================================
+sub do_stagein {
+my($action) = @_;
+my($fn, $reqid, $usrid, $func, $file, $owner) = split(' ', $action, 6);
+
+my($cmd, @data, $prc);
+my($retry_cnt) = 0;
+my($temp);
+
+while (++$retry_cnt <= $max_retry) {
+   my($Lflag) = (defined($resource)) ? '-L $resource' : '';
+   my($rflag) = ($func =~ /^r/) ? '-r' : '';
+   if ($owner) {
+      my($uid,$gid,$mode,$size) = split(/:/, $owner);
+      $rflag = "-o $uid:$gid -p $mode -s $size";
+      }
+   $trgfn = mss2local($file);
+   $cmd = "$pstgcmd $rflag $Lflag $file $trgfn 2>&1";
+   logit("do_stagein: Executing: $cmd") if $debug >= $CTL;
+   (@data) = `$cmd`;
+   $prc = $? >> 8;
+   if ($prc) {			# command failed
+      # Retryable error conditions that do not require notification should go here.
+      if (grep(/FileToNet: select error = 145/, @data)) {	# pftp timeout
+         logit("do_stagein: $XFR timeout for $file");
+         next;
+         }
+      if (grep(/cannot be opened - HPSS Error: -2/, @data)) {	# file does not exist
+         logit("do_stagein: $file not in ".($isMPS ? 'MSS' : 'HPSS'));
+         last;							# no point in retrying
+         }
+      foreach $temp (@data) {
+         chomp($temp);
+         logit("$temp") if $debug >= $ERR;
+         }
+      logerr("do_stagein: $XFR failed for $file, rc=$prc, retry=$retry_cnt",'ftp');
+      }
+   else {			# command succeeded
+      foreach $temp (@data) {
+         chomp($temp);
+         logit("$temp") if $debug >= $DEBUG;
+         }
+      last;			# exit retry loop
+      }
+   } # while (++$retry_cnt <= $max_retry)
+#
+# The default is to send failure notices but not success notices. Overrides are as follows:
+#   f send fail notice, not affected by quiet flag
+#   n send success notice
+#   q quiet, suppress default failure notice
+
+if ($prc) {
+   my($fail) = ($prc == 2) ? 'FAIL2' : 'FAIL';
+   my($etext) = ($prc == 2) ? 'file does not exist' : "";
+   notifyuser("$fail", "$action", "$etext") if ($func =~ /f/) || ($func !~ /q/);
+   }
+else {
+   notifyuser('SUCC', "$action") if ($func =~ /n/);
+   }
+delitemfile("$action");
+return $prc;
+}
+
+
+#===================================================================
+# Subroutine to fork a stage-in process
+#
+# Input: file name to stage-in
+#===================================================================
+sub fork_stagein {
+my($action) = @_;
+local($pid);
+my($fn, $reqid, $usrid, $func, $file, $owner) = split(' ', $action, 6);
+
+# Fork a process to stage-in file.
+if ($pid = fork) {		# parent
+   $migpid{"$file"} = $pid;
+   $ident{"$file"} = "$reqid";
+   $num_pstg_proc++;		# increment count
+   return;
+   }
+elsif (defined $pid) {		# child
+   logit("fork_stagein: starting $action") if $debug >= $PROC;
+   my($stime) = time();
+   my($rc) = do_stagein("$action");
+   my($etime) = time();
+   my($usr,$sys,$cusr,$csys) = times();
+   my($elap) = $etime-$stime ? $etime-$stime : 1;
+   my($pctb) = sprintf("%.2f", 100 * ($usr+$sys+$cusr+$csys) / $elap);
+   my($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksiz, $blks)
+            = stat(mss2local($file));
+   my($rate) = sprintf("%dK/sec", $size/$elap/1024); 
+   logit("fork_stagein: for $file, exiting, size=$size elap=$elap, pctbsy=$pctb%, $rate, rc=$rc") if $debug >= $PROC;
+   `$CMDkill -USR1 $ppid`;			# wakeup parent
+   exit $rc;
+   }
+else {
+   logit("fork_stagein: fork failed for $action: $!\n") if $debug >= $ERR;
+   }
+}
+ 
+#===================================================================
+# Subroutine to lock a file using fcntl instead of flock
+#
+# Input: file handle to lock
+#        flock flags to be translated to fcntl
+#===================================================================
+sub Flock {
+my($fh, $flags) = @_;
+my($lk_type, $lk_mode, $lk_parms);
+
+# Determine lock mode.
+if ($flags & $LOCK_NB) {	# non-blocking request
+   $lk_mode = F_SETLK;
+   }
+else {
+   $lk_mode = F_SETLKW;		# wait for lock
+   }
+# Determine lock type.
+if ($flags & $LOCK_UN) {	# unlock request
+   $lk_type = F_UNLCK;
+   }
+elsif ($flags & $LOCK_SH) {	# shared lock
+   $lk_type = F_RDLCK;
+   }
+else {
+   $lk_type = F_WRLCK;		# exclusive lock
+   }
+# Construct the parameter list and perform lock function.
+$lk_parms = pack('sslllll', $lk_type, 0, 0, 0, 0, 0, 0);
+return fcntl($fh, $lk_mode, $lk_parms);
+}
+
+#===================================================================
+# Subroutine to create action queue from file data
+#
+# Input: filename to read
+#===================================================================
+sub getactadd {
+my($file, @data) = @_;
+my($reqid, $usrid, $func, $fn);
+my($i);
+
+chop (@data);
+for ($i=0; $i <= $#data; $i++) {
+   ($reqid, $usrid, $func, $fn, $owner) = split(' ', $data[$i], 5);
+   if ($func =~ /^(r|w)/) {
+      $pending{$reqid} = 1;
+      }
+   push(@action, "$file $data[$i]");
+   }
+}
+
+#===================================================================
+# Subroutine to get action items from files
+#
+# Input: none
+#===================================================================
+sub getaction {
+undef @action;
+undef %pending;
+if ($flipflop % $fliprate) {
+   getactfile("$prtyfn.1");	# process priority requests
+   getactfile("$prtyfn.0");	# process normal requests
+   }
+else {                          # give normal queue a chance
+   getactfile("$prtyfn.0");	# process normal requests
+   getactfile("$prtyfn.1");	# process priority requests
+   }
+$flipflop++;
+}
+
+sub getactfile {
+my($file) = @_;
+my($LOCK_fh, $NEW_fh, $OLD_fh, @data);
+
+# Get lock for this request queue
+$LOCK_fh  = getlock(">>$file.lock", $LOCK_EX, $LOCKERR);
+return if !$LOCK_fh;
+
+# Process file of old, pending requests
+if (-f "$file.old") {
+   $OLD_fh  = getlock("+<$file.old", $LOCK_EX, $LOCKNOERR);
+   if ($OLD_fh) {
+      @data = <$OLD_fh>;
+      getactadd("$file.old", @data);
+      unlock($OLD_fh, "$file.old");
+      }
+   }
+
+# Process file of new requests
+if (-f "$file") {
+   $NEW_fh  = getlock("+<$file", $LOCK_EX, $LOCKNOERR);
+   if ($NEW_fh) {
+      rename("$file", "$file.temp");
+      @data = <$NEW_fh>;
+      getactadd("$file.old", @data);
+      unlock($NEW_fh, "$file.temp");
+      # Append data to old requests
+      $OLD_fh  = getlock(">>$file.old", $LOCK_EX, $LOCKNOERR);
+      if ($OLD_fh) {
+         print($OLD_fh @data);
+         unlock($OLD_fh, "$file.old");
+         }
+      else {
+         logerr("getactfile: Unable to update $file.old",'upd');
+         my(@t) = localtime(time);
+         my($savefn) = sprintf("%s.save.%02d%02d%02d", $file, $t[2], $t[1], $t[0]);
+         rename("$file.temp", "$savefn");
+         }
+      }
+   }
+unlock($LOCK_fh, "$file.lock");
+}
+      
+#===================================================================
+# Subroutine to open and lock a file
+#
+# Input: file name to lock
+#        flags for flock
+#        error logging flag
+#===================================================================
+sub getlock {
+my($file, $flag, $errflg) = @_;
+my($fh) = $globalfh++;
+if (!open($fh, "$file")) {
+   logerr("getlock: open failed for $file, $!",'gl') if $errflg;
+   return '';
+   }
+if (!Flock($fh, $flag)) {
+   logerr("getlock: flock failed for $file, $!",'gl') if $errflg && $! != 11;
+   close($fh);
+   return '';
+   }
+logit("getlock: locking file $file, flags $flag") if $debug >= $DEBUG;
+return $fh;      
+}
+
+#===================================================================
+# Subroutine to generate a subject line
+#
+# Input: host name
+#===================================================================
+sub SLine {my($EFD, $host) = @_;
+
+my(@frec) = <$EFD>;
+my($rec, $etype, $enlst, %ErrTypes);
+
+foreach $rec (@frec) {$ErrTypes{$1} = 1 if $rec =~ m/.*-(\w*)-/;}
+
+my(@elist) = keys(%ErrTypes);
+@elist = sort(@elist);
+foreach $etype (@elist) {$enlst .= ' '.$etype;}
+
+return "$SSD$enlst @ $host"
+}
+
+#===================================================================
+# Subroutine to notify administrator of an error
+#
+# Input: error message to log
+#===================================================================
+sub logerr {
+local($text,$etype) = @_;
+local(@t) = localtime(time);
+$etype = 'oth' if !defined($etype);
+
+# Put error message in error log file which will be mailed periodically
+# to the administrator in the main processing loop to avoid mail flooding.
+$ERR_fh  = getlock(">>$errlogfn", $LOCK_EX, $LOCKNOERR);
+if ($ERR_fh) {
+   printf($ERR_fh "%02d:%02d:%02d [%s-%s-%d] %s\n", $t[2], $t[1], $t[0], $cftag, $etype, $$, $text);
+   unlock($ERR_fh, "$errlogfn");
+   }
+else {			# Couldn't open error log
+   logit("logerr: Could not get lock for $errlogfn");
+   `$CMDecho "\n$text" | $mailcmd -s "PreStage error on $host" $adminuser`;
+   }
+logit("$text");
+}
+
+#===================================================================
+# Subroutine to log an message
+#
+# Input: message text to log
+#===================================================================
+sub logit {
+local($text) = @_;
+local(@t) = localtime(time);
+open(LOG, ">>$logfn");
+printf(LOG "%02d:%02d:%02d [%6d] %s\n", $t[2], $t[1], $t[0], $$, $text);
+close(LOG);
+}
+
+#===================================================================
+# Subroutine to send a notification to a user via file
+#
+# Input: type of notification: DONE, FAIL, FAIL2, SUCC
+#        action queue item
+#===================================================================
+sub notifyfile {
+my($type, $action, $etext) = @_;
+my($fn, $reqid, $usrid, $func, $file) = split(' ', $action, 5);
+my($rhost, $ofn, $lfn) = $usrid =~ m|^file://(.*?)/(.*)\?lfn=(.*)$|;
+my($stat);
+
+if (! (open(OUT, "+<$ofn"))) {
+   logit("notifyfile: Unable to open $ofn, $!");
+   return:
+   }
+$stat = 'DONE';
+$stat = 'OK'     if $type eq 'SUCC';
+$stat = 'BAD'    if $type eq 'FAIL';
+$stat = 'ENOENT' if $type eq 'FAIL2';
+print OUT "stage $stat $lfn $etext\n";
+close(OUT);
+return;
+}
+#===================================================================
+# Subroutine to send a notification to a user via sockets
+#
+# Input: type of notification: DONE, FAIL, FAIL2, SUCC
+#        action queue item
+#===================================================================
+sub notifysock {
+my($type, $action) = @_;
+my($fn, $reqid, $usrid, $func, $file) = split(' ', $action, 5);
+my($failcnt, $msgt, $string);
+my($proto, $rhost, $port) = $usrid =~ m|^(\S*)://(\S*):(\S*)$|;
+if ($port =~ m|^([^/]*)/(.*)$|) {
+   $port = $1;
+   $string = $2;
+   }
+local *SOCK;
+
+if ("$type" eq 'DONE') {
+   $failcnt = split(/\n/, $failed{$reqid});
+   logit("notifysock: reqid=$reqid, cnt=$failcnt");
+   $msgt = "DONE $failcnt $reqid $file\n$failed{$reqid}";
+   delete($failed{$reqid});		# Don't send list more than once
+   }
+elsif ("$type" eq 'SUCC') {
+   $msgt = "ready $reqid $string $file\n";
+   }
+elsif ($type =~ /^FAIL/) {
+    if ($func =~ /f/) {
+       $msgt = "unprep $reqid $string $file\n";
+       }
+    else {
+       $msgt = "FAIL $reqid $file\n";
+       }
+   }
+if ($proto eq "tcp") {
+   socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname('tcp'));
+   if (!($iaddr = inet_aton($rhost))) {
+      logit("notifysock: inet_aton failed for $usrid");
+      return;
+      }
+   $paddr = sockaddr_in($port, $iaddr);
+   if (!connect(SOCK, $paddr)) {
+      logit("notifysock: Connect to $usrid failed: $!");
+      return;
+      }
+   if (!defined(send(SOCK, "$msgt", 0))) {
+      logit("notifysock: Send to $usrid failed: $!");
+      }
+   shutdown(SOCK,2);
+   }
+elsif ($proto eq "udp") {
+   socket(SOCK, PF_INET, SOCK_DGRAM, getprotobyname('udp'));
+   if (!($iaddr = inet_aton($rhost))) {
+      logit("notifysock: inet_aton failed for $usrid");
+      return;
+      }
+   $paddr = sockaddr_in($port, $iaddr);
+   if (!defined(send(SOCK, "$msgt", 0, $paddr))) {
+      logit("notifysock: Send to $usrid failed: $!");
+      }
+   shutdown(SOCK,2);
+   }
+else {
+   logit("notifysock: Invalid protocol for  $usrid");
+   }
+}
+
+#===================================================================
+# Subroutine to send a notification to a user via E-mail
+#
+# Input: type of notification: FAIL, DONE
+#        action queue item
+#===================================================================
+sub notifyuser {
+my($type, $action, $etext) = @_;
+my($fn, $reqid, $usrid, $func, $file) = split(' ', $action, 5);
+my($failtxt, $msgt, $subj);
+
+return if ("$usrid" eq '-');
+logit("notifyuser: Sending $type notice for \"$action\"");
+if ($usrid =~ m|^\S*://\S*:\S*$|) {	# notify via socket
+   notifysock($type, $action);
+   return;
+   }
+if ($usrid =~ m|^file://|) {	        # notify via file
+   notifyfile($type, $action, $etext);
+   return;
+   }
+if ($usrid =~ m|^mailto://(\S*)$|) {
+   $usrid = $1;
+   }
+if ("$type" eq 'DONE') {
+   if ($failed{$reqid}) {
+      $failtxt = "\n\nStagein failed for the following files:\n$failed{$reqid}";
+      delete($failed{$reqid});		# Don't send list more than once
+      }
+   $subj = "PreStage done on $host";
+   $msgt = "PreStage request finished for:\n" .
+           "$file$failtxt";
+   }
+elsif ($type =~ /^FAIL/) {
+   $subj = "PreStage failed on $host";
+   $msgt = "Stagein failed for:\n$file\n";
+   }
+else {
+   return;
+   }
+`$CMDecho "$msgt" | $mailcmd -s "$subj" $usrid`;
+}
+
+#===================================================================
+# Subroutine to read config file
+#
+# Input: config filename
+#
+# config file format:
+#
+#	ooss[.subsys].variable_name = value
+#		or
+#	ooss[.subsys].variable_name value
+#
+# where subsys is optional with a value of pstg
+#===================================================================
+
+sub readConfig {
+local($cfgFN) = @_;
+return unless(open(CONFIG, $cfgFN)); 
+$mtime_cfgfn = (stat("$cfgFN"))[9];
+logit("readConfig: processing file $cfgFN");    
+while( <CONFIG> ) {
+   s/#.*$//;       #remove comments
+   if (/=/) {                           # var = val
+      ($var,$val) = /(\S*?)\s*=\s*(.*)/;
+      }
+   else {                               # var val (no equal sign)
+      ($var,$val) = /(\S*)\s*(.*)/;
+      }
+   $var =~ tr/ \t\n//d;			#remove whitespaces
+   $val =~ s/^\s*//;			#remove leading whitespaces
+   $val =~ s/\s*$//;			#remove trailing whitespaces
+   if ($var =~ /^(\S*)\.(\S*)\.(\S*)$/) {
+      ($sys,$ssys,$var) = ($1,$2,$3);
+      next if ("$ssys" ne "$cftag");	# skip if not for our subsys
+      }
+   elsif ( $var =~ /^(\S*)\.(\S*)$/ ) {
+      ($sys,$var) = ($1,$2);
+      }
+   else {
+      next;				# skip comments, errors
+      }
+   next if ("$sys" ne "$SSD");		# skip if not for ooss
+   eval '$' . "$var = " .'"' . "$val" . '"' ;
+   logit("readConfig: $var = $val") if $debug >=$FILE;
+   }
+close(CONFIG);
+}
+
+sub reReadConfig {
+readConfig($cfgfn);
+}
+
+#===================================================================
+# Subroutine to unlock a file
+#
+# Input: file handle for opened file
+#        file name for messages
+#===================================================================
+sub unlock {
+my($fh, $file) = @_;
+
+if (!Flock($fh, $LOCK_UN)) {
+   logerr("unlock: flock failed for $file, $!",'ul');
+   }
+close($fh);
+logit("unlock: unlocking file $file") if $debug >= $DEBUG;
+}
+
+#===================================================================
+# Subroutine to process signals
+#
+# Input: type of signal trapped
+#===================================================================
+sub wakeup {
+my($sig) = @_;
+
+# When a stage-in process terminates, it will wakeup the parent with a
+# USR1 signal.
+sleep 1;		# wait a second for stage-in process to terminate
+}

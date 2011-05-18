@@ -1,0 +1,526 @@
+// @(#)root/smatrix:$Id$
+// Authors: L. Moneta    2005  
+
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+//
+// Cramer optmized inversion for matrices up to size 5x5. 
+// Code from ROOT TMatrixDCramerInv which originates from CLHEP 
+// (original author Mark Fischler)
+//
+// Modified by L. Moneta 22/03/07: specialize only until 5x5 (before was up to 6x6) 
+//  tests show that on 64 machines (like on slc4) it is faster the general method
+//
+
+#ifndef ROOT_Math_CramerInversion_icc
+#define ROOT_Math_CramerInversion_icc
+
+#include <cmath>
+
+
+namespace ROOT { 
+
+  namespace Math { 
+
+
+
+//==============================================================================
+// Inversion for 3x3 matrices
+//==============================================================================
+
+/**
+   Inversion for a 3x3 matrix
+ */
+template <class MatrixRep>
+bool FastInverter<3>::Dinv(MatrixRep & rhs) { 
+
+  typedef typename MatrixRep::value_type Scalar; 
+
+  // check matrix sizes ??
+
+  //  Scalar * pM = rhs.Array();	
+
+  const Scalar c00 = rhs[4] * rhs[8] - rhs[5] * rhs[7];
+  const Scalar c01 = rhs[5] * rhs[6] - rhs[3] * rhs[8];
+  const Scalar c02 = rhs[3] * rhs[7] - rhs[4] * rhs[6];
+  const Scalar c10 = rhs[7] * rhs[2] - rhs[8] * rhs[1];
+  const Scalar c11 = rhs[8] * rhs[0] - rhs[6] * rhs[2];
+  const Scalar c12 = rhs[6] * rhs[1] - rhs[7] * rhs[0];
+  const Scalar c20 = rhs[1] * rhs[5] - rhs[2] * rhs[4];
+  const Scalar c21 = rhs[2] * rhs[3] - rhs[0] * rhs[5];
+  const Scalar c22 = rhs[0] * rhs[4] - rhs[1] * rhs[3];
+
+  const Scalar t0 = std::abs(rhs[0]);
+  const Scalar t1 = std::abs(rhs[3]);
+  const Scalar t2 = std::abs(rhs[6]);
+  Scalar det;
+  Scalar tmp;
+  if (t0 >= t1) {
+    if (t2 >= t0) {
+    tmp = rhs[6];
+    det = c12*c01-c11*c02;
+    } else {
+      tmp = rhs[0];
+      det = c11*c22-c12*c21;
+    }
+  } else if (t2 >= t1) {
+    tmp = rhs[6];
+    det = c12*c01-c11*c02;
+  } else {
+    tmp = rhs[3];
+    det = c02*c21-c01*c22;
+  }
+
+  if ( det == 0 || tmp == 0) {
+    return false; 
+  }
+
+  const Scalar s = tmp/det;
+
+//   if (determ)
+//     *determ = 1./s;
+
+  rhs[0] = s*c00;
+  rhs[1] = s*c10;
+  rhs[2] = s*c20;
+  rhs[3] = s*c01;
+  rhs[4] = s*c11;
+  rhs[5] = s*c21;
+  rhs[6] = s*c02;
+  rhs[7] = s*c12;
+  rhs[8] = s*c22;
+  
+  return true;
+}
+
+
+//==============================================================================
+// Inversion for 4x4 matrices
+//==============================================================================
+// Fij are indices for a 4x4 matrix.
+
+#define F00 0
+#define F01 1
+#define F02 2
+#define F03 3
+
+#define F10 4
+#define F11 5
+#define F12 6
+#define F13 7
+
+#define F20 8
+#define F21 9
+#define F22 10
+#define F23 11
+
+#define F30 12
+#define F31 13
+#define F32 14
+#define F33 15
+
+/**
+   Inversion for a 4x4 matrix
+ */
+template <class MatrixRep>
+bool FastInverter<4>::Dinv(MatrixRep & rhs) { 
+
+  typedef typename MatrixRep::value_type Scalar; 
+
+  // check matrix sizes ??
+
+  //  Scalar * pM = rhs.Array();	
+
+  // Find all NECESSARY 2x2 dets:  (18 of them)
+
+  const Scalar det2_12_01 = rhs[F10]*rhs[F21] - rhs[F11]*rhs[F20];
+  const Scalar det2_12_02 = rhs[F10]*rhs[F22] - rhs[F12]*rhs[F20];
+  const Scalar det2_12_03 = rhs[F10]*rhs[F23] - rhs[F13]*rhs[F20];
+  const Scalar det2_12_13 = rhs[F11]*rhs[F23] - rhs[F13]*rhs[F21];
+  const Scalar det2_12_23 = rhs[F12]*rhs[F23] - rhs[F13]*rhs[F22];
+  const Scalar det2_12_12 = rhs[F11]*rhs[F22] - rhs[F12]*rhs[F21];
+  const Scalar det2_13_01 = rhs[F10]*rhs[F31] - rhs[F11]*rhs[F30];
+  const Scalar det2_13_02 = rhs[F10]*rhs[F32] - rhs[F12]*rhs[F30];
+  const Scalar det2_13_03 = rhs[F10]*rhs[F33] - rhs[F13]*rhs[F30];
+  const Scalar det2_13_12 = rhs[F11]*rhs[F32] - rhs[F12]*rhs[F31];
+  const Scalar det2_13_13 = rhs[F11]*rhs[F33] - rhs[F13]*rhs[F31];
+  const Scalar det2_13_23 = rhs[F12]*rhs[F33] - rhs[F13]*rhs[F32];
+  const Scalar det2_23_01 = rhs[F20]*rhs[F31] - rhs[F21]*rhs[F30];
+  const Scalar det2_23_02 = rhs[F20]*rhs[F32] - rhs[F22]*rhs[F30];
+  const Scalar det2_23_03 = rhs[F20]*rhs[F33] - rhs[F23]*rhs[F30];
+  const Scalar det2_23_12 = rhs[F21]*rhs[F32] - rhs[F22]*rhs[F31];
+  const Scalar det2_23_13 = rhs[F21]*rhs[F33] - rhs[F23]*rhs[F31];
+  const Scalar det2_23_23 = rhs[F22]*rhs[F33] - rhs[F23]*rhs[F32];
+
+  // Find all NECESSARY 3x3 dets:   (16 of them)
+
+  const Scalar det3_012_012 = rhs[F00]*det2_12_12 - rhs[F01]*det2_12_02 
+                                + rhs[F02]*det2_12_01;
+  const Scalar det3_012_013 = rhs[F00]*det2_12_13 - rhs[F01]*det2_12_03 
+                                + rhs[F03]*det2_12_01;
+  const Scalar det3_012_023 = rhs[F00]*det2_12_23 - rhs[F02]*det2_12_03 
+                                + rhs[F03]*det2_12_02;
+  const Scalar det3_012_123 = rhs[F01]*det2_12_23 - rhs[F02]*det2_12_13 
+                                + rhs[F03]*det2_12_12;
+  const Scalar det3_013_012 = rhs[F00]*det2_13_12 - rhs[F01]*det2_13_02 
+                                + rhs[F02]*det2_13_01;
+  const Scalar det3_013_013 = rhs[F00]*det2_13_13 - rhs[F01]*det2_13_03
+                                + rhs[F03]*det2_13_01;
+  const Scalar det3_013_023 = rhs[F00]*det2_13_23 - rhs[F02]*det2_13_03
+                                + rhs[F03]*det2_13_02;
+  const Scalar det3_013_123 = rhs[F01]*det2_13_23 - rhs[F02]*det2_13_13
+                                + rhs[F03]*det2_13_12;
+  const Scalar det3_023_012 = rhs[F00]*det2_23_12 - rhs[F01]*det2_23_02 
+                                + rhs[F02]*det2_23_01;
+  const Scalar det3_023_013 = rhs[F00]*det2_23_13 - rhs[F01]*det2_23_03
+                                + rhs[F03]*det2_23_01;
+  const Scalar det3_023_023 = rhs[F00]*det2_23_23 - rhs[F02]*det2_23_03
+                                + rhs[F03]*det2_23_02;
+  const Scalar det3_023_123 = rhs[F01]*det2_23_23 - rhs[F02]*det2_23_13
+                                + rhs[F03]*det2_23_12;
+  const Scalar det3_123_012 = rhs[F10]*det2_23_12 - rhs[F11]*det2_23_02 
+                                + rhs[F12]*det2_23_01;
+  const Scalar det3_123_013 = rhs[F10]*det2_23_13 - rhs[F11]*det2_23_03 
+                                + rhs[F13]*det2_23_01;
+  const Scalar det3_123_023 = rhs[F10]*det2_23_23 - rhs[F12]*det2_23_03 
+                                + rhs[F13]*det2_23_02;
+  const Scalar det3_123_123 = rhs[F11]*det2_23_23 - rhs[F12]*det2_23_13 
+                                + rhs[F13]*det2_23_12;
+
+  // Find the 4x4 det:
+
+  const Scalar det = rhs[F00]*det3_123_123 - rhs[F01]*det3_123_023 
+                       + rhs[F02]*det3_123_013 - rhs[F03]*det3_123_012;
+
+//   if (determ)
+//     *determ = det;
+
+  if ( det == 0 ) {
+    return false;
+  }
+
+  // use 1.0f to remove warning C4244 on Windows when using float
+  const Scalar oneOverDet = 1.0f / det;
+  const Scalar mn1OverDet = - oneOverDet;
+
+  rhs[F00] =  det3_123_123 * oneOverDet;
+  rhs[F01] =  det3_023_123 * mn1OverDet;
+  rhs[F02] =  det3_013_123 * oneOverDet;
+  rhs[F03] =  det3_012_123 * mn1OverDet;
+
+  rhs[F10] =  det3_123_023 * mn1OverDet;
+  rhs[F11] =  det3_023_023 * oneOverDet;
+  rhs[F12] =  det3_013_023 * mn1OverDet;
+  rhs[F13] =  det3_012_023 * oneOverDet;
+
+  rhs[F20] =  det3_123_013 * oneOverDet;
+  rhs[F21] =  det3_023_013 * mn1OverDet;
+  rhs[F22] =  det3_013_013 * oneOverDet;
+  rhs[F23] =  det3_012_013 * mn1OverDet;
+
+  rhs[F30] =  det3_123_012 * mn1OverDet;
+  rhs[F31] =  det3_023_012 * oneOverDet;
+  rhs[F32] =  det3_013_012 * mn1OverDet;
+  rhs[F33] =  det3_012_012 * oneOverDet;
+
+  return true;
+}
+
+//==============================================================================
+// Inversion for 5x5 matrices
+//==============================================================================
+// Mij are indices for a 5x5 matrix.
+#define M00 0
+#define M01 1
+#define M02 2
+#define M03 3
+#define M04 4
+
+#define M10 5
+#define M11 6
+#define M12 7
+#define M13 8
+#define M14 9
+
+#define M20 10
+#define M21 11
+#define M22 12
+#define M23 13
+#define M24 14
+
+#define M30 15
+#define M31 16
+#define M32 17
+#define M33 18
+#define M34 19
+
+#define M40 20
+#define M41 21
+#define M42 22
+#define M43 23
+#define M44 24
+
+
+/**
+   Inversion for a 5x5 matrix
+ */
+template <class MatrixRep>
+bool FastInverter<5>::Dinv(MatrixRep & rhs) { 
+
+  typedef typename MatrixRep::value_type Scalar; 
+
+  // check matrix sizes ??
+
+  //  Scalar * pM = rhs.Array();	
+
+
+  // Find all NECESSARY 2x2 dets:  (30 of them)
+
+  const Scalar det2_23_01 = rhs[M20]*rhs[M31] - rhs[M21]*rhs[M30];
+  const Scalar det2_23_02 = rhs[M20]*rhs[M32] - rhs[M22]*rhs[M30];
+  const Scalar det2_23_03 = rhs[M20]*rhs[M33] - rhs[M23]*rhs[M30];
+  const Scalar det2_23_04 = rhs[M20]*rhs[M34] - rhs[M24]*rhs[M30];
+  const Scalar det2_23_12 = rhs[M21]*rhs[M32] - rhs[M22]*rhs[M31];
+  const Scalar det2_23_13 = rhs[M21]*rhs[M33] - rhs[M23]*rhs[M31];
+  const Scalar det2_23_14 = rhs[M21]*rhs[M34] - rhs[M24]*rhs[M31];
+  const Scalar det2_23_23 = rhs[M22]*rhs[M33] - rhs[M23]*rhs[M32];
+  const Scalar det2_23_24 = rhs[M22]*rhs[M34] - rhs[M24]*rhs[M32];
+  const Scalar det2_23_34 = rhs[M23]*rhs[M34] - rhs[M24]*rhs[M33];
+  const Scalar det2_24_01 = rhs[M20]*rhs[M41] - rhs[M21]*rhs[M40];
+  const Scalar det2_24_02 = rhs[M20]*rhs[M42] - rhs[M22]*rhs[M40];
+  const Scalar det2_24_03 = rhs[M20]*rhs[M43] - rhs[M23]*rhs[M40];
+  const Scalar det2_24_04 = rhs[M20]*rhs[M44] - rhs[M24]*rhs[M40];
+  const Scalar det2_24_12 = rhs[M21]*rhs[M42] - rhs[M22]*rhs[M41];
+  const Scalar det2_24_13 = rhs[M21]*rhs[M43] - rhs[M23]*rhs[M41];
+  const Scalar det2_24_14 = rhs[M21]*rhs[M44] - rhs[M24]*rhs[M41];
+  const Scalar det2_24_23 = rhs[M22]*rhs[M43] - rhs[M23]*rhs[M42];
+  const Scalar det2_24_24 = rhs[M22]*rhs[M44] - rhs[M24]*rhs[M42];
+  const Scalar det2_24_34 = rhs[M23]*rhs[M44] - rhs[M24]*rhs[M43];
+  const Scalar det2_34_01 = rhs[M30]*rhs[M41] - rhs[M31]*rhs[M40];
+  const Scalar det2_34_02 = rhs[M30]*rhs[M42] - rhs[M32]*rhs[M40];
+  const Scalar det2_34_03 = rhs[M30]*rhs[M43] - rhs[M33]*rhs[M40];
+  const Scalar det2_34_04 = rhs[M30]*rhs[M44] - rhs[M34]*rhs[M40];
+  const Scalar det2_34_12 = rhs[M31]*rhs[M42] - rhs[M32]*rhs[M41];
+  const Scalar det2_34_13 = rhs[M31]*rhs[M43] - rhs[M33]*rhs[M41];
+  const Scalar det2_34_14 = rhs[M31]*rhs[M44] - rhs[M34]*rhs[M41];
+  const Scalar det2_34_23 = rhs[M32]*rhs[M43] - rhs[M33]*rhs[M42];
+  const Scalar det2_34_24 = rhs[M32]*rhs[M44] - rhs[M34]*rhs[M42];
+  const Scalar det2_34_34 = rhs[M33]*rhs[M44] - rhs[M34]*rhs[M43];
+
+  // Find all NECESSARY 3x3 dets:   (40 of them)
+
+  const Scalar det3_123_012 = rhs[M10]*det2_23_12 - rhs[M11]*det2_23_02 + rhs[M12]*det2_23_01;
+  const Scalar det3_123_013 = rhs[M10]*det2_23_13 - rhs[M11]*det2_23_03 + rhs[M13]*det2_23_01;
+  const Scalar det3_123_014 = rhs[M10]*det2_23_14 - rhs[M11]*det2_23_04 + rhs[M14]*det2_23_01;
+  const Scalar det3_123_023 = rhs[M10]*det2_23_23 - rhs[M12]*det2_23_03 + rhs[M13]*det2_23_02;
+  const Scalar det3_123_024 = rhs[M10]*det2_23_24 - rhs[M12]*det2_23_04 + rhs[M14]*det2_23_02;
+  const Scalar det3_123_034 = rhs[M10]*det2_23_34 - rhs[M13]*det2_23_04 + rhs[M14]*det2_23_03;
+  const Scalar det3_123_123 = rhs[M11]*det2_23_23 - rhs[M12]*det2_23_13 + rhs[M13]*det2_23_12;
+  const Scalar det3_123_124 = rhs[M11]*det2_23_24 - rhs[M12]*det2_23_14 + rhs[M14]*det2_23_12;
+  const Scalar det3_123_134 = rhs[M11]*det2_23_34 - rhs[M13]*det2_23_14 + rhs[M14]*det2_23_13;
+  const Scalar det3_123_234 = rhs[M12]*det2_23_34 - rhs[M13]*det2_23_24 + rhs[M14]*det2_23_23;
+  const Scalar det3_124_012 = rhs[M10]*det2_24_12 - rhs[M11]*det2_24_02 + rhs[M12]*det2_24_01;
+  const Scalar det3_124_013 = rhs[M10]*det2_24_13 - rhs[M11]*det2_24_03 + rhs[M13]*det2_24_01;
+  const Scalar det3_124_014 = rhs[M10]*det2_24_14 - rhs[M11]*det2_24_04 + rhs[M14]*det2_24_01;
+  const Scalar det3_124_023 = rhs[M10]*det2_24_23 - rhs[M12]*det2_24_03 + rhs[M13]*det2_24_02;
+  const Scalar det3_124_024 = rhs[M10]*det2_24_24 - rhs[M12]*det2_24_04 + rhs[M14]*det2_24_02;
+  const Scalar det3_124_034 = rhs[M10]*det2_24_34 - rhs[M13]*det2_24_04 + rhs[M14]*det2_24_03;
+  const Scalar det3_124_123 = rhs[M11]*det2_24_23 - rhs[M12]*det2_24_13 + rhs[M13]*det2_24_12;
+  const Scalar det3_124_124 = rhs[M11]*det2_24_24 - rhs[M12]*det2_24_14 + rhs[M14]*det2_24_12;
+  const Scalar det3_124_134 = rhs[M11]*det2_24_34 - rhs[M13]*det2_24_14 + rhs[M14]*det2_24_13;
+  const Scalar det3_124_234 = rhs[M12]*det2_24_34 - rhs[M13]*det2_24_24 + rhs[M14]*det2_24_23;
+  const Scalar det3_134_012 = rhs[M10]*det2_34_12 - rhs[M11]*det2_34_02 + rhs[M12]*det2_34_01;
+  const Scalar det3_134_013 = rhs[M10]*det2_34_13 - rhs[M11]*det2_34_03 + rhs[M13]*det2_34_01;
+  const Scalar det3_134_014 = rhs[M10]*det2_34_14 - rhs[M11]*det2_34_04 + rhs[M14]*det2_34_01;
+  const Scalar det3_134_023 = rhs[M10]*det2_34_23 - rhs[M12]*det2_34_03 + rhs[M13]*det2_34_02;
+  const Scalar det3_134_024 = rhs[M10]*det2_34_24 - rhs[M12]*det2_34_04 + rhs[M14]*det2_34_02;
+  const Scalar det3_134_034 = rhs[M10]*det2_34_34 - rhs[M13]*det2_34_04 + rhs[M14]*det2_34_03;
+  const Scalar det3_134_123 = rhs[M11]*det2_34_23 - rhs[M12]*det2_34_13 + rhs[M13]*det2_34_12;
+  const Scalar det3_134_124 = rhs[M11]*det2_34_24 - rhs[M12]*det2_34_14 + rhs[M14]*det2_34_12;
+  const Scalar det3_134_134 = rhs[M11]*det2_34_34 - rhs[M13]*det2_34_14 + rhs[M14]*det2_34_13;
+  const Scalar det3_134_234 = rhs[M12]*det2_34_34 - rhs[M13]*det2_34_24 + rhs[M14]*det2_34_23;
+  const Scalar det3_234_012 = rhs[M20]*det2_34_12 - rhs[M21]*det2_34_02 + rhs[M22]*det2_34_01;
+  const Scalar det3_234_013 = rhs[M20]*det2_34_13 - rhs[M21]*det2_34_03 + rhs[M23]*det2_34_01;
+  const Scalar det3_234_014 = rhs[M20]*det2_34_14 - rhs[M21]*det2_34_04 + rhs[M24]*det2_34_01;
+  const Scalar det3_234_023 = rhs[M20]*det2_34_23 - rhs[M22]*det2_34_03 + rhs[M23]*det2_34_02;
+  const Scalar det3_234_024 = rhs[M20]*det2_34_24 - rhs[M22]*det2_34_04 + rhs[M24]*det2_34_02;
+  const Scalar det3_234_034 = rhs[M20]*det2_34_34 - rhs[M23]*det2_34_04 + rhs[M24]*det2_34_03;
+  const Scalar det3_234_123 = rhs[M21]*det2_34_23 - rhs[M22]*det2_34_13 + rhs[M23]*det2_34_12;
+  const Scalar det3_234_124 = rhs[M21]*det2_34_24 - rhs[M22]*det2_34_14 + rhs[M24]*det2_34_12;
+  const Scalar det3_234_134 = rhs[M21]*det2_34_34 - rhs[M23]*det2_34_14 + rhs[M24]*det2_34_13;
+  const Scalar det3_234_234 = rhs[M22]*det2_34_34 - rhs[M23]*det2_34_24 + rhs[M24]*det2_34_23;
+
+  // Find all NECESSARY 4x4 dets:   (25 of them)
+
+  const Scalar det4_0123_0123 = rhs[M00]*det3_123_123 - rhs[M01]*det3_123_023 
+                                  + rhs[M02]*det3_123_013 - rhs[M03]*det3_123_012;
+  const Scalar det4_0123_0124 = rhs[M00]*det3_123_124 - rhs[M01]*det3_123_024 
+                                  + rhs[M02]*det3_123_014 - rhs[M04]*det3_123_012;
+  const Scalar det4_0123_0134 = rhs[M00]*det3_123_134 - rhs[M01]*det3_123_034 
+                                  + rhs[M03]*det3_123_014 - rhs[M04]*det3_123_013;
+  const Scalar det4_0123_0234 = rhs[M00]*det3_123_234 - rhs[M02]*det3_123_034 
+                                  + rhs[M03]*det3_123_024 - rhs[M04]*det3_123_023;
+  const Scalar det4_0123_1234 = rhs[M01]*det3_123_234 - rhs[M02]*det3_123_134 
+                                  + rhs[M03]*det3_123_124 - rhs[M04]*det3_123_123;
+  const Scalar det4_0124_0123 = rhs[M00]*det3_124_123 - rhs[M01]*det3_124_023 
+                                  + rhs[M02]*det3_124_013 - rhs[M03]*det3_124_012;
+  const Scalar det4_0124_0124 = rhs[M00]*det3_124_124 - rhs[M01]*det3_124_024 
+                                  + rhs[M02]*det3_124_014 - rhs[M04]*det3_124_012;
+  const Scalar det4_0124_0134 = rhs[M00]*det3_124_134 - rhs[M01]*det3_124_034 
+                                  + rhs[M03]*det3_124_014 - rhs[M04]*det3_124_013;
+  const Scalar det4_0124_0234 = rhs[M00]*det3_124_234 - rhs[M02]*det3_124_034 
+                                  + rhs[M03]*det3_124_024 - rhs[M04]*det3_124_023;
+  const Scalar det4_0124_1234 = rhs[M01]*det3_124_234 - rhs[M02]*det3_124_134 
+                                  + rhs[M03]*det3_124_124 - rhs[M04]*det3_124_123;
+  const Scalar det4_0134_0123 = rhs[M00]*det3_134_123 - rhs[M01]*det3_134_023 
+                                  + rhs[M02]*det3_134_013 - rhs[M03]*det3_134_012;
+  const Scalar det4_0134_0124 = rhs[M00]*det3_134_124 - rhs[M01]*det3_134_024 
+                                  + rhs[M02]*det3_134_014 - rhs[M04]*det3_134_012;
+  const Scalar det4_0134_0134 = rhs[M00]*det3_134_134 - rhs[M01]*det3_134_034 
+                                  + rhs[M03]*det3_134_014 - rhs[M04]*det3_134_013;
+  const Scalar det4_0134_0234 = rhs[M00]*det3_134_234 - rhs[M02]*det3_134_034 
+                                  + rhs[M03]*det3_134_024 - rhs[M04]*det3_134_023;
+  const Scalar det4_0134_1234 = rhs[M01]*det3_134_234 - rhs[M02]*det3_134_134 
+                                  + rhs[M03]*det3_134_124 - rhs[M04]*det3_134_123;
+  const Scalar det4_0234_0123 = rhs[M00]*det3_234_123 - rhs[M01]*det3_234_023 
+                                  + rhs[M02]*det3_234_013 - rhs[M03]*det3_234_012;
+  const Scalar det4_0234_0124 = rhs[M00]*det3_234_124 - rhs[M01]*det3_234_024 
+                                  + rhs[M02]*det3_234_014 - rhs[M04]*det3_234_012;
+  const Scalar det4_0234_0134 = rhs[M00]*det3_234_134 - rhs[M01]*det3_234_034 
+                                  + rhs[M03]*det3_234_014 - rhs[M04]*det3_234_013;
+  const Scalar det4_0234_0234 = rhs[M00]*det3_234_234 - rhs[M02]*det3_234_034 
+                                  + rhs[M03]*det3_234_024 - rhs[M04]*det3_234_023;
+  const Scalar det4_0234_1234 = rhs[M01]*det3_234_234 - rhs[M02]*det3_234_134 
+                                  + rhs[M03]*det3_234_124 - rhs[M04]*det3_234_123;
+  const Scalar det4_1234_0123 = rhs[M10]*det3_234_123 - rhs[M11]*det3_234_023 
+                                  + rhs[M12]*det3_234_013 - rhs[M13]*det3_234_012;
+  const Scalar det4_1234_0124 = rhs[M10]*det3_234_124 - rhs[M11]*det3_234_024 
+                                  + rhs[M12]*det3_234_014 - rhs[M14]*det3_234_012;
+  const Scalar det4_1234_0134 = rhs[M10]*det3_234_134 - rhs[M11]*det3_234_034 
+                                  + rhs[M13]*det3_234_014 - rhs[M14]*det3_234_013;
+  const Scalar det4_1234_0234 = rhs[M10]*det3_234_234 - rhs[M12]*det3_234_034 
+                                  + rhs[M13]*det3_234_024 - rhs[M14]*det3_234_023;
+  const Scalar det4_1234_1234 = rhs[M11]*det3_234_234 - rhs[M12]*det3_234_134 
+                                  + rhs[M13]*det3_234_124 - rhs[M14]*det3_234_123;
+
+  // Find the 5x5 det:
+
+  const Scalar det = rhs[M00]*det4_1234_1234 - rhs[M01]*det4_1234_0234 + rhs[M02]*det4_1234_0134 
+                       - rhs[M03]*det4_1234_0124 + rhs[M04]*det4_1234_0123;
+
+//   if (determ)
+//     *determ = det;
+
+  if ( det == 0 ) {
+    //Error("Inv5x5","matrix is singular");
+    //m.Invalidate();
+    return false;
+  }
+
+  const Scalar oneOverDet = 1.0f / det;
+  const Scalar mn1OverDet = - oneOverDet;
+
+  rhs[M00] =  det4_1234_1234 * oneOverDet;
+  rhs[M01] =  det4_0234_1234 * mn1OverDet;
+  rhs[M02] =  det4_0134_1234 * oneOverDet;
+  rhs[M03] =  det4_0124_1234 * mn1OverDet;
+  rhs[M04] =  det4_0123_1234 * oneOverDet;
+
+  rhs[M10] =  det4_1234_0234 * mn1OverDet;
+  rhs[M11] =  det4_0234_0234 * oneOverDet;
+  rhs[M12] =  det4_0134_0234 * mn1OverDet;
+  rhs[M13] =  det4_0124_0234 * oneOverDet;
+  rhs[M14] =  det4_0123_0234 * mn1OverDet;
+
+  rhs[M20] =  det4_1234_0134 * oneOverDet;
+  rhs[M21] =  det4_0234_0134 * mn1OverDet;
+  rhs[M22] =  det4_0134_0134 * oneOverDet;
+  rhs[M23] =  det4_0124_0134 * mn1OverDet;
+  rhs[M24] =  det4_0123_0134 * oneOverDet;
+
+  rhs[M30] =  det4_1234_0124 * mn1OverDet;
+  rhs[M31] =  det4_0234_0124 * oneOverDet;
+  rhs[M32] =  det4_0134_0124 * mn1OverDet;
+  rhs[M33] =  det4_0124_0124 * oneOverDet;
+  rhs[M34] =  det4_0123_0124 * mn1OverDet;
+
+  rhs[M40] =  det4_1234_0123 * oneOverDet;
+  rhs[M41] =  det4_0234_0123 * mn1OverDet;
+  rhs[M42] =  det4_0134_0123 * oneOverDet;
+  rhs[M43] =  det4_0124_0123 * mn1OverDet;
+  rhs[M44] =  det4_0123_0123 * oneOverDet;
+
+  return true;
+}
+
+
+  }  // namespace Math
+
+}  // namespace ROOT
+          
+
+
+
+// undef macros to avoid conflicts
+
+// 4x4 indices 
+
+#undef F00 
+#undef F01 
+#undef F02
+#undef F03
+
+#undef F10
+#undef F11
+#undef F12
+#undef F13
+
+#undef F20
+#undef F21
+#undef F22
+#undef F23
+
+#undef F30
+#undef F31
+#undef F32
+#undef F33
+
+// undef 5x5 indices
+
+#undef M00
+#undef M01
+#undef M02
+#undef M03
+#undef M04
+
+#undef M10
+#undef M11
+#undef M12
+#undef M13
+#undef M14
+
+#undef M20
+#undef M21
+#undef M22
+#undef M23
+#undef M24
+
+#undef M30
+#undef M31
+#undef M32
+#undef M33
+#undef M34
+
+#undef M40
+#undef M41
+#undef M42
+#undef M43
+#undef M44
+
+
+#endif

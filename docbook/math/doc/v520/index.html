@@ -1,0 +1,193 @@
+<!-- <html> <head><title>ROOT Math Release Notes</title></head><body> -->
+
+<br>
+<hr>
+<a name="math"></a>
+<h2>Math Libraries</h2>
+<hr>
+<h3>MathCore</h3>
+<p>MathCore includes now classes which were previously contained in <em>libCore</em>, like <tt>TMath</tt>, <tt>TComplex</tt> and the <tt>TRandom</tt> classes. Furthermore, some of the algorithms implemented in the <tt>TF1</tt> class have been moved to MathCore. This implies that all other ROOT library using one of these classes, such as <em>libHist</em>, have a direct dependency on the Mathcore library.
+Linking with <em>libMathCore</em> is therefore required for running any major ROOT application. It has been added to the list of libraries obtained when doing <em>root-config --libs</em>.
+<p>
+<strong>N.B.: users building ROOT applications and not  using <em>root-config</em> MUST add <em>libMathCore</em> to their list of linking libraries.
+</strong>
+<p>
+Together with the libraries merge, many changes have been applied to both TMath and the other mathcore classes.
+<h4>TMath</h4>
+A major clean-up and re-structuring has been done for the functions present in <tt>TMath</tt>. Some functions have been implemented  using the STL algorithms, which have better performances in term of CPU time and a template interface has been also added.
+Some of the basic special mathematical functions of TMath, like the error function or the gamma and beta functions use now the  <a href="#" target="http:://www.netlib.org/cephes">Cephes</a> implementation from Stephen L. Moshier, which is used as well by the  <tt>ROOT::Math</tt> functions. This implementation  has been found to be more accurate and in some cases more efficient in term of CPU time. More detailed information on the new mathematical functions can be found in <a href="http://project-mathlibs.web.cern.ch/project-mathlibs/documents/slawinska.pdf">this presentation</a> from M. Slawinska at a ROOT team meeting.
+   
+<ul>
+  <li>define the functions as template functions instead of having the same re-definition for all the various basic types. This is done for <tt>TMath::Mean</tt>,<tt>TMath::GeomMean</tt>, <tt>TMath::Median</tt>, <tt>TMath::KOrdStat</tt>
+  <li>Use STL to implement the following  algorithms: 
+  <ul>  
+  <li> <tt>TMath::Sort</tt> is re-implemented using <tt>std::sort</tt>.</li>
+  <li><tt>TMath::BinarySearch</tt> is re-implemented using the STL algorithm <tt>std::lower_bound</tt></li>
+  </ul>
+ The STL algorithms have been found for these cases to be perform better in term of CPU time. For some other algorithms like  <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation is faster than STL and has been maintained.
+  </li>
+  <li>Add a generic iterator interface, similar to the STL algorithm interface, to the following TMath functions:
+	<tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS,
+	BinarySearch</tt>. The iterator interface for sort is called
+	<tt>TMath::SortItr</tt> to avoid a compilation ambiguity. For example,
+	for finding the mean of a <tt>std::vector&lt;double&gt; v</tt>, one simply needs to call <tt>TMath::Mean(v.begin(), v.end() ) </tt>.
+  </li>
+  <li>Various changes have been applied to the mathematical functions to remove duplications in the implementation with the special and statistical functions defined in <tt>ROOT::Math</tt>. The functions which have been changed and thus they can return a sightly different result than before are:
+  <ul>
+  <li><tt>TMath::Erf</tt> and <tt>TMath::Erfc</tt> call <tt>ROOT::Math::erf</tt> and <tt>ROOT::math::erfc</tt> which are implemented using the Cephes algorithms, which is accurate at the required double precision level.</li> 
+  <li><tt>TMath::Gamma(z)</tt>  is implemented with <tt>ROOT::Math::tgamma</tt>, which again uses Cephes.</li>
+  <li>The incomplete gamma function, <tt>TMath::Gamma(a,x)</tt> it is implemented using <tt>ROOT::Math::inc_gamma</tt> based on a corresponding Cephes function.</li>
+  <li><tt>TMath::Prob</tt> (the upper chi2 probability) is implemented also using <tt>ROOT::Math::chisquared_cdf_c</tt> which uses <tt>ROOT::Math::inc_gamma_c</tt> based on a corresponding Cephes function. Now the implementation does not suffer anymore from large numerical error present when the result of <tt>TMath::Prob</tt> was approaching zero.</li> 
+  <li><tt>TMath::LnGamma(z)</tt> is implemented using <tt>ROOT::Math::lgamma</tt>. This affects also <tt>TMath::Beta</tt> which is implemented using the log of the gamma function.</li>
+  <li><tt>TMath::BetaIncomplete</tt> is implemented using <tt>ROOT::Math::beta_inc</tt>.</li>
+  <li><tt>TMath::GammaDist</tt> is implemented using <tt>ROOT::Math::gamma_pdf</tt>.</li>
+  <li><tt>TMath::LogNormal</tt> is implemented using <tt>ROOT::Math::lognormal_pdf</tt>.</li>
+  <li><tt>TMath::PoissonI</tt>:  fixed a problem for large values and is implemented using directly TMath::Poisson with integer values.</li>
+  </ul>
+  </li>
+</ul>
+
+  <p>
+  <h4>Fit</h4>
+  Mathcore include now new classes for performing fits and minimization of multi-dimensional functions. The aim of these classes is to extend and improve the fitting functionality provided in ROOT via the <tt>TVirtualFitter</tt> classes and the fitting  methods present in many data analysis object, such as <tt>TH1::Fit</tt>.
+  <br>
+The fit data are decoupled from the fitter class and described by the dedicated fit data classes like the <tt>ROOT::Fit::BinData</tt> for bin data containing coordinate values of any dimensions, bin content values and optionally errors in coordinate and bin content, and <tt>ROOT::Fit::UnBinData</tt> classes for any dimension un-bin data.<br>
+  The fitter class, <tt>ROOT::Fit::Fitter</tt>, provides the functionality for fitting those data with any model function implementing the parametric function interface, <tt>ROOT::Math::IParamMultiFunction</tt>. Fit methods such as least square, bin and un-bin likelihood are supported. The fit solution is then found by using the <tt>ROOT::Math::Minimizer</tt> interface class and the results are stored in the <tt>ROOT::Fit::FitResult</tt> class. Fit parameter can be configured individually using the <tt>ROOT::Fit::FitParameterSettings</tt> class. 
+  <br>
+  Various implementation of the minimizer interface can be used automatically using the ROOT plug-in manager mechanism, including the linear fitter for a fast and direct solution, in case of a linear least square model, or by using Minuit, Minuit2 or GSL minimization methods provided by the MathMore library.  
+<br>
+  <p>
+ Functions for filling the new <tt>ROOT::Fit::BinData</tt> classes with all the histogram and graph types have been added in the histogram library (<em>libHist</em>) and graph library:  
+  <ul>
+    <li><tt>ROOT::Fit::FillData( BinData & , const TH1 *, TF1 * )</tt> for histograms  (in libHist)
+    <li><tt>ROOT::Fit::FillData( BinData & , const TGraph2D *, TF1 * )</tt> for 2D graphs (in libHist)
+    <li><tt>ROOT::Fit::FillData( BinData & , const TGraph *, TF1 * )</tt> for all 1D graphs (in libGraf) 
+    <li><tt>ROOT::Fit::FillData( BinData & , const TMultiGraph *, TF1 * )</tt> for multi-graphs (in libGraf)
+    </ul>
+<p>  
+<h4>MathCore Numerical Algorithms</h4>
+
+    Classes implementing numerical methods which can be used by all the other ROOT library have been added in MathCore. These originate mainly from methods present previously in the implementation of the <tt>TF1</tt> class. Now they can be used also outside this class. In addition, in order to have a common entry point, interfaces classes for these numerical algorithms have been
+included. 
+These interfaces are as well implemented by classes using the GSL library and located in the <em>MathMore</em> library. The library can be loaded automatically using the ROOT plug-in manager.
+In detail, the new classes containing implementations present previously in <tt>TF1</tt> are:   
+
+    <ul>
+  <li><tt>GaussIntegrator</tt> and <tt>GaussLegendreIntegrator</tt> for numerical integration of one-dimensional functions. The first class uses Gaussian  8 and 16 point  quadrature approximation, it provides the translation of the CERNLIB algorithm
+  <a href="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/d103/top.html">DGAUSS</a> by Sigfried Kolbig,  and it is used by the <tt>TF1::Integral</tt> method. The second one uses the Gauss Legendre quadrature formula. It is used by the <tt>TF1::IntegralFast</tt> method.
+  These classes implement both the same  virtual interface as the adaptive integration methods provided by the MathMore library.  They can all be created and used easily via the common class <tt>ROOT::Math::IntegratorOneDim</tt> providing the interfaces for numerical integration.
+New template methods have been also included in the common Integration class in order to be able to integrate automatically any C++ callable object.
+</li>
+<li><tt>ROOT::Math::RichardsonDerivator</tt> implementing numerical derivation using the Richardson's extrapolation formula (use 2 derivative estimates to compute a third, more accurate estimation). This is used by the <tt>TD1::Derivative</tt> method. </li>
+<li><tt>BrentRootFinder</tt> for finding the root of one-dimensional function using the Brent algorithm. The class inherits from a virtual interface, which is also implemented by the MathMore root finder methods. The user can instantiate, via the common  <tt>ROOT::Math::RootFinder</tt> class, all the various root finder algorithms.  The <tt>BrentRootFinder</tt> class is used by <tt>TF1::GetX</tt> . </li>
+<li>A similar class, <tt>BrentMinimizer1D</tt>, provides the possibility to find the minimum of one-dimensional functions using  the Brent algorithm. This class is used by <tt>TF1::GetMinimum</tt> or <tt>TF1::GetMaximum</tt>
+Use ROOT convention for all enumeration names defining the type of numerical algorithms (start with k, like kADAPTIVE for the integration type). This affects both MathCore and MathMore.
+ </li>
+
+</ul>
+ 
+In addition we use now the ROOT convention for all enumeration names defining the type of numerical algorithms. The names start with <tt>k</tt>, like <tt>kADAPTIVE</tt> for the integration type. This change affects both MathCore and MathMore and it breaks backward compatibility. 
+
+<p>  
+<h4>MathCore Function interfaces</h4>
+Mathcore provides as well interfaces for the evaluation of mathematical and parametric functions to be used in the the numerical methods. This release contains the following changes:
+<ul>
+<li>The <tt>ROOT::Math::IParamFunction</tt>, <tt>ROOT::Math::IParamMultiFunction</tt> interfaces (used mainly for fitting) require now a pointer to the parameters (type <tt>const double *</tt>), when evaluating the function. The derived classes must implement now the const
+method <tt>DoEvalPar</tt> (and not <tt>DoEval</tt> as before). In addition the method
+<tt>operator()(const double * x, const double * p)</tt> is now const. This change makes the caching of parameter not hidden and the interface is now 
+ thread-safe. </li>
+ <li>A similar change in the <tt>ROOT::Math::IParamGradFunction</tt>, <tt>ROOT::Math::IParamMultiGradFunction</tt> interfaces, where the parameter values are now required for calculating the partial derivatives with respect to the parameters.
+This changes the signature of the pure abstract method, <tt>DoParameterDerivative(const double *x, const double * p, </tt>, which takes also a pointer (type <tt>const double *</tt>) to the parameters.
+In addition, these classes do not inherit anymore from the function gradient interface (<tt>ROOT::Math::IGradFunction</tt> and <tt>ROOT::Math::IMultiGradFunction</tt>). They define only the parameter gradient which is needed for fitting and not the coordinate gradient. A derived class, like <tt>ROOT::Math::Polynomial</tt>, implementing both functionality (coordinate and parameter gradient) inherits then from both interfaces. 
+ </li>
+ <li>
+ </ul>
+
+<p>More detailed description of the current MathCore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/MathCore.html">location</a>.
+
+<hr>
+<h3>MathMore</h3>
+<p>This new release contains:
+<ul>
+  <li>Modify and rename the class <tt>ROOT::Math::RootFinder</tt> to <tt>ROOT::Math::GSLRootFinder</tt> to distinguish from the main interface class which has been put in the Mathcore library and it can create the GSLRootFinder using the plug-in manager. Furthermore, the class <tt>ROOT::Math::GSLRootFinder</tt> is not anymore a template class on the algorithm. They type of root-finder algorithm can now be selected via an enumeration</li>
+  <li>Fixed a bug in the <tt>ROOT::Math::GSLNLSMutiFi</tt> class.
+    <li>Changes also in the class for the new enumeration names (all names start with k, like kADAPTIVE for the integration types).
+  </li>
+</ul>
+
+<p>More detailed description of the current MathMore release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/MathMore.html">location</a>.
+<p>
+
+<hr>
+
+
+ <h3>GenVector</h3>
+  The new physics vector classes have been moved out from the MathCore library in a new library, <em>libGenVector</em>.  The library contains as well the CINT dictionary including main instantiations for the template classes. For this release the instantiation of some extra methods, in particular of the class <tt>ROOT::Math::TRansform3D</tt> have been added in the dictionary library.
+Due to a CINT limitation, the dictionary for explicit template constructors of the Rotation classes, taking as input any other type
+of rotation are missing. Therefore code like the following one will now work in CINT (or Python):  
+<pre>
+ROOT::Math::Rotation3D r; 
+ROOT::Math::EulerAngles eulerRot(r);
+</pre>
+A possible solution is to use the operator=:
+<pre>
+ROOT::Math::EulerAngles eulerRot; eulerRot = r;
+</pre>
+<br>
+In addition the setter methods for the 2D,3D and 4D vector classes have been extended following a suggestion by G. Raven. Functions like <tt>SetX</tt> instead of returning a <tt>void</tt> return now a reference to the vector class itself (<tt>*this</tt>).
+<br>Detailed description of the current GenVector release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/Vector.html">location</a>.
+
+<hr>
+<h3>SMatrix</h3>
+Fix a bug discovered by Harals Soleng in the addition of two matrix expressions. Remove also some compilation warning found on Windows when compiling matrices instantiated using float types.  
+<br>Detailed description of the current SMatrix release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/html/SMatrix.html">location</a>.
+
+
+<hr>
+<h3>Minuit</h3>
+  Two new classes have been added:
+  <ul>
+    <li><tt>TMinuitMinimizer</tt>: implementation of the <tt>ROOT::Math::Minimizer</tt> interface with TMinuit. This class is used for example by the new Fitter class.
+    <li><tt>TLinearMinimizer</tt>: implementation of the <tt>ROOT::Math::Minimizer</tt> interface with the TLinearFitter.
+  </ul>
+In addition, the method <tt>TLinearFitter::SetBasisFunction(TObjArray  * f)</tt> has been added to set directly the linear terms of the fit function.
+
+<br>
+<hr>
+
+ <h3>Minuit2</h3>
+
+  Various fixes have been applied to different problems discovered mainly by a test program from Alfio Lazzaro. In detail:
+  <ul>
+    <li>
+ Fix a bug in <tt>MnMinos</tt> which was setting wrong initial values when the parameters were limited.
+  This was resulting in a much larger number of function calls used inside <tt>MnMinos</tt>. </li>
+
+<li> Improve <tt>MnHesse</tt> by returning in the final state the improved gradient step values used in <tt>HessianGradientCalculator</tt>. With this change same results are obtained from using Hesse in Minuit2 or TMinuit. In addition, the interface of MnHesse (<tt>MnHesse::operator()</tt> ) has been improved to use it  from the <tt>FunctionMinimum</tt> object (similar to MnMinos) in order to be called after the minimization (Migrad). The API with a <tt>MnUserParameterState</tt> should not be used after minimization, because in that case the latest state information resulting from the minimum (gradient values and step sizes) is lost.  
+</li>
+<li>Add support in <tt>MnMigrad</tt> and <tt>MnMinimize</tt> for user provided analytical gradient of the FCN function. One needs to pass an instance of a function implementing the <tt>ROOT::Minuit2::FcnGradientBase</tt> interface. 
+</li>
+<li>Use now <tt>std::string</tt> for storing parameter names. This removes the un-necessary limitation on the length of parameter name (10 characters) existing before. The method <tt>Name()</tt> of <tt>MinuitParameter</tt> (and of <tt>MnUserParameterState</tt> and <tt>MnUserParameters</tt>) still returns a <tt>const char *</tt> (for backward compatibility). A new method, <tt>GetName()</tt> has been added to return a <tt>std::string</tt>
+</li>
+
+
+<li>
+The<tt> Minuit2Minimizer</tt> class has been improved by having an option to always run Hesse if it was not done before during the minimization. Method to retrieve the correlation coefficients have been also added. 
+</li>
+</ul>
+
+<p>More detailed description of the current Minuit2 release can be found at this <a href="http://www.cern.ch/mathlibs/sw/5_20_00/Minuit2/html/index.html">location</a>.
+  
+
+<hr>
+
+ <h3>Unuran</h3>
+
+A new version, 1.2.4, has been added to fix mainly some problems found in gcc 4.3. For the detailed changes of this new UNU.RAN version see the file <tt>$ROOTSYS/math/unuran/src/unuran-1.2.4-root/NEWS</tt>. 
+
+<br>
+
+<hr>
+
+<!-- hhmts start --> Last modified: Tue Jun 24 17:22:42 CEST 2008 <!-- hhmts end -->
+<!-- </body> </html> -->

@@ -1,0 +1,194 @@
+<br/> 
+<hr/> 
+<a name="hist"></a> 
+<h3>Histogram package</h3>
+
+<h4>new class TGraphTime</h4>
+<ul>
+<li> <tt>TGraphTime</tt> is a new class to organize and draw a list of 
+     objects evolving with time. An example of use is shown in the tutorials
+     <tt>$ROOTSYS/tutorials/graphs/gtime.C</tt> and
+     <tt>$ROOTSYS/tutorials/graphs/gtime2.C</tt>.</li>
+</ul>
+<p>The tutorial gtime.C shows the evolution of a set of points with time and it
+produces the following picture.</p>
+<p><img src="gtime.gif" alt="gtime.C output"/></p>
+<p>The tutorial gtime2.C is an example of TGraphTime showing how the class could be used to visualize
+a set of particles with their time stamp in a MonteCarlo program.
+It produces the following picture.</p>
+<p><img src="gtime2.gif" alt="gtime2.C output"/></p>
+
+
+
+<h4>THStack</h4>
+<ul>
+<li>The following macro produced two sets of superimposed labels with different
+text sizes:
+<pre>
+{
+   TH1F *hgaus1 = new TH1F("Hgaus1", "", 100, -10, 10);
+   TH1F *hgaus2 = new TH1F("Hgaus2", "", 100, -20, 20);
+   THStack *hst = new THStack();
+   hgaus1-&gt;FillRandom("gaus", 30000); hst-&gt;Add(hgaus1, "ep");
+   hgaus2-&gt;FillRandom("gaus", 30000); hst-&gt;Add(hgaus2, "ep");
+   hst-&gt;Draw("nostack");
+   hst-&gt;GetHistogram()-&gt;SetLabelSize(0.07, "xy");
+}
+</pre></li>
+<li> Change <tt>THStack::GetMaximum()</tt> and <tt>THStack::GetMinimum()</tt>
+     to make sure the error bars fit entirely on the plot when a 
+     <tt>THStack</tt> is plotted with the option E. The following 
+     macro showed the problem:
+<pre>
+{
+   TH1D *h1 = new TH1D("h1","h1",10,0,10);
+   TH1D *h2 = new TH1D("h2","h2",10,0,10);
+   THStack h;
+
+   h1-&gt;SetLineColor(kRed);   
+   h1-&gt;SetMarkerStyle(20),   
+   h2-&gt;SetLineColor(kBlue);   
+   h2-&gt;SetMarkerStyle(21);   
+
+   for(int i=0; i&lt;11; i++){
+      h1-&gt;SetBinContent(i,1.5-i/10);
+      h1-&gt;SetBinError(i,0.5*i);
+      h2-&gt;SetBinContent(i,10.5-i/10);
+      h2-&gt;SetBinError(i,0.7*i);
+   }
+
+   h.Add(h1);
+   h.Add(h2);
+   h.Draw("nostack E1");
+}
+</pre></li>
+</ul>
+
+<h4>TGraphPainter</h4>
+<ul>
+<li> TGraphAsymmErrors and TGraphBentErrors were not correctly clipped when
+     paint with the option E3 (filled band) and zoomed.</li>
+<li> When drawn with the option B, a TGraph had the first or/and last bar missing
+     if its lowest or/and highest value were equal to the minimum or/and maximum 
+     of the pad. The following lines illustrate the problem:
+     <pre>
+     Int_t x[5] = {0,1,2,3,4};
+     Int_t y[5] = {10,1,2,3,0};
+     Int_t n = 5;
+     TGraph *gr = new TGraph(n,x,y);
+     gr-&gt;Draw("AB*");
+     </pre>
+     This problem was submited here: https://savannah.cern.ch/bugs/index.php?53949
+</li>
+</ul>
+
+<h4>TFormula</h4>
+<ul>
+<li>Add support for the ternary condition operator ( cond ? if_expr : else_expr ).</li>
+</ul>
+
+
+<h4>THStack</h4>
+<ul>
+<li>The following macro produced two sets of superimposed labels with different
+text sizes:
+<pre>
+{
+   TH1F *hgaus1 = new TH1F("Hgaus1", "", 100, -10, 10);
+   TH1F *hgaus2 = new TH1F("Hgaus2", "", 100, -20, 20);
+   THStack *hst = new THStack();
+   hgaus1-&gt;FillRandom("gaus", 30000); hst-&gt;Add(hgaus1, "ep");
+   hgaus2-&gt;FillRandom("gaus", 30000); hst-&gt;Add(hgaus2, "ep");
+   hst-&gt;Draw("nostack");
+   hst-&gt;GetHistogram()-&gt;SetLabelSize(0.07, "xy");
+}
+</pre></li>
+</ul>
+
+<h4>TH1</h4>
+<ul>
+  <li>Fix problem in the resulting statistics of TH1::Add when the coeffient are negative, for an histogram subtraction. This fixes the issue
+  <a href="https://savannah.cern.ch/bugs/?55911">#55911</a>.</li>
+  <li>In the implementation of  TH1::ResetStats(), set the statistics to the one calculated using the bin center and also reset the number of entries to the
+      total bin content or to the effective entries in case of a weighted histogram.</li>
+  <li>Check the histogram compatibility, by comparing each bin, in the case of variable bin histogram, when using the histogram operation methods <tt>TH1::Add</tt> or  <tt>TH1::Multiply</tt> or <tt>TH1::Divide</tt></li>
+</ul>
+
+<h4>THistPainter</h4>
+<ul>
+<li>Round correctly the number of entries displayed in the statistics box to the closest integer value.</li>
+<li> New plotting option <tt>SURF7</tt>. It is similar to <tt>SURF3</tt> except
+that the surface is plotted with colors and the contours on top with lines.
+<p><img src="surf7.gif" alt="SURF7"></img></p></li>
+</ul>
+  
+<h4>TGraph</h4>
+<ul>
+  <li>Fixed problem in &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=9208&gt;</li>
+</ul>
+
+<h4>TGraphErrors</h4>
+<ul>
+  <li>Add a new fitting option <tt>"EX0"</tt>, to neglect the error in X when fitting
+  </li>
+</ul>
+
+<h4>TGraph2DErrors</h4>
+<ul>
+<li> New option <tt>"ERR"</tt> to draw <tt>TGraphErrors</tt> as error bars.
+     The following picture has been produced with the option <tt>"ERR P0"</tt>.
+<p><img src="graph2derrors.gif" alt="ERR"></img></p>
+</li>
+</ul>
+
+<h4>THnSparse</h4>
+<ul>
+  <li>Make a function to generate a THnSparse from a corresponding TH1.</li>
+  <li>Fixed a problem with the division methods, as well as implement unit tests for them.</li>
+  <li>Remove some unnecessary parts of the methods Multiply and Divide.</li>
+  <li>Implement the multiplication proposal in
+    &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=7692&gt;, as weel
+    as implemeting unit tests for it.</li>
+    <li>Add a new method <tt>Fit()</tt> for fitting a THNSparse. By default the likelihood method is used. For using a least square
+    method (not really reccomended) if the histogram is really sparse, the option "X" must be used.  </li>
+</ul>
+
+<h4>new classes TFitResult, TFitResultPtr</h4>
+<ul>
+ <li> All the <tt>Fit</tt> methods of the Hist library instead of returning an integer now return a <tt>TFitResultPtr</tt> object. The <tt>TFitResultPtr</tt> is an object that converts automatically to an integer, which represents the status code of the fit. If the Fit method is used as before, there is a no visible change for the user.</li>
+  <li>When using the fit option <tt>"S"</tt>, the <tt>TFitResultPtr</tt> will now contain a pointer to the new <tt>TFitResult</tt> class. It will behave as a smart pointer to <tt>TFitResult</tt>,
+by using the <tt>-&gt;</tt> operator the user can call the <tt>TFitResult</tt> methods or access directly the <tt>TFitResult</tt> object, by using the de-reference operator <tt>*</tt> or
+  <tt>TFitResultPtr::Get()</tt>.</li>
+  <li>The <tt>TFitResult</tt> class derives from the <tt>ROOT::Math::FitResult</tt>, which contains all the result information from a fit and from <tt>TNamed</tt>. It provides then I/O capabilities for the FitResult object and convenience methods like <tt>Print()</tt>, <tt>Write()</tt>, <tt>GetCovarianceMatrix()</tt> and <tt>GetCorrelationMatrix()</tt> which return a TMatrixDSym object.</li>
+  <li>Example of usage:
+  <pre>
+     TFitResult r = h-&gt;Fit("myFunc","S");
+     TMatrixDSym cov = r-&gt;GetCovarianceMatrix();  //  to access the covariance matrix
+     Double_t chi2   = r-&gt;Chi2(); // to retrieve the fit chi2 
+     Double_t par0   = r-&gt;Value(0); // retrieve the value for the parameter 0 
+     Double_t err0   = r-&gt;Error(0); // retrieve the error for the parameter 0 
+     r-&gt;Print("V");     // print full information of fit including covariance matrix
+     r-&gt;Write();        // store the result in a file
+</pre>
+</li>
+</ul>
+  
+
+
+<h3>FitPanel</h3>
+<ul>
+  <li>Added predefined 2D Functions.</li>
+  <li>Addition of new minimization algorithms from the GSL library and foreseen the addition of 
+  genetic minimizers when will be released.</li>
+  <li>Fixed up to three bugs from the previous release</li>
+  <li>Added the Update Button. This way the user can update the content of the fitpanel with all the new objects and functions created in the current ROOT session.</li>
+  <li>Changed the way the TF1s were being copied internally. Instead of using TObject::Clone, now it's using the TF1 copy constructor</li>
+</ul>
+
+<h4>new tutorial rebin.C</h4>
+This tutorial illustrates how to:
+<ul>
+<li>create a variable binwidth histogram with a binning such
+   that the population per bin is about the same.</li>
+<li>rebin a variable binwidth histogram into another one.</li>
+</ul>

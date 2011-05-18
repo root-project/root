@@ -1,0 +1,66 @@
+<lcgdict>
+  <class name="testclasses::WithTypedefMemberT<testclasses::MyVector>"/>
+  <class name="testclasses2::WithTypedefMemberT<testclasses::MyVector>"/>
+  <class name="testclasses2::WithTypedefMemberT<testclasses::MyInt>"/>
+  <class pattern="classVec*"/>
+  <class pattern="Class*"/>
+  <class pattern="Bla::*" rootmap="FALSE"/>
+  <function name="function1"/>
+  <function name="function2"/>
+  <function name="function3"/>
+  <function name="function5"/>
+  <function pattern="Functions::*"/>
+  <operator name="+"/>
+  <operator name="<<"/>
+  <class pattern="OP*"/>
+  <class name="FUNCS::C"/>
+  <function name="FUNCS::operator-"/>
+  <function name="FUNCS::operator*"/>
+
+  <class name="testclasses::WithTransientMember">
+    <field name="m_transient" transient="TRUE"/>
+  </class>
+
+  <function name="trigger"/>
+  
+  <class name="MemberPointerTest"/>
+  <class name="MyClass" id="1234" comment="This is a comment" >
+    <field name="data" comment="[this is an emulated comment]" />
+  </class> 
+  <class pattern="zot::*"/>
+
+  <class name="TT::Outer<TT::A<unsigned long> >"/>
+
+  <class pattern="testclasses::*"/>
+
+  <class name="xmlTypedefSelection::TypedefXmlSelClass2"/>
+
+  <exclusion>
+    <class name="TT::Outer<TT::A<unsigned long> >">
+      <method name="unwantedFunction"/>
+    </class>
+  </exclusion>
+
+  <class pattern="Bla*"/>
+  <class name="TT::TemplatedMemberTypes"/>
+  <class name="std::string"/>
+  <class name="std::map<std::string,double>"/>
+
+  <class name="std::vector<int>"/>
+  <class name="std::vector<int>::value_type"/>
+
+  <class name="std::vector<MyClass>"/>
+  <class name="std::vector<MyClass>::value_type"/>
+
+  <class name="std::vector<MYINT>"/>
+  <class name="std::vector<MYFLOAT>"/>
+
+  <class pattern="std::list<MYFLOAT*>"/>
+  <class pattern="std::list<MYINT*>"/>
+
+  <class pattern="std::vector<ClassO*"/>
+  <class pattern="std::vector<const ClassO*"/>
+
+  <class name="VirtFuncOverrider::Comp" />
+ 
+</lcgdict>

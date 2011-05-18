@@ -1,0 +1,131 @@
+#!/bin/sh
+
+#--- Help function -------------
+printhelp()
+{
+   echo "   "
+   echo "  pq2-put"
+   echo "   "
+   echo "  Purpose: register one or more datasets"
+   echo "   "
+   echo "  Syntax:"
+   echo "           pq2-put [-h|--help] [-v] [-k] [-o options] [(-d|--dataset=)] datasetfile"
+   echo "                   [--overwrite] [--update] [--trust]"
+   echo "                   [--tree deftree] [--staged]"
+   echo "                   [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
+   echo "   "
+   echo "   -h | --help   Print this help"
+   echo "   -v            Verbose mode"
+   echo "   -k            Keep temporary files"
+   echo "   datasetfile:  Path to the file with the list of files in the dataset or"
+   echo "                 directory with the files containing the file lists of the"
+   echo "                 datasets to be registered; in the first case wildcards '*'"
+   echo "                 can be specified in the file name, i.e. \"<dir>/fil*\" is ok"
+   echo "                 but \"<dir>/*/file\" is not. In all cases the name of the"
+   echo "                 dataset is the name of the file finally used"
+   echo "   options       Options for registering datasets; a combination of:"
+   echo "                    O   overwrite existing dataset"
+   echo "                    U   add information to existing dataset, if any or create a new one"
+   echo "                    T   Trust the information already present in the dataset"
+   echo "                    V   verify information in the dataset (can be very slow)"
+   echo "   --overwrite   Equivalent to '-o O'"
+   echo "   --update      Equivalent to '-o U'"
+   echo "   --trust       Equivalent to '-o T'"
+   echo "   deftree       Set the default tree name to 'deftree' (option 'T' or --trust only)"
+   echo "   --staged      Assume all files online or staged (option 'T' or --trust only)"
+   echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
+   echo "                 for data servers, it must include the directory."
+   echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
+   echo "   tmpdir        Directory for temporary files [/tmp/<user>]."
+   echo "   "
+}
+
+PQ2=`which pq2 2> /dev/null`
+if test "x$PQ2" = "x" ; then
+   echo "Unknown command 'pq2'"
+   exit 1
+fi
+
+DBGOPT=""
+KEEPOPT=""
+SRVURL=""
+DSNAME=""
+OPTS=""
+TDIR=$TMPDIR
+#
+# Parse long options first
+other_args=
+short_opts=
+for i in $@ ; do
+   opt=""
+   case $i in
+      --*) opt=`echo "$i" | sed 's/--//'` ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
+   esac
+   if test ! "x$opt" = "x" ; then
+      case "$opt" in
+         *=*) oarg=`echo "$opt" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+         *) oarg= ;;
+      esac ;
+      case $opt in
+         dataset=*) DSNAME="-d $oarg" ;;
+         help)      printhelp ; exit ;;
+         keep)      KEEPOPT="-k" ;;
+         overwrite=*) OPTS="O$OPTS" ;;
+         staged)    OPTS="staged|$OPTS" ;;
+         tmp=*)     TDIR="$oarg" ;;
+         tree=*)    OPTS="tree:$oarg|$OPTS" ;;
+         trust=*)   OPTS="T$OPTS" ;;
+         update=*)  OPTS="U$OPTS" ;;
+         url=*)     SRVURL="-u $oarg" ;;
+      esac
+   fi
+done
+
+if test ! "x$short_opts" = "x" ; then
+   while getopts d:o:t:u:hkv i $short_opts ; do
+      case $i in
+      d) DSNAME="-d $OPTARG" ;;
+      h) printhelp ; exit ;;
+      k) KEEPOPT="-k" ;;
+      o) OPTS="$OPTS$OPTARG" ;;
+      t) TDIR="$OPTARG" ;;
+      u) SRVURL="-u $OPTARG" ;;
+      v) DBGOPT="-v" ;;
+      \?) printhelp; exit 1 ;;
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
+   done
+
+   # Fill empty fields with any non-prefixed argument
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="-d $other_args"
+   fi
+fi
+
+if test "x$DSNAME" = "x"; then
+   echo "Some arguments are missing (d:$DSNAME)!"
+   printhelp
+   exit
+fi
+
+# Check the options
+if test ! "x$OPTS" = "x" ; then
+   OPTS="-o $OPTS"
+fi
+
+# Run
+export TMPDIR="$TDIR"; $PQ2 put $DBGOPT $KEEPOPT $DSNAME $OPTS $SRVURL
+
+
+
+

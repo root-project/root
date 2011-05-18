@@ -1,0 +1,547 @@
+#!/usr/bin/perl
+
+#**************************************************************************
+#  xrdadmin
+#  $Id$
+#
+#  Administration utility for an xrootd server.
+#  See xrdadmin -h for help.
+#
+#**************************************************************************
+
+use strict 'vars';
+use Getopt::Long;
+use Socket;
+use Term::ReadLine;
+
+# Default options
+my $iname = '';            # instance name of xrootd server
+my $adminDir = '';         # direcory of this script on remote machine
+
+my %opts = ();
+GetOptions(\%opts,
+	   'inst|i=s' => \$iname,
+	   'path|p=s' => \$adminDir,
+	   'debug|d',
+	   'help|h'
+	  );
+
+&usage(1) if ($Getopt::Long::error);
+&usage(0) if ($opts{'help'});
+&usage(0) if ($#ARGV>0);
+
+# Possible requests to xrootd
+#
+my %reqs = ("abort"    => ["abort target [msg]",
+			   "Send abort and message to target"],
+	     "close"    => ["close target",
+			    "Send close to target"],
+	     "cont"     => ["cont target",
+			    "Invalidates a previous pause command"],
+	     "disc"     => ["disc target",
+			    "Send disc to target"],
+	     "lsc"      => ["lsc target",
+			    "List the client connections"],
+	     "lsd"      => ["lsd target",
+			    "List detailed client connections"],
+	     "msg"      => ["msg target [msg]",
+			    "Send a message to target"],
+	     "pause"    => ["pause target wsec",
+			    "Target should wait for wsec seconds"],
+	     "redirect" => ["redirect target host[?token]:port[?token]",
+			    "Redirect target to host:port and transmit token"]
+	   );
+
+# Possible command to xrdadmin
+#
+my %cmds = ("help"     => ["help [request]",
+			    "Display help (for request)"],
+	     "exit"     => ["exit",
+			    "Exit xrdadmin (also ^D)"],
+	     "listterm" => ["listterm",
+			    "List the features of Term::Readline"]
+	   );
+
+
+
+#(see "M A I N" for the main program at the end)#
+
+#******************************************************************************
+#*                                u s a g e                                   *
+#******************************************************************************
+sub usage {
+  my($exit, $message) = @_;
+
+  print STDERR $message if defined $message;
+  print STDERR <<INLINE_LITERAL_TEXT; #'
+Usage: xrdadmin [OPTION] [[user@]XrdServer]
+
+Administration utility for an xrootd server. If XrdServer is not specified
+the server is assumed to run on the local machine. Otherwise an ssh
+connection to the specified server is started.
+
+OPTIONS:
+  -i, --inst         the instance of xrootd to connect to
+  -p, --path         The path of xrdadmin on XrdServer
+                     (can also be set by \$XRDADMIN on the server)
+  -d, --debug        print debugging information
+  -h, --help         help
+
+EXAMPLE:
+  xrdadmin -d -p /soft/xrootd xrdsrv01.mydomain.com
+
+  Starts xrdadmin on xrdserv01 from the directory /soft/xrootd/
+  and debugging messages are turned on.
+
+REMARKS:
+  Depending on the implementation of Term::ReadLine on your system,
+  you will have more or less powerfull command editing features
+  available (history, etc.). Use 'listterm' to show available
+  features. We recommend to install Term::ReadLine::Gnu.
+
+INLINE_LITERAL_TEXT
+#'
+  exit($exit) if defined $exit;
+}
+
+#******************************************************************************
+#*                            p r i n t H e l p                               *
+#******************************************************************************
+# Input:     $req    the request to print the help for
+#
+sub printHelp {
+  my ($req) = @_;
+
+  if ($req eq "") {
+    print "Available requests in xrdadmin:\n";
+    foreach my $rec (sort keys %reqs) {
+      printf "%-15s%s\n", $rec, $reqs{$rec}[1];
+    }
+    print "\nOther commands:\n";
+    foreach my $rec (sort keys %cmds) {
+      printf "%-15s%s\n", $rec, $cmds{$rec}[1];
+    }
+    print "\nGet specific help to a request with 'help [request]'\n";
+    print "See the protocol specifications on http://xrootd.slac.stanford.edu\n";
+    print "for a more detailed description of all requests.\n\n";
+  }
+  elsif (exists $reqs{$req}) {
+    print "Syntax: $reqs{$req}[0]\n";
+    print "$reqs{$req}[1]\n";
+    if ($reqs{$req}[0]=~m#target#) {
+      print "target has the format [user][*][@[prefix][*][suffix]]\n";
+    }
+  }
+  elsif (exists $cmds{$req}) {
+    print "Syntax: $cmds{$req}[0]\n";
+    print "$cmds{$req}[1]\n";
+  }
+  else {
+    print "No help available for $req\n";
+  }
+}
+
+#******************************************************************************
+#*                               s e n d M s g                                *
+#******************************************************************************
+# Input:  $cmd   - command to be sent
+#         $args  - the arguments to the command
+#
+# Processing:
+#         The message is sent to the xrootd admin tcp path.
+#
+# Return: 1 - Message sent
+#         0 - Message not sent.
+#
+sub sendMsg {
+  my($cmd, $args) = @_;
+
+  # Create the message
+  #
+  my $msg = "$cmd $cmd";
+  $msg .= " $args" if (not $args eq "");
+
+  # Send the message
+  #
+  print "Sent: '$msg\\n'\n" if $opts{debug};
+  send(XRDSOCK, "$msg\n", 0) or die "Send failed: $!\n";
+
+  return 1;
+}
+
+#******************************************************************************
+#*                               g e t S o c k                                *
+#******************************************************************************
+# Create a socket connection to the xrootd server
+#
+# Input:  $iname   - instance name of xrootd
+#         $path    - admin path
+#
+# Return: 0 - connection failed
+#         1 - connection successfull
+#
+sub getSock {
+  my($iname, $path) = @_;
+
+  # Get the path we are to use
+  #
+  return 0 if !$path && !($path = getConfig($iname));
+
+  # Create the path we are to use
+  #
+  $path =~ tr:/:/:s;
+  my $XRDADDR = sockaddr_un($path);
+
+  # Create a socket
+  #
+  if (!socket(XRDSOCK, PF_UNIX, SOCK_STREAM, 0))
+     {print STDERR  "Unable to create socket for $path; $!\n";
+      return 0;
+     }
+
+  # Connect it
+  #
+  if (!connect(XRDSOCK, $XRDADDR))
+     {print STDERR  "Unable to connect socket to $path; $!\n";
+      return 0;
+     }
+  return 1;
+}
+
+
+#******************************************************************************
+#*                             g e t C o n f i g                              *
+#******************************************************************************
+# Find the admin path
+#
+# Input:  $iname   -  instance name
+#
+# Return: admin path
+#
+sub getConfig {
+  my($iname) = @_;
+  
+  my($fn, $pp1, $pp2);
+
+# Construct possible adm paths
+#
+  if ($iname eq '')
+     {$pp1 = '/tmp/.xrootd/admin';
+      $pp2 = '/var/run/xrootd/admin';}
+     else
+     {$pp1 = "/tmp/$iname/.xrootd/admin";
+      $pp2 = "/var/run/xrootd/$iname/admin";}
+
+# We will look for the adm file in one of two locations
+#
+  while(!-w $pp1 && !-w $pp2) {sleep(5);}
+
+  if (-w $pp1) {$fn = $pp1;}
+     elsif (-w $pp2) {$fn = $pp2;}
+        else {print STDERR "OlbNotify: Unable to find xrootd admin path\n";
+              return '';
+             }
+    return $fn;
+}
+
+
+#******************************************************************************
+#*                              g e t T o k e n                               *
+#******************************************************************************
+# Extracts token from XML message:
+#
+#     <token id=2 name='token'>This is the value</token>
+#
+# Input:   $token    name of token
+#          $msg      XML message
+#          $hash     reference to a hash
+#          $end      reference to a scalar
+#
+# Ouput:   $hash     hash with XML attributes of token
+#          $end      position in $msg where the token ended
+#                    -1 if the token was not found
+#
+# Return:            value of token ("" if the token was not found)
+#
+sub getToken {
+  my ($token, $msg, $hash, $end) = @_;
+
+  (my $attr, my $value) = ($msg =~ m#<$token(.*?)>(.*?)</$token>#);
+  if ($#- < 0) {    # no match
+    $$end = -1;
+    return "";
+  }
+  else {            # match
+    $$end = $+[0];
+  }
+
+  $attr =~ s/^\s+|\s+$//g;      # remove leading/trailing whitespaces
+  while (not $attr eq "") {
+    $attr =~ /\s*(\S+?)\s*=\s*(\S+)\s*/;   # match one 'id = value' entity
+    $attr = substr($attr, $+[2]);          # cut off the matched part
+    $hash->{$1} = $2;                      # store in hash
+    $hash->{$1} =~ s/\"//g;                # remove quotes
+  }
+
+  return $value;
+}
+
+
+
+sub stripQuotes {
+  my ($s) = @_;
+  
+  $s =~ s/[\"\']//g;
+  return $s;
+}
+
+#******************************************************************************
+#*                              h a n d l e R e s p                           *
+#******************************************************************************
+# This routine handles the XML response from the xrootd server
+#
+# Input:   $msg      XML message from xrootd
+#
+sub handleResp {
+  my ($msg) = @_;
+
+  chomp ($msg);
+  print "Received: $msg\n" if $opts{debug};
+
+  # Get request iD
+  my ($id) = ($msg =~ m#<resp id=\"(.*?)\">#);
+
+  # Get error code
+  my $error = getToken('rc',$msg);
+
+  # If error, print error message and return
+  if ($error != 0) {
+    my $errorMsg = getToken('msg',$msg);
+    print "$id: Error $error: $errorMsg\n";
+    return;
+  }
+
+  # Now handle the known request ID's
+  if ($id eq "login") {
+    my $version = getToken("v", $msg);
+    print "$id: Successfull. Protocol version $version\n";
+  }
+
+  elsif ($id eq "abort") {
+    my $num = getToken("num", $msg);
+    print "$id: $num abort requests sent.\n";
+  }
+
+  elsif ($id eq "close") {
+    my $num = getToken("num", $msg);
+    print "$id: $num connections closed.\n";
+  }
+
+  elsif ($id eq "cont" || $id eq "disc" || $id eq "msg" ||
+	 $id eq "pause" || $id eq "redirect") {
+    my $num = getToken("num", $msg);
+    print "$id: $num '$id' requests sent to clients.\n";
+  }
+
+  elsif ($id eq "lsc") {
+    my $conn = getToken("conn", $msg);
+    if ($conn eq "") { print "No connections.\n"; }
+    else {
+      my @list = split(" ",$conn);
+      print join("\n",@list)."\n";
+    }
+  }
+
+  elsif ($id eq "lsd") {
+    handle_lsd($msg);
+  }
+
+  else {
+    print "Unkown response ID '$id'. Server response was:\n$msg\n"
+  }
+}
+
+#******************************************************************************
+#*                              h a n d l e _ l s d                           *
+#******************************************************************************
+# This routine handles the server response to the 'lsd' command
+#
+# Input:   $msg      XML message from xrootd
+#
+sub handle_lsd() {
+  (my $msg) = @_;
+
+  while (not $msg eq "") {
+    my %hash = ();
+    my $end = 0;
+
+    my $tok = getToken("c", $msg, \%hash, \$end);
+    last if $tok eq "";
+
+    # Cut off this part of the message
+    $msg = substr($msg, $end);
+
+    my ($cname) = ($tok =~ m#(.*?)<#);   # everything before next '<'
+
+    # IO token
+    my %iohash = ();
+    my $iotok = getToken("io", $tok, \%iohash);
+    my $nfiles = getToken("nf", $iotok);
+
+    my $ptok = getToken("p", $iotok);
+    my ($pbytes) = ($ptok =~ m#(.*?)<#);
+    my $pcnt = getToken("n", $ptok);
+
+    my $itok = getToken("i", $iotok);
+    my ($ibytes) = ($itok =~ m#(.*?)<#);
+    my $wcnt = getToken("n", $itok);
+
+    my $otok = getToken("o", $iotok);
+    my ($obytes) = ($otok =~ m#(.*?)<#);
+    my $rcnt = getToken("n", $otok);
+
+    my $stalls = getToken("s", $iotok);
+    my $tardies = getToken("t", $iotok);
+
+    my $role = "not available";
+    if (exists $hash{r}) {
+      if ($hash{r} eq "a") { $role = "administrative"; }
+      elsif ($hash{r} eq "u") { $role = "user"; }
+      else { $role = "unkown role ($hash{r})"; }
+    }
+
+    my $mon = "none";
+    if (exists $hash{m} && not $hash{m} eq "") {
+      if ($hash{m} eq "f") { $mon = "file-level"; }
+      elsif ($hash{m} eq "i") { $mon = "I/O-level"; }
+      else { $mon = "unkown ($hash{m})"; }
+    }
+
+    # AUTH token
+    my %ahash = ();
+    my $atok = getToken("auth", $tok, \%ahash);
+    my ($name, $host, $org, $arole);
+    if (not $atok eq "") {
+      $name = getToken("n", $atok);
+      $host = getToken("h", $atok);
+      $org = getToken("o", $atok);
+      $arole = getToken("r", $atok);
+    }
+
+    # Print information
+    print "$cname\n";
+    print "  Role: $role\n";
+    print "  Connect time: ",scalar(localtime($hash{t})),"\n";
+    print "  Client capabilities: ",($hash{v} & 192)>>6,"\n";
+    print "  Protocol: ",($hash{v} & 63),"\n";
+    print "  Monitoring: $mon\n";
+
+    print "  I/O statistics:\n";
+    print "    References: $iohash{u}\n";
+    print "    Open files: $nfiles\n";
+    print "    Pre-read: $pbytes bytes, $pcnt requests\n";
+    print "    Read: $ibytes bytes, $wcnt requests\n";
+    print "    Write: $obytes bytes, $rcnt request\n";
+    print "    stalls: $stalls   tardies: $tardies\n";
+
+    if (not $atok eq "") {
+      print "  Authentication:\n";
+      print "    Protocol: $ahash{p}\n";
+      print "    Name: $name\n";
+      print "    Host: $host\n";
+      print "    Organization: $org\n";
+      print "    Role: $arole\n";
+    }
+    print "\n";
+  }
+}
+
+
+  
+#******************************************************************************
+#*                             X R D A D M I N                                *
+#******************************************************************************
+# Main subroutine
+#
+sub xrdadmin() {
+
+  # Set backspace as erase character
+  #
+  system ('stty erase \^?');
+
+  # Setup the ReadLine module
+  #
+  my $term = new Term::ReadLine 'PerlSQ';
+  my $OUT = $term->OUT || *STDOUT{IO}; 
+
+  $term->newTTY(*STDIN, $OUT);
+
+  # Allocate a socket if we do not have one
+  #
+  my $path;
+  exit 8 if !fileno(XRDSOCK) && !getSock($iname, $path);
+
+  # Send the login sequence
+  #
+  my @pwd = getpwuid($>);
+  my $adminID = $pwd[0].'.'.$$;
+  exit 16 if !sendMsg("login",$adminID);
+  my $Resp = <XRDSOCK>;
+  handleResp($Resp);
+
+  # Continue getting commands here
+  #
+  while (defined(my $line = $term->readline("xrdadmin> ")) ) {
+
+    $line =~ s/^\s+|\s+$//g;    # remove whitespaces
+    next if $line eq "";        # ignore empty lines
+
+    my ($cmd,$args) = ("","");
+    ($cmd,$args) = split(/ /,$line,2);    # split into cmd and args
+    if (length($cmd)>15) {
+      print "The command $cmd is too long (>15 characters).\n";
+      next;
+    }
+
+    # Handle xrdadmin command
+    #
+    if ($cmd eq "help") { printHelp($args); }
+    elsif ($cmd eq "exit" || $cmd eq "bye") { last; }
+    elsif ($cmd eq "listterm") {
+      foreach (keys %{$term->Features}) { print; print "\n";}
+    }
+
+    # Handle requests to xrootd
+    #
+    else {
+      sendMsg($cmd, $args);
+      $Resp = <XRDSOCK>;
+      handleResp($Resp);
+    }
+  }
+  return 0;
+}
+
+
+#******************************************************************************
+#*                               M A I N                                      *
+#******************************************************************************
+
+if ($#ARGV==0) {
+
+  # This will start xrdadmin on the server via an ssh-tunnel
+
+  my $host = $ARGV[0];
+  my $options = '';
+  $options = " -d" if $opts{debug};
+  $options .= " -i $iname" if ($iname);
+  $adminDir = '$XRDADMIN' if ($adminDir eq '');
+  my $cmd = "ssh -xt $ARGV[0] 'eval $adminDir/xrdadmin $options'";
+  print "Executing $cmd\n" if $opts{debug};
+  exit system ($cmd);
+}
+else {
+
+  # Server runs on the local machine
+  exit xrdadmin();
+}

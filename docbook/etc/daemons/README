@@ -1,0 +1,17 @@
+The rootd and proofd startup scripts:
+
+rootd.rc.d    - rootd startup file for RedHat based systems (/etc/rc.d/init.d)
+rootd.xinetd  - rootd startup file for xinetd (/etc/xinetd.d)
+proofd.rc.d   - proofd startup file for RedHat based systems (/etc/rc.d/init.d)
+proofd.xinetd - proofd startup file for xinetd (/etc/xinetd.d)
+
+ch.cern.rootd.plist  - rootd MacOS X 10.4 launchd script
+ch.cern.proofd.plist - proofd MacOS X 10.4 launchd script
+
+Modify the path in the above two scripts as needed and copy both files to
+/Library/LaunchDaemons/ and do:
+
+launchctl load /Library/LaunchDaemons/ch.cern.proofd.plist
+launchctl load /Library/LaunchDaemons/ch.cern.rootd.plist
+
+at reboot the rootd and proofd will be executed again.

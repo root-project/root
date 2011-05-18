@@ -1,0 +1,4 @@
+makecint -mk makeptlib -dl thread.dll -H ptlib.h
+make -f makeptlib
+cint ptmain.cxx
+make -f makeptlib clean

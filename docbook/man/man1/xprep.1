@@ -1,0 +1,67 @@
+.\"
+.\" $Id: xprep.1,v 1.1 2005/11/21 11:25:37 rdm Exp $
+.\"
+.TH XPREP 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+xprep \- XRootD utility to stage files
+.SH SYNOPSIS
+.B xprep
+.I  SOURCE
+.I  DEST
+.RI [ OPTIONS ]
+.SH "DESCRIPTION"
+.B Xprep 
+is a tool to copy for staging files at a specific location. 
+.P
+.I SOURCE 
+is in the format \fIHOST\fR[:\fIPORT\fR], and 
+.I DEST
+is a filesystem path.
+.SH "OPTIONS"
+.TP
+.BI \-d LEVEL
+Set the debug level
+.TP 
+.BI \-f FILE
+Input file. 
+.TP
+.B \-p
+Unknown
+.TP
+.B \-s
+Stage.
+.TP
+.B \-w
+Wode mode.
+.SH "SEE ALSO"
+\fIroot\fR(1), \fIxrootd\fR(1), \fIxrdcp\fR(1)
+.PP
+See also the \fBROOT\fR webpages:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fR
+.UE
+.SH "ORIGINAL AUTHORS"
+G. Ganis
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" EOF
+.\"

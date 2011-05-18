@@ -1,0 +1,39 @@
+/* XPM */
+static char *trd2 shape 16_xpm[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16       16            1",
+/* colors */
+"` c None s None",
+". c #a0a0a0",
+"# c #a8a8a8",
+"a c #989898",
+"b c #b4b4b4",
+"c c #808080",
+"d c #bfbfbf",
+"e c #979797",
+"f c #8a8a8a",
+"g c #e8e8e8",
+"h c #707070",
+"i c #c2c2c2",
+"j c #797979",
+"k c #e0e0e0",
+"l c #f2f2f2",
+"m c #dbdbdb",
+/* pixels */
+"````````````````",
+"`````gmi#bk`````",
+"```gfcccfe.`````",
+"```gja###.#`````",
+"````ce....b`````",
+"````fc#.#ab`````",
+"````aj.#..b`````",
+"````#ha#..b`````",
+"````dhe.#.b`````",
+"````ihf...b`````",
+"````kjca#.d`````",
+"`````dha#ad`````",
+"``````ac#.d`````",
+"``````le.ab`````",
+"```````kaig`````",
+"````````l```````"
+};

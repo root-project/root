@@ -1,0 +1,148 @@
+<br>
+<hr>
+<a name="core"></a>
+<h3>Core</h3>
+<ul>
+<li>
+The ROOT source directory has been drastically reorganized and simplified.
+Each source directory containing the code for a single library or plugin,
+were all in the same top level directory, without logical grouping.
+This made it difficult to see which libraries were related and belonged
+together. In the new structure we've added a set of meta directories
+that are used to group the sources of related libraries, and that also
+reflects the ROOT team work package structure.
+Note, the name and number of libraries has not been changed.
+This new structure also facilitates the maintaining of the release notes
+and other documentation items per meta package.
+</li>
+<li>
+On Linux, MacOS X and Windows, there is no need anymore to define the
+environment variable ROOTSYS. Internally ROOTSYS is set depending on the
+location of the ROOT libraries. ROOTSYS was never needed when ROOT was
+configured using --prefix.
+</li>
+<li>
+On MacOS X when configure'ing with --enable-rpath (and not specifying
+--prefix) the installation does not need (DY)LD_LIBRARY_PATH to be set
+anymore. The installation is completely relocatable. The (DY)LD_LIBRARY_PATH
+is determined relative to the location of the root executable.
+</li>
+<li>
+On Windows .root files are now associated with the most recently executed
+ROOT installation, i.e. run ROOT once and .root files open with ROOT.
+</li>
+<li>
+Class TMessageHandler derives now from TQObject and does emit signals.
+This allows for easier usage of this class.
+</li>
+<li>
+In this release xrootd and libAfterImage are managed in Subversion
+via so called "vendor branches". This is completely transparent
+except for people who do directly use svn. You will get the message:
+<pre>
+   $ svn up
+   svn: Failed to add directory 'xrootd/src/xrootd': object of the same name already exists
+   $ rm -rf xrootd/src/xrootd
+   $ svn up
+   svn: Failed to add directory 'asimage/src/libAfterImage': object of the same name already exists
+   $ rm -rf asimage/src/libAfterImage
+   $ svn up
+</pre>
+</li>
+<li>
+Port to gcc 4.3.1. This version of gcc is much stricker with respect to
+implicit header files so in many source files &lt;stdlib.h&gt; and &lt;string.h&gt;
+had to be added.
+</li>
+<li>
+TPRegexp
+<ul>
+<li>
+Modularized Match() and Substitute() functions so that the low-level work
+is done by MatchInternal() and SubstituteInternal().
+</li>
+<li>
+Added function TString GetModifiers() that translates from bit-flag
+options back to perl-style option characters.
+</li>
+<li>
+For all functions that do actual matching replaced the default value
+of 'Int_t nMatchMax' argument from 30 to 10. PCRE internals require
+the index buffer to be 3-times the number of allowed matches. This
+multiplication is now performed in individual functions and nMatchMax
+is really the number of allowed matches. Two function calls in 
+TString passing this number explicitly have been updated.
+</li>
+</ul>
+</li>
+<li>
+TPMERegexp
+<ul>
+<li>
+New sub-class of TPRegexp with API closer to PERL.
+Supports main Perl operations using regular expressions (Match,
+Substitute and Split). To retrieve the results one can simply use
+operator[] returning a TString.
+</li>
+</ul>
+</li>
+<li>
+New tutorial regexp_pme.C.
+</li>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Add a new TClass interface to be able to trigger the "auto addition of object
+to a TDirectory object".  If a class has a member function:
+<pre>        DirectoryAutoAdd(TDirectory*)</pre>
+it will now be accessible (when the dictionary is generated via rootcint 
+for now) via TClass::GetDirectoryAutoAdd which return a wrapper with the 
+signature:<pre>
+        void (*)(void *this_obj,TDirectory *where_to_add)
+</pre>
+</li><li>Extend <b><i>#pragma create TClass;</i></b> to namespaces.</li>
+<li>Enable autoloading of the cintdlls.</li>
+<li>rlibmap now handles <b><i>#pragma create TClass;</i></b> statements.</li>
+</ul>
+<h4>Cont</h4>
+<ul>
+<li>
+Support for std algorithms and iterators for ROOT collection classes by Anar.
+The background is the following. While working on the PROOF code I found
+that enumerating TList is an inconvenient and a long operation, I had to
+write the same code all over the place and make duplications. I tried
+to use STD algorithms with it, namely std::for_each, and failed.
+I therefore decided to enable std::for_each algorithm for ROOT 
+Containers/Iterators by making as few as possible changes, without rewriting
+iterators at all. Now with only two simple lines of code one is able to
+iterate through a container:
+<pre>
+   TIter iter(&amp;list);
+   for_each(iter.Begin(), TIter::End(), SEnumFunctor());
+</pre>
+or
+<pre>
+   for_each(iter.Begin(), inter_end, SEnumFunctor());
+</pre>
+where iter_end could be an iterator to a middle of the container.
+<p>
+After I had changed Iterators so that they could be used with std::for_each,
+I decided to go further and did some more changes. As a result,
+<ul>
+<li>
+   I have updated CINT implementation of some algorithms (they look now
+   more or less better in terms of the standard),
+</li>
+<li>
+   All collections can be now used with std::for_each, std::find_if,
+   std::count_if (probably with some more algorithms. I've listed here
+   only what has been *checked* by me).
+</li>
+</ul>
+<li>
+A test program has been added: $ROOTSYS/test/stressIterators.cxx
+</li>
+<li>
+A tutorial macro has been added: $ROOTSYS/tutorials/cont/TListAndSTL.C
+</li>
+</ul>

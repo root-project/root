@@ -1,0 +1,152 @@
+
+  $Id$
+
+INSTRUCTIONS FOR PACKAGE MAINTAINERS
+====================================
+
+I) Overview
+II) Creating the configure script and the Makefiles
+III) Information concerning the created Makefiles
+IV) Producing a distribution tarball and releasing
+
+
+I) Overview
+===========
+
+This package build is based on the GNU autotools. It uses
+autmake, autoconf, and libtool.
+
+The best documentation for these tools can be found in the
+"autobook" (online at
+http://sources.redhat.com/autobook/autobook/autobook_toc.html)
+
+The following is just a short instructions manual.
+
+Autoconf: creates the configure script from the configure.ac
+          rules file. Offers a number of portable macros for testing a
+          system's properties.
+          Running configure will make substitutions in the
+          Makefile templates (Makefile.in) to generate the
+          finale Makefiles.
+
+Automake: used to create standardized Makefile templates
+          (Makefile.in files) from simple rules files
+          (Makefile.am files). These rules files are
+          quite easy to write and modify.
+
+libtool:  used to generate libraries. Allows running the built
+          programs from within the build directories as well as
+          in the final destination directories without worrying
+          about library path settings.
+
+
+II) Creating the configure script and the Makefiles
+===================================================
+
+You should have a reasonably current distribution of the autotools
+on your development machine. If not you can fetch the needed packages
+using the getAutotools.sh script found in the top directory of the
+xrootd tree. The script will download and install the tools to a
+private area of your choice.
+
+The following command does all of the things lined out below. So, you
+can skip the rest of this section, if it works fine:
+
+autoreconf --install
+(autoreconf --install --force   if your setup got severely corrupted)
+
+Only read this, if you are interested in details:
+
+The simple script "bootstrap.sh" is provided to automatize the 
+required four steps that are explained in more detail in the rest of
+this section.
+
+In order to produce the configure script and Makefile.in templates
+the following steps need to be performed:
+
+Change to the packages top directory, where the configure.ac file
+is located.
+ 
+1. libtoolize --copy --force
+2. aclocal
+3. automake -acf
+4. autoconf
+
+Now you can run configure and make.
+
+Notes to these steps:
+1. libtoolize installs the macros needed to build GNU libtool, a
+   tool to portably build libraries.
+2. "aclocal" scans the configure.ac file and imports macros
+   needed by automake into the aclocal.m4 file. Macros are taken
+   from the autoconf installation, but a package can also provide
+   additional ones in acinclude.m4 or a folder.
+3. "automake -a" creates the Makefile.in files from the
+   Makefile.am files. The -a flag will install a number of
+   helper files like 'config.guess'.
+4. "autoconf" will create the configure file itself. The rules file
+   configure.ac contains a number of macros (documentation is best
+   found in the Autoconf info pages) and shell code.
+
+
+
+III) Information concerning the created Makefiles
+=================================================
+
+Automake does a good job of tracking dependencies, even though
+the standard structure uses a "recursive make" concept across
+subdirectories. The makefiles which are produced have a
+number of standard targets (clean, install, check, dist,distclean).
+Also, they allow overriding of standard variabes like CFLAGS.
+
+"make install" will install the files foreseen in the Makefile.am
+files into a tree below the $prefix directory that was chosen at
+configure time.
+Even at "make install" time, the destination can be modified:
+
+make --prefix=/usr/local
+make DESTDIR=/somedir install 
+
+In this example files will end up in /somedir/usr/local
+(this is typically used in rpm builds where DESTDIR is a staging dir)
+
+
+IV) Producing a distribution tarball and releasing
+==================================================
+
+1. Check library versions
+
+If library versioning is used, check that all modified libraries
+have correct version numbers
+
+2. Check distribution version  
+
+Make sure that you have updated the version number in the
+AC_INIT(name,version,bug-mail-address) macro in the configure.ac
+file.
+
+3. Producing a distribution tarball is as easy as typing
+
+make dist
+
+A tarball containing all the files needed for the build and any
+extra files specified in the Makefile.am templates is created.
+The tarball is named according to GNU standard. 
+
+BEFORE RELEASING YOU _MUST_ RUN
+
+make distcheck
+
+This will
+- generate a distribution tarball
+- unpack the tarball in a sandbox and build it, making sure that no files
+  have been forgotten
+- test the installation process
+- make sure that "make DESTDIR=" works. This is important for package builders
+- run the test suite
+- make sure that "make uninstall" leaves no files (this is less important, 
+  since almost never used)
+
+
+2.6.2007 Derek Feichtinger  <derek.feichtinger@psi.ch>
+

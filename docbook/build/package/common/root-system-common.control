@@ -1,0 +1,7 @@
+Package: root-system-common
+Architecture: all
+Depends: ttf-freefont | root-ttf, ttf-opensymbol | root-ttf
+Description: Common files for ROOT
+ This package contains some common infrastructure files for ROOT.
+
+ 

@@ -1,0 +1,102 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, 1, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH HISTTOWORKSPACE 1 "DEC. 2010"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+hist2workspace \- utility to create RooFit/RooStats workspace from histograms
+.SH SYNOPSIS
+.B hist2workspace input.xml
+.SH DESCRIPTION
+.B hist2workspace 
+is a utility to create RooFit/RooStats workspace from histograms
+.br
+.br
+.SH Prepare working area
+The ROOT release ships with a script 
+.B prepareHistFactory
+in the $ROOTSYS/bin directory that prepares a working area.  
+It creates a results/, data/, and config/ directory.
+It also copies the HistFactorySchema.dtd and example XML files into
+the config/ directory.  Additionally, it copies a root file into the data/
+directory for use with the examples.
+.br
+.SH HistFactorySchema.dtd
+This file is located in $ROOTSYS/etc/ specifies the XML schema.  
+It is typically placed in the config/ directory of a working area
+together with the top-level XML file and the individual channel XML files.
+The user should not modify this file.
+.br
+The HistFactorySchema.dtd is commented to specify exactly the meaning of
+the various options. 
+
+
+.SH Top-Level XML File
+(see for example $ROOTSYS/tutorials/histfactory/example.xml)
+This file is edited by the user.  It specifies
+ - A top level 'Combination' that is composed of:
+    - several 'Channels', which are described in separate XML files.
+    - several 'Measurements' (corresponding to a full fit of the model) each of which specifies
+      - a name for this measurement to be used in tables and files
+      - what is the luminosity associated to the measurement in picobarns
+      - which bins of the histogram should be used
+      - what is the relative uncertainty on the luminosity 
+      - what is (are) the parameter(s) of interest that will be measured
+      - which parameters should be fixed/floating (eg. nuisance parameters)
+      - which type of constriants are desired 
+	- Gaussian by default
+	- Gamma, LogNormal, and Uniform are also supported
+      - if the tool should export the model only and skip the default fit 
+
+.br
+.SH Channel XML Files
+(see for example $ROOTSYS/tutorials/histfactory/example_channel.xml)
+This file is edited by the user.  It specifies for each channel
+ - observed data 
+   - if absent the tool will use the expectation, which is useful for expected sensitivity
+ - several 'Samples' (eg. signal, bkg1, bkg2, ...), each of which has:
+   - a name
+   - if the sample is normalized by theory (eg N = L*sigma) or not (eg. data driven)
+   - a nominal expectation histogram
+   - a named 'Normalization Factor' (which can be fixed or allowed to float in a fit)
+   - several 'Overall Systematics' in normalization with:
+     - a name
+     - +/- 1 sigma variations (eg. 1.05 and 0.95 for a 5% uncertainty)
+   - several 'Histogram Systematics' in shape with:
+     - a name (which can be shared with the OverallSyst if correlated)
+     - +/- 1 sigma variational histograms
+.SH "ORIGINAL AUTHORS"
+.RS
+.B Kyle Cranmer
+,
+.B Akira Shibata
+, and 
+.B Dominique Tardif
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+

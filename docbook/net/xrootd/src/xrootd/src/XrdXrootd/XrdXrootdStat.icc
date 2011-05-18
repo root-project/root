@@ -1,0 +1,75 @@
+/******************************************************************************/
+/*                                                                            */
+/*                     X r d X r o o t d S t a t . i c c                      */
+/*                                                                            */
+/* (c) 2006 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/*                            All Rights Reserved                             */
+/*   Produced by Andrew Hanushevsky for Stanford University under contract    */
+/*              DE-AC02-76-SFO0515 with the Department of Energy              */
+/******************************************************************************/
+  
+//         $Id$
+
+//const char *XrdXrootdStatCVSID = "$Id$";
+
+// This method has been extracted from this file so that it can be easily
+// included in other parts of the system that need to generate a protocol
+// version of the stat response. The XRD_CLASS_NAME must be defined prior
+// to inclusion (this file undefines it at the end). Be sure to include
+
+//          <stdlib.h> <sys/stat.h> <sys/types.h> <XProtocol.hh>
+
+/******************************************************************************/
+/*                               S t a t G e n                                */
+/******************************************************************************/
+  
+int XRDXROOTD_STAT_CLASSNAME::StatGen(struct stat &buf, char *xxBuff)
+{
+   const mode_t isReadable = (S_IRUSR | S_IRGRP | S_IROTH);
+   const mode_t isWritable = (S_IWUSR | S_IWGRP | S_IWOTH);
+   const mode_t isExecable = (S_IXUSR | S_IXGRP | S_IXOTH);
+   static uid_t myuid = getuid();
+   static gid_t mygid = getgid();
+   union {long long uuid; struct {int hi; int lo;} id;} Dev;
+   long long fsz;
+   int flags = 0;
+
+// Compute the unique id
+//
+   Dev.id.lo = buf.st_ino;
+   Dev.id.hi = buf.st_dev;
+
+// Compute correct setting of the readable flag
+//
+   if (buf.st_mode & isReadable
+   &&((buf.st_mode & S_IRUSR && myuid == buf.st_uid)
+   || (buf.st_mode & S_IRGRP && mygid == buf.st_gid)
+   ||  buf.st_mode & S_IROTH)) flags |= kXR_readable;
+
+// Compute correct setting of the writable flag
+//
+   if (buf.st_mode & isWritable
+   &&((buf.st_mode & S_IWUSR && myuid == buf.st_uid)
+   || (buf.st_mode & S_IWGRP && mygid == buf.st_gid)
+   ||  buf.st_mode & S_IWOTH)) flags |= kXR_writable;
+
+// Compute correct setting of the execable flag
+//
+   if (buf.st_mode & isExecable
+   &&((buf.st_mode & S_IXUSR && myuid == buf.st_uid)
+   || (buf.st_mode & S_IXGRP && mygid == buf.st_gid)
+   ||  buf.st_mode & S_IXOTH)) flags |= kXR_xset;
+
+// Compute the other flag settings
+//
+   if (S_ISDIR(buf.st_mode))           flags |= kXR_isDir;
+      else if (!S_ISREG(buf.st_mode))  flags |= kXR_other;
+   if (!Dev.uuid)                      flags |= kXR_offline;
+   if (buf.st_mode & S_ISUID)          flags |= kXR_poscpend;
+   fsz = static_cast<long long>(buf.st_size);
+
+// Format the results and return them
+//
+   return sprintf(xxBuff,"%lld %lld %d %ld",Dev.uuid,fsz,flags,buf.st_mtime)+1;
+}
+#undef XRDXROOTD_STAT_CLASSNAME

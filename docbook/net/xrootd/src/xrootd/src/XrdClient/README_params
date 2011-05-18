@@ -1,0 +1,98 @@
+
+$Id$
+
+Here is the list of the internal parameters of XrdClient, with their meaning.
+The parameters names are case sensitive.
+
+
+Name: ConnectTimeout
+Default value: 60
+Desc: The timeout value for connection attempts at the init of an instance.
+ Any timeout will be internally treated as a recoverable error, and handled
+ in some way, typically retrying. Note that a connection attempt may
+ fail before this time.
+
+Name: RequestTimeout
+Default value: 60
+Desc: The timeout value for send/receive attempts. Any timeout
+ will be internally treated as a recoverable error, and handled
+ in some way, typically auto-redirecting to the first redirector encountered.
+
+Name: MaxRedirectcount
+Default value: 255
+Desc: If a client gets redirected or auto-redirected more times than this
+ number in the last RedirCntTimeout seconds, the pending operation will be abandoned.
+
+Name: RedirCntTimeout
+Default value: 3600
+Desc: see up.
+
+Name: DebugLevel
+Default value: 0
+Desc: Verbosity of the printed output.
+ -1 = no printing at all
+ 0 = print only errors, and a few more.
+ 1 = really basic trace of what's happening
+ 2 = trace of what is the client doing
+ 3 = Ultra-verbose: dump every data exchange
+ 4 = Hyper-verbose: dump everything flowing through sockets
+
+Name: ReconnectTimeout
+Default value: 10
+Desc: The timeout value for re-connection attempts. Any timeout
+ will be internally treated as a recoverable error, and handled
+ in some way, typically retrying. Note that a connection attempt may
+ fail before this time.
+
+
+Name: FirstConnectMaxCnt
+Default value: 150
+Desc: How many times the connection on initialization will be retried,
+ in the case of error.
+
+Name: StartGarbageCollectorThread
+Default value: 1
+Desc: A really paranoid parameter. If set to 0, the physical/logical
+ connections are no more closed if inactive.
+
+Name: GoAsync
+Default value: 1
+Desc: Choose between the sync/async internal architecture. The sync one
+ is unable to handle unsolicited responses, and will never be.
+
+Name: ReadCacheSize
+Default value: 4000000
+Desc: The max size of the read cache. One cache per instance. Set to 0 to
+ disable caching.
+
+Name: ReadAheadSize
+Default value: 800000
+Desc: The size of the blocks requested and populating the cache.
+
+Name: RedirDomainAllowRE
+Default value: Internally computed to allow only operations
+ on the local domain.
+Desc: Given a list of |-separated regexps for the domains to ALLOW REDIR to, 
+ match every entry with domain. If NO match is found, deny access. Only * is
+ allowed in the regexps, and only at the beginning or the end of the single exprs
+
+Name: RedirDomainDenyRE
+Default value: Internally computed to allow only operations
+ on the local domain.
+Desc: Given a list of |-separated regexps for the domains to DENY REDIR to, 
+ match every entry with domain. If ANY match is found, deny access. Only * is
+ allowed in the regexps, and only at the beginning or the end of the single exprs
+
+Name: ConnectDomainAllowRE
+Default value: Internally computed to allow only operations
+ on the local domain.
+Desc: Given a list of |-separated regexps for the domains to ALLOW CONNECT to, 
+ match every entry with domain. If NO match is found, deny access. Only * is
+ allowed in the regexps, and only at the beginning or the end of the single exprs
+
+Name: ConnectDomainDenyRE
+Default value: Internally computed to allow only operations
+ on the local domain.
+Desc: Given a list of |-separated regexps for the domains to DENY CONNECT to, 
+ match every entry with domain. If ANY match is found, deny access. Only * is
+ allowed in the regexps, and only at the beginning or the end of the single exprs

@@ -1,0 +1,11 @@
+File: $CINTSYSDIR/demo/perlawk/README
+
+ This directory contains example of PERL/AWK like text processing example.
+Cint can link file parsing class ReadFile and regular expression class RegExp 
+and they make it possible to write perl/awk like program using C++ script. 
+
+ To run this example, you need to precompile class ReadFile and RegExp.
+
+	$ cint parseplot.c
+
+

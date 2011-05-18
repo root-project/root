@@ -1,0 +1,123 @@
+<br> 
+<hr> 
+<a name="graf2d"></a> 
+
+
+<h3>Graphical Output</h3>
+
+<h4>TASImage / libAfterImage</h4>
+<ul>
+
+<li> In <tt>TImageDump</tt> the way the markers 6 and 7 are drawn 
+     (medium dot and big dot) has been changed to make sure they have
+     the same size as the one on screen.
+<li> Changes in libAfterImage (draw.c & draw.h), TASImage.cxx
+     and TImageDump.cxx in order to produce nice looking 
+     circular (hollow and solid) markers. Previously the line 
+     used to draw hollow circular markers looked very thick and 
+     the solid ones did not look circular.
+<li> Remove the global variable named "dpy" in libAfterImage. It produced
+     an error if a user program used that simple variable name. "dpy"
+     was a pointer to a "Display".
+</ul>
+
+<h4>PostScript and PDF</h4>
+<ul>
+<li> Now, a text with size 0 is not drawn in PDF files. An invalid
+     PDF file is created if a text with size 0 is produced.
+<li> The landscape orientation is now correct in pdf files. gv recognizes
+     the files as "Landscape" and the orientation is not upside down
+     as it was before (seascape).
+<li> In PostScript and PDF files the method <tt>DrawPS</tt> is used to write
+     a single (x,y) position.
+     This case was not treated correctly and, because of that, the PS and PDF
+     files might contain useless attributes settings. That was only a few
+     bytes more in the file but they were useless.
+</ul>
+
+<h4>TLegend</h4>
+<ul>
+<li> When a object is added "by name" in a legend, the
+  TMultiGraph and THStack present in the current pad
+  are scanned if an object with this name has not been
+  found in the pad. Previously the graphs and histograms
+  were hidden in multi-graphs and histogram-stacks when one
+  tried to add them by name.
+<li> New reference guide.
+</ul>
+
+<h4>TGaxis</h4>
+<ul>
+<li> In <tt>PaintAxis</tt> The option "U", for unlabeled axis, was not 
+     implemented in case of alphanumeric axis' labels.
+<li> On log-scale TGAxis, with labels having lower values than 1 and ticks marks
+  set to the positive side, alignement issues seem to come up. 
+  The following example shows four TGAxis drawn respectively with the 
+  following options: RG-, RG+, LG-, LG+. For the RG+ and LG+ options, 
+  the 10E-1 and 10E-2 labels were ill-aligned, showing a shift to the right 
+  compared to the 1E2, 1E1 and 1 labels. 
+  <pre>
+  {
+     c1 = new TCanvas("c1","Examples of Log TGaxis",10,10,700,500);
+     c1->Range(-10,-1,10,1);
+     TGaxis *axis1 = new TGaxis(-7,-0.8,-7,0.8,0.01,100,50510,"RG-");
+     axis1->SetTitle("RG-"); axis1->Draw();
+     TGaxis *axis2 = new TGaxis(-2,-0.8,-2,0.8,0.01,100,50510,"RG+");
+     axis2->SetLabelOffset(-0.04); axis2->SetTitleOffset(-1.5);
+     axis2->SetTitle("RG+"); axis2->Draw();
+     TGaxis *axis3 = new TGaxis(2,-0.8,2,0.8,0.01,100,50510,"LG-");
+     axis3->SetLabelOffset(-0.04);
+     axis3->SetTitle("LG-"); axis3->Draw();
+     TGaxis *axis4 = new TGaxis(7,-0.8,7,0.8,0.01,100,50510,"LG+");
+     axis4->SetTitleOffset(-1);
+     axis4->SetTitle("LG+"); axis4->Draw();
+  }
+  </pre>
+<li> <tt>gStyle.SetStripDecimals(kFALSE)</tt> did not work in cases like the
+  following one:
+  <pre>
+  {
+     gStyle.SetStripDecimals(kFALSE);
+     gStyle.SetPadLeftMargin(.15);
+     TGraph graph_freq;
+     graph_freq.SetPoint(0, 933., 40078879.);
+     graph_freq.SetPoint(1, 934., 40078966.);
+     graph_freq.Draw("A*");
+  }
+  </pre>
+</ul>
+
+<h4>TCrown</h4>
+<ul>
+<li> The crown picking did not work.
+<li> Improve help.
+</ul>
+
+<h4>TLatex</h4>
+<ul>
+<li> The text angle was not taken into account in case the
+  text was painted in low precision like in:
+  <pre>
+  gStyle->SetTitleFont(60,"xy");
+  TH1F* h=new TH1F("foo", "bar;#int;#int", 10, 0, 1);
+  h->Draw();
+  </pre>
+  In that example the Y title was not rotated.
+</ul>
+
+<h4>TCanvas</h4>
+<ul>
+<li> A canvas is turned into GL mode only if the
+  canvas name starts with "gl". Before the
+  "gl" string could be anywhere in the name.
+</ul>
+
+<h4>QtRoot/ libGQt</h4>
+<ul>
+<li> The redundant Qt3-related code was removed.
+<li> The Q3_SUPPORT  flag was eliminated. 
+     The plug-in can be used with and without Q3_SUPPORT now.
+<li> The code was adjusted to work under the Qt 4.5.x.
+<li> Many platform depended (win32) sections 
+     were replaced with the cross-platform code
+</ul>

@@ -1,0 +1,47 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for HP-UX 10.x with gcc
+
+PLATFORM      = hpux
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -fPIC -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
+CFLAGS        = -fPIC -I/usr/include/X11R5 $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CXXFLAGS) \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CFLAGS) \
+                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
+COMPILER      = gnu
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -fPIC
+SOEXT         = sl
+
+# System libraries:
+SYSLIBS       = -lm -ldld $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
+CILIBS        = -L/usr/lib -lm -ldld
+
+# Fortran:
+F77           = fort77
+F77FLAGS      = -K +ppu
+F77LDFLAGS    = -K +ppu $(OPT)
+F77LIBS       = -lf
+
+# Extras
+GLLIBEXTRA    = -L/usr/contrib/X11R6/lib

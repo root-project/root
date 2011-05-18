@@ -1,0 +1,24 @@
+Package: libroot-graf3d-gl@libvers@
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Conflicts: root-plugin-graf3d-gl
+Replaces: root-plugin-graf3d-gl
+Provides: root-plugin-graf3d-gl
+Description: GL plugin for ROOT - runtime library
+ This package contains the GL plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT, as well as 3D 
+ rendering of histograms, and similar.  Included is also a high quality 
+ 3D viewer for ROOT defined geometries.
+
+Package: libroot-graf3d-gl-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf3d-gl@libvers@ (= ${binary:Version})
+Conflicts: root-plugin-graf3d-gl (<< 5.19.00-1)
+Replaces: root-plugin-graf3d-gl
+Description: GL plugin for ROOT - development files
+ This package contains the GL plug-in for ROOT.  This plugin provides
+ 3D rendering of volumes and shapes defined in ROOT.  Included is also
+ a high quality 3D viewer for ROOT defined geometries.
+

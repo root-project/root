@@ -1,0 +1,54 @@
+<br/> 
+<hr/> 
+<a name="io"></a> 
+<h3>I/O</h3>
+<h4>Schema Evolution.</h4>
+<ul>
+   <li>Change TExMap hash, key and values from (U)Long_t to (U)Long64_t. This makes TExMap streamable in a portable way. On 64-bit platforms there is 
+       no difference, but on 32-bit platforms all values will now be 64-bit.  This fixes a big portability issue with THnSparse which uses TExMap internally
+       where the versions created on a 32-bit platform could not be read on a 64-bit platform and vice versa.</li>
+   <li>Avoid reporting I/O error for members of a class that is used only for a transient member; Concrete implementation of TClassGenerator needs to be updated to also avoid the warnings.</li>
+   <li>Fix the rule lookup based on checksum</li>
+   <li>Extend support of the schema evolution rules to fixed length array.</li>
+   <li>Prevent a process abort (due to a call to Fatal) when we are missing the dictionary for (one of) the 
+       content of an STL collection when this collection is 'only' use has a transient member.</li>
+   <li>Fix the case where the source and target of a rule have the same name.</li>
+   <li>Avoid using the 'current' StreamerInfo to read an older streamerInfo that is missing (in case of corrupted files).</li>
+</ul>
+
+<!-- Misnamed 
+
+<h4>New TTreeCache APIs</h4>
+Implement an API to control the read-merge block size.
+A new static member is added in TFile:
+<pre lang="cxx">   static Int_t     fgReadaheadSize;         //Readahead buffer size</pre>
+and the following corresponding getter and setter:
+<pre lang="cxx">   static Int_t     GetReadaheadSize();
+   static void      SetReadaheadSize(Int_t bufsize = 256000);</pre>
+   
+Following IO tests with Alice, Atlas and CMS files, the readahead size has been
+set by default to 256 Kbytes.
+<br/>
+Because the readahead algorithm reads more data than it is required when
+reading the Tree, a new TFile data member has been added with the corresponding
+getter:
+<pre lang="cxx">   Long64_t    fBytesReadExtra; //Number of extra bytes (overhead) read by the readahead buffer
+   Long64_t    GetBytesReadExtra() const { return fBytesReadExtra; }</pre>
+
+-->
+
+<h4>Misc.</h4>
+<ul>
+   <li>New TFile plugin for the Hadoop Distributed File System (protocol hdfs:)</li>
+   <li>Unregister stack objects from their TDirectory when the TList tries to delete them.</li>
+   <li>When streaming a base class without StreamerNVirtual() use an external streamer if it was set.</li>
+   <li>Many improvement to the I/O run-time performance.</li>
+   <li>DCache:
+   <ul><li>Increase readahead size from 8k to 128k and make it settable via DCACHE_RA_BUFFER env var.</li>
+       <li>dCap client does not ignore ?filetpye=raw and other options, so remove it.</li>
+   </ul></li>
+   <li>The function TFile::GetRelOffset is now public instead of protected.</li>
+   <li>Corrected the reading of the TFile record of large files.</li>
+   <li>MakeProject: several updates to improve support for CMS and Atlas data files (add support for auto_ptr, bitset, class name longer than 255 characters, etc.)</li>
+</ul>
+

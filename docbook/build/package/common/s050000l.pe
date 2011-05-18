@@ -1,0 +1,66 @@
+#!/usr/bin/fontforge 
+#
+# Copyright: 1994, 1995, 1996, 1997, 1998, 1999 ROOT Team
+#           2000, 2001, 2002, 2003, 2004, 2005 ROOT Team
+#           2006 ROOT Team
+#
+# This library is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of the
+# License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+# USA
+#
+Print("Opening s050000l.pfb");
+Open("./s050000l.pfb");
+Print("Reencoding to symbol");
+Reencode("symbol");
+Generate("s050000l.sym.ttf","ttf");
+# Move misplaced glyphs"
+a    = Array(9);
+a[0] =  39;
+a[1] =  68;
+a[2] =  87;
+a[3] = 109;
+a[4] = 160;
+a[5] = 210;
+a[6] = 211;
+a[7] = 212;
+a[8] = 224;
+s    = Array(9);
+s[0] = "suchthat";
+s[1] = "Delta";
+s[2] = "Omega";
+s[3] = "mu";
+s[4] = "Euro";
+s[5] = "registerserif";
+s[6] = "copyrightserif";
+s[7] = "trademarkserif";
+s[8] = "lozenge";
+i    = 0;
+while (i < 9) 
+	Print("Moving ",256+i," (",s[i],") to ",a[i]);
+	Select(256+i);
+	Cut();
+	Select(a[i]);
+	Paste();
+	SetCharName(s[i]);
+	i++;
+endloop;
+Print("Scale to em");
+ScaleToEm(1638,410);
+Print("Saving to s050000l.sym.ttf");
+Generate("s050000l.sym.ttf","ttf");
+Print("Please rename s050000l.sym.ttf to symbol.ttf");
+
+# 
+# EOF
+#

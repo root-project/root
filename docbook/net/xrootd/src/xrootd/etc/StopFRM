@@ -1,0 +1,156 @@
+#!/bin/sh
+# Usage: StopFRM [-h] [-p] [-t] [-x]
+
+# Where: -h holds the daemon (i.e., prevents it from restarting)
+#        -p stops only the purge     daemon
+#        -t types the stop commands and does not execute them
+#        -x stops only the transfer  daemon
+# No option cause everything to be started.
+
+# Set defaults
+#******************************************************************************#
+#*                              D e f a u l t s                               *#
+#******************************************************************************#
+  
+TEST=
+EXITRC=0
+DOALL=1
+HOLD=
+ONLYP=0
+ONLYX=0
+
+# Source he config file to set additional options
+#
+. `dirname $0`/StartXRD.cf
+
+#******************************************************************************#
+#*                           S u b r o u t i n e s                            *#
+#******************************************************************************#
+
+Emsg () {
+    echo StopFRM: $1
+    }
+
+Check(){
+    frmwho=$1
+    frmpid=$2
+
+    # Check if the process is indeed dead
+    #
+      FOO=`ps -p $frmpid`
+      if [ $? -eq 0 ]; then
+         sleep 1
+         FOO=`ps -p $frmpid`
+         if [ $? -eq 0 ]; then
+         Emsg "$XRDUSER $frmwho pid $frmpid is still alive..."
+         echo $FOO
+         fi
+      fi
+
+    }
+
+Kill() {
+    frmwho=$1
+    frmpid=$2
+
+    # Verify that we can kill this process
+    #
+      if [ $MYNAME != root ]; then
+         set -- `ps -p $frmpid -o user`
+         if [ $2 != $MYNAME ]; then
+            Emsg "User $MYNAME can't kill $frmwho process $frmpid started by $2."
+         fi
+      fi
+
+    # Now kill the process
+    #
+      kCMD="kill -9 $frmpid"
+      if [ -z "$TEST" ]; then
+         $TEST $kCMD
+         else
+         set -- `$kCMD 2>&1`
+         fi
+
+    # Chek if we were successful
+    #
+      if [ $? -ne 0 ]; then
+         shift 2
+         Emsg "Unable to kill $frmwho process $frmpid; $*."
+         else
+         Check $frmwho $frmpid
+         fi
+    }
+
+Stop() {
+        frmwho=$1
+        frmpgm=$2
+        frmfnx=$3
+        set -- ''
+        set -- `ps -e -o pid -o args | grep $frmpgm | awk '$0 !~ /grep/ {print $1}'`
+
+        if [ -z "$1" ]; then
+           Emsg "Unable to find $XRDUSER $frmwho daemon."
+           else
+           for frmpid do
+               Kill $frmwho $frmpid
+               done
+        fi
+        if [ "$HOLD" = "1" ]; then
+           set -- `touch $frmfnx`
+        fi
+       }
+
+#******************************************************************************#
+#*                                  M a i n                                   *#
+#******************************************************************************#
+  
+# Pick up options
+#
+while test -n "$1"; do
+     if [ "$1" = "-h" ]; then
+        HOLD=1
+   elif [ "$1" = "-p" ]; then
+        DOALL=0
+        ONLYP=1
+   elif [ "$1" = "-t" ]; then
+        TEST=echo
+        OPTS=$OPTS" -t"
+   elif [ "$1" = "-x" ]; then
+        DOALL=0
+        ONLYX=1
+   else
+        Emsg "Invalid option - $1."
+        echo 'Usage: StopFRM [-h] [-p] [-t] [-x]'
+        exit 1
+     fi
+   shift
+   done
+
+# Determine hostname and username
+#
+MYHOST=`/bin/hostname`
+
+if   [ -x /usr/bin/whoami ]; then
+     MYNAME=`/usr/bin/whoami`
+elif [ -x /usr/ucb/whoami ]; then
+     MYNAME=`/usr/ucb/whoami`
+else
+     Emsg "Unable to determine username."
+     exit 1
+fi
+
+# Now stop the purge daemon
+#
+if [ ! -z "$START_PURGE" -a "$DOALL" = "1" -o "$ONLYP" = "1" ]; then
+   Emsg "Stopping $XRDUSER purge daemon. . ."
+   Stop purge $START_PURGE $HFILE_PURGE
+fi
+
+# Now stop the transfer daemon
+#
+if [ "$DOALL" = "1" -o "$ONLYX" = "1" ]; then
+   Emsg "Stopping $XRDUSER transfer daemon. . ."
+   Stop transfer $START_TRANSFER $HFILE_TRANSFER
+fi
+
+exit $EXITRC

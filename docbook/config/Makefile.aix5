@@ -1,0 +1,52 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for AIX 5.x with xlC
+
+PLATFORM      = aix5
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O -qmaxmem=-1
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = xlC_r
+CC            = xlC_r
+CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+                $(EXTRA_CXXFLAGS)
+CFLAGS        = -qchars=signed -qnoro -qnoroconst -qstaticinline \
+                $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+                -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -qstaticinline \
+                -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
+                \$$SourceFiles ; /usr/vacpp/bin/makeC++SharedLib \
+                -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles
+
+# Linker:
+LD            = xlC_r
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       =
+SOEXT         = a
+FORCELINK     = yes
+
+# System libraries:
+SYSLIBS       = -lm -lld $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
+CILIBS        = -lm -lld
+
+# Fortran:
+F77           = xlf
+F77FLAGS      = -qextname -qcharlen=32767
+F77LIBS       = -lxlf -lxlf90
+
+# Extras

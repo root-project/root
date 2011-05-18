@@ -1,0 +1,58 @@
+The compression package "zlib" is part of the zip directory. The original tar 
+file can be downloaded from : http://www.zlib.org 
+
+Only the useful code has been extracted from this tar file. It consists of: 
+
+ zip/inc:
+   crc32.h deflate.h inffast.h inffixed.h inflate.h
+   inftrees.h trees.h zconf.h zlib.h zutil.h
+
+ zip/src:
+   adler32.c compress.c crc32.c deflate.c gzio.c infback.c
+   inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c
+
+To put a new zlib version in ROOT, all these files must be replaced.
+
+The zlib version number can be found in zip/inc/zlib.h.
+The current zlib is 1.2.3.
+
+zlib is now used in TPDF to compress the "stream" part of PDF files.
+
+The ROOT compress functions R__zip and R__unzip have also been modified
+in order to use zlib. Some performance tests show very different results
+depending on the machine configuration and compiler.
+see two results below (the right column indicates the percentage
+of gain (or loss) when using the new zlib.
+The new zlib seems to slower when writing and faster when reading.
+
+On Linux RH7.3 gcc3.2.3 Pentium IV 2.4 GHz
+==========================================
+                          oldzlib            zlib 1.2.1   gain(+)/loss(-)
+Event 1000 1 0   1         11.59s             11.46s         + 1.12
+Event 1000 1 0  20          3.83s              3.31s         +13.57
+Event 1000 1 99  1         10.44s             10.98s         - 5.17
+Event 1000 1 99 20          3.57s              3.17s         +11.20
+stress -b 30               13.01s             12.35s         + 5.07
+stress -b 1000             61.67s             58.38s         + 5.33
+bench                     151.99s            151.56s         + 0.28
+stressLinear               35.87s             35.77s         + 0.28
+
+On windows VC++7.1 IBM R40 Pentium M 1.5Ghz
+===========================================
+                          oldzlib            zlib 1.2.1   gain(+)/loss(-)
+Event 1000 1 0   1          7.53s              8.67s         -15.14
+Event 1000 1 0  20          2.43s              2.30s         + 5.35
+Event 1000 1 99  1          6.67s              8.76s         -31.33
+Event 1000 1 99 20          2.35s              2.22s         + 5.55
+stress -b 30                9.23s              9.52s         - 3.14
+stress -b 1000             42.13s             47.91s         -13.72
+bench                     112.53s            118.89s         - 5.65
+stressLinear               37.44s             37.08s         + 0.96
+
+To activate the new zlib it is enough to set Root.ZipMode = 1
+in the system.rootrc file.
+When setting Root.ZipMode to 1 (or 0) it is possible to read files
+written with the old zip function.
+Files written with Root.ZipMode=1 can only be read by versions
+of Root >= 4.02/00
+

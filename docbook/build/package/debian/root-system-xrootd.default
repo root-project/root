@@ -1,0 +1,78 @@
+# Defaults for rootd initscript
+# sourced by /etc/init.d/root-system-xrootd
+# installed at /etc/default/root-system-xrootd by the maintainer scripts
+#
+# Please refer to the xrootd(1) and olbd(1) man(1) page for more
+# information on command line parameters. 
+#
+# This is a POSIX shell fragment
+#
+#
+XROOTD_USER=
+
+# If this is set to `yes', then the server is started.  
+# Anything else disables the server
+ENABLE_XROOTD=yes
+
+# Configuration file for xrootd - please refer to the xrootd(1) manual. 
+XROOTD_CONFIG_FILE=
+
+# Log file for xrootd 
+XROOTD_LOG_FILE=
+
+# Port to listen to (per default 1094) - note, that you can not run 
+# both rootd and xrootd on the same port.  You should give a different 
+# port to one of them. 
+XROOTD_PORT=
+
+# Whether this server is a redirector (see xrootd(1) manual)
+XROOTD_REDIRECTOR=no
+
+# Base directory for xrootd 
+XROOTD_BASE_DIR=
+
+# Additional options for xrootd 
+XDAEMON_OPTS=
+
+# If this is set to `yes', then the server is started.  
+# Anything else disables the server
+ENABLE_OLBD=no
+
+# Configuration file for olbd - please refer to the olbd(1) manual. 
+OLBD_CONFIG_FILE=
+
+# Log file for olbd 
+OLBD_LOG_FILE=
+
+# Port to listen to (per default 1094) - note, that you can not run 
+# both rootd and olbd on the same port.  You should give a different 
+# port to one of them. 
+OLBD_PORT=
+
+# Whether this server is a redirector (see olbd(1) manual)
+OLBD_REDIRECTOR=no
+
+# Additional options for olbd 
+ODAEMON_OPTS=
+
+# If this is set to `yes', then the server is started.  
+# Anything else disables the server
+ENABLE_CMSD=no
+
+# Configuration file for cmsd - please refer to the cmsd(1) manual. 
+CMSD_CONFIG_FILE=
+
+# Log file for cmsd 
+CMSD_LOG_FILE=
+
+# Port to listen to (per default 1094) - note, that you can not run 
+# both rootd and cmsd on the same port.  You should give a different 
+# port to one of them. 
+CMSD_PORT=
+
+# Additional options for cmsd 
+CDAEMON_OPTS=
+
+#
+# EOF
+#

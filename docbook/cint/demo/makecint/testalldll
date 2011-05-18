@@ -1,0 +1,45 @@
+cd Array
+sh setupdll
+make clean
+cd ..
+
+cd Complex
+sh setupdll
+make clean
+cd ..
+
+cd DArray
+sh setupdll
+make clean
+cd ..
+
+cd KRcc
+sh setupdll
+make clean
+cd ..
+
+cd KRcc
+sh setupdll
+make clean
+cd ..
+
+cd ReadFile
+sh setupdll
+make clean
+cd ..
+
+cd Stub2
+sh setup
+#make -f Make1 clean
+#make -f Make2 clean
+cd ..
+
+cd Stub
+sh setupdll
+make clean
+cd ..
+
+cd stl
+sh setup
+#make clean
+cd ..

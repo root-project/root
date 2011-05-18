@@ -1,0 +1,9 @@
+This directory contains all the geometry painter, checker, overlap and track classes.
+BEGIN_HTML
+ All necessary information related to how to use the package can be found below:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/18Geometry.pdf">The Chapter about the TGeo classes and builder in the Users Guide
+    </a></li>
+    
+</ul>
+END_HTML

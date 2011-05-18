@@ -1,0 +1,9 @@
+Package: root-plugin-proof-proofplayer
+Architecture: any
+Depends: ${shlibs:Depends}
+Suggests: root-plugin-net-netx, root-plugin-proof-xproof
+Description: PROOF plugin for ROOT
+ This package contains the proof plug-in for ROOT.  This provides a
+ client to use in a PROOF environment.
+
+

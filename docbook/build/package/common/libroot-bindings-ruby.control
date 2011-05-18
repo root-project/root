@@ -1,0 +1,19 @@
+Package: libroot-bindings-ruby@libvers@
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Replaces: root-plugin-ruby  (<< 5.09.01-1)
+Description: Ruby extension for ROOT - run-time library
+ This package contains the Ruby extension for ROOT.  The interface
+ goes both ways - that is, you can call ROOT functions from Ruby, and
+ invoke the Ruby interpreter from ROOT. 
+
+Package: libroot-bindings-ruby-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-bindings-ruby@libvers@ (= ${binary:Version}), libroot-core-dev, ruby1.8-dev | ruby-dev (>= 1.8)
+Conflicts: libroot-ruby (<< 5.19.01-1)
+Replaces: libroot-ruby
+Description: Ruby extension for ROOT - development headers
+ This package contains the Ruby extension for ROOT.
+

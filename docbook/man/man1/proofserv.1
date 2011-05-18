@@ -1,0 +1,86 @@
+.\"
+.\" $Id: proofserv.1,v 1.3 2006/02/28 16:38:23 rdm Exp $
+.\"
+.TH PROOFSERV 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+proofserv \- PROOF (The Parallel ROOT Facility)
+.SH "DESCRIPTION"
+Using \fBPROOF\fI (The \fIP\fRarallel \fIROO\fRT \fIF\fRacility) one
+can analyze trees in parallel on a cluster of computers. The
+\fBPROOF\fR system consists of the \fIproofd\fR(1) from-end program
+which is started via \fIinetd\fR(8).  
+.PP
+\fIproofd\fR takes care of user authentication and overlays itself
+then with the desired version of the \fIproofserv\fR(1)
+executable. 
+.PP 
+The \fIproofserv\fR(1) is a basically the same as the \fBROOT\fR
+interactive module \fIroot\fR(1), except that it reads its commands
+from a socket instead of from the terminal. 
+.PP
+Since it is a remote server it will not do graphics and therefore is
+not linked with any graphics libraries (Motif, X11, etc.). 
+.PP 
+\fBproofserv\fR is started by the daemon \fBproofd\fR(1) on request by
+the user.  It is not a command to be executed by the user directly. 
+.PP 
+Note, that if \fBproofserv\fR is passed any arguments, it will use the
+\fBlibProofx\fB interface, rather than the standard \fBlibProof\fR
+interface. 
+.SH "SEE ALSO"
+.IR proofd (1) 
+,
+.IR root (1) 
+,
+.IR rootd (1)
+.PP 
+More information can be found at the \fBROOT\fR website:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fB
+.UE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above): 
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR 
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" $Log: proofserv.1,v $
+.\" Revision 1.3  2006/02/28 16:38:23  rdm
+.\" From Christian Holm:
+.\" many mods in the Debian and RedHat packaging system to ready ROOT for
+.\" inclusion in Debian and RedHat distributions.
+.\"
+.\" Revision 1.2  2005/09/07 10:23:23  rdm
+.\" From Christian Holm:
+.\" fixes for Debian packages (due to the license change ROOT can be moved
+.\" out of the non-free tree). Also updates in the man pages reflecting the
+.\" new license.
+.\"
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
+.\" Revision 1.1  2000/12/08 17:41:01  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
+.\"

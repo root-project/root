@@ -1,0 +1,11 @@
+
+  0.5           version 0.5 used in GTK 2.2.3
+  0.7           version 0.7 used in GTK 2.2.4, 2.2.latest
+  0.8           version 0.8 used in GTK 2.4.0, 2.4.1
+  0.9           version 0.9 used in GTK 2.4.2, 2.4.3, 2.4.latest
+
+  In map file:
+
+  1st column: <globus_gsi_credential version> 
+  2nd column: <globus_gsi_credential.h revision> 
+  3rd column: <globus_gsi_cred_constants.h revision> 

@@ -1,0 +1,58 @@
+# @(#)root/mathcore:$Id$
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+
+check_PROGRAMS =  testRootFinder  testDerivation testIntegration testMinimization1D testSpecFunc testStatFunc testVavilov
+
+# skip other tests since they depend on ROOT lib
+#testInterpolation  testDerivation testIntegration
+
+# testInterpolation_SOURCES =  testInterpolation.cxx
+
+testDerivation_SOURCES =  testDerivation.cxx
+
+testIntegration_SOURCES =  testIntegration.cxx
+
+testRootFinder_SOURCES =  testRootFinder.cxx
+
+testMinimization1D_SOURCES =  testMinimization1D.cxx
+
+testSpecFunc_SOURCES =  testSpecFunc.cxx
+
+testStatFunc_SOURCES =  testStatFunc.cxx
+
+testVavilov_SOURCES =  testVavilov.cxx  VavilovTest.h VavilovTest.cxx
+
+
+
+INCLUDES = -I$(top_srcdir)/inc 
+
+# testInterpolation_LDADD =  $(top_builddir)/src/libMathCore.la
+# testInterpolation_LDFLAGS = @GSL_LDFLAGS@
+
+testDerivation_LDADD =  $(top_builddir)/src/libMathMore.la
+testDerivation_LDFLAGS = @GSL_LDFLAGS@
+
+testIntegration_LDADD =  $(top_builddir)/src/libMathMore.la
+testIntegration_LDFLAGS = @GSL_LDFLAGS@
+
+testRootFinder_LDADD =  $(top_builddir)/src/libMathMore.la
+testRootFinder_LDFLAGS = @GSL_LDFLAGS@
+
+testMinimization1D_LDADD =  $(top_builddir)/src/libMathMore.la
+testMinimization1D_LDFLAGS = @GSL_LDFLAGS@
+
+testSpecFunc_LDADD =  $(top_builddir)/src/libMathMore.la
+testSpecFunc_LDFLAGS = @GSL_LDFLAGS@
+
+testStatFunc_LDADD =  $(top_builddir)/src/libMathMore.la
+testStatFunc_LDFLAGS = @GSL_LDFLAGS@
+
+testVavilov_LDADD =  $(top_builddir)/src/libMathMore.la
+testVavilov_LDFLAGS = @GSL_LDFLAGS@
+
+
+
+

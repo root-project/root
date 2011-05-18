@@ -1,0 +1,957 @@
+  namespace Bla {
+    class Base {
+    public:
+      int i;
+      Base (void);
+      ~Base (void);
+    };
+    class Diamond : public Bla::Left, public Bla::Right {
+    };
+    class Left : virtual public Bla::Base {
+    };
+    class Right : virtual public Bla::Base {
+    };
+  }
+  namespace Functions {
+  }
+  namespace TT {
+    class Outer<TT::A<unsigned long> > {
+    public:
+      int wantedFunction (void);
+    };
+    class TemplatedMemberTypes {
+      std::string m0;
+      std::string* m1;
+      std::string[5] m3;
+      std::map<std::basic_string<char>,double>* m4;
+      std::map<std::basic_string<char>,double>[5] m5;
+    };
+  }
+  namespace VirtFuncOverrider {
+    class Comp : public VirtFuncOverrider::Obj, virtual public VirtFuncOverrider::ICh {
+    public:
+      ~Comp (void);
+      void ia (void);
+      void comp (void);
+    };
+  }
+  namespace ns {
+    class AutoSelectClass {
+    };
+    class TestSelectionClass {
+      int fI;
+      float fF;
+      std::vector<std::pair<int,float> > fV;
+    public:
+      void bar (void);
+    };
+    class TestTemplatedSelectionClass<float,float,float> {
+      int fI;
+    };
+    class TestTemplatedSelectionClass<int,int,bool> {
+      int fI;
+    };
+    class TestTemplatedSelectionClass<int,int,char> {
+      int fI;
+    };
+    class TestTemplatedSelectionClass<int,int,float> {
+      int fI;
+    };
+  }
+  namespace std {
+    class _Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> > {
+    public:
+      std::_Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> >::_Vector_impl _M_impl;
+      std::allocator<ClassO<int*>*> get_allocator (void);
+      _Vector_base (const std::allocator<ClassO<int*>*>& __a);
+      _Vector_base (size_t __n, const std::allocator<ClassO<int*>*>& __a);
+      ~_Vector_base (void);
+      ClassO<int*>** _M_allocate (size_t __n);
+      void _M_deallocate (ClassO<int*>** __p, size_t __n);
+    };
+    class _Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > > {
+    public:
+      std::_Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > >::_Vector_impl _M_impl;
+      std::allocator<ClassO<int*> > get_allocator (void);
+      _Vector_base (const std::allocator<ClassO<int*> >& __a);
+      _Vector_base (size_t __n, const std::allocator<ClassO<int*> >& __a);
+      ~_Vector_base (void);
+      ClassO<int*>* _M_allocate (size_t __n);
+      void _M_deallocate (ClassO<int*>* __p, size_t __n);
+    };
+    class _Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> > {
+    public:
+      std::_Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> >::_Vector_impl _M_impl;
+      std::allocator<const ClassO<const int*>* const*> get_allocator (void);
+      _Vector_base (const std::allocator<const ClassO<const int*>* const*>& __a);
+      _Vector_base (size_t __n, const std::allocator<const ClassO<const int*>* const*>& __a);
+      ~_Vector_base (void);
+      ClassO<const int*>*** _M_allocate (size_t __n);
+      void _M_deallocate (const ClassO<const int*>* const** __p, size_t __n);
+    };
+    class _Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> > {
+    public:
+      std::_Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> >::_Vector_impl _M_impl;
+      std::allocator<const ClassO<int>*> get_allocator (void);
+      _Vector_base (const std::allocator<const ClassO<int>*>& __a);
+      _Vector_base (size_t __n, const std::allocator<const ClassO<int>*>& __a);
+      ~_Vector_base (void);
+      ClassO<int>** _M_allocate (size_t __n);
+      void _M_deallocate (const ClassO<int>** __p, size_t __n);
+    };
+    class allocator<ClassO<int*> > : public __gnu_cxx::new_allocator<ClassO<int*> > {
+    public:
+      allocator (void);
+      allocator (const std::allocator<ClassO<int*> >& a);
+      ~allocator (void);
+    };
+    class allocator<ClassO<int*>*> : public __gnu_cxx::new_allocator<ClassO<int*>*> {
+    public:
+      allocator (void);
+      allocator (const std::allocator<ClassO<int*>*>& a);
+      ~allocator (void);
+    };
+    class allocator<const ClassO<const int*>* const*> : public __gnu_cxx::new_allocator<const ClassO<const int*>* const*> {
+    public:
+      allocator (void);
+      allocator (const std::allocator<const ClassO<const int*>* const*>& a);
+      ~allocator (void);
+    };
+    class allocator<const ClassO<int>*> : public __gnu_cxx::new_allocator<const ClassO<int>*> {
+    public:
+      allocator (void);
+      allocator (const std::allocator<const ClassO<int>*>& a);
+      ~allocator (void);
+    };
+    class basic_string<char> {
+      std::basic_string<char>::_Alloc_hider _M_dataplus;
+    public:
+      basic_string (void);
+      basic_string (const std::allocator<char>& __a);
+      basic_string (const std::basic_string<char>& __str);
+      basic_string (const std::basic_string<char>& __str, size_t __pos, size_t __n = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      basic_string (const std::basic_string<char>& __str, size_t __pos, size_t __n, const std::allocator<char>& __a);
+      basic_string (const char* __s, size_t __n, const std::allocator<char>& __a = <gccxml-cast-expr>);
+      basic_string (const char* __s, const std::allocator<char>& __a = <gccxml-cast-expr>);
+      basic_string (size_t __n, char __c, const std::allocator<char>& __a = <gccxml-cast-expr>);
+      ~basic_string (void);
+      std::basic_string<char> operator operator= (const std::basic_string<char>& __str);
+      std::basic_string<char> operator operator= (const char* __s);
+      std::basic_string<char> operator operator= (char __c);
+      __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > begin (void);
+      __gnu_cxx::__normal_iterator<const char*,std::basic_string<char> > begin (void);
+      __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > end (void);
+      __gnu_cxx::__normal_iterator<const char*,std::basic_string<char> > end (void);
+      size_t size (void);
+      size_t length (void);
+      size_t max_size (void);
+      void resize (size_t __n, char __c);
+      void resize (size_t __n);
+      size_t capacity (void);
+      void reserve (size_t __res = 0);
+      void clear (void);
+      bool empty (void);
+      char operator operator[] (size_t __pos);
+      char operator operator[] (size_t __pos);
+      char at (size_t __n);
+      char at (size_t __n);
+      std::basic_string<char> operator operator+= (const std::basic_string<char>& __str);
+      std::basic_string<char> operator operator+= (const char* __s);
+      std::basic_string<char> operator operator+= (char __c);
+      std::basic_string<char> append (const std::basic_string<char>& __str);
+      std::basic_string<char> append (const std::basic_string<char>& __str, size_t __pos, size_t __n);
+      std::basic_string<char> append (const char* __s, size_t __n);
+      std::basic_string<char> append (const char* __s);
+      std::basic_string<char> append (size_t __n, char __c);
+      void push_back (char __c);
+      std::basic_string<char> assign (const std::basic_string<char>& __str);
+      std::basic_string<char> assign (const std::basic_string<char>& __str, size_t __pos, size_t __n);
+      std::basic_string<char> assign (const char* __s, size_t __n);
+      std::basic_string<char> assign (const char* __s);
+      std::basic_string<char> assign (size_t __n, char __c);
+      void insert (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __p, size_t __n, char __c);
+      std::basic_string<char> insert (size_t __pos1, const std::basic_string<char>& __str);
+      std::basic_string<char> insert (size_t __pos1, const std::basic_string<char>& __str, size_t __pos2, size_t __n);
+      std::basic_string<char> insert (size_t __pos, const char* __s, size_t __n);
+      std::basic_string<char> insert (size_t __pos, const char* __s);
+      std::basic_string<char> insert (size_t __pos, size_t __n, char __c);
+      __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > insert (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __p, char __c);
+      std::basic_string<char> erase (size_t __pos = 0, size_t __n = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > erase (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __position);
+      __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > erase (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __first, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __last);
+      std::basic_string<char> replace (size_t __pos, size_t __n, const std::basic_string<char>& __str);
+      std::basic_string<char> replace (size_t __pos1, size_t __n1, const std::basic_string<char>& __str, size_t __pos2, size_t __n2);
+      std::basic_string<char> replace (size_t __pos, size_t __n1, const char* __s, size_t __n2);
+      std::basic_string<char> replace (size_t __pos, size_t __n1, const char* __s);
+      std::basic_string<char> replace (size_t __pos, size_t __n1, size_t __n2, char __c);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, const std::basic_string<char>& __str);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, const char* __s, size_t __n);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, const char* __s);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, size_t __n, char __c);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, char* __k1, char* __k2);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, const char* __k1, const char* __k2);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __k1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __k2);
+      std::basic_string<char> replace (__gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i1, __gnu_cxx::__normal_iterator<char*,std::basic_string<char> > __i2, __gnu_cxx::__normal_iterator<const char*,std::basic_string<char> > __k1, __gnu_cxx::__normal_iterator<const char*,std::basic_string<char> > __k2);
+      size_t copy (char* __s, size_t __n, size_t __pos = 0);
+      void swap (std::basic_string<char>& __s);
+      char* c_str (void);
+      char* data (void);
+      std::allocator<char> get_allocator (void);
+      size_t find (const char* __s, size_t __pos, size_t __n);
+      size_t find (const std::basic_string<char>& __str, size_t __pos = 0);
+      size_t find (const char* __s, size_t __pos = 0);
+      size_t find (char __c, size_t __pos = 0);
+      size_t rfind (const std::basic_string<char>& __str, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t rfind (const char* __s, size_t __pos, size_t __n);
+      size_t rfind (const char* __s, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t rfind (char __c, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_first_of (const std::basic_string<char>& __str, size_t __pos = 0);
+      size_t find_first_of (const char* __s, size_t __pos, size_t __n);
+      size_t find_first_of (const char* __s, size_t __pos = 0);
+      size_t find_first_of (char __c, size_t __pos = 0);
+      size_t find_last_of (const std::basic_string<char>& __str, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_last_of (const char* __s, size_t __pos, size_t __n);
+      size_t find_last_of (const char* __s, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_last_of (char __c, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_first_not_of (const std::basic_string<char>& __str, size_t __pos = 0);
+      size_t find_first_not_of (const char* __s, size_t __pos, size_t __n);
+      size_t find_first_not_of (const char* __s, size_t __pos = 0);
+      size_t find_first_not_of (char __c, size_t __pos = 0);
+      size_t find_last_not_of (const std::basic_string<char>& __str, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_last_not_of (const char* __s, size_t __pos, size_t __n);
+      size_t find_last_not_of (const char* __s, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      size_t find_last_not_of (char __c, size_t __pos = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      std::basic_string<char> substr (size_t __pos = 0, size_t __n = std::basic_string<_CharT, _Traits, _Alloc>::npos);
+      int compare (const std::basic_string<char>& __str);
+      int compare (size_t __pos, size_t __n, const std::basic_string<char>& __str);
+      int compare (size_t __pos1, size_t __n1, const std::basic_string<char>& __str, size_t __pos2, size_t __n2);
+      int compare (const char* __s);
+      int compare (size_t __pos, size_t __n1, const char* __s);
+      int compare (size_t __pos, size_t __n1, const char* __s, size_t __n2);
+    };
+    class map<std::basic_string<char>,double> {
+      std::_Rb_tree<std::basic_string<char>,std::pair<const std::basic_string<char>,double>,std::_Select1st<std::pair<const std::basic_string<char>,double> >,std::less<std::basic_string<char> >,std::allocator<std::pair<const std::basic_string<char>,double> > > _M_t;
+    public:
+      map (void);
+      map (const std::less<std::basic_string<char> >& __comp, const std::allocator<std::pair<const std::basic_string<char>,double> >& __a = <gccxml-cast-expr>);
+      map (const std::map<std::basic_string<char>,double>& __x);
+      std::map<std::basic_string<char>,double> operator operator= (const std::map<std::basic_string<char>,double>& __x);
+      std::allocator<std::pair<const std::basic_string<char>,double> > get_allocator (void);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > begin (void);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > begin (void);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > end (void);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > end (void);
+      bool empty (void);
+      size_t size (void);
+      size_t max_size (void);
+      double operator operator[] (const std::string& __k);
+      std::pair<std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> >,bool> insert (const std::pair<const std::basic_string<char>,double>& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > insert (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > position, const std::pair<const std::basic_string<char>,double>& __x);
+      void erase (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __position);
+      size_t erase (const std::string& __x);
+      void erase (std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __first, std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > __last);
+      void swap (std::map<std::basic_string<char>,double>& __x);
+      void clear (void);
+      std::less<std::basic_string<char> > key_comp (void);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > find (const std::string& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > find (const std::string& __x);
+      size_t count (const std::string& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::string& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > lower_bound (const std::string& __x);
+      std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::string& __x);
+      std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > upper_bound (const std::string& __x);
+      std::pair<std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::string& __x);
+      std::pair<std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> >,std::_Rb_tree_const_iterator<std::pair<const std::basic_string<char>,double> > > equal_range (const std::string& __x);
+    };
+    class vector<ClassO<int*> > : std::_Vector_base<ClassO<int*>,std::allocator<ClassO<int*> > > {
+    public:
+      vector (const std::allocator<ClassO<int*> >& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const ClassO<int*>& __value, const std::allocator<ClassO<int*> >& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<ClassO<int*> >& __x);
+      ~vector (void);
+      std::vector<ClassO<int*> > operator operator= (const std::vector<ClassO<int*> >& __x);
+      void assign (size_t __n, const ClassO<int*>& __val);
+      __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > begin (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int*>*,std::vector<ClassO<int*> > > begin (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > end (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int*>*,std::vector<ClassO<int*> > > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const ClassO<int*>& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      ClassO<int*> operator operator[] (size_t __n);
+      ClassO<int*> operator operator[] (size_t __n);
+      ClassO<int*> at (size_t __n);
+      ClassO<int*> at (size_t __n);
+      ClassO<int*> front (void);
+      ClassO<int*> front (void);
+      ClassO<int*> back (void);
+      ClassO<int*> back (void);
+      void push_back (const ClassO<int*>& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > insert (__gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __position, const ClassO<int*>& __x);
+      void insert (__gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __position, size_t __n, const ClassO<int*>& __x);
+      __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > erase (__gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __position);
+      __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > erase (__gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __first, __gnu_cxx::__normal_iterator<ClassO<int*>*,std::vector<ClassO<int*> > > __last);
+      void swap (std::vector<ClassO<int*> >& __x);
+      void clear (void);
+    };
+    class vector<ClassO<int*>*> : std::_Vector_base<ClassO<int*>*,std::allocator<ClassO<int*>*> > {
+    public:
+      vector (const std::allocator<ClassO<int*>*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, ClassO<int*>* const& __value, const std::allocator<ClassO<int*>*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<ClassO<int*>*>& __x);
+      ~vector (void);
+      std::vector<ClassO<int*>*> operator operator= (const std::vector<ClassO<int*>*>& __x);
+      void assign (size_t __n, ClassO<int*>* const& __val);
+      __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > begin (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>* const*,std::vector<ClassO<int*>*> > begin (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > end (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>* const*,std::vector<ClassO<int*>*> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, ClassO<int*>* const& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      ClassO<int*>* operator operator[] (size_t __n);
+      ClassO<int*>* operator operator[] (size_t __n);
+      ClassO<int*>* at (size_t __n);
+      ClassO<int*>* at (size_t __n);
+      ClassO<int*>* front (void);
+      ClassO<int*>* front (void);
+      ClassO<int*>* back (void);
+      ClassO<int*>* back (void);
+      void push_back (ClassO<int*>* const& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > insert (__gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __position, ClassO<int*>* const& __x);
+      void insert (__gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __position, size_t __n, ClassO<int*>* const& __x);
+      __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > erase (__gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __position);
+      __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > erase (__gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __first, __gnu_cxx::__normal_iterator<ClassO<int*>**,std::vector<ClassO<int*>*> > __last);
+      void swap (std::vector<ClassO<int*>*>& __x);
+      void clear (void);
+    };
+    class vector<MyClass> : std::_Vector_base<MyClass,std::allocator<MyClass> > {
+    public:
+      vector (const std::allocator<MyClass>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const MyClass& __value, const std::allocator<MyClass>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<MyClass>& __x);
+      ~vector (void);
+      std::vector<MyClass> operator operator= (const std::vector<MyClass>& __x);
+      void assign (size_t __n, const MyClass& __val);
+      __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > begin (void);
+      __gnu_cxx::__normal_iterator<const MyClass*,std::vector<MyClass> > begin (void);
+      __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > end (void);
+      __gnu_cxx::__normal_iterator<const MyClass*,std::vector<MyClass> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const MyClass& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      MyClass operator operator[] (size_t __n);
+      MyClass operator operator[] (size_t __n);
+      MyClass at (size_t __n);
+      MyClass at (size_t __n);
+      MyClass front (void);
+      MyClass front (void);
+      MyClass back (void);
+      MyClass back (void);
+      void push_back (const MyClass& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > insert (__gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __position, const MyClass& __x);
+      void insert (__gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __position, size_t __n, const MyClass& __x);
+      __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > erase (__gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __position);
+      __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > erase (__gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __first, __gnu_cxx::__normal_iterator<MyClass*,std::vector<MyClass> > __last);
+      void swap (std::vector<MyClass>& __x);
+      void clear (void);
+    };
+    class vector<const ClassO<const int*>* const*> : std::_Vector_base<const ClassO<const int*>* const*,std::allocator<const ClassO<const int*>* const*> > {
+    public:
+      vector (const std::allocator<const ClassO<const int*>* const*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const ClassO<const int*>* const* const& __value, const std::allocator<const ClassO<const int*>* const*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<const ClassO<const int*>* const*>& __x);
+      ~vector (void);
+      std::vector<const ClassO<const int*>* const*> operator operator= (const std::vector<const ClassO<const int*>* const*>& __x);
+      void assign (size_t __n, const ClassO<const int*>* const* const& __val);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > begin (void);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const* const*,std::vector<const ClassO<const int*>* const*> > begin (void);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > end (void);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const* const*,std::vector<const ClassO<const int*>* const*> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const ClassO<const int*>* const* const& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      ClassO<const int*>** operator operator[] (size_t __n);
+      ClassO<const int*>** operator operator[] (size_t __n);
+      ClassO<const int*>** at (size_t __n);
+      ClassO<const int*>** at (size_t __n);
+      ClassO<const int*>** front (void);
+      ClassO<const int*>** front (void);
+      ClassO<const int*>** back (void);
+      ClassO<const int*>** back (void);
+      void push_back (const ClassO<const int*>* const* const& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > insert (__gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __position, const ClassO<const int*>* const* const& __x);
+      void insert (__gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __position, size_t __n, const ClassO<const int*>* const* const& __x);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > erase (__gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __position);
+      __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > erase (__gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __first, __gnu_cxx::__normal_iterator<const ClassO<const int*>* const**,std::vector<const ClassO<const int*>* const*> > __last);
+      void swap (std::vector<const ClassO<const int*>* const*>& __x);
+      void clear (void);
+    };
+    class vector<const ClassO<int>*> : std::_Vector_base<const ClassO<int>*,std::allocator<const ClassO<int>*> > {
+    public:
+      vector (const std::allocator<const ClassO<int>*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const ClassO<int>* const& __value, const std::allocator<const ClassO<int>*>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<const ClassO<int>*>& __x);
+      ~vector (void);
+      std::vector<const ClassO<int>*> operator operator= (const std::vector<const ClassO<int>*>& __x);
+      void assign (size_t __n, const ClassO<int>* const& __val);
+      __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > begin (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int>* const*,std::vector<const ClassO<int>*> > begin (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > end (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int>* const*,std::vector<const ClassO<int>*> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const ClassO<int>* const& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      ClassO<int>* operator operator[] (size_t __n);
+      ClassO<int>* operator operator[] (size_t __n);
+      ClassO<int>* at (size_t __n);
+      ClassO<int>* at (size_t __n);
+      ClassO<int>* front (void);
+      ClassO<int>* front (void);
+      ClassO<int>* back (void);
+      ClassO<int>* back (void);
+      void push_back (const ClassO<int>* const& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > insert (__gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __position, const ClassO<int>* const& __x);
+      void insert (__gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __position, size_t __n, const ClassO<int>* const& __x);
+      __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > erase (__gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __position);
+      __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > erase (__gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __first, __gnu_cxx::__normal_iterator<const ClassO<int>**,std::vector<const ClassO<int>*> > __last);
+      void swap (std::vector<const ClassO<int>*>& __x);
+      void clear (void);
+    };
+    class vector<float> : std::_Vector_base<float,std::allocator<float> > {
+    public:
+      vector (const std::allocator<float>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const MYFLOAT& __value, const std::allocator<float>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<float>& __x);
+      ~vector (void);
+      std::vector<float> operator operator= (const std::vector<float>& __x);
+      void assign (size_t __n, const MYFLOAT& __val);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > begin (void);
+      __gnu_cxx::__normal_iterator<const float*,std::vector<float> > begin (void);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > end (void);
+      __gnu_cxx::__normal_iterator<const float*,std::vector<float> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const MYFLOAT& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      MYFLOAT operator operator[] (size_t __n);
+      MYFLOAT operator operator[] (size_t __n);
+      MYFLOAT at (size_t __n);
+      MYFLOAT at (size_t __n);
+      MYFLOAT front (void);
+      MYFLOAT front (void);
+      MYFLOAT back (void);
+      MYFLOAT back (void);
+      void push_back (const MYFLOAT& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, const MYFLOAT& __x);
+      void insert (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position, size_t __n, const MYFLOAT& __x);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > erase (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __position);
+      __gnu_cxx::__normal_iterator<float*,std::vector<float> > erase (__gnu_cxx::__normal_iterator<float*,std::vector<float> > __first, __gnu_cxx::__normal_iterator<float*,std::vector<float> > __last);
+      void swap (std::vector<float>& __x);
+      void clear (void);
+    };
+    class vector<int> : std::_Vector_base<int,std::allocator<int> > {
+    public:
+      vector (const std::allocator<int>& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const int& __value, const std::allocator<int>& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<int>& __x);
+      ~vector (void);
+      std::vector<int> operator operator= (const std::vector<int>& __x);
+      void assign (size_t __n, const int& __val);
+      __gnu_cxx::__normal_iterator<int*,std::vector<int> > begin (void);
+      __gnu_cxx::__normal_iterator<const int*,std::vector<int> > begin (void);
+      __gnu_cxx::__normal_iterator<int*,std::vector<int> > end (void);
+      __gnu_cxx::__normal_iterator<const int*,std::vector<int> > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const int& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      int operator operator[] (size_t __n);
+      int operator operator[] (size_t __n);
+      int at (size_t __n);
+      int at (size_t __n);
+      int front (void);
+      int front (void);
+      int back (void);
+      int back (void);
+      void push_back (const int& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<int*,std::vector<int> > insert (__gnu_cxx::__normal_iterator<int*,std::vector<int> > __position, const int& __x);
+      void insert (__gnu_cxx::__normal_iterator<int*,std::vector<int> > __position, size_t __n, const int& __x);
+      __gnu_cxx::__normal_iterator<int*,std::vector<int> > erase (__gnu_cxx::__normal_iterator<int*,std::vector<int> > __position);
+      __gnu_cxx::__normal_iterator<int*,std::vector<int> > erase (__gnu_cxx::__normal_iterator<int*,std::vector<int> > __first, __gnu_cxx::__normal_iterator<int*,std::vector<int> > __last);
+      void swap (std::vector<int>& __x);
+      void clear (void);
+    };
+    class vector<std::pair<int,float> > : std::_Vector_base<std::pair<int,float>,std::allocator<std::pair<int,float> > > {
+    public:
+      vector (const std::allocator<std::pair<int,float> >& __a = <gccxml-cast-expr>);
+      vector (size_t __n, const std::pair<int,float>& __value, const std::allocator<std::pair<int,float> >& __a = <gccxml-cast-expr>);
+      vector (size_t __n);
+      vector (const std::vector<std::pair<int,float> >& __x);
+      ~vector (void);
+      std::vector<std::pair<int,float> > operator operator= (const std::vector<std::pair<int,float> >& __x);
+      void assign (size_t __n, const std::pair<int,float>& __val);
+      __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > begin (void);
+      __gnu_cxx::__normal_iterator<const std::pair<int,float>*,std::vector<std::pair<int,float> > > begin (void);
+      __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > end (void);
+      __gnu_cxx::__normal_iterator<const std::pair<int,float>*,std::vector<std::pair<int,float> > > end (void);
+      size_t size (void);
+      size_t max_size (void);
+      void resize (size_t __new_size, const std::pair<int,float>& __x);
+      void resize (size_t __new_size);
+      size_t capacity (void);
+      bool empty (void);
+      void reserve (size_t __n);
+      std::pair<int,float> operator operator[] (size_t __n);
+      std::pair<int,float> operator operator[] (size_t __n);
+      std::pair<int,float> at (size_t __n);
+      std::pair<int,float> at (size_t __n);
+      std::pair<int,float> front (void);
+      std::pair<int,float> front (void);
+      std::pair<int,float> back (void);
+      std::pair<int,float> back (void);
+      void push_back (const std::pair<int,float>& __x);
+      void pop_back (void);
+      __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > insert (__gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __position, const std::pair<int,float>& __x);
+      void insert (__gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __position, size_t __n, const std::pair<int,float>& __x);
+      __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > erase (__gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __position);
+      __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > erase (__gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __first, __gnu_cxx::__normal_iterator<std::pair<int,float>*,std::vector<std::pair<int,float> > > __last);
+      void swap (std::vector<std::pair<int,float> >& __x);
+      void clear (void);
+    };
+  }
+  namespace testclasses {
+    namespace ConvOp {
+      class ConversionOperator {
+      public:
+        int m_i;
+        int* m_ip;
+        const int*(testclasses::ConvOp::ConversionOperator::)(void) const* operator const int*(testclasses::ConvOp::ConversionOperator::*)(void) const (void);
+        int* testclasses::ConvOp::ConversionOperator::* operator int* testclasses::ConvOp::ConversionOperator::* (void);
+        int* i (void);
+      };
+      class ConversionOperatorT<int> {
+      public:
+        int m_i;
+        int* m_ip;
+        const int*(testclasses::ConvOp::ConversionOperatorT<int>::)(void) const* operator const int*(testclasses::ConvOp::ConversionOperatorT<int>::*)(void) const (void);
+        int* testclasses::ConvOp::ConversionOperatorT<int>::* operator int* testclasses::ConvOp::ConversionOperatorT<int>::* (void);
+        int* i (void);
+      };
+    }
+    namespace FwUnnamedNSType {
+      class ForwardUnnamedNamespaceType {
+      public:
+        void foo (const @anonymous@namespace@::ForwardedUnnamedType*);
+        void foo2 (const testclasses::@anonymous@namespace@::ForwardedUnnamedNestedType*);
+      };
+    }
+    namespace NonPublicDestructor {
+      class BaseWithProtectedDestructor {
+      };
+      class Derived20 : public testclasses::NonPublicDestructor::BaseWithProtectedDestructor {
+      };
+      class Derived21 : public testclasses::NonPublicDestructor::BaseWithProtectedDestructor {
+      public:
+        ~Derived21 (void);
+      };
+    }
+    namespace OverloadedOperators {
+      class NoOp {
+      public:
+        std::vector<int> makeItComplex;
+      };
+      class OpANew {
+      public:
+        void* operator operator new [] (size_t n);
+      };
+      class OpNew {
+      public:
+        void* operator operator new (size_t n);
+      };
+      class PlOpANew {
+      public:
+        void* operator operator new [] (size_t n, void* v);
+      };
+      class PlOpAOpANew {
+      public:
+        void* operator operator new [] (size_t n);
+        void* operator operator new [] (size_t n, void* v);
+      };
+      class PlOpNew {
+      public:
+        void* operator operator new (size_t n, void* v);
+      };
+      class PlOpOpNew {
+      public:
+        void* operator operator new (size_t n);
+        void* operator operator new (size_t n, void* v);
+      };
+    }
+    class Base {
+    public:
+      ~Base (void);
+    };
+    class ConstNonConstMembers {
+    public:
+      int m_i;
+      const int m_ci;
+      volatile int m_vi;
+      ConstNonConstMembers (void);
+      int foo (int i);
+      int foo (int i);
+      int constfoo (void);
+      int nonconstfoo (void);
+    };
+    class DataMembers {
+      int i;
+      int* pi;
+      int** ppi;
+      int[5] pa;
+      int[5][5] paa;
+      int[5][4][3][2][1] paa2;
+      int**[5][3][1] paa3;
+      int (*)(const std::vector<double>&,const std::vector<double>&) fPtr2;
+      int (*)(int,char,bool) fPtr;
+    };
+    class DerivedA : public testclasses::Base {
+    };
+    class DerivedB : public testclasses::Base {
+    };
+    class MyClass {
+    };
+    class MyStruct {
+    };
+    class Outer {
+    };
+    class PrivateConstructors {
+    public:
+      int i;
+      void foo (void);
+    };
+    class TemplFun {
+    public:
+      void foooo (@anonymous@namespace@::_testclasses_instances::A);
+    };
+    class TestFunctionReturnTypes {
+    public:
+      int returnFundamental (void);
+      A returnCompound (void);
+      A* returnPointer1 (void);
+      int* returnPointer2 (void);
+      void returnVoid (void);
+      int returnRef1 (void);
+      A returnRef2 (void);
+    };
+    class Typedefs {
+    };
+    class UnnamedTypes {
+      testclasses::UnnamedTypes::._77 m_struct;
+      testclasses::UnnamedTypes::._78 m_union;
+    };
+    class WithArray {
+      int[5] m_a;
+    public:
+      WithArray (void);
+    };
+    class WithTransientMember {
+      int m_transient;
+      testclasses::WithTransientMember* m_nottransient;
+    };
+    class WithTypedef {
+    };
+    class WithTypedefMember {
+      int m_i;
+      testclasses::MyInt m_mi;
+      std::vector<int> m_v;
+      testclasses::MyVector m_mv;
+    };
+    class WithTypedefMemberT<int> {
+      testclasses::MyInt m_t;
+    };
+    class WithTypedefMemberT<std::vector<int> > {
+      testclasses::MyVector m_t;
+    };
+    class testTemplInt<-1> {
+    };
+    class testTemplInt<1> {
+    };
+  }
+  namespace testclasses2 {
+    class WithTypedefMemberT<int> {
+      testclasses::MyInt m_t;
+    };
+    class WithTypedefMemberT<std::vector<int> > {
+      testclasses::MyVector m_t;
+    };
+  }
+  namespace xmlTypedefSelection {
+    class RealXmlSelClass {
+    };
+  }
+  namespace zot {
+    class foo : virtual public zot::foo_base {
+    public:
+      int bar (void);
+      void set_bar (int i);
+      void set_bar (float f);
+      void operator operator++ (void);
+    };
+    class foo_base {
+    protected:
+      int fBar;
+    public:
+      foo_base (void);
+      ~foo_base (void);
+    };
+  }
+  class ClassA : public ClassM {
+    int fA;
+  public:
+    ClassA (void);
+    ~ClassA (void);
+    int operator int (void);
+    int a (void);
+    void setA (int v);
+    void dummy (int, float);
+    ClassA operator operator=<int> (const int&);
+  };
+  class ClassAAA {
+  public:
+    int function6 (int);
+  };
+  class ClassB : virtual public ClassA {
+    int fB;
+  public:
+    ClassB (void);
+    ~ClassB (void);
+    int funWithManyArgs (int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15, int i16, int i17, int i18, int i19);
+    int b (void);
+    void setB (int v);
+  };
+  class ClassBBB {
+  public:
+    int meth (int);
+  };
+  class ClassC : virtual public ClassA {
+    int fC;
+  public:
+    ClassC (void);
+    ~ClassC (void);
+    int c (void);
+    void setC (int v);
+  };
+  class ClassD : virtual public ClassB {
+    int fD;
+  public:
+    ClassD (void);
+    ~ClassD (void);
+    int d (void);
+    void setD (int v);
+  };
+  class ClassE : virtual public ClassC {
+    int fE;
+  public:
+    ClassE (void);
+    ~ClassE (void);
+    int e (void);
+    void setE (int v);
+  };
+  class ClassF : virtual public ClassD, virtual public ClassE {
+    int fF;
+  public:
+    ClassF (void);
+    ~ClassF (void);
+    int f (void);
+    void setF (int v);
+  };
+  class ClassG : public ClassF {
+    int fG;
+  public:
+    ClassG (void);
+    ~ClassG (void);
+    int g (void);
+    void setG (int v = 11);
+  };
+  class ClassH : public ClassG {
+    int fH;
+  public:
+    ClassH (void);
+    ~ClassH (void);
+    int h (void);
+    void setH (int v);
+  };
+  class ClassI : public ClassE, public ClassK {
+    int fI;
+  public:
+    ClassI (void);
+    ~ClassI (void);
+    int i (void);
+    void setI (int v);
+  };
+  class ClassJ : public ClassI {
+    int fJ;
+  public:
+    ClassJ (void);
+    ~ClassJ (void);
+    int j (void);
+    void setJ (int v);
+  };
+  class ClassK : virtual public ClassC {
+    int fK;
+  public:
+    ClassK (void);
+    ~ClassK (void);
+    int k (void);
+    void setK (int v);
+  };
+  class ClassL : public ClassK {
+    int fL;
+  public:
+    ClassL (void);
+    ~ClassL (void);
+    int l (void);
+    void setL (int v);
+  };
+  class ClassM {
+    int fM;
+  public:
+    ClassM (void);
+    ~ClassM (void);
+    int m (void);
+    void setM (int v);
+  };
+  class ClassN : public ClassL {
+    int fN;
+  public:
+    ClassN (void);
+    ~ClassN (void);
+    int n (void);
+    void setN (int v);
+  };
+  class ClassO<ClassO<int*>*> {
+    ClassO<int*>** _p;
+    ClassO<int*>*** _pp;
+    ClassO<int*>* const** _cpp;
+  public:
+    void P (ClassO<int*>** p);
+    void R (ClassO<int*>*& r);
+    void cP (ClassO<int*>* const* cp);
+    void cR (ClassO<int*>* const& cr);
+    void cPc (ClassO<int*>* const* const cpc);
+  };
+  class ClassO<ClassO<int> > {
+    ClassO<int>* _p;
+    ClassO<int>** _pp;
+    const ClassO<int>** _cpp;
+  public:
+    void P (ClassO<int>* p);
+    void R (ClassO<int>& r);
+    void cP (const ClassO<int>* cp);
+    void cR (const ClassO<int>& cr);
+    void cPc (const ClassO<int>* const cpc);
+  };
+  class ClassO<int*> {
+    int** _p;
+    int*** _pp;
+    int* const** _cpp;
+  public:
+    void P (int** p);
+    void R (int*& r);
+    void cP (int* const* cp);
+    void cR (int* const& cr);
+    void cPc (int* const* const cpc);
+  };
+  class ClassO<int> {
+    int* _p;
+    int** _pp;
+    const int** _cpp;
+  public:
+    void P (int* p);
+    void R (int& r);
+    void cP (const int* cp);
+    void cR (const int& cr);
+    void cPc (const int* const cpc);
+  };
+  class ClassT1<int> {
+  public:
+    int fA;
+  };
+  class ClassT2<int,int> {
+  public:
+    int fA;
+    int fB;
+  };
+  class ClassT4<int,int,int,int> {
+  public:
+    int fA;
+    int fB;
+    int fC;
+    int fD;
+  };
+  class ClassT6<int,int,int,int,int,int> {
+  public:
+    int fA;
+    int fB;
+    int fC;
+    int fD;
+    int fE;
+    int fF;
+  };
+  class MemberPointerTest {
+  public:
+    int MyClass::* fPtr;
+    void(MyClass::)(bool)* fFptr;
+    void setMemberPointer (int MyClass::* p);
+    int MyClass::* getMemberPointer (void);
+    void setFunctionMemberPointer (void(MyClass::)(bool)* p);
+    void(MyClass::)(bool)* getFunctionMemberPointer (void);
+  };
+  class MyClass {
+  public:
+    int data;  //[this is an emulated comment]
+    void something (bool);
+  };
+  class classVec<5> {
+    double[5] arr;
+  };

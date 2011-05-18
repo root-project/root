@@ -1,0 +1,60 @@
+<br/> 
+<hr/> 
+<a name="graf2d"></a> 
+<h3>TPDF</h3>
+<ul>
+<li> The following macro produed a wrong PDF file. The second page had a black
+     background.
+     <pre>
+     {
+        gROOT->SetStyle("Plain");
+        TCanvas*  canvas = new TCanvas("canvas", "canvas", 600, 700);
+        TH1F* h = new TH1F("h","ht", 100, -5, 5);
+        h->FillRandom("gaus",10000);
+        canvas->Divide(2,1);
+        canvas->cd(1); h->Draw();
+        canvas->Update();
+        canvas->Print("test.pdf(");
+        canvas->Print("test.pdf");
+        canvas->Print("test.pdf)");
+     }
+     </pre>
+</li>
+</ul>
+
+<h3>TPostscript</h3>
+<ul>
+<li> Fix a precision problem in the text positionning. When the pad limits along
+     X or Y were very close the text position might be wrong. This was found 
+     thanks to the test #15 in stressGraphics. The text position is now computed
+     using double precision variables only.
+</li>
+</ul>
+
+<h3>TASImage</h3>
+<ul>
+<li> Horizontal dashed lines having a width greater than 1, were not correct.
+</li>
+</ul>
+
+<h3>TGaxis</h3>
+<ul>
+<li> The following macro produced two different labelling. Label "3" was missing
+     on the axis "b".
+     <pre>
+     {
+        TGaxis *a = new TGaxis(0.2,0.5,0.8,0.5,0.2,3.5,510,"G");
+        a->SetMoreLogLabels(1); a->Draw();
+        TGaxis *b = new TGaxis(0.8,0.7,0.2,0.7,0.2,3.5,510,"G");
+        b->SetMoreLogLabels(1); b->Draw();
+     }
+     </pre>
+</li>
+</ul>
+
+<h3>TPad</h3>
+<ul>
+<li>Add a protection in <tt>TPad:Clear()</tt> to fix the
+    bug report #78382. An histogram redrawing in a cloned
+    pad produced a segmentation fault.</li>
+</ul>

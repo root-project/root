@@ -1,0 +1,42 @@
+/* XPM */
+static char *bld_cut[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21       14            1",
+/* colors */
+". c #000000",
+"# c #ccd0cc",
+"a c #c0c0c0",
+"b c #f2f2f2",
+"c c #e6e6e6",
+"d c #dadada",
+"e c #cecece",
+"f c #b6b6b6",
+"g c #aaaaaa",
+"h c #9e9e9e",
+"i c #b5b3b5",
+"j c #6e6e6e",
+"k c #ccd0cc",
+"l c #ffffff",
+/* pixels */
+"###iii##########iiiga",
+"###iii##########iiiga",
+"##ik..i########i...ig",
+"##i.e..i######i..l.ig",
+"##i.fl..i####i..le.ig",
+"##i.hcl..i##i..lef.ig",
+"##i..acl..ii..lef..ig",
+"###i..acl....lef..ig#",
+"####i..acli.lef..ig##",
+"#####i..acbiif..ig###",
+"######i..a.l...ig####",
+"#######i..gce.jggg###",
+"####iii.ii..ee.iiig##",
+"###i......i.......ig#",
+"##i..ggh.igi..hgg..ig",
+"gg..gdad.i#gi.dadg..g",
+"gg..lalb.i##i.gdal..g",
+"gg..glb..g##g..glb..g",
+"##i.....g####g.....i#",
+"###i...g######g...i##",
+"####ggg########ggg###"
+};

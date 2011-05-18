@@ -1,0 +1,10 @@
+# -*- mode: makefile -*-
+#
+# Makefile compiler definitions included by the top Makefile.
+# Used to override the compilers specified in the architecture
+# specific Makefiles.
+
+CC    = @altcc@
+CXX   = @altcxx@
+F77   = @altf77@
+LD    = @altld@

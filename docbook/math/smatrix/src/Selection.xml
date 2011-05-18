@@ -1,0 +1,4 @@
+<lcgdict>
+ <class pattern ="SMatrix<double,*"/> 
+ <class pattern ="SVector<double,*"/> 
+</lcgdict>

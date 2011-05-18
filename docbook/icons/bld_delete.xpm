@@ -1,0 +1,35 @@
+/* XPM */
+static char *bld_delete[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        7            1",
+/* colors */
+". c #000000",
+"# c #c9cfcf",
+"a c #ff6b8f",
+"b c #dc0049",
+"c c #960031",
+"d c #626262",
+"e c #4a4a4a",
+/* pixels */
+"#####################",
+"#####################",
+"####...########e..###",
+"###..a..######e.a..##",
+"##..aba..####e.aba..#",
+"##.abbba..##e.abbbc.#",
+"##..cbbba.dd.abbbc..#",
+"###..cbbba..abbbc..##",
+"####..cbbbaabbbc..###",
+"#####..cbbbbbbc..####",
+"######d.cbbbbc.d#####",
+"######d.abbbba.d#####",
+"#####..abbbbbba..####",
+"####..abbbccbbba..###",
+"###..abbbc..cbbba..##",
+"##..abbbc.dd.cbbba..#",
+"##.bbbbc..##e.cbbbb.#",
+"##..cbc..####e.cbc..#",
+"###..c..######e.c..##",
+"####...########e..###",
+"#####################"
+};

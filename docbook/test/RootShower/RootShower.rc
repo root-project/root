@@ -1,0 +1,43 @@
+#include <winver.h>
+
+ROOTSHOWER_ICON              ICON                    "rootshower.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,00,0,1
+ PRODUCTVERSION 4,00,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Root Shower\0"
+            VALUE "CompanyName", "CERN\0"
+            VALUE "FileDescription", "Root Shower Monte-Carlo / Event Display\0"
+            VALUE "FileVersion", "4.00/00\0"
+            VALUE "InternalName", "RootShower\0"
+            VALUE "LegalCopyright", "Copyright (c) Bertrand Bellenot 2000-2010\0"
+            VALUE "OriginalFilename", "RootShower.exe\0"
+            VALUE "ProductName", "ROOT - Event MC / Viewer\0"
+            VALUE "ProductVersion", "4.00/00\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+

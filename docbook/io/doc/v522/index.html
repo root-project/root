@@ -1,0 +1,75 @@
+<br> 
+<hr> 
+<a name="io"></a> 
+<h3>I/O</h3>
+<ul>
+<li>Fix the order of creation of the TStreamerInfo during the opening of a ROOT file to insure that the CollectionProxy are properly setup.</li> 
+<li>Fix problem: "recover warning when opening an empty file
+created with TXNetFile" which was due to a bad check <tt>in TFile::Recover</tt>
+(line <tt>TFile.cxx:1561</tt>) where the inheritance from <tt>TFile</tt> should be checked
+instead of requiring the name to be <tt>TFile</tt>.</li>
+<li>In TBranch::File, in the case of importing the data directly from
+	  an external TBuffer, remove 80 char limit on reading the class name</li>
+<li> Re-enable support for the
+	  rootrc configuration <tt>Root.ZipMode</tt>.</li>
+</ul>
+<h4>Data Model Evolution</h4>
+
+First step in the implemantation of the infrastructure for the new Data Model Evolution Scheme.
+<br>This Data Model Evolution is brought to your courtesy of BNL/STAR/ATLAS/Fermi/Cern<br>
+	  
+<h5>Current Capabilities</h5>
+<ul>
+<li>	  Assign values to transient data members
+<li>	  Rename classes
+<li>	  Rename data members
+<li>	  Change the shape of the data structures or convert one class
+<li>	  structure to another
+<li>	  Change the meaning of data members
+<li>	  Ability to access the TBuffer directly when needed
+<li>	  Ensure that the objects in collections are handled in the same
+	  way as the ones stored separately
+<li>	  Supported in object-wise, member-wise and split modes.
+</ul>
+	  
+<h5>Coming soon</h5>
+<ul>
+<li>	  Make things operational also in bare ROOT mode
+<li>	  Ability to transform data before writing
+<li>	  Support for changing the class type of nested object in a split
+	  branch
+<li>	  Support for access to onfile version of nested objects from
+	  within the parent rule
+</ul>
+<h5>LinkDef rule syntax</h5>
+Setting a transient member:	  
+<pre>	  #pragma read sourceClass="ACache" targetClass="ACache" source=""
+	  version="[1-]" target="zcalc" \
+	  code="{ zcalc = false; }"
+</pre>	  
+Setting a new member from 2 removed members:
+	  
+<pre>	  #pragma read sourceClass="ACache" targetClass="ACache"
+	  source="int x; int y; char c" version="[8]" target="z" \
+	  code="{ z = onfile.x*1000 + onfile.y*10; }"
+</pre>
+	  Renaming a class:
+	  
+<pre>	  #pragma read sourceClass="ACache" version="[8]"
+	  targetClass="Axis" \
+	  source="int x; int y;" target="z" \
+	  code="{ z = onfile.x*1000 + onfile.y*
+	  #pragma read sourceClass="ACache" version="[9]"
+	  targetClass="Axis";</pre>
+     
+See the <a href="DataModelEvolution.txt">long form documentation</a>
+	  
+<h5>Selection XML syntax</h5
+	  
+<pre>	  &lt;read sourceClass="ACache" targetClass="ACache" source=""
+	  version="[1-]" target="zcalc"&gt;
+	  &lt;![CDATA[
+	  { zcalc = false; }
+	  ]]&gt;&lt;/read&gt;
+</pre>
+<br>

@@ -1,0 +1,16 @@
+Package: root-plugin-io-chirp
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://www.cs.wisc.edu/condor/chirp/
+Description: Chirp plugin for ROOT
+ This package contains the Chirp plug-in for ROOT, which allows you to
+ access files via the Chirp protocol.
+ .
+ Chirp is a simple and lightweight remote I/O protocol used by a
+ variety of research projects related to Condor. The Chirp protocol
+ corresponds closely to the Unix interface. It consists of familiar
+ operations such as open(), read(), write(), and close(). In addition,
+ Chirp provides a variety of authentication methods, allowing remote
+ users to identify themselves with strong Globus or Kerberos
+ credentials. The Chirp protocol is used in a variety of systems.
+

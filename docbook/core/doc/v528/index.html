@@ -1,0 +1,143 @@
+<br/>
+<hr/>
+<a name="core"></a> 
+<h3>Core</h3>
+<h4>Build system and Platform support</h4>
+<ul>
+<li>The build system has been extended to support out-of-source builds.
+This means you can build different sets of binaries from one source tree, like:
+<pre>
+      mkdir root-debug
+      cd root-debug
+      ../root/configure --build=debug
+</pre>
+</li>
+<li>
+The build system now supports cross compilation, where typically you need tools
+like rootcint, rootmap, etc, to be compiled on the build platform to be able
+to generate dictionaries for the target platform.
+</li>
+<li>ROOT has been ported to iOS. This port required the above mentioned
+changes in the build system. To build ROOT for the iPhone/iPad sumilator do:
+<pre>
+    ./configure iossim
+    make
+</pre>
+To build a native iOS armv7 version do:
+<pre>
+    ./configure ios
+    make
+</pre>
+Both builds create a libRoot.a that can be used to create ROOT based iOS apps
+(iOS does not allow apps to load non-system dynamic libraries at run time).
+Some sample Xcode projects using ROOT will soon be made available.
+</ul>
+<h4>Base</h4>
+<ul>
+<li>Change TTime data member from Long_t to Long64_t. On 32-bit systems the
+Long_t is 32-bits and too small to keep the time in milliseconds since the ROOT EPOCH (1-1-1995). Added new operators:
+<pre>
+operator long long()
+operator unsigned long long()
+</pre>
+The existing operators long and unsigned long on 32-bit machines return
+an error in case the stored time is larger then 32-bit and truncation
+occurs (like was always the case till now, but silently).
+</li>
+<li>New method ExitOnException() which allows to set the behaviour of
+TApplication in case of an exception (sigsegv, sigbus, sigill, sigfpe).
+The default is to trap the signal and continue with the event loop,
+using this method one can specify to exit with the signal number to the
+shell, or to abort() which in addition generates a core dump.
+</li>
+<li>New command line argument -x which forces ROOT to exit on an exception.</li>
+<li>Add TSystem::AddDynamicPath.</li>
+</ul>
+<h4>Build</h4>
+<ul>
+<li>New option '-t' for rmkdepend to allow the caller to fully specify the name to be used as a target
+This supersedes the name calculated from the input file name and the -p and -o option.
+</li>
+</ul>
+<h4>ACLiC</h4>
+<ul>
+<li>Allow ACLiC to use a flat directory structure when a build directory is specified.
+To use a flat structure do:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gSystem->SetBuildDir(whereIwant, kTRUE); // the default for the 2nd parameter is kFALSE
+</pre>
+Or use '-' in the option of CompileMacro
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gSystem->CompileMacro(myscript,"k-",...);
+</pre>
+</li>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Implement polymorphism for Emulated object (still not supporting polymorphism
+of Emulated Object inheriting from compiled class).
+This avoids memory leaks when the user data model relies on polymorphism
+and does not the shared library defining the classes theand avoid splicing if the data is copied.
+<br/>
+<tt>TStreamerInfo::New</tt> inserts the address of the creating <tt>TStreamerInfo</tt> into
+the object.  This address is inserted in each emulated that does not inherit
+from an emulated class and is positioned after all the base classes (which
+are compiled classes).   A derived class will set this value inside each
+of its emulated base class.<br/>
+<tt>TStreamerInfo::Destruct</tt> and the new method <tt>TStreamerInfo::GetActualClass</tt>
+use this information to detect the TStreamerInfo actually used to create
+the object and hence run the proper emulated destructor.</li>
+<br>
+<li>Add a new function GenerateDictionary to TInterpreter which allows for the quick and easy creation of a dictionary
+given one (or more) class name(s) and the name(s) of its header files.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gInterpreter->GenerateDictionary("vector&lt;vector&lt;float&gt; &gt;;list&lt;vector&lt;float&gt; &gt;","list;vector");
+   gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
+</pre>This replaces the recommendation of creating a small 'loader.C' script to create the dictionaries.
+</li>
+<li>Implement a ShowMembers function for interpreted classes, by querying the interpreter for the data member 
+information.</li>
+<li>In order to fix possible buffer overflow of parent string buffer in TMemberInspector,
+the signature of ShowMember() was changed to no longer require (nor request) the 
+caller to provide a buffer (of length unknown to the callee.)</li>
+<li>Improve the uniqueness of globally visible symbols to allow for the mixing of
+dictionaries with very similar layout.</li>
+</ul>
+
+<h4>Cont</h4>
+<ul>
+<li>New functions for TClonesArray:
+<ul>
+<li>
+AbsorbObjects(TClonesArray* otherTCA):
+Allows one to directly move the object pointers from otherTCA to the calling
+TCA without cloning (copying). The calling TCA takes over ownership of all of
+the moved objects. otherTCA is left empty upon return.
+</li>
+<li>
+MultiSort(Int_t nTCs, TClonesArray** tcs):
+Sorts multiple TClonesArrays simultaneously using the calling TCA's objects
+as the sorting key.
+</li>
+</ul>
+</li>
+
+<li>New function for TSeqCollection:
+
+QSort(Object **a, Int_t nBs, TObject ***b):
+Sort array a of TObject pointers using a quicksort algorithm. Arrays b will
+be sorted just like a (a determines the sort; nBs is the number of TObject**
+arrays in b). Uses ObjCompare() to compare objects. This function is used by
+the new function TClonesArray::MultiSort().
+</li>
+<li>Add a new option "+" in TClonesArray::Clear.   When the option starts with "C+", 
+eg "C+xyz" the objects in the array are in turn cleared with the option "xyz".</li>
+<li>Since the Collection objects do have a name and the Clone method does allow 
+for the name to change, TCollection::Clone was added to implement the name change properly.</li>
+</ul>
+<h4>Thread</h4>
+<ul>
+<li>New static function TThread::IsInitialized
+</li>
+</ul>
+

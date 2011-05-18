@@ -1,0 +1,898 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
+<title>Appendix A: Install and Build ROOT</title>
+
+<sect1>
+<title>ROOT Copyright and Licensing Agreement:</title>
+<para>This is a reprint of the copyright and licensing agreement of ROOT:</para>
+<para>Copyright (C) 1995-2003, René Brun and Fons Rademakers.</para>
+<para>All rights reserved.</para>
+<para/>
+<para>ROOT Software Terms and Conditions</para>
+<para>The authors hereby grant permission to use, copy, and distribute this software and its documentation for any purpose, provided that existing copyright notices are retained in all copies and that this notice is included verbatim in any distributions. Additionally, the authors grant permission to modify this software and its documentation for any purpose, provided that such modifications are not distributed without the explicit consent of the authors and that existing copyright notices are retained in all copies. Users of the software are asked to feed back problems, benefits, and/or suggestions about the software to the ROOT Development Team:  <uri xmlns:xlink="mailto:rootdev@root.cern.ch">rootdev@root.cern.ch</uri> Support for this software - fixing of bugs, incorporation of new features - is done on a best effort basis. All bug fixes and enhancements will be made available under the same terms and conditions as the original software. </para>
+<para/>
+<para>IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
+<para/>
+<para>THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.</para>
+</sect1>
+
+<sect1>
+<title>Installing ROOT</title>
+<para>To install ROOT you will need to go to the ROOT website at:  <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri></para>
+<para>You have a choice to download the binaries or the source. The source is quicker to transfer since it is only 3.4 MB, but you will need to compile and link it. The binaries range from 7.4 MB to 11 MB depending on the target platform.</para>
+</sect1>
+
+<sect1>
+<title>Choosing a Version</title>
+<para>The ROOT developers follow the principle of "release early and release often", however a very large portion of a user base requires a stable product therefore generally three versions of the system is available for download – new, old and pro:</para>
+<itemizedlist>
+<listitem><para>The <emphasis role="underline">new</emphasis> version evolves quickly, with weekly or bi-weekly releases. Use this to get access to the latest and greatest, but it may not be stable. By trying out the new version you can help us converge quickly to a stable version that can then become the new pro version. If you are a new user we would advice you to try the new version. </para></listitem>
+<listitem><para>The <emphasis role="underline">pro</emphasis> (production) version is a version we feel comfortable with to exposing to a large audience for serious work. The change rate of this version is much lower than for the new version, it is about 3 to 6 months. </para></listitem>
+<listitem><para>The <emphasis role="underline">old</emphasis> version is the previous pro version that people might need for some time before switching the new pro version. The old change rate is the same as for pro. </para></listitem>
+</itemizedlist>
+</sect1>
+
+<sect1>
+<title>Installing Precompiled Binaries</title>
+<para>The binaries are available for downloading from  <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri>. Once downloaded you need to unzip and de-tar the file. For example, if you have downloaded ROOT v2.25 for HPUX:</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% gunzip root_v2.25.00.HP-UX.B.10.20.tar.gz</code></emphasis>
+<emphasis role="bold"><code>% tar xvf root_v2.25.00.HP-UX.B.10.20.tar</code></emphasis>
+</programlisting>
+
+<para>This will create the directory root. Before getting started read the file README/README. Also, read the Introduction chapter for an explanation of the directory structure.</para>
+</sect1>
+
+<sect1>
+<title>Installing the Source</title>
+<para>You have a choice to download a compressed (tar ball) file containing the source, or you can login to the source code change control (CVS) system and check out the most recent source. The compressed file is a one time only choice; every time you would like to upgrade you will need to download the entire new version. Choosing the CVS option will allow you to get changes as they are submitted by the developers and you can stay up to date.</para>
+
+<sect2>
+<title>Installing and Building the Source from a Compressed File</title>
+<para>To install the ROOT source you can download the tar file containing all the source files from the ROOT website. The first thing you should do is to get the latest version as a tar file. Unpack the source tar file, this creates directory ‘root’:</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% tar zxvf root_v2.25.xx.source.tar.gz</code></emphasis>
+</programlisting>
+
+<para>Set <code>ROOTSYS</code> to the directory where you want root to be installed:</para>
+
+<programlisting language="c++">
+% <emphasis role="bold"><code>export ROOTSYS=&lt;path&gt;/root</code></emphasis>
+</programlisting>
+
+<para>Now type the build commands:</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% cd root </code></emphasis>
+<emphasis role="bold"><code>% ./configure --help</code></emphasis>
+<emphasis role="bold"><code>% ./configure &lt;target&gt;</code></emphasis>
+<emphasis role="bold"><code>% gmake</code></emphasis>
+<emphasis role="bold"><code>% gmake install</code></emphasis>
+</programlisting>
+
+<para>Add <code>$ROOTSYS/bin</code> to <code>PATH</code> and <code>$</code><code>ROOTSYS/lib to LD_LIBRARY_PATH</code>:</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% export PATH=$ROOTSYS/bin:$PATH</code></emphasis>
+<emphasis role="bold"><code>% export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH</code></emphasis>
+</programlisting>
+
+<para>Try running root:</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% root</code></emphasis>
+</programlisting>
+
+<para>It is also possible to setup and build ROOT in a fixed location. Please check README/INSTALL for more a detailed description of this procedure.</para>
+
+<sect3>
+<title>Target directory</title>
+<para>By default, ROOT will be built in the <code>$ROOTSYS</code> directory. In that case the whole system (binaries, sources, tutorials, etc.) will be located under the <code>$ROOTSYS</code> directory. </para>
+</sect3>
+
+<sect3>
+<title><code>Makefile</code> targets</title>
+<para>The <code>Makefile</code> is documented in details in the README/BUILDSYSTEM file. It explains the build options and targets. </para>
+</sect3>
+</sect2>
+
+<sect2>
+<title>More Build Options</title>
+<para>To build the library providing thread support you need to define either the environment variable ‘<code>THREAD</code><code>=-</code><code>lpthread’ </code>or the configure flag <code>‘--with-thread=-lpthread</code>’ (it is the default for the <code>linuxegcs</code> architecture). [Note: this is only tested on Linux for the time being.] To build the library providing CERN RFIO (remote I/O) support you need to define either the environment variable <code>‘ RFIO=&lt;path&gt;/libshift.a</code>’ or the configure flag <code>‘--with-rfio=&lt;path&gt;/libshift.a’</code>. For pre-built version of <code>libshift.a</code> see  <uri xmlns:xlink="ftp://root.cern.ch/root/shift/">ftp://root.cern.ch/root/shift/</uri></para>
+<para>To build the PAW and Geant3 conversion programs h2root and g2root you need to define either the environment variable <code>‘CERNLIB=&lt;cernlibpath&gt;</code>’ or the configure flag <code>‘--with-cern-libdir=&lt;cernlibpath&gt;</code>’. </para>
+<para>To build the <code>MySQL</code> interface library you need to install <code>MySQL</code> first. Visit  <uri xmlns:xlink="http://www.mysql.com/">http://www.mysql.com/</uri> for the latest versions.</para>
+<para>To build the strong authentication module used by <code>rootd</code>, you first have to install the SRP (Secure Remote Password) system. Visit  <uri xmlns:xlink="http://srp.stanford.edu/">http://srp.stanford.edu</uri></para>
+<para>To use the library you have to define either the environment variable ‘<code>SRP=&lt;</code><code>srpdir</code><code>&gt;</code>’ or the configure flag <code>‘--with-srp=&lt;srpdir&gt;’.</code> </para>
+<para>To build the event generator interfaces for Pythia and Pythia6, you first have to get the Pythia libraries available from ftp:  <uri xmlns:xlink="ftp://root.cern.ch/root/pythia6.tar.gz">ftp://root.cern.ch/root/pythia6.tar.gz</uri>.</para>
+<para>To use the libraries you have to define either ‘<code>PYTHIA=&lt;</code><code>pythiadir</code><code>&gt;</code>’ or the configure flag <code>‘--with-pythia=&lt;pythiadir&gt;</code>’. The same applies for Pythia6.</para>
+
+<sect3>
+<title>Installing the Source from CVS</title>
+<para>This paragraph describes how to checkout and build ROOT from CVS for UNIX systems. For description of a checkout for other platforms, please see ROOT installation web page:  <uri xmlns:xlink="http://root.cern.ch/root/CVS.html">http://root.cern.ch/root/CVS.html</uri><code>. </code></para>
+<para>Note: The syntax is for <code>ba(sh)</code>, if you use <code>a t(csh)</code> you have to substitute export with <code>setenv</code>.</para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs</code></emphasis>
+<emphasis role="bold"><code>% cvs login</code></emphasis>
+% (Logging in to cvs@root.cern.ch)
+<emphasis role="bold"><code>% CVS password: cvs</code></emphasis>
+<emphasis role="bold"><code>% cvs –z3 checkout root</code></emphasis>
+U root/…
+U …
+<emphasis role="bold"><code>% cd root</code></emphasis>
+<emphasis role="bold"><code>% ./configure –-help</code></emphasis>
+<emphasis role="bold"><code>% ./configure &lt;platform&gt;</code></emphasis>
+<emphasis role="bold"><code>% gmake</code></emphasis>
+</programlisting>
+
+<para>If you are a part of collaboration, you may need to use setup procedures specific to the particular development environment prior to running <code>gmake</code>. You only need to run <code>cvs</code> login once. It will remember anonymous password in your <code>$HOME/.cvspass</code> file. For more install instructions and options, see the file README/INSTALL. </para>
+</sect3>
+
+<sect3>
+<title>CVS for Windows</title>
+<para>Although there exists a native version of CVS for Windows, we only support the build process under the <code>Cygwin</code> environment. You must have CVS version 1.10 or newer. The checkout and build procedure is similar to that for UNIX. For detailed install instructions, see the file REAMDE/INSTALL. </para>
+</sect3>
+
+<sect3>
+<title>Converting a Tar Ball to a Working CVS Sandbox</title>
+<para>You may want to consider downloading the source as a tar ball and converting it to CVS because it is faster to download the tar ball than checking out the entire source with CVS. Our source tar ball contains CVS information. If your tar ball is dated June 1, 2000 or later, it is already set up to talk to our public server (root.cern.ch). You just need to download and unpack the tar ball and then run following commands: </para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% cd root </code></emphasis>
+<emphasis role="bold"><code>% cvs -z3 update -d -P </code></emphasis>
+<emphasis role="bold"><code>% ./configure &lt;platform&gt; </code></emphasis>
+</programlisting>
+
+</sect3>
+
+<sect3>
+<title>Staying up-to-date</title>
+<para>To keep your local ROOT source up-to-date with the CVS repository you should regularly run the command: </para>
+
+<programlisting language="c++">
+<emphasis role="bold"><code>% cvs -z3 update -d –P</code></emphasis>
+</programlisting>
+
+</sect3>
+</sect2>
+</sect1>
+
+<sect1>
+<title>File system.rootrc</title>
+<para>ROOT Environment settings are handled via the class <emphasis role="bold"><code>TEnv</code></emphasis>. <code>gEnv-&gt;Print()</code>shows which values are active. Any settings can be obtained by <emphasis role="bold"><code>TEnv</code></emphasis><code>::GetValue</code> methods that return an integer, double or character value for a named resource. If the resource is not found, the default value (given as the second parameter) is returned.</para>
+
+<programlisting language="c++">
+fShowEventStatus = gEnv-&gt;GetValue("Canvas.ShowEventStatus",kFALSE);
+</programlisting>
+
+<para>Via the method <emphasis role="bold"><code>TEnv</code></emphasis><code>::SetValue</code> allows you can set the value of a resource or create a new resource:</para>
+
+<programlisting language="c++">
+<code>gEnv-&gt;SetValue(</code>"<code>Root.ObjectStat</code>"<code>,1);</code>
+</programlisting>
+
+<para>Path used by dynamic loader to find shared libraries and macros. Paths are different for Unix and Windows. The example shows the defaults for all ROOT applications for either Unix or Windows:</para>
+
+<programlisting language="c++">
+Unix.*.Root.DynamicPath:    .:$(ROOTSYS)/lib
+Unix.*.Root.MacroPath:      .:$(ROOTSYS)/macros
+WinNT.*.Root.DynamicPath:   .;$(ROOTSYS)/bin;$(PATH)
+WinNT.*.Root.MacroPath:     .;$(ROOTSYS)/macros
+</programlisting>
+
+<para>Path where to look for <code>TrueType</code> fonts:</para>
+
+<programlisting language="c++">
+Unix.*.Root.UseTTFonts:     true
+*.*.Root.TTFontPath:        $(ROOTSYS)/fonts
+</programlisting>
+
+<para>Use <code>Net* API</code> functions:</para>
+
+<programlisting language="c++">
+WinNT.UseNetAPI:            true
+</programlisting>
+
+<para>Use thread library (if exists).</para>
+
+<programlisting language="c++">
+Unix.*.Root.UseThreads:     false
+</programlisting>
+
+<para>Select the compression algorithm (0=old zlib, 1=new zlib). Setting this to `0' may be a security vulnerability.</para>
+
+<programlisting language="c++">
+Root.ZipMode:               1
+</programlisting>
+
+<para>Show where item is found in the specified path:</para>
+
+<programlisting language="c++">
+Root.ShowPath:              false
+</programlisting>
+
+<para>Activate memory statistics (<code>size</code> and <code>cnt</code> are used to trap allocation of blocks of a certain <code>size</code> after <code>cnt</code> attempts).</para>
+
+<programlisting language="c++">
+Root.MemStat:               0
+Root.MemStat.size:         -1
+Root.MemStat.cnt:          -1
+Root.ObjectStat:            0
+</programlisting>
+
+<para>Activate memory leak checker (use in conjunction with <code>$ROOTSYS/bin/memprobe</code>). Currently only works on Linux with gcc.</para>
+
+<programlisting language="c++">
+Root.MemCheck:              0
+Root.MemCheckFile:          memcheck.out
+</programlisting>
+
+<para>Global debug mode. When <code>&gt;0</code> turns on progressively more details debugging.</para>
+
+<programlisting language="c++">
+Root.Debug:                 0
+Root.Stacktrace:            yes
+</programlisting>
+
+<para>Settings for X11 behaviour.</para>
+
+<programlisting language="c++">
+X11.Sync:                   no
+X11.FindBestVisual:         yes
+</programlisting>
+
+<para>Default editor in use.</para>
+
+<programlisting language="c++">
+Unix.*.Editor:              vi
+WinNT.*.Editor:             notepad
+</programlisting>
+
+<para>Default 3d Viewer. By default 3-D views are shown in the pad, if the next line is activated, the default viewer will be OpenGL.</para>
+
+<programlisting language="c++">
+Viewer3D.DefaultDrawOption: ogl
+</programlisting>
+
+<para>Default Fitter (current choices are <code>Minuit</code>,         <code>Minuit2</code>,         <code>Fumili</code> and <code>Fumili2</code>).</para>
+
+<programlisting language="c++">
+Root.Fitter:                Minuit
+</programlisting>
+
+<para>Specify list of file endings which <emphasis role="bold"><code>TTabCom</code></emphasis> (TAB completion) should ignore.</para>
+
+<programlisting language="c++">
+TabCom.FileIgnore:          .cpp:.h:.cmz
+</programlisting>
+
+<sect2>
+<title>TCanvas Specific Settings</title>
+<para>Opaque move and resize show full pad during the operation instead of only the outline. Especially for resize you will need serious CPU power. <code>UseScreenFactor=true</code> means to size canvas according to size of screen, so a canvas still looks good on a low resolution laptop screen without having to change canvas size in macros.</para>
+
+<programlisting language="c++">
+Canvas.MoveOpaque:          false
+Canvas.ResizeOpaque:        false
+Canvas.UseScreenFactor:     true
+</programlisting>
+
+<para>Hight color 2 is the red one. </para>
+
+<programlisting language="c++">
+Canvas.HighLightColor:      2
+</programlisting>
+
+<para>Next three settings are related to different user interface parts of canvas window. If they are set to true, the corresponding event status bar, tool bar, graphics editor to beactivated by default. </para>
+
+<programlisting language="c++">
+Canvas.ShowEventStatus:     false
+Canvas.ShowToolBar:         false
+Canvas.ShowEditor:          false
+</programlisting>
+
+<para>AutoExec allows <emphasis role="bold"><code>TExec</code></emphasis> objects to be executed on mouse and key events.</para>
+
+<programlisting language="c++">
+Canvas.AutoExec:            true
+</programlisting>
+
+<para>Canvas print directory is set to the current one by default:</para>
+
+<programlisting language="c++">
+Canvas.PrintDirectory     .
+</programlisting>
+
+<para>Printer settings:</para>
+
+<programlisting language="c++">
+WinNT.*.Print.Command:    AcroRd32.exe
+#Unix.*.Print.Command:    a2ps -P%p --landscape --columns=2 --margin=30 -rf8.0 %f
+Print.Printer:            32-rb20-hp
+Print.Directory:          .
+Print.FileType:           pdf
+</programlisting>
+
+<para>Default histogram binnings used by <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code> method.</para>
+
+<programlisting language="c++">
+Hist.Binning.1D.x:          100
+Hist.Binning.2D.x:           40
+Hist.Binning.2D.y:           40
+Hist.Binning.2D.Prof:       100
+Hist.Binning.3D.x:           20
+Hist.Binning.3D.y:           20
+Hist.Binning.3D.z:           20
+Hist.Binning.3D.Profx:      100
+Hist.Binning.3D.Profy:      100
+</programlisting>
+
+<para>Default statistics names used for parameters in <emphasis role="bold"><code>TPaveStats</code></emphasis>:</para>
+
+<programlisting language="c++">
+Hist.Stats.Entries         Entries
+Hist.Stats.Mean            Mean
+Hist.Stats.MeanX           Mean x
+Hist.Stats.MeanY           Mean y
+Hist.Stats.RMS             RMS
+Hist.Stats.RMSX            RMS x
+Hist.Stats.RMSY            RMS y
+Hist.Stats.Underflow       Underflow
+Hist.Stats.Overflow        Overflow
+Hist.Stats.Integral        Integral
+Hist.Stats.Skewness        Skewness
+Hist.Stats.SkewnessX       Skewness x
+Hist.Stats.SkewnessY       Skewness y
+Hist.Stats.Kurtosis        Kurtosis
+Hist.Stats.KurtosisX       Kurtosis x
+Hist.Stats.KurtosisY       Kurtosis y
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>THtml Specific Settings</title>
+<para>See the reference guide documentation of <emphasis role="bold"><code>THtml</code></emphasis> class at  <uri xmlns:xlink="http://root.cern.ch/root/htmldoc/THtml.html">http://root.cern.ch/root/htmldoc/THtml.html</uri> for more details. </para>
+<para>XHTML content charset (see  <uri xmlns:xlink="http://www.w3.org/TR/2002/REC-xhtml1-20020801">http://www.w3.org/TR/2002/REC-xhtml1-20020801</uri>, default: ISO-8859-1) is set by:</para>
+
+<programlisting language="c++">
+Root.Html.Charset:
+</programlisting>
+
+<para>Stem of a search engine for the documentation, where <code>%s</code> is replaced by the term entered in the search text box (example: <code>http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml</code>, default is <code>""</code>)</para>
+
+<programlisting language="c++">
+Root.Html.Search:
+</programlisting>
+
+<para>Link to the site's search engine (default: <code>""</code>, example: <code>http://root.cern.ch/root/Search.phtml</code>)</para>
+
+<programlisting language="c++">
+Root.Html.SearchEngine:
+</programlisting>
+
+<para>String to prepend to <emphasis role="bold"><code>TClass</code></emphasis><code>::GetImplFileName()</code> names containing directories when looking for source files (default: <code>""</code>, <code>e</code>xample: <code>../root</code>)</para>
+
+<programlisting language="c++">
+Root.Html.SourcePrefix:
+</programlisting>
+
+<para>Link stem to <code>ViewCVS</code> entry for classes, where a class name is assumed to match a file name (default: <code>""</code>, example: <code>http://root.cern.ch/viewcvs</code>).</para>
+
+<programlisting language="c++">
+Root.Html.ViewCVS:
+</programlisting>
+
+<para>Stem of the CERN XWho system (default: <code>http://consult.cern.ch/xwho/people?</code>)</para>
+
+<programlisting language="c++">
+Root.Html.XWho:
+</programlisting>
+
+<para>If set to Doc++, allow method documentation in front of method even for methods in the source file (default: <code>""</code>)</para>
+
+<programlisting language="c++">
+Root.Html.DescriptionStyle:
+</programlisting>
+
+<para>Search path for the source and header files with their default settings:</para>
+
+<programlisting language="c++">
+Unix.*.Root.Html.SourceDir:  .:src:include
+WinNT.*.Root.Html.SourceDir: .;src;include
+</programlisting>
+
+<para>URL stem for ROOT documentation pages (default is <code>""</code>).</para>
+
+<programlisting language="c++">
+Root.Html.Root:              http://root.cern.ch/root/html
+</programlisting>
+
+<para>Filesystem output directory for generated web pages (default: <code>htmldoc)</code>.</para>
+
+<programlisting language="c++">
+Root.Html.OutputDir:        htmldoc/
+</programlisting>
+
+<para>Address of the package's home page (default:  <uri xmlns:xlink="http://root.cern.ch">http://root.cern.ch</uri>):</para>
+
+<programlisting language="c++">
+Root.Html.HomePage:
+</programlisting>
+
+<para>Location of user defined header and footer files, see  <uri xmlns:xlink="http://root.cern.ch/root/html/THtml">http://root.cern.ch/root/html/THtml#conf:header</uri> (defaults are <code>""</code>, example: <code>../header.txt</code>, <code>../footer.txt</code>):</para>
+
+<programlisting language="c++">
+Root.Html.Header:
+Root.Html.Footer:
+</programlisting>
+
+<para>Tag for detecting class description comments (default value is set below).</para>
+
+<programlisting language="c++">
+Root.Html.Description:      //____________________
+</programlisting>
+
+<para>Tag for detecting "Author" comment (default value is set below).</para>
+
+<programlisting language="c++">
+Root.Html.Author:           // Author:
+</programlisting>
+
+<para>Tag for detecting "last updated" comment. <emphasis role="bold"><code>THtml</code></emphasis> uses the current date if this tag is not found in a class source file (default value is set below).</para>
+
+<programlisting language="c++">
+Root.Html.LastUpdate:       // @(#)
+</programlisting>
+
+<para>Tag for detecting "Copyright" comment (default value is set below).</para>
+
+<programlisting language="c++">
+Root.Html.Copyright:        * Copyright
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>GUI Specific Settings</title>
+<para>Set the “<code>native</code>” ROOT GUI interface to be used in a ROOT session. If set to “<code>qt</code>”, the “<code>native</code>” GUI interface is replaced with one based on Qt by the regular ROOT plug-in mechanism.</para>
+
+<programlisting language="c++">
+Gui.Backend:                native
+Gui.Factory:                native
+</programlisting>
+
+<para>GUI default fonts in use: </para>
+
+<programlisting language="c++">
+Gui.DefaultFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuFont:               -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuHiFont:             -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocFixedFont:           -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocPropFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.IconFont:               -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.StatusFont:             -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+</programlisting>
+
+<para>Regular background and foreground colors in use:</para>
+
+<programlisting language="c++">
+Gui.BackgroundColor:         #c0c0c0
+Gui.ForegroundColor:         black
+</programlisting>
+
+<para>Selection background and foreground colors in use:</para>
+
+<programlisting language="c++">
+Gui.SelectBackgroundColor:   #000080
+Gui.SelectForegroundColor:   white
+</programlisting>
+
+<para>Document background and foreground colors in use:</para>
+
+<programlisting language="c++">
+Gui.DocumentBackgroundColor: white
+Gui.DocumentForegroundColor: black
+</programlisting>
+
+<para>Tooltip background and foreground colors in use:</para>
+
+<programlisting language="c++">
+Gui.TooltipBackgroundColor:  LightYellow
+Gui.TooltipForegroundColor:  black
+</programlisting>
+
+<para>Path where all GUI icons in use can be found:</para>
+
+<programlisting language="c++">
+Gui.IconPath:                $(HOME)/icons:$(ROOTSYS)/icons:.
+</programlisting>
+
+<para>Mime type file setting:</para>
+
+<programlisting language="c++">
+Gui.MimeTypeFile:            $(HOME)/.root.mimes
+</programlisting>
+
+<para>If <code>$(HOME)/.root.mimes</code> does not exists, defaults to this:</para>
+
+<programlisting language="c++">
+#Gui.MimeTypeFile:            $(ROOTSYS)/etc/root.mimes
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>TBrowser Settings</title>
+<para>Current icon style selection - can be either <code>small</code>, <code>big</code>, <code>list</code>, <code>details</code>:</para>
+
+<programlisting language="c++">
+Browser.IconStyle:           small
+</programlisting>
+
+<para>Current sorting rule applied on the browser objects - can be <code>name</code>, <code>type</code>, <code>size</code>, <code>date</code>:</para>
+
+<programlisting language="c++">
+Browser.SortBy:              name
+</programlisting>
+
+<para>Number of items in a group view:</para>
+
+<programlisting language="c++">
+Browser.GroupView:           10000
+</programlisting>
+
+<para>Show or not hidden items:</para>
+
+<programlisting language="c++">
+Browser.ShowHidden:          no
+</programlisting>
+
+<para>Create a thumbnail view after executing the macro (default is <code>yes</code>).</para>
+
+<programlisting language="c++">
+Browser.AutoThumbnail:       yes
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>TRint Specific Settings</title>
+<para>Rint (interactive ROOT executable) specific alias, logon and logoff macros.</para>
+
+<programlisting language="c++">
+Rint.Load:               rootalias.C
+Rint.Logon:              rootlogon.C
+Rint.Logoff:             rootlogoff.C
+</programlisting>
+
+<para>Record ROOT session commands in a given history file (default is <code>$(HOME)/.root_hist</code>). If set to "<code>-</code>", it turn off the command recording.</para>
+
+<programlisting language="c++">
+Rint.History:            $(HOME)/.root_hist
+</programlisting>
+
+<para>Next two lines set the history file size handling. Once <code>HistSize</code> is reached, the last <code>HistSave</code> entries are removed. If  <code>HistSize</code> is set to 0, it turns off command recording. Both values can be overridden by environment variable <code>ROOT_HIST=size[:save]</code>, where the "<code>:save</code>" part is optional.</para>
+
+<programlisting language="c++">
+Rint.HistSize:         500
+Rint.HistSave:         400
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>ACLiC Specific Settings</title>
+<para><code>ACLiC.Linkdef</code> specifies the suffix that will be added to the script name to try to locate a custom linkdef file when generating the dictionary.</para>
+
+<programlisting language="c++">
+ACLiC.Linkdef:          _linkdef
+</programlisting>
+
+<para>The top directory for storing the libraries produced by ACLiC is set by:</para>
+
+<programlisting language="c++">
+ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
+</programlisting>
+
+<para>The additional include directives for ACLiC compilations are set by:</para>
+
+<programlisting language="c++">
+ACLiC.IncludePaths:     -I/where/the/includes/are
+</programlisting>
+
+</sect2>
+
+<sect2>
+<title>PROOF Related Variables</title>
+<para>PROOF debug options.</para>
+
+<programlisting language="c++">
+Proof.DebugLevel: 0
+Proof.DebugMask:-1
+</programlisting>
+
+<para>PROOF GDB hooks allows a debugger to be attached early in the startup phase of <code>proofserv: </code>0 - don't wait; 1 - master proofserv enters wait loop; 2 - slave proofserv enters wait loop; 3 - any proofserv enters wait loop</para>
+
+<programlisting language="c++">
+Proof.GdbHook:    0
+</programlisting>
+
+<para>On the master to enable the parallel startup of workers using threads set next to “<code>yes</code>” (default is “<code>no</code>”):</para>
+
+<programlisting language="c++">
+Proof.ParallelStartup: no
+</programlisting>
+
+<para/>
+
+<programlisting language="c++">
+Proof.StatsHist:       no
+Proof.StatsTrace:      no
+Proof.SlaveStatsTrace: no
+</programlisting>
+
+<para/>
+
+<programlisting language="c++">
+Proof.CondorHome:     /opt/condor
+Proof.CondorConfig:   /opt/condor/etc/condor_config
+</programlisting>
+
+<para/>
+
+<programlisting language="c++">
+PEAC.GmUrl:           http://somewhere:8080/clarens/
+PEAC.LmUrl:           http://elsewhere:8080/clarens/
+</programlisting>
+
+<para/>
+<para>Certificate and key</para>
+
+<programlisting language="c++">
+Clarens.CertFile:     $(HOME)/.globus/usercert.pem
+Clarens.KeyFile:      $(HOME)/.globus/userkey.pem
+</programlisting>
+
+<sect3>
+<title>Settings Related to Authentication for rootd and proofd</title>
+<para>Default authentication method for <code>rootd</code> and <code>proofd</code>. These are supported for backward compatibility but have a very low priority. System defaults are generated by configure as a list in <code>system.rootauthrc</code> in <code>$ROOTSYS/etc/</code> or <code>/etc/root</code>; the file <code>$HOME/.rootauthrc</code> can be used to override the system defaults.</para>
+<para>The value meaning: <code>0=UsrPwd</code>, <code>1=SRP</code>, <code>2=Krb5</code>, <code>3=Globus</code>,<code>4=SSH</code>, <code>5=UidGid</code>.</para>
+
+<programlisting language="c++">
+Rootd.Authentication:    0
+Proofd.Authentication:   0
+</programlisting>
+
+<para>Connection is shutdown at timeout expiration. Timeout is in seconds. Negotiation cannot be attempted at low level (i.e. inside TAuthenticate::Authenticate()) because of synchronization problems with the server. At higher level, TAuthenticate::HasTimedOut() gives information about timeout: 0 = no timeout; 1 = timeout, no methods left; 2 = timeout, still methods to be tried. Caller should decide about an additional attempt. Timeout is disabled by default (&lt; 0). It can be changed on-the-fly with the method <emphasis role="bold"><code>TAuthenticate</code></emphasis><code>::SetTimeOut(to_value)</code>.</para>
+
+<programlisting language="c++">
+Auth.Timeout:           -1
+</programlisting>
+
+<para>Password dialog box is set to 0 if you do not want a dialog box to be popped-up when a password is requested. Default setting is 1.</para>
+
+<programlisting language="c++">
+Auth.UsePasswdDialogBox: 0
+</programlisting>
+
+<para>Set the following to 1 if you want full SRP authentication in PROOF (Client-to-Master and Master-to-Slave).</para>
+
+<programlisting language="c++">
+Proofd.SendSRPPwd:        0
+</programlisting>
+
+<para>Set next to 1 to use SSH authentication in PROOF servers (Master-to-Slave or Slaves-to-DataServers). This is switched off by default because credentials forwarding for SSH is not controlled by the system; however the user may have other ways to guarantee it, so it may want to switch it on.</para>
+
+<programlisting language="c++">
+ProofServ.UseSSH:       0
+</programlisting>
+
+<para>Default login name (if not defined it is taken from <code>$(HOME)</code>).</para>
+
+<programlisting language="c++">
+UsrPwd.Login:           qwerty
+SRP.Login:              qwerty
+Krb5.Login:             qwerty@LOCAL.DOM.AIN
+Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem
+ad:/etc/grid-security/certificates
+SSH.Login:              qwerty
+UidGid.Login:           qwerty
+</programlisting>
+
+<para>To be prompted for login information.</para>
+
+<programlisting language="c++">
+UsrPwd.LoginPrompt:     yes
+SRP.LoginPrompt:        yes
+Krb5.LoginPrompt:       yes
+Globus.LoginPrompt:     yes
+SSH.LoginPrompt:        yes
+UidGid.LoginPrompt:     yes
+</programlisting>
+
+<para>To reuse established security context.</para>
+
+<programlisting language="c++">
+UsrPwd.ReUse:           yes
+SRP.ReUse:              no
+Krb5.ReUse:             no
+Globus.ReUse:           yes
+SSH.ReUse:              yes
+</programlisting>
+
+<para>Duration validity of the sec context for UsrPwd, SRP and SSH. Format:  &lt;hours&gt;:&lt;minutes&gt;  (default 24:00)</para>
+
+<programlisting language="c++">
+#UsrPwd.Valid:          24:00
+#SRP.Valid:             24:00
+#SSH.Valid:             24:00
+</programlisting>
+
+<para>To control password encryption for UsrPwd authentication.</para>
+
+<programlisting language="c++">
+UsrPwd.Crypt:             yes
+</programlisting>
+
+<para>Globus Miscellaneous - Globus Proxy duration: <code>HH:MM</code> (ex <code>12:15</code> for 12 hours and 15 min); '<code>default</code>' for system default.</para>
+
+<programlisting language="c++">
+Globus.ProxyDuration:     default
+#Globus.ProxyDuration:    12:15
+</programlisting>
+
+<para>Number of bits for the initial key.</para>
+
+<programlisting language="c++">
+Globus.ProxyKeyBits:      1024
+</programlisting>
+
+<para>Path to alternative '<code>ssh</code>' (to override <code>$PATH</code> if ever needed).</para>
+
+<programlisting language="c++">
+SSH.ExecDir:              /usr/bin
+</programlisting>
+
+<para>In case of error, <code>SSH</code> returns 1 (or <code>256=0x100</code>).  To trap those errors for which one should retry, error printouts  must be parsed; any substring found under the <emphasis role="bold"><code>TEnv</code></emphasis> <code>SSH.ErrorRetry</code> triggers a retry condition; strings can be added here in the form (including double quotes):</para>
+
+<programlisting language="c++">
++SSH.ErrorRetry:         "&lt;error_string&gt;"
+</programlisting>
+
+<para>This is what one usually gets if the server has reached the maximum number of sshd daemons (defined by <code>MaxStartups</code> in <code>sshd_config</code>); this is a typical case in which one should retry.</para>
+
+<programlisting language="c++">
+SSH.ErrorRetry:          "Connection closed by remote host"
+</programlisting>
+
+<para>Max number of retries for SSH in case of retry error (see above).</para>
+
+<programlisting language="c++">
+SSH.MaxRetry:            100
+</programlisting>
+
+<para>Type of key to be used for RSA encryption: <code>0=local</code>; <code>1=SSL</code> (<code>default</code> if <code>openssl</code> available).</para>
+
+<programlisting language="c++">
+<code>RSA.KeyType:             1</code>
+</programlisting>
+
+<para>In case of <code>'RSA.KeyType: 1</code>' this specifies the number of bits to be used for the Blowfish key used to encrypt the exchanged information: default - 256, minimum - 128, maximum - 15912.</para>
+
+<programlisting language="c++">
+SSL.BFBits:              256
+</programlisting>
+
+</sect3>
+
+<sect3>
+<title>Server Authentication in TServerSocket</title>
+<para>General setting: file with server access rules</para>
+
+<programlisting language="c++">
+SrvAuth.DaemonRc:        /etc/root/system.daemonrc
+</programlisting>
+
+<para>Check of host equivalence via <code>/etc/hosts</code>.<code>equiv</code> or <code>$HOME/.rhosts</code>.</para>
+
+<programlisting language="c++">
+SrvAuth.CheckHostsEquivalence: 1
+</programlisting>
+
+<para>SRP: pass file (default <code>$HOME/.srootdpass</code>).</para>
+
+<programlisting language="c++">
+SrvAuth.SRPpassfile:     $HOME/.srootdpass
+</programlisting>
+
+<para>Globus/GSI: <code>hostcert</code> configuration file.</para>
+
+<programlisting language="c++">
+SrvAuth.HostCert:         /etc/root/hostcert.conf
+</programlisting>
+
+<para>Globus/GSI: <code>gridmap</code> file.</para>
+
+<programlisting language="c++">
+SrvAuth.GridMap:          /etc/grid-security/grid-mapfile
+</programlisting>
+
+<para>SSH: port for the <code>sshd</code> daemon.</para>
+
+<programlisting language="c++">
+SrvAuth.SshdPort:         22
+</programlisting>
+
+<para>Force file opening via <emphasis role="bold"><code>TNetFile</code></emphasis> (<emphasis role="bold"><code>TXNetFile</code></emphasis>) if a hostname is specified in the Url. By default, for local files <emphasis role="bold"><code>TFile</code></emphasis><code>::Open()</code> invokes directly <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code>.</code></emphasis></para>
+
+<programlisting language="c++">
+TFile.ForceRemote:        yes
+</programlisting>
+
+<para>Special cases for the <emphasis role="bold"><code>TUrl</code></emphasis> parser, where the special cases are parsed in a protocol + file part, like rfio:host:/path/file.root, castor:/path/file.root or /alien/path/file.root. In case the file namespace descriptor ends with - the namespace is not a part of the filename. Extend in private .rootrc with a +Url.Special line.</para>
+
+<programlisting language="c++">
+Url.Special:             file: rfio: hpss: castor: gfal: dcache:
++Url.Special:            /alien/- /castor/
+</programlisting>
+
+</sect3>
+
+<sect3>
+<title>PROOF XRD Client Variables</title>
+<para>Debug level (if &lt;=0 : none, 1 : low, 2 : medium, 3 : high)</para>
+
+<programlisting language="c++">
+XProof.Debug:       0
+</programlisting>
+
+<para>Socket read timeout [in secs: default 10 secs]</para>
+
+<programlisting language="c++">
+XProof.ReadTimeout: 10
+</programlisting>
+
+<para>The following env vars are handled by <emphasis role="bold"><code>TXNetFile</code></emphasis> and related classes (module <code>netx</code>, <code>libNetx.so</code>).</para>
+<para><code>XNet.ConnectTimeout</code> - maximum time to wait before server's response on a connect [10 s]</para>
+<para><code>XNet.RequestTimeout</code> - maximum time to wait before considering a read/write failure [60 s]</para>
+<para><code>XNet.ConnectDomainAllowRE</code> - sequence of <emphasis role="bold"><code>TRegexp</code></emphasis> regular expressions separated by a <code>|</code>. A domain is granted access to for the first connection if it matches one of these regexps. Example:</para>
+
+<programlisting language="c++">
+slac.stanford.edu|pd.infn.it|fe.infn.it
+</programlisting>
+
+<para><code>XNet.ConnectDomainDenyRE</code> - sequence of TRegexp regular expressions separated by a <code>|</code>. A domain is denied access to for the first connection if it matches one of these regexps. </para>
+<para><code>XNet.RedirDomainAllowRE</code> - sequence of TRegexp regular expressions separated by a <code>|</code>. A domain is granted access to for a redirection if it matches one of these regexps. Example:</para>
+<para><code>XNet.RedirDomainDenyRE</code> - sequence of TRegexp regular expressions separated by a <code>|</code>. A domain is granted access to for a redirection if it matches one of these regexps.</para>
+<para><code>XNet.MaxRedirectCount</code> - maximum number of redirections from server [default - 255]</para>
+<para><code>XNet.Debug</code> - log verbosity level (0=nothing,1=messages of interest to the user, 2=messages of interest to the developers (includes also user messages), 3=dump of all sent/received data buffers (includes also user and developers messages). [default - 0]</para>
+<para><code>XNet.ReconnectTimeout</code> - sleep-time before going back to the load balancer (or rebouncing to the same failing host) after a read/write error [default - 10s]</para>
+<para><code>XNet.StartGarbageCollectorThread</code> - for test/development purposes. Normally nonzero (true), but as workaround for external causes someone could be interested in not having the garbage collector thread around. [experimental!]</para>
+<para><code>XNet.GoAsynchronous</code> - default is 0. When activated, <emphasis role="bold"><code>XTNetFile</code></emphasis>  works in async mode, allowing input buffering and unsolicited responses [experimental!]</para>
+<para><code>XNet.TryConnect</code> - Number of tries connect to a single server before giving up.</para>
+<para><code>XNet.TryConnectServersList</code> - number of connect retries to the whole server list given [default - 240]</para>
+<para><code>XNet.PrintTAG</code> - Print a particular string the developers can choose to quickly recognize the version at run time [default - 0]</para>
+<para>Example of custom setting for the Rint application (root.exe). This overrides the default specified above for a generic application. Color 5 is yellow.</para>
+
+<programlisting language="c++">
+Rint.Canvas.HighLightColor:      5
+</programlisting>
+
+</sect3>
+</sect2>
+</sect1>
+
+<sect1>
+<title>Documentation to Download</title>
+<para/>
+<itemizedlist>
+<listitem><para>The latest ROOT Users Guide</para></listitem>
+<listitem><para>     <uri xmlns:xlink="http://root.cern.ch/root/doc/RootDoc.html">http://root.cern.ch/root/doc/RootDoc.html</uri>  </para></listitem>
+<listitem><para>ROOT Reference Guide</para></listitem>
+<listitem><para>  <uri xmlns:xlink="http://root.cern.ch/root/Reference.html">http://root.cern.ch/root/Reference.html</uri></para></listitem>
+</itemizedlist>
+</sect1>
+</chapter>
+

@@ -1,0 +1,16 @@
+#
+# Example of configuration file for the plug-in retrieving mapping information
+# from an LDAP server; the path to this file must be given via the env variable
+# XRDGSIGMAPLDAPCF .
+#
+# The command executed is in the form
+#
+#    ldapsearch -H <srv> -x -b "<base>" "subject=<DN>" <attr>
+#
+#
+# The server URL
+srv:  ldap://ldapsrv.server.dom:8389
+# The search base
+base: ou=People,o=exp,dc=org,dc=dom
+# The attribute
+attr: uid

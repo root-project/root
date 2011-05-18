@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# $Id$
+#
+#  Simple wrapper script to calculate the 'cksum' of a file and print 
+#  only the checksum value for use by xrootd
+#
+
+result=`cksum ${1?} 2> /dev/null `
+
+if [ $? -ne 0 ] ; then 
+    exit 1
+else
+    echo $result | cut -d' ' -f1
+    exit 0
+fi
+

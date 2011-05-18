@@ -1,0 +1,619 @@
+// @(#)root/smatrix:$Id$
+// Authors: T. Glebe, L. Moneta    2005  
+
+#ifndef ROOT_Math_SVector_icc
+#define ROOT_Math_SVector_icc
+// ********************************************************************
+//
+// source:
+//
+// type:      source code
+//
+// created:   21. Mar 2001
+//
+// author:    Thorsten Glebe
+//            HERA-B Collaboration
+//            Max-Planck-Institut fuer Kernphysik
+//            Saupfercheckweg 1
+//            69117 Heidelberg
+//            Germany
+//            E-mail: T.Glebe@mpi-hd.mpg.de
+//
+// Description: A fixed size Vector class
+//
+// changes:
+// 21 Mar 2001 (TG) creation
+// 26 Mar 2001 (TG) added place_at()
+// 06 Apr 2001 (TG) CTORS added
+// 07 Apr 2001 (TG) CTORS added
+// 22 Aug 2001 (TG) CTOR(T*,len) added
+// 14 Jan 2002 (TG) added operator==(), operator!=(), operator>(), operator<()
+//
+// ********************************************************************
+#include <iostream>
+#include <assert.h>
+#include <algorithm>
+
+#ifndef ROOT_Math_StaticCheck
+#include "Math/StaticCheck.h"
+#endif
+
+namespace ROOT { 
+
+namespace Math { 
+
+
+//==============================================================================
+// Constructors
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>::SVector() {
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = 0;
+}
+
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>::SVector(const VecExpr<A,T,D>& rhs) {
+   operator=(rhs);
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = rhs.fArray[i];
+}
+
+
+
+//==============================================================================
+// New Constructors from STL interfaces
+//==============================================================================
+
+#ifdef LATER
+template <class T, unsigned int D>
+template <class InputIterator>
+SVector<T,D>::SVector(InputIterator begin, InputIterator end) {
+   assert( begin + D == end);
+   std::copy(begin, end, fArray);
+}
+
+template <class T, unsigned int D>
+template <class InputIterator>
+SVector<T,D>::SVector(InputIterator begin, unsigned int size) {
+   assert( size <= D);
+   std::copy(begin, begin+size, fArray);
+}
+
+#else
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T* a, unsigned int len) {
+   assert(len == D);
+   for(unsigned int i=0; i<D; ++i)
+      fArray[i] = a[i];
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const_iterator ibegin, const_iterator iend) {
+   assert( ibegin + D == iend);
+   std::copy(ibegin, iend, fArray);
+}
+
+
+#endif
+
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1) {
+   STATIC_CHECK( D == 1,SVector_dimension_not_right); 
+   fArray[0] = a1;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2) {
+   STATIC_CHECK( D == 2,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3) {
+   STATIC_CHECK( D == 3,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4) {
+   STATIC_CHECK( D == 4,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5) {
+   STATIC_CHECK( D == 5,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5, const T& a6) {
+   STATIC_CHECK( D == 6,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5, const T& a6, const T& a7) {
+   STATIC_CHECK( D == 7,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5, const T& a6, const T& a7, const T& a8) {
+   STATIC_CHECK( D == 8,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5, const T& a6, const T& a7, const T& a8,
+                      const T& a9) {
+   STATIC_CHECK( D == 9,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+   fArray[8] = a9;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
+                      const T& a5, const T& a6, const T& a7, const T& a8,
+                      const T& a9, const T& a10) {
+   STATIC_CHECK( D == 10,SVector_dimension_not_right); 
+   fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
+   fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
+   fArray[8] = a9; fArray[9] = a10;
+}
+
+//==============================================================================
+// operator=
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator=(const T& a1) {
+   // operator = for size 1 vectors
+   STATIC_CHECK( D == 1,SVector_dimension_not_right); 
+   fArray[0] = a1;
+   return *this;
+}
+
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>& SVector<T,D>::operator=(const VecExpr<A,T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] = rhs.apply(i);
+   }
+   return *this;
+}
+
+//==============================================================================
+// operator==
+//==============================================================================
+template <class T, unsigned int D>
+bool SVector<T,D>::operator==(const T& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs);
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+bool SVector<T,D>::operator==(const SVector<T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs.apply(i));
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+template <class A>
+bool SVector<T,D>::operator==(const VecExpr<A,T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] == rhs.apply(i));
+   }
+   return rc;
+}
+
+//==============================================================================
+// operator!=
+//==============================================================================
+template <class T, unsigned int D>
+inline bool SVector<T,D>::operator!=(const T& rhs) const {
+   return !operator==(rhs);
+}
+
+template <class T, unsigned int D>
+inline bool SVector<T,D>::operator!=(const SVector<T,D>& rhs) const {
+   return !operator==(rhs);
+}
+
+template <class T, unsigned int D>
+template <class A>
+inline bool SVector<T,D>::operator!=(const VecExpr<A,T,D>& rhs) const {
+   return !operator==(rhs);
+}
+
+//==============================================================================
+// operator>
+//==============================================================================
+template <class T, unsigned int D>
+bool SVector<T,D>::operator>(const T& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs);
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+bool SVector<T,D>::operator>(const SVector<T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs.apply(i));
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+template <class A>
+bool SVector<T,D>::operator>(const VecExpr<A,T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] > rhs.apply(i));
+   }
+   return rc;
+}
+
+//==============================================================================
+// operator<
+//==============================================================================
+template <class T, unsigned int D>
+bool SVector<T,D>::operator<(const T& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs);
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+bool SVector<T,D>::operator<(const SVector<T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs.apply(i));
+   }
+   return rc;
+}
+
+template <class T, unsigned int D>
+template <class A>
+bool SVector<T,D>::operator<(const VecExpr<A,T,D>& rhs) const {
+   bool rc = true;
+   for(unsigned int i=0; i<D; ++i) {
+      rc = rc && (fArray[i] < rhs.apply(i));
+   }
+   return rc;
+}
+
+//==============================================================================
+// operator+=
+//==============================================================================
+#ifdef NEW_IMPL
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator+=(const  A& rhs) {
+   return operator=(*this + rhs);
+}
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator-=(const  A& rhs) {
+   // self subtraction
+   return operator=(*this - rhs);
+}
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator*=(const  A& rhs) {
+   // self multiplication
+   return operator=(*this * rhs);
+}
+
+template <class T, unsigned int D>
+template<class A> 
+SVector<T,D>& SVector<T,D>::operator/=(const  A& rhs) {
+   // self division
+   return operator=(*this / rhs);
+}
+#endif
+
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator+=(const  T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs;
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator+=(const  SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs.apply(i);
+   }
+   return *this;
+}
+
+
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>& SVector<T,D>::operator+=(const VecExpr<A,T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] += rhs.apply(i);
+   }
+   return *this;
+}
+
+//==============================================================================
+// operator-=
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator-=(const  T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs;
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator-=(const SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs.apply(i);
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>& SVector<T,D>::operator-=(const VecExpr<A,T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] -= rhs.apply(i);
+   }
+   return *this;
+}
+
+//==============================================================================
+// operator*= (only scalar values) 
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator*=(const T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] *= rhs;
+   }
+   return *this;
+}
+#ifdef OLD_IMPL
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>& SVector<T,D>::operator*=(const VecExpr<A,T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] *= rhs.apply(i);
+   }
+   return *this;
+}
+
+//==============================================================================
+// operator/=
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator/=(const SVector<T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs.apply(i);
+   }
+   return *this;
+}
+
+template <class T, unsigned int D>
+template <class A>
+SVector<T,D>& SVector<T,D>::operator/=(const VecExpr<A,T,D>& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs.apply(i);
+   }
+   return *this;
+}
+#endif
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::operator/=(const T& rhs) {
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= rhs;
+   }
+   return *this;
+}
+
+
+//==============================================================================
+// unit
+//==============================================================================
+template <class T, unsigned int D>
+SVector<T,D>& SVector<T,D>::Unit() {
+   const T len = Mag(*this);
+   for(unsigned int i=0; i<D; ++i) {
+      fArray[i] /= len;
+   }
+   return *this;
+}
+
+//==============================================================================
+// place_at
+//==============================================================================
+template <class T, unsigned int D>
+template <unsigned int D2>
+SVector<T,D>& SVector<T,D>::Place_at(const SVector<T,D2>& rhs, unsigned int row) {
+   
+   assert(row+D2 <= D);
+   //  Sassert(end <= D);
+   
+   for(unsigned int i=row, j=0; j<D2; ++i,++j)
+      fArray[i] = rhs.apply(j);
+   
+   return *this;
+}
+
+
+//==============================================================================
+// place_at
+//==============================================================================
+template <class T, unsigned int D>
+template <class A, unsigned int D2>
+SVector<T,D>& SVector<T,D>::Place_at(const VecExpr<A,T,D2>& rhs, unsigned int row) {
+   
+   assert(row+D2 <= D);
+   
+   for(unsigned int i=row, j=0; j<D2; ++i,++j)
+      fArray[i] = rhs.apply(j);
+   
+   return *this;
+}
+
+//==============================================================================
+// print
+//==============================================================================
+template <class T, unsigned int D>
+std::ostream& SVector<T,D>::Print(std::ostream& os) const {
+   const std::ios_base::fmtflags prevFmt = os.setf(std::ios::right,std::ios::adjustfield);
+   //  os.setf(ios::fixed);
+   
+   for (unsigned int i = 0; i < D; ++i ) {
+      os << fArray[i];
+      if (i != D-1) os << ", "; 
+   } 
+   if (prevFmt != os.flags() ) os.setf(prevFmt, std::ios::adjustfield);
+   return os;
+}
+
+//==============================================================================
+// Access functions
+//==============================================================================
+template <class T, unsigned int D>
+inline T SVector<T,D>::apply(unsigned int i) const { return fArray[i]; }
+
+template <class T, unsigned int D>
+inline const T* SVector<T,D>::Array() const { return fArray; }
+
+template <class T, unsigned int D>
+inline T* SVector<T,D>::Array() { return fArray; }
+
+
+//==============================================================================
+// STL interface
+//==============================================================================
+template <class T, unsigned int D>
+inline T* SVector<T,D>::begin() { return fArray; }
+
+template <class T, unsigned int D>
+inline const T* SVector<T,D>::begin() const { return fArray; }
+
+template <class T, unsigned int D>
+inline T* SVector<T,D>::end() { return fArray + Dim(); }
+
+template <class T, unsigned int D>
+inline const T* SVector<T,D>::end() const { return fArray + Dim(); }
+
+template <class T, unsigned int D>
+template <class InputIterator> 
+void SVector<T,D>::SetElements(InputIterator ibegin, InputIterator iend) { 
+   // iterator size must match vector size
+   assert( ibegin + D == iend);
+   std::copy(ibegin, iend, fArray);
+}
+
+template <class T, unsigned int D>
+template <class InputIterator> 
+void SVector<T,D>::SetElements(InputIterator ibegin, unsigned int size) { 
+   // size <= vector size
+   assert( size <= D);
+   std::copy(ibegin, ibegin+size, fArray);
+}
+
+
+//==============================================================================
+// Operators
+//==============================================================================
+template <class T, unsigned int D>
+inline const T& SVector<T,D>::operator[](unsigned int i) const { return fArray[i]; }
+
+template <class T, unsigned int D>
+inline const T& SVector<T,D>::operator()(unsigned int i) const { return fArray[i]; }
+
+template <class T, unsigned int D>
+inline T& SVector<T,D>::operator[](unsigned int i) { return fArray[i]; }
+
+template <class T, unsigned int D>
+inline T& SVector<T,D>::operator()(unsigned int i) { return fArray[i]; }
+//==============================================================================
+// Element access with At()
+//==============================================================================
+template <class T, unsigned int D>
+inline const T& SVector<T,D>::At(unsigned int i) const { 
+   assert(i < D);
+   return fArray[i]; 
+}
+
+template <class T, unsigned int D>
+inline T& SVector<T,D>::At(unsigned int i) { 
+   assert(i < D);
+   return fArray[i]; 
+}
+
+//==============================================================================
+// SubVector
+//==============================================================================
+template <class T, unsigned int D>
+template <class SubVector>  
+SubVector SVector<T,D>::Sub(unsigned int row) const { 
+   
+   STATIC_CHECK( SubVector::kSize <= D,SVector_dimension_too_small); 
+   
+   assert(row + SubVector::kSize <= D);
+   
+   SubVector tmp;
+   // need to use std::copy ??
+   for(unsigned int i=0; i < SubVector::kSize; ++i) {
+      tmp[i] = fArray[i+row];
+   }
+   return tmp;
+}
+
+//==============================================================================
+// operator<<
+//==============================================================================
+template <class T, unsigned int D>
+inline std::ostream& operator<<(std::ostream& os, const SVector<T,D>& rhs) {
+   return rhs.Print(os);
+}
+
+
+
+
+}  // namespace Math
+
+}  // namespace ROOT
+          
+
+#endif

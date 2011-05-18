@@ -1,0 +1,23 @@
+/**********************************************************************
+* The WILDCARD interpreter demonstration
+*  wildc test1.c
+**********************************************************************/
+// Call back function is C/C++
+void entry(const char *name) {
+  printf("%s entered\n",name);
+}
+void exitb() {
+  printf("Exit from WildCard\n");
+  WildCard_Exit();
+}
+main() {
+  #pragma tcl interp
+  entry .entry -width 15 -textvariable name
+  bind .entry <Return> {ceval entry(\"$name\");set name ""}
+  button .exitb -text "EXIT button" -bg gray -fg white -borderwidth 1m
+  bind .exitb <Button-1>   {ceval exitb()}
+  pack .entry .exitb -fill x
+  #pragma endtcl
+  WildCard_MainLoop();
+}
+

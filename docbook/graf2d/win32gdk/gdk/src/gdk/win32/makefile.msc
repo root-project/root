@@ -1,0 +1,82 @@
+## Makefile for building the GDK DLL with Microsoft C
+## Use: nmake -f makefile.msc
+
+# Location of the Wintab toolkit. Downloadable from http://www.pointing.com.
+
+################################################################
+
+# Nothing much configurable below
+
+!IFNDEF DEBUG
+# Full optimization:
+OPTIMIZE = -O2 -MD
+!ELSE
+# Debugging:
+OPTIMIZE = -Z7 -MDd
+LINKDEBUG = /debug /profile
+!ENDIF
+
+LINKDEBUG =/nodefaultlib
+ 
+# cl -? describes the options
+#CC = cl -G5 -GF $(OPTIMIZE) -W3 -nologo
+!if "$(NMCXXFLAGS)" == ""
+CC = cl -GR $(OPTIMIZE) -W3 -nologo
+!else
+CC = cl -nologo $(NMCXXFLAGS)
+!endif
+
+LDFLAGS = /link /machine:ix86 $(LINKDEBUG)
+
+GLIB_VER=1.3
+GTK_VER=1.3
+
+GLIB = ..\..\glib
+
+CFLAGS = -I. -I.. -I..\.. -I$(GLIB) -DG_ENABLE_DEBUG -DHAVE_CONFIG_H -DGDK_VERSION=\"$(GTK_VER)\"
+
+all: \
+	gdk-win32.lib \
+	gdk.res
+
+gdk_win32_OBJECTS = \
+	gdkcc-win32.obj \
+	gdkcolor-win32.obj \
+	gdkcursor-win32.obj \
+	gdkdnd-win32.obj \
+	gdkdrawable-win32.obj \
+	gdkevents-win32.obj \
+	gdkfont-win32.obj \
+	gdkgc-win32.obj \
+	gdkglobals-win32.obj \
+	gdkim-win32.obj \
+	gdkimage-win32.obj \
+	gdkinput-win32.obj \
+	gdkmain-win32.obj \
+	gdkpixmap-win32.obj \
+	gdkproperty-win32.obj \
+	gdkregion-win32.obj \
+	gdkselection-win32.obj \
+	gdkvisual-win32.obj \
+	gdkwin32id.obj \
+	gdkwindow-win32.obj
+
+#..\config.h : ..\config.h.win32
+#	copy ..\config.h.win32 ..\config.h
+
+gdk.res : rc\gdk.rc
+	rc -DBUILDNUMBER=0 -r -fo gdk.res rc\gdk.rc
+
+gdk-win32.lib : $(gdk_win32_OBJECTS)
+	lib -out:gdk-win32.lib $(LINKDEBUG) $(gdk_win32_OBJECTS)
+
+.c.obj :
+	$(CC) $(CFLAGS) -c -DGDK_COMPILATION -DG_LOG_DOMAIN=\"Gdk\" $<
+
+clean:
+	-@erase /q *.obj >nul 2>&1
+	-@erase /q *.lib >nul 2>&1
+	-@erase /q *.err >nul 2>&1
+	-@erase /q *.res >nul 2>&1
+	-@erase /q *.pdb >nul 2>&1
+	-@erase /q *.ilk >nul 2>&1

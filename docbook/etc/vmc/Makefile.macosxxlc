@@ -1,0 +1,41 @@
+# -*- mode: makefile -*-
+# $Id$
+
+# MacOS X with xlc platform dependent definitions
+
+# The compilers
+CXX   	  = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
+F77	  = $(shell root-config --f77)
+
+# Global optimisation
+OPT   = -qnoopt #-g -O
+#OPT   = -O3
+
+# Shared library suffix
+SL	  = dylib
+
+#
+# The options
+#
+CXXOPTS       = $(OPT) -qpic \
+		-qflttrap=overflow:zerodivide:invalid:inexact:enable
+COPT	      = $(OPT) -qpic \
+		-qflttrap=overflow:zerodivide:invalid:inexact:enable
+FOPT	      = $(OPT) -qextname -qpic \
+		-qflttrap=overflow:zerodivide:invalid:inexact:enable
+
+# CERNLIB defines
+
+CLIBDEFS      = -DCERNLIB_LINUX -DCERNLIB_BLDLIB -DCERNLIB_CZ -DCERNLIB_PPC
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS)
+CLIBFOPT      = $(shell echo $(CLIBDEFS) | sed -e's/-D/-WF,-D/g')
+
+LD            = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; $(shell root-config --ld)
+LDFLAGS       = $(OPT) -bind_at_load 
+
+SHLD	      = export MACOSX_DEPLOYMENT_TARGET=10.3 ; unset LD_PREBIND; $(shell root-config --ld)
+SOFLAGS       = -dynamiclib -undefined dynamic_lookup -single_module
+SHLIB         = -lg2c
+

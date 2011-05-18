@@ -1,0 +1,47 @@
+libXrdSecProtocolssl:
+=======================
+This library implements SSL authentication with Proxy/VOMS support for xrootd. The Verify/VOMS code is taken from Apache mod_ssl & mod_gridsite/libgridsite.
+The SSL handshake is done via the virtual socket Layer in xrootd. The implementation supports session reuse. Session information is stored on client side in files like /tmp/xssl_<uid>:<desthost>.<destdomain>
+
+Currently only the server verifies the client certificate/revocation lists.
+
+
+Configuratione Options:
+=======================
+
+server:
+--------------
+-d:<debug level>	: debug level (default 0)
+-cadir:<certdir>	: CA directory (default /etc/grid-services/certificates)
+-cert:<certfile>	: Service certificate (default /etc/grid-services/hostcert.pem for server)
+-key:<keyfile>		: Service key         (default /etc/grid-services/hostkey.pem  for server)
+-ca:<level>		: CA verification level (default 10)
+-t:<session lifetime>	: SSL Session lifetime in seconds (default 86400 sec = 24 hours)
+-export:<dir>           : Directory where forwared proxies are stored (default <unset> = don't store)
+-gridmapfile:<file>     : Grid Mapfile (default /etc/grid-security/grid-mapfile)
+-vomsmapfile:<file>     : VOMS Mapfile (default /etc/grid-security/voms-mapfile)
+-mapuser:1|0            : apply grid map file for user mapping (default 0)
+-mapgroup:1|0           : apply voms map file for group mapping (default 0) or cross user mapping (if map value starts with uid:)
+-mapcernuser:1|0        : apply automatic mapping of CERN users to AFS accounts
+-mapnobody:1|0          : if a user cannot be mapped this would map him to nobody if set, otherwise authentication failure
+-selecttimeout:<time>   : timeout for the full non-blocking SSL handshake (default 10)
+-sessioncachesize:<size>: size of session cache (0 = sessions disabled)
+-procdir=<procdir>      : directory where to write /proc information of the authentication statistics
+
+client: (Env-Variables)
+
+XrdSecNoSSL             : disables usage of SSL protocol even if server offered
+XrdSecDEBUG		: debug level (default 0)
+XrdSecSSLCADIR		: CA directory (default /etc/grid-services/certificates)
+XrdSecSSLUSERCERT	: client certificate (default proxy /tmp/x509up_u$UID)
+XrdSecSSLUSERKEY	: client key         (default proxy /tmp/x509up_u$UID)
+XrdSecSSLPROXYFORWARD   : foward the proxy certificate to the remote service
+XrdSecSSLVERIFYDEPTH    : verification level depth (default 10)
+XrdSecSSLSESSION        : enable/disable ssl session reuse (default 0 [no])
+XrdSecSSLSELECTTIMEOUT  : timeout for the full non-blocking SSL handshake (default 10)
+
+# for Globus compatibility
+X509_CERT_DIR           : CA directory if XrdSecSSLCADIR is not defined
+X509_USER_KEY           : client key if XrdSecSSLUSERKEY is not defined
+X509_USER_CERT          : client certificate if XrdSecSSLUSERCERT is not defined
+X509_USER_PROXY         : client proxy to use

@@ -1,0 +1,10 @@
+BEGIN_HTML
+This directory contains all pad's basic classes.
+<ul>
+<li><a href="http://root.cern.ch/drupal/content/graphics-pad">The Graphics Pad.</a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-draw-objects">How to Draw objects.</a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-pick-objects">How to Pick objects.</a></li>
+<li><a href="http://root.cern.ch/root/html/tutorials/graphs/zones.C.html">Dividing a canvas with no margins between pads.</a></li>
+<li><a href="http://root.cern.ch/root/html/tutorials/hist/transpad.C.html">Using transparent pads.</a></li>
+</ul>
+END_HTML

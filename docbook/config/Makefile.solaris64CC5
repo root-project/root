@@ -1,0 +1,72 @@
+# -*- mode: makefile -*-
+#
+# Makefile of ROOT for Solaris with CC 5.0 on x86-64 machines in 64-bit mode
+
+PLATFORM      = solaris
+
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = $(DEBUGFLAGS)
+NOOPT         =
+else
+OPT           = $(OPTFLAGS)
+NOOPT         =
+endif
+
+MTOPT         =
+ifneq ($(OSTHREADLIB),)
+MTOPT         = -mt
+endif
+
+CC_MINOR_VER := $(shell CC -V 2>&1 | sed 's,^.*5\.\([^[:space:]]*\).*$$,\1,')
+
+CCPTR := -ptr$(ROOTSYS)
+ifeq ($(findstring $(CC_MINOR_VER),0 1 2 3 4),)
+# newer than 5.4
+CCPTR :=
+CCSTL := -library=stlport4
+endif
+
+# Compiler:
+# used in cint/Module.mk
+SUNCC5        = true
+#CXX           = /opt/WS5.0/bin/CC
+#CC            = /opt/WS5.0/bin/cc
+CXX           = CC
+CC            = cc
+CXXFLAGS      = -m64 -KPIC -I/usr/openwin/include $(CCSTL) $(CCPTR) \
+                $(EXTRA_CXXFLAGS) $(MTOPT)
+CFLAGS        = -m64 -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS) $(MTOPT)
+CINTCXXFLAGS  = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
+                $(EXTRA_CXXFLAGS) -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO \
+                $(CCSTL) $(CCPTR) $(MTOPT)
+CINTCFLAGS    = -m64 -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL $(EXTRA_CFLAGS) \
+                -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO $(MTOPT)
+CPPPREP       = /usr/ccs/lib/cpp -E -C -B -D__sun -D__sparc -D__unix
+
+# Linker:
+LD            = CC
+LDFLAGS       = -m64 $(OPT) $(CCSTL) $(EXTRA_LDFLAGS)
+SOFLAGS       = -G $(CCPTR)
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl -lnsl -lsocket -lposix4 $(ALLOCLIBDIR) $(ALLOCLIB)
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
+CILIBS        = -lm -ltermcap -ldl
+
+# Fortran:
+ifeq ($(F77),f77)
+#F77           = /opt/SUNWspro/bin/f77
+F77           = f77
+F77FLAGS      = -m64
+F77LIBS       = -lfui -lfsu -lmtsk -lsunmath
+# Use this on Solaris 10 with F90 compiler
+#F77LIBS      := -lf77compat -lfui -lfsu -lmtsk -lsunperf -lsunmath
+F77LDFLAGS    = -m64 $(OPT) $(EXTRA_LDFLAGS)
+endif
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR

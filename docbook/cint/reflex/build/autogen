@@ -1,0 +1,22 @@
+#! /bin/sh 
+#
+#autogen -- run configuration things in the right order
+#Developers only need to run this script once after fresh CVS
+#checkout.  They may need it again after some changes in configure.in
+#such as creation of new files from configure.
+
+# Author: Paul_Kunz@slac.stanford.edu
+
+src=`dirname $0`
+dst=$src/..
+echo "$0: setup file tree"
+rm -f ${dst}/Module.mk
+cp ${src}/Makefile.am ${src}/configure.ac ${dst}
+echo "$0: configuring Reflex package"
+cd ${dst}                                                             ; \
+if [ ! -d config ] ; then echo "$0: mkdir config" ; mkdir config ; fi ; \
+aclocal                                                               ; \
+libtoolize --force --automake --ltdl                                  ; \
+autoconf                                                              ; \
+autoheader                                                            ; \
+automake --add-missing 

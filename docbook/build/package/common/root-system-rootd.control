@@ -1,0 +1,13 @@
+Package: root-system-rootd
+Architecture: any
+Depends: root-system-common, lsb-base (>= 3.0-6), ${shlibs:Depends}
+Pre-Depends: adduser, openbsd-inetd | inet-superserver
+Recommends: root-system-bin, libroot-dev
+Provides: root-file-server
+Description: ROOT remote file server 
+ This package contains ROOT file server.  rootd is a server for ROOT
+ files, serving files over the Internet. Using this daemon, you can
+ access files on the machine from anywhere on the Internet, using a
+ transparent interface.
+
+

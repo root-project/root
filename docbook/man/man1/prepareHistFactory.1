@@ -1,0 +1,54 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, 1, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH PREPAREHISTFACTORY 1 "DEC. 2010"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+prepareHistFactory \- create a working directory for the HistFactory tools
+.SH SYNOPSIS
+.B prepareHistFactory [dir_name]
+.SH DESCRIPTION
+.B prepareHistFactory
+is a simple script that prepares a working area (and creates the directory 
+dir_name if specified).  
+Within the directory dir_name, it creates a results/, data/, and config/ directory relative to the given path.
+It also copies the HistFactorySchema.dtd and example XML files into
+the config/ directory.  Additionally, it copies a root file into the data/
+directory for use with the examples.
+.br.
+Once this is done, one is ready to run the example
+.B hist2workspace input.xml
+or edit the XML files for a new project.
+.SH "ORIGINAL AUTHORS"
+.RS
+.B Dominique Tardif
+ and 
+.B Kyle Cranmer
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+

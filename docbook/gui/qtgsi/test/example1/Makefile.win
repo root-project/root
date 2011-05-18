@@ -1,0 +1,70 @@
+# Makefile.win for QtGSI example on Win32
+# Author: Bertrand Bellenot, 03/04/2006
+
+include $(ROOTSYS)/config/Makefile.config
+
+####### Compiler, tools and options
+
+is_debug := $(findstring debug,$(strip $(shell root-config --config)))
+
+OutPutOpt     = -out:
+CXX           = cl
+LD            = link
+
+ifdef is_debug
+# Debugging:
+OPTIMIZE  := -Z7
+LINKDEBUG := -debug
+else
+# Full optimization:
+OPTIMIZE  := -Ox
+endif
+
+QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -FIw32pragma.h -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT -DQT3_SUPPORT $(QTINCDIR:%=-I%)
+LFLAGS       := -nologo -machine:ix86 $(LINKDEBUG)
+ROOTGLIBS    := $(shell root-config --glibs)
+QTGSILIBS    := $(QTLIB) $(ROOTGLIBS) '$(ROOTSYS)\lib\libqtgsi.lib'
+
+QTGSITESTS   := main.cpp qtroot.cpp guitest.cpp
+QTGSITESTO   := $(QTGSITESTS:.cpp=.obj)
+QTGSITESTH   := qtroot.h guitest.h
+QTGSITESTMOCS := moc_qtroot.cpp 
+QTGSITESTMOCO := moc_qtroot.obj
+QTGSITEST    = qtroot.exe
+
+OBJS          = $(QTGSITESTO) $(QTGSITESTMOCO)
+
+PROGRAMS      = $(QTGSITEST)
+
+#------------------------------------------------------------------------------
+
+.SUFFIXES: .cpp .obj .exe
+
+all:            $(PROGRAMS)
+
+$(QTGSITEST):  $(OBJS)
+		$(LD) $(LFLAGS) $^ $(QTGSILIBS) $(OutPutOpt)$@
+
+clean:
+		@rm -f $(OBJS)
+
+distclean:      clean
+		@rm -f $(PROGRAMS) moc_*
+
+###
+
+.cpp.obj:
+		$(CXX) $(QTCXXFLAGS) -c $<
+
+####### Compile
+
+main.obj: main.cpp qtroot.h
+
+qtroot.obj: qtroot.cpp qtroot.h
+
+guitest.obj: guitest.cpp guitest.h
+
+moc_qtroot.obj: moc_qtroot.cpp qtroot.h
+
+moc_qtroot.cpp: $(QTMOCEXE) qtroot.h
+		$(QTMOCEXE) qtroot.h -o moc_qtroot.cpp

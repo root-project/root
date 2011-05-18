@@ -1,0 +1,19 @@
+Package: libroot-hist@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: root-plugin-hist-histpainter
+Homepage: http://root.cern.ch
+Description: Histogram library for ROOT - run-time library
+ This package contains a library for histogrammin
+
+Package: libroot-hist-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-hist@libvers@ (= ${binary:Version}), libroot-core-dev, libroot-math-matrix-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Histogram library for ROOT - development files
+ This package contains a library for histogrammin
+

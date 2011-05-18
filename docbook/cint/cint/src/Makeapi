@@ -1,0 +1,27 @@
+###########################################################################
+# src/Makeapi
+#
+# Makefile to make ERTTI Api interface method.
+#
+#  1) First, you must install cint correctly.
+#  2) Modify newlink.c eliminating G__N_EXPLICITDESTRUCTOR macro
+#  3) do make in $CINTSYSDIR
+#  4) do make -f Makeapi in src directory
+#  5) Restore G__N_EXPLICITDESTRUCTOR macro in newlink.c
+#  6) do make in $CINTSYSDIR
+#
+###########################################################################
+
+APIHEADER = $(add-prefix ../inc/, \
+	  Api.h \
+	  Class.h \
+	  BaseCls.h \
+	  Type.h \
+	  DataMbr.h \
+	  Method.h \
+	  MethodAr.h \
+	  CallFunc.h \
+	  Typedf.h )
+
+Apiif.cxx : $(APIHEADER) ../cint
+	../cint -nApiif.cxx -NG__API -Z0 -D__MAKECINT__ -UG__APIIF -c-1 -I../inc Api.h Shadow.h

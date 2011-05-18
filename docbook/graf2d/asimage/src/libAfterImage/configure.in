@@ -1,0 +1,799 @@
+dnl# -*- sh -*-
+dnl# Process this file with autoconf to produce a configure script.
+dnl#
+dnl#Copyright (c) 1998 Michal Vitecek <fuf@fuf.sh.cvut.cz>
+dnl#Copyright (c) 2001,1998 Sasha Vasko <sasha at aftercode.net>
+dnl#Copyright (c) 1998 Juergen Sawinski <Juergen.Sawinski@urz.uni-heidelberg.de>
+dnl#Copyright (c) 1997 1998 Guylhem AZNAR <guylhem@oeil.qc.ca>
+
+AC_INIT(libAfterImage,1.19,as-bugs@afterstep.org,libAfterImage.tar)
+
+AC_CONFIG_HEADER(config.h:config.h.in)
+
+version=$PACKAGE_VERSION
+version_major="1"
+lib_name="LIBAFTERIMAGE"
+lib_file_name=$PACKAGE_NAME
+
+dnl# Setup command-line options
+
+dnl# we need the standard prefixes defined early
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+test "x$exec_prefix" = xNONE && exec_prefix="$prefix"
+eval "mandir=$mandir"
+eval "libdir=$libdir"
+eval "includedir=$includedir"
+
+dnl# compile-time switches
+AC_ARG_ENABLE(i18n,			[  --enable-i18n            support I18N [no] ],enable_i18n=$enableval,enable_i18n="no")
+AC_ARG_ENABLE(xlocale,		[  --enable-xlocale         using X_LOCALE [no] ],enable_xlocale=$enableval,enable_xlocale="no")
+AC_ARG_WITH(locale,			[  --with-locale=LOCALE     locale name you want to use ],with_locale=$withval,with_locale="")
+AC_ARG_ENABLE(staticlibs,   [  --enable-staticlibs      enable linking to libAfterImage statically [yes] ],enable_staticlibs=$enableval,enable_staticlibs="yes")
+AC_ARG_ENABLE(sharedlibs,   [  --enable-sharedlibs      enable linking to libAfterImage dynamically [no] ],enable_sharedlibs=$enableval,enable_sharedlibs="no")
+
+AC_ARG_ENABLE(gdb,			[  --enable-gdb             add gdb symbols (-g) (for debugging) [no] ],enable_gdb=$enableval,enable_gdb="no")
+AC_ARG_ENABLE(warn,			[  --enable-warn            turn on more compiler warnings (for debugging) [no] ],enable_warn=$enableval,enable_warn="no")
+AC_ARG_ENABLE(gprof,		[  --enable-gprof           add gprof symbols (-pg) (for debugging) [no] ],enable_gprof=$enableval,enable_gprof="no")
+AC_ARG_ENABLE(audit,		[  --enable-audit           memory usage audit (for debugging) [no] ],enable_audit=$enableval,enable_audit="no")
+AC_ARG_ENABLE(shmimage,		[  --enable-shmimage        enable usage of MIT shared memory extention for image transfer [no] ],enable_shmimage=$enableval,enable_shmimage="no")
+AC_ARG_ENABLE(shaping,		[  --enable-shaping        enable usage of MIT shaped windows extention [yes] ],enable_shaping=$enableval,enable_shaping="yes")
+AC_ARG_ENABLE(glx,		[  --enable-glx            enable usage of GLX extention [no] ],enable_glx=$enableval,enable_glx="no")
+
+AC_ARG_ENABLE(mmx_optimization,
+							[  --enable-mmx-optimization  enable utilization of MMX instruction set to speed up imaging operations [yes] ],enable_mmx_optimization=$enableval,enable_mmx_optimization="yes")
+
+AC_ARG_WITH(jpeg,		    [  --with-jpeg              support JPEG image format [yes]])
+AC_ARG_WITH(jpeg_includes,  [  --with-jpeg-includes=DIR use JPEG includes in DIR], jpeg_includes="$withval", jpeg_includes=no)
+AC_ARG_WITH(builtin_jpeg,   [  --with-builtin-jpeg      use included JPEG  library [no]],with_builtin_jpeg="$withval",with_builtin_jpeg=no)
+AC_ARG_WITH(png,		    [  --with-png               support PNG image format [yes]])
+AC_ARG_WITH(png_includes,   [  --with-png-includes=DIR  use PNG includes in DIR], png_includes="$withval", png_includes=no)
+AC_ARG_WITH(builtin_png,    [  --with-builtin-png       use included PNG library [no]],with_builtin_png="$withval",with_builtin_png=no)
+AC_ARG_WITH(builtin_zlib,   [  --with-builtin-zlib      use included libZ library (needed for PNG) [no]],with_builtin_zlib="$withval",with_builtin_zlib=no)
+AC_ARG_WITH(tiff,		    [  --with-tiff              support TIFF image format [yes]])
+AC_ARG_WITH(tiff_includes,  [  --with-tiff-includes=DIR use TIFF includes in DIR], tiff_includes="$withval", tiff_includes=no)
+AC_ARG_WITH(svg,		    [  --with-svg               support SVG image format via librsvg [yes]])
+
+AC_ARG_WITH(xpm,	    	[  --with-xpm               support XPM image format [yes]])
+dnl# libXPM should not be used as an obsolete software !
+with_builtin_xpm=$with_xpm
+dnl# AC_ARG_WITH(builtin_xpm,    [  --with-builtin-xpm       use builtin XPM parsing/handling instead of libXpm [yes]])
+dnl# AC_ARG_WITH(xpm_includes,   [  --with-xpm-includes=DIR  use libXpm includes in DIR( when builtin XPM handling is disabled )], xpm_includes="$withval", xpm_includes=no)
+
+dnl# standard libgif/ungif should not be used and considered obsolete!
+dnl# AC_ARG_WITH(ungif,		    [  --with-ungif             support Uncompressed GIF image format using libungif [no]],with_ungif="$withval",with_ungif=no)
+dnl# AC_ARG_WITH(gif,		    [  --with-gif               support GIF image format using libgif   [no]],with_gif="$withval",with_gif=no)
+dnl# AC_ARG_WITH(gif_includes,   [  --with-gif-includes=DIR  use GIF includes in DIR], gif_includes="$withval", gif_includes=no)
+with_ungif=no
+with_gif=no
+with_gif_includes=no
+AC_ARG_WITH(builtin_gif,    [  --with-builtin-gif               support Uncompressed GIF image format using builtin libgif [yes]],with_builtin_gif="$withval",with_builtin_gif=yes)
+
+
+AC_ARG_WITH(ttf,		    [  --with-ttf               support True Type Fonts via FreeType library [yes]])
+AC_ARG_WITH(ttf_includes,   [  --with-ttf-includes=DIR  use FreeType includes in DIR], ttf_includes="$withval", ttf_includes=no)
+
+AC_ARG_WITH(afterbase,		    [  --with-afterbase               use libAfterBase library of basic functionality [yes]],with_afterbase="$withval",with_afterbase=yes)
+AC_ARG_WITH(afterbase_includes, [  --with-afterbase-includes=DIR  use libAfterBase includes in DIR],afterbase_includes="$withval",afterbase_includes=no)
+
+dnl# Check for compiler tools
+
+AC_PROG_CC
+AC_PROG_LN_S
+dnl# AC_SUBST(CC)
+dnl# AC_SUBST(GCC)
+
+
+AC_CYGWIN
+AC_CANONICAL_TARGET
+
+RDYNAMIC="-rdynamic"
+
+case "$target" in
+    *i?86*OpenUNIX*)
+		RDYNAMIC="-Wl,-Bexport"
+		;;
+    *i?86*sco*)
+		RDYNAMIC="-Wl,-Bexport"
+		;;
+    *aix*)
+		RDYNAMIC="-Wl,-bexpall"
+		;;
+    *i?86*freebsd*)
+		RDYNAMIC=""
+		;;
+    hppa*)
+		RDYNAMIC="-Wl,-E"
+		;;
+    i?86*solaris*)
+		RDYNAMIC=""
+		;;
+    sparc*solaris*)
+		RDYNAMIC="-Wl,-export-dynamic"
+		;;
+    *-apple-darwin*)
+		RDYNAMIC="-Wl,-Sn"
+		;;
+    *ppc* | *powerpc*)
+		RDYNAMIC=""
+		;;
+    *)
+esac
+
+if test "x$CYGWIN" = "xno" -a "x$GCC" = "xyes" ; then
+  if test -z "`echo $CFLAGS | grep '\-fPIC' 2> /dev/null`" ; then
+  	CFLAGS="$CFLAGS -fPIC"
+  fi
+fi
+
+
+if test "x$FROM_AFTERSTEP_CONFIGURE" = "xyes"; then
+
+dnl# AfterSTep already checked everything for us
+	aaa=bbb
+	dnl#  AC_PROG_INSTALL
+    AC_SUBST(INSTALL)
+    AC_SUBST(INSTALL_PROGRAM)
+    AC_SUBST(INSTALL_DATA)
+    AC_SUBST(INSTALL_LIB)
+    AC_SUBST(RANLIB)
+    AC_SUBST(RM)
+    AC_SUBST(MV)
+    AC_SUBST(CP)
+    AC_SUBST(MKDIR)
+    AC_SUBST(PERL)
+    AC_SUBST(FIND)
+    AC_SUBST(XARGS)
+    AC_SUBST(LDCONFIG)
+    AC_SUBST(LEX)
+    AC_SUBST(LEXLIB)
+    AC_SUBST(YACC)
+    if test "x$have_shmimage" = "xyes"; then
+		AC_DEFINE(XSHMIMAGE)
+    fi
+    if test "x$have_shaping" = "xyes"; then
+		AC_DEFINE(SHAPE)
+    fi
+
+else
+
+dnl# we are alone - have to do all the checks ourselves :
+	dnl# Add -Wall
+	if test "x$GCC" = "xyes"; then
+	  if test -z "`echo $CFLAGS | grep '\-Wall' 2> /dev/null`" ; then
+  		CFLAGS="$CFLAGS -Wall"
+	  fi
+	fi
+
+	dnl# Add -fPIC for IA64 compilation
+
+	dnl# Add -g
+	if test "x$enable_gdb" = "xyes"; then
+  		if ! test -n "`echo $CFLAGS' ' | grep '\-g ' 2> /dev/null`" ; then
+			CFLAGS="$CFLAGS -g"
+  		fi
+	else
+  		DIRTY_CFLAGS="$CFLAGS"
+  		CFLAGS="-DNO_DEBUG_OUTPUT"
+  		for f in $DIRTY_CFLAGS; do 
+        		if test "x$f" != "x-g"; then
+	   		CFLAGS="$CFLAGS $f"
+			fi	 
+  		done
+	fi
+	dnl# Add -pg
+	if test "x$enable_gprof" = "xyes"; then
+	  CFLAGS="$CFLAGS -pg"
+	  LDFLAGS="$LDFLAGS -pg"
+	fi
+	dnl# Add lots more warnings
+	if test "x$enable_warn" = "xyes"; then
+	  CFLAGS="$CFLAGS -Wuninitialized -Wwrite-strings -Wcast-qual -Wbad-function-cast -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wconversion -Wcomment -Wcast-align -Winline -Wshadow -Wredundant-decls"
+	fi
+	AC_PROG_INSTALL
+	dnl# if the path to the install program is relative, make it absolute
+	currdir=`pwd`
+	INSTALL=`echo $INSTALL|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
+	INSTALL_PROGRAM=`echo $INSTALL_PROGRAM|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
+	INSTALL_DATA=`echo $INSTALL_DATA|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
+	INSTALL_LIB=`echo $INSTALL_LIB|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
+
+	AC_PROG_RANLIB
+	AC_PATH_PROG(RM, rm, rm)
+	AC_PATH_PROG(MV, mv, mv)
+	AC_PATH_PROG(CP, cp, cp)
+	AC_PATH_PROG(MKDIR, mkdir, mkdir)
+	AC_PATH_PROG(PERL, perl, perl)
+	AC_PATH_PROG(FIND, find, find)
+	AC_PATH_PROG(XARGS, xargs, xargs)
+	AC_PATH_PROG(LDCONFIG, ldconfig, ldconfig, $PATH:/sbin:/usr/local/sbin)
+fi
+
+if test "x$enable_gdb" = "xno"; then
+		DIRTY_CFLAGS="$CFLAGS"
+  		CFLAGS="-O3"
+  		for f in $DIRTY_CFLAGS; do 
+       		if test "x$f" != "x-O2" -a "x$f" != "x-O3" -a "x$f" != "x-O"; then
+		   		CFLAGS="$CFLAGS $f"
+			fi	 
+  		done
+fi
+
+
+MMX_CFLAGS="-mmmx -Winline"
+have_mmx_intrinsics=no
+
+dnl# Check for MMX :
+if test "x$enable_mmx_optimization" = "xyes"; then
+  	AC_MSG_CHECKING(for MMX support)
+  
+  	save_CFLAGS=$CFLAGS
+  	CFLAGS="$CFLAGS $MMX_CFLAGS"
+AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for MMX intrinsics"
+#endif
+#include <mmintrin.h>
+int main () {
+    __m64 v = _mm_cvtsi32_si64 (1);
+    __m64 w = _mm_slli_si64 (v, 1);
+	v = _mm_add_pi32 (v, w);  /* paddd */
+    v = _mm_srl_pi32 (v, w);  /* psrld */
+    return _mm_cvtsi64_si32 (v);
+}], have_mmx_intrinsics=yes)
+
+	AC_MSG_RESULT($have_mmx_intrinsics)
+	CFLAGS=$save_CFLAGS
+fi
+
+if test $have_mmx_intrinsics = yes ; then
+	AC_DEFINE(HAVE_MMX,1,[Define if CPU supports MMX instructions])
+else 
+   MMX_CFLAGS=
+fi
+AC_SUBST(MMX_CFLAGS)
+
+dnl# Check for X :
+dnl# check for X, if top level configure script did not do that yet :
+afterimage_x_support=yes
+if test "x$PATH_XTRA_CHECKED" != "xyes"; then
+	AC_PATH_XTRA
+else
+  if test "x$have_x" != "xyes"; then
+	  AC_DEFINE(X_DISPLAY_MISSING)
+	  afterimage_x_support=no
+  fi
+
+fi
+
+user_ldflags=$LDFLAGS
+
+if test "x$have_x" = "xyes"; then
+  x_libs="$X_LIBS $X_EXTRA_LIBS $X_PRE_LIBS"
+  if test "x$user_ldflags" = "x"; then
+  	full_x_libs=$x_libs
+  else
+	full_x_libs="$user_ldflags $x_libs"
+  fi
+  AC_CHECK_LIB(X11, XOpenDisplay, [x_libs="-lX11 $x_libs"],,$full_x_libs)
+fi
+
+
+
+dnl# some standard checks :
+dnl# let's check for endiannes of our box
+AC_C_BIGENDIAN
+AC_C_INLINE
+AC_CHECK_TYPES([long long])
+
+dnl# Check for headers
+AC_HEADER_TIME
+AC_CHECK_HEADERS(sys/wait.h sys/time.h malloc.h stdlib.h unistd.h stddef.h stdarg.h errno.h)
+
+dnl# Check for X shaped window extension
+have_shmimage=no
+have_xext_lib=no
+if test "x$enable_shmimage" = "xyes"; then
+	AC_CHECK_LIB(Xext, XShmCreateImage, [have_shmimage=yes],,$full_x_libs)
+	if test "x$have_shmimage" = "xyes"; then
+		AC_CHECK_HEADER(sys/ipc.h,,[have_shmimage=no])
+	fi
+	if test "x$have_shmimage" = "xyes"; then
+		AC_CHECK_HEADER(sys/shm.h,,[have_shmimage=no])
+	fi
+	if test "x$have_shmimage" = "xyes"; then
+		have_xext_lib=yes
+		AC_DEFINE(XSHMIMAGE,1,[Define if support for shared memory XImages is available])
+	fi
+fi
+
+dnl# Check for X shaped window extension
+HAVESHAPE="NOSHAPE"
+if test "x$enable_shaping" = "xyes"; then
+  	AC_CHECK_LIB(Xext, XShapeCombineMask, [have_xext_lib=yes;AC_DEFINE(SHAPE,1,Support for shaped windows)],,$full_x_libs)
+fi
+
+if test "x$enable_glx" = "xyes"; then
+  	AC_CHECK_LIB(GL, glDrawPixels, [x_libs="$x_libs -lGL";AC_DEFINE(HAVE_GLX,1,Support for OpenGL extention)],,$full_x_libs)
+fi
+
+
+if test "x$have_xext_lib" = "xyes"; then
+    x_libs="$x_libs -lXext"
+fi
+
+dnl# Check for graphics libraries :
+
+image_format="xpm"
+
+AFTERIMAGE_LIBS=$x_libs
+
+if test "$with_xpm" = no; then
+  have_xpm=disabled
+else
+  if test "$with_builtin_xpm" = no; then
+  	SAVED_CFLAGS=$CPPFLAGS
+  	if test "x$xpm_includes" != "xno"; then
+		XPM_CFLAGS="-I$xpm_includes"
+		CPPFLAGS="$CPPFLAGS $XPM_CFLAGS"
+  	fi
+	have_libxpm=no
+  	AC_CHECK_HEADER(xpm.h,have_libxpm=yes)
+	if test "x$have_libxpm" = "xno"; then
+		AC_CHECK_HEADER(X11/xpm.h,have_libxpm_x11="yes")
+		if test "x$have_libxpm_x11" = "xyes"; then
+			 AC_DEFINE(HAVE_LIBXPM_X11,1,[Define if support for XPM images should be through libXpm library in Xlib])
+			 have_libxpm=yes
+		fi
+	fi
+  	if test "x$have_libxpm" = "xyes"; then
+		AC_DEFINE(HAVE_XPM,1,[Define if support for XPM images is desired])
+		AC_DEFINE(HAVE_LIBXPM,1,[Define if support for XPM images should be through libXpm])
+		AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lXpm"
+        fi
+  	CPPFLAGS=$SAVED_CFLAGS
+  else
+	AC_DEFINE(HAVE_XPM,1,[Define if support for XPM images is desired])
+	XPM_CFLAGS=
+  fi
+fi
+AC_SUBST(XPM_CFLAGS)
+
+JPEG_OBJS=
+ZLIB_OBJS=
+PNG_OBJS=
+
+have_jpeg=
+
+if test "$with_jpeg" = no; then
+  have_jpeg=disabled
+else
+  SAVED_CFLAGS=$CPPFLAGS
+  if test "x$jpeg_includes" != "xno"; then
+	JPEG_CFLAGS="-I$jpeg_includes"
+	CPPFLAGS="$CPPFLAGS $JPEG_CFLAGS"
+  fi
+  if test "with_builtin_jpeg" = yes -a ! -f libjpeg/jpeglib.h; then
+  	with_builtin_jpeg=no
+  fi
+  if test "$with_builtin_jpeg" = no; then
+	  AC_CHECK_HEADER(jpeglib.h,have_jpeg=yes)
+  fi
+  if test "$have_jpeg" = yes; then
+	AC_DEFINE(HAVE_JPEG,1,[Define if libjpeg is available]) 
+	AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -ljpeg"
+  else
+	AC_MSG_CHECKING(built-in JPEG library) 
+	if test -f libjpeg/jpeglib.h; then
+		JPEG_OBJS='$(LIBJPEG_OBJS)'
+		AC_DEFINE(HAVE_JPEG,1,[Define if libjpeg is available]) 
+		AC_DEFINE(HAVE_BUILTIN_JPEG,1,[Define if using builtin libjpeg]) 
+		AC_MSG_RESULT(yes)
+	else
+		AC_MSG_RESULT(no)
+	fi
+   fi	
+  CPPFLAGS=$SAVED_CFLAGS
+fi
+AC_SUBST(JPEG_CFLAGS)
+
+dnl# these check are needed by built-in jpeg library : 
+AC_DEFINE(HAVE_PROTOTYPES,1,We always use function prototypes - not supporting old compilers)
+AC_CHECK_TYPE(unsigned char)
+AC_CHECK_TYPE(unsigned short)
+AC_C_CONST
+AC_C_CHAR_UNSIGNED
+
+have_png=no
+have_zlib=no
+
+if test "$with_png" = no; then
+  have_png=disabled
+else
+  SAVED_CFLAGS=$CPPFLAGS
+  if test "$png_includes" != no; then
+	PNG_CFLAGS="-I$png_includes"
+	CPPFLAGS="$CPPFLAGS $PNG_CFLAGS"
+  fi
+  if test "$with_builtin_png" = yes -a ! -f libpng/png.h; then 
+  	  with_builtin_png=no
+  fi
+  if test "$with_builtin_zlib" = yes -a ! -f zlib/zlib.h; then 
+  	  with_builtin_zlib=no
+  fi
+  
+  if test "$with_builtin_png" = no; then
+	  AC_CHECK_HEADER(png.h,[have_png=yes with_builtin_zlib=no])
+  fi
+  if test "$with_builtin_zlib" = no; then
+	  AC_CHECK_HEADERS(zlib.h,[have_zlib=yes],[have_zlib=no])
+  fi
+  if test "$have_png" = yes; then
+        AC_MSG_CHECKING(for png_get_sRGB in png.h)
+        AC_EGREP_HEADER(png_get_sRGB,png.h,,have_png=no)
+        AC_MSG_RESULT($have_png)
+  fi
+  if test "$have_png" = yes; then
+        AC_DEFINE(HAVE_PNG,1,[Define if libpng is available])
+        AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lpng"
+        image_format="png"
+  else 
+	AC_MSG_CHECKING(built-in PNG library) 
+	if test -f libpng/png.h; then
+		PNG_OBJS='$(LIBPNG_OBJS)'	
+	        AC_DEFINE(HAVE_PNG,1,[Define if libpng is available])
+        	AC_DEFINE(HAVE_BUILTIN_PNG,1,[Define if using builtin libpng])
+		AC_MSG_RESULT(yes)	     
+		if test "$have_zlib" = no; then 
+			AC_MSG_CHECKING(built-in ZLIB library) 
+			if test -f zlib/zlib.h; then
+				ZLIB_OBJS='$(ZLIB_OBJS)'
+				AC_MSG_RESULT(yes)	     
+			else
+				AC_MSG_RESULT(no)	     
+			fi
+		fi
+		image_format="png"
+		have_png=yes
+	else
+		AC_MSG_RESULT(no)
+	fi
+  fi
+  CPPFLAGS=$SAVED_CFLAGS
+fi
+AC_SUBST(PNG_CFLAGS)
+dnl# This is required by built in versions of zlib and libpng : 
+
+dnl# Test for libungif first :
+have_gif=no
+if test "$with_gif$with_ungif" = nono; then
+  have_gif=disabled
+else
+  SAVED_CFLAGS=$CPPFLAGS
+  if test "$gif_includes" != no; then
+	GIF_CFLAGS="-I$gif_includes"
+	CPPFLAGS="$CPPFLAGS $GIF_CFLAGS"
+  fi
+  AC_CHECK_HEADER(gif_lib.h,have_gif=yes)
+  CPPFLAGS=$SAVED_CFLAGS
+  if test "x$have_gif" = "xyes"; then
+	AC_DEFINE(HAVE_GIF,1,[Define if libgif is available])
+	if test "$with_gif" = no; then
+		AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lungif"
+	else
+		AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lgif"
+	fi
+  fi
+fi
+
+if test "x$have_gif" != "xyes"; then
+	if test "x$with_builtin_gif" = "xyes"; then
+		AC_MSG_CHECKING(using built-in UNGIF library) 
+		if test -f libungif/gif_lib.h; then
+			UNGIF_OBJS='$(LIBUNGIF_OBJS)'	
+			AC_DEFINE(HAVE_GIF,1,[Define if libgif/ungif is available])
+        		AC_DEFINE(HAVE_BUILTIN_UNGIF,1,[Define if using builtin libgif])
+			AC_MSG_RESULT(yes)	     
+			have_gif=yes
+		else
+			AC_MSG_RESULT(no)
+		fi
+	fi
+fi
+
+AC_SUBST(GIF_CFLAGS)
+
+dnl# Test for libtiff :
+
+if test "$with_tiff" = no; then
+  have_tiff=disabled
+else
+  SAVED_CFLAGS=$CPPFLAGS
+  if test "$tiff_includes" != no; then
+	TIFF_CFLAGS="-I$tiff_includes"
+	CPPFLAGS="$CPPFLAGS $TIFF_CFLAGS"
+  fi
+  AC_CHECK_HEADER(tiffio.h,[AC_DEFINE(HAVE_TIFF,1,[Define if libtiff is available]) AFTERIMAGE_LIBS="-ltiff $AFTERIMAGE_LIBS" have_tiff=yes])
+  CPPFLAGS=$SAVED_CFLAGS
+fi
+AC_SUBST(TIFF_CFLAGS)
+
+if test "$have_tiff" = yes -o "$have_png" = yes ; then
+  if test "x$ZLIB_OBJS" = "x" -a "$have_zlib" = yes; then 
+	  AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lz"
+  fi
+fi
+
+have_svg=
+if test "$with_svg" = no; then
+	have_svg=disabled
+else
+	if test -z "$PKG_CONFIG"; then
+    		AC_PATH_PROG(PKG_CONFIG, pkg-config,no)
+	fi
+	if test "$PKG_CONFIG" = "no" ; then
+		AC_MSG_CHECKING(if librsvg 2.0 is available)
+		AC_MSG_RESULT(pkg-config is not found. Cannot check for librsvg 2.0.)
+		have_svg=no
+	else
+		have_svg=yes
+		pkg_modules="librsvg-2.0 >= 2.0.0"
+		
+		PKG_CHECK_MODULES(SVG,[$pkg_modules],,[have_svg=no])
+		
+		if test "x$have_svg" = "xyes"; then
+			AC_DEFINE(HAVE_SVG,1,librsvg v.2.0 or higher is available )
+			AFTERIMAGE_LIBS="$SVG_LIBS $AFTERIMAGE_LIBS"
+		fi
+	fi
+fi
+
+AC_SUBST(SVG_CFLAGS)
+
+dnl# we always need libm since we now call exp() in gaussian blur
+AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lm"
+
+dnl# check for libfreetype
+
+TTF_INCLUDES=
+
+if test "x$with_ttf" = "xno"; then
+  have_ttf=disabled
+else
+  if test "x$ttf_includes" = "xno"; then
+    AC_MSG_CHECKING(headers required by TTF support)
+    if freetype-config --cflags >/dev/null  ;then
+	  present_incs="$CCFLAGS $x_includes";
+	  for l in `freetype-config --cflags` ;	do
+	    inc_found=no
+	    for p in `echo "$present_incs"` ; do
+		if test "x$l" = "x$p" ; then
+    		    inc_found=yes;
+		fi;
+		if test "x$l" = "x-I$p" ; then
+    		    inc_found=yes;
+		fi;
+	    done;
+	    if test "x$inc_found" != "xyes" ; then
+		TTF_INCLUDES="$TTF_INCLUDES $l" ;
+	    fi;
+	  done;
+	  AC_MSG_RESULT($TTF_INCLUDES)
+	  saved_CPPFLAGS=$CPPFLAGS
+	  saved_CFLAGS=$CFLAGS
+	  CPPFLAGS="$TTF_INCLUDES $CPPFLAGS"
+	  CFLAGS="$CFLAGS $TTF_INCLUDES $XPM_CFLAGS $JPEG_CFLAGS $PNG_CFLAGS $GIF_CFLAGS $TIFF_CFLAGS $SVG_CFLAGS $X_CFLAGS"
+	  have_ft2build=no
+	  AC_CHECK_HEADERS(ft2build.h,[have_ft2build=yes])
+	  AC_MSG_CHECKING( freetype/freetype.h )
+	  have_ttf=no
+          have_freetype_freetype=no
+	  have_freetype=no
+	  AC_EGREP_HEADER(FT_Face,freetype/freetype.h,
+	                  [have_freetype_freetype=yes],
+	                  [AC_MSG_RESULT(no);AC_MSG_CHECKING(freetype.h); \
+                                             AC_EGREP_HEADER(FT_Face,freetype.h,
+					                   [have_freetype=yes], AC_MSG_RESULT(no))]
+					  )
+	  if test "x$have_ft2build" = "xno" ; then
+    	  	if test "x$have_freetype_freetype" = "xyes" ; then
+			AC_TRY_RUN([#include <freetype/freetype.h>
+                            	int main(){FT_Face f; return 0;}],
+	                   	[have_ttf=yes],AC_MSG_RESULT(no))
+	  	elif test "x$have_freetype" = "xyes" ; then
+			AC_TRY_RUN([#include <freetype.h>
+                            	int main(){FT_Face f; return 0;}],
+	                   	[have_ttf=yes],AC_MSG_RESULT(no))
+	  	fi;
+	  elif test "x$have_freetype_freetype" = "xyes" ; then
+		AC_TRY_RUN([#include <ft2build.h> 
+			    #include <freetype/freetype.h>
+                            int main(){FT_Face f; return 0;}],
+	                [have_ttf=yes],AC_MSG_RESULT(no))
+	  elif test "x$have_freetype" = "xyes" ; then
+		AC_TRY_RUN([#include <ft2build.h>
+			#include <freetype.h>
+                        int main(){FT_Face f; return 0;}],
+	                [have_ttf=yes],AC_MSG_RESULT(no))
+	  fi;		       
+    	  if test "x$have_ttf" = "xyes" ; then
+		AC_DEFINE(HAVE_FREETYPE,1,[Define if libFreeType is available])
+		if test "x$have_freetype_freetype" = "xyes" ; then 
+			AC_DEFINE(HAVE_FREETYPE_FREETYPE,1,[Define if libFreeType has freetype.h in freetype/ ])
+		fi;
+                AC_MSG_RESULT(yes)
+	  fi;
+	  CPPFLAGS=$saved_CPPFLAGS
+	  CFLAGS=$saved_CFLAGS
+    else
+		enable_ttf=no ;
+		AC_MSG_RESULT(none found, ttf disabled)
+		echo "You have to install FreeType libary in order to be able to use TTF fonts."
+        have_ttf=no
+    fi;
+  else
+	TTF_INCLUDES=$ttf_includes
+	AC_DEFINE(HAVE_FREETYPE,1,[Define if libFreeType is available])
+    have_ttf=yes
+  fi
+  if test "$have_ttf" = yes; then
+	  AFTERIMAGE_LIBS="`freetype-config --libs` $AFTERIMAGE_LIBS"
+  fi
+fi;
+AC_SUBST(TTF_INCLUDES)
+
+AC_SUBST(JPEG_OBJS)
+AC_SUBST(ZLIB_OBJS)
+AC_SUBST(PNG_OBJS)
+AC_SUBST(UNGIF_OBJS)
+
+AFTERIMAGE_LIBS_EXTERNAL=$AFTERIMAGE_LIBS
+AC_SUBST(AFTERIMAGE_LIBS_EXTERNAL)
+
+USE_DEFAULT_AFTERBASE=0
+AFTERBASE_INCS_PATH=
+if test "x$with_afterbase" != "xno"; then
+  AC_MSG_CHECKING(libAfterBase headers in ../libAfterBase)
+  have_afterbase=yes
+  if test "x$afterbase_includes" = "xno"; then
+	  if test -r "../libAfterBase/astypes.h"; then
+	    AC_MSG_RESULT(yes)
+		AFTERBASE_INCS_PATH="../"
+	  else
+	    AC_MSG_RESULT(no)
+ 	    AC_CHECK_HEADER(libAfterBase/astypes.h,[USE_DEFAULT_AFTERBASE=1],[have_afterbase=no])
+	  fi
+  else
+	  AFTERBASE_INCS_PATH="$afterbase_includes/"
+      AC_MSG_RESULT($AFTERBASE_INCS_PATH)
+  fi
+else
+  AC_MSG_CHECKING(libAfterBase)
+fi
+
+AFTERBASE_C=afterbase.o
+HAVE_AFTERBASE_FLAG=0
+if test "x$have_afterbase" = "xyes"; then
+    HAVE_AFTERBASE_FLAG=1
+	AFTERBASE_C=
+	if test "x$CYGWIN" = "xno" -a "x$GCC" = "xyes" ; then
+dnl# rdynamic is only useable if we have libAfterBase's backtrace functionality
+		user_ldflags="$user_ldflags $RDYNAMIC"
+  	fi
+    if test "x$have_x" != "xyes" -a "x$have_gif" = "xyes"; then
+    	AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lAfterBase"
+    else
+    	AFTERIMAGE_LIBS="-lAfterBase $AFTERIMAGE_LIBS"
+    fi
+    if test -r "../libAfterBase/astypes.h"; then
+    	AFTERIMAGE_APPS_LIBS="-L../ -L../../libAfterBase -lAfterImage $AFTERIMAGE_LIBS"
+    	AFTERIMAGE_TEST_LIBS="-L./ -L../libAfterBase -lAfterImage $AFTERIMAGE_LIBS"
+    	AFTERIMAGE_LIB_LIBS="-L./ -L../libAfterBase $AFTERIMAGE_LIBS"
+    else
+    	AFTERIMAGE_APPS_LIBS="-L../ -L$libdir -lAfterImage $AFTERIMAGE_LIBS"
+    	AFTERIMAGE_TEST_LIBS="-L./ -L$libdir -lAfterImage $AFTERIMAGE_LIBS"
+    	AFTERIMAGE_LIB_LIBS="-L./ -L$libdir $AFTERIMAGE_LIBS"
+    fi
+    AC_DEFINE(HAVE_AFTERBASE,1,[Define if libAfterBase is available])
+else
+	AFTERIMAGE_APPS_LIBS="-L../ -lAfterImage $AFTERIMAGE_LIBS_EXTERNAL"
+	AFTERIMAGE_TEST_LIBS="-L./ -lAfterImage $AFTERIMAGE_LIBS_EXTERNAL"
+	AFTERIMAGE_LIB_LIBS="-L./ $AFTERIMAGE_LIBS_EXTERNAL"
+	if test "$with_afterbase" = "no"; then
+	    AC_MSG_RESULT(disabled)
+	fi
+	AC_HEADER_DIRENT
+	AC_CHECK_HEADERS(sys/dirent.h)
+fi
+AC_SUBST(AFTERBASE_INCS_PATH)
+AC_SUBST(USE_DEFAULT_AFTERBASE)
+AC_SUBST(HAVE_AFTERBASE_FLAG)
+AC_SUBST(AFTERBASE_C)
+AC_SUBST(have_afterbase)
+AC_SUBST(AFTERIMAGE_APPS_LIBS)
+AC_SUBST(AFTERIMAGE_TEST_LIBS)
+AC_SUBST(AFTERIMAGE_LIB_LIBS)
+AC_SUBST(afterimage_x_support)
+
+dnl# finalizing libs listing :
+
+CLEAN_AFTERIMAGE_LIBS=
+for L in $AFTERIMAGE_LIBS; do
+  if test "$L" != "-L$libdir"; then
+	  CLEAN_AFTERIMAGE_LIBS="$CLEAN_AFTERIMAGE_LIBS $L"
+  fi
+done
+AFTERIMAGE_LIBS="-L$libdir -lAfterImage $CLEAN_AFTERIMAGE_LIBS"
+AC_SUBST(AFTERIMAGE_LIBS)
+
+if test "x$enable_staticlibs" = "xyes"; then
+   LIBPROG='$(LIB_STATIC)'
+   LIBINSTALL="install.static"
+   LIBUNINSTALL="install.static"
+else
+   enable_sharedlibs="yes"
+fi
+if test "x$enable_sharedlibs" = "xyes"; then
+	if test "x$CYGWIN" = "xyes" ; then
+	   tmp='$(LIB_SHARED_CYG)'
+	   tmp2='install.cyg'
+	else
+	   tmp='$(LIB_SHARED)'
+	   tmp2='install.dyn'
+	fi
+   	LIBPROG="$LIBPROG $tmp"
+   	LIBINSTALL="$LIBINSTALL $tmp2"
+    LIBUNINSTALL="uninstall.static un$tmp2"
+fi
+
+dnl# define X_LOCALE.  need Linux, NetBSD and etc.
+if test "x$enable_xlocale" = "xyes"; then
+  DEFINE_XLOCALE="-DX_LOCALE"
+fi
+
+dnl# Translate enable_* from "yes/no" to "1/0" (for configure.h)
+
+if test "x$enable_i18n" = "xyes"; then AC_DEFINE(I18N,1,[Define if locale support in X is needed]) fi
+if test "x$enable_audit" = "xyes"; then AC_DEFINE(DEBUG_ALLOCS,1,[Define if memory allocation logging and debugging is desired]) fi
+
+dnl# Variable strings declaration
+
+AC_SUBST(image_format)
+
+AC_SUBST(CFLAGS)
+AC_SUBST(version)
+AC_SUBST(version_major)
+AC_SUBST(lib_name)
+AC_SUBST(lib_file_name)
+AC_SUBST(with_locale)
+AC_SUBST(user_ldflags)
+AC_SUBST(x_libs)
+AC_SUBST(X_CFLAGS)
+AC_SUBST(LIBPROG)
+AC_SUBST(LIBINSTALL)
+AC_SUBST(DEFINE_XLOCALE)
+AC_SUBST(PERL)
+
+dnl# Write results
+dnl# Common parts of the Makefile
+
+LIBAFTERIMAGEFILES=.shared
+AC_SUBST_FILE(LIBAFTERIMAGEFILES)
+
+APPSDEPS=
+if test -d apps ; 	then   
+  APPSDEPS='$(APPS_DEPS)'
+  AC_CONFIG_FILES([apps/Makefile]) 
+fi
+
+if test -d aftershow ; 	then   
+  AC_CONFIG_FILES([aftershow/Makefile]) 
+fi
+
+AC_SUBST(APPSDEPS)
+
+AC_OUTPUT(Makefile \
+afterbase.h \
+afterimage-libs \
+afterimage-config)
+
+chmod 755 afterimage-libs

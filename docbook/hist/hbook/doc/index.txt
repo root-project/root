@@ -1,0 +1,12 @@
+This directory contains all the hbook interface classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://root.cern.ch/drupal/content/how-convert-hbookpaw-files-root-files">How to convert Hbook/PAW files to ROOT</a></li>
+<li><a href="ftp://root.cern.ch/root/doc/3Histograms.pdf">The Chapter about the Histogram classes in the Users Guide</a></li>
+<li><a href="ftp://root.cern.ch/root/doc/5FittingHistograms.pdf">The Chapter about Fitting Histogram in the Users Guide</a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-use-histograms-classes">How to use the Histogram classes</a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-merge-histograms-files">How to Merge files with histograms and Trees</a></li>
+<li><a href="http://root.cern.ch/drupal/content/how-fit-histograms-or-data-points">How to Fit Histograms</a></li>
+<li><a href="http://root.cern.ch/root/html/tutorials/spectrum/peaks.C.html">How to Fit find peaks in histograms</a></li>
+END_HTML

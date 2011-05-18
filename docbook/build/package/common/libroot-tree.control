@@ -1,0 +1,19 @@
+Package: libroot-tree@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: libroot-tree-treeplayer@libvers@ | root-plugin-tree-treeviewer
+Homepage: http://root.cern.ch
+Description: Tree library for ROOT
+ This package contains the Tree library for ROOT. 
+
+Package: libroot-tree-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-tree@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Tree library for ROOT
+ This package contains the Tree library for ROOT. 
+

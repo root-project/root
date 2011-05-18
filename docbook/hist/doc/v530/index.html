@@ -1,0 +1,63 @@
+<br/> 
+<hr/> 
+<a name="hist"></a> 
+<h3>Histogram package</h3>
+
+<h4>THistPainter</h4>
+<ul>
+<li><tt>TPad::SetTheta()</tt> and <tt>TPad::SetPhi()</tt> did not cause the
+canvas redrawing.</li>
+<li> Protection added in case two histograms were plotted in the same pad
+using the option BOX (the 2nd one with option SAME).
+The clipping was not correct when an interactive zoom was performed.
+</li>
+<li> The 2D functions, for instance a fit function, associated to a 2D
+histogram were always drawn as scatter plots. This was very confusing.
+Now they are drawn as a surface if the histogram plotting option is a
+lego or a surface or as a contour plot for any other plotting options.
+</li>
+</ul>
+
+<h4>TH2Poly</h4>
+<ul>
+<li> <tt>Add(const TH1 *h1, Double_t c1)</tt> has been implemented.</li>
+<li> <tt>Reset()</tt> has been implemented.</li>
+<li> The destructor has been completed.</li>
+</ul>
+
+<h4>TGraph</h4>
+<ul>
+<li> The default browsing option for grapgs is now <tt>"alp"</tt>.<li>
+</ul>
+
+<h4>TGraphErrors</h4>
+<ul>
+<li>The following macro generated wrong C++ code.
+<pre>
+{
+   TGraphErrors *ge = new TGraphErrors(2);
+   ge->SetName("aaa");    // <<< without this it works
+   ge->SetPoint(1, 1, 1); ge->SetPoint(2, 2, 1);
+   ge->Draw("ap*");
+   gPad->Update();
+   ge->SavePrimitive(cout);
+}
+</pre>
+</li>
+<li> The option "0" for graphs with error bars is no implemented:
+  <p> "By default, when a data point is outside the visible range 
+   along the Y axis the error bars are not drawn. Combined with 
+   other options, this option forces error bars' drawing for the 
+   data points outside the visible range along the Y axis."</p>
+  <p>A similar option already existed for histograms.</p>
+</li>
+</ul>
+
+<tt>TSVDUnfold</tt>
+<ul>
+<li>Rescaling using full covariance matrix rather than neglecting 
+correlations.</li>
+<li>Computed covariance matrix via <tt>GetXtau()</tt> and inverse via
+<tt>GetXinv()</tt>.</li>
+</ul>
+

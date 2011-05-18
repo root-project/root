@@ -1,0 +1,859 @@
+#!/usr/bin/env perl
+
+# $Id$
+
+# (C) 1999 by the Board of Trustees of the Leland Stanford, Jr., University
+#                          All Rights Reserved
+# Produced by Andrew Hanushevsky for Stanford University under contract
+#            DE-AC03-76-SFO0515 with the Deprtment of Energy
+
+# This command stages in a file from a remote site. The syntax is:
+
+# ooss_Stage [options] <sourcefn> <targetfn>
+
+# options:
+
+# [-a cgrp] [-c cfn] [-d] [-e] [-f fpath] [-i] [-F] [-k] [-L locks] [-m] [-n]
+
+# [-o [usr][:grp]] [-p mode] [-r] [-s size] [-u user] [-U mid]
+
+# [-v bytes] [-x xeq] [-z]
+
+# -a specifies the cache group where allocation is to occur.
+
+# -c specifies the location of the configuration file. If -c is not specified,
+#    a configuration from /usr/etc/ooss/ooss_mps.cf (ooss_Stage) or
+#    /opt/xrootd/etc/xrootd.cf (mps_Stage) is read, if it exists.
+
+# -d turn on debugging (see -dv).
+
+# -e eliminate any same named file prior to staging in this file (i.e., replace)
+
+# -f the path to the filesystem where the file is to be placed. If specified,
+#    then targetfn becomes a symlink to the file placed in fpath file system.
+
+# -i do stage in immediately. Otherwise, the prestage mechanism is used.
+
+# -F force the stagein even if purge has indicated that not enough space
+#    exists for staging.
+
+# -k turn on lock debugging (see -d).
+
+# -L list of comma separated lock names to obtain before starting the stage.
+#    The option is ignored unless the resource reservation system is configured.
+
+# -m missing option (to keep artem happy). The target file must be missing. If
+#    it is not, an error message is printed and a non-zero status is returned.
+
+# -n do not redirect standard error when invoking the copy function
+
+# -o sets the ownership of the file after staging it in. ooss_Stage must be
+#    running as root to do this. A user/group combination may be specified.
+
+# -p set the mode of the file. Specify 1 to 4 octal digits.
+
+# -r set the access mode to be readonly (i.e., 440)
+
+# -s is the minimum amount of free space that must be available before
+#    trying to stage in a file. The size can be specified in bytes or
+#    as a number suffixed by K, M, or G. If size is specified as a dot
+#    then the actual size of the file is used by first trting to find the
+#    the source file locally and, upon failure, trying to find the file
+#    using a remote stat call to the configured remote system.
+
+# -u The username that is to be used for the pftp login. The corresponding
+#    keyfile will be appended with ".<user>".
+
+# -U The monitor record username (typically, the user who actually requested
+#    the stagein operation).
+
+# -v verify that the specified number of bytes have been staged in. The size
+#    can be specified in bytes or as a number suffixed by K, M, or G. If size
+#    is specified as a dot then the actual size of the file. If the staged file
+#    is not exactly equal to the specified quantity, an error is reported. Note
+#    that -v . is forced should -s . be specified.
+
+# -x The transfer command to use (normally, /usr/etc/ooss/pftp_client for
+#    ooss_Stage and /opt/xrootd/utils/xfrcmd for mps_Stage).
+#    Specify the command along with %sfn and %tfn to substitute the
+#    source and target filenames in the command line, respectively.
+
+# -z do not reset the process group id.
+
+# Upon success, a zero status code is returned. Failure causes a message to
+# be issued to stderr and a non-zero exit status to be returned.
+
+$isMPS = substr(($0 =~ m|([^/]*)$|)[0],0,4) eq 'mps_' ;
+$Config{isMPS} = $isMPS;
+$SSD = ($isMPS ? 'mps' : 'ooss');
+
+# a) We always include the two default locations for 'use' statements.
+# b) If the current working directory is not the location of the program,
+#    we add the path to the program (as intuited by the execution path)
+#    to @INC. The eval() defers this until run-time.
+# c) Finally, we defer all use statements to run-time which is when we
+#    have properly established @INC. Again, eval is used for the deferral.
+#
+use lib '/opt/xrootd/utils';
+use lib '/usr/etc/ooss';
+($ppath) = $0 =~ m:^(\S*)/\S*$:;
+if ($ppath) {eval 'use lib $ppath;';}
+eval 'use ooss_CAlloc';  die "'use ooss_CAlloc' failed: $@\n" if ($@);
+eval 'use ooss_Lock';    die "'use ooss_Lock' failed: $@\n" if ($@);
+eval 'use XrdOlbNotify'; die "'use XrdOlbNotify' failed: $@\n" if ($@);
+eval 'use mps_monStage'; die "'use mps_monStage' failed: $@\n" if ($@);
+eval 'use ooss_name2name'; die "'use ooss_name2name' failed: $@\n" if ($@);
+use Socket;
+use Sys::Hostname;
+
+# Global variables:
+#
+$CR_SFX    = '.anew';        # Suffix for file being staged in
+$CS_SFX    = '.stage';       # Suffix for file stage command stream
+$ER_SFX    = '.fail';        # Suffix for fail file when error occurrs
+$VerSZ     = '';             # Optional verify  size
+$MinSZ     = undef;          # Optional minimum size
+$OKFile    = 1;              # If file already present, all is good.
+$Replace   = undef;          # Replace existing file, if any
+$Mode      = undef;
+$DOSTAGE   = 1;
+
+$Debug = 0; $ErrLog = ''; 
+$CfgFile = '';     # The configuration file name (has a default)
+$CmdFile = '';     # The file containing the command stream
+$DataFile= '';     # Absolute name of where the data resides
+$ErrFile = '';     # Absolute name of where error data resides
+$LinkPath= '';     # Absolute symbolic link path to the data file
+$TempFile= '';     # Abolsute name of where data resides while being brought in
+$FSPath  = '';     # Abolsute path to the filesystem where data is to reside
+$LockFile= '';     # The lock file handle
+$XfrCmd  = '';     # The overridden transfer command
+$xfrtime = 0;      # Time to transfer the file
+$Eoutput = '2>&1'; # The redirection of stderr to stdout
+$OwnerU  = '';     # Us as the owner
+$OwnerG  = '';     # Us as the group
+$FSGroup = '';     # Cache group
+$KeepPG  = 0;      # Process group
+$Force   = 0;      # Force staging
+$Immed   = 0;      # Default use prestage
+$User    = '';     # Alternate username
+$pnomsg  = 1;
+
+$monUser = scalar(getpwuid($<)).":$$.0@".hostname(); # Monitored user
+
+# These are commands that we use which may or may not differ by os-type
+#
+$CMDps   = '/bin/ps';
+$CMDgrep = '/bin/grep';
+$CMDpstg = $SSD.'_PreStage';
+
+# Determine default behaviour
+#
+  $resp = `$CMDps -ef | $CMDgrep -v grep | $CMDgrep $CMDpstg`;
+  chomp($resp);
+  $Immed = 1 if $resp eq '';
+
+# Establish a signal handler and create a process group
+#
+$SIG{TERM} = 'THandler';
+
+# Get the options
+#
+  while (substr($ARGV[0], 0, 1) eq '-') {
+     $op = shift(@ARGV);
+        if ($op eq '-a') {$FSGroup  = &GetVal('cache group'); $Immed = 1;}
+     elsif ($op eq '-c') {$CfgFile  = &GetVal('config filename')}
+     elsif ($op eq '-d') {$Debug    = 1}
+     elsif ($op eq '-e') {$Replace  = 1; $Immed = 1;}
+     elsif ($op eq '-dv'){$DebugV   = 1}
+     elsif ($op eq '-f') {$FSPath   = &GetVal('file system'); $Immed = 1;}
+     elsif ($op eq '-F') {$Force    = 1; $Immed = 1;}
+     elsif ($op eq '-i') {$Immed    = 1}
+     elsif ($op eq '-k') {$DebugLK  = 1}
+     elsif ($op eq '-L') {$ResList  = &GetVal('lock name')}
+     elsif ($op eq '-m') {$OKFile  =  0; $Immed = 1;}
+     elsif ($op eq '-n') {$Eoutput = ''}
+     elsif ($op eq '-o') {($OwnerU, $OwnerG) = split(':', &GetVal('ownership'))}
+     elsif ($op eq '-p') {$Mode =  &GetVal('mode');
+                          &Emsg("Invalid mode '$Mode'.") 
+                               if !IsOct($Mode) || $Mode > 7777;
+                          $Mode = oct($Mode);
+			  $Mode = undef if $Mode == 0;
+                         }
+     elsif ($op eq '-r') {$ReadOnly = 1}
+     elsif ($op eq '-s') {if ($ARGV[0] eq '.') {$MinSZ = -1; shift;}
+			     elsif ($ARGV[0] eq 'undef') {$MinSZ = undef; shift;}
+			     else {$DOSTAGE=$MinSZ=&GetVal('staging size','Q')}}
+     elsif ($op eq '-u') {$User = &GetVal('user name');
+                          $Immed = 1 if $User ne $Config{xfruser}}
+     elsif ($op eq '-U') {$monUser = &GetVal('monitored user name');}
+     elsif ($op eq '-v') {$Immed = 1;
+                          if ($ARGV[0] eq '.') {$VerSZ = -1; shift;}
+                             else {$VerSZ = &GetVal('verify size', 'Q')}}
+     elsif ($op eq '-x') {$XfrCmd = &GetVal('transfer command'); $Immed = 1;}
+     else {&Emsg("Invalid option '$op'.")}
+     }
+
+# Set the mode accordingly
+#
+  if ($ReadOnly) {$Mode = (defined($Mode) ? $Mode & oct('0440') : oct('0440'))}
+
+# Get the source and target filenames
+#
+  &Emsg('Source file not specified.') if (!($src_fn = $ARGV[0]));
+  &Emsg('Target file not specified.') if (!($trg_fn = $ARGV[1]));
+  &Emsg("Extraneous parameter, $ARGV[2].") if ($ARGV[2]);
+
+  # Remove double slashes only if src_fn does not look like an url
+  if (!($src_fn =~ "\:\/\/")) {
+    while ($src_fn =~ s|//|/|g) {}           # remove double slashes
+  }
+
+  while ($trg_fn =~ s|//|/|g) {}           # remove double slashes
+  $Immed = 1 if ("$src_fn" ne "$trg_fn");  # prestage cannot handle names being different
+
+# Perform configuration
+#
+  &Init_Config($CfgFile);
+  $Debug     = $Config{debug} if !defined($Debug);
+  $LogErrors = $Config{logerrors};
+  $MinSZ     = $Config{minfree} if !defined($MinSZ);
+  $OwnerG    = $Config{group} if !$OwnerG;
+
+# Verify that the username and groupnames are valid, if specified
+#
+  if ($OwnerU eq '') {$OwnerU = $>}
+     else {$op = $OwnerU;
+           &Emsg("Invalid username, '$op'.")
+                if (!IsNum($OwnerU) && !defined($OwnerU = getpwnam($OwnerU)));
+           &Emsg('Unable to set user ownership; not running as root.')
+                if ($OwnerU != $> && $>);
+          }
+  if ($OwnerG eq '') {$OwnerG = $)}
+     else {$op = $OwnerG;
+           &Emsg("Invalid group name, '$op'.")
+                if (!IsNum($OwnerG) && !defined($OwnerG = getgrnam($OwnerG)));
+           if ( ($OwnerG != $)) && ($>) )  # if gid different and not root
+              {my($testfile) = "/tmp/" . $SSD . "_Stage.$$";
+               open(DUMMY, ">$testfile"); close(DUMMY);
+               my($ok) = chown($OwnerU, $OwnerG, $testfile);
+               unlink($testfile);
+               &Emsg('Unable to set group ownership; not running as root.') if !$ok;
+              }
+          }
+
+# Perform config overrides at this point
+#
+  $Config{debuglk} = $DebugLK if defined($DebugLK);
+  if ($User) {$Config{xfruser} = $User; $Config{keyfn} .= ".$User";}
+
+# Check if the file already exists in the cache
+#
+  if (-e $trg_fn && !$Replace)
+     {utime(time(), (stat($trg_fn))[9], $trg_fn);
+      &CleanUp(&Emsg("File $trg_fn already exists.", $OKFile));
+     }
+
+
+do_prestage() if (!$Immed);
+
+# Start the allocation manager
+#
+  &Emsg($emsg, 1) if ($emsg = &CA_Start());
+
+# Obtain the file size if spcified as exact
+#
+  if ($MinSZ == -1)
+     {$MinSZ = &Get_FSize($src_fn);
+      $VerSZ = $MinSZ;
+     }
+     elsif ($VerSZ == -1) {$VerSZ = &Get_FSize($src_fn)}
+
+# Obtain the directory in which the target file resides
+#
+  ($Tdir, $Tfn) = &XDirFn($trg_fn);
+
+# Create all components of the directory path. We can do this without
+# obtaining any locks because the operation is idempotent.
+#
+  &MakePath($Tdir);
+
+# Now, allocate a file system target for this file unless one has been
+# specified. In which case, the caller is responsible for make sure it has
+# enough space.
+#
+  if ($FSPath) {$DoLink = ($FSPath ne $Tdir);}
+     else {if (InPlace($Tdir)) {$DoLink = 0; $FSPath = $Tdir;}
+               else {($rc,$FSPath,$DoLink)=CA_SelectFS($Tdir,$MinSZ,$FSGroup);
+                     &Emsg($FSPath) if $rc != 0;
+                    }
+          }
+  &Emsg("Invalid file system path, '$FSPath'.") if !-d $FSPath;
+
+# Establish where the data goes
+#
+  if ($DoLink) {($DataFile = $trg_fn) =~ tr:/:%:}
+     else {$DataFile = $Tfn}
+  $c = $c.'/' if (($c = chop($FSPath)) ne '/');
+  $DataFile = $FSPath.$c.$DataFile;
+  &Log("DataFile=$DataFile Minsz=$MinSZ Versz=$VerSZ") if $Debug;
+
+# Obtain a lock on the target file.
+#
+  if (&Need2Lock($Tdir))
+     {($LockFile, $emsg) = &Lock($Tdir, $Tfn);
+      if (!$LockFile) {&Emsg($emsg) if $emsg; &CleanUp(0);}
+     }
+
+# Either replace or remove any dangling symbolic links at this point. If
+# all the tests, the file exists in the cache, return because we are done.
+#
+  if ($Replace) {&Emsg("Unable to delete $trg_fn.") if !&RemoveFile($trg_fn);}
+     else {if (-l $trg_fn && !-e $trg_fn) {unlink($trg_fn);}
+              elsif (-e $trg_fn) {&CleanUp(&Emsg("File $trg_fn already exists.",$OKFile));}
+          }
+
+# Check if we should pause processing
+#
+  while(-e $Config{stoppstg} || (-e $Config{stoppsta} && !$Force))
+       {&Emsg("Staging has been paused.", 1) if $pnomsg;
+        $pnomsg = 0;
+        sleep(3);
+       }
+
+# At this point we need to bring the file into this cache. Issue the
+# appropriate command to do this.
+#
+  $xfrtime = time();
+  $TempFile = &mush($DataFile).$CR_SFX;
+  $CmdFile  = &mush($trg_fn).$CS_SFX;
+  $ErrFile  = &mush($trg_fn).$ER_SFX;
+  unlink($ErrFile);
+  if ($XfrCmd)
+     {$resp=Xfr_File($src_fn, $TempFile, $CmdFile, $VerSZ, $XfrCmd);
+     } else{
+      $resp=Get_File($src_fn, $TempFile, $CmdFile, $VerSZ);
+     }
+#  &Emsg("Unable to transfer file '$src_fn' to '$trg_fn'; $resp.") if $resp;
+  if ($resp) {
+      my($rc) = ($resp =~ /cannot be opened - HPSS Error: -2/) ? 2 : 4;
+      &Emsg("Unable to transfer file '$src_fn' to '$trg_fn'; $resp.",0,$rc);
+  }
+  $xfrtime = time() - $xfrtime;
+
+# Create a symbolic link to the file if we need to do this
+#
+  if ($DoLink)
+     {&Emsg("Unable to symlink $trg_fn to $DataFile; $!.")
+           if !symlink($DataFile, $trg_fn);
+      $LinkPath = $trg_fn;
+     }
+
+# The file exists now in the cache, we must rename it to the wanted file
+# name. We can't get the directory lock because we have the base file locked
+# and don't want to give up that lock to go up one locking level. It works
+# out that we really don't need the directory lock since a rename is an
+# atomic operation. However, first set the modification time on the lock file.
+#
+  &Lock_Time($trg_fn, time());
+  if (rename($TempFile, $DataFile))
+     {$TempFile = ''; $LinkPath = ''; FileHere($trg_fn);}
+     else {&Emsg("Unable to rename '$TempFile'; $!.")}
+
+# Set the access mode bits if need be
+#
+  &Emsg("Unable to set mode for '$trg_fn'; $!.", 1)
+       if (defined($Mode) && !chmod($Mode, $DataFile));
+
+# Set ownership, as needed
+#
+  &Emsg("Unable to change ownership for '$trg_fn'; $!.")
+       if (($OwnerU != $> || $OwnerG != $)) && !chown($OwnerU, $OwnerG, $DataFile));
+
+# All done.
+#
+  $DataFile = '';
+  &CleanUp(0);
+
+sub CleanUp {my($rc) = @_;
+  $LockFile = &UnLock($LockFile) if $LockFile;
+  unlink($TempFile) if $TempFile;
+  unlink($LinkPath) if $LinkPath;
+  unlink($DataPath) if $DataPath;
+  if ($Config{logstats})
+     {my($lktime, $lktries) = &Lock_Stats();
+      &Log("Stage rc=$rc lkn=$lktries lkt=$lktime xfr=$xfrtime fn=$trg_fn");
+     }
+  if ($rc && $ErrLog && $CmdFile && open(CUFD, ">>$CmdFile") )
+     {print(CUFD $ErrLog); close(CUFD); rename($CmdFile, $ErrFile);
+      utime(time(), 2, $ErrFile) if $rc == 2;
+     }
+  exit($rc);
+}
+
+#******************************************************************************
+#*                              G e t _ F i l e                               *
+#******************************************************************************
+ 
+sub Get_File {my($src, $trg, $cfn, $sz) = @_;
+    my($cmd, $resp, $GetTries, @fstat);
+
+    # For zero length files, simply open and close it
+    #
+    if (!$DOSTAGE) {if (open(TCHFD, ">$trg")) {close(TCHFD); return '';}}
+
+    # Construct the command stream
+    #
+    $cmd = $Config{xfrargs};
+    $cmd =~ s/%xfrhost/$Config{xfrhost}/;
+    $cmd =~ s/%xfrport/$Config{xfrport}/;
+    $cmd =~ s/%xfruser/$Config{xfruser}/;
+    $cmd =~ s/%blksz/$Config{pftpblksz}/;
+    $cmd =~ s/%keyfn/$Config{keyfn}/;
+    $cmd =~ s/%xfrsfn/$src/;
+    $cmd =~ s/%xfrtfn/$trg/;
+    $cmd =~ s/\;/\n/g;
+
+    # Write out the command stream to a file
+    #
+    if (!open(CSFD, ">$cfn") || !print(CSFD $cmd))
+       {$resp = "retrieval failed; cannot create command stream file $cfn; $!";
+        &Log($src.' '.$resp) if $LogErrors;
+        return $resp;
+       }
+    close(CSFD);
+
+    # Execute the command to get the file (as many times as wanted/needed)
+    #
+    $cmd =  "$Config{xfrcmd} -f $cfn $Eoutput";
+    $GetTries = $Config{max_retry};
+    while($GetTries--) {
+        &Log("Executing '$cmd'") if $Debug;
+	my($stime) = time();
+        $resp = `$cmd`;
+	my($etime) = time();
+	my($elap) = $etime-$stime ? $etime-$stime : 1;
+        if (!$?)
+           {next if ($sz && ($resp = &Check_FSize($trg, $sz)));
+	    my($filesize) = (stat($trg))[7];
+	    update_ctrs(1,$filesize,$elap,0);
+            unlink($cfn);
+            &monStage($monUser, $src, $filesize, $elap) if $Config{mondest};
+            return '';
+           }
+	if ($resp =~ /Login failed./) {
+	    $GetTries++;
+	    sleep 240;	# wait a bit and retry forever
+	    next;       # since nothing else will work
+	}
+	if ($resp =~ /connect: Connection timed out/) {
+	    $GetTries++;
+	    sleep 240;	# wait a bit and retry forever
+	    next;       # since nothing else will work
+	}
+	if ($resp =~ /connect: Connection refused/) {
+	    $GetTries++;
+	    sleep 240;	# wait a bit and retry forever
+	    next;       # since nothing else will work
+	}
+        # similar error condition to "could not load thread state"
+	if ($resp =~ /cannot be opened - HPSS Error: -50/) {
+	    sleep 120;	# wait a bit and retry
+	    next;
+	}
+	# disk is full
+	if ($resp =~ /NetToFile:file write failure\(5\)/) {
+	    $GetTries = 0; # no more retries
+	    last;          # exit retry loop
+	}
+        &Log("Error $? getting '$src'.") if $LogErrors;
+        &Log("Response: $resp") if $Debug;
+        $ErrLog .= "xfr response -------->\n".$resp."<-------- xfr response\n"
+            if !$GetTries;
+        $resp = 'retrieval failed for unknown reasons.'
+               if !($resp = &LastLine($resp));
+       }
+    update_ctrs(0,0,0,1) if $resp;  # count failures
+    return $resp;
+    }
+
+#******************************************************************************
+#*                              X f r _ F i l e                               *
+#******************************************************************************
+
+sub Xfr_File {my($src, $trg, $cfn, $sz, $xcmd) = @_;
+    my($resp, $rc);
+
+
+    # Construct the command line
+    #
+    $xcmd =~ s/%sfn/$src/;
+    $xcmd =~ s/%tfn/$trg/;
+
+    # Execute the command
+    #
+    &Log("Executing $xcmd") if $Debug;
+    $resp = `$xcmd $Eoutput`; $rc = $?;
+    &Log("Response: $resp") if $Debug;
+    if ($?) {unlink($trg);
+             &Log("Error $? getting '$src'.") if $LogErrors;
+             $resp = 'retrieval failed for unknown reasons.'
+                     if !($resp = &LastLine($resp));
+            }
+       elsif ($sz) {$resp = &Check_FSize($trg, $sz)}
+              else {$resp = ''}
+    return $resp;
+}
+ 
+#******************************************************************************
+#*                    F i l e   S i z e   H a n d l i n g                     *
+#******************************************************************************
+
+sub Get_FSize {my($fname) = @_;
+
+# Get the size of the file using either the local or remote method
+#
+  $sz = -s $fname;
+  $sz = CA_GetFSize($fname) if !defined($sz);
+  &Emsg("file '$fname' not found.") if !defined($sz);
+  return $sz;
+}
+
+sub Check_FSize {my($trg, $sz) = @_;
+    my(@fstat, $resp);
+
+    @fstat = stat($trg);
+    if ($fstat[7] != $sz)
+       {unlink($trg);
+        $resp = "retrieval failed for $trg; got $fstat[7] of $sz bytes.";
+        &Log($resp) if $LogErrors;
+       } else {$resp = ''}
+
+    return $resp;
+}
+  
+#******************************************************************************
+#                   R e m o v e   F i l e   H a n d l i n g                   *
+#******************************************************************************
+  
+sub RemoveFile {my($tfn) = @_; my($Link);
+    my(@Stems) = ('.anew', '.fail', '.map', '.stage');
+
+# If the target is a symbolic link, make sure we remove the target file
+#
+  if (-l $tfn)
+     {return &Emsg("unable to read symlink $tfn; $!.", 1)
+                  if (!($Link = readlink($tfn)));
+      return &Emsg("unable to handle relative symlink, '$Link'.", 1)
+                  if (substr($Link, 0, 1) ne '/');
+      $Link = '' if !-e $Link;
+     } else {$Link = ''}
+
+# Now do the local variant of this (no need to really lock the directory).
+#
+     if ($Link && !unlink($Link))
+        {return &Emsg("unable to remove $Link; $!.", 1)}
+  elsif ((-l $tfn || -e $tfn) && !unlink($tfn))
+        {return &Emsg("unable to remove $tfn; $!.", 1)}
+  else  {foreach $sfx (@Stems) {unlink($tfn.$sfx)}}
+
+  return 1;
+}
+
+#******************************************************************************
+#*                             u t i l i t i e s                              *
+#******************************************************************************
+  
+sub XDirFn {my($fn) = @_; my($i, $dir);
+    if ( ($i = rindex($fn, '/')) < 0) {return ('./', $fn)}
+       else {$dir = substr($fn, 0, $i+1); $fn = substr($fn, $i+1);}
+    return ( (substr($dir, 0, 1) eq '/' ? $dir : './'.$dir), $fn);
+    }
+
+sub MakePath {my($path) = @_; my(@dirs, $mkpath, $dname);
+    @dirs = split('/', $path);
+    $mkpath = shift(@dirs);  # start with either "" or "."
+    while (($dname = shift(@dirs)) ne "") {
+          $mkpath .= "/$dname";
+          if (!mkdir($mkpath, $Config{dmode}) && $! != 17)
+             {&Emsg("cannot create '$dname' in '$path'; $!", 1); return;}
+             else {chmod($Config{dmode}, $mkpath)}
+          }
+    }
+
+sub Need2Lock {my($tdir) = @_;
+    my($ld, @ldirs);
+    if ($Config{scan})
+       {@ldirs = split(':', $Config{scan});
+        foreach $ld (@ldirs) {return 1 if ( ($tdir =~ m/^$ld/) )}
+       }
+    return 0;
+}
+
+sub mush {my($fn) = @_; my($path, $fname);
+          return $fn if !$Config{hidden};
+          return '.' if $fn eq '';
+          ($path, $fname) = $fn =~ m:^(.*/)(.*):g;
+          return '.'.$fn if $path eq '';
+          return $path.'.'.$fname;
+}
+
+sub InPlace {my($path) = @_;
+    my($scan);
+    my(@sdirs) = split(/:/, $Config{scan});
+    foreach $scan (@sdirs)
+       {return 0 if $path =~ m/^$scan/;}
+    return 1;
+}
+
+sub Log {my($msg) = @_; 
+    my($i, $k);
+    print STDERR $SSD.'_Stage: ', $msg, "\n" if $Debug;
+    return if !$Config{logfn};
+    local(@t) = localtime(time);
+    open(LOG, ">>$Config{logfn}");
+    printf(LOG "%02d%02d%02d %02d:%02d:%02d [%6d] %s\n", 
+               $t[5]%100,$t[4]+1,$t[3],
+               $t[2],   $t[1],   $t[0], $$, $msg);
+    close(LOG);
+}
+
+sub LastLine {my($resp) = @_;
+    my(@rr, $i);
+    @rr = split("\n", $resp);
+    $resp = '';
+    for ($i = $#rr; $i >= 0 && !$resp; $i--) {$resp = $rr[$i] if $rr[$i];}
+    return $resp;
+}
+
+sub GetVal {my($item, $type) = @_; my($v, $q);
+    $v = shift(@ARGV); $q = 0;
+    &Emsg(ucfirst($item).' not specified.') if $v eq '';
+    if ($type eq 'Q') { $q = uc(chop($v));
+                           if ($q eq 'K') {$q = 1024;}
+                        elsif ($q eq 'M') {$q = 1024*1024;}
+                        elsif ($q eq 'G') {$q = 1024*1024*1024;}
+                        else  {$v .= $q; $q = 0;}
+                      }
+    &Emsg("Invalid $item, '$v'.") 
+         if ($type eq 'N' || $type eq 'Q') && !&IsNum($v);
+    $v = $v*$q if $q;
+    return $v;
+    }
+
+sub IsNum  {my($v) = @_; return ($v =~ m/^[0-9]+$/);}
+
+sub IsOct  {my($v) = @_; return ($v =~ m/^[0-7]+$/);}
+
+sub Emsg {my($msg,$ret,$rc) = @_;
+    &Log($msg) if $LogErrors;
+    print STDERR $SSD.'_Stage: ', $msg, "\n";
+    $ErrLog .= $msg."\n";
+    return 0 if $ret;
+    $rc = 4 if $rc eq "";
+    &CleanUp($rc);
+    }
+
+#******************************************************************************
+#*                         c o n f i g u r a t i o n                          *
+#******************************************************************************
+  
+sub Init_Config {my($cfn) = @_; 
+    my(%Xlate, $OK, $sys, $ssys, $var, $val, $dvd);
+
+$Config{_fs_stat}  = ($isMPS ? '/opt/xrootd/utils/fs_stat'
+                             : '/usr/etc/ooss/fs_stat');
+$Config{adminuser} = ($isMPS ? 'sys-mps' : 'sys-hpss'); # Administrator for mail messages
+$Config{debug}     = 0;      # Debug general code
+$Config{dmode}     = 0775;   # Directory create mode
+$Config{group}     = '';     # Group to put file into
+$Config{logerrors} = 1;      # Put error messages into syslog
+$Config{logfn}     = "/var/adm/$SSD/logs/Slog";
+$Config{logstats}  = 1;      # Put xfr statistics into syslog
+$Config{maxproc}   = 1;      # Maximum number of processes
+$Config{scan}      = '';     # Valid directories (used to control lock files)
+$Config{prestageQ} = "/var/adm/$SSD/PreStageQ/stageRequests.1";
+$Config{prestagePID} = "/tmp/" . $SSD . "_prestage.pid";
+$Config{pftpblksz} =  2097152;
+$Config{stgctrsfn} =  '';
+$Config{xfrcmd}    = ($isMPS ? '/opt/xrootd/utils/xfrcmd'
+                             : '/usr/etc/ooss/pftp_client');
+$Config{xfrargs}   = 'open %xfrhost %xfrport;user %xfruser <%keyfn;binary;' .
+                     'setpblocksize %blksz;pget %xfrsfn %xfrtfn;quit;';
+$Config{xfrhost}   = ($isMPS ? 'mpsmss' : 'babarmss');
+$Config{xfrport}   = ($isMPS ?     '21' : '2021');
+$Config{xfruser}   = ($isMPS ? 'mpsuser' : 'objysrv');
+$Config{max_retry} = 1;      # Number of times to try a failing remote get
+$Config{keyfn}     = ($isMPS ? '/var/adm/mps/xfrcmd/keyfile'
+                             : '/var/adm/ooss/pftp/keyfile');
+$Config{stoppstg}  = "/var/adm/$SSD/STOPPSTG";
+$Config{stoppsta}  = "/var/adm/$SSD/STOPPSTA";
+
+# See ooss_CAlloc.pm and ooss_Lock.pm for additional configuration options.
+
+if (!$cfn) {$cfn = ($isMPS ? '/opt/xrootd/etc/xrootd.cf'
+                           : '/usr/etc/ooss/ooss_mps.cf');
+            $copt = 1;
+           }
+
+%Xlate = (
+          pftpblksz      => 'xfrblksz',
+          pftpcmd        => 'xfrcmd',
+          pftphost       => 'xfrhost',
+          pftpport       => 'xfrport',
+          pftpuser       => 'xfruser',
+         );
+my(%Xcept)= ('ooss.cache'   => 1,
+              'oss.cache'   => 1);
+
+if (!open(CONFIG, $cfn))
+   {if ($? == 2 && !$copt) {&Emsg("error opening '$cfn'; $!.")}
+       else {return}
+   }
+&Log("processing file $cfn.") if $DebugV;
+$OK = 1;
+
+while( <CONFIG> ) {
+   s/#.*$//;       #remove comments
+   if (/=/) {             # var = val
+      ($var,$val) = /(\S*?)\s*=\s*(.*)/;
+      }
+   else {                 # var val (no equal sign)
+      ($var,$val) = /(\S*)\s*(.*)/;
+      }
+   $var =~ tr/ \t\n//d;   #remove whitespaces
+   $val =~ s/^\s*//;      #remove leading whitespaces
+   $val =~ s/\s*$//;      #remove trailing whitespaces
+   my($Accept) = $Xcept{$var};
+   &Log("readconfig: $var = $val") if $DebugV && $var;
+
+      if (($sys,$ssys,$svar) = $var =~ /^(\S*)\.(\S*)\.(\S*)$/)
+         {next if ("$ssys" ne 'stage');} # skip if not for our subsys
+   elsif ( !(($sys,$svar) = $var =~ /^(\S*)\.(\S*)$/ )) { next; }
+
+   next if (("$sys" ne "$SSD" && !$Accept) || !$svar); # skip if not for ooss
+
+   if ($Xlate{$svar}) {$dvd = $Xlate{$svar}}
+      else {$dvd = $svar;}
+
+      if (!exists($Config{$dvd}) && $ssys eq 'stage') 
+         {&Emsg("invalid directive '$svar'",1)}
+   elsif ($val eq '')             {$OK = &Emsg("value not specified for '$svar'",1)}
+   elsif ($dvd eq 'scan')
+         {$val =~ tr/ /:/s;
+          if ($Config{scan}) {$Config{scan} .= ':'.$val}
+             else {$Config{scan} = $val}
+         }
+   elsif ($svar eq 'xfrcmd') {$XfrCmd = $val; $Immed=1;}
+   elsif ($svar eq 'ftpcmd') {$Config{xfrcmd} = $val;}
+   else  {$Config{$dvd} = $val}
+
+   # Special processing for cachefs and cache
+   #
+   $OK = &Emsg($etxt, 1) if ($dvd eq 'cachefs' || $dvd eq 'cache'
+                             || $dvd eq 'noreloc')
+                         && ($etxt = &CA_Config($dvd, $val));
+   }
+close(CONFIG);
+
+# Check if anything went wrong
+#
+&Emsg("fatal error processing configuration file") if !$OK;
+
+}
+
+sub THandler {$SIG{TERM} = 'DEFAULT'; kill(-15, getpgrp(0));}
+
+#=============================================================================
+sub do_prestage {
+    my($addr,$data,$fh,$gname,$host,$iaddr,$lockfh,$mode,$notify,$rqstid,$sflg,$udp_port,$uname);
+    my($mfile) = $Config{prestageQ};
+
+    # First, open socket for prestage notification
+    #
+    if(!(socket(SOCK, PF_INET, SOCK_DGRAM, getprotobyname('udp')))) {
+	&Emsg("Unable to get socket for prestage notification",1);
+	return 1;
+    }
+    setsockopt(SOCK, SOL_SOCKET, SO_REUSEADDR, 1);
+    $addr = sockaddr_in(0, INADDR_ANY);
+    if(!(bind(SOCK, $addr))) {
+	&Emsg("Unable to bind to socket for prestage notification",1);
+	close(SOCK);
+	return 1;
+    }
+    ($udp_port, $iaddr) = unpack_sockaddr_in(getsockname(SOCK));
+
+    # build parameters for prestage request
+    #
+    chop($host = `hostname`);
+    $rqstid = time() . "_$$";
+    $notify = "udp://$host:$udp_port";
+    $uname = getpwuid($OwnerU);
+    $gname = getgrgid($OwnerG);
+    $mode = defined($Mode) ? sprintf("%o", $Mode) : 0;
+    $sflg = defined($MinSZ) ? (($MinSZ == -1) ? '.' : $MinSZ) : 'undef';
+    
+    my($lockfh,$emsg) = LockWr("$mfile.lock",2,0);
+    if ($emsg) {
+	&Emsg("Unable to get lock for $mfile.lock, $emsg",1);
+        close(SOCK);
+	return 1;
+    }
+    my($fh,$emsg) = LockWr($mfile,2,0);   
+    if ($emsg) {
+	&Emsg("Unable to access $mfile, $emsg",1);
+        close(SOCK);
+	&UnLock($lockfh);
+	return 1;
+    }
+    my($exists) = (-s "$mfile") + (-s "$mfile.old");
+    print $fh "$rqstid $notify r $trg_fn $uname:$gname:$mode:$sflg\n";
+    print $fh "$rqstid $notify * stagein complete\n";
+    UnLock($fh);
+    UnLock($lockfh);
+    wakeup($Config{prestagePID}) if !$exists;
+
+    # Now wait for file to be staged.
+    #
+    while (1) {
+	recv(SOCK, $data, 2048, 0);
+	if ($data =~ /DONE (\d) (\S*)/) {
+	    close(SOCK);
+	    if (($1 != 0) || ("$2" ne "$rqstid")) {
+		&Emsg("Stagein failed for $src_fn");
+	    }
+	    &CleanUp(0);
+	}
+    }
+    return 0;
+}
+#=============================================================================
+sub wakeup {
+    my($pidfn) = @_;
+    if (-s "$pidfn") {
+	open(PID, "$pidfn");
+	my($pid) = <PID>;
+	close(PID);
+	chop($pid);
+	`/bin/kill -USR1 $pid`;
+        &Log("kill -USR1 sent to $pid $pidfn") if $Debug;
+    }
+}
+#=============================================================================
+sub update_ctrs {
+    my($num,$bytes,$elap,$fail) = @_;
+    return if !$Config{stgctrsfn};
+    my($fh,$emsg) = LockWr("$Config{stgctrsfn}.lock",2,0);   
+    return if $emsg;
+    open(CTRS,"$Config{stgctrsfn}");
+    my($data) = <CTRS>;
+    close(CTRS);
+    open(CTRS,">$Config{stgctrsfn}");
+    my($onum,$obytes,$oelap,$ofail) = split(' ',$data);
+    printf(CTRS "%15.0f %15.0f %15.0f %15.0f\n",
+           $onum+$num, $obytes+$bytes, $oelap+$elap, $ofail+$fail);
+    close(CTRS);
+    UnLock($fh);
+    return;
+}

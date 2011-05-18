@@ -1,0 +1,110 @@
+/////////////////////////////////////////////////////////////////////////
+//
+// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #509
+// 
+//  Easy CINT interactive access to workspace contents through a 
+//  'C++' namespace in CINT that maps the workspace contents in a typesafe way
+//
+//  *********************************************************************************
+//  *** NB: This macro exploits a feature native to CINT and _cannot_ be compiled ***
+//  *********************************************************************************
+//
+// 04/2009 - Wouter Verkerke 
+//
+/////////////////////////////////////////////////////////////////////////
+
+#ifndef __CINT__
+#include "RooGlobalFunc.h"
+#endif
+#include "RooRealVar.h"
+#include "RooDataSet.h"
+#include "RooGaussian.h"
+#include "RooConstVar.h"
+#include "RooChebychev.h"
+#include "RooAddPdf.h"
+#include "RooWorkspace.h"
+#include "RooPlot.h"
+#include "TCanvas.h"
+#include "TAxis.h"
+#include "TFile.h"
+#include "TH1.h"
+using namespace RooFit ;
+
+
+void fillWorkspace(RooWorkspace& w) ;
+
+void rf509_wsinteractive()
+{
+  // C r e a t e  a n d   f i l l   w o r k s p a c e
+  // ------------------------------------------------
+
+  // Create a workspace named 'w' that exports its contents to 
+  // a same-name C++ namespace in CINT 'namespace w'.
+  RooWorkspace* w = new RooWorkspace("w",kTRUE) ;
+
+  // Fill workspace with p.d.f. and data in a separate function
+  fillWorkspace(*w) ;
+
+  // Print workspace contents
+  w->Print() ;
+
+  // U s e   w o r k s p a c e   c o n t e n t s   t h r o u g h   C I N T   C + +   n a m e s p a c e
+  // -------------------------------------------------------------------------------------------------
+
+  // Use the name space prefix operator to access the workspace contents
+  RooDataSet* d = w::model.generate(w::x,1000) ;
+  RooFitResult* r = w::model.fitTo(*d) ;
+
+  RooPlot* frame = w::x.frame() ;
+  d->plotOn(frame) ;
+
+
+  // NB: The 'w::' prefix can be omitted if namespace w is imported in local namespace
+  // in the usual C++ way
+  using namespace w;
+  model.plotOn(frame) ;
+  model.plotOn(frame,Components(bkg),LineStyle(kDashed)) ;
+
+
+  // Draw the frame on the canvas
+  new TCanvas("rf509_wsinteractive","rf509_wsinteractive",600,600) ;
+  gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+
+
+}
+
+
+
+
+void fillWorkspace(RooWorkspace& w)
+{
+  // C r e a t e  p d f   a n d   f i l l   w o r k s p a c e
+  // --------------------------------------------------------
+
+  // Declare observable x
+  RooRealVar x("x","x",0,10) ;
+
+  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their paramaters
+  RooRealVar mean("mean","mean of gaussians",5,0,10) ;
+  RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
+  RooRealVar sigma2("sigma2","width of gaussians",1) ;
+
+  RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
+  RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
+  
+  // Build Chebychev polynomial p.d.f.  
+  RooRealVar a0("a0","a0",0.5,0.,1.) ;
+  RooRealVar a1("a1","a1",-0.2,0.,1.) ;
+  RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
+
+  // Sum the signal components into a composite signal p.d.f.
+  RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
+  RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
+
+  // Sum the composite signal and background 
+  RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
+  RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
+
+  w.import(model) ;
+
+}

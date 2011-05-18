@@ -1,0 +1,411 @@
+.\" 
+.\" $Id: xrootd.1,v 1.1 2005/03/21 21:42:21 rdm Exp $
+.\"
+.TH XROOTD 1 "Version 4" "ROOT" 
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+xrootd \- The eXtended ROOT file server daemon 
+.SH SYNOPSIS
+.B xrootd
+.I [options] [exported directories]
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.BR xrootd
+program.
+.PP
+.B xrootd
+is a
+.B ROOT
+remote file server daemon.
+.SH STARTING XROOTD
+The simplest possible setup is one server and one or more clients:
+.sp 1
+.RS
+.nf
+                       +-- kan001 -----------+ 
++-----------+        +--------+  +---------+ |      
+| Client    |------->| Server |  | Storage | | 
+| TXNetFile |        | xrootd |--|  /data  |-+ 
++-----------+        +--------+  +---------+   
+     		     
+.fi
+.RE
+.sp 1
+As with the original 
+.BR rootd (1) 
+server, this is relatively easy to setup. You can start it as:
+.sp 1
+.RS
+.nf
+kan001> xrootd
+.fi
+.RE
+.sp 1
+Unlike the 
+.BR rootd server (1), 
+this doesn't immediately go into background, but in fact produces some
+amount of logging information.  
+.PP
+Using some 
+.B xrootd 
+client application, you should be able to access a file on the server
+using the same syntax as with 
+.BR  TNetFile / rootd , 
+for example:
+.sp 1
+.RS
+.nf
+root://kan001//tmp/mydatafile.root
+.fi
+.RE
+.sp 1
+From a client-side application such as a ROOT interactive session, you
+should be able to open the file and perform operations on it:
+.sp 1
+.RS
+.nf
+root [1] myfile = TFile::Open("root://kan001//tmp/mydatafile.root");    
+root [2] myfile->ls(); 
+XTNetFile**             root://kan001//tmp/mydatafile.root
+ XTNetFile*             root://kan001//tmp/mydatafile.root
+  KEY: TF1      fooHist;1       gaus
+  KEY: TF1      barHist;1       gaus
+root [3] myfile->Close();
+root [4] .q
+.fi
+.RE
+.sp 1
+.SH ACCESSING AREAS OTHER THAN /tmp
+One important difference from 
+.BR rootd (1) 
+is that 
+.B xrootd 
+by default only allows one to access files in
+.IR /tmp . 
+This is for security reasons so that a running 
+.B xrootd 
+does not give remote clients access to read (or write to!) everything
+visible as 
+.BR xrootd .
+.PP
+A client accessing an area which is not explicitly exported by 
+.B xrootd e.g., 
+.I root://kan001//data/mydatafile.root
+will get an error. 
+.PP
+You must specify explicitly any directories you wish to export via
+.BR xrootd . 
+This can be done on the command line when starting 
+.BR xrootd , 
+for example: 
+.sp 1
+.RS
+.nf
+kan001> xrootd /data
+.fi
+.RE
+.sp 1
+will export the 
+.I /data 
+directory.
+
+
+.SH MULTIPLE SERVERS
+Often it is the case that the data that an application wants to access
+is spread over multiple data servers.
+.PP
+The client application thus needs to know (or determine from some
+external source) on which server any given data file is located. It
+can then access those files directly with URL's like: 
+.sp 1
+.RS
+.nf
+root://kan001//data/aaaFile.root
+root://kan002//data/bbbFile.root
+.fi
+.RE
+.sp 1
+While this may work for small systems with few users, it has some
+disadvantages: 
+.IP
+If users know statically where files are located it doesn't easily
+permit load balancing by moving files between servers or by
+replicating them to spread the load. 
+.IP
+If an external catalog is read by the client in order to determine
+which server has the file, any changes to that catalog must be
+synchronized with what actually happens to the files on disk.
+.IP 
+If the file isn't actually on disk, but is retrieved from somewhere
+else when the client asks for it (e.g. mass storage, discussed in
+later examples), there is no easy way to manage the disk space to
+insure that it is used efficiently and uniformly.
+.PP
+The \fBxrootd\fR system provides a method for solving these problems
+via its \fIopen load balancer\fR component. This provides a method for 
+providing transparent access data servers.
+.sp 1
+.RS
+.nf
+                                   +-- kan001 ----------------+
+                                   |  +--------+  +---------+ |
+                                 +--->| Server |  | Storage | |
+                     + kanrdr +  | |  |  olbd  |  |  /data  | |
++-----------+    +--------+   |  | +--| xrootd |--|         |-+
+| Client    |--->| Server |------+    +--------+  +---------+  
+| TXNetFile |    | xrootd |   |  | 
++-----------+    |  olbd  |---+  | +-- kan002 ----------------+
+                 +--------+      | |  +--------+  +---------+ |
+                                 +--->| Server |  | Storage | |
+                                 | |  |  olbd  |  |  /data  | |
+                                 | +--| xrootd |--|         |-+
+                                 |    +--------+  +---------+  
+                                 |
+                                 ...
+.fi 
+.RE
+.sp 1
+In addition to the dataservers an additional machine (the
+\fIredirector\fR - \fBkanrdr\fR above) is added. It does not need to
+have any disk space itself as its sole role is to redirect the client
+dynamically to an actual data server machine which can serve the
+requested file. Thus client applications open all files via the
+redirector \fBkanrdr\fR:
+.sp 1
+.RS
+.nf
+root://kanrdr//data/aaaFile.root
+root://kanrdr//data/bbbFile.root
+.fi 
+.RE
+.sp 1
+The redirection to the appropriate dataserver will take place
+automatically (with the proper server configuration, discussed below)
+and hence the user running the application doesn't need to know
+anything about the actual layout of the data over the data
+servers. Note also that after redirection the client is reading
+directly from the data server to which it was redirected. It does need
+the redirector any longer (at least until it needs to open a different
+file).
+.PP
+To accomplish this a second daemon, the \fBolbd\fR, must be started on
+both the redirector and each of the dataservers as show in the figure
+above. Configuration of an \fBxrootd\fI/\fBolbd\fR system  
+.SH OPTIONS
+.TP
+\fB\-l\fR \fIlogfile\fR
+The primary advantage of using this option as opposed to simply
+redirecting the output to a file is that there is also a feature which
+does automatic log file rotation. At midnight each night
+\fBxrootd\fR will move the current \fIlogfile\fR to
+\fIlogfile.yyyymmdd\fR and then continue writing to \fIlogfile\fR.
+.TP
+\fB-p\fR \fIport\fR
+As with \fBrootd\fR(1), \fBxrootd\fR will started automatically on the
+IANA assigned port number 1094. If you need to start it on another
+port, that can be done using this option.   Clients will need to
+specify this port when accessing the server, using an URL like 
+\fIroot://kan001:2525//tmp/mydatafile.root\fR.  In general it is
+probably simplest to run xrootd on the standard port 1094. 
+.TP
+\fB\-c\fR \fIconfigfile\fR
+\fBxrootd\fR can be configured via a config file as well as via
+command line options. There are in fact many more options available
+via the config file and hence this is the recommended way of starting
+\fBxrootd\fR is to use this option.  The config file \fIconfigfile\fR
+can have configuration directives as described below. 
+.TP
+.B \-r 
+Flag this server as a redirector. 
+
+.SH CONFIGURATION FILES
+A configuration file for \fBxrootd\fR looks like 
+.sp 1
+.RS
+.nf
+# Start the server on port 2525
+xrd.port 2525
+# Export files in /data only
+xrootd.export /data
+.fi
+.RE
+.sp 1
+in order to achieve (for example) what was done with command line
+options in the sections above. Note that lines beginning with \fB#\fR
+are taken to be comments and ignored. For the moment we just note that
+all config lines are of the form: 
+.sp 1
+.RS
+.nf
+\fIconfigclass\fR.\fIoption\fR [\fIoptval1\fR] [\fIoptval2\fR] [...]
+.fi
+.RE
+.sp 1
+.PP
+It is also important to note that spelling errors in either
+\fIconfigclass\fR or \fIoption\fR will result in the entire line being
+(silently) ignored.  
+.PP
+.B Read-only data access
+.br
+An important thing to note about \fBxrootd\fR access to files is that
+by default it allows any accessed file to be opened in update mode
+(and/or new files to be created). For many situations this is
+undesirable: the goal is simply to make data files available for
+others to read. The easiest thing to do in that case is simply to
+disallow all write access. To do this you need to add two lines to
+your config file: 
+.sp 1
+.RS
+.nf
+xrootd.fslib /opt/xrootd/lib/libXrdOfs.so
+oss.readonly
+.fi
+.RE
+.sp 1
+in your configuration file. The first of these will cause the shared
+library for the optional ofs/oss file layer to be loaded (the exact
+path the \fIlib\fR area will depend on how you installed
+\fBxrootd\fR). This shared library provides a number of filesystem
+extensions. The second line disallows all write/update access using
+one of these options.  
+.PP
+More fine-grained configurations are possible, but globally
+disallowing writes like this should cover a common use case.
+.PP
+.B Multiple servers
+.br
+As an example we take a redirector (called \fBkanrdr\fR) and two data 
+servers (called \fBkan001\fR and \fBkan002\fR) with files
+\fBaaaFile.root\fR and \fBbbbFile.root\fR as above.
+.PP
+For the redirector we use a config file:
+.sp 1
+.RS
+.nf
+#
+# redirector.cf 
+#
+# xrootd
+xrootd.fslib /opt/xrootd/lib/libXrdOfs.so
+xrootd.export /data
+odc.manager kanrdr 3121
+odc.trace redirect
+# olbd
+olb.port 3121
+olb.allow host kanrdr.slac.stanford.edu
+olb.allow host kan001.slac.stanford.edu
+olb.allow host kan002.slac.stanford.edu
+.fi
+.RE
+.sp 1
+and for the data servers we use:
+.sp 1
+.RS
+.nf
+#
+# dataserver.cf 
+#
+# xrootd
+xrootd.fslib /opt/xrootd/lib/libXrdOfs.so
+xrootd.export /data
+oss.readonly
+odc.manager kanrdr 3121
+# olbd
+olb.port 3121
+olb.subscribe kanrdr 3121
+.fi
+.RE
+.sp 1
+As in the earlier examples, the actual path the to the \fBlibXrdOfs.so\fR
+may depend on your installation. (And you should obviously substitute 
+your machine names for \fBkanrdr\fR/\fBkan001\fR/\fBkan002\fR.) 
+.PP 
+It is then possible to start the \fBxrootd\fR and \fBolbd\fR servers
+on each of the machines. 
+.PP
+On dataserver kan001:
+.sp 1
+.RS
+.nf
+xrootd    \-l kan001.xrdlog -c dataserver.cf &
+olbd -s   \-l kan001.olblog -c dataserver.cf &
+.fi
+.RE
+.sp 1
+On dataserver kan002:
+.sp 1
+.RS
+.nf
+xrootd    \-l kan002.xrdlog -c dataserver.cf &
+olbd -s   \-l kan002.olblog -c dataserver.cf &
+.fi
+.RE
+.sp 1
+And on the redirector kanrdr:
+.sp 1
+.RS
+.nf
+xrootd -r \-l kanrdr.xrdlog -c redirector.cf &
+olbd -m   \-l kanrdr.olblog -c redirector.cf &
+.fi
+.RE
+.sp 1
+This should give you a working system capable of providing (readonly)
+access to data files on two servers transparently masqueraded behind a
+single redirector machine. 
+.PP
+.B Testing the example load balanced system
+.br
+Once the system is running we can try to open one of the files, for
+example: 
+.sp 1
+.RS
+.nf
+root [1] myfile = TFile::Open("root://kanrdr//data/aaafile.root");
+root [2] myfile->ls();
+XTNetFile**             root://kanrdr//data/aaafile.root
+ XTNetFile*             root://kanrdr//data/aaafile.root
+  KEY: TF1      fooHist;1       gaus
+  KEY: TF1      barHist;1       gaus
+.fi
+.RE
+.sp 1
+Your client will be redirected and connect itself to \fBkan001\fR, the
+actual location of the requested file. 
+.SH "SEE ALSO"
+\fIrootd\fR(1), \fIproofd\fR(1), \fIsystem.rootdaemonrc\fR(1)
+.PP 
+See also 
+.I http://xrootd.slac.stanford.edu
+for more on the extended \fBROOT\fR server.
+.PP
+For more information on the \fBROOT\fR system, please refer to 
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+.UE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+.B Rene Brun 
+and
+.B Fons Rademakers
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was originally written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system and ROOT version 3.

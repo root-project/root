@@ -1,0 +1,38 @@
+Summary: An eXtended Root Daemon (xrootd)
+Name: xrootd
+#  note: "-" is not allowed in version string!
+Version: @VERSION@
+Release: 1
+Prefix: /opt/xrootd
+URL: http://xrootd.slac.stanford.edu/
+Copyright: SLAC/Stanford University
+Group: Applications/File
+Source: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.gz
+BuildRoot: %{_tmppath}/%{name}-root
+AutoReqProv: no
+
+%description
+The xrootd server provides performant, secure and fault-tolerant access to
+root files. An optional load balancer is also included.
+
+%prep
+
+%setup -n @PACKAGE_TARNAME@-@PACKAGE_VERSION@
+
+%build
+./configure --prefix=/opt/xrootd --enable-dbg-build --enable-krb5 --enable-gsi --enable-mon -C --disable-tokenauthz --with-base-directory=/opt/xrootd --with-utils-dir=/opt/xrootd/utils
+
+make
+
+
+%install
+make install DESTDIR=$RPM_BUILD_ROOT
+find $RPM_BUILD_ROOT \( -type f -o -type l \) -print \
+    | sed "s#^$RPM_BUILD_ROOT/*#/#" > RPM-FILE-LIST
+
+%files -f RPM-FILE-LIST
+
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+

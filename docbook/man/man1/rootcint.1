@@ -1,0 +1,238 @@
+.\"
+.\" $Id: rootcint.1,v 1.2 2005/03/21 21:42:21 rdm Exp $
+.\"
+.TH ROOTCINT 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+rootcint \- ROOT Dictionary generator 
+.SH SYNOPSIS
+.nf
+\fBrootcint \fIheader_file\fR[+][\-][!] ... [LinkDef.h] > \fIdict_file\fR 
+\fBrootcint \fR[\-f] \fIdict_file \fR[\-c] \fIheader_file\fR[+][\-][!] ... [LinkDef.h]
+.fi
+.SH "DESCRIPTION" 
+The 
+.B rootcint 
+program generates the 
+.IR Streamer() , 
+.I TBuffer &operator>>() 
+and 
+.I ShowMembers() 
+methods for 
+.B ROOT 
+classes, i.e. classes using the
+.I ClassDef 
+and 
+.I ClassImp 
+macros. 
+In addition 
+.B rootcint 
+can also generate the 
+.B CINT 
+dictionaries needed in order to get access to ones classes via the
+interpreter.  
+.PP 
+.B rootcint 
+can be used like: 
+.sp 1 
+.RS
+.nf
+.B rootcint TAttAxis.h[-][!] ... [LinkDef.h] > AxisGen.C
+.fi
+.RE
+or 
+.RS
+.nf
+.B rootcint [-f] [AxDict.C] [-c] TAttAxis.h[-][!] ... [LinkDef.h]
+.fi
+.RE
+.sp 1
+The difference between the two is that in the first case only the
+.I  Streamer() 
+and 
+.I ShowMembers() 
+methods are generated while in the latter case a  complete compileable
+file is generated (including the include statements). The first method
+also allows the output to be appended to an already existing file
+(using 
+.B >>
+). The optional minus behind the include file name tells 
+.B rootcint 
+to not generate the 
+.B Streamer() 
+method. A custom method must be provided by the user in that
+case. When using option 
+.B -c 
+also the interpreter method interface stubs will be written to the
+output file (
+.B AxDict.C 
+in the above case).  
+By default the output file will not be overwritten if it exists. Use
+the 
+.B -f (force) 
+option to overwite the output file.  
+.PP 
+Before specifying the first header file one can also add include file
+directories to be searched and preprocessor defines, like:  
+.sp 1 
+.RS
+.nf
+.B \-I$../include -DDebug
+.fi
+.RE
+.sp 1
+The (optional) file 
+.B LinkDef.h 
+looks like: 
+.sp 1 
+.RS
+.nf
+#ifdef __CINT__
+
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
+
+#pragma link C++ class TAxis;
+#pragma link C++ class TAttAxis-;
+#pragma link C++ class TArrayC-!;
+
+#pragma link C++ function StrDup;
+#pragma link C++ function operator+(const TString&,const TString&);
+
+#pragma link C++ global gROOT;
+#pragma link C++ global gEnv;
+
+#pragma link C++ enum EMessageTypes;
+
+#endif
+.fi 
+.RE
+.sp 1
+This file tells 
+.B rootcint 
+for which classes the method interface stubs should be generated. A
+trailing `\-' in the class name tells 
+.B rootcint 
+to not generate the 
+.B Streamer() 
+method. This is necessary for those classes that need a customized 
+.B Streamer() 
+method. A trailing `!' in the class name tells 
+.B rootcint
+to not generate the 
+.B operator>>(TBuffer &b, MyClass *&obj) 
+method. This is necessary to be able to write pointers to objects of
+classes not inheriting from 
+.I TObject. 
+When this file is not specified a default version exporting the
+classes with the names equal to the include files minus the 
+.B .h 
+is generated. 
+.PP 
+.B IMPORTANT: 
+.TP
+1
+.B LinkDef.h 
+must be the last argument on the 
+.B rootcint command line. 
+.TP
+2
+Note that the 
+.B LinkDef 
+file name MUST contain the string:
+.B LinkDef.h 
+or 
+.BR linkdef.h , 
+i.e. 
+.B NA49_LinkDef.h 
+is fine just like, 
+.BR mylinkdef.h . 
+.\" .El
+.SH "SEE ALSO"
+\fIroot\fR(1), \fIcint\fR(1)
+.PP
+.B rootcint 
+is  documented fully on  
+.UR http://root.cern.ch/root/RootCintMan.html
+.I ROOT web-site
+.UE
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+.B Rene Brun 
+and
+.B Fons Rademakers
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" $Log: rootcint.1,v $
+.\" Revision 1.2  2005/03/21 21:42:21  rdm
+.\" From Christian Holm Christensen:
+.\"       * New Debian and RedHat rpm packaging scripts.
+.\"       * Added a description to `build/package/debian/README.Debian' on
+.\"         how to add a new package.   It's not that complicated so it
+.\"         should be a simple thing to add a new package, even for some
+.\"         with little or no experience with RPMs or DEBs.
+.\"       * When searching for the Oracle client libraries, I added the
+.\"         directories `/usr/lib/oracle/*/client/lib' and
+.\"         `/usr/include/oracle/*/client' - as these are the paths that the
+.\"         RPMs install into.
+.\"       * I added the packages `root-plugin-krb5' and
+.\"         `root-plugin-oracle'.
+.\"       * The library `libXMLIO' is in `libroot'.
+.\"       * The package `root-plugin-xml' contains the XML parser.
+.\"       * I fixed an cosmetic error in `build/misc/root.m4'.  The
+.\"         definition of `ROOT_PATH' should be quoted, otherwise aclocal
+.\"         will complain.
+.\"       * In the top-level `Makefile' I pass an additional argument to
+.\"         `makecintdlls' - namely `$(ROOTCINTTMP)'.  In `makecintdlls' I
+.\"         use that argument to make the various dictionaries for
+.\"         `lib...Dict.so'.   Originally, the script used plain `rootcint'.
+.\"         However, as `rootcint' may not be in the path yet, or the one in
+.\"         the path may be old, this failed.  Hence, I use what we know is
+.\"         there - namely the newly build `rootcint_tmp'.  BTW, what are
+.\"         these shared libraries, and where do they belong?  I guess they
+.\"         are specific to ROOT, and not used by plain `CINT'.  For now, I
+.\"         put them in `libroot'.
+.\"       *  Made the two `virtual' packages `root-db-client' - provided the
+.\"         DB plugins, and `root-fitter' provided by `root-plugin-minuit'
+.\"         and `root-plugin-fumili'.  Note, the virtual package
+.\"         `root-file-server' provided by `root-rootd' and `root-xrootd'
+.\"         already existed in the previous patch.
+.\"       * Note, I added the directory `build/package/debian/po' which is
+.\"         for translations of DebConf templates.  DebConf is Debians very
+.\"         advanced package configuration interface.   It presents the user
+.\"         with a set of questions in some sort of `GUI' based on how much
+.\"         the user would like to change.  These `dialogs' can be
+.\"         translated quite easily.  As an example, I translated the
+.\"         questions used by the `ttf-root-installer' package into Danish.
+.\"         I'm sure someone can translate them into German, French,
+.\"         Italien, Spanish, and so on.
+.\"
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
+.\" Revision 1.1  2000/12/08 17:41:01  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
+.\"

@@ -1,0 +1,183 @@
+.\" 
+.\" $Id: system.rootdaemonrc.1,v 1.1 2004/12/15 12:37:43 rdm Exp $
+.\"
+.TH SYSTEM.ROOTDAEMONRC 1 "Version 4" "ROOT" 
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+system.rootdaemonrc, .rootdaemonrc \- access control directives for ROOT daemons 
+.SH LOCATIONS
+.nf
+.B ROOTDAEMORC, $HOME/.rootdaemonrc
+.B /etc/root/system.rootdaemonrc, $ROOTSYS/etc/system.rootdaemonrc
+.fi
+.SH "DESCRIPTION"
+This manual page documents the format of directives specifying access control 
+directives for ROOT daemons. These directives are read from a text file whose
+full path is taken from the environment variable \fBROOTDAEMONRC\fR.
+If such a variable in undefined, the daemon looks for a file named 
+\fB.rootdaemonrc\fR in the $HOME directory of the user starting the daemon;
+if this file does not exists either, the file 
+\fBsystem.rootdaemonrc\fR, located under \fB/etc/root\fR or \fB$ROOTSYS/etc\fR, is used. 
+If none of these file exists (or is readable), the daemon makes use of a default 
+built-in directive derived from the configuration options of the installation.
+
+.SH "FORMAT"
+.TP 
+.B * 
+lines starting with '#' are comment lines.
+.TP 
+.B * 
+hosts can specified either with their name (e.g. pcepsft43), their FQDN (e.g. pcepsft43.cern.ch) or their IP address (e.g. 137.138.99.73).
+.TP 
+.B * 
+host names can be followed by :rootd, :proofd or :sockd to define directives applying only to the given service; 'sockd' applies to servers run from interactive sessions (TServerSocket class)
+.TP 
+.B * 
+directives applying to all host can be specified either by 'default' or '*'
+.TP 
+.B * 
+the '*' character can be used in any field of the name to indicate a set of machines or domains, e.g. pcepsft*.cern.ch applies to all 'pcepsft' machines in the domain 'cern.ch'. (to indicate all 'lxplus' machines you should use 'lxplus*.cern.ch' because internally the generic lxplus machine has a real name of the form lxplusnnn.cern.ch; you can also use 'lxplus' if you don't care about domain name checking).
+.TP 
+.B * 
+a whole domain can be indicated by its name, e.g. 'cern.ch', 'cnaf.infn.it' or '.ch'
+.TP 
+.B * 
+truncated IP address can also be used to indicate a set of machines; they are interpreted as the very first or very last part of the address; for example, to select 137.138.99.73, any of these is valid: '137.138.99', '137.138', '137`, '99.73'; or with wild cards: '137.13*' or '*.99.73`; however, '138.99' is invalid because ambiguous.
+.TP 
+.B * 
+the information following the name or IP address indicates, in order of preference, the short names or the internal codes of authentication methods accepted for requests coming from the specified host(s); the ones implemented so far are:
+
+   Method                           nickname    code
+
+   UsrPwd                            usrpwd       0
+   SRP                               srp          1
+   Kerberos                          krb5         2
+   Globus                            globus       3
+   SSH                               ssh          4
+   UidGid                            uidgid       5   (insecure)
+
+(The insecure method is intended to speed up access within a cluster protected by other means from outside attacks; should not be used for inter-cluster or inter-domain authentication). Methods non specified explicitly are not accepted. For the insecure method it is possible to give access only to a specific list of users by specifying the usernames after the method separated by colons (:) example:
+
+   uidgid:user1:user2:user3
+
+will allow uidgid access only to users user1, user2 and user3. This is useful to give easy access to data servers. It is also possible to deny access to a user by using a '-' in front of the name:
+
+   uidgid:-user4
+.TP 
+.B * 
+Lines ending with '\' are followed by additional information for the host on the next line; the name of the host should not be repeated.
+
+.SH "EXAMPLES"
+Valid examples:
+
+.TP 
+.B default              none
+All requests are denied unless specified by dedicated directives.
+
+.TP 
+.B default              0 ssh
+Authentication mechanisms allowed by default are 'usrpwd' (code 0) and 'ssh'
+
+.TP 
+.B 137.138.             0 4
+Authentication mechanisms allowed from host in the domain 137.138. (cern.ch) are 'usrpwd' (code 0) and 'ssh'
+
+.TP 
+.B pceple19.cern.ch     4 1 3 2 5 0
+All mechanisms are accepted for requests coming from host pceple19.cern.ch .
+
+.TP 
+.B lxplus*.cern.ch      4 1 globus 0:qwerty:uytre
+Requests from the lxplus cluster can authenticate using 'ssh', 'srp' and 'globus'; users 'qwerty' and 'uytre' can also use 'usrpwd' .
+
+.TP 
+.B pcep*.cern.ch:rootd  0:-qwerty 4
+Requests from the pcep*.cern.ch nodes can authenticate using 'usrpwd' and 'ssh' when accessing the 'rootd' daemon ; user 'qwerty' can only use 'ssh'.
+
+.SH "SEE ALSO"
+\fIrootd\fR(1), \fIproofd\fR(1)
+.PP
+For more information on the \fBROOT\fR system, please refer to 
+\fIhttp://root.cern.ch/\fR .
+
+.SH "ORIGINAL AUTHORS"
+The ROOT team (see web page above):
+.RS
+.B Rene Brun 
+and
+.B Fons Rademakers
+.RE
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was written by G. Ganis <g.ganis@cern.ch> .
+.\" 
+.\" $Log: system.rootdaemonrc.1,v $
+.\" Revision 1.1  2004/12/15 12:37:43  rdm
+.\" From Gerri:
+.\" 1) New files:
+.\"  .1 build/package/rpm/root-rootd.spec.in
+.\"
+.\"     skeleton for the rootd RPM specs file
+.\"
+.\"  .2 build/package/common/root-rootd.dscr
+.\"
+.\"     short and long descriptions used in the previous file
+.\"
+.\"  .3 config/rootd.in
+.\"
+.\"     Skeleton for the startup script to be created under etc; the
+.\"     variable which depends on the configuration directives is
+.\"     the location of the executable to run (i.e the installation
+.\"     prefix). This file is to be moved to /etc/rc.d/init.d/ on RH
+.\"     (or equivalent position on other versions of Linux).
+.\"
+.\"  .4 man/man1/system.rootdaemonrc.1
+.\"
+.\"     man page for system.rootdaemonrc and related files
+.\"
+.\"
+.\" 2) Patched files:
+.\"
+.\"  .1 Makefile
+.\"
+.\"     add new target 'rootdrpm' with the rules to create the specs file
+.\"
+.\"  .2 configure
+.\"
+.\"     add creation of etc/rootd from the skeleton in config/rootd.in
+.\"
+.\"  .3 config/Makefile.in
+.\"
+.\"     add variable ROOTDRPMREL with the RPM release version (default 1);
+.\"     this can be changed on command line whn creating the spec file
+.\"
+.\"  .4 config/rootdaemonrc.in
+.\"
+.\"     update fir 'sockd' and correct a few typos
+.\"
+.\"  .5 man/man1/rootd.1
+.\"
+.\"     significant updates; typo corrections
+.\"
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
+.\" Revision 1.1  2000/12/08 17:41:01  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
+.\"

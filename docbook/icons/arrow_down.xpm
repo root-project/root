@@ -1,0 +1,11 @@
+/* XPM */
+const char * arrow_down_xpm[] = {
+"12 6 2 1",
+" 	c None s None",
+".	c black",
+"            ",
+"  .......   ",
+"   .....    ",
+"    ...     ",
+"     .      ",
+"            "};

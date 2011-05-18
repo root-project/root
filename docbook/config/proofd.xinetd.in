@@ -1,0 +1,13 @@
+# default: on
+# description: The proofd daemon is used to startup PROOF.
+service proofd
+{
+	disable			= no
+	socket_type		= stream
+	wait			= no
+	user			= root
+	server			= @bindir@/proofd
+	server_args		= -i @prefix@
+	log_on_success		+= DURATION USERID
+	log_on_failure		+= USERID
+}

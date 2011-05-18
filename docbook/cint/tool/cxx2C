@@ -1,0 +1,44 @@
+#!/bin/sh
+############################################################################
+# cint (C/C++ interpreter)
+############################################################################
+# Shell script , cxx2C
+############################################################################
+# Description:
+#  Rename C++ source file extention from .cxx to .C
+############################################################################
+
+echo '######################################################################'
+echo '# Renaming C++ source file extention from .cxx to .C'
+echo '######################################################################'
+
+sed '
+s/\.cxx/\.C/g
+s/\.cxx/\.C/g
+s/\.cxx/\.C/g
+' Makefile.base  > temp
+mv temp Makefile.base
+
+sed '
+s/\.cxx/\.C/g
+s/\.cxx/\.C/g
+s/\.cxx/\.C/g
+' src/Makefile.base  > temp
+mv temp src/Makefile.base
+
+cd src
+for i in *.cxx
+do
+  fname=`basename $i .cxx`
+  mv $i $fname.C
+done
+cd ..
+
+cd main
+for i in *.cxx
+do
+  fname=`basename $i .cxx`
+  mv $i $fname.C
+done
+cd ..
+

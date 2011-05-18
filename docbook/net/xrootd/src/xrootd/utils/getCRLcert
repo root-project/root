@@ -1,0 +1,140 @@
+#! /bin/sh
+
+# $Id$
+# G. Ganis, May 2009
+
+# This script downloads and installs the CRL certificate for the CA of the
+# input certificate; write access to the CA certificate directory is required.
+# The script requires 'wget' and 'openssl'.
+#
+# Syntax:
+#          getCRLcert [-help] [-o <output-file-or-dir>] [-hash <hash>] [-uri <crluri>] /path/to/CA/<CAhash>.pem
+#
+
+print_help() {
+   echo " "
+   echo "Syntax:"
+   echo "        getCRLcert [-help] [-o <output-file-or-dir>] [-hash <hash>] [-uri <crluri>] /path/to/CA/<CAhash>.pem"
+   echo " "
+}
+
+# Parse inputs
+
+CAcert=
+CAhash=
+CRLuri=
+CRLcert=
+isO="no"
+isH="no"
+isU="no"
+for i in $@ ; do
+  if test "x$i" = "x-help" ; then
+     print_help
+     exit
+  elif test "x$i" = "x-h" ; then
+     print_help
+     exit
+  elif test "x$i" = "x-o" ; then
+     isO="yes"
+  elif test "x$i" = "x-hash" ; then
+     isH="yes"
+  elif test "x$i" = "x-uri" ; then
+     isU="yes"
+  else
+     if test "x$isO" = "xyes" ; then
+        CRLcert="$i"
+        isO="no"
+     elif test "x$isH" = "xyes" ; then
+        CAhash="$i"
+        isH="no"
+     elif test "x$isU" = "xyes" ; then
+        CRLuri="$i"
+        isU="no"
+     else
+        CAcert=$i
+     fi
+  fi
+done
+
+if test "x$CAcert" = "x" ; then
+   print_help
+   exit
+fi
+if test ! -f $CAcert ; then
+   echo "file $CAcert does not exists or is not a regular file"
+   exit
+fi
+
+# Get CA hash
+if test  "x$CAhash" = "x" ; then
+   tmphash=`basename $CAcert`
+   CAhash=`echo $tmphash | cut -c1-8`
+fi
+
+if test "x$CRLcert" = "x" ; then
+   CRLcert=`dirname $CAcert`
+   CRLcert="$CRLcert/$CAhash.r0"
+else
+   if test -d $CRLcert ; then
+      CRLcert="$CRLcert/$CAhash.r0"
+   fi
+fi
+
+# Try to extract the URI
+if test "x$CRLuri" = "x" ; then
+   rm -f crluri.txt
+   openssl x509 -in $CAcert -text | grep URI | grep "\.crl" >> crluri.txt
+   while read -r uu; do
+      CRLuri=`echo $uu | cut -c5-`
+   done < crluri.txt
+fi
+
+echo "CAcert:  $CAcert"
+echo "CAhash:  $CAhash"
+echo "CRLuri:  $CRLuri"
+echo "CRLcert: $CRLcert"
+
+# Get the cerificate from the URI, if defined
+if test ! "x$CRLuri" = "x" ; then
+   wget $CRLuri -O $CRLcert
+fi
+
+# Check the result
+if test ! -f $CRLcert ; then
+   # Try to retrieve it from the ".crl_url" file
+   CRLurl=`dirname $CAcert`
+   CRLurl="$CRLurl/$CAhash.crl_url"
+   echo "CRLurl: $CRLurl"
+   wget $CRLurl -O $CRLcert
+fi
+
+# Check the result
+if test ! -f $CRLcert ; then
+   # Failurre
+   echo "CRL certificate cannot be retrieved retrieved"
+   exit
+fi
+
+# Make sure it is in PEM format
+rm -f ssl.err.txt
+openssl crl -in $CRLcert -text 2> sslerr.txt
+sslerr=`grep "unable to load CRL" sslerr.txt`
+if test ! "x$sslerr" = "x" ; then
+   echo "Not in PEM format: try to tranform it"
+   CRLcertDER="$CRLcert.der"
+   mv $CRLcert $CRLcertDER
+   openssl crl -inform DER -in $CRLcertDER -out $CRLcert
+   # Check again
+   rm -f ssl.err.txt
+   openssl crl -in $CRLcert -text 2> sslerr.txt
+   sslerr=`grep "unable to load CRL" sslerr.txt`
+   if test ! "x$sslerr" = "x" ; then
+      echo "Failure: could not get file in PEM format"
+   else
+      echo "Success: CRL file $CRLcert successfully installed!"
+   fi
+else
+   echo "Success: CRL file $CRLcert successfully installed!"
+fi
+
+

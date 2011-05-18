@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ 
+<schema version="1.0" xmlns="http://www.apple.com/metadata"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="http://www.apple.com/metadata file:///System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Resources/MetadataSchema.xsd">
+
+    <attributes>
+        <attribute name="ch_cern_root_data_objectName" multivalued="false" type="CFString"/>
+        <attribute name="ch_cern_root_data_objectTitle" multivalued="false" type="CFString"/>
+    </attributes>
+     
+    <types>
+        <type name="ch.cern.root.data">         
+            <allattrs>
+               ch_cern_root_data_objectName
+               ch_cern_root_data_objectTitle
+            </allattrs>
+            <displayattrs>
+            </displayattrs>
+        </type>
+    </types>
+</schema>
+

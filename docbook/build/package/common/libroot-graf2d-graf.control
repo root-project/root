@@ -1,0 +1,18 @@
+Package: libroot-graf2d-graf@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Homepage: http://root.cern.ch
+Description: Graph library for ROOT
+ This package contains the Graf library for ROOT. 
+
+Package: libroot-graf2d-graf-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-graf2d-graf@libvers@ (= ${binary:Version}), libroot-hist-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<< 5.19.01-1)
+Homepage: http://root.cern.ch
+Description: Graph library for ROOT
+ This package contains the Graf library for ROOT. 
+

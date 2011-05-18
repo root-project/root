@@ -1,0 +1,71 @@
+# -*- mode: makefile -*-
+# $Id: Makefile.macosx 20845 2007-11-16 15:48:58Z rdm $
+
+# MacOSX 64-bit platform dependent definitions
+
+# OS version
+MACOSX_MAJOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1))
+MACOSX_MINOR := $(strip $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2))
+
+# Architecture: PPC or x86
+ARCH_PPCI386 := $(shell arch)
+
+# fink directories
+FINK_ROOT := $(shell which fink | sed -e 's?/bin/fink??')
+
+# The compilers
+CXX   	  = $(shell root-config --cxx)
+CC	  = $(shell root-config --cc)
+F77	  = $(shell root-config --f77)
+
+# Global optimisation
+OPT   = -g #-O
+
+# Shared library suffix
+SL	  = dylib
+
+# AWK
+AWK	  = awk
+
+# The options
+#
+#
+CXXOPTS       = $(OPT) -m64 -pipe -Wall -W -Woverloaded-virtual  
+COPT	      = $(OPT) -m64
+FOPT	      = $(OPT) -m64 -fno-second-underscore
+
+# CERNLIB defines
+
+CLIBDEFS_TMP  = -DCERNLIB_LXIA64 -DCERNLIB_BLDLIB -DCERNLIB_CZ 
+ifeq (i386,$(findstring i386,$(ARCH_PPCI386)))
+CLIBDEFS      = $(CLIBDEFS_TMP) 
+else
+CLIBDEFS      = $(CLIBDEFS_TMP) -DCERNLIB_PPC
+endif
+
+ifneq (,$(findstring g95,$(F77)))
+CLIBDEFS     += -DCERNLIB_G95
+else
+CLIBDEFS     += -DCERNLIB_GFORTRAN
+endif
+
+CLIBCXXOPTS   = $(CLIBDEFS)
+CLIBCOPT      = $(CLIBDEFS)
+CLIBFOPT      = $(CLIBDEFS)
+
+LD            = export MACOSX_DEPLOYMENT_TARGET=$(MACOSX_MAJOR).$(MACOSX_MINOR) ; \
+		unset LD_PREBIND ; \
+		$(shell root-config --ld)
+
+LDFLAGS       = $(OPT) -m64 -bind_at_load
+
+SHLD	      = $(LD)
+SOFLAGS       = -m64 -dynamiclib -undefined dynamic_lookup -single_module
+
+ifneq (,$(findstring g95,$(F77)))
+SHLIB += -L$(shell $(F77) --print-search-dirs | sed -n -e 's/install: //p') -lf95
+else
+SHLIB := $(shell $(F77) -m64 -print-file-name=libgfortran.dylib)
+SHLIB += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
+SHLIB += -ldl
+endif

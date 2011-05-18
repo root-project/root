@@ -1,0 +1,18 @@
+Package: libroot-math-genvector@libvers@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Generalized vector library for ROOT
+ This package contains the Genvector library for ROOT.  This provides 
+ a generalized vector library.
+
+Package: libroot-math-genvector-dev
+Architecture: any
+Section: libdevel
+Depends: libroot-math-genvector@libvers@ (= ${binary:Version}), libroot-core-dev
+Replaces: libroot-dev
+Conflicts: libroot-dev (<= 5.19.01-1)
+Description: Generalized vector library for ROOT
+ This package contains the Genvector library for ROOT.  This provides 
+ a generalized vector library.
+

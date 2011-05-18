@@ -1,0 +1,5 @@
+activate_krb5=default_yes
+activate_apps=yes
+#acx_krb5_incdir=/afs/slac.stanford.edu/package/krb5/include
+#acx_krb5_libdir=/afs/slac.stanford.edu/package/krb5/lib
+
