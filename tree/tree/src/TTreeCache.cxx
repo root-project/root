@@ -1,4 +1,3 @@
-#include "TSystem.h"
 // @(#)root/tree:$Id$
 // Author: Rene Brun   04/06/2006
 
