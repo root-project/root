@@ -41,7 +41,7 @@ INCLUDEFILES += $(IODEP)
 include/%.h:    $(IODIRI)/%.h
 		cp $< $@
 
-$(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS)
+$(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO)" \
 		   "$(IOLIBEXTRA)"

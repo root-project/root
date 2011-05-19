@@ -2,6 +2,7 @@
 #
 # Makefile containing library dependencies
 
+IOLIBDEPM              = $(THREADLIB)
 NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
 HISTLIBDEPM            = $(MATRIXLIB) $(MATHCORELIB)
@@ -134,6 +135,7 @@ FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
 
 ifeq ($(EXPLICITLINK),yes)
 
+IOLIBDEP               = $(IOLIBDEPM)
 NETLIBDEP              = $(NETLIBDEPM)
 MATRIXLIBDEP           = $(MATRIXLIBDEPM)
 HISTLIBDEP             = $(HISTLIBDEPM)
@@ -232,6 +234,7 @@ FITSIOLIBDEP           = $(FITSIOLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
+IOLIBEXTRA              = lib/libThread.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
@@ -401,6 +404,7 @@ FITSIOLIBEXTRA          = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
 
 else
 
+IOLIBEXTRA              = -Llib -lThread
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
