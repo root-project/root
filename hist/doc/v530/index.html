@@ -25,6 +25,15 @@ lego or a surface or as a contour plot for any other plotting options.
 <li> The destructor has been completed.</li>
 </ul>
 
+<h4>THStack</h4>
+<ul>
+<li> When the 1D histograms in a stack are painted with patterns or hatches
+  the histograms are first painted with the TFrame background color to avoid
+  the hatches overlaps. In case the TFrame background color was 0 this did not
+  work because in that case the histogram is painted hollow. Instead of 0 we
+  now use 10 (also white).
+</ul>
+
 <h4>TGraph</h4>
 <ul>
 <li> The default browsing option for graphs is now <tt>"alp"</tt>.<li>
