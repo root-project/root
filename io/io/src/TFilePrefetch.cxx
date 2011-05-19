@@ -160,10 +160,10 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
          mutexBlocks->UnLock();                
 
          gettimeofday(&tv, NULL);
-         time = 1e+6*tv.tv_sec + tv.tv_usec;
+         time = ((Long64_t)1e+6)*tv.tv_sec + tv.tv_usec;
          fReadBlockAdded->Wait(); //wait for a new block to be added
          gettimeofday(&tv, NULL);
-         fWaitTime += ((tv.tv_sec*1e+6 + tv.tv_usec) - time);
+         fWaitTime += ((tv.tv_sec*((Long64_t)1e+6) + tv.tv_usec) - time);
       }
    }
 

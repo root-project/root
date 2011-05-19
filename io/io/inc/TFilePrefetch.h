@@ -40,7 +40,7 @@ class TFilePrefetch {
 public:
   
    TFilePrefetch(TFile*);                                    //! constructor
-   ~TFilePrefetch();                                         //! destructor
+   virtual ~TFilePrefetch();                                         //! destructor
 
    void ReadAsync(TFPBlock*, Bool_t&);                       //! function that does the actual reading(lowest level)
    void ReadListOfBlocks();                                  //! read all the blocks in the list prefetchBlocks
