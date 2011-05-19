@@ -187,7 +187,7 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
    TUrl url(fCurrent->GetName());
    url.SetAnchor(0);
    TString lfname = gEnv->GetValue("Path.Localroot", "");
-   TFile::EFileType type = TFile::GetType(url.GetFileAndOptions(), "", &lfname);
+   TFile::EFileType type = TFile::GetType(url.GetUrl(), "", &lfname);
    if (type == TFile::kLocal &&
        strcmp(url.GetProtocol(),"root") && strcmp(url.GetProtocol(),"xrd"))
       lfname = url.GetFileAndOptions();
@@ -198,7 +198,7 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
          ReleaseCache(lfname);
       } else {
          Error("Process",
-               "attempt to call ReleaseCache for a non-local file: '%s'", fname.Data());
+               "attempt to call ReleaseCache for a non-local file: '%s'", lfname.Data());
       }
    } else if (fType->GetType() == TPBHandleDSType::kCheckCache) {
       // Check the file cache
@@ -206,7 +206,7 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
          CheckCache(lfname);
       } else {
          Error("Process",
-               "attempt to call CheckCache for a non-local file: '%s'", fname.Data());
+               "attempt to call CheckCache for a non-local file: '%s'", lfname.Data());
       }
    } else if (fType->GetType() == TPBHandleDSType::kRemoveFiles) {
       // Remove the file
