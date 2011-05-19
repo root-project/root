@@ -3955,7 +3955,8 @@ Int_t TTree::Fill()
              (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
              (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
-            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+            //First call FlushBasket to make sure that fTotBytes is up to date.
+            FlushBaskets();
             OptimizeBaskets(fTotBytes,1,"");
             if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
             fFlushedBytes = fZipBytes;
@@ -5706,6 +5707,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          TBranch *branch = leaf->GetBranch();
          Double_t totBytes = (Double_t)branch->GetTotBytes();
          Double_t idealFactor = totBytes/aveSize;
+         UInt_t sizeOfOneEntry = 1+(UInt_t)(totBytes / (Double_t)branch->GetEntries()); 
          Int_t oldBsize = branch->GetBasketSize();
          oldMemsize += oldBsize;
          oldBaskets += 1+Int_t(totBytes/oldBsize);
@@ -5719,6 +5721,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
          newBsize = newBsize - newBsize%512;
+         if (newBsize < sizeOfOneEntry) newBsize = sizeOfOneEntry;
          if (newBsize < bmin) newBsize = bmin;
          if (newBsize > 10000000) newBsize = bmax;
          if (pass) {
@@ -5726,7 +5729,10 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
             branch->SetBasketSize(newBsize);
          }
          newMemsize += newBsize;
-         newBaskets += 1+Int_t(totBytes/newBsize);
+         // For this number to be somewhat accurate when newBsize is 'low'
+         // we do not include any space for meta data in the requested size (newBsize) even-thouh SetBasketSize will 
+         // not let it be lower than 100+TBranch::fEntryOffsetLen.
+         newBaskets += 1+Int_t(totBytes/newBsize); 
          if (pass == 0) continue;
          //Reset the compression level in case the compression factor is small
          Double_t comp = 1;
@@ -5741,7 +5747,8 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
       Double_t bmin_new = bmin*memFactor;
       Double_t bmax_new = bmax*memFactor;
       static const UInt_t hardmax = 1*1024*1024*1024; // Really, really never give more than 1Gb to a single buffer.
-      bmin = (bmin_new > hardmax) ? hardmax : (UInt_t)bmin_new;
+      static const UInt_t hardmin = 8;                // Really, really never go lower than 8 bytes (we use this number so that the calculation of the number of basket is consistent but in fact SetBasketSize will not let the size go below 100+TBranch::fEntryOffsetLen)
+      bmin = (bmin_new > hardmax) ? hardmax : ( bmin_new < hardmin ? hardmin : (UInt_t)bmin_new );
       bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;         
    }
    if (pDebug) {
