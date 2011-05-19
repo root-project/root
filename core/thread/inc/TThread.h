@@ -138,6 +138,7 @@ public:
    static void      Ps();
    static void      ps() { Ps(); }
 
+   static void      Initialize();
    static Bool_t    IsInitialized();
 
    Long_t           Join(void **ret = 0);
@@ -176,7 +177,11 @@ public:
    static Int_t     CleanUp();
 
    // XActions
-   static void      Printf(const char *fmt, ...);   // format and print
+   static void      Printf(const char *fmt, ...)   // format and print
+#if defined(__GNUC__) && !defined(__CINT__)
+   __attribute__((format(printf, 1, 2)))
+#endif
+   ;
    static void      XAction();
 
    ClassDef(TThread,0)  // Thread class

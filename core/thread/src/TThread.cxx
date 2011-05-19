@@ -229,13 +229,24 @@ TThread::TThread(Long_t id)
 }
 
 //______________________________________________________________________________
+void TThread::Initialize()
+{
+   // Initialize the Thread package. This initializes the TThread and ROOT
+   // global mutexes to make parts of ROOT thread safe/aware. This call is
+   // implicit in case a TThread is created.
+   
+   Init();
+}
+
+//______________________________________________________________________________
 Bool_t TThread::IsInitialized()
 {
-   // Return true, if the TThread objects have been initialize.   If false,
+   // Return true, if the TThread objects have been initialize. If false,
    // the process is (from ROOT's point of view) single threaded.
 
-   if (fgThreadImp) return kTRUE;
-   else return kFALSE;
+   if (fgThreadImp)
+      return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -312,6 +323,9 @@ TThread::~TThread()
 Int_t TThread::Delete(TThread *&th)
 {
    // Static method to delete the specified thread.
+   // Returns -1 in case the thread was running and has been killed. Returns
+   // 0 in case the thread has been Delete and Cleaned up. The th pointer is
+   // not valid anymore in that case.
 
    if (!th) return 0;
    th->fHolder = &th;
@@ -450,7 +464,8 @@ Int_t TThread::Run(void *arg)
 {
    // Start the thread. This starts the static method TThread::Function()
    // which calls the user function specified in the TThread ctor with
-   // the arg argument.
+   // the arg argument. Returns 0 on success, otherwise an error number will
+   // be returned.
 
    if (arg) fThreadArg = arg;
 
@@ -473,7 +488,8 @@ Int_t TThread::Run(void *arg)
 //______________________________________________________________________________
 Int_t TThread::Kill()
 {
-   // Kill this thread.
+   // Kill this thread. Returns 0 on success, otherwise an error number will
+   // be returned.
 
    if (fState != kRunningState && fState != kDeletingState) {
       if (gDebug)
@@ -488,7 +504,8 @@ Int_t TThread::Kill()
 //______________________________________________________________________________
 Int_t TThread::Kill(Long_t id)
 {
-   // Static method to kill the thread by id.
+   // Static method to kill the thread by id. Returns 0 on success, otherwise
+   // an error number will be returned.
 
    TThread *th = GetThread(id);
    if (th) {
@@ -503,7 +520,8 @@ Int_t TThread::Kill(Long_t id)
 //______________________________________________________________________________
 Int_t TThread::Kill(const char *name)
 {
-   // Static method to kill thread by name.
+   // Static method to kill thread by name. Returns 0 on success, otherwise
+   // an error number will be returned.
 
    TThread *th = GetThread(name);
    if (th) {
@@ -518,41 +536,48 @@ Int_t TThread::Kill(const char *name)
 //______________________________________________________________________________
 Int_t TThread::SetCancelOff()
 {
-   // Static method to turn off thread cancellation.
+   // Static method to turn off thread cancellation. Returns 0 on success,
+   // otherwise an error number will be returned.
 
-   return fgThreadImp->SetCancelOff();
+   return fgThreadImp ? fgThreadImp->SetCancelOff() : -1;
 }
 
 //______________________________________________________________________________
 Int_t TThread::SetCancelOn()
 {
-   // Static method to turn on thread cancellation.
+   // Static method to turn on thread cancellation. Returns 0 on success,
+   // otherwise an error number will be returned.
 
-   return fgThreadImp->SetCancelOn();
+   return fgThreadImp ? fgThreadImp->SetCancelOn() : -1;
 }
 
 //______________________________________________________________________________
 Int_t TThread::SetCancelAsynchronous()
 {
-   // Static method to set asynchronous cancellation.
+   // Static method to set the cancellation response type of the calling thread
+   // to asynchronous, i.e. cancel as soon as the cancellation request
+   // is received.
 
-   return fgThreadImp->SetCancelAsynchronous();
+   return fgThreadImp ? fgThreadImp->SetCancelAsynchronous() : -1;
 }
 
 //______________________________________________________________________________
 Int_t TThread::SetCancelDeferred()
 {
-   // Static method to set deffered cancellation.
+   // Static method to set the cancellation response type of the calling thread
+   // to deferred, i.e. cancel only at next cancellation point.
+   // Returns 0 on success, otherwise an error number will be returned.
 
-   return fgThreadImp->SetCancelDeferred();
+   return fgThreadImp ? fgThreadImp->SetCancelDeferred() : -1;
 }
 
 //______________________________________________________________________________
 Int_t TThread::CancelPoint()
 {
-   // Static method to set a cancellation point.
+   // Static method to set a cancellation point. Returns 0 on success, otherwise
+   // an error number will be returned.
 
-   return fgThreadImp->CancelPoint();
+   return fgThreadImp ? fgThreadImp->CancelPoint() : -1;
 }
 
 //______________________________________________________________________________
@@ -616,7 +641,7 @@ Int_t TThread::Exit(void *ret)
 {
    // Static method which terminates the execution of the calling thread.
 
-   return fgThreadImp->Exit(ret);
+   return fgThreadImp ? fgThreadImp->Exit(ret) : -1;
 }
 
 //______________________________________________________________________________
