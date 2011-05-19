@@ -195,6 +195,7 @@ E: jasondet@gmail.com
 D: Implementation of class KelvinFunctions
 D: Implementation of multiple columns in TLegend class
 D: Implementation of TClonesArray::MultiSort
+D: TTree support for csv files
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
@@ -725,6 +726,10 @@ D: OpenLDAP interface
 N: Stefan Schmitt
 E: sschmitt@mail.desy.de
 D: contribution to TUnfold class
+
+N: Elvin Alin Sindrilaru
+E: elvin.alin.sindrilaru@cern.ch
+D: Asynchronous prefetching of TTree baskets
 
 N: Tomasz Sosnicki
 E: tom.sosnicki@gmail.com
