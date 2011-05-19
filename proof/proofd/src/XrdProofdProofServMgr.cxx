@@ -3329,6 +3329,12 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
          sessiondir += xps->Tag();
          topsesstag = xps->Tag();
          topsesstag.replace("session-","");
+         // If the child, make sure the directory exists ...
+         if (XrdProofdAux::AssertDir(sessiondir.c_str(), p->Client()->UI(),
+                                    fMgr->ChangeOwn()) == -1) {
+            TRACE(XERR, "problems asserting dir '"<<sessiondir<<"' - errno: "<<errno);  
+            return;
+         }
       }
 
    } else if (pid > 0) {
