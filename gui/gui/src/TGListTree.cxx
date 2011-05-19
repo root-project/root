@@ -977,6 +977,9 @@ Bool_t TGListTree::HandleKey(Event_t *event)
                Checked((TObject *)item->GetUserData(), item->IsChecked());
             }
             break;
+         case kKey_F3:
+            Search(kFALSE);
+            break;
          case kKey_F5:
             Layout();
             break;
@@ -1011,6 +1014,18 @@ Bool_t TGListTree::HandleKey(Event_t *event)
             break;
          default:
             break;
+      }
+      if (event->fState & kKeyControlMask) { // Ctrl key modifier pressed
+         switch((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
+            case kKey_F:
+               Search();
+               break;
+            case kKey_G:
+               Search(kFALSE);
+               break;
+            default:
+               return kTRUE;
+         }
       }
 
    }
@@ -1296,7 +1311,7 @@ void TGListTree::AdjustPosition(TGListTreeItem *item)
 }
 
 //______________________________________________________________________________
-void TGListTree::Search(Bool_t /*close*/)
+void TGListTree::Search(Bool_t close)
 {
    // Invokes search dialog. Looks for item with the entered name.
 
@@ -1308,7 +1323,9 @@ void TGListTree::Search(Bool_t /*close*/)
    srch->fBuffer = (char *)StrDup(buf.Data());
 
    TGListTreeItem *item;
-   new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+   if (close || buf.IsNull())
+      new TGSearchDialog(fClient->GetDefaultRoot(), fCanvas, 400, 150, srch, &ret);
+   else if (!buf.IsNull()) ret = 1;
 
    if (ret) {
       item = FindItemByPathname(srch->fBuffer);
@@ -2293,6 +2310,14 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    char dirname[1024];
    TGListTreeItem *item = 0;
    item = FindChildByName(item, "/");
+   if (!gVirtualX->InheritsFrom("TGX11")) {
+      // on Windows, use the current drive instead of root (/)
+      TList *curvol  = gSystem->GetVolumes("cur");
+      if (curvol) {
+         TNamed *drive = (TNamed *)curvol->At(0);
+         item = FindChildByName(0, TString::Format("%s\\", drive->GetName()));
+      }
+   }
    TGListTreeItem *diritem = 0;
    TString fulldir;
 
