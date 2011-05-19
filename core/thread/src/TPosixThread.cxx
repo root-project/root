@@ -26,7 +26,8 @@ ClassImp(TPosixThread)
 //______________________________________________________________________________
 Int_t TPosixThread::Run(TThread *th)
 {
-   // Create a pthread.
+   // Create a pthread. Returns 0 on success, otherwise an error number will
+   // be returned.
 
    int det;
    pthread_t id;
@@ -52,7 +53,8 @@ Int_t TPosixThread::Join(TThread *th, void **ret)
 {
    // Join  suspends  the  execution  of the calling thread until the
    // thread identified by th terminates, either by  calling  pthread_exit
-   // or by being cancelled.
+   // or by being cancelled. Returns 0 on success, otherwise an error number will
+   // be returned.
 
    return pthread_join((pthread_t) th->fId, ret);
 }
@@ -60,7 +62,7 @@ Int_t TPosixThread::Join(TThread *th, void **ret)
 //______________________________________________________________________________
 Int_t TPosixThread::Exit(void *ret)
 {
-   // Terminates the execution of the calling thread.
+   // Terminates the execution of the calling thread. Return 0.
 
    pthread_exit(ret);
    return 0;
@@ -70,7 +72,8 @@ Int_t TPosixThread::Exit(void *ret)
 Int_t TPosixThread::Kill(TThread *th)
 {
    // Cancellation is the mechanism by which a thread can terminate the
-   // execution of another thread.
+   // execution of another thread. Returns 0 on success, otherwise an error
+   // number will be returned.
 
    return pthread_cancel((pthread_t) th->fId);
 }
@@ -78,7 +81,8 @@ Int_t TPosixThread::Kill(TThread *th)
 //______________________________________________________________________________
 Int_t TPosixThread::SetCancelOff()
 {
-   // Turn off the cancellation state of the calling thread.
+   // Turn off the cancellation state of the calling thread. Returns 0 on
+   // success, otherwise an error number will be returned.
 
    return pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
 }
@@ -86,7 +90,8 @@ Int_t TPosixThread::SetCancelOff()
 //______________________________________________________________________________
 Int_t TPosixThread::SetCancelOn()
 {
-   // Turn on the cancellation state of the calling thread.
+   // Turn on the cancellation state of the calling thread. Returns 0 on
+   // success, otherwise an error number will be returned.
 
    return pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
 }
@@ -106,6 +111,7 @@ Int_t TPosixThread::SetCancelDeferred()
 {
    // Set the cancellation response type of the calling thread to
    // deferred, i.e. cancel only at next cancellation point.
+   // Returns 0 on success, otherwise an error number will be returned.
 
    return pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, 0);
 }
@@ -113,7 +119,7 @@ Int_t TPosixThread::SetCancelDeferred()
 //______________________________________________________________________________
 Int_t TPosixThread::CancelPoint()
 {
-   // Introduce an explicit cancellation point.
+   // Introduce an explicit cancellation point. Returns 0.
 
    int istate;
    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &istate);
