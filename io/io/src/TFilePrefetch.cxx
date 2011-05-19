@@ -17,9 +17,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
-#ifndef R__WIN32
-#include <sys/time.h>
-#endif
 
 #define MAX_READ_SIZE  4                       //maximum size of the read list of blocks
 #define MAX_RECYCLE_SIZE 2                      //maximum size of the recycle list of blocks
@@ -47,8 +44,6 @@ TFilePrefetch::TFilePrefetch(TFile* file)
    fNewBlockAdded = new TCondition(0);
    fReadBlockAdded = new TCondition(0);
    fSem = new TSemaphore(0);
-   fWaitTime = 0;
-
 }
 
 
@@ -139,12 +134,10 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
 {
    //Return a prefetched element.
 
-   struct timeval tv;
    Bool_t found = false;
    TFPBlock* blockObj = NULL;
    TMutex *mutexBlocks = fMutexReadList;
    Int_t index = -1;
-   Long64_t time;
 
    while (1){
       mutexBlocks->Lock();
@@ -161,11 +154,9 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
       else{
          mutexBlocks->UnLock();                
 
-         gettimeofday(&tv, NULL);
-         time = ((Long64_t)1e+6)*tv.tv_sec + tv.tv_usec;
+         fWaitTime.Start(kFALSE);
          fReadBlockAdded->Wait(); //wait for a new block to be added
-         gettimeofday(&tv, NULL);
-         fWaitTime += ((tv.tv_sec*((Long64_t)1e+6) + tv.tv_usec) - time);
+         fWaitTime.Stop();
       }
    }
 

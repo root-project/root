@@ -34,6 +34,10 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
+#ifndef ROOT_TStopwatch
+#include "TStopwatch.h"
+#endif
+
 
 class TFilePrefetch {
 
@@ -66,7 +70,7 @@ public:
 
    Int_t SumHex(char*);                                      // add the values from a hex rep. to produce an integer 
    Bool_t BinarySearchReadList(TFPBlock*, Long64_t, Int_t, Int_t*);  // search segments in a block corresponding to the current segment request
-   Long64_t GetWaitTime() { return fWaitTime; }                     // return the time spent wating for buffer to be read
+   Long64_t GetWaitTime() { return Long64_t(fWaitTime.RealTime()*1.e+6); } // return the time spent wating for buffer to be read in microseconds
 
 private:
  
@@ -82,7 +86,7 @@ private:
    TCondition *fReadBlockAdded;                              //! condition usd to signal the addition of a new red block
    TSemaphore *fSem;                                         //! semaphore used to kill the consumer thread
    TString    *fPathCache;                                   //! path to the cache directory
-   Long64_t    fWaitTime;                                    //! time wating to prefetch a buffer (in usec)
+   TStopwatch  fWaitTime;                                    //! time wating to prefetch a buffer (in usec)
 
    ClassDef(TFilePrefetch, 0);
 };
