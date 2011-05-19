@@ -2,77 +2,114 @@
 <chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
 <title>Graphics and the Graphical User Interface</title>
 
-<para>Graphical capabilities of ROOT range from 2D objects (lines, polygons, arrows) to various plots, histograms, and 3D graphical objects. In this chapter,
-we are going to focus on principals of graphics and 2D objects. Plots and histograms are discussed in a chapter of their own.</para>
+<para>Graphical capabilities of ROOT range from 2D objects (lines, polygons,
+arrows) to various plots, histograms, and 3D graphical objects. In this chapter,
+we are going to focus on principals of graphics and 2D objects. Plots and
+histograms are discussed in a chapter of their own.</para>
 
 <sect1>
 <title>Drawing Objects</title>
-<para>In ROOT, most objects derive from a base class <emphasis role="bold"><code>TObject</code></emphasis>. This class has a virtual method <code>Draw()</code> so all objects are supposed to be able to be "drawn". The basic whiteboard on which an object is drawn is called a canvas (defined by the class <emphasis role="bold"><code>TCanvas</code></emphasis>). If several canvases are defined, there is only one active at a time. One draws an object in the active canvas by using the statement:</para>
+<para>In ROOT, most objects derive from a base class
+<emphasis role="bold"><code>TObject</code></emphasis>. This class has a virtual
+method <code>Draw()</code> so all objects are supposed to be able to be "drawn".
+The basic whiteboard on which an object is drawn is called a canvas (defined by
+the class <emphasis role="bold"><code>TCanvas</code></emphasis>). If several
+canvases are defined, there is only one active at a time. One draws an object in
+the active canvas by using the statement:</para>
 
-<programlisting language="c++">
-object.Draw()
+<programlisting language="c++">object.Draw()
 </programlisting>
 
-<para>This instructs the object "<code>object</code>" to draw itself. If no canvas is opened, a default one (named "<code>c1</code>") is instantiated and is drawn.  </para>
+<para>This instructs the object "<code>object</code>" to draw itself. If no
+canvas is opened, a default one (named "<code>c1</code>") is instantiated and is
+drawn.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TLine</code></emphasis><emphasis role="bold"><code> a(0.1,0.1,0.6,0.6)</code></emphasis>
-root[] <emphasis role="bold"><code>a.Draw()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">TLine a(0.1,0.1,0.6,0.6)</emphasis>
+root[] <emphasis role="bold">a.Draw()</emphasis>
 &lt;TCanvas::MakeDefCanvas&gt;: created default TCanvas with name c1
 </programlisting>
 
-<para>The first statement defines a line and the second one draws it. A default canvas is drawn since there was no opened one.</para>
+<para>The first statement defines a line and the second one draws it. A default
+canvas is drawn since there was no opened one.</para>
 </sect1>
 
 <sect1>
 <title>Interacting with Graphical Objects</title>
-<para>When an object is drawn, one can interact with it. For example, the line drawn in the previous paragraph may be moved or transformed. One very important characteristic of ROOT is that transforming an object on the screen will also transform it in memory. One actually interacts with the real object, not with a copy of it on the screen. You can try for instance to look at the starting X coordinate of the line:</para>
+<para>When an object is drawn, one can interact with it. For example, the line
+drawn in the previous paragraph may be moved or transformed. One very important
+characteristic of ROOT is that transforming an object on the screen will also
+transform it in memory. One actually interacts with the real object, not with a
+copy of it on the screen. You can try for instance to look at the starting X
+coordinate of the line:</para>
 
-<programlisting language="c++">
-root[] a.GetX1()
+<programlisting language="c++">root[] a.GetX1()
 (double)1.000000000e-1
 </programlisting>
 
-<para><code>X1</code> is the <code>x</code> value of the starting coordinate given in the definition above. Now move it interactively by clicking with the left mouse button in the line's middle and try to do again:</para>
+<para><code>X1</code> is the <code>x</code> value of the starting coordinate
+given in the definition above. Now move it interactively by clicking with the
+left mouse button in the line's middle and try to do again:</para>
 
-<programlisting language="c++">
-root[] a.GetX1()
+<programlisting language="c++">root[] a.GetX1()
 (Double_t)1.31175468483816005e-01
 </programlisting>
 
-<para>You do not obtain the same result as before, the coordinates of '<code>a</code>' have changed. As said, interacting with an object on the screen changes the object in memory.</para>
+<para>You do not obtain the same result as before, the coordinates of
+'<code>a</code>' have changed. As said, interacting with an object on the screen
+changes the object in memory.</para>
 
 <sect2>
 <title>Moving, Resizing and Modifying Objects</title>
-<para>Changing the graphic objects attributes can be done with the GUI or programmatically. First, let's see how it is done in the GUI.</para>
+<para>Changing the graphic objects attributes can be done with the GUI or
+programmatically. First, let's see how it is done in the GUI.</para>
 
 <sect3>
 <title>The Left Mouse Button</title>
-<para>As was just seen moving or resizing an object is done with the left mouse button. The cursor changes its shape to indicate what may be done:</para>
-<para>Point the object or one part of it:<inlinemediaobject><imageobject><imagedata fileref="pictures/02000095.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject>  <inlinemediaobject><imageobject><imagedata fileref="pictures/02000096.jpg" width="10.55pt" depth="9.95pt"/></imageobject></inlinemediaobject></para>
-<para>Rotate:<inlinemediaobject><imageobject><imagedata fileref="pictures/02000097.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject></para>
-<para>Resize (exists also for the other directions):<inlinemediaobject><imageobject><imagedata fileref="pictures/02000098.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject> <inlinemediaobject><imageobject><imagedata fileref="pictures/02000099.jpg" width="11.15pt" depth="10.55pt"/></imageobject></inlinemediaobject></para>
-<para>Enlarge (used for text):<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009A.jpg" width="9.95pt" depth="11.15pt"/></imageobject></inlinemediaobject>
-Move:<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009B.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject></para>
-<para/>
-<para/>
+<para>As was just seen moving or resizing an object is done with the left mouse
+button. The cursor changes its shape to indicate what may be done:</para>
+<para>Point the object or one part of it:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000095.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000096.jpg" width="10.55pt" depth="9.95pt"/></imageobject></inlinemediaobject>
+</para>
+<para>Rotate:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000097.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject>
+</para>
+<para>Resize (exists also for the other directions):
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000098.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/02000099.jpg" width="11.15pt" depth="10.55pt"/></imageobject></inlinemediaobject>
+</para>
+<para>Enlarge (used for text):
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009A.jpg" width="9.95pt" depth="11.15pt"/></imageobject></inlinemediaobject>
+</para>
+<para>Move:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009B.jpg" width="9.95pt" depth="9.95pt"/></imageobject></inlinemediaobject>
+</para>
 <para>Here are some examples of:</para>
-<para> Moving: Resizing:      Rotating:</para>
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009C.jpg" width="74.5pt" depth="57.1pt"/></imageobject></inlinemediaobject><inlinemediaobject><imageobject><imagedata fileref="pictures/0200009D.jpg" width="105.5pt" depth="57.1pt"/></imageobject></inlinemediaobject>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009E.jpg" width="91.85pt" depth="56.5pt"/></imageobject></inlinemediaobject>  <inlinemediaobject><imageobject><imagedata fileref="pictures/0300009F.png" width="75.1pt" depth="57.1pt"/></imageobject></inlinemediaobject>
+Moving:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009C.jpg" width="74.5pt" depth="57.1pt"/></imageobject></inlinemediaobject>
+Resizing:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009D.jpg" width="105.5pt" depth="57.1pt"/></imageobject></inlinemediaobject>
+</para>
+<para>
+Rotating:
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0200009E.jpg" width="91.85pt" depth="56.5pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/0300009F.png" width="75.1pt" depth="57.1pt"/></imageobject></inlinemediaobject>
 </para>
 </sect3>
 
 <sect3>
 <title>With C++ Statements (Programmatically)</title>
-<para>How would one move an object in a script? Since there is a tight correspondence between what is seen on the screen and the object in memory, changing the object changes it on the screen. For example, try to do:</para>
+<para>How would one move an object in a script? Since there is a tight
+correspondence between what is seen on the screen and the object in memory,
+changing the object changes it on the screen. For example, try to do:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>a.SetX1(0.9)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">a.SetX1(0.9)</emphasis>
 </programlisting>
 
-<para>This should change one of the coordinates of our line, but nothing happens on the screen. Why is that? In short, the canvas is not updated with each change for performance reasons. See "Updating the Pad".</para>
+<para>This should change one of the coordinates of our line, but nothing happens
+on the screen. Why is that? In short, the canvas is not updated with each change
+for performance reasons. See "Updating the Pad".</para>
 </sect3>
 </sect2>
 
@@ -81,15 +118,21 @@ root[] <emphasis role="bold"><code>a.SetX1(0.9)</code></emphasis>
 
 <sect3>
 <title>The Middle Mouse Button</title>
-<para>Objects in a canvas, as well as in a pad, are stacked on top of each other in the order they were drawn. Some objects may become “active” objects, which mean they are reordered to be on top of the others. To interactively make an object "active", you can use the middle mouse button. In case of canvases or pads, the border becomes highlighted when it is active.</para>
+<para>Objects in a canvas, as well as in a pad, are stacked on top of each other
+in the order they were drawn. Some objects may become “active” objects, which
+mean they are reordered to be on top of the others. To interactively make an
+object "active", you can use the middle mouse button. In case of canvases or
+pads, the border becomes highlighted when it is active.</para>
 </sect3>
 
 <sect3>
 <title>With C++ Statements (Programmatically)</title>
-<para>Frequently we want to draw in different canvases or pads. By default, the objects are drawn in the active canvas. To activate a canvas you can use the <emphasis role="bold"><code>TPad</code></emphasis><code>::cd()</code> method.</para>
+<para>Frequently we want to draw in different canvases or pads. By default, the
+objects are drawn in the active canvas. To activate a canvas you can use the
+<emphasis role="bold"><code>TPad</code></emphasis><code>::cd()</code>
+method.</para>
 
-<programlisting language="c++">
-root[] c1-&gt;cd()
+<programlisting language="c++">root[] c1-&gt;cd()
 </programlisting>
 
 </sect3>
@@ -97,11 +140,21 @@ root[] c1-&gt;cd()
 
 <sect2>
 <title>Context Menus: the Right Mouse Button</title>
-<para>The context menus are a way to interactively call certain methods of an object. When designing a class, the programmer can add methods to the context menu of the object by making minor changes to the header file. </para>
+<para>The context menus are a way to interactively call certain methods of an
+object. When designing a class, the programmer can add methods to the context
+menu of the object by making minor changes to the header file.</para>
 
 <sect3>
 <title>Using Context Menus</title>
-<para>On a ROOT canvas, you can right-click on any object and see the context menu for it. The script <code>hsimple.C</code> draws a histogram. The image below shows the context menus for some of the objects on the canvas. Next picture shows that drawing a simple histogram involves as many as seven objects. When selecting a method from the context menu and that method has options, the user will be asked for numerical values or strings to fill in the option. For example, <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetTitle</code>         will prompt you for a string to use for the axis title.</para>
+<para>On a ROOT canvas, you can right-click on any object and see the context
+menu for it. The script <code>hsimple.C</code> draws a histogram. The image
+below shows the context menus for some of the objects on the canvas. Next
+picture shows that drawing a simple histogram involves as many as seven objects.
+When selecting a method from the context menu and that method has options, the
+user will be asked for numerical values or strings to fill in the option. For
+example,
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::SetTitle</code>
+will prompt you for a string to use for the axis title.</para>
 
 <figure><title>Context menus of different objects in a canvas</title>
 <para>
@@ -113,39 +166,82 @@ root[] c1-&gt;cd()
 
 <sect3>
 <title>Structure of the Context Menus</title>
-<para>The curious reader will have noticed that each entry in the context menu corresponds to a method of the class. Look for example to the menu named <emphasis role="bold"><code>TAxis</code></emphasis><code>::xaxis</code>. <code>xaxis</code> is the name of the object and <emphasis role="bold"><code>TAxis</code></emphasis> the name of its class. If we look at the list of <emphasis role="bold"><code>TAxis</code></emphasis> methods, for example in  <uri xmlns:xlink="http://root.cern.ch/root/htmldoc/TAxis.html">http://root.cern.ch/root/htmldoc/TAxis.html</uri>, we see the methods <code>SetTimeDisplay()</code> and<code> UnZoom()</code>, which appear also in the context menu.</para>
-<para>There are several divisions in the context menu, separated by lines. The top division is a list of the class methods; the second division is a list of the parent class methods. The subsequent divisions are the methods other parent classes in case of multiple inheritance. For example, see the <emphasis role="bold"><code>TPaveText</code></emphasis><code>::title context menu.</code> A <emphasis role="bold"><code>TPaveText</code></emphasis> inherits from         <emphasis role="bold"><code>TAttLine</code></emphasis>, which has the method <code>SetLineAttributes()</code>.</para>
+<para>The curious reader will have noticed that each entry in the context menu
+corresponds to a method of the class. Look for example to the menu named
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::xaxis</code>.
+<code>xaxis</code> is the name of the object and
+<emphasis role="bold"><code>TAxis</code></emphasis> the name of its class. If we
+look at the list of <emphasis role="bold"><code>TAxis</code></emphasis> methods,
+for example in
+<uri xmlns:xlink="http://root.cern.ch/root/htmldoc/TAxis.html">http://root.cern.ch/root/htmldoc/TAxis.html</uri>,
+we see the methods <code>SetTimeDisplay()</code> and<code> UnZoom()</code>,
+which appear also in the context menu.</para>
+<para>There are several divisions in the context menu, separated by lines. The
+top division is a list of the class methods; the second division is a list of
+the parent class methods. The subsequent divisions are the methods other parent
+classes in case of multiple inheritance. For example, see the
+<emphasis role="bold"><code>TPaveText</code></emphasis><code>::title context
+menu.</code> A <emphasis role="bold"><code>TPaveText</code></emphasis> inherits
+from <emphasis role="bold"><code>TAttLine</code></emphasis>, which has the
+method <code>SetLineAttributes()</code>.</para>
 </sect3>
 
 <sect3>
 <title>Adding Context Menus for a Class</title>
-<para>For a method to appear in the context menu of the object it has to be marked by <code>// *MENU*</code> in the header file. Below is the line from <code>TAttLine.h</code> that adds the <code>SetLineAttribute</code> method to the context menu. </para>
+<para>For a method to appear in the context menu of the object it has to be
+marked by <code>// *MENU*</code> in the header file. Below is the line from
+<code>TAttLine.h</code> that adds the <code>SetLineAttribute</code> method to
+the context menu. </para>
 
-<programlisting language="c++">
-virtual void  SetLineAttributes(); <code>// *MENU*</code>
+<programlisting language="c++">virtual void  SetLineAttributes(); // *MENU*
 </programlisting>
 
-<para>Nothing else is needed, since CINT knows the classes and their methods. It takes advantage of that to create the context menu on the fly when the object is clicking on. If you click on an axis, ROOT will ask the interpreter what are the methods of the <emphasis role="bold"><code>TAxis</code></emphasis> and which ones are set for being displayed in a context menu.</para>
-<para>Now, how does the interpreter know this? Remember, when you build a class that you want to use in the ROOT environment, you use <code>rootcint</code> that builds the so-called stub functions and the dictionary. These functions and the dictionary contain the knowledge of the used classes. To do this, <code>rootcint</code> parses all the header files. ROOT has defined some special syntax to inform CINT of certain things, this is done in the comments so that the code still compiles with a C++ compiler.</para>
-<para>For example, you have a class with a <code>Draw()</code> method, which will display itself.  You would like a context menu to appear when on clicks on the image of an object of this class. The recipe is the following:</para>
+<para>Nothing else is needed, since CINT knows the classes and their methods. It
+takes advantage of that to create the context menu on the fly when the object is
+clicking on. If you click on an axis, ROOT will ask the interpreter what are the
+methods of the <emphasis role="bold"><code>TAxis</code></emphasis> and which
+ones are set for being displayed in a context menu.</para>
+<para>Now, how does the interpreter know this? Remember, when you build a class
+that you want to use in the ROOT environment, you use <code>rootcint</code> that
+builds the so-called stub functions and the dictionary. These functions and the
+dictionary contain the knowledge of the used classes. To do this,
+<code>rootcint</code> parses all the header files. ROOT has defined some special
+syntax to inform CINT of certain things, this is done in the comments so that
+the code still compiles with a C++ compiler.</para>
+<para>For example, you have a class with a <code>Draw()</code> method, which
+will display itself.  You would like a context menu to appear when on clicks on
+the image of an object of this class. The recipe is the following:</para>
+
 <itemizedlist>
-<listitem><para>The class has to contain the <code>ClassDef/ClassImp</code> macros</para></listitem>
-<listitem><para>For each method you want to appear in the context menu, put a comment after the declaration containing <code>*MENU*</code> or *<code>TOGGLE</code>* depending on the behavior you expect. One usually uses Set methods (setters). The *TOGGLE* comment is used to toggle a <code>boolean</code> data field. In that case, it is safe to call the data field <code>fMyBool</code> where <code>MyBool</code> is the name of the setter <code>SetMyBool</code>. Replace <code>MyBool</code> with your own <code>boolean</code> variable. </para></listitem>
-<listitem><para>You can specify arguments and the data members in which to store the arguments.</para></listitem>
+<listitem><para>
+The class has to contain the <code>ClassDef/ClassImp</code> macros
+</para></listitem>
+<listitem><para>
+For each method you want to appear in the context menu, put a comment after the
+declaration containing <code>*MENU*</code> or <code>*TOGGLE*</code> depending on
+the behavior you expect. One usually uses Set methods (setters). The
+<code>*TOGGLE*</code> comment is used to toggle a <code>boolean</code> data
+field. In that case, it is safe to call the data field <code>fMyBool</code>
+where <code>MyBool</code> is the name of the setter <code>SetMyBool</code>.
+Replace <code>MyBool</code> with your own <code>boolean</code> variable.
+</para></listitem>
+<listitem><para>
+You can specify arguments and the data members in which to store the arguments.
+</para></listitem>
 </itemizedlist>
+
 <para>For example:</para>
 
-<programlisting language="c++">
-class MyClass : public TObject {
-private:
-int      fV1;   <emphasis role="italic"><code>// first variable</code></emphasis>
-double   fV2;   <emphasis role="italic"><code>// second variable</code></emphasis>
-public:
-int    GetV1() {return fV1;}
-double GetV2() {return fV2;}
-void   SetV1(int x1) { fV1 = x1;}     <emphasis role="italic"><code>// *MENU*</code></emphasis>
-void   SetV2(double d2) { fV2 = d2;}  <emphasis role="italic"><code>// *MENU*</code></emphasis>
-void   SetBoth(int x1, double d2) {fV1 = x1; fV2 = d2;}
+<programlisting language="c++">class MyClass : public TObject {
+  private:
+    int      fV1;   <emphasis role="italic">// first variable</emphasis>
+    double   fV2;   <emphasis role="italic">// second variable</emphasis>
+    public:
+    int    GetV1() {return fV1;}
+    double GetV2() {return fV2;}
+    void   SetV1(int x1) { fV1 = x1;}     <emphasis role="italic">// *MENU*</emphasis>
+    void   SetV2(double d2) { fV2 = d2;}  <emphasis role="italic">// *MENU*</emphasis>
+    void   SetBoth(int x1, double d2) {fV1 = x1; fV2 = d2;}
 
 ClassDef (MyClass,1)
 }
@@ -153,14 +249,14 @@ ClassDef (MyClass,1)
 
 <para>To specify arguments:</para>
 
-<programlisting language="c++">
-<code>void SetXXX(Int_t x1, Float_t y2); //*MENU* *ARGS={x1=&gt;fV1}</code>
+<programlisting language="c++">void SetXXX(Int_t x1, Float_t y2); //*MENU* *ARGS={x1=&gt;fV1}
 </programlisting>
 
-<para>This statement is in the comment field, after the *MENU*. If there is more than one argument, these arguments are separated by commas, where fX1 and fY2 are data fields in the same class.</para>
+<para>This statement is in the comment field, after the *MENU*. If there is more
+than one argument, these arguments are separated by commas, where fX1 and fY2
+are data fields in the same class.</para>
 
-<programlisting language="c++">
-<code>void SetXXX(Int_t x1, Float_t y2); //*MENU* *ARGS={x1=&gt;fX1,y2=&gt;fY2}</code>
+<programlisting language="c++">void SetXXX(Int_t x1, Float_t y2); //*MENU* *ARGS={x1=&gt;fX1,y2=&gt;fY2}
 </programlisting>
 
 <para>If the arguments statement is present, the option dialog displayed when selecting <code>SetXXX field</code> will show the values of variables. We indicate to the system which argument corresponds to which data member of the class.</para>
@@ -169,49 +265,119 @@ ClassDef (MyClass,1)
 
 <sect2>
 <title>Executing Events when a Cursor Passes on Top of an Object</title>
-<para>This paragraph is for class designers. When a class is designed, it is often desirable to include drawing methods for it. We will have a more extensive discussion about this, but drawing an object in a canvas or a pad consists in "attaching" the object to that pad. When one uses <code>object.Draw()</code>, the object is NOT painted at this moment. It is only attached to the active pad or canvas.</para>
-<para>Another method should be provided for the object to be painted, the<code> Paint()</code> method. This is all explained in the next paragraph. As well as <code>Draw()</code> and <code>Paint()</code>, other methods may be provided by the designer of the class. When the mouse is moved or a button pressed/released, the <emphasis role="bold"><code>TCanvas</code></emphasis>         function named <code>HandleInput()</code> scans the list of objects in all it's pads and for each object calls some standard methods to make the object react to the event (mouse movement, click or whatever).</para>
-<para>The second one is <code>DistanceToPrimitive(px,py)</code>. This function computes a "distance" to an object from the mouse position at the pixel position (<code>px</code>,<code> py</code>, see definition at the end of this paragraph) and returns this distance in pixel units. The selected object will be the one with the shortest computed distance. To see how this works, select the "<code>Event Status</code>" item in the canvas "<code>Options</code>" menu. ROOT will display one status line showing the picked object. If the picked object is, for example, a histogram, the status line indicates the name of the histogram, the position <code>x,y</code> in histogram coordinates, the channel number and the channel content.</para>
-<para>It is nice for the canvas to know what the closest object from the mouse is, but it's even nicer to be able to make this object react. The third standard method to be provided is <code>ExecuteEvent()</code>. This method actually does the event reaction. Its prototype is where <code>px</code> and <code>py</code> are the coordinates at which the event occurred, except if the event is a key press, in which case <code>px</code> contains the key code.</para>
+<para>This paragraph is for class designers. When a class is designed, it is
+often desirable to include drawing methods for it. We will have a more extensive
+discussion about this, but drawing an object in a canvas or a pad consists in
+"attaching" the object to that pad. When one uses <code>object.Draw()</code>,
+the object is NOT painted at this moment. It is only attached to the active pad
+or canvas.</para>
+<para>Another method should be provided for the object to be painted, the
+<code>Paint()</code> method. This is all explained in the next paragraph. As
+well as <code>Draw()</code> and <code>Paint()</code>, other methods may be
+provided by the designer of the class. When the mouse is moved or a button
+pressed/released, the <emphasis role="bold"><code>TCanvas</code></emphasis>
+function named <code>HandleInput()</code> scans the list of objects in all it's
+pads and for each object calls some standard methods to make the object react to
+the event (mouse movement, click or whatever).</para>
+<para>The second one is <code>DistanceToPrimitive(px,py)</code>. This function
+computes a "distance" to an object from the mouse position at the pixel position
+(<code>px</code>, <code>py</code>, see definition at the end of this paragraph)
+and returns this distance in pixel units. The selected object will be the one
+with the shortest computed distance. To see how this works, select the
+"<code>Event Status</code>" item in the canvas "<code>Options</code>" menu. ROOT
+will display one status line showing the picked object. If the picked object is,
+for example, a histogram, the status line indicates the name of the histogram,
+the position <code>x,y</code> in histogram coordinates, the channel number and
+the channel content.</para>
+<para>It is nice for the canvas to know what the closest object from the mouse
+is, but it's even nicer to be able to make this object react. The third standard
+method to be provided is <code>ExecuteEvent()</code>. This method actually does
+the event reaction. Its prototype is where <code>px</code> and <code>py</code>
+are the coordinates at which the event occurred, except if the event is a key
+press, in which case <code>px</code> contains the key code.</para>
 
-<programlisting language="c++">
-void ExecuteEvent(Int_t event, Int_t px, Int_t py);
+<programlisting language="c++">void ExecuteEvent(Int_t event, Int_t px, Int_t py);
 </programlisting>
 
-<para>Where <code>event</code> is the event that occurs and is one of the following (defined in <code>Buttons.h</code>):</para>
+<para>Where <code>event</code> is the event that occurs and is one of the
+following (defined in <code>Buttons.h</code>):</para>
 
-<programlisting language="c++">
-<code>kNoEvent,          kButton1Down,      kButton2Down,       kButton3Down,      kKeyDown,          kButton1Up,        kButton2Up,         kButton3Up,    kButton1Motion,    kButton2Motion,    kButton3Motion,     kKeyPress,    kButton1Locate,    kButton2Locate,    kButton3Locate,     kKeyUp,       kButton1Double,    kButton2Double,    kButton3Double,     kMouseMotion, </code>
-<code>kMouseEnter,       kMouseLeave    </code>
+<programlisting language="c++">kNoEvent,          kButton1Down,      kButton2Down,
+kButton3Down,      kKeyDown,          kButton1Up,
+kButton2Up,        kButton3Up,        kButton1Motion,
+kButton2Motion,    kButton3Motion,    kKeyPress,
+kButton1Locate,    kButton2Locate,    kButton3Locate,
+kKeyUp,            kButton1Double,    kButton2Double,
+kButton3Double,    kMouseMotion,      kMouseEnter,
+kMouseLeave
 </programlisting>
 
 <para>We hope the names are self-explanatory.</para>
-<para>Designing an <code>ExecuteEvent</code> method is not very easy, except if one wants very basic treatment. We will not go into that and let the reader refer to the sources of classes like <emphasis role="bold"><code>TLine</code></emphasis> or <emphasis role="bold"><code>TBox</code></emphasis>. Go and look at their <code>ExecuteEvent</code> method! We can nevertheless give some reference to the various actions that may be performed. For example, one often wants to change the shape of the cursor when passing on top of an object. This is done with the <code>SetCursor</code> method:</para>
+<para>Designing an <code>ExecuteEvent</code> method is not very easy, except if
+one wants very basic treatment. We will not go into that and let the reader
+refer to the sources of classes like
+<emphasis role="bold"><code>TLine</code></emphasis> or
+<emphasis role="bold"><code>TBox</code></emphasis>. Go and look at their
+<code>ExecuteEvent</code> method! We can nevertheless give some reference to the
+various actions that may be performed. For example, one often wants to change
+the shape of the cursor when passing on top of an object. This is done with the
+<code>SetCursor</code> method:</para>
 
-<programlisting language="c++">
-gPad-&gt;SetCursor(cursor)
+<programlisting language="c++">gPad-&gt;SetCursor(cursor)
 </programlisting>
 
 <para>The argument <code>cursor</code> is the type of cursor. It may be:</para>
 
-<programlisting language="c++">
-kBottomLeft,  kBottomRight,   kTopLeft,   kTopRight,    kBottomSide,   kLeftSide,    kTopSide,     kRightSide,     kMove,      kCross,       kArrowHor,     kArrowVer,     kHand,        kRotate,        kPointer,   kArrowRight,  kCaret,        kWatch
+<programlisting language="c++">kBottomLeft,  kBottomRight,   kTopLeft,
+kTopRight,    kBottomSide,   kLeftSide,
+kTopSide,     kRightSide,    kMove,
+kCross,       kArrowHor,     kArrowVer,
+kHand,        kRotate,       kPointer,
+kArrowRight,  kCaret,        kWatch
 </programlisting>
 
-<para>They are defined in <code>TVirtualX.h</code> and again we hope the names are self-explanatory. If not, try them by designing a small class. It may derive from something already known like <emphasis role="bold"><code>TLine</code></emphasis>.</para>
-<para>Note that the <code>ExecuteEvent()</code> functions may in turn; invoke such functions for other objects, in case an object is drawn using other objects. You can also exploit at best the virtues of inheritance. See for example how the class <emphasis role="bold"><code>TArrow</code></emphasis> (derived from <emphasis role="bold"><code>TLine</code></emphasis>) use or redefine the picking functions in its base class.</para>
-<para>The last comment is that mouse position is always given in pixel units in all these standard functions. <code>px=0</code> and <code>py=0 </code>corresponds to the top-left corner of the canvas. Here, we have followed the standard convention in windowing systems. Note that user coordinates in a canvas (pad) have the origin at the bottom-left corner of the canvas (pad). This is all explained in the paragraph "The Coordinate Systems of a Pad".</para>
+<para>They are defined in <code>TVirtualX.h</code> and again we hope the names
+are self-explanatory. If not, try them by designing a small class. It may derive
+from something already known like
+<emphasis role="bold"><code>TLine</code></emphasis>.</para>
+<para>Note that the <code>ExecuteEvent()</code> functions may in turn; invoke
+such functions for other objects, in case an object is drawn using other
+objects. You can also exploit at best the virtues of inheritance. See for
+example how the class <emphasis role="bold"><code>TArrow</code></emphasis>
+(derived from <emphasis role="bold"><code>TLine</code></emphasis>) use or
+redefine the picking functions in its base class.</para>
+<para>The last comment is that mouse position is always given in pixel units in
+all these standard functions. <code>px=0</code> and <code>py=0</code>
+corresponds to the top-left corner of the canvas. Here, we have followed the
+standard convention in windowing systems. Note that user coordinates in a canvas
+(pad) have the origin at the bottom-left corner of the canvas (pad). This is all
+explained in the paragraph "The Coordinate Systems of a Pad".</para>
 </sect2>
 </sect1>
 
 <sect1>
 <title>Graphical Containers: Canvas and Pad</title>
-<para>We have talked a lot about canvases, which may be seen as windows. More generally, a graphical entity that contains graphical objects is called a Pad. A Canvas is a special kind of Pad. From now on, when we say something about pads, this also applies to canvases. A pad (class <emphasis role="bold"><code>TPad</code></emphasis>) is a graphical container in the sense it contains other graphical objects like histograms and arrows. It may contain other pads (sub-pads) as well. More technically, each pad has a linked list of pointers to the objects it holds.</para>
-<para>Drawing an object is nothing more than adding its pointer to this list. Look for example at the code of <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw()</code>. It is merely ten lines of code. The last statement is <code>AppendPad()</code>. This statement calls method of <emphasis role="bold"><code>TObject</code></emphasis> that just adds the pointer of the object, here a histogram, to the list of objects attached to the current pad. Since this is a <emphasis role="bold"><code>TObject</code></emphasis>’s method, every object may be "drawn", which means attached to a pad. We can illustrate this by the Figure 9-2. This image corresponds to the following structure:</para>
+<para>We have talked a lot about canvases, which may be seen as windows. More
+generally, a graphical entity that contains graphical objects is called a Pad. A
+Canvas is a special kind of Pad. From now on, when we say something about pads,
+this also applies to canvases. A pad (class
+<emphasis role="bold"><code>TPad</code></emphasis>) is a graphical container in
+the sense it contains other graphical objects like histograms and arrows. It may
+contain other pads (sub-pads) as well. More technically, each pad has a linked
+list of pointers to the objects it holds.</para>
+<para>Drawing an object is nothing more than adding its pointer to this list.
+Look for example at the code of
+<emphasis role="bold"><code>TH1</code></emphasis><code>::Draw()</code>. It is
+merely ten lines of code. The last statement is <code>AppendPad()</code>. This
+statement calls method of <emphasis role="bold"><code>TObject</code></emphasis>
+that just adds the pointer of the object, here a histogram, to the list of
+objects attached to the current pad. Since this is a
+<emphasis role="bold"><code>TObject</code></emphasis>’s method, every object may
+be "drawn", which means attached to a pad. We can illustrate this by the
+Figure 9-2. This image corresponds to the following structure:</para>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/060000A1.png" width="117.95pt" depth="78.2pt"/></imageobject></inlinemediaobject>
 </para>
-<para/>
 
 <figure><title>A histogram drawn in a pad</title>
 <para>
@@ -219,43 +385,90 @@ kBottomLeft,  kBottomRight,   kTopLeft,   kTopRight,    kBottomSide,   kLeftSide
 </para>
 </figure>
 
-<para>When is the painting done then? The answer is: when needed. Every object that derives from <emphasis role="bold"><code>TObject</code></emphasis> has a <code>Paint()</code> method. It may be empty, but for graphical objects, this routine contains all the instructions to paint effectively it in the active pad. Since a Pad has the list of objects it owns, it will call successively the <code>Paint()</code> method of each object, thus re-painting the whole pad on the screen. If the object is a sub-pad, its <code>Paint()</code> method will call the <code>Paint()</code> method of the objects attached, recursively calling <code>Paint()</code> for all the objects.</para>
+<para>When is the painting done then? The answer is: when needed. Every object
+that derives from <emphasis role="bold"><code>TObject</code></emphasis> has a
+<code>Paint()</code> method. It may be empty, but for graphical objects, this
+routine contains all the instructions to paint effectively it in the active pad.
+Since a Pad has the list of objects it owns, it will call successively the
+<code>Paint()</code> method of each object, thus re-painting the whole pad on
+the screen. If the object is a sub-pad, its <code>Paint()</code> method will
+call the <code>Paint()</code> method of the objects attached, recursively
+calling <code>Paint()</code> for all the objects.</para>
 
 <sect2>
 <title>The Global Pad: gPad</title>
-<para>When an object is drawn, it is always in the so-called active pad. For every day use, it is comfortable to be able to access the active pad, whatever it is. For that purpose, there is a global pointer, called <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>. It is always pointing to the active pad. If you want to change the fill color of the active pad to blue but you do not know its name, do this.</para>
+<para>When an object is drawn, it is always in the so-called active pad. For
+every day use, it is comfortable to be able to access the active pad, whatever
+it is. For that purpose, there is a global pointer, called
+<emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>.
+It is always pointing to the active pad. If you want to change the fill color of
+the active pad to blue but you do not know its name, do this.</para>
 
-<programlisting language="c++">
-root[] gPad-&gt;SetFillColor(38)
+<programlisting language="c++">root[] gPad-&gt;SetFillColor(38)
 </programlisting>
 
-<para>To get the list of colors, go to the paragraph "Color and color palettes" or if you have an opened canvas, click on the <code>View</code> menu, selecting the <code>Colors</code> item.</para>
+<para>To get the list of colors, go to the paragraph "Color and color palettes"
+or if you have an opened canvas, click on the <code>View</code> menu, selecting
+the <code>Colors</code> item.</para>
 
 <sect3>
 <title>Finding an Object in a Pad</title>
-<para>Now that we have a pointer to the active pad, <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis> and that we know this pad contains some objects, it is sometimes interesting to access one of those objects. The method <code>GetPrimitive()</code> of <emphasis role="bold"><code>TPad</code></emphasis>, i.e. <emphasis role="bold"><code>TPad</code></emphasis><code>::GetPrimitive(const char* name)</code> does exactly this. Since most of the objects that a pad contains derive from <emphasis role="bold"><code>TObject</code></emphasis>, they have a name. The following statement will return a pointer to the object <code>myobjectname</code> and put that pointer into the variable <code>obj</code>. As you can see, the type of returned pointer is <emphasis role="bold"><code>TObject</code></emphasis><code>*</code>.</para>
+<para>Now that we have a pointer to the active pad,
+<emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>
+and that we know this pad contains some objects, it is sometimes interesting to
+access one of those objects. The method <code>GetPrimitive()</code> of
+<emphasis role="bold"><code>TPad</code></emphasis>, i.e.
+<emphasis role="bold"><code>TPad</code></emphasis><code>::GetPrimitive(const char* name)</code>
+does exactly this. Since most of the objects that a pad contains derive from
+<emphasis role="bold"><code>TObject</code></emphasis>, they have a name. The
+following statement will return a pointer to the object
+<code>myobjectname</code> and put that pointer into the variable
+<code>obj</code>. As you can see, the type of returned pointer is
+<emphasis role="bold"><code>TObject</code></emphasis><code>*</code>.</para>
 
-<programlisting language="c++">
-root[] obj = gPad-&gt;GetPrimitive("myobjectname")
+<programlisting language="c++">root[] obj = gPad-&gt;GetPrimitive("myobjectname")
 (class TObject*)0x1063cba8
 </programlisting>
 
-<para>Even if your object is something more complicated, like a histogram <emphasis role="bold"><code>TH1F</code></emphasis>, this is normal. A function cannot return more than one type. So the one chosen was the lowest common denominator to all possible classes, the class from which everything derives, <emphasis role="bold"><code>TObject</code></emphasis>. How do we get the right pointer then? Simply do a cast of the function output that will transform the output (pointer) into the right type. For example if the object is a <emphasis role="bold"><code>TPaveLabel</code></emphasis>:</para>
+<para>Even if your object is something more complicated, like a histogram
+<emphasis role="bold"><code>TH1F</code></emphasis>, this is normal. A function
+cannot return more than one type. So the one chosen was the lowest common
+denominator to all possible classes, the class from which everything derives,
+<emphasis role="bold"><code>TObject</code></emphasis>. How do we get the right
+pointer then? Simply do a cast of the function output that will transform the
+output (pointer) into the right type. For example if the object is a
+<emphasis role="bold"><code>TPaveLabel</code></emphasis>:</para>
 
-<programlisting language="c++">
-root[] obj = (TPaveLabel*)(gPad-&gt;GetPrimitive("myobjectname"))
+<programlisting language="c++">root[] obj = (TPaveLabel*)(gPad-&gt;GetPrimitive("myobjectname"))
 (class TPaveLabel*)0x1063cba8
 </programlisting>
 
-<para>This works for all objects deriving from <emphasis role="bold"><code>TObject</code></emphasis>. However, a question remains. An object has a name if it derives from <emphasis role="bold"><code>TNamed</code></emphasis>, not from <emphasis role="bold"><code>TObject</code></emphasis>. For example, an arrow (<emphasis role="bold"><code>TArrow</code></emphasis>) doesn't have a name. In that case, the "name" is the name of the class. To know the name of an object, just click with the right button on it. The name appears at the top of the context menu. In case of multiple unnamed objects, a call to <code>GetPrimitve("className")</code> returns the instance of the class that was first created. To retrieve a later instance you can use <code>GetListOfPrimitives()</code>, which returns a list of all the objects on the pad. From the list you can select the object you need.</para>
+<para>This works for all objects deriving from
+<emphasis role="bold"><code>TObject</code></emphasis>. However, a question
+remains. An object has a name if it derives from
+<emphasis role="bold"><code>TNamed</code></emphasis>, not from
+<emphasis role="bold"><code>TObject</code></emphasis>. For example, an arrow
+(<emphasis role="bold"><code>TArrow</code></emphasis>) doesn't have a name. In
+that case, the "name" is the name of the class. To know the name of an object,
+just click with the right button on it. The name appears at the top of the
+context menu. In case of multiple unnamed objects, a call to
+<code>GetPrimitive("className")</code> returns the instance of the class that
+was first created. To retrieve a later instance you can use
+<code>GetListOfPrimitives()</code>, which returns a list of all the objects on
+the pad. From the list you can select the object you need.</para>
 </sect3>
 
 <sect3>
 <title>Hiding an Object</title>
-<para>Hiding an object in a pad can be made by removing it from the list of objects owned by that pad. This list is accessible by the <code>GetListOfPrimitives()</code> method of <emphasis role="bold"><code>TPad</code></emphasis>. This method returns a pointer to a <emphasis role="bold"><code>TList</code></emphasis>. Suppose we get the pointer to the object, we want to hide, call it <code>obj</code> (see paragraph above). We get the pointer to the list:</para>
+<para>Hiding an object in a pad can be made by removing it from the list of
+objects owned by that pad. This list is accessible by the
+<code>GetListOfPrimitives()</code> method of
+<emphasis role="bold"><code>TPad</code></emphasis>. This method returns a
+pointer to a <emphasis role="bold"><code>TList</code></emphasis>. Suppose we get
+the pointer to the object, we want to hide, call it <code>obj</code> (see
+paragraph above). We get the pointer to the list:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>li = gPad</code></emphasis><emphasis role="bold"><code>-&gt;GetListOfPrimitives()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">li = gPad-&gt;GetListOfPrimitives()</emphasis>
 </programlisting>
 
 <para>Then remove the object from this list:</para>
@@ -264,19 +477,23 @@ root[] <emphasis role="bold"><code>li = gPad</code></emphasis><emphasis role="bo
 root[] <emphasis role="bold"><code>li-&gt;Remove(obj)</code></emphasis>
 </programlisting>
 
-<para>The object will disappear from the pad as soon as the pad is updated (try to resize it for example). If one wants to make the object reappear:</para>
+<para>The object will disappear from the pad as soon as the pad is updated (try
+to resize it for example). If one wants to make the object reappear:</para>
 
-<programlisting language="c++">
-root[] obj-&gt;Draw()
+<programlisting language="c++">root[] obj-&gt;Draw()
 </programlisting>
 
-<para>Caution, this will not work with composed objects, for example many histograms drawn on the same plot (with the option "<code>same</code>"). There are other ways! Try to use the method described here for simple objects.</para>
+<para>Caution, this will not work with composed objects, for example many
+histograms drawn on the same plot (with the option "<code>same</code>"). There
+are other ways! Try to use the method described here for simple objects.</para>
 </sect3>
 </sect2>
 
 <sect2>
 <title>The Coordinate Systems of a Pad</title>
-<para>There are coordinate systems in a <emphasis role="bold"><code>TPad</code></emphasis>: user coordinates, normalized coordinates (NDC), and pixel coordinates.</para>
+<para>There are coordinate systems in a
+<emphasis role="bold"><code>TPad</code></emphasis>: user coordinates, normalized
+coordinates (NDC), and pixel coordinates.</para>
 
 <figure><title>Pad coordinate systems</title>
 <para>
@@ -286,21 +503,34 @@ root[] obj-&gt;Draw()
 
 <sect3>
 <title>The User Coordinate System</title>
-<para>The most common is the user coordinate system. Most methods of <emphasis role="bold"><code>TPad</code></emphasis> use the user coordinates, and all graphic primitives have their parameters defined in terms of user coordinates. By default, when an empty pad is drawn, the user coordinates are set to a range from 0 to 1 starting at the lower left corner. At this point they are equivalent of the NDC coordinates (see below).  If you draw a high level graphical object, such as a histogram or a function, the user coordinates are set to the coordinates of the histogram. Therefore, when you set a point it will be in the histogram coordinates. </para>
-<para>For a newly created blank pad, one may use <emphasis role="bold"><code>TPad</code></emphasis><code>::Range</code>         to set the user coordinate system. This function is defined as:</para>
+<para>The most common is the user coordinate system. Most methods of
+<emphasis role="bold"><code>TPad</code></emphasis> use the user coordinates, and
+all graphic primitives have their parameters defined in terms of user
+coordinates. By default, when an empty pad is drawn, the user coordinates are
+set to a range from 0 to 1 starting at the lower left corner. At this point they
+are equivalent of the NDC coordinates (see below). If you draw a high level
+graphical object, such as a histogram or a function, the user coordinates are
+set to the coordinates of the histogram. Therefore, when you set a point it will
+be in the histogram coordinates. </para>
+<para>For a newly created blank pad, one may use
+<emphasis role="bold"><code>TPad</code></emphasis><code>::Range</code> to set
+the user coordinate system. This function is defined as:</para>
 
-<programlisting language="c++">
-void Range(float x1,float y1,float x2,float y2)
+<programlisting language="c++">void Range(float x1,float y1,float x2,float y2)
 </programlisting>
 
-<para>The arguments         <code>x1</code>, <code>x2</code> defines the new range in the x direction, and the <code>y1</code>, <code>y2</code> define the new range in the y-direction. </para>
+<para>The arguments <code>x1</code>, <code>x2</code> defines the new range in
+the x direction, and the <code>y1</code>, <code>y2</code> define the new range
+in the y-direction. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TCanvas MyCanvas ("MyCanvas")</code></emphasis>
-root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><code>-&gt;Range(-100,-100,100,100)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">TCanvas MyCanvas ("MyCanvas")</emphasis>
+root[] <emphasis role="bold">gPad-&gt;Range(-100,-100,100,100)</emphasis>
 </programlisting>
 
-<para>This will set the active pad to have both coordinates to go from -100 to 100, with the center of the pad at (0,0). You can visually check the coordinates by viewing the status bar in the canvas. To display the status bar select Event Status entry in the View canvas menu.</para>
+<para>This will set the active pad to have both coordinates to go from -100 to
+100, with the center of the pad at (0,0). You can visually check the coordinates
+by viewing the status bar in the canvas. To display the status bar select Event
+Status entry in the View canvas menu.</para>
 
 <figure><title>The status bar</title>
 <para>
@@ -312,28 +542,54 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 
 <sect3>
 <title>The Normalized Coordinate System (NDC)</title>
-<para>Normalized coordinates are independent of the window size and of the user system. The coordinates range from 0 to 1 and (0, 0) corresponds to the bottom-left corner of the pad. Several internal ROOT functions use the NDC system (3D primitives, PostScript, log scale mapping to linear scale). You may want to use this system if the user coordinates are not known ahead of time.</para>
+<para>Normalized coordinates are independent of the window size and of the user
+system. The coordinates range from 0 to 1 and (0, 0) corresponds to the
+bottom-left corner of the pad. Several internal ROOT functions use the NDC
+system (3D primitives, PostScript, log scale mapping to linear scale). You may
+want to use this system if the user coordinates are not known ahead of
+time.</para>
 </sect3>
 
 <sect3>
 <title>The Pixel Coordinate System</title>
-<para>The least common is the pixel coordinate system, used by functions such as <code>DistanceToPrimitive()</code> and <code>ExecuteEvent()</code>. Its primary use is for cursor position, which is always given in pixel coordinates. If (<code>px,py</code>) is the cursor position, <code>px=0</code> and <code>py=0</code> corresponds to the top-left corner of the pad, which is the standard convention in windowing systems.</para>
+<para>The least common is the pixel coordinate system, used by functions such as
+<code>DistanceToPrimitive()</code> and <code>ExecuteEvent()</code>. Its primary
+use is for cursor position, which is always given in pixel coordinates. If
+(<code>px,py</code>) is the cursor position, <code>px=0</code> and
+<code>py=0</code> corresponds to the top-left corner of the pad, which is the
+standard convention in windowing systems.</para>
 </sect3>
 
 <sect3>
 <title>Using NDC for a particular Object</title>
-<para>Most of the time, you will be using the user coordinate system. But sometimes, you will want to use NDC. For example, if you want to draw text always at the same place over a histogram, no matter what the histogram coordinates are. There are two ways to do this. You can set the NDC for one object or may convert NDC to user coordinates. Most graphical objects offer an option to be drawn in NDC. For instance, a line (<emphasis role="bold"><code>TLine</code></emphasis>) may be drawn in NDC by using <code>DrawLineNDC()</code>. A latex formula or a text may use <emphasis role="bold"><code>TText</code></emphasis><code>::SetNDC()</code> to be drawn in NDC coordinates.</para>
+<para>Most of the time, you will be using the user coordinate system. But
+sometimes, you will want to use NDC. For example, if you want to draw text
+always at the same place over a histogram, no matter what the histogram
+coordinates are. There are two ways to do this. You can set the NDC for one
+object or may convert NDC to user coordinates. Most graphical objects offer an
+option to be drawn in NDC. For instance, a line
+(<emphasis role="bold"><code>TLine</code></emphasis>) may be drawn in NDC by
+using <code>DrawLineNDC()</code>. A latex formula or a text may use
+<emphasis role="bold"><code>TText</code></emphasis><code>::SetNDC()</code> to be
+drawn in NDC coordinates.</para>
 </sect3>
 </sect2>
 
 <sect2>
 <title>Converting between Coordinate Systems</title>
-<para>There are a few utility functions in <emphasis role="bold"><code>TPad</code></emphasis> to convert from one system of coordinates to another. In the following table, a point is defined by <code>(px,py)</code> in pixel coordinates, <code>(ux,uy)</code> in user coordinates, <code>(ndcx,ndcy)</code> in normalized coordinates, (<code>ap</code><code>x</code>, <code>apy</code>) are in absolute pixel coordinates.</para>
+<para>There are a few utility functions in
+<emphasis role="bold"><code>TPad</code></emphasis> to convert from one system of
+coordinates to another. In the following table, a point is defined by
+<code>(px,py)</code> in pixel coordinates, <code>(ux,uy)</code> in user
+coordinates, <code>(ndcx,ndcy)</code> in normalized coordinates,
+(<code>ap</code><code>x</code>, <code>apy</code>) are in absolute pixel
+coordinates.</para>
+
 <informaltable frame="all">
 <tgroup cols="3">
-<colspec colwidth="2850*" colname="column-1"/>
-<colspec colwidth="3349*" colname="column-2"/>
-<colspec colwidth="2448*" colname="column-3"/>
+<colspec colwidth="2550*" colname="column-1"/>
+<colspec colwidth="3900*" colname="column-2"/>
+<colspec colwidth="2200*" colname="column-3"/>
 <tbody>
 <row>
 <entry rowsep="1" colsep="1">
@@ -352,18 +608,10 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<code>UtoPixel</code>
-
-
-
-<code>(ndcx)</code>
+<code>UtoPixel(ndcx)</code>
 </para>
 <para>
-<code>VtoPixel</code>
-
-
-
-<code>(ndcy)</code>
+<code>VtoPixel(ndcy)</code>
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -377,25 +625,13 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<code>PixeltoX</code>
-
-
-
-<code>(px)</code>
+<code>PixeltoX(px)</code>
 </para>
 <para>
-<code>PixeltoY</code>
-
-
-
-<code>(py)</code>
+<code>PixeltoY(py)</code>
 </para>
 <para>
-<code>PixeltoXY</code>
-
-
-
-<code>(px,py,&amp;ux,&amp;uy)</code>
+<code>PixeltoXY(px,py,&amp;ux,&amp;uy)</code>
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -410,25 +646,13 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<code>XtoPixel</code>
-
-
-
-<code>(ux)</code>
+<code>XtoPixel(ux)</code>
 </para>
 <para>
-<code>YtoPixel</code>
-
-
-
-<code>(uy)</code>
+<code>YtoPixel(uy)</code>
 </para>
 <para>
-<code>XYtoPixel</code>
-
-
-
-<code>(ux,uy,&amp;px,&amp;py)</code>
+<code>XYtoPixel(ux,uy,&amp;px,&amp;py)</code>
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -443,41 +667,13 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<code>Xto</code>
-<code>Abs</code>
-<code>Pixel</code>
-
-
-
-
-
-<code>(ux)</code>
+<code>XtoAbsPixel(ux)</code>
 </para>
 <para>
-<code>Yto</code>
-<code>Abs</code>
-<code>Pixel</code>
-
-
-
-
-
-<code>(uy)</code>
+<code>YtoAbsPixel(uy)</code>
 </para>
 <para>
-<code>XYto</code>
-<code>Abs</code>
-<code>Pixel</code>
-
-
-
-
-
-<code>(ux,uy,&amp;</code>
-<code>a</code>
-<code>px,&amp;</code>
-<code>a</code>
-<code>py)</code>
+<code>XYtoAbsPixel(ux,uy,&amp;apx,&amp;apy)</code>
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -492,50 +688,13 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<code>Abs</code>
-<code>Pixel</code>
-<code>toX</code>
-
-
-
-
-
-
-
-<code>(ap</code>
-<code>x)</code>
+<code>AbsPixeltoX(apx)</code>
 </para>
 <para>
-<code>Abs</code>
-<code>Pixel</code>
-<code>toY</code>
-
-
-
-
-
-
-
-<code>(ap</code>
-<code>y)</code>
+<code>AbsPixeltoY(apy)</code>
 </para>
 <para>
-<code>Abs</code>
-<code>Pixel</code>
-<code>toXY</code>
-
-
-
-
-
-
-
-<code>(apx,ap</code>
-<code>y,&amp;</code>
-<code>u</code>
-<code>x,&amp;</code>
-<code>u</code>
-<code>y)</code>
+<code>AbsPixeltoXY(apx,apy,&amp;ux,&amp;uy)</code>
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -547,24 +706,36 @@ root[] <emphasis role="bold"><code>gPad</code></emphasis><emphasis role="bold"><
 </tbody>
 </tgroup>
 </informaltable>
-<para>Note: all the pixel conversion functions along the Y axis consider that <code>py=0 </code>is at the top of the pad except <code>PixeltoY()</code> which assume that the position <code>py=0</code> is at the bottom of the pad. To make <code>PixeltoY()</code> converting the same way as the other conversion functions, it should be used the following way (<code>p </code>is a pointer to a <emphasis role="bold"><code>TPad</code></emphasis>): </para>
 
-<programlisting language="c++">
-p-&gt;PixeltoY(py – p-&gt;GetWh());
+<para>Note: all the pixel conversion functions along the Y axis consider that
+<code>py=0</code> is at the top of the pad except <code>PixeltoY()</code> which
+assume that the position <code>py=0</code> is at the bottom of the pad. To make
+<code>PixeltoY()</code> converting the same way as the other conversion
+functions, it should be used the following way (<code>p</code> is a pointer to a
+<emphasis role="bold"><code>TPad</code></emphasis>): </para>
+
+<programlisting language="c++">p-&gt;PixeltoY(py – p-&gt;GetWh());
 </programlisting>
 
 </sect2>
 
 <sect2>
 <title>Dividing a Pad into Sub-pads</title>
-<para>Dividing a pad into sub pads in order for instance to draw a few histograms, may be done in two ways. The first is to build pad objects and to draw them into a parent pad, which may be a canvas. The second is to automatically divide a pad into horizontal and vertical sub pads.</para>
+<para>Dividing a pad into sub pads in order for instance to draw a few
+histograms, may be done in two ways. The first is to build pad objects and to
+draw them into a parent pad, which may be a canvas. The second is to
+automatically divide a pad into horizontal and vertical sub pads.</para>
 
 <sect3>
 <title>Creating a Single Sub-pad</title>
-<para>The simplest way to divide a pad is to build sub-pads in it. However, this forces the user to explicitly indicate the size and position of those sub-pads. Suppose we want to build a sub-pad in the active pad (pointed by <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>). First, we build it, using a <emphasis role="bold"><code>TPad</code></emphasis> constructor:</para>
+<para>The simplest way to divide a pad is to build sub-pads in it. However, this
+forces the user to explicitly indicate the size and position of those sub-pads.
+Suppose we want to build a sub-pad in the active pad (pointed by
+<emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>).
+First, we build it, using a <emphasis role="bold"><code>TPad</code></emphasis>
+constructor:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>spad1 = new TPad("spad1","The first subpad",.1,.1,.5,.5)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">spad1 = new TPad("spad1","The first subpad",.1,.1,.5,.5)</emphasis>
 </programlisting>
 
 <para>One gives the coordinates of the lower left point (0.1, 0.1) and of the upper right one (0.5, 0.5). These coordinates are in NDC. This means that they are independent of the user coordinates system, in particular if you have already drawn for example a histogram in the mother pad. The only thing left is to draw the pad:</para>
