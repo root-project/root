@@ -715,6 +715,8 @@ void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window)
    if (g_list_length(GDK_WINDOW_WIN32DATA(window)->grab_keys) == 0) {
       g_list_free(GDK_WINDOW_WIN32DATA(window)->grab_keys);
       GDK_WINDOW_WIN32DATA(window)->grab_keys = NULL;
+      if (k_grab_window == window)
+         k_grab_window = NULL;
    } 
 }
 
@@ -5330,7 +5332,7 @@ gdk_event_translate(GdkEvent * event,
          GetCursorPos(&pt);
          chw = WindowFromPoint(pt);
          other_window = gdk_window_lookup(chw);
-         if (other_window && IsChild(xevent->hwnd, chw)) {
+         if (other_window) { // && IsChild(xevent->hwnd, chw)) {
             gdk_window_unref (window);
             gdk_window_ref (other_window);
             window = other_window;
@@ -5417,7 +5419,7 @@ gdk_event_translate(GdkEvent * event,
          GetCursorPos(&pt);
          chw = WindowFromPoint(pt);
          other_window = gdk_window_lookup(chw);
-         if (other_window && IsChild(xevent->hwnd, chw)) {
+         if (other_window) { // && IsChild(xevent->hwnd, chw)) {
             gdk_window_unref (window);
             gdk_window_ref (other_window);
             window = other_window;
