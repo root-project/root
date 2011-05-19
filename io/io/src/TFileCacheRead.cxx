@@ -29,6 +29,7 @@
 #include "TFile.h"
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
+#include "TFilePrefetch.h"
 #include "TMath.h"
 
 ClassImp(TFileCacheRead)

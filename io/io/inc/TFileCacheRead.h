@@ -24,12 +24,10 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TFilePrefetch
-#include "TFilePrefetch.h"
-#endif
 
 class TFile;
 class TBranch;
+class TFilePrefetch;
 
 class TFileCacheRead : public TObject {
 
