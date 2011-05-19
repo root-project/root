@@ -2,7 +2,9 @@
 #include "TFPBlock.h"
 #endif
 #include <cstdlib>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 
 ClassImp(TFPBlock)
 
