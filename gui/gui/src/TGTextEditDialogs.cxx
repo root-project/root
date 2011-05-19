@@ -95,10 +95,10 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    fCombo = new TGComboBox(fF3, "");
    fSearch = fCombo->GetTextEntry();
    fBSearch = fSearch->GetBuffer();
-   if (!gLastSearchString.IsNull())
-      fBSearch->AddText(0, gLastSearchString.Data());
-   else if (sstruct && sstruct->fBuffer)
+   if (sstruct && sstruct->fBuffer)
       fBSearch->AddText(0, sstruct->fBuffer);
+   else if (!gLastSearchString.IsNull())
+      fBSearch->AddText(0, gLastSearchString.Data());
    else
       fSearchButton->SetState(kButtonDisabled);
    fSearch->Associate(this);
