@@ -1,10 +1,8 @@
-#ifndef ROOT_TFPBlock
+
 #include "TFPBlock.h"
-#endif
+#include "TStorage.h"
 #include <cstdlib>
-#ifndef __APPLE__
-#include <malloc.h>
-#endif
+
 
 ClassImp(TFPBlock)
 
@@ -119,8 +117,8 @@ void TFPBlock::ReallocBlock(Long64_t* offset, Int_t* length, Int_t nb)
       aux += fLen[i];
    }
 
+   fBuffer = TStorage::ReAllocChar(fBuffer, aux, fFullSize);
    fFullSize = aux;
-   fBuffer = (char*) realloc(fBuffer, fFullSize);
 }
 
 
