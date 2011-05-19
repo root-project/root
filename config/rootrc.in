@@ -463,6 +463,10 @@ RSA.KeyType:  1
 # supported by the underlying TFile implementation. Default is yes.
 #TFile.AsyncReading:     no
 
+# Control the usage of asynchronous prefetching capabilities irrespective 
+# of the TFile implementation. By default it is disabled.
+#TFile.AsyncPrefetching:   no
+
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/path/file.root,
 # castor:/path/file.root or /alien/path/file.root.

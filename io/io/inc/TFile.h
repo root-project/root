@@ -36,10 +36,11 @@ class TFileCacheRead;
 class TFileCacheWrite;
 class TProcessID;
 class TStopwatch;
-
+class TFilePrefetch;
 
 class TFile : public TDirectoryFile {
   friend class TDirectoryFile;
+  friend class TFilePrefetch;
 
 public:
    // Asynchronous open request status

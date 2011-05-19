@@ -43,7 +43,8 @@
 #pragma link C++ class TCollectionMemberStreamer-;
 #pragma link C++ options=version(0) class TVirtualObject-;
 #pragma link C++ options=version(0) class TVirtualArray-;
-
+#pragma link C++ class TFPBlock+;
+#pragma link C++ class TFilePrefetch+;
 #pragma link C++ namespace TStreamerInfoActions;
 #pragma link C++ class TStreamerInfoActions::TConfiguredAction+;
 #pragma link C++ class TStreamerInfoActions::TActionSequence+;

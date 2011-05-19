@@ -49,7 +49,14 @@ protected:
    TTree          *fTree;        //! pointer to the current Tree
    Bool_t          fIsLearning;  //! true if cache is in learning mode
    Bool_t          fIsManual;    //! true if cache is StopLearningPhase was used
-   static  Int_t fgLearnEntries; //Number of entries used for learning mode
+   Bool_t          fFirstBuffer; //! true if first buffer is used for prefetching
+   Bool_t          fOneTime;     //! used in the learning phase 
+   Bool_t          fReverseRead; //!  reading in reverse mode 
+   Int_t           fFillTimes;   //!  how many times we can fill the current buffer
+   Bool_t          fFirstTime;   //! save the fact that we processes the first entry
+   Long64_t        fFirstEntry;  //! save the value of the first entry
+   Bool_t          fReadDirectionSet; //! read direction established
+   static  Int_t   fgLearnEntries; // number of entries used for learning mode
 
 private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied
@@ -71,6 +78,8 @@ public:
    virtual Bool_t      IsLearning() const {return fIsLearning;}
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Int_t       ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
+   virtual Int_t       ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void        ResetCache();
    virtual void        SetEntryRange(Long64_t emin,   Long64_t emax);
    static void         SetLearnEntries(Int_t n = 10);

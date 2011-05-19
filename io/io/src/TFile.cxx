@@ -1358,6 +1358,9 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       SetOffset(pos);
 
       Int_t st;
+      Double_t start = 0;
+      if (gPerfStats != 0) start = TTimeStamp();
+
       if ((st = ReadBufferViaCache(buf, len))) {
          if (st == 2)
             return kTRUE;
@@ -1365,10 +1368,7 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       }
 
       Seek(pos);
-
       ssize_t siz;
-      Double_t start = 0;
-      if (gPerfStats != 0) start = TTimeStamp();
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -1413,8 +1413,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       }
 
       ssize_t siz;
-
       Double_t start = 0;
+
       if (gPerfStats != 0) start = TTimeStamp();
 
       while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
