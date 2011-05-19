@@ -504,9 +504,9 @@ TFile::~TFile()
       // CINT object are always on the heap.
       gInterpreter->ResetGlobalVar(this);
    }
-      
+
    if (gDebug)
-      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);  
+      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
 }
 
 //______________________________________________________________________________
@@ -1976,6 +1976,7 @@ void TFile::UseCache(Int_t /*maxCacheSize*/, Int_t /*pageSize*/)
    // The write cache is now managed by TFileCacheWrite
    // Both caches are created automatically by the system.
 
+   Obsolete("UseCache", "v5-30-00", "v5-32-00");
 }
 
 //______________________________________________________________________________
@@ -2268,7 +2269,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (dir == 0) {
             gSystem->mkdir(dirname);
          }
-         
+
       } else if (opt.Contains("recreate")) {
          // check that directory exist, if not create it
          if (dir == 0) {
@@ -2283,7 +2284,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             dirpath.Form("%s/%s",dirname,afile);
             gSystem->Unlink(dirpath);
          }
-         
+
       } else {
          // new is assumed
          // if directory already exist, print error message and return
