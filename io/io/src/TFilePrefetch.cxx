@@ -17,7 +17,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cctype>
+#ifndef R__WIN32
 #include <sys/time.h>
+#endif
 
 #define MAX_READ_SIZE  4                       //maximum size of the read list of blocks
 #define MAX_RECYCLE_SIZE 2                      //maximum size of the recycle list of blocks
