@@ -53,7 +53,8 @@ ENDMACRO (test003)
 REFLEX_ADD_MACRO_TEST(test003)
 
 
-# with --fail_on_warnings, test that an output file is not-generated ONLY for files containing warnings
+# With --fail_on_warnings, test that an output file is not-generated for all files (not just those containing warnings).
+# to be more usable in Makefiles.
 MACRO (test004)
 
    REFLEX_TEST_FILE(WRITE X.h "class X {int &y; };\n")
@@ -65,7 +66,7 @@ MACRO (test004)
                                STDERR MATCHES "^$")
 
    MACRO_ASSERT_TEST_FILE_NOT_EXISTS("X_rflx.cpp")
-   MACRO_ASSERT_TEST_FILE_EXISTS("Y_rflx.cpp")
+   MACRO_ASSERT_TEST_FILE_NOT_EXISTS("Y_rflx.cpp")
    MACRO_ASSERT_TEST_FILE_NOT_EXISTS("B.xml")
 
 ENDMACRO (test004)
