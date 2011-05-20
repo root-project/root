@@ -67,8 +67,8 @@ To show the ROOT command line, we show the ROOT prompt without numbers. In the i
 (<code>root[12]</code>); for the sake of simplicity, the line numbers are left off. Bold monotype font indicates the ROOT class names as
 <emphasis role="bold"><code>TObject</code></emphasis>, <emphasis role="bold"><code>TClass</code></emphasis>, and text for you to enter at verbatim.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TLine l</code></emphasis>
+<programlisting language="c++"
+>root[] <emphasis role="bold"><code>TLine l</code></emphasis>
 root[] <emphasis role="bold"><code>l.Print()</code></emphasis>
 TLine  X1=0.000000 Y1=0.000000 X2=0.000000 Y2=0.000000
 </programlisting>
@@ -157,8 +157,8 @@ Run Time Type Identification (RTTI), Socket and Network Communication, Threads.
 You may work on a platform where your system administrator has already installed ROOT. You will need to follow the specific development environment for your
 setup and you may not have write access to the directories. In any case, you will need an environment variable called <code>ROOTSYS</code>, which holds the path of the top ROOT directory. </para>
 
-<programlisting language="c++">
-&gt; <emphasis role="bold"><code>echo $ROOTSYS</code></emphasis>
+<programlisting language="c++"
+>&gt; <emphasis role="bold"><code>echo $ROOTSYS</code></emphasis>
 /opt/root
 </programlisting>
 
@@ -457,8 +457,8 @@ The chapter “The Tutorials and Tests” has instructions on how to build all t
 <title>$ROOTSYS/&lt;library&gt;</title>
 <para>The directories we explored above are available when downloading the binaries. When downloading the source you also get a directory for each library with the corresponding header and source files, located in the <code>inc</code> and <code>src</code> subdirectories. To see what classes are in a library, you can check the <code>&lt;library&gt;/inc</code> directory for the list of class definitions. For example, the physics library <code>libPhysics.so</code> contains these class definitions: </para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>&gt; ls -m $ROOTSYS/physics/inc</code></emphasis>
+<programlisting language="c++"
+><emphasis role="bold"><code>&gt; ls -m $ROOTSYS/physics/inc</code></emphasis>
 CVS,LinkDef.h,TLorentzRotation.h,TLorentzVector.h,TRotation.h,TVector2.h,
 TVector3.h
 </programlisting>
