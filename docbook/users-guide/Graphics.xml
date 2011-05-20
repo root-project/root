@@ -1474,7 +1474,40 @@ subscripts and superscripts:</para>
 
 <sect3>
 <title>Fractions</title>
-<para>Fractions denoted by the / symbol are made in the obvious way. The #frac command is used for large fractions in displayed formula; it has two arguments: the numerator and the denominator. For example, the equation<inlinemediaobject><imageobject><imagedata fileref="pictures/060000BB.png" width="37.85pt" depth="21.1pt"/></imageobject></inlinemediaobject> is obtained by following expression <code>x=#frac{y+z/2}{y^{2}+1}</code>.</para>
+<para>Fractions denoted by the / symbol are made in the obvious way. The <code>#frac</code> command
+          is used for large fractions in displayed formula; it has two arguments: the numerator and
+          the denominator. For example, the equation <inlineequation>
+            <mml:math>
+              <mml:mrow>
+                <mml:mi>x</mml:mi>
+                <mml:mo>=</mml:mo>
+              </mml:mrow>
+              <mml:mfrac>
+                <mml:mrow>
+                  <mml:mi>y</mml:mi>
+                  <mml:mo>+</mml:mo>
+                  <mml:mfrac>
+                    <mml:mrow>
+                      <mml:mi>z</mml:mi>
+                    </mml:mrow>
+                    <mml:mrow>
+                      <mml:mn>2</mml:mn>
+                    </mml:mrow>
+                  </mml:mfrac>
+                </mml:mrow>
+                <mml:mrow>
+                  <mml:msup>
+                    <mml:mi>y</mml:mi>
+                    <mml:mn>2</mml:mn>
+                  </mml:msup>
+                  <mml:mo>+</mml:mo>
+                  <mml:mn>1</mml:mn>
+                </mml:mrow>
+              </mml:mfrac>
+            </mml:math>
+          </inlineequation>
+          is obtained by following expression
+            <code>x=#frac{y+z/2}{y^{2}+1}</code>.</para>
 </sect3>
 
 <sect3>
@@ -3881,5 +3914,4 @@ Bool_t *addChildren = 0)
 </sect2>
 </sect1>
 </chapter>
-
 
