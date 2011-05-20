@@ -1,3 +1,25 @@
+// @(#)root/io:$Id$
+// Author: Elvin Sindrilaru   19/05/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TFPBlock                                                             //
+//                                                                      //
+// This class represents the encapsulation of a block request.          //
+// It contains the chunks to be prefetched and also serves as a         //
+// container for the information read.                                  //
+// These blocks are prefetch in a special reader thread by the          //
+// TFilePrefetch class.                                                 //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TFPBlock.h"
 #include "TStorage.h"
@@ -7,43 +29,45 @@
 ClassImp(TFPBlock)
 
 //__________________________________________________________________
-//constructor
 TFPBlock::TFPBlock(Long64_t* offset, Int_t* length, Int_t nb)
 {
+   // Constructor.
+
    Int_t aux = 0;
-  
+
    fNblock = nb;
    fPos = new Long64_t[nb];
    fLen = new Int_t[nb];
- 
+
    for (Int_t i=0; i < nb; i++){
       fPos[i] = offset[i];
       fLen[i] = length[i];
-      aux += length[i]; 
+      aux += length[i];
    }
    fFullSize = aux;
    fBuffer = new char[fFullSize];
 }
 
 //__________________________________________________________________
-//destructor
 TFPBlock::~TFPBlock()
 {
+   // Destructor.
+
    delete[] fPos;
    delete[] fLen;
    delete[] fBuffer;
 }
 
 //__________________________________________________________________
-Long64_t* TFPBlock::GetPos()
+Long64_t* TFPBlock::GetPos() const
 {
    // Get pointer to the array of postions.
-  
+
    return fPos;
 }
 
 //__________________________________________________________________
-Int_t* TFPBlock::GetLen()
+Int_t* TFPBlock::GetLen() const
 {
    // Get pointer to the array of lengths.
 
@@ -51,7 +75,7 @@ Int_t* TFPBlock::GetLen()
 }
 
 //__________________________________________________________________
-Int_t TFPBlock::GetFullSize()
+Int_t TFPBlock::GetFullSize() const
 {
    // Return size of the block.
 
@@ -59,7 +83,7 @@ Int_t TFPBlock::GetFullSize()
 }
 
 //__________________________________________________________________
-Int_t TFPBlock::GetNoElem()
+Int_t TFPBlock::GetNoElem() const
 {
    // Return number of elements in the block.
 
@@ -67,15 +91,15 @@ Int_t TFPBlock::GetNoElem()
 }
 
 //__________________________________________________________________
-Long64_t TFPBlock::GetPos(Int_t i)
+Long64_t TFPBlock::GetPos(Int_t i) const
 {
    // Get position of the element at index i.
-  
+
    return fPos[i];
 }
 
 //__________________________________________________________________
-Int_t TFPBlock::GetLen(Int_t i)
+Int_t TFPBlock::GetLen(Int_t i) const
 {
   // Get length of the element at index i.
 
@@ -83,7 +107,7 @@ Int_t TFPBlock::GetLen(Int_t i)
 }
 
 //__________________________________________________________________
-char* TFPBlock::GetBuffer()
+char* TFPBlock::GetBuffer() const
 {
    // Get block buffer.
 
@@ -93,8 +117,8 @@ char* TFPBlock::GetBuffer()
 //__________________________________________________________________
 void TFPBlock::SetBuffer(char* buf)
 {
-   //Set block buffer.
-  
+   // Set block buffer.
+
    fBuffer = buf;
 }
 
@@ -120,5 +144,3 @@ void TFPBlock::ReallocBlock(Long64_t* offset, Int_t* length, Int_t nb)
    fBuffer = TStorage::ReAllocChar(fBuffer, aux, fFullSize);
    fFullSize = aux;
 }
-
-

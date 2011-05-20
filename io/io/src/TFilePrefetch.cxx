@@ -1,15 +1,18 @@
-#ifndef ROOT_TFilePrefetch
+// @(#)root/io:$Id$
+// Author: Elvin Sindrilaru   19/05/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TFilePrefetch.h"
-#endif
-#ifndef ROOT_TTimeStamp
 #include "TTimeStamp.h"
-#endif
-#ifndef ROOT_TVirtualPerfStats
 #include "TVirtualPerfStats.h"
-#endif
-#ifndef ROOT_TVirtualMonitoring
 #include "TVirtualMonitoring.h"
-#endif
 
 #include <iostream>
 #include <string>
@@ -18,23 +21,22 @@
 #include <cstdlib>
 #include <cctype>
 
-#define MAX_READ_SIZE  4                       //maximum size of the read list of blocks
-#define MAX_RECYCLE_SIZE 2                      //maximum size of the recycle list of blocks
+static const int kMAX_READ_SIZE    = 4;   //maximum size of the read list of blocks
+static const int kMAX_RECYCLE_SIZE = 2;   //maximum size of the recycle list of blocks
 
-#define xtod(c) ((c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)))
+inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)); }
 
 using namespace std;
 
 ClassImp(TFilePrefetch)
 
 //____________________________________________________________________________________________
-//constructor 
 TFilePrefetch::TFilePrefetch(TFile* file)
 {
+   // Constructor.
 
-   fConsumer = 0;  
+   fConsumer = 0;
    fFile = file;
-   fPathCache= NULL;
    fPendingBlocks = new TList();
    fReadBlocks = new TList();
    fRecycleBlocks = new TList();
@@ -46,12 +48,11 @@ TFilePrefetch::TFilePrefetch(TFile* file)
    fSem = new TSemaphore(0);
 }
 
-
 //____________________________________________________________________________________________
-//class destructor
 TFilePrefetch::~TFilePrefetch()
 {
-  
+   // Destructor.
+
    //killing consumer thread
    fSem->Post();
    fNewBlockAdded->Signal();
@@ -70,11 +71,11 @@ TFilePrefetch::~TFilePrefetch()
 //____________________________________________________________________________________________
 void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
 {
-   //Read one block and insert it in prefetchBuffers list.
-  
-   char* path = NULL;
- 
-   if (CheckBlockInCache(path, block)){        
+   // Read one block and insert it in prefetchBuffers list.
+
+   char* path = 0;
+
+   if (CheckBlockInCache(path, block)){
       block->SetBuffer(GetBlockFromCache(path, block->GetFullSize()));
       inCache = kTRUE;
    }
@@ -85,16 +86,15 @@ void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
    delete[] path;
 }
 
-
 //____________________________________________________________________________________________
 void TFilePrefetch::ReadListOfBlocks()
 {
-   //Get blocks specified in prefetchBlocks.
+   // Get blocks specified in prefetchBlocks.
 
    Bool_t inCache = kFALSE;
-   TFPBlock*  block = NULL;
+   TFPBlock*  block = 0;
 
-   while((block = GetPendingBlock())){  
+   while((block = GetPendingBlock())){
      ReadAsync(block, inCache);
      AddReadBlock(block);
      if (!inCache)
@@ -105,7 +105,7 @@ void TFilePrefetch::ReadListOfBlocks()
 //____________________________________________________________________________________________
 Bool_t TFilePrefetch::BinarySearchReadList(TFPBlock* blockObj, Long64_t offset, Int_t len, Int_t* index)
 {
-   //Search for a requested element in a block and return the index.
+   // Search for a requested element in a block and return the index.
 
    Int_t first = 0, last = -1, mid = -1;
    last = (Int_t) blockObj->GetNoElem()-1;
@@ -128,14 +128,21 @@ Bool_t TFilePrefetch::BinarySearchReadList(TFPBlock* blockObj, Long64_t offset, 
    return false;
 }
 
+//____________________________________________________________________________________________
+Long64_t TFilePrefetch::GetWaitTime()
+{
+   // Return the time spent wating for buffer to be read in microseconds.
+
+   return Long64_t(fWaitTime.RealTime()*1.e+6);
+}
 
 //____________________________________________________________________________________________
 Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
 {
-   //Return a prefetched element.
+   // Return a prefetched element.
 
    Bool_t found = false;
-   TFPBlock* blockObj = NULL;
+   TFPBlock* blockObj = 0;
    TMutex *mutexBlocks = fMutexReadList;
    Int_t index = -1;
 
@@ -147,12 +154,12 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
          if (BinarySearchReadList(blockObj, offset, len, &index)){
             found = true;
             break;
-         }    
+         }
       }
       if (found)
          break;
       else{
-         mutexBlocks->UnLock();                
+         mutexBlocks->UnLock();
 
          fWaitTime.Start(kFALSE);
          fReadBlockAdded->Wait(); //wait for a new block to be added
@@ -161,8 +168,8 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
    }
 
    if (found){
-      Int_t auxInt = 0;       
-      char* ptrInt = NULL;    
+      Int_t auxInt = 0;
+      char* ptrInt = 0;
 
       for(Int_t i=0; i < blockObj->GetNoElem(); i++){
 
@@ -181,37 +188,34 @@ Bool_t TFilePrefetch::ReadBuffer(char* buf, Long64_t offset, Int_t len)
    return found;
 }
 
-
 //____________________________________________________________________________________________
 void TFilePrefetch::ReadBlock(Long64_t* offset, Int_t* len, Int_t nblock)
 {
-   //Create a TFPBlock object or recycle one and add it to the prefetchBlocks list.
+   // Create a TFPBlock object or recycle one and add it to the prefetchBlocks list.
 
    TFPBlock* block = CreateBlockObj(offset, len, nblock);
    AddPendingBlock(block);
 }
 
-
 //____________________________________________________________________________________________
 void TFilePrefetch::AddPendingBlock(TFPBlock* block)
 {
-   //Safe method to add a block to the pendingList.
+   // Safe method to add a block to the pendingList.
 
    TMutex *mutexBlocks = fMutexPendingList;
 
    mutexBlocks->Lock();
    fPendingBlocks->Add(block);
-   mutexBlocks->UnLock();   
+   mutexBlocks->UnLock();
    fNewBlockAdded->Signal();
 }
-
 
 //____________________________________________________________________________________________
 TFPBlock* TFilePrefetch::GetPendingBlock()
 {
-   //Safe method to remove a block from the pendingList.
+   // Safe method to remove a block from the pendingList.
 
-   TFPBlock* block = NULL;
+   TFPBlock* block = 0;
    TMutex *mutexBlocks = fMutexPendingList;
    mutexBlocks->Lock();
 
@@ -219,86 +223,82 @@ TFPBlock* TFilePrefetch::GetPendingBlock()
       block = (TFPBlock*)fPendingBlocks->First();
      block = (TFPBlock*)fPendingBlocks->Remove(block);
    }
-   mutexBlocks->UnLock();   
+   mutexBlocks->UnLock();
    return block;
 }
-
 
 //____________________________________________________________________________________________
 void TFilePrefetch::AddReadBlock(TFPBlock* block)
 {
-   //Safe method to add a block to the readList.
+   // Safe method to add a block to the readList.
 
    TMutex *mutexBlocks = fMutexReadList;
    mutexBlocks->Lock();
 
-   if (fReadBlocks->GetSize() >= MAX_READ_SIZE){
+   if (fReadBlocks->GetSize() >= kMAX_READ_SIZE){
       TFPBlock* movedBlock = (TFPBlock*) fReadBlocks->First();
       movedBlock = (TFPBlock*)fReadBlocks->Remove(movedBlock);
       AddRecycleBlock(movedBlock);
    }
 
    fReadBlocks->Add(block);
-   mutexBlocks->UnLock();  
+   mutexBlocks->UnLock();
    fReadBlockAdded->Signal();
 }
-
 
 //____________________________________________________________________________________________
 void TFilePrefetch::AddRecycleBlock(TFPBlock* block)
 {
-   //Safe method to add a block to the recycleList.
+   // Safe method to add a block to the recycleList.
 
    TMutex *mutexBlocks = fMutexRecycleList;
-   mutexBlocks->Lock(); 
+   mutexBlocks->Lock();
 
-   if (fRecycleBlocks->GetSize() >= MAX_RECYCLE_SIZE){
+   if (fRecycleBlocks->GetSize() >= kMAX_RECYCLE_SIZE){
       delete block;
    }
    else{
       fRecycleBlocks->Add(block);
    }
-   mutexBlocks->UnLock(); 
+   mutexBlocks->UnLock();
 }
-
 
 //____________________________________________________________________________________________
 TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t noblock)
 {
-   //Create a new block or recycle an old one.
+   // Create a new block or recycle an old one.
 
-   TFPBlock* blockObj = NULL;
+   TFPBlock* blockObj = 0;
    TMutex *mutexRecycle = fMutexRecycleList;
-   
+
    mutexRecycle->Lock();
 
    if (fRecycleBlocks->GetSize()){
       blockObj = static_cast<TFPBlock*>(fRecycleBlocks->First());
       fRecycleBlocks->Remove(blockObj);
       blockObj->ReallocBlock(offset, len, noblock);
-      mutexRecycle->UnLock();   
+      mutexRecycle->UnLock();
    }
    else{
-      mutexRecycle->UnLock();  
+      mutexRecycle->UnLock();
       blockObj = new TFPBlock(offset, len, noblock);
    }
    return blockObj;
 }
 
 //____________________________________________________________________________________________
-TThread* TFilePrefetch::GetThread()
+TThread* TFilePrefetch::GetThread() const
 {
-   //Return reference to the consumer thread.
+   // Return reference to the consumer thread.
 
    return fConsumer;
 }
 
-
 //____________________________________________________________________________________________
 Int_t TFilePrefetch::ThreadStart()
 {
-   //Used to start the consumer thread.
-     
+   // Used to start the consumer thread.
+
    fConsumer= new TThread("consumerThread",
                              (void(*) (void *))ThreadProc,
                               (void*) this);
@@ -309,25 +309,25 @@ Int_t TFilePrefetch::ThreadStart()
 //____________________________________________________________________________________________
 void TFilePrefetch::ThreadProc(void* arg)
 {
-   //Execution loop of the consumer thread.
+   // Execution loop of the consumer thread.
 
    TFilePrefetch* tmp = (TFilePrefetch*) arg;
 
    while(tmp->fSem->TryWait() !=0){
       tmp->ReadListOfBlocks();
       tmp->fNewBlockAdded->Wait();
-   } 
+   }
 }
 
 //########################################### CACHING PART ###############################################################
 
 //____________________________________________________________________________________________
-Int_t TFilePrefetch::SumHex(char *hex)
+Int_t TFilePrefetch::SumHex(const char *hex)
 {
-   //Sum up individual hex values to obtain a decimal value.
+   // Sum up individual hex values to obtain a decimal value.
 
    Int_t result = 0;
-   char* ptr = hex;
+   const char* ptr = hex;
 
    for(Int_t i=0; i < (Int_t)strlen(hex); i++)
       result += xtod(ptr[i]);
@@ -335,26 +335,22 @@ Int_t TFilePrefetch::SumHex(char *hex)
    return result;
 }
 
-
 //____________________________________________________________________________________________
 Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 {
-   //Test if the block is in cache.
+   // Test if the block is in cache.
 
    Bool_t found = false;
    TString fullPath;    //path of the cached files
    Int_t value = 0;
-   FileStat_t* stat = new FileStat_t();
 
-   if (!fPathCache){
-      delete stat;
+   if (fPathCache == "")
       return false;
-   }
-   else
-      fullPath = *(fPathCache);
 
-   if (gSystem->OpenDirectory(fullPath.Data()) == 0)
-      gSystem->mkdir(fullPath.Data()); 
+   fullPath = fPathCache;
+
+   if (gSystem->OpenDirectory(fullPath) == 0)
+      gSystem->mkdir(fullPath);
 
    char* concatStr = new char[100];
    TString fileName, dirName;
@@ -369,50 +365,48 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 
    md->Final();
    fileName = md->AsString();
-   value = SumHex((char *)fileName.Data());
+   value = SumHex(fileName);
    value = value % 16;
    sprintf(concatStr, "%i", value);
    dirName = concatStr;
 
    fullPath += "/" + dirName + "/" + fileName;
 
-   if (gSystem->GetPathInfo(fullPath.Data(), *stat) == 0){    
+   FileStat_t stat;
+   if (gSystem->GetPathInfo(fullPath, stat) == 0) {
       path = new char[fullPath.Sizeof() + 1];
-      strcpy(path, fullPath.Data());
+      strcpy(path, fullPath);
       found = true;
-   }
-   else
+   } else
       found = false;
 
    delete[] concatStr;
-   delete stat;
    delete md;
    return found;
 }
 
-
 //____________________________________________________________________________________________
-char* TFilePrefetch::GetBlockFromCache(char* path, Int_t length)
+char* TFilePrefetch::GetBlockFromCache(const char* path, Int_t length)
 {
-   //Return a buffer from cache.
+   // Return a buffer from cache.
 
-   char*buffer = NULL;
+   char *buffer = 0;
    TString strPath = path;
 
    strPath += "?filetype=raw";
-   TFile* file = new TFile(strPath.Data());
+   TFile* file = new TFile(strPath);
 
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
    buffer = (char*) calloc(length+1, sizeof(char));
-   file->ReadBuffer(buffer, 0, length);    
-  
+   file->ReadBuffer(buffer, 0, length);
+
    fFile->fBytesRead  += length;
    fFile->fgBytesRead += length;
    fFile->SetReadCalls(fFile->GetReadCalls() + 1);
    fFile->fgReadCalls++;
-  
+
    if (gMonitoringWriter)
       gMonitoringWriter->SendFileReadProgress(fFile);
    if (gPerfStats != 0) {
@@ -423,28 +417,25 @@ char* TFilePrefetch::GetBlockFromCache(char* path, Int_t length)
    return buffer;
 }
 
-
 //____________________________________________________________________________________________
 void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
 {
-   //Save the block content in cache.
-  
+   // Save the block content in cache.
+
    TString fullPath;
    TString fileName, dirName;
-   char* concatStr = new char[100];
+   char* concatStr;
    Int_t value = 0;
-   TFile* file = NULL;
+   TFile* file = 0;
 
-   if (!fPathCache){
-      delete[] concatStr;
+   if (fPathCache == "")
       return;
-   }
-   else
-      fullPath = *(fPathCache);
+   
+   concatStr = new char[100];
+   fullPath = fPathCache;
 
    //dir is SHA1 value modulo 16; filename is the value of the SHA1
    TMD5* md = new TMD5();
-   FileStat_t* stat = new FileStat_t();
 
    for(Int_t i=0; i< block->GetNoElem(); i++){
       sprintf(concatStr, "%lld", block->GetPos(i));
@@ -453,24 +444,24 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    md->Final();
 
    fileName  = md->AsString();
-   value = SumHex((char*)fileName.Data());
+   value = SumHex(fileName);
    value = value % 16;
 
    sprintf(concatStr, "%i", value);
    dirName = concatStr;
    fullPath += ("/" + dirName);
-  
-   if (gSystem->OpenDirectory(fullPath.Data()) == false)
-      gSystem->mkdir(fullPath.Data());
-   
+
+   if (gSystem->OpenDirectory(fullPath) == false)
+      gSystem->mkdir(fullPath);
+
    fullPath += ("/" + fileName);
-   if (gSystem->GetPathInfo(fullPath.Data(), *stat) == 0){  
+   FileStat_t stat;
+   if (gSystem->GetPathInfo(fullPath, stat) == 0) {
       fullPath += "?filetype=raw";
-      file = TFile::Open(fullPath.Data(), "update");
-   }
-   else{
+      file = TFile::Open(fullPath, "update");
+   } else{
       fullPath += "?filetype=raw";
-      file = TFile::Open(fullPath.Data(), "new");
+      file = TFile::Open(fullPath, "new");
    }
 
    file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
@@ -478,22 +469,20 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
 
    file = 0;
    delete file;
-   delete stat;
    delete[] concatStr;
    delete md;
 }
 
-
 //____________________________________________________________________________________________
-Bool_t TFilePrefetch::CheckCachePath(char* locationCache)
+Bool_t TFilePrefetch::CheckCachePath(const char* locationCache)
 {
-   //Validate the input file cache path.
+   // Validate the input file cache path.
 
    Bool_t found = true;
    TString path = locationCache;
    Ssiz_t pos = path.Index(":/");
 
-   if (pos > 0){
+   if (pos > 0) {
       TSubString prot   = path(0, pos);
       TSubString dir  = path(pos + 2, path.Length());
       TString protocol(prot);
@@ -504,29 +493,25 @@ Bool_t TFilePrefetch::CheckCachePath(char* locationCache)
            found = false;
            break;
         }
-   }
-   else
+   } else
       found = false;
- 
+
    return found;
 }
 
-
 //____________________________________________________________________________________________
-Bool_t TFilePrefetch::SetCache(char* path)
+Bool_t TFilePrefetch::SetCache(const char* path)
 {
-   //Set the path of the cache directory.
+   // Set the path of the cache directory.
 
    if (CheckCachePath(path)){
-      fPathCache = new TString(path);
-  
-      if (!gSystem->OpenDirectory(path)){        
+      fPathCache = path;
+
+      if (!gSystem->OpenDirectory(path)){
         gSystem->mkdir(path);
-      }      
-   }
-   else{
+      }
+   } else
       return false;
-   }
    return true;
 }
 

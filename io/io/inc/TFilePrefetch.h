@@ -1,5 +1,32 @@
+// @(#)root/io:$Id$
+// Author: Elvin Sindrilaru   19/05/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TFilePrefetch
 #define ROOT_TFilePrefetch
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TFilePrefetch                                                        //
+//                                                                      //
+// The prefetching mechanism uses two classes (TFilePrefetch and        //
+// TFPBlock) to prefetch in advance a block of tree entries. There is   //
+// a thread which takes care of actually transferring the blocks and    //
+// making them available to the main requesting thread. Therefore,      //
+// the time spent by the main thread waiting for the data before        //
+// processing considerably decreases. Besides the prefetching           //
+// mechanisms there is also a local caching option which can be         //
+// enabled by the user. Both capabilities are disabled by default       //
+// and must be explicitly enabled by the user.                          //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TFile
 #include "TFile.h"
@@ -39,55 +66,55 @@
 #endif
 
 
-class TFilePrefetch {
-
-public:
-  
-   TFilePrefetch(TFile*);                                    //! constructor
-   virtual ~TFilePrefetch();                                         //! destructor
-
-   void ReadAsync(TFPBlock*, Bool_t&);                       //! function that does the actual reading(lowest level)
-   void ReadListOfBlocks();                                  //! read all the blocks in the list prefetchBlocks
-
-   void AddPendingBlock(TFPBlock*);                          //! method to add a block to the pending list of blocks
-   TFPBlock* GetPendingBlock();                              // retrieve a block from the list of pending blocks
-
-   void AddReadBlock(TFPBlock*);                             // method to add a block to the list of read blocks
-   void AddRecycleBlock(TFPBlock*);                          // method to add a block to the list of recycled blocks
-   Bool_t ReadBuffer(char*, Long64_t, Int_t);                // test if segment if prefetched and return it
-   void ReadBlock(Long64_t*, Int_t*, Int_t);                 // submit a request from the main thread
-   TFPBlock* CreateBlockObj(Long64_t*, Int_t*, Int_t);       // create a new block or recycle an old one
-
-   TThread* GetThread();                                     // get reference to consumer thread
-   static void ThreadProc(void*);                            // actions executed by the consumer thread
-   Int_t ThreadStart();                                      // start thread
-
-   Bool_t SetCache(char*);                                   // set the path to the cache directory
-   Bool_t CheckCachePath(char*);                             // used to validate the input pathCache
-   Bool_t CheckBlockInCache(char*&, TFPBlock*);              // test if block is in cache
-   char* GetBlockFromCache(char*, Int_t);                    // get the block if in cache else return null
-   void SaveBlockInCache(TFPBlock*);                         // save the buffer content in cache
-
-   Int_t SumHex(char*);                                      // add the values from a hex rep. to produce an integer 
-   Bool_t BinarySearchReadList(TFPBlock*, Long64_t, Int_t, Int_t*);  // search segments in a block corresponding to the current segment request
-   Long64_t GetWaitTime() { return Long64_t(fWaitTime.RealTime()*1.e+6); } // return the time spent wating for buffer to be read in microseconds
+class TFilePrefetch : public TObject {
 
 private:
- 
-   TFile      *fFile;                                        //! reference to the file
-   TList      *fPendingBlocks;                               //! list of pending block to be read
-   TList      *fReadBlocks;                                  //! list of block read
-   TList      *fRecycleBlocks;                               //! list of recycled blocks 
-   TThread    *fConsumer;                                    //! consumer thread
-   TMutex     *fMutexPendingList;                            //! mutex for the pending list
-   TMutex     *fMutexReadList;                               //! mutex for the list of read blocks
-   TMutex     *fMutexRecycleList;                            //! mutex for the list of recycled blocks 
-   TCondition *fNewBlockAdded;                               //! condition used to signal the addition of a new pending block
-   TCondition *fReadBlockAdded;                              //! condition usd to signal the addition of a new red block
-   TSemaphore *fSem;                                         //! semaphore used to kill the consumer thread
-   TString    *fPathCache;                                   //! path to the cache directory
-   TStopwatch  fWaitTime;                                    //! time wating to prefetch a buffer (in usec)
+   TFile      *fFile;              // reference to the file
+   TList      *fPendingBlocks;     // list of pending block to be read
+   TList      *fReadBlocks;        // list of block read
+   TList      *fRecycleBlocks;     // list of recycled blocks
+   TThread    *fConsumer;          // consumer thread
+   TMutex     *fMutexPendingList;  // mutex for the pending list
+   TMutex     *fMutexReadList;     // mutex for the list of read blocks
+   TMutex     *fMutexRecycleList;  // mutex for the list of recycled blocks
+   TCondition *fNewBlockAdded;     // condition used to signal the addition of a new pending block
+   TCondition *fReadBlockAdded;    // condition usd to signal the addition of a new red block
+   TSemaphore *fSem;               // semaphore used to kill the consumer thread
+   TString     fPathCache;         // path to the cache directory
+   TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
 
-   ClassDef(TFilePrefetch, 0);
+   static void ThreadProc(void*);
+
+public:
+   TFilePrefetch(TFile*);
+   virtual ~TFilePrefetch();
+
+   void      ReadAsync(TFPBlock*, Bool_t&);
+   void      ReadListOfBlocks();
+
+   void      AddPendingBlock(TFPBlock*);
+   TFPBlock *GetPendingBlock();
+
+   void      AddReadBlock(TFPBlock*);
+   void      AddRecycleBlock(TFPBlock*);
+   Bool_t    ReadBuffer(char*, Long64_t, Int_t);
+   void      ReadBlock(Long64_t*, Int_t*, Int_t);
+   TFPBlock *CreateBlockObj(Long64_t*, Int_t*, Int_t);
+
+   TThread  *GetThread() const;
+   Int_t     ThreadStart();
+
+   Bool_t    SetCache(const char*);
+   Bool_t    CheckCachePath(const char*);
+   Bool_t    CheckBlockInCache(char*&, TFPBlock*);
+   char     *GetBlockFromCache(const char*, Int_t);
+   void      SaveBlockInCache(TFPBlock*);
+
+   Int_t     SumHex(const char*);
+   Bool_t    BinarySearchReadList(TFPBlock*, Long64_t, Int_t, Int_t*);
+   Long64_t  GetWaitTime();
+
+   ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };
+
 #endif

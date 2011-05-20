@@ -32,10 +32,23 @@ aborting
 
 <h4>Asynchronous Prefetching</h4>
 <ul>
-<li>The prefetching mechanism uses two new classes (<tt>TFilePrefetch.h</tt> and <tt>TFPBlock.h</tt>) to prefetch in advance a block of entries. There is a second thread which takes care of actually transferring the blocks and making them available to the main requesting thread. Therefore, the time spent by the main thread waiting for the data before processing considerably decreases. Besides the prefetching mechanisms there is also a local caching option which can be enabled by the user. Both capabilities are disabled by default and must be explicitly enabled by the user. 
+<li>The prefetching mechanism uses two new classes (<tt>TFilePrefetch</tt> 
+and <tt>TFPBlock</tt>) to prefetch in advance a block of tree entries. There
+is a thread which takes care of actually transferring the blocks and
+making them available to the main requesting thread. Therefore, the time
+spent by the main thread waiting for the data before processing considerably
+decreases. Besides the prefetching mechanisms there is also a local
+caching option which can be enabled by the user. Both capabilities are
+disabled by default and must be explicitly enabled by the user. 
 </li>
 
-<li>In order to enable the prefetching the user must set the environment variable <tt>TFile.AsyncPrefetching</tt> as follows: <tt>gEnv->SetValue("TFile.AsyncPrefetching", 1)</tt>. Only when the prefetching is enabled can the user set the local cache directory in which the file transferred will be saved. For subsequent reads of the same file the system will use the local copy of the file from cache. To set up a local cache directory, the client can use the following commands:
+<li>In order to enable the prefetching the user must set the rootrc environment
+variable <tt>TFile.AsyncPrefetching</tt> as follows: 
+<tt>gEnv->SetValue("TFile.AsyncPrefetching", 1)</tt>. Only when the
+prefetching is enabled can the user set the local cache directory in
+which the file transferred will be saved. For subsequent reads of the
+same file the system will use the local copy of the file from cache.
+To set up a local cache directory, the client can use the following commands:
 </li>
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
   TString cachedir="file:/tmp/xcache/";
@@ -44,13 +57,25 @@ aborting
   gEnv->SetValue("Cache.Directory", cachedir.Data());
 </pre>
 
-<li>The <tt>TFilePrefetch</tt> class is responsible with actually reading and storing the requests received from the main thread. It also creates the working thread which will transfer all the information. Apart from managing the block requests, it also deals with caching the blocks on the local machine and retrieving them when necessary. 
+<li>The <tt>TFilePrefetch</tt> class is responsible for actually reading
+and storing the requests received from the main thread. It also creates
+the working thread which will transfer all the information. Apart from
+managing the block requests, it also deals with caching the blocks on
+the local machine and retrieving them when necessary. 
 </li>
 
-<li>The <tt>TFPBlock</tt> class represents the encapsulation of a block request. It contains the chunks to be prefetched and also serves as a container for the information read.</li>
+<li>The <tt>TFPBlock</tt> class represents the encapsulation of a block
+request. It contains the chunks to be prefetched and also serves as a
+container for the information read.</li>
 
-<li>In order to accommodate the new prefetching mechanism the following files have suffered considerable modifications: <tt>TFileCacheRead.cxx/.h</tt>, <tt>TTreeCache.cxx/.h</tt> and to a less extent <tt>TXNetFile.cxx</tt>, <tt>TFile.h</tt>. Basically in <tt>TFileCacheRead</tt> we've added the logic for dealing with the second buffer that is prefetched. In <tt>TTreeCache</tt> during prefetching the method FillBuffer is called after each read so that once the main thread starts reading from the beginning of the last available buffer, the second thread starts prefetching the next block.
+<li>In order to accommodate the new prefetching mechanism the following
+files have been modified: <tt>TFileCacheRead.cxx/.h</tt>,
+<tt>TTreeCache.cxx/.h</tt> and to a less extent <tt>TXNetFile.cxx</tt>,
+<tt>TFile.h</tt>. Basically in <tt>TFileCacheRead</tt> we've added the
+logic for dealing with the second buffer that is prefetched. In
+<tt>TTreeCache</tt> during prefetching the method FillBuffer is called
+after each read so that once the main thread starts reading from the
+beginning of the last available buffer, the second thread starts
+prefetching the next block.
 </li>
 </ul>
-
-
