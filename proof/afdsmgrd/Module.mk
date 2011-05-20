@@ -60,19 +60,12 @@ clean:: clean-$(MODNAME)
 #
 # TODO: add make uninstall to CMake
 distclean-$(MODNAME):
-	@( rm -f $(ROOT_SRCDIR)/$(AFDSMGRDBIN) ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/afdsmgrd.conf.example ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/sysconfig/afdsmgrd.example ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/init.d/afdsmgrd ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/afdsmgrd-macros/StageXrd.C ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/afdsmgrd-root.sh ; \
-	   rm -f $(ROOT_SRCDIR)/etc/proof/afdsmgrd-exec-wrapper ; \
-	   rm -fr $(ROOT_SRCDIR)/etc/proof/sysconfig ; \
-	   rm -fr $(ROOT_SRCDIR)/etc/proof/init.d ; \
-	   rm -fr $(ROOT_SRCDIR)/etc/proof/afdsmgrd-macros ; \
-	   cd "$(AFDSMGRDDIR)" ; \
+	@( cd "$(AFDSMGRDDIR)" ; \
 	   if [ -d afdsmgrd ]; then \
 	     echo "*** Completely cleaning up afdsmgrd ***" ; \
+	     cd afdsmgrd && \
+	     make uninstall && \
+	     cd .. && \
 	     rm -r afdsmgrd ; \
 	   fi ; \
 	)
