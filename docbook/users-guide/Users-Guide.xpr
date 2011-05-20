@@ -1,299 +1,316 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project version="12.1">
+<project version="12.2">
     <meta>
-        <filters directoryPatterns="" filePatterns=""
-            positiveFilePatterns="" showHiddenFiles="false"/>
+        <filters directoryPatterns="" filePatterns="" positiveFilePatterns="" showHiddenFiles="false"/>
         <options>
-            <serialized version="12.1">
+            <serialized version="12.2" xml:space="preserve">
                 <map>
                     <entry>
-                        <String xml:space="preserve">scenario.associations</String>
+                        <String>scenario.associations</String>
                         <scenarioAssociation-array>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">../../../Dropbox/User%27s%20Guide/WritingGUI.xml</String>
+                                    <String>ROOTUsersGuide.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">../../../ROOT_Documents/User%27s%20Guide/DocBook/1Introduction.xml</String>
+                                    <String>Introduction.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">../../../ROOT_Documents/User%27s%20Guide/DocBook/GettingStarted.xml</String>
+                                    <String>../../../Dropbox/User%27s%20Guide/WritingGUI.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">../../../ROOT_Documents/User%27s%20Guide/DocBook/Introduction.xml</String>
+                                    <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/1Introduction.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">../../../ROOT_Documents/User%27s%20Guide/DocBook/ROOTUsersGuide.xml</String>
+                                    <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/GettingStarted.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">Introduction.xml</String>
+                                    <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/Introduction.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook HTML - Chunk</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">ROOTUsersGuide.xml</String>
+                                    <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/ROOTUsersGuide.xml</String>
                                 </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook HTML</String>
+                                    <String>ROOT Docbook HTML</String>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="url">
-                                    <String xml:space="preserve">FittingHistograms.xml</String>
+                                    <String>FittingHistograms.xml</String>
                                 </field>
                             </scenarioAssociation>
                         </scenarioAssociation-array>
                     </entry>
                     <entry>
-                        <String xml:space="preserve">scenarios</String>
+                        <String>scenarios</String>
                         <scenario-array>
                             <scenario>
                                 <field name="advancedOptionsMap">
                                     <null/>
                                 </field>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook HTML</String>
+                                    <String>ROOT Docbook HTML</String>
                                 </field>
                                 <field name="baseURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="footerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="fOPMethod">
-                                    <String xml:space="preserve">pdf</String>
+                                    <String>pdf</String>
                                 </field>
                                 <field name="fOProcessorName">
-                                    <String xml:space="preserve">Apache FOP</String>
+                                    <String>Apache FOP</String>
                                 </field>
                                 <field name="headerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="inputXSLURL">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/html/docbook_custom.xsl</String>
+                                    <String>${frameworks}/docbook/xsl/html/docbook_custom.xsl</String>
                                 </field>
                                 <field name="inputXMLURL">
-                                    <String xml:space="preserve">${currentFileURL}</String>
+                                    <String>${currentFileURL}</String>
                                 </field>
                                 <field name="defaultScenario">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="isFOPPerforming">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="saveAs">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="openInBrowser">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="outputFile">
-                                    <File xml:space="preserve">${cfd}/${cfn}.html</File>
+                                    <File>${cfd}/${cfn}.html</File>
                                 </field>
                                 <field name="openOtherLocationInBrowser">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="locationToOpenInBrowserURL">
                                     <null/>
                                 </field>
                                 <field name="openInEditor">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInHTMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInXMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInSVGPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInResultSetPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="useXSLTInput">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="xsltParams">
                                     <list>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics.path</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/images/</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">draft.mode</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">no</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.source</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.xslthl.config</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">shade.verbatim</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics.path</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/images/</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>draft.mode</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>no</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.source</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.xslthl.config</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>shade.verbatim</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
                                     </list>
                                 </field>
                                 <field name="cascadingStylesheets">
                                     <String-array/>
                                 </field>
                                 <field name="xslTransformer">
-                                    <String xml:space="preserve">Saxon6.5.5</String>
+                                    <String>Saxon6.5.5</String>
                                 </field>
                                 <field name="extensionURLs">
                                     <String-array>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
                                     </String-array>
                                 </field>
                             </scenario>
@@ -302,229 +319,253 @@
                                     <null/>
                                 </field>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook HTML - Chunk</String>
+                                    <String>ROOT Docbook HTML - Chunk</String>
                                 </field>
                                 <field name="baseURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="footerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="fOPMethod">
-                                    <String xml:space="preserve">pdf</String>
+                                    <String>pdf</String>
                                 </field>
                                 <field name="fOProcessorName">
-                                    <String xml:space="preserve">Apache FOP</String>
+                                    <String>Apache FOP</String>
                                 </field>
                                 <field name="headerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="inputXSLURL">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/html/chunk_custom.xsl</String>
+                                    <String>${frameworks}/docbook/xsl/html/chunk_custom.xsl</String>
                                 </field>
                                 <field name="inputXMLURL">
-                                    <String xml:space="preserve">${currentFileURL}</String>
+                                    <String>${currentFileURL}</String>
                                 </field>
                                 <field name="defaultScenario">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="isFOPPerforming">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="saveAs">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="openInBrowser">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="outputFile">
                                     <null/>
                                 </field>
                                 <field name="openOtherLocationInBrowser">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="locationToOpenInBrowserURL">
-                                    <String xml:space="preserve">${cfdu}/chunks/index.html</String>
+                                    <String>${cfdu}/chunks/index.html</String>
                                 </field>
                                 <field name="openInEditor">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInHTMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInXMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInSVGPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInResultSetPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="useXSLTInput">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="xsltParams">
                                     <list>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics.path</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/images/</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">base.dir</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${cfd}/chunks/</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">draft.mode</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">no</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.source</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.xslthl.config</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">img.src.path</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">../</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">shade.verbatim</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics.path</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/images/</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>base.dir</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${cfd}/chunks/</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>draft.mode</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>no</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.source</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.xslthl.config</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>img.src.path</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>../</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>shade.verbatim</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
                                     </list>
                                 </field>
                                 <field name="cascadingStylesheets">
                                     <String-array/>
                                 </field>
                                 <field name="xslTransformer">
-                                    <String xml:space="preserve">Saxon6.5.5</String>
+                                    <String>Saxon6.5.5</String>
                                 </field>
                                 <field name="extensionURLs">
                                     <String-array>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
                                     </String-array>
                                 </field>
                             </scenario>
@@ -533,273 +574,303 @@
                                     <null/>
                                 </field>
                                 <field name="name">
-                                    <String xml:space="preserve">ROOT Docbook PDF</String>
+                                    <String>ROOT Docbook PDF</String>
                                 </field>
                                 <field name="baseURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="footerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="fOPMethod">
-                                    <String xml:space="preserve">pdf</String>
+                                    <String>pdf</String>
                                 </field>
                                 <field name="fOProcessorName">
-                                    <String xml:space="preserve">Apache FOP</String>
+                                    <String>Apache FOP</String>
                                 </field>
                                 <field name="headerURL">
-                                    <String xml:space="preserve"></String>
+                                    <String></String>
                                 </field>
                                 <field name="inputXSLURL">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/fo/docbook_custom.xsl</String>
+                                    <String>${frameworks}/docbook/xsl/fo/docbook_custom.xsl</String>
                                 </field>
                                 <field name="inputXMLURL">
-                                    <String xml:space="preserve">${currentFileURL}</String>
+                                    <String>${currentFileURL}</String>
                                 </field>
                                 <field name="defaultScenario">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="isFOPPerforming">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="type">
-                                    <String xml:space="preserve">XSL</String>
+                                    <String>XSL</String>
                                 </field>
                                 <field name="saveAs">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="openInBrowser">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="outputFile">
-                                    <File xml:space="preserve">${cfd}/${cfn}.pdf</File>
+                                    <File>${cfd}/${cfn}.pdf</File>
                                 </field>
                                 <field name="openOtherLocationInBrowser">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="locationToOpenInBrowserURL">
                                     <null/>
                                 </field>
                                 <field name="openInEditor">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInHTMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInXMLPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInSVGPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="showInResultSetPane">
-                                    <Boolean xml:space="preserve">false</Boolean>
+                                    <Boolean>false</Boolean>
                                 </field>
                                 <field name="useXSLTInput">
-                                    <Boolean xml:space="preserve">true</Boolean>
+                                    <Boolean>true</Boolean>
                                 </field>
                                 <field name="xsltParams">
                                     <list>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">admon.graphics.path</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/images/</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">draft.mode</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">no</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">fop.extensions</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">0</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">fop1.extensions</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.source</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">highlight.xslthl.config</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">monospace.verbatim.font.width</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">0.60em</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">paper.type</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">A4</String>
-                                    </field>
-                                    </transformationParameter>
-                                    <transformationParameter>
-                                    <field name="paramDescription">
-                                    <paramDescriptor>
-                                    <field name="localName">
-                                    <String xml:space="preserve">shade.verbatim</String>
-                                    </field>
-                                    <field name="prefix">
-                                    <null/>
-                                    </field>
-                                    <field name="namespace">
-                                    <null/>
-                                    </field>
-                                    </paramDescriptor>
-                                    </field>
-                                    <field name="value">
-                                    <String xml:space="preserve">1</String>
-                                    </field>
-                                    </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>admon.graphics.path</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/images/</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>draft.mode</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>no</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>fop.extensions</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>0</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>fop1.extensions</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.source</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>highlight.xslthl.config</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>${frameworks}/docbook/xsl/highlighting/xslthl-config.xml</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>monospace.verbatim.font.width</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>0.60em</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>paper.type</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>A4</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
+                                        <transformationParameter>
+                                            <field name="paramDescription">
+                                                <paramDescriptor>
+                                                    <field name="localName">
+                                                        <String>shade.verbatim</String>
+                                                    </field>
+                                                    <field name="prefix">
+                                                        <null/>
+                                                    </field>
+                                                    <field name="namespace">
+                                                        <null/>
+                                                    </field>
+                                                </paramDescriptor>
+                                            </field>
+                                            <field name="value">
+                                                <String>1</String>
+                                            </field>
+                                            <field name="hasXPathValue">
+                                                <Boolean>false</Boolean>
+                                            </field>
+                                        </transformationParameter>
                                     </list>
                                 </field>
                                 <field name="cascadingStylesheets">
                                     <String-array/>
                                 </field>
                                 <field name="xslTransformer">
-                                    <String xml:space="preserve">Saxon6.5.5</String>
+                                    <String>Saxon6.5.5</String>
                                 </field>
                                 <field name="extensionURLs">
                                     <String-array>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
-                                    <String xml:space="preserve">${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/xslthl-2.0.1.jar</String>
+                                        <String>${frameworks}/docbook/xsl/extensions/saxon65.jar</String>
                                     </String-array>
                                 </field>
                             </scenario>
                         </scenario-array>
                     </entry>
                     <entry>
-                        <String xml:space="preserve">scenarios.load.from.project</String>
-                        <Boolean xml:space="preserve">true</Boolean>
+                        <String>scenarios.load.from.project</String>
+                        <Boolean>true</Boolean>
                     </entry>
                 </map>
             </serialized>
