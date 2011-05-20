@@ -1474,9 +1474,10 @@ subscripts and superscripts:</para>
 
 <sect3>
 <title>Fractions</title>
-<para>Fractions denoted by the / symbol are made in the obvious way. The <code>#frac</code> command
-          is used for large fractions in displayed formula; it has two arguments: the numerator and
-          the denominator. For example, the equation <inlineequation>
+<para>Fractions denoted by the / symbol are made in the obvious way. The
+<code>#frac</code> command is used for large fractions in displayed formula; it
+has two arguments: the numerator and the denominator. For example, the equation
+<inlineequation>
             <mml:math>
               <mml:mrow>
                 <mml:mi>x</mml:mi>
@@ -1505,21 +1506,23 @@ subscripts and superscripts:</para>
                 </mml:mrow>
               </mml:mfrac>
             </mml:math>
-          </inlineequation>
-          is obtained by following expression
-            <code>x=#frac{y+z/2}{y^{2}+1}</code>.</para>
+</inlineequation>
+is obtained by following expression <code>x=#frac{y+z/2}{y^{2}+1}</code>.</para>
 </sect3>
 
 <sect3>
 <title>Roots</title>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000BC.png" width="48.3pt" depth="22.65pt"/></imageobject></inlinemediaobject>The <code>#sqrt</code> command produces the square ROOT of its argument; it has an optional first argument for other roots.</para>
-<para>Example:         <code>#sqrt{10}  #sqrt[3]{10}</code></para>
+<para>The <code>#sqrt</code> command produces the square ROOT of its argument;
+it has an optional first argument for other roots.</para>
+<para>Example: <code>#sqrt{10}  #sqrt[3]{10}</code>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000BC.png" width="48.3pt" depth="22.65pt"/></imageobject></inlinemediaobject>
+</para>
 </sect3>
 
 <sect3>
 <title>Delimiters</title>
 <para>You can produce three kinds of proportional delimiters.</para>
-<para><code>#[]{....}</code>         or "a la" Latex</para>
+<para><code>#[]{....}</code> or "à la" Latex</para>
 <para><code>#left[.....#right] </code>big square brackets</para>
 <para><code>#{}{....} or #left{.....#right}</code>big curly brackets</para>
 <para><code>#||{....} or #left|.....#right|</code>big absolute value symbol</para>
@@ -1529,23 +1532,36 @@ subscripts and superscripts:</para>
 <sect3>
 <title>Changing Style in Math Mode</title>
 <para>You can change the font and the text color at any moment using:</para>
-<para><code>#font[font-number]{...}</code> and <code>#color[color-number]{...}</code></para>
+<para><code>#font[font-number]{...}</code> and
+<code>#color[color-number]{...}</code></para>
 </sect3>
 
 <sect3>
 <title>Line Splitting</title>
-<para>A  <emphasis role="bold"><code>TLatex</code></emphasis> string may be split in two with the following command: <code>#splitline{top}{bottom}. </code><emphasis role="bold"><code>TAxis</code></emphasis>         and         <emphasis role="bold"><code>TGaxis</code></emphasis>         objects can take advantage of this feature. For example, the date and time could be shown in the time axis over two lines with: <code>#splitline{21 April 2003}{14:23:56}</code></para>
+<para>A <emphasis role="bold"><code>TLatex</code></emphasis> string may be split
+in two with the following command: <code>#splitline{top}{bottom}</code>.
+<emphasis role="bold"><code>TAxis</code></emphasis> and
+<emphasis role="bold"><code>TGaxis</code></emphasis> objects can take advantage
+of this feature. For example, the date and time could be shown in the time axis
+over two lines with: <code>#splitline{21 April 2003}{14:23:56}</code></para>
 </sect3>
 </sect2>
 
 <sect2>
 <title>Greek Letters</title>
-<para>The command to produce a lowercase Greek letter is obtained by adding # to the name of the letter. For an uppercase Greek letter, just capitalize the first letter of the command name.</para>
+<para>The command to produce a lowercase Greek letter is obtained by adding
+<code>#</code> to the name of the letter. For an uppercase Greek letter, just
+capitalize the first letter of the command name.</para>
 
-<programlisting language="c++">
-#alpha #beta #chi #delta #varepsilon #phi #gamma #eta #iota #varphi #kappa #lambda
-#mu #nu #omicron #pi #theta #rho #sigma #tau #upsilon #varomega #omega #xi
-#psi #zeta#Alpha #Beta #Chi #Delta #Epsilon #Phi #Gamma #Eta #Iota #Kappa #vartheta#Lambda #Mu #Nu #Omicron #Pi #Theta #Rho #Sigma #Tau#Upsilon#Omega #varsigma #Xi #Psi #epsilon #varUpsilon#Zeta
+<programlisting language="c++">#alpha     #beta    #chi      #delta     #varepsilon  #phi
+#gamma     #eta     #iota     #varphi    #kappa       #lambda
+#mu        #nu      #omicron  #pi        #theta       #rho 
+#sigma     #tau     #upsilon  #varomega  #omega       #xi
+#psi       #zeta    #Alpha    #Beta      #Chi         #Delta
+#Epsilon   #Phi     #Gamma    #Eta       #Iota        #Kappa
+#vartheta  #Lambda  #Mu       #Nu        #Omicron     #Pi
+#Theta     #Rho     #Sigma    #Tau       #Upsilon     #Omega
+#varsigma  #Xi      #Psi      #epsilon   #varUpsilon  #Zeta
 </programlisting>
 
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000BD.png" width="3in" depth="244.55pt"/></imageobject></inlinemediaobject></para>
@@ -1556,22 +1572,46 @@ subscripts and superscripts:</para>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/030000BE.png" width="217.25pt" depth="208.55pt"/></imageobject></inlinemediaobject>
 </para>
-<para><emphasis role="bold"><code>TLatex</code></emphasis> can make mathematical and other symbols. A few of them, such as + and &gt;, are produced by typing the corresponding keyboard character. Others are obtained with the commands as shown in the table above.</para>
+<para><emphasis role="bold"><code>TLatex</code></emphasis> can make mathematical
+and other symbols. A few of them, such as <code>+</code> and <code>&gt;</code>,
+are produced by typing the corresponding keyboard character. Others are obtained
+with the commands as shown in the table above.</para>
 
 <sect3>
 <title>Accents, Arrows and Bars</title>
-<para>Symbols in a formula are sometimes placed one above another. <emphasis role="bold"><code>TLatex</code></emphasis> provides special commands for that.</para>
+<para>Symbols in a formula are sometimes placed one above another.
+<emphasis role="bold"><code>TLatex</code></emphasis> provides special commands for that.</para>
 <para><code>#hat{a} = </code>hat</para>
 <para><code>#check  = </code>inverted hat</para>
 <para><code>#acute  = </code>acute</para>
 <para><code>#grave  = </code>accent grave</para>
-<para><code>#dot = </code>derivative</para>
+<para><code>#dot    = </code>derivative</para>
 <para><code>#ddot   = </code>double derivative</para>
-<para><code>#tilde </code>         <code>= </code>tilde</para>
-<para><code>#slash </code>         <code>= </code>special sign. Draw a slash on top of the text between brackets for example</para>
+<para><code>#tilde  = </code>tilde</para>
+<para><code>#slash  = </code>special sign. Draw a slash on top of the text between brackets for example</para>
 <para><code>#slash{E}_{T} </code>generates "Missing ET"</para>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/060000BF.png" width="11.15pt" depth="13.05pt"/></imageobject></inlinemediaobject>is obtained with <code>#bar{a}</code></para>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/060000C0.png" width="9.95pt" depth="14.3pt"/></imageobject></inlinemediaobject>is obtained with <code>#vec{a}</code></para>
+<para>
+  <inlineequation>
+    <mml:math>
+      <mml:mover>
+        <mml:mi>a</mml:mi>
+        <mml:mn>‾</mml:mn>
+      </mml:mover>
+    </mml:math>
+  </inlineequation>
+is obtained with <code>#bar{a}</code></para>
+<para> 
+  <inlineequation>
+    <mml:math>
+      <mml:mover>
+        <mml:mi>a</mml:mi>
+        <mml:mn>→</mml:mn>
+      </mml:mover>
+    </mml:math>
+  </inlineequation>
+  is obtained with <code>#vec{a}</code>
+</para>
+ 
 </sect3>
 
 <sect3>
@@ -1580,7 +1620,6 @@ subscripts and superscripts:</para>
 
 <programlisting language="c++">
 {
-gROOT-&gt;Reset();
 TCanvas c1("c1","Latex",600,700);
 TLatex l;
 l.SetTextAlign(12);
@@ -1612,7 +1651,6 @@ l.DrawLatex(0.1,0.2,"4) F(t) = #sum_{i=
 
 <programlisting language="c++">
 {
-gROOT-&gt;Reset();
 TCanvas c1("c1","Latex",600,700);
 TLatex l;
 l.SetTextAlign(23);
@@ -1644,7 +1682,6 @@ M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
 
 <programlisting language="c++">
 {
-gROOT-&gt;Reset();
 TCanvas c1("c1");
 TPaveText pt(.1,.5,.9,.9);
 pt.AddText("#frac{2s}{#pi#alpha^{2}}
@@ -2162,7 +2199,6 @@ axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
 
 <programlisting language="c++">
 {
-gROOT-&gt;Reset();
 c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 c1-&gt;Range(-10,-1,10,1);
 
@@ -3914,4 +3950,3 @@ Bool_t *addChildren = 0)
 </sect2>
 </sect1>
 </chapter>
-
