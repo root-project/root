@@ -70,8 +70,8 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
-                core/base core/cont core/meta io/io math/mathcore net/net \
-                core/zip core/thread math/matrix core/newdelete hist/hist \
+                core/base core/cont core/meta core/thread io/io math/mathcore \
+                net/net core/zip math/matrix core/newdelete hist/hist \
                 tree/tree graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
