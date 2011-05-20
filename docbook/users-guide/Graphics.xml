@@ -1618,22 +1618,21 @@ is obtained with <code>#bar{a}</code></para>
 <title>Example 1</title>
 <para>The script <code>$ROOTSYS/tutorials/graphics/latex.C:</code></para>
 
-<programlisting language="c++">
-{
-TCanvas c1("c1","Latex",600,700);
-TLatex l;
-l.SetTextAlign(12);
-l.SetTextSize(0.04);
+<programlisting language="c++">{
+  TCanvas c1("c1","Latex",600,700);
+  TLatex l;
+  l.SetTextAlign(12);
+  l.SetTextSize(0.04);
 
-l.DrawLatex(0.1,0.8,"1) C(x) = d #sqrt{#frac{2}{#lambdaD}}
-#int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt");
-l.DrawLatex(0.1,0.6,"2) C(x) = d #sqrt{#frac{2}{#lambdaD}}
-#int^{x}cos(#frac{#pi}{2}t^{2})dt");
-l.DrawLatex(0.1,0.4,"3) R = |A|^{2} =
-#frac{1}{2}(#[]{#frac{1}{2}+C(V)}^{2}+
-#[]{#frac{1}{2}+S(V)}^{2})");
-l.DrawLatex(0.1,0.2,"4) F(t) = #sum_{i=
--#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
+  l.DrawLatex(0.1,0.8,"1) C(x) = d #sqrt{#frac{2}{#lambdaD}}
+  #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt");
+  l.DrawLatex(0.1,0.6,"2) C(x) = d #sqrt{#frac{2}{#lambdaD}}
+  #int^{x}cos(#frac{#pi}{2}t^{2})dt");
+  l.DrawLatex(0.1,0.4,"3) R = |A|^{2} =
+  #frac{1}{2}(#[]{#frac{1}{2}+C(V)}^{2}+
+  #[]{#frac{1}{2}+S(V)}^{2})");
+  l.DrawLatex(0.1,0.2,"4) F(t) = #sum_{i=
+  -#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
 }
 </programlisting>
 
@@ -1649,22 +1648,21 @@ l.DrawLatex(0.1,0.2,"4) F(t) = #sum_{i=
 <title>Example 2</title>
 <para>The script <code>$ROOTSYS/tutorials/graphics/latex2.C:</code></para>
 
-<programlisting language="c++">
-{
-TCanvas c1("c1","Latex",600,700);
-TLatex l;
-l.SetTextAlign(23);
-l.SetTextSize(0.1);
-l.DrawLatex(0.5,0.95,"e^{+}e^{-}#rightarrowZ^{0}
-#rightarrowI#bar{I}, q#bar{q}");
-l.DrawLatex(0.5,0.75,"|#vec{a}#bullet#vec{b}|=
-#Sigmaa^{i}_{jk}+b^{bj}_{i}");
-l.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}
-+m#bar{#psi}=0
-#Leftrightarrow(#Box+m^{2})#psi=0");
-l.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} ,
-J^{#mu}_{em}=#bar{I}#gamma_{#mu}I
-M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
+<programlisting language="c++">{
+  TCanvas c1("c1","Latex",600,700);
+  TLatex l;
+  l.SetTextAlign(23);
+  l.SetTextSize(0.1);
+  l.DrawLatex(0.5,0.95,"e^{+}e^{-}#rightarrowZ^{0}
+  #rightarrowI#bar{I}, q#bar{q}");
+  l.DrawLatex(0.5,0.75,"|#vec{a}#bullet#vec{b}|=
+  #Sigmaa^{i}_{jk}+b^{bj}_{i}");
+  l.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}
+  +m#bar{#psi}=0
+  #Leftrightarrow(#Box+m^{2})#psi=0");
+  l.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} ,
+  J^{#mu}_{em}=#bar{I}#gamma_{#mu}I
+  M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
 }
 </programlisting>
 
@@ -1680,21 +1678,20 @@ M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
 <title>Example 3</title>
 <para>The script <code>$ROOTSYS/tutorials/graphics/latex3.C</code>:</para>
 
-<programlisting language="c++">
-{
-TCanvas c1("c1");
-TPaveText pt(.1,.5,.9,.9);
-pt.AddText("#frac{2s}{#pi#alpha^{2}}
-#frac{d#sigma}{dcos#theta} (e^{+}e^{-}
-#rightarrow f#bar{f} ) = ");
-pt.AddText("#left| #frac{1}{1 - #Delta#alpha} #right|^{2}
-(1+cos^{2}#theta");
-pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s)
-#[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f}
-(1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}
-#hat{g}_{a}^{f} cos#theta) } #right}");
-pt.SetLabel("Born equation");
-pt.Draw();
+<programlisting language="c++">{
+  TCanvas c1("c1");
+  TPaveText pt(.1,.5,.9,.9);
+  pt.AddText("#frac{2s}{#pi#alpha^{2}}
+  #frac{d#sigma}{dcos#theta} (e^{+}e^{-}
+  #rightarrow f#bar{f} ) = ");
+  pt.AddText("#left| #frac{1}{1 - #Delta#alpha} #right|^{2}
+  (1+cos^{2}#theta");
+  pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s)
+  #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f}
+  (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}
+  #hat{g}_{a}^{f} cos#theta) } #right}");
+  pt.SetLabel("Born equation");
+  pt.Draw();
 }
 </programlisting>
 
@@ -1709,26 +1706,50 @@ pt.Draw();
 
 <sect2>
 <title>Text in a Pad</title>
-<para>Text displayed in a pad may be embedded into boxes, called paves, or may be drawn alone. In any case, it is recommended to use a Latex expression, which is covered in the previous paragraph. Using <emphasis role="bold"><code>TLatex</code></emphasis> is valid whether the text is embedded or not. In fact, you will use Latex expressions without knowing it since it is the standard for all the embedded text. A pave is just a box with a border size and a shadow option. The options common to all types of paves and used when building those objects are the following:</para>
-<para><code>option</code> = “<code>T"</code> top frame</para>
-<para><code>option</code> = “<code>B"</code> bottom frame</para>
-<para><code>option</code> = “<code>R"</code> right frame</para>
-<para><code>option</code> = “<code>L"</code> left frame</para>
-<para><code>option</code> = “<code>NDC"</code> <code>x1,y1,x2,y2</code> are given in NDC</para>
-<para><code>option</code> = “<code>ARC"</code> corners are rounded</para>
-<para>We will see the practical use of these options in the description of the more functional objects like <emphasis role="bold"><code>TPaveLabel</code></emphasis><code>s</code>. There are several categories of paves containing text: <emphasis role="bold"><code>TPaveLabel</code></emphasis>, <emphasis role="bold"><code>TPaveText</code></emphasis> and <emphasis role="bold"><code>TPavesText</code></emphasis>. <emphasis role="bold"><code>TPaveLabel</code></emphasis><code>s</code> are panels containing one line of text. They are used for labeling.</para>
+<para>Text displayed in a pad may be embedded into boxes, called paves, or may
+be drawn alone. In any case, it is recommended to use a Latex expression, which
+is covered in the previous paragraph. Using
+<emphasis role="bold"><code>TLatex</code></emphasis> is valid whether the text
+is embedded or not. In fact, you will use Latex expressions without knowing it
+since it is the standard for all the embedded text. A pave is just a box with a
+border size and a shadow option. The options common to all types of paves and
+used when building those objects are the following:</para>
+<para><code>option = "T"</code> top frame</para>
+<para><code>option = "B"</code> bottom frame</para>
+<para><code>option = "R"</code> right frame</para>
+<para><code>option = "L"</code> left frame</para>
+<para><code>option = "NDC" x1,y1,x2,y2</code> are given in NDC</para>
+<para><code>option = "ARC"</code> corners are rounded</para>
+<para>We will see the practical use of these options in the description of the
+more functional objects like
+<emphasis role="bold"><code>TPaveLabel</code></emphasis><code>s</code>. There
+are several categories of paves containing text:
+<emphasis role="bold"><code>TPaveLabel</code></emphasis>,
+<emphasis role="bold"><code>TPaveText</code></emphasis> and
+<emphasis role="bold"><code>TPavesText</code></emphasis>.
+<emphasis role="bold"><code>TPaveLabel</code></emphasis><code>s</code> are
+panels containing one line of text. They are used for labeling.</para>
 
-<programlisting language="c++">
-TPaveLabel(Double_t x1,Double_t y1,Double_t x2,Double_t y2, const char *label,
-Option_t *option)
+<programlisting language="c++">TPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+           const char *label, Option_t *option)
 </programlisting>
 
-<para>Where (<code>x1</code>, <code>y1</code>) are the coordinates of the bottom left corner, <code>(x2,y2)</code> - coordinates of the upper right corner. “<code>label</code>” is the text to be displayed and “option” is the drawing option, described above. By default, the border size is 5 and the option is “<code>br</code>”. If one wants to set the border size to some other value, one may use the method <code>SetBorderSize()</code>. For example, suppose we have a histogram, which limits are (-100,100) in the x direction and (0, 1000) in the y direction. The following lines will draw a label in the center of the histogram, with no border. If one wants the label position to be independent of the histogram coordinates, or user coordinates, one can use the option “<code>NDC</code>”. See “The Coordinate Systems of a Pad”.</para>
+<para>Where (<code>x1</code>, <code>y1</code>) are the coordinates of the bottom
+left corner, <code>(x2,y2)</code> - coordinates of the upper right corner.
+“<code>label</code>” is the text to be displayed and “<code>option</code>” is
+the drawing option, described above. By default, the border size is 5 and the
+option is “<code>br</code>”. If one wants to set the border size to some other
+value, one may use the method <code>SetBorderSize()</code>. For example, suppose
+we have a histogram, which limits are (-100,100) in the x direction and
+(0, 1000) in the y direction. The following lines will draw a label in the
+center of the histogram, with no border. If one wants the label position to be
+independent of the histogram coordinates, or user coordinates, one can use the
+option “<code>NDC</code>”. See “The Coordinate Systems of a Pad”.</para>
 
 <programlisting language="c++">
-root[] <emphasis role="bold"><code>pl = new TPaveLabel</code></emphasis><emphasis role="bold"><code>(-50,0,50,200,”Some text”)</code></emphasis>
-root[] <emphasis role="bold"><code>pl-&gt;SetBorderSize(0)</code></emphasis>
-root[] <emphasis role="bold"><code>pl-&gt;Draw()</code></emphasis>
+root[] <emphasis role="bold">pl = new TPaveLabel(-50,0,50,200,”Some text”)</emphasis>
+root[] <emphasis role="bold">pl-&gt;SetBorderSize(0)</emphasis>
+root[] <emphasis role="bold">pl-&gt;Draw()</emphasis>
 </programlisting>
 
 <figure><title><code>PaveLabels</code> drawn with different options</title>
@@ -1737,9 +1758,13 @@ root[] <emphasis role="bold"><code>pl-&gt;Draw()</code></emphasis>
 </para>
 </figure>
 
-<para>A <emphasis role="bold"><code>TPaveLabel</code></emphasis> can contain only one line of text. A <emphasis role="bold"><code>TPaveText</code></emphasis> may contain several lines. This is
-the only difference. This picture illustrates and explains some of the points of <emphasis role="bold"><code>TPaveText</code></emphasis>. Once a
-<emphasis role="bold"><code>TPaveText</code></emphasis> is drawn, a line can be added or removed by brining up the context menu with the mouse.</para>
+<para>A <emphasis role="bold"><code>TPaveLabel</code></emphasis> can contain
+only one line of text. A <emphasis role="bold"><code>TPaveText</code></emphasis>
+may contain several lines. This is the only difference. This picture illustrates
+and explains some of the points of
+<emphasis role="bold"><code>TPaveText</code></emphasis>. Once a
+<emphasis role="bold"><code>TPaveText</code></emphasis> is drawn, a line can be
+added or removed by brining up the context menu with the mouse.</para>
 
 <figure><title>PaveText examples</title>
 <para>
@@ -1747,10 +1772,13 @@ the only difference. This picture illustrates and explains some of the points of
 </para>
 </figure>
 
-<para>A <emphasis role="bold"><code>TPavesText</code></emphasis> is a stack of text panels (see <emphasis role="bold"><code>TPaveText</code></emphasis>). One can set the number of stacked panels at building time. It has the following constructor: By default, the number of stacked panels is 5, <code>option=</code>”<code>br</code>”.</para>
+<para>A <emphasis role="bold"><code>TPavesText</code></emphasis> is a stack of
+text panels (see <emphasis role="bold"><code>TPaveText</code></emphasis>). One
+can set the number of stacked panels at building time. It has the following
+constructor: By default, the number of stacked panels is 5,
+<code>option=</code>”<code>br</code>”.</para>
 
-<programlisting language="c++">
-TPavesText(Double_t x1,Double_t y1,Double_t x2,Double_t y2,Int_t npaves,
+<programlisting language="c++">TPavesText(Double_t x1,Double_t y1,Double_t x2,Double_t y2,Int_t npaves,
 Option_t* option)
 </programlisting>
 
@@ -1765,37 +1793,48 @@ Option_t* option)
 
 <sect1>
 <title>Axis</title>
-<para>The axis objects are automatically built by various high level objects such as histograms or graphs. Once build, one may access them and change their characteristics. It is also possible, for some particular purposes to build axis on their own. This may be useful for example in the case one wants to draw two axis for the same plot, one on the left and one on the right.</para>
-<para>For historical reasons, there are two classes representing axis. <emphasis role="bold"><code>TAxis</code></emphasis> * <code>axis</code> is the axis object, which will be returned when calling the <emphasis role="bold"><code>TH1</code></emphasis><code>::GetAxis()</code> method.</para>
+<para>The axis objects are automatically built by various high level objects
+such as histograms or graphs. Once build, one may access them and change their
+characteristics. It is also possible, for some particular purposes to build axis
+on their own. This may be useful for example in the case one wants to draw two
+axis for the same plot, one on the left and one on the right.</para>
+<para>For historical reasons, there are two classes representing axis.
+<emphasis role="bold"><code>TAxis</code></emphasis> * <code>axis</code> is the
+axis object, which will be returned when calling the
+<emphasis role="bold"><code>TH1</code></emphasis><code>::GetAxis()</code>
+method.</para>
 
-<programlisting language="c++">
-TAxis *axis = histo-&gt;GetXaxis()
+<programlisting language="c++">TAxis *axis = histo-&gt;GetXaxis()
 </programlisting>
 
-<para>Of course, you may do the same for <code>Y</code> and <code>Z</code>-axis. The graphical representation of an axis is done with the <emphasis role="bold"><code>TGaxis</code></emphasis> class. The histogram classes and <emphasis role="bold"><code>TGraph</code></emphasis> generate instances of this class. This is internal and the user should not have to see it.</para>
+<para>Of course, you may do the same for <code>Y</code> and <code>Z</code>-axis.
+The graphical representation of an axis is done with the
+<emphasis role="bold"><code>TGaxis</code></emphasis> class. The histogram
+classes and <emphasis role="bold"><code>TGraph</code></emphasis> generate
+instances of this class. This is internal and the user should not have to see
+it.</para>
 
 <sect2>
 <title>Axis Title</title>
 <para>The axis title is set, as with all named objects, by</para>
 
-<programlisting language="c++">
-axis-&gt;SetTitle("Whatever title you want");
+<programlisting language="c++">axis-&gt;SetTitle("Whatever title you want");
 </programlisting>
 
-<para>When the axis is embedded into a histogram or a graph, one has to first extract the axis object:</para>
+<para>When the axis is embedded into a histogram or a graph, one has to first
+extract the axis object:</para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTitle("Whatever title you want")
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTitle("Whatever title you want")
 </programlisting>
 
 </sect2>
 
 <sect2>
 <title>Axis Options and Characteristics</title>
-<para>The axis options are most simply set with the styles. The available style options controlling specific axis options are the following:</para>
+<para>The axis options are most simply set with the styles. The available style
+options controlling specific axis options are the following:</para>
 
-<programlisting language="c++">
-TAxis *axis = histo-&gt;GetXaxis();
+<programlisting language="c++">TAxis *axis = histo-&gt;GetXaxis();
 axis-&gt;SetAxisColor(Color_t color = 1);
 axis-&gt;SetLabelColor(Color_t color = 1);
 axis-&gt;SetLabelFont(Style_t font = 62);
@@ -1808,51 +1847,75 @@ axis-&gt;SetTitleOffset(Float_t offset = 1);
 axis-&gt;SetTitleSize(Float_t size = 0.02);
 </programlisting>
 
-<para>The getters corresponding to the described setters are also available. The general options, not specific to axis, as for instance <code>SetTitleTextColor()</code> are valid and do have an effect on axis characteristics.</para>
+<para>The getters corresponding to the described setters are also available. The
+general options, not specific to axis, as for instance
+<code>SetTitleTextColor()</code> are valid and do have an effect on axis
+characteristics.</para>
 </sect2>
 
 <sect2>
 <title>Setting the Number of Divisions</title>
-<para>Use <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetNdivisions(ndiv,optim)</code>         to set the number of divisions for an axis. The <code>ndiv</code> and <code>optim</code> are as follows:</para>
+<para>Use
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::SetNdivisions(ndiv,optim)</code>
+to set the number of divisions for an axis. The <code>ndiv</code> and
+<code>optim</code> are as follows:</para>
+
 <itemizedlist>
-<listitem><para><code>ndiv</code> = <code>N1 + 100*N2 + 10000*N3</code></para></listitem>
+<listitem><para><code>ndiv = N1 + 100*N2 + 10000*N3</code></para></listitem>
 <listitem><para><code>N1 =</code> number of first divisions.</para></listitem>
 <listitem><para><code>N2 =</code> number of secondary divisions.</para></listitem>
 <listitem><para><code>N3 =</code> number of tertiary divisions.</para></listitem>
-<listitem><para>    <code>optim = kTRUE </code>    (default), the divisions’ number will be optimized around the specified value.</para></listitem>
-<listitem><para>    <code>optim = kFALSE, </code>    or n &lt; 0, the axis will be forced to use exactly n divisions.</para></listitem>
+<listitem><para><code>optim = kTRUE </code> (default), the divisions’ number
+will be optimized around the specified value.</para></listitem>
+<listitem><para><code>optim = kFALSE, </code> or n &lt; 0, the axis will be
+forced to use exactly n divisions.</para></listitem>
 </itemizedlist>
+
 <para>For example:</para>
 <para><code>ndiv = 0</code>: no tick marks.</para>
-<para><code>ndiv = 2</code>: 2 divisions, one tick mark in the middle of the axis.</para>
+<para><code>ndiv = 2</code>: 2 divisions, one tick mark in the middle of the
+axis.</para>
 <para><code>ndiv = 510</code>: 10 primary divisions, 5 secondary divisions</para>
-<para><code>ndiv = -10 </code>: exactly 10 primary divisions</para>
+<para><code>ndiv = -10</code>: exactly 10 primary divisions</para>
 </sect2>
 
 <sect2>
 <title>Zooming the Axis</title>
-<para>You can use <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetRange</code> or <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetRangeUser</code> to zoom the axis.</para>
+<para>You can use
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::SetRange</code> or
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::SetRangeUser</code>
+to zoom the axis.</para>
 
-<programlisting language="c++">
-TAxis::SetRange(Int_t binfirst,Int_t binlast)
+<programlisting language="c++">TAxis::SetRange(Int_t binfirst,Int_t binlast)
 </programlisting>
 
-<para>The <code>SetRange</code> method parameters are bin numbers. They are not axis. For example if a histogram plots the values from 0 to 500 and has 100 bins, <code>SetRange(0,10)</code> will cover the values 0 to 50. The parameters for <code>SetRangeUser</code> are user coordinates. If the start or end is in the middle of a bin the resulting range is approximation. It finds the low edge bin for the start and the high edge bin for the high.</para>
+<para>The <code>SetRange</code> method parameters are bin numbers. They are not
+axis. For example if a histogram plots the values from 0 to 500 and has 100
+bins, <code>SetRange(0,10)</code> will cover the values 0 to 50. The parameters
+for <code>SetRangeUser</code> are user coordinates. If the start or end is in
+the middle of a bin the resulting range is approximation. It finds the low edge
+bin for the start and the high edge bin for the high.</para>
 
-<programlisting language="c++">
-TAxis::SetRangeUser(Axis_t ufirst,Axis_t ulast)
+<programlisting language="c++">TAxis::SetRangeUser(Axis_t ufirst,Axis_t ulast)
 </programlisting>
 
-<para>Both methods, <code>SetRange</code> and <code>SetRangeUser</code>, are in the context menu of any axis and can be used interactively. In addition, you can zoom an axis interactively: click on the axis on the start, drag the cursor to the end, and release the mouse button.</para>
+<para>Both methods, <code>SetRange</code> and <code>SetRangeUser</code>, are in
+the context menu of any axis and can be used interactively. In addition, you can
+zoom an axis interactively: click on the axis on the start, drag the cursor to
+the end, and release the mouse button.</para>
 </sect2>
 
 <sect2>
 <title>Drawing Axis Independently of Graphs or Histograms</title>
-<para>An axis may be drawn independently of a histogram or a graph. This may be useful to draw for example a supplementary axis for a graph. In this case, one has to use the <emphasis role="bold"><code>TGaxis</code></emphasis> class, the graphical representation of an axis. One may use the standard constructor for this kind of objects:</para>
+<para>An axis may be drawn independently of a histogram or a graph. This may be
+useful to draw for example a supplementary axis for a graph. In this case, one
+has to use the <emphasis role="bold"><code>TGaxis</code></emphasis> class, the
+graphical representation of an axis. One may use the standard constructor for
+this kind of objects:</para>
 
-<programlisting language="c++">
-TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,Double_t wmin,
-Double_t wmax,Int_t ndiv = 510,Option_t* chopt,Double_t gridlength = 0)
+<programlisting language="c++">TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+       Double_t wmin, Double_t wmax, Int_t ndiv = 510,
+       Option_t* chopt,Double_t gridlength = 0)
 </programlisting>
 
 <para>The arguments <code>xmin, ymin</code> are the coordinates of the axis' start in the user coordinates system, <code>and xmax, ymax</code> are the end coordinates. The arguments <code>wmin</code> and <code>wmax</code> are the minimum (at the start) and maximum (at the end) values to be represented on the axis; <code>ndiv</code> is the number of divisions. The options, given by the “<code>chopt</code>” string are the following:</para>
