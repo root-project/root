@@ -3,10 +3,15 @@
       xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0">  
     
     <info>
-        <title>ROOT User's Guide</title>
-        <productname>ROOT, An Object Oriented Data Analysis Framework</productname>
-        <author><orgname>The ROOT team</orgname></author>
-        <editor><orgname>The ROOT team</orgname></editor>
+        <title>User's Guide</title>
+        <subtitle>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata fileref="pictures/03000003.png" width="332.7pt" depth="196.15pt"/>
+                </imageobject>
+            </inlinemediaobject>
+        </subtitle>
+        <orgname>The ROOT Team</orgname>
         <date>June 2011</date>
     </info>
     
