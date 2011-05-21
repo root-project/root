@@ -546,7 +546,7 @@ Bool_t TTreeCache::FillBuffer()
    }
 
    //store baskets
-   Int_t flushIntervals = 0;
+   Int_t clusterIterations = 0;
    Long64_t minEntry = fEntryCurrent;
    Int_t prevNtot;
    Int_t minBasket = 0;  // We will use this to avoid re-checking the first baskets in the 2nd (or more) run in the while loop.
@@ -601,7 +601,7 @@ Bool_t TTreeCache::FillBuffer()
          if (j < nextMinBasket) nextMinBasket = j;
          if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtotCurrentBuf=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtotCurrentBuf);
       }
-      flushIntervals++;
+      clusterIterations++;
           
       minEntry = clusterIter.Next();
       if (fIsLearning) {
@@ -611,18 +611,18 @@ Bool_t TTreeCache::FillBuffer()
       // Continue as long as we still make progress (prevNtot < fNtotCurrentBuf), that the next entry range to be looked at, 
       // which start at 'minEntry', is not past the end of the requested range (minEntry < fEntryMax)
       // and we guess that we not going to go over the requested amount of memory by asking for another set
-      // of entries (fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(flushIntervals+1))/flushIntervals).
-      // fNtotCurrentBuf / flushIntervals is the average size we are accumulated so far at each loop.
-      // and thus (fNtotCurrentBuf / flushIntervals) * (flushIntervals+1) is a good guess at what the next total size
-      // would be if we run the loop one more time.   fNtotCurrentBuf and flushIntervals are Int_t but can something
+      // of entries (fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations).
+      // fNtotCurrentBuf / clusterIterations is the average size we are accumulated so far at each loop.
+      // and thus (fNtotCurrentBuf / clusterIterations) * (clusterIterations+1) is a good guess at what the next total size
+      // would be if we run the loop one more time.   fNtotCurrentBuf and clusterIterations are Int_t but can something
       // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numercial limit of Int_t (i.e. become
       // artificially negative).   To avoid this issue we promote fNtotCurrentBuf to a long long (64 bits rather than 32 bits) 
-      if (!((fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(flushIntervals+1))/flushIntervals) && (prevNtot < fNtotCurrentBuf) && (minEntry < fEntryMax)))
+      if (!((fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations) && (prevNtot < fNtotCurrentBuf) && (minEntry < fEntryMax)))
          break;
 
       //for the reverse reading case
       if (!fIsLearning && fReverseRead){
-         if (flushIntervals >= fFillTimes)
+         if (clusterIterations >= fFillTimes)
             break;
          if (minEntry >= fEntryCurrentMax && fEntryCurrentMax >0)
             break;
