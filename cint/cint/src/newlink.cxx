@@ -8161,8 +8161,8 @@ int G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
          fprintf(fp, "(%s) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isupper(type) ? (isconst & ~(G__PCONSTVAR | G__PCONSTCONSTVAR)) : isconst), k);
          break;
       case 'a':
-         // Pointer to member , THIS IS BAD , WON'T WORK
-         fprintf(fp, "*(%s *) G__int(libp->para[%d])", G__type2string(type, tagnum, typenum, 0, isconst), k);
+         // Pointer to member , the value returned by G__int is actually a pointer to the pointer ...
+         fprintf(fp, "G__int(libp->para[%d]) ? *(%s *) G__int(libp->para[%d]) : 0", k, G__type2string(type, tagnum, typenum, 0, isconst), k);
          break;
       case 'n':
          fprintf(fp, "(%s) G__Longlong(libp->para[%d])", G__type2string(type, tagnum, typenum, reftype, isconst), k);

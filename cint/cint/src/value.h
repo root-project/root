@@ -40,7 +40,13 @@ inline T G__convertT(const G__value* buf)
    case 'n': return (T) buf->obj.ll;
    case 'm': return (T) buf->obj.ull;
    case 'q': return (T) buf->obj.ld;
-   case 'a': return (T) *(long*)buf->obj.i;
+   case 'a': {
+      if (buf->obj.i && *(long*)buf->obj.i == 0) {
+         return (T)0;
+      } else {
+         return (T) buf->obj.i;
+      }
+   }
    default: ;
    }
    return (T) buf->obj.i;
