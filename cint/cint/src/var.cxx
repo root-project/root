@@ -1726,16 +1726,20 @@ void G__letpointer2memfunc(G__var_array* var, int paran, int ig15, const char* i
          // var = expr; assign to value
          if (var->paran[ig15] <= paran) {
             // -- Assign to type element
+            if (presult->obj.i) {
 #ifdef G__PTR2MEMFUNC
-            if (presult->type == 'C') {
-               *(long*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)) = presult->obj.i;
-            }
-            else {
-               memcpy((void*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)), (void*)presult->obj.i, G__P2MFALLOC);
-            }
+               if (presult->type == 'C') {
+                  *(long*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)) = presult->obj.i;
+               }
+               else {
+                  memcpy((void*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)), (void*)presult->obj.i, G__P2MFALLOC);
+               }
 #else // G__PTR2MEMFUNC
-            memcpy((void*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)), (void*) presult->obj.i, G__P2MFALLOC);
+               memcpy((void*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)), (void*) presult->obj.i, G__P2MFALLOC);
 #endif // G__PTR2MEMFUNC
+            } else {
+               std::memset((void*)(G__struct_offset + var->p[ig15] + (linear_index * G__P2MFALLOC)), 0, G__P2MFALLOC);
+            }
             break;
          }
       default:
@@ -4678,21 +4682,24 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
             (G__asm_wholefunction == G__ASM_FUNC_NOP) &&
             !G__def_struct_member &&
             (!G__static_alloc || G__prerun) &&
-            result.obj.i &&
             ((G__globalvarpointer == G__PVOID) || result.type)
          ) {
-            // --
+               // --
+            if (result.obj.i) {
 #ifdef G__PTR2MEMFUNC
-            if (result.type == 'C') {
-               *((long*) var->p[ig15]) = result.obj.i;
-            }
-            else {
-               std::memcpy((void*) var->p[ig15], (void*) result.obj.i, G__P2MFALLOC);
-            }
+               if (result.type == 'C') {
+                  *((long*) var->p[ig15]) = result.obj.i;
+               }
+               else {
+                  std::memcpy((void*) var->p[ig15], (void*) result.obj.i, G__P2MFALLOC);
+               }
 #else // G__PTR2MEMFUNC
-            std::memcpy((void*) var->p[ig15], (void*) result.obj.i, G__P2MFALLOC);
+               std::memcpy((void*) var->p[ig15], (void*) result.obj.i, G__P2MFALLOC);
 #endif // G__PTR2MEMFUNC
             // --
+            } else {
+               std::memset((void*) var->p[ig15], 0, G__P2MFALLOC);
+            }
          }
          break;
 #ifndef G__OLDIMPLEMENTATION2191
