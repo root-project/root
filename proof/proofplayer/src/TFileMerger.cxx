@@ -205,6 +205,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
    // Merge all objects in a directory
    // NB. This function is a copy of the hadd function MergeROOTFile
 
+   Bool_t status = kTRUE;
+
    // Get the dir name
    TString path(target->GetPath());
    path.Remove(0, path.Last(':') + 2);
@@ -247,7 +249,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          allNames.Add(new TObjString(key->GetName()));
 
          // read object from first source file
-         current_sourcedir->cd();
          TObject *obj = key->ReadObj();
          if (!obj) {
             Info("MergeRecursive", "could not read object for key {%s, %s}",
@@ -339,7 +340,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
             // newdir is now the starting point of another round of merging
             // newdir still knows its depth within the target file via
             // GetPath(), so we can still figure out where we are in the recursion
-            MergeRecursive( newdir, sourcelist);
+            status = MergeRecursive( newdir, sourcelist);
+            if (!status) return status;
 
          } else if (obj->InheritsFrom(TObject::Class()) &&
                     obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*") ) {
@@ -438,6 +440,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                      if (target->WriteTObject(nobj, key2->GetName(), "SingleKey") <= 0) {
                         Warning("MergeRecursive", "problems copying object (n:'%s', t:'%s') to output file ",
                                                   obj->GetName(), obj->GetTitle());
+                        status = kFALSE;
                      }
                      delete nobj;
                   }
@@ -465,10 +468,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                }
             }
          } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
-            obj->Write( key->GetName(), TObject::kSingleKey );
+            if ( obj->Write( key->GetName(), TObject::kSingleKey ) <= 0 ) {
+               status = kFALSE;
+            }
             ((TCollection*)obj)->SetOwner();
          } else {
-            obj->Write( key->GetName() );
+            if ( obj->Write( key->GetName() ) <= 0) {
+               status = kFALSE;
+            }
          }
          if (obj->IsA()->InheritsFrom(TCollection::Class())) ((TCollection*)obj)->Delete();
          oldkey = key;
@@ -479,5 +486,5 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
    // save modifications to target file
    target->SaveSelf(kTRUE);
    TH1::AddDirectory(addDirStat);
-   return kTRUE;
+   return status;
 }
