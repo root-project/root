@@ -42,6 +42,11 @@
 // will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
 // This could be an optional argument to SetGLViewer. A frame could be
 // passed as well.
+//
+// When stand-alone viewer is requested, it will come up with menu-hiding
+// enabled by default. If you dislike this, add the following line to rootrc
+// file (or set corresponding gEnv entry in application initialization):
+//   Eve.Viewer.HideMenus: off
 
 ClassImp(TEveViewer);
 
