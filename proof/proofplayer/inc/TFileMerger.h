@@ -76,6 +76,7 @@ public:
    virtual void   Reset();
    virtual Bool_t AddFile(const char *url, Bool_t cpProgress = kTRUE);
    virtual Bool_t OutputFile(const char *url);
+   virtual Bool_t OutputFile(const char *url, Int_t compressionLevel);
    virtual void   PrintFiles(Option_t *options);
    virtual Bool_t Merge(Bool_t = kTRUE);
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist);

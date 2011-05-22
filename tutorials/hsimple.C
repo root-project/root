@@ -55,6 +55,7 @@ TFile *hsimple(Int_t get=0)
    }
    hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = new TFile(filename,"RECREATE","Demo ROOT file with histograms");
+   hfile->SetCompressionLevel(7);
 
    // Create some histograms, a profile histogram and an ntuple
    TH1F *hpx = new TH1F("hpx","This is the px distribution",100,-4,4);

@@ -163,8 +163,8 @@ int main( int argc, char **argv )
          if ( skip_errors ) {
             cerr << "Skipping file with error: " << argv[i] << endl;
          } else {
-	    cerr << "Exiting due to error in " << argv[i] << endl;
-	    return 1;
+            cerr << "Exiting due to error in " << argv[i] << endl;
+            return 1;
          }
       }
    }

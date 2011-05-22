@@ -115,19 +115,27 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::OutputFile(const char *outputfile)
+Bool_t TFileMerger::OutputFile(const char *outputfile, Int_t compressionLevel)
 {
    // Open merger output file.
-
+   
    SafeDelete(fOutputFile);
-
+   
    fOutputFilename = outputfile;
-
-   if (!(fOutputFile = TFile::Open(outputfile, "RECREATE"))) {
+   
+   if (!(fOutputFile = TFile::Open(outputfile, "RECREATE", "", compressionLevel))) {
       Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
       return kFALSE;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TFileMerger::OutputFile(const char *outputfile)
+{
+   // Open merger output file.
+   
+   return OutputFile(outputfile,1); // 1 is the same as the default from the TFile constructor.
 }
 
 //______________________________________________________________________________
