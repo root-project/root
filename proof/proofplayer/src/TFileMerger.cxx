@@ -44,7 +44,7 @@ ClassImp(TFileMerger)
 
 //______________________________________________________________________________
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
-            : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE),
+            : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fReoptimize(kFALSE),
               fLocal(isLocal), fHistoOneGo(histoOneGo)
 {
    // Create file merger object.
@@ -445,8 +445,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
             if (!fNoTrees) {
                if (globChain) {
                   globChain->ls("noaddr");
-                  if (fFastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
-                  else             globChain->Merge(target->GetFile(),0,"keep");
+                  if (fFastMethod && !fReoptimize) globChain->Merge(target->GetFile(),0,"keep fast");
+                  else                             globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;
                }
             }

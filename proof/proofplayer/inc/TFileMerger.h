@@ -55,6 +55,7 @@ protected:
    TString        fOutputFilename1; // the name of the temporary outputfile for merging
    Bool_t         fFastMethod;      // True if using Fast merging algorithm (default)
    Bool_t         fNoTrees;         // True if Trees should not be merged (default is kFALSE)
+   Bool_t         fReoptimize;      // If true, the TTree basket size is re-optimized and fast cloning is disabled (default is kFALSE)
 
    Bool_t	      fLocal;           // Makes local copies of merging files if True (default is kTRUE)
    Bool_t	      fHistoOneGo;      // Merger histos in one go (default is kTRUE)
@@ -79,9 +80,10 @@ public:
    virtual Bool_t Merge(Bool_t = kTRUE);
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
+   virtual void   SetReoptimize(Bool_t reoptimize=kFALSE) { fReoptimize = reoptimize; }
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
 
-   ClassDef(TFileMerger,2)  // File copying and merging services
+   ClassDef(TFileMerger,3)  // File copying and merging services
 };
 
 #endif
