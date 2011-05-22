@@ -44,7 +44,7 @@ ClassImp(TFileMerger)
 
 //______________________________________________________________________________
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
-            : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fReoptimize(kFALSE),
+            : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fExplicitCompLevel(kFALSE), fCompressionChange(kFALSE),
               fLocal(isLocal), fHistoOneGo(histoOneGo)
 {
    // Create file merger object.
@@ -103,6 +103,8 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
          Error("AddFile", "cannot open file %s", url);
       return kFALSE;
    } else {
+      if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
+
       fFileList->Add(newfile);
 
       if (!fMergeList)
@@ -119,6 +121,8 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Int_t compressionLevel)
 {
    // Open merger output file.
    
+   fExplicitCompLevel = kTRUE;
+
    SafeDelete(fOutputFile);
    
    fOutputFilename = outputfile;
@@ -135,7 +139,9 @@ Bool_t TFileMerger::OutputFile(const char *outputfile)
 {
    // Open merger output file.
    
-   return OutputFile(outputfile,1); // 1 is the same as the default from the TFile constructor.
+   Bool_t res = OutputFile(outputfile,1); // 1 is the same as the default from the TFile constructor.
+   fExplicitCompLevel = kFALSE;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -453,8 +459,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
             if (!fNoTrees) {
                if (globChain) {
                   globChain->ls("noaddr");
-                  if (fFastMethod && !fReoptimize) globChain->Merge(target->GetFile(),0,"keep fast");
-                  else                             globChain->Merge(target->GetFile(),0,"keep");
+                  if (fFastMethod && !fCompressionChange) globChain->Merge(target->GetFile(),0,"keep fast");
+                  else                                    globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;
                }
             }
