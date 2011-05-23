@@ -66,6 +66,16 @@
 
 #define PyROOT_PyUnicode_Type PyString_Type
 
+static inline PyObject* PyROOT_PyCapsule_New( void* cobj, const char* /* name */, void (*destr)(void *) )
+{
+   return PyCObject_FromVoidPtr( cobj, destr );
+}
+#define PyROOT_PyCapsule_CheckExact    PyCObject_Check
+static inline void* PyROOT_PyCapsule_GetPointer( PyObject* capsule, const char* /* name */ )
+{
+   return (void*)PyCObject_AsVoidPtr( capsule );
+}
+
 #define PYROOT__long__ "__long__"
 #define PYROOT__idiv__ "__idiv__"
 #define PYROOT__div__  "__div__"
@@ -100,6 +110,10 @@
 
 #define PyInt_Type      PyLong_Type
 
+#define PyROOT_PyCapsule_New           PyCapsule_New
+#define PyROOT_PyCapsule_CheckExact    PyCapsule_CheckExact
+#define PyROOT_PyCapsule_GetPointer    PyCapsule_GetPointer
+
 #define PYROOT__long__ "__int__"
 #define PYROOT__idiv__ "__itruediv__"
 #define PYROOT__div__  "__truediv__"
@@ -111,6 +125,12 @@
 
 #define PyBuffer_Type   PyMemoryView_Type
 #endif  // ! 3.0
+
+#if PY_VERSION_HEX >= 0x03020000
+#define PyROOT_PySliceCast   PyObject*
+#else
+#define PyROOT_PySliceCast   PySliceObject*
+#endif  // >= 3.2
 
 // feature of 3.0 not in 2.5 and earlier
 #if PY_VERSION_HEX < 0x02060000

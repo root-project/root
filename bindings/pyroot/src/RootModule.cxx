@@ -230,7 +230,7 @@ namespace {
    // return object proxy as an opaque CObject
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
-         return PyCObject_FromVoidPtr( (void*)(*(long*)addr), 0 );
+         return PyROOT_PyCapsule_New( (void*)(*(long*)addr), NULL, NULL );
 
       return 0;
    }
@@ -265,7 +265,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* BindObject( PyObject*, PyObject* args )
    {
-   // from a long representing an address or a CObject, bind to a class
+   // from a long representing an address or a PyCapsule/CObject, bind to a class
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 2 ) {
          PyErr_Format( PyExc_TypeError,
@@ -273,9 +273,9 @@ namespace {
          return 0;
       }
 
-   // try to convert first argument: either CObject or long integer
+   // try to convert first argument: either PyCapsule/CObject or long integer
       PyObject* pyaddr = PyTuple_GET_ITEM( args, 0 );
-      void* addr = PyCObject_AsVoidPtr( pyaddr );
+      void* addr = PyROOT_PyCapsule_GetPointer( pyaddr, NULL );
       if ( PyErr_Occurred() ) {
          PyErr_Clear();
 

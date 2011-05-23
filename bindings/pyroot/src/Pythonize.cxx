@@ -516,7 +516,8 @@ namespace {
          TSeqCollection* nseq = (TSeqCollection*)clSeq->New();
 
          Py_ssize_t start, stop, step;
-         PySlice_GetIndices( index, oseq->GetSize(), &start, &stop, &step );
+         PySlice_GetIndices( (PyROOT_PySliceCast)index, oseq->GetSize(), &start, &stop, &step );
+
          for ( Py_ssize_t i = start; i < stop; i += step ) {
             nseq->Add( oseq->At( (Int_t)i ) );
          }
@@ -545,7 +546,7 @@ namespace {
             TSeqCollection::Class(), self->GetObject() );
 
          Py_ssize_t start, stop, step;
-         PySlice_GetIndices( (PySliceObject*) index, oseq->GetSize(), &start, &stop, &step );
+         PySlice_GetIndices( (PyROOT_PySliceCast)index, oseq->GetSize(), &start, &stop, &step );
          for ( Py_ssize_t i = stop - step; i >= start; i -= step ) {
             oseq->RemoveAt( (Int_t)i );
          }
@@ -590,7 +591,7 @@ namespace {
             TSeqCollection::Class(), self->GetObject() );
 
          Py_ssize_t start, stop, step;
-         PySlice_GetIndices( index, oseq->GetSize(), &start, &stop, &step );
+         PySlice_GetIndices( (PyROOT_PySliceCast)index, oseq->GetSize(), &start, &stop, &step );
          for ( Py_ssize_t i = stop - step; i >= start; i -= step ) {
             oseq->RemoveAt( (Int_t)i );
          }
@@ -780,7 +781,7 @@ namespace {
          Py_DECREF( pyclass );
  
          Py_ssize_t start, stop, step;
-         PySlice_GetIndices( index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
+         PySlice_GetIndices( (PyROOT_PySliceCast)index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
          for ( Py_ssize_t i = start; i < stop; i += step ) {
             PyObject* pyidx = PyInt_FromSsize_t( i );
             CallPyObjMethod( nseq, "push_back", CallPyObjMethod( (PyObject*)self, "_vector__at", pyidx ) );
@@ -1614,7 +1615,7 @@ namespace {
                Py_INCREF( item );
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
-               PyTuple_SET_ITEM( newArgs, iarg, PyCObject_FromVoidPtr( (void*)fid, NULL ) );
+               PyTuple_SET_ITEM( newArgs, iarg, PyROOT_PyCapsule_New( (void*)fid, NULL, NULL ) );
             }
          }
 
@@ -1721,7 +1722,7 @@ namespace {
 
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
-         PyTuple_SET_ITEM( newArgs, 0, PyCObject_FromVoidPtr( (void*)fid, NULL ) );
+         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( (void*)fid, NULL, NULL ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
@@ -1812,7 +1813,7 @@ namespace {
 
       // build new argument array
          PyObject* newArgs = PyTuple_New( argc );
-         PyTuple_SET_ITEM( newArgs, 0, PyCObject_FromVoidPtr( (void*)FitterPyCallback, NULL ) );
+         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( (void*)FitterPyCallback, NULL, NULL ) );
          for ( int iarg = 1; iarg < argc; ++iarg ) {
             PyObject* pyarg = PyTuple_GET_ITEM( args, iarg );
             Py_INCREF( pyarg );

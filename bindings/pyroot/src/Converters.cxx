@@ -591,9 +591,9 @@ Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, v
       return kFALSE;
    }
 
-// (3): opaque CObject from somewhere
-   if ( PyCObject_Check( pyobject ) ) {
-      address = (void*)PyCObject_AsVoidPtr( pyobject );
+// (3): opaque PyCapsule (CObject in older pythons) from somewhere
+   if ( PyROOT_PyCapsule_CheckExact( pyobject ) ) {
+      address = (void*)PyROOT_PyCapsule_GetPointer( pyobject, NULL );
       return kTRUE;
    }
 
