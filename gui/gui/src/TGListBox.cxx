@@ -1000,6 +1000,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          if (activate)  {
             f->Activate(kTRUE);
             fLastActive = f;
+            fLastActiveEl = el;
          } else {
             f->Activate(kFALSE);
          }
