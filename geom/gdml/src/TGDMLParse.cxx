@@ -836,6 +836,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    TGeoMixture* mix = 0; 
    TGeoMaterial* mat = 0;
    TString tempconst = "";
+   TString matname;
    Bool_t composite = kFALSE;
    
    if (z == 1){
@@ -962,19 +963,23 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       if((strcmp(fCurrentFile,fStartFile)) != 0){
          name = TString::Format("%s_%s", name.Data(), fCurrentFile);
       }
-      mix = new TGeoMixture(NameShort(name), ncompo, density);
+      mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
       mixflag = 1;
       Int_t natoms;
       Double_t weight;
       
       for(fractions f = fracmap.begin(); f != fracmap.end(); f++){
-         if(felemap.find(f->first) != felemap.end()){
+         matname = f->first;
+         matname = NameShort(matname);
+         TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
+         if(mattmp || (felemap.find(f->first) != felemap.end())){
             if (composite) {
                natoms = (Int_t)f->second;
                mix->AddElement(felemap[f->first], natoms);
             } else {
-               weight = f->second;  
-               mix->AddElement(felemap[f->first], weight); 
+               weight = f->second;
+               if (mattmp) mix->AddElement(mattmp, weight);
+               else        mix->AddElement(felemap[f->first], weight); 
             }   
          } 
          else {
