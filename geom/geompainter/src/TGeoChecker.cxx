@@ -1623,6 +1623,9 @@ void TGeoChecker::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
       case 2:
          ShapeSafety(shape, nsamples, option);
          break;
+      case 3:
+         ShapeNormal(shape, nsamples, option);
+         break; 
       default:
          Error("CheckShape", "Test number %d not existent", testNo);
    }      
@@ -1847,6 +1850,108 @@ void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
       }
    }      
 }     
+
+//_____________________________________________________________________________
+void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
+{
+// Check of validity of the normal for a given shape.
+// Sample points inside the shape. Generate directions randomly in cos(theta) 
+// and propagate to boundary. Compute normal and safety at crossing point, plot
+// the point and generate a random direction so that (dir) dot (norm) <0.
+   Double_t dx = ((TGeoBBox*)shape)->GetDX();
+   Double_t dy = ((TGeoBBox*)shape)->GetDY();
+   Double_t dz = ((TGeoBBox*)shape)->GetDZ();
+   Double_t dmax = 2.*TMath::Sqrt(dx*dx+dy*dy+dz*dz);
+   // Number of tracks shot for every point inside the shape
+   const Int_t kNtracks = 1000;
+   Int_t n10 = nsamples/10;
+   Int_t itot = 0;
+   Int_t i;
+   Double_t dist, safe;
+   Double_t point[3];
+   Double_t dir[3];
+   Double_t norm[3];
+   Double_t theta, phi, ndotd;
+   TCanvas *errcanvas = 0;
+   TPolyMarker3D *pm1 = 0;
+   TPolyMarker3D *pm2 = 0;
+   pm2 = new TPolyMarker3D();
+//   pm2->SetMarkerStyle(24);
+   pm2->SetMarkerSize(0.2);
+   pm2->SetMarkerColor(kBlue);
+   if (!fTimer) fTimer = new TStopwatch();
+   fTimer->Reset();
+   fTimer->Start();
+   while (itot<nsamples) {
+      Bool_t inside = kFALSE;
+      while (!inside) {
+         point[0] = gRandom->Uniform(-dx,dx);
+         point[1] = gRandom->Uniform(-dy,dy);
+         point[2] = gRandom->Uniform(-dz,dz);
+         inside = shape->Contains(point);
+      }   
+      phi = 2*TMath::Pi()*gRandom->Rndm();
+      theta= TMath::ACos(1.-2.*gRandom->Rndm());
+      dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+      dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+      dir[2]=TMath::Cos(theta);
+      itot++;
+      if (n10) {
+         if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nsamples));
+      }
+      for (i=0; i<kNtracks; i++) {
+         dist = shape->DistFromInside(point,dir,3);
+         if (dist<TGeoShape::Tolerance() || dist>dmax) {         
+            printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g\n",
+                    point[0],point[1],point[2], dir[0], dir[1], dir[2], dist);
+            if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+            if (!pm1) {
+               pm1 = new TPolyMarker3D();
+               pm1->SetMarkerStyle(24);
+               pm1->SetMarkerSize(0.4);
+               pm1->SetMarkerColor(kRed);
+            }   
+            pm1->SetNextPoint(point[0],point[1],point[2]);
+            break;
+         }
+         
+         for (Int_t j=0; j<3; j++) point[j] += dist*dir[j];
+         safe = shape->Safety(point, kTRUE);
+         if (safe>1.E-6) {
+            printf("Error safety (%19.15f, %19.15f, %19.15f) safe=%g\n",
+                    point[0],point[1],point[2], safe);
+            if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+            if (!pm1) {
+               pm1 = new TPolyMarker3D();
+               pm1->SetMarkerStyle(24);
+               pm1->SetMarkerSize(0.4);
+               pm1->SetMarkerColor(kRed);
+            }   
+            pm1->SetNextPoint(point[0],point[1],point[2]);
+            break;
+         }
+         // Compute normal
+         shape->ComputeNormal(point,dir,norm);
+         while (1) {
+            phi = 2*TMath::Pi()*gRandom->Rndm();
+            theta= TMath::ACos(1.-2.*gRandom->Rndm());
+            dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+            dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+            dir[2]=TMath::Cos(theta);
+            ndotd = dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2];
+            if (ndotd<0) break; // backwards, still inside shape
+         }
+         if ((itot%10) == 0) pm2->SetNextPoint(point[0],point[1],point[2]);
+      }   
+   }        
+   if (errcanvas) {
+      shape->Draw();
+      pm1->Draw();
+   }   
+      
+   new TCanvas("shape03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+   pm2->Draw();
+}            
 
 //______________________________________________________________________________
 TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,

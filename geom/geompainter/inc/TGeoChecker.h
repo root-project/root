@@ -85,6 +85,7 @@ public:
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void             ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *option);
+   void             ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *option);
    Double_t        *ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
    void             SetSelectedNode(TGeoNode *node) {fSelectedNode=node;}
    void             SetNmeshPoints(Int_t npoints=1000);
