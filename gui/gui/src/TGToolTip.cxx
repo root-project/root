@@ -87,6 +87,7 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
 
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+   fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -121,6 +122,7 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
 
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+   fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -153,6 +155,7 @@ TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
 
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+   fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
@@ -183,6 +186,7 @@ TGToolTip::TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms)
 
    fLabel = new TGLabel(this, text);
    fLabel->SetBackgroundColor(fClient->GetResourcePool()->GetTipBgndColor());
+   fLabel->SetTextColor(fClient->GetResourcePool()->GetTipFgndColor());
 
    AddFrame(fLabel, fL1 = new TGLayoutHints(kLHintsLeft | kLHintsTop,
                                             2, 3, 0, 0));
