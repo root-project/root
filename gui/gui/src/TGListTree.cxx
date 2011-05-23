@@ -957,8 +957,9 @@ Bool_t TGListTree::HandleKey(Event_t *event)
                DoubleClicked(item, 1);
             } else {
                // treat 'Enter' and 'Return' as a click
-               ClearViewPort();
                if (fSelected) fSelected->SetActive(kFALSE);
+               UnselectAll(kTRUE);
+               ClearViewPort();
                fSelected = item;
                fSelected->SetActive(kTRUE);
                HighlightItem(item, kTRUE, kTRUE);
