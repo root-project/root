@@ -46,7 +46,7 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TGTextEntry.h"
-
+#include "KeySymbols.h"
 
 
 ClassImp(TGComboBoxPopup)
@@ -101,6 +101,19 @@ void TGComboBoxPopup::EndPopup()
    // Ungrab pointer and unmap popup window.
 
    if (IsMapped()) {
+      Handle_t id = fListBox->GetContainer()->GetId();
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Up),
+                         kAnyModifier, kFALSE);
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Down),
+                         kAnyModifier, kFALSE);
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Enter),
+                         kAnyModifier, kFALSE);
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Return),
+                         kAnyModifier, kFALSE);
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Escape),
+                         kAnyModifier, kFALSE);
+      gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Space),
+                         kAnyModifier, kFALSE);
       gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
       UnmapWindow();
    }
@@ -135,9 +148,24 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Layout();
    MapRaised();
 
+   Handle_t id = fListBox->GetContainer()->GetId();
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Up),
+                      kAnyModifier, kTRUE);
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Down),
+                      kAnyModifier, kTRUE);
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Enter),
+                      kAnyModifier, kTRUE);
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Return),
+                      kAnyModifier, kTRUE);
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Escape),
+                      kAnyModifier, kTRUE);
+   gVirtualX->GrabKey(id, gVirtualX->KeysymToKeycode(kKey_Space),
+                      kAnyModifier, kTRUE);
+   fListBox->GetContainer()->RequestFocus();
+
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                              kPointerMotionMask, kNone,
-                              fClient->GetResourcePool()->GetGrabCursor());
+                          kPointerMotionMask, kNone,
+                          fClient->GetResourcePool()->GetGrabCursor());
 
    if (fClient->IsEditable()) {
       fClient->RegisterPopup(this);
@@ -147,6 +175,34 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    EndPopup();
 }
 
+//______________________________________________________________________________
+void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
+{
+   // Slot handling the key press events. 
+
+   switch ((EKeySym)keysym) {
+      case kKey_Enter:
+      case kKey_Return:
+      case kKey_Space:
+         if (fListBox && f) {
+            TGLBEntry *entry = dynamic_cast<TGLBEntry *>(f);
+            if (entry) {
+               fListBox->Select(entry->EntryId());
+               SendMessage(fListBox, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
+                           entry->EntryId(), 0);
+            }
+         }
+         EndPopup();
+         break;
+      case kKey_Escape:
+         if (fListBox) 
+            ((TGContainer *)fListBox->GetContainer())->UnSelectAll();
+         EndPopup();
+         break;
+      default:
+         break;
+   }
+}
 
 //______________________________________________________________________________
 TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
@@ -243,6 +299,9 @@ void TGComboBox::Init()
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
                          kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
+   fListBox->GetContainer()->Connect("KeyPressed(TGFrame*, UInt_t, UInt_t)", 
+                                     "TGComboBoxPopup", fComboFrame, 
+                                     "KeyPressed(TGFrame*, UInt_t, UInt_t)");
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different
    // items when the mouse crosses.

@@ -51,6 +51,7 @@ public:
                    Pixel_t back = GetWhitePixel());
 
    virtual Bool_t HandleButton(Event_t *);
+   void KeyPressed(TGFrame*, UInt_t, UInt_t);
 
    void SetListBox(TGListBox *lb) { fListBox = lb; }
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
