@@ -5337,6 +5337,10 @@ gdk_event_translate(GdkEvent * event,
             gdk_window_ref (other_window);
             window = other_window;
          }
+         if (!k_grab_window &&
+            is_grabbed_key(&window, event->key.keyval, event->key.state)) {
+            gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
+         }
       }
 
       if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
@@ -5423,6 +5427,10 @@ gdk_event_translate(GdkEvent * event,
             gdk_window_unref (window);
             gdk_window_ref (other_window);
             window = other_window;
+         }
+         if (!k_grab_window &&
+            is_grabbed_key(&window, event->key.keyval, event->key.state)) {
+            gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
          }
       }
 
