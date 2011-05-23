@@ -621,6 +621,8 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
 {
    // constructor
    if (nuisanceParameters) fNuisanceParameters.add(*nuisanceParameters); 
+   // remove constant nuisance parameters 
+   RemoveConstantParameters(&fNuisanceParameters);
 }
 
 BayesianCalculator::BayesianCalculator( RooAbsData& data,
@@ -680,6 +682,8 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
    fNuisanceParameters.removeAll();
    if (model.GetParametersOfInterest()) fPOI.add( *(model.GetParametersOfInterest()) );
    if (model.GetNuisanceParameters())  fNuisanceParameters.add( *(model.GetNuisanceParameters() ) );
+   // remove constant nuisance parameters 
+   RemoveConstantParameters(&fNuisanceParameters);
 
    // invalidate the cached pointers
    ClearAll(); 
