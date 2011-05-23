@@ -340,47 +340,43 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 {
    // Test if the block is in cache.
 
-   Bool_t found = false;
-   TString fullPath;    //path of the cached files
-   Int_t value = 0;
-
    if (fPathCache == "")
       return false;
+   
+   Bool_t found = false;
+   TString fullPath(fPathCache); // path of the cached files.
 
-   fullPath = fPathCache;
+   Int_t value = 0;
 
    if (gSystem->OpenDirectory(fullPath) == 0)
       gSystem->mkdir(fullPath);
 
-   char* concatStr = new char[100];
-   TString fileName, dirName;
-
    //dir is SHA1 value modulo 16; filename is the value of the SHA1(offset+len)
    TMD5* md = new TMD5();
 
+   TString concatStr;
    for (Int_t i=0; i < block->GetNoElem(); i++){
-      sprintf(concatStr, "%lld", block->GetPos(i));
-      md->Update((UChar_t*)concatStr, strlen(concatStr));
+      concatStr.Form("%lld", block->GetPos(i));
+      md->Update((UChar_t*)concatStr.Data(), concatStr.Length());
    }
 
    md->Final();
-   fileName = md->AsString();
+   TString fileName( md->AsString() );
    value = SumHex(fileName);
    value = value % 16;
-   sprintf(concatStr, "%i", value);
-   dirName = concatStr;
+   TString dirName;
+   dirName.Form("%i", value);
 
    fullPath += "/" + dirName + "/" + fileName;
 
    FileStat_t stat;
    if (gSystem->GetPathInfo(fullPath, stat) == 0) {
-      path = new char[fullPath.Sizeof() + 1];
-      strcpy(path, fullPath);
+      path = new char[fullPath.Length() + 1];
+      strlcpy(path, fullPath,fullPath.Length() + 1);
       found = true;
    } else
       found = false;
 
-   delete[] concatStr;
    delete md;
    return found;
 }
@@ -422,38 +418,32 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
 {
    // Save the block content in cache.
 
-   TString fullPath;
-   TString fileName, dirName;
-   char* concatStr;
-   Int_t value = 0;
-   TFile* file = 0;
-
    if (fPathCache == "")
       return;
    
-   concatStr = new char[100];
-   fullPath = fPathCache;
-
    //dir is SHA1 value modulo 16; filename is the value of the SHA1
    TMD5* md = new TMD5();
 
+   TString concatStr;
    for(Int_t i=0; i< block->GetNoElem(); i++){
-      sprintf(concatStr, "%lld", block->GetPos(i));
-      md->Update((UChar_t*)concatStr, strlen(concatStr));
+      concatStr.Form("%lld", block->GetPos(i));
+      md->Update((UChar_t*)concatStr.Data(), concatStr.Length());
    }
    md->Final();
 
-   fileName  = md->AsString();
-   value = SumHex(fileName);
+   TString fileName( md->AsString() );   
+   Int_t value = SumHex(fileName);
    value = value % 16;
 
-   sprintf(concatStr, "%i", value);
-   dirName = concatStr;
+   TString fullPath( fPathCache );
+   TString dirName;
+   dirName.Form("%i", value);
    fullPath += ("/" + dirName);
 
    if (gSystem->OpenDirectory(fullPath) == false)
       gSystem->mkdir(fullPath);
 
+   TFile* file = 0;
    fullPath += ("/" + fileName);
    FileStat_t stat;
    if (gSystem->GetPathInfo(fullPath, stat) == 0) {
@@ -467,9 +457,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
    file->Close();
 
-   file = 0;
    delete file;
-   delete[] concatStr;
    delete md;
 }
 

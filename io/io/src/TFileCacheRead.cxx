@@ -72,8 +72,11 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fBSeekSortLen = 0;
    fBSeekPos     = 0;
    fBLen         = 0;
+   fBIsSorted    = kFALSE;
+   fBIsTransferred=kFALSE;
 
    fAsyncReading = kFALSE;
+   fEnablePrefetching = kFALSE;
    fPrefetch        = 0;
    fPrefetchBlocks  = 0;
 }
@@ -156,6 +159,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fIsSorted    = kFALSE;
    fIsTransferred = kFALSE;
    fBIsSorted = kFALSE;
+   fBIsTransferred = kFALSE;
 
    if (file) file->SetCacheRead(this);
 }
