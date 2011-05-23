@@ -14,8 +14,9 @@
    Memcheck:Leak
    fun:_Znwm
    fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
-   obj:*libstdc++.so*
+   ...
    fun:_ZNSsC1EPKcRKSaIcE
+   fun:_ZN6TClass8AddClassEPS_
 }
 
 {
@@ -28,29 +29,18 @@
 }
 
 {
-   TClass::fClassInfo
-   Memcheck:Leak
-   fun:_Znwm
-   fun:_ZN5TCint12SetClassInfoEP6TClassb
-   fun:_ZN6TClass4InitEPKcs*
-}
-
-{
-   TClass members
-   Memcheck:Leak
-   fun:_Znwm
-   fun:_ZN8TStorage11ObjectAllocEm
-   fun:_ZN7TObjectnwEm
-   fun:_ZN6TClass4InitEPKcs*
-}
-
-{
-   TClass::fStreamerInfo's storage
+   Anything allocated by TClass::Init: new[]()
    Memcheck:Leak
    fun:_Znam
-   fun:_ZN8TStorage5AllocEm
-   fun:_ZN9TObjArray4InitEii
-   fun:_ZN9TObjArrayC1Eii
+   ...
+   fun:_ZN6TClass4InitEPKcs*
+}   
+
+{
+   Anything allocated by TClass::Init: new()
+   Memcheck:Leak
+   fun:_Znwm
+   ...
    fun:_ZN6TClass4InitEPKcs*
 }
 
@@ -374,8 +364,7 @@
    fun:malloc
    fun:nss_parse_service_list
    fun:__nss_database_lookup
-   obj:*
-   obj:*
+   ...
    fun:getpwuid_r@@GLIBC_*
 }
 
