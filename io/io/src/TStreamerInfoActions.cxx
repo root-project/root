@@ -1470,20 +1470,20 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          } else {
             switch (oldType) {
                   // read basic types
-               case TStreamerInfo::kBool:    sequence->AddAction( ReadBasicTypeGenericLoop<Bool_t>, new TConfiguration(info,i,offset) );    break;
-               case TStreamerInfo::kChar:    sequence->AddAction( ReadBasicTypeGenericLoop<Char_t>, new TConfiguration(info,i,offset) );    break;
-               case TStreamerInfo::kShort:   sequence->AddAction( ReadBasicTypeGenericLoop<Short_t>, new TConfiguration(info,i,offset) );   break;
-               case TStreamerInfo::kInt:     sequence->AddAction( ReadBasicTypeGenericLoop<Int_t>, new TConfiguration(info,i,offset) );     break;
-               case TStreamerInfo::kLong:    sequence->AddAction( ReadBasicTypeGenericLoop<Long_t>, new TConfiguration(info,i,offset) );    break;
-               case TStreamerInfo::kLong64:  sequence->AddAction( ReadBasicTypeGenericLoop<Long64_t>, new TConfiguration(info,i,offset) );  break;
-               case TStreamerInfo::kFloat:   sequence->AddAction( ReadBasicTypeGenericLoop<Float_t>, new TConfiguration(info,i,offset) );   break;
-               case TStreamerInfo::kDouble:  sequence->AddAction( ReadBasicTypeGenericLoop<Double_t>, new TConfiguration(info,i,offset) );  break;
-               case TStreamerInfo::kUChar:   sequence->AddAction( ReadBasicTypeGenericLoop<UChar_t>, new TConfiguration(info,i,offset) );   break;
-               case TStreamerInfo::kUShort:  sequence->AddAction( ReadBasicTypeGenericLoop<UShort_t>, new TConfiguration(info,i,offset) );  break;
-               case TStreamerInfo::kUInt:    sequence->AddAction( ReadBasicTypeGenericLoop<UInt_t>, new TConfiguration(info,i,offset) );    break;
-               case TStreamerInfo::kULong:   sequence->AddAction( ReadBasicTypeGenericLoop<ULong_t>, new TConfiguration(info,i,offset) );   break;
-               case TStreamerInfo::kULong64: sequence->AddAction( ReadBasicTypeGenericLoop<ULong64_t>, new TConfiguration(info,i,offset) ); break;
-               case TStreamerInfo::kFloat16: {
+               case TVirtualStreamerInfo::kBool:    sequence->AddAction( ReadBasicTypeGenericLoop<Bool_t>, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kChar:    sequence->AddAction( ReadBasicTypeGenericLoop<Char_t>, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kShort:   sequence->AddAction( ReadBasicTypeGenericLoop<Short_t>, new TConfiguration(info,i,offset) );   break;
+               case TVirtualStreamerInfo::kInt:     sequence->AddAction( ReadBasicTypeGenericLoop<Int_t>, new TConfiguration(info,i,offset) );     break;
+               case TVirtualStreamerInfo::kLong:    sequence->AddAction( ReadBasicTypeGenericLoop<Long_t>, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kLong64:  sequence->AddAction( ReadBasicTypeGenericLoop<Long64_t>, new TConfiguration(info,i,offset) );  break;
+               case TVirtualStreamerInfo::kFloat:   sequence->AddAction( ReadBasicTypeGenericLoop<Float_t>, new TConfiguration(info,i,offset) );   break;
+               case TVirtualStreamerInfo::kDouble:  sequence->AddAction( ReadBasicTypeGenericLoop<Double_t>, new TConfiguration(info,i,offset) );  break;
+               case TVirtualStreamerInfo::kUChar:   sequence->AddAction( ReadBasicTypeGenericLoop<UChar_t>, new TConfiguration(info,i,offset) );   break;
+               case TVirtualStreamerInfo::kUShort:  sequence->AddAction( ReadBasicTypeGenericLoop<UShort_t>, new TConfiguration(info,i,offset) );  break;
+               case TVirtualStreamerInfo::kUInt:    sequence->AddAction( ReadBasicTypeGenericLoop<UInt_t>, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kULong:   sequence->AddAction( ReadBasicTypeGenericLoop<ULong_t>, new TConfiguration(info,i,offset) );   break;
+               case TVirtualStreamerInfo::kULong64: sequence->AddAction( ReadBasicTypeGenericLoop<ULong64_t>, new TConfiguration(info,i,offset) ); break;
+               case TVirtualStreamerInfo::kFloat16: {
                   if (element->GetFactor() != 0) {
                      sequence->AddAction( GenericLooper<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
                   } else {
@@ -1493,7 +1493,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                   }
                   break;
                }
-               case TStreamerInfo::kDouble32: {
+               case TVirtualStreamerInfo::kDouble32: {
                   if (element->GetFactor() != 0) {
                      sequence->AddAction( GenericLooper<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
                   } else {
@@ -1506,11 +1506,11 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                   }
                   break;
                }
-               case TStreamerInfo::kTNamed:  sequence->AddAction( GenericLooper<ReadTNamed >, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kTNamed:  sequence->AddAction( GenericLooper<ReadTNamed >, new TConfiguration(info,i,offset) );    break;
                   // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
                   // Streamer alltogether.
-               case TStreamerInfo::kTObject: sequence->AddAction( GenericLooper<ReadTObject >, new TConfiguration(info,i,offset) );    break;
-               case TStreamerInfo::kTString: sequence->AddAction( GenericLooper<ReadTString >, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kTObject: sequence->AddAction( GenericLooper<ReadTObject >, new TConfiguration(info,i,offset) );    break;
+               case TVirtualStreamerInfo::kTString: sequence->AddAction( GenericLooper<ReadTString >, new TConfiguration(info,i,offset) );    break;
                default:
                   sequence->AddAction( GenericCollectionAction, new TConfigSTL(info,i,0 /* the offset will be used from TStreamerInfo */,0,proxy.GetCollectionClass(),0,0) );
                   break;
