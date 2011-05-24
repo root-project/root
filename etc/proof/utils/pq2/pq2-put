@@ -11,7 +11,7 @@ printhelp()
    echo "  Syntax:"
    echo "           pq2-put [-h|--help] [-v] [-k] [-o options] [(-d|--dataset=)] datasetfile"
    echo "                   [--overwrite] [--update] [--trust]"
-   echo "                   [--tree deftree] [--staged]"
+   echo "                   [--tree=deftree] [--staged]"
    echo "                   [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
