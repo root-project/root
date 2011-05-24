@@ -41,9 +41,9 @@ public:
    Bool_t       fIsFirst;          // True if this is the first call to Merge for this series of object.
    TString      fOptions;          // Additional text based option being passed down to customize the merge.
    TObject     *fUserData;         // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
-   
+ 
    TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile), fIsFirst(kTRUE), fUserData(0) {}
-   TFileMergeInfo() { delete fUserData; } ;
+   virtual ~TFileMergeInfo() { delete fUserData; } ;
    
    void Reset() { fIsFirst = kTRUE; delete fUserData; fUserData = 0; }
    
