@@ -1077,13 +1077,13 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Red:")));
    cf1->AddFrame(fRte = new TGTextEntry(cf1, fRtb = new TGTextBuffer(5), kCDLG_RTE),0);
-   fRte->Resize(40, fRte->GetDefaultHeight());
+   fRte->Resize(50, fRte->GetDefaultHeight());
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Green:")),0);
    cf1->AddFrame(fGte = new TGTextEntry(cf1, fGtb = new TGTextBuffer(5), kCDLG_GTE),0);
-   fGte->Resize(40, fGte->GetDefaultHeight());
+   fGte->Resize(50, fGte->GetDefaultHeight());
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Blue:")));
    cf1->AddFrame(fBte = new TGTextEntry(cf1, fBtb = new TGTextBuffer(5), kCDLG_BTE),0);
-   fBte->Resize(40, fBte->GetDefaultHeight());
+   fBte->Resize(50, fBte->GetDefaultHeight());
 
    TGCompositeFrame *cf2 = new TGCompositeFrame(cf, 10, 10);
    cf2->SetCleanup();
@@ -1091,13 +1091,13 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    cf2->SetLayoutManager(new TGMatrixLayout(cf2, 0, 2, 4));
    cf2->AddFrame(new TGLabel(cf2, new TGHotString("Hue:")),0);
    cf2->AddFrame(fHte = new TGTextEntry(cf2, fHtb = new TGTextBuffer(5), kCDLG_HTE),0);
-   fHte->Resize(40, fHte->GetDefaultHeight());
+   fHte->Resize(50, fHte->GetDefaultHeight());
    cf2->AddFrame(new TGLabel(cf2, new TGHotString("Sat:")),0);
    cf2->AddFrame(fSte = new TGTextEntry(cf2, fStb = new TGTextBuffer(5), kCDLG_STE),0);
-   fSte->Resize(40, fSte->GetDefaultHeight());
+   fSte->Resize(50, fSte->GetDefaultHeight());
    cf2->AddFrame(new TGLabel(cf2, new TGHotString("Lum:")),0);
    cf2->AddFrame(fLte = new TGTextEntry(cf2, fLtb = new TGTextBuffer(5), kCDLG_LTE),0);
-   fLte->Resize(40, fLte->GetDefaultHeight());
+   fLte->Resize(50, fLte->GetDefaultHeight());
 
    fHte->Associate(this);
    fLte->Associate(this);

@@ -339,7 +339,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
                            2, 5, 0, 2);
    fL3 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 2, 4, 4);
    fL5 = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 3, 5, 0, 0);
-   fL6 = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 0, 2, 0, 0);
+   fL6 = new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 0, 2, 0, 0);
    fL7 = new TGLayoutHints(kLHintsLeft, 10, 10, 10, 10);
 
    fL21 = new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 5, 10, 0);

@@ -221,7 +221,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    //--------------------- Text align and color
 
-   vf = new TGVerticalFrame(hf, 10, 10, kFixedWidth);
+   vf = new TGVerticalFrame(hf, 10, 10);
 
    lbl = new TGLabel(vf, new TGString("Text Align :"));
    vf->AddFrame(lbl, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
@@ -231,10 +231,10 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    vf->AddFrame(fTextAligns, new TGLayoutHints(kLHintsCenterX | kLHintsTop |
                                                kLHintsExpandX, 5, 5, 0, 5));
 
-   fTextAligns->Resize(110,20);
+   fTextAligns->Resize(110, 20);
 
    vf->Layout();
-   vf->Resize(120,vf->GetDefaultHeight());
+   vf->Resize(vf->GetDefaultSize());
 
    w = hf->GetDefaultWidth();
 
@@ -242,12 +242,12 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    vf->AddFrame(hf2, new TGLayoutHints(kLHintsNormal, 0, 0, 5, 5));
 
    lbl = new TGLabel(hf2, new TGString("Text Color"));
-   hf2->AddFrame(lbl, new TGLayoutHints(kLHintsLeft, 5, 5, 20, 5));
+   hf2->AddFrame(lbl, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 5, 20, 5));
 
    fColorSelect = new TGColorSelect(hf2, fTextColor, kFDLG_COLORSEL);
    fColorSelect->Associate(this);
 
-   hf2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsRight | kLHintsTop, 5, 5, 20, 5));
+   hf2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5, 5, 20, 5));
 
    vf->Resize(vf->GetDefaultSize());
 
@@ -278,13 +278,21 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
       }
    }
 
+   TGLBEntry *entry = fTextAligns->FindEntry("bottom center");
+   if (entry)
+      fTextAligns->Resize(entry->GetWidth() + 20, entry->GetHeight() > 20 ?
+                          entry->GetHeight() : 20);
+ 
+   vf->Layout();
+   vf->Resize(vf->GetDefaultSize());
+
    //--------------------- sample box
 
    hf = new TGHorizontalFrame(this, 10, 10);
    AddFrame(hf, new TGLayoutHints(kLHintsNormal | kLHintsExpandX, 5, 5, 5, 5));
 
-   TGGroupFrame *gf = new TGGroupFrame(hf, new TGString("Sample"), kFixedSize);
-   hf->AddFrame(gf, new TGLayoutHints(kLHintsNormal, 3, 3, 3, 3));
+   TGGroupFrame *gf = new TGGroupFrame(hf, new TGString("Sample"));
+   hf->AddFrame(gf, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3));
 
    TGCompositeFrame *cf = new TGCompositeFrame(gf, 200, 100, kSunkenFrame);
    gf->AddFrame(cf, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY |
@@ -343,7 +351,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    vf->Resize(cancel->GetDefaultWidth()+70, vf->GetDefaultHeight());
 
-   hf->AddFrame(vf, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5));
+   hf->AddFrame(vf, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
    SetEditDisabled(kEditDisable);
 
    fInitAlign = fTextAlign;
