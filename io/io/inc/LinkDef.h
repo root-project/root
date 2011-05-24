@@ -21,6 +21,7 @@
 #pragma link C++ class TFile-;
 #pragma link C++ class TFileCacheRead+;
 #pragma link C++ class TFileCacheWrite+;
+#pragma link C++ class TFileMerger+;
 #pragma link C++ class TFree;
 #pragma link C++ class TKey-;
 #pragma link C++ class TKeyMapFile;
