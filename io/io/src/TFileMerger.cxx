@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Id$
+// @(#)root/io:$Id$
 // Author: Andreas Peters + Fons Rademakers + Rene Brun  26/5/2005
 
 /*************************************************************************
@@ -493,3 +493,4 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
    }
    return status;
 }
+
