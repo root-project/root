@@ -52,7 +52,7 @@ MnUserTransformation::MnUserTransformation(const std::vector<double>& par, const
    for(unsigned int i = 0; i < par.size(); i++) {
       std::ostringstream buf;
       buf << "p" << i;
-      buf.str(parName);
+      parName = buf.str();
       Add(parName, par[i], err[i]);
    }
 }
@@ -133,7 +133,7 @@ double MnUserTransformation::Int2extError(unsigned int i, double val, double err
 
 MnUserCovariance MnUserTransformation::Int2extCovariance(const MnAlgebraicVector& vec, const MnAlgebraicSymMatrix& cov) const {
    // return the external covariance matrix from the internal error matrix and the internal parameter value
-   // the vector of internal parameter is needed for the derivaties (Jacobian of the transformation)
+   // the vector of internal parameter is needed for the derivatives (Jacobian of the transformation)
    // Vext(i,j) = Vint(i,j) * dPext(i)/dPint(i) * dPext(j)/dPint(j) 
    
    MnUserCovariance result(cov.Nrow());
