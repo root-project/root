@@ -138,6 +138,9 @@
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
 #   endif
+#   if __SUNPRO_CC >= 0x5110
+#      define R__THROWNEWDELETE
+#   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
 #   endif
