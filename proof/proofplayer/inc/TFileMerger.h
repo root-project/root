@@ -57,15 +57,19 @@ protected:
    Bool_t         fNoTrees;          // True if Trees should not be merged (default is kFALSE)
    Bool_t         fExplicitCompLevel;// True if the user explicitly requested a compressio level change (default kFALSE)
    Bool_t         fCompressionChange;// True if the output and input have different compression level (default kFALSE)
+   Int_t          fPrintLevel;       // How much information to print out at run time.
 
-   Bool_t	      fLocal;           // Makes local copies of merging files if True (default is kTRUE)
-   Bool_t	      fHistoOneGo;      // Merger histos in one go (default is kTRUE)
-   TList	        *fMergeList;       // list of the files need to be merged
+   Bool_t         fLocal;           // Makes local copies of merging files if True (default is kTRUE)
+   Bool_t         fHistoOneGo;      // Merger histos in one go (default is kTRUE)
+   TList         *fMergeList;       // list of the files need to be merged
 
-public:
+public:   
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
    virtual ~TFileMerger();
 
+   Int_t       GetPrintLevel() const { return fPrintLevel; }
+   void        SetPrintLevel(Int_t level) { fPrintLevel = level; }
+   Bool_t      HasCompressionChange() const { return fCompressionChange; }
    const char *GetOutputFileName() const { return fOutputFilename; }
    TList      *GetMergeList() const { return fMergeList;  }
 
@@ -76,8 +80,8 @@ public:
    //--- file merging interface
    virtual void   Reset();
    virtual Bool_t AddFile(const char *url, Bool_t cpProgress = kTRUE);
-   virtual Bool_t OutputFile(const char *url);
-   virtual Bool_t OutputFile(const char *url, Int_t compressionLevel);
+   virtual Bool_t OutputFile(const char *url, Bool_t force = kTRUE);
+   virtual Bool_t OutputFile(const char *url, Bool_t force, Int_t compressionLevel);
    virtual void   PrintFiles(Option_t *options);
    virtual Bool_t Merge(Bool_t = kTRUE);
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist);

@@ -30,6 +30,7 @@
 
 
 class TBrowser;
+class TFileMergeInfo;
 
 class THStack : public TNamed {
 private:
@@ -67,6 +68,7 @@ public:
    TAxis           *GetXaxis() const;
    TAxis           *GetYaxis() const;
    virtual void     ls(Option_t *option="") const;
+   virtual Long64_t Merge(TCollection* li, TFileMergeInfo *info);
    virtual void     Modified();
    virtual void     Paint(Option_t *chopt="");
    virtual void     Print(Option_t *chopt="") const;

@@ -121,7 +121,7 @@ public:
       EStatOption   GetStatisticOption() const {return fStatisticOption;}
       const TH1*    GetTotalHistogram() const {return fTotalHistogram;}
       Double_t      GetWeight() const {return fWeight;}
-      void          Merge(TCollection* list);      
+      Long64_t      Merge(TCollection* list);      
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
       void          Paint(Option_t* opt);

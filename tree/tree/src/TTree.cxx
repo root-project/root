@@ -356,6 +356,7 @@
 #include "TVirtualPad.h"
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
+#include "TFileMergeInfo.h"
 
 #include <cstddef>
 #include <fstream>
@@ -5642,6 +5643,46 @@ Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
    }
    if (GetTreeIndex()) {
       GetTreeIndex()->Append(0,kFALSE); // Force the sorting
+   }
+   return GetEntries();
+}
+
+//______________________________________________________________________________
+Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
+{
+   // Merge the trees in the TList into this tree.  
+   // If info->fIsFirst is true, first we clone this TTree info the directory
+   // info->fOutputDirectory and then overlay the new TTree information onto
+   // this TTree object (so that this TTree object is now the appropriate to
+   // use for further merging).
+   //
+   // Returns the total number of entries in the merged tree.
+   //
+   
+   const char *options = info ? info->fOptions.Data() : "";
+   if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
+      TDirectory::TContext ctxt(gDirectory,info->fOutputDirectory);
+      TTree *newtree = CloneTree(-1, options);
+      newtree->Write();
+      delete newtree;
+      info->fOutputDirectory->ReadTObject(this,this->GetName());
+   }
+   if (!li) return 0;
+   TIter next(li);
+   TTree *tree;
+   while ((tree = (TTree*)next())) {
+      if (tree==this) continue;
+      if (!tree->InheritsFrom(TTree::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s", tree->ClassName(), ClassName());
+         return -1;
+      }
+      // Copy MakeClass status.
+      tree->SetMakeClass(fMakeClass);
+      
+      // Copy branch addresses.
+      CopyAddresses(tree);
+      
+      CopyEntries(tree,-1,options);
    }
    return GetEntries();
 }

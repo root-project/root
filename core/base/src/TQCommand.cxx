@@ -422,6 +422,24 @@ void TQCommand::Merge(TQCommand *c)
 }
 
 //______________________________________________________________________________
+Long64_t TQCommand::Merge(TCollection *collection,TFileMergeInfo*)
+{
+   // Merge a collection of TQCommand.
+    
+   TIter next(collection);
+   while (TObject* o = next()) {
+      TQCommand *command = dynamic_cast<TQCommand*> (o);
+      if (!command) {
+         Error("Merge",
+               "Cannot merge - an object which doesn't inherit from TQCommand found in the list");
+         return -1;
+      }
+      Merge(command);
+   }
+   return GetEntries();
+}
+
+//______________________________________________________________________________
 void TQCommand::Add(TObject *obj, Option_t *opt)
 {
    // Add command to the list of merged commands.

@@ -2273,7 +2273,7 @@ Int_t TEfficiency::GetGlobalBin(Int_t binx,Int_t biny,Int_t binz) const
 }
 
 //______________________________________________________________________________
-void TEfficiency::Merge(TCollection* pList)
+Long64_t TEfficiency::Merge(TCollection* pList)
 {
    //merges the TEfficiency objects in the given list to the given
    //TEfficiency object using the operator+=(TEfficiency&)
@@ -2287,17 +2287,18 @@ void TEfficiency::Merge(TCollection* pList)
    //The new weight is set according to:
    //Begin_Latex #frac{1}{w_{new}} = #sum_{i} \frac{1}{w_{i}}End_Latex 
    
-   if(pList->IsEmpty())
-      return;
-   
-   TIter next(pList);
-   TObject* obj = 0;
-   TEfficiency* pEff = 0;
-   while((obj = next())) {
-      pEff = dynamic_cast<TEfficiency*>(obj);
-      if(pEff)
-	 *this += *pEff;
+   if(!pList->IsEmpty()) {   
+      TIter next(pList);
+      TObject* obj = 0;
+      TEfficiency* pEff = 0;
+      while((obj = next())) {
+         pEff = dynamic_cast<TEfficiency*>(obj);
+         if(pEff) {
+            *this += *pEff;
+         }
+      }
    }
+   return fTotalHistogram->GetEntries();
 }
 
 //______________________________________________________________________________

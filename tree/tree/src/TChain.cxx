@@ -1720,6 +1720,15 @@ Long64_t TChain::Merge(TCollection* /* list */, Option_t* /* option */ )
 }
 
 //______________________________________________________________________________
+Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
+{
+   // Merge all chains in the collection.  (NOT IMPLEMENTED)
+   
+   Error("Merge", "not implemented");
+   return -1;
+}
+
+//______________________________________________________________________________
 Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 {
    // Merge all the entries in the chain into a new tree in the current file.

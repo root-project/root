@@ -46,6 +46,8 @@ class TMemberInspector;
 class TObject;
 class TNamed;
 class TRootIOCtor;
+class TCollection;
+class TFileMergeInfo;
 class TString;
 
 //---- types -------------------------------------------------------------------
@@ -190,7 +192,8 @@ namespace ROOT {
    typedef void  (*DelFunc_t)(void *);
    typedef void  (*DelArrFunc_t)(void *);
    typedef void  (*DesFunc_t)(void *);
-   typedef void  (*DirAutoAdd_t)(void *, TDirectory*);
+   typedef void  (*DirAutoAdd_t)(void *, TDirectory *);
+   typedef Long64_t (*MergeFunc_t)(void *, TCollection *, TFileMergeInfo *);
 
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 

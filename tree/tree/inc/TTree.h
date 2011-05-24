@@ -87,7 +87,7 @@ class TBranchRef;
 class TBasket;
 class TStreamerInfo;
 class TTreeCloner;
-
+class TFileMergeInfo;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -448,6 +448,7 @@ public:
    virtual Int_t           MakeSelector(const char* selector = 0);
    Bool_t                  MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
+   virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
    virtual Bool_t          Notify();
    virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option=""); 

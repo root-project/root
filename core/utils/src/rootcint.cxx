@@ -1049,6 +1049,44 @@ bool HasDirectoryAutoAdd(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+bool HasNewMerge(G__ClassInfo &cl)
+{
+   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+   
+   // Detect if the class has a 'new' Merge function.
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   long offset;
+   const char *proto = "TCollection*,TFileMergeInfo*";
+   const char *name = "Merge";
+   
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   
+   return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
+bool HasOldMerge(G__ClassInfo &cl)
+{
+   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+   
+   // Detect if the class has an old fashion Merge function.
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   long offset;
+   const char *proto = "TCollection*";
+   const char *name = "Merge";
+   
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
+   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   
+   return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
 int GetClassVersion(G__ClassInfo &cl)
 {
    // Return the version number of the class or -1
@@ -1850,6 +1888,18 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       << "   }" << std::endl;
    }
 
+   if (HasNewMerge(cl)) {
+      (*dictSrcOut) << "   // Wrapper around the merge function." << std::endl
+      << "   static Long64_t merge_" << mappedname.c_str() << "(void *obj,TCollection *coll,TFileMergeInfo *info) {" << std::endl
+      << "      return ((" << classname.c_str() << "*)obj)->Merge(coll,info);" << std::endl
+      << "   }" << std::endl;
+   } else if (HasOldMerge(cl)) {
+      (*dictSrcOut) << "   // Wrapper around the merge function." << std::endl
+      << "   static Long64_t  merge_" << mappedname.c_str() << "(void *obj,TCollection *coll,TFileMergeInfo *) {" << std::endl
+      << "      return ((" << classname.c_str() << "*)obj)->Merge(coll);" << std::endl
+      << "   }" << std::endl;
+   }
+
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
 
@@ -2468,10 +2518,13 @@ void WriteClassInit(G__ClassInfo &cl)
                     << "   static void destruct_" << mappedname.c_str() << "(void *p);" << std::endl;
    }
    if (HasDirectoryAutoAdd(cl)) {
-      (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *p, TDirectory *dir);" << std::endl;
+      (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *obj, TDirectory *dir);" << std::endl;
    }
    if (HasCustomStreamerMemberFunction(cl)) {
       (*dictSrcOut)<< "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << std::endl;
+   }
+   if (HasNewMerge(cl) || HasOldMerge(cl)) {
+      (*dictSrcOut)<< "   static Long64_t merge_" << mappedname.c_str() << "(void *obj, TCollection *coll,TFileMergeInfo *info);" << std::endl;
    }
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
@@ -2664,6 +2717,9 @@ void WriteClassInit(G__ClassInfo &cl)
    if (HasCustomStreamerMemberFunction(cl)) {
       // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
       (*dictSrcOut) << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasNewMerge(cl) || HasOldMerge(cl)) {
+      (*dictSrcOut) << "      instance.SetMerge(&merge_" << mappedname.c_str() << ");" << std::endl;
    }
    if (bset) {
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
@@ -4936,7 +4992,8 @@ int main(int argc, char **argv)
                  << "#define G__ROOT" << std::endl
                  << "#endif" << std::endl << std::endl
                  << "#include \"RtypesImp.h\"" << std::endl
-                 << "#include \"TIsAProxy.h\"" << std::endl;
+                 << "#include \"TIsAProxy.h\"" << std::endl
+                 << "#include \"TFileMergeInfo.h\"" << std::endl;
    (*dictSrcOut) << std::endl;
 #ifdef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
