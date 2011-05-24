@@ -16,15 +16,3 @@ Warning in <TClass::TClass>: no dictionary for class CaloJet is available
 Warning in <TClass::TClass>: no dictionary for class edm::EDCollection<CaloJet> is available
 Source file 2: cmsJets_1.root
 Target path: result.root:/
-OBJ: TChain	Events	 : 0
- cmsJets_0.roottree:Events entries=1234567890
- cmsJets_1.roottree:Events entries=1234567890
-OBJ: TChain	##Params	 : 0
- cmsJets_0.roottree:##Params entries=1234567890
- cmsJets_1.roottree:##Params entries=1234567890
-OBJ: TChain	##Shapes	 : 0
- cmsJets_0.roottree:##Shapes entries=1234567890
- cmsJets_1.roottree:##Shapes entries=1234567890
-OBJ: TChain	##Links	 : 0
- cmsJets_0.roottree:##Links entries=1234567890
- cmsJets_1.roottree:##Links entries=1234567890
