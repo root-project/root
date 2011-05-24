@@ -2298,7 +2298,7 @@ Long64_t TEfficiency::Merge(TCollection* pList)
          }
       }
    }
-   return fTotalHistogram->GetEntries();
+   return (Long64_t)fTotalHistogram->GetEntries();
 }
 
 //______________________________________________________________________________
