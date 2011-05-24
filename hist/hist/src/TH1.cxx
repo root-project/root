@@ -7652,7 +7652,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
    fZaxis.SetRange(0,0);
    fXaxis.Set(nx,xBins);
    fYaxis.Set(ny,yBins);
-   fYaxis.Set(nz,zBins);
+   fZaxis.Set(nz,zBins);
    fNcells = (nx+2)*(ny+2)*(nz+2);
    SetBinsLength(fNcells);
    if (fSumw2.fN) {
