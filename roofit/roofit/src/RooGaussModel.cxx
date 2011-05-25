@@ -305,6 +305,14 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
   // Analytical integration capability of raw PDF
   case noBasis:
+ 
+    // Optionally advertise flat integral over sigma scale factor
+    if (_flatSFInt) {
+      if (matchArgs(allVars,analVars,RooArgSet(convVar(),ssf.arg()))) {
+	return 2 ;
+      }
+    }
+
     if (matchArgs(allVars,analVars,convVar())) return 1 ;
     break ;
 
@@ -329,6 +337,7 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
     // Optionally advertise flat integral over sigma scale factor
     if (_flatSFInt) {
+
       if (matchArgs(allVars,analVars,RooArgSet(convVar(),ssf.arg()))) {
 	return 2 ;
       }
