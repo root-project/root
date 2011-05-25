@@ -57,11 +57,21 @@
 ClassImp(RooAbsData)
 ;
 
+static std::set<RooAbsData*> _dlist ;
+
+//_____________________________________________________________________________
+Bool_t RooAbsData::isAlive(RooAbsData* data) 
+{
+  return _dlist.find(data)!=_dlist.end() ;
+}
+
+
 
 //_____________________________________________________________________________
 RooAbsData::RooAbsData() 
 {
   // Default constructor
+  _dlist.insert(this) ;
   _dstore = 0 ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
@@ -75,6 +85,8 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 {
   // Constructor from a set of variables. Only fundamental elements of vars
   // (RooRealVar,RooCategory etc) are stored as part of the dataset
+
+  _dlist.insert(this) ;
 
   // clone the fundamentals of the given data set into internal buffer
   TIterator* iter = vars.createIterator() ;
@@ -111,6 +123,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 {
   // Copy constructor
 
+  _dlist.insert(this) ;
   _vars.addClone(other._vars) ;
 
   // reconnect any paramaterized ranges to internal dataset observables
@@ -135,6 +148,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 RooAbsData::~RooAbsData() 
 {
   // Destructor
+  _dlist.erase(this) ;
   
   // delete owned contents.
   delete _dstore ;

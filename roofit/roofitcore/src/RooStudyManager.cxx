@@ -118,15 +118,32 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)%p)->GetOutputList()",p)) ;
   aggregateData(olist) ;
-
-
-  gROOT->ProcessLineFast(Form("((TProof*)%p)->Close(\"s\") ;",p)) ;
-  // close proof session
-  if (!showGui) {
-    gROOT->ProcessLineFast(Form("delete ((TProof*)%p) ;",p)) ;
-  }
+  
 }
 
+
+//_____________________________________________________________________________
+void RooStudyManager::closeProof(Option_t *option)
+{
+  // "Option_t *option" takes the parameters forwarded to gProof->Close(option).
+  //
+  // This function is intended for scripts that run in loops
+  // where it is essential to properly close all connections and delete
+  // the TProof instance (frees ports).
+
+  if (gROOT->GetListOfProofs()->LastIndex() != -1) {
+    gROOT->ProcessLineFast(Form("TProof::gProof->Close(\"%s\") ;",option)) ;
+    gROOT->ProcessLineFast("TProof::gProof->CloseProgressDialog() ;") ;
+
+    // CloseProgressDialog does not do anything when run without GUI. This detects
+    // whether the proof instance is still there and deletes it if that is the case.
+    if (gROOT->GetListOfProofs()->LastIndex() != -1) {
+      gROOT->ProcessLineFast("delete TProof::gProof ;") ;
+    }
+  } else {
+    ooccoutW((TObject*)NULL,Generation) << "Global Proof object not found. Cannot close connections." << endl ;
+  }
+}
 
 
 

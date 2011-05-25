@@ -906,6 +906,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 // 	  cout << "PREPARING RATIO HERE (SINGLE TERM)" << endl ;	  
 	  RooAbsReal* ratio = makeCondPdfRatioCorr(*(RooAbsReal*)term->first(),termNSet,termImpSet,normRange(),RooNameReg::str(_refRangeName)) ;	  
 	  ostringstream str ; termImpSet.printValue(str) ;
+// 	  cout << GetName() << "inserting ratio term" << endl ;
 	  ratioTerms[str.str()].add(*ratio) ;
 	}	
       }
@@ -2365,4 +2366,28 @@ void RooProdPdf::printMetaArgs(ostream& os) const
   }
   os << " " ;    
   delete niter ;
+}
+
+
+
+//_____________________________________________________________________________
+Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/) 
+{
+  // Implement support for node removal
+
+  if (nameChange && _pdfList.find("REMOVAL_DUMMY")) {
+
+    cxcoutD(LinkStateMgmt) << "RooProdPdf::redirectServersHook(" << GetName() << "): removing REMOVAL_DUMMY" << endl ;
+
+    // Remove node from _pdfList proxy and remove corresponding entry from normset list
+    RooAbsArg* pdfDel = _pdfList.find("REMOVAL_DUMMY") ;
+    
+    TObject* setDel = _pdfNSetList.At(_pdfList.index("REMOVAL_DUMMY")) ;
+    _pdfList.remove(*pdfDel) ;
+    _pdfNSetList.Remove(setDel) ;
+    
+    // Clear caches
+    _cacheMgr.reset() ;
+  }
+  return kFALSE ;
 }

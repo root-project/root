@@ -72,7 +72,7 @@ RooConstVar& RooRealConstant::value(Double_t value)
   init() ;
   RooConstVar* var ;
   while((var=(RooConstVar*)_constDBIter->Next())) {
-    if (var->getVal()==value) return *var ;
+    if ((var->getVal()==value) && (!var->getAttribute("REMOVAL_DUMMY"))) return *var ;
   }
 
   // Create new constant
@@ -81,6 +81,20 @@ RooConstVar& RooRealConstant::value(Double_t value)
 
   var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
   var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
+  _constDB->addOwned(*var) ;
+
+  return *var ;
+}
+
+
+//_____________________________________________________________________________
+RooConstVar& RooRealConstant::removalDummy() 
+{
+  // Create a dummy node used in node-removal operations
+  
+  RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
+  var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
+  var->setAttribute("REMOVAL_DUMMY") ;
   _constDB->addOwned(*var) ;
 
   return *var ;

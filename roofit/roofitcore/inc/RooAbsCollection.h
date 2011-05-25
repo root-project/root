@@ -149,6 +149,9 @@ public:
 
   void sort(Bool_t ascend=kTRUE) { _list.Sort(ascend) ; }
 
+  void addClaim() { _claimCount++ ; }
+  void releaseClaim() { if (_claimCount>0) _claimCount-- ; }
+
 protected:
 
   friend class RooMultiCatIter ;
@@ -157,6 +160,7 @@ protected:
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
+  Int_t  _claimCount ; //! Number of external claims on contents
 
   void safeDeleteList() ;
 

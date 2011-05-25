@@ -86,6 +86,9 @@ public:
 
   void setSelfNormalized(Bool_t flag) { _selfNorm = flag ; }
   void setDefNormSet(const RooArgSet& nset) { _defNormSet.removeAll() ; _defNormSet.addClone(nset) ; }
+
+
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
   
 protected:
 

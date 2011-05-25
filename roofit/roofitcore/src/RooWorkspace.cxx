@@ -885,6 +885,58 @@ const RooArgSet* RooWorkspace::set(const char* name)
 
 
 //_____________________________________________________________________________
+Bool_t RooWorkspace::renameSet(const char* name, const char* newName) 
+{
+  // Rename set to a new name
+
+  // First check if set exists
+  if (!set(name)) {
+    coutE(InputArguments) << "RooWorkspace::renameSet(" << GetName() << ") ERROR a set with name " << name
+			  << " does not exist" << endl ;
+    return kTRUE ;
+  }
+
+  // Check if no set exists with new name
+  if (set(newName)) {
+    coutE(InputArguments) << "RooWorkspace::renameSet(" << GetName() << ") ERROR a set with name " << newName
+			  << " already exists" << endl ;
+    return kTRUE ;
+  }
+
+  // Copy entry under 'name' to 'newName'
+  _namedSets[newName].add(_namedSets[name]) ;
+
+  // Remove entry under old name
+  _namedSets.erase(name) ;
+
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooWorkspace::removeSet(const char* name) 
+{
+  // Remove a named set from the workspace
+
+  // First check if set exists
+  if (!set(name)) {
+    coutE(InputArguments) << "RooWorkspace::removeSet(" << GetName() << ") ERROR a set with name " << name
+			  << " does not exist" << endl ;
+    return kTRUE ;
+  }
+
+  // Remove set with given name
+  _namedSets.erase(name) ;
+
+  return kFALSE ;
+}
+
+
+
+
+//_____________________________________________________________________________
 Bool_t RooWorkspace::startTransaction() 
 {
   // Open an import transaction operations. Returns kTRUE if successful, kFALSE
@@ -900,6 +952,10 @@ Bool_t RooWorkspace::startTransaction()
   return kTRUE ;
 }
 
+
+
+
+//_____________________________________________________________________________
 Bool_t RooWorkspace::cancelTransaction() 
 {
   // Cancel an ongoing import transaction. All objects imported since startTransaction()

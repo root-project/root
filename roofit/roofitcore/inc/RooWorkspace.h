@@ -70,6 +70,8 @@ public:
   Bool_t defineSet(const char* name, const RooArgSet& aset, Bool_t importMissing=kFALSE) ;
   Bool_t defineSet(const char* name, const char* contentList) ;
   Bool_t extendSet(const char* name, const char* newContents) ;
+  Bool_t renameSet(const char* name, const char* newName) ;
+  Bool_t removeSet(const char* name) ;
   const RooArgSet* set(const char* name) ;
 
   // Import, load and save parameter value snapshots

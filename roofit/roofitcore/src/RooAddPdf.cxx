@@ -559,17 +559,44 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
 // 	   <<" _refCoefRangeName AK = "  << (_refCoefRangeName?_refCoefRangeName->GetName():"")  	   
 // 	   << " && _refCoefNorm" << _refCoefNorm << " with size = _refCoefNorm.getSize() " << _refCoefNorm.getSize() << endl ;
 
-      if (_refCoefRangeName && _refCoefNorm.getSize()>0) {
+      // Check if _refCoefRangeName is identical to default range for all observables, 
+      // If so, substitute by unit integral 
+
+      // ----------
+      RooArgSet* tmpObs = thePdf->getObservables(_refCoefNorm) ;
+      RooAbsArg* obsArg ;
+      TIterator* iter = tmpObs->createIterator() ;
+      Bool_t allIdent = kTRUE ;
+      while((obsArg=(RooAbsArg*)iter->Next())) {
+	RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
+	if (rvarg) {
+	  if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
+	      rvarg->getMax(RooNameReg::str(_refCoefRangeName))!=rvarg->getMax()) {
+	    allIdent=kFALSE ;
+	  }
+	}
+      }
+      delete iter ;
+      delete tmpObs ;
+      // -------------
+
+      if (_refCoefRangeName && _refCoefNorm.getSize()>0 && !allIdent) {
+	
+
 	RooArgSet* tmp = thePdf->getObservables(_refCoefNorm) ;
 	rangeProj1 = thePdf->createIntegral(*tmp,*tmp,RooNameReg::str(_refCoefRangeName)) ;
+	
 	//rangeProj1->setOperMode(operMode()) ;
+
 	delete tmp ;
       } else {
+
 	TString theName(GetName()) ;
 	theName.Append("_") ;
 	theName.Append(thePdf->GetName()) ;
 	theName.Append("_RangeNorm1") ;
 	rangeProj1 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
+
       }
       cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R1 = " << rangeProj1->GetName() << endl ;
       cache->_refRangeProjList.addOwned(*rangeProj1) ;
@@ -720,7 +747,6 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
 	 << "ALEX:   r1 = " << r1->GetName() << " = " << r1->getVal() <<  endl 
 	 << "ALEX:   r2 = " << r2->GetName() << " = " << r2->getVal() <<  endl 
 	 << "ALEX: proj = (" << pp->getVal() << "/" << sn->getVal() << ")*(" << r2->getVal() << "/" << r1->getVal() << ") = " << proj << endl ;
-    
     
     
     RooAbsPdf::globalSelectComp(_tmp) ;

@@ -891,7 +891,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
+Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursionStep)
 {
   // Substitute our servers with those listed in newSet. If nameChange is false, servers and
   // and substitutes are matched by name. If nameChange is true, servers are matched to args
@@ -901,7 +901,36 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 
   // Trivial case, no servers
   if (!_serverList.First()) return kFALSE ;
-  if (newSet.getSize()==0) return kFALSE ;
+  if (newSetOrig.getSize()==0) return kFALSE ;
+
+  // Strip any non-matchin removal nodes from newSetOrig
+  RooArgSet newSet ;
+  if (nameChange) {
+
+    TIterator* iter = newSetOrig.createIterator() ;
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+
+      if (string("REMOVAL_DUMMY")==arg->GetName()) {
+	
+	if (arg->getAttribute("REMOVE_ALL")) {
+// 	  cout << "RooAbsArg::redir including remove_all node " << arg->GetName() << endl ;
+	  newSet.add(*arg) ;
+	} else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
+// 	  cout << "RooAbsArg::redir including remove_from_" << GetName() << " node " << arg->GetName() << endl ;
+	  newSet.add(*arg) ;
+	}
+      } else {
+	newSet.add(*arg) ;
+      }
+    }
+
+//     cout << "RooAbsArg::redirect with name change(" << GetName() << ") newSet = " << newSet << " origSet = " << newSetOrig << endl ;
+
+  } else {
+    newSet.add(newSetOrig) ;
+  }
+  
 
   // Replace current servers with new servers with the same name from the given list
   Bool_t ret(kFALSE) ;
@@ -934,7 +963,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
 			     << " redirected from " << oldServer << " to " << newServer << endl ;
     }
-
+    
     if (!newServer) {
       if (mustReplaceAll) {
 	cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
@@ -943,7 +972,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
       }
       continue ;
     }
-
+    
     propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
     propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
     // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;

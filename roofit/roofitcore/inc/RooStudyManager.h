@@ -43,6 +43,7 @@ public:
 
   // PROOF-based paralllel running
   void runProof(Int_t nExperiments, const char* proofHost="", Bool_t showGui=kTRUE) ;
+  static void closeProof(Option_t *option = "s") ;
 
   // Batch running
   void prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput) ;

@@ -67,7 +67,8 @@ ClassImp(RooAbsCollection)
 RooAbsCollection::RooAbsCollection() :
   _list(43),
   _ownCont(kFALSE), 
-  _name()
+  _name(),
+  _claimCount(0)
 {
   // Default constructor
 
@@ -80,7 +81,8 @@ RooAbsCollection::RooAbsCollection() :
 RooAbsCollection::RooAbsCollection(const char *name) :
   _list(43),
   _ownCont(kFALSE), 
-  _name(name)
+  _name(name),
+  _claimCount(0)
 {
   // Empty collection constructor
 
@@ -95,7 +97,8 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   RooPrintable(other),
   _list(other._list.getHashTableSize()) , 
   _ownCont(kFALSE), 
-  _name(name)
+  _name(name),
+  _claimCount(0)
 {
   // Copy constructor. Note that a copy of a collection is always non-owning,
   // even the source collection is owning. To create an owning copy of
@@ -121,7 +124,7 @@ RooAbsCollection::~RooAbsCollection()
   // Destructor
 
   // Delete all variables in our list if we own them
-  if(_ownCont){ 
+  if(_ownCont && _claimCount==0){ 
     safeDeleteList() ;
     //_list.Delete();
   }

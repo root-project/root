@@ -33,6 +33,8 @@ public:
 
   static void cleanup() ;
 
+  static RooConstVar& removalDummy() ;
+
 protected:
 
   static void init() ;

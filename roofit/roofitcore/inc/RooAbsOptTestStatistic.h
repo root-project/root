@@ -78,6 +78,7 @@ protected:
   Bool_t      _ownData  ; // Do we own the dataset
   Bool_t      _sealed ; // Is test statistic sealed -- i.e. no access to data 
   TString     _sealNotice ; // User-defined notice shown when reading a sealed likelihood 
+  RooArgSet   _ownedDataObs ; //! Dataset observables we've agreed to own
   ClassDef(RooAbsOptTestStatistic,3) // Abstract base class for optimized test statistics
 };
 

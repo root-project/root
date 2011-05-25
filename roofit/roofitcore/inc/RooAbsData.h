@@ -37,6 +37,8 @@ class RooAbsDataStore ;
 class RooAbsData : public TNamed, public RooPrintable {
 public:
 
+  static Bool_t isAlive(RooAbsData*) ;
+
   // Constructors, factory methods etc.
   RooAbsData() ; 
   RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* store=0) ;

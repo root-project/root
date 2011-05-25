@@ -442,7 +442,12 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
     if (_ownData) {
       delete _dataClone ;
     } else {
-      _dataClone->resetCache() ;
+      // If dataclone survives the test statistic, clean its cache transer
+      // ownership of observables back to dataset
+      if (RooAbsData::isAlive(_dataClone)) {
+	_dataClone->resetCache() ;
+	_ownedDataObs.releaseOwnership() ;
+      } 
     }
     delete _projDeps ;
   } 
@@ -655,12 +660,13 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
   RooAbsData* origData = _dataClone ;
   Bool_t deleteOrigData = _ownData ;
 
-
   if (!cloneData && _rangeName.size()>0) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
 			 << "ignoring request to _not_ clone the input dataset" << endl ; 
     cloneData = kTRUE ;
   }
+
+  RooArgSet obsToOwn ;
 
   if (cloneData) {
     if (_rangeName.size()==0) {
@@ -670,8 +676,17 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     }
     _ownData = kTRUE ;
   } else {
+
+    //cout << "RAOTS::setData(" << GetName() << ") linking to existing data, claiming ownership of observables" << endl ;
+
     _dataClone = &indata ;
     _ownData = kFALSE ;
+
+    // Add claim on observables to prevent these from being deleted when _dataClone is deleted
+    _dataClone->_vars.addClaim() ;
+
+    // Prepare totake ownership of data observables
+    obsToOwn.add(_dataClone->_vars) ;
   }    
   // Attach function clone to dataset
   _funcClone->attachDataSet(*_dataClone) ;
@@ -681,7 +696,27 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
   if (deleteOrigData) {
     delete origData ;
   } else {
-    origData->resetCache() ;
+    if (RooAbsData::isAlive(origData)) {
+
+      //cout << "RAOTS::setData(" << GetName() << ") releasing previous data, which is still alive, transferring ownership of observables back to dataset" << endl ;
+
+      origData->resetCache() ;
+      // Release claim on observables so that dataset will delete them in dtor
+      origData->_vars.releaseClaim() ;
+
+      // Clear contents of _ownedDataObs, but do _not_ delete items
+      _ownedDataObs.releaseOwnership() ;
+      _ownedDataObs.removeAll() ;
+    } else {
+      // Delete items in _ownedDataObs
+      //cout << "RAOTS::setData(" << GetName() << ") releasing previous data, which is still dead, deleting observables" << endl ;
+      _ownedDataObs.removeAll() ;
+    }
+  }
+
+  // Take ownership of observables of dataset 
+  if (obsToOwn.getSize()>0) {
+    _ownedDataObs.addOwned(obsToOwn) ;
   }
 
   setValueDirty() ;

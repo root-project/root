@@ -185,8 +185,6 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   // Low-level factory interface for creating a RooCategory with a given list of state names. The State name list
   // can be of the form 'name1,name2,name3' or of the form 'name1=id1,name2=id2,name3=id3'
 
-
-
   // Create variable
   RooCategory cat(name,name) ;
 
@@ -787,6 +785,8 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   // Interface to RooCustomizer
   //
   // EDIT::name( orig, substNode=origNode), ... ]                             -- Create a clone of input object orig, with the specified replacements operations executed
+  // EDIT::name( orig, origNode=$REMOVE(), ... ]                              -- Create clone of input removing term origNode from all PROD() terms that contained it
+  // EDIT::name( orig, origNode=$REMOVE(prodname,...), ... ]                  -- As above, but restrict removal of origNode to PROD term(s) prodname,...
   //
   //
   // Interface to RooClassFactory
