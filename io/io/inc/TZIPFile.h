@@ -48,22 +48,29 @@ protected:
 
    Long64_t   FindEndHeader();
    Int_t      ReadEndHeader(Long64_t pos);
+   Long64_t   ReadZip64EndLocator(Long64_t pos);
+   Int_t      ReadZip64EndRecord(Long64_t pos);
    Int_t      ReadDirectory();
    Int_t      ReadMemberHeader(TZIPMember *member);
    UInt_t     Get(const void *buffer, Int_t bytes);
+   ULong64_t  Get64(const void *buffer, Int_t bytes);
+   Int_t      DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global = kTRUE);
 
    // ZIP archive constants
    enum EZIPConstants {
       // - Archive version required (and made)
-      kARCHIVE_VERSION     = 20,
+      kARCHIVE_VERSION     = 45,
 
       // - Magic header constants
-      kDIR_HEADER_MAGIC    = 0x02014b50,
-      kENTRY_HEADER_MAGIC  = 0x04034b50,
-      kEND_HEADER_MAGIC    = 0x06054b50,
-      kZIP_MAGIC_LEN       = 4,
-      kMAX_VAR_LEN         = 0xffff,     // Max variable-width field length
-      kMAX_SIZE            = 0xffffffff, // Max size of things
+      kDIR_HEADER_MAGIC       = 0x02014b50,
+      kENTRY_HEADER_MAGIC     = 0x04034b50,
+      kEND_HEADER_MAGIC       = 0x06054b50,
+      kZIP64_EDR_HEADER_MAGIC = 0x06064b50,
+      kZIP64_EDL_HEADER_MAGIC = 0x07064b50,
+      kZIP64_EXTENDED_MAGIC   = 0x0001,     // Zip64 Extended Information Extra Field
+      kZIP_MAGIC_LEN          = 4,          // Length of magic's
+      kMAX_VAR_LEN            = 0xffff,     // Max variable-width field length
+      kMAX_SIZE               = 0xffffffff, // Max size of things
 
       // - Offsets into the central directory headers
       kDIR_MAGIC_OFF      = 0,
@@ -83,6 +90,26 @@ protected:
       kDIR_EXT_ATTR_OFF   = 38,   kDIR_EXT_ATTR_LEN       = 4,
       kDIR_ENTRY_POS_OFF  = 42,   kDIR_ENTRY_POS_LEN      = 4,
       kDIR_HEADER_SIZE    = 46,
+      
+      // - Offsets into the Zip64 end of central directory record (EDR)
+      kZIP64_EDR_MAGIC_OFF      = 0,
+      kZIP64_EDR_SIZE_OFF       = 4,  kZIP64_EDR_SIZE_LEN       = 8,
+      kZIP64_EDR_VERS_MADE_OFF  = 12, kZIP64_EDR_VERS_MADE_LEN  = 2,
+      kZIP64_EDR_VERS_EXT_OFF   = 14, kZIP64_EDR_VERS_EXT_LEN   = 2,
+      kZIP64_EDR_DISK_OFF       = 16, kZIP64_EDR_DISK_LEN       = 4,
+      kZIP64_EDR_DIR_DISK_OFF   = 20, kZIP64_EDR_DIR_DISK_LEN   = 4,
+      kZIP64_EDR_DISK_HDRS_OFF  = 24, kZIP64_EDR_DISK_HDRS_LEN  = 8,
+      kZIP64_EDR_TOTAL_HDRS_OFF = 32, kZIP64_EDR_TOTAL_HDRS_LEN = 8,
+      kZIP64_EDR_DIR_SIZE_OFF   = 40, kZIP64_EDR_DIR_SIZE_LEN   = 8,
+      kZIP64_EDR_DIR_OFFSET_OFF = 48, kZIP64_EDR_DIR_OFFSET_LEN = 8,
+      kZIP64_EDR_HEADER_SIZE    = 56,
+      
+      // - Offsets into the Zip64 end of central directory locator (EDL)
+      kZIP64_EDL_MAGIC_OFF      = 0,
+      kZIP64_EDL_DISK_OFF       = 4,  kZIP64_EDL_DISK_LEN       = 4,
+      kZIP64_EDL_REC_OFFSET_OFF = 8,  kZIP64_EDL_REC_OFFSET_LEN = 8,
+      kZIP64_EDL_TOTAL_DISK_OFF = 16, kZIP64_EDL_TOTAL_DISK_LEN = 4,
+      kZIP64_EDL_HEADER_SIZE    = 20,
 
       // - Offsets into the end-of-archive header
       kEND_MAGIC_OFF      = 0,
@@ -107,6 +134,15 @@ protected:
       kENTRY_NAMELEN_OFF  = 26,   kENTRY_NAMELEN_LEN      = 2,
       kENTRY_EXTRALEN_OFF = 28,   kENTRY_EXTRALEN_LEN     = 2,
       kENTRY_HEADER_SIZE  = 30,
+      
+      // - Offsets into the Zip64 Extended Information Extra Field
+      kZIP64_EXTENDED_MAGIC_OFF      = 0,  kZIP64_EXTENDED_MAGIC_LEN      = 2,
+      kZIP64_EXTENDED_SIZE_OFF       = 2,  kZIP64_EXTENDED_SIZE_LEN       = 2,
+      kZIP64_EXTENDED_USIZE_OFF      = 4,  kZIP64_EXTENDED_USIZE_LEN      = 8,
+      kZIP64_EXTENTED_CSIZE_OFF      = 12, kZIP64_EXTENDED_CSIZE_LEN      = 8,
+      kZIP64_EXTENDED_HDR_OFFSET_OFF = 20, kZIP64_EXTENDED_HDR_OFFSET_LEN = 8,
+      kZIP64_EXTENDED_DISK_OFF       = 28, kZIP64_EXTENDED_DISK_LEN       = 4,
+      kZIP64_EXTENDED_SIZE           = 32,
 
       // - Compression method and strategy
       kSTORED              = 0,            // Stored as is
@@ -146,9 +182,9 @@ friend class TZIPFile;
 
 private:
    void          *fLocal;     // Extra file header data
-   Long64_t       fLocalLen;  // Length of extra file header data
+   UInt_t         fLocalLen;  // Length of extra file header data
    void          *fGlobal;    // Extra directory data
-   Long64_t       fGlobalLen; // Length of extra directory data
+   UInt_t         fGlobalLen; // Length of extra directory data
    UInt_t         fCRC32;     // CRC-32 for all decompressed data
    UInt_t         fAttrInt;   // Internal file attributes
    UInt_t         fAttrExt;   // External file attributes
@@ -163,9 +199,9 @@ public:
    virtual ~TZIPMember();
 
    void     *GetLocal() const { return fLocal; }
-   Long64_t  GetLocalLen() const { return fLocalLen; }
+   UInt_t    GetLocalLen() const { return fLocalLen; }
    void     *GetGlobal() const { return fGlobal; }
-   Long64_t  GetGlobalLen() const { return fGlobalLen; }
+   UInt_t    GetGlobalLen() const { return fGlobalLen; }
    UInt_t    GetCRC32() const { return fCRC32; }
    UInt_t    GetAttrInt() const { return fAttrInt; }
    UInt_t    GetAttrExt() const { return fAttrExt; }
@@ -174,7 +210,7 @@ public:
 
    void      Print(Option_t *option = "") const;
 
-   ClassDef(TZIPMember,1)  //A ZIP archive member file
+   ClassDef(TZIPMember,2)  //A ZIP archive member file
 };
 
 #endif

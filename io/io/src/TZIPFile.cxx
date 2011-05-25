@@ -167,7 +167,12 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    Long64_t diroff  = Get(buf + kEND_DIR_OFFSET_OFF, kEND_DIR_OFFSET_LEN);
    Int_t    commlen = Get(buf + kEND_COMMENTLEN_OFF, kEND_COMMENTLEN_LEN);
 
-   if (disk != 0 || dirdisk != 0 || dhdrs != thdrs || diroff + dirsz != pos) {
+   if (disk != 0 || dirdisk != 0) {
+      Error("ReadHeader", "only single disk archives are supported in %s",
+            fArchiveName.Data());
+      return -1;
+   }
+   if (dhdrs != thdrs) {
       Error("ReadEndHeader", "inconsistency in end header data in %s",
             fArchiveName.Data());
       return -1;
@@ -187,7 +192,86 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    fDirSize   = dirsz;
 
    delete [] comment;
+   
+   // Try to read Zip64 end of central directory locator
+   Long64_t recoff = ReadZip64EndLocator(pos - kZIP64_EDL_HEADER_SIZE);
+   if (recoff < 0) {
+      if (recoff == -1)
+         return -1;
+      return 0;
+   }
+   
+   if (ReadZip64EndRecord(recoff) < 0)
+      return -1;
 
+   return 0;
+}
+
+//______________________________________________________________________________
+Long64_t TZIPFile::ReadZip64EndLocator(Long64_t pos)
+{
+   // Read Zip64 end of central directory locator. Returns -1 in case of error,
+   // -2 in case end locator magic is not found (i.e. not a zip64 file) and
+   // offset of Zip64 end of central directory record in case of success.
+   
+   char buf[kZIP64_EDL_HEADER_SIZE];
+   
+   // read and validate first the end header magic
+   fFile->Seek(pos);
+   if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
+       Get(buf, kZIP_MAGIC_LEN) != kZIP64_EDL_HEADER_MAGIC) {
+      return -2;
+   }
+   
+   // read rest of the header
+   if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kZIP64_EDL_HEADER_SIZE - kZIP_MAGIC_LEN)) {
+      Error("ReadZip64EndLocator", "error reading %d Zip64 end locator header bytes from %s",
+            kZIP64_EDL_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
+      return -1;
+   }
+
+   UInt_t   dirdisk = Get(  buf + kZIP64_EDL_DISK_OFF,       kZIP64_EDL_DISK_LEN);
+   Long64_t recoff  = Get64(buf + kZIP64_EDL_REC_OFFSET_OFF, kZIP64_EDL_REC_OFFSET_LEN);
+   UInt_t   totdisk = Get(  buf + kZIP64_EDL_TOTAL_DISK_OFF, kZIP64_EDL_TOTAL_DISK_LEN);
+
+   if (dirdisk != 0 || totdisk != 1) {
+      Error("ReadZip64EndLocator", "only single disk archives are supported in %s",
+            fArchiveName.Data());
+      return -1;
+   }
+
+   return recoff;
+}
+
+//______________________________________________________________________________
+Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
+{
+   // Read Zip64 end of central directory record. Returns -1 in case of error
+   // and 0 in case of success.
+   
+   char buf[kZIP64_EDR_HEADER_SIZE];
+   
+   // read and validate first the end header magic
+   fFile->Seek(pos);
+   if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
+       Get(buf, kZIP_MAGIC_LEN) != kZIP64_EDR_HEADER_MAGIC) {
+      Error("ReadZip64EndRecord", "no Zip64 end of directory record\n");
+      return -1;
+   }
+   
+   // read rest of the header
+   if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kZIP64_EDR_HEADER_SIZE - kZIP_MAGIC_LEN)) {
+      Error("ReadZip64EndRecord", "error reading %d Zip64 end record header bytes from %s",
+            kZIP64_EDR_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
+      return -1;
+   }
+   
+   Long64_t dirsz  = Get64(buf + kZIP64_EDR_DIR_SIZE_OFF,   kZIP64_EDR_DIR_SIZE_LEN);
+   Long64_t diroff = Get64(buf + kZIP64_EDR_DIR_OFFSET_OFF, kZIP64_EDR_DIR_OFFSET_LEN);
+   
+   fDirOffset = fDirPos = diroff;
+   fDirSize   = dirsz;
+   
    return 0;
 }
 
@@ -249,7 +333,7 @@ Int_t TZIPFile::ReadDirectory()
       }
 
       char *name    = new char[namelen+1];
-      char *extra   = new char[extlen+1];
+      char *extra   = new char[extlen];
       char *comment = new char[commlen+1];
       if (fFile->ReadBuffer(name, namelen) ||
           fFile->ReadBuffer(extra, extlen) ||
@@ -262,7 +346,6 @@ Int_t TZIPFile::ReadDirectory()
          return -1;
       }
       name[namelen]    = '\0';
-      extra[extlen]    = '\0';
       comment[commlen] = '\0';
 
       // create a new archive member and store the fields
@@ -286,10 +369,13 @@ Int_t TZIPFile::ReadDirectory()
       m->fAttrInt   = iattr;
       m->fAttrExt   = xattr;
       m->fPosition  = offset;
-
+      
       delete [] name;
       delete [] comment;
       // extra is adopted be the TZIPMember
+
+      if (DecodeZip64ExtendedExtraField(m) == -1)
+         return -1;
 
       if (gDebug)
          Info("ReadDirectory", "%lld  %lld  %s  %s",
@@ -306,7 +392,7 @@ Int_t TZIPFile::ReadDirectory()
    }
 
    // should now see end of archive
-   if (n != kEND_HEADER_MAGIC) {
+   if (n != kEND_HEADER_MAGIC && n != kZIP64_EDR_HEADER_MAGIC) {
       Error("ReadDirectory", "wrong end header magic in %s", fArchiveName.Data());
       return -1;
    }
@@ -350,6 +436,54 @@ Int_t TZIPFile::ReadMemberHeader(TZIPMember *member)
 }
 
 //______________________________________________________________________________
+Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
+{
+   // Decode the Zip64 extended extra field. If global is true, decode the
+   // extra field coming from the central directory, if false decode the
+   // extra field coming from the local file header. Returns -1 in case of
+   // error, -2 in case Zip64 extra block was not found and 0 in case of
+   // success.
+   
+   char  *buf;
+   Int_t  len;
+   Int_t  ret = -2;
+   
+   if (global) {
+      buf = (char *) m->fGlobal;
+      len = m->fGlobalLen;
+   } else {
+      buf = (char *) m->fLocal;
+      len = m->fLocalLen;
+   }
+   
+   if (!buf || !len) {
+      return ret;
+   }
+   
+   Int_t off = 0;
+   while (len > 0) {
+      UInt_t   tag  = Get(buf + off + kZIP64_EXTENDED_MAGIC_OFF, kZIP64_EXTENDED_MAGIC_LEN);
+      UInt_t   size = Get(buf + off + kZIP64_EXTENDED_SIZE_OFF,  kZIP64_EXTENDED_SIZE_LEN);
+      if (tag == kZIP64_EXTENDED_MAGIC) {
+         Long64_t usize = Get64(buf + off + kZIP64_EXTENDED_USIZE_OFF,      kZIP64_EXTENDED_USIZE_LEN);
+         Long64_t csize = Get64(buf + off + kZIP64_EXTENTED_CSIZE_OFF,      kZIP64_EXTENDED_CSIZE_LEN);
+         m->fDsize = usize;
+         m->fCsize = csize;
+         if (size >= 24) {
+            Long64_t offset = Get64(buf + off + kZIP64_EXTENDED_HDR_OFFSET_OFF, kZIP64_EXTENDED_HDR_OFFSET_LEN);
+            m->fPosition = offset;
+         }
+
+         ret = 0;
+      }
+      len -= (Int_t)size + kZIP64_EXTENDED_MAGIC_LEN + kZIP64_EXTENDED_MAGIC_LEN;
+      off += (Int_t)size + kZIP64_EXTENDED_MAGIC_LEN + kZIP64_EXTENDED_MAGIC_LEN;
+   }
+   
+   return ret;
+}
+
+//______________________________________________________________________________
 Int_t TZIPFile::SetCurrentMember()
 {
    // Find the desired member in the member array and make it the
@@ -384,6 +518,33 @@ UInt_t TZIPFile::Get(const void *buffer, Int_t bytes)
    // Read a "bytes" long little-endian integer value from "buffer".
 
    UInt_t value = 0;
+
+   if (bytes > 4) {
+      Error("Get", "can not read > 4 byte integers, use Get64");
+      return value;
+   }
+#ifdef R__BYTESWAP
+   memcpy(&value, buffer, bytes);
+#else
+   const UChar_t *buf = static_cast<const unsigned char *>(buffer);
+   for (UInt_t shift = 0; bytes; shift += 8, --bytes, ++buf)
+      value += *buf << shift;
+#endif
+   return value;
+}
+
+//______________________________________________________________________________
+ULong64_t TZIPFile::Get64(const void *buffer, Int_t bytes)
+{
+   // Read a 8 byte long little-endian integer value from "buffer".
+   
+   ULong64_t value = 0;
+   
+   if (bytes != 8) {
+      Error("Get64", "bytes must be 8 (asked for %d)", bytes);
+      return value;
+   }
+   
 #ifdef R__BYTESWAP
    memcpy(&value, buffer, bytes);
 #else
@@ -512,8 +673,6 @@ void TZIPMember::Print(Option_t *) const
 {
    // Pretty print basic ZIP member info.
 
-   //printf("%-20lld %s   %s\n", fDsize, fModTime.AsSQLString(), fName.Data());
-   // above statement does not work with VC++7.1, spurious (null)
    printf("%-20lld", fDsize);
    printf(" %s   %s\n", fModTime.AsSQLString(), fName.Data());
 }
