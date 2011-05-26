@@ -1023,7 +1023,8 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       h2->GetStats(s2);
       for (Int_t i=0;i<kNstat;i++) {
          if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
-         else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
+         //else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
+         else        s3[i] = c1*s1[i] + c2*s2[i];
       }
    }
 
@@ -2938,7 +2939,8 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Double_t z= (w > 0 ? w : -w);
+   //Double_t z= (w > 0 ? w : -w);
+   Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -2966,7 +2968,8 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    AddBinContent(bin, w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
-   Double_t z= (w > 0 ? w : -w);
+   //Double_t z= (w > 0 ? w : -w);
+   Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
    // this make sense if the histogram is not expanding (kCanRebin is not set)
@@ -3019,7 +3022,8 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
       if (bin == 0 || bin > nbins) {
          if (!fgStatOverflows) continue;
       }
-      Double_t z= (ww > 0 ? ww : -ww);
+      //Double_t z= (ww > 0 ? ww : -ww);
+      Double_t z= ww;
       fTsumw   += z;
       fTsumw2  += z*z;
       fTsumwx  += z*x[i];
@@ -6832,13 +6836,19 @@ void TH1::GetStats(Double_t *stats) const
       }
       for (binx = firstBinX; binx <= lastBinX; binx++) {
          x   = fXaxis.GetBinCenter(binx);
-         w   = TMath::Abs(GetBinContent(binx));
+         //w   = TMath::Abs(GetBinContent(binx));
+         // not sure what to do here if w < 0
+         w   = GetBinContent(binx);
          err = TMath::Abs(GetBinError(binx));
          stats[0] += w;
          stats[1] += err*err;
          stats[2] += w*x;
          stats[3] += w*x*x;
       }
+      // if (stats[0] < 0) { 
+      //    // in case total is negative do something ??
+      //    stats[0] = 0; 
+      // }
    } else {
       stats[0] = fTsumw;
       stats[1] = fTsumw2;

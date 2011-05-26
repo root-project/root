@@ -786,7 +786,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
-   Double_t u= (w > 0 ? w : -w);
+   Double_t u= w; //(w > 0 ? w : -w);
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);

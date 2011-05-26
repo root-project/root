@@ -715,7 +715,7 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
       if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
-   Double_t u= (w > 0 ? w : -w);
+   Double_t u= w; // (w > 0 ? w : -w);
    fEntries++;
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, u*y);
@@ -745,7 +745,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
       if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
-   Double_t u= (w > 0 ? w : -w);
+   Double_t u= w; // (w > 0 ? w : -w);
    fEntries++;
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, u*y);
@@ -778,7 +778,7 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
          if (y[i] <fYmin || y[i]> fYmax || TMath::IsNaN(y[i])) continue;
       }
 
-      Double_t u= (w[i] > 0 ? w[i] : -w[i]);
+      Double_t u = (w) ? w[i] : 1; // (w[i] > 0 ? w[i] : -w[i]);
       fEntries++;
       bin =fXaxis.FindBin(x[i]);
       AddBinContent(bin, u*y[i]);

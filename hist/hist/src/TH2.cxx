@@ -329,7 +329,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Double_t z= (w > 0 ? w : -w);
+   Double_t z= w;  //  (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -367,7 +367,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t z= (w > 0 ? w : -w);
+   Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -406,7 +406,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
       if (!fgStatOverflows) return -1;
    }
    Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t z= (w > 0 ? w : -w);
+   Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -445,7 +445,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t z= (w > 0 ? w : -w);
+   Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -494,7 +494,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (biny == 0 || biny > fYaxis.GetNbins()) {
          if (!fgStatOverflows) continue;
       }
-      Double_t z= (ww > 0 ? ww : -ww);
+      Double_t z= ww; //(ww > 0 ? ww : -ww);
       fTsumw   += z;
       fTsumw2  += z*z;
       fTsumwx  += z*x[i];
@@ -1043,7 +1043,8 @@ void TH2::GetStats(Double_t *stats) const
          for (binx = firstBinX; binx <= lastBinX; binx++) {
             bin = GetBin(binx,biny);
             x   = fXaxis.GetBinCenter(binx);
-            w   = TMath::Abs(GetBinContent(bin));
+            //w   = TMath::Abs(GetBinContent(bin));
+            w   = GetBinContent(bin);
             err = TMath::Abs(GetBinError(bin));
             stats[0] += w;
             stats[1] += err*err;
