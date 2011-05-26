@@ -129,7 +129,7 @@ ROOT::TextInputColorizer::TextInputColorizer():
    fColors[kColorTabComp] = ColorFromName("magenta");
    fColors[kColorBracket] = ColorFromName("green");
    fColors[kColorBadBracket] = ColorFromName("red");
-   fColors[kColorPrompt] = ColorFromName("cyan");
+   fColors[kColorPrompt] = ColorFromName("default");
 }
 
 ROOT::TextInputColorizer::~TextInputColorizer() {
