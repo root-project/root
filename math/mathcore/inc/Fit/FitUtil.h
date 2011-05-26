@@ -77,7 +77,7 @@ namespace FitUtil {
        evaluate the Poisson LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   double EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * x, int iWeight, unsigned int & nPoints);  
 
    /** 
        evaluate the Poisson LogL given a model function and the data at the point x. 

@@ -1025,10 +1025,18 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    return logPdf;
 }
 
-double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * p, unsigned int &   nPoints ) {  
+double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, 
+                                    const double * p, int iWeight, unsigned int &   nPoints ) {  
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
+   //
+   // if use Weight use a weighted dataset 
+   // iWeight = 1 ==> logL = Sum( w f(x_i) )
+   // case of iWeight==1 is actually identical to weight==0
+   // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
+         
+         
 
    unsigned int n = data.Size();
 #ifdef DEBUG
@@ -1044,6 +1052,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    const DataOptions & fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+   bool useW2 = (iWeight == 2);
 
    double wrefVolume = 1.0; 
    std::vector<double> xc; 
@@ -1057,7 +1066,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x1 = data.Coords(i);
       double y = data.Value(i);
-
+      
       double fval = 0;   
       double binVolume = 1.0; 
 
@@ -1104,8 +1113,25 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       // EvalLog protects against 0 values of fval but don't want to add in the -log sum 
       // negative values of fval 
       fval = std::max(fval, 0.0);
-      loglike +=  fval - y * ROOT::Math::Util::EvalLog( fval);  
 
+      double tmp = 0; 
+      if (useW2) { 
+         // apply weight correction . Effective weight is error^2/ y
+         // and expected events in bins is fval/weight
+         // can apply correction only when y is not zero otherwise weight is undefined
+         if (y != 0) { 
+            double error = data.Error(i);
+            double weight = (error*error)/y; 
+            tmp =  fval*weight - weight * y * ROOT::Math::Util::EvalLog( fval);
+         }
+      }
+      else {
+         // standard case no weights or iWeight=1 
+         tmp = fval - y *  ROOT::Math::Util::EvalLog( fval);  
+      }
+
+      loglike +=  tmp;  
+      
    }
    
    // reset the number of fitting data points

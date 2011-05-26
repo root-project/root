@@ -43,6 +43,14 @@ namespace ROOT {
 
    namespace Math { 
       class Minimizer;
+
+      // should maybe put this in a FitMethodFunctionfwd file
+      template<class FunctionType> class BasicFitMethodFunction;
+
+      // define the normal and gradient function
+      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;      
+      typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
+
    } 
 
    /**
@@ -67,6 +75,9 @@ namespace ROOT {
    The result of the fit is returned and kept internally in the  ROOT::Fit::FitResult class. 
    The configuration of the fit (parameters, options, etc...) are specified in the 
    ROOT::Math::FitConfig class. 
+   After fitting the config of the fit will be modified to have the new values the resulting 
+   parameter of the fit with step sizes equal to the errors. FitConfig can be preserved with 
+   initial parameters by calling FitConfig.SetUpdateAfterFit(false);
 
    @ingroup FitMain
 */ 
@@ -128,16 +139,16 @@ public:
    /** 
        fit an binned data set using loglikelihood method
    */ 
-   bool Fit(const UnBinData & data) { 
-      return DoLikelihoodFit(data); 
+   bool Fit(const UnBinData & data, bool useWeight = false) { 
+      return DoLikelihoodFit(data, useWeight); 
    } 
 
    /**
       Likelihood fit 
     */
    template <class Data> 
-   bool LikelihoodFit(const Data & data) { 
-      return DoLikelihoodFit(data);
+   bool LikelihoodFit(const Data & data, bool useWeight = false) { 
+      return DoLikelihoodFit(data, useWeight);
    }
 
    /** 
@@ -145,9 +156,9 @@ public:
        Pre-requisite on the function: 
    */ 
    template < class Data , class Function> 
-   bool LikelihoodFit( const Data & data, const Function & func) { 
+   bool LikelihoodFit( const Data & data, const Function & func, bool useWeight = false) { 
       SetFunction(func);
-      return DoLikelihoodFit(data);
+      return DoLikelihoodFit(data, useWeight);
    }
 
    /**
@@ -158,6 +169,15 @@ public:
     */
    template <class Function>
    bool FitFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+
+   /**
+      Set a generic FCN function as a C++ callable object implementing 
+      double () (const double *) 
+      Note that the function dimension (i.e. the number of parameter) is needed in this case
+      For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
+    */
+   template <class Function>
+   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Fit using the given FCN function represented by a multi-dimensional function interface 
@@ -171,7 +191,27 @@ public:
       Note that passing a params != 0 will set the parameter settings to the new value AND also the 
       step sizes to some pre-defined value (stepsize = 0.3 * abs(parameter_value) )
     */
-   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
+   bool FitFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool
+      chi2fit = false); 
+
+   /** 
+       Fit using a FitMethodFunction interface. Same as method above, but now extra information
+       can be taken from the function class
+   */
+   bool FitFCN(const ROOT::Math::FitMethodFunction & fcn, const double * params = 0); 
+
+   /**
+      Set the FCN function represented by a multi-dimensional function interface 
+      (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
+      See also note above for the initial parameters for FitFCN
+    */
+   bool SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
+
+   /** 
+       Set the objective function (FCN)  using a FitMethodFunction interface. 
+       Same as method above, but now extra information can be taken from the function class
+   */
+   bool SetFCN(const ROOT::Math::FitMethodFunction & fcn, const double * params = 0); 
 
    /**
       Fit using the given FCN function representing a multi-dimensional gradient function 
@@ -181,6 +221,25 @@ public:
     */
    bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
 
+   /** 
+       Fit using a FitMethodGradFunction interface. Same as method above, but now extra information
+       can be taken from the function class
+   */
+   bool FitFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double * params = 0); 
+
+   /**
+      Set the FCN function represented by a multi-dimensional gradient function interface 
+      (ROOT::Math::IMultiGenFunction) and optionally the initial parameters
+      See also note above for the initial parameters for FitFCN
+    */
+   bool SetFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false); 
+
+   /** 
+       Set the objective function (FCN)  using a FitMethodGradFunction interface. 
+       Same as method above, but now extra information can be taken from the function class
+   */
+   bool SetFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double * params = 0); 
+
       
    /**
       fit using user provided FCN with Minuit-like interface
@@ -189,6 +248,23 @@ public:
     */
    typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
    bool FitFCN( MinuitFCN_t fcn, int npar = 0, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+
+   /**
+      set objective function using user provided FCN with Minuit-like interface
+      If npar = 0 it is assumed that the parameters are specified in the parameter settings created before
+      For the options same consideration as in the previous method
+    */
+   bool SetFCN( MinuitFCN_t fcn, int npar = 0, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+
+   /**
+      Perform a fit with the previously set FCN function. Require SetFCN before
+    */
+   bool FitFCN(); 
+
+   /**
+      Perform a simple FCN evaluation. FitResult will be modified and contain  the value of the FCN 
+    */
+   bool EvalFCN(); 
 
    /**
       do a linear fit on a set of bin-data
@@ -281,26 +357,48 @@ public:
    ROOT::Math::IMultiGenFunction * GetFCN() const { return fObjFunction.get(); } 
 
 
+   /**
+      apply correction in the error matrix for the weights for likelihood fits
+      This method can be called only after a fit and it assumes now that the 
+      passed function (loglw2) is a log-likelihood function impelemented using the 
+      sum of weight squared 
+   */
+   bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2);
+
+
 protected: 
 
    /// least square fit 
    bool DoLeastSquareFit(const BinData & data); 
    /// binned likelihood fit
-   bool DoLikelihoodFit(const BinData & data); 
+   bool DoLikelihoodFit(const BinData & data, bool useWeight); 
    /// un-binned likelihood fit
-   bool DoLikelihoodFit(const UnBinData & data); 
+   bool DoLikelihoodFit(const UnBinData & data, bool);  //not yet impl 
    /// linear least square fit 
    bool DoLinearFit(const BinData & data);
 
+   // initialize the minimizer 
+   bool DoInitMinimizer(); 
    /// do minimization
-   template<class ObjFunc> 
-   bool DoMinimization(const ObjFunc & f, unsigned int dataSize, const ROOT::Math::IMultiGenFunction * chifunc = 0); 
+   bool DoMinimization(const BaseFunc & f, const ROOT::Math::IMultiGenFunction * chifunc = 0); 
+   // do minimization after having set obj function
+   bool DoMinimization(const ROOT::Math::IMultiGenFunction * chifunc = 0); 
+   // update config after fit 
+   void DoUpdateFitConfig(); 
+   // get function calls from the FCN 
+   int GetNCallsFromFCN(); 
 
 private: 
 
    bool fUseGradient;       // flag to indicate if using gradient or not
 
-   bool fBinFit;            // flag to indicate if fit is binned (in case of false the fit is unbinned or undefined)
+   bool fBinFit;            // flag to indicate if fit is binned 
+                            // in case of false the fit is unbinned or undefined)
+                            // flag it is used to compute chi2 for binned likelihood fit
+
+   int fFitType;   // type of fit   (0 undefined, 1 least square, 2 likelihood)
+
+   int fDataSize;  // size of data sets (need for Fumili or LM fitters)
 
    IModelFunction * fFunc;  // copy of the fitted  function containing on output the fit result (managed by FitResult)
 
@@ -311,6 +409,7 @@ private:
    std::auto_ptr<ROOT::Math::Minimizer>  fMinimizer;  //! pointer to used minimizer
 
    std::auto_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  //! pointer to used objective function
+
 
 }; 
 
@@ -332,6 +431,11 @@ template<class Function>
 bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar); 
    return FitFCN(wf,par,datasize,chi2fit);
+}
+template<class Function>
+bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {
+   ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar); 
+   return SetFCN(wf,par,datasize,chi2fit);
 }
 
 #endif  // endif __CINT__

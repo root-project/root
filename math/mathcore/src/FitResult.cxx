@@ -38,12 +38,57 @@ namespace ROOT {
    namespace Fit { 
 
 
+const int gInitialResultStatus = -99; // use this special convention to flag it when printing result
+
 FitResult::FitResult() : 
    fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0), 
-   fStatus(-1), fCovStatus(0), fVal(0), fEdm(0), fChi2(-1), fFitFunc(0)
+   fStatus(-1), fCovStatus(0), fVal(0), fEdm(-1), fChi2(-1), fFitFunc(0)
 {
    // Default constructor implementation.
 }
+
+FitResult::FitResult(const FitConfig & fconfig) :
+   fValid(false), 
+   fNormalized(false), 
+   fNFree(0),
+   fNdf(0), 
+   fNCalls(0), 
+   fStatus(gInitialResultStatus), 
+   fCovStatus(0), 
+   fVal(0), 
+   fEdm(-1),
+   fChi2(-1), 
+   fFitFunc(0), 
+   fParams(std::vector<double>( fconfig.NPar() ) ),
+   fErrors(std::vector<double>( fconfig.NPar() ) ),           
+   fParNames(std::vector<std::string> ( fconfig.NPar() ) )           
+{ 
+   // create a Fit result from a fit config (i.e. with initial parameter values 
+   // and errors equal to step values
+   // The model function is NULL in this case 
+
+   // set minimizer type and algorithm 
+   fMinimType = fconfig.MinimizerType();
+   // append algorithm name for minimizer that support it  
+   if ( (fMinimType.find("Fumili") == std::string::npos) &&
+        (fMinimType.find("GSLMultiFit") == std::string::npos) 
+      ) { 
+      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType(); 
+   }
+
+   // get parameter values and errors (step sizes) 
+   unsigned int npar = fconfig.NPar();
+   for (unsigned int i = 0; i < npar; ++i ) {
+      const ParameterSettings & par = fconfig.ParSettings(i); 
+      fParams[i]   =  par.Value();
+      fErrors[i]   =  par.StepSize();
+      fParNames[i] =  par.Name();
+      if (par.IsFixed() ) fFixedParams.push_back(i); 
+      else fNFree++;
+      if (par.IsBound() ) fBoundParams.push_back(i); 
+   }
+
+} 
 
 FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) : 
    fValid(isValid),
@@ -59,6 +104,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
    fFitFunc(0), 
    fParams(std::vector<double>( min.NDim() ) )
 {
+   // Constructor of FitResult after minimization using result from Minimizers
 
    // set minimizer type 
    fMinimType = fconfig.MinimizerType();
@@ -112,6 +158,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       if (par.IsBound() ) fBoundParams.push_back(ipar); 
    } 
 
+   // if flag is binned compute a chi2 when a chi2 function is given 
    if (binnedFit) { 
       if (chi2func == 0) 
          fChi2 = fVal;
@@ -212,7 +259,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
 bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned int ncalls) { 
    // update fit result with new status from minimizer 
-   // nclass if is not zero is added to the total function calls
+   // ncalls if it is not zero is used instead of value from minimizer
 
    const unsigned int npar = fParams.size();
    if (min.NDim() != npar ) { 
@@ -248,6 +295,8 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
    
    if (min.Errors() != 0)  { 
+
+      if (fErrors.size() != npar) fErrors.resize(npar);
    
       std::copy(min.Errors(), min.Errors() + npar, fErrors.begin() ) ; 
 
@@ -355,7 +404,13 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    }
    os << "\n****************************************\n";
    if (!fValid) { 
-      os << "            Invalid FitResult            ";
+      if (fStatus != gInitialResultStatus) {
+         os << "         Invalid FitResult";
+         os << "  (status = " << fStatus << " )";
+      }
+      else {
+         os << "      FitResult before fitting";
+      }
       os << "\n****************************************\n";
    }
    

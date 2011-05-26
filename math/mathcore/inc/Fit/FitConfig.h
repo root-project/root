@@ -92,6 +92,10 @@ public:
    */
    std::vector<ROOT::Fit::ParameterSettings> & ParamsSettings() { return fSettings; }
 
+   /**
+      number of parameters settings 
+    */
+   unsigned int NPar() const { return fSettings.size(); }
 
    /**
       set the parameter settings from a model function. 
@@ -156,6 +160,10 @@ public:
    ///do minos errros analysis on the  parameters
    bool MinosErrors() const { return fMinosErrors; }
 
+   ///Update configuration after a fit using the FitResult
+   bool UpdateAfterFit() const { return fUpdateAfterFit; } 
+
+
    /// return vector of parameter indeces for which the Minos Error will be computed
    const std::vector<unsigned int> & MinosParams() const { return fMinosParams; }
 
@@ -178,6 +186,8 @@ public:
       fMinosParams = paramInd; 
    }
 
+   ///Update configuration after a fit using the FitResult
+   void SetUpdateAfterFit(bool on = true) { fUpdateAfterFit = on; } 
 
 
    /**
@@ -194,6 +204,7 @@ private:
    bool fNormErrors;    // flag for error normalization
    bool fParabErrors;   // get correct parabolic errors estimate (call Hesse after minimizing)  
    bool fMinosErrors;   // do full error analysis using Minos
+   bool fUpdateAfterFit; // update the configuration after a fit using the result
 
 
    std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings

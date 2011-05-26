@@ -58,6 +58,12 @@ public:
    */ 
    FitResult (); 
 
+   /** 
+      Constructor from a fit-config for a dummy fit 
+      (e.g. when only one fcn evaluation is done)
+   */ 
+   FitResult (const FitConfig & fconfig);
+
    /**
       Construct from a Minimizer instance after fitting
       Run also Minos if requested from the configuration

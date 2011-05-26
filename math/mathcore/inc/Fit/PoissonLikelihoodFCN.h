@@ -64,11 +64,12 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func) :
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0) :
       BaseObjFunction(func.NPar(), data.Size() ),
       fData(data),
       fFunc(func),
       fNEffPoints(0),
+      fWeight(weight),
       fGrad ( std::vector<double> ( func.NPar() ) )
    { }
 
@@ -94,7 +95,7 @@ private:
 public:
 
    /// clone the function (need to return Base for Windows)
-   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc); }
+   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc,fWeight); }
 
    // effective points used in the fit
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
@@ -120,6 +121,21 @@ public:
    /// access to const reference to the model function
    virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
+   bool IsWeighted() const { return (fWeight != 0); }
+
+   // Use the weights in evaluating the likelihood 
+   void UseSumOfWeights() { 
+      if (fWeight == 0) return; // do nothing if it was not weighted 
+      fWeight = 1;
+   }
+
+   // Use sum of the weight squared in evaluating the likelihood 
+   // (this is needed for calculating the errors)
+   void UseSumOfWeightSquare() { 
+      if (fWeight == 0) return; // do nothing if it was not weighted 
+      fWeight = 2;
+   }
+
 
 protected:
 
@@ -131,7 +147,7 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fNEffPoints);
+      return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fWeight, fNEffPoints);
    }
 
    // for derivatives
@@ -143,10 +159,13 @@ private:
 
       //data member
 
+
    const BinData & fData;
    const IModelFunction & fFunc;
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+
+   int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared 
 
    mutable std::vector<double> fGrad; // for derivatives
 

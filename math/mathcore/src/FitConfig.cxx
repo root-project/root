@@ -40,6 +40,7 @@ FitConfig::FitConfig(unsigned int npar) :
    fNormErrors(false),
    fParabErrors(false), // ensure that in any case correct parabolic errors are estimated
    fMinosErrors(false),    // do full Minos error analysis for all parameters
+   fUpdateAfterFit(true),    // update after fit
    fSettings(std::vector<ParameterSettings>(npar) )  
 {
    // constructor implementation
@@ -63,6 +64,7 @@ FitConfig & FitConfig::operator = (const FitConfig &rhs) {
    fNormErrors = rhs.fNormErrors; 
    fParabErrors = rhs.fParabErrors; 
    fMinosErrors = rhs.fMinosErrors; 
+   fUpdateAfterFit = rhs.fUpdateAfterFit;
 
    fSettings = rhs.fSettings; 
    fMinosParams = rhs.fMinosParams; 

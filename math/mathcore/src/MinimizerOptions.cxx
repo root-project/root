@@ -28,7 +28,7 @@ namespace Math {
       static std::string gDefaultMinimizer = ""; // take from /etc/system.rootrc in ROOT Fitter
       static std::string gDefaultMinimAlgo = "Migrad";
       static double gDefaultErrorDef = 1.;
-      static double gDefaultTolerance = 1.E-4; 
+      static double gDefaultTolerance = 1.E-2; 
       static double gDefaultPrecision = -1; // value <= 0 means left to minimizer
       static int  gDefaultMaxCalls = 0; // 0 means leave default values Deaf
       static int  gDefaultMaxIter  = 0; 
