@@ -26,11 +26,13 @@
 #include <stdio.h>
 
 #include <cctype>
+#include <cstring>
 #include <map>
 #include <list>
 
 namespace {
   using namespace textinput;
+  using std::memset; // FD_ZERO
 
   class Rewind {
   public:
