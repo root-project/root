@@ -37,6 +37,9 @@ namespace ROOT {
                      const char* colorBracket, const char* colorBadBracket,
                      const char* colorPrompt);
    private:
+      void ExtendRangeAndSetColor(textinput::Text& input, size_t idx,
+                                  char col, textinput::Range& disp);
+
       enum EColorsTypes {
          kColorNone,
          kColorType,
@@ -48,6 +51,7 @@ namespace ROOT {
       };
 
       textinput::Color fColors[kNumColors]; // Colors used, indexed by EColorsTypes
+      bool fColorIsDefault[kNumColors]; // Whether the fColors entry is the default color.
       EColorsTypes fPrevBracketColor; // previous bracket: None or [Bad]Bracket
    };
 

@@ -108,21 +108,11 @@ namespace {
   
    bool IsAlnum_(char c) { return c == '_' || isalnum(c); }
    bool IsAlpha_(char c) { return c == '_' || isalpha(c); }
-
-   void ExtendRangeAndSetColor(Text& input, size_t idx, char col, Range& disp) {
-      // Utility function that updates the display modification range if the
-      // color at index idx is different from what it was before.
-
-      if (input.GetColor(idx) != col) {
-         input.SetColor(idx, col);
-         disp.Extend(idx);
-      }
-   }
 } // unnamed namespace
 
 
 ROOT::TextInputColorizer::TextInputColorizer():
-   fPrevBracketColor(kColorNone) {
+   fColorIsDefault(), fPrevBracketColor(kColorNone) {
    // Set the default colors.
    // fColors[kColorNone] stays default initialized.
    fColors[kColorType] = ColorFromName("blue");
@@ -130,10 +120,28 @@ ROOT::TextInputColorizer::TextInputColorizer():
    fColors[kColorBracket] = ColorFromName("green");
    fColors[kColorBadBracket] = ColorFromName("red");
    fColors[kColorPrompt] = ColorFromName("default");
+   fColorIsDefault[kColorPrompt] = true;
 }
 
 ROOT::TextInputColorizer::~TextInputColorizer() {
    // pin vtable
+}
+
+
+void ROOT::TextInputColorizer::ExtendRangeAndSetColor(Text& input,
+                                                      size_t idx, char col,
+                                                      Range& disp) {
+   // Utility function that updates the display modification range if the
+   // color at index idx is different from what it was before.
+
+   if (fColorIsDefault[(int)col]) {
+      // Never mind the color: use use default.
+      col = 0;
+   }
+   if (input.GetColor(idx) != col) {
+      input.SetColor(idx, col);
+      disp.Extend(idx);
+   }
 }
 
 bool ROOT::TextInputColorizer::GetColor(char type, Color& col) {
@@ -159,10 +167,15 @@ void ROOT::TextInputColorizer::SetColors(const char* colorType,
    // color name, optionally prepended by "underline" or "bold"
 
    fColors[kColorType] = ColorFromName(colorType);
+   fColorIsDefault[kColorType] = (fColors[kColorType] == Color());
    fColors[kColorTabComp] = ColorFromName(colorTabComp);
+   fColorIsDefault[kColorTabComp] = (fColors[kColorTabComp] == Color());
    fColors[kColorBracket] = ColorFromName(colorBracket);
+   fColorIsDefault[kColorBracket] = (fColors[kColorBracket] == Color());
    fColors[kColorBadBracket] = ColorFromName(colorBadBracket);
+   fColorIsDefault[kColorBadBracket] = (fColors[kColorBadBracket] == Color());
    fColors[kColorPrompt] = ColorFromName(colorPrompt);
+   fColorIsDefault[kColorPrompt] = (fColors[kColorPrompt] == Color());
 }
 
 void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
@@ -247,7 +260,11 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
 }
 
 void ROOT::TextInputColorizer::ProcessPromptChange(Text& prompt) {
-   prompt.SetColor(Range::AllText(), kColorPrompt);
+   int idx = kColorPrompt;
+   if (fColorIsDefault[kColorPrompt]) {
+      idx = 0;
+   }
+   prompt.SetColor(Range::AllText(), idx);
 }
 
 void ROOT::TextInputColorizer::ProcessCursorChange(size_t Cursor,
