@@ -62,7 +62,7 @@ HISTFACTORYDS   := $(call stripsrc,$(MODDIRS)/G__HistFactory.cxx)
 HISTFACTORYDO   := $(HISTFACTORYDS:.cxx=.o)
 HISTFACTORYDH   := $(HISTFACTORYDS:.cxx=.h)
 
-HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooStats/HistFactory/*.h))
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 
@@ -73,7 +73,7 @@ HISTFACTORYLIB  := $(LPATH)/libHistFactory.$(SOEXT)
 HISTFACTORYMAP  := $(HISTFACTORYLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/RooStats/HistFactory/%.h,$(HISTFACTORYH))
+ALLHDRS      += $(patsubst $(MODDIRI)/RooStats/HistFactory/%.h,include/RooStats/HistFactory/%.h,$(HISTFACTORYH))
 ALLLIBS      += $(HISTFACTORYLIB)
 ALLMAPS      += $(HISTFACTORYMAP)
 
@@ -81,11 +81,11 @@ ALLMAPS      += $(HISTFACTORYMAP)
 INCLUDEFILES += $(HISTFACTORYDEP)
 
 #needed since include are in inc and not inc/RooStats
-HISTFACTORYH_DIC   := $(subst $(MODDIRI),include/RooStats/HistFactory,$(HISTFACTORYH))
+#HISTFACTORYH_DIC   := $(subst $(MODDIRI),include/RooStats/HistFactory,$(HISTFACTORYH))
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/RooStats/HistFactory/%.h:    $(HISTFACTORYDIRI)/%.h
+include/RooStats/HistFactory/%.h:    $(HISTFACTORYDIRI)/RooStats/HistFactory/%.h
 		@(if [ ! -d "include/RooStats/HistFactory" ]; then    \
 		   mkdir -p include/RooStats/HistFactory;             \
 		fi)
@@ -99,10 +99,10 @@ $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
 		   "$(HISTFACTORYO) $(HISTFACTORYDO)" \
 		   "$(HISTFACTORYLIBEXTRA)"
 
-$(HISTFACTORYDS):  $(HISTFACTORYH_DIC) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
+$(HISTFACTORYDS):  $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(HISTFACTORYH_DIC) $(HISTFACTORYL)
+		$(ROOTCINTTMP) -f $@ -c $(HISTFACTORYH) $(HISTFACTORYL)
 
 $(HISTFACTORYMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTFACTORYL)
 		$(RLIBMAP) -o  $@ -l $(HISTFACTORYLIB) \

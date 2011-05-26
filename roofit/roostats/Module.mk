@@ -1,3 +1,5 @@
+
+
 # Module.mk for roostats module
 # Copyright (c) 2008 Rene Brun and Fons Rademakers
 #
@@ -18,7 +20,7 @@ ROOSTATSDS   := $(call stripsrc,$(MODDIRS)/G__RooStats.cxx)
 ROOSTATSDO   := $(ROOSTATSDS:.cxx=.o)
 ROOSTATSDH   := $(ROOSTATSDS:.cxx=.h)
 
-ROOSTATSH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+ROOSTATSH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooStats/*.h))
 ROOSTATSS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ROOSTATSO    := $(call stripsrc,$(ROOSTATSS:.cxx=.o))
 
@@ -28,7 +30,7 @@ ROOSTATSLIB  := $(LPATH)/libRooStats.$(SOEXT)
 ROOSTATSMAP  := $(ROOSTATSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/RooStats/%.h,$(ROOSTATSH))
+ALLHDRS      += $(patsubst $(MODDIRI)/RooStats/%.h,include/RooStats/%.h,$(ROOSTATSH))
 ALLLIBS      += $(ROOSTATSLIB)
 ALLMAPS      += $(ROOSTATSMAP)
 
@@ -36,12 +38,12 @@ ALLMAPS      += $(ROOSTATSMAP)
 INCLUDEFILES += $(ROOSTATSDEP)
 
 #needed since include are in inc and not inc/RooStats
-ROOSTATSH_DIC   := $(subst $(MODDIRI),include/RooStats,$(ROOSTATSH))
+#ROOSTATSH_DIC   := $(subst $(MODDIRI),include/RooStats,$(ROOSTATSH))
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/RooStats/%.h: $(ROOSTATSDIRI)/%.h
+include/RooStats/%.h: $(ROOSTATSDIRI)/RooStats/%.h
 		@(if [ ! -d "include/RooStats" ]; then    \
 		   mkdir -p include/RooStats;             \
 		fi)
@@ -54,10 +56,10 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 		   "$(ROOSTATSO) $(ROOSTATSDO)" \
 		   "$(ROOSTATSLIBEXTRA)"
 
-$(ROOSTATSDS):  $(ROOSTATSH_DIC) $(ROOSTATSL) $(ROOTCINTTMPDEP)
+$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ROOSTATSH_DIC) $(ROOSTATSL)
+		$(ROOTCINTTMP) -f $@ -c $(ROOSTATSH) $(ROOSTATSL)
 
 $(ROOSTATSMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ROOSTATSL)
 		$(RLIBMAP) -o $@ -l $(ROOSTATSLIB) \
