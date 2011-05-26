@@ -26,6 +26,7 @@
 
 using namespace textinput;
 using std::memcpy;
+using std::signal;
 
 void
 TerminalConfigUnix__handleAbortSignal(int signum) {
