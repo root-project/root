@@ -27,6 +27,13 @@
 using namespace textinput;
 using std::memcpy;
 
+void
+TerminalConfigUnix__handleAbortSignal(int signum) {
+  // Clean up before we are killed.
+  TerminalConfigUnix::Get().HandleAbortSignal(signum);
+  
+}
+
 TerminalConfigUnix&
 TerminalConfigUnix::Get() {
   static TerminalConfigUnix s;
@@ -41,12 +48,19 @@ TerminalConfigUnix::TerminalConfigUnix():
   tcgetattr(fFD, fOldTIOS);
   *fConfTIOS = *fOldTIOS;
 #endif
+  fPrevAbortHandler = signal(SIGABRT, TerminalConfigUnix__handleAbortSignal);
 }
 
 TerminalConfigUnix::~TerminalConfigUnix() {
   Detach();
   delete fOldTIOS;
   delete fConfTIOS;
+}
+
+void
+TerminalConfigUnix::HandleAbortSignal(int signum) {
+  Detach();
+  if (fPrevAbortHandler) fPrevAbortHandler(signum);
 }
 
 void

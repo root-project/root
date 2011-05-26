@@ -19,9 +19,16 @@
 #ifndef TEXTINPUT_UNIXTERMINALSETTINGS_H
 #define TEXTINPUT_UNIXTERMINALSETTINGS_H
 
+#include <csignal>
+
 struct termios;
 
 namespace textinput {
+#if defined(__sun__) && defined(__SVR4) && !defined(sig_t)
+  // Doesn't define sig_t
+typedef SIG_TYP sig_t
+#endif
+
 class TerminalConfigUnix {
 public:
   ~TerminalConfigUnix();
@@ -33,11 +40,14 @@ public:
   void Detach();
   bool IsAttached() { return fIsAttached; }
 
+  void HandleAbortSignal(int signum);
+
 private:
   TerminalConfigUnix();
 
   bool fIsAttached; // whether fConfTIOS is active.
   int fFD; // file descriptor
+  sig_t fPrevAbortHandler; // Next signal handler to call for SIGABRT
   termios* fOldTIOS; // tty configuration before grabbing
   termios* fConfTIOS; // tty configuration while active
 };
