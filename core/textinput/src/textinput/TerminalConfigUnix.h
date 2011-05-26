@@ -24,7 +24,7 @@
 struct termios;
 
 namespace textinput {
-#if defined(__sun__) && defined(__SVR4) && !defined(sig_t)
+#if defined(__sun) && defined(__SVR4) && !defined(sig_t)
   // Doesn't define sig_t
 typedef SIG_TYP sig_t
 #endif
