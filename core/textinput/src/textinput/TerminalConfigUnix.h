@@ -25,8 +25,8 @@ struct termios;
 
 namespace textinput {
 #if defined(__sun) && defined(__SVR4) && !defined(sig_t)
-  // Doesn't define sig_t
-typedef SIG_TYP sig_t
+// Solaris doesn't define sig_t
+typedef SIG_TYP sig_t;
 #endif
 
 class TerminalConfigUnix {
