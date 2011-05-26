@@ -461,4 +461,8 @@ namespace textinput {
     fUndoBuf.push_back(std::make_pair(fContext->GetLine(),
                                       fContext->GetCursor()));
   }
+
+   // Pin vtables:
+   TabCompletion::~TabCompletion() {}
+   FunKey::~FunKey() {}
 }

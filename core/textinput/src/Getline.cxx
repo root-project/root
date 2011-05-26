@@ -35,7 +35,7 @@ namespace {
    class ROOTTabCompletion: public TabCompletion {
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
-      ~ROOTTabCompletion() { delete []fLineBuf; }
+      virtual ~ROOTTabCompletion() { delete []fLineBuf; }
     
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,

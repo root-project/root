@@ -30,6 +30,7 @@ namespace textinput {
                           EditorRange& R /*out*/,
                           std::vector<std::string>& DisplayCompletions /*out*/)
     = 0;
+    virtual ~TabCompletion();
   };
 
   class FunKey {
@@ -39,6 +40,7 @@ namespace textinput {
                            Text& Line /*in+out*/,
                            size_t& Cursor /*in+out*/,
                            EditorRange& R /*out*/) = 0;
+    virtual ~FunKey();
   };
 }
 
