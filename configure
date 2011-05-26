@@ -4262,23 +4262,27 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       decreftwo=20070723
       decrefthree=20071004
       decreffour=300000002
+      decreffive=300000003
       if [ $decver -gt $decrefone ] ; then
-         if [ $decver -gt $decreffour ] ; then
+         if [ $decver -gt $decreffive ] ; then
             xrdcomm="$xrdcomm"
             extraxrdflags="$extraxrdflags"
+         elif [ $decver -gt $decreffour ] ; then
+            vercomm=" (>$decreffour, <=$decreffive: setting -DXRDNETDNS)"
+            extraxrdflags="$extraxrdflags -DXRDNETDNS"
          elif [ $decver -gt $decrefthree ] ; then
             vercomm=" (>$decrefthree, <=$decreffour: setting -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DXRCPHYCNOREUSE $extraxrdflags"
+            extraxrdflags="-DXRCPHYCNOREUSE -DXRDNETDNS $extraxrdflags"
          elif [ $decver -gt $decreftwo ] ; then
-            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DOLDXRDLOCATE  -DXRCPHYCNOREUSE $extraxrdflags"
+            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE -DXRCPHYCNOREUSE -DXRDNETDNS)"
+            extraxrdflags="-DOLDXRDLOCATE -DXRCPHYCNOREUSE  -DXRDNETDNS $extraxrdflags"
          else
-            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE  -DXRCPHYCNOREUSE $extraxrdflags"
+            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC -DXRCPHYCNOREUSE -DXRDNETDNS)"
+            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE -DXRDNETDNS $extraxrdflags"
          fi
       else
-         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN -DXRCPHYCNOREUSE)"
-         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE $extraxrdflags"
+         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN -DXRCPHYCNOREUSE -DXRDNETDNS)"
+         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE -DXRDNETDNS $extraxrdflags"
       fi
    fi
 
