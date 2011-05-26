@@ -178,9 +178,10 @@ Gl_config(const char* which, int value) {
 const char*
 Getlinem(EGetLineMode mode, const char* prompt) {
 
-   if (mode == kCleanUp)
-      // That's what destructors were invented for.
+   if (mode == kCleanUp) {
+      TextInputHolder::get().ReleaseInputOutput();
       return 0;
+   }
 
    if (mode == kInit || mode == kLine1) {
       if (prompt) {
