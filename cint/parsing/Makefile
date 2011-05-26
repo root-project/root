@@ -25,13 +25,18 @@ endif
 # Remember that sometest.log can be made automatically from
 # from runsometest.C
 
+ifeq ($(shell root-config --has-table),yes)
 testTable: testTable.log
+else
+testTable:
+endif
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 	@echo the problem exist when BYTECODE is \#defined in TTable.cxx
 else
 	$(TestDiff)
 endif
+
 
 operatorLessThanTemplate.log: runoperatorLessThanTemplate.C operatorLessThanTemplate_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runoperatorLessThanTemplate.C | $(RemoveLeadingDirs) | grep -v -e tagnum -e size= > $@ 2>&1
