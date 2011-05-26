@@ -132,7 +132,7 @@ void Fitter::SetFunction(const IGradModel1DFunction & func)
    fConfig.CreateParamsSettings(*fFunc); 
 }
 
-bool Fitter::SetFCN(const BaseFunc & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
+bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
    // set the objective function for the fit 
    // if params is not NULL create the parameter settings
    fUseGradient = false; 
@@ -160,10 +160,10 @@ bool Fitter::SetFCN(const BaseFunc & fcn, const double * params, unsigned int da
    return true;
 }
 
-bool Fitter::SetFCN(const BaseGradFunc & fcn, const double * params, unsigned int dataSize , bool chi2fit) {
+bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params, unsigned int dataSize , bool chi2fit) {
    // set the objective function for the fit 
    // if params is not NULL create the parameter settings
-   if (!SetFCN(fcn,params, dataSize, chi2fit)) return false;
+   if (!SetFCN(static_cast<const ROOT::Math::IMultiGenFunction &>(fcn),params, dataSize, chi2fit) ) return false;
    fUseGradient = true; 
    return true;
 }

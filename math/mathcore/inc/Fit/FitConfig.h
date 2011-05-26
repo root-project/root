@@ -201,10 +201,10 @@ protected:
 
 private: 
 
-   bool fNormErrors;    // flag for error normalization
-   bool fParabErrors;   // get correct parabolic errors estimate (call Hesse after minimizing)  
-   bool fMinosErrors;   // do full error analysis using Minos
-   bool fUpdateAfterFit; // update the configuration after a fit using the result
+   bool fNormErrors;       // flag for error normalization
+   bool fParabErrors;      // get correct parabolic errors estimate (call Hesse after minimizing)  
+   bool fMinosErrors;      // do full error analysis using Minos
+   bool fUpdateAfterFit;   // update the configuration after a fit using the result
 
 
    std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings
