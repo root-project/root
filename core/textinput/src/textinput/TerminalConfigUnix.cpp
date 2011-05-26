@@ -34,11 +34,11 @@ TerminalConfigUnix::Get() {
 }
 
 TerminalConfigUnix::TerminalConfigUnix():
-  fIsAttached(false), fOldTIOS(), fConfTIOS() {
+  fIsAttached(false), fFD(fileno(stdin)), fOldTIOS(), fConfTIOS() {
 #ifdef TCSANOW
   fOldTIOS = new termios;
   fConfTIOS = new termios;
-  tcgetattr(fileno(stdin), fOldTIOS);
+  tcgetattr(fFD, fOldTIOS);
   *fConfTIOS = *fOldTIOS;
 #endif
 }
@@ -53,7 +53,7 @@ void
 TerminalConfigUnix::Attach() {
   if (fIsAttached) return;
 #ifdef TCSANOW
-  tcsetattr(fileno(stdin), TCSANOW, fConfTIOS);
+  tcsetattr(fFD, TCSANOW, fConfTIOS);
 #endif
   fIsAttached = true;
 }
@@ -63,7 +63,7 @@ TerminalConfigUnix::Detach() {
   // Reset the terminal configuration.
   if (!fIsAttached) return;
 #ifdef TCSANOW
-  tcsetattr(fileno(stdout), TCSANOW, fOldTIOS);
+  tcsetattr(fFD, TCSANOW, fOldTIOS);
 #endif
   fIsAttached = false;
 }

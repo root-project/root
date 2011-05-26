@@ -37,6 +37,7 @@ private:
   TerminalConfigUnix();
 
   bool fIsAttached; // whether fConfTIOS is active.
+  int fFD; // file descriptor
   termios* fOldTIOS; // tty configuration before grabbing
   termios* fConfTIOS; // tty configuration while active
 };
