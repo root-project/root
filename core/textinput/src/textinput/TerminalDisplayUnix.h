@@ -19,7 +19,7 @@
 #include "textinput/TerminalDisplay.h"
 
 namespace textinput {
-  struct Color;
+  class Color;
 
   // Output to tty / pipe / file.
   class TerminalDisplayUnix: public TerminalDisplay {
