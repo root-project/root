@@ -20,7 +20,7 @@
 
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
-    fStartLine(0), fIsAttached(false), fIsConsole(false) {
+    TerminalDisplay(false), fStartLine(0), fIsAttached(false) {
     HandleResizeEvent();
   }
 
@@ -29,8 +29,8 @@ namespace textinput {
   void
   TerminalDisplayWin::UpdateHandle() {
     fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-    fIsConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
-    if (!fIsConsole) {
+    SetIsTTY(::GetConsoleMode(fOut, &fOldMode) != 0);
+    if (!IsTTY()) {
       fOut = CreateFile("CONOUT$", (GENERIC_READ | GENERIC_WRITE),
         (FILE_SHARE_READ | FILE_SHARE_WRITE), NULL, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL, NULL);
@@ -38,7 +38,7 @@ namespace textinput {
         ShowError("opening CONOUT$");
         fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
       } else {
-        fIsConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
+        SetIsTTY(::GetConsoleMode(fOut, &fOldMode) != 0);
       }
     }
     fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
@@ -47,7 +47,7 @@ namespace textinput {
   void
   TerminalDisplayWin::HandleResizeEvent() {
     UpdateHandle();
-    if (fIsConsole) {
+    if (IsTTY()) {
       CONSOLE_SCREEN_BUFFER_INFO Info;
       if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
         ShowError("resize / getting console info");
@@ -130,7 +130,7 @@ namespace textinput {
   void
   TerminalDisplayWin::WriteRawString(const char *text, size_t len) {
     DWORD NumWritten = 0;
-    if (fIsConsole) {
+    if (IsTTY()) {
       WriteConsole(fOut, text, (DWORD) len, &NumWritten, NULL);
     } else {
       WriteFile(fOut, text, (DWORD) len, &NumWritten, NULL);
@@ -145,11 +145,11 @@ namespace textinput {
     // set to noecho
     if (fIsAttached) return;
     UpdateHandle();
-    if (fIsConsole && !::SetConsoleMode(fOut, fMyMode)) {
+    if (IsTTY() && !::SetConsoleMode(fOut, fMyMode)) {
       ShowError("attaching to console output");
     }
     CONSOLE_SCREEN_BUFFER_INFO Info;
-    if (fIsConsole) {
+    if (IsTTY()) {
       if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
         ShowError("attaching / getting console info");
       } else {
@@ -168,7 +168,7 @@ namespace textinput {
   void
   TerminalDisplayWin::Detach() {
     if (!fIsAttached) return;
-    if (fIsConsole && !SetConsoleMode(fOut, fOldMode)) {
+    if (IsTTY() && !SetConsoleMode(fOut, fOldMode)) {
       ShowError("detaching to console output");
     }
     TerminalDisplay::Detach();

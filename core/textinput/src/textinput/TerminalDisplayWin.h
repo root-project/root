@@ -50,7 +50,6 @@ namespace textinput {
   private:
     size_t fStartLine; // line of current prompt in cmd.exe's buffer
     bool fIsAttached; // whether console is configured
-    bool fIsConsole; // whether the output is to a console
     HANDLE fOut; // output handle
     DWORD fOldMode; // console configuration before grabbing
     DWORD fMyMode; // console configuration when active

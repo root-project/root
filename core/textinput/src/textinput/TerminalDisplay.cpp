@@ -183,6 +183,12 @@ namespace textinput {
     const Text& EditPrompt = GetContext()->GetEditor()->GetEditorPrompt();
     size_t EditorPromptLen = EditPrompt.length();
 
+    if (!IsTTY()) {
+       PromptLen = 0;
+       EditorPromptLen = 0;
+       PromptUpdate = Range::kNoPromptUpdate;
+    }
+
     if (PromptUpdate & Range::kUpdatePrompt) {
       // Writing from front means we write the prompt, too
       Move(Pos());

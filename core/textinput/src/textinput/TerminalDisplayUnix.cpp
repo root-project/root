@@ -95,8 +95,8 @@ extern "C" void TerminalDisplayUnix__handleResizeSignal(int) {
 namespace textinput {
   // If input is not a tty don't write in tty-mode either.
   TerminalDisplayUnix::TerminalDisplayUnix():
-    fIsAttached(false), fNColors(16),
-    fIsTTY(isatty(fileno(stdin)) && isatty(fileno(stdout))) {
+    TerminalDisplay(isatty(fileno(stdin)) && isatty(fileno(stdout))),
+    fIsAttached(false), fNColors(16) {
     HandleResizeSignal();
     gTerminalDisplayUnix() = this;
     signal(SIGWINCH, TerminalDisplayUnix__handleResizeSignal);
@@ -144,7 +144,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::SetColor(char CIdx, const Color& C) {
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     
     if (CIdx == 0) {
       // Default color, reset.
@@ -176,14 +176,14 @@ namespace textinput {
   void
   TerminalDisplayUnix::MoveFront() {
     static const char text[] = {(char)0x1b, '[', '1', 'G', 0};
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     WriteRawString(text, sizeof(text));
   }
   
   void
   TerminalDisplayUnix::MoveInternal(char What, size_t n) {
     static const char cmd[] = "\x1b[";
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     std::string text;
     for (size_t i = 0; i < n; ++i) {
       text += cmd;
@@ -199,7 +199,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::MoveDown(size_t nLines /* = 1 */) {
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     std::string moves(nLines, 0x0a);
     WriteRawString(moves.c_str(), nLines);
   }
@@ -217,7 +217,7 @@ namespace textinput {
   void
   TerminalDisplayUnix::EraseToRight() {
     static const char text[] = {(char)0x1b, '[', 'K', 0};
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     WriteRawString(text, sizeof(text));
   }
 
@@ -230,7 +230,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::ActOnEOL() {
-    if (!fIsTTY) return;
+    if (!IsTTY()) return;
     WriteRawString(" \b", 2);
     //MoveUp();
   }

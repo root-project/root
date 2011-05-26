@@ -49,7 +49,6 @@ namespace textinput {
   private:
     bool fIsAttached; // whether tty is configured
     size_t fNColors; // number of colors supported by output
-    bool fIsTTY; // whether output is to a terminal
   };
 }
 #endif // TEXTINPUT_TERMINALDISPLAYUNIX_H
