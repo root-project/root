@@ -219,7 +219,9 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::WriteRawString(const char *text, size_t len) {
-    write(fileno(stdout), text, len);
+    if (write(fileno(stdout), text, len) == -1) {
+      // Silence Ubuntu's "unused result". We don't care if it fails.
+    }
   }
 
   void

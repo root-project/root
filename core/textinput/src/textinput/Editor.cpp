@@ -98,7 +98,7 @@ namespace textinput {
       return true;
     }
 
-    fCurHistEntry = -1;
+    fCurHistEntry = (size_t) -1;
     return false;
   }
 
@@ -205,7 +205,7 @@ namespace textinput {
         return kPRSuccess;
       case kCmdEnter:
         fReplayHistEntry = (size_t) -1;
-        fCurHistEntry = -1;
+        fCurHistEntry = (size_t) -1;
         CancelSpecialInputMode(R.fDisplay);
         return kPRSuccess;
       case kCmdDelLeft:

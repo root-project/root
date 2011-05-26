@@ -75,8 +75,7 @@ namespace {
       T.EI = ei; T.Mod = m; }
     
     bool empty() const { return Map.empty(); }
-    bool haveSubTree() const { return !empty(); }
-    bool haveExtInp() const { return empty(); }
+    bool haveExtInp() const { return empty(); } // no sub-tree
     InputData::EExtendedInput getExtInp() const { return T.EI; }
     char getMod() const { return T.Mod; }
     
@@ -104,7 +103,7 @@ namespace {
         return Heap.back()[Watermark++];
       }
     private:
-      static const size_t kChunkSize = 100;
+      enum EChunkSize { kChunkSize = 100 };
       std::list<ExtKeyMap*> Heap;
       size_t Watermark;
     };

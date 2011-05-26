@@ -18,7 +18,7 @@
 
 namespace textinput {
   History::History(const char* filename):
-  fHistFileLines(0), fMaxDepth(-1), fPruneLength(0) {
+    fHistFileLines(0), fMaxDepth((size_t) -1), fPruneLength(0) {
     // Create a history object, initialize from filename if the file
     // exists. Append new lines to filename taking into account the
     // maximal number of lines allowed by SetMaxDepth().

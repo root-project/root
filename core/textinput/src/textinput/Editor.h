@@ -116,9 +116,9 @@ namespace textinput {
       };
     };
 
-    Editor(TextInputContext* C): fContext(C), fCurHistEntry(-1),
-      fReplayHistEntry(-1), fMode(kInputMode), fOverwrite(false),
-      fCutDirection(0) {}
+    Editor(TextInputContext* C):
+      fContext(C), fCurHistEntry((size_t)-1), fReplayHistEntry((size_t)-1),
+      fMode(kInputMode), fOverwrite(false), fCutDirection(0) {}
     ~Editor() {}
 
     Range ResetText();
