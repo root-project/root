@@ -614,7 +614,7 @@ void TBackCompFitter::PrintResults(Int_t level, Double_t ) const {
       fFitter->GetMinimizer()->PrintResults();
    else { 
       if (level > 0) fFitter->Result().Print(std::cout); 
-      if (level > 3)  fFitter->Result().PrintCovMatrix(std::cout);    
+      if (level > 1)  fFitter->Result().PrintCovMatrix(std::cout);    
    }
    // need to print minos errors and globalCC + other info
 }

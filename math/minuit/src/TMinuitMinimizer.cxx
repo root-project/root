@@ -19,6 +19,8 @@
 #include "TGraph.h" // needed for scan 
 #include "TError.h"
 
+#include "TMatrixDSym.h" // needed for inverting the matrix
+
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -574,6 +576,57 @@ unsigned int TMinuitMinimizer::NFree() const {
    if (fMinuit->fNpar < 0) return 0; 
    return fMinuit->fNpar; 
 }
+
+bool TMinuitMinimizer::GetCovMatrix(double * cov) const { 
+   // get covariance matrix
+   int covStatus = CovMatrixStatus(); 
+   if ( fCovar.size() != fDim*fDim || covStatus < 2) { 
+      Error("GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
+      return false;
+   }
+   std::copy(fCovar.begin(), fCovar.end(), cov);
+   TMatrixDSym cmat(fDim,cov);
+   return true; 
+}
+
+bool TMinuitMinimizer::GetHessianMatrix(double * hes) const { 
+   // get Hessian - inverse of covariance matrix 
+   // just invert it 
+   // but need to get the compact form to avoid the zero for the fixed parameters 
+   int covStatus = CovMatrixStatus(); 
+   if ( fCovar.size() != fDim*fDim || covStatus < 2) { 
+      Error("GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
+      return false;
+   }
+   // case of fixed params need to take care 
+   unsigned int nfree = NFree();
+   TMatrixDSym mat(nfree);   
+   fMinuit->mnemat(mat.GetMatrixArray(), nfree); 
+   // invert the matrix
+   // probably need to check if failed. In that case inverse is equal to original
+   mat.Invert();
+   
+   unsigned int l = 0; 
+   for (unsigned int i = 0; i < fDim; ++i) {       
+      if ( fMinuit->fNiofex[i] > 0 ) {  // not fixed ?
+         unsigned int m = 0; 
+         for (unsigned int j = 0; j <= i; ++j) { 
+            if ( fMinuit->fNiofex[j] > 0 ) {  //not fixed
+               hes[i*fDim + j] =  mat(l,m);
+               hes[j*fDim + i] = hes[i*fDim + j]; 
+               m++;
+            }
+         }
+         l++;
+      }
+   }
+   return true;
+}
+//    if  ( fCovar.size() != fDim*fDim ) return false; 
+//    TMatrixDSym mat(fDim, &fCovar.front() );
+//    std::copy(mat.GetMatrixArray(), mat.GetMatrixArray()+ mat.GetNoElements(), hes);
+//    return true; 
+// }
 
 int TMinuitMinimizer::CovMatrixStatus() const { 
    // return status of covariance matrix 

@@ -145,7 +145,26 @@ public:
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const { 
       return ( fCovar.size() > (i + fDim* j) ) ? fCovar[i + fDim* j] : 0; 
- }
+   }
+
+   /** 
+       Fill the passed array with the  covariance matrix elements 
+       if the variable is fixed or const the value is zero. 
+       The array will be filled as cov[i *ndim + j]
+       The ordering of the variables is the same as in errors and parameter value. 
+       This is different from the direct interface of Minuit2 or TMinuit where the 
+       values were obtained only to variable parameters
+   */ 
+   virtual bool GetCovMatrix(double * cov) const;  
+
+   /** 
+       Fill the passed array with the Hessian matrix elements 
+       The Hessian matrix is the matrix of the second derivatives 
+       and is the inverse of the covariance matrix
+       If the variable is fixed or const the values for that variables are zero. 
+       The array will be filled as h[i *ndim + j]
+   */ 
+   virtual bool GetHessianMatrix(double * h) const;  
 
    ///return status of covariance matrix 
    virtual int CovMatrixStatus() const; 

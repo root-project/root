@@ -18,6 +18,7 @@
 #include "Fit/UnBinData.h"
 #include "HFitInterface.h"
 #include "Math/MinimizerOptions.h"
+#include "Math/Minimizer.h"
 
 #include "Math/WrappedTF1.h"
 #include "Math/WrappedMultiTF1.h"
@@ -354,6 +355,22 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          HFit::StoreAndDrawFitFunction(h1, f1, range, !fitOption.Plus, !fitOption.Nograph, goption); 
       }
 
+      // print the result 
+      // if using Fitter class must be done here 
+      // use old style Minuit for TMinuit and if no corrections have been applied 
+      if (!fitOption.Quiet) { 
+         if (fitter->GetMinimizer() && fitConfig.MinimizerType() == "Minuit" && 
+             !fitConfig.NormalizeErrors() && fitOption.Like <= 1) { 
+            fitter->GetMinimizer()->PrintResults(); // use old style Minuit
+         }
+         else { 
+            // print using FitResult class
+            if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout); 
+            fitResult.Print(std::cout);
+         }
+      }
+
+
       // store result in the backward compatible VirtualFitter
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter(); 
       // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
@@ -379,13 +396,9 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       //N.B=  this might create a memory leak if user does not delete the fitter he creates
       TVirtualFitter::SetFitter( bcfitter ); 
 
-      // print results
-//       if (!fitOption.Quiet) fitResult.Print(std::cout);
-//       if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout); 
-
       // use old-style for printing the results
-      if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-      else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
+      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
+      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
       if (fitOption.StoreResult) 
       {
