@@ -1410,8 +1410,8 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
    // Final checks
    if (pw[0]) {
       TString spw(pw);
-      if (spw[strlen(pw) - 1] == '\n')
-         spw[strlen(pw) - 1] = 0;   // get rid of \n
+      if (spw.EndsWith("\n"))
+         spw.Remove(spw.Length() - 1);   // get rid of \n
       char *rpw = StrDup(spw);
       return rpw;
    }
