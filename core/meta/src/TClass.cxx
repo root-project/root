@@ -1096,6 +1096,7 @@ TClass::TClass(const TClass& cl) :
   fIsA(cl.fIsA),
   fGlobalIsA(cl.fGlobalIsA),
   fIsAMethod(cl.fIsAMethod),
+  fMerge(cl.fMerge),
   fNew(cl.fNew),
   fNewArray(cl.fNewArray),
   fDelete(cl.fDelete),
