@@ -154,6 +154,12 @@ RooAbsData::~RooAbsData()
   delete _dstore ;
   delete _iterator ;
   delete _cacheIter ;
+
+  // Delete owned dataset components
+  for(list<RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
+    delete *iter ;
+  }
+
 }
 
 

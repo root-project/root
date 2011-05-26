@@ -65,6 +65,8 @@ public:
 
 protected:
 
+  virtual RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
+
   friend class RooConvGenContext ;
   friend class RooProdGenContext ;
   friend class RooAddGenContext ;

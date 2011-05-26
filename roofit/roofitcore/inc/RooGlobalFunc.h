@@ -130,6 +130,7 @@ RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
 RooCmdArg StoreError(const RooArgSet& aset) ; 
 RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
+RooCmdArg OwnLinked() ;
 
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;

@@ -34,6 +34,9 @@
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooRandom.h"
+#include "RooGlobalFunc.h"
+
+using namespace RooFit ;
 
 #include <string>
 
@@ -203,6 +206,54 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   delete iter;
 
 }
+
+
+//_____________________________________________________________________________
+RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title, const RooArgSet& obs)
+{
+  // Create an empty dataset to hold the events that will be generated
+
+  // If the observables do not contain the index, make a plain dataset
+  if (!obs.contains(*_idxCat)) {
+    return new RooDataSet(name,title,obs) ;
+  }
+
+  // If all slices contain all observables minus the index, make a plain dataset
+  Bool_t allObsinAllSlices(kTRUE) ;
+  TIterator* iter = _idxCat->typeIterator() ;
+  RooCatType* state ;
+  while((state=(RooCatType*)iter->Next())) {
+    RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
+    RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
+    if (sliceObs->getSize()!=obs.getSize()-1) {
+      allObsinAllSlices = kFALSE ;
+    }
+    delete sliceObs ;
+  }
+  delete iter ;
+  if (allObsinAllSlices) {
+    return new RooDataSet(name,title,obs) ;
+  }
+
+  // Otherwise, make a composite linked dataset as output placeholder
+  map<string,RooAbsData*> dmap ;
+
+  iter = _idxCat->typeIterator() ;
+  while((state=(RooCatType*)iter->Next())) {
+    RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
+    RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
+    std::string sliceName = Form("%s_slice_%s",name,state->GetName()) ;
+    std::string sliceTitle = Form("%s (index slice %s)",title,state->GetName()) ;
+    RooDataSet* dset = new RooDataSet(sliceName.c_str(),sliceTitle.c_str(),*sliceObs) ;
+    dmap[state->GetName()] = dset ;
+    delete sliceObs ;
+  }
+  delete iter ;
+
+  return new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
+}
+
+
 
 
 

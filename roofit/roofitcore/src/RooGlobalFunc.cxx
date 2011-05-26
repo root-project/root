@@ -127,6 +127,7 @@ namespace RooFit {
   RooCmdArg ImportFromFile(const char* fname, const char* tname){ return RooCmdArg("ImportFromFile",0,0,0,0,fname,tname,0,0) ; }
   RooCmdArg StoreError(const RooArgSet& aset)           { return RooCmdArg("StoreError",0,0,0,0,0,0,0,0,0,0,&aset) ; }
   RooCmdArg StoreAsymError(const RooArgSet& aset)       { return RooCmdArg("StoreAsymError",0,0,0,0,0,0,0,0,0,0,&aset) ; }
+  RooCmdArg OwnLinked()                                 { return RooCmdArg("OwnLinked",1,0,0,0,0,0,0,0,0,0,0) ; }
 
   RooCmdArg Import(const std::map<std::string,RooDataSet*>& arg) {
     RooCmdArg container("ImportDataSliceMany",0,0,0,0,0,0,0,0) ; 

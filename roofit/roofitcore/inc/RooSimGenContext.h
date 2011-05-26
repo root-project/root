@@ -41,6 +41,8 @@ protected:
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
+  RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
+
   RooSimGenContext(const RooSimGenContext& other) ;
 
   RooAbsCategoryLValue* _idxCat ; // Clone of index category

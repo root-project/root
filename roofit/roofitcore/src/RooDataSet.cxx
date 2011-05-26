@@ -98,6 +98,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   //                                   In this mode, no data is copied and the linked dataset must be remain live for the duration
   //                                   of this dataset. Note that link is active for both reading and writing, so modifications
   //                                   to the aggregate dataset will also modify its components. Link() and Import() are mutually exclusive.
+  // OwnLinked()                    -- Take ownership of all linked datasets
   //
   // Import(map<string,RooDataSet*>&) -- As above, but allows specification of many imports in a single operation
   // Link(map<string,RooDataSet*>&)   -- As above, but allows specification of many links in a single operation
@@ -117,6 +118,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooDataSet::ctor(%s)",GetName())) ;
+  pc.defineInt("ownLinked","OwnLinked",0) ;
   pc.defineObject("impTree","ImportTree",0) ;
   pc.defineObject("impData","ImportData",0) ;
   pc.defineObject("indexCat","IndexCat",0) ;
@@ -140,6 +142,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineMutex("WeightVarName","WeightVar") ;
   pc.defineDependency("ImportDataSlice","IndexCat") ;
   pc.defineDependency("LinkDataSlice","IndexCat") ;
+  pc.defineDependency("OwnLinked","LinkDataSlice") ;
 
   
   RooLinkedList l ;
@@ -172,6 +175,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   RooArgSet* asymErrorSet = pc.getSet("asymErrSet") ;
   const char* fname = pc.getString("fname") ;
   const char* tname = pc.getString("tname") ;
+  Int_t ownLinked = pc.getInt("ownLinked") ;
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
@@ -217,6 +221,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       }
       icat->setLabel(hiter->first.c_str()) ;
       storeMap[icat->getLabel()]=hiter->second->store() ;
+
+      // Take ownership of slice if requested
+      if (ownLinked) {
+	addOwnedComponent(*hiter->second) ;
+      }
     }
 
     // Create composite datastore

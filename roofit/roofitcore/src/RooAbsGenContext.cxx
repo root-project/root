@@ -125,6 +125,14 @@ void RooAbsGenContext::attach(const RooArgSet& /*params*/)
 
 
 //_____________________________________________________________________________
+RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title, const RooArgSet& obs)
+{
+  // Create an empty dataset to hold the events that will be generated
+  return new RooDataSet(name, title, obs);
+}
+
+
+//_____________________________________________________________________________
 RooDataSet *RooAbsGenContext::generate(Int_t nEvents) 
 {
   // Generate the specified number of events with nEvents>0 and
@@ -189,8 +197,9 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents)
   TString name(GetName()),title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
-  
-  _genData = new RooDataSet(name.Data(), title.Data(), *_theEvent);
+
+  // WVE need specialization here for simultaneous pdfs
+  _genData = createDataSet(name.Data(),title.Data(),*_theEvent) ; 
 
   // Perform any subclass implementation-specific initialization
   initGenerator(*_theEvent);
