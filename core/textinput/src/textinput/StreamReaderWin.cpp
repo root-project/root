@@ -18,6 +18,7 @@
 
 #include <io.h>
 #include <stdio.h>
+#include <Windows.h>
 
 namespace textinput {
   StreamReaderWin::StreamReaderWin(): fHaveInputFocus(false), fIsConsole(true),
