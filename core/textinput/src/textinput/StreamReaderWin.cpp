@@ -20,6 +20,27 @@
 #include <stdio.h>
 #include <Windows.h>
 
+// MSVC 7.1 is missing these definitions:
+#ifndef ENABLE_QUICK_EDIT_MODE
+# define ENABLE_QUICK_EDIT_MODE 0x0040
+#endif
+#ifndef ENABLE_EXTENDED_FLAGS
+# define ENABLE_EXTENDED_FLAGS 0x0080
+#endif
+#ifndef ENABLE_LINE_INPUT
+# define ENABLE_LINE_INPUT 0x0002
+#endif
+#ifndef ENABLE_PROCESSED_INPUT
+# define ENABLE_PROCESSED_INPUT 0x0001
+#endif
+#ifndef ENABLE_ECHO_INPUT
+# define ENABLE_ECHO_INPUT 0x0004
+#endif
+#ifndef ENABLE_INSERT_MODE
+# define ENABLE_INSERT_MODE 0x0020
+#endif
+// End MSVC 7.1 quirks
+
 namespace textinput {
   StreamReaderWin::StreamReaderWin(): fHaveInputFocus(false), fIsConsole(true),
     fOldMode(0), fMyMode(0) {
