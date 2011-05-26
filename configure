@@ -31,6 +31,7 @@ host=
 deprecated_options="         \
    enable_mathcore           \
    enable_cern               \
+   enable_editline           \
 "
 
 options="                    \
@@ -52,7 +53,6 @@ options="                    \
    enable_cintex             \
    enable_clarens            \
    enable_cling              \
-   enable_editline           \
    enable_dcache             \
    enable_exceptions         \
    enable_explicitlink       \
@@ -1337,7 +1337,6 @@ enable/disable options, prefix with either --enable- or --disable-
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
-  editline           Color-enabled prompt, requires (n)curses library
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
@@ -1410,8 +1409,6 @@ with options, prefix with --with-, enables corresponding support
   chirp-incdir       Chirp support, location of chirp_reli.h
   chirp-libdir       Chirp support, location of libchirp_client
   cppunit            Cppunit testing, directory of the cppunit installation
-  curses-incdir      (n)Curses support for editline, location of (n)curses.h
-  curses-libdir      (n)Curses support for editline, location of lib(n)curses
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
@@ -1711,8 +1708,6 @@ if test $# -gt 0 ; then
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
-      --with-curses-incdir=*)  cursesincdir=$optarg  ; enable_editline="yes"  ;;
-      --with-curses-libdir=*)  curseslibdir=$optarg  ; enable_editline="yes"  ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
@@ -2412,42 +2407,6 @@ if test "x$enable_builtin_zlib" = "xno" ; then
 fi
 message "Checking whether to build included zlib"
 result "$enable_builtin_zlib"
-
-######################################################################
-#
-### echo %%% nCurses or Curses Support - Third party libraries
-#
-# Check for libcurses / libncurses
-#
-if test ! "x$enable_editline" = "xno" ; then
-    lookforcurseslib="libncurses"
-    check_header "ncurses.h" "$cursesincdir" \
-        ${finkdir:+$finkdir/include} \
-        /usr/include/ncurses /usr/local/include/ncurses \
-        /usr/include /usr/local/include
-    cursesincdir=$found_dir
-    curseshdr=$found_hdr
-    if test "x$cursesincdir" = "x"; then
-        lookforcurseslib="libcurses"
-        check_header "curses.h" "$cursesincdir" \
-            ${finkdir:+$finkdir/include} \
-            /usr/include/curses /usr/local/include/curses \
-            /usr/include /usr/local/include
-        cursesincdir=$found_dir
-        curseshdr=$found_hdr
-    fi
-
-    check_library "$lookforcurseslib" "$enable_shared" "$curseslibdir" \
-        /usr/lib /usr/local/lib
-    curseslib=$found_lib
-    curseslibdir=$found_dir
-
-    if test "x$cursesincdir" = "x" || test "x$curseslib" = "x"; then
-        enable_editline="no"
-    fi
-fi
-check_explicit "$enable_editline" "$enable_editline_explicit" \
-     "Explicitly required editline dependencies not fulfilled"
 
 ######################################################################
 #
@@ -6092,12 +6051,6 @@ fi
 if test -d cint/cint7 ; then
    rm -rf cint/cint7
 fi
-if test ! "x$enable_editline" = "xno" ; then
-   rm -f core/clib/src/Getline.o core/clib/src/Getline.d
-fi
-if test ! "x$enable_editline_explicit" = "x" ; then
-   rm -f core/rint/src/TRint.o core/rint/src/TRint.d
-fi
 if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
@@ -6477,10 +6430,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
     -e "s|@xrdversion@|$decver|"                \
-    -e "s|@cursesincdir@|$cursesincdir|"        \
-    -e "s|@curseshdr@|$curseshdr|"              \
-    -e "s|@curseslib@|$curseslib|"              \
-    -e "s|@curseslibdir@|$curseslibdir|"        \
     -e "s|@cfitsioincdir@|$cfitsioincdir|"      \
     -e "s|@cfitsiolib@|$cfitsiolib|"            \
     -e "s|@cfitsiolibdir@|$cfitsiolibdir|"      \
@@ -6520,7 +6469,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
-    -e "s|@buildeditline@|$enable_editline|"    \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 

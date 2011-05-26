@@ -1296,7 +1296,7 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
 
       // If a different file with the same name exists already, ask what to do
       if (!same) {
-         char *a = Getline("Local file exists already: would you like to overwrite it? [N/y]");
+         const char *a = Getline("Local file exists already: would you like to overwrite it? [N/y]");
          if (a[0] == 'n' || a[0] == 'N' || a[0] == '\0') return 0;
       } else {
          return 0;
@@ -1510,7 +1510,7 @@ Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt
       if (!force) {
          // If a different file with the same name exists already, ask what to do
          if (!same) {
-            char *a = Getline("Remote file exists already: would you like to overwrite it? [N/y]");
+            const char *a = Getline("Remote file exists already: would you like to overwrite it? [N/y]");
             if (a[0] == 'n' || a[0] == 'N' || a[0] == '\0') return 0;
             force = kTRUE;
          } else {

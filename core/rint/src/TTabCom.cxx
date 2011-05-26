@@ -161,14 +161,6 @@ ClassImp(TTabCom)
 //
 TTabCom *gTabCom = 0;
 
-
-extern "C" int gl_root_tab_hook(char *buf, int /*prompt_width */ ,
-                                int *pLoc)
-{
-   return gTabCom ? gTabCom->Hook(buf, pLoc) : -1;
-}
-
-
 // ----------------------------------------------------------------------------
 //
 //              constructors
@@ -194,8 +186,6 @@ TTabCom::TTabCom()
    fLastIter = 0;
 
    InitPatterns();
-
-   Gl_tab_hook = gl_root_tab_hook;
 }
 
 //
@@ -1243,6 +1233,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
 Int_t TTabCom::Complete(const TRegexp & re,
                         const TSeqCollection * pListOfCandidates,
                         const char appendage[],
+                        ostream& out,
                         TString::ECaseCompare cmp)
 {
    // [private]
@@ -1414,15 +1405,15 @@ Int_t TTabCom::Complete(const TRegexp & re,
             // (except for those excluded by "FileIgnore")
          {
             IfDebug(cerr << "printing ambiguous matches" << endl);
-            cout << endl;
+            out << endl;
             while ((pObj = next_match())) {
                s = pObj->GetName();
                s0 = next_fullpath()->GetName();
                if (!ExcludedByFignore(s) || nGoodStrings == 0) {
                   if (IsDirectory(s0))
-                     cout << s << "/" << endl;
+                     out << s << "/" << endl;
                   else
-                     cout << s << endl;
+                     out << s << endl;
                }
             }
             pos = -2;
@@ -1635,7 +1626,7 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 }
 
 //______________________________________________________________________________
-Int_t TTabCom::Hook(char *buf, int *pLoc)
+Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
 {
    // [private]
 
@@ -1670,14 +1661,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
       {
          const TSeqCollection *pListOfUsers = GetListOfUsers();
 
-         pos = Complete("[^~]*$", pListOfUsers, "/");
+         pos = Complete("[^~]*$", pListOfUsers, "/", out);
       }
       break;
    case kSYS_EnvVar:
       {
          const TSeqCollection *pEnv = GetListOfEnvVars();
 
-         pos = Complete("[^$]*$", pEnv, "");
+         pos = Complete("[^$]*$", pEnv, "", out);
       }
       break;
 
@@ -1690,8 +1681,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(filePath.Data());
 
-//             pos = Complete( "[^ /]*$", pListOfFiles, " " );
-         pos = Complete("[^ /]*$", pListOfFiles, "filename ");
+//             pos = Complete( "[^ /]*$", pListOfFiles, " ", out );
+         pos = Complete("[^ /]*$", pListOfFiles, "filename ", out);
       }
       break;
 
@@ -1706,14 +1697,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(macroPath.Data());
 
-//             pos = Complete( "[^ /]*$", pListOfFiles, " " );
-         pos = Complete("[^ /]*$", pListOfFiles, "filename ");
+//             pos = Complete( "[^ /]*$", pListOfFiles, " ", out);
+         pos = Complete("[^ /]*$", pListOfFiles, "filename ", out);
       }
       break;
 
    case kCINT_pragma:
       {
-         pos = Complete("[^ ]*$", GetListOfPragmas(), "");
+         pos = Complete("[^ ]*$", GetListOfPragmas(), "", out);
       }
       break;
    case kCINT_includeSYS:
@@ -1723,14 +1714,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             TString includePath =
                 DeterminePath(fileName, GetSysIncludePath());
 
-//                  pos = Complete( "[^</]*$", GetListOfFilesInPath( includePath ), "> " );
+//                  pos = Complete( "[^</]*$", GetListOfFilesInPath( includePath ), "> ", out);
             pos =
                 Complete("[^</]*$", GetListOfFilesInPath(includePath),
-                         "filename> ");
+                         "filename> ", out);
          } else {
-//                  pos = Complete( "[^</]*$", GetListOfSysIncFiles(), "> " );
+//                  pos = Complete( "[^</]*$", GetListOfSysIncFiles(), "> ", out);
             pos =
-                Complete("[^</]*$", GetListOfSysIncFiles(), "filename> ");
+                Complete("[^</]*$", GetListOfSysIncFiles(), "filename> ", out);
          }
       }
       break;
@@ -1741,14 +1732,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TSeqCollection *pListOfFiles =
              GetListOfFilesInPath(includePath.Data());
 
-//             pos = Complete( "[^\"/]*$", pListOfFiles, "\" " );
-         pos = Complete("[^\"/]*$", pListOfFiles, "filename\" ");
+//             pos = Complete( "[^\"/]*$", pListOfFiles, "\" ", out);
+         pos = Complete("[^\"/]*$", pListOfFiles, "filename\" ", out);
       }
       break;
 
    case kCINT_cpp:
       {
-         pos = Complete("[^# ]*$", GetListOfCppDirectives(), " ");
+         pos = Complete("[^# ]*$", GetListOfCppDirectives(), " ", out);
       }
       break;
 
@@ -1759,8 +1750,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TString dynamicPath = DeterminePath(fileName,gEnv->GetValue("Root.DynamicPath",(char *) 0));
          const TSeqCollection *pListOfFiles = GetListOfFilesInPath(dynamicPath);
 
-//             pos = Complete( "[^\"/]*$", pListOfFiles, "\");" );
-         pos = Complete("[^\"/]*$", pListOfFiles, "filename\");");
+//             pos = Complete( "[^\"/]*$", pListOfFiles, "\");", out);
+         pos = Complete("[^\"/]*$", pListOfFiles, "filename\");", out);
       }
       break;
 
@@ -1770,7 +1761,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TString filePath = DeterminePath(fileName,".");
          const TSeqCollection *pListOfFiles = GetListOfFilesInPath(filePath.Data());
 
-         pos = Complete("[^\" /]*$", pListOfFiles, "filename\"");
+         pos = Complete("[^\" /]*$", pListOfFiles, "filename\"", out);
       }
       break;
 
@@ -1884,7 +1875,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
                pList->AddAll(pClass->GetListOfAllPublicDataMembers());
             }
 
-            pos = Complete("[^: ]*$", pList, "");
+            pos = Complete("[^: ]*$", pList, "", out);
 
             delete pList;
             if (pClass)
@@ -1901,7 +1892,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             pList->AddAll(pClass->GetListOfAllPublicMethods());
             pList->AddAll(pClass->GetListOfAllPublicDataMembers());
 
-            pos = Complete("[^: ]*$", pList, "(");
+            pos = Complete("[^: ]*$", pList, "(", out);
 
             delete pList;
             delete pClass;
@@ -1956,16 +1947,16 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             {
                int* store_fpLoc = fpLoc;
                char* store_fBuf = fBuf;
-               pos = Complete("[^. ]*$", pList, "(");
+               pos = Complete("[^. ]*$", pList, "(", out);
                if (pos == -1) {
                   fpLoc = store_fpLoc;
                   fBuf = store_fBuf;
-                  pos = Complete("[^. ]*$", pList, "(", TString::kIgnoreCase);
+                  pos = Complete("[^. ]*$", pList, "(", out, TString::kIgnoreCase);
                }
                break;
             }
          case kCXX_IndirectMember:
-            pos = Complete("[^> ]*$", pList, "(");
+            pos = Complete("[^> ]*$", pList, "(", out);
             break;
          default:
             assert(0);
@@ -2048,19 +2039,19 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               cout << endl << pMethod->GetReturnTypeName()
+               out << endl << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
                if (comment && comment[0] != '\0') {
-                  cout << " \t// " << comment;
+                  out << " \t// " << comment;
                }
             }
          }
 
          // done
          if (foundOne) {
-            cout << endl;
+            out << endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2149,19 +2140,19 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               cout << endl << pMethod->GetReturnTypeName()
+               out << endl << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
                if (comment && comment[0] != '\0') {
-                  cout << " \t// " << comment;
+                  out << " \t// " << comment;
                }
             }
          }
 
          // done
          if (foundOne) {
-            cout << endl;
+            out << endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2208,7 +2199,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
          const TSeqCollection *pC3 = GetListOfGlobalFunctions();
          if (pC3) pList->AddAll(pC3);
 
-         pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "");
+         pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "", out);
 
          delete pList;
       }
@@ -2233,11 +2224,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
             cerr << endl << "no such function: " << dblquote(functionName)
                 << endl;
          } else {
-            cout << endl;
+            out << endl;
             TIter next(&listOfMatchingGlobalFuncs);
             TFunction *pFunction;
             while ((pFunction = (TFunction *) next())) {
-               cout << pFunction->GetReturnTypeName()
+               out << pFunction->GetReturnTypeName()
                    << " " << pFunction->GetName()
                    << pFunction->GetSignature()
                    << endl;

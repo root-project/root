@@ -42,6 +42,9 @@
 #ifndef ROOT_TRegExp
 #include "TRegexp.h"
 #endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
 
 
 #define MAX_LEN_PAT 1024               // maximum length of a pattern
@@ -65,7 +68,7 @@ public: // typedefs
    typedef TListIter TContIter;
 
 public: // member functions
-   Int_t Hook(char *buf, int *pLoc);
+   Int_t Hook(char *buf, int *pLoc, ostream& out);
 
    const TSeqCollection* GetListOfClasses();
    const TSeqCollection* GetListOfCppDirectives();
@@ -195,7 +198,8 @@ private: // member functions
    TTabCom(const TTabCom &);           //private and not implemented
    TTabCom& operator=(const TTabCom&); //private and not implemented
 
-   Int_t      Complete( const TRegexp& re, const TSeqCollection* pListOfCandidates, const char appendage[], TString::ECaseCompare cmp = TString::kExact);
+   Int_t      Complete(const TRegexp& re, const TSeqCollection* pListOfCandidates,
+                       const char appendage[], ostream& out, TString::ECaseCompare cmp = TString::kExact);
    void       CopyMatch( char dest[], const char localName[], const char appendage[]=0, const char fullName[]=0 ) const;
    EContext_t DetermineContext() const;
    TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;
@@ -231,6 +235,6 @@ private: // data members
    ClassDef(TTabCom,0)  //Perform comand line completion when hitting <TAB>
 };
 
-extern TTabCom *gTabCom;
+R__EXTERN TTabCom *gTabCom;
 
 #endif

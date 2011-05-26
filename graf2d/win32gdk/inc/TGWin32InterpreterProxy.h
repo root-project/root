@@ -59,8 +59,8 @@ public:
    Long_t   ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void     PrintIntro();
-   void     SetGetline(char*(*getlineFunc)(const char* prompt),
-		       void (*histaddFunc)(char* line));
+   void     SetGetline(const char*(*getlineFunc)(const char* prompt),
+                       void (*histaddFunc)(const char* line));
    void     Reset();
    void     ResetAll();
    void     ResetGlobals();

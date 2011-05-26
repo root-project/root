@@ -279,8 +279,8 @@ unsigned long G__long_random(unsigned long limit);
 /*********************************************************************
 * External readline interface
 *********************************************************************/
-typedef char* (*G__pGetline_t)(const char* prompt);
-typedef void  (*G__pHistadd_t)(char* line);
+typedef const char* (*G__pGetline_t)(const char* prompt);
+typedef void  (*G__pHistadd_t)(const char* line);
 
 #ifndef __CINT__
 G__EXPORT

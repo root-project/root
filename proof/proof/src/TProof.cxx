@@ -107,7 +107,7 @@ Bool_t TProofInterruptHandler::Notify()
 
    } else {
       // Real stop or request to switch to asynchronous?
-      char *a = 0;
+      const char *a = 0;
       if (fProof->GetRemoteProtocol() < 22) {
          a = Getline("\nSwith to asynchronous mode not supported remotely:"
                      "\nEnter S/s to stop, Q/q to quit, any other key to continue: ");
@@ -9395,7 +9395,7 @@ void TProof::ShowLog(Int_t qry)
 
          // Ask if more is wanted
          if (!(np%10)) {
-            char *opt = Getline("More (y/n)? [y]");
+            const char *opt = Getline("More (y/n)? [y]");
             if (opt[0] == 'n')
                break;
          }

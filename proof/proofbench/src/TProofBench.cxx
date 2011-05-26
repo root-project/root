@@ -681,7 +681,7 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
       if (isatty(0) != 0 && isatty(1) != 0) {
          Printf("Target dataset '%s' exists already:"
                                           " do you want to remove it first?", dsetdst);
-         char *a = Getline("[Y,n] ");
+         const char *a = Getline("[Y,n] ");
          Printf("a: %s", a);
          if (a[0] == 'Y' || a[0] == 'y' || a[0] == '\n') {
             Info("CopyDataSet", "removing dataset '%s' ...", dsetdst);

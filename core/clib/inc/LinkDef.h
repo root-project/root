@@ -11,12 +11,6 @@
 
 #ifdef __CINT__
 
-#pragma link C++ enum EGetLineMode;
-
-#pragma link C++ function Getline(char*);
-#pragma link C++ function Getlinem(EGetLineMode,char*);
-#pragma link C++ function Gl_histadd(char*);
-
 #pragma link C++ function strlcpy(char *, const char *, size_t);
 #pragma link C++ function strlcat(char *, const char *, size_t);
 #pragma link C++ function snprintf(char *, size_t, const char *, ...);

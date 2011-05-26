@@ -40,11 +40,7 @@
 #include "TError.h"
 #include <stdlib.h>
 
-#ifdef R__BUILDEDITLINE
-#include "Getline_el.h"
-#else
 #include "Getline.h"
-#endif
 
 #ifdef R__UNIX
 #include <signal.h>
@@ -227,7 +223,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_histsize(hist_size, hist_save);
    Gl_histinit((char *)logon);
 
-#ifdef R__BUILDEDITLINE
    // black on white or white on black?
    static const char* defaultColorsBW[] = {
       "bold blue", "magenta", "bold green", "bold red underlined", "default"
@@ -247,7 +242,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    TString colorBadBracket = gEnv->GetValue("Rint.BadBracketColor", defaultColors[3]);
    TString colorPrompt = gEnv->GetValue("Rint.PromptColor", defaultColors[4]);
    Gl_setColors(colorType, colorTabCom, colorBracket, colorBadBracket, colorPrompt);
-#endif
 
    Gl_windowchanged();
 
@@ -520,7 +514,7 @@ Bool_t TRint::HandleTermInput()
    // Handle input coming from terminal.
 
    static TStopwatch timer;
-   char *line;
+   const char *line;
 
    if ((line = Getlinem(kOneChar, 0))) {
       if (line[0] == 0 && Gl_eof())
@@ -531,7 +525,6 @@ Bool_t TRint::HandleTermInput()
       Gl_histadd(line);
 
       TString sline = line;
-      line[0] = 0;
 
       // strip off '\n' and leading and trailing blanks
       sline = sline.Chop();
@@ -669,4 +662,15 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
    }
 
    return ret;
+}
+
+
+//______________________________________________________________________________
+Int_t TRint::TabCompletionHook(char *buf, int *pLoc, ostream& out)
+{
+   // Forward tab completion request to our TTabCom::Hook().
+   if (gTabCom)
+      return gTabCom->Hook(buf, pLoc, out);
+
+   return -1;
 }

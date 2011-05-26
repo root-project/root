@@ -58,10 +58,10 @@ VOID_METHOD_ARG2(Interpreter,LoadMacro,const char*,filename,TInterpreter::EError
 RETURN_METHOD_ARG2(Interpreter,Long_t,ProcessLine,const char*,line,TInterpreter::EErrorCode*,error)
 RETURN_METHOD_ARG2(Interpreter,Long_t,ProcessLineSynch,const char*,line,TInterpreter::EErrorCode*,error)
 VOID_METHOD_ARG0(Interpreter,PrintIntro,1)
-typedef char* (*GetlineFunc_t)(const char* prompt);
-typedef void (*HistaddFunc_t)(char* line);
+typedef const char* (*GetlineFunc_t)(const char* prompt);
+typedef void (*HistaddFunc_t)(const char* line);
 VOID_METHOD_ARG2(Interpreter,SetGetline,GetlineFunc_t, getlineFunc,\
-		 HistaddFunc_t, histaddFunc, 1)
+                 HistaddFunc_t, histaddFunc, 1)
 VOID_METHOD_ARG0(Interpreter,Reset,1)
 VOID_METHOD_ARG0(Interpreter,ResetAll,1)
 VOID_METHOD_ARG0(Interpreter,ResetGlobals,1)

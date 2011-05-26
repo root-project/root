@@ -1096,6 +1096,15 @@ void TApplication::StopIdleing()
 }
 
 //______________________________________________________________________________
+Int_t TApplication::TabCompletionHook(char* /*buf*/, int* /*pLoc*/, ostream& /*out*/)
+{
+   // What to do when tab is pressed. Re-implemented by TRint.
+   // See TTabCom::Hook() for meaning of return values.
+   return -1;
+}
+
+
+//______________________________________________________________________________
 void TApplication::Terminate(Int_t status)
 {
    // Terminate the application by call TSystem::Exit() unless application has

@@ -335,12 +335,6 @@ BUILDPEAC      := @buildpeac@
 BUILDAFDSMGRD  := @buildafdsmgrd@
 AFDSMGRDAPMON  := @afdsmgrdapmon@
 
-CURSESINCDIR   := $(filter-out -I/usr/include, -I@cursesincdir@)
-CURSESLIBDIR   := @curseslibdir@
-CURSESHDR      := @curseshdr@
-CURSESLIB      := @curseslib@
-BUILDEDITLINE  := @buildeditline@
-
 CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
 

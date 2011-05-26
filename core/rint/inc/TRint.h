@@ -60,6 +60,7 @@ public:
    virtual void        Run(Bool_t retrn = kFALSE);
    virtual void        Terminate(int status);
            void        Interrupt() { fInterrupt = kTRUE; }
+   virtual Int_t       TabCompletionHook(char *buf, int *pLoc, ostream& out);
 
    ClassDef(TRint,0);  //ROOT Interactive Application Interface
 };

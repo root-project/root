@@ -1351,8 +1351,9 @@ char *TAuthenticate::PromptUser(const char *remote)
          return StrDup("None");
    }
 
-   char *usr = Getline(Form("Name (%s:%s): ", remote, user));
-   if (usr[0]) {
+   const char *usrIn = Getline(Form("Name (%s:%s): ", remote, user));
+   if (usrIn[0]) {
+      TString usr(usrIn);
       usr[strlen(usr) - 1] = 0; // get rid of \n
       if (strlen(usr))
          return StrDup(usr);
@@ -1378,7 +1379,7 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
    }
 
    char buf[128];
-   char *pw = buf;
+   const char *pw = buf;
    // Get the plugin for the passwd dialog box, if needed
    if (!gROOT->IsBatch() && (fgPasswdDialog == (TPluginHandler *)(-1)) &&
        gEnv->GetValue("Auth.UsePasswdDialogBox", 1) == 1) {
@@ -1402,16 +1403,16 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
 
    } else {
       Gl_config("noecho", 1);
-      pw = Getline((char *) prompt);
+      pw = Getline(prompt);
       Gl_config("noecho", 0);
    }
 
    // Final checks
    if (pw[0]) {
-      if (pw[strlen(pw)-1] == '\n')
-         pw[strlen(pw) - 1] = 0;   // get rid of \n
-      char *rpw = StrDup(pw);
-      memset(pw, 0, strlen(pw));
+      TString spw(pw);
+      if (spw[strlen(pw) - 1] == '\n')
+         spw[strlen(pw) - 1] = 0;   // get rid of \n
+      char *rpw = StrDup(spw);
       return rpw;
    }
    return 0;

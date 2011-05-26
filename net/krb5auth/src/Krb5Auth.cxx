@@ -718,10 +718,11 @@ Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc)
    // Check if the user wants to be prompt about principal
    TString principal = TString(clientPrincipal);
    if (TAuthenticate::GetPromptUser() || promptPrinc) {
-      char *usr = Getline(Form("Principal (%s): ", principal.Data()));
+      const char *usr = Getline(Form("Principal (%s): ", principal.Data()));
       if (usr[0]) {
-         usr[strlen(usr) - 1] = 0; // get rid of \n
-         if (strlen(usr))
+        TString usrs(usr);
+         usrs[strlen(usr) - 1] = 0; // get rid of \n
+         if (usrs.Length())
             principal = usr;
       }
    }

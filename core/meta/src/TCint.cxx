@@ -647,8 +647,8 @@ void TCint::PrintIntro()
 }
 
 //______________________________________________________________________________
-void TCint::SetGetline(char*(*getlineFunc)(const char* prompt),
-		       void (*histaddFunc)(char* line))
+void TCint::SetGetline(const char*(*getlineFunc)(const char* prompt),
+                       void (*histaddFunc)(const char* line))
 {
    // Set a getline function to call when input is needed.
    G__SetGetlineFunc(getlineFunc, histaddFunc);
