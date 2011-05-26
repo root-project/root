@@ -318,10 +318,17 @@ bool Minuit2Minimizer::Minimize() {
    int strategy = Strategy(); 
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
-   if (PrintLevel() >=1)
-      std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn 
+   if (PrintLevel() >=1) { 
+      // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
+      int maxfcn_used = maxfcn; 
+      if (maxfcn_used == 0) { 
+         int nvar = fState.VariableParameters();
+         maxfcn_used = 200 + 100*nvar + 5*nvar*nvar;
+      }      
+      std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn_used 
                 << " convergence for edm < " << tol << " strategy " 
                 << strategy << std::endl; 
+   }
 
    // internal minuit messages
    MnPrint::SetLevel(PrintLevel() );
@@ -474,7 +481,7 @@ const double * Minuit2Minimizer::Errors() const {
 double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const { 
    // get value of covariance matrices (transform from external to internal indices)
    if ( i >= fDim || i >= fDim) return 0;  
-   if ( Status()  || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
+   if (  !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
@@ -482,10 +489,54 @@ double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const {
    return fState.Covariance()(k,l); 
 }
 
+bool Minuit2Minimizer::GetCovMatrix(double * cov) const { 
+   // get value of covariance matrices 
+   if ( !fState.HasCovariance()    ) return false; // no info available when minimization has failed
+   for (unsigned int i = 0; i < fDim; ++i) {
+      if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) {
+         for (unsigned int j = 0; j < fDim; ++j) { cov[i*fDim + j] = 0; }          
+      } 
+      unsigned int l = fState.IntOfExt(i); 
+      for (unsigned int j = 0; j < fDim; ++j) { 
+         // could probably speed up this loop (if needed)
+         int k = i*fDim + j;
+         if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) cov[k] = 0; 
+         // need to transform from external to internal indices)
+         // for taking care of the removed fixed row/columns in the Minuit2 representation
+         unsigned int m = fState.IntOfExt(j); 
+         cov[k] =  fState.Covariance()(l,m); 
+      }
+   }
+   return true;
+}
+
+bool Minuit2Minimizer::GetHessianMatrix(double * hess) const { 
+   // get value of Hessian matrix
+   // this is the second derivative matrices
+   if (  !fState.HasCovariance()    ) return false; // no info available when minimization has failed
+   for (unsigned int i = 0; i < fDim; ++i) {
+      if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) {
+         for (unsigned int j = 0; j < fDim; ++j) { hess[i*fDim + j] = 0; }          
+      } 
+      unsigned int l = fState.IntOfExt(i); 
+      for (unsigned int j = 0; j < fDim; ++j) { 
+         // could probably speed up this loop (if needed)
+         int k = i*fDim + j;
+         if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) hess[k] = 0; 
+         // need to transform from external to internal indices)
+         // for taking care of the removed fixed row/columns in the Minuit2 representation
+         unsigned int m = fState.IntOfExt(j); 
+         hess[k] =  fState.Hessian()(l,m); 
+      }
+   }
+   return true;
+}
+
+
 double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const { 
    // get correlation between parameter i and j 
    if ( i >= fDim || i >= fDim) return 0;  
-   if ( Status()  || !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
+   if (  !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0; 
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0; 
    unsigned int k = fState.IntOfExt(i); 
@@ -572,9 +623,16 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // cut off too small tolerance (they are not needed)
    tol = std::max(tol, 0.01);
    
-   if (PrintLevel() >=1)
+   if (PrintLevel() >=1) { 
+      // print the real number of maxfcn used (defined in MnMinos)
+      int maxfcn_used = maxfcn; 
+      if (maxfcn_used == 0) { 
+         int nvar = fState.VariableParameters();
+         maxfcn_used = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
+      }
       std::cout << "Minuit2Minimizer::GetMinosError for parameter " << i << "  " << par_name
-                << " max-calls " << maxfcn << ", tolerance " << tol << std::endl; 
+                << " using max-calls " << maxfcn_used << ", tolerance " << tol << std::endl; 
+   }
 
 
    if (runLower) low = minos.Loval(i,maxfcn,tol);
@@ -783,6 +841,7 @@ bool Minuit2Minimizer::Hesse( ) {
    if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
 
    if (PrintLevel() >= 3) { 
+      std::cout << "State returned from Hesse " << std::endl;
       std::cout << fState << std::endl; 
    }
 
@@ -791,7 +850,7 @@ bool Minuit2Minimizer::Hesse( ) {
       if (PrintLevel() > 0) MN_INFO_MSG2("Minuit2Minimizer::Hesse","Hesse failed ");
       // update minimizer error status 
       int hstatus = 4;
-      // informationon error state can be retrieved only if fMinimum is available
+      // information on error state can be retrieved only if fMinimum is available
       if (fMinimum) { 
          if (fMinimum->Error().HesseFailed() ) hstatus = 1;
          if (fMinimum->Error().InvertFailed() ) hstatus = 2;

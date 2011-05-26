@@ -76,6 +76,9 @@ public:
    const MnUserCovariance& Covariance() const {return fCovariance;}
    const MnGlobalCorrelationCoeff& GlobalCC() const {return fGlobalCC;}
 
+   // hessian (inverse of covariance matrix)
+   MnUserCovariance Hessian() const;
+
    //Minuit internal representation
    const std::vector<double>& IntParameters() const {return fIntParameters;}
    const MnUserCovariance& IntCovariance() const {return fIntCovariance;}

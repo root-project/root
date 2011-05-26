@@ -32,9 +32,16 @@ public:
 
   MnUserCovariance() : fData(std::vector<double>()), fNRow(0) {}
 
+   // safe constructor using std::vector
   MnUserCovariance(const std::vector<double>& data, unsigned int nrow) :
     fData(data), fNRow(nrow) {
     assert(data.size() == nrow*(nrow+1)/2);
+  }
+
+   // unsafe constructor using just a pointer
+  MnUserCovariance(const double * data, unsigned int nrow) :
+     fData(std::vector<double>(data,data+nrow*(nrow+1)/2)), 
+     fNRow(nrow) {
   }
 
   MnUserCovariance(unsigned int n) : 

@@ -173,13 +173,34 @@ public:
    virtual const double * Errors() const; 
 
    /** 
-       return covariance matrices elements 
+       return covariance matrix elements 
        if the variable is fixed or const the value is zero
        The ordering of the variables is the same as in errors and parameter value. 
        This is different from the direct interface of Minuit2 or TMinuit where the 
        values were obtained only to variable parameters
    */ 
    virtual double CovMatrix(unsigned int i, unsigned int j) const;  
+
+
+   /** 
+       Fill the passed array with the  covariance matrix elements 
+       if the variable is fixed or const the value is zero. 
+       The array will be filled as cov[i *ndim + j]
+       The ordering of the variables is the same as in errors and parameter value. 
+       This is different from the direct interface of Minuit2 or TMinuit where the 
+       values were obtained only to variable parameters
+   */ 
+   virtual bool GetCovMatrix(double * cov) const;  
+
+   /** 
+       Fill the passed array with the Hessian matrix elements 
+       The Hessian matrix is the matrix of the second derivatives 
+       and is the inverse of the covariance matrix
+       If the variable is fixed or const the values for that variables are zero. 
+       The array will be filled as h[i *ndim + j]
+   */ 
+   virtual bool GetHessianMatrix(double * h) const;  
+
 
    /**
       return the status of the covariance matrix 

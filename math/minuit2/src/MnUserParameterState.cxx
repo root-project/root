@@ -139,6 +139,27 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
    }
 }
 
+MnUserCovariance MnUserParameterState::Hessian() const { 
+   // invert covariance matrix and return Hessian
+   // need to copy in a MnSymMatrix
+   MnAlgebraicSymMatrix mat(fCovariance.Nrow() );
+   std::copy(fCovariance.Data().begin(), fCovariance.Data().end(), mat.Data() );
+   int ifail = Invert(mat);
+   if(ifail != 0) {
+#ifdef WARNINGMSG
+      MN_INFO_MSG("MnUserParameterState:Hessian inversion fails- return diagonal matrix.");
+#endif
+      MnUserCovariance tmp(fCovariance.Nrow());
+      for(unsigned int i = 0; i < fCovariance.Nrow(); i++) {
+         tmp(i,i) = 1./fCovariance(i,i);
+      }
+      return tmp;
+   }
+
+   MnUserCovariance hessian( mat.Data(), fCovariance.Nrow() );
+   return hessian;
+}
+
 // facade: forward interface of MnUserParameters and MnUserTransformation
 // via MnUserParameterState
 
