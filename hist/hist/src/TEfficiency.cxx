@@ -1302,7 +1302,7 @@ Bool_t TEfficiency::BetaShortestInterval(Double_t level,Double_t a,Double_t b, D
    // special case when the shortest interval is undefined  return the central interval
    // can happen for a posterior when passed=total=0
    //
-   if ( a==b && a<1.0) { 
+   if ( a==b && a<=1.0) { 
       lower = BetaCentralInterval(level,a,b,kFALSE);
       upper = BetaCentralInterval(level,a,b,kTRUE);
       return kTRUE;

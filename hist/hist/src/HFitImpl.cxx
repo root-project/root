@@ -149,7 +149,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    if (fitOption.Like) opt.fUseEmpty = true;  // use empty bins in log-likelihood fits 
    if (special==300) opt.fCoordErrors = false; // no need to use coordinate errors in a pol0 fit
    if (fitOption.NoErrX) opt.fCoordErrors = false;  // do not use coordinate errors when requested
-   if (fitOption.W1) opt.fErrors1 = true;
+   if (fitOption.W1 ) opt.fErrors1 = true;
    if (fitOption.W1 > 1) opt.fUseEmpty = true; // use empty bins with weight=1
 
    //opt.fBinVolume = 1; // for testing
@@ -320,8 +320,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
    if (fitOption.User && userFcn) // user provided fit objective function
       fitok = fitter->FitFCN( userFcn );
-   else if (fitOption.Like) // likelihood fit 
-      fitok = fitter->LikelihoodFit(*fitdata);
+   else if (fitOption.Like)  {// likelihood fit 
+      bool weight = (fitOption.Like > 1);
+      fitok = fitter->LikelihoodFit(*fitdata,weight);
+   }
    else // standard least square fit
       fitok = fitter->Fit(*fitdata); 
 
@@ -605,8 +607,8 @@ void ROOT::Fit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    if (opt.Contains("L")) fitOption.Like    = 1;
    if (opt.Contains("X")) fitOption.Chi2    = 1;
    if (opt.Contains("I")) fitOption.Integral= 1;
-   if (opt.Contains("LL")) fitOption.Like   = 2;
    if (opt.Contains("W")) fitOption.W1      = 1;
+   if (opt.Contains("WL")) { fitOption.Like   = 2; fitOption.W1=0; }
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
    if (opt.Contains("G")) fitOption.Gradient= 1;
@@ -771,7 +773,14 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
 
 // implementations of ROOT::Fit::FitObject functions (defined in HFitInterface) in terms of the template HFit::Fit
 
-TFitResultPtr ROOT::Fit::FitObject(TH1 * h1, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
+TFitResultPtr ROOT::Fit::FitObject(TH1 * h1, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions &
+moption, const char *goption, ROOT::Fit::DataRange & range) { 
+   // check fit options
+   // check if have weights in case of weighted likelihood
+   if (foption.Like > 1 && h1->GetSumw2N() == 0) { 
+      Warning("HFit::FitObject","A weighted likelihood fit is requested but histogram is not weighted - do a standard Likelihood fit");
+      foption.Like = 1;
+   }
    // histogram fitting
    return HFit::Fit(h1,f1,foption,moption,goption,range); 
 }

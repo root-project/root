@@ -3345,7 +3345,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //                = "I"  Use integral of function in bin, normalized by the bin volume,
 //                       instead of value at bin center
 //                = "L"  Use Loglikelihood method (default is chisquare method)
-//                = "LL" Use Loglikelihood method and bin contents are not integers)
+//                = "WL" Use Loglikelihood method and bin contents are not integer, 
+//                       i.e. histogram is weighted (must have Sumw2() set)
 //                = "U"  Use a User specified fitting algorithm (via SetFCN)
 //                = "Q"  Quiet mode (minimum printing)
 //                = "V"  Verbose mode (default is between Q and V)
@@ -3866,9 +3867,10 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
    if (opt.Contains("X"))  fitOption.Chi2    = 1;
    if (opt.Contains("L"))  fitOption.Like    = 1;
-   if (opt.Contains("LL")) fitOption.Like    = 2;
+   //if (opt.Contains("LL")) fitOption.Like    = 2;
    if (opt.Contains("W"))  fitOption.W1      = 1;
    if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
+   if (opt.Contains("WL")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
    if (opt.Contains("E"))  fitOption.Errors  = 1;
    if (opt.Contains("M"))  fitOption.More    = 1;
    if (opt.Contains("R"))  fitOption.Range   = 1;
@@ -3882,6 +3884,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    if (opt.Contains("F"))  fitOption.Minuit = 1;
    if (opt.Contains("C"))  fitOption.Nochisq = 1;
    if (opt.Contains("S"))  fitOption.StoreResult = 1;
+
    return 1;
 }
 
@@ -5615,11 +5618,11 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
       xmin = xmin - range;
       range *= 2;
       binsize *= 2;
-      // make sure that the merging will be correct
-      if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-         xmin += 0.5 * binsize;
-         xmax += 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      }
+      // // make sure that the merging will be correct
+      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
+      //    xmin += 0.5 * binsize;
+      //    xmax += 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
+      // }
    }
    while (point >= xmax) {
       if (ntimes++ > 64)
@@ -5627,11 +5630,11 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
       xmax = xmax + range;
       range *= 2;
       binsize *= 2;
-      // make sure that the merging will be correct
-      if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-         xmin -= 0.5 * binsize;
-         xmax -= 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      }
+      // // make sure that the merging will be correct
+      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
+      //    xmin -= 0.5 * binsize;
+      //    xmax -= 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
+      // }
    }
    newMin = xmin;
    newMax = xmax;
