@@ -282,10 +282,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
 
    if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone)) {
       // Make sure that the timer is stopped
-      if (fProgress) {
-         fProgress->Stop();
-         SafeDelete(fProgress);
-      }
+      if (fProgress) fProgress->Stop();
       return kFALSE;
    }
 
