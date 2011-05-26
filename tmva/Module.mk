@@ -55,15 +55,15 @@ TMVAH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h
-TMVAH1C      := $(patsubst %,include/TMVA/%,$(TMVAH1))
-TMVAH2C      := $(patsubst %,include/TMVA/%,$(TMVAH2))
-TMVAH3C      := $(patsubst %,include/TMVA/%,$(TMVAH3))
-TMVAH4C      := $(patsubst %,include/TMVA/%,$(TMVAH4))
-TMVAH1       := $(patsubst %,$(MODDIRI)/%,$(TMVAH1))
-TMVAH2       := $(patsubst %,$(MODDIRI)/%,$(TMVAH2))
-TMVAH3       := $(patsubst %,$(MODDIRI)/%,$(TMVAH3))
-TMVAH4       := $(patsubst %,$(MODDIRI)/%,$(TMVAH4))
-TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+#TMVAH1C      := $(patsubst %,include/TMVA/%,$(TMVAH1))
+#TMVAH2C      := $(patsubst %,include/TMVA/%,$(TMVAH2))
+#TMVAH3C      := $(patsubst %,include/TMVA/%,$(TMVAH3))
+#TMVAH4C      := $(patsubst %,include/TMVA/%,$(TMVAH4))
+TMVAH1       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH1))
+TMVAH2       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH2))
+TMVAH3       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH3))
+TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
+TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.h))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))
 
@@ -73,7 +73,7 @@ TMVALIB      := $(LPATH)/libTMVA.$(SOEXT)
 TMVAMAP      := $(TMVALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/TMVA/%.h,$(TMVAH))
+ALLHDRS      += $(patsubst $(MODDIRI)/TMVA/%.h,include/TMVA/%.h,$(TMVAH))
 ALLLIBS      += $(TMVALIB)
 ALLMAPS      += $(TMVAMAP)
 
@@ -83,7 +83,7 @@ INCLUDEFILES += $(TMVADEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/TMVA/%.h: $(TMVADIRI)/%.h
+include/TMVA/%.h: $(TMVADIRI)/TMVA/%.h
 		@(if [ ! -d "include/TMVA" ]; then     \
 		   mkdir -p include/TMVA;              \
 		fi)
@@ -94,22 +94,22 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 		   "$(SOFLAGS)" libTMVA.$(SOEXT) $@ "$(TMVAO) $(TMVADO)" \
 		   "$(TMVALIBEXTRA)"
 
-$(TMVADS1):     $(TMVAHC1) $(TMVAL1) $(ROOTCINTTMPDEP)
+$(TMVADS1):     $(TMVAH1) $(TMVAL1) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH1C) $(TMVAL1)
-$(TMVADS2):     $(TMVAHC2) $(TMVAL2) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH1) $(TMVAL1)
+$(TMVADS2):     $(TMVAH2) $(TMVAL2) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH2C) $(TMVAL2)
-$(TMVADS3):     $(TMVAH3C) $(TMVAL3) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH2) $(TMVAL2)
+$(TMVADS3):     $(TMVAH3) $(TMVAL3) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH3C) $(TMVAL3)
-$(TMVADS4):     $(TMVAH4C) $(TMVAL4) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH3) $(TMVAL3)
+$(TMVADS4):     $(TMVAH4) $(TMVAL4) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH4C) $(TMVAL4)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH4) $(TMVAL4)
 
 $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 		$(RLIBMAP) -o $@ -l $(TMVALIB) \
