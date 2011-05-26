@@ -720,10 +720,10 @@ Int_t Krb5InitCred(const char *clientPrincipal, Bool_t promptPrinc)
    if (TAuthenticate::GetPromptUser() || promptPrinc) {
       const char *usr = Getline(Form("Principal (%s): ", principal.Data()));
       if (usr[0]) {
-        TString usrs(usr);
-         usrs[strlen(usr) - 1] = 0; // get rid of \n
-         if (usrs.Length())
-            principal = usr;
+         TString usrs(usr);
+         usrs.Remove(usrs.Length() - 1); // get rid of \n
+         if (!usrs.IsNull())
+            principal = usrs;
       }
    }
 
