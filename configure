@@ -6051,6 +6051,9 @@ fi
 if test -d cint/cint7 ; then
    rm -rf cint/cint7
 fi
+if test -d core/editline ; then
+   rm -rf core/editline
+fi
 if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
