@@ -36,7 +36,10 @@ TGLFormat::TGLFormat() :
 #ifdef WIN32
    fDepthSize(32),
 #else
-   fDepthSize(24),
+   // 16-bits needed for some virtual machines (VirtualBox) and Xming-mesa
+   // (when running ssh from windows to linux).
+   // All others seem to have 24-bit depth-buffers only and use this anyway.
+   fDepthSize(16),
 #endif
    fAccumSize(0),
    fStencilSize(8),
