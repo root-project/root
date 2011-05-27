@@ -135,6 +135,7 @@ double WrappedTF1::GetDerivPrecision( ) { return fgEps; }
 
 WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  : 
    fLinear(false), 
+   fPolynomial(false), 
    fFunc(&f),
    fDim(dim),
    fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
