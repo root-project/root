@@ -229,7 +229,7 @@ char *G__input(const char *prompt)
     /* memory parity checker can not handle the pointer malloced in readlie */
     G__DUMMY_Free((void*)pchar);
 #else
-    free(pchar);
+    free((void*)pchar);
 #endif
     if(line[0]!='\0') {
       G__input_history(&state,line);
