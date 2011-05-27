@@ -56,7 +56,7 @@ protected:
    char         *fBuffer;         //[fBufferSize] buffer of contiguous prefetched blocks
    Bool_t        fIsSorted;       //True if fSeek array is sorted
    Bool_t        fIsTransferred;   //True when fBuffer contains something valid
-   Long64_t      fPrefetchBlocks;
+   Long64_t      fPrefetchedBlocks; // Number of blocks prefetched.
 
    //varibles for the second block prefetched with the same semantics as for the first one
    Int_t         fBNseek;
@@ -86,7 +86,7 @@ public:
    virtual void        AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual Int_t       GetBufferSize() const { return fBufferSize; };
    virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
-           Long64_t    GetPrefetchedBlocks() const { return fPrefetchBlocks; }
+           Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE) { fEnablePrefetching = setPrefetching; }
    virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; };

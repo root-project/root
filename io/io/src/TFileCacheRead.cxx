@@ -78,7 +78,7 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fAsyncReading = kFALSE;
    fEnablePrefetching = kFALSE;
    fPrefetch        = 0;
-   fPrefetchBlocks  = 0;
+   fPrefetchedBlocks= 0;
 }
 
 //_____________________________________________________________________________
@@ -122,7 +122,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
 
    fBuffer = 0;
    fPrefetch = 0;
-   fPrefetchBlocks = 0;
+   fPrefetchedBlocks = 0;
 
    //initialise the prefetch object and set the cache directory
    // start the thread only if the file is not local  
@@ -324,7 +324,7 @@ void TFileCacheRead::Print(Option_t *option) const
    printf("Average transaction................: %f Kbytes\n",0.001*Double_t(fFile->GetBytesRead())/Double_t(fFile->GetReadCalls()));
    printf("Number of blocks in current cache..: %d, total size: %d\n",fNseek,fNtot);
    if (fPrefetch){
-     printf("Prefetching .......................: %lli blocks\n", fPrefetchBlocks);
+     printf("Prefetching .......................: %lli blocks\n", fPrefetchedBlocks);
      printf("Prefetching Wait Time..............: %f seconds\n", fPrefetch->GetWaitTime() / 1e+6);
    }
 
@@ -372,7 +372,7 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
       Sort();
       loc = -1;
       fPrefetch->ReadBlock(fPos, fLen, fNb);
-      fPrefetchBlocks++;
+      fPrefetchedBlocks++;
       fIsTransferred = kTRUE;
    }
 
@@ -381,7 +381,7 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
       SecondSort();
       loc = -1;
       fPrefetch->ReadBlock(fBPos, fBLen, fBNb);
-      fPrefetchBlocks++;
+      fPrefetchedBlocks++;
    }
 
    // in case we are writing and reading to/from this file, we must check                                                                                    
