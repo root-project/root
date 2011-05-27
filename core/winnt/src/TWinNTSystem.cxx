@@ -3780,7 +3780,16 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
    // and before emptying CINT.
    if (gROOT) {
       gROOT->CloseFiles();
-      if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->Delete();
+      if (gROOT->GetListOfBrowsers()) {
+         // GetListOfBrowsers()->Delete() creates problems when a browser is 
+         // created on the stack, calling CloseWindow() solves the problem
+         //gROOT->GetListOfBrowsers()->Delete();
+         TBrowser *b;
+         TIter next(gROOT->GetListOfBrowsers());
+         while ((b = (TBrowser*) next()))
+            gROOT->ProcessLine(Form("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
+                                    (ULong_t)b));
+      }
    }
    if (gInterpreter) {
       gInterpreter->ResetGlobals();
