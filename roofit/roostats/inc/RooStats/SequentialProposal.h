@@ -27,7 +27,7 @@ namespace RooStats {
 class SequentialProposal : public ProposalFunction {
 
    public:
-      SequentialProposal() : RooStats::ProposalFunction() {}
+   SequentialProposal() : RooStats::ProposalFunction(), fDivisor(0) {}
       SequentialProposal(double divisor) ;
 
       // Populate xPrime with a new proposed point
