@@ -127,19 +127,19 @@ void TGFileBrowser::CreateBrowser()
    lb->Resize(lb->GetWidth(), 120);
    Int_t dropt = 1;
    fDrawOption->AddEntry("", dropt++);
-   fDrawOption->AddEntry(" box", dropt++);
-   fDrawOption->AddEntry(" colz", dropt++);
-   fDrawOption->AddEntry(" lego", dropt++);
-   fDrawOption->AddEntry(" lego1", dropt++);
-   fDrawOption->AddEntry(" lego2", dropt++);
-   fDrawOption->AddEntry(" same", dropt++);
-   fDrawOption->AddEntry(" surf", dropt++);
-   fDrawOption->AddEntry(" surf1", dropt++);
-   fDrawOption->AddEntry(" surf2", dropt++);
-   fDrawOption->AddEntry(" surf3", dropt++);
-   fDrawOption->AddEntry(" surf4", dropt++);
-   fDrawOption->AddEntry(" surf5", dropt++);
-   fDrawOption->AddEntry(" text", dropt++);
+   fDrawOption->AddEntry("box", dropt++);
+   fDrawOption->AddEntry("colz", dropt++);
+   fDrawOption->AddEntry("lego", dropt++);
+   fDrawOption->AddEntry("lego1", dropt++);
+   fDrawOption->AddEntry("lego2", dropt++);
+   fDrawOption->AddEntry("same", dropt++);
+   fDrawOption->AddEntry("surf", dropt++);
+   fDrawOption->AddEntry("surf1", dropt++);
+   fDrawOption->AddEntry("surf2", dropt++);
+   fDrawOption->AddEntry("surf3", dropt++);
+   fDrawOption->AddEntry("surf4", dropt++);
+   fDrawOption->AddEntry("surf5", dropt++);
+   fDrawOption->AddEntry("text", dropt++);
    fTopFrame->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY |
                        kLHintsRight, 2, 2, 2, 2));
    fTopFrame->AddFrame(new TGLabel(fTopFrame, "Draw Option: "),
