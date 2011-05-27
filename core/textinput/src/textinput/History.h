@@ -36,7 +36,6 @@ namespace textinput {
     void SetMaxDepth(size_t maxDepth) { fMaxDepth = maxDepth; }
     void SetPruneLength(size_t pruneLength = (size_t) kPruneLengthDefault) {
       fPruneLength = pruneLength; }
-    size_t GetFileLines() const { return fHistFileLines; }
 
     // Indices are reverse! I.e. 0 is newest!
     const std::string& GetLine(size_t Idx) const {
@@ -56,8 +55,7 @@ namespace textinput {
     void ReadFile(const char* FileName);
 
   private:
-    std::ofstream fHistFile; // History file stream
-    size_t fHistFileLines; // Number of lines in hist file
+    std::string fHistFileName; // History file name
     size_t fMaxDepth; // Max number of entries before pruning
     size_t fPruneLength; // Remaining entries after pruning
     std::vector<std::string> fEntries; // Previous input lines
