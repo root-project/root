@@ -86,6 +86,7 @@ public:
    virtual void        AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual Int_t       GetBufferSize() const { return fBufferSize; };
    virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
+           Long64_t    GetPrefetchedBlocks() const { return fPrefetchBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE) { fEnablePrefetching = setPrefetching; }
    virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; };
