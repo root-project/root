@@ -16,6 +16,12 @@
 #include "textinput/History.h"
 #include <iostream>
 
+#ifdef WIN32
+# include <stdio.h>
+#else
+# include <unistd.h>
+#endif
+
 namespace textinput {
   History::History(const char* filename):
     fHistFileName(filename ? filename : ""), fMaxDepth((size_t) -1),
@@ -91,7 +97,11 @@ namespace textinput {
         out << fEntries.back() << '\n';
         in.close();
         out.close();
+#ifdef WIN32
+        ::_unlink(fHistFileName.c_str());
+#else
         ::unlink(fHistFileName.c_str());
+#endif
         ::rename(pruneFileName.c_str(), fHistFileName.c_str());
       }
     } else {
