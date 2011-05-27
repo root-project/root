@@ -67,6 +67,7 @@ namespace {
     rgb256[14][0] =   0; rgb256[14][1] = 255; rgb256[14][1] = 255;
     rgb256[15][0] = 255; rgb256[15][1] = 255; rgb256[15][1] = 255;
     
+    /*
     for (unsigned char red = 0; red < 6; ++red) {
       for (unsigned char green = 0; green < 6; ++green) {
         for (unsigned char blue = 0; blue < 6; ++blue) {
@@ -77,6 +78,21 @@ namespace {
         }
       }
     }
+    */
+    // 6 intensity RGB
+    static const int intensities[] = {0, 0x5f, 0x87, 0xaf, 0xd7, 0xff};
+    int idx = 16;
+    for (int r = 0; r < 6; ++r) {
+      for (int g = 0; g < 6; ++g) {
+        for (int b = 0; b < 6; ++b) {
+          rgb256[idx][0] = intensities[r];
+          rgb256[idx][1] = intensities[g];
+          rgb256[idx][2] = intensities[b];
+          ++idx;
+        }
+      }
+    }
+
     // colors 232-255 are a grayscale ramp, intentionally leaving out
     // black and white
     for (unsigned char gray = 0; gray < 24; ++gray) {
@@ -146,31 +162,42 @@ namespace textinput {
   TerminalDisplayUnix::SetColor(char CIdx, const Color& C) {
     if (!IsTTY()) return;
     
-    if (CIdx == 0) {
-      // Default color, reset.
-      static const char text[] = {(char)0x1b, '[', '0', 'm', 0};
-      WriteRawString(text, 4);
-      return;
+    // Default color, reset previous bold etc.
+    static const char text[] = {(char)0x1b, '[', '0', 'm', 0};
+    WriteRawString(text, 4);
+
+    if (CIdx == 0) return;
+
+    if (fNColors == 256) {
+      int ANSIIdx = GetClosestColorIdx256(C);
+      static const char preamble[] = {'\x1b', '[', '3', '8', ';', '5', ';', 0};
+      std::string buf(preamble);
+      if (ANSIIdx > 100) {
+        buf += '0' + (ANSIIdx / 100);
+      }
+      if (ANSIIdx > 10) {
+        buf += '0' + ((ANSIIdx / 10) % 10);
+      }
+      buf += '0' + (ANSIIdx % 10);
+      buf +=  "m";
+      WriteRawString(buf.c_str(), buf.length());
+    } else {
+      int ANSIIdx = GetClosestColorIdx16(C);
+      char buf[] = {'\x1b', '[', '3', '0' + (ANSIIdx % 8), 'm', 0};
+      if (ANSIIdx > 7) buf[2] += 6;
+      WriteRawString(buf, 5);
     }
 
-    int ANSIIdx = 0;
-    if (fNColors == 256) {
-      ANSIIdx = GetClosestColorIdx256(C);
-    } else {
-      ANSIIdx = GetClosestColorIdx16(C);
+    if (C.fModifiers & Color::kModUnderline) {
+      WriteRawString("\033[4m", 4);
     }
-    char buf[6] = {'\x1b', '[', '0', '0', 'm', 0};
-    int val = 30 + ANSIIdx;
-    if (val > 37) {
-      val = 90 - 30 - 8;
+    if (C.fModifiers & Color::kModBold) {
+      WriteRawString("\033[1m", 4);
     }
-    if (val > 97) {
-      printf("ERROR in SetColor, ANSIIdx=%d, val=%d, RGB=(%d,%d,%d)\n", ANSIIdx,
-             val,(int)C.fR,(int)C.fG,(int)C.fB);
+    if (C.fModifiers & Color::kModInverse) {
+      WriteRawString("\033[7m", 4);
     }
-    buf[2] += val / 10;
-    buf[3] += val % 10;
-    WriteRawString(buf, 5);
+
   }
   
   void
@@ -285,13 +312,13 @@ namespace textinput {
     
     // start with black:
     int idx = 0;
-    char r = C.fR;
-    char g = C.fG;
-    char b = C.fB;
-    int graylvl = (r + g + b)/3;
+    unsigned int r = C.fR;
+    unsigned int g = C.fG;
+    unsigned int b = C.fB;
+    unsigned int graylvl = (r + g + b)/3;
     long mindelta = (r*r + g*g + b*b) + graylvl;
     if (mindelta) {
-      for (unsigned int i = 1; i < 256; ++i) {
+      for (unsigned int i = 0; i < 256; ++i) {
         long delta = (rgb256[i][0] + rgb256[i][1] + rgb256[i][2])/3 - graylvl;
         if (delta < 0) delta = -delta;
         delta += (r-rgb256[i][0])*(r-rgb256[i][0]) +
