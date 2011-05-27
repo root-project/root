@@ -85,6 +85,6 @@ Int_t runPrefetchReading()
      }
    }
  
-   fprintf(stdout, "fPrefetchBlocks = %lli\n", file->GetCacheRead()->GetPrefetchBlocks());
+   fprintf(stdout, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
    return 0;
 }

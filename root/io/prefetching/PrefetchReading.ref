@@ -266,5 +266,5 @@ i = 0
 i = 1000
 i = 2000
 i = 3000
-fPrefetchBlocks = 32
+fPrefetchedBlocks = 32
 (Int_t)0
