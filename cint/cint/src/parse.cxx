@@ -8030,13 +8030,8 @@ void G__free_tempobject()
    long store_struct_offset; /* used to be int */
    int store_tagnum;
    int store_return;
-   if (
-      G__xrefflag || // Generating a variable cross-reference, or
-      (
-         G__command_eval && // exec temp code from the cmd line, and
-         (G__ifswitch != G__DOWHILE) // not in a do {} while (); construct.
-      )
-   ) {
+   if (G__xrefflag) {
+      // If generating a variable cross-reference, do nothing.
       return;
    }
    if (!G__p_tempbuf->prev) {
