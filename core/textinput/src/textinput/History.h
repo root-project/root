@@ -34,7 +34,7 @@ namespace textinput {
 
     // If fMaxDepth == 0, do not create history output.
     void SetMaxDepth(size_t maxDepth) { fMaxDepth = maxDepth; }
-    void SetPruneLength(size_t pruneLength = (size_t) kPruneLengthMaxDepth) {
+    void SetPruneLength(size_t pruneLength = (size_t) kPruneLengthDefault) {
       fPruneLength = pruneLength; }
     size_t GetFileLines() const { return fHistFileLines; }
 
