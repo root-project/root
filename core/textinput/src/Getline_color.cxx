@@ -335,11 +335,10 @@ void ROOT::TextInputColorizer::ProcessCursorChange(size_t Cursor,
             break;
          }
       }
-    
-      // no bracket found on either current or previous char, return.
-      if (foundParenIdx == -1) {
-         return;
-      }
+   }   
+   // no bracket found on either current or previous char, return.
+   if (foundParenIdx == -1) {
+      return;
    }
   
    // terate through remaining letters until find a matching closing bracket

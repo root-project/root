@@ -33,10 +33,9 @@ namespace textinput {
       }
 
       return C(In.GetRaw());
-    } else {
-      return ToCommandExtended(In.GetExtendedInput(), HadEscPending);
     }
-    return C(In.GetRaw(), Editor::kCKError);
+    // else
+    return ToCommandExtended(In.GetExtendedInput(), HadEscPending);
   }
   
   Editor::Command
@@ -78,6 +77,7 @@ namespace textinput {
       case 0x7f: return C(Editor::kCmdDelLeft); // MacOS
       default: return C(In, Editor::kCKError);
     }
+    // Cannot reach:
     return C(In, Editor::kCKError);
   }
   
@@ -95,6 +95,7 @@ namespace textinput {
       case 'i' - 0x60 /*TAB*/: return C(Editor::kCmdHistComplete);
       default: return C(In, Editor::kCKError);
     }
+    // Cannot reach:
     return C(In, Editor::kCKError);    
   }
 
@@ -148,6 +149,8 @@ namespace textinput {
       case InputData::kEIIgnore: return C(Editor::kCmdIgnore);
       default:  return C(Editor::kCmdIgnore);
     }
+    // Cannot reach:
+    return C(Editor::kCmdIgnore);    
   }
 
 }

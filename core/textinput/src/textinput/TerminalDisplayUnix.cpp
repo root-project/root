@@ -42,7 +42,7 @@ namespace {
   void InitRGB256(unsigned char rgb256[][3]) {
     // initialize the array with the expected standard colors:
     // (from http://frexx.de/xterm-256-notes)
-    unsigned char rgbidx = 0;
+
     // this is not what I see, though it's supposedly the default:
     //   rgb[0][0] =   0; rgb[0][1] =   0; rgb[0][1] =   0;
     // use this instead, just to be on the safe side:
@@ -67,18 +67,6 @@ namespace {
     rgb256[14][0] =   0; rgb256[14][1] = 255; rgb256[14][1] = 255;
     rgb256[15][0] = 255; rgb256[15][1] = 255; rgb256[15][1] = 255;
     
-    /*
-    for (unsigned char red = 0; red < 6; ++red) {
-      for (unsigned char green = 0; green < 6; ++green) {
-        for (unsigned char blue = 0; blue < 6; ++blue) {
-          rgbidx = 16 + (red * 36) + (green * 6) + blue;
-          rgb256[rgbidx][0] = red ? (red * 40 + 55) : 0;
-          rgb256[rgbidx][1] = green ? (green * 40 + 55) : 0;
-          rgb256[rgbidx][2] = blue ? (blue * 40 + 55) : 0;
-        }
-      }
-    }
-    */
     // 6 intensity RGB
     static const int intensities[] = {0, 0x5f, 0x87, 0xaf, 0xd7, 0xff};
     int idx = 16;

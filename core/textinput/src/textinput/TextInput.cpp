@@ -178,7 +178,8 @@ namespace textinput {
     if (!R.fDisplay.IsEmpty() && fContext->GetColorizer()) {
       fContext->GetColorizer()->ProcessTextChange(ColModR, fContext->GetLine());
     }
-    if (!ColModR.fDisplay.IsEmpty() || ColModR.fDisplay.fPromptUpdate) {
+    if (!ColModR.fDisplay.IsEmpty()
+        || ColModR.fDisplay.fPromptUpdate != Range::kNoPromptUpdate) {
       std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
                     std::bind2nd(std::mem_fun(&Display::NotifyTextChange), ColModR.fDisplay));
     }
