@@ -1380,7 +1380,6 @@ ClassImp(TProofPlayerLocal)
 
 ClassImp(TProofPlayerRemote)
 
-
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
@@ -1406,6 +1405,12 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    PDB(kGlobal,1) Info("Process","Enter");
    fDSet = dset;
    fExitStatus = kFinished;
+
+   // This is done here to pickup on the fly changes
+   Int_t usemerge = 0;
+   if (TProof::GetParameter(fInput, "PROOF_UseTH1Merge", usemerge) != 0)
+      usemerge = gEnv->GetValue("ProofPlayer.UseTH1Merge", 0);
+   fUseTH1Merge = (usemerge == 1) ? kTRUE : kFALSE;
 
    Bool_t noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
 
@@ -2898,25 +2903,116 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj)
          return (TObject *)0;
 
       } else {
-         // Histogram has already been projected
-         Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
-         if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
-            // Large histo: merge one-by-one
-            return obj;
+
+         if (!fUseTH1Merge) {
+            // Check if we can 'Add' the histogram to an existing one; this is more efficient
+            // then using Merge
+            TH1 *hout = (TH1*) fOutput->FindObject(h->GetName());
+            if (hout) {
+               // Do they have the same binning and ranges?
+               Bool_t samebin = HistoSameAxis(hout, h);
+               if (samebin) {
+                  hout->Add(h);
+                  PDB(kOutput,2)
+                     Info("HandleHistogram", "histogram '%s' just added", h->GetName());
+                  
+                  return (TObject *)0;
+               } else {
+                  // Remove the existing histo from the output list ...
+                  fOutput->Remove(hout);
+                  // ... and create either the list to merge in one-go at the end
+                  // (more efficient than merging one by one) or, if too big, merge
+                  // these two and start the 'one-by-one' technology
+                  Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
+                  if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
+                     list = new TList;
+                     list->Add(hout);
+                     h->Merge(list);
+                     list->SetOwner();
+                     delete list;
+                     return h;
+                  } else {
+                     list = new TList;
+                     list->SetName(h->GetName());
+                     list->SetOwner();
+                     fOutputLists->Add(list);
+                     // Add the existing and the incoming histos
+                     list->Add(hout);
+                     list->Add(h);
+                     // Done
+                     return (TObject *)0;
+                  }
+               }
+            } else {
+               // This is the first one; add it to the output list
+               fOutput->Add(h);
+               return (TObject *)0;
+            }
+
          } else {
-            // Create the list to merge in one-go at the end (more efficient
-            // than merging one by one)
-            list = new TList;
-            list->SetName(h->GetName());
-            list->SetOwner();
-            fOutputLists->Add(list);
-            list->Add(h);
-            // Done
-            return (TObject *)0;
+
+            // Histogram has already been projected
+            Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
+            if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
+               // Large histo: merge one-by-one
+               return obj;
+            } else {
+               // Create the list to merge in one-go at the end (more efficient
+               // than merging one by one)
+               list = new TList;
+               list->SetName(h->GetName());
+               list->SetOwner();
+               fOutputLists->Add(list);
+               list->Add(h);
+               // Done
+               return (TObject *)0;
+            }
          }
       }
    }
    PDB(kOutput,1) Info("HandleHistogram", "leaving");
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::HistoSameAxis(TH1 *h0, TH1 *h1)
+{
+   // Return kTRUE is the histograms 'h0' and 'h1' have the same binning and ranges
+   // on the axis (i.e. if they can be just Add-ed for merging).
+
+   Bool_t rc = kFALSE;
+   if (!h0 || !h1) return rc;
+
+   TAxis *a0 = 0, *a1 = 0;
+
+   // Check X
+   a0 = h0->GetXaxis();
+   a1 = h1->GetXaxis();
+   if (a0->GetNbins() == a1->GetNbins())
+      if (TMath::Abs(a0->GetXmax() - a1->GetXmax()) < 1.e-9)
+         if (TMath::Abs(a0->GetXmin() - a1->GetXmin()) < 1.e-9) rc = kTRUE;
+
+   // Check Y, if needed
+   if (h0->GetDimension() > 1) {
+      rc = kFALSE;
+      a0 = h0->GetYaxis();
+      a1 = h1->GetYaxis();
+      if (a0->GetNbins() == a1->GetNbins())
+         if (TMath::Abs(a0->GetXmax() - a1->GetXmax()) < 1.e-9)
+            if (TMath::Abs(a0->GetXmin() - a1->GetXmin()) < 1.e-9) rc = kTRUE;
+   }
+
+   // Check Z, if needed
+   if (h0->GetDimension() > 2) {
+      rc = kFALSE;
+      a0 = h0->GetZaxis();
+      a1 = h1->GetZaxis();
+      if (a0->GetNbins() == a1->GetNbins())
+         if (TMath::Abs(a0->GetXmax() - a1->GetXmax()) < 1.e-9)
+            if (TMath::Abs(a0->GetXmin() - a1->GetXmin()) < 1.e-9) rc = kTRUE;
+   }
+
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
