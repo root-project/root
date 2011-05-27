@@ -1,0 +1,6 @@
+set(ROOT_FOUND TRUE)
+set(ROOT_INCLUDE_DIRS ${ROOTSYS}/include)
+set(ROOT_LIBRARY_DIRS ${ROOTSYS}/lib)
+
+
+

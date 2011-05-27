@@ -1,0 +1,16 @@
+############################################################################
+# CMakeLists.txt file for building ROOT hist/hist package
+############################################################################
+
+set(libname Hist)
+
+ROOT_USE_PACKAGE(core)
+ROOT_USE_PACKAGE(math)
+ROOT_USE_PACKAGE(graf2d)
+ROOT_USE_PACKAGE(io/io)
+
+ROOT_GENERATE_DICTIONARY(G__${libname} *.h Math/*.h LINKDEF LinkDef.h)
+ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES Matrix MathCore)
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES Matrix MathCore)
+ROOT_INSTALL_HEADERS()
+

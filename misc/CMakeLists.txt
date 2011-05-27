@@ -1,0 +1,8 @@
+if(CMAKE_Fortran_COMPILER)
+  add_subdirectory(minicern)
+endif()
+if(memstat)
+  add_subdirectory(memstat)
+endif()
+
+

@@ -1,0 +1,824 @@
+#!/bin/sh
+# -*- sh-indentation: 3 -*-
+# This script returns the machine dependent compile options needed
+# to compile and link applications using the ROOT libraries.
+#
+# Author: Fons Rademakers, 06/06/99
+
+progdir=`dirname $0`
+runningdir=`pwd`
+if echo $progdir | grep "^/" > /dev/null 2>& 1 || \
+   echo $progdir | grep "^~" > /dev/null 2>& 1; then
+   # absolute path
+   fullpath=$progdir
+else
+   # relative path
+   fullpath=$runningdir/$progdir
+fi
+ROOTSYS=`dirname $fullpath`
+
+arch=@ROOT_ARCHITECTURE@
+platform=@ROOT_PLATFORM@
+bindir=@BIN_INSTALL_DIR@
+libdir=@LIB_INSTALL_DIR@
+incdir=@INCLUDE_INSTALL_DIR@
+etcdir=@ETC_INSTALL_DIR@
+features="@installed_options_list@"
+configargs="@ROOT_CONFIGARGS@"
+altcc="@CMAKE_C_COMPILER@"
+altcxx="@CMAKE_CXX_COMPILER@"
+altf77="@CMAKE_Fortran_COMPILER@"
+altld="@CMAKE_CXX_COMPILER@"
+dicttype=@ROOT_DICTTYPE@ 
+zliblib=@zliblib@ 
+
+if test "$platform" = "win32"; then
+   if [ "x$ROOTSYS" != "x" ]; then
+      unixROOTSYS=`cygpath -u $ROOTSYS`
+   else
+      unixROOTSYS=.
+   fi
+   bindir=$unixROOTSYS/bin
+   libdir=$unixROOTSYS/lib
+   incdir=$unixROOTSYS/include
+   etcdir=$unixROOTSYS/etc
+fi
+
+### ROOT libraries ###
+
+newlib="-lNew"
+rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
+rootglibs="-lGui"
+
+if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
+    rootlibs="$rootlibs -lReflex"
+fi
+
+if test "$platform" = "win32"; then
+   rootulibs="-include:_G__cpp_setupG__Net        \
+              -include:_G__cpp_setupG__IO         \
+              -include:_G__cpp_setupG__Hist       \
+              -include:_G__cpp_setupG__Graf       \
+              -include:_G__cpp_setupG__G3D        \
+              -include:_G__cpp_setupG__GPad       \
+              -include:_G__cpp_setupG__Tree       \
+              -include:_G__cpp_setupG__Thread     \
+              -include:_G__cpp_setupG__Rint       \
+              -include:_G__cpp_setupG__PostScript \
+              -include:_G__cpp_setupG__Matrix     \
+              -include:_G__cpp_setupG__Physics"
+   rootuglibs="-include:_G__cpp_setupG__Gui1"
+elif test "$platform" = "aix5"; then
+   rootulibs="-Wl,-u,.G__cpp_setupG__Net        \
+              -Wl,-u,.G__cpp_setupG__IO         \
+              -Wl,-u,.G__cpp_setupG__Hist       \
+              -Wl,-u,.G__cpp_setupG__Graf       \
+              -Wl,-u,.G__cpp_setupG__G3D        \
+              -Wl,-u,.G__cpp_setupG__GPad       \
+              -Wl,-u,.G__cpp_setupG__Tree       \
+              -Wl,-u,.G__cpp_setupG__Thread     \
+              -Wl,-u,.G__cpp_setupG__Rint       \
+              -Wl,-u,.G__cpp_setupG__PostScript \
+              -Wl,-u,.G__cpp_setupG__Matrix     \
+              -Wl,-u,.G__cpp_setupG__Physics"
+   rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
+else
+   rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
+              -Wl,-u,_G__cpp_setupG__IO         \
+              -Wl,-u,_G__cpp_setupG__Hist       \
+              -Wl,-u,_G__cpp_setupG__Graf       \
+              -Wl,-u,_G__cpp_setupG__G3D        \
+              -Wl,-u,_G__cpp_setupG__GPad       \
+              -Wl,-u,_G__cpp_setupG__Tree       \
+              -Wl,-u,_G__cpp_setupG__Thread     \
+              -Wl,-u,_G__cpp_setupG__Rint       \
+              -Wl,-u,_G__cpp_setupG__PostScript \
+              -Wl,-u,_G__cpp_setupG__Matrix     \
+              -Wl,-u,_G__cpp_setupG__Physics"
+   rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
+fi
+
+### machine dependent settings ###
+
+case $arch in
+hpux)
+   #HP-UX with CC
+   auxcflags="+a1 +Z"
+   auxlibs="-lm -ldld"
+   ;;
+hpuxacc | hpuxia64acc)
+   # HP-UX 10.x with aCC
+   auxcflags=
+   auxlibs="-lm -ldld"
+   ;;
+hpuxgcc)
+   # HP-UX 10.x with g++
+   auxcflags=
+   auxlibs="-lm -ldld"
+   ;;
+hurddeb)
+   # Debian GNU/Hurd
+   auxcflags=
+   auxlibs="-lnsl -lm -ldl -rdynamic"
+   ;;
+aix | aix5)
+   # IBM AIX
+   auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
+   auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
+   ;;
+aixgcc)
+   # IBM AIX with g++
+   auxcflags="-fsigned-char"
+   auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
+   ;;
+solaris)
+   # Solaris
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl -lsunmath"
+   ;;
+solarisgcc)
+   # Solaris g++ 2.8.x
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
+   ;;
+solarisCC5)
+   # Solaris CC 5.0
+   auxcflags=
+   auxlibs="-lm -ldl -lnsl -lsocket"
+   ;;
+solariskcc)
+   # Solaris KCC
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lgen -lm -ldl -lsocket -lnsl"
+   ;;
+solarisx86)
+   # Solaris CC on Intel
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
+   ;;
+sgicc)
+   # SGI
+   auxcflags="-LANG:std"
+   auxlibs="-lm -ldl"
+   ;;
+sgicc64)
+   # SGI
+   auxcflags="-64 -LANG:std"
+   auxlibs="-lm"
+   ;;
+sgigcc)
+   # SGI 6.x with gcc
+   auxcflags="-fsigned-char"
+   auxlibs="-lgen -lstdc++ -lm -ldl"
+   ;;
+sgin32gcc)
+   # SGI 6.x with gcc with n32 ABI
+   auxcflags="-fsigned-char"
+   auxlibs="-lm -ldl"
+   ;;
+sgikcc)
+   # SGI with KCC
+   auxcflags="--signed_chars --display_error_number \
+              --diag_suppress 68 --diag_suppress 191 --diag_suppress 837"
+   auxlibs="-lm -ldl"
+   ;;
+alphagcc)
+   # Alpha/OSF with g++
+   auxcflags=
+   auxlibs="-lg++ -lm"
+   ;;
+alphagcc)
+   # Alpha/OSF with gcc
+   auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
+   auxlibs="-ltermcap -lm"
+   ;;
+alphakcc)
+   # Alpha/OSF with kai compiler (not yet valid)
+   auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
+   auxlibs="-ltermcap -lm"
+   ;;
+alphacxx6)
+   # Alpha/OSF with cxx6
+   auxcflags="-tlocal -D__osf__ -D__alpha -D_USE_STD_IOSTREAM"
+   auxlibs="-lm"
+   ;;
+alphacxx)
+   # Alpha/OSF with cxx5
+   auxcflags="-oldcxx -D__osf__ -D__alpha"
+   auxlibs="-lm"
+   ;;
+linuxrh42 | linuxrh51)
+   # Linux with gcc 2.7.2.x
+   auxcflags=
+   auxlibs="-lg++ -lm -ldl -rdynamic"
+   ;;
+linux)
+   # Linux with gcc >= 3.x
+   auxcflags="-m32"
+   auxldflags="-m32"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxmips)
+   # Linux on mips with gcc >= 3.x
+   auxcflags="-mapi=32"
+   auxldflags="-mapi=32"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxdeb | linuxsuse6)
+   # Linux with gcc on Debian and SuSE
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxdeb2ppc)
+   # Debian/Linux on PPC
+   auxcflags=-fsigned-char
+   auxlibs="-lnsl -lm -ldl -rdynamic"
+   ;;
+linuxkcc)
+   # Linux with the KAI compiler
+   auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxhppa)
+   # Linux on hppa with the GCC compiler
+   auxcflags=
+   auxldflags=
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxicc)
+   # Linux with the Intel icc compiler
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
+linuxppcgcc)
+   # PPC Linux with gcc
+   auxcflags="-fsigned-char -I/usr/X11/include"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxppc64gcc)
+   # PPC64 (64 bit mode) Linux with gcc 3.x
+   auxcflags="-m64 -fsigned-char"
+   auxldflags="-m64"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxia64gcc)
+   # Itanium Linux with gcc 2.x/3.x
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxia64sgi)
+   # Itanium Linux with SGI compiler
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
+linuxia64ecc)
+   # Itanium Linux with Intel ecc compiler
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
+linuxx8664gcc)
+   # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
+   auxcflags="-m64"
+   auxldflags="-m64"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxx8664icc)
+   # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
+linuxalphagcc)
+   # Alpha Linux with gcc
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+linuxarm)
+   # ARM Linux with gcc
+   auxcflags="-fsigned-char"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
+mklinux)
+   # MkLinux with libc5
+   auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
+   auxlibs="-lg++ -lm -ldl -rdynamic"
+   ;;
+freebsd)
+   # FreeBSD with libc5
+   auxcflags=
+   auxlibs="-lm -lg++"
+   ;;
+freebsd4)
+   # FreeBSD 4 with glibc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
+   ;;
+freebsd5)
+   # FreeBSD 5 with glibc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
+   ;;
+openbsd)
+   # OpenBSD with libc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
+   ;;
+macosx)
+   # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   if [ $macosx_minor -le 3 ]; then
+      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+      auxcflags="-Wno-long-double $auxcflags"
+      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+      forcelibs=$rootulibs
+      forceglibs=$rootuglibs
+   else
+      auxcflags=
+      auxlibs="-lm -ldl"
+   fi
+   ;;
+macosxicc)
+   # MacOS X with Intel icc compiler
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   auxcflags=
+   auxlibs="-lm -ldl"
+   ;;
+macosx64)
+   # MacOS X with gcc (GNU cc v4.x) in 64 bit mode
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   auxcflags="-m64"
+   auxldflags="-m64"
+   auxlibs="-lm -ldl"
+   ;;
+macosxxlc)
+   # MacOS X with IBM xl compiler and possible fink (fink.sf.net)
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+   # cannot find the one linked to libGraf if relocated after built
+   rootlibs="$rootlibs -lfreetype"
+   if [ $macosx_minor -le 3 ]; then
+      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
+      forcelibs=$rootulibs
+      forceglibs=$rootuglibs
+   else
+      auxcflags=
+      auxlibs="-lm -ldl"
+   fi
+   ;;
+hiux)
+   # Hitachi HIUX
+   auxcflags=
+   auxlibs="-lm -ldld"
+   ;;
+win32)
+   # Win32
+   auxcflags="-MD"
+   if test "x@winrtdebug@" = "xTRUE"; then
+	  auxcflags="-MDd"
+   fi
+   VC_MAJOR=`unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $8 }' | cut -d'.' -f1`
+   if test "$VC_MAJOR" != "" && test $VC_MAJOR -gt 13; then
+      auxcflags="$auxcflags -EHs -GR"
+   else
+      auxcflags="$auxcflags -GR -GX -G5"
+   fi
+   auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
+   ;;
+win32gcc)
+   # Win32 with cygwin gcc
+   auxcflags=
+   auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
+   ;;
+*)
+   echo "root-config: \"$arch\" invalid architecture"
+   echo "Please report to rootdev@root.cern.ch"
+   exit 1
+   ;;
+esac
+
+
+### compiler dependent settings ###
+
+case $arch in
+*kcc)
+   ex=""
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+	 auxcflags="--thread_safe $auxcflags"
+	 auxldflags="--thread_safe $auxldflags"
+      fi
+      if test "x$f" = "xexceptions" ; then
+	 ex="yes"
+      fi
+   done
+   if test "x$ex" = "x" ; then
+      auxcflags="--no_exceptions $auxcflags"
+      auxldflags="--no_exceptions $auxldflags"
+   else
+      auxcflags="--exceptions $auxcflags"
+      auxldflags="--exceptions $auxldflags"
+   fi
+   ;;
+freebsd* | openbsd* | linux*)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         auxcflags="-pthread $auxcflags"
+         auxlibs="-pthread $auxlibs"
+      fi
+      if test "x$f" = "xrpath" ; then
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
+      fi
+   done
+   ;;
+macosx*)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         if [ $macosx_minor -ge 5 ]; then
+            auxcflags="-D_REENTRANT -pthread $auxcflags"
+            auxlibs="-pthread $auxlibs"
+         else
+	    auxcflags="-D_REENTRANT $auxcflags"
+	    auxlibs="-lpthread $auxlibs"
+         fi
+      fi
+      if test "x$f" = "xrpath" ; then
+         if [ $macosx_minor -ge 5 ]; then
+            auxlibs="-Wl,-rpath,$libdir $auxlibs"
+         fi
+      fi
+   done
+   ;;
+hpuxacc | hpuxia64acc)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+         auxcflags="-mt $auxcflags"
+         auxlibs="-mt $auxlibs"
+      fi
+   done
+   ;;
+win32)
+   ;;
+*)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+	 auxcflags="-D_REENTRANT $auxcflags"
+	 auxlibs="-lpthread $auxlibs"
+      fi
+   done
+   ;;
+esac
+
+### end of machine and compiler dependent settings ###
+nostubs=no #TODO: Don't know what this is @no_stubs@, so set it to no
+nostubstest=no #TODO: Don't know what this is @no_stubs_test@, so set it to no
+
+
+prefix=@ROOT_INSTALL_DIR@
+if test "$platform" = "win32" && test "$prefix" != ""; then
+   prefix=`cygpath -u $prefix`
+fi
+exec_prefix=${prefix}
+exec_prefix_set=no
+new_set=no
+libsout=no
+noauxlibs=no
+noauxcflags=no
+noldflags=no
+
+usage="\
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
+ [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
+ [--glibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--noauxcflags] [--noauxlibs]\
+ [--noldflags] [--has-<feature>] [--arch] [--platform] [--dicttype]\
+ [--config] [--features] [--svn-revision] [--python-version]\
+ [--cc] [--cxx] [--f77] [--ld ] [--nostubs] [--nostubstest] [--help]"
+
+if test $# -eq 0; then
+   echo "${usage}" 1>&2
+   exit 1
+fi
+
+out=""
+
+while test $# -gt 0; do
+  case "$1" in
+  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *)    optarg= ;;
+  esac
+
+  case $1 in
+    --arch)
+      ### Output the arcitecture (compiler/OS combination)
+      out="$out $arch"
+      ;;
+    --platform)
+      ### Output the platform (OS)
+      out="$out $platform"
+      ;;
+    --has-*)
+      ### Check for feature
+      f=`echo $1 | sed 's/--has-//'`
+      for c in $features ; do
+         if test "x$c" = "x$f" ; then
+            out="$out yes"
+            break
+         fi
+         c=""
+      done
+      if test "x$c" = "x" ; then
+         out="$out no"
+      fi
+      ;;
+    --prefix=*)
+      ### Set the prefix
+      if test "$platform" = "win32"; then
+         ### We need to expand the path to backslash seperated path
+         optarg=`cygpath -u $optarg`
+      fi
+      prefix=$optarg
+      bindir=${prefix}/bin
+      libdir=${prefix}/lib
+      incdir=${prefix}/include
+      if test $exec_prefix_set = no ; then
+         exec_prefix=$optarg
+      fi
+      ;;
+    --prefix)
+      ### Output the prefix
+      out="$out $prefix"
+      ;;
+    --exec-prefix=*)
+      ### Set the exec-prefix
+      if test "$platform" = "win32"; then
+      ### We need to expand the path to backslash seperated path
+         optarg=`cygpath -u $optarg`
+      fi
+      exec_prefix=$optarg
+      exec_prefix_set=yes
+      bindir=${exec_prefix}/bin
+      libdir=${exec_prefix}/lib
+      ;;
+    --exec-prefix)
+      ### Output the exec-prefix
+      out="$out $prefix"
+      ;;
+    --nonew)
+      ### Don't use the libNew library
+      new_set="no"
+      ;;
+    --new)
+      ### Use the libNew library
+      new_set="yes"
+      ;;
+    --noauxlibs)
+      noauxlibs="yes"
+      ;;
+    --noauxcflags)
+      noauxcflags="yes"
+      ;;
+    --noldflags)
+      noldflags="yes"
+      ;;
+    --version)
+      ### Output the version number.  If RVersion.h can not be found, give up.
+      if test -r ${incdir}/RVersion.h; then
+         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
+      else
+         echo "cannot read ${incdir}/RVersion.h"
+         exit 1
+      fi
+      ;;
+    --svn-revision)
+      ### Output the version number.  If RVersion.h can not be found, give up.
+      if test -r ${incdir}/RVersion.h; then
+         out="$out `sed -n 's,.*ROOT_SVN_REVISION *\([0-9]*\).*,\1,p' < ${incdir}/RVersion.h`"
+      else
+         echo "cannot read ${incdir}/RVersion.h"
+         exit 1
+      fi
+      ;;
+    --python-version)
+      out="$out @PYTHON_VERSION@"
+      ;;
+    --cflags)
+      ### Output the compiler flags
+      if test ${incdir} != /usr/include; then
+         ### In case we're on a Win32 system, we need to expand the
+         ### path to a backslash seperated path
+         if test "$platform" = "win32"; then
+            includes=-I\'`cygpath -w ${incdir}`\'
+         else
+            includes=-I${incdir}
+         fi
+      fi
+      if test "x$noauxcflags" = "xyes" ; then
+         out="$out $includes"
+      else
+         out="$out ${auxcflags} $includes"
+      fi
+      ;;
+   --auxcflags)
+      ### Output auxiliary compiler flags
+      out="$out $auxcflags"
+      ;;
+    --ldflags)
+      ### Output linker flags
+      out="$out $auxldflags"
+      ;;
+    --libs)
+      ### Output regular ROOT libraries.  If the user said --glibs --libs,
+      ### We've already output the libraries, so we skip this section
+      if test "x$libsout" = "xyes" ; then
+	 shift
+	 continue
+      fi
+      ### Set the flag
+      libsout="yes"
+      ### See if we need the new library
+      if test "x$new_set" = "xyes"; then
+         libs="${newlib} ${rootlibs}"
+      else
+         libs=${rootlibs}
+      fi
+      ### If we're on a win32 system, we need to change the -l prefix
+      ### into a .lib suffix, and expand the paths to a backslash
+      ### separated path.
+      if test "$platform" = "win32"; then
+         nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
+         libs=
+         for i in $nlibs; do
+            libs="$libs '`cygpath -w $i`'"
+         done
+      else
+         if test "x$noldflags" = "xno" ; then
+	    out="$out -L${libdir}"
+	 fi
+      fi
+      if test "x$noauxlibs" = "xyes" ; then
+	 out="$out $forcelibs $libs"
+      else
+	 out="$out $forcelibs $libs ${auxlibs}"
+      fi
+      ;;
+    --glibs)
+      ### Output graphics and normal libraries
+      ### If the user said --libs --glibs, we don't need to add the
+      ### regular ROOT libraries.
+      glibsonly="no"
+      if test "x$libsout" = "xno" ; then
+         ### Set the flag
+         libsout="yes"
+         if test "x$new_set" = "xyes" ; then
+            glibs="${newlib} ${rootlibs} ${rootglibs}"
+         else
+            glibs="${rootlibs} ${rootglibs}"
+         fi
+      else
+         glibs="${rootglibs}"
+         glibsonly="yes"
+      fi
+      ### If we're on a win32 system, we need to change the -l prefix
+      ### into a .lib suffix, and expand the paths to a backslash
+      ### separated path.
+      if test "$platform" = "win32"; then
+         nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
+         glibs=
+         for i in $nlibs; do
+            glibs="$glibs '`cygpath -w $i`'"
+         done
+      else
+        if test "x$noldflags" = "xno" ; then
+           out="$out -L${libdir}"
+        fi
+      fi
+      if test "x$glibsonly" = "xyes" ; then
+         out="$out $forceglibs $glibs"
+      else
+         if test "x$noauxlibs" = "xyes" ; then
+            out="$out $forcelibs $forceglibs $glibs"
+         else
+            out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
+         fi
+      fi
+      ;;
+    --auxlibs)
+      ### output the auxiliary libraries
+      out="$out $auxlibs"
+      ;;
+    --bindir)
+      ### output the executable directory
+      out="$out $bindir"
+      ;;
+    --libdir)
+      ### output the library directory
+      out="$out $libdir"
+      ;;
+    --incdir)
+      ### output the header directory
+      out="$out $incdir"
+      ;;
+    --etcdir)
+      ### output the etc directory
+      out="$out $etcdir"
+      ;;
+    --config)
+      ### output the configure arguments
+      out="$out $configargs"
+      ;;
+    --features)
+      ### output all supported features
+      out="$out$features"  # no space, features starts with space
+      ;;
+    --dicttype)
+      ### output the dictionary type
+      out="$out $dicttype"
+      ;;
+    --cc)
+      ### output used C compiler
+      out="$out $altcc"
+      ;;
+    --cxx)
+      ### output used C++ compiler
+      out="$out $altcxx"
+      ;;
+    --f77)
+      ### output used Fortran compiler
+      out="$out $altf77"
+      ;;
+    --ld)
+      ### output used Linker
+      out="$out $altld"
+      ;;
+    --nostubs)
+      ### Output the prefix
+      out="$out $nostubs"
+      ;;
+    --nostubstest)
+      ### Output the prefix
+      out="$out $nostubstest"
+      ;;
+    --help)
+      ### Print a help message
+      echo "Usage: `basename $0` [options]"
+      echo ""
+      echo "  --arch                Print the architecture (compiler/OS)"
+      echo "  --platform            Print the platform (OS)"
+      echo "  --prefix[=dir]        Print or set prefix"
+      echo "  --exec-prefix[=dir]   Print or set execution prefix"
+      echo "  --libs                Print regular ROOT libraries"
+      echo "  --glibs               Print regular + GUI ROOT libraries"
+      echo "  --cflags              Print compiler flags and header path"
+      echo "  --ldflags             Print linker flags"
+      echo "  --bindir              Print the executable directory"
+      echo "  --libdir              Print the library directory"
+      echo "  --incdir              Print the header directory"
+      echo "  --auxlibs             Print auxiliary libraries"
+      echo "  --auxcflags           Print auxiliary compiler flags"
+      echo "  --[no]new             Turn on[off] use of libNew.so"
+      echo "  --noauxlibs           Do not print auxiliary/system libraries"
+      echo "  --noauxcflags         Do not print auxiliary compiler flags"
+      echo "  --noldflags           Do not print linker flags"
+      echo "  --config              Print arguments used for ./configure"
+      echo "  --features            Print list of all supported features"
+      echo "  --has-<feature>       Test if <feature> is compiled in"
+      echo "  --dicttype            Print dictionary generator being used"
+      echo "  --version             Print the ROOT version"
+      echo "  --svn-revision        Print the ROOT SVN revision number"
+      echo "  --python-version      Print the Python version used by ROOT"
+      echo "  --cc                  Print alternative C compiler specified when ROOT was built"
+      echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"
+      echo "  --f77                 Print alternative Fortran compiler specified when ROOT was built"
+      echo "  --ld                  Print alternative Linker specified when ROOT was built"
+      echo "  --nostubs             Print yes if we are using the stubless calls"
+      echo "  --nostubstest         Print yes if we are using the stubless calls (in test mode)"
+      echo "  --help                Print this message"
+      exit 0
+      ;;
+    *)
+      ### Give an error
+      echo "Unknown argument \"$1\"!" 1>&2
+      echo "${usage}" 1>&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+### Output the stuff
+echo $out

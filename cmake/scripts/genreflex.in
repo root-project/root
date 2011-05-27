@@ -1,0 +1,3 @@
+#!/bin/sh
+dir=@CMAKE_BINARY_DIR@
+python ${dir}/python/genreflex/genreflex.py "$@"

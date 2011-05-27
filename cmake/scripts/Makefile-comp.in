@@ -1,0 +1,10 @@
+# -*- mode: makefile -*-
+#
+# Makefile compiler definitions included by the top Makefile.
+# Used to override the compilers specified in the architecture
+# specific Makefiles.
+
+CC    ="@CMAKE_C_COMPILER@"
+CXX   ="@CMAKE_CXX_COMPILER@"
+F77   ="@CMAKE_Fortran_COMPILER@"
+LD    ="@CMAKE_CXX_COMPILER@"

@@ -1,0 +1,7 @@
+#ifndef ROOT_RConfigOptions
+#define ROOT_RConfigOptions
+
+#define R__CONFIGUREOPTIONS   "@RootConfigOptions@"
+#define R__CONFIGUREFEATURES  "@RootConfigFeatures@"
+
+#endif

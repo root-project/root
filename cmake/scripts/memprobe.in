@@ -1,0 +1,309 @@
+#!@perl@
+
+################################################################################
+#
+#  Authors : D.Bertini and M.Ivanov
+#  Date: 23/10/2000
+#  Updated: 10/05/2001 D.Bertini, v2.0 port to gdb5.0 + glibc2.2
+#
+#
+#  To activate the memory checker you have to set in the .rootrc file
+#  the resource Root.MemCheck to 1 (e.g.: Root.MemCheck: 1) and you
+#  have to link with libNew.so (e.g. use root-config --new --libs) or
+#  use rootn.exe. When all this is the case you will find at the end
+#  of the program execution a file "memcheck.out" in the directory
+#  where you started your ROOT program. Alternatively you can set
+#  the resource Root.MemCheckFile to the name of a file to which
+#  the leak information will be written. The contents of this
+#  "memcheck.out" file can be analyzed and transformed into printable
+#  text via the memprobe program (in $ROOTSYS/bin).
+#
+################################################################################
+
+if ( ( $#ARGV < 0 )) {
+Usage();
+}
+
+use Getopt::Std;
+
+getopt "h,e,m,d,f";
+#Usage("exec file is mandatory !\n") if ( !($opt_h or $opt_e) );
+
+if ( $opt_h ) {   Usage();}
+if ( $opt_e ) {  $ExeFile=$opt_e;
+	       }else {
+		if (!$opt_h){ Usage("an exec file must be provided  !\n");}
+               }
+if ( $opt_m ) {  $MemStatFile=$opt_m;
+	       }else{
+                $MemStatFile="memcheck.out";
+	      }
+if ( $opt_d ) {  $MemDescFile=$opt_d;
+               }else{
+                 $MemDescFile="memcheckdesc.out";
+              }
+
+if ( $opt_f ) {  $MemFiltFile=$opt_f;
+	       }else{
+		 $MemFiltFile="analfilter";
+	       }
+
+
+sub Usage
+{
+	my ($txt) = @_;
+
+	print "MemProbe v2.0 Usage:\n";
+	print "\t $0 -e exec-file [options] [files] \n ";
+        print "\t-e \t\t\tname of analyzed program\n";
+	print "Options: \n";
+        print "\t-h \t\t\tthis usage help\n";
+        print "\t-m  \t\tname of analyzed program output file\n";
+        print "\t-d \t\tname of the stat description file\n";
+        print "\t-f  \t\tname of the filter file\n";
+	print "\nWarning: $txt\n" if $txt;
+
+	exit 2;
+}
+
+
+# old version
+#$ExeFile = shift @ARGV;
+#$MemStatFile = $#ARGV >= 0 ? shift @ARGV : "memcheck.out";
+
+open (MEMSTAT, $MemStatFile) or die "-E- Could not open leaks data file $MemStatFile: $!";
+
+if ($#ARGV >= 0) {
+  $BreakOn = shift @ARGV;
+  # Rest in @ARGV are program arguments
+}
+
+
+##############################################################################
+#              Read filter expression
+##############################################################################
+
+open (FILTERFILE, $MemFiltFile);
+@FILTER = <FILTERFILE>;
+close (FILTERFILE);
+for ($j = 0; $j <= $#FILTER; ++$j){
+  chop $FILTER[$j];
+  #    print $FILTER[$j];
+}
+
+##############################################################################
+#              Find  leak adresses
+##############################################################################
+
+$n = $u = 0;
+$nfull = $ufull = 0;
+
+while (<MEMSTAT>) {
+  # remove newline
+  chop $_ ;
+
+  if (/\s*(stack:)\s*/) {
+    $addrfull = $';  #obtain stack info
+    $_ = $addrfull;
+    s/(st)//g;
+    s/(0x)/:0x/g;
+    @arr = split(/:/);  #obtain different leak points
+    for ($i = 1; $i < $#arr; ++$i){
+      $addr =  $arr[$i];
+      $u++ if not exists $Size{$addr};
+      $Size{$addr} += 0;
+      $n++;
+    }
+  }
+}
+close (MEMSTAT);
+
+
+##############################################################################
+#             FIND  debug info for  addresses - information stored
+#             in file leak.desc.C
+##############################################################################
+
+
+# redirect standard output to the trash
+open (STDERR,">/dev/null");
+
+# Redirect list of commands to a file
+# using unix pipes (needed for RH.7.1 & gdb5.0)
+
+open (myFile,">commands");
+
+# Change set listsize 2 to something else to show more lines
+print myFile "set prompt\nset listsize 1\nset height 0\nset verbose off\n";
+
+
+if (defined($BreakOn)) {
+  print myFile "break $BreakOn\n";
+  print myFile "run ", join(" ", @ARGV), " \n";
+}
+else{
+  print myFile "break main \n ";
+  print myFile "run ", join(" ", @ARGV), " \n";
+}
+
+foreach (sort keys %Size) {
+  print myFile "l \*$_\n ";
+}
+
+if (defined($BreakOn)) {
+  print myFile "kill\n";
+}
+close (myFile);
+
+##############################################################################
+#               Calling now gdb services in batch mode using
+#               dumped list of commands.
+#               ==> works with gdb-4.18 gdb-5.0 release versions
+##############################################################################
+
+
+open (PIPE, "| gdb -n -q $ExeFile < commands > $MemDescFile")
+or die "-E- Cannot start gdb !!!";
+close (PIPE);
+
+
+
+##############################################################################
+#                ASIGN debug info to address
+##############################################################################
+
+open (DBGinfo, $MemDescFile) or die "-E- Could not open desc file $MemDescFile: $!";
+$addr =0;
+while (<DBGinfo>){
+  #  if (/(0x[0-9a-f]+)\s*/){
+  if (/(^0x[0-9a-f]+)/){
+    $addr = $1;
+    #print $addr;
+    /is in /;
+    #    print $';
+    #    print "\n";
+    $filename{$addr} =$';
+    #    print "$addr   $filename{$addr}\n";
+  }else{
+    $line{$addr} = $_ if ! /^\s*l/;
+  }
+  for ($j = 0; $j <= $#FILTER; ++$j){
+    if (   ( $line{$addr} =~ /(${FILTER[$j]})/ )  ||
+      ( $filename{$addr} =~ /(${FILTER[$j]})/ )){
+  $line{$addr} = "filtered";
+}
+}
+
+}
+close (DBGinfo);
+
+##############################################################################
+#                   FIND unique leak stack sequences
+##############################################################################
+
+open (MEMSTAT, $MemStatFile) or die "-E- Could not open leaks data file $MemStatFile: $!";
+
+while (<MEMSTAT>) {
+  # remove newline
+  chop $_ ;
+  if (/\s*(stack:)\s*/) {
+    $addrfull = $';  #obtain stack info
+    $info =$`;
+    $info =~ s/size //; #obtain mem info for given stack sequence
+    $_ = $addrfull;
+    s/(st)//g;
+    s/(0x)/:0x/g;
+    s/ //g;
+    @arr = split(/:/);  #obtain leak points
+    $addrfull ="stack";
+    $FilterOut=0;
+    for ($i = 1; ($i <= $#arr)&&($FilterOut==0); ++$i){
+      $addr =  $arr[$i];
+      if ( $line{$addr} =~ /filtered/)
+	{
+	  $FilterOut=1;
+	}
+      if ( $filename{$addr} =~ /\)/)
+	{
+	  $addrfull .=  ":";
+	  $addrfull .=  $addr;
+	}
+    }
+    if ($FilterOut==0){
+      $_= $info;
+      @meminfo = split(/:/);
+      $ufull++ if not exists $Sizefull{$addrfull};
+      $SizeTotal{$addrfull} += $meminfo[1];
+      $CountTotal{$addrfull}+= $meminfo[0];
+      $SizeLeak{$addrfull} += $meminfo[3];
+      $CountLeak{$addrfull}+= $meminfo[2];
+      $nfull++;
+    }
+  }
+}
+
+print STDERR "total memory corrupted at point==> ($nfull) \n";
+print STDERR "unique allocations ==> ($ufull) \n";
+
+close (MEMSTAT);
+
+##############################################################################
+#            PRINT output leak information to leak.info.C  output file
+##############################################################################
+
+
+open (LEAKinfo,">leak.info");
+open (MULTI,">multidelete.info");
+open (MEMSTAT,">memcheck.info");
+
+# sort by size of leak
+sub bysize {
+  $SizeLeak{$b} <=> $SizeLeak{$a};      # presuming integers
+}
+
+sub bysizetotal {
+  $SizeTotal{$b} <=> $SizeTotal{$a};      # presuming integers
+}
+
+foreach  (sort bysizetotal keys   %SizeTotal) {
+  print MEMSTAT "Count: $CountTotal{$_}($CountLeak{$_})   Size: $SizeTotal{$_}($SizeLeak{$_}) \n";
+  s/stack://g;
+  @arr = split(/:/);  #obtain leak points
+  for ($i = 0; $i <= $#arr; ++$i){
+    $addr =  $arr[$i];
+    print MEMSTAT "$filename{$addr}$line{$addr}";
+  }
+  print MEMSTAT "\n\n";
+}
+
+
+foreach  (sort bysize keys   %SizeLeak) {
+  if ($CountLeak{$_}<0){
+    print MULTI "Multiple deallocation :$CountLeak{$_}\n";
+    s/stack://g;
+    @arr = split(/:/);  #obtain leak points
+    for ($i = 0; $i <= $#arr; ++$i){
+      $addr =  $arr[$i];
+      print MULTI "$filename{$addr}$line{$addr}";
+    }
+    print MULTI "\n\n";
+  }
+  if ($SizeLeak{$_}!=0){
+    print LEAKinfo "Leaked allocations: $CountLeak{$_} \t Leaked size: $SizeLeak{$_} \n";
+    s/stack://g;
+    @arr = split(/:/);  #obtain leak points
+    for ($i = 0; $i <= $#arr; ++$i){
+      $addr =  $arr[$i];
+      print LEAKinfo "$filename{$addr}$line{$addr}";
+    }
+    print LEAKinfo "\n\n";
+  }
+}
+close(LEAKinfo);
+close(MULTI);
+close(MEMSTAT);
+
+$remove = 'rm -rf commands';
+exec $remove;
+die " -E- no commands file !";
+

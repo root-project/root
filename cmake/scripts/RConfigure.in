@@ -1,0 +1,26 @@
+#ifndef ROOT_RConfigure
+#define ROOT_RConfigure
+
+/* Configurations file for @ROOT_ARCHITECTURE@ */
+#ifdef R__HAVE_CONFIG
+#define ROOTPREFIX    "@ROOT_INSTALL_DIR@"
+#define ROOTBINDIR    "@BIN_INSTALL_DIR@"
+#define ROOTLIBDIR    "@LIB_INSTALL_DIR@"
+#define ROOTINCDIR    "@INCLUDE_INSTALL_DIR@"
+#define ROOTETCDIR    "@ETC_INSTALL_DIR@"
+#define ROOTDATADIR   "@DATA_INSTALL_DIR@"
+#define ROOTDOCDIR    "@DOC_INSTALL_DIR@"
+#define ROOTMACRODIR  "@MACRO_INSTALL_DIR@"
+#define ROOTSRCDIR    "@SRC_INSTALL_DIR@"
+#define ROOTICONPATH  "@ICON_INSTALL_DIR@"
+#define EXTRAICONPATH "@EXTRA_ICON_INSTALL_DIR@"
+#define TTFFONTDIR    "@FONT_INSTALL_DIR@"
+#define CINTINCDIR    "@CINT_INSTALL_DIR@"
+#endif
+
+#cmakedefine R__HAS_SETRESUID   /**/
+#cmakedefine R__HAS_MATHMORE   /**/
+#cmakedefine R__HAS_PTHREAD    /**/
+#cmakedefine R__HAS_XFT    /**/
+
+#endif
