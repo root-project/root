@@ -15,6 +15,7 @@
 #include <TFormula.h>
 #include <TF1.h>
 #include <TH1F.h>
+#include <TH3F.h>
 #include <TMath.h>
 #include <TRandom3.h>
 #include <TString.h>
@@ -29,6 +30,8 @@ ProofSimple::ProofSimple()
 
    fNhist = -1;
    fHist = 0;
+   fNhist3 = -1;
+   fHist3 = 0;
    fRandom = 0;
 }
 
@@ -57,6 +60,13 @@ void ProofSimple::Begin(TTree * /*tree*/)
       fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
    }
    fHist = new TH1F*[fNhist];
+   
+   if (fInput->FindObject("ProofSimple_NHist3")) {
+      TParameter<Long_t> *p =
+         dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimple_NHist3"));
+      fNhist3 = (p) ? (Int_t) p->GetVal() : fNhist3;
+   }
+   if (fNhist3 > 0) fHist3 = new TH3F*[fNhist3];
 }
 
 //_____________________________________________________________________________
@@ -82,6 +92,22 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
       fHist[i] = new TH1F(Form("h%d",i), Form("h%d",i), 100, -3., 3.);
       fHist[i]->SetFillColor(kRed);
       fOutput->Add(fHist[i]);
+   }
+   
+   // 3D Histos array
+   if (fInput->FindObject("ProofSimple_NHist3")) {
+      TParameter<Long_t> *p =
+         dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimple_NHist3"));
+      fNhist3 = (p) ? (Int_t) p->GetVal() : fNhist3;
+   }
+   if (fNhist3 > 0) {
+      fHist3 = new TH3F*[fNhist3];
+      // Create the 3D histogram
+      for (Int_t i=0; i < fNhist3; i++) {
+         fHist3[i] = new TH3F(Form("h%d_3d",i), Form("h3%d_3d",i),
+                              100, -3., 3., 100, -3., 3., 100, -3., 3.);
+         fOutput->Add(fHist3[i]);
+      }
    }
 
    // Set random seed
@@ -113,6 +139,12 @@ Bool_t ProofSimple::Process(Long64_t)
       if (fRandom && fHist[i]) {
          Double_t x = fRandom->Gaus(0.,1.);
          fHist[i]->Fill(x);
+      }
+   }
+   for (Int_t i=0; i < fNhist3; i++) {
+      if (fRandom && fHist3[i]) {
+         Double_t x = fRandom->Gaus(0.,1.);
+         fHist3[i]->Fill(x,x,x);
       }
    }
 

@@ -22,10 +22,13 @@
 //      This will create a local PROOF session and run an analysis filling
 //      100 histos with 100000 gaussian random numbers, and displaying them
 //      in a canvas with 100 pads (10x10).
-//      The number of histograms can be passed as 'arguments' to 'simple',
+//      The number of histograms can be passed as argument 'nhist' to 'simple',
 //      e.g. to fill 16 histos with 1000000 entries use
 //
 //      root[] runProof("simple(nevt=1000000,nhist=16)")
+//
+//      The argument nhist3 controls the creation of 3d histos to simulate
+//      merging load. By default, no 3D hitogram is created.
 //
 //   2. "h1"
 //
@@ -570,7 +573,7 @@ void runProof(const char *what = "simple",
       // Default 10000 events
       nevt = (nevt < 0) ? 100000 : nevt;
       // Find out the number of histograms
-      TString aNhist;
+      TString aNhist, aNhist3;
       while (args.Tokenize(tok, from, " ")) {
          // Number of histos
          if (tok.BeginsWith("nhist=")) {
@@ -580,13 +583,23 @@ void runProof(const char *what = "simple",
                Printf("runProof: error parsing the 'nhist=' option (%s) - ignoring", tok.Data());
                aNhist = "";
             }
+         } else if (tok.BeginsWith("nhist3=")) {
+            aNhist3 = tok;
+            aNhist3.ReplaceAll("nhist3=","");
+            if (!aNhist3.IsDigit()) {
+               Printf("runProof: error parsing the 'nhist3=' option (%s) - ignoring", tok.Data());
+               aNhist3 = "";
+            }
          }
       }
       Int_t nhist = (aNhist.IsNull()) ? 100 : aNhist.Atoi();
-      Printf("\nrunProof: running \"simple\" with nhist= %d and nevt= %lld\n", nhist, nevt);
+      Int_t nhist3 = (aNhist3.IsNull()) ? -1 : aNhist3.Atoi();
+      Printf("\nrunProof: running \"simple\" with nhist= %d, nhist3=%d and nevt= %lld\n", nhist, nhist3, nevt);
 
       // The number of histograms is added as parameter in the input list
       proof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+      // The number of histograms is added as parameter in the input list
+      if (nhist3 > 0) proof->SetParameter("ProofSimple_NHist3", (Long_t)nhist3);
       // The selector string
       sel.Form("%s/proof/ProofSimple.C%s", tutorials.Data(), aMode.Data());
       //

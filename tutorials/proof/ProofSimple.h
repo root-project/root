@@ -13,6 +13,7 @@
 #include <TSelector.h>
 
 class TH1F;
+class TH3F;
 class TRandom3;
 
 class ProofSimple : public TSelector {
@@ -21,6 +22,8 @@ public :
    // Specific members
    Int_t            fNhist;
    TH1F           **fHist;//[fNhist]
+   Int_t            fNhist3;
+   TH3F           **fHist3;//[fNhist3]
    TRandom3        *fRandom;
 
    ProofSimple();
