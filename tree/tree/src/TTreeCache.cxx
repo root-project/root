@@ -471,7 +471,7 @@ Bool_t TTreeCache::FillBuffer()
          }
         
          if (fReverseRead){ //reverse reading with prefetching
-            if (fEntryCurrent >0 && entry >= fEntryCurrent && entry < fEntryNext){
+            if (fEntryCurrent >0 && entry < fEntryNext){
                //we can prefetch the next buffer
                entry = fEntryCurrent - tree->GetAutoFlush() * fFillTimes;
                if (entry < 0)
@@ -779,21 +779,16 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
       return 1;
    }
       
-   //not found in cache. Do we need to fill the cache?
-   Bool_t bufferFilled = FillBuffer();
-   if (bufferFilled) {
-      Int_t res = TFileCacheRead::ReadBuffer(buf,pos,len);
-
-      if (res == 1)
-         fNReadOk++;
-      else if (res == 0)
+   //keep on prefetching until request is satisfied
+   while (1){
+     if(TFileCacheRead::ReadBuffer(buf, pos, len))
+       break;
+     FillBuffer();
          fNReadMiss++;
- 
-      return res;
    }
 
-   fNReadMiss++;
-   return 0;
+   fNReadOk++;
+   return 1;
 }
 
 //_____________________________________________________________________________

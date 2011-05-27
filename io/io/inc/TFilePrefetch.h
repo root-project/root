@@ -83,7 +83,7 @@ private:
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
 
-   static void ThreadProc(void*);
+   static TThread::VoidRtnFunc_t ThreadProc(void*);  //create a joinable worker thread
 
 public:
    TFilePrefetch(TFile*);

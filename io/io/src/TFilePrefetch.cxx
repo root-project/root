@@ -56,6 +56,8 @@ TFilePrefetch::~TFilePrefetch()
    //killing consumer thread
    fSem->Post();
    fNewBlockAdded->Signal();
+   fConsumer->Join();
+   fConsumer->Delete();
 
    delete fPendingBlocks;
    delete fReadBlocks;
@@ -299,15 +301,14 @@ Int_t TFilePrefetch::ThreadStart()
 {
    // Used to start the consumer thread.
 
-   fConsumer= new TThread("consumerThread",
-                             (void(*) (void *))ThreadProc,
+  fConsumer= new TThread((TThread::VoidRtnFunc_t) ThreadProc,
                               (void*) this);
    fConsumer->Run();
    return 1;
 }
 
 //____________________________________________________________________________________________
-void TFilePrefetch::ThreadProc(void* arg)
+TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    // Execution loop of the consumer thread.
 
@@ -315,8 +316,11 @@ void TFilePrefetch::ThreadProc(void* arg)
 
    while(tmp->fSem->TryWait() !=0){
       tmp->ReadListOfBlocks();
+      if (tmp->fSem->TryWait() == 0) break;
       tmp->fNewBlockAdded->Wait();
    }
+
+   return (TThread::VoidRtnFunc_t) 1;
 }
 
 //########################################### CACHING PART ###############################################################
