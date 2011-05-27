@@ -218,7 +218,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          restart = kTRUE;
       } else {
          if (!strcmp(opt,"ask")) {
-            char *answer = Getline("getProof: would you like to restart it (N,Y)? [N] ");
+            char *answer = (char *) Getline("getProof: would you like to restart it (N,Y)? [N] ");
             if (answer && (answer[0] == 'Y' || answer[0] == 'y'))
                restart = kTRUE;
          }
@@ -529,7 +529,7 @@ Int_t startXrootdAt(Int_t port, const char *exportdirs, Bool_t force)
          restart = kTRUE;
       } else {
          Printf("startXrootdAt: xrootd service already available on port %d: ", port);
-         char *answer = Getline("startXrootdAt: would you like to restart it (N,Y)? [N] ");
+         char *answer = (char *) Getline("startXrootdAt: would you like to restart it (N,Y)? [N] ");
          if (answer && (answer[0] == 'Y' || answer[0] == 'y')) {
             restart = kTRUE;
          }
