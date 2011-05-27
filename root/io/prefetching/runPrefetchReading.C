@@ -78,13 +78,13 @@ Int_t runPrefetchReading()
          for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);   
          int count = 0;
          int maxcount = 100 + 100 ;
-         for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos(count)); }
+         for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos((double)count)); }
        } else {
          T->GetEntry(i);
        }
      }
    }
  
-   fprintf(stdout, "fPrefetchBlocks = %lli\n", file->GetCacheRead()->fPrefetchBlocks);
+   fprintf(stdout, "fPrefetchBlocks = %lli\n", file->GetCacheRead()->GetPrefetchBlocks());
    return 0;
 }
