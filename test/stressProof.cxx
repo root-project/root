@@ -729,7 +729,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (failed) {
       Bool_t kept = kTRUE;
       if (usedeflog && !gROOT->IsBatch()) {
-         char *answer = Getline(" Some tests failed: would you like to keep the log file (N,Y)? [Y] ");
+         const char *answer = Getline(" Some tests failed: would you like to keep the log file (N,Y)? [Y] ");
          if (answer && (answer[0] == 'N' || answer[0] == 'n')) {
             // Remove log file
             gSystem->Unlink(glogfile);
