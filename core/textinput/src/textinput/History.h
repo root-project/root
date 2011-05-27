@@ -27,11 +27,12 @@ namespace textinput {
   class History {
   public:
     enum {
-      kPruneLengthMaxDepth = -1 // Prune length equals fMaxDepth
+      kPruneLengthDefault = -1 // Prune length equals 80% of fMaxDepth
     };
     History(const char* filename);
     ~History();
 
+    // If fMaxDepth == 0, do not create history output.
     void SetMaxDepth(size_t maxDepth) { fMaxDepth = maxDepth; }
     void SetPruneLength(size_t pruneLength = (size_t) kPruneLengthMaxDepth) {
       fPruneLength = pruneLength; }

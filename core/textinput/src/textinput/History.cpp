@@ -48,7 +48,7 @@ namespace textinput {
   void
   History::ReadFile(const char* FileName) {
     // Inject all lines of FileName.
-    // Intentionally ignore PruneLength
+    // Intentionally ignore fMaxDepth
     std::ifstream InHistFile(FileName);
     if (!InHistFile) return;
     std::string line;
@@ -68,13 +68,13 @@ namespace textinput {
   History::AppendToFile() {
     // Write last entry to hist file.
     // Prune if needed.
-    if (!fHistFile) return;
+    if (!fHistFile || ! fMaxDepth) return;
     if (fHistFileLines >= fMaxDepth) {
       // Prune!
       fHistFile.seekp(0);
       size_t nPrune = fPruneLength;
-      if (nPrune == (size_t)kPruneLengthMaxDepth) {
-        nPrune = fMaxDepth;
+      if (nPrune == (size_t)kPruneLengthDefault) {
+        nPrune = fMaxDepth * 0.8;
       }
       for (size_t Idx = fEntries.size() - nPrune,
         E = fEntries.size(); Idx < E; ++Idx) {
