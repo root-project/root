@@ -105,7 +105,7 @@ namespace textinput {
         }
         if ((Key >= 0x30 && Key <= 0x5A /*0-Z*/)
           || (Key >= VK_NUMPAD0 && Key <= VK_DIVIDE)
-          || (Key >= VK_OEM_PLUS && Key <= VK_OEM_102)
+          || (Key >= VK_OEM_1 && Key <= VK_OEM_102)
           || Key == VK_SPACE) {
             C = buf.Event.KeyEvent.uChar.AsciiChar;
             if (buf.Event.KeyEvent.dwControlKeyState
