@@ -496,8 +496,8 @@ namespace {
       // thread for processing windows messages (aka Main/Server thread).
       // We need to start the thread outside the TGWin32 / GUI related
       // dll, because starting threads at DLL init time does not work.
-      // Indead, we start an ideling thread at binary startup, and only
-      // call the "real" message provcessing function
+      // Instead, we start an ideling thread at binary startup, and only
+      // call the "real" message processing function
       // TGWin32::GUIThreadMessageFunc() once gVirtualX comes up.
 
       MSG msg;
