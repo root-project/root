@@ -100,7 +100,8 @@ namespace textinput {
     size_t OldCursorPos = fContext->GetCursor();
     for (std::vector<Reader*>::const_iterator iR = fContext->GetReaders().begin(),
          iE = fContext->GetReaders().end(); iR != iE && nRead < nMax; ++iR) {
-      if (IsBlockingUntilEOL() || (*iR)->HavePendingInput()) {
+      while ((IsBlockingUntilEOL() && (fLastReadResult == kRRNone))
+             || (nRead < nMax && (*iR)->HavePendingInput())) {
         if ((*iR)->ReadInput(nRead, in)) {
           fLastKey = in.GetRaw(); // rough approximation
           Editor::Command Cmd = fContext->GetKeyBinding()->ToCommand(in);
