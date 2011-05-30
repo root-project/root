@@ -183,6 +183,17 @@ Getlinem(EGetLineMode mode, const char* prompt) {
       return 0;
    }
 
+   if (mode == kOneChar) {
+      // Check first display: if !TTY, read full line.
+      const textinput::Display* disp
+         = TextInputHolder::get().GetContext()->GetDisplays()[0];
+      const textinput::TerminalDisplay* tdisp = 0;
+      if (disp) tdisp = dynamic_cast<const textinput::TerminalDisplay*>(disp);
+      if (tdisp && !tdisp->IsTTY()) {
+         mode = kLine1;
+      }
+   }
+
    if (mode == kInit || mode == kLine1) {
       if (prompt) {
          TextInputHolder::get().SetPrompt(prompt);
@@ -210,6 +221,9 @@ Getlinem(EGetLineMode mode, const char* prompt) {
    }
    if (res == TextInput::kRRReadEOLDelimiter) {
       return TextInputHolder::getHolder().TakeInput();
+   } else if (res == TextInput::kRREOF) {
+      // ROOT expects "" and then Gl_eol() returning true
+      return "";
    }
 
    return NULL;
