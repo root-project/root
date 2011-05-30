@@ -78,4 +78,8 @@ after each read so that once the main thread starts reading from the
 beginning of the last available buffer, the second thread starts
 prefetching the next block.
 </li>
+<li>
+The TZIPFile compressed archive reader now supports the Zip64 format for
+archives and file members greater than 2 and 4 GB, respectively.
+</li>
 </ul>
