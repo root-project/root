@@ -179,12 +179,15 @@ public:
    /// set the Minos errors for parameter i (called by the Fitter class when running Minos)
    void SetMinosError(unsigned int i, double elow, double eup);
 
+   /// query if parameter i has the Minos error
+   bool HasMinosError(unsigned int i) const;
+
    /// lower Minos error. If Minos has not run for parameter i return the parabolic error 
    double LowerError(unsigned int i) const;
 
    /// upper Minos error. If Minos has not run for parameter i return the parabolic error 
    double UpperError(unsigned int i) const;
-
+   
    /// parameter global correlation coefficient 
    double GlobalCC(unsigned int i) const { 
       return (i < fGlobalCC.size() ) ? fGlobalCC[i] : -1; 
@@ -268,7 +271,7 @@ public:
    void NormalizeErrors();
 
    /// flag to chek if errors are normalized
-   bool NormalizedErrors() { return fNormalized; }
+   bool NormalizedErrors() const { return fNormalized; }
 
    /// print the result and optionaly covariance matrix and correlations
    void Print(std::ostream & os, bool covmat = false) const;

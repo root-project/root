@@ -346,6 +346,13 @@ double FitResult::Prob() const {
    return ROOT::Math::chisquared_cdf_c(fChi2, static_cast<double>(fNdf) ); 
 }
 
+bool FitResult::HasMinosError(unsigned int i) const { 
+   // query if the parameter i has the Minos error
+   std::map<unsigned int, std::pair<double,double> >::const_iterator itr = fMinosErrors.find(i); 
+   return (itr !=  fMinosErrors.end() );
+}
+
+
 double FitResult::LowerError(unsigned int i) const { 
    // return lower Minos error for parameter i 
    //  return the parabolic error if Minos error has not been calculated for the parameter i 

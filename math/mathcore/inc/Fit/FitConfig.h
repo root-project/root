@@ -39,6 +39,8 @@ namespace ROOT {
 
    namespace Fit { 
 
+      class FitResult;
+
 //___________________________________________________________________________________
 /** 
    Class describing the configuration of the fit, options and parameter settings
@@ -107,6 +109,12 @@ public:
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list. 
    */
    void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = 0); 
+
+   /*
+     Set the parameter setting from a fit Result
+   */
+   void SetFromFitResult (const FitResult & rhs);
+
 
 
    /**

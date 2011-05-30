@@ -12,6 +12,8 @@
 
 #include "Fit/FitConfig.h"
 
+#include "Fit/FitResult.h"
+
 #include "Math/IParamFunction.h"
 #include "Math/Util.h"
 
@@ -73,6 +75,58 @@ FitConfig & FitConfig::operator = (const FitConfig &rhs) {
 
    return *this;
 }
+
+void FitConfig::SetFromFitResult(const FitResult &result) { 
+   // Implementation of setting of parameters from the result of the fit
+   // all the other options will stay the same. 
+   // If the size of parameters do not match they will be re-created
+   // but in that case the bound on the parameter will be lost
+
+   unsigned int npar = result.NPar();
+   if (fSettings.size() !=  npar) {
+      fSettings.clear();
+      fSettings.resize(npar);
+   }
+   // fill the parameter settings 
+   for (unsigned int i = 0; i < npar; ++i) {
+      if (result.IsParameterFixed(i) )
+         fSettings[i].Set(result.ParName(i), result.Value(i) ); 
+      else { 
+         if (result.IsParameterBound(i) && !fSettings[i].IsBound() ) {
+            // bound on parameters will be lost- must be done by hand by user 
+            std::string msg = "Bound on parameter " + result.ParName(i) + " is lost; it must be set again by the user";
+            MATH_WARN_MSG("FitConfig::SetFromResult",msg.c_str() );
+         }
+         fSettings[i].Set( result.ParName(i), result.Value(i), result.Error(i) ); 
+
+         // query if parameter needs to run Minos
+         if (result.HasMinosError(i) ) {
+            if (fMinosParams.size() == 0) { 
+               fMinosErrors = true; 
+               fMinosParams.reserve(npar-i);
+            }
+            fMinosParams.push_back(i);
+         }
+      }
+   }
+
+   // set information about errors 
+   SetNormErrors( result.NormalizedErrors() );
+
+   // set also minimizer type 
+   // algorithm is after " / "
+   const std::string & minname = result.MinimizerType();
+   size_t pos = minname.find(" / ");
+   if (pos != std::string::npos) { 
+      std::string minimType = minname.substr(0,pos);
+      std::string algoType = minname.substr(pos+3,minname.length() );
+      SetMinimizer(minimType.c_str(), algoType.c_str() );
+   }
+   else { 
+      SetMinimizer(minname.c_str());
+   }      
+}
+
 
 void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const double * vstep ) { 
    // initialize FitConfig from given parameter values and step sizes
