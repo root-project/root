@@ -41,6 +41,7 @@ namespace textinput {
   
   void
   TerminalDisplay::NotifyTextChange(Range r) {
+    if (!IsTTY()) return;
     Attach();
     WriteWrapped(r.fPromptUpdate,GetContext()->GetTextInput()->IsInputHidden(),
       r.fStart, r.fLength);
@@ -56,7 +57,9 @@ namespace textinput {
   void
   TerminalDisplay::NotifyResetInput() {
     Attach();
-    WriteRawString("\n", 1);
+    if (IsTTY()) {
+      WriteRawString("\n", 1);
+    }
     fWriteLen = 0;
     fWritePos = Pos();
   }
@@ -69,7 +72,10 @@ namespace textinput {
 
   void
   TerminalDisplay::DisplayInfo(const std::vector<std::string>& Options) {
-    char infoColIdx = GetContext()->GetColorizer()->GetInfoColor();
+    char infoColIdx = 0;
+    if (GetContext()->GetColorizer()) {
+       infoColIdx = GetContext()->GetColorizer()->GetInfoColor();
+    }
     WriteRawString("\n", 1);
     for (size_t i = 0, n = Options.size(); i < n; ++i) {
       Text t(Options[i], infoColIdx);
@@ -83,9 +89,15 @@ namespace textinput {
   
   void
   TerminalDisplay::Detach() {
-    Color DefaultColor;
-    GetContext()->GetColorizer()->GetColor(0, DefaultColor);
-    SetColor(0, DefaultColor);
+    fWritePos = Pos();
+    fWriteLen = 0;
+    if (GetContext()->GetColorizer()) {
+      Color DefaultColor;
+      GetContext()->GetColorizer()->GetColor(0, DefaultColor);
+      SetColor(0, DefaultColor);
+      // We can't tell whether the application will activate a different color:
+      fPrevColor = -1;
+    }
   }
 
   size_t
