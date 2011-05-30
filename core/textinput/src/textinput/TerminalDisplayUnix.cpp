@@ -256,6 +256,8 @@ namespace textinput {
     if (fIsAttached) return;
     fflush(stdout);
     TerminalConfigUnix::Get().Attach();
+    fWritePos = Pos();
+    fWriteLen = 0;
     fIsAttached = true;
     NotifyTextChange(Range::AllWithPrompt());
   }
