@@ -7,7 +7,7 @@ However, much of this tutorial covers aspects of collections specific to
 the ROOT system. In this tutorial the following features will be demonstrated:
 <ul>
 <li><a href="ftp://root.cern.ch/root/doc/16CollectionClasses.pdf">Chapter about Collections in the Users Guide</a>
-<li><a href="http://root.cern.ch/root/html/examples/tcollex.C.html">Using collections</a>
+<li><a href="http://root.cern.ch/viewvc/trunk/test/tcollex.cxx?view=markup">Using collections</a>
 <li>How to create instances of collections
 <li>The difference between lists, ordered collections, hashtables, maps, etc.
 <li>How to add and remove elements of a collection
