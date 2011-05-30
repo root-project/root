@@ -17,6 +17,6 @@ BEGIN_HTML
     </a></li>
     
 </ul>
-See also <a href="http://aliceinfo.cern.ch/Offline/Activities/Geometry/">the use of the geometry
+See also <a href="http://aliweb.cern.ch/Offline/Activities/Geometry/index.html">the use of the geometry
 classes in AliROOT package of ALICE</a>.
 END_HTML
