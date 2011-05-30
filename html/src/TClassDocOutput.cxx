@@ -1482,15 +1482,13 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
                 << ".h.html\">header file</a>" << endl;
    else
-      classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
-                << ".h.html\"></a>" << endl;
+      classFile << "<a class=\"descrheadentry\"> </a>" << endl;
 
    if (sourceFileName.Length())
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
                 << ".cxx.html\">source file</a>" << endl;
    else
-      classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
-                << ".cxx.html\"></a>" << endl;
+      classFile << "<a class=\"descrheadentry\"> </a>" << endl;
 
    if (!fHtml->IsNamespace(fCurrentClass) && !fHtml->HaveDot()) {
       // make a link to the inheritance tree (postscript)
