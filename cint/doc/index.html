@@ -3,19 +3,10 @@
 <ul>
 <li><p><b>CINT</b></p>
 <p>the current CINT core: interpreter, parser, etc.</p></li>
-<li><p><b>CINT7</b></p>
-the new CINT core, using Reflex instead of arrays of C structures</li>
 <li><p><b>Reflex</b></p>
 A C++ library for reflection data, i.e. to store information about available types, members, their sizes, etc.</li>
 <li><p><b>Cintex</b></p>
 An interface between Reflex and the current CINT version.</li>
 </ul>
 
-<p>More information can be obtained from <a href="http://root.cern.ch/cint">the CINT website</a>.
-The main area of work is currently getting CINT7 to work as well as the old CINT.
-Once this merge with Reflex is finished, CINT will be a lot easier to maintain, use less memory, and also run faster than the current CINT.
-You can watch our progress <a href="http://www-root.fnal.gov/roottest/cint_summary.shtml">in the nightly test status</a> for the rows labeled <tt>new</tt>.</p>
-
-<p>The next major overhaul will convert CINT into a true C++ layout and make it thread-safe, with &gt;= one interpreter per thread.
-We have a draft proposal for the new layout written as C++ headers; a document describing this will follow.
-For now you can peek at the <a href="http://root.cern.ch/viewvc/branches/dev/axel/cint8/">subversion repository containing the set of headers</a>.</p>
+<p>More information can be obtained from <a href="http://root.cern.ch/cint">the CINT website</a>.</p>
