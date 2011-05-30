@@ -10,27 +10,27 @@ In the near future, CINT will use Reflex directly; any dictionary loaded by CINT
 <h3>Retrieving data</h3>
 <p>The main user interface to the Reflex data consists of
 <dl>
-<dt><a href="ROOT__Reflex__Type.html"><tt>ROOT::Reflex::Type</tt></a></dt>
-<dd>represents any type, from basic ones like <tt>int</tt> to e.g. <tt>ROOT::Reflex::Type</tt> itself.</dd>
-<dt><a href="ROOT__Reflex__Scope.html"><tt>ROOT::Reflex::Scope</tt></a></dt>
-<dd>represents a namespace, class, struct, union, etc - anything that can have members, e.g. the global scope <tt>::</tt> or <tt>ROOT::Reflex::Type</tt>.</dd>
-<dt><a href="ROOT__Reflex__Member.html"><tt>ROOT::Reflex::Member</tt></a></dt>
+<dt><a href="Reflex__Type.html"><tt>Reflex::Type</tt></a></dt>
+<dd>represents any type, from basic ones like <tt>int</tt> to e.g. <tt>Reflex::Type</tt> itself.</dd>
+<dt><a href="Reflex__Scope.html"><tt>Reflex::Scope</tt></a></dt>
+<dd>represents a namespace, class, struct, union, etc - anything that can have members, e.g. the global scope <tt>::</tt> or <tt>Reflex::Type</tt>.</dd>
+<dt><a href="Reflex__Member.html"><tt>Reflex::Member</tt></a></dt>
 <dd>represents a data or function member of a scope.</dd>
 </dl>
 </p>
-<p>Note that conversions exist, e.g. <tt>ROOT::Reflex::Member</tt> is both a scope and a type, thus a <tt>ROOT::Reflex::Scope</tt> representing <tt>ROOT::Reflex::Member</tt> can be converted to a <tt>ROOT::Reflex::Type</tt>. 
+<p>Note that conversions exist, e.g. <tt>Reflex::Member</tt> is both a scope and a type, thus a <tt>Reflex::Scope</tt> representing <tt>Reflex::Member</tt> can be converted to a <tt>Reflex::Type</tt>. 
 Just check the list of member functions for these types - they are easy to understand.</p>
 
 <h3>Example</h3>
-Once you have filled your reflection data into Reflex you can e.g. query it for the first parameter of the function <tt><a href="ROOT__Reflex__Scope.html">ROOT::Reflex::Scope</a>::<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:SubTypeByName">SubTypeByName()</a></tt>:
-<div class="code"><code class="inlinecode">using ROOT::Reflex; <span class="comment">// save typing</span><br/>
+Once you have filled your reflection data into Reflex you can e.g. query it for the first parameter of the function <tt><a href="Reflex__Scope.html">Reflex::Scope</a>::<a href="Reflex__Scope.html#Reflex__Scope:SubTypeByName">SubTypeByName()</a></tt>:
+<div class="code"><code class="inlinecode">using Reflex; <span class="comment">// save typing</span><br/>
 &nbsp;<br/>
-<a href="ROOT__Reflex__Scope.html">Scope</a>  s = <a href="ROOT__Reflex__Scope.html">Scope</a>::<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:ByName">ByName("ROOT::Reflex::Scope");</a> <span class="comment">// the scope containing the member we want to query</span><br/>
-<a href="ROOT__Reflex__Member.html">Member</a> m = s.<a href="ROOT__Reflex__Scope.html#ROOT__Reflex__Scope:FunctionMemberByName">FunctionMemberByName</a>("SubTypeByName"); <span class="comment">// get the function member</span><br/>
-<a href="ROOT__Reflex__Type.html">Type</a>  mt = m.<a href="ROOT__Reflex__Member.html#ROOT__Reflex__Member:TypeOf">TypeOf()</a>; <span class="comment">// we need its type</span><br/>
-<a href="ROOT__Reflex__Type.html">Type</a> arg = mt.<a href="ROOT__Reflex__Type.html#ROOT__Reflex__Type:FunctionParameterAt">FunctionParameterAt(0)</a>; <span class="comment">// the type of the first function parameter</span><br/>
+<a href="Reflex__Scope.html">Scope</a>  s = <a href="Reflex__Scope.html">Scope</a>::<a href="Reflex__Scope.html#Reflex__Scope:ByName">ByName("Reflex::Scope");</a> <span class="comment">// the scope containing the member we want to query</span><br/>
+<a href="Reflex__Member.html">Member</a> m = s.<a href="Reflex__Scope.html#Reflex__Scope:FunctionMemberByName">FunctionMemberByName</a>("SubTypeByName"); <span class="comment">// get the function member</span><br/>
+<a href="Reflex__Type.html">Type</a>  mt = m.<a href="Reflex__Member.html#Reflex__Member:TypeOf">TypeOf()</a>; <span class="comment">// we need its type</span><br/>
+<a href="Reflex__Type.html">Type</a> arg = mt.<a href="Reflex__Type.html#Reflex__Type:FunctionParameterAt">FunctionParameterAt(0)</a>; <span class="comment">// the type of the first function parameter</span><br/>
 &nbsp;<br/>
-cout << arg.<a href="ROOT__Reflex__Type.html#ROOT__Reflex__Type:Name">Name(SCOPED | QUALIFIED)</a> << endl; <span class="comment">// print the scoped and qualified name</span></code></div>
+cout << arg.<a href="Reflex__Type.html#Reflex__Type:Name">Name(SCOPED | QUALIFIED)</a> << endl; <span class="comment">// print the scoped and qualified name</span></code></div>
 <div style="clear: both;"></div>
 <p>&nbsp;</p>
 <h3>Class reference</h3>
