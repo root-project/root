@@ -1040,17 +1040,23 @@ void TDocOutput::CreateModuleIndex()
 
          for (std::set<std::string>::const_iterator iModule = modules.begin();
               iModule != modules.end(); ++iModule) {
+            TString modURL(*iModule);
+            modURL.ReplaceAll("/", "_");
+            modURL.ToUpper();
             sstrCluster << "\"" << *iModule << "\" [style=filled,color=white,URL=\""
-                        << *iModule << "_Index.html\"];" << endl;
+                        << modURL << "_Index.html\"];" << endl;
          }
          sstrCluster << endl
                      << "}" << endl;
       } else {
          // only one module
+         TString modURL(*modules.begin());
+         modURL.ReplaceAll("/", "_");
+         modURL.ToUpper();
          sstrCluster << "\"" << *modules.begin()
                      << "\" [label=\"" << libinfo->GetName()
                      << "\",style=filled,color=lightgray,shape=box,URL=\""
-                     << *modules.begin() << "_Index.html\"];" << endl;
+                     << modURL << "_Index.html\"];" << endl;
       }
 
       // GetSharedLib doesn't mention libCore or libCint; add them by hand
