@@ -221,10 +221,9 @@ namespace textinput {
 
     size_t avail = 0;
     if (hidden) {
-      // '*' are nice but less secure for password (length will be known).
-      // Text hide(std::string(GetContext()->GetLine().length(), '*'), 0);
-      // avail = WriteWrappedElement(hide, Offset,
-      //                             PromptLen + EditorPromptLen, Requested);
+      Text hide(std::string(GetContext()->GetLine().length(), '*'), 0);
+      avail = WriteWrappedElement(hide, Offset,
+                                  PromptLen + EditorPromptLen, Requested);
     } else {
       avail = WriteWrappedElement(GetContext()->GetLine(), Offset,
                                        PromptLen + EditorPromptLen, Requested);

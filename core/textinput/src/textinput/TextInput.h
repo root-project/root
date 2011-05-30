@@ -23,6 +23,7 @@ namespace textinput {
   class Display;
   class EditorRange;
   class FunKey;
+  class InputData;
   class Reader;
   class TextInputContext;
   class TabCompletion;
@@ -83,6 +84,8 @@ namespace textinput {
     
   private:
     void EmitSignal(char c, EditorRange& r);
+    void ProcessNewInput(const InputData& in, EditorRange& r);
+    void DisplayNewInput(EditorRange& r, size_t& oldCursorPos);
     
     bool fHidden; // whether input should be shown
     char fLastKey; // most recently read key

@@ -98,60 +98,22 @@ namespace textinput {
     InputData in;
     EditorRange R;
     size_t OldCursorPos = fContext->GetCursor();
-    for (std::vector<Reader*>::const_iterator iR = fContext->GetReaders().begin(),
-         iE = fContext->GetReaders().end(); iR != iE && nRead < nMax; ++iR) {
+    for (std::vector<Reader*>::const_iterator iR
+           = fContext->GetReaders().begin(),
+         iE = fContext->GetReaders().end();
+         iR != iE && nRead < nMax; ++iR) {
       while ((IsBlockingUntilEOL() && (fLastReadResult == kRRNone))
              || (nRead < nMax && (*iR)->HavePendingInput())) {
         if ((*iR)->ReadInput(nRead, in)) {
-          fLastKey = in.GetRaw(); // rough approximation
-          Editor::Command Cmd = fContext->GetKeyBinding()->ToCommand(in);
-          
-          if (Cmd.GetKind() == Editor::kCKControl
-              && (Cmd.GetChar() == 3 || Cmd.GetChar() == 26)) {
-            // If there are modifications in the queue, process them now.
-            UpdateDisplay(R);
-            EmitSignal(Cmd.GetChar(), R);
-          } else if (Cmd.GetKind() == Editor::kCKCommand
-            && Cmd.GetCommandID() == Editor::kCmdWindowResize) {
-            std::for_each(fContext->GetDisplays().begin(),
-                          fContext->GetDisplays().end(),
-                          std::mem_fun(&Display::NotifyWindowChange));
-          } else {
-            if (!in.IsRaw() && in.GetExtendedInput() == InputData::kEIEOF) {
-              fLastReadResult = kRREOF;
-              break;
-            } else {
-              Editor::EProcessResult Res = fContext->GetEditor()->Process(Cmd, R);
-              if (Res == Editor::kPRError) {
-                // Signal displays that an error has occurred.
-                std::for_each(fContext->GetDisplays().begin(),
-                              fContext->GetDisplays().end(),
-                              std::mem_fun(&Display::NotifyError));
-              } else if (Cmd.GetKind() == Editor::kCKCommand
-                    && (Cmd.GetCommandID() == Editor::kCmdEnter || 
-                    Cmd.GetCommandID() == Editor::kCmdHistReplay)) {
-                fLastReadResult = kRRReadEOLDelimiter;
-                break;
-              }
-            }
-          }
+          ProcessNewInput(in, R);
+          DisplayNewInput(R, OldCursorPos);
+          if (fLastReadResult == kRREOF
+              || fLastReadResult == kRRReadEOLDelimiter)
+            break;
         }
       }
     }
     
-    if (fContext->GetColorizer() && OldCursorPos != fContext->GetCursor()) {
-       fContext->GetColorizer()->ProcessCursorChange(fContext->GetCursor(),
-                                                     fContext->GetLine(),
-                                                     R.fDisplay);
-    }
-
-    UpdateDisplay(R);
-    
-    if (OldCursorPos != fContext->GetCursor()) {
-      std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
-                    std::mem_fun(&Display::NotifyCursorChange));
-    }
-
     if (fLastReadResult == kRRNone) {
       if (nRead == nMax) {
         fLastReadResult = kRRCharLimitReached;
@@ -160,6 +122,62 @@ namespace textinput {
       }
     }
     return fLastReadResult;
+  }
+
+  void
+  TextInput::ProcessNewInput(const InputData& in, EditorRange& R) {
+    // in was read, process it.
+    fLastKey = in.GetRaw(); // rough approximation
+    Editor::Command Cmd = fContext->GetKeyBinding()->ToCommand(in);
+          
+    if (Cmd.GetKind() == Editor::kCKControl
+        && (Cmd.GetChar() == 3 || Cmd.GetChar() == 26)) {
+      // If there are modifications in the queue, process them now.
+      UpdateDisplay(R);
+      EmitSignal(Cmd.GetChar(), R);
+    } else if (Cmd.GetKind() == Editor::kCKCommand
+               && Cmd.GetCommandID() == Editor::kCmdWindowResize) {
+      std::for_each(fContext->GetDisplays().begin(),
+                    fContext->GetDisplays().end(),
+                    std::mem_fun(&Display::NotifyWindowChange));
+    } else {
+      if (!in.IsRaw() && in.GetExtendedInput() == InputData::kEIEOF) {
+        fLastReadResult = kRREOF;
+        return;
+      } else {
+        Editor::EProcessResult Res = fContext->GetEditor()->Process(Cmd, R);
+        if (Res == Editor::kPRError) {
+          // Signal displays that an error has occurred.
+          std::for_each(fContext->GetDisplays().begin(),
+                        fContext->GetDisplays().end(),
+                        std::mem_fun(&Display::NotifyError));
+        } else if (Cmd.GetKind() == Editor::kCKCommand
+                   && (Cmd.GetCommandID() == Editor::kCmdEnter || 
+                       Cmd.GetCommandID() == Editor::kCmdHistReplay)) {
+          fLastReadResult = kRRReadEOLDelimiter;
+          return;
+        }
+      }
+    }
+  }
+
+  void
+  TextInput::DisplayNewInput(EditorRange& R, size_t& oldCursorPos) {
+    // Display what has been entered.
+    if (fContext->GetColorizer() && oldCursorPos != fContext->GetCursor()) {
+       fContext->GetColorizer()->ProcessCursorChange(fContext->GetCursor(),
+                                                     fContext->GetLine(),
+                                                     R.fDisplay);
+    }
+
+    UpdateDisplay(R);
+    
+    if (oldCursorPos != fContext->GetCursor()) {
+      std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
+                    std::mem_fun(&Display::NotifyCursorChange));
+    }
+
+    oldCursorPos = fContext->GetCursor();
   }
 
   void
