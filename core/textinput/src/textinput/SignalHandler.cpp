@@ -23,7 +23,7 @@ namespace textinput {
   SignalHandler::EmitCtrlC() {
     raise(SIGINT);
   }
-  
+
   void
   SignalHandler::EmitCtrlZ() {
 #ifndef WIN32

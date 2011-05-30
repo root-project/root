@@ -39,15 +39,15 @@ namespace textinput {
     fPromptUpdate = (EPromptUpdate) (fPromptUpdate | with.fPromptUpdate);
     return *this;
   }
-  
+
   Range&
   Range::Intersect(const Range& with) {
     if (IsEmpty()) {
-      return *this; 
+      return *this;
     }
     if (with.IsEmpty()) {
       *this = Empty();
-      return *this; 
+      return *this;
     }
     size_t wEnd = with.fStart + with.fLength;
     if (with.fLength == (size_t) -1) wEnd = (size_t) -1;

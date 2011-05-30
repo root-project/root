@@ -26,12 +26,12 @@ namespace textinput {
   public:
     TerminalDisplayUnix();
     ~TerminalDisplayUnix();
-    
+
     void HandleResizeSignal();
-    
+
     void Attach();
     void Detach();
-    
+
   protected:
     void MoveUp(size_t nLines = 1);
     void MoveDown(size_t nLines = 1);

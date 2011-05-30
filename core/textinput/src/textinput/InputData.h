@@ -67,13 +67,13 @@ namespace textinput {
     enum {
       kIsRaw = 0x80
     };
-    
+
     InputData(): fExt(kEIUninitialized), fMod(0) {}
     InputData(int ch, char mod = 0): fRaw(ch), fMod(mod | kIsRaw) {}
 
     bool IsRaw() const { return (fMod & kIsRaw) != 0; }
     int GetRaw() const { return fRaw; }
-    
+
     EExtendedInput GetExtendedInput() const { return fExt; }
     int GetModifier() const { return fMod & ~kIsRaw; }
 
@@ -84,7 +84,7 @@ namespace textinput {
   private:
     union {
       char fRaw; // raw input character, if kIsRaw & fMod
-      EExtendedInput fExt; // non-character input 
+      EExtendedInput fExt; // non-character input
     };
     char fMod; // Modifiers, also stores union descriminator (kIsRaw)
   };

@@ -38,7 +38,7 @@ namespace textinput {
     return new TerminalDisplayUnix();
 #endif
   }
-  
+
   void
   TerminalDisplay::NotifyTextChange(Range r) {
     if (!IsTTY()) return;
@@ -47,13 +47,13 @@ namespace textinput {
       r.fStart, r.fLength);
     Move(GetCursor());
   }
-  
+
   void
   TerminalDisplay::NotifyCursorChange() {
     Attach();
     Move(GetCursor());
   }
-  
+
   void
   TerminalDisplay::NotifyResetInput() {
     Attach();
@@ -63,7 +63,7 @@ namespace textinput {
     fWriteLen = 0;
     fWritePos = Pos();
   }
-  
+
   void
   TerminalDisplay::NotifyError() {
     Attach();
@@ -86,7 +86,7 @@ namespace textinput {
     Detach();
     Attach();
   }
-  
+
   void
   TerminalDisplay::Detach() {
     fWritePos = Pos();
@@ -105,7 +105,7 @@ namespace textinput {
                                        size_t WriteOffset, size_t Requested) {
     size_t Start = TextOffset;
     size_t Remaining = Requested;
-    
+
     size_t Available = Element.length() - Start;
     if (Requested == (size_t) -1) {
       Requested = Available;
@@ -131,7 +131,7 @@ namespace textinput {
         if (numThisLine > numToEOL) {
           numThisLine = numToEOL;
         }
-        
+
         if (GetContext()->GetColorizer()) {
           // We only write same-color chunks; how long is it?
           const std::vector<char>& Colors = Element.GetColors();
@@ -141,7 +141,7 @@ namespace textinput {
                  && ThisColor == Colors[Start + numSameColor])
             ++numSameColor;
           numThisLine = numSameColor;
-          
+
           if (ThisColor != fPrevColor) {
             Color C;
             GetContext()->GetColorizer()->GetColor(ThisColor, C);
@@ -231,7 +231,7 @@ namespace textinput {
     fWriteLen = PromptLen + EditorPromptLen + GetContext()->GetLine().length();
     return avail;
   }
-  
+
   void
   TerminalDisplay::Move(Pos p) {
     Attach();
@@ -243,7 +243,7 @@ namespace textinput {
       MoveDown(p.fLine - fWritePos.fLine);
       fWritePos.fLine += p.fLine - fWritePos.fLine;
     }
-    
+
     if (p.fCol == 0) {
       MoveFront();
       fWritePos.fCol = 0;

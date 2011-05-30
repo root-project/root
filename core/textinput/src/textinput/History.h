@@ -44,13 +44,13 @@ namespace textinput {
     size_t GetSize() const { return fEntries.size(); }
 
     size_t MatchIndex(size_t StartIdx, const char* regexp, size_t again = 0);
-    
+
     void AddLine(const std::string& line);
     void ModifyLine(size_t Idx, const char* line) {
       fEntries[fEntries.size() - 1 - Idx] = line;
       // Does not sync to file!
     }
-    
+
     void AppendToFile();
     void ReadFile(const char* FileName);
 

@@ -36,7 +36,7 @@ namespace {
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
       virtual ~ROOTTabCompletion() { delete []fLineBuf; }
-    
+
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
@@ -49,13 +49,13 @@ namespace {
             // no change
             return true;
          }
-      
+
          line = std::string(fLineBuf);
          std::string compLine;
          while (std::getline(sstr, compLine)) {
             displayCompletions.push_back(compLine);
          }
-      
+
          size_t lenLineBuf = strlen(fLineBuf);
          if (posFirstChange == (size_t) -2) {
             // redraw whole line, incl prompt
@@ -79,7 +79,7 @@ namespace {
       char* fLineBuf;
    };
    const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
-  
+
 
    // Helper to define the lifetime of the TextInput singleton.
    class TextInputHolder {
@@ -94,26 +94,26 @@ namespace {
          Hist->SetMaxDepth(fgSizeLines);
          Hist->SetPruneLength(fgSaveLines);
       }
-    
+
       ~TextInputHolder() {
          // Delete allocated objects.
          delete fReader;
          delete fDisplay;
       }
-    
+
       const char* TakeInput() {
          fTextInput.TakeInput(fInputLine);
          fInputLine += "\n"; // ROOT wants a trailing newline.
          return fInputLine.c_str();
       }
-    
+
       void SetColors(const char* colorTab, const char* colorTabComp,
                      const char* colorBracket, const char* colorBadBracket,
                      const char* colorPrompt) {
          fCol.SetColors(colorTab, colorTabComp, colorBracket, colorBadBracket,
                         colorPrompt);
       }
-    
+
       static void SetHistoryFile(const char* hist) {
          fgHistoryFile = hist;
       }
@@ -131,7 +131,7 @@ namespace {
       static TextInput& get() {
          return getHolder().fTextInput;
       }
-    
+
    private:
       TextInput fTextInput; // The singleton TextInput object.
       Display* fDisplay; // Default TerminalDisplay
@@ -152,7 +152,7 @@ namespace {
       static int fgSizeLines;
       static int fgSaveLines;
    };
-  
+
    int TextInputHolder::fgSizeLines = 500;
    int TextInputHolder::fgSaveLines = -1;
    std::string TextInputHolder::fgHistoryFile;
@@ -270,14 +270,14 @@ Gl_setColors(const char* colorTab, const char* colorTabComp, const char* colorBr
    TextInputHolder::getHolder().SetColors(colorTab, colorTabComp, colorBracket,
                                           colorBadBracket, colorPrompt);
 }
-  
+
 /******************** Superseded interface *********************************/
 
 void Gl_setwidth(int /*w*/) {
    // ignored, handled by displays themselves.
 }
-  
-  
+
+
 void Gl_windowchanged() {
    // ignored, handled by displays themselves.
 }
@@ -286,5 +286,5 @@ void
 Gl_histadd(const char* /*buf*/) {
    // ignored, handled by displays themselves.
 }
-  
+
 } // extern "C"

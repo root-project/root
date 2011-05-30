@@ -54,7 +54,7 @@ namespace {
     rgb256[5][0] = 205; rgb256[5][1] =   0; rgb256[5][1] = 205;
     rgb256[6][0] =   0; rgb256[6][1] = 205; rgb256[6][1] = 205;
     rgb256[7][0] = 229; rgb256[7][1] = 229; rgb256[7][1] = 229;
-    
+
     // this is not what I see, though it's supposedly the default:
     //   rgb256[ 8][0] = 127; rgb256[ 8][1] = 127; rgb256[ 8][1] = 127;
     // use this instead, just to be on the safe side:
@@ -66,7 +66,7 @@ namespace {
     rgb256[13][0] = 255; rgb256[13][1] =   0; rgb256[13][1] = 255;
     rgb256[14][0] =   0; rgb256[14][1] = 255; rgb256[14][1] = 255;
     rgb256[15][0] = 255; rgb256[15][1] = 255; rgb256[15][1] = 255;
-    
+
     // 6 intensity RGB
     static const int intensities[] = {0, 0x5f, 0x87, 0xaf, 0xd7, 0xff};
     int idx = 16;
@@ -117,7 +117,7 @@ namespace textinput {
   TerminalDisplayUnix::~TerminalDisplayUnix() {
     Detach();
   }
-  
+
   void
   TerminalDisplayUnix::HandleResizeSignal() {
 #ifdef TIOCGWINSZ
@@ -149,7 +149,7 @@ namespace textinput {
   void
   TerminalDisplayUnix::SetColor(char CIdx, const Color& C) {
     if (!IsTTY()) return;
-    
+
     // Default color, reset previous bold etc.
     static const char text[] = {(char)0x1b, '[', '0', 'm', 0};
     WriteRawString(text, 4);
@@ -187,14 +187,14 @@ namespace textinput {
     }
 
   }
-  
+
   void
   TerminalDisplayUnix::MoveFront() {
     static const char text[] = {(char)0x1b, '[', '1', 'G', 0};
     if (!IsTTY()) return;
     WriteRawString(text, sizeof(text));
   }
-  
+
   void
   TerminalDisplayUnix::MoveInternal(char What, size_t n) {
     static const char cmd[] = "\x1b[";
@@ -204,7 +204,7 @@ namespace textinput {
       text += cmd;
       text += What;
     }
-    WriteRawString(text.c_str(), text.length()); 
+    WriteRawString(text.c_str(), text.length());
   }
 
   void
@@ -218,17 +218,17 @@ namespace textinput {
     std::string moves(nLines, 0x0a);
     WriteRawString(moves.c_str(), nLines);
   }
-  
+
   void
   TerminalDisplayUnix::MoveRight(size_t nCols /* = 1 */) {
     MoveInternal('C', nCols);
   }
-  
+
   void
   TerminalDisplayUnix::MoveLeft(size_t nCols /* = 1 */) {
     MoveInternal('D', nCols);
   }
-  
+
   void
   TerminalDisplayUnix::EraseToRight() {
     static const char text[] = {(char)0x1b, '[', 'K', 0};
@@ -249,7 +249,7 @@ namespace textinput {
     WriteRawString(" \b", 2);
     //MoveUp();
   }
-  
+
   void
   TerminalDisplayUnix::Attach() {
     // set to noecho
@@ -261,7 +261,7 @@ namespace textinput {
     fIsAttached = true;
     NotifyTextChange(Range::AllWithPrompt());
   }
-  
+
   void
   TerminalDisplayUnix::Detach() {
     if (!fIsAttached) return;
@@ -280,7 +280,7 @@ namespace textinput {
     r = r > sum / 4;
     g = g > sum / 4;
     b = b > sum / 4;
-    
+
     // ANSI:
     return r + (g * 2) + (b * 4);
     // ! ANSI:
@@ -293,13 +293,13 @@ namespace textinput {
     if (rgb256[0][0] == 0) {
       InitRGB256(rgb256);
     }
-    
+
     // Find the closest index.
     // A: the closest color match (square of geometric distance in RGB)
     // B: the closest brightness match
     // Treat them equally, which suppresses differences
     // in color due to squared distance.
-    
+
     // start with black:
     int idx = 0;
     unsigned int r = C.fR;
@@ -314,7 +314,7 @@ namespace textinput {
         delta += (r-rgb256[i][0])*(r-rgb256[i][0]) +
         (g-rgb256[i][1])*(g-rgb256[i][1]) +
         (b-rgb256[i][2])*(b-rgb256[i][2]);
-        
+
         if (delta < mindelta) {
           mindelta = delta;
           idx = i;
@@ -324,7 +324,7 @@ namespace textinput {
     }
     return idx;
   }
-        
+
 }
 
 #endif // #ifndef WIN32

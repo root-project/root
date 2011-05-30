@@ -32,17 +32,17 @@ namespace textinput {
     struct Pos {
       Pos() : fCol(0), fLine(0) {}
       Pos(size_t col, size_t line): fCol(col), fLine(line) {}
-      
+
       bool operator==(const Pos& O) const {
         return fCol == O.fCol && fLine == O.fLine; }
 
       size_t fCol;
       size_t fLine;
     };
-    
+
     Display(): fContext(0) {}
     virtual ~Display();
-    
+
     const TextInputContext* GetContext() const { return fContext; }
     void SetContext(TextInputContext* C) { fContext = C; }
 
@@ -56,7 +56,7 @@ namespace textinput {
     virtual void DisplayInfo(const std::vector<std::string>& Options) = 0;//Info
     virtual void Attach() {} // Take control e.g. of the terminal
     virtual void Detach() {} // Allow others to control terminal's parameters
-    
+
   private:
     const TextInputContext* fContext; // Context object
   };

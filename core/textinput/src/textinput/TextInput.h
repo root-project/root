@@ -58,7 +58,7 @@ namespace textinput {
     void SetColorizer(Colorizer* c);
     void SetCompletion(TabCompletion* tc);
     void SetFunctionKeyHandler(FunKey* fc);
-    
+
     void SetMaxPendingCharsToRead(size_t nMax) { fMaxChars = nMax; }
     void SetReadingAllPendingChars() { fMaxChars = (size_t) -1; }
     void SetBlockingUntilEOL() { fMaxChars = 0; }
@@ -72,21 +72,21 @@ namespace textinput {
     bool AtEOL() const { return fLastReadResult == kRRReadEOLDelimiter || AtEOF(); }
     bool AtEOF() const { return fLastReadResult == kRREOF; }
     bool HavePendingInput() const;
-    
+
     // Display interface
     void Redraw();
     void UpdateDisplay(const EditorRange& r);
     void DisplayInfo(const std::vector<std::string>& lines);
     void HandleResize();
-    
+
     void GrabInputOutput() const;
     void ReleaseInputOutput() const;
-    
+
   private:
     void EmitSignal(char c, EditorRange& r);
     void ProcessNewInput(const InputData& in, EditorRange& r);
     void DisplayNewInput(EditorRange& r, size_t& oldCursorPos);
-    
+
     bool fHidden; // whether input should be shown
     char fLastKey; // most recently read key
     size_t fMaxChars; // Num chars to read; 0 for blocking, -1 for all available

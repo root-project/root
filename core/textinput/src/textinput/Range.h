@@ -51,7 +51,7 @@ namespace textinput {
        return fLength == 0 && fPromptUpdate != kNoPromptUpdate; }
     void ExtendPromptUpdate(EPromptUpdate PU) {
       fPromptUpdate = (EPromptUpdate) ((int) fPromptUpdate | (int) PU); }
-    
+
     static size_t PMax(size_t p1, size_t p2) { return (p1 > p2 ? p1 : p2); }
     static size_t PMin(size_t p1, size_t p2) { return (p1 < p2 ? p1 : p2); }
 

@@ -43,7 +43,7 @@ namespace textinput {
     }
     fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
   }
-  
+
   void
   TerminalDisplayWin::HandleResizeEvent() {
     UpdateHandle();
@@ -74,20 +74,20 @@ namespace textinput {
     MoveInternal(P);
     fWritePos = P;
   }
-  
+
   void
   TerminalDisplayWin::MoveInternal(Pos P) {
     COORD C = {P.fCol, P.fLine + fStartLine};
     ::SetConsoleCursorPosition(fOut, C);
   }
-  
+
   void
   TerminalDisplayWin::MoveFront() {
     Pos P(fWritePos);
     P.fCol = 0;
     MoveInternal(P);
   }
-  
+
   void
   TerminalDisplayWin::MoveUp(size_t nLines /* = 1 */) {
     Pos P(fWritePos);
@@ -101,21 +101,21 @@ namespace textinput {
     ++P.fLine;
     MoveInternal(P);
   }
-  
+
   void
   TerminalDisplayWin::MoveRight(size_t nCols /* = 1 */) {
     Pos P(fWritePos);
     ++P.fCol;
     MoveInternal(P);
   }
-  
+
   void
   TerminalDisplayWin::MoveLeft(size_t nCols /* = 1 */) {
     Pos P(fWritePos);
     --P.fCol;
     MoveInternal(P);
   }
-  
+
   void
   TerminalDisplayWin::EraseToRight() {
     DWORD NumWritten;
@@ -139,7 +139,7 @@ namespace textinput {
       ShowError("writing to output");
     }
   }
-  
+
   void
   TerminalDisplayWin::Attach() {
     // set to noecho
@@ -164,7 +164,7 @@ namespace textinput {
     fIsAttached = true;
     NotifyTextChange(Range::AllWithPrompt());
   }
-  
+
   void
   TerminalDisplayWin::Detach() {
     if (!fIsAttached) return;
@@ -174,16 +174,16 @@ namespace textinput {
     TerminalDisplay::Detach();
     fIsAttached = false;
   }
-        
+
   void
   TerminalDisplayWin::ShowError(const char* Where) const {
-    DWORD Err = GetLastError(); 
+    DWORD Err = GetLastError();
     LPVOID MsgBuf = 0;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
       FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       (LPTSTR) &MsgBuf, 0, NULL);
 
-    printf("Error %d in textinput::TerminalDisplayWin %s: %s\n", Err, Where, MsgBuf); 
+    printf("Error %d in textinput::TerminalDisplayWin %s: %s\n", Err, Where, MsgBuf);
     LocalFree(MsgBuf);
   }
 

@@ -38,7 +38,7 @@ void Gl_setColors(const char* colorTab, const char* colorTabComp, const char* co
 
 R__EXTERN int (*Gl_beep_hook)();
 R__EXTERN int (*Gl_in_key)(int key);
-  
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

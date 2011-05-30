@@ -28,7 +28,7 @@ namespace textinput {
   public:
     Reader(): fContext(0) {}
     virtual ~Reader();
-    
+
     TextInputContext* GetContext() const { return fContext; }
     void SetContext(TextInputContext* C) { fContext = C; }
 

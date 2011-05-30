@@ -17,7 +17,7 @@
 namespace textinput {
   KeyBinding::KeyBinding(): fEscPending(false), fAllowEsc(true) {}
   KeyBinding::~KeyBinding() {}
-  
+
   Editor::Command KeyBinding::ToCommand(InputData In) {
     // Convert InputData into a Command
     typedef Editor::Command C;
@@ -27,7 +27,7 @@ namespace textinput {
       if (In.GetModifier() & InputData::kModCtrl) {
         return ToCommandCtrl(In.GetRaw());
       }
-      
+
       if (HadEscPending) {
         return ToCommandEsc(In.GetRaw());
       }
@@ -37,7 +37,7 @@ namespace textinput {
     // else
     return ToCommandExtended(In.GetExtendedInput(), HadEscPending);
   }
-  
+
   Editor::Command
   KeyBinding::ToCommandCtrl(char In) {
     // Control was pressed and In was hit. Convert to command.
@@ -80,7 +80,7 @@ namespace textinput {
     // Cannot reach:
     return C(In, Editor::kCKError);
   }
-  
+
   Editor::Command
   KeyBinding::ToCommandEsc(char In) {
     // ESC was entered, followed by In. Convert to command.
@@ -96,7 +96,7 @@ namespace textinput {
       default: return C(In, Editor::kCKError);
     }
     // Cannot reach:
-    return C(In, Editor::kCKError);    
+    return C(In, Editor::kCKError);
   }
 
   Editor::Command
@@ -150,7 +150,7 @@ namespace textinput {
       default:  return C(Editor::kCmdIgnore);
     }
     // Cannot reach:
-    return C(Editor::kCmdIgnore);    
+    return C(Editor::kCmdIgnore);
   }
 
 }

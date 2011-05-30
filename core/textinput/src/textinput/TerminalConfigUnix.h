@@ -51,6 +51,6 @@ private:
   termios* fOldTIOS; // tty configuration before grabbing
   termios* fConfTIOS; // tty configuration while active
 };
-   
+
 }
 #endif // TEXTINPUT_UNIXTERMINALSETTINGS_H

@@ -35,10 +35,10 @@ namespace textinput {
       kModBold = 2,
       kModInverse = 4
     };
-    
+
     Color(Intensity_t r = 127, Intensity_t g = 127, Intensity_t b = 127,
           char mod = 0): fR(r), fG(g), fB(b), fModifiers(mod) {}
-    
+
     bool operator==(const Color& O) const {
       // Equality test.
       return fR == O.fR && fG == O.fG && fB == O.fB
@@ -47,7 +47,7 @@ namespace textinput {
       // Inequality test.
       return fR != O.fR || fG != O.fG || fB != O.fB
         || fModifiers != O.fModifiers; }
-    
+
     Intensity_t fR, fG, fB; // Intensity of the channels
     char fModifiers; // Character display modifiers; bitset of EModifiers
   };

@@ -25,12 +25,12 @@ namespace textinput {
   public:
     TerminalDisplayWin();
     ~TerminalDisplayWin();
-    
+
     void HandleResizeEvent();
-    
+
     void Attach();
     void Detach();
-    
+
   protected:
     void Move(Pos p);
     void MoveInternal(Pos p);
@@ -41,12 +41,12 @@ namespace textinput {
     void MoveFront();
     void SetColor(char CIdx, const Color& C);
     void WriteRawString(const char* text, size_t len);
-    
+
     void EraseToRight();
 
     void ShowError(const char* Where) const;
     void UpdateHandle();
-    
+
   private:
     size_t fStartLine; // line of current prompt in cmd.exe's buffer
     bool fIsAttached; // whether console is configured

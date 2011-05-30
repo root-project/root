@@ -31,7 +31,7 @@ namespace textinput {
     // maximal number of lines allowed by SetMaxDepth().
     if (filename) ReadFile(filename);
   }
-  
+
   History::~History() {}
 
   void

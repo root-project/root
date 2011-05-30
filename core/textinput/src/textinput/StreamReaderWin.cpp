@@ -46,9 +46,9 @@ namespace textinput {
     fOldMode(0), fMyMode(0) {
     fIn = ::GetStdHandle(STD_INPUT_HANDLE);
     fIsConsole = ::GetConsoleMode(fIn, &fOldMode) != 0;
-    fMyMode = fOldMode | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS; 
+    fMyMode = fOldMode | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
     fMyMode = fOldMode & ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT
-      | ENABLE_ECHO_INPUT | ENABLE_INSERT_MODE); 
+      | ENABLE_ECHO_INPUT | ENABLE_INSERT_MODE);
   }
 
   StreamReaderWin::~StreamReaderWin() {}
@@ -163,17 +163,17 @@ namespace textinput {
     HandleKeyEvent(C, in);
     ++nRead;
     return true;
-  } 
+  }
 
   void
   StreamReaderWin::HandleError(const char* Where) const {
-    DWORD Err = GetLastError(); 
+    DWORD Err = GetLastError();
     LPVOID MsgBuf = 0;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
       FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       (LPTSTR) &MsgBuf, 0, NULL);
 
-    printf("Error %d in textinput::StreamReaderWin %s: %s\n", Err, Where, MsgBuf); 
+    printf("Error %d in textinput::StreamReaderWin %s: %s\n", Err, Where, MsgBuf);
     LocalFree(MsgBuf);
   }
 

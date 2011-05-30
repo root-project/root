@@ -47,36 +47,36 @@ namespace textinput {
       kCmdPaste, // past from all subsequent, same direction cut
 
       kCmdSwapThisAndLeftThenMoveRight,
-      
+
       kCmdWordToUpper,
       kCmdWordToLower,
       kCmdToUpperMoveNextWord,
-      
+
       kCmdReverseSearch,
       kCmdHistOlder,
       kCmdHistNewer,
       kCmdHistReplay,
       kCmdHistComplete,
-      
+
       kCmdComplete, // TAB - fires a callback.
 
       kCmd_END_TEXT_MODIFYING_CMDS,
 
       kCmdEnter, // Usually end of line
-      
+
       kCmdInsertMode,
       kCmdOverwiteMode,
       kCmdToggleOverwriteMode,
-      
+
       kCmdClearScreen,
       kCmdWindowResize,
-      
+
       kCmdUndo,
 
       kCmdEsc,
       kCmdIgnore // ignore this command, e.g. because it was already processed
     };
-    
+
     enum EMoveID {
       kMoveLeft,
       kMoveRight,
@@ -87,7 +87,7 @@ namespace textinput {
       kMoveNextWord,
       kMovePrevWord
     };
-    
+
     // Whether the editing command was successful
     enum EProcessResult {
       kPRError,
@@ -102,7 +102,7 @@ namespace textinput {
       Command(char C, ECommandKind k = kCKChar): fKind(k), fChar(C) {}
 
       ECommandKind GetKind() const { return fKind; }
-      
+
       ECommandID GetCommandID() const { return fCmd;}
       EMoveID GetMoveID() const { return fMove;}
       char GetChar() const { return fChar;}

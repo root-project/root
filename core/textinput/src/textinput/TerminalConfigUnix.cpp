@@ -32,7 +32,7 @@ void
 TerminalConfigUnix__handleAbortSignal(int signum) {
   // Clean up before we are killed.
   TerminalConfigUnix::Get().HandleAbortSignal(signum);
-  
+
 }
 
 TerminalConfigUnix&

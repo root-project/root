@@ -24,15 +24,15 @@ namespace ROOT {
       virtual ~TextInputColorizer();
       void ProcessTextChange(textinput::EditorRange& Modification,
                              textinput::Text& input);
-  
+
       void ProcessPromptChange(textinput::Text& prompt);
-  
+
       void ProcessCursorChange(size_t Cursor, textinput::Text& input,
                                textinput::Range& DisplayR);
       bool GetColor(char type, textinput::Color& Col);
       char GetInfoColor() const { return (char) kColorTabComp; }
 
-  
+
       void SetColors(const char* colorType, const char* colorTabComp,
                      const char* colorBracket, const char* colorBadBracket,
                      const char* colorPrompt);

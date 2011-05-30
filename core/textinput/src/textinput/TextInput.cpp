@@ -35,7 +35,7 @@ namespace textinput {
     fContext->AddDisplay(display);
     fContext->AddReader(reader);
   }
-  
+
   TextInput::~TextInput() {
     delete fContext;
   }
@@ -86,12 +86,12 @@ namespace textinput {
     if (fLastReadResult == kRRReadEOLDelimiter
         || fLastReadResult == kRREOF)
       return fLastReadResult;
-    
+
     if (fLastReadResult == kRRNone) {
       GrabInputOutput();
       UpdateDisplay(EditorRange(Range::AllText(), Range::AllWithPrompt()));
     }
-    
+
     size_t nRead = 0;
     size_t nMax = GetMaxPendingCharsToRead();
     if (nMax == 0) nMax = (size_t) -1; // aka "all"
@@ -113,7 +113,7 @@ namespace textinput {
         }
       }
     }
-    
+
     if (fLastReadResult == kRRNone) {
       if (nRead == nMax) {
         fLastReadResult = kRRCharLimitReached;
@@ -129,7 +129,7 @@ namespace textinput {
     // in was read, process it.
     fLastKey = in.GetRaw(); // rough approximation
     Editor::Command Cmd = fContext->GetKeyBinding()->ToCommand(in);
-          
+
     if (Cmd.GetKind() == Editor::kCKControl
         && (Cmd.GetChar() == 3 || Cmd.GetChar() == 26)) {
       // If there are modifications in the queue, process them now.
@@ -152,7 +152,7 @@ namespace textinput {
                         fContext->GetDisplays().end(),
                         std::mem_fun(&Display::NotifyError));
         } else if (Cmd.GetKind() == Editor::kCKCommand
-                   && (Cmd.GetCommandID() == Editor::kCmdEnter || 
+                   && (Cmd.GetCommandID() == Editor::kCmdEnter ||
                        Cmd.GetCommandID() == Editor::kCmdHistReplay)) {
           fLastReadResult = kRRReadEOLDelimiter;
           return;
@@ -171,7 +171,7 @@ namespace textinput {
     }
 
     UpdateDisplay(R);
-    
+
     if (oldCursorPos != fContext->GetCursor()) {
       std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
                     std::mem_fun(&Display::NotifyCursorChange));
@@ -186,7 +186,7 @@ namespace textinput {
     GrabInputOutput();
     UpdateDisplay(EditorRange(Range::AllText(), Range::AllWithPrompt()));
   }
-  
+
   void
   TextInput::UpdateDisplay(const EditorRange& R) {
     // Update changed ranges if attached.
@@ -214,9 +214,9 @@ namespace textinput {
       Signal->EmitCtrlC();
     else if (C == 26)
       Signal->EmitCtrlZ();
-    
+
     GrabInputOutput();
-    
+
     // Already done by GrabInputOutput():
     //R.Display = Range::AllText();
     // Immediate refresh.
@@ -225,9 +225,9 @@ namespace textinput {
     //                           R.Display));
     // Empty range.
     R.fDisplay = Range::Empty();
-    
+
   }
-  
+
   void
   TextInput::SetPrompt(const char *P) {
     fContext->SetPrompt(P);
@@ -255,7 +255,7 @@ namespace textinput {
   TextInput::SetFunctionKeyHandler(FunKey* fc) {
     fContext->SetFunctionKeyHandler(fc);
   }
-  
+
   void
   TextInput::GrabInputOutput() const {
     if (fActive) return;
@@ -267,26 +267,26 @@ namespace textinput {
                   std::mem_fun(&Display::Attach));
     fActive = true;
   }
-  
+
   void
   TextInput::ReleaseInputOutput() const {
     // Signal readers that we are done reading.
     if (!fActive) return;
     std::for_each(fContext->GetReaders().begin(), fContext->GetReaders().end(),
                   std::mem_fun(&Reader::ReleaseInputFocus));
-    
+
     // Signal displays that we are done displaying.
     std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
                   std::mem_fun(&Display::Detach));
-    
+
     fActive = false;
   }
-  
+
   void
   TextInput::DisplayInfo(const std::vector<std::string>& lines) {
     // Display an informational message at the prompt. Acts like
     // a pop-up. Used e.g. for tab-completion.
-    
+
     // foreach fails to build the reference in GCC 4.1.
     // Iterate manually instead.
     for (std::vector<Display*>::const_iterator i = fContext->GetDisplays().begin(),

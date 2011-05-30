@@ -31,7 +31,7 @@ namespace textinput {
     Text() {}
     Text(const char* S): fString(S), fColor(strlen(S)) {}
     Text(const std::string& S, char C = 0): fString(S), fColor(S.length(), C) {}
-    
+
     const std::string& GetText() const { return fString; }
     const std::vector<char>& GetColors() const { return fColor; }
     std::vector<char>& GetColors() { return fColor; }
@@ -55,7 +55,7 @@ namespace textinput {
       fColor.erase(fColor.begin() + pos, fColor.begin() + pos + len);
     }
     void clear() { fString.clear(); fColor.clear(); }
-    
+
     void
     SetColor(const Range &R, char C) {
       // Set colors of characters in range R to C.
@@ -65,11 +65,11 @@ namespace textinput {
       }
       std::fill_n(fColor.begin() + R.fStart, len, C);
     }
-    
+
     char operator[](size_t i) const { return fString[i]; }
     char& operator[](size_t i) { return fString[i]; }
-    
-    Text& operator+=(char C) { insert(length(), C); return *this; } 
+
+    Text& operator+=(char C) { insert(length(), C); return *this; }
     Text& operator=(const std::string& S) {
       // Assing string S to this, initialize with default colors.
       fColor.clear();

@@ -37,13 +37,13 @@ namespace textinput {
     void Detach();
     void DisplayInfo(const std::vector<std::string>& Options);
     bool IsTTY() const { return fIsTTY; }
-    
+
   protected:
     TerminalDisplay(bool isTTY):
       fIsTTY(isTTY), fWidth(80), fWriteLen(0), fPrevColor(-1) {}
     void SetIsTTY(bool isTTY) { fIsTTY = isTTY; }
     Pos GetCursor() const {
-      // Collect the different prompts and the text cursor to calculate 
+      // Collect the different prompts and the text cursor to calculate
       // the cursor position in the terminal.
       size_t idx = GetContext()->GetCursor();
       idx += GetContext()->GetPrompt().length();
@@ -70,9 +70,9 @@ namespace textinput {
     virtual void SetColor(char CIdx, const Color& C) = 0;
     virtual void WriteRawString(const char* text, size_t len) = 0;
     virtual void ActOnEOL() {};
-    
+
     virtual void EraseToRight() = 0;
-    
+
   protected:
     bool fIsTTY; // whether this is a terminal or redirected
     size_t fWidth; // Width of the terminal in character columns

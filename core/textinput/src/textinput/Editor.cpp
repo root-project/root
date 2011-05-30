@@ -39,7 +39,7 @@ namespace textinput {
     }
     return kPRError;
   }
-  
+
   Range
   Editor::ResetText() {
     if (!fContext->GetLine().empty()
@@ -110,7 +110,7 @@ namespace textinput {
     DisplayR.ExtendPromptUpdate(Range::kUpdateEditorPrompt);
     fMode = kInputMode;
   }
-  
+
   Editor::EProcessResult
   Editor::ProcessChar(char C, EditorRange& R) {
     if (C < 32) return kPRError;
@@ -124,7 +124,7 @@ namespace textinput {
 
     PushUndo();
     ClearPasteBuf();
-    
+
     Text& Line = fContext->GetLine();
     size_t Cursor = fContext->GetCursor();
 
@@ -144,7 +144,7 @@ namespace textinput {
     }
     return kPRSuccess;
   }
-  
+
   Editor::EProcessResult
   Editor::ProcessMove(EMoveID M, EditorRange &R) {
     ClearPasteBuf();
@@ -152,7 +152,7 @@ namespace textinput {
 
     size_t Cursor = fContext->GetCursor();
     size_t LineLen = fContext->GetLine().length();
-    
+
     switch (M) {
       case kMoveEnd: fContext->SetCursor(LineLen); return kPRSuccess;
       case kMoveFront: fContext->SetCursor(0); return kPRSuccess;
@@ -177,7 +177,7 @@ namespace textinput {
     }
     return kPRError;
   }
-  
+
   Editor::EProcessResult
   Editor::ProcessCommand(ECommandID M, EditorRange &R) {
     if (M < kCmd_END_TEXT_MODIFYING_CMDS) {
@@ -396,7 +396,7 @@ namespace textinput {
     }
     return kPRError;
   }
-  
+
   size_t
   Editor::FindWordBoundary(int Direction) {
     static const char space[] = " \x9";
@@ -408,7 +408,7 @@ namespace textinput {
     size_t ret = Direction > 0 ?
       Line.GetText().find_first_of(space, Cursor + 1)
     : Line.GetText().find_last_of(space, Cursor - 2);
-    
+
     if (ret == std::string::npos) {
       if (Direction > 0) return Line.length();
       else return 0;
@@ -423,7 +423,7 @@ namespace textinput {
     }
     return ret;
   }
-  
+
   void
   Editor::AddToPasteBuf(int Dir, std::string const &T) {
     if (fCutDirection == Dir) {
@@ -451,7 +451,7 @@ namespace textinput {
       fPasteBuf = T;
     }
   }
-  
+
   void
   Editor::PushUndo() {
     static const size_t MaxUndoBufSize = 100;
