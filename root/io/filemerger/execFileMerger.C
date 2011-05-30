@@ -1,22 +1,27 @@
-
+#include "TError.h"
+#include "TFile.h"
+#include "TFileMerger.h"
+#include "TGraph.h"
+#include "THnSparse.h"
+#include "THStack.h"
+#include "TTree.h"
 
 void createInputs(int n = 2) 
 {
-   for(UInt_t i = 0; i < n; ++i ) {
+   for(UInt_t i = 0; i < (UInt_t)n; ++i ) {
       TFile *file = TFile::Open(TString::Format("input%d.root",i),"RECREATE");
       TH1F * h = new TH1F("h1","",10,0,100);
       h->Fill(10.5); h->Fill(20.5);
  
       Int_t nbins[5];
-      Double_t xmin[10];
-      Double_t xmax[10];
+      Double_t xmin[5];
+      Double_t xmax[5];
       for(UInt_t j = 0; j < 5; ++j) {
          nbins[j] = 10; xmin[j] = 0; xmax[j] = 10;
       }
       THnSparseF *sparse = new THnSparseF("sparse", "sparse", 5, nbins, xmin, xmax);
-      Double_t value[5];
-      value[0] = 0.5; value[1] = 1.5; value[2] = 2.5; value[3] = 3.5; value[4] = 4.5;
-      sparse->Fill(value);
+      Double_t coord[5] = {0.5, 1.5, 2.5, 3.5, 4.5};
+      sparse->Fill(coord);
       sparse->Write();
       
       THStack *stack = new THStack("stack","");
@@ -54,7 +59,7 @@ void createInputs(int n = 2)
 bool merge(int n = 2) {
    TFileMerger merger(kFALSE,kFALSE); // hadd style
    merger.OutputFile("merged.root");
-   for(UInt_t i = 0; i < n; ++i ) {
+   for(UInt_t i = 0; i < (UInt_t)n; ++i ) {
       if (! merger.AddFile(TString::Format("input%d.root",i))) {
          return false;
       }
@@ -72,7 +77,7 @@ bool check(int n = 2) {
       result = false;
    }
    if (h->GetBinContent(2) != n || h->GetBinContent(3) != n) {
-      Error("h1 not added properly");
+      Error("execFileMerger","h1 not added properly");
       result = false;
    }
    
@@ -80,10 +85,20 @@ bool check(int n = 2) {
    if (!sparse) {
       Error("execFileMerger","sparse is missing\n");
       result = false;
-   }
-   Int_t nbins[5];
-   for(UInt_t j = 0; j < 5; ++j) {
-      nbins[j] = j+1;
+   } else {
+      Int_t coordIdx[5] = {1, 2, 3, 4, 5};
+      Double_t cont = sparse->GetBinContent(coordIdx);
+      if (cont > n + 0.4 || cont < n - 0.4) {
+         Error("execFileMerger","sparse merge failed: expected bin content %g, read %g\n",
+               (Double_t)n, cont);
+         result = false;
+      }
+      Double_t entries = sparse->GetEntries();
+      if (entries > n + 0.4 || entries < n - 0.4) {
+         Error("execFileMerger","sparse merge failed: expected %g entries, read %g\n",
+               (Double_t)n, entries);
+         result = false;
+      }
    }
    
    THStack *stack; file->GetObject("stack",stack);
