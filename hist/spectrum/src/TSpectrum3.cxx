@@ -291,7 +291,7 @@ algorithm [1]</p>
 <p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
 -18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span>there exist two algorithms for the estimation of new value in the
-channel “<sub><img width=43 height=24 src="gif/gif/spectrum3_background_image001.gif"></sub>”</p>
+channel “<sub><img width=43 height=24 src="gif/spectrum3_background_image001.gif"></sub>”</p>
 
 <p class=MsoNormal style='margin-left:18.0pt;text-align:justify'>&nbsp;</p>
 
@@ -314,11 +314,11 @@ the estimated channel is calculated as</p>
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
 <p class=MsoNormal style='text-align:justify'><sub><img width=103 height=26
-src="gif/gif/spectrum3_background_image002.gif"></sub></p>
+src="gif/spectrum3_background_image002.gif"></sub></p>
 
 <p class=MsoNormal style='text-align:justify'><sub><img width=621 height=408
-src="gif/gif/spectrum3_background_image003.gif"></sub><sub><img width=148 height=27
-src="gif/gif/spectrum3_background_image004.gif"></sub></p>
+src="gif/spectrum3_background_image003.gif"></sub><sub><img width=148 height=27
+src="gif/spectrum3_background_image004.gif"></sub></p>
 
 <p class=MsoNormal>&nbsp;</p>
 
@@ -405,7 +405,7 @@ elimination methods for multidimensional gamma-ray spectra. NIM, A401 (1997)
 <p class=MsoNormal><i>Example 1– script Back3.c :</i></p>
 
 <p class=MsoNormal><i><span style='font-size:18.0pt'><img border=0 width=601
-height=368 src="gif/gif/spectrum3_background_image005.jpg"></span></i></p>
+height=368 src="gif/spectrum3_background_image005.jpg"></span></i></p>
 
 <p class=MsoNormal>&nbsp;</p>
 
@@ -413,7 +413,7 @@ height=368 src="gif/gif/spectrum3_background_image005.jpg"></span></i></p>
 gamma-gamma-gamma-ray spectrum</b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=601 height=368 src="gif/gif/spectrum3_background_image006.jpg"></span></b></p>
+border=0 width=601 height=368 src="gif/spectrum3_background_image006.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b>Fig. 2 Background estimated
 from data from Fig. 1 using decreasing clipping window with widths 5, 5, 5 and
