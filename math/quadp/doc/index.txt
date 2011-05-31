@@ -20,7 +20,7 @@ of Object-Oriented Software for Quadatric Programmin
 g (OOQP) in ROOT
     </a></li>
 <li><a
-href="http://root.cern.ch/root/html/examples/portfolio.C.html">Markowitz
+href="tutorials/quadp/portfolio.C.html">Markowitz
 stock portfolio allocation
     </a></li>
 </ul>

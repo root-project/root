@@ -7,9 +7,9 @@ BEGIN_HTML
     </a></li>
 <li><a href="http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/minmain.html">The MINUIT documentation in CERNLIB
     </a></li>
-<li><a href="http://root.cern.ch/root/HowtoFit.html">How to Fit Histograms
+<li><a href="http://root.cern.ch/drupal/content/howtos#fit">How to Fit Histograms
       </A></li>
-<li><a href="http://root.cern.ch/root/htmldoc/examples/peaks.C.html">How to Fit find peaks in histograms
+<li><a href="tutorials/spectrum/peaks.C.html">How to Fit find peaks in histograms
       </A></li>
 </ul>
 END_HTML
