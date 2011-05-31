@@ -843,14 +843,13 @@ exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
 </para>
 <para>To benefit from this mechanism your classes must inherit from <emphasis role="bold"><code>TQObject</code></emphasis> or otherwise the class definition must start with <code>RQ_OBJECT</code><code>(“ClassName”) </code>macro. This macro allows the signals/slots communication mechanism to be applied between compiled and interpreted classes in an interactive ROOT session without having the class derive from <emphasis role="bold"><code>TQObject</code></emphasis>. Every signal method declaration is followed by a comment <code>“*SIGNAL*”.</code> Only instances of a class that defines a signal or instances of its subclasses can emit the signal. The ROOT implementation of a popular example presenting signals and slots is the next. Let’s have a minimal class declaration:</para>
 
-<programlisting language="c++">
-class MyClass {
-private:
-Int_t fValue;
-public:
-MyClass()  { fValue=0; }
-Int_t GetValue() const { return fValue; }
-Void  SetValue(Int_t);
+<programlisting language="c++">class MyClass {
+   private:
+      Int_t fValue;
+   public:
+      MyClass()  { fValue=0; }
+      Int_t GetValue() const { return fValue; }
+      void  SetValue(Int_t);
 };
 </programlisting>
 
@@ -881,10 +880,9 @@ Emit("SetValue(Int_t)",v);
 
 <para>The line <code>Emit("SetValue(Int_t)",v)</code> activates the signal <code>SetValue(Int_t)</code> with argument v. You can use any of the methods <emphasis role="bold"><code>TQObject</code></emphasis><code>::Emit</code><code>(“full_method_name”,arguments)</code> to emit a signal. We create two instances of <code>MyClass</code> and connect them together: </para>
 
-<programlisting language="c++">
-MyClass *objA = new MyClass();
+<programlisting language="c++">MyClass *objA = new MyClass();
 MyClass *objB = new MyClass();
-objA-&gt;Connect("SetValue(Int_t)","MyClass",b,"SetValue(Int_t)");
+objA-&gt;Connect("SetValue(Int_t)","MyClass",objB,"SetValue(Int_t)");
 objB-&gt;SetValue(11);
 objA-&gt;SetValue(79);
 objB-&gt;GetValue();          <emphasis role="italic"><code>// the value is 79</code></emphasis>
