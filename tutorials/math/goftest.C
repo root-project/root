@@ -32,7 +32,7 @@ void goftest() {
    //ROOT::Math::Random<ROOT::Math::GSLRngMT> r;
    TF1 * f1 = new TF1("logNormal","ROOT::Math::lognormal_pdf(x,[0],[1])",0,500);
    // set the lognormal parameters (m and s) 
-   f1->SetParameters(5.0,2.0);
+   f1->SetParameters(4.0,1.0);
    f1->SetNpx(1000);
       
 
@@ -42,18 +42,21 @@ void goftest() {
    h1smp->SetStats(kFALSE);
    
    for (UInt_t i = 0; i < nEvents1; ++i) { 
-      Double_t data = f1->GetRandom();
+      //Double_t data = f1->GetRandom();
+      Double_t data = gRandom->Gaus(4,1);
+      data = TMath::Exp(data);
       sample1[i] = data;
       h1smp->Fill(data);
    }
-   // normalize correctly the histogram
-   h1smp->Scale( ROOT::Math::lognormal_cdf(500.,5.,2) / nEvents1, "width");
+   // normalize correctly the histogram using the entries inside
+   h1smp->Scale( ROOT::Math::lognormal_cdf(500.,4.,1) / nEvents1, "width");
 
    TCanvas* c = new TCanvas("c","1-Sample and 2-Samples GoF Tests");
    c->Divide(1, 2);
-   c->cd(1);
+   TPad * pad = c->cd(1);
    h1smp->Draw();
    h1smp->SetLineColor(kBlue);
+   pad->SetLogy();
    f1->SetNpx(100); // use same points as histo for drawing
    f1->SetLineColor(kRed);
    f1->Draw("SAME");
