@@ -694,8 +694,12 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
             }
          }
       } else if (res.BeginsWith("Content-Type: multipart")) {
-         boundary = "--" + res(res.Index("boundary=")+9, 1000);
-         boundaryEnd = boundary + "--";
+         boundary = res(res.Index("boundary=")+9, 1000);
+         if (boundary[0]=='"' && boundary[boundary.Length()-1]=='"') {
+            boundaryEnd = "--" + boundary(1,boundary.Length()-2) + "--";            
+         } else {
+            boundaryEnd = "--" + boundary + "--";
+         }
       } else if (res.BeginsWith("Content-range:")) {
 #ifdef R__WIN32
          sscanf(res.Data(), "Content-range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
