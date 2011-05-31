@@ -55,8 +55,7 @@
 <title>A Simple Example</title>
 <para>We will start with a simple example that builds a small application containing a canvas and two buttons: Draw and Exit. Its functionality will be very simple: every time you click on Draw button, the graphics of the function <code>sin(x)/x</code> will be drawn in randomly chosen interval in the canvas window, if you click on Exit - you close the application. This example shows the basic concepts for almost any GUI-application in ROOT and it is important to understand how it is constructed. The example program is written as a named script. See "CINT the C++ Interpreter". Remember that the named script can be executed via </para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> .x example.C </code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"> .x example.C </emphasis>
 </programlisting>
 
 <para>only if the filename (without extension) and the function entry point are both the same. </para>
@@ -67,15 +66,13 @@ root[]<emphasis role="bold"><code> .x example.C </code></emphasis>
 <para>Let’s now go through the code of the <code>example.C</code>. </para>
 <para>The first lines include ROOT header files. The header file names are almost always as the class names (<emphasis role="bold"><code>TApplication</code></emphasis>, <emphasis role="bold"><code>TF1</code></emphasis>, <emphasis role="bold"><code>TCanvas</code></emphasis>), but there are cases when similar classes are grouped together in one header file: all frames are declared in <code>TGFrame.h</code>, all buttons – in <code>TGButton.h</code>, etc. Our small example is based on an object of the class <code>MyMainFrame</code>. </para>
 
-<programlisting language="c++">
-new MyMainFrame(gClient-&gt;GetRoot(),200,200);
+<programlisting language="c++">new MyMainFrame(gClient-&gt;GetRoot(),200,200);
 </programlisting>
 
 <para>The first parameter <code>gClient-&gt;GetRoot()</code> makes the initial connection to the window server. It is a pointer to the root window of the screen, which is obtained from <emphasis role="italic"><emphasis role="bold"><code>gClient</code></emphasis></emphasis>. The next two parameters initialize the width and height of the application window in pixels. Let see what <code>MyMainFrame</code> is. The three arguments pass to the <emphasis role="bold"><code>TGMainFrame</code></emphasis> constructor when we create the <code>fMain</code> object. </para>
 <para>The first thing to note is the inclusion of the <code>RQ_OBJECT</code> macro in the class declaration of <code>MyMainFrame</code>. It is necessary to provide a standalone class signal/slot capability. The signal/slot communication mechanism is described in a separate chapter. See “Event Processing: Signals and Slots”.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// example.C</code></emphasis>
+<programlisting language="c++"><emphasis role="italic">// example.C</emphasis>
 
 #include &lt;TGClient.h&gt;
 #include &lt;TCanvas.h&gt;
@@ -97,37 +94,40 @@ public:
    void DoDraw();
 };
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
-   <emphasis role="italic"><code>// Create a main frame</code></emphasis>
+   <emphasis role="italic">// Create a main frame</emphasis>
    fMain = new TGMainFrame(p,w,h);
 
-   <emphasis role="italic"><code>// Create canvas widg</code></emphasis><emphasis role="italic"><code>et</code></emphasis>
+   <emphasis role="italic">// Create canvas widget</emphasis>
    fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
    fMain-&gt;AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX |
                       kLHintsExpandY, 10,10,10,1));
-   <emphasis role="italic"><code>// Create a horizontal frame widget with buttons </code></emphasis>
+   <emphasis role="italic">// Create a horizontal frame widget with buttons </emphasis>
    TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain,200,40);
    TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
    draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
-   hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+   hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,
+                                               5,5,3,4));
    TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit", 
-                                         "gApplication-&gt;Terminate(0)");
-   hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-   fMain-&gt;AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+                                "gApplication-&gt;Terminate(0)");
+   hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,
+                                               5,5,3,4));
+   fMain-&gt;AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,
+                                                2,2,2,2));
 
-   <emphasis role="italic"><code>// Set a name to the main frame</code></emphasis>
+   <emphasis role="italic">/ Set a name to the main frame</emphasis>
    fMain-&gt;SetWindowName("Simple Example");
 
-   <emphasis role="italic"><code>// Map all subwindows of main frame</code></emphasis>
+   <emphasis role="italic">// Map all subwindows of main frame</emphasis>
    fMain-&gt;MapSubwindows();
 
-   <emphasis role="italic"><code>// Initialize the layout algorithm</code></emphasis>
+   <emphasis role="italic">// Initialize the layout algorithm</emphasis>
    fMain-&gt;Resize(fMain-&gt;GetDefaultSize());
 
-   <emphasis role="italic"><code>// Map main frame</code></emphasis>
+   <emphasis role="italic">// Map main frame</emphasis>
    fMain-&gt;MapWindow();
 }
 void MyMainFrame::DoDraw() {
-   <emphasis role="italic"><code>// Draws function graphics in randomly choosen interval</code></emphasis>
+   <emphasis role="italic">// Draws function graphics in randomly choosen interval</emphasis>
    TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom-&gt;Rndm()*10);
    f1-&gt;SetFillColor(19);
    f1-&gt;SetFillStyle(1);
@@ -138,12 +138,12 @@ void MyMainFrame::DoDraw() {
    fCanvas-&gt;Update();
 }
 MyMainFrame::~MyMainFrame() {
-   <emphasis role="italic"><code>// Clean up used widgets: frames, buttons, layout hints</code></emphasis>
+   <emphasis role="italic">// Clean up used widgets: frames, buttons, layout hints</emphasis>
    fMain-&gt;Cleanup();
    delete fMain;
 }
 void example() {
-   <emphasis role="italic"><code>// Popup the GUI...</code></emphasis>
+   <emphasis role="italic">// Popup the GUI...</emphasis>
    new MyMainFrame(gClient-&gt;GetRoot(),200,200);
 }
 </programlisting>
@@ -151,15 +151,13 @@ void example() {
 <para>The <emphasis role="bold"><code>TGMainFrame </code></emphasis>class defines a top level window that interacts with the system window manager. Its method <code>CloseWindow()</code> is invoked when Alt+F4 are pressed or a window manager close/exit command is used. To terminate the application when this happens you need to override the <code>CloseWindow()</code> method and call <code>gApplication-&gt;Terminate</code><code>(0)</code>. </para>
 <para>The main frame can be considered as a container where all widgets of the application are organized with respect to their parent-child relationship. After the main frame we create <code>fEcanvas</code> – an object of class <emphasis role="bold"><code>TRootEmbeddedCanvas</code></emphasis>. It is a quite complex widget and we will explain it in detail later. For the moment keep in mind only its main purpose – to create a <emphasis role="bold"><code>TCanvas</code></emphasis> – the ROOT basic whiteboard for drawing and editing different graphical objects. </para>
 
-<programlisting language="c++">
-fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
+<programlisting language="c++">fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
 </programlisting>
 
 <para>In the <emphasis role="bold"><code>TRootEmbeddedCanvas</code></emphasis> constructor we pass the address of the main frame widget <code>fMain</code> as a second parameter. This pass is important because it makes <code>fMain</code> the parent of the canvas window. The first parameter <code>Ecanvas</code> is the name of the <emphasis role="bold"><code>TCanvas</code></emphasis>, the last two parameters give the width and height of canvas window in pixels. Next step is to add <code>fEcanvas</code> to the parent frame defining its appearance inside the parent window. We use the method <code>AddFrame():</code> </para>
 
-<programlisting language="c++">
-fMain-&gt;AddFrame(fEcanvas,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-                                             10, 10, 10, 1));
+<programlisting language="c++">fMain-&gt;AddFrame(fEcanvas,new TGLayoutHints(kLHintsExpandX | 
+                kLHintsExpandY, 10, 10, 10, 1));
 </programlisting>
 
 <para>It adds the <code>fEcanvas</code> into the list of children widgets of the main frame <code>fMain</code>. The specification of how it should be placed inside the parent frame is made by the <emphasis role="bold"><code>TGLayoutHints</code></emphasis> object. Setting its first parameter to <code>kLHintsExpandX|kLHintsExpandY </code>we define the canvas window as expanded on x and y in the frame. The next four parameters define amounts of padding in left, right, top and bottom in pixels. This means that the canvas window will be expanded when the parent window expands, but it will keep around a frame of 10 pixels on left, right, top and 1 pixel on bottom. </para>
@@ -169,51 +167,44 @@ fMain-&gt;AddFrame(fEcanvas,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
 <para>The laying out is always made with respect to the parent-children relationship. There is a special chapter presenting the different layout managers, but we will quickly introduce the concept here. The layout process will apply not to the embedded canvas window but to its parent – the main frame. A popular layout manager and the one used in this case is the vertical layout manager which arranges its widgets vertically in a column. </para>
 <para>The next widget we create as a child of the main frame is the horizontal frame <code>hframe</code>:</para>
 
-<programlisting language="c++">
-TGHorizontalFrame *hframe=new TGHorizontalFrame(fMain,200,40);
+<programlisting language="c++">TGHorizontalFrame *hframe=new TGHorizontalFrame(fMain,200,40);
 </programlisting>
 
 <para>The first parameter of its constructor is again the address of its parent, <code>fMain</code>. The next ones define the frame width and height in pixels. The name of the class <emphasis role="bold"><code>TGHorizontalFrame</code></emphasis> gives a hint that a horizontal layout will apply on its children widgets. The Draw and Exit buttons will be laid out horizontally. Here are their constructors:</para>
 
-<programlisting language="c++">
-TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
+<programlisting language="c++">TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
 hframe -&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
-                                      "gApplication-&gt;Terminate(0)");
+                                   "gApplication-&gt;Terminate(0)");
 hframe -&gt;AddFrame(exit,new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 </programlisting>
 
 <para>They are created as objects of the <emphasis role="bold"><code>TGTextButton</code></emphasis> class that represent the command buttons with a text label. When you click on a command button it performs the action shown on its label. These buttons are well known as “push buttons” or just “buttons”. The parent address <code>hframe</code> is passed as first parameter. The second one defines the button label and normally indicates the action to be taken when the button is clicked. It is possible to define a hot key for the button at that point using the hot string for its label. A hot string is a string with a “hot” character underlined. This character we call the button hot key. It shows the assigned keyboard mnemonic for the button choice. Following our example, this means that you can use <code>Alt+D</code> to click on Draw button and <code>Alt+E</code> to click on Exit. There is a possibility to specify a command string as third parameter of the button constructor. We use it to assign the command <code>gApplication-&gt;Terminate</code><code>(0)</code>. The application will be terminated when you click on the Exit button. </para>
 <para>We call again <code>AddFrame()</code> to add the buttons to their parent widget giving layout hints for each of them. This time we would like to have centered buttons with an amount of 5 pixels on the left, 5 on the right, 3 on the top and 4 on the bottom. You can feel already that the same steps are repeated three times: to create a new widget with passing a parent address as a parameter, to define layout hints for it and to add it in the parent list. The next line is something new:</para>
 
-<programlisting language="c++">
-draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
+<programlisting language="c++">draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
 </programlisting>
 
 <para>Here we connect a signal to a slot. Whenever the draw button is clicked, it emits a signal that something has happened (it is clicked) to whom might be interesting in the outside world. The widget does not know who will use this information. On the other side of the program world there is some code which should be executed when the button is clicked. This code is called a slot. Think about slots as normal C++ functions or class methods. The line above specifies that the slot <code>MyMainFrame::DoDraw()</code> will be executed when the draw button is clicked. Our slot draws the graphics of <code>sin(x)/x</code> in randomly chosen interval every time the draw button sends a signal “I am clicked”. The signal/slot communication mechanism  originally featured in Qt by TrollTech(see  <uri xmlns:xlink="http://doc.trolltech.com/3.1/signalsandslots.html">http://doc.trolltech.com/3.1/signalsandslots.html</uri>). ROOT supports its own version of signals/slots. We will return to that point in details later. We specified all child widgets of the horizontal frame (the Draw and Exit buttons in our case). Next, we need to add their parent frame to the main frame:</para>
 
-<programlisting language="c++">
-fMain-&gt;AddFrame(hframe,new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+<programlisting language="c++">fMain-&gt;AddFrame(hframe,new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 </programlisting>
 
 <para>The last thing to do is to set the main window title and to make all widgets visible.  Commonly in all systems windows are assigned by name to be identified by users. This name is displayed in the application’s title bar and can be set by:</para>
 
-<programlisting language="c++">
-fMain-&gt;SetWindowName("Simple Example");
+<programlisting language="c++">fMain-&gt;SetWindowName("Simple Example");
 </programlisting>
 
 <para>The next lines make the widgets visible. The first one maps all child frames of the top-level frame; the last one – the main frame itself, i.e. makes it appear on the screen.</para>
 
-<programlisting language="c++">
-fMain-&gt;MapSubwindows();
+<programlisting language="c++">fMain-&gt;MapSubwindows();
 fMain-&gt;Resize(fMain-&gt;GetDefaultSize());
 fMain-&gt;MapWindow();
 </programlisting>
 
 <para>The line in between has an important mission – to execute all layout specifications for the widgets before the top-level window itself is shown on the screen. We can run the named script via the CINT interpreter with the command:</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code>.x example.C</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold">.x example.C</emphasis>
 </programlisting>
 
 <para>The event processing starts. If you change the state of a widget, it emits a signal and the corresponding slot is executed ensuring the functionality we want for this small example. </para>
@@ -236,23 +227,20 @@ root[]<emphasis role="bold"><code>.x example.C</code></emphasis>
 <para>As usual a standalone program in C++ has to contain a main() function – the starting point for the application execution. In this case it is better to separate the program code creating a program header file example2a.h with the <code>MyMainFrame</code> class declaration and <code>example2a.cxx </code>– with the class methods implementation. To run our simple example as a standalone application we need to create in addition an object of class <emphasis role="bold"><code>TApplication</code></emphasis>. It will make a correct initialization of the dictionaries if it is not yet done. It will be responsible for holding everything together and to handle all events in the application. Its environment provides an interface to the ROOT graphics system and by calling the <code>Run()</code> method the event loop starts and the application program is waiting for the user action. The application exits only if the top level window is not closed. Two header files are used in addition: <code>TApplication.h</code> – for the class <emphasis role="bold"><code>TApplication</code></emphasis> and <code>TGClient.h</code> that is used to make initial connection to the graphics system. The class <emphasis role="bold"><code>TApplication</code></emphasis> must be instantiated only once in any given application. The original list of argument options can be retrieved via the <code>Argc()</code> and <code>Argv()</code> methods.</para>
 <para>Note: to have signals/slots working we need to create a dictionary for the class <code>MyMainFrame</code>, i.e. we create the file <code>ex2aLinkDef.h</code>         containing the line:</para>
 
-<programlisting language="c++">
-<code>#pragma link C++ class MyMainFrame;</code>
+<programlisting language="c++">#pragma link C++ class MyMainFrame;
 </programlisting>
 
 <para>
 <code>We compile the example:</code></para>
 
-<programlisting language="c++">
-<code>rootcint -f ex2aDict.cxx -c example2a.h ex2aLinkDef.h</code>
-<code>g++ `root-config --cflags --glibs` -o example2a example2a.cxx ex2aDict.cxx</code>
+<programlisting language="c++">rootcint -f ex2aDict.cxx -c example2a.h ex2aLinkDef.h
+g++ `root-config --cflags --glibs` -o example2a example2a.cxx ex2aDict.cxx
 </programlisting>
 
 <para>
 <code>example2a.h</code></para>
 
-<programlisting language="c++">
-#include &lt;TQObject.h&gt;
+<programlisting language="c++">#include &lt;TQObject.h&gt;
 #include &lt;RQ_OBJECT.h&gt;
 
 class TGWindow;
@@ -272,12 +260,9 @@ public:
 </programlisting>
 
 <para>
-<code>
-</code>
 <code>example2a.cxx</code></para>
 
-<programlisting language="c++">
-#include &lt;TApplication.h&gt;
+<programlisting language="c++">#include &lt;TApplication.h&gt;
 #include &lt;TGClient.h&gt;
 #include &lt;TCanvas.h&gt;
 #include &lt;TF1.h&gt;
@@ -303,8 +288,7 @@ int main(int argc, char **argv) {
 <para>
 <code>example2b.h</code></para>
 
-<programlisting language="c++">
-#include &lt;TGFrame.h&gt;
+<programlisting language="c++">#include &lt;TGFrame.h&gt;
 class MyMainFrame : public TGMainFrame {
 private:
    TRootEmbeddedCanvas *fEcanvas;
@@ -319,8 +303,7 @@ public:
 <para>
 <code>example2b.cxx</code></para>
 
-<programlisting language="c++">
-#include &lt;TApplication.h&gt;
+<programlisting language="c++">#include &lt;TApplication.h&gt;
 #include &lt;TGClient.h&gt;
 #include &lt;TCanvas.h&gt;
 #include &lt;TF1.h&gt;
@@ -332,7 +315,7 @@ public:
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h)
    : TGMainFrame(p,w,h) {
 
-   <emphasis role="italic"><code>// Creates widgets of the example</code></emphasis>
+   <emphasis role="italic">// Creates widgets of the example</emphasis>
    fEcanvas = new TRootEmbeddedCanvas ("Ecanvas",this,200,200);
    AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
                                         10,10,10,1));
@@ -345,7 +328,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h)
    hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
    AddFrame(hframe,new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 
-   <emphasis role="italic"><code>// Sets window name and shows the main frame</code></emphasis>
+   <emphasis role="italic">// Sets window name and shows the main frame</emphasis>
    SetWindowName("Simple Example");
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -380,19 +363,17 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h)
 <para>The widgets base class <emphasis role="bold"><code>TGWidget</code></emphasis> is typically used as a mix-in class via multiple inheritances. Its properties are available for all deriving widgets: <emphasis role="bold"><code>TGButton</code></emphasis>, <emphasis role="bold"><code>TGComboBox</code></emphasis>, <emphasis role="bold"><code>TGTab</code></emphasis>, <emphasis role="bold"><code>TGColorPalette</code></emphasis>, <emphasis role="bold"><code>TGColorPick</code></emphasis>, <emphasis role="bold"><code>TGDoubleSlider</code></emphasis>, <emphasis role="bold"><code>TGListTree</code></emphasis>, <emphasis role="bold"><code>TGNumberEntry</code></emphasis>, <emphasis role="bold"><code>TGScrollBar</code></emphasis>, <emphasis role="bold"><code>TGShutterItem</code></emphasis>, <emphasis role="bold"><code>TGTextEntry</code></emphasis>, <emphasis role="bold"><code>TGSlider</code></emphasis>, <emphasis role="bold"><code>TGListBox</code></emphasis>, <emphasis role="bold"><code>TGView.</code></emphasis> </para>
 <para>This class has four data members keeping information about the widget id – important for event processing, the window which handles the widget’s events, the widget status flags and the assigned command (if there is any). The general properties of <emphasis role="bold"><code>TGWidget</code></emphasis> are specified by <code>SetFlags</code><code>(Int_t flags)</code> and <code>ClearFlags</code><code>(Int_t flags)</code> methods. The status flags are: <code>kWidgetWantFocus</code>, <code>kWidgetHasFocus</code>, and <code>kWidgetIsEnabled</code>. The method <code>Associate(const TGWindow* w)</code> – sets the window which handles the widget events. <code>SetCommand(const char* command)</code> – sets the command to be executed. The command string can be gathering via <code>GetCommand()</code> method. For example, the third parameter in <emphasis role="bold"><code>TGTextButton</code></emphasis> constructor can be omitted and set later in your program, i.e. instead of:</para>
 
-<programlisting language="c++">
-TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
+<programlisting language="c++">TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
                                       "gApplication-&gt;Terminate()");
 </programlisting>
 
 <para>You will have the following the two lines:</para>
 
-<programlisting language="c++">
-TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit");
+<programlisting language="c++">TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit");
 exit-&gt;SetCommand("gApplication-&gt;Terminate()");
 </programlisting>
 
-<para>The method <code>IsEnabled</code><code>()</code> – returns <code>kTRUE</code> if the widget has flag <code>kWidgetIsEnabled</code> and it accepts user events. This method is very important for creating a good user interface because it allows you to disable or enable a widget depending on the situation of your application. As a standard all disabled widgets are displayed “grayed out”. <code>HasFocus</code><code>()</code> – returns <code>kTRUE</code> if the widget has the input focus (i.e. flag <code>kWidgetHasFocus</code> is set). Remember that only one item in a complex widget as a dialog can have the value of <code>HasFocus()</code> sets as true. <code>WantFocus</code><code>()</code> – returns <code>kTRUE</code> if the flag <code>kWidgetWantFocus</code> is set.</para>
+<para>The method <code>IsEnabled()</code> – returns <code>kTRUE</code> if the widget has flag <code>kWidgetIsEnabled</code> and it accepts user events. This method is very important for creating a good user interface because it allows you to disable or enable a widget depending on the situation of your application. As a standard all disabled widgets are displayed “grayed out”. <code>HasFocus</code><code>()</code> – returns <code>kTRUE</code> if the widget has the input focus (i.e. flag <code>kWidgetHasFocus</code> is set). Remember that only one item in a complex widget as a dialog can have the value of <code>HasFocus()</code> sets as true. <code>WantFocus</code><code>()</code> – returns <code>kTRUE</code> if the flag <code>kWidgetWantFocus</code> is set.</para>
 </sect2>
 
 <sect2>
@@ -422,14 +403,12 @@ exit-&gt;SetCommand("gApplication-&gt;Terminate()");
 
 <para>Ones of <emphasis role="bold"><code>TGFrame</code></emphasis> member functions provide direct functionality; others – will be overridden by <emphasis role="bold"><code>TGFrame</code></emphasis> subclasses to ensure particular widget’s functionality. There are two constructors provided in <emphasis role="bold"><code>TGFrame</code></emphasis> class. One creates a frame using an externally created window: </para>
 
-<programlisting language="c++">
-TGFrame(TGClient *c,Window_t id,const TGWindow *parent = 0);
+<programlisting language="c++">TGFrame(TGClient *c,Window_t id,const TGWindow *parent = 0);
 </programlisting>
 
 <para>For example, it can register the root window (called by <emphasis role="bold"><code>TGClient</code></emphasis>), or a window created via <emphasis role="bold"><code>TVirtualX</code></emphasis><code>::InitWindow()</code> (window id is obtained by <emphasis role="bold"><code>TVirtualX</code></emphasis><code>::GetWindowID()</code> method). The other <emphasis role="bold"><code>TGFrame</code></emphasis> constructor is: </para>
 
-<programlisting language="c++">
-TGFrame(const TGWindow *p,UInt_t w,UInt_t h,UInt_t options=0,
+<programlisting language="c++">TGFrame(const TGWindow *p,UInt_t w,UInt_t h,UInt_t options=0,
 ULong_t back = GetDefaultBackground());
 </programlisting>
 
@@ -603,33 +582,29 @@ ULong_t back = GetDefaultBackground());
 </informaltable>
 <para>The method <code>ChangeOpton(UInt_t options)</code> allows you to change frame options. Next example shows you how to change <code>kVerticalFrame</code> option to <code>kHorizontalFrame</code>:</para>
 
-<programlisting language="c++">
-frame-&gt;ChangeOptions((frame-&gt;GetOptions()&amp; ~kVerticalFrame)| kHorizontalFrame);
+<programlisting language="c++">frame-&gt;ChangeOptions((frame-&gt;GetOptions()&amp; ~kVerticalFrame)| kHorizontalFrame);
 </programlisting>
 
 <para>The class <emphasis role="bold"><code>TGCompositeFrame</code></emphasis> is the base class of all composite widgets as a menu bar, a list box, a combo box, etc. It subclasses <emphasis role="bold"><code>TGFrame</code></emphasis> and has in addition a layout manager and a list of child frames/widgets. There are two steps to do the design using a composite frame widget. First you put all widgets you need within this frame and assign them desired properties using <code>AddFrame(),</code> then you lay them out by the <code>Layout</code><code>()</code> method according to the assigned layout manager. The method <code>AddFrame()</code> creates an instance of <emphasis role="bold"><code>TGFrameElement</code></emphasis> class for every child widget of a composite frame. This class has three public data members: the child pointer, its layout hints, and a status variable showing if the child is visible or hidden. If no hints are specified, the default layout hints are used. Because the layout is very important part of any design we include a special section about layout management and layout hints. </para>
 <para>You can set a layout manager for the composite frame via:</para>
 
-<programlisting language="c++">
-compFrame-&gt;SetLayoutManager(TGLayoutManager *l);
+<programlisting language="c++">compFrame-&gt;SetLayoutManager(TGLayoutManager *l);
 </programlisting>
 
 <para>The child widgets cannot be added to different composite frames. </para>
 <para>Any child frame can be removed from the parent list by:</para>
 
-<programlisting language="c++">
-compFrame-&gt;RemoveFrame(TGFrame *f);
+<programlisting language="c++">compFrame-&gt;RemoveFrame(TGFrame *f);
 </programlisting>
 
 <para>You can hide or show a child frame of a composite frame using the methods: <code>HideFrame</code><code>(TGFrame *f)</code> or <code>ShowFrame</code><code>(TGFrame *f).</code> You should call, for example <code>HideFrame(TGFrame *f),</code> only after the frames have been laid out and the sub windows of the composite frame have been mapped via method <code>MapSubwindows(),</code> i.e.</para>
 
-<programlisting language="c++">
-frame-&gt;AddFrame(hFrame1,fLayout1);
+<programlisting language="c++">frame-&gt;AddFrame(hFrame1,fLayout1);
 frame-&gt;AddFrame(hFrame2,fLayout2);
-frame-&gt;Resize(frame-&gt;GetDefaultSize()); <emphasis role="italic"><code>// lays out frames</code></emphasis>
-frame-&gt;MapSubwindows();                 <emphasis role="italic"><code>// maps subwindows</code></emphasis>
-frame-&gt;HideFrame(hFrame2);              <emphasis role="italic"><code>// hides frame hFrame2</code></emphasis>
-frame-&gt;MapWindow();                     <emphasis role="italic"><code>// maps main frame</code></emphasis>
+frame-&gt;Resize(frame-&gt;GetDefaultSize()); <emphasis role="italic">// lays out frames</emphasis>
+frame-&gt;MapSubwindows();                 <emphasis role="italic">// maps subwindows</emphasis>
+frame-&gt;HideFrame(hFrame2);              <emphasis role="italic">// hides frame hFrame2</emphasis>
+frame-&gt;MapWindow();                     <emphasis role="italic">// maps main frame</emphasis>
 </programlisting>
 
 <para>The state information about a child frame can be obtained from the methods <code>GetState</code><code>(TGframe *f)</code>, <code>IsArranged(TGFrame *f)</code>, and <code>IsVisible</code><code>(TGFrame *f)</code>. </para>
@@ -644,8 +619,7 @@ frame-&gt;MapWindow();                     <emphasis role="italic"><code>// maps
 </para>
 <para>It is a composite frame with a border and a title. The title explains the purpose of the group and should be a noun or noun phrase. Here is an example taken from <code>guitest.C</code>:</para>
 
-<programlisting language="c++">
-groupFrame = new TGGroupFrame(tf,"Options",kVerticalFrame);
+<programlisting language="c++">groupFrame = new TGGroupFrame(tf,"Options",kVerticalFrame);
 groupFrame-&gt;SetTitlePos(TGGroupFrame::kLeft);
 </programlisting>
 
@@ -806,24 +780,21 @@ groupFrame-&gt;SetTitlePos(TGGroupFrame::kLeft);
 </para>
 <para>The signals/slot communication mechanism is an advanced object communication concept; it largely replaces the concept of callback functions to handle actions in GUI’s. Signals and slots are just like any object-oriented methods implemented in C++. The objects are the instances of classes that don’t know anything about each other. They interact and allow method calls of other object’s methods. The idea is simple: any object can send out (emit) a signal in certain situations saying that something happened. This is all it does to communicate and it does not know whether anything is interested in this information. On the other side there might be an object waiting for that signal and ready to react to it. This object disposes of special instruments to listen to the sent out signals. To have a communication we need a message transmission between the objects. In this simple example we use signals and slots. The code of the method <emphasis role="bold"><code>TGButton</code></emphasis><code>::Clicked</code><code>()</code> is:</para>
 
-<programlisting language="c++">
-virtual void Clicked()  { Emit("Clicked()"); }   <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
+<programlisting language="c++">virtual void Clicked()  { Emit("Clicked()"); }   <emphasis role="italic">// *SIGNAL*</emphasis>
 </programlisting>
 
 <para>I.e. any button emits the signal <code>Clicked()</code> any time someone clicks on it. As you can see this method is virtual and could be overridden if you need to. In our simple example we call the <code>Connect()</code> method to connect the <code>Clicked()</code> signal of Draw button with <code>MyMainFrame::DoDraw():</code></para>
 
-<programlisting language="c++">
-draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
+<programlisting language="c++">draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
 </programlisting>
 
 <para>In the same way we can connect to the signal <code>Clicked()</code> of the Exit button with the system call <code>gApplication-&gt;Terminate(0).</code> We declare a new slot <code>DoExit(),</code> implement it to invoke the termination call and associate this slot with the signal <code>Clicked()</code> of the Exit button. </para>
 <para>The code of <code>example.C</code> can be changed as follows:</para>
 <para/>
 
-<programlisting language="c++">
-public:
+<programlisting language="c++">public:
 ...
-   void DoExit();  <emphasis role="italic"><code>// a new slot is added</code></emphasis>
+   void DoExit();  <emphasis role="italic">// a new slot is added</emphasis>
 }
 void MyMainFrame::DoExit() {
    gApplication-&gt;Terminate(0);
@@ -831,7 +802,7 @@ void MyMainFrame::DoExit() {
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
 ...
    TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit ");
-   <emphasis role="italic"><code>// connects signal Clicked() with slot DoExit()</code></emphasis>
+   <emphasis role="italic">// connects signal Clicked() with slot DoExit()</emphasis>
    exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
 ...
 }
@@ -855,8 +826,7 @@ public:
 
 <para>It will become the following as interpreted:</para>
 
-<programlisting language="c++">
-class MyClass {
+<programlisting language="c++">class MyClass {
    RQ_OBJECT("MyClass")
 private:
    Int_t fValue;
@@ -869,8 +839,7 @@ public:
 
 <para>Both class declarations have the same data member and public methods to access the value. By placing the <code>RQ_OBJECT(“MyClass”)</code> macro inside the <code>MyClass</code> body (<code>MyClass</code> is not inherited from <emphasis role="bold"><code>TQObject</code></emphasis>) we allow this class to use the signal/slot communication. Any instance of this class can tell the outside world that the state of its data member has changed by emitting a signal <code>SetValue(Int_t).</code> A possible implementation of <code>MyClass::SetValue()</code> can be: </para>
 
-<programlisting language="c++">
-void MyClass::SetValue(Int_t v) {
+<programlisting language="c++">void MyClass::SetValue(Int_t v) {
    if (v != fValue) {
       fValue = v;
       Emit("SetValue(Int_t)",v);
@@ -885,7 +854,7 @@ MyClass *objB = new MyClass();
 objA-&gt;Connect("SetValue(Int_t)","MyClass",objB,"SetValue(Int_t)");
 objB-&gt;SetValue(11);
 objA-&gt;SetValue(79);
-objB-&gt;GetValue();          <emphasis role="italic"><code>// the value is 79</code></emphasis>
+objB-&gt;GetValue();          <emphasis role="italic">// the value is 79</emphasis>
 </programlisting>
 
 <para>By calling the method <code>objA-&gt;Connect()</code>, <code>objA</code> connects its signal "<code>SetValue(Int_t)</code>" to the "<code>MyClass::SetValue(Int_t)</code>" method (slot) of <code>objB</code>. Next, when you call <code>objA-&gt;SetValue(79) </code>object <code>objA </code>emits a signal which <code>objB </code>receives and <code>objB-&gt;SetValue(79) </code>is invoked.</para>
@@ -893,21 +862,18 @@ objB-&gt;GetValue();          <emphasis role="italic"><code>// the value is 79</
 <para>As a programmer you build the sender-receiver part of object connections using the <emphasis role="bold"><code>TQObject</code></emphasis><code>::Connect</code><code>()</code> method. You can connect one signal to many different slots. The slots will be activated in order they were connected to the signal. You can change this order using the methods <code>LowPriority</code><code>()</code> and <code>HightPriority</code><code>()</code> of <emphasis role="bold"><code>TQObject</code></emphasis>. Also, many signals can be connected to one slot of a particular object or a slot can be connected to a signal for all objects of a specific class. It is even possible to connect a signal directly to another signal – this will emit the second signal immediately after the first one is emitted. </para>
 <para>All signals and slots are normal class methods and can take any number of arguments of any type. The common methods of <emphasis role="bold"><code>TQObject</code></emphasis> that activate a signal with any number and type of parameters are:</para>
 
-<programlisting language="c++">
-Emit(signal_name,param);
+<programlisting language="c++">Emit(signal_name,param);
 </programlisting>
 
 <para>With no parameters <code>param</code> the method will be:</para>
 
-<programlisting language="c++">
-ApplyButton-&gt;Emit("Clicked()");
+<programlisting language="c++">ApplyButton-&gt;Emit("Clicked()");
 </programlisting>
 
 <para><code>param</code> can be a single parameter or an array of <code>Long_t</code> parameters as it is shown below:</para>
 
-<programlisting language="c++">
-TQObject *processor;  <emphasis role="italic"><code>// data processor</code></emphasis>
-TH1F     *hist;       <emphasis role="italic"><code>// filled with processor results</code></emphasis>
+<programlisting language="c++">TQObject *processor;  <emphasis role="italic">// data processor</emphasis>
+TH1F     *hist;       <emphasis role="italic">// filled with processor results</emphasis>
 ...
 processor-&gt;Connect("Evaluated(Float_t,Float_t)", "TH1F", hist,
                      "Fill(Axis_t x,Axis_t y)");
@@ -922,8 +888,7 @@ processor-&gt;Emit("Evaluated(Float_t,Float_t)",args);
 
 <para>To use signals and slot you need something that brings them together. The class <emphasis role="bold"><code>TQObject</code></emphasis> has several methods creating sender-receiver connections. Some of them are static and can be called without having an instance of the class. The ROOT implementation of signals and slots allows connections to any known CINT object. The class name parameter in the <code>Connect()</code> methods must be a class with a dictionary (interpreted classes have an implicit dictionary). </para>
 
-<programlisting language="c++">
-TGButton *myButton;
+<programlisting language="c++">TGButton *myButton;
 TH2      *myHist;
 ...
 TQObject::Connect(myButton, "Clicked()","TH2",MyHist, "Draw(Option_t*)");
@@ -931,30 +896,26 @@ TQObject::Connect(myButton, "Clicked()","TH2",MyHist, "Draw(Option_t*)");
 
 <para>You can replace it with 0 (zero) and in this case the slot string defines a global or interpreted function name. The receiver parameter should be zero too. For example:</para>
 
-<programlisting language="c++">
-TQObject::Connect(myButton, "Clicked()",0,0, "hsimple()");
+<programlisting language="c++">TQObject::Connect(myButton, "Clicked()",0,0, "hsimple()");
 </programlisting>
 
 <para>To make a single connection from all objects of a class you should write:</para>
 
-<programlisting language="c++">
-TQObject::Connect("Channel", "AllarmOn()","HandlerClass",handler,
+<programlisting language="c++">TQObject::Connect("Channel", "AllarmOn()","HandlerClass",handler,
                   "HandleAllarm()");
 </programlisting>
 
 <para>The first argument specifies the class name Channel. The signal <code>AllarmOn()</code> of any object of the class Channel is connected to the <code>HandleAllarm()</code> method of the handler object of the class <code>HandlerClass</code>.</para>
 <para>In <code>example.C</code> we have used the not-static <code>Connect() </code>method:</para>
 
-<programlisting language="c++">
-Bool_t Connect(const char *signal, const char *receiver_class, 
+<programlisting language="c++">Bool_t Connect(const char *signal, const char *receiver_class, 
                void *receiver, const char *slot);
 </programlisting>
 
 <para>It needs to know four things: the signal that should be connected, the receiver class, the object that will receive the signal, and the slot that will be connected to the signal. Because this method is non-static we can write this as a receiver parameter. </para>
 <para>In all methods you have to specify the signal and the slot with their names and parameter types. Do not write values instead of types in that place. It is possible to pass a parameter by value to a slot method in the following way:</para>
 
-<programlisting language="c++">
-Connect(myButton, "Pressed()","TH1",hist, "SetMaximum(=123) ");
+<programlisting language="c++">Connect(myButton, "Pressed()","TH1",hist, "SetMaximum(=123) ");
 Connect(myButton, "Pressed()","TH1",hist, "Draw(="LEGO")");
 </programlisting>
 
@@ -963,10 +924,9 @@ Connect(myButton, "Pressed()","TH1",hist, "Draw(="LEGO")");
 <para>1/ to destroy all connections to an object’s signals;</para>
 <para>2/ to destroy all connections to a particular object’s signal; 3/ to detach an object from a specific receiver:</para>
 
-<programlisting language="c++">
-Disconnect(myObgect);                     <emphasis role="italic"><code>// case 1</code></emphasis>
-Disconnect(myObgect, "mySignal");         <emphasis role="italic"><code>// case 2</code></emphasis>
-Disconnect(myObgect,0,myReceiver,0);      <emphasis role="italic"><code>// case 3</code></emphasis>
+<programlisting language="c++">Disconnect(myObgect);                     <emphasis role="italic">// case 1</emphasis>
+Disconnect(myObgect, "mySignal");         <emphasis role="italic">// case 2</emphasis>
+Disconnect(myObgect,0,myReceiver,0);      <emphasis role="italic">// case 3</emphasis>
 </programlisting>
 
 <para>Three parameters of these methods could be replaced by 0. The meaning in these cases would be “any signal”, “any receiving object”, “any slot of the receiving object”, i.e. 0 is used as a wildcard. The sender parameter cannot be 0, because you can disconnect signals from one given object. If the signal parameter is 0, the receiver and the slot are disconnected from any signal. Giving the name of the signal you disconnect this signal.  </para>
@@ -983,8 +943,7 @@ Disconnect(myObgect,0,myReceiver,0);      <emphasis role="italic"><code>// case 
 <para>
 <code>tst.C </code></para>
 
-<programlisting language="c++">
-#include &lt;TQObject.h&gt;
+<programlisting language="c++">#include &lt;TQObject.h&gt;
 #include &lt;RQ_OBJECT.h&gt;
 
 class A {
@@ -994,17 +953,17 @@ private:
 public:
    A() : fValue(0) { }
    ~A() { }
-   void  SetValue(Int_t value);  <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
+   void  SetValue(Int_t value);  <emphasis role="italic">// *SIGNAL*</emphasis>
    void  PrintValue() const   { printf("value = %d\n", fValue); }
 };
-void A::SetValue(Int_t value) {  <emphasis role="italic"><code>// Set new valu</code></emphasis>e
-   <emphasis role="italic"><code>// Emit signal "SetValue(Int_t)" with a single parameter</code></emphasis>
+void A::SetValue(Int_t value) {  <emphasis role="italic">// Set new value</emphasis>
+   <emphasis role="italic">// Emit signal "SetValue(Int_t)" with a single parameter</emphasis>
    if (value != fValue) {
       fValue = value;
       Emit("SetValue(Int_t)", fValue);
    }
 }
-<emphasis role="italic"><code>// Main program </code></emphasis>
+<emphasis role="italic">// Main program </emphasis>
 #ifdef STANDALONE
 int main(int argc, char **argv) {
    A* a = new A();
@@ -1024,8 +983,7 @@ int main(int argc, char **argv) {
 
 <para>ACLiC simplifies this procedure and allows the dictionary generation by:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.L tst.C++</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">.L tst.C++</emphasis>
 </programlisting>
 
 <para>It will create the shared library <code>tst_C.so.</code></para>
@@ -1052,8 +1010,7 @@ The current working directory should be added to <code>$LD_LIBRARY_PATH</code> v
 <para>As we saw the hot strings "&amp;Draw" and "&amp;Exit" define the text labels “Draw” and “Exit” and keyboard mnemonics <code>Alt+D</code>, <code>Alt+E</code> for their selection. The letter D and E appear underlined on the screen. All text buttons should have a unique shortcut key with the exception of OK and Cancel.</para>
 <para>These buttons are usually placed within a window to provide fast access to frequently used or critical commands. They help in situations where a command is not available through the menu bar. You already know that a command string can be passed in the text button via the constructor: </para>
 
-<programlisting language="c++">
-TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id,
+<programlisting language="c++">TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id,
              GContext_t norm, FontStruct_t font, UInt_t options);
 </programlisting>
 
@@ -1074,15 +1031,13 @@ TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id,
 </para>
 <para>Here is the example how to create the first button:</para>
 
-<programlisting language="c++">
-TGPictureButton *fPicture = new TGPictureButton(parent,
+<programlisting language="c++">TGPictureButton *fPicture = new TGPictureButton(parent,
                            gClient-&gt;GetPicture("h1_s.xpm"), 11);
 </programlisting>
 
 <para>The picture of file h1_s.xpm is used in the button. All <code>.xpm</code> files are located in the directory <code>$ROOTSYS/icons</code>. You can assign a command directly as a parameter of the picture button constructor. The picture of <emphasis role="bold"><code>TGPictureButton</code></emphasis> can be changed by:</para>
 
-<programlisting language="c++">
-fPicture-&gt;SetPicture("h2_s.xpm");
+<programlisting language="c++">fPicture-&gt;SetPicture("h2_s.xpm");
 </programlisting>
 
 <para>The advantage of command buttons is that they are always visible, providing a reminder of their existence. They can be inscribed with a meaningful description of what they do by <emphasis role="bold"><code>TGToolTip</code></emphasis><code>(“Some describing text”).</code> Their activation is much easier and faster than using a two-step menu bar/pull-down sequence. The only disadvantage of the text and picture buttons is that they consume considerable screen space if they are many. Having no more than six command buttons per window or dialog box helps to appropriately balance the application’s effectiveness, its real efficiency, and the operational simplicity. </para>
@@ -1092,8 +1047,7 @@ fPicture-&gt;SetPicture("h2_s.xpm");
 </para>
 <para>A columnar orientation is the preferred manner of radio buttons presentation. If the vertical space on the window is limited, they can be oriented horizontally. Selection choices should be organized logically in groups. Here is the example that produces the image above:</para>
 
-<programlisting language="c++">
-br = new TGButtonGroup(p,"Coordinate system",kVerticalFrame);
+<programlisting language="c++">br = new TGButtonGroup(p,"Coordinate system",kVerticalFrame);
 fR[0] = new TGRadioButton(bg,new TGHotString("&amp;Pixel"));
 fR[1] = new TGRadioButton(bg,new TGHotString("&amp;NDC "));
 fR[2] = new TGRadioButton(bg,new TGHotString("&amp;User "));
@@ -1114,8 +1068,7 @@ br-&gt;Show();
 </para>
 <para>To have the check button “Event Status” and to set it as selected we need to write:</para>
 
-<programlisting language="c++">
-TGCheckButton *estat = new TGCheckButton(p, "Event Status",1);
+<programlisting language="c++">TGCheckButton *estat = new TGCheckButton(p, "Event Status",1);
 estat-&gt;SetState(kButtonDown);
 </programlisting>
 
@@ -1125,16 +1078,14 @@ estat-&gt;SetState(kButtonDown);
 </para>
 <para>This can be done by:</para>
 
-<programlisting language="c++">
-SetState(EButtonState state)
+<programlisting language="c++">SetState(EButtonState state)
 </programlisting>
 
 <para>The parameter state can be one of <code>kButtonUp</code>, <code>kButtonDown</code>, <code>kButtonEngaged</code>, <code>kButtonDisabled</code>.</para>
 <para>Check boxes can be used to affect other controls. The contents of a list can, for example, be filtered by setting a check box. In any case, use a check box only when both states of a choice are clearly opposite and unambiguous. If opposite states are not clear, it is better to use two radio buttons.</para>
 <para>Choice description, i.e. check box label, must be clear, meaningful, fully spelled out, and displayed in mixed-type text. Whenever the use of a given button is inappropriate, for whatever reason, that button should be disabled:</para>
 
-<programlisting language="c++">
-button-&gt;SetState(kButtonDisabled);
+<programlisting language="c++">button-&gt;SetState(kButtonDisabled);
 </programlisting>
 
 <para>Never make a button appear and disappear. </para>
@@ -1203,18 +1154,16 @@ button-&gt;SetState(kButtonDisabled);
 <listitem><para><code>kNELLimitMax</code> - upper limit only </para></listitem>
 <listitem><para><code>kNELLimitMinMax</code> - both lower and upper limits</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-fN1 = new TGNumberEntry(parent, 0.005, 9, kENTRY1,
-         TGNumberFormat::kNESRealThree,   <emphasis role="italic"><code>//style</code></emphasis>
-         TGNumberFormat::kNEAAnyNumber,   <emphasis role="italic"><code>//input value filter</code></emphasis>
-         TGNumberFormat::kNELLimitMinMax, <emphasis role="italic"><code>//specify limits</code></emphasis>
-         -1.,1.);                         <emphasis role="italic"><code>//limit values</code></emphasis>
+<programlisting language="c++">fN1 = new TGNumberEntry(parent, 0.005, 9, kENTRY1,
+         TGNumberFormat::kNESRealThree,   <emphasis role="italic">//style</emphasis>
+         TGNumberFormat::kNEAAnyNumber,   <emphasis role="italic">//input value filter</emphasis>
+         TGNumberFormat::kNELLimitMinMax, <emphasis role="italic">//specify limits</emphasis>
+         -1.,1.);                         <emphasis role="italic">//limit values</emphasis>
 </programlisting>
 
 <para><emphasis role="bold"><code>TGNumberEntryField</code></emphasis> is a number entry input widget.</para>
 
-<programlisting language="c++">
-Nent = new TGNumberEntryField(hgrunf2, kNENT_ID, 0.6,
+<programlisting language="c++">Nent = new TGNumberEntryField(hgrunf2, kNENT_ID, 0.6,
                               TGNumberFormat::kNESRealThree,
                               TGNumberFormat::kNEAAnyNumber);
 </programlisting>
@@ -1235,20 +1184,19 @@ Nent = new TGNumberEntryField(hgrunf2, kNENT_ID, 0.6,
 <para>The <emphasis role="bold"><code>TGMenuBar</code></emphasis> class implements a menu bar widget. It is used to specify and provide access to common and frequently used application actions described in menu titles, implemented by <emphasis role="bold"><code>TGMenuTitle</code></emphasis> class. The menu bar is the highest-level of the menu system and it is a starting point for all interactions. Also, it is always visible and allows using the keyboard equivalents. The geometry of the menu bar is automatically set to the parent widget, i.e. the menu bar automatically resizes itself so that it has the same width as its parent (typically <emphasis role="bold"><code>TGMainFrame</code></emphasis>). </para>
 <para>The menu bar is as a container for its menus – objects of the type <emphasis role="bold"><code>TGPopupMenu.</code></emphasis> Popup menus can appear in a menu bar. They can be a sub-menu of another popup menu (cascading menus) or can be standalone (as a context menu). They are made of one or more menu items choices. When displayed, the menu items are arranged in a vertical list. Usually they correspond to actions (e.g. <code>Open</code><emphasis role="bold">)</emphasis>. These items can be labeled with text, graphics or a combination of both. Each of them should have a character defined as its unique key for access. Grouped logically by their functionality, they are separated visually by menu separators in groups. For example, The <code>File</code> menu is a common menu title for tasks that apply to a file, as <code>Open</code><emphasis role="bold">, </emphasis><code>Save</code><emphasis role="bold">, </emphasis><code>Close</code><emphasis role="bold">, </emphasis><code>Print</code>…</para>
 
-<programlisting language="c++">
-<code>// a popup menu </code>
+<programlisting language="c++"><emphasis role="italic">// a popup menu</emphasis>
 fMenuFile = new TGPopupMenu(gClient-&gt;GetRoot());
 
-<code>// adding menu entries </code>
+<emphasis role="italic">// adding menu entries</emphasis>
 fMenuFile-&gt;AddEntry("&amp;Open...",M_FILE_OPEN);
 fMenuFile-&gt;AddEntry("&amp;Save",M_FILE_SAVE);
 fMenuFile-&gt;AddEntry("S&amp;ave as...",M_FILE_SAVEAS);
 fMenuFile-&gt;AddEntry("&amp;Close", -1);
 
-<code>// adding separator</code>
+<emphasis role="italic">// adding separator</emphasis>
 fMenuFile-&gt;AddSeparator();
 
-<code>// next group of menu entries</code>
+<emphasis role="italic">// next group of menu entries</emphasis>
 fMenuFile-&gt;AddEntry("&amp;Print",M_FILE_PRINT);
 fMenuFile-&gt;AddEntry("P&amp;rint setup...",M_FILE_PRINTSETUP);
 . . .
@@ -1259,15 +1207,14 @@ fMenuFile-&gt;AddEntry("E&amp;xit",M_FILE_EXIT);
 <para>First we create the File menu by creating an object of class<emphasis role="bold"><code> TGPopupMenu</code></emphasis> and adding menu entries with <code>AddEntry</code> method. Its first parameter is a hot string, the second – a menu ID. The ampersand character (&amp;) denotes shortcut for each menu entry; you can use the letter after it to manage the menu via keyboard. There are three groups of menu entries separated visually by two separators. </para>
 <para>You can add a sub-menu by using the method <emphasis role="bold"><code>TGPopupMenu</code></emphasis><code>::AddPopup</code>. Its first parameter is again a string, the second one – a pointer to a <emphasis role="bold"><code>TGPopupMenu</code></emphasis> object that will appear as a sub-menu when the menu entry will be selected. The often used visual indicator of a sub- menu is a right-facing arrow to the right of the parent menu item. Generally only one level of cascading menus is recommended and you should be careful in using more. Next lines show how to create a menu bar with <code>File</code><emphasis role="bold">, </emphasis><code>Test</code> and <code>Help</code> menus:</para>
 
-<programlisting language="c++">
-<code>// menu bar item layout hints </code>
+<programlisting language="c++"><emphasis role="italic">// menu bar item layout hints</emphasis>
 fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft,0,4,0,0);
 fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
-<code>// menu bar </code>
+<emphasis role="italic">// menu bar </emphasis>
 fMenuBar = new TGMenuBar(fMain,100,20,kHorizontalFrame);
 
-<emphasis role="italic"><code>// adding popup menus</code></emphasis>
+<emphasis role="italic">// adding popup menus</emphasis>
 fMenuBar-&gt;AddPopup("&amp;File",fMenuFile,fMenuBarItemLayout);
 fMenuBar-&gt;AddPopup("&amp;Test",fMenuTest,fMenuBarItemLayout);
 fMenuBar-&gt;AddPopup("&amp;Help",fMenuHelp,fMenuBarHelpLayout);
@@ -1298,37 +1245,36 @@ fMenuBar-&gt;AddPopup("&amp;Help",fMenuHelp,fMenuBarHelpLayout);
 </para>
 <para>A toolbar (<emphasis role="bold"><code>TGToolBar</code></emphasis>) is a composite frame that contains <emphasis role="bold"><code>TGPictureButton </code></emphasis>objects. It provides an easy and fast access to most frequently used commands or options across multiple application screens. Also, it invokes easily a sub application within an application. All its functions can be obtained by application menus. It is located horizontally at the top of the main window just below the menu bar. All other subtask and sub-feature bars are positioned along sides of window. </para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// toolbar icon files</code></emphasis>
+<programlisting language="c++"><emphasis role="italic">// toolbar icon files</emphasis>
 const char *xpms[] = {
    "x_pic.xpm",
    "y_pic.xpm",
    "z_pic.xpm",
    0
 };
-<code>// toolbar tool tip text</code>
+<emphasis role="italic">// toolbar tool tip text</emphasis>
 const char *tips[] = {
    "X Settings",
    "Y Settings",
    "Z Settings",
    0
 };
-<code>// toolbar button separator</code>
+<emphasis role="italic">// toolbar button separator</emphasis>
 int separator = 5;
 
-<code>// structure containing toolbar button information </code>
+<emphasis role="italic">// structure containing toolbar button information </emphasis>
 ToolBarData_t t[3];
 
-<code>// creation of a toolbar object as a child of main frame</code>
+<emphasis role="italic">// creation of a toolbar object as a child of main frame</emphasis>
 TGToolBar *tb = new TGToolBar(fMain,520,80);
 
 for (int i = 0; i &lt; 3; i++) {
-   <code>// filling the ToolBarData_t with information </code>
-   t[i].fPixmap   = xpms[i];   <code>// icon file</code>
-   t[i].fTipText  = tips[i];   <code>// tool tip text</code>
-   t[i].fStayDown = kFALSE;    <code>// button behavior if clicked</code>
-   t[i].fId = i+1;             <emphasis role="italic"><code>// button id</code></emphasis>
-   t[i].fButton = NULL;        <emphasis role="italic"><code>// button pointer</code></emphasis>
+   <emphasis role="italic">// filling the ToolBarData_t with information</emphasis>
+   t[i].fPixmap   = xpms[i];   <emphasis role="italic">// icon file</emphasis>
+   t[i].fTipText  = tips[i];   <emphasis role="italic">// tool tip text</emphasis>
+   t[i].fStayDown = kFALSE;    <emphasis role="italic">// button behavior if clicked</emphasis>
+   t[i].fId = i+1;             <emphasis role="italic">// button id</emphasis>
+   t[i].fButton = NULL;        <emphasis role="italic">// button pointer</emphasis>
 
    if (strlen(xpms[i]) == 0) {
       separator = 5;
@@ -1337,10 +1283,10 @@ for (int i = 0; i &lt; 3; i++) {
    tb-&gt;AddButton(fMain,&amp;t[i],separator);
    separator = 0;
 }
-<code>// adding the tool bar to the main frame</code>
+<emphasis role="italic">// adding the tool bar to the main frame</emphasis>
 fMain-&gt;AddFrame(tb, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-<code>// adding a horizontal line as a separator</code>
+<emphasis role="italic">// adding a horizontal line as a separator</emphasis>
 TGHorizontal3DLine *lh = new TGHorizontal3DLine(fMain);
 fMain-&gt;AddFrame(lh, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 </programlisting>
@@ -1374,8 +1320,7 @@ fMain-&gt;AddFrame(lh, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 <para>The proper usage of the list boxes is for selecting values, or objects, or setting attributes. You have to create them to display 4 to 8 choices at one time (3 is a required minimum in case of lack of screen space). The list should contain not more than 40 items accessible by scrolling view (vertical scroll bar). If more are required, you should provide a method for using search criteria or scoping the options. The best list boxes use is for textual data or choices. They should be wide enough to display fully all items. When it is not possible, break the long items with ellipsis and provide tool tip that displays the full item text. </para>
 <para>The list box widget is represented by <emphasis role="bold"><code>TGListBox</code></emphasis>, <emphasis role="bold"><code>TGLBContainer</code></emphasis>, <emphasis role="bold"><code>TGLBEntry</code></emphasis> and <emphasis role="bold"><code>TGTextLBEntry</code></emphasis> classes. Currently entries are simple text strings (<emphasis role="bold"><code>TGTextLBEntry</code></emphasis>). A <emphasis role="bold"><code>TGListBox</code></emphasis> looks a lot like a <emphasis role="bold"><code>TGCanvas</code></emphasis>. It has a <emphasis role="bold"><code>TGViewPort</code></emphasis> containing a <emphasis role="bold"><code>TGLBContainer</code></emphasis> which contains the entries and it also has a vertical scrollbar which becomes visible if there are more items than fit in the visible part of the container. The <emphasis role="bold"><code>TGListBox</code></emphasis> is user callable. The other classes are service classes of the list box. Here is a sample code showing how to create a list box with ten entries:</para>
 
-<programlisting language="c++">
-<code>// list box widget containing 10 entries</code>
+<programlisting language="c++"><emphasis role="italic">// list box widget containing 10 entries</emphasis>
 int fFirstEntry = 0, fLastEntry = 10;
 char tmp[20];
 TGListBox *fListBox = new TGListBox(parent, 90);
@@ -1390,21 +1335,19 @@ parent-&gt;AddFrame(fListBox,new TGLayoutHints(kLHintsTop | kLHintsLeft,
 
 <para>We create the list box widget passing the parent window pointer and giving an ID number. Next we add entries with specified string and ID to the list box. Before adding the list box to its parent widget, it should be resized via <code>Resize</code><code>(width, height)</code> method. The list box width and height are in pixels. The default entry layout hints are <code>kLHintsExpandX | kLHintsTop</code>. If you want to add entries using different ones, call the method: </para>
 
-<programlisting language="c++">
-TGListBox::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints);
+<programlisting language="c++">TGListBox::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints);
 </programlisting>
 
 <para>It adds the specified <emphasis role="bold"><code>TGLBEntry</code></emphasis> and <emphasis role="bold"><code>TGLayoutHints</code></emphasis> to the list box. There are several methods providing a flexible entry manipulation: you can insert, add or remove list box items dynamically. The list box entry IDs are used in these methods and also in event processing routines. In our example the integer variables <code>fFirstEntry</code> and <code>fLastEntry</code> contain the information about the first and last entry IDs. You can add or remove a list box entry using them in the following way:</para>
 
-<programlisting language="c++">
-<code>// adding an entry</code>
+<programlisting language="c++"><emphasis role="italic">// adding an entry</emphasis>
 fLastEntry++;
 sprintf(tmp, "Entry %i", fLastEntry);
 fListBox-&gt;AddEntry(tmp, fLastEntry);
 fListBox-&gt;MapSubwindows();
 fListBox-&gt;Layout();
 . . .
-<code>// removing an entry</code>
+<emphasis role="italic">// removing an entry</emphasis>
 if (fFirstEntry &lt; fLastEntry) {
    fListBox-&gt;RemoveEntry(fFirstEntry);
    fListBox-&gt;Layout();
@@ -1430,18 +1373,17 @@ if (fFirstEntry &lt; fLastEntry) {
 </para>
 <para>The combo box widget is represented by the user callable class <emphasis role="bold"><code>TGComboBox</code></emphasis>. The class <emphasis role="bold"><code>TGComboBoxPopup</code></emphasis> is a service class. The combo box constructor is very similar to the list box one. The first parameter is a parent widget pointer again, the second – an integer value that will be used as combo box ID. The method used for adding entries is very similar to the list box method we used before. The method <code>Select(entryID)</code> sets the current combo box entry.  </para>
 
-<programlisting language="c++">
-char tmp[20];
-<emphasis role="italic"><code>// combo box layout hints</code></emphasis>
+<programlisting language="c++">char tmp[20];
+<emphasis role="italic">// combo box layout hints</emphasis>
 fLcombo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5);
-<emphasis role="italic"><code>// combo box widget</code></emphasis>
+<emphasis role="italic">// combo box widget</emphasis>
 TGComboBox *fCombo = new TGComboBox(parent,100);
 for (i = 0; i &lt; 10; i++) {
    sprintf(tmp, "Entry%i", i+1);
    fCombo-&gt;AddEntry(tmp, i+1);
 }
 fCombo-&gt;Resize(150, 20);
-<code>// Entry3 is selected as current</code>
+<emphasis role="italic">// Entry3 is selected as current</emphasis>
 fCombo-&gt;Select(2);
 parent-&gt;AddFrame(fCombo, fLcombo);
 </programlisting>
@@ -1458,8 +1400,7 @@ parent-&gt;AddFrame(fCombo, fLcombo);
 <para>The class <emphasis role="bold"><code>TGHSlider</code></emphasis> represents the horizontal slider; <emphasis role="bold"><code>TGVSlider</code></emphasis> – the vertical one. Both inherit from the base class <emphasis role="bold"><code>TGSlider</code></emphasis> that creates the main slider parameters: the range of values within a value can be selected; the indicator type; the tick mark scale. Using its methods <code>SetRange</code>, <code>SetPosition</code> and <code>SetScale</code> you can set these parameters. To retrieve the set slider value you can call <code>GetPosition</code> method.</para>
 <para>Next sample code creates a horizontal slider <code>hslider</code> with a tick mark of type <code>kSlider1</code>. Its width is 150 pixels, and its scale is placed down (<code>kScaleDownRight</code>). The last parameter in the <emphasis role="bold"><code>TGHSlider</code></emphasis> constructor is the slider ID. It will be used for event processing. The methods <code>SetRange</code> and <code>SetPosition</code> set the range and the current tick mark position of the slider. </para>
 
-<programlisting language="c++">
-hslider = new TGHSlider(parent,150,kSlider1 | kScaleDownRight,sID);
+<programlisting language="c++">hslider = new TGHSlider(parent,150,kSlider1 | kScaleDownRight,sID);
 hslider-&gt;SetRange(0,50);
 hslider-&gt;SetPosition(39);
 </programlisting>
@@ -1475,8 +1416,7 @@ hslider-&gt;SetPosition(39);
 </para>
 <para><emphasis role="bold"><code>TGDoubleSlider</code></emphasis> is an abstract base class that creates the main slider parameters. The concrete class to use for a vertical double slider is <emphasis role="bold"><code>TGDoubleVSlider</code></emphasis> and <emphasis role="bold"><code>TGDoubleHSlider</code></emphasis> for a horizontal one. The double slider constructors are similar to those of the other sliders. If you set <code>kDoubleScaleNo</code> as a scale parameter no scale will be drawn. Here is an example:</para>
 
-<programlisting language="c++">
-vDslider = new TGDoubleVSlider(p,100,kDoubleScaleNo,dsliderID);
+<programlisting language="c++">vDslider = new TGDoubleVSlider(p,100,kDoubleScaleNo,dsliderID);
 vDslider-&gt;SetRange(-10,10);
 </programlisting>
 
@@ -1491,8 +1431,7 @@ vDslider-&gt;SetRange(-10,10);
 </para>
 <para>To change the slider range value press the left mouse button near to the left/right (top/bottom) edges of the slider. To change both values simultaneously press the mouse button near to the slider center.  To change pointer value press the mouse on the pointer and drag it to the desired position.</para>
 
-<programlisting language="c++">
-fSlider = new TGTripleHSlider(parent, 100, kDoubleScaleBoth, kSLD_ID,
+<programlisting language="c++">fSlider = new TGTripleHSlider(parent, 100, kDoubleScaleBoth, kSLD_ID,
                               kHorizontalFrame);
 parent-&gt;AddFrame(fSlider, new TGLayoutHints(kLHintsExpandX,5,5,5,5));
 fSlider-&gt;SetConstrained(kTRUE);
@@ -1513,8 +1452,7 @@ fSlider -&gt;SetPointerPosition(pvalue);
 <para>The picture below shows the progress bars you can create using the classes <emphasis role="bold"><code>TGProgressBar</code></emphasis>, <emphasis role="bold"><code>TGHProgressBar</code></emphasis>, and <emphasis role="bold"><code>TGHProgressBar</code></emphasis>.</para>
 <para/>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// vertical frame with three horizontal progressive bars</code></emphasis>
+<programlisting language="c++"><emphasis role="italic">// vertical frame with three horizontal progressive bars</emphasis>
 TGVerticalFrame *vframe = new TGVerticalFrame(fMain, 10, 10);
 fHProg1 = new TGHProgressBar(vframe,TGProgressBar::kStandard,300);
 fHProg1-&gt;ShowPosition();
@@ -1540,14 +1478,12 @@ vframe-&gt;Resize(200, 200);
 <title>Static Widgets</title>
 <para>The classes <emphasis role="bold"><code>TGLabel</code></emphasis> and <emphasis role="bold"><code>TGIcon</code></emphasis> show some information - text or graphics. The line below creates a label object. The syntax is very simple: you specify the parent widget and a string object holding the desired text.</para>
 
-<programlisting language="c++">
-TGLabel *label = new TGLabel(parentWidget, "Label’s string");
+<programlisting language="c++">TGLabel *label = new TGLabel(parentWidget, "Label’s string");
 </programlisting>
 
 <para>Next sample creates an icon object. First we create an object of type <emphasis role="bold"><code>TGPicture</code></emphasis>. The <emphasis role="bold"><code>TGPicture</code></emphasis> objects are never created directly by the application code. We call <emphasis role="bold"><code>TGClient</code></emphasis> telling it the pixmap’s file name to create a <emphasis role="bold"><code>TGPicture</code></emphasis> object and, in turn, it will return a pointer to the created object. If the pixmap file cannot be found the returned pointer will be <code>NULL</code>. As usual, the first parameter of a <emphasis role="bold"><code>TGIcon</code></emphasis> constructor is the parent frame. The second one is the <emphasis role="bold"><code>TGPicture</code></emphasis> object holding the pixmap we want to show. Last two parameters define the width and height of pixmap in pixels. In the end we add the created icon object to its parent.</para>
 
-<programlisting language="c++">
-<code>// icon widget</code>
+<programlisting language="c++"><emphasis role="italic">// icon widget</emphasis>
 const TGPicture *ipic =(TGPicture *)gClient-&gt;GetPicture("leaf.xpm");
 TGIcon *icon = new TGIcon(parent,ipic,40,40);
 parent-&gt;AddFrame(icon,new TGLayoutHints(kLHintsLeft | kLHintsBottom,
@@ -1568,16 +1504,15 @@ parent-&gt;AddFrame(icon,new TGLayoutHints(kLHintsLeft | kLHintsBottom,
 <para>An application can only have one status bar at a time. </para>
 <para>There is nothing special to create a status bar in your application. You should decide how many fields you need to present the current application state to the user. By default a status bar consists of one part. Multiple parts can be created by <code>SetParts</code> method. Its first parameter is an array of integers that give the percentage size of each part. The second parameter gives the number of status bar parts. Using <code>SetText</code> method you can set a text for any part.</para>
 
-<programlisting language="c++">
-<code>// status bar</code>
+<programlisting language="c++"><emphasis role="italic">// status bar</emphasis>
 Int_t parts[] = {33, 10, 10, 47};
 fStatusBar = new TGStatusBar(fMain,50,10,kHorizontalFrame);
 fStatusbar-&gt;SetParts(parts,4);
 fMain-&gt;AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsLeft |
                                                 kLHintsExpandX, 0, 0, 2, 0));
 . . .
-<code>// fill status bar fields with information; selected is the object </code>
-<code>// below the cursor; atext contains pixel coordinates info</code>
+<emphasis role="italic">// fill status bar fields with information; selected is the object</emphasis>
+<emphasis role="italic">// below the cursor; atext contains pixel coordinates info</emphasis>
 fStatusBar-&gt;SetText(selected-&gt;GetTitle(),0);
 fStatusBar-&gt;SetText(selected-&gt;GetName(),1);
 fStatusBar-&gt;SetText(atext,2);
@@ -1595,8 +1530,7 @@ fStatusBar-&gt;SetText(selected-&gt;GetObjectInfo(px,py),3);
 <para>This widget is represented by <emphasis role="bold"><code>TGSplitter</code></emphasis>, <emphasis role="bold"><code>TGHSplitter</code></emphasis>, and <emphasis role="bold"><code>TGVSplitter</code></emphasis> classes. Currently there is no special graphics representation for splitter widgets; only the cursor changes when crossing a splitter. </para>
 <para>There is nothing special to create a splitter – two lines of code only:</para>
 
-<programlisting language="c++">
-TGHSplitter *hsplitter = new TGHSplitter(fVf);
+<programlisting language="c++">TGHSplitter *hsplitter = new TGHSplitter(fVf);
 hsplitter-&gt;SetFrame(fH1,kTRUE);
 </programlisting>
 
@@ -1611,8 +1545,7 @@ hsplitter-&gt;SetFrame(fH1,kTRUE);
 </itemizedlist>
 <para>You can see these rules in the code below:</para>
 
-<programlisting language="c++">
-<code>// Create horizontal splitter</code>
+<programlisting language="c++"><emphasis role="italic">// Create horizontal splitter</emphasis>
 fVf = new TGVerticalFrame(fMain,10,10);
 fH1 = new TGHorizontalFrame(fVf,10,10, kFixedHeight);
 fH2 = new TGHorizontalFrame(fVf,10,10);
@@ -1650,8 +1583,7 @@ fVf-&gt;AddFrame(fH2, new TGLayoutHints(kLHintsBottom | kLHintsExpandX |
 </itemizedlist>
 <para>Next is a sample code for a vertical splitter:</para>
 
-<programlisting language="c++">
-<code>// Create vertical splitter</code>
+<programlisting language="c++"><emphasis role="italic">// Create vertical splitter</emphasis>
 fHf = new TGHorizontalFrame(fMain, 50, 50);
 fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
 fV2 = new TGVerticalFrame(fHf, 10, 10);
@@ -1687,12 +1619,11 @@ fHf-&gt;AddFrame(fV2,new TGLayoutHints(kLHintsRight | kLHintsExpandX |
 <para>When all display information cannot be presented in a window, the additional information must be found and made visible. A <emphasis role="bold"><code>TGCanvas</code></emphasis> is a frame containing two scrollbars (horizontal and vertical) and a viewport (<emphasis role="bold"><code>TGViewPort</code></emphasis>). The viewport acts as the window through which we look at the contents of the container frame. A <emphasis role="bold"><code>TGContainer</code></emphasis> frame manages a content area. It can display and control a hierarchy of multi-column items, and provides the ability to add new items at any time. By default it doesn't map sub-windows, which are items of the container. In this case sub-window must provide <code>DrawCopy</code> method, see for example <emphasis role="bold"><code>TGLVEntry</code></emphasis> class. It is also possible to use option which allows mapping sub-windows. This option has much slower drawing speed in case of more than 1000 items placed in container. To activate this option the fMapSubwindows data member must be set to <code>kTRUE</code> (for example <emphasis role="bold"><code>TTVLVContainer</code></emphasis> class). </para>
 <para>A scroll bar only is available when scrolling is necessary. It consists of three elements: a slider box and two directional scroll arrows (buttons). </para>
 
-<programlisting language="c++">
-fCanvas = new TGCanvas(parent, w, h);
+<programlisting language="c++">fCanvas = new TGCanvas(parent, w, h);
 fContents = new TGListTree(fCanvas, kHorizontalFrame);
 fContents-&gt;Associate(parent);
 parent-&gt;AddFrame(fCanvas, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
-<emphasis role="italic"><code>// or</code></emphasis>
+<emphasis role="italic">// or</emphasis>
 fCanvas = new TGCanvas(parent, w, h);
 fContents = new TGListTree(fCanvas-&gt;GetViewPort(),100,100,kHorizontalFrame);
 fContents-&gt;SetCanvas(fCanvas);
@@ -1718,8 +1649,7 @@ parent-&gt;AddFrame(fCanvas, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 <title>Embedded Canvas</title>
 <para>This class creates a <emphasis role="bold"><code>TGCanvas</code></emphasis> in which a well known ROOT <emphasis role="bold"><code>TCanvas</code></emphasis> is embedded. A pointer to the <emphasis role="bold"><code>TCanvas</code></emphasis> can be obtained via the <code>GetCanvas()</code> member function.</para>
 
-<programlisting language="c++">
-fEc1 = new TRootEmbeddedCanvas("ec1",fParent,100,100);
+<programlisting language="c++">fEc1 = new TRootEmbeddedCanvas("ec1",fParent,100,100);
 fParent -&gt;AddFrame(fEc1, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 fEc2 = new TRootEmbeddedCanvas("ec2",fParent,100,100);
 fParent -&gt;AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
@@ -1736,14 +1666,13 @@ fEc1-&gt;GetCanvas()-&gt;Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
 </para>
 <para>To embed a canvas derived from a <emphasis role="bold"><code>TCanvas</code></emphasis> do the following:</para>
 
-<programlisting language="c++">
-TRootEmbeddedCanvas *embedded = new TRootEmbeddedCanvas(0, p, w, h);
-<emphasis role="italic"><code>// note name must be 0, not null string ""</code></emphasis>
+<programlisting language="c++">TRootEmbeddedCanvas *embedded = new TRootEmbeddedCanvas(0, p, w, h);
+<emphasis role="italic">// note name must be 0, not null string ""</emphasis>
 Int_t wid = embedded-&gt;GetCanvasWindowId();
 TMyCanvas *myc = new TMyCanvas("myname", 10, 10, wid);
 embedded-&gt;AdoptCanvas(myc);
-<emphasis role="italic"><code>// the MyCanvas is adopted by the embedded canvas and will be 
-// destroyed by it</code></emphasis>
+<emphasis role="italic">// the MyCanvas is adopted by the embedded canvas and will be 
+// destroyed by it</emphasis>
 </programlisting>
 
 </sect2>
@@ -1794,8 +1723,7 @@ embedded-&gt;AdoptCanvas(myc);
 <title>Using Several Tabs</title>
 <para>Sometimes you might need to use several tabs to organize properly your class-editor. Each editor tab is a resource shared among all the class-editors. Tabs must be created from the constructor of your editor-class by using the method:  </para>
 
-<programlisting language="c++">
-TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const Text_t *name),
+<programlisting language="c++">TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const Text_t *name),
 </programlisting>
 
 <para>It returns a pointer to a new tab container frame ready for use in your class. If you need to hide/show this frame depending on the object’s status, you should store it in a data member. See for examples: <emphasis role="bold"><code>TH1Editor</code></emphasis>, <emphasis role="bold"><code>TH2Editor</code></emphasis>.</para>
@@ -1806,14 +1734,12 @@ TGVerticalFrame* TGedFrame::CreateEditorTabSubFrame(const Text_t *name),
 <para>Full control over base-class editors can be achieved by re-implementing virtual method void <emphasis role="bold"><code>TGedFrame</code></emphasis><code>::ActivateBaseClassEditors(TClass</code>         <code>*cl)</code>. It is called during each compound editor rebuild and the default implementation simply offers all base-classes to the publishing mechanism. </para>
 <para>To prevent inclusion of a base-class into the compound editor, call:  </para>
 
-<programlisting language="c++">
-void <code>TGedEditor</code>::ExcludeClassEditor(TClass* class, Bool_t recurse)
+<programlisting language="c++">void <code>TGedEditor</code>::ExcludeClassEditor(TClass* class, Bool_t recurse)
 </programlisting>
 
 <para>Pointer to the compound GED-editor is available in <emphasis role="bold"><code>TGedFrame</code></emphasis>‘s data-member:</para>
 
-<programlisting language="c++">
-<code>TGedEditor</code> <code>*fGedEditor</code>
+<programlisting language="c++"><code>TGedEditor</code> <code>*fGedEditor</code>
 </programlisting>
 
 <para>Ordering of base-class editor frames follows the order of the classes in the class hierarchy. This order can be changed by modifying the value of <emphasis role="bold"><code>TGedFrame</code></emphasis>’s data member <code>Int_t fPriority</code>. The default value is 50; smaller values move the frame towards to the top. This priority should be set in the editor constructor.</para>
@@ -1845,8 +1771,7 @@ void <code>TGedEditor</code>::ExcludeClassEditor(TClass* class, Bool_t recurse)
 <para>The atoms and the drag and drop manager (<emphasis role="bold"><code>TGDNDManager</code></emphasis>), are created at the main application creation time  (class TGMainFrame).</para>
 <para>Setting a Drag Source - first, create and fill data:</para>
 
-<programlisting language="c++">
-TH1F *h = new TH1F("h","h",1000,-3,3);
+<programlisting language="c++">TH1F *h = new TH1F("h","h",1000,-3,3);
 h-&gt;FillRandom("gaus",50000);
 TDNDdata data;
 TBufferFile *buf = new TBufferFile(TBuffer::kWrite);
@@ -1858,16 +1783,14 @@ data.fDataType = gVirtualX-&gt;InternAtom("application/root");
 
 <para>Then, set a GUI widget as DND Source, and associate the data. Source widget can be any class inheriting from <emphasis role="bold"><code>TGFrame</code></emphasis>.</para>
 
-<programlisting language="c++">
-SourceWidget = new TGIcon(this, gClient-&gt;GetPicture("f1_s.xpm"), 32, 32);
+<programlisting language="c++">SourceWidget = new TGIcon(this, gClient-&gt;GetPicture("f1_s.xpm"), 32, 32);
 SourceWidget-&gt;SetDNDSource(kTRUE);
 SourceWidget-&gt;SetDNDdata(&amp;data);
 </programlisting>
 
 <para>Setting A Drop Target - set the widget as DND Target, and set the DND types it must be aware of: as <code>SourceWidget</code>, <code>TargetWidget</code> can be any class inheriting from <emphasis role="bold"><code>TGFrame</code></emphasis>.</para>
 
-<programlisting language="c++">
-TargetWidget = new TRootEmbeddedCanvas("Target", this, 700, 400);
+<programlisting language="c++">TargetWidget = new TRootEmbeddedCanvas("Target", this, 700, 400);
 TargetWidget-&gt;SetDNDTarget(kTRUE);
 gVirtualX-&gt;SetDNDAware(TargetWidget-&gt;GetId(),gDNDManager-&gt;GetTypeList());
 </programlisting>
@@ -1881,20 +1804,18 @@ gVirtualX-&gt;SetDNDAware(TargetWidget-&gt;GetId(),gDNDManager-&gt;GetTypeList()
 <para>Once a widget has been set as DND Target, it has to handle Drag and Drop events.</para>
 <para><code>Atom_t HandleDNDenter(Atom_t *typelist)</code> - this method is used to handle a drag operation entering the widget. The typelist parameter is the list of types the data contains. If the list contains one type the widget understands, it should return this type to notify the manager that the drop would be accepted, i.e. :</para>
 
-<programlisting language="c++">
-for (int i = 0; typelist[i] != kNone; ++i) {
+<programlisting language="c++">for (int i = 0; typelist[i] != kNone; ++i) {
    if (typelist[i] == gVirtualX-&gt;InternAtom("application/root"))
-      <emphasis role="italic"><code>// accept "application/root" DND type</code></emphasis>
+      <emphasis role="italic">// accept "application/root" DND type</emphasis>
       return typelist[i];
 }
-<emphasis role="italic"><code>// other type not accepted</code></emphasis>
+<emphasis role="italic">// other type not accepted</emphasis>
 return kNone;
 </programlisting>
 
 <para><code>Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot, Int_t yroot)- t</code>his method should be used to handle the drag position in widget coordinates (<code>x,y</code>) or in root coordinates (<code>xroot,yroot</code>).</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// get the pad over which the cursor is</code></emphasis>
+<programlisting language="c++"><emphasis role="italic">// get the pad over which the cursor is</emphasis>
 TPad *pad = fCanvas-&gt;Pick(x, y, 0);
 if (pad) {
    pad-&gt;cd();
@@ -1905,8 +1826,7 @@ return action;
 
 <para><code>Bool_t HandleDNDdrop(</code><emphasis role="bold"><code>TDNDdata</code></emphasis><code> *data)</code> - this is the place where the widget actually receives the data. First, check the data format (see description of <emphasis role="bold"><code>TDNDData</code></emphasis> - Drag and Drop data class) and then use it accordingly. In the case of ROOT object, here is an example of how to retrieve it:</para>
 
-<programlisting language="c++">
-if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("application/root")) {
+<programlisting language="c++">if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("application/root")) {
    TBufferFile buf(TBuffer::kRead,data-&gt;fDataLength,(void *)data-&gt;fData);
    buf.SetReadMode();
    TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
@@ -1917,8 +1837,7 @@ if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("application/root")) {
 
 <para>In the case of URI/list, the use is:</para>
 
-<programlisting language="c++">
-if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("text/uri-list")) {
+<programlisting language="c++">if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("text/uri-list")) {
    TString sfname((char *)data-&gt;fData);
    TUrl uri(sfname.Data());
    if (sfname.EndsWith(".jpg")
