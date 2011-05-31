@@ -110,7 +110,7 @@ ClassImpQ(TPad)
 //  An example of pads hierarchy is shown below:
 //Begin_Html
 /*
-<img src="examples/gif/canvas.gif">
+<img src="gif/canvas.gif">
 */
 //End_Html
 //
