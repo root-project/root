@@ -44,7 +44,7 @@
 
 <sect1>
 <title>TVirtualX</title>
-<para>The GUI classes interface to the platform dependent low level graphics system via the semi-abstract graphics base class <emphasis role="bold"><code>TVirtualX</code></emphasis>. Currently concrete implementations exist for X11 and Win32 (<code>MacOS</code><code> X</code> is fully supported via Apple’s X11 implementation). Thanks to this single graphics interface, porting the ROOT GUI to a new platform requires only the implementation of <emphasis role="bold"><code>TVirtualX</code></emphasis>.</para>
+<para>The GUI classes interface to the platform dependent low level graphics system via the semi-abstract graphics base class <emphasis role="bold"><code>TVirtualX</code></emphasis>. Currently concrete implementations exist for X11 and Win32 (MacOS X is fully supported via Apple’s X11 implementation). Thanks to this single graphics interface, porting the ROOT GUI to a new platform requires only the implementation of <emphasis role="bold"><code>TVirtualX</code></emphasis>.</para>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/02000201.jpg" width="243.95pt" depth="52.75pt"/></imageobject></inlinemediaobject>
 </para>
@@ -87,64 +87,64 @@ new MyMainFrame(gClient-&gt;GetRoot(),200,200);
 #include &lt;RQ_OBJECT.h&gt;
 
 class MyMainFrame {
-RQ_OBJECT("MyMainFrame")
+   RQ_OBJECT("MyMainFrame")
 private:
-TGMainFrame         *fMain;
-TRootEmbeddedCanvas *fEcanvas;
+   TGMainFrame         *fMain;
+   TRootEmbeddedCanvas *fEcanvas;
 public:
-MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
-virtual ~MyMainFrame();
-void DoDraw();
+   MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
+   virtual ~MyMainFrame();
+   void DoDraw();
 };
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
-<emphasis role="italic"><code>// Create a main frame</code></emphasis>
-fMain = new TGMainFrame(p,w,h);
+   <emphasis role="italic"><code>// Create a main frame</code></emphasis>
+   fMain = new TGMainFrame(p,w,h);
 
-<emphasis role="italic"><code>// Create canvas widg</code></emphasis><emphasis role="italic"><code>et</code></emphasis>
-fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
-fMain-&gt;AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX| kLHintsExpandY,
-10,10,10,1));
-<emphasis role="italic"><code>// Create a horizontal frame widget with buttons </code></emphasis>
-TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain,200,40);
-TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
-draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
-hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
-"gApplication-&gt;Terminate(0)");
-hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-fMain-&gt;AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+   <emphasis role="italic"><code>// Create canvas widg</code></emphasis><emphasis role="italic"><code>et</code></emphasis>
+   fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
+   fMain-&gt;AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX |
+                      kLHintsExpandY, 10,10,10,1));
+   <emphasis role="italic"><code>// Create a horizontal frame widget with buttons </code></emphasis>
+   TGHorizontalFrame *hframe = new TGHorizontalFrame(fMain,200,40);
+   TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
+   draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
+   hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+   TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit", 
+                                         "gApplication-&gt;Terminate(0)");
+   hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+   fMain-&gt;AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 
-<emphasis role="italic"><code>  // Set a name to the main frame</code></emphasis>
-fMain-&gt;SetWindowName("Simple Example");
+   <emphasis role="italic"><code>// Set a name to the main frame</code></emphasis>
+   fMain-&gt;SetWindowName("Simple Example");
 
-<emphasis role="italic"><code>  // Map all subwindows of main frame</code></emphasis>
-fMain-&gt;MapSubwindows();
+   <emphasis role="italic"><code>// Map all subwindows of main frame</code></emphasis>
+   fMain-&gt;MapSubwindows();
 
-<emphasis role="italic"><code>  // Initialize the layout algorithm</code></emphasis>
-fMain-&gt;Resize(fMain-&gt;GetDefaultSize());
+   <emphasis role="italic"><code>// Initialize the layout algorithm</code></emphasis>
+   fMain-&gt;Resize(fMain-&gt;GetDefaultSize());
 
-<emphasis role="italic"><code>  // Map main frame</code></emphasis>
-fMain-&gt;MapWindow();
+   <emphasis role="italic"><code>// Map main frame</code></emphasis>
+   fMain-&gt;MapWindow();
 }
 void MyMainFrame::DoDraw() {
-<emphasis role="italic"><code>  // </code></emphasis>    <emphasis role="italic"><code>Draws function graphics in randomly choosen interval</code></emphasis>
-TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom-&gt;Rndm()*10);
-f1-&gt;SetFillColor(19);
-f1-&gt;SetFillStyle(1);
-f1-&gt;SetLineWidth(3);
-f1-&gt;Draw();
-TCanvas *fCanvas = fEcanvas-&gt;GetCanvas();
-fCanvas-&gt;cd();
-fCanvas-&gt;Update();
+   <emphasis role="italic"><code>// Draws function graphics in randomly choosen interval</code></emphasis>
+   TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom-&gt;Rndm()*10);
+   f1-&gt;SetFillColor(19);
+   f1-&gt;SetFillStyle(1);
+   f1-&gt;SetLineWidth(3);
+   f1-&gt;Draw();
+   TCanvas *fCanvas = fEcanvas-&gt;GetCanvas();
+   fCanvas-&gt;cd();
+   fCanvas-&gt;Update();
 }
 MyMainFrame::~MyMainFrame() {
-<emphasis role="italic"><code>// Clean up used widgets: frames, buttons, layouthints</code></emphasis>
-fMain-&gt;Cleanup();
-delete fMain;
+   <emphasis role="italic"><code>// Clean up used widgets: frames, buttons, layout hints</code></emphasis>
+   fMain-&gt;Cleanup();
+   delete fMain;
 }
 void example() {
-<emphasis role="italic"><code>  // Popup the GUI...</code></emphasis>
-new MyMainFrame(gClient-&gt;GetRoot(),200,200);
+   <emphasis role="italic"><code>// Popup the GUI...</code></emphasis>
+   new MyMainFrame(gClient-&gt;GetRoot(),200,200);
 }
 </programlisting>
 
@@ -159,7 +159,7 @@ fEcanvas = new TRootEmbeddedCanvas("Ecanvas",fMain,200,200);
 
 <programlisting language="c++">
 fMain-&gt;AddFrame(fEcanvas,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-10,10,10,1));
+                                             10, 10, 10, 1));
 </programlisting>
 
 <para>It adds the <code>fEcanvas</code> into the list of children widgets of the main frame <code>fMain</code>. The specification of how it should be placed inside the parent frame is made by the <emphasis role="bold"><code>TGLayoutHints</code></emphasis> object. Setting its first parameter to <code>kLHintsExpandX|kLHintsExpandY </code>we define the canvas window as expanded on x and y in the frame. The next four parameters define amounts of padding in left, right, top and bottom in pixels. This means that the canvas window will be expanded when the parent window expands, but it will keep around a frame of 10 pixels on left, right, top and 1 pixel on bottom. </para>
@@ -179,7 +179,7 @@ TGHorizontalFrame *hframe=new TGHorizontalFrame(fMain,200,40);
 TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
 hframe -&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
-"gApplication-&gt;Terminate(0)");
+                                      "gApplication-&gt;Terminate(0)");
 hframe -&gt;AddFrame(exit,new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 </programlisting>
 
@@ -260,14 +260,14 @@ class TGMainFrame;
 class TRootEmbeddedCanvas;
 
 class MyMainFrame {
-RQ_OBJECT("MyMainFrame")
+   RQ_OBJECT("MyMainFrame")
 private:
-TGMainFrame         *fMain;
-TRootEmbeddedCanvas *fEcanvas;
+   TGMainFrame         *fMain;
+   TRootEmbeddedCanvas *fEcanvas;
 public:
-MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
-virtual ~MyMainFrame();
-void DoDraw();
+   MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
+   virtual ~MyMainFrame();
+   void DoDraw();
 };
 </programlisting>
 
@@ -292,10 +292,10 @@ void MyMainFrame::DoDraw() {  ...  }
 void example() {  ...  }
 
 int main(int argc, char **argv) {
-TApplication theApp("App",&amp;argc,argv);
-example();
-theApp.Run();
-return 0;
+   TApplication theApp("App",&amp;argc,argv);
+   example();
+   theApp.Run();
+   return 0;
 }
 </programlisting>
 
@@ -307,12 +307,12 @@ return 0;
 #include &lt;TGFrame.h&gt;
 class MyMainFrame : public TGMainFrame {
 private:
-TRootEmbeddedCanvas *fEcanvas;
+   TRootEmbeddedCanvas *fEcanvas;
 public:
-MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
-virtual ~MyMainFrame() {  ...  }
-void DoDraw(){  ...  }
-ClassDef(MyMainFrame,0)
+   MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h);
+   virtual ~MyMainFrame() {  ...  }
+   void DoDraw(){  ...  }
+   ClassDef(MyMainFrame,0)
 };
 </programlisting>
 
@@ -330,26 +330,26 @@ ClassDef(MyMainFrame,0)
 #include "example2b.h"
 
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h)
-: TGMainFrame(p,w,h) {
+   : TGMainFrame(p,w,h) {
 
-<emphasis role="italic"><code>  // Creates widgets of the example</code></emphasis>
-fEcanvas = new TRootEmbeddedCanvas ("Ecanvas",this,200,200);
-AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
-10,10,10,1));
-TGHorizontalFrame *hframe=new TGHorizontalFrame(this, 200,40);
-TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
-draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
-hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit ",
-"gApplication-&gt;Terminate()");
-hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-AddFrame(hframe,new TGLayoutHints(kLHintsCenterX,2,2,2,2));
+   <emphasis role="italic"><code>// Creates widgets of the example</code></emphasis>
+   fEcanvas = new TRootEmbeddedCanvas ("Ecanvas",this,200,200);
+   AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
+                                        10,10,10,1));
+   TGHorizontalFrame *hframe=new TGHorizontalFrame(this, 200,40);
+   TGTextButton *draw = new TGTextButton(hframe,"&amp;Draw");
+   draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
+   hframe-&gt;AddFrame(draw, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+   TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit ",
+                                         "gApplication-&gt;Terminate()");
+   hframe-&gt;AddFrame(exit, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+   AddFrame(hframe,new TGLayoutHints(kLHintsCenterX,2,2,2,2));
 
-<emphasis role="italic"><code>  // Sets window name and shows the main frame</code></emphasis>
-SetWindowName("Simple Example");
-MapSubwindows();
-Resize(GetDefaultSize());
-MapWindow();
+   <emphasis role="italic"><code>// Sets window name and shows the main frame</code></emphasis>
+   SetWindowName("Simple Example");
+   MapSubwindows();
+   Resize(GetDefaultSize());
+   MapWindow();
 }
 </programlisting>
 
@@ -382,7 +382,7 @@ MapWindow();
 
 <programlisting language="c++">
 TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit",
-"gApplication-&gt;Terminate()");
+                                      "gApplication-&gt;Terminate()");
 </programlisting>
 
 <para>You will have the following the two lines:</para>
@@ -823,16 +823,16 @@ draw-&gt;Connect("Clicked()","MyMainFrame",this,"DoDraw()");
 <programlisting language="c++">
 public:
 ...
-void DoExit();  <emphasis role="italic"><code>// a new slot is added</code></emphasis>
+   void DoExit();  <emphasis role="italic"><code>// a new slot is added</code></emphasis>
 }
 void MyMainFrame::DoExit() {
-gApplication-&gt;Terminate(0);
+   gApplication-&gt;Terminate(0);
 }
 MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
 ...
-TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit ");
-<emphasis role="italic"><code>  // connects signal Clicked() with slot DoExit()</code></emphasis>
-exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
+   TGTextButton *exit = new TGTextButton(hframe,"&amp;Exit ");
+   <emphasis role="italic"><code>// connects signal Clicked() with slot DoExit()</code></emphasis>
+   exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
 ...
 }
 </programlisting>
@@ -844,12 +844,12 @@ exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
 <para>To benefit from this mechanism your classes must inherit from <emphasis role="bold"><code>TQObject</code></emphasis> or otherwise the class definition must start with <code>RQ_OBJECT</code><code>(“ClassName”) </code>macro. This macro allows the signals/slots communication mechanism to be applied between compiled and interpreted classes in an interactive ROOT session without having the class derive from <emphasis role="bold"><code>TQObject</code></emphasis>. Every signal method declaration is followed by a comment <code>“*SIGNAL*”.</code> Only instances of a class that defines a signal or instances of its subclasses can emit the signal. The ROOT implementation of a popular example presenting signals and slots is the next. Let’s have a minimal class declaration:</para>
 
 <programlisting language="c++">class MyClass {
-   private:
-      Int_t fValue;
-   public:
-      MyClass()  { fValue=0; }
-      Int_t GetValue() const { return fValue; }
-      void  SetValue(Int_t);
+private:
+   Int_t fValue;
+public:
+   MyClass()  { fValue=0; }
+   Int_t GetValue() const { return fValue; }
+   void  SetValue(Int_t);
 };
 </programlisting>
 
@@ -857,13 +857,13 @@ exit-&gt;Connect("Clicked()","MyMainFrame",this,"DoExit()");
 
 <programlisting language="c++">
 class MyClass {
-RQ_OBJECT("MyClass")
+   RQ_OBJECT("MyClass")
 private:
-Int_t fValue;
+   Int_t fValue;
 public:
-MyClass() { fValue=0; }
-Int_t GetValue() const { return fValue; }
-Void  SetValue(Int_t); <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
+   MyClass() { fValue=0; }
+   Int_t GetValue() const { return fValue; }
+   Void  SetValue(Int_t); <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
 };
 </programlisting>
 
@@ -871,10 +871,10 @@ Void  SetValue(Int_t); <emphasis role="italic"><code>// *SIGNAL*</code></emphasi
 
 <programlisting language="c++">
 void MyClass::SetValue(Int_t v) {
-if (v != fValue) {
-fValue = v;
-Emit("SetValue(Int_t)",v);
-}
+   if (v != fValue) {
+      fValue = v;
+      Emit("SetValue(Int_t)",v);
+   }
 }
 </programlisting>
 
@@ -909,8 +909,8 @@ ApplyButton-&gt;Emit("Clicked()");
 TQObject *processor;  <emphasis role="italic"><code>// data processor</code></emphasis>
 TH1F     *hist;       <emphasis role="italic"><code>// filled with processor results</code></emphasis>
 ...
-processor-&gt;Connect("Evaluated(Float_t,Float_t)", "TH1F",hist,
-"Fill(Axis_t x,Axis_t y)");
+processor-&gt;Connect("Evaluated(Float_t,Float_t)", "TH1F", hist,
+                     "Fill(Axis_t x,Axis_t y)");
 ...
 Long_t args[2];
 args[0]=(Long_t)processor-&gt;GetValue(1);
@@ -939,15 +939,15 @@ TQObject::Connect(myButton, "Clicked()",0,0, "hsimple()");
 
 <programlisting language="c++">
 TQObject::Connect("Channel", "AllarmOn()","HandlerClass",handler,
-"HandleAllarm()");
+                  "HandleAllarm()");
 </programlisting>
 
 <para>The first argument specifies the class name Channel. The signal <code>AllarmOn()</code> of any object of the class Channel is connected to the <code>HandleAllarm()</code> method of the handler object of the class <code>HandlerClass</code>.</para>
 <para>In <code>example.C</code> we have used the not-static <code>Connect() </code>method:</para>
 
 <programlisting language="c++">
-Bool_t Connect(const char *signal,const char *receiver_class,void *receiver,
-const char *slot);
+Bool_t Connect(const char *signal, const char *receiver_class, 
+               void *receiver, const char *slot);
 </programlisting>
 
 <para>It needs to know four things: the signal that should be connected, the receiver class, the object that will receive the signal, and the slot that will be connected to the signal. Because this method is non-static we can write this as a receiver parameter. </para>
@@ -988,36 +988,36 @@ Disconnect(myObgect,0,myReceiver,0);      <emphasis role="italic"><code>// case 
 #include &lt;RQ_OBJECT.h&gt;
 
 class A {
-RQ_OBJECT("A")
+   RQ_OBJECT("A")
 private:
-Int_t fValue;
+   Int_t fValue;
 public:
-A():fValue(0) { }
-~A() { }
-void  SetValue(Int_t value);  <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
-void  PrintValue() const   { printf("value=%dn",fValue); }
+   A() : fValue(0) { }
+   ~A() { }
+   void  SetValue(Int_t value);  <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
+   void  PrintValue() const   { printf("value = %d\n", fValue); }
 };
 void A::SetValue(Int_t value) {  <emphasis role="italic"><code>// Set new valu</code></emphasis>e
-<emphasis role="italic"><code>// Emit signal "SetValue(Int_t)" with a single parameter</code></emphasis>
-if(value!=fValue) {
-fValue=value;
-Emit("SetValue(Int_t)",fValue);
-}
+   <emphasis role="italic"><code>// Emit signal "SetValue(Int_t)" with a single parameter</code></emphasis>
+   if (value != fValue) {
+      fValue = value;
+      Emit("SetValue(Int_t)", fValue);
+   }
 }
 <emphasis role="italic"><code>// Main program </code></emphasis>
 #ifdef STANDALONE
 int main(int argc, char **argv) {
-A* a = new A();
-A* b = new A();
-a-&gt;Connect("SetValue(Int_t)","A",b,"SetValue(Int_t)");
-printf("n******* Test of SetValue(Int_t) signal *******n");
-b-&gt;SetValue(10);
-printf("nt***** b before ******n");
-b-&gt;PrintValue();
-a-&gt;SetValue(20);
-printf("t***** b after a-&gt;SetValue(20) ******n");
-b-&gt;PrintValue();
-return 0;
+   A* a = new A();
+   A* b = new A();
+   a-&gt;Connect("SetValue(Int_t)", "A", b, "SetValue(Int_t)");
+   printf("n******* Test of SetValue(Int_t) signal *******n");
+   b-&gt;SetValue(10);
+   printf("nt***** b before ******n");
+   b-&gt;PrintValue();
+   a-&gt;SetValue(20);
+   printf("t***** b after a-&gt;SetValue(20) ******n");
+   b-&gt;PrintValue();
+   return 0;
 }
 #endif
 </programlisting>
@@ -1053,8 +1053,8 @@ The current working directory should be added to <code>$LD_LIBRARY_PATH</code> v
 <para>These buttons are usually placed within a window to provide fast access to frequently used or critical commands. They help in situations where a command is not available through the menu bar. You already know that a command string can be passed in the text button via the constructor: </para>
 
 <programlisting language="c++">
-TGTextButton(const TGWindow *p,const char *s,const char *cmd,
-Int_t id,GContext_t norm,FontStruct_t font,UInt_totions);
+TGTextButton(const TGWindow *p, const char *s, const char *cmd, Int_t id,
+             GContext_t norm, FontStruct_t font, UInt_t options);
 </programlisting>
 
 <para>A button label can be changed by <code>SetText(new_label).</code> There are important guidelines to be followed about a button label. The text has to provide a meaningful description of the performed action. The single-word label should be used whenever possible, only two-three words for clarity, if necessary. Do not number labels. Always follow all platform presentation and usage guidelines for standard button functions. Let’s remember a few standard names and definitions of well known buttons:</para>
@@ -1076,7 +1076,7 @@ Int_t id,GContext_t norm,FontStruct_t font,UInt_totions);
 
 <programlisting language="c++">
 TGPictureButton *fPicture = new TGPictureButton(parent,
-gClient-&gt;GetPicture("h1_s.xpm"),11);
+                           gClient-&gt;GetPicture("h1_s.xpm"), 11);
 </programlisting>
 
 <para>The picture of file h1_s.xpm is used in the button. All <code>.xpm</code> files are located in the directory <code>$ROOTSYS/icons</code>. You can assign a command directly as a parameter of the picture button constructor. The picture of <emphasis role="bold"><code>TGPictureButton</code></emphasis> can be changed by:</para>
@@ -1205,18 +1205,18 @@ button-&gt;SetState(kButtonDisabled);
 </itemizedlist>
 <programlisting language="c++">
 fN1 = new TGNumberEntry(parent, 0.005, 9, kENTRY1,
-TGNumberFormat::kNESRealThree,   <emphasis role="italic"><code>//style</code></emphasis>
-TGNumberFormat::kNEAAnyNumber,   <emphasis role="italic"><code>//input value filter</code></emphasis>
-TGNumberFormat::kNELLimitMinMax, <emphasis role="italic"><code>//</code></emphasis><emphasis role="italic"><code>specify </code></emphasis><emphasis role="italic"><code>limits</code></emphasis>
--1.,1.);                         <emphasis role="italic"><code>//limit values</code></emphasis>
+         TGNumberFormat::kNESRealThree,   <emphasis role="italic"><code>//style</code></emphasis>
+         TGNumberFormat::kNEAAnyNumber,   <emphasis role="italic"><code>//input value filter</code></emphasis>
+         TGNumberFormat::kNELLimitMinMax, <emphasis role="italic"><code>//specify limits</code></emphasis>
+         -1.,1.);                         <emphasis role="italic"><code>//limit values</code></emphasis>
 </programlisting>
 
 <para><emphasis role="bold"><code>TGNumberEntryField</code></emphasis> is a number entry input widget.</para>
 
 <programlisting language="c++">
-Nent  = new TGNumberEntryField(hgrunf2, kNENT_ID, 0.6,
-TGNumberFormat::kNESRealThree,
-TGNumberFormat::kNEAAnyNumber);
+Nent = new TGNumberEntryField(hgrunf2, kNENT_ID, 0.6,
+                              TGNumberFormat::kNESRealThree,
+                              TGNumberFormat::kNEAAnyNumber);
 </programlisting>
 
 <para><emphasis role="bold"><code>TGNumberEntryField</code></emphasis> is a plain vanilla entry field, whereas <emphasis role="bold"><code>TGNumberEntry</code></emphasis> adds two small buttons to increase and decrease the numerical value in the field. The number entry widgets also support using the up and down cursor keys to change the numerical values. The step size can be selected with control and shift keys: </para>
@@ -1261,7 +1261,7 @@ fMenuFile-&gt;AddEntry("E&amp;xit",M_FILE_EXIT);
 
 <programlisting language="c++">
 <code>// menu bar item layout hints </code>
-fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
+fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft,0,4,0,0);
 fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
 <code>// menu bar </code>
@@ -1301,17 +1301,17 @@ fMenuBar-&gt;AddPopup("&amp;Help",fMenuHelp,fMenuBarHelpLayout);
 <programlisting language="c++">
 <emphasis role="italic"><code>// toolbar icon files</code></emphasis>
 const char *xpms[] = {
-"x_pic.xpm",
-"y_pic.xpm",
-"z_pic.xpm",
-0
+   "x_pic.xpm",
+   "y_pic.xpm",
+   "z_pic.xpm",
+   0
 };
 <code>// toolbar tool tip text</code>
 const char *tips[] = {
-"X Settings",
-"Y Settings",
-"Z Settings",
-0
+   "X Settings",
+   "Y Settings",
+   "Z Settings",
+   0
 };
 <code>// toolbar button separator</code>
 int separator = 5;
@@ -1323,19 +1323,19 @@ ToolBarData_t t[3];
 TGToolBar *tb = new TGToolBar(fMain,520,80);
 
 for (int i = 0; i &lt; 3; i++) {
-<code>// filling the ToolBarData_t with information </code>
-t[i].fPixmap   = xpms[i];   <code>// icon file</code>
-t[i].fTipText  = tips[i];   <code>// tool tip text</code>
-t[i].fStayDown = kFALSE;    <code>// button behavior if clicked</code>
-t[i].fId = i+1;             <emphasis role="italic"><code>// button id</code></emphasis>
-t[i].fButton = NULL;        <emphasis role="italic"><code>// button pointer</code></emphasis>
+   <code>// filling the ToolBarData_t with information </code>
+   t[i].fPixmap   = xpms[i];   <code>// icon file</code>
+   t[i].fTipText  = tips[i];   <code>// tool tip text</code>
+   t[i].fStayDown = kFALSE;    <code>// button behavior if clicked</code>
+   t[i].fId = i+1;             <emphasis role="italic"><code>// button id</code></emphasis>
+   t[i].fButton = NULL;        <emphasis role="italic"><code>// button pointer</code></emphasis>
 
-if (strlen(xpms[i]) == 0) {
-separator = 5;
-continue;
-}
-tb-&gt;AddButton(fMain,&amp;t[i],separator);
-separator = 0;
+   if (strlen(xpms[i]) == 0) {
+      separator = 5;
+      continue;
+   }
+   tb-&gt;AddButton(fMain,&amp;t[i],separator);
+   separator = 0;
 }
 <code>// adding the tool bar to the main frame</code>
 fMain-&gt;AddFrame(tb, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -1380,11 +1380,12 @@ int fFirstEntry = 0, fLastEntry = 10;
 char tmp[20];
 TGListBox *fListBox = new TGListBox(parent, 90);
 for (i = fFirstEntry; i &lt; fLastEntry; i++) {
-sprintf(tmp, "Entry %i", i+1);
-fListBox-&gt;AddEntry(tmp, i);
+   sprintf(tmp, "Entry %i", i+1);
+   fListBox-&gt;AddEntry(tmp, i);
 }
 fListBox-&gt;Resize(150, 80);
-parent-&gt;AddFrame(fListBox,new TGLayoutHints(kLHintsTop | kLHintsLeft,5,5,5,5));
+parent-&gt;AddFrame(fListBox,new TGLayoutHints(kLHintsTop | kLHintsLeft,
+                                              5, 5, 5, 5));
 </programlisting>
 
 <para>We create the list box widget passing the parent window pointer and giving an ID number. Next we add entries with specified string and ID to the list box. Before adding the list box to its parent widget, it should be resized via <code>Resize</code><code>(width, height)</code> method. The list box width and height are in pixels. The default entry layout hints are <code>kLHintsExpandX | kLHintsTop</code>. If you want to add entries using different ones, call the method: </para>
@@ -1405,9 +1406,9 @@ fListBox-&gt;Layout();
 . . .
 <code>// removing an entry</code>
 if (fFirstEntry &lt; fLastEntry) {
-fListBox-&gt;RemoveEntry(fFirstEntry);
-fListBox-&gt;Layout();
-fFirstEntry++;
+   fListBox-&gt;RemoveEntry(fFirstEntry);
+   fListBox-&gt;Layout();
+   fFirstEntry++;
 }
 </programlisting>
 
@@ -1432,12 +1433,12 @@ fFirstEntry++;
 <programlisting language="c++">
 char tmp[20];
 <emphasis role="italic"><code>// combo box layout hints</code></emphasis>
-fLcombo = new TGLayoutHints(kLHintsTop | kLHintsLeft,5,5,5,5);
+fLcombo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5);
 <emphasis role="italic"><code>// combo box widget</code></emphasis>
 TGComboBox *fCombo = new TGComboBox(parent,100);
 for (i = 0; i &lt; 10; i++) {
-sprintf(tmp, "Entry%i", i+1);
-fCombo-&gt;AddEntry(tmp, i+1);
+   sprintf(tmp, "Entry%i", i+1);
+   fCombo-&gt;AddEntry(tmp, i+1);
 }
 fCombo-&gt;Resize(150, 20);
 <code>// Entry3 is selected as current</code>
@@ -1492,8 +1493,8 @@ vDslider-&gt;SetRange(-10,10);
 
 <programlisting language="c++">
 fSlider = new TGTripleHSlider(parent, 100, kDoubleScaleBoth, kSLD_ID,
-kHorizontalFrame);
-parent-&gt;AddFrame(fSlider, new TGLayoutHints(kLHintsExpandX, 5, 5, 5, 5));
+                              kHorizontalFrame);
+parent-&gt;AddFrame(fSlider, new TGLayoutHints(kLHintsExpandX,5,5,5,5));
 fSlider-&gt;SetConstrained(kTRUE);
 fSlider-&gt;SetRange(rmin, rmax);
 fSlider-&gt;SetPosition(pmin, pmax);
@@ -1525,11 +1526,11 @@ fHProg3 = new TGHProgressBar(vframe,TGProgressBar::kStandard,300);
 fHProg3-&gt;SetFillType(TGProgressBar::kBlockFill);
 
 vframe-&gt;AddFrame(fHProg1,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-kLHintsExpandX,5,5,5,10));
+                                             kLHintsExpandX,5,5,5,10));
 vframe-&gt;AddFrame(fHProg2,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-kLHintsExpandX,5,5,5,10));
+                                             kLHintsExpandX,5,5,5,10));
 vframe-&gt;AddFrame(fHProg3,new TGLayoutHints(kLHintsTop | kLHintsLeft |
-kLHintsExpandX,5,5,5,10));
+                                             kLHintsExpandX,5,5,5,10));
 vframe-&gt;Resize(200, 200);
 </programlisting>
 
@@ -1549,7 +1550,8 @@ TGLabel *label = new TGLabel(parentWidget, "Label’s string");
 <code>// icon widget</code>
 const TGPicture *ipic =(TGPicture *)gClient-&gt;GetPicture("leaf.xpm");
 TGIcon *icon = new TGIcon(parent,ipic,40,40);
-parent-&gt;AddFrame(icon,new TGLayoutHints(kLHintsLeft | kLHintsBottom,1,15,1,1));
+parent-&gt;AddFrame(icon,new TGLayoutHints(kLHintsLeft | kLHintsBottom,
+                                          1, 15, 1, 1));
 </programlisting>
 
 <para>The <emphasis role="bold"><code>TGPicture</code></emphasis> objects are cached by <emphasis role="bold"><code>TGClient</code></emphasis> in order to keep the resource usage low and to improve the efficiency of the client-server windowing systems. <emphasis role="bold"><code>TGClient</code></emphasis> will check whether a pixmap with the same name was already loaded before to register a new picture object. If it finds it, it will return a pointer to the existing object. Also, it will increase the usage counter for the object. </para>
@@ -1571,8 +1573,8 @@ parent-&gt;AddFrame(icon,new TGLayoutHints(kLHintsLeft | kLHintsBottom,1,15,1,1)
 Int_t parts[] = {33, 10, 10, 47};
 fStatusBar = new TGStatusBar(fMain,50,10,kHorizontalFrame);
 fStatusbar-&gt;SetParts(parts,4);
-fMain-&gt;AddFrame(fStatusBar,new TGLayoutHints(kLHintsBottom | kLHintsLeft |
-kLHintsExpandX,0,0,2,0));
+fMain-&gt;AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsLeft |
+                                                kLHintsExpandX, 0, 0, 2, 0));
 . . .
 <code>// fill status bar fields with information; selected is the object </code>
 <code>// below the cursor; atext contains pixel coordinates info</code>
@@ -1619,13 +1621,14 @@ fFbottom = new TGCompositeFrame(fH2,10,10,kSunkenFrame);
 fLtop = new TGLabel(fFtop,"Top Frame");
 fLbottom = new TGLabel(fFbottom,"Bottom Frame");
 
-fFtop-&gt;AddFrame(fLtop,new TGLayoutHints(kLHintsLeft | kLHintsCenterY,3,0,0,0));
-fFbottom-&gt;AddFrame(fLbottom,new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
-3,0,0,0));
-fH1-&gt;AddFrame(fFtop,new TGLayoutHints(kLHintsTop | kLHintsExpandY |
-kLHintsExpandX,0,0,1,2));
+fFtop-&gt;AddFrame(fLtop, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
+                                           3,0,0,0));
+fFbottom-&gt;AddFrame(fLbottom, new TGLayoutHints(kLHintsLeft | 
+                                                 kLHintsCenterY,3,0,0,0));
+fH1-&gt;AddFrame(fFtop, new TGLayoutHints(kLHintsTop | kLHintsExpandY |
+                                         kLHintsExpandX,0,0,1,2));
 fH2-&gt;AddFrame(fFbottom,new TGLayoutHints(kLHintsTop | kLHintsExpandY |
-kLHintsExpandX,0,0,1,2));
+                                           kLHintsExpandX,0,0,1,2));
 fH1-&gt;Resize(fFtop-&gt;GetDefaultWidth(),fH1-&gt;GetDefaultHeight()+20);
 fH2-&gt;Resize(fFbottom-&gt;GetDefaultWidth(),fH2-&gt;GetDefaultHeight()+20);
 fVf-&gt;AddFrame(fH1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -1633,8 +1636,8 @@ fVf-&gt;AddFrame(fH1, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 TGHSplitter *hsplitter = new TGHSplitter(fVf);
 hsplitter-&gt;SetFrame(fH1,kTRUE);
 fVf-&gt;AddFrame(hsplitter,new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-fVf-&gt;AddFrame(fH2,
-new TGLayoutHints(kLHintsBottom | kLHintsExpandX | kLHintsExpandY));
+fVf-&gt;AddFrame(fH2, new TGLayoutHints(kLHintsBottom | kLHintsExpandX | 
+                                       kLHintsExpandY));
 </programlisting>
 
 <para>For a <code>vertical</code> splitter the rules are:</para>
@@ -1658,13 +1661,14 @@ fFright = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame);
 fLleft = new TGLabel(fFleft, "Left Frame");
 fLright = new TGLabel(fFright, "Right Frame");
 
-fFleft-&gt;AddFrame(fLleft,new TGLayoutHints(kLHintsLeft | kLHintsCenterY,3,0,0,0));
-fFright-&gt;AddFrame(fLright,new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
-3,0,0,0));
+fFleft-&gt;AddFrame(fLleft, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
+                                             3,0,0,0));
+fFright-&gt;AddFrame(fLright, new TGLayoutHints(kLHintsLeft | 
+                                               kLHintsCenterY,3,0,0,0));
 fV1-&gt;AddFrame(fFleft,new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-kLHintsExpandY,0,0,5,5));
+                                         kLHintsExpandY, 0, 0, 5, 5));
 fV2-&gt;AddFrame(fFright,new TGLayoutHints(kLHintsTop | kLHintsExpandX |
-kLHintsExpandY,0,0,5,5));
+                                          kLHintsExpandY, 0, 0, 5, 5));
 fV1-&gt;Resize(fFleft-&gt;GetDefaultWidth()+20, fV1-&gt;GetDefaultHeight());
 fV2-&gt;Resize(fFright-&gt;GetDefaultWidth(), fV1-&gt;GetDefaultHeight());
 fHf-&gt;AddFrame(fV1,new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
@@ -1672,7 +1676,8 @@ fHf-&gt;AddFrame(fV1,new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 splitter = new TGVSplitter(fHf,2,30);
 splitter-&gt;SetFrame(fV1, kTRUE);
 fHf-&gt;AddFrame(splitter,new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
-fHf-&gt;AddFrame(fV2,new TGLayoutHints(kLHintsRight|kLHintsExpandX|kLHintsExpandY));
+fHf-&gt;AddFrame(fV2,new TGLayoutHints(kLHintsRight | kLHintsExpandX | 
+                                      kLHintsExpandY));
 </programlisting>
 
 </sect2>
@@ -1686,14 +1691,14 @@ fHf-&gt;AddFrame(fV2,new TGLayoutHints(kLHintsRight|kLHintsExpandX|kLHintsExpand
 fCanvas = new TGCanvas(parent, w, h);
 fContents = new TGListTree(fCanvas, kHorizontalFrame);
 fContents-&gt;Associate(parent);
-parent-&gt;AddFrame(fCanvas,new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
+parent-&gt;AddFrame(fCanvas, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 <emphasis role="italic"><code>// or</code></emphasis>
 fCanvas = new TGCanvas(parent, w, h);
 fContents = new TGListTree(fCanvas-&gt;GetViewPort(),100,100,kHorizontalFrame);
 fContents-&gt;SetCanvas(fCanvas);
 fContents-&gt;Associate(parent);
 fCanvas-&gt;SetContainer(fContents);
-parent-&gt;AddFrame(fCanvas,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+parent-&gt;AddFrame(fCanvas, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 </programlisting>
 
 <para>The <emphasis role="bold"><code>TGContainer</code></emphasis> class can handle the following keys: </para>
@@ -1715,15 +1720,15 @@ parent-&gt;AddFrame(fCanvas,new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
 <programlisting language="c++">
 fEc1 = new TRootEmbeddedCanvas("ec1",fParent,100,100);
-fParent -&gt;AddFrame(fEc1, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+fParent -&gt;AddFrame(fEc1, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 fEc2 = new TRootEmbeddedCanvas("ec2",fParent,100,100);
-fParent -&gt;AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+fParent -&gt;AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX|kLHintsExpandY));
 fEc1-&gt;GetCanvas()-&gt;SetBorderMode(0);
 fEc2-&gt;GetCanvas()-&gt;SetBorderMode(0);
 fEc1-&gt;GetCanvas()-&gt;SetBit(kNoContextMenu);
 fEc1-&gt;GetCanvas()-&gt;Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
-"MyClass", this,
-"HandleMyCanvases(Int_t,Int_t,Int_t,TObject*)");
+                               "MyClass", this, 
+                               "HandleMyCanvas(Int_t,Int_t,Int_t,TObject*)");
 </programlisting>
 
 <para>
@@ -1737,7 +1742,8 @@ TRootEmbeddedCanvas *embedded = new TRootEmbeddedCanvas(0, p, w, h);
 Int_t wid = embedded-&gt;GetCanvasWindowId();
 TMyCanvas *myc = new TMyCanvas("myname", 10, 10, wid);
 embedded-&gt;AdoptCanvas(myc);
-<emphasis role="italic"><code>// the MyCanvas is adopted by the embedded canvas and will be destroyed by it</code></emphasis>
+<emphasis role="italic"><code>// the MyCanvas is adopted by the embedded canvas and will be 
+// destroyed by it</code></emphasis>
 </programlisting>
 
 </sect2>
@@ -1863,7 +1869,7 @@ SourceWidget-&gt;SetDNDdata(&amp;data);
 <programlisting language="c++">
 TargetWidget = new TRootEmbeddedCanvas("Target", this, 700, 400);
 TargetWidget-&gt;SetDNDTarget(kTRUE);
-gVirtualX-&gt;SetDNDAware(TargetWidget-&gt;GetId(), gDNDManager-&gt;GetTypeList());
+gVirtualX-&gt;SetDNDAware(TargetWidget-&gt;GetId(),gDNDManager-&gt;GetTypeList());
 </programlisting>
 
 <para><code>gDNDManager-&gt;GetTypeList()</code> returns the list of types recognized by ROOT. </para>
@@ -1877,22 +1883,22 @@ gVirtualX-&gt;SetDNDAware(TargetWidget-&gt;GetId(), gDNDManager-&gt;GetTypeList(
 
 <programlisting language="c++">
 for (int i = 0; typelist[i] != kNone; ++i) {
-if (typelist[i] == gVirtualX-&gt;InternAtom("application/root"))
-// accept "application/root" DND type
-return typelist[i];
+   if (typelist[i] == gVirtualX-&gt;InternAtom("application/root"))
+      <emphasis role="italic"><code>// accept "application/root" DND type</code></emphasis>
+      return typelist[i];
 }
-// other type not accepted
+<emphasis role="italic"><code>// other type not accepted</code></emphasis>
 return kNone;
 </programlisting>
 
 <para><code>Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot, Int_t yroot)- t</code>his method should be used to handle the drag position in widget coordinates (<code>x,y</code>) or in root coordinates (<code>xroot,yroot</code>).</para>
 
 <programlisting language="c++">
-// get the pad over which the cursor is
+<emphasis role="italic"><code>// get the pad over which the cursor is</code></emphasis>
 TPad *pad = fCanvas-&gt;Pick(x, y, 0);
 if (pad) {
-pad-&gt;cd();
-gROOT-&gt;SetSelectedPad(pad);
+   pad-&gt;cd();
+   gROOT-&gt;SetSelectedPad(pad);
 }
 return action;
 </programlisting>
@@ -1901,23 +1907,23 @@ return action;
 
 <programlisting language="c++">
 if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("application/root")) {
-TBufferFile buf(TBuffer::kRead, data-&gt;fDataLength, (void *)data-&gt;fData);
-buf.SetReadMode();
-TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
-if (obj-&gt;IsA()-&gt;GetMethodAllAny("Draw"))
-obj-&gt;Draw();
+   TBufferFile buf(TBuffer::kRead,data-&gt;fDataLength,(void *)data-&gt;fData);
+   buf.SetReadMode();
+   TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+   if (obj-&gt;IsA()-&gt;GetMethodAllAny("Draw"))
+      obj-&gt;Draw();
 }
 </programlisting>
 
 <para>In the case of URI/list, the use is:</para>
 
 <programlisting language="c++">
-<code>if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("text/uri-list")) {</code>
-<code>   TString sfname((char *)data-&gt;fData);</code>
-<code>   TUrl uri(sfname.Data());</code>
-<code>   if (sfname.EndsWith(".jpg")</code>
-<code>      TImage *img = TImage::Open(uri.GetFile());</code>
-<code>}</code>
+if (data-&gt;fDataType == gVirtualX-&gt;InternAtom("text/uri-list")) {
+   TString sfname((char *)data-&gt;fData);
+   TUrl uri(sfname.Data());
+   if (sfname.EndsWith(".jpg")
+      TImage *img = TImage::Open(uri.GetFile());
+}
 </programlisting>
 
 <para><code>Bool_t HandleDNDleave()</code> is used if a specific action has to be performed when the drag operation leaves the widget.</para>
