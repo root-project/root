@@ -44,18 +44,42 @@
 namespace textinput {
   StreamReaderWin::StreamReaderWin(): fHaveInputFocus(false), fIsConsole(true),
     fOldMode(0), fMyMode(0) {
-    fIn = ::GetStdHandle(STD_INPUT_HANDLE);
-    fIsConsole = ::GetConsoleMode(fIn, &fOldMode) != 0;
+    UpdateHandle(true);
     fMyMode = fOldMode | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
     fMyMode = fOldMode & ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT
       | ENABLE_ECHO_INPUT | ENABLE_INSERT_MODE);
   }
 
-  StreamReaderWin::~StreamReaderWin() {}
+  StreamReaderWin::~StreamReaderWin() {
+    if (fIn != ::GetStdHandle(STD_INPUT_HANDLE)) {
+      // We allocated CONIN$:
+      CloseHandle(fIn);
+    }
+  }
+
+  void
+  StreamReaderWin::UpdateHandle(bool setup) {
+    fIn = ::GetStdHandle(STD_INPUT_HANDLE);
+    bool isConsole = ::GetConsoleMode(fIn, &fOldMode) != 0;
+    if (setup) {
+      fIsConsole = isConsole;
+    } else {
+      if (fIsConsole && !isConsole) {
+        // We had a console, but now stdin is not a console anymore.
+        // This happens if redirection is not reverted properly.
+        // Assume we are meant to stay at the console:
+        fIn = ::CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+          FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+          FILE_ATTRIBUTE_NORMAL, NULL); 
+        ::GetConsoleMode(fIn, &fOldMode);
+      }
+    }
+  }
 
   void
   StreamReaderWin::GrabInputFocus() {
     if (fHaveInputFocus) return;
+    UpdateHandle(false);
     if (fIsConsole && !SetConsoleMode(fIn, fMyMode)) {
       fIsConsole = false;
     }

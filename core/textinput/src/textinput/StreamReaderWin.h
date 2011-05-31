@@ -34,6 +34,7 @@ namespace textinput {
   private:
     void HandleError(const char* Where) const;
     void HandleKeyEvent(unsigned char C, InputData& in);
+    void UpdateHandle(bool setup);
 
     bool fHaveInputFocus; // whether the console is configured
     bool fIsConsole; // whether the input is a console or file
