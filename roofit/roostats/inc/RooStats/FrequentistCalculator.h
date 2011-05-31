@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id$
+// @(#)root/roostats:$Id: FrequentistCalculator.h 37084 2010-11-29 21:37:13Z moneta $
 // Author: Sven Kreiss, Kyle Cranmer   Nov 2010
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -8,15 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOSTATS_HybridCalculator
-#define ROOSTATS_HybridCalculator
+#ifndef ROOSTATS_FrequentistCalculator
+#define ROOSTATS_FrequentistCalculator
 
 //_________________________________________________
 /*
 BEGIN_HTML
 <p>
-This class extends the HybridCalculator with Importance Sampling. The use
-of ToyMCSampler as the TestStatSampler is assumed.
+The use of ToyMCSampler as the TestStatSampler is assumed.
 </p>
 END_HTML
 */
@@ -34,18 +33,16 @@ END_HTML
 
 namespace RooStats {
 
-   class HybridCalculator : public HypoTestCalculatorGeneric {
+   class FrequentistCalculator : public HypoTestCalculatorGeneric {
 
    public:
-      HybridCalculator(
+      FrequentistCalculator(
                         const RooAbsData &data,
                         const ModelConfig &altModel,
                         const ModelConfig &nullModel,
                         TestStatSampler* sampler=0
       ) :
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
-         fPriorNuisanceNull(0),
-         fPriorNuisanceAlt(0),
          fNullImportanceDensity(NULL),
          fNullImportanceSnapshot(NULL),
          fAltImportanceDensity(NULL),
@@ -57,15 +54,11 @@ namespace RooStats {
       {
       }
 
-      ~HybridCalculator() {
+      ~FrequentistCalculator() {
          if(fNullImportanceSnapshot) delete fNullImportanceSnapshot;
          if(fAltImportanceSnapshot) delete fAltImportanceSnapshot;
       }
 
-
-      // Override the distribution used for marginalizing nuisance parameters that is infered from ModelConfig
-      virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { fPriorNuisanceNull = &priorNuisance; }
-      virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) { fPriorNuisanceAlt = &priorNuisance; }
 
       // sets importance density and snapshot (optional)
       void SetNullImportanceDensity(RooAbsPdf *p, const RooArgSet *s = NULL) {
@@ -88,19 +81,14 @@ namespace RooStats {
       void SetNToysInTails(int toysNull, int toysAlt) { fNToysNullTail = toysNull; fNToysAltTail = toysAlt; }
 
    protected:
-      // check whether all input is consistent
-      int CheckHook(void) const;
-
       // configure TestStatSampler for the Null run
-      int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
       // configure TestStatSampler for the Alt run
-      int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
    protected:
-      RooAbsPdf *fPriorNuisanceNull;
-      RooAbsPdf *fPriorNuisanceAlt;
-
+      // importance sampling
       RooAbsPdf *fNullImportanceDensity;
       const RooArgSet *fNullImportanceSnapshot;
       RooAbsPdf *fAltImportanceDensity;
@@ -115,7 +103,7 @@ namespace RooStats {
       int fNToysAltTail;
 
    protected:
-      ClassDef(HybridCalculator,1)
+      ClassDef(FrequentistCalculator,1)
    };
 }
 

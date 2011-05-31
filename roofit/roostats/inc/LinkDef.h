@@ -53,8 +53,9 @@
 #pragma link C++ class RooStats::Heaviside+; 
 #pragma link C++ class RooStats::SequentialProposal+; 
 
-#pragma link C++ class RooStats::HybridCalculatorGeneric+;
+#pragma link C++ class RooStats::HypoTestCalculatorGeneric+;
 #pragma link C++ class RooStats::HybridCalculator+;
+#pragma link C++ class RooStats::FrequentistCalculator+;
 #pragma link C++ class RooStats::HybridCalculatorOriginal+;
 #pragma link C++ class RooStats::HybridPlot+;
 #pragma link C++ class RooStats::HybridResult+;				 
@@ -80,6 +81,7 @@
 
 #pragma link C++ class RooStats::BayesianCalculator+;
 #pragma link C++ class RooStats::HypoTestInverter+;
+#pragma link C++ class RooStats::HypoTestInverterOriginal+;
 #pragma link C++ class RooStats::HypoTestInverterResult+;
 #pragma link C++ class RooStats::HypoTestInverterPlot+;
 #pragma link C++ class RooStats::HLFactory+;
@@ -118,5 +120,6 @@
 #pragma extra_include "Math/IFunction.h";
 #pragma extra_include "Math/Minimizer.h";
 #pragma extra_include "RooFunctor.h";
+#pragma extra_include "TGraphErrors.h";
 
 #endif

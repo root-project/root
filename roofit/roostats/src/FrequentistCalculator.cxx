@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id$
+// @(#)root/roostats:$Id: FrequentistCalculator.cxx 37084 2010-11-29 21:37:13Z moneta $
 // Author: Kyle Cranmer, Sven Kreiss   23/05/10
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -9,67 +9,45 @@
  *************************************************************************/
 
 /**
-Same purpose as HybridCalculatorOriginal, but different implementation.
+Does a frequentist hypothesis test. Nuisance parameters are fixed to their
+MLEs.
 */
 
-#include "RooStats/HybridCalculator.h"
+#include "RooStats/FrequentistCalculator.h"
 #include "RooStats/ToyMCSampler.h"
 
 
-ClassImp(RooStats::HybridCalculator)
+ClassImp(RooStats::FrequentistCalculator)
 
 using namespace RooStats;
 
 
 
-int HybridCalculator::CheckHook(void) const {
-   if( (fNullModel->GetNuisanceParameters()
-        && fNullModel->GetNuisanceParameters()->getSize()>0
-        && !fPriorNuisanceNull)
-    || (fAltModel->GetNuisanceParameters()
-        && fAltModel->GetNuisanceParameters()->getSize()>0
-        && !fPriorNuisanceAlt)
-   ){
-      oocoutE((TObject*)0,InputArguments)  << "Must ForceNuisancePdf, inferring posterior from ModelConfig is not yet implemented" << endl;
-      return -1; // error
-   }
-
-   if(    (!fNullModel->GetNuisanceParameters() && fPriorNuisanceNull)
-       || (!fAltModel->GetNuisanceParameters()  && fPriorNuisanceAlt)
-       || (fNullModel->GetNuisanceParameters()  && fNullModel->GetNuisanceParameters()->getSize()==0 && fPriorNuisanceNull)
-       || (fAltModel->GetNuisanceParameters()  && fAltModel->GetNuisanceParameters()->getSize()>0   && !fPriorNuisanceAlt)
-   ){
-      oocoutE((TObject*)0,InputArguments)  << "Nuisance PDF specified, but the pdf doesn't know which parameters are the nuisance parameters.  Must set nuisance parameters in the ModelConfig" << endl;
-      return -1; // error
-   }
-
-   return 0; // ok
-}
-
-
-int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const {
+int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const {
 
    // ****** any TestStatSampler ********
 
-   if(fPriorNuisanceNull) {
-      // Setup Priors for ad hoc Hybrid
-      fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
-   } else if(
-      fNullModel->GetNuisanceParameters()==NULL ||
-      fNullModel->GetNuisanceParameters()->getSize()==0
-   ) {
-      oocoutI((TObject*)0,InputArguments)
-       << "No nuisance parameters specified and no prior forced, reduces "
-       << "to simple hypothesis testing with no uncertainty" << endl;
-   } else {
-      // TODO principled case:
-      // must create posterior from Model.PriorPdf and Model.Pdf
+   // note: making nll or profile class variables can only be done in the constructor
+   // as all other hooks are const (which has to be because GetHypoTest is const). However,
+   // when setting it only in constructor, they would have to be changed every time SetNullModel
+   // or SetAltModel is called. Simply put, converting them into class variables breaks
+   // encapsulation.
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-      // Note, we do not want to use "prior" for nuisance parameters:
-      // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
+   // create profile keeping everything but nuisance parameters fixed
+   RooArgSet allButNuisance(*fNullModel->GetPdf()->getParameters(*fData));
+   allButNuisance.remove(*fNullModel->GetNuisanceParameters());
+   RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE));
+   RooAbsReal* profile = nll->createProfile(allButNuisance);
+   profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+   // add nuisance parameters to parameter point
+   if(fNullModel->GetNuisanceParameters())
+      parameterPoint->add(*fNullModel->GetNuisanceParameters());
 
-      oocoutE((TObject*)0,InputArguments) << "inferring posterior from ModelConfig is not yet implemented" << endl;
-   }
+   delete profile;
+   delete nll;
+   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
 
 
@@ -110,29 +88,27 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
 }
 
 
-int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const {
+int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const {
 
    // ****** any TestStatSampler ********
 
-   if(fPriorNuisanceAlt){
-     // Setup Priors for ad hoc Hybrid
-     fTestStatSampler->SetPriorNuisance(fPriorNuisanceAlt);
-   } else if (
-      fAltModel->GetNuisanceParameters()==NULL ||
-      fAltModel->GetNuisanceParameters()->getSize()==0
-   ) {
-      oocoutI((TObject*)0,InputArguments)
-         << "No nuisance parameters specified and no prior forced, reduces "
-         << "to simple hypothesis testing with no uncertainty" << endl;
-   } else {
-      // TODO principled case:
-      // must create posterior from Model.PriorPdf and Model.Pdf
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-      // Note, we do not want to use "prior" for nuisance parameters:
-      // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
+   // create profile keeping everything but nuisance parameters fixed
+   RooArgSet allButNuisance(*fAltModel->GetPdf()->getParameters(*fData));
+   allButNuisance.remove(*fAltModel->GetNuisanceParameters());
+   RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE));
+   RooAbsReal* profile = nll->createProfile(allButNuisance);
+   profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+   // add nuisance parameters to parameter point
+   if(fAltModel->GetNuisanceParameters())
+      parameterPoint->add(*fAltModel->GetNuisanceParameters());
 
-      oocoutE((TObject*)0,InputArguments) << "inferring posterior from ModelConfig is not yet implemented" << endl;
-   }
+   delete profile;
+   delete nll;
+   RooMsgService::instance().setGlobalKillBelow(msglevel);
+
 
 
 

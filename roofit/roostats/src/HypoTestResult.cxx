@@ -58,7 +58,8 @@ HypoTestResult::HypoTestResult(const char* name) :
    fNullPValue(NaN), fAlternatePValue(NaN),
    fTestStatisticData(NaN),
    fNullDistr(NULL), fAltDistr(NULL),
-   fPValueIsRightTail(kTRUE)
+   fPValueIsRightTail(kTRUE),
+   fBackgroundIsAlt(kFALSE)
 {
    // Default constructor
 }
@@ -70,7 +71,8 @@ HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) 
    fNullPValue(nullp), fAlternatePValue(altp),
    fTestStatisticData(NaN),
    fNullDistr(NULL), fAltDistr(NULL),
-   fPValueIsRightTail(kTRUE)
+   fPValueIsRightTail(kTRUE),
+   fBackgroundIsAlt(kFALSE)
 {
    // Alternate constructor
 }
@@ -147,12 +149,12 @@ Double_t HypoTestResult::CLbError() const {
    // compute CLb error
    // Clb =  1 - NullPValue() 
    // must use opposite condition that routine above
-   return fNullPValueError; 
+   return fBackgroundIsAlt ? fAlternatePValueError : fNullPValueError;
 }
 
 //____________________________________________________________________
 Double_t HypoTestResult::CLsplusbError() const {
-   return fAlternatePValueError; 
+   return fBackgroundIsAlt ? fNullPValueError : fAlternatePValueError;
 }
 
 

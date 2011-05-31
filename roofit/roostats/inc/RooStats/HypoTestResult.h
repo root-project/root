@@ -48,10 +48,10 @@ namespace RooStats {
       virtual Double_t AlternatePValue() const { return fAlternatePValue; }
 
       // Convert  NullPValue into a "confidence level"
-      virtual Double_t CLb() const { return 1.-NullPValue(); }
+      virtual Double_t CLb() const { return !fBackgroundIsAlt ? 1.-NullPValue() : AlternatePValue(); }
 
       // Convert  AlternatePValue into a "confidence level"
-      virtual Double_t CLsplusb() const { return AlternatePValue(); }
+      virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : 1.-NullPValue(); }
 
       // CLs is simply CLs+b/CLb (not a method, but a quantity)
       virtual Double_t CLs() const {
@@ -79,6 +79,9 @@ namespace RooStats {
       void SetPValueIsRightTail(Bool_t pr);
       Bool_t GetPValueIsRightTail(void) const { return fPValueIsRightTail; }
 
+      void SetBackgroundAsAlt(Bool_t l = kTRUE) { fBackgroundIsAlt = l; }
+      Bool_t GetBackGroundIsAlt(void) const { return fBackgroundIsAlt; }
+
       /// The error on the "confidence level" of the null hypothesis
       Double_t CLbError() const;
 
@@ -93,6 +96,8 @@ namespace RooStats {
 
       void Print(const Option_t* = "") const {
          // Print out some information about the results
+         // Note: use Alt/Null labels for the hypotheses here as the Null
+         // might be the s+b hypothesis.
 
          cout << endl << "Results " << GetName() << ": " << endl;
          if(HasTestStatisticData()  &&  fNullDistr) {
@@ -100,9 +105,9 @@ namespace RooStats {
             cout << " - Significance = " << Significance() << " sigma" << endl;
          }
          if(fAltDistr)
-            cout << " - Number of S+B toys: " << fAltDistr->GetSize() << std::endl;
+            cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
          if(fNullDistr)
-            cout << " - Number of B toys: " << fNullDistr->GetSize() << std::endl;
+            cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
          if(HasTestStatisticData())
             cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
          if(HasTestStatisticData()  &&  fNullDistr)
@@ -129,8 +134,9 @@ namespace RooStats {
       SamplingDistribution *fNullDistr;
       SamplingDistribution *fAltDistr;
       Bool_t fPValueIsRightTail;
+      Bool_t fBackgroundIsAlt;
 
-      ClassDef(HypoTestResult,1)  // Base class to represent results of a hypothesis test
+      ClassDef(HypoTestResult,2)  // Base class to represent results of a hypothesis test
 
    };
 }

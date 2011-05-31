@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOSTATS_HybridCalculatorGeneric
-#define ROOSTATS_HybridCalculatorGeneric
+#ifndef ROOSTATS_HypoTestCalculatorGeneric
+#define ROOSTATS_HypoTestCalculatorGeneric
 
 
 #ifndef ROOT_Rtypes
@@ -42,10 +42,10 @@
 
 namespace RooStats {
 
-   class HybridCalculatorGeneric: public HypoTestCalculator {
+   class HypoTestCalculatorGeneric : public HypoTestCalculator {
 
    public:
-      HybridCalculatorGeneric(
+      HypoTestCalculatorGeneric(
                         const RooAbsData &data,
                         const ModelConfig &altModel,
                         const ModelConfig &nullModel,
@@ -53,7 +53,7 @@ namespace RooStats {
       );
 
 
-      ~HybridCalculatorGeneric();
+      ~HypoTestCalculatorGeneric();
 
 
    public:
@@ -70,18 +70,23 @@ namespace RooStats {
       // Set the DataSet
       virtual void SetData(RooAbsData &data) { fData = &data; }
 
-      // Override the distribution used for marginalizing nuisance parameters that is infered from ModelConfig
-      virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { fPriorNuisanceNull = &priorNuisance; }
-      virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) { fPriorNuisanceAlt = &priorNuisance; }
-
       // Returns instance of TestStatSampler. Use to change properties of
       // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
    protected:
       // should return zero (to be used later for conditional flow)
-      virtual int PreNullHook(double /*obsTestStat*/) const { return 0; }
-      virtual int PreAltHook(double /*obsTestStat*/) const { return 0; }
+      virtual int CheckHook(void) const { return 0; }
+      virtual int PreNullHook(RooArgSet* /*parameterPoint*/, double /*obsTestStat*/) const { return 0; }
+      virtual int PreAltHook(RooArgSet* /*parameterPoint*/, double /*obsTestStat*/) const { return 0; }
+
+   protected:
+      const ModelConfig *fAltModel;
+      const ModelConfig *fNullModel;
+      const RooAbsData *fData;
+      TestStatSampler *fTestStatSampler;
+      TestStatSampler *fDefaultSampler;
+      TestStatistic *fDefaultTestStat;
 
    private:
       void SetupSampler(const ModelConfig& model) const;
@@ -93,17 +98,9 @@ namespace RooStats {
          const RooArgSet *impSnapshot=NULL
       ) const;
 
-      const ModelConfig *fAltModel;
-      const ModelConfig *fNullModel;
-      const RooAbsData *fData;
-      RooAbsPdf *fPriorNuisanceNull;
-      RooAbsPdf *fPriorNuisanceAlt;
-      TestStatSampler *fTestStatSampler;
-      TestStatSampler *fDefaultSampler;
-      TestStatistic *fDefaultTestStat;
 
    protected:
-   ClassDef(HybridCalculatorGeneric,1)
+   ClassDef(HypoTestCalculatorGeneric,1)
 };
 }
 

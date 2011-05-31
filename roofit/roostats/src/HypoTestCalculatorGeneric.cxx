@@ -16,22 +16,20 @@ HybridCalculator derives from this class but explicitly uses the
 ToyMCSampler as its TestStatSampler.
 */
 
-#include "RooStats/HybridCalculatorGeneric.h"
-#include "RooStats/HybridPlot.h"
-
+#include "RooStats/HypoTestCalculatorGeneric.h"
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 
 #include "RooAddPdf.h"
 
 
-ClassImp(RooStats::HybridCalculatorGeneric)
+ClassImp(RooStats::HypoTestCalculatorGeneric)
 
 using namespace RooStats;
 
 
 //___________________________________
-HybridCalculatorGeneric::HybridCalculatorGeneric(
+HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
                                      const RooAbsData &data,
                                      const ModelConfig &altModel,
                                      const ModelConfig &nullModel,
@@ -40,8 +38,6 @@ HybridCalculatorGeneric::HybridCalculatorGeneric(
    fAltModel(&altModel),
    fNullModel(&nullModel),
    fData(&data),
-   fPriorNuisanceNull(0),
-   fPriorNuisanceAlt(0),
    fTestStatSampler(sampler),
    fDefaultSampler(0),
    fDefaultTestStat(0)
@@ -59,10 +55,12 @@ HybridCalculatorGeneric::HybridCalculatorGeneric(
       fDefaultSampler = new ToyMCSampler(*fDefaultTestStat, 1000);
       fTestStatSampler = fDefaultSampler;
    }
+
+
 }
 
 //_____________________________________________________________
-void HybridCalculatorGeneric::SetupSampler(const ModelConfig& model) const {
+void HypoTestCalculatorGeneric::SetupSampler(const ModelConfig& model) const {
    // common setup for both models
    fNullModel->LoadSnapshot();
    fTestStatSampler->SetObservables(*fNullModel->GetObservables());
@@ -74,38 +72,16 @@ void HybridCalculatorGeneric::SetupSampler(const ModelConfig& model) const {
    fTestStatSampler->SetPdf(*model.GetPdf());
    fTestStatSampler->SetGlobalObservables(*model.GetGlobalObservables());
    fTestStatSampler->SetNuisanceParameters(*model.GetNuisanceParameters());
-
-   if( (&model == fNullModel) && fPriorNuisanceNull){
-     // Setup Priors for ad hoc Hybrid
-     fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
-   } else if( (&model == fAltModel) && fPriorNuisanceAlt){
-     // Setup Priors for ad hoc Hybrid
-     fTestStatSampler->SetPriorNuisance(fPriorNuisanceAlt);
-   } else if(model.GetNuisanceParameters()==NULL ||
-             model.GetNuisanceParameters()->getSize()==0){
-     oocoutI((TObject*)0,InputArguments)
-       << "No nuisance parameters specified and no prior forced, reduces to simple hypothesis testing with no uncertainty" << endl;
-   } else{
-     // TODO principled case:
-     // must create posterior from Model.PriorPdf and Model.Pdf
-
-     // Note, we do not want to use "prior" for nuisance parameters:
-     // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
-
-     oocoutE((TObject*)0,InputArguments)  << "infering posterior from ModelConfig is not yet implemented" << endl;
-   }
 }
 
 //____________________________________________________
-HybridCalculatorGeneric::~HybridCalculatorGeneric()  {
-   //  if(fPriorNuisanceNull) delete fPriorNuisanceNull;
-   //  if(fPriorNuisanceAlt)  delete fPriorNuisanceAlt;
+HypoTestCalculatorGeneric::~HypoTestCalculatorGeneric()  {
    if(fDefaultSampler)    delete fDefaultSampler;
    if(fDefaultTestStat)   delete fDefaultTestStat;
 }
 
 //____________________________________________________
-HypoTestResult* HybridCalculatorGeneric::GetHypoTest() const {
+HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    // several possibilities:
    // no prior nuisance given and no nuisance parameters: ok
@@ -114,30 +90,20 @@ HypoTestResult* HybridCalculatorGeneric::GetHypoTest() const {
    //   - nuisance parameters are constant, so they don't float in test statistic
    //   - nuisance parameters are floating, so they do float in test statistic
 
-   // TODO skreiss: really necessary?
+   // initial setup
    const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData);
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
-   if( (fNullModel->GetNuisanceParameters()
-        && fNullModel->GetNuisanceParameters()->getSize()>0
-        && !fPriorNuisanceNull)
-     || (fAltModel->GetNuisanceParameters()
-         && fAltModel->GetNuisanceParameters()->getSize()>0
-         && !fPriorNuisanceAlt)
-       ){
-     oocoutE((TObject*)0,InputArguments)  << "Must ForceNuisancePdf, inferring posterior from ModelConfig is not yet implemented" << endl;
-     return 0;
+   if(fNullModel->GetSnapshot() == NULL) {
+      oocoutE((TObject*)0,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
+      return 0;
    }
 
-   if(   (!fNullModel->GetNuisanceParameters() && fPriorNuisanceNull)
-      || (!fAltModel->GetNuisanceParameters()  && fPriorNuisanceAlt)
-      || (fNullModel->GetNuisanceParameters()  && fNullModel->GetNuisanceParameters()->getSize()==0 && fPriorNuisanceNull)
-       || (fAltModel->GetNuisanceParameters()  && fAltModel->GetNuisanceParameters()->getSize()>0   && !fPriorNuisanceAlt)
-       ){
-     oocoutE((TObject*)0,InputArguments)  << "Nuisance PDF specified, but the pdf doesn't know which parameters are the nuisance parameters.  Must set nuisance parameters in the ModelConfig" << endl;
-     return 0;
+   // CheckHook
+   if(CheckHook() != 0) {
+      oocoutE((TObject*)0,Generation) << "There was an error in CheckHook(). Stop." << endl;
+      return 0;
    }
-
 
    // get a big list of all variables for convenient switching
    RooArgSet *nullParams = fNullModel->GetPdf()->getParameters(*fData);
@@ -153,27 +119,33 @@ HypoTestResult* HybridCalculatorGeneric::GetHypoTest() const {
    double obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
    oocoutP((TObject*)0,Generation) << "Test Statistic on data: " << obsTestStat << endl;
 
+   // set parameters back ... in case the evaluation of the test statistic
+   // modified something (e.g. a nuisance parameter that is not randomized
+   // must be set here)
+   *bothParams = *saveAll;
+
    // Generate sampling distribution for null
    SetupSampler(*fNullModel);
-   if(PreNullHook(obsTestStat) != 0) {
+   RooArgSet paramPointNull(*fNullModel->GetParametersOfInterest());
+   if(PreNullHook(&paramPointNull, obsTestStat) != 0) {
       oocoutE((TObject*)0,Generation) << "PreNullHook did not return 0." << endl;
    }
-   RooArgSet poiNull(*fNullModel->GetParametersOfInterest());
-   SamplingDistribution* samp_null = fTestStatSampler->GetSamplingDistribution(poiNull);
+   SamplingDistribution* samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
 
    // set parameters back
    *bothParams = *saveAll;
 
    // Generate sampling distribution for alternate
    SetupSampler(*fAltModel);
-   if(PreAltHook(obsTestStat) != 0) {
+   RooArgSet paramPointAlt(*fAltModel->GetParametersOfInterest());
+   if(PreAltHook(&paramPointAlt, obsTestStat) != 0) {
       oocoutE((TObject*)0,Generation) << "PreAltHook did not return 0." << endl;
    }
-   RooArgSet poiAlt(*fAltModel->GetParametersOfInterest());
-   SamplingDistribution* samp_alt = fTestStatSampler->GetSamplingDistribution(poiAlt);
+   SamplingDistribution* samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
 
 
-   string resultname = "HybridCalculator_result";
+   // create result
+   string resultname = "HypoTestCalculator_result";
    HypoTestResult* res = new HypoTestResult(resultname.c_str());
    res->SetPValueIsRightTail(fTestStatSampler->GetTestStatistic()->PValueIsRightTail());
    res->SetTestStatisticData(obsTestStat);

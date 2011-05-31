@@ -23,81 +23,97 @@ class RooRealVar;
 
 namespace RooStats {
 
-  class HypoTestInverterResult : public SimpleInterval {
 
-  public:
+class HypoTestInverterResult : public SimpleInterval {
 
-    // default constructor
-    explicit HypoTestInverterResult(const char* name = 0);
+public:
 
-    // constructor
-    HypoTestInverterResult( const char* name, 
-			    const RooRealVar& scannedVariable,
-			    double cl ) ;
+   // default constructor
+   explicit HypoTestInverterResult(const char* name = 0);
 
-    // destructor
-    virtual ~HypoTestInverterResult();
+   // constructor
+   HypoTestInverterResult( const char* name, 
+                           const RooRealVar& scannedVariable,
+                           double cl ) ;
 
-    // function to return the value of the parameter of interest for the i^th entry in the results
-    double GetXValue( int index ) const ;
+   // destructor
+   virtual ~HypoTestInverterResult();
 
-    // function to return the value of the confidence level for the i^th entry in the results
-    double GetYValue( int index ) const ;
+   // function to return the value of the parameter of interest for the i^th entry in the results
+   double GetXValue( int index ) const ;
 
-    // function to return the estimated error on the value of the confidence level for the i^th entry in the results
-    double GetYError( int index ) const ;
+   // function to return the value of the confidence level for the i^th entry in the results
+   double GetYValue( int index ) const ;
+
+   // function to return the estimated error on the value of the confidence level for the i^th entry in the results
+   double GetYError( int index ) const ;
     
-    // return a pointer to the i^th result object
-    HypoTestResult* GetResult( int index ) const ;   
+   // return a pointer to the i^th result object
+   HypoTestResult* GetResult( int index ) const ;   
 
-    // number of entries in the results array
-    int ArraySize() const { return fXValues.size(); };
+   double GetLastYValue( ) const  { return GetYValue(  fXValues.size()-1); }
 
-    // set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
-    virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
+   double GetLastXValue( ) const  { return GetXValue(  fXValues.size()-1); }
 
-    // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-    virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
+   double GetLastYError( ) const  { return GetYError(  fXValues.size()-1); }
 
-    // flag to switch between using CLsb (default) or CLs as confidence level
-    void UseCLs( bool on = true ) { fUseCLs = on; }  
+   HypoTestResult * GetLastResult( ) const  { return GetResult(  fXValues.size()-1); }
 
-    // lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
-    Double_t LowerLimit();
-    Double_t UpperLimit();
+   // number of entries in the results array
+   int ArraySize() const { return fXValues.size(); };
 
-    // rough estimation of the error on the computed bound of the confidence interval 
-    // Estimate of lower limit error
-    //function evaluates only a rought error on the lower limit. Be careful when using this estimation
-    Double_t LowerLimitEstimatedError();
 
-    // Estimate of lower limit error
-    //function evaluates only a rought error on the lower limit. Be careful when using this estimation
-    Double_t UpperLimitEstimatedError();
+   // set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
+   virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
 
-  private:
+   // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+   virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
 
-    // merge with the content of another HypoTestInverterResult object
-    bool Add( const HypoTestInverterResult& otherResult );
+   // flag to switch between using CLsb (default) or CLs as confidence level
+   void UseCLs( bool on = true ) { fUseCLs = on; }  
 
-    double CalculateEstimatedError(double target);
-    int FindClosestPointIndex(double target);
-    double FindInterpolatedLimit(double target);
+   // lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
+   Double_t LowerLimit();
+   Double_t UpperLimit();
 
-  protected:
+   // rough estimation of the error on the computed bound of the confidence interval 
+   // Estimate of lower limit error
+   //function evaluates only a rought error on the lower limit. Be careful when using this estimation
+   Double_t LowerLimitEstimatedError();
 
-    bool fUseCLs; 
-    bool fInterpolateLowerLimit;
-    bool fInterpolateUpperLimit;
+   // Estimate of lower limit error
+   //function evaluates only a rought error on the lower limit. Be careful when using this estimation
+   Double_t UpperLimitEstimatedError();
 
-    std::vector<double> fXValues;
+private:
 
-    TList fYObjects;
+   // merge with the content of another HypoTestInverterResult object
+   bool Add( const HypoTestInverterResult& otherResult );
 
-    friend class HypoTestInverter;
+   double CalculateEstimatedError(double target);
+   int FindClosestPointIndex(double target);
+   double FindInterpolatedLimit(double target);
 
-    ClassDef(HypoTestInverterResult,1)  // HypoTestInverterResult class      
-  };
+protected:
+
+   bool fUseCLs; 
+   bool fInterpolateLowerLimit;
+   bool fInterpolateUpperLimit;
+   bool fFittedLowerLimit;
+   bool fFittedUpperLimit;
+
+   double fLowerLimitError;
+   double fUpperLimitError;
+
+   std::vector<double> fXValues;
+
+   TList fYObjects;
+
+   friend class HypoTestInverter;
+   friend class HypoTestInverterOriginal;
+
+   ClassDef(HypoTestInverterResult,1)  // HypoTestInverterResult class      
+};
 }
 
 #endif

@@ -10,8 +10,8 @@
 
 //_________________________________________________________________
 /**
-   HypoTestInverter class for performing an hypothesis test inversion by scanning the hypothesis test results of the 
-  HybridCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
+   HypoTestInverter class for performing an hypothesis test inversion by scanning the hypothesis test results of an 
+  HypoTestCalculator  for various values of the parameter of interest. By looking at the confidence level curve of 
  the result  an upper limit, where it intersects the desired confidence level, can be derived.
  The class implements the RooStats::IntervalCalculator interface and returns an  RooStats::HypoTestInverterResult class.
  The result is a SimpleInterval, which via the method UpperLimit returns to the user the upper limit value.
@@ -21,26 +21,63 @@ The confidence level value at a given point can be done via  HypoTestInverter::R
 The class can scan the CLs+b values or alternativly CLs (if the method HypoTestInverter::UseCLs has been called).
 
 
-   New contributions to this class have been written by Matthias Wolf (advanced AutoRun algorithm)
+   Contributions to this class have been written by Giovanni Petrucciani and Annapaola Decosa
 **/
 
 // include other header files
 
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
-#include "RooRealVar.h"
+#
 #include "TMath.h"
 
-#include "RooStats/HybridCalculatorOriginal.h"
 #include "RooStats/HybridResult.h"
 
-// include header file of this class 
 #include "RooStats/HypoTestInverter.h"
+
+
+#include "TF1.h"
+#include "TLine.h"
+#include "TCanvas.h"
+#include "TGraphErrors.h"
+#include "RooRealVar.h"
+#include "RooArgSet.h"
+#include "RooAbsPdf.h"
+#include "RooRandom.h"
+#include "RooConstVar.h"
+#include "RooMsgService.h"
+#include "RooStats/ModelConfig.h"
+#include "RooStats/HybridCalculator.h"
+#include "RooStats/FrequentistCalculator.h"
+#include "RooStats/SimpleLikelihoodRatioTestStat.h"
+#include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
+#include "RooStats/ProfileLikelihoodTestStat.h"
+#include "RooStats/ToyMCSampler.h"
+#include "RooStats/HypoTestPlot.h"
+#include "RooStats/HypoTestInverterPlot.h"
+
 
 
 ClassImp(RooStats::HypoTestInverter)
 
 using namespace RooStats;
+
+// static variable definitions
+double HypoTestInverter::fgCLAccuracy = 0.005;
+unsigned int HypoTestInverter::fgNToys = 500;
+
+double HypoTestInverter::fgAbsAccuracy = 0.05;
+double HypoTestInverter::fgRelAccuracy = 0.05;
+std::string HypoTestInverter::fgAlgo = "logSecant";
+
+
+// helper class to wrap the functionality of the various HypoTestCalculators
+
+template<class HypoTestType> 
+struct HypoTestWrapper { 
+
+   static void SetToys(HypoTestType * h, int toyNull, int toyAlt) { h->SetToys(toyNull,toyAlt); }
+   
+};
 
 
 HypoTestInverter::HypoTestInverter( ) :
@@ -48,31 +85,41 @@ HypoTestInverter::HypoTestInverter( ) :
    fScannedVariable(0),
    fResults(0),
    fUseCLs(false),
-   fSize(0)
+   fSize(0),
+   fVerbose(0),
+   fNBins(0), fXmin(1), fXmax(1)
 {
   // default constructor (doesn't do anything) 
 }
 
 
-HypoTestInverter::HypoTestInverter( HypoTestCalculator& myhc0,
-				    RooRealVar& scannedVariable, double size ) :
-   TNamed( ),
-   fCalculator0(&myhc0),
+HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
+                                          RooRealVar& scannedVariable, double size ) :
+   fCalculator0(&hc),
    fScannedVariable(&scannedVariable), 
    fResults(0),
    fUseCLs(false),
-   fSize(size)
+   fSize(size),
+   fVerbose(0),
+   fCalcType(kHybrid), 
+   fNBins(0), fXmin(1), fXmax(1)
 {
-   // constructor from a reference to an HypoTestCalculator 
-   // (it must be an HybridCalculator type) and a RooRealVar for the variable
-   SetName("HypoTestInverter");
+   // constructor from a reference to an HybridCalculator
+}
 
 
-   HybridCalculatorOriginal * hc = dynamic_cast<HybridCalculatorOriginal *> (fCalculator0);
-   if (hc == 0) { 
-      Fatal("HypoTestInverter","Using non HybridCalculatorOriginal class IS NOT SUPPORTED");
-   }
-
+HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
+                                          RooRealVar& scannedVariable, double size ) :
+   fCalculator0(&hc),
+   fScannedVariable(&scannedVariable), 
+   fResults(0),
+   fUseCLs(false),
+   fSize(size),
+   fVerbose(0),
+   fCalcType(kFrequentist), 
+   fNBins(0), fXmin(1), fXmax(1)
+{
+   // constructor from a reference to a FrequentistCalculator 
 }
 
 
@@ -84,229 +131,121 @@ HypoTestInverter::~HypoTestInverter()
   if (fResults) delete fResults;
 }
 
-void  HypoTestInverter::CreateResults() { 
+void  HypoTestInverter::Clear()  { 
+   // delete contained result and graph
+   if (fResults) delete fResults; 
+   fResults = 0;
+   if (fLimitPlot.get()) fLimitPlot = std::auto_ptr<TGraphErrors>();
+}   
+
+void  HypoTestInverter::CreateResults() const { 
   // create a new HypoTestInverterResult to hold all computed results
    if (fResults == 0) {
-      TString results_name = this->GetName();
-      results_name += "_results";
+      TString results_name = "HypoInv_result_";
+      results_name += fScannedVariable->GetName();
       fResults = new HypoTestInverterResult(results_name,*fScannedVariable,ConfidenceLevel());
-      fResults->SetTitle("HypoTestInverter Result");
+      TString title = "HypoTestInverter Result For ";
+      title += fScannedVariable->GetName();
+      fResults->SetTitle(title);
    }
    fResults->UseCLs(fUseCLs);
+   fResults->SetConfidenceLevel(1.-fSize);
+}
+
+HypoTestInverterResult* HypoTestInverter::GetInterval() const { 
+   // run a fixed scan or the automatic scan 
+
+   // if having a result with more thon one point return it
+   if (fResults && fResults->ArraySize() > 1) return fResults;
+
+   if (fNBins > 0) {
+      bool ret = RunFixedScan(fNBins, fXmin, fXmax); 
+      if (!ret) 
+         oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running a fixed scan " << std::endl;    
+   }
+   else { 
+      double limit(0),err(0);
+      bool ret = RunLimit(limit,err);
+      if (!ret) 
+         oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;    
+   }
+   return fResults;
 }
 
 
-bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, double epsilon, unsigned int numAlgorithm  )
-{
-  /// Search for the value of the parameter of interest (vary the
-  /// hypothesis being tested) in the specified range [xMin,xMax]
-  /// until the confidence level is compatible with the target value
-  /// within one time the estimated error (and the estimated error
-  /// should also become smaller than the specified parameter epsilon)
 
-  // various sanity checks on the input parameters
-  if ( xMin>=xMax || xMin< fScannedVariable->getMin() || xMax>fScannedVariable->getMax() ) {
-    std::cout << "Error: problem with the specified range\n";
-    return false;
-  }
-  if ( target<=0 || target>=1 ) {
-    std::cout << "Error: problem with target value\n";
-    return false;
-  }
-  if ( epsilon>0.5-fabs(0.5-target) ) {
-    std::cout << "Error: problem with error value\n";
-    return false;
-  }
-  if ( numAlgorithm!=0 && numAlgorithm!=1 ) {
-    std::cout << "Error: invalid interpolation algorithm\n";
-    return false;
-  }
+HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adaptive, double clsTarget) const {
 
-  CreateResults();
+   // run the hypothesis test 
+   HypoTestResult *  hcResult = hc.GetHypoTest();
+   if (hcResult == 0) {
+      oocoutE((TObject*)0,Eval) << "HypoTestInverter::Eval - HypoTest failed" << std::endl;
+      return hcResult; 
+   }
 
-  // if ( TMath::AreEqualRel(target,1-Size()/2,DBL_EPSILON) ) {  // to uncomment for ROOT 5.26
-  if ( fabs(1-target/(1-Size()/2))<DBL_EPSILON ) {
-    fResults->fInterpolateLowerLimit = false;
-    std::cout << "Target matches lower limit: de-activate interpolation in HypoTestInverterResult\n";
-  }
-  // if ( TMath::AreEqualRel(target,Size()/2,DBL_EPSILON) ) {  // to uncomment for ROOT 5.26
-  if ( fabs(1-target/((Size()/2)))<DBL_EPSILON ) {
-    fResults->fInterpolateUpperLimit = false;
-    std::cout << "Target matches upper limit: de-activate interpolation in HypoTestInverterResult\n";
-  }
+   // to be seen.......why CMS codes is  having this - need to check 
+#ifdef LATER_TBI
+   bool flipPValues = false;
+   TestStatistics * testStat = hc.GetStatSapler()->GetTestStatistics();
+   if ( dynamic_cast<ProfileLikelihoodTestStat*>(testStat) ) { 
+      // I need to flip the P-values
+      flipPValues = true;
+      hcResult->SetPValueIsRightTail(!hcResult->GetPValueIsRightTail());
+   //  hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+1e-9); // issue with < vs <= in discrete models
+   } else {
+   //  hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+1e-9); // issue with < vs <= in discrete models
+   }
+#endif
 
-  // parameters of the algorithm that are hard-coded
-  const double nSigma = 1; // number of times the estimated error the final p-value should be from the target
+   double clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
+   double clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
 
-  // backup some values to be restored at the end 
-  const unsigned int nToys_backup = ((HybridCalculatorOriginal*)fCalculator0)->GetNumberOfToys();
-
-  // check the 2 hypothesis tests specified as extrema in the constructor
-  double leftX = xMin;
-  if (!RunOnePoint(leftX)) return false;
-  double leftCL = fResults->GetYValue(fResults->ArraySize()-1);
-  double leftCLError = fResults->GetYError(fResults->ArraySize()-1);
+   //if (fVerbose) std::cout << (fUseCLs ? "\tCLs = " : "\tCLsplusb = ") << clsMid << " +/- " << clsMidErr << std::endl;
+   
+   if (adaptive) {
  
-  double rightX = xMax;
-  if (!RunOnePoint(rightX)) return false;
-  double rightCL = fResults->GetYValue(fResults->ArraySize()-1);
-  double rightCLError = fResults->GetYError(fResults->ArraySize()-1);
-  
-  if ( rightCL>target && leftCL>target ) {
-    std::cout << "The confidence level at both boundaries are both too large ( " << leftCL << " and " <<  rightCL << std::endl << "Run again with other boundaries or larger toy-MC statistics\n";
-    return false;
-  }
-  if ( rightCL<target && leftCL<target ) {
-    std::cout << "The confidence level at both boundaries are both too small ( " << leftCL << " and " <<  rightCL << std::endl << "Run again with other boundaries or larger toy-MC statistics\n";
-    return false;
-  }
+      if (fCalcType == kHybrid) HypoTestWrapper<HybridCalculator>::SetToys((HybridCalculator*)&hc, fUseCLs ? fgNToys : 1, 4*fgNToys);
+      if (fCalcType == kFrequentist) HypoTestWrapper<FrequentistCalculator>::SetToys((FrequentistCalculator*)&hc, fUseCLs ? fgNToys : 1, 4*fgNToys);
 
-  unsigned int nIteration = 2;  // number of iteration performed by the algorithm
-  bool quitThisLoop = false;  // flag to interrupt the search and quit cleanly
-
-  double centerCL = 0;
-  double centerCLError = 0;
-
-  // search for the value of the searched variable where the CL is
-  // within 1 sigma of the desired level and sigma smaller than
-  // epsilon.
-  do {
-    double x = 0;
-
-    // safety checks
-    if (leftCL==rightCL) {
-      std::cout << "This cannot (and should not) happen... quit\n";
-      quitThisLoop = true;
-    } else if (leftX==rightX) {
-      std::cout << "This cannot (and should not) happen... quit\n";
-      quitThisLoop = true;
-    } else {
-
-      // apply chosen type of interpolation algorithm
-      if (numAlgorithm==0) {
-	// exponential interpolation
-
-	// add safety checks
-	if (!leftCL) leftCL = DBL_EPSILON;
-	if (!rightCL) rightCL = DBL_EPSILON;
-
-	double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
-	double b = leftCL / exp(a * leftX);
-	x = (log(target) - log(b)) / a;
-
-	// to do: do not allow next iteration outside the xMin,xMax interval
-	if (x<xMin || x>xMax || isnan(x)) {
-	  std::cout << "Extrapolated value out of range or nan: exits\n";
-	  quitThisLoop = true;
-	}
-      } else if (numAlgorithm==1) {
-	// linear interpolation
-	
-	double a = (leftCL-rightCL)/(leftX-rightX);
-	double b = leftCL-a*leftX;
-	x = (target-b)/a;
-
-	if (x<xMin || x>xMax || isnan(x)) {
-	  std::cout << "Extrapolated value out of range or nan: exits\n";
-	  quitThisLoop = true;
-	}
-      }  // end of interpolation algorithms
-    }
-
-    if ( x==leftX || x==rightX ) {
-      std::cout << "Error: exit because interpolated value equals to a previous iteration\n";
-      quitThisLoop = true;
-    }
-
-    // perform another hypothesis-test for value x
-    bool success = false;
-    if (!quitThisLoop) success = RunOnePoint(x);
-
-    if (success) {
-
-      nIteration++;  // succeeded, increase the iteration counter
-      centerCL = fResults->GetYValue(fResults->ArraySize()-1);
-      centerCLError = fResults->GetYError(fResults->ArraySize()-1);
-
-      // replace either the left or right point by this new point
-    
-      // test if the interval points are on different sides, then
-      // replace the one on the correct side with the center
-      if ( (leftCL > target) == (rightCL < target) ) {
-	if ( (centerCL > target) == (leftCL > target) ) {
-	  leftX = x;
-	  leftCL = centerCL;
-	  leftCLError = centerCLError;
-	} else {
-	  rightX = x;
-	  rightCL = centerCL;
-	  rightCLError = centerCLError;
-	}
-	// Otherwise replace the point farest away from target (measured in
-	// sigmas)
-      } else if ( (fabs(leftCL - target) / leftCLError) >
-		  (fabs(rightCL - target) / rightCLError) ) {
-	leftX = x;
-	leftCL = centerCL;
-	leftCLError = centerCLError;
-      } else {
-	rightX = x;
-	rightCL = centerCL;
-	rightCLError = centerCLError;
-      }
-
-      // if a point is found compatible with the target CL but with too
-      // large error, increase the number of toyMC
-      if ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon  ) {
-	do {
-
-	  int nToys = ((HybridCalculatorOriginal*)fCalculator0)->GetNumberOfToys();  // current number of toys
-	  int nToysTarget = (int) TMath::Max(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2));  // estimated number of toys until the target precision is reached
-	  
-	  std::cout << "Increasing the number of toys to: " << nToysTarget << std::endl;
-	  
-	  // run again the same point with more toyMC (run the complement number of toys)
-	  ((HybridCalculatorOriginal*)fCalculator0)->SetNumberOfToys(nToysTarget-nToys);
-	  
-	  if (!RunOnePoint(x)) quitThisLoop=true;
-	  nIteration++;  // succeeded, increase the iteration counter
-	  centerCL = fResults->GetYValue(fResults->ArraySize()-1);
-	  centerCLError = fResults->GetYError(fResults->ArraySize()-1);
-	  
-	  // set the number of toys to reach the target 
-	  ((HybridCalculatorOriginal*)fCalculator0)->SetNumberOfToys(nToysTarget);
-	} while ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon && quitThisLoop==false );  // run this block again if it's still compatible with the target and the error still too large
-      }
+   while (clsMidErr >= fgCLAccuracy && (clsTarget == -1 || fabs(clsMid-clsTarget) < 3*clsMidErr) ) {
+      std::auto_ptr<HypoTestResult> more(hc.GetHypoTest());
       
-      if (leftCL==rightCL) {
-	std::cout << "Algorithm failed: left and right CL are equal (no intrapolation possible or more toy-MC statistics needed)\n";
-	  quitThisLoop = true;
-      }
-    } // end running one more iteration
+#ifdef LATER_TBI
+      if (flipPValues)
+         more->SetPValueIsRightTail(!more->GetPValueIsRightTail());
+#endif
+      hcResult->Append(more.get());
+      clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
+      clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
+      if (fVerbose) std::cout << (fUseCLs ? "\tCLs = " : "\tCLsplusb = ") << clsMid << " +/- " << clsMidErr << std::endl;
+   }
 
-  } while ( ( fabs(centerCL-target) > nSigma*centerCLError || centerCLError > epsilon ) && quitThisLoop==false );  // end of the main 'do' loop 
-
-  // restore some parameters that might have been changed by the algorithm
-  ((HybridCalculatorOriginal*)fCalculator0)->SetNumberOfToys(nToys_backup);
-  
-  if ( quitThisLoop==true ) {
-    // abort and return 'false' to indicate fail status
-    std::cout << "Aborted the search because something happened\n";
-    return false;
-  }
-
-  std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
-
-  // finished: return 'true' for success status
-  return true;
-}
+   }
+   if (fVerbose ) {
+      oocoutP((TObject*)0,Eval) << "P values for  " << fScannedVariable->GetName()  << " =  " <<
+         fScannedVariable->getVal() << "\n" <<
+         "\tCLs      = " << hcResult->CLs()      << " +/- " << hcResult->CLsError()      << "\n" <<
+         "\tCLb      = " << hcResult->CLb()      << " +/- " << hcResult->CLbError()      << "\n" <<
+         "\tCLsplusb = " << hcResult->CLsplusb() << " +/- " << hcResult->CLsplusbError() << "\n" <<
+         std::endl;
+   }
+   
+   fPerf_totalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
 
 
-bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax )
+   return hcResult;
+} 
+
+
+bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
 {
    // Run a Fixed scan in npoints between min and max
 
    CreateResults();
+   // interpolate the limits
+   fResults->fFittedLowerLimit = false; 
+   fResults->fFittedUpperLimit = false; 
+
   // safety checks
   if ( nBins<=0 ) {
     std::cout << "Please provide nBins>0\n";
@@ -339,52 +278,313 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax )
 }
 
 
-bool HypoTestInverter::RunOnePoint( double thisX )
+bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget) const
 {
-   // run only one point 
+   // run only one point at the given value
 
    CreateResults();
 
-   // check if thisX is in the range specified for fScannedVariable
-   if ( thisX<fScannedVariable->getMin() ) {
-     std::cout << "Out of range: using the lower bound on the scanned variable rather than " << thisX<< "\n";
-     thisX = fScannedVariable->getMin();
+   // check if rVal is in the range specified for fScannedVariable
+   if ( rVal<fScannedVariable->getMin() ) {
+     std::cout << "Out of range: using the lower bound on the scanned variable rather than " << rVal<< "\n";
+     rVal = fScannedVariable->getMin();
    }
-   if ( thisX>fScannedVariable->getMax() ) {
-     std::cout << "Out of range: using the upper bound on the scanned variable rather than " << thisX<< "\n";
-     thisX = fScannedVariable->getMax();
+   if ( rVal>fScannedVariable->getMax() ) {
+     std::cout << "Out of range: using the upper bound on the scanned variable rather than " << rVal<< "\n";
+     rVal = fScannedVariable->getMax();
    }
 
+   // save old value 
    double oldValue = fScannedVariable->getVal();
 
-   fScannedVariable->setVal(thisX);
-   std::cout << "Running for " << fScannedVariable->GetName() << " = " << thisX << endl;
+   // evaluate hybrid calculator at a single point
+   fScannedVariable->setVal(rVal);
+   // need to set value of rval in hybridcalculator
+   const ModelConfig * altModel = fCalculator0->GetAlternateModel();
+   RooArgSet poi; poi.add(*altModel->GetParametersOfInterest());
+   // set poi to right values 
+   poi = RooArgSet(*fScannedVariable);
+   const_cast<ModelConfig*>(altModel)->SetSnapshot(poi);
+
+   if (fVerbose > 0) 
+       oocoutP((TObject*)0,Eval) << "Running for " << fScannedVariable->GetName() << " = " << rVal << endl;
    
    // compute the results
-   HypoTestResult* myHybridResult = fCalculator0->GetHypoTest(); 
+   HypoTestResult* result =   Eval(*fCalculator0,adaptive,clTarget);
    
    double lastXtested;
    if ( fResults->ArraySize()!=0 ) lastXtested = fResults->GetXValue(fResults->ArraySize()-1);
    else lastXtested = -999;
 
-   if ( lastXtested==thisX ) {
+   if ( lastXtested==rVal ) {
      
      std::cout << "Merge with previous result\n";
-     HybridResult* latestResult = (HybridResult*) fResults->GetResult(fResults->ArraySize()-1);
-     latestResult->Add((HybridResult*)myHybridResult);
-     delete myHybridResult;
+     HypoTestResult* prevResult =  fResults->GetResult(fResults->ArraySize()-1);
+     prevResult->Append(result);
+     delete result; // t.b.c
 
    } else {
      
      // fill the results in the HypoTestInverterResult array
-     fResults->fXValues.push_back(thisX);
-     fResults->fYObjects.Add(myHybridResult);
+     fResults->fXValues.push_back(rVal);
+     fResults->fYObjects.Add(result);
+
    }
 
-
-   std::cout << "computed: " << fResults->GetYValue(fResults->ArraySize()-1) << endl;
+      // std::cout << "computed value for poi  " << rVal  << " : " << fResults->GetYValue(fResults->ArraySize()-1) 
+      //        << " +/- " << fResults->GetYError(fResults->ArraySize()-1) << endl;
 
    fScannedVariable->setVal(oldValue);
    
    return true;
+}
+
+
+
+bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccuracy, double relAccuracy, const double*hint) const {
+
+// bool HybridNew::runLimit(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) {
+
+   RooRealVar *r = fScannedVariable; 
+   r->setConstant(true);
+   //w->loadSnapshot("clean");
+
+  if ((hint != 0) && (*hint > r->getMin())) {
+    r->setMax(std::min<double>(3.0 * (*hint), r->getMax()));
+    r->setMin(std::max<double>(0.3 * (*hint), r->getMin()));
+  }
+
+  // if not specified use the default values for rel and absolute accuracy
+  if (absAccuracy <= 0) absAccuracy = fgAbsAccuracy;
+  if (relAccuracy <= 0) relAccuracy = fgRelAccuracy;  
+
+  typedef std::pair<double,double> CLs_t;
+  double clsTarget = fSize; 
+  CLs_t clsMin(1,0), clsMax(0,0), clsMid(0,0);
+  double rMin = r->getMin(), rMax = r->getMax(); 
+  limit    = 0.5*(rMax + rMin);
+  limitErr = 0.5*(rMax - rMin);
+  bool done = false;
+
+  TF1 expoFit("expoFit","[0]*exp([1]*(x-[2]))", rMin, rMax);
+
+  // if (readHybridResults_) { 
+  //     if (verbose > 0) std::cout << "Search for upper limit using pre-computed grid of p-values" << std::endl;
+
+  //     readAllToysFromFile(); 
+  //     double minDist=1e3;
+  //     for (int i = 0, n = limitPlot_->GetN(); i < n; ++i) {
+  //         double x = limitPlot_->GetX()[i], y = limitPlot_->GetY()[i], ey = limitPlot_->GetErrorY(i);
+  //         if (verbose > 0) std::cout << "  r " << x << (CLs_ ? ", CLs = " : ", CLsplusb = ") << y << " +/- " << ey << std::endl;
+  //         if (y-3*ey >= clsTarget) { rMin = x; clsMin = CLs_t(y,ey); }
+  //         if (y+3*ey <= clsTarget) { rMax = x; clsMax = CLs_t(y,ey); }
+  //         if (fabs(y-clsTarget) < minDist) { limit = x; minDist = fabs(y-clsTarget); }
+  //     }
+  //     if (verbose > 0) std::cout << " after scan x ~ " << limit << ", bounds [ " << rMin << ", " << rMax << "]" << std::endl;
+  //     limitErr = std::max(limit-rMin, rMax-limit);
+  //     expoFit.SetRange(rMin,rMax);
+
+  //     if (limitErr < std::max(rAbsAccuracy_, rRelAccuracy_ * limit)) {
+  //         if (verbose > 1) std::cout << "  reached accuracy " << limitErr << " below " << std::max(rAbsAccuracy_, rRelAccuracy_ * limit) << std::endl;
+  //         done = true; 
+  //     }
+  // } else {
+
+  fLimitPlot.reset(new TGraphErrors());
+
+  if (fVerbose > 0) std::cout << "Search for upper limit to the limit" << std::endl;
+  for (int tries = 0; tries < 6; ++tries) {
+     //clsMax = eval(w, mc_s, mc_b, data, rMax);
+     if (! RunOnePoint(rMax) ) { 
+        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Hypotest failed" << std::endl;
+        return false;
+     }
+     clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+     if (clsMax.first == 0 || clsMax.first + 3 * fabs(clsMax.second) < clsTarget ) break;
+     rMax += rMax;
+     if (tries == 5) { 
+        oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot set higher limit: at " << r->GetName() 
+                                  << " = " << rMax  << " still get " 
+                                  << (fUseCLs ? "CLs" : "CLsplusb") << " = " << clsMax.first << std::endl;
+        return false;
+     }
+  }
+  if (fVerbose > 0) { 
+     oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Search for lower limit to the limit" << std::endl;
+  }
+  //clsMin = (fUseCLs && rMin == 0 ? CLs_t(1,0) : eval(w, mc_s, mc_b, data, rMin));
+  if ( fUseCLs && rMin == 0 ) { 
+     clsMin =  CLs_t(1,0); 
+  }
+  else { 
+     if (! RunOnePoint(rMin) ) return false;
+     clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+  }
+  if (clsMin.first != 1 && clsMin.first - 3 * fabs(clsMin.second) < clsTarget) {
+     if (fUseCLs) { 
+        rMin = 0;
+        clsMin = CLs_t(1,0); // this is always true for CLs
+     } else {
+        rMin = -rMax / 4;
+        for (int tries = 0; tries < 6; ++tries) {
+           if (! RunOnePoint(rMax) ) return false;
+           clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+           if (clsMin.first == 1 || clsMin.first - 3 * fabs(clsMin.second) > clsTarget) break;
+           rMin += rMin;
+           if (tries == 5) { 
+              oocoutE((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Cannot set lower limit: at " << r->GetName() 
+                                        << " = " << rMin << " still get " << (fUseCLs ? "CLs" : "CLsplusb") 
+                                        << " = " << clsMin.first << std::endl;
+              return false;
+           }
+        }
+     }
+  }
+
+  if (fVerbose > 0) 
+      oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Now doing proper bracketing & bisection" << std::endl;
+  do {
+     // determine point by bisection or interpolation
+     limit = 0.5*(rMin+rMax); limitErr = 0.5*(rMax-rMin);
+     if (fgAlgo == "logSecant" && clsMax.first != 0) {
+        double logMin = log(clsMin.first), logMax = log(clsMax.first), logTarget = log(clsTarget);
+        limit = rMin + (rMax-rMin) * (logTarget - logMin)/(logMax - logMin);
+        if (clsMax.second != 0 && clsMin.second != 0) {
+           limitErr = hypot((logTarget-logMax) * (clsMin.second/clsMin.first), (logTarget-logMin) * (clsMax.second/clsMax.first));
+           limitErr *= (rMax-rMin)/((logMax-logMin)*(logMax-logMin));
+        }
+     }
+     r->setError(limitErr);
+
+     // exit if reached accuracy on r 
+     if (limitErr < std::max(absAccuracy, relAccuracy * limit)) {
+        if (fVerbose > 1) 
+            oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - reached accuracy " << limitErr 
+                                      << " below " << std::max(absAccuracy, relAccuracy * limit)  << std::endl;
+        done = true; break;
+     }
+     
+     // evaluate point 
+     
+     //clsMid = eval(w, mc_s, mc_b, data, limit, true, clsTarget);
+     if (! RunOnePoint(limit, true, clsTarget) ) return false;
+     clsMid = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+
+     if (clsMid.second == -1) {
+        std::cerr << "Hypotest failed" << std::endl;
+        return false;
+     }
+
+     // if sufficiently far away, drop one of the points
+     if (fabs(clsMid.first-clsTarget) >= 2*clsMid.second) {
+        if ((clsMid.first>clsTarget) == (clsMax.first>clsTarget)) {
+           rMax = limit; clsMax = clsMid;
+        } else {
+                  rMin = limit; clsMin = clsMid;
+              }
+          } else {
+              if (fVerbose > 0) std::cout << "Trying to move the interval edges closer" << std::endl;
+              double rMinBound = rMin, rMaxBound = rMax;
+              // try to reduce the size of the interval 
+              while (clsMin.second == 0 || fabs(rMin-limit) > std::max(absAccuracy, relAccuracy * limit)) {
+                  rMin = 0.5*(rMin+limit); 
+                  if (!RunOnePoint(rMin,true, clsTarget) ) return false;
+                  clsMin = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+                  //clsMin = eval(w, mc_s, mc_b, data, rMin, true, clsTarget); 
+                  if (fabs(clsMin.first-clsTarget) <= 2*clsMin.second) break;
+                  rMinBound = rMin;
+              } 
+              while (clsMax.second == 0 || fabs(rMax-limit) > std::max(absAccuracy, relAccuracy * limit)) {
+                  rMax = 0.5*(rMax+limit); 
+//                  clsMax = eval(w, mc_s, mc_b, data, rMax, true, clsTarget); 
+                  if (!RunOnePoint(rMax,true,clsTarget) ) return false;
+                  clsMax = std::make_pair( fResults->GetLastYValue(), fResults->GetLastYError() );
+                  if (fabs(clsMax.first-clsTarget) <= 2*clsMax.second) break;
+                  rMaxBound = rMax;
+              } 
+              expoFit.SetRange(rMinBound,rMaxBound);
+              break;
+          }
+  } while (true);
+  
+  if (!done) { // didn't reach accuracy with scan, now do fit
+      if (fVerbose) {
+         oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Before fit   --- \n"; 
+         std::cout << "Limit: " << r->GetName() << " < " << limit << " +/- " << limitErr << " [" << rMin << ", " << rMax << "]\n";
+      }
+      
+      expoFit.FixParameter(0,clsTarget);
+      expoFit.SetParameter(1,log(clsMax.first/clsMin.first)/(rMax-rMin));
+      expoFit.SetParameter(2,limit);
+      double rMinBound, rMaxBound; expoFit.GetRange(rMinBound, rMaxBound);
+      limitErr = std::max(fabs(rMinBound-limit), fabs(rMaxBound-limit));
+      int npoints = 0; 
+      
+      HypoTestInverterPlot plot("plot","plot",fResults);
+      fLimitPlot = std::auto_ptr<TGraphErrors>(plot.MakePlot() );
+
+      
+      for (int j = 0; j < fLimitPlot->GetN(); ++j) { 
+         if (fLimitPlot->GetX()[j] >= rMinBound && fLimitPlot->GetX()[j] <= rMaxBound) npoints++; 
+      }
+      for (int i = 0, imax = /*(readHybridResults_ ? 0 : */  8; i <= imax; ++i, ++npoints) {
+          fLimitPlot->Sort();
+          fLimitPlot->Fit(&expoFit,(fVerbose <= 1 ? "QNR EX0" : "NR EXO"));
+          if (fVerbose) {
+               oocoutI((TObject*)0,Eval) << "Fit to " << npoints << " points: " << expoFit.GetParameter(2) << " +/- " << expoFit.GetParError(2) << std::endl;
+          }
+          if ((rMin < expoFit.GetParameter(2))  && (expoFit.GetParameter(2) < rMax) && (expoFit.GetParError(2) < 0.5*(rMaxBound-rMinBound))) { 
+              // sanity check fit result
+              limit = expoFit.GetParameter(2);
+              limitErr = expoFit.GetParError(2);
+              if (limitErr < std::max(absAccuracy, relAccuracy * limit)) break;
+          }
+          // add one point in the interval. 
+          double rTry = RooRandom::uniform()*(rMaxBound-rMinBound)+rMinBound; 
+          if (i != imax) { 
+             if (!RunOnePoint(rTry,true,clsTarget) ) return false;
+             //eval(w, mc_s, mc_b, data, rTry, true, clsTarget);
+          }
+
+      } 
+  }
+
+//if (!plot_.empty() && fLimitPlot.get()) {
+  if (fLimitPlot.get() && fLimitPlot->GetN() > 0) {
+       //new TCanvas("c1","c1");
+      fLimitPlot->Sort();
+      fLimitPlot->SetLineWidth(2);
+      double xmin = r->getMin(), xmax = r->getMax();
+      for (int j = 0; j < fLimitPlot->GetN(); ++j) {
+        if (fLimitPlot->GetY()[j] > 1.4*clsTarget || fLimitPlot->GetY()[j] < 0.6*clsTarget) continue;
+        xmin = std::min(fLimitPlot->GetX()[j], xmin);
+        xmax = std::max(fLimitPlot->GetX()[j], xmax);
+      }
+      fLimitPlot->GetXaxis()->SetRangeUser(xmin,xmax);
+      fLimitPlot->GetYaxis()->SetRangeUser(0.5*clsTarget, 1.5*clsTarget);
+      fLimitPlot->Draw("AP");
+      expoFit.Draw("SAME");
+      TLine line(fLimitPlot->GetX()[0], clsTarget, fLimitPlot->GetX()[fLimitPlot->GetN()-1], clsTarget);
+      line.SetLineColor(kRed); line.SetLineWidth(2); line.Draw();
+      line.DrawLine(limit, 0, limit, fLimitPlot->GetY()[0]);
+      line.SetLineWidth(1); line.SetLineStyle(2);
+      line.DrawLine(limit-limitErr, 0, limit-limitErr, fLimitPlot->GetY()[0]);
+      line.DrawLine(limit+limitErr, 0, limit+limitErr, fLimitPlot->GetY()[0]);
+      //c1->Print(plot_.c_str());
+  }
+
+  oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Result:    \n" 
+                            << "\tLimit: " << r->GetName() << " < " << limit << " +/- " << limitErr << " @ " << (1-fSize) * 100 << "% CL\n";
+  if (fVerbose > 1) oocoutI((TObject*)0,Eval) << "Total toys: " << fPerf_totalToysRun << std::endl;
+
+  // set value in results
+  fResults->fUpperLimit = limit; 
+  fResults->fUpperLimitError = limitErr;
+  fResults->fFittedUpperLimit = true;
+  // lower limit are always min of p value
+  fResults->fLowerLimit = fScannedVariable->getMin(); 
+  fResults->fLowerLimitError = 0;
+  fResults->fFittedLowerLimit = true; 
+
+  return true;
 }

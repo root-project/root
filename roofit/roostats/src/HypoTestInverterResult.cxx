@@ -35,7 +35,11 @@ HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
    SimpleInterval(name),
    fUseCLs(false),
    fInterpolateLowerLimit(true),
-   fInterpolateUpperLimit(true)
+   fInterpolateUpperLimit(true),
+   fFittedLowerLimit(false),
+   fFittedUpperLimit(false),
+   fLowerLimitError(0),
+   fUpperLimitError(0)
 {
   // default constructor
 }
@@ -47,7 +51,11 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    SimpleInterval(name,scannedVariable,-999,999,cl), 
    fUseCLs(false),
    fInterpolateLowerLimit(true),
-   fInterpolateUpperLimit(true)
+   fInterpolateUpperLimit(true),
+   fFittedLowerLimit(false),
+   fFittedUpperLimit(false),
+   fLowerLimitError(0),
+   fUpperLimitError(0)
 {
   // constructor 
    fYObjects.SetOwner();
@@ -90,9 +98,9 @@ double HypoTestInverterResult::GetYValue( int index ) const
   }
 
   if (fUseCLs) 
-    return ((HybridResult*)fYObjects.At(index))->CLs();
+    return ((HypoTestResult*)fYObjects.At(index))->CLs();
   else 
-    return ((HybridResult*)fYObjects.At(index))->AlternatePValue();  // CLs+b
+    return ((HypoTestResult*)fYObjects.At(index))->AlternatePValue();  // CLs+b
 }
 
 double HypoTestInverterResult::GetYError( int index ) const
@@ -103,9 +111,9 @@ double HypoTestInverterResult::GetYError( int index ) const
   }
 
   if (fUseCLs) 
-    return ((HybridResult*)fYObjects.At(index))->CLsError();
+    return ((HypoTestResult*)fYObjects.At(index))->CLsError();
   else 
-    return ((HybridResult*)fYObjects.At(index))->CLsplusbError();
+    return ((HypoTestResult*)fYObjects.At(index))->CLsplusbError();
 }
 
 HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
@@ -170,6 +178,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target)
 
 Double_t HypoTestInverterResult::LowerLimit()
 {
+  if (fFittedLowerLimit) return fLowerLimit;
    //std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << endl;
   if ( fInterpolateLowerLimit ){
     fLowerLimit = FindInterpolatedLimit(1-(1-ConfidenceLevel())/2);
@@ -182,6 +191,7 @@ Double_t HypoTestInverterResult::LowerLimit()
 Double_t HypoTestInverterResult::UpperLimit()
 {
    //std::cout << "finding point with cl = " << (1-ConfidenceLevel())/2 << endl;
+  if (fFittedUpperLimit) return fUpperLimit;
   if ( fInterpolateUpperLimit ) {
      fUpperLimit = FindInterpolatedLimit((1-ConfidenceLevel())/2);
   } else {
@@ -222,6 +232,8 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target)
 
 Double_t HypoTestInverterResult::LowerLimitEstimatedError()
 {
+  if (fFittedLowerLimit) return fLowerLimitError;
+
    //std::cout << "The HypoTestInverterResult::LowerLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
   if (fInterpolateLowerLimit) std::cout << "The lower limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
@@ -231,6 +243,9 @@ Double_t HypoTestInverterResult::LowerLimitEstimatedError()
 
 Double_t HypoTestInverterResult::UpperLimitEstimatedError()
 {
+
+  if (fFittedUpperLimit) return fUpperLimitError;
+
    //std::cout << "The HypoTestInverterResult::UpperLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
   if (fInterpolateUpperLimit) std::cout << "The upper limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
