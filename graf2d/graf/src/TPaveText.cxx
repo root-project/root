@@ -30,13 +30,18 @@ ClassImp(TPaveText)
 
 
 //______________________________________________________________________________
-//  A PaveText is a Pave (see TPave) with text,lines or/and boxes.
-//Begin_Html
-/*
-<img src="gif/pavetext.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>TPaveText : to draw a pave with text</h2></center>
+A PaveText is a Pave (see TPave) with text, lines or/and boxes inside.
+Line (and boxes) are positionned in the pave using coordinates relative to
+the pave (%).
+<p>
+Example:
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphics/pavetext.C
+End_Macro */
+
 
 
 //______________________________________________________________________________
