@@ -100,14 +100,14 @@ Gui.Style:                windows
 #include &lt;TRint.h&gt;
 #include &lt;qpushbutton.h&gt;
 int main( int argc, char **argv ) {
-<emphasis role="italic"><code>// Create an interactive ROOT application</code></emphasis>
-TRint *theApp = new TRint("Rint", &amp;argc, argv);
-<emphasis role="italic"><code>   // Create Qt object within ROOT application</code></emphasis>
-QPushButton hello( "Hello world!", 0 );
-hello.resize( 100, 30 );
-hello.show();
-<emphasis role="italic"><code>   // and enter the ROOT event loop...</code></emphasis>
-theApp-&gt;Run();
+   <emphasis role="italic"><code>// Create an interactive ROOT application</code></emphasis>
+   TRint *theApp = new TRint("Rint", &amp;argc, argv);
+   <emphasis role="italic"><code>   // Create Qt object within ROOT application</code></emphasis>
+   QPushButton hello( "Hello world!", 0 );
+   hello.resize( 100, 30 );
+   hello.show();
+   <emphasis role="italic"><code>// and enter the ROOT event loop...</code></emphasis>
+   theApp-&gt;Run();
 }
 </programlisting>
 
@@ -132,20 +132,20 @@ theApp-&gt;Run();
 
 int main( int argc, char **argv ) {
 
-QApplication *app = new QApplication(argc, argv);
-TQtWidget *MyWidget= new TQtWidget(0,"MyWidget");
-<emphasis role="italic"><code>    // Create any other Qt-widget here</code></emphasis>
-MyWidget-&gt;show();
-MyWidget-&gt;GetCanvas()-&gt;cd();
-TGraph *mygraph;
-float x[3] = {1,2,3};
-float y[3] = {1.5, 3.0, 4.5};
-mygraph  = new TGraph(3,x,y);
-mygraph-&gt;SetMarkerStyle(20);
-mygraph-&gt;Draw("AP");
-MyWidget-&gt;GetCanvas()-&gt;Update();
-app-&gt;exec();
-return 0;
+   QApplication *app = new QApplication(argc, argv);
+   TQtWidget *MyWidget= new TQtWidget(0,"MyWidget");
+   <emphasis role="italic"><code>// Create any other Qt-widget here</code></emphasis>
+   MyWidget-&gt;show();
+   MyWidget-&gt;GetCanvas()-&gt;cd();
+   TGraph *mygraph;
+   float x[3] = {1,2,3};
+   float y[3] = {1.5, 3.0, 4.5};
+   mygraph  = new TGraph(3,x,y);
+   mygraph-&gt;SetMarkerStyle(20);
+   mygraph-&gt;Draw("AP");
+   MyWidget-&gt;GetCanvas()-&gt;Update();
+   app-&gt;exec();
+   return 0;
 }
 </programlisting>
 
@@ -211,15 +211,15 @@ class TVirtualPad;
 
 class TMyQButton {
 private:
-QPushButton *fMyButton;
+   QPushButton *fMyButton;
 public:
-TMyQButton(const char*name="");
-virtual ~TMyQButton();
-void SetSize(UInt_t w, UInt_t h);
-void Show(Bool_t show=kTRUE);
-void SetText(const char *text);
-void SetOn(Bool_t on=kTRUE);
-void SetStyle(const char * style);
+   TMyQButton(const char*name="");
+   virtual ~TMyQButton();
+   void SetSize(UInt_t w, UInt_t h);
+   void Show(Bool_t show=kTRUE);
+   void SetText(const char *text);
+   void SetOn(Bool_t on=kTRUE);
+   void SetStyle(const char * style);
 };
 #endif
 </programlisting>
@@ -230,32 +230,38 @@ void SetStyle(const char * style);
 #include "TMyQButton.h"
 #include &lt;qpushbutton.h&gt;
 
-<emphasis role="italic"><code>// This class allow you to create and manipulate the QPushButton interactively</code></emphasis>
+<emphasis role="italic"><code>// This class allow you to create and manipulate the QPushButton
+// interactively</code></emphasis>
 TMyQButton::TMyQButton(const char *name) {
-<emphasis role="italic"><code>   // Create Qt QPushButton interactively</code></emphasis>
-fMyButton = new QPushButton(name,0);
+   <emphasis role="italic"><code>// Create Qt QPushButton interactively</code></emphasis>
+   fMyButton = new QPushButton(name,0);
 }
 
 TMyQButton::~TMyQButton() { delete fMyButton; }
 
-void TMyQButton::SetSize(UInt_t w, UInt_t h) { <emphasis role="italic"><code>// Resize the Qt button</code></emphasis>
-fMyButton-&gt;resize(w,h);
+void TMyQButton::SetSize(UInt_t w, UInt_t h) {
+   <emphasis role="italic"><code>// Resize the Qt button</code></emphasis>
+   fMyButton-&gt;resize(w,h);
 }
-void TMyQButton::Show(Bool_t show) {          <emphasis role="italic"><code> // Show / hide the button</code></emphasis>
-if (show)  fMyButton-&gt;show();
-else       fMyButton-&gt;hide();
+void TMyQButton::Show(Bool_t show) {
+   <emphasis role="italic"><code>// Show / hide the button</code></emphasis>
+   if (show)  fMyButton-&gt;show();
+   else       fMyButton-&gt;hide();
 }
-void TMyQButton::SetText(const char *text) {   <emphasis role="italic"><code>// Set / </code></emphasis><emphasis role="italic"><code>change the button text</code></emphasis>
-fMyButton-&gt;setText(text);
+void TMyQButton::SetText(const char *text) {
+   <emphasis role="italic"><code>// Set / change the button text</code></emphasis>
+   fMyButton-&gt;setText(text);
 }
 void TMyQButton::SetOn(Bool_t on) {
-fMyButton-&gt;setOn(on);
+   fMyButton-&gt;setOn(on);
 }
-void TMyQButton::SetStyle(const char * style) { <emphasis role="italic"><code>// Set </code></emphasis><emphasis role="italic"><code>button’s</code></emphasis><emphasis role="italic"><code> look and feel</code></emphasis>
-<emphasis role="italic"><code>   // The possible styles are defined by the local Qt inmstallation.</code></emphasis>
-<emphasis role="italic"><code>   // For example the possible style can be: "window", "motif", "cde", "sgi",</code></emphasis>
-<emphasis role="italic"><code>   // "motifplus", "platinum",  "compact","windowsxp", "aqua", "macintosh</code></emphasis>
-fMyButton-&gt;setStyle(style);
+void TMyQButton::SetStyle(const char * style) { 
+   <emphasis role="italic"><code>// Set button’s look and feel</code></emphasis>
+   <emphasis role="italic"><code>// The possible styles are defined by the local Qt installation.</code></emphasis>
+   <emphasis role="italic"><code>// For example the possible style can be: "window", "motif", "cde",</code></emphasis>
+   <emphasis role="italic"><code>// "sgi", "motifplus", "platinum", "compact", "windowsxp", "aqua",</code></emphasis>
+   <emphasis role="italic"><code>// "macintosh</code></emphasis>
+   fMyButton-&gt;setStyle(style);
 }
 </programlisting>
 
@@ -344,16 +350,16 @@ root[] <emphasis role="bold"><code>pnt.drawPixmap(0,0,*pix);</code></emphasis>
 #  include &lt;qstring.h&gt;
 #endif
 void FileDialog() {
-// This is small AClIC wrapper to use Qt 3.3 QFileDialog class
-// See: http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames
-// To use, invoke ACLiC from the ROOT prompt:
-// root [] .x FileDialog .C++
-QStringList files = QFileDialog::getOpenFileNames ();
-QStringList::Iterator it = files.begin();
-while ( it != files.end() ) {
-printf ("Next file selected: %sn", (const char *)(*it));
-++it;
-}
+   // This is small AClIC wrapper to use Qt 3.3 QFileDialog class
+   // See: http://doc.trolltech.com/3.3/qfiledialog.html#getOpenFileNames
+   // To use, invoke ACLiC from the ROOT prompt:
+   // root [] .x FileDialog .C++
+   QStringList files = QFileDialog::getOpenFileNames ();
+   QStringList::Iterator it = files.begin();
+   while ( it != files.end() ) {
+      printf ("Next file selected: %sn", (const char *)(*it));
+      ++it;
+   }
 }
 </programlisting>
 
@@ -429,22 +435,22 @@ this,SLOT(CanvasEvent(TObject *, unsigned int, TCanvas *)));
 . . .
 void qtrootexample1::CanvasEvent(TObject *obj,unsigned int event,TCanvas *)
 {
-TQtWidget *tipped = (TQtWidget *)sender();
-const char *objectInfo = obj-&gt;GetObjectInfo(tipped-&gt;GetEventX(),
-tipped-&gt;GetEventY());
-QString tipText ="You have ";
-if  (tipped == tQtWidget1)
-tipText +="clicked";
-else
-tipText +="passed";
-tipText += " the object &lt;";
-tipText += obj-&gt;GetName();
-tipText += "&gt; of class ";
-tipText += obj-&gt;ClassName();
-tipText += " : ";
-tipText += objectInfo;
+   TQtWidget *tipped = (TQtWidget *)sender();
+   const char *objectInfo = obj-&gt;GetObjectInfo(tipped-&gt;GetEventX(),
+   tipped-&gt;GetEventY());
+   QString tipText ="You have ";
+   if  (tipped == tQtWidget1)
+      tipText +="clicked";
+   else
+      tipText +="passed";
+   tipText += " the object &lt;";
+   tipText += obj-&gt;GetName();
+   tipText += "&gt; of class ";
+   tipText += obj-&gt;ClassName();
+   tipText += " : ";
+   tipText += objectInfo;
 
-QWhatsThis::display(tipText)
+   QWhatsThis::display(tipText)
 }
 </programlisting>
 
