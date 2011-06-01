@@ -21,41 +21,30 @@
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
     TerminalDisplay(false), fStartLine(0), fIsAttached(false) {
-    UpdateHandle(true);
+    fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+    bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
+    SetIsTTY(isConsole);
+    if (isConsole) {
+      // Prevent redirection from stealing our console handle,
+      // simply open our own.
+      fOut = ::CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL, NULL);
+      ::GetConsoleMode(fOut, &fOldMode);
+      fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+    }
     HandleResizeEvent();
   }
 
   TerminalDisplayWin::~TerminalDisplayWin() {
-    if (fOut != ::GetStdHandle(STD_OUTPUT_HANDLE)) {
+    if (IsTTY()) {
       // We allocated CONOUT$:
       CloseHandle(fOut);
     }
   }
 
   void
-  TerminalDisplayWin::UpdateHandle(bool setup) {
-    fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
-    bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
-    if (setup) {
-      SetIsTTY(isConsole);
-    } else {
-      if (IsTTY() && !isConsole) {
-        // We had a console, but now stdin is not a console anymore.
-        // This happens if redirection is not reverted properly.
-        // Assume we are meant to stay at the console:
-        fOut = ::CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
-          FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-          FILE_ATTRIBUTE_NORMAL, NULL);
-        ::GetConsoleMode(fOut, &fOldMode);
-      }
-    }
-
-    fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
-  }
-
-  void
   TerminalDisplayWin::HandleResizeEvent() {
-    UpdateHandle(false);
     if (IsTTY()) {
       CONSOLE_SCREEN_BUFFER_INFO Info;
       if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
@@ -153,7 +142,6 @@ namespace textinput {
   TerminalDisplayWin::Attach() {
     // set to noecho
     if (fIsAttached) return;
-    UpdateHandle(false);
     if (IsTTY() && !::SetConsoleMode(fOut, fMyMode)) {
       ShowError("attaching to console output");
     }
