@@ -27,6 +27,7 @@
 using namespace textinput;
 using std::memcpy;
 using std::signal;
+using std::raise;
 
 namespace {
 void
