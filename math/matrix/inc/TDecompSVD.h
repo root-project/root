@@ -52,8 +52,8 @@ public :
    virtual ~TDecompSVD() {}
 
            const TMatrixD  GetMatrix ();
-   Int_t     GetNrows  () const { return fU.GetNrows(); }
-   Int_t     GetNcols  () const { return fV.GetNcols(); }
+   virtual Int_t     GetNrows  () const;
+   virtual Int_t     GetNcols  () const;
            const TMatrixD &GetU      ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                  return fU; }
            const TMatrixD &GetV      ()       { if ( !TestBit(kDecomposed) ) Decompose();
