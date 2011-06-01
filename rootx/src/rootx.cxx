@@ -97,6 +97,7 @@ extern void CloseDisplay();
 
 static STRUCT_UTMP *gUtmpContents;
 static bool gNoLogo = false;
+static int childpid = -1;
 const  int  kMAXPATHLEN = 8192;
 
 
@@ -313,6 +314,7 @@ static void SetLibraryPath()
 
 extern "C" {
    static void SigUsr1(int);
+   static void SigTerm(int);
 }
 
 static void SigUsr1(int)
@@ -323,7 +325,13 @@ static void SigUsr1(int)
       PopdownLogo();
 }
 
-static void WaitChild(int childpid)
+static void SigTerm(int sig)
+{
+   // When we get terminated, terminate child, too.
+   kill(childpid, sig);
+}
+
+static void WaitChild()
 {
    // Wait till child (i.e. ROOT) is finished.
 
@@ -429,7 +437,8 @@ int main(int argc, char **argv)
 
    // Ignore SIGINT and SIGQUIT. Install handler for SIGUSR1.
 
-   struct sigaction ignore, handle, saveintr, savequit, saveusr1;
+   struct sigaction ignore, actUsr1, actTerm,
+      saveintr, savequit, saveusr1, saveterm;
 
 #if defined(__sun) && !defined(__i386) && !defined(__SVR4)
    ignore.sa_handler = (void (*)())SIG_IGN;
@@ -440,34 +449,41 @@ int main(int argc, char **argv)
 #endif
    sigemptyset(&ignore.sa_mask);
    ignore.sa_flags = 0;
-   handle = ignore;
+
+   actUsr1 = ignore;
+   actTerm = ignore;
 #if defined(__sun) && !defined(__i386) && !defined(__SVR4)
-   handle.sa_handler = (void (*)())SigUsr1;
+   actUsr1.sa_handler = (void (*)())SigUsr1;
+   actTerm.sa_handler = (void (*)())SigTerm;
 #elif defined(__sun) && defined(__SVR4)
-   handle.sa_handler = SigUsr1;
+   actUsr1.sa_handler = SigUsr1;
+   actTerm.sa_handler = SigTerm;
 #elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
 #   if defined(IRIX64) || (__GNUG__>=3)
-   handle.sa_handler = SigUsr1;
+   actUsr1.sa_handler = SigUsr1;
+   actTerm.sa_handler = SigTerm;
 #   else
-   handle.sa_handler = (void (*)(...))SigUsr1;
+   actUsr1.sa_handler = (void (*)(...))SigUsr1;
+   actTerm.sa_handler = (void (*)(...))SigTerm;
 #   endif
 #else
-   handle.sa_handler = SigUsr1;
+   actUsr1.sa_handler = SigUsr1;
+   actTerm.sa_handler = SigTerm;
 #endif
    sigaction(SIGINT,  &ignore, &saveintr);
    sigaction(SIGQUIT, &ignore, &savequit);
-   sigaction(SIGUSR1, &handle, &saveusr1);
+   sigaction(SIGUSR1, &actUsr1, &saveusr1);
+   sigaction(SIGTERM, &actTerm, &saveterm);
 
    // Create child...
 
-   int childpid;
    if ((childpid = fork()) < 0) {
       fprintf(stderr, "%s: error forking child\n", argv[0]);
       return 1;
    } else if (childpid > 0) {
       if (!gNoLogo)
          WaitLogo();
-      WaitChild(childpid);
+      WaitChild();
    }
 
    // Continue with child...
@@ -476,6 +492,7 @@ int main(int argc, char **argv)
    sigaction(SIGINT,  &saveintr, 0);
    sigaction(SIGQUIT, &savequit, 0);
    sigaction(SIGUSR1, &saveusr1, 0);
+   sigaction(SIGTERM, &saveterm, 0);
 
    // Close X display connection
    CloseDisplay();
