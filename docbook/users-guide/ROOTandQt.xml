@@ -29,11 +29,10 @@
 <title>Qt-layer Installation</title>
 <para>The Qt-layer is included into the ROOT distribution kit. To install it one has to configure ROOT. The installation does not change any other components of the ROOT package. It produces several extra-shared libraries that may be dynamically loaded into the ROOT session at start time with the regular ROOT plug-in mechanism to replace the “native” GUI interface. To install Qt-layer one should follow the ROOT installation procedure providing the QTDIR environment variable points to the proper version of Qt system. Many Linux flavors come with the pre-installed Qt. May sure you are not going to pick the obsolete version.</para>
 
-<programlisting language="c++">
-<code>% cd root </code>
-<code>% ./configure &lt;target&gt; --enable-qt </code>
-<code>% gmake</code>
-<code>% gmake install</code>
+<programlisting language="c++">% cd root
+% ./configure &lt;target&gt; --enable-qt 
+% gmake
+% gmake install
 </programlisting>
 
 </sect3>
@@ -42,9 +41,8 @@
 <title>Qt Main C++ Classes CINT Dictionary</title>
 <para>The ROOT CINT dictionary allows to call the Qt main classes directly from the ROOT command prompt is an optional component and it is not created during the “Qt-layer installation”. To build / re-build the Qt main classes ROOT dictionary one can invoke the make </para>
 
-<programlisting language="c++">
-<code>% cd root </code>
-<code>% gmake qtcint</code>
+<programlisting language="c++">% cd root 
+% gmake qtcint
 </programlisting>
 
 <para>The dictionary contains so-called Qt main classes as defined by TrollTech on the Web page:  <uri xmlns:xlink="http://doc.trolltech.com/3.3/mainclasses.html">http://doc.trolltech.com/3.3/mainclasses.html</uri>. The dictionary is NOT loaded automatically and it should be loaded by the user ROOT macro as needed. </para>
@@ -55,32 +53,28 @@
 <para>Any ROOT-based application should be configured to use Qt-layer using ROOT “Environment Setup”. The correct <emphasis role="bold"><code>QTDIR</code></emphasis> environment variable to locate the proper version of Qt package should be provided as well. There are several ways to customize the ROOT setup environment to activate Qt-layer.</para>
 <para>Look up at <code>$ROOTSYS/etc/system.rootrc</code>. Find there the definition of <code>Gui.Backend</code> and <code>Gui.Factory</code>: </para>
 
-<programlisting language="c++">
-# GUI specific settings
+<programlisting language="c++"># GUI specific settings
 Gui.Backend:                native
 Gui.Factory:                native
 </programlisting>
 
 <para>Now you can either edit the file <code>$ROOTSYS/etc/system.rootrc</code> or provide your own custom <code>.rootrc</code> redefine the options:</para>
 
-<programlisting language="c++">
-# GUI specific settings
+<programlisting language="c++"># GUI specific settings
 Gui.Backend:                qt
 Gui.Factory:                qt
 </programlisting>
 
 <para>If you need to switch often from native layer to qt one back and force you may find convenient to define the type of GUI using some external environment variable defining options indirectly: </para>
 
-<programlisting language="c++">
-# GUI specific settings
+<programlisting language="c++"># GUI specific settings
 Gui.Backend:                $(GUI)
 Gui.Factory:                $(GUI)
 </programlisting>
 
 <para>The last step is to make sure your <code>LD_LIBRARY_PATH</code> variable point to the <code>$QTDIR/lib</code> directory. Optionally, you can define the Qt Widget “look and feel” using the option <code>Gui.Style</code> option. The number of different styles to choose from is defined by your local Qt installation. Usually you can choose from “<code>window</code>”, “<code>motif</code>”, “<code>cde</code>”, “<code>motifplus</code>”, “<code>platinum</code>”, “<code>sgi</code>”, “<code>compact</code>”, “<code>windowsxp</code>”, “<code>aqua</code>” or “<code>macintosh</code>”. For example, the option defined below will force the “windows” look and feel on any platform.</para>
 
-<programlisting language="c++">
-# Qt GUI style setting
+<programlisting language="c++"># Qt GUI style setting
 Gui.Style:                windows
 </programlisting>
 
@@ -96,17 +90,16 @@ Gui.Style:                windows
 <title>Qt-based ROOT Applications</title>
 <para>“ROOT application” is the application that either instantiates the ROOT <emphasis role="bold"><code>TApplication</code></emphasis> / <emphasis role="bold"><code>TRint</code></emphasis> class and enters the ROOT event loop or is the shared library that can be loaded into the already running ROOT application via <emphasis role="bold"><code>TSystem</code></emphasis><code>::Load</code> method or via ROOT plug-in mechanism. You must neither initialize Qt <code>QApplication</code> nor enter the Qt event loop. Qt-layer takes care about these two steps. What you need is to instantiate the Qt object of your choice and to keep playing ROOT rules.</para>
 
-<programlisting language="c++">
-#include &lt;TRint.h&gt;
+<programlisting language="c++">#include &lt;TRint.h&gt;
 #include &lt;qpushbutton.h&gt;
 int main( int argc, char **argv ) {
-   <emphasis role="italic"><code>// Create an interactive ROOT application</code></emphasis>
+   <emphasis role="italic">// Create an interactive ROOT application</emphasis>
    TRint *theApp = new TRint("Rint", &amp;argc, argv);
-   <emphasis role="italic"><code>   // Create Qt object within ROOT application</code></emphasis>
+   <emphasis role="italic">   // Create Qt object within ROOT application</emphasis>
    QPushButton hello( "Hello world!", 0 );
    hello.resize( 100, 30 );
    hello.show();
-   <emphasis role="italic"><code>// and enter the ROOT event loop...</code></emphasis>
+   <emphasis role="italic">// and enter the ROOT event loop...</emphasis>
    theApp-&gt;Run();
 }
 </programlisting>
@@ -123,8 +116,7 @@ int main( int argc, char **argv ) {
 <para>“Qt application” is the application that either instantiates the Qt <code>QApplication</code> and enters the Qt event loop or is the shared library that can be loaded into the already running Qt application via Qt plug-in mechanism. You must neither initialize ROOT <emphasis role="bold"><code>TApplication</code></emphasis> / <emphasis role="bold"><code>TRint</code></emphasis> nor enter the ROOT event loop. Qt-layer takes care about both of these steps. What you need is just to instantiate the embedded and regular ROOT objects of your choice and keep playing Qt rules. ROOT-based Qt applications treat the “native” style of the ROOT <emphasis role="bold"><code>Gui.Backend</code></emphasis>         and <emphasis role="bold"><code>Gui.Factory</code></emphasis> parameters as “qt”. For example,</para>
 <para/>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// Minimal ROOT based Qt example</code></emphasis>
+<programlisting language="c++"><emphasis role="italic">// Minimal ROOT based Qt example</emphasis>
 #include &lt;qapplication.h&gt;
 #include "TGraph.h"
 #include "TQtWidget.h"
@@ -134,7 +126,7 @@ int main( int argc, char **argv ) {
 
    QApplication *app = new QApplication(argc, argv);
    TQtWidget *MyWidget= new TQtWidget(0,"MyWidget");
-   <emphasis role="italic"><code>// Create any other Qt-widget here</code></emphasis>
+   <emphasis role="italic">// Create any other Qt-widget here</emphasis>
    MyWidget-&gt;show();
    MyWidget-&gt;GetCanvas()-&gt;cd();
    TGraph *mygraph;
@@ -151,33 +143,31 @@ int main( int argc, char **argv ) {
 
 <para>The code above can be converted into the running application using qmake, TrollTech provided, build utility. As soon as you have qmake project file <code>HelloCanvas.pro</code>:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code># Automatically generated by qmake (1.07a) Sun Jun 26 02:03:47 2005</code></emphasis>
-<emphasis role="italic"><code># Adjusted by hand to include $ROOTSYS/include/rootcint.pri file</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"># Automatically generated by qmake (1.07a) Sun Jun 26 02:03:47 2005</emphasis>
+<emphasis role="italic"># Adjusted by hand to include $ROOTSYS/include/rootcint.pri file</emphasis>
 
 TEMPLATE = app thread
 CONFIG -= moc
 INCLUDEPATH += .
 
-<emphasis role="italic"><code># include "by hand" the qmake include file from</code></emphasis>
-<emphasis role="italic"><code># ROOT distribution to define</code></emphasis>
-<emphasis role="italic"><code>#  1. include path to the ROOT system header files</code></emphasis>
-<emphasis role="italic"><code>#  2. the list of the ROOT shared libraries to link</code></emphasis>
-<emphasis role="italic"><code>#     Qt application against of</code></emphasis>
-<emphasis role="italic"><code>#  3. qmake rules to generate ROOT/Cint dictionaries</code></emphasis>
+<emphasis role="italic"># include "by hand" the qmake include file from</emphasis>
+<emphasis role="italic"># ROOT distribution to define</emphasis>
+<emphasis role="italic">#  1. include path to the ROOT system header files</emphasis>
+<emphasis role="italic">#  2. the list of the ROOT shared libraries to link</emphasis>
+<emphasis role="italic">#     Qt application against of</emphasis>
+<emphasis role="italic">#  3. qmake rules to generate ROOT/Cint dictionaries</emphasis>
 
 include("$(ROOTSYS)/include/rootcint.pri")
 
-<emphasis role="italic"><code># Input</code></emphasis>
+<emphasis role="italic"># Input</emphasis>
 SOURCES += HelloCanvas.cxx
 </programlisting>
 
 <para> You can get the running ROOT-based Qt application with the Unix shell commands:</para>
 
-<programlisting language="c++">
-<code>qmake HelloCanvas.pro</code>
-<code>make</code>
-<code>HelloCanvas</code>
+<programlisting language="c++">qmake HelloCanvas.pro
+make
+HelloCanvas
 </programlisting>
 
 </sect3>
@@ -188,8 +178,7 @@ SOURCES += HelloCanvas.cxx
 <para>For example, we may convert the stand-alone Qt-based ROOT application above into C++ class with <code>RootCint</code> dictionary, that one loads into the interactive ROOT session and invokes interactively. This task requires four simple files.</para>
 <para>1. Class dictionary definition file <code>LinkDef.h</code>:</para>
 
-<programlisting language="c++">
-#ifdef __CINT__
+<programlisting language="c++">#ifdef __CINT__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
@@ -201,8 +190,7 @@ SOURCES += HelloCanvas.cxx
 
 <para>2. Class header file <code>TMyQButton.h</code>:</para>
 
-<programlisting language="c++">
-#ifndef ROOT_TMyQButton
+<programlisting language="c++">#ifndef ROOT_TMyQButton
 #define ROOT_TMyQButton
 #include "Rtypes.h"
 
@@ -226,50 +214,48 @@ public:
 
 <para> 3. Class implementation file <code>TMyQButton.cxx</code>:</para>
 
-<programlisting language="c++">
-#include "TMyQButton.h"
+<programlisting language="c++">#include "TMyQButton.h"
 #include &lt;qpushbutton.h&gt;
 
-<emphasis role="italic"><code>// This class allow you to create and manipulate the QPushButton
-// interactively</code></emphasis>
+<emphasis role="italic">// This class allow you to create and manipulate the QPushButton
+// interactively</emphasis>
 TMyQButton::TMyQButton(const char *name) {
-   <emphasis role="italic"><code>// Create Qt QPushButton interactively</code></emphasis>
+   <emphasis role="italic">// Create Qt QPushButton interactively</emphasis>
    fMyButton = new QPushButton(name,0);
 }
 
 TMyQButton::~TMyQButton() { delete fMyButton; }
 
 void TMyQButton::SetSize(UInt_t w, UInt_t h) {
-   <emphasis role="italic"><code>// Resize the Qt button</code></emphasis>
+   <emphasis role="italic">// Resize the Qt button</emphasis>
    fMyButton-&gt;resize(w,h);
 }
 void TMyQButton::Show(Bool_t show) {
-   <emphasis role="italic"><code>// Show / hide the button</code></emphasis>
+   <emphasis role="italic">// Show / hide the button</emphasis>
    if (show)  fMyButton-&gt;show();
    else       fMyButton-&gt;hide();
 }
 void TMyQButton::SetText(const char *text) {
-   <emphasis role="italic"><code>// Set / change the button text</code></emphasis>
+   <emphasis role="italic">// Set / change the button text</emphasis>
    fMyButton-&gt;setText(text);
 }
 void TMyQButton::SetOn(Bool_t on) {
    fMyButton-&gt;setOn(on);
 }
 void TMyQButton::SetStyle(const char * style) { 
-   <emphasis role="italic"><code>// Set button’s look and feel</code></emphasis>
-   <emphasis role="italic"><code>// The possible styles are defined by the local Qt installation.</code></emphasis>
-   <emphasis role="italic"><code>// For example the possible style can be: "window", "motif", "cde",</code></emphasis>
-   <emphasis role="italic"><code>// "sgi", "motifplus", "platinum", "compact", "windowsxp", "aqua",</code></emphasis>
-   <emphasis role="italic"><code>// "macintosh</code></emphasis>
+   <emphasis role="italic">// Set button’s look and feel</emphasis>
+   <emphasis role="italic">// The possible styles are defined by the local Qt installation.</emphasis>
+   <emphasis role="italic">// For example the possible style can be: "window","motif",</emphasis>
+   <emphasis role="italic">// "cde","sgi","motifplus","platinum","compact","windowsxp",</emphasis>
+   <emphasis role="italic">// "aqua","macintosh"</emphasis>
    fMyButton-&gt;setStyle(style);
 }
 </programlisting>
 
 <para>4. <code>qmake</code> project file <code>MyQButton.pro</code>:</para>
 
-<programlisting language="c++">
-TEMPLATE = lib dll thread
-<emphasis role="italic"><code># Input</code></emphasis>
+<programlisting language="c++">TEMPLATE = lib dll thread
+<emphasis role="italic"># Input</emphasis>
 HEADERS += TMyQButton.h
 SOURCES += TMyQButton.cxx
 
@@ -279,19 +265,17 @@ include("$(ROOTSYS)/include/rootcint.pri")
 
 <para>At this point, you are ready to produce the class-shared library with the ROOT/CINT dictionary by invoking two shell commands (as above):</para>
 
-<programlisting language="c++">
-<code>qmake MyQButton.pro</code>
-<code>make</code>
+<programlisting language="c++">qmake MyQButton.pro
+make
 </programlisting>
 
 <para>In addition, get you class into the interactive Root session:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gSystem-&gt;Load(</code></emphasis>"<emphasis role="bold"><code>lib</code></emphasis><emphasis role="bold"><code>MyQButton.</code></emphasis><emphasis role="bold"><code>so</code></emphasis>"<emphasis role="bold"><code>)</code></emphasis>
-root[] <emphasis role="bold"><code>TM</code></emphasis><emphasis role="bold"><code>yQButton knopka;</code></emphasis>
-root[] <emphasis role="bold"><code>knopka.SetSize(100,60);</code></emphasis>
-root[] <emphasis role="bold"><code>knopka.SetText(</code></emphasis>"<emphasis role="bold"><code>Hell</code></emphasis><emphasis role="bold"><code>o Cint</code></emphasis>"<emphasis role="bold"><code>);</code></emphasis>
-root[] <emphasis role="bold"><code>knopka.Show();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">gSystem-&gt;Load(</emphasis>"<emphasis role="bold"><code>lib</code></emphasis><emphasis role="bold"><code>MyQButton.</code></emphasis><emphasis role="bold"><code>so</code></emphasis>"<emphasis role="bold"><code>)</code></emphasis>
+root[] <emphasis role="bold">TMyQButton knopka;</emphasis>
+root[] <emphasis role="bold">knopka.SetSize(100,60);</emphasis>
+root[] <emphasis role="bold">knopka.SetText("Hello Cint");</emphasis>
+root[] <emphasis role="bold">knopka.Show();</emphasis>
 </programlisting>
 
 <para>Please, pay your attention that class implementation does not contain any Qt system initialization call. Since the above example is a ROOT application, do not forget, one needs the <code>.rootrc</code> file to assign “<code>qt</code>” value for the options<code> Gui.Backend</code> and <code>Gui.Factory</code>.</para>
@@ -324,27 +308,24 @@ root[] <emphasis role="bold"><code>knopka.Show();</code></emphasis>
 <para>Since the Qt package is a regular C++ class library to use it within ROOT C++ interpreter environment one should either load the dedicated RootCint dictionary or apply ACLiC mode.</para>
 <para>For example, the following ROOT interactive session is to popup the “Open File” Qt dialog box and print out the file name selected by the user via the dialog.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gSystem-&gt;Load(</code></emphasis>"<emphasis role="bold"><code>qtcint</code></emphasis>"<emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
-root[] <emphasis role="bold"><code>cout &lt;&lt; QFileDialog::getOpenFileName() &lt;&lt; endl;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">gSystem-&gt;Load("qtcint");</emphasis>
+root[] <emphasis role="bold">cout &lt;&lt; QFileDialog::getOpenFileName() &lt;&lt; endl;</emphasis>
 </programlisting>
 
 <para>The ROOT session:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gSystem-&gt;Load(</code></emphasis>"<emphasis role="bold"><code>qtcint</code></emphasis>"<emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
-root[] <emphasis role="bold"><code>QPrinter p;</code></emphasis>
-root[] <emphasis role="bold"><code>p.setup();</code></emphasis>  <emphasis role="italic"><code>// Display the Qt “Setup printer” dialog box</code></emphasis>
-root[] <emphasis role="bold"><code>Int_t id = gPad-&gt;GetPixmapID();</code></emphasis>
-root[] <emphasis role="bold"><code>QPixmap *pix = (QPixmap *)(TGQt::iwid(id));</code></emphasis>
-root[] <emphasis role="bold"><code>QPainter pnt(&amp;p);</code></emphasis>
-root[] <emphasis role="bold"><code>pnt.drawPixmap(0,0,*pix);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">gSystem-&gt;Load("qtcint");</emphasis>
+root[] <emphasis role="bold">QPrinter p;</emphasis>
+root[] <emphasis role="bold">p.setup();</emphasis>  <emphasis role="italic">// Display the Qt “Setup printer” dialog box</emphasis>
+root[] <emphasis role="bold">Int_t id = gPad-&gt;GetPixmapID();</emphasis>
+root[] <emphasis role="bold">QPixmap *pix = (QPixmap *)(TGQt::iwid(id));</emphasis>
+root[] <emphasis role="bold">QPainter pnt(&amp;p);</emphasis>
+root[] <emphasis role="bold">pnt.drawPixmap(0,0,*pix);</emphasis>
 </programlisting>
 
 <para>is to display the Qt “Setup Printer” dialog and use QPrinter object to print the current <emphasis role="bold"><code>TPad</code></emphasis> image to the selected printer. To use the more complex Qt-related code one is advised to apply “ACLiC – Automatic Compiler of Libraries for CINT” (see CINT the C++ Interpreter). For example:</para>
 
-<programlisting language="c++">
-#ifndef __CINT__
+<programlisting language="c++">#ifndef __CINT__
 #  include &lt;qfiledialog.h&gt;
 #  include &lt;qstringlist.h&gt;
 #  include &lt;qstring.h&gt;
@@ -365,9 +346,8 @@ void FileDialog() {
 
 <para>With the ROOT ACLiC session:</para>
 
-<programlisting language="c++">
-root [0]<emphasis role="bold"><code> .x FileDialog.C++</code></emphasis>
-Info in &lt;TUnixSystem::ACLiC&gt;: creating shared library   macros/./FileDialog_C.so
+<programlisting language="c++">root [0]<emphasis role="bold"> .x FileDialog.C++</emphasis>
+Info in &lt;TUnixSystem::ACLiC&gt;: creating shared library macros/./FileDialog_C.so
 Next file selected: macros/QtFileDialog.C
 Next file selected: macros/QtMultiFileDialog.C
 Next file selected: macros/QtMultiFileDialog_C.so
@@ -391,19 +371,18 @@ Next file selected: macros/QtPrintDialog_C.so
 <title>TQtWidget Public Qt Slots</title>
 <para><emphasis role="bold"><code>TQtWidget</code></emphasis> class inherits all slots of its base QWidget class (see:  <uri xmlns:xlink="http://doc.trolltech.com/3.3/qwidget.html">http://doc.trolltech.com/3.3/qwidget.html</uri>). In addition, it is in possession of two groups of the dedicated slots.</para>
 
-<programlisting language="c++">
-virtual void cd();
+<programlisting language="c++">virtual void cd();
 virtual void cd(int subpadnumber);
 </programlisting>
 
 <para>Make the associated <emphasis role="bold"><code>TCanvas</code></emphasis>/<emphasis role="bold"><code>TPad</code></emphasis> the current one, the proxy interface to the embedded <emphasis role="bold"><code>TCanvas</code></emphasis><code>::cd()</code>         and <emphasis role="bold"><code>TCanvas</code></emphasis><code>::cd(int subpadnumber)</code> methods.</para>
 
-<programlisting language="c++">
-virtual bool Save(const QString &amp;fileName) const
+<programlisting language="c++">virtual bool Save(const QString &amp;fileName) const
 virtual bool Save(const char *fileName) const
 virtual bool Save(const QString &amp;fileName,const char *format,
-int quality=60) const
-virtual bool Save(const char *fileName,const char *format,int quality=60) const
+                  int quality=60) const
+virtual bool Save(const char *fileName,const char *format,
+                  int quality=60) const
 </programlisting>
 
 <para>The slots are to save the double buffer of the <emphasis role="bold"><code>TQtWidget</code></emphasis> object using the default or specified save format. The default save format is defined either by the “known” file extension or by the “default” file format.  </para>
@@ -415,25 +394,24 @@ virtual bool Save(const char *fileName,const char *format,int quality=60) const
 <para>The class object emits the different signals that can be used to create the sophisticated GUI applications.</para>
 <para>The signal <code>CanvasPainted()</code> is emitted to notify the GUI that the double buffer of the widget has been filled and buffer has been painted onto the screen. In the other words, this signal means that all <emphasis role="bold"><code>TObject</code></emphasis> objects of the embedded <emphasis role="bold"><code>TCanvas</code></emphasis> have been visualized on the screen. The signal:</para>
 
-<programlisting language="c++">
-Saved(bool ok)
+<programlisting language="c++">Saved(bool ok)
 </programlisting>
 
 <para>is emitted to notify the GUI that a <emphasis role="bold"><code>TCanvas</code></emphasis> has been saved into the file:</para>
 
-<programlisting language="c++">
-RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c)
+<programlisting language="c++">RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c)
 </programlisting>
 
 <para>This signal notifies the Qt framework that the Qt mouse/keyboard event has been process by ROOT. The signal is disabled by default, i.e. the connected slot is not called unless the signal is explicitly enabled with <emphasis role="bold"><code>TQtWidget</code></emphasis><code>::EnableSignalEvents</code> method.</para>
 <para/>
 <para>For example, to create a custom response to the mouse crossing of a <emphasis role="bold"><code>TCanvas</code></emphasis><emphasis role="bold"><code>, </code></emphasis>you need to connect the <code>RootEventProsecced</code> signal with your <code>qt</code> slot. The next piece of the code demonstrates that:</para>
 
-<programlisting language="c++">
-connect(tQtWidget,SIGNAL(RootEventProcessed(TObject *,unsigned int, TCanvas *)),
+<programlisting language="c++">connect(tQtWidget,SIGNAL(RootEventProcessed(TObject *,
+                         unsigned int, TCanvas *)),
 this,SLOT(CanvasEvent(TObject *, unsigned int, TCanvas *)));
 . . .
-void qtrootexample1::CanvasEvent(TObject *obj,unsigned int event,TCanvas *)
+void qtrootexample1::CanvasEvent(TObject *obj, unsigned int event,
+                                 TCanvas *)
 {
    TQtWidget *tipped = (TQtWidget *)sender();
    const char *objectInfo = obj-&gt;GetObjectInfo(tipped-&gt;GetEventX(),
@@ -504,8 +482,7 @@ void qtrootexample1::CanvasEvent(TObject *obj,unsigned int event,TCanvas *)
 <title>main()</title>
 <para>The <code>main</code> file should look like:</para>
 
-<programlisting language="c++">
-#include "TQtApplication.h"
+<programlisting language="c++">#include "TQtApplication.h"
 #include "TQtRootApplication.h"
 #include "MyWidget1.h"
 int main( int argc, char ** argv ){
@@ -513,7 +490,7 @@ int main( int argc, char ** argv ){
     TQApplication app("uno",&amp;argc,argv);
     MyWidget1 *w = new Mywidget1;
     w-&gt;show();
-    a.connect( &amp;a, SIGNAL( lastWindowClosed() ), &amp;a, SLOT( quit() ) );
+    a.connect(&amp;a, SIGNAL(lastWindowClosed()), &amp;a, SLOT(quit()));
     return a.exec();
 }
 </programlisting>
