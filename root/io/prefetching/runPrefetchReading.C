@@ -10,6 +10,7 @@
 #include "TEnv.h"
 #include "TFileCacheRead.h"
 #include "TTreeCache.h"
+#include "TError.h"
 
 Int_t runPrefetchReading()
 {
@@ -32,7 +33,7 @@ Int_t runPrefetchReading()
    }
 
    TFile *file = TFile::Open( filename );
-   if (!file) return 1;
+   if (!file || file->IsZombie()) return 1;
 
    // Try the known names :)
    const char *names [] = { "E","Events","CollectionTree","ntuple","T" };
@@ -41,7 +42,10 @@ Int_t runPrefetchReading()
       file->GetObject(names[i], T);
       if (T) break;
    }
-
+   if (T==0) {
+     Error("runPrefetchReading","Could not find a tree which the conventional names in %s.",filename);
+     return 2;
+   }
    TFile::SetReadaheadSize(0);  // (256*1024);
    Long64_t nentries = T->GetEntries();
 
