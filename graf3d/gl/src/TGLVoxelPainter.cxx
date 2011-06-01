@@ -267,6 +267,8 @@ void TGLVoxelPainter::DrawPlot()const
    if(!maxContent)//bad, find better way to check zero.
       maxContent = 1.;
 
+   Float_t rgba[4] = {};
+
    for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
       for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
 //         for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
@@ -281,8 +283,13 @@ void TGLVoxelPainter::DrawPlot()const
             if (fBoxCut.IsActive() && fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
                continue;
 
+            FindVoxelColor(fHist->GetBinContent(ir, jr, kr), rgba);
+
+            if (rgba[3] < 0.01f)
+               continue;
+
             if (!fSelectionPass)
-               SetVoxelColor(fHist->GetBinContent(ir, jr, kr));
+               SetVoxelColor(rgba);
 
             const Int_t binID = fSelectionBase + i * fCoord->GetNZBins() * fCoord->GetNYBins() + j * fCoord->GetNZBins() + k;
 
@@ -292,9 +299,6 @@ void TGLVoxelPainter::DrawPlot()const
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
             Rgl::DrawBoxFront(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
-
-            //Rgl::DrawTransparentBox(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
-
 
             if (!fSelectionPass && !fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
@@ -400,22 +404,27 @@ void TGLVoxelPainter::PreparePalette()const
 }
 
 //______________________________________________________________________________
-void TGLVoxelPainter::SetVoxelColor(Double_t binContent)const
+void TGLVoxelPainter::FindVoxelColor(Double_t binContent, Float_t *rgba)const
 {
-   // Set boxes color.
+   // Find box color.
    const UChar_t * tc = fPalette.GetColour(binContent);
-   Float_t opacity = 1.f;
+   rgba[3] = 0.06f; //Just a constant transparency.
+
 
    if (fTransferFunc) {
-      //Igogo! I have transparency!
-      opacity = fTransferFunc->Eval(binContent);
-   } else {
-      //Just a constant transparency.
-      opacity = 0.06f;
+      rgba[3] = fTransferFunc->Eval(binContent);
    }
+   
+   rgba[0] = tc[0] / 255.f;
+   rgba[1] = tc[1] / 255.f;
+   rgba[2] = tc[2] / 255.f;
+}
 
-   Float_t diffColor[] = {tc[0] / 255.f, tc[1] / 255.f, tc[2] / 255.f, opacity};
 
+//______________________________________________________________________________
+void TGLVoxelPainter::SetVoxelColor(const Float_t *diffColor)const
+{
+   // Set box color.
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);

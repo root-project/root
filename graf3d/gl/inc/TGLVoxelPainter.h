@@ -59,10 +59,11 @@ private:
    void    DrawPaletteAxis()const;
 
    //Aux. functions.
-   void    SetVoxelColor(Double_t binContent)const;
+   void    FindVoxelColor(Double_t binContent, Float_t *rgba)const;
+   void    SetVoxelColor(const Float_t *rgba)const;
 
    Bool_t  HasSections()const;
-   void	  PreparePalette()const;
+   void	   PreparePalette()const;
 
    TF1    *fTransferFunc;
 
