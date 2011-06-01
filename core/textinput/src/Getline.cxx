@@ -90,6 +90,7 @@ namespace {
                     fgHistoryFile.c_str()) {
          fTextInput.SetColorizer(&fCol);
          fTextInput.SetCompletion(&fTabComp);
+         fTextInput.EnableAutoHistAdd(false);
          History* Hist = fTextInput.GetContext()->GetHistory();
          Hist->SetMaxDepth(fgSizeLines);
          Hist->SetPruneLength(fgSaveLines);
@@ -171,6 +172,10 @@ Gl_config(const char* which, int value) {
    }
 }
 
+void
+Gl_histadd(const char* buf) {
+   TextInputHolder::get().AddHistoryLine(buf);
+}
 
 /* Wrapper around textinput.
  * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup
@@ -279,11 +284,6 @@ void Gl_setwidth(int /*w*/) {
 
 
 void Gl_windowchanged() {
-   // ignored, handled by displays themselves.
-}
-
-void
-Gl_histadd(const char* /*buf*/) {
    // ignored, handled by displays themselves.
 }
 

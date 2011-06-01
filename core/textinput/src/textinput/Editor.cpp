@@ -43,7 +43,8 @@ namespace textinput {
   Range
   Editor::ResetText() {
     if (!fContext->GetLine().empty()
-        && !fContext->GetTextInput()->IsInputHidden()) {
+        && !fContext->GetTextInput()->IsInputHidden()
+        && fContext->GetTextInput()->IsAutoHistAddEnabled()) {
       fContext->GetHistory()->AddLine(fContext->GetLine().GetText());
     }
     Range R(0, fContext->GetLine().length());
