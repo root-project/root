@@ -82,12 +82,18 @@ namespace textinput {
     void GrabInputOutput() const;
     void ReleaseInputOutput() const;
 
+    // History interface
+    bool IsAutoHistAddEnabled() const { return fAutoHistAdd; }
+    void EnableAutoHistAdd(bool enable = true) { fAutoHistAdd = enable; }
+    void AddHistoryLine(const char* line);
+
   private:
     void EmitSignal(char c, EditorRange& r);
     void ProcessNewInput(const InputData& in, EditorRange& r);
     void DisplayNewInput(EditorRange& r, size_t& oldCursorPos);
 
     bool fHidden; // whether input should be shown
+    bool fAutoHistAdd; // whether input should be added to history
     char fLastKey; // most recently read key
     size_t fMaxChars; // Num chars to read; 0 for blocking, -1 for all available
     EReadResult fLastReadResult; // current input state

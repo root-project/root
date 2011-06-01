@@ -17,6 +17,7 @@
 #include "textinput/Reader.h"
 #include "textinput/Color.h"
 #include "textinput/Editor.h"
+#include "textinput/History.h"
 #include "textinput/KeyBinding.h"
 #include "textinput/TextInputContext.h"
 #include "textinput/SignalHandler.h"
@@ -28,6 +29,9 @@ namespace textinput {
   TextInput::TextInput(Reader& reader, Display& display,
                        const char* HistFile /* = 0 */):
   fHidden(false),
+  fAutoHistAdd(true),
+  fLastKey(0),
+  fMaxChars(0),
   fLastReadResult(kRRNone),
   fActive(false)
   {
@@ -300,5 +304,16 @@ namespace textinput {
     // Resize signal was emitted, tell the displays.
     std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
              std::mem_fun(&Display::NotifyWindowChange));
+  }
+
+  void
+  TextInput::AddHistoryLine(const char* line) {
+    if (!line) return;
+    std::string sLine(line);
+    while (sLine[sLine.length() - 1] == '\n'
+           || sLine[sLine.length() - 1] == '\r') {
+      sLine.erase(sLine.length() - 1);
+    }
+    fContext->GetHistory()->AddLine(sLine);
   }
 }
