@@ -43,7 +43,7 @@ Int_t runPrefetchReading()
       if (T) break;
    }
    if (T==0) {
-     Error("runPrefetchReading","Could not find a tree which the conventional names in %s.",filename);
+     Error("runPrefetchReading","Could not find a tree which the conventional names in %s.",filename.Data());
      return 2;
    }
    TFile::SetReadaheadSize(0);  // (256*1024);
