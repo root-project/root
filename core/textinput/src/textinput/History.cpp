@@ -25,7 +25,7 @@
 namespace textinput {
   History::History(const char* filename):
     fHistFileName(filename ? filename : ""), fMaxDepth((size_t) -1),
-    fPruneLength(0) {
+    fPruneLength(0), fNumHistFileLines(0) {
     // Create a history object, initialize from filename if the file
     // exists. Append new lines to filename taking into account the
     // maximal number of lines allowed by SetMaxDepth().
@@ -37,6 +37,7 @@ namespace textinput {
   void
   History::AddLine(const std::string& line) {
     // Add a line to entries and file.
+    if (line.empty()) return;
     fEntries.push_back(line);
     AppendToFile();
   }
@@ -55,8 +56,11 @@ namespace textinput {
         if (c != '\n' && c != '\r') break;
         line.erase(len - 1);
       }
-      fEntries.push_back(line);
+      if (!line.empty()) {
+        fEntries.push_back(line);
+      }
     }
+    fNumHistFileLines = fEntries.size();
   }
 
   void
@@ -65,23 +69,32 @@ namespace textinput {
     // Prune if needed.
     if (fHistFileName.empty() || !fMaxDepth) return;
 
-    // Count lines:
-    size_t numLines = 0;
-    std::string line;
-    std::ifstream in(fHistFileName.c_str());
-    while (std::getline(in, line))
-      ++numLines;
-    if (numLines >= fMaxDepth) {
-      // Prune!
-      size_t nPrune = fPruneLength;
-      if (nPrune == (size_t)kPruneLengthDefault) {
-         nPrune = (size_t)(fMaxDepth * 0.8);
-      }
+    // Calculate prune length to use
+    size_t nPrune = fPruneLength;
+    if (nPrune == (size_t)kPruneLengthDefault) {
+      nPrune = (size_t)(fMaxDepth * 0.8);
+    } else if (nPrune > fMaxDepth) {
+      nPrune = fMaxDepth - 1; // fMaxDepth is guaranteed to be > 0.
+    }
 
-      // Don't write our lines - other processes might have
+    // Don't check for the actual line count of the history file after every
+    // single line. Once every 50% on the way between nPrune and fMaxDepth is
+    // enough.
+    if (fNumHistFileLines < fMaxDepth
+        && (fNumHistFileLines % (fMaxDepth - nPrune)) == 0) {
+      fNumHistFileLines = 0;
+      std::string line;
+      std::ifstream in(fHistFileName.c_str());
+      while (std::getline(in, line))
+        ++fNumHistFileLines;
+    }
+
+    size_t numLines = fNumHistFileLines;
+    if (numLines >= fMaxDepth) {
+      // Prune! But don't simply write our lines - other processes might have
       // added their own.
-      in.clear();
-      in.seekg(0);
+      std::string line;
+      std::ifstream in(fHistFileName.c_str());
       std::string pruneFileName = fHistFileName + "_prune";
       std::ofstream out(pruneFileName.c_str());
       if (out) {
@@ -103,10 +116,12 @@ namespace textinput {
         ::unlink(fHistFileName.c_str());
 #endif
         ::rename(pruneFileName.c_str(), fHistFileName.c_str());
+        fNumHistFileLines = nPrune;
       }
     } else {
       std::ofstream out(fHistFileName.c_str(), std::ios_base::app);
       out << fEntries.back() << '\n';
+      ++fNumHistFileLines;
     }
   }
 }

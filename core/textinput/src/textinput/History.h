@@ -58,6 +58,7 @@ namespace textinput {
     std::string fHistFileName; // History file name
     size_t fMaxDepth; // Max number of entries before pruning
     size_t fPruneLength; // Remaining entries after pruning
+    size_t fNumHistFileLines; // Hist file's number of lines at previous access
     std::vector<std::string> fEntries; // Previous input lines
   };
 }
