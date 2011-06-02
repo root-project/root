@@ -230,7 +230,7 @@ int main(int argc, char **argv)
          event->Build(ev, arg5, ptmin);
 
          if (write) nb += tree->Fill();  //fill the tree
-if(write) tree->OptimizeBaskets(100000);
+
          if (hm) hm->Hfill(event);      //fill histograms
       }
       if (write) {
