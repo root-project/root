@@ -93,6 +93,7 @@ public:
    void     DetachBuffer() { fBuffer = 0; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
    void     Expand(Int_t newsize);  // expand buffer to newsize
+   void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;

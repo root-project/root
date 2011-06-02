@@ -140,6 +140,25 @@ TBuffer::~TBuffer()
    fParent = 0;
 }
 
+
+//______________________________________________________________________________
+void TBuffer::AutoExpand(Int_t size_needed)
+{
+   // Automatically calculate a new size and expand the buffer to fit at least size_needed.
+   // The goals is to minimize the number of memory allocation and the memory allocation
+   // which avoiding too much memory wastage.
+   // If the size_needed is larger than the current size, the policy
+   // is to expand to double the current size or the size_needed which ever is largest.
+   
+   if (size_needed > fBufSize) {
+      if (size_needed > 2*fBufSize) {
+         Expand(size_needed);
+      } else {
+         Expand(2*fBufSize);
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
@@ -182,7 +201,7 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 //______________________________________________________________________________
 void TBuffer::Expand(Int_t newsize)
 {
-   // Expand the I/O buffer to newsize bytes.
+   // Expand (or shrink) the I/O buffer to newsize bytes.
 
    Int_t l  = Length();
    if ( (fMode&kWrite)!=0 ) {
