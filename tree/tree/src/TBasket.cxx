@@ -545,7 +545,7 @@ void TBasket::Reset()
                newSize = avgSize;
             }
             newSize = newSize + 512 - newSize%512;  // Wiggle room and alignment (512 is same as in OptimizeBaskets)
-            fBufferRef->Expand(newSize);
+            fBufferRef->Expand(newSize,kFALSE);     // Expand without copying the existing data.
          }
       }
    }

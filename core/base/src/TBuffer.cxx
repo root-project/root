@@ -199,17 +199,19 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 }
 
 //______________________________________________________________________________
-void TBuffer::Expand(Int_t newsize)
+void TBuffer::Expand(Int_t newsize, Bool_t copy)
 {
    // Expand (or shrink) the I/O buffer to newsize bytes.
+   // If copy is true (the default), the existing content of the
+   // buffer is preserved, otherwise the buffer is returned zero-ed out.
 
    Int_t l  = Length();
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
-                              fBufSize+kExtraSpace);
+                              copy ? fBufSize+kExtraSpace : 0);
    } else {
       fBuffer  = fReAllocFunc(fBuffer, newsize,
-                              fBufSize);
+                              copy ? fBufSize : 0);
    }
    if (fBuffer == 0) {
       if (fReAllocFunc == TStorage::ReAllocChar) {
