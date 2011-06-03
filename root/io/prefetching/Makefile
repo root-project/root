@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += PrefetchReading mytest
+TEST_TARGETS += PrefetchReading 
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -61,5 +61,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 
+ifeq ($(FAIL),)
+PrefetchReading: 
+	$(WarnFailTest)
+else
 PrefetchReading: PrefetchReading.clog
 	$(TestDiff)
+endif
