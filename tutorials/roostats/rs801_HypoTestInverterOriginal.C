@@ -4,7 +4,7 @@
 // author: Gregory Schott
 // date Sep 2009
 //
-// This tutorial shows an example of using the HypoTestInverter class 
+// This tutorial shows an example of using the HypoTestInverterOriginal class 
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
 
-#include "RooStats/HypoTestInverter.h"
+#include "RooStats/HypoTestInverterOriginal.h"
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HybridCalculatorOriginal.h"
@@ -28,7 +28,7 @@ using namespace RooFit;
 using namespace RooStats;
 
 
-void rs801_HypoTestInverter()
+void rs801_HypoTestInverterOriginal()
 {
   // prepare the model
   RooRealVar lumi("lumi","luminosity",1);
@@ -49,7 +49,7 @@ void rs801_HypoTestInverter()
   myhc.UseNuisance(false);                            
 
   // run the hypothesis-test invertion
-  HypoTestInverter myInverter(myhc,r);
+  HypoTestInverterOriginal myInverter(myhc,r);
   myInverter.SetTestSize(0.10);
   myInverter.UseCLs(true);
   // myInverter.RunFixedScan(5,1,6);
