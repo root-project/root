@@ -13,7 +13,7 @@ ROOT_USE_PACKAGE(math/mathcore)
 ROOT_GENERATE_DICTIONARY(G__IO *.h  LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h )
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx LIBRARIES Cint Core)
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx LIBRARIES Cint Core Thread)
 ROOT_INSTALL_HEADERS()
 
 #--- Extra rules ----------------------------------------------------------
