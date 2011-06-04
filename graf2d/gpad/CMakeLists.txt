@@ -7,5 +7,7 @@ ROOT_USE_PACKAGE(graf2d/graf)
 ROOT_USE_PACKAGE(core)
 include_directories(${CMAKE_SOURCE_DIR}/hist/hist/inc)  # This is to avoid a circular dependency graf <--> hist 
 
-ROOT_STANDARD_LIBRARY_PACKAGE(Gpad DEPENDENCIES Graf Hist)
-
+ROOT_GENERATE_DICTIONARY(G__GPad *.h LINKDEF LinkDef.h)
+ROOT_GENERATE_ROOTMAP(Gpad LINKDEF LinkDef.h DEPENDENCIES Graf Hist)
+ROOT_LINKER_LIBRARY(Gpad *.cxx G__GPad.cxx DEPENDENCIES Graf Hist)
+ROOT_INSTALL_HEADERS()

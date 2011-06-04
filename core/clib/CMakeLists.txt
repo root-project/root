@@ -3,9 +3,6 @@
 ############################################################################
 
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
-if(editline)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/Getline.c)
-endif()
 
 ROOT_GENERATE_DICTIONARY(G__Clib strlcpy.h snprintf.h LINKDEF LinkDef.h)
 

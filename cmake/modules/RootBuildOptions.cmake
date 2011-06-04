@@ -60,7 +60,6 @@ ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp
 ROOT_BUILD_OPTION(cintex ON "Build the libCintex Reflex interface library")              
 ROOT_BUILD_OPTION(clarens OFF "Clarens RPC support, optionally used by PROOF")
 ROOT_BUILD_OPTION(cling OFF "Enable new CLING C++ interpreter")            
-ROOT_BUILD_OPTION(editline ON "Color-enabled prompt, requires (n)curses library")              
 ROOT_BUILD_OPTION(dcache OFF "dCache support, requires libdcap from DESY")              
 ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability")         
 ROOT_BUILD_OPTION(explicitlink OFF "Explicitly link with all dependent libraries")      
@@ -118,7 +117,6 @@ option(gminimal "Do not automatically search for support libraries, but include 
   
 if(WIN32)
   set(x11 OFF)
-  set(editline OFF)
   set(memstat OFF)
   set(explicitlink ON)
 endif()
