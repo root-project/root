@@ -28,7 +28,7 @@ namespace textinput {
     void GrabInputFocus();
     void ReleaseInputFocus();
 
-    bool HavePendingInput();
+    bool HavePendingInput(bool wait);
     bool ReadInput(size_t& nRead, InputData& in);
 
   private:

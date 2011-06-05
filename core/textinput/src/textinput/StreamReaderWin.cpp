@@ -85,8 +85,8 @@ namespace textinput {
   }
 
   bool
-  StreamReaderWin::HavePendingInput() {
-    DWORD ret = ::WaitForSingleObject(fIn, 0);
+  StreamReaderWin::HavePendingInput(bool wait) {
+    DWORD ret = ::WaitForSingleObject(fIn,  wait ? INFINITE : 0);
     if (ret == WAIT_FAILED) {
       HandleError("waiting for console input");
       // We don't know. Better block rather than veto input:
