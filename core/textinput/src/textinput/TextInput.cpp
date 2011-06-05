@@ -76,7 +76,7 @@ namespace textinput {
     }
     for (std::vector<Reader*>::const_iterator iR = fContext->GetReaders().begin(),
          iE = fContext->GetReaders().end(); iR != iE; ++iR) {
-      if ((*iR)->HavePendingInput())
+      if ((*iR)->HavePendingInput(false))
         return true;
     }
     return false;
@@ -102,12 +102,16 @@ namespace textinput {
     InputData in;
     EditorRange R;
     size_t OldCursorPos = fContext->GetCursor();
+    // Allow the reader to select() if we want a single line, and we want it
+    // only from one reader
+    bool waitForInput = IsBlockingUntilEOL()
+      && fContext->GetReaders().size() == 1;
     for (std::vector<Reader*>::const_iterator iR
            = fContext->GetReaders().begin(),
          iE = fContext->GetReaders().end();
          iR != iE && nRead < nMax; ++iR) {
       while ((IsBlockingUntilEOL() && (fLastReadResult == kRRNone))
-             || (nRead < nMax && (*iR)->HavePendingInput())) {
+             || (nRead < nMax && (*iR)->HavePendingInput(waitForInput))) {
         if ((*iR)->ReadInput(nRead, in)) {
           ProcessNewInput(in, R);
           DisplayNewInput(R, OldCursorPos);
