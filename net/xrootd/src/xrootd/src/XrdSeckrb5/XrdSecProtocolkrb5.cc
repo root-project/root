@@ -310,7 +310,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        if (client_options & XrdSecEXPTKN)
           {// Make sure the ticket is forwardable
            if (!(Creds->ticket_flags & TKT_FLG_FORWARDABLE))
-              { if (client_options & XrdSecINITTKN)
+              { if ((client_options & XrdSecINITTKN) && !reinitdone)
                    { // Need to re-init
                     CLPRT("Existing ticket is not forwardable: re-init ");
                     rc = system(reinitcmd);
