@@ -1585,13 +1585,12 @@ Selection = "weight *(boolean expression)"
 <title>Accessing the Histogram in Batch Mode</title>
 <para>The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method creates a histogram called <code>htemp</code> and puts it on the active pad. In a batch program, the histogram <code>htemp</code> created by default, is reachable from the current pad.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// draw the histogram</code></emphasis>
-<code>nt-&gt;Draw("x", "cuts");</code>
-<emphasis role="italic"><code>// get the histogram from the current pad</code></emphasis>
-<code>TH1F htemp = (TH1F*)gPad-&gt;GetPrimitive("htemp"); </code>
-<emphasis role="italic"><code>// now we have full use of the histogram</code></emphasis>
-<code>htemp-&gt;GetEntries(); </code>
+<programlisting language="c++"><emphasis role="italic">// draw the histogram</emphasis>
+nt-&gt;Draw("x", "cuts");
+<emphasis role="italic">// get the histogram from the current pad</emphasis>
+TH1F *htemp = (TH1F*)gPad-&gt;GetPrimitive("htemp");
+<emphasis role="italic">// now we have full use of the histogram</emphasis>
+htemp-&gt;GetEntries();
 </programlisting>
 
 <para>If you pipe the result of the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> into a histogram, the histogram is also available in the current directory. You can do:</para>
