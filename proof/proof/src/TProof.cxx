@@ -345,10 +345,6 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    } else if (!(strstr(masterurl, "://"))) {
       fUrl.SetProtocol("proof");
    }
-   if (!strcmp(fUrl.GetHost(), "localhost") ||
-       !strncmp(fUrl.GetHost(), "localhost.", strlen("localhost.")))
-      fUrl.SetHost(gSystem->HostName());
-
    // Port
    if (fUrl.GetPort() == TUrl(" ").GetPort())
       fUrl.SetPort(TUrl("proof:// ").GetPort());
