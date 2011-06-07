@@ -529,9 +529,11 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
             curfile->SetCacheRead(fTreeCache);
             fTreeCache->UpdateBranches(main, kTRUE);
          }
-         fTreeCacheIsLearning = fTreeCache->IsLearning();
-         if (fTreeCacheIsLearning)
-            Info("GetTrees","the tree cache is in learning phase");
+         if (fTreeCache) {
+            fTreeCacheIsLearning = fTreeCache->IsLearning();
+            if (fTreeCacheIsLearning)
+               Info("GetTrees","the tree cache is in learning phase");
+         }
       } else {
          // Disable the cache
          main->SetCacheSize(0);
