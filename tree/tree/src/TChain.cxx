@@ -307,7 +307,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
          dotslashpos = next_dot;
          next_dot = basename.Index(".root",dotslashpos+1);
       }
-      if (basename[dotslashpos+5]!='/') {
+      if (dotslashpos>=0 && basename[dotslashpos+5]!='/') {
          // We found the 'last' .root in the name and it is not followed by
          // a '/', so the tree name is _not_ specified in the name.
          dotslashpos = -1;
