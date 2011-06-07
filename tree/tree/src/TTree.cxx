@@ -6929,6 +6929,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
 
    if (cacheSize < 0) {
       if (fAutoFlush < 0) cacheSize = -fAutoFlush;
+      else if (fAutoFlush == 0) cacheSize = 0;
       else cacheSize = Long64_t(1.5*fAutoFlush*fZipBytes/(fEntries+1));
    }
    TFile* file = GetCurrentFile();
