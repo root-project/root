@@ -314,10 +314,13 @@ namespace textinput {
   TextInput::AddHistoryLine(const char* line) {
     if (!line) return;
     std::string sLine(line);
-    while (sLine[sLine.length() - 1] == '\n'
-           || sLine[sLine.length() - 1] == '\r') {
+    while (!sLine.empty()
+           && (sLine[sLine.length() - 1] == '\n'
+               || sLine[sLine.length() - 1] == '\r')) {
       sLine.erase(sLine.length() - 1);
     }
-    fContext->GetHistory()->AddLine(sLine);
+    if (!sLine.empty()) {
+       fContext->GetHistory()->AddLine(sLine);
+    }
   }
 }
