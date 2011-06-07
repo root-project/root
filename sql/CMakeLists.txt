@@ -1,0 +1,10 @@
+if(mysql)
+  add_subdirectory(mysql)
+endif()
+if(oracle)
+  add_subdirectory(oracle)
+endif()
+if(odbc)
+  add_subdirectory(odbc)
+endif()
+

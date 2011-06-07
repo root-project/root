@@ -11,24 +11,27 @@
 #  GSL_INCLUDE_DIRS - where to find headers
 #  GSL_LIBRARIES - full path to the libraries
 #  GSL_LIBRARY_DIRS, the directory where the PLplot library is found.
- 
-#  CMAKE_GSL_CXX_FLAGS  = Unix compiler flags for GSL, essentially "`gsl-config --cxxflags`"
-#  GSL_LINK_DIRECTORIES = link directories, useful for rpath on Unix
-#  GSL_EXE_LINKER_FLAGS = rpath on Unix
+#  GSL_CFLAGS, additional c (c++) required
  
 set( GSL_FOUND OFF )
 set( GSL_CBLAS_FOUND OFF )
- 
+
+if(GSL_INCLUDE_DIR AND GSL_LIBRARY AND GSL_CBLAS_LIBRARY)
+  set(GSL_FIND_QUIETLY 1)
+endif()
+
 # Windows, but not for Cygwin and MSys where gsl-config is available
 if( WIN32 AND NOT CYGWIN AND NOT MSYS )
   # look for headers
   find_path( GSL_INCLUDE_DIR
     NAMES gsl/gsl_cdf.h gsl/gsl_randist.h
+	PATHS $ENV{GSL_DIR}/include
     )
   if( GSL_INCLUDE_DIR )
     # look for gsl library
     find_library( GSL_LIBRARY
       NAMES gsl
+	  PATHS $ENV{GSL_DIR}/lib
     )
     if( GSL_LIBRARY )
       set( GSL_INCLUDE_DIRS ${GSL_INCLUDE_DIR} )
@@ -39,12 +42,14 @@ if( WIN32 AND NOT CYGWIN AND NOT MSYS )
     # look for gsl cblas library
     find_library( GSL_CBLAS_LIBRARY
         NAMES gslcblas
+		PATHS $ENV{GSL_DIR}/lib
       )
     if( GSL_CBLAS_LIBRARY )
       set( GSL_CBLAS_FOUND ON )
     endif( GSL_CBLAS_LIBRARY )
  
     set( GSL_LIBRARIES ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} )
+	set( GSL_CFLAGS "-DGSL_DLL")
   endif( GSL_INCLUDE_DIR )
  
   mark_as_advanced(

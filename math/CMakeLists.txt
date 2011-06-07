@@ -15,12 +15,19 @@ add_subdirectory(physics)
 add_subdirectory(mlp)
 add_subdirectory(quadp)
 add_subdirectory(foam)
-add_subdirectory(smatrix)   #special CMakeList.txt
+add_subdirectory(smatrix)
 add_subdirectory(splot)
 #add_subdirectory(mathcore/test EXCLUDE_FROM_ALL)
 add_subdirectory(genvector)
 if(tmva) 
   add_subdirectory(genetic) 
 endif()
+if(unuran)
+  add_subdirectory(unuran)
+endif()
+if(fftw3)
+  add_subdirectory(fftw)
+endif()
+
 
 

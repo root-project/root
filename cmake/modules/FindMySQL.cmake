@@ -1,4 +1,3 @@
-# - Find mysqlclient
 # Find the native MySQL includes and library
 #
 #  MYSQL_INCLUDE_DIR - where to find mysql.h, etc.
@@ -17,20 +16,25 @@ FIND_PATH(MYSQL_INCLUDE_DIR mysql.h
   /usr/include/mysql
   /usr/include
   /usr/mysql/include
+  $ENV{MYSQL_DIR}/include
 )
 
 SET(MYSQL_NAMES mysqlclient mysqlclient_r)
 FIND_LIBRARY(MYSQL_LIBRARY
   NAMES ${MYSQL_NAMES}
-  PATHS /usr/local/mysql/lib /usr/local/lib /usr/lib
+  PATHS /usr/local/mysql/lib /usr/local/lib /usr/lib $ENV{MYSQL_DIR}/lib $ENV{MYSQL_DIR}/lib/opt
 )
 
 IF (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
   SET(MYSQL_FOUND TRUE)
-  SET( MYSQL_LIBRARIES ${MYSQL_LIBRARY} )
+  SET(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
+  iF(WIN32)
+    STRING(REPLACE mysqlclient libmysql libmysql ${MYSQL_LIBRARY})
+    SET(MYSQL_LIBRARIES ${libmysql} ${MYSQL_LIBRARIES})
+  ENDIF()
 ELSE (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
   SET(MYSQL_FOUND FALSE)
-  SET( MYSQL_LIBRARIES )
+  SET(MYSQL_LIBRARIES )
 ENDIF (MYSQL_INCLUDE_DIR AND MYSQL_LIBRARY)
 
 IF (MYSQL_FOUND)
