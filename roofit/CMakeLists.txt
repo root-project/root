@@ -21,6 +21,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roostats/inc)
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
 add_subdirectory(roostats)
-add_subdirectory(histfactory)
+if(xml)
+  add_subdirectory(histfactory)
+endif()
 
 

@@ -4,5 +4,7 @@ endif()
 if(memstat)
   add_subdirectory(memstat)
 endif()
-
+if(table)
+  add_subdirectory(table)
+endif()
 

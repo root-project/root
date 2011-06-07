@@ -17,4 +17,7 @@ add_subdirectory(asimage)     # special CMakeLists.txt
 if(qt)
   add_subdirectory(qt)
 endif()
+if(gviz)
+  add_subdirectory(gviz)
+endif()
 
