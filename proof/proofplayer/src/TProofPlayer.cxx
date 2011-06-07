@@ -1831,6 +1831,20 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          fProof->Collect();
 
          HandleTimer(0); // force an update of final result
+         // This forces a last call to TPacketizer::HandleTimer via the second argument
+         // (the first is ignored). This is needed when some events were skipped so that
+         // the total number of entries is not the one requested. The packetizer has no
+         // way in such a case to understand that processing is finished: it must be told.
+         if (fPacketizer) {
+            fPacketizer->StopProcess(kFALSE, kTRUE);
+            // The progress timer will now stop itself at the next call
+            fPacketizer->SetBit(TVirtualPacketizer::kIsDone);
+         }
+         // Store process info
+         if (fPacketizer && fQuery)
+            fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
+                                          fPacketizer->GetInitTime(),
+                                          fPacketizer->GetProcTime());
          StopFeedback();
 
          return Finalize(kFALSE,sync);
@@ -1857,7 +1871,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          // (the first is ignored). This is needed when some events were skipped so that
          // the total number of entries is not the one requested. The packetizer has no
          // way in such a case to understand that processing is finished: it must be told.
-         if (fPacketizer) fPacketizer->StopProcess(kFALSE, kTRUE);
+         if (fPacketizer) {
+            fPacketizer->StopProcess(kFALSE, kTRUE);
+            // The progress timer will now stop itself at the next call
+            fPacketizer->SetBit(TVirtualPacketizer::kIsDone);
+         }
          // Store process info
          if (fPacketizer && fQuery)
             fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
@@ -2476,7 +2494,7 @@ void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
    // Stop process after this event.
 
    if (fPacketizer != 0)
-      fPacketizer->StopProcess(abort, kTRUE);
+      fPacketizer->StopProcess(abort, kFALSE);
    if (abort == kTRUE)
       fExitStatus = kAborted;
    else
