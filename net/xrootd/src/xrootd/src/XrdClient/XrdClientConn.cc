@@ -274,8 +274,8 @@ short XrdClientConn::Connect(XrdClientUrlInfo Host2Conn,
 void XrdClientConn::Disconnect(bool ForcePhysicalDisc)
 {
     // Disconnect... is it so difficult? Yes!
-
-    ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
+    if( ConnectionManager->SidManager() )
+      ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
 
     if (fMainReadCache && (DebugLevel() >= XrdClientDebug::kDUMPDEBUG) ) fMainReadCache->PrintCache();
 
@@ -1729,24 +1729,27 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
       // We fill the header struct containing the request for login
       ClientRequest reqhdr;
       memset(reqhdr.auth.reserved, 0, 12);
-      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
+      memset(reqhdr.auth.credtype, 0, 4 );
+      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length() > 4 ? 4 : protname.length() );
 
       LastServerResp.status = kXR_authmore;
       char *srvans = 0;
       while (LastServerResp.status == kXR_authmore) {
+         bool resp = false;
+
          //
          // Length of the credentials buffer
          reqhdr.header.dlen = credentials->size;
          SetSID(reqhdr.header.streamid);
          reqhdr.header.requestid = kXR_auth;
-         SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
+         resp = SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
                                 (char *)"XrdClientConn::DoAuthentication");
          SafeDelete(credentials);
          Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
                                         "server reply: status: "<<
                                          LastServerResp.status <<
                                         " dlen: "<< LastServerResp.dlen);
-         if (LastServerResp.status == kXR_authmore) {
+         if (resp && (LastServerResp.status == kXR_authmore)) {
             //
             // We are required to send additional information
             // First assign the security token that we have received
@@ -1772,17 +1775,37 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
                Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
                                              "credentials size " << credentials->size);
             }
-         } else if (LastServerResp.status != kXR_ok) {
-            // Unexpected reply: stop handshake and print error msg, if any
-            if (LastServerError.errmsg)
-               Error("DoAuthentication", LastServerError.errmsg);
-            protocol->Delete();
-            protocol = 0;
+         } else {
+            // Something happened, it could be an error or a good thing as well
+
+            if (LastServerResp.status == kXR_error) {
+               // Unexpected reply: stop handshake and print error msg, if any
+
+               if (LastServerError.errmsg)
+                  Error("DoAuthentication", LastServerError.errmsg);
+
+               protocol->Delete();
+               protocol = 0;
+               // This is a fatal auth error
+               break;
+            }
+
+            if (!resp) {
+               // Communication error
+
+               protocol->Delete();
+               protocol = 0;
+               // This is a fatal auth error
+               break;
+            }
+
          }
       }
+   
       // If we are done
       if (protocol) break;
    }
+
    if (!protocol) {
       Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
                                     "unable to get protocol object.");
@@ -2367,44 +2390,51 @@ bool XrdClientConn::WaitResp(int secsmax) {
 
     // Returns true on timeout, false if a signal was caught
 
-    int rc = true;
+   int rc = false;
 
-    // Lock mutex
-    fREQWaitResp->Lock();
+   Info(XrdClientDebug::kHIDEBUG,
+        "WaitResp", "Waiting response for " << secsmax << " secs." );
 
-    // We don't have to wait if the info already arrived
-    if (!fREQWaitRespData) {
+   // Lock condvar
+   fREQWaitResp->Lock();
 
-       Info(XrdClientDebug::kHIDEBUG,
-            "WaitResp", "Waiting response for " << secsmax << " secs." );
+   time_t timelimit = time(0)+secsmax;
 
-       time_t timelimit = time(0)+secsmax;
-
-       while (rc) {
-          time_t timenow = time(0);
+   while (!fREQWaitRespData) {
+      rc = true;
+      time_t timenow = time(0);
           
-          if ((timenow < timelimit) && !IsOpTimeLimitElapsed(timenow)) {
-             // If still to wait... wait in relatively small steps
-             time_t tt = xrdmin(timelimit - timenow, 10);
-             // If still to wait... wait
-             rc = fREQWaitResp->Wait(tt);           
-          }
-          else {
-             rc = true;
-             break;
-          }
+      if ((timenow < timelimit) && !IsOpTimeLimitElapsed(timenow)) {
+         // If still to wait... wait in relatively small steps
+         time_t tt = xrdmin(timelimit - timenow, 10);
+         fREQWaitResp->Wait(tt);
 
-       }
-       
-       
-       Info(XrdClientDebug::kHIDEBUG,
-            "WaitResp", "Signal or timeout elapsed. Data=" << fREQWaitRespData );
-    }
+         // Let's see if there's something
+         // If not.. continue waiting
+         if (fREQWaitRespData) {
+            rc = false;
+            break;
+         }
+
+      }
+      else break;
+      
+
+   }
     
-    // Unlock mutex
-    fREQWaitResp->UnLock();
+   // Unlock condvar
+   fREQWaitResp->UnLock();
+       
+   if (rc) {
+      Info(XrdClientDebug::kHIDEBUG,
+           "WaitResp", "Timeout elapsed.");
+   }
+   else {
+      Info(XrdClientDebug::kHIDEBUG,
+           "WaitResp", "Got an unsolicited response. Data=" << fREQWaitRespData);
+   }
     
-    return rc;
+   return rc;
 }
 
 
