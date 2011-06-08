@@ -855,6 +855,17 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
+Int_t  TDecompSVD::GetNrows  () const 
+{ 
+   return fU.GetNrows(); 
+}
+
+Int_t TDecompSVD::GetNcols  () const 
+{
+   return fV.GetNcols();
+}
+
+//______________________________________________________________________________
 Bool_t TDecompSVD::Invert(TMatrixD &inv)
 {
 // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
@@ -864,7 +875,7 @@ Bool_t TDecompSVD::Invert(TMatrixD &inv)
 
    const Int_t rowLwb = GetRowLwb();
    const Int_t colLwb = GetColLwb();
-   const Int_t nRows  = GetNrows();
+   const Int_t nRows  = fU.GetNrows();
 
    if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nRows ||
        inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
@@ -886,11 +897,11 @@ TMatrixD TDecompSVD::Invert(Bool_t &status)
 
    const Int_t rowLwb = GetRowLwb();
    const Int_t colLwb = GetColLwb();
-   const Int_t rowUpb = rowLwb+GetNrows()-1;
-   TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+GetNrows()-1);
+   const Int_t rowUpb = rowLwb+fU.GetNrows()-1;
+   TMatrixD inv(rowLwb,rowUpb,colLwb,colLwb+fU.GetNrows()-1);
    inv.UnitMatrix();
    status = MultiSolve(inv);
-   inv.ResizeTo(rowLwb,rowLwb+GetNcols()-1,colLwb,colLwb+GetNrows()-1);
+   inv.ResizeTo(rowLwb,rowLwb+fV.GetNcols()-1,colLwb,colLwb+fU.GetNrows()-1);
 
    return inv;
 }

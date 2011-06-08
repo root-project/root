@@ -35,6 +35,8 @@ private:
 public:
    TRandom3(UInt_t seed=4357);
    virtual ~TRandom3();
+   // get the current seed (only first element of the seed table)
+   virtual  UInt_t    GetSeed() const { return fMt[0];}
    virtual  Double_t  Rndm(Int_t i=0);
    virtual  void      RndmArray(Int_t n, Float_t *array);
    virtual  void      RndmArray(Int_t n, Double_t *array);
