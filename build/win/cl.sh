@@ -16,4 +16,10 @@ done
 cl.exe $args
 stat=$?
 
+if [ $stat -eq 126 ]; then
+# cygwin causes spurious exit codes 126; just re-try.
+   cl.exe $args
+   stat=$?
+fi
+
 exit $stat
