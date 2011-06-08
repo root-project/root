@@ -1,5 +1,5 @@
-// @(#)root/hdfs:$Id$
-// Author: Brian Bockelman 29/09/2009
+// @(#)root/io:$Id$
+// Author: Philippe Canal, May 2011
 
 /*************************************************************************
  * Copyright (C) 1995-2009, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #ifndef ROOT_TMemFile
-#define ROOT_TMem
+#define ROOT_TMemFile
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -50,14 +50,12 @@ public:
    virtual ~TMemFile();
 
    virtual Long64_t    GetSize() const;
-   
+
    UChar_t *GetBuffer() { return fBuffer; }
    void ResetAfterMerge(TFileMergeInfo *);
    void ResetErrno() const;
 
    ClassDef(TMemFile, 0) //A ROOT file that reads/writes via HDFS
 };
-
-
 
 #endif

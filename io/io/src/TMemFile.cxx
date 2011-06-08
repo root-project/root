@@ -1,4 +1,4 @@
-// @(#)root/hdfs:$Id$
+// @(#)root/io:$Id$
 // Author: Philippe Canal, May 2011
 
 /*************************************************************************
@@ -98,10 +98,10 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
 TFile(path, "WEB", ftitle, compress), fBuffer(0)
 {
    // Usual Constructor.  See the TFile constructor for details.
-   
+
    fSize      = -1;
    fSysOffset = 0;
-   
+
    fOption = option;
    fOption.ToUpper();
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
@@ -112,18 +112,18 @@ TFile(path, "WEB", ftitle, compress), fBuffer(0)
       read    = kTRUE;
       fOption = "READ";
    }
-   
+
    if (create || update || recreate) {
       Int_t mode = O_RDWR | O_CREAT;
       if (recreate) mode |= O_TRUNC;
-      
+
       fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened", path);
          goto zombie;
       }
       fWritable = kTRUE;
-      
+
    } else {
       fD = fD = SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
@@ -132,15 +132,15 @@ TFile(path, "WEB", ftitle, compress), fBuffer(0)
       }
       fWritable = kFALSE;
    }
-   
+
    fBuffer = new UChar_t[fgDefaultBlockSize];
    fSize = fgDefaultBlockSize;
    memcpy(fBuffer,buffer,size);
 
    Init(create || recreate);
-   
+
    return;
-   
+
 zombie:
    // Error in opening file; make this a zombie
    MakeZombie();
@@ -154,7 +154,7 @@ TMemFile::~TMemFile()
 
    // Need to call close, now as it will need both our virtual table
    // and the content of fBuffer
-   Close(); 
+   Close();
    delete [] fBuffer;  fBuffer = 0;
    TRACE("destroy")
 }
@@ -163,7 +163,7 @@ TMemFile::~TMemFile()
 Long64_t TMemFile::GetSize() const
 {
    // Return the current size of the memory file
-   
+
    // We could also attempt to read it from the beginning of the buffer
    return fSize;
 }
@@ -173,15 +173,15 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
 {
    // Wipe all the data from the permanent buffer but keep, the in-memory object
    // alive.
-   
+
    ResetObjects(this,info);
 
    fNbytesKeys = 0;
    fSeekKeys = 0;
-   
+
    fMustFlush = kTRUE;
    fInitDone = kFALSE;
-   
+
    fFree         = 0;
    fWritten      = 0;
    fSumBuffer    = 0;
@@ -210,8 +210,8 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    {
       TDirectory::TContext ctxt(gDirectory, this);
       Init(kTRUE);
-   
-      // And now we need re-initilize the directories ... 
+
+      // And now we need re-initilize the directories ...
 
       TIter   next(this->GetList());
       TObject *idcur;
@@ -220,7 +220,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
             ((TDirectoryFile*)idcur)->ResetAfterMerge(info);
          }
       }
-      
+
    }
 }
 
@@ -229,7 +229,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
 {
    // Wipe all the data from the permanent buffer but keep, the in-memory object
    // alive.
-   
+
    if (directory->GetListOfKeys()) {
       TIter next(directory->GetListOfKeys());
       TKey *key;
@@ -240,7 +240,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
          }
       }
       directory->GetListOfKeys()->Delete("slow");
-   }   
+   }
 
    TString listHargs;
    listHargs.Form("(TFileMergeInfo*)0x%lx",(ULong_t)info);
@@ -259,7 +259,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
          if (error) {
             Error("ResetObjects", "calling ResetAfterMerge() on '%s' failed.",
                   idcur->GetName());
-         }         
+         }
       } else {
          Error("ResetObjects","In %s, we can not reset %s (not ResetAfterMerge function)",
                directory->GetName(),idcur->GetName());
@@ -274,7 +274,7 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
    // See documentation for TFile::SysRead().
 
    TRACE("READ")
-   
+
    if (fBuffer == 0) {
       errno = EBADF;
       gSystem->SetErrorStr("The memory file is not open.");
@@ -344,7 +344,7 @@ Int_t TMemFile::SysClose(Int_t /* fd */)
 //______________________________________________________________________________
 Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
 {
-   // Write a buffer into the file; 
+   // Write a buffer into the file;
 
    if (fSysOffset + len > fSize) {
       len = fSize - fSysOffset;
@@ -379,6 +379,3 @@ void TMemFile::ResetErrno() const
 
    TSystem::ResetErrno();
 }
-
-
-
