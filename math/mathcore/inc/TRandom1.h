@@ -49,6 +49,8 @@ public:
    TRandom1(Int_t rowIndex, Int_t colIndex, Int_t lux );
    virtual ~TRandom1();
    virtual  Int_t    GetLuxury() const {return fLuxury;}
+                    // Get the current seed (first element of the table)
+   virtual  UInt_t   GetSeed() const { return  UInt_t ( fFloatSeedTable[0] /  fMantissaBit24 ) ; }
                     // Gets the current seed.
    const UInt_t     *GetTheSeeds() const {return fTheSeeds;}
                      // Gets the current array of seeds.
