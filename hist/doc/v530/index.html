@@ -16,6 +16,11 @@ histogram were always drawn as scatter plots. This was very confusing.
 Now they are drawn as a surface if the histogram plotting option is a
 lego or a surface or as a contour plot for any other plotting options.
 </li>
+<li>When drawing scatter plot for TH2 or TH2Poly do not use gRandom, but an independent random generator instance,
+to avoid interfering with gRandom (see bug <a href="https://savannah.cern.ch/bugs/?83021" >83021</a>).
+Now the same sequence is also used for the same histograms, giving therefore the same scatter plot for the same
+histogram.
+</li>
 </ul>
 
 <h4>TH2Poly</h4>

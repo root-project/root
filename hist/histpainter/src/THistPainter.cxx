@@ -49,7 +49,7 @@
 #include "TGraphDelaunay.h"
 #include "TView.h"
 #include "TMath.h"
-#include "TRandom.h"
+#include "TRandom2.h"
 #include "TObjArray.h"
 #include "TVectorD.h"
 #include "Hoption.h"
@@ -6636,8 +6636,10 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       char *blank = strstr(oscat," "); if (blank) *blank = 0;
       sscanf(oscat+5,"%lg",&scale);
    }
-   UInt_t seedsave = gRandom->GetSeed();
-   gRandom->SetSeed();
+   // use an independent instance of a random generator 
+   // instead of gRandom to avoid conflicts and 
+   // to get same random numbers when drawing the same histogram
+   TRandom * random = new TRandom2();
    marker=0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -6664,8 +6666,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
                   gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                   marker=0;
                }
-               fXbuf[marker] = (gRandom->Rndm(loop)*xstep) + xk;
-               fYbuf[marker] = (gRandom->Rndm(loop)*ystep) + yk;
+               fXbuf[marker] = (random->Rndm(loop)*xstep) + xk;
+               fYbuf[marker] = (random->Rndm(loop)*ystep) + yk;
                if (Hoption.Logx){
                   if (fXbuf[marker] > 0) fXbuf[marker] = TMath::Log10(fXbuf[marker]);
                   else                   break;
@@ -6684,7 +6686,6 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       }
    }
    if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
-   gRandom->SetSeed(seedsave);
 
    if (Hoption.Zscale) PaintPalette();
 }
@@ -8017,8 +8018,11 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
    Double_t dz = zmax - zmin;
    scale = (kNMAX-1)/dz;
 
-   UInt_t seedsave = gRandom->GetSeed();
-   gRandom->SetSeed();
+
+   // use an independent instance of a random generator
+   // instead of gRandom to avoid conflicts and 
+   // to get same random numbers when drawing the same histogram
+   TRandom * random = new TRandom2();
 
    TH2PolyBin  *b;
 
@@ -8061,8 +8065,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (gRandom->Rndm(loop)*xstep) + xk;
-            yp = (gRandom->Rndm(loop)*ystep) + yk;
+            xp = (random->Rndm(loop)*xstep) + xk;
+            yp = (random->Rndm(loop)*ystep) + yk;
             if (g->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -8085,8 +8089,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (gRandom->Rndm(loop)*xstep) + xk;
-            yp = (gRandom->Rndm(loop)*ystep) + yk;
+            xp = (random->Rndm(loop)*xstep) + xk;
+            yp = (random->Rndm(loop)*ystep) + yk;
             if (mg->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -8098,7 +8102,6 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
       }
    }
    PaintTH2PolyBins("l");
-   gRandom->SetSeed(seedsave);
 }
 
 
