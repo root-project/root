@@ -43,6 +43,7 @@ namespace textinput {
     void WriteRawString(const char* text, size_t len);
 
     void EraseToRight();
+    void CheckCursorPos();
 
     void ShowError(const char* Where) const;
 

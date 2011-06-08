@@ -68,7 +68,30 @@ namespace textinput {
   }
 
   void
+  TerminalDisplayWin::CheckCursorPos() {
+    // Did something print something on the screen?
+    // I.e. did the cursor move?
+    CONSOLE_SCREEN_BUFFER_INFO CSI;
+    if (::GetConsoleScreenBufferInfo(fOut, &CSI)) {
+      if (CSI.dwCursorPosition.X != fWritePos.fCol
+        || CSI.dwCursorPosition.Y != fWritePos.fLine + fStartLine) {
+        fStartLine = CSI.dwCursorPosition.Y;
+        if (CSI.dwCursorPosition.X) {
+          // Whooa - where are we?! Newline and cross fingers:
+          WriteRawString("\n", 1);
+          ++fStartLine;
+        }
+        fWritePos.fCol = 0;
+        fWritePos.fLine = 0;
+        Redraw();
+      }
+    }
+  }
+
+
+  void
   TerminalDisplayWin::Move(Pos P) {
+    CheckCursorPos();
     MoveInternal(P);
     fWritePos = P;
   }
