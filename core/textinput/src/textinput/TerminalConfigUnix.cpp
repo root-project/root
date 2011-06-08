@@ -115,7 +115,9 @@ void
 TerminalConfigUnix::Attach() {
   if (fIsAttached) return;
 #ifdef TCSANOW
-  tcsetattr(fFD, TCSANOW, fConfTIOS);
+  if (IsInteractive()) {
+    tcsetattr(fFD, TCSANOW, fConfTIOS);
+  }
 #endif
   fIsAttached = true;
 }
@@ -125,9 +127,19 @@ TerminalConfigUnix::Detach() {
   // Reset the terminal configuration.
   if (!fIsAttached) return;
 #ifdef TCSANOW
-  tcsetattr(fFD, TCSANOW, fOldTIOS);
+  if (IsInteractive()) {
+    tcsetattr(fFD, TCSANOW, fOldTIOS);
+  }
 #endif
   fIsAttached = false;
 }
+
+bool TerminalConfigUnix::IsInteractive() const {
+  // Whether both stdin and stdout are attached to a tty.
+  return isatty(fileno(stdin)) && isatty(fileno(stdout))
+    && (getpgrp() == tcgetpgrp(STDOUT_FILENO));
+}
+
+
 
 #endif // ndef WIN32

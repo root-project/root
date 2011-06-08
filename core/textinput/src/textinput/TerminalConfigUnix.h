@@ -38,7 +38,8 @@ public:
 
   void Attach();
   void Detach();
-  bool IsAttached() { return fIsAttached; }
+  bool IsAttached() const { return fIsAttached; }
+  bool IsInteractive() const;
 
   void HandleSignal(int signum);
 
