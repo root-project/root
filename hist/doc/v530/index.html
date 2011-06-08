@@ -3,6 +3,45 @@
 <a name="hist"></a> 
 <h3>Histogram package</h3>
 
+<h4>All Histogram classes (including the TProfile's)</h4>
+<ul>
+  <li>Add support for filling histograms with <b>negative</b> weights. Now the correct global histogram statistics (Mean, Standard
+  deviation, etc..) is computed, while before the abs(w) was used when computing the histogram statistics.
+  </li>
+  <li>Updated in all the projection function the check for the compatibility with previously existing histograms, now
+  the limits are checked using a tolerance/</li>
+  <li>Fix a bug in computing the point errors when fitting a 2d (or 3D) histogram with a 1d (or 2D) function.</li>
+</ul>
+
+
+<h4>TH1</h4>
+<ul>
+  <li>Add support for weighted likelihood fit of histogram by using a new option, <i>WL</i> and suppress the old option
+ <i>LL</i>.
+  The histogram must have the sum of the weight squared stored bin by bin to use this fit option
+  (i.e. <tt>TH1::Sumw2()</tt> has been called before filling).
+  Now one can perform likelihoof fit to weighted or scaled histograms and get the correct errors in the fit parameters.
+  (see bug report <a href="https://savannah.cern.ch/bugs/?79754" >79754</a>).
+  </li>
+  <li>Fix for the bug <a href="http://savannah.cern.ch/bugs/?82562" >82562</a>.</li>
+  <li>Fix a bug in <tt>TH1::Merge</tt> for histogram with labels (bug <a href="http://savannah.cern.ch/bugs/?75902" >75902</a>).</li>
+  <li>Fix few bugs related with the Buffer. </li>
+  
+</ul>
+
+<h4>TProfile</h4>
+<ul>
+  <li>Fix a bug in <tt>TProfile::Merge</tt> when the <tt>kCanRebin</tt> bit is set
+   (bug  <a href="https://savannah.cern.ch/bugs/?79675" >79675</a>).</li>
+<li>Fix a bug in <tt>LabelsDeflate</tt>   (bug  <a href="https://savannah.cern.ch/bugs/?77149" >77149</a>)</li>
+</ul>
+
+<h4>TH1</h4>
+<ul>
+  <li>Add new method <tt>TH3::Rebin3D</tt> and alsoRebinX, RebinY and RebinZ thanks to Zhiyi Liu.
+</li>
+</ul>
+
 <h4>THistPainter</h4>
 <ul>
 <li><tt>TPad::SetTheta()</tt> and <tt>TPad::SetPhi()</tt> did not cause the
@@ -17,9 +56,9 @@ Now they are drawn as a surface if the histogram plotting option is a
 lego or a surface or as a contour plot for any other plotting options.
 </li>
 <li>When drawing scatter plot for TH2 or TH2Poly do not use gRandom, but an independent random generator instance,
-to avoid interfering with gRandom (see bug <a href="https://savannah.cern.ch/bugs/?83021" >83021</a>).
-Now the same sequence is also used for the same histograms, giving therefore the same scatter plot for the same
-histogram.
+to avoid interfering with gRandom (bug <a href="https://savannah.cern.ch/bugs/?83021" >83021</a>).
+Now the same random sequence is always used for drawing the same histograms, giving therefore exactly the same scatter plot for the same
+histogram, while before a slightly different plot was obtained every time. 
 </li>
 </ul>
 
@@ -73,9 +112,36 @@ histogram.
    data points outside the visible range along the Y axis."</p>
   <p>A similar option already existed for histograms.</p>
 </li>
+<li>When fitting TGraphErrors and a linear function, use the error in X, before they were not used,
+while they were used for non-linear fits. </li>
 </ul>
 
-<tt>TSVDUnfold</tt>
+<h4>TFractionFitter</h4>
+<ul>
+  <li>New version from Frank Filthaut  providing the possibility to exclude bins from the fit</li>
+</ul>
+
+<h4>TGraphAsymErrors</h4>
+
+<ul>
+  <li>Fix calculation of binomial errors in <tt>>TGraphAsymErrors::Divide</tt> for the case the histogram have weights. 
+Have  methods working for Bayesian and Normal statistic options. For the others options the division using weights is
+  not supported.
+  </li>
+</ul>
+
+<h4>TEfficiency</h4>
+
+<ul>
+  <li>Update in the class by implementing <tt>DistanceToPrimitive</tt> and <tt>ExecuteEvent</tt>. This allows the
+  possibility to click on the object</li>
+  <li>Add methods to returned the drawn graph (1D) or the histogram (2D).</li>
+  <li>Apply some fixes in  the <tt>TEfficiency::Draw</tt> and <tt>Paint</tt> methods. </li>
+</ul>
+
+
+
+<h4>TSVDUnfold</h4>
 <ul>
 <li>Rescaling using full covariance matrix rather than neglecting 
 correlations.</li>
