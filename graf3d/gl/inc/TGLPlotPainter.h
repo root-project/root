@@ -225,7 +225,7 @@ protected:
       kTrueColorSelectionBase = 10
    };
 
-   ESelectionBase        fSelectionBase;
+   Int_t                 fSelectionBase;
    mutable Bool_t        fDrawPalette;
 
 public:
