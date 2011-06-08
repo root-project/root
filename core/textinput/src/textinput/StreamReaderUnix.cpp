@@ -228,6 +228,7 @@ namespace textinput {
   bool
   StreamReaderUnix::ReadInput(size_t& nRead, InputData& in) {
     int c = ReadRawCharacter();
+    in.SetModifier(InputData::kModNone);
     if (c == -1) {
       in.SetExtended(InputData::kEIEOF);
     } else if (c == 0x1b) {
