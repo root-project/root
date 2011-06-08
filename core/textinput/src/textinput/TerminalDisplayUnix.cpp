@@ -99,7 +99,7 @@ extern "C" void TerminalDisplayUnix__handleResizeSignal(int) {
 namespace textinput {
   // If input is not a tty don't write in tty-mode either.
   TerminalDisplayUnix::TerminalDisplayUnix():
-    TerminalDisplay(isatty(fileno(stdin)) && isatty(fileno(stdout))),
+    TerminalDisplay(TerminalConfigUnix::Get().IsInteractive()),
     fIsAttached(false), fNColors(16) {
     HandleResizeSignal();
     gTerminalDisplayUnix() = this;
