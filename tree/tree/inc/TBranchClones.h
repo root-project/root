@@ -56,6 +56,7 @@ public:
    Bool_t          IsFolder() const {return kTRUE;}
    virtual void    Print(Option_t *option="") const;
    virtual void    Reset(Option_t *option="");
+   virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual void    SetAddress(void *add);
    virtual void    SetBasketSize(Int_t buffsize);
    virtual void    UpdateFile();

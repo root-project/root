@@ -49,7 +49,7 @@ private:
 
 protected:
    TStopwatch     fWatch;            // stop watch to measure file copy speed
-   TList         *fFileList;         // a list of files, which shall be merged
+   TList         *fFileList;         // a list the file (TFile*) which shall be merged
    TFile         *fOutputFile;       // the outputfile for merging
    TString        fOutputFilename;   // the name of the outputfile for merging
    TString        fOutputFilename1;  // the name of the temporary outputfile for merging
@@ -61,7 +61,7 @@ protected:
 
    Bool_t         fLocal;           // Makes local copies of merging files if True (default is kTRUE)
    Bool_t         fHistoOneGo;      // Merger histos in one go (default is kTRUE)
-   TList         *fMergeList;       // list of the files need to be merged
+   TList         *fMergeList;       // list of TObjString containing the name of the files need to be merged
 
 public:   
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
@@ -72,6 +72,7 @@ public:
    Bool_t      HasCompressionChange() const { return fCompressionChange; }
    const char *GetOutputFileName() const { return fOutputFilename; }
    TList      *GetMergeList() const { return fMergeList;  }
+   TFile      *GetOutputFile() const { return fOutputFile; }
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
@@ -80,11 +81,13 @@ public:
    //--- file merging interface
    virtual void   Reset();
    virtual Bool_t AddFile(const char *url, Bool_t cpProgress = kTRUE);
+   virtual Bool_t AddAdoptFile(TFile *source, Bool_t cpProgress = kTRUE);
    virtual Bool_t OutputFile(const char *url, Bool_t force = kTRUE);
    virtual Bool_t OutputFile(const char *url, Bool_t force, Int_t compressionLevel);
    virtual void   PrintFiles(Option_t *options);
+   virtual Bool_t IncrementalMerge(Bool_t = kTRUE);
    virtual Bool_t Merge(Bool_t = kTRUE);
-   virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist);
+   virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t incremental = kFALSE);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
 

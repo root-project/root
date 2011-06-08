@@ -50,6 +50,7 @@ namespace ROOT {
       ShowMembersFunc_t           fShowMembers;
       Int_t                       fVersion;
       MergeFunc_t                 fMerge;
+      ResetAfterMergeFunc_t       fResetAfterMerge;
       NewFunc_t                   fNew;
       NewArrFunc_t                fNewArray;
       DelFunc_t                   fDelete;
@@ -128,6 +129,7 @@ namespace ROOT {
       void                              SetFromTemplate();
       Int_t                             SetImplFile(const char *file, Int_t line);
       void                              SetMerge(MergeFunc_t);
+      void                              SetResetAfterMerge(ResetAfterMergeFunc_t);
       void                              SetNew(NewFunc_t newFunc);
       void                              SetNewArray(NewArrFunc_t newArrayFunc);
       void                              SetReadRawRules( const std::vector<ROOT::TSchemaHelper>& rules );

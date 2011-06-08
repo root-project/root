@@ -471,6 +471,7 @@ public:
    virtual void            RecursiveRemove(TObject *obj);
    virtual void            RemoveFriend(TTree*);
    virtual void            Reset(Option_t* option = "");
+   virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);
    virtual void            ResetBranchAddresses();
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*

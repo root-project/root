@@ -194,6 +194,7 @@ namespace ROOT {
    typedef void  (*DesFunc_t)(void *);
    typedef void  (*DirAutoAdd_t)(void *, TDirectory *);
    typedef Long64_t (*MergeFunc_t)(void *, TCollection *, TFileMergeInfo *);
+   typedef void  (*ResetAfterMergeFunc_t)(void *, TFileMergeInfo *);
 
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 

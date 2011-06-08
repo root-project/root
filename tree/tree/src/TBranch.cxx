@@ -1975,6 +1975,64 @@ void TBranch::Reset(Option_t*)
    fNBaskets = 0;
 }
 
+
+//______________________________________________________________________________
+void TBranch::ResetAfterMerge(TFileMergeInfo *)
+{
+   // Reset a Branch.
+   //
+   // Existing buffers are deleted.
+   // Entries, max and min are reset.
+   //
+   
+   fReadBasket       = 0;
+   fReadEntry        = -1;
+   fFirstBasketEntry = -1;
+   fNextBasketEntry  = -1;
+   fCurrentBasket    = 0;
+   fWriteBasket      = 0;
+   fEntries          = 0;
+   fTotBytes         = 0;
+   fZipBytes         = 0;
+   fEntryNumber      = 0;
+   
+   if (fBasketBytes) {
+      for (Int_t i = 0; i < fMaxBaskets; ++i) {
+         fBasketBytes[i] = 0;
+      }
+   }
+   
+   if (fBasketEntry) {
+      for (Int_t i = 0; i < fMaxBaskets; ++i) {
+         fBasketEntry[i] = 0;
+      }
+   }
+   
+   if (fBasketSeek) {
+      for (Int_t i = 0; i < fMaxBaskets; ++i) {
+         fBasketSeek[i] = 0;
+      }
+   }
+   
+   TBasket *reusebasket = (TBasket*)fBaskets[fWriteBasket];
+   if (reusebasket) {
+      fBaskets[fWriteBasket] = 0;
+   } else {
+      reusebasket = (TBasket*)fBaskets[fReadBasket];
+      if (reusebasket) {
+         fBaskets[fReadBasket] = 0;
+      }
+   }
+   fBaskets.Delete();
+   if (reusebasket) {
+      fNBaskets = 1;
+      reusebasket->Reset();
+      fBaskets[0] = reusebasket;
+   } else {
+      fNBaskets = 0;
+   }
+}
+
 //______________________________________________________________________________
 void TBranch::ResetAddress()
 {

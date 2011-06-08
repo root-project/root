@@ -192,6 +192,17 @@ void TBranchRef::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TBranchRef::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // Reset a Branch after a Merge operation (drop data but keep customizations)
+   // TRefTable is cleared.
+   
+   TBranch::ResetAfterMerge(info);
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
+   fRefTable->Reset();
+}
+
+//______________________________________________________________________________
 Int_t TBranchRef::SetParent(const TObject* object, Int_t branchID)
 {
    // -- Set the current parent branch.

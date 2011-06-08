@@ -6423,6 +6423,34 @@ void TTree::Reset(Option_t* option)
       fBranchRef->Reset();
    }
 }
+//______________________________________________________________________________
+void TTree::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // Resets the state of this TTree after a merge (keep the customization but
+   // forget the data).
+   
+   fEntries       = 0;
+   fNClusterRange = 0;
+   fTotBytes      = 0;
+   fZipBytes      = 0;
+   fSavedBytes    = 0;
+   fTotalBuffers  = 0;
+   fChainOffset   = 0;
+   fReadEntry     = -1;
+   
+   delete fTreeIndex;
+   fTreeIndex     = 0;
+   
+   Int_t nb = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nb; ++i)  {
+      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+      branch->ResetAfterMerge(info);
+   }
+   
+   if (fBranchRef) {
+      fBranchRef->ResetAfterMerge(info);
+   }
+}
 
 //______________________________________________________________________________
 void TTree::ResetBranchAddress(TBranch *br)

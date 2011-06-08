@@ -47,6 +47,7 @@ protected:
    TList      *fKeys;            //Pointer to keys list in memory
 
    virtual void         CleanTargets();
+   void Init(TClass *cl = 0);
 
 private:
    TDirectoryFile(const TDirectoryFile &directory);  //Directories cannot be copied
@@ -105,6 +106,7 @@ public:
    virtual void        ReadAll(Option_t *option="");
    virtual Int_t       ReadKeys(Bool_t forceRead=kTRUE);
    virtual Int_t       ReadTObject(TObject *obj, const char *keyname);
+   virtual void        ResetAfterMerge(TFileMergeInfo *);
    virtual void        rmdir(const char *name);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);

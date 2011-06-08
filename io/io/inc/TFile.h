@@ -154,6 +154,7 @@ public:
    virtual ~TFile();
    virtual void        Close(Option_t *option=""); // *MENU*
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t buffersize = 1000000);
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);

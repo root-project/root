@@ -1035,7 +1035,6 @@ bool HasDirectoryAutoAdd(G__ClassInfo &cl)
    // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
 
    // Detect if the class has a DirectoryAutoAdd
-   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
 
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
@@ -1051,10 +1050,9 @@ bool HasDirectoryAutoAdd(G__ClassInfo &cl)
 //______________________________________________________________________________
 bool HasNewMerge(G__ClassInfo &cl)
 {
-   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+   // Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
    
    // Detect if the class has a 'new' Merge function.
-   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
    
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
@@ -1070,10 +1068,9 @@ bool HasNewMerge(G__ClassInfo &cl)
 //______________________________________________________________________________
 bool HasOldMerge(G__ClassInfo &cl)
 {
-   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+   // Return true if the class has a method Merge(TCollection*)
    
    // Detect if the class has an old fashion Merge function.
-   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
    
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
@@ -1081,6 +1078,44 @@ bool HasOldMerge(G__ClassInfo &cl)
    const char *name = "Merge";
    
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
+   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   
+   return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
+bool HasReset(G__ClassInfo &cl)
+{
+   // Return true if the class has a method ResetAfterMerge(TFileMergeInfo *)
+   
+   // Detect if the class has a 'new' Merge function.
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   long offset;
+   const char *proto = "Option_t*";
+   const char *name = "Reset";
+   
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   
+   return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
+bool HasResetAfterMerge(G__ClassInfo &cl)
+{
+   // Return true if the class has a method ResetAfterMerge(TFileMergeInfo *)
+   
+   // Detect if the class has a 'new' Merge function.
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   long offset;
+   const char *proto = "TFileMergeInfo*";
+   const char *name = "MergeAfterReset";
+   
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    
    return hasMethodWithSignature;
@@ -1900,6 +1935,17 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       << "   }" << std::endl;
    }
 
+   if (HasResetAfterMerge(cl)) {
+      (*dictSrcOut) << "   // Wrapper around the Reset function." << std::endl
+      << "   static void reset_" << mappedname.c_str() << "(void *obj,TFileMergeInfo *info) {" << std::endl
+      << "      ((" << classname.c_str() << "*)obj)->ResetAfterMerge(info);" << std::endl
+      << "   }" << std::endl;
+   } else if (HasReset(cl)) {
+      (*dictSrcOut) << "   // Wrapper around the Reset function." << std::endl
+      << "   static void reset_" << mappedname.c_str() << "(void *obj,TFileMergeInfo *info) {" << std::endl
+      << "      ((" << classname.c_str() << "*)obj)->Reset(info ? info->fOptions.Data() : \"\");" << std::endl
+      << "   }" << std::endl;
+   }
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
 }
 
@@ -2526,6 +2572,9 @@ void WriteClassInit(G__ClassInfo &cl)
    if (HasNewMerge(cl) || HasOldMerge(cl)) {
       (*dictSrcOut)<< "   static Long64_t merge_" << mappedname.c_str() << "(void *obj, TCollection *coll,TFileMergeInfo *info);" << std::endl;
    }
+   if (HasResetAfterMerge(cl) || HasReset(cl)) {
+      (*dictSrcOut)<< "   static void reset_" << mappedname.c_str() << "(void *obj, TFileMergeInfo *info);" << std::endl;
+   }
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
@@ -2720,6 +2769,9 @@ void WriteClassInit(G__ClassInfo &cl)
    }
    if (HasNewMerge(cl) || HasOldMerge(cl)) {
       (*dictSrcOut) << "      instance.SetMerge(&merge_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasResetAfterMerge(cl) || HasReset(cl)) {
+      (*dictSrcOut) << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << std::endl;      
    }
    if (bset) {
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"

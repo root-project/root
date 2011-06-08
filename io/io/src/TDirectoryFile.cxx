@@ -119,7 +119,26 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    fBufferSize  = 0;
    fWritable    = kTRUE;
 
+   Init(cl);
+
+   fModified = kFALSE;
+
+   R__LOCKGUARD2(gROOTMutex);
+   gROOT->GetUUIDs()->AddUUID(fUUID,this);   
+}
+
+//______________________________________________________________________________
+void TDirectoryFile::Init(TClass *cl)
+{
+   // Initialize the key associated with this directory (and the related 
+   // data members.
+
+   TFile* f = GetFile();
    if (f->IsBinary()) {
+      if (cl==0) {
+         cl = IsA();
+      }
+      TDirectory* motherdir = GetMotherDir();
       fSeekParent  = f->GetSeekDir();
       Int_t nbytes = TDirectoryFile::Sizeof();
       TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
@@ -137,9 +156,6 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       if (fSeekDir == 0) return;
    }
 
-   fModified = kFALSE;
-   R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
 //______________________________________________________________________________
@@ -1293,6 +1309,51 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
    TKey *key = (TKey*)fKeys->FindObject(keyname);
    if (!key)   { Error("Read","Key not found"); return 0; }
    return key->Read(obj);
+}
+
+//______________________________________________________________________________
+void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // Reset the TDirectory after its content has been merged into another
+   // Directory.  This returns the TDirectoryFile object back to its state
+   // before any data has been written to the file.
+   // The object in the in-memory list are assumed to also have been reset.
+   
+   // There is nothing to reset in the base class (TDirectory) since
+   // we do want to key the list of in-memory object as is.
+   fModified = kFALSE;
+   // Does not change: fWritable
+   fDatimeC.Set();
+   fDatimeM.Set();
+   fNbytesKeys = 0; // updated when the keys are written
+   fNbytesName = 0; // updated by Init
+   // Does not change (user customization): fBufferSize;
+   fSeekDir = 0;    // updated by Init
+   fSeekParent = 0; // updated by Init
+   fSeekKeys = 0;   // updated by Init
+   // Does not change: fFile
+   TKey *key = (TKey*)fKeys->FindObject(fName);
+   TClass *cl = IsA();
+   if (key) {
+      cl = TClass::GetClass(key->GetClassName());
+   }
+   // NOTE: We should check that the content is really mergeable and in 
+   // the in-mmeory list, before deleting the keys.
+   if (fKeys) {
+      fKeys->Delete("slow");
+   }
+   
+   Init(cl);
+
+   // Do the same with the sub-directories.
+   TIter   next(GetList());
+   TObject *idcur;
+   while ((idcur = next())) {
+      if (idcur->IsA() == TDirectoryFile::Class()) {
+         ((TDirectoryFile*)idcur)->ResetAfterMerge(info);
+      }
+   }
+   
 }
 
 //______________________________________________________________________________
