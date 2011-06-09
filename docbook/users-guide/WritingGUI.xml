@@ -836,7 +836,7 @@ private:
 public:
    MyClass() { fValue=0; }
    Int_t GetValue() const { return fValue; }
-   Void  SetValue(Int_t); <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
+   void  SetValue(Int_t); <emphasis role="italic"><code>// *SIGNAL*</code></emphasis>
 };
 </programlisting>
 
