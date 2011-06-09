@@ -237,7 +237,6 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 // Check pushes and pulls needed to cross the next boundary with respect to the
 // position given by FindNextBoundary. If radius is not mentioned the full bounding
 // box will be sampled.
-   gRandom = new TRandom3();
    TGeoVolume *tvol = fGeoManager->GetTopVolume();
    Info("CheckBoundaryErrors", "Top volume is %s",tvol->GetName());  
    const TGeoShape *shape = tvol->GetShape();
@@ -476,7 +475,6 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    memset(fFlags, 0, nuid*sizeof(Bool_t));
    TGeoVolume *vol;
    TCanvas *c = new TCanvas("overlaps", "Overlaps by sampling", 800,800);
-   new TRandom3();
 
 // STAGE 1: Overlap checking by sampling per volume
    if (checkoverlaps) {
@@ -1153,7 +1151,6 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
    TGeoNode *node1, *node2;
    Int_t novlps = 0;
    TGeoHMatrix mat1, mat2;
-   if (!gRandom) new TRandom3();
    while (ipoint < npoints) {
    // Shoot randomly in the bounding box.
       pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
@@ -2035,7 +2032,6 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
 // Draw random points in the bounding box of a volume.
    if (!vol) return;
-   gRandom = new TRandom3();
    vol->VisibleDaughters(kTRUE);
    vol->Draw();
    TString opt = option;
@@ -2109,7 +2105,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    TObjArray *pm = new TObjArray(128);
    TPolyLine3D *line = 0;
    TPolyLine3D *normline = 0;
-   gRandom = new TRandom3();
    TGeoVolume *vol=fGeoManager->GetTopVolume();
 //   vol->VisibleDaughters(kTRUE);
 
@@ -2227,7 +2222,6 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    TGeoNode *nodeg3 = 0;
    TGeoNode *solg3 = 0;
    if (!node) {dist=-1; return 0;}
-   gRandom = new TRandom3();
    Bool_t hasg3 = kFALSE;
    if (strlen(g3path)) hasg3 = kTRUE;
    TString geopath = fGeoManager->GetPath();
@@ -2298,7 +2292,6 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
       return node_close;
    }
 
-//   gRandom = new TRandom3();
    // save current point
    memcpy(&point[0], pointg, 3*sizeof(Double_t));
    for (Int_t i=0; i<npoints; i++) {
@@ -2423,7 +2416,6 @@ Double_t *TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, D
 void TGeoChecker::Test(Int_t npoints, Option_t *option)
 {
    // Check time of finding "Where am I" for n points.
-   gRandom= new TRandom3();
    Bool_t recheck = !strcmp(option, "RECHECK");
    if (recheck) printf("RECHECK\n");
    const TGeoShape *shape = fGeoManager->GetTopVolume()->GetShape();
@@ -2479,7 +2471,6 @@ void TGeoChecker::TestOverlaps(const char* path)
    TGeoNode *checked = fGeoManager->GetCurrentNode();
    checked->InspectNode();
    // shoot 1E4 points in the shape of the current volume
-   gRandom= new TRandom3();
    Int_t npoints = 1000000;
    Double_t big = 1E6;
    Double_t xmin = big;
@@ -2596,7 +2587,6 @@ Double_t TGeoChecker::Weight(Double_t precision, Option_t *option)
    if (!nmat) return 0;
    Int_t *nin = new Int_t[nmat];
    memset(nin, 0, nmat*sizeof(Int_t));
-   gRandom = new TRandom3();
    TString opt = option;
    opt.ToLower();
    Bool_t isverbose = opt.Contains("v");

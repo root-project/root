@@ -772,7 +772,8 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
       if (has_pad) gPad->Update();
    }
    PaintShape(shape,"range");   
-   view->SetAutoRange(kTRUE);   
+   view->SetAutoRange(kFALSE);
+   view->SetPerspective();
    // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
 }
