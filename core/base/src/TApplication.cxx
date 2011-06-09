@@ -175,6 +175,11 @@ TApplication::TApplication(const char *appClassName,
    fAppRemote     = 0;
    ResetBit(kProcessRemotely);
 
+   // Make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
+   gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
+
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
 
@@ -183,11 +188,6 @@ TApplication::TApplication(const char *appClassName,
       fgGraphNeeded = kTRUE;
       InitializeGraphics();
    }
-
-   // Make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
-   gInterpreter->UpdateListOfTypes();
 
    // Save current interpreter context
    gInterpreter->SaveContext();
