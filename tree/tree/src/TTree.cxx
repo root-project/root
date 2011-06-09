@@ -635,6 +635,7 @@ TTree::TTree()
 , fClones(0)
 , fBranchRef(0)
 , fFriendLockStatus(0)
+, fTransientBuffer(0)
 {
    // Default constructor and I/O constructor.
    //
@@ -701,6 +702,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fClones(0)
 , fBranchRef(0)
 , fFriendLockStatus(0)
+, fTransientBuffer(0)
 {
    // Normal tree constructor.
    //
@@ -843,6 +845,25 @@ TTree::~TTree()
    // Must be done after the destruction of friends.
    // Note: We do *not* own our directory.
    fDirectory = 0;
+
+   if (fTransientBuffer) {
+      delete fTransientBuffer;
+      fTransientBuffer = 0;
+   }
+}
+
+//______________________________________________________________________________
+TBuffer* TTree::GetTransientBuffer(Int_t size)
+{
+    // Returns the transient buffer currently used by this TTree for reading/writing baskets
+    if (fTransientBuffer) {
+       if (fTransientBuffer->BufferSize() < size) {
+          fTransientBuffer->Expand(size);
+       }
+       return fTransientBuffer;
+    }
+    fTransientBuffer = new TBufferFile(TBuffer::kRead, size);
+    return fTransientBuffer;
 }
 
 //______________________________________________________________________________

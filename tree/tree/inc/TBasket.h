@@ -40,7 +40,14 @@ class TBasket : public TKey {
 private:
    TBasket(const TBasket&);            // TBasket objects are not copiable.
    TBasket& operator=(const TBasket&); // TBasket objects are not copiable.
-      
+
+   // Internal corner cases for ReadBasketBuffers
+   Int_t ReadBasketBuffersUnzip(char*, Int_t, Bool_t, TFile*);
+   Int_t ReadBasketBuffersUncompressedCase();
+
+   // Helper for managing the compressed buffer.
+   void InitializeCompressedBuffer(Int_t len, TFile* file);
+ 
 protected:
    Int_t       fBufferSize;      //fBuffer length in bytes
    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
@@ -50,9 +57,10 @@ protected:
    Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch;          //Pointer to the basket support branch
-   Int_t       fCompressedSize;  //!Size of the allocated memroy in fCompressedBuffer
-   char       *fCompressedBuffer;//!Temporary place holder for the compressed buffer if needed.
-   
+   TBuffer    *fCompressedBufferRef; //! Compressed buffer.
+   Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.
+   Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
+
 public:
    
    TBasket();
