@@ -186,7 +186,6 @@ public:
    virtual void      ReadBasket(TBuffer &b);
    virtual void      Refresh(TBranch *b);
    virtual void      Reset(Option_t *option="");
-   virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetAddress();
    virtual void      ResetReadEntry() {fReadEntry = -1;}
    virtual void      SetAddress(void *add);

@@ -4033,15 +4033,17 @@ void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
 }
 
 //______________________________________________________________________________
-Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
+Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
+                 UInt_t buffersize)
 {
-   // Allows to copy this file to the dst URL. Returns kTRUE in case of success,
+   // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
    // kFALSE otherwise.
 
    Bool_t rmdestiferror = kFALSE;
    TStopwatch watch;
    Bool_t success = kFALSE;
 
+   TUrl sURL(src, kTRUE);
    TUrl dURL(dst, kTRUE);
 
    TString oopt = "RECREATE";
@@ -4050,28 +4052,43 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
    // Files will be open in RAW mode
    TString raw = "filetype=raw";
 
+   // Set optimization options for the source file
+   TString opt = sURL.GetOptions();
+   if (opt != "") opt += "&";
+   opt += raw;
+   // Netx-related options:
+   //    cachesz = 4*buffersize     -> 4 buffers as peak mem usage
+   //    readaheadsz = 2*buffersize -> Keep at max 4*buffersize bytes outstanding when reading
+   //    rmpolicy = 1               -> Remove from the cache the blk with the least offset
+   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
+   sURL.SetOptions(opt);
+
    // Set optimization options for the destination file
-   TString opt = dURL.GetOptions();
+   opt = dURL.GetOptions();
    if (opt != "") opt += "&";
    opt += raw;
    dURL.SetOptions(opt);
 
    char *copybuffer = 0;
 
-   TFile *sfile = this;
+   TFile *sfile = 0;
    TFile *dfile = 0;
 
+   // Open source file
+   if (!(sfile = TFile::Open(sURL.GetUrl(), "READ"))) {
+      ::Error("TFile::Cp", "cannot open source file %s", src);
+      goto copyout;
+   }
    // "RECREATE" does not work always well with XROOTD
    // namely when some pieces of the path are missing;
    // we force "NEW" in such a case
-   if (TFile::GetType(ourl, "") == TFile::kNet) {
+   if (TFile::GetType(ourl, "") == TFile::kNet)
       if (gSystem->AccessPathName(ourl)) {
          oopt = "NEW";
          // Force creation of the missing parts of the path
          opt += "&mkpath=1";
          dURL.SetOptions(opt);
       }
-   }
 
    // Open destination file
    if (!(dfile = TFile::Open(dURL.GetUrl(), oopt))) {
@@ -4125,7 +4142,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
       read   = sfile->GetBytesRead() - b0;
       if ((read <= 0) || readop) {
          ::Error("TFile::Cp", "cannot read from source file %s. readsize=%lld read=%lld readop=%d",
-                              sfile->GetName(), readsize, read, readop);
+                              src, readsize, read, readop);
          goto copyout;
       }
 
@@ -4147,8 +4164,10 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
    success = kTRUE;
 
 copyout:
+   if (sfile) sfile->Close();
    if (dfile) dfile->Close();
 
+   if (sfile) delete sfile;
    if (dfile) delete dfile;
    if (copybuffer) delete[] copybuffer;
 
@@ -4158,46 +4177,6 @@ copyout:
    watch.Stop();
    watch.Reset();
 
-   return success;
-}
-
-//______________________________________________________________________________
-Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
-                 UInt_t buffersize)
-{
-   // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
-   // kFALSE otherwise.
-   
-   TUrl sURL(src, kTRUE);
-
-   // Files will be open in RAW mode
-   TString raw = "filetype=raw";
-   
-   // Set optimization options for the source file
-   TString opt = sURL.GetOptions();
-   if (opt != "") opt += "&";
-   opt += raw;
-   // Netx-related options:
-   //    cachesz = 4*buffersize     -> 4 buffers as peak mem usage
-   //    readaheadsz = 2*buffersize -> Keep at max 4*buffersize bytes outstanding when reading
-   //    rmpolicy = 1               -> Remove from the cache the blk with the least offset
-   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
-   sURL.SetOptions(opt);
-
-   TFile *sfile = 0;
-
-   Bool_t success = kFALSE;
-
-   // Open source file
-   if (!(sfile = TFile::Open(sURL.GetUrl(), "READ"))) {
-      ::Error("TFile::Cp", "cannot open source file %s", src);
-   } else {
-      success = sfile->Cp(dst, progressbar, buffersize);
-   }
-
-   if (sfile) sfile->Close();
-   if (sfile) delete sfile;
-   
    return success;
 }
 
