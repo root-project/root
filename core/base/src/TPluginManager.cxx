@@ -466,6 +466,9 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    if (!fBasesLoaded) {
       fBasesLoaded = new THashTable();
       fBasesLoaded->SetOwner();
+      
+      // make sure we have gPluginMgr availble in the plugin macros
+      gInterpreter->InitializeDictionaries();
    }
    TString sbase = base;
    if (sbase != "") {
