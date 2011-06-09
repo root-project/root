@@ -466,7 +466,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       }
 
       // Optional monitor for zip time profiling.
-      Double_t start;
+      Double_t start = 0;
       if (R__unlikely(gPerfStats)) {
          start = TTimeStamp();
       }
