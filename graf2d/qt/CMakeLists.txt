@@ -16,8 +16,8 @@ QT4_WRAP_CPP(mocfiles inc/TQtWidget.h inc/TQtEmitter.h inc/TQtClientFilter.h
                       inc/TQtRootSlot.h)
 
 ROOT_GENERATE_DICTIONARY(G__GQt ${headers} LINKDEF LinkDef.h)
-ROOT_GENERATE_ROOTMAP(GQt LINKDEF LinkDef.h DEPENDENCIES )
+ROOT_GENERATE_ROOTMAP(GQt LINKDEF LinkDef.h DEPENDENCIES Gui Gpad Graf Rint)
 
-ROOT_LINKER_LIBRARY(GQt *.cxx ${mocfiles} G__GQt.cxx LIBRARIES ${QT_LIBRARIES})
+ROOT_LINKER_LIBRARY(GQt *.cxx ${mocfiles} G__GQt.cxx LIBRARIES ${QT_LIBRARIES} DEPENDENCIES Gui Gpad Graf Rint)
 
 ROOT_INSTALL_HEADERS()

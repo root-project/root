@@ -9,6 +9,10 @@
 set(CASTOR_FOUND FALSE)
 set(CASTOR_LIBRARIES)
 
+if(CASTOR_INCLUDE_DIR)
+  set(CASTOR_FIND_QUIETLY 1)
+endif()
+
 find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS 
   $ENV{CASTOR_DIR}/include
   /cern/pro/include
@@ -26,7 +30,6 @@ if(CASTOR_INCLUDE_DIR)
   string(REGEX MATCH   "BASEVERSION[ ]*[\"][ ]*([^ \"]+)" cont ${contents})
   string(REGEX REPLACE "BASEVERSION[ ]*[\"][ ]*([^ \"]+)" "\\1" CASTOR_VERSION ${cont})
 endif()
-message(STATUS "Found Castor version ${CASTOR_VERSION}")
 
 find_library(CASTOR_shift_LIBRARY NAMES shift shiftmd PATHS
   $ENV{CASTOR_DIR}/lib
@@ -48,10 +51,14 @@ endif()
 
 if(CASTOR_INCLUDE_DIR AND CASTOR_LIBRARIES)
   set(CASTOR_FOUND TRUE)
+  if(NOT CASTOR_FIND_QUIETLY)
+    message(STATUS "Found Castor version ${CASTOR_VERSION} at ${CASTOR_INCLUDE_DIR}")
+  endif()
 endif()
 
 mark_as_advanced(
-  CASTOR_LIBRARIES
+  CASTOR_shift_LIBRARY
   CASTOR_INCLUDE_DIR
 )
+
 
