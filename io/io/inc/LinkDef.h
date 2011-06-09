@@ -27,6 +27,7 @@
 #pragma link C++ class TKeyMapFile;
 #pragma link C++ class TMapFile;
 #pragma link C++ class TMapRec;
+#pragma link C++ class TMemFile;
 #pragma link C++ class TArchiveFile+;
 #pragma link C++ class TArchiveMember+;
 #pragma link C++ class TZIPFile+;

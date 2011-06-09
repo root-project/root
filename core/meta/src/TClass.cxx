@@ -742,7 +742,7 @@ TClass::TClass() :
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
-   fMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
@@ -766,7 +766,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
-   fMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
@@ -816,7 +816,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
-   fMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
@@ -845,7 +845,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
    fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
-   fMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
@@ -1097,6 +1097,7 @@ TClass::TClass(const TClass& cl) :
   fGlobalIsA(cl.fGlobalIsA),
   fIsAMethod(cl.fIsAMethod),
   fMerge(cl.fMerge),
+  fResetAfterMerge(cl.fResetAfterMerge),
   fNew(cl.fNew),
   fNewArray(cl.fNewArray),
   fDelete(cl.fDelete),
@@ -5097,10 +5098,18 @@ void TClass::SetMerge(ROOT::MergeFunc_t newMerge)
 }
 
 //______________________________________________________________________________
+void TClass::SetResetAfterMerge(ROOT::ResetAfterMergeFunc_t newReset)
+{
+   // Install a new wrapper around 'ResetAfterMerge'.
+   
+   fResetAfterMerge = newReset;
+}
+
+//______________________________________________________________________________
 void TClass::SetNew(ROOT::NewFunc_t newFunc)
 {
    // Install a new wrapper around 'new'.
-
+   
    fNew = newFunc;
 }
 
@@ -5393,6 +5402,14 @@ ROOT::MergeFunc_t TClass::GetMerge() const
    // Return the wrapper around Merge.
    
    return fMerge;
+}
+
+//______________________________________________________________________________
+ROOT::ResetAfterMergeFunc_t TClass::GetResetAfterMerge() const
+{
+   // Return the wrapper around Merge.
+   
+   return fResetAfterMerge;
 }
 
 //______________________________________________________________________________

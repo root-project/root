@@ -2012,7 +2012,7 @@ void TChain::RecursiveRemove(TObject *obj)
 //______________________________________________________________________________
 void TChain::Reset(Option_t*)
 {
-   // -- Resets the state of this chain.
+   // Resets the state of this chain.
 
    delete fFile;
    fFile = 0;
@@ -2028,6 +2028,22 @@ void TChain::Reset(Option_t*)
    fDirectory = 0;
 
    TTree::Reset();
+}
+
+//______________________________________________________________________________
+void TChain::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // Resets the state of this chain after a merge (keep the customization but
+   // forget the data).
+   
+   fNtrees         = 0;
+   fTreeNumber     = -1;
+   fTree           = 0;
+   fFile           = 0;
+   fFiles->Delete();
+   fTreeOffset[0]  = 0;
+   
+   TTree::ResetAfterMerge(info);
 }
 
 //_______________________________________________________________________

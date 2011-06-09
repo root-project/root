@@ -47,7 +47,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(showmembers),
         fVersion(1),
-        fMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
+        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
@@ -67,7 +67,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
-        fMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
+        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
@@ -87,7 +87,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(isa), fShowMembers(0),
         fVersion(version),
-        fMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
+        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
@@ -109,7 +109,7 @@ namespace ROOT {
         fImplFileName(0), fImplFileLine(0),
         fIsA(0), fShowMembers(0),
         fVersion(version),
-        fMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
+        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(0),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
@@ -225,6 +225,7 @@ namespace ROOT {
          fClass->SetDirectoryAutoAdd(fDirAutoAdd);
          fClass->SetStreamerFunc(fStreamerFunc);
          fClass->SetMerge(fMerge);
+         fClass->SetResetAfterMerge(fResetAfterMerge);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
          // If IsZombie is true, something went wront and we will not be
          // able to properly copy the collection proxy
@@ -565,6 +566,14 @@ namespace ROOT {
       
       fMerge = func;
       if (fClass) fClass->SetMerge(fMerge);
+   }
+   
+   void TGenericClassInfo::SetResetAfterMerge(ResetAfterMergeFunc_t func)
+   {
+      // Install a new wrapper around the Merge function.
+      
+      fResetAfterMerge = func;
+      if (fClass) fClass->SetResetAfterMerge(fResetAfterMerge);
    }
    
    NewFunc_t TGenericClassInfo::GetNew() const

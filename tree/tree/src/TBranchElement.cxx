@@ -3669,7 +3669,7 @@ void TBranchElement::ReleaseObject()
 //______________________________________________________________________________
 void TBranchElement::Reset(Option_t* option)
 {
-   // -- Reset a Branch.
+   // Reset a Branch.
    //
    // Existing i/o buffers are deleted.
    // Entries, max and min are reset.
@@ -3682,6 +3682,20 @@ void TBranchElement::Reset(Option_t* option)
    }
    fBranchID = -1;
    TBranch::Reset(option);
+}
+
+//______________________________________________________________________________
+void TBranchElement::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // Reset a Branch after a Merge operation (drop data but keep customizations)
+   //
+   
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; ++i) {
+      TBranch* branch = (TBranch*) fBranches[i];
+      branch->ResetAfterMerge(info);
+   }
+   TBranch::ResetAfterMerge(info);
 }
 
 //______________________________________________________________________________

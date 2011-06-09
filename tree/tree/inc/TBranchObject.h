@@ -50,6 +50,7 @@ public:
    Bool_t              IsFolder() const;
    virtual void        Print(Option_t *option="") const;
    virtual void        Reset(Option_t *option="");
+   virtual void        ResetAfterMerge(TFileMergeInfo *);
    virtual void        SetAddress(void *addobj);
    virtual void        SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void        SetBasketSize(Int_t buffsize);

@@ -335,6 +335,26 @@ void TBranchClones::Reset(Option_t* option)
 }
 
 //______________________________________________________________________________
+void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
+{
+   // -- Reset branch after a merge.
+   //
+   //    Existing buffers are deleted
+   //    Entries, max and min are reset
+   //
+   
+   fEntries  = 0;
+   fTotBytes = 0;
+   fZipBytes = 0;
+   Int_t nbranches = fBranches.GetEntriesFast();
+   for (Int_t i = 0; i < nbranches; i++) {
+      TBranch* branch = (TBranch*) fBranches.At(i);
+      branch->ResetAfterMerge(info);
+   }
+   fBranchCount->ResetAfterMerge(info);
+}
+
+//______________________________________________________________________________
 void TBranchClones::SetAddress(void* addr)
 {
    // -- Set address of this branch.

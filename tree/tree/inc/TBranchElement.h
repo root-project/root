@@ -190,6 +190,7 @@ public:
    virtual void             Print(Option_t* option = "") const;
            void             PrintValue(Int_t i) const;
    virtual void             Reset(Option_t* option = "");
+   virtual void             ResetAfterMerge(TFileMergeInfo *);
    virtual void             ResetAddress();
    virtual void             ResetDeleteObject();
    virtual void             SetAddress(void* addobj);

@@ -113,6 +113,7 @@ private:
    mutable TMethodCall *fIsAMethod;       //!saved info to call a IsA member function
 
    ROOT::MergeFunc_t   fMerge;          //pointer to a function implementing Merging objects of this class.
+   ROOT::ResetAfterMergeFunc_t fResetAfterMerge; //pointer to a function implementing Merging objects of this class.
    ROOT::NewFunc_t     fNew;            //pointer to a function newing one object.
    ROOT::NewArrFunc_t  fNewArray;       //pointer to a function newing an array of objects.
    ROOT::DelFunc_t     fDelete;         //pointer to a function deleting one object.
@@ -285,6 +286,7 @@ public:
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
    ROOT::MergeFunc_t  GetMerge() const;
+   ROOT::ResetAfterMergeFunc_t  GetResetAfterMerge() const;
    ROOT::NewFunc_t    GetNew() const;
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
@@ -336,6 +338,7 @@ public:
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
    void               SetMerge(ROOT::MergeFunc_t mergeFunc);
+   void               SetResetAfterMerge(ROOT::ResetAfterMergeFunc_t resetFunc);
    void               SetNew(ROOT::NewFunc_t newFunc);
    void               SetNewArray(ROOT::NewArrFunc_t newArrayFunc);
    TVirtualStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");

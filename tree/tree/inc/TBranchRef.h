@@ -50,6 +50,7 @@ public:
    virtual Bool_t  Notify();
    virtual void    Print(Option_t *option="") const;
    virtual void    Reset(Option_t *option="");
+   virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
    
