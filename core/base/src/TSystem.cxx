@@ -742,7 +742,13 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
 
    TPluginHandler *h;
    TSystem *helper = 0;
-   TUrl url(path, kTRUE);
+   if (path) {
+      if (!GetDirPtr()) {
+         TUrl url(path, kTRUE);
+         if (!strcmp(url.GetProtocol(), "file"))
+            return 0;
+      }
+   }
 
    // look for existing helpers
    TIter next(fHelpers);
