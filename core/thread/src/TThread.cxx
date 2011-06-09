@@ -68,6 +68,7 @@ private:
    Long_t      fRc;
    TMutex     *fM;
    TCondition *fC;
+   Bool_t      fJoined;
 
    static void JoinFunc(void *p);
 
@@ -80,7 +81,7 @@ public:
 
 //______________________________________________________________________________
 TJoinHelper::TJoinHelper(TThread *th, void **ret)
-   : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM))
+   : fT(th), fRet(ret), fRc(0), fM(new TMutex), fC(new TCondition(fM)), fJoined(kFALSE)
 {
    // Constructor of Thread helper class.
 
@@ -108,6 +109,7 @@ void TJoinHelper::JoinFunc(void *p)
    jp->fRc = jp->fT->Join(jp->fRet);
 
    jp->fM->Lock();
+   jp->fJoined = kTRUE;
    jp->fC->Signal();
    jp->fM->UnLock();
 
@@ -123,9 +125,21 @@ Int_t TJoinHelper::Join()
    fH->Run();
 
    while (kTRUE) {
+      // TimedWaitRelative will release the mutex (i.e. equivalent to fM->Unlock),
+      // then block on the condition variable.  Upon return it will lock the mutex.
       int r = fC->TimedWaitRelative(100);  // 100 ms
 
-      if (r == 0) break;
+      // From the man page from pthread_ond_timedwait:
+
+      // When using condition variables there is always a Boolean predicate
+      // involving shared variables associated with each condition wait that
+      // is true if the thread should proceed. Spurious wakeups from the
+      // pthread_cond_timedwait() or pthread_cond_wait() functions may occur.
+      // Since the return from pthread_cond_timedwait() or pthread_cond_wait()
+      // does not imply anything about the value of this predicate, the
+      // predicate should be re-evaluated upon such return.
+
+      if (r == 0 && fJoined) break;
 
       gSystem->ProcessEvents();
    }
