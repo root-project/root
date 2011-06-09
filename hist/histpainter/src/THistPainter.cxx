@@ -6639,7 +6639,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    // use an independent instance of a random generator 
    // instead of gRandom to avoid conflicts and 
    // to get same random numbers when drawing the same histogram
-   TRandom * random = new TRandom2();
+   TRandom2 random;
    marker=0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -6666,8 +6666,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
                   gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                   marker=0;
                }
-               fXbuf[marker] = (random->Rndm(loop)*xstep) + xk;
-               fYbuf[marker] = (random->Rndm(loop)*ystep) + yk;
+               fXbuf[marker] = (random.Rndm(loop)*xstep) + xk;
+               fYbuf[marker] = (random.Rndm(loop)*ystep) + yk;
                if (Hoption.Logx){
                   if (fXbuf[marker] > 0) fXbuf[marker] = TMath::Log10(fXbuf[marker]);
                   else                   break;
@@ -8022,7 +8022,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
    // use an independent instance of a random generator
    // instead of gRandom to avoid conflicts and 
    // to get same random numbers when drawing the same histogram
-   TRandom * random = new TRandom2();
+   TRandom2 random;
 
    TH2PolyBin  *b;
 
@@ -8065,8 +8065,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random->Rndm(loop)*xstep) + xk;
-            yp = (random->Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm(loop)*xstep) + xk;
+            yp = (random.Rndm(loop)*ystep) + yk;
             if (g->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
@@ -8089,8 +8089,8 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
                gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
                marker=0;
             }
-            xp = (random->Rndm(loop)*xstep) + xk;
-            yp = (random->Rndm(loop)*ystep) + yk;
+            xp = (random.Rndm(loop)*xstep) + xk;
+            yp = (random.Rndm(loop)*ystep) + yk;
             if (mg->IsInside(xp,yp)) {
                fXbuf[marker] = xp;
                fYbuf[marker] = yp;
