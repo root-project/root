@@ -8,8 +8,10 @@
 # Redistribution and use is allowed according to the terms of the GPLv2 license.
 # Mofified by Pere Mato
 
-set(ORACLE_FOUND "NO")
-
+set(ORACLE_FOUND 0)
+if(ORACLE_INCLUDE_DIR AND ORACLE_LIBRARY_OCCI)
+  set(ORACLE_FIND_QUIETLY 1)
+endif()
 set(ORACLE_HOME $ENV{ORACLE_DIR})
 
 IF (ORACLE_PATH_INCLUDES)
@@ -73,7 +75,7 @@ IF (NOT DEFINED ORACLE_OCI_VERSION)
       ${ORACLE_HOME}/bin
     )
     IF(SQLPLUS_EXECUTABLE)
-		EXECUTE_PROCESS(COMMAND ${ORACLE_HOME}/bin/sqlplus -version OUTPUT_VARIABLE sqlplus_out)
+		EXECUTE_PROCESS(COMMAND ${SQLPLUS_EXECUTABLE} -version OUTPUT_VARIABLE sqlplus_out)
 		STRING(REGEX MATCH "([0-9.]+)" sqlplus_version ${sqlplus_out})
 		MESSAGE(STATUS "Found sqlplus version: ${sqlplus_version}")
 

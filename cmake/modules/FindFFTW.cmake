@@ -6,7 +6,7 @@
 # FFTW_FOUND.  If false, you cannot build anything that requires Pythia6.
 # FFTW_LIBRARY, where to find the libpythia8 library.
 
-set(PYTHIA8_FOUND 0)
+set(FFTW_FOUND 0)
 
 find_path(FFTW_INCLUDE_DIR fftw3.h
   $ENV{FFTW_DIR}/include

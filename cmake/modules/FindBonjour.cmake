@@ -56,8 +56,8 @@ if (CMAKE_SYSTEM_NAME MATCHES Linux)
   endif()
 endif()
 
-mark_as_advanced(
-  BONJOUR_LIBRARIES
+mark_as_advanced( FORCE
   BONJOUR_INCLUDE_DIR
+  BONJOUR_LIBRARY
 )
 

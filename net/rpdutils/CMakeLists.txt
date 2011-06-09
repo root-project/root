@@ -14,6 +14,11 @@ else()
   list(REMOVE_ITEM rpdutilsrcs src/globus.cxx)
 endif()
 
+#---Authentication methods-----------------------------------------------------------------
+if(shadowpw)
+  add_definitions(-DR__SHADOWPW)
+endif()
+
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})
 

@@ -78,6 +78,7 @@ if(roofit)
   add_subdirectory(roofit)
 endif()
 
+
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION .)

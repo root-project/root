@@ -145,7 +145,7 @@ if(NOT WIN32)
   endif()
   set( xopt ${xopt} --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon 
                     --with-cxx=${CMAKE_CXX_COMPILER} --with-ld=${CMAKE_CXX_COMPILER})
-  message(STATUS "Options to Xrootd-configure: ${xarch} ${xopt}")
+  #message(STATUS "Options to Xrootd-configure: ${xarch} ${xopt}")
 	
   add_custom_command(OUTPUT ${xrootdmake}
                      COMMAND ./configure.classic ${xarch} ${xopt}
