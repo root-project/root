@@ -21,8 +21,7 @@
 #include <cstdlib>
 #include <cctype>
 
-static const int kMAX_READ_SIZE    = 4;   //maximum size of the read list of blocks
-static const int kMAX_RECYCLE_SIZE = 2;   //maximum size of the recycle list of blocks
+static const int kMAX_READ_SIZE    = 2;   //maximum size of the read list of blocks
 
 inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)); }
 
@@ -39,7 +38,6 @@ TFilePrefetch::TFilePrefetch(TFile* file)
    fFile = file;
    fPendingBlocks = new TList();
    fReadBlocks = new TList();
-   fRecycleBlocks = new TList();
    fMutexReadList = new TMutex();
    fMutexPendingList = new TMutex();
    fMutexRecycleList = new TMutex();
@@ -61,7 +59,6 @@ TFilePrefetch::~TFilePrefetch()
 
    delete fPendingBlocks;
    delete fReadBlocks;
-   delete fRecycleBlocks;
    delete fMutexReadList;
    delete fMutexPendingList;
    delete fMutexRecycleList;
@@ -223,7 +220,7 @@ TFPBlock* TFilePrefetch::GetPendingBlock()
 
    if (fPendingBlocks->GetSize()){
       block = (TFPBlock*)fPendingBlocks->First();
-     block = (TFPBlock*)fPendingBlocks->Remove(block);
+      block = (TFPBlock*)fPendingBlocks->Remove(block);
    }
    mutexBlocks->UnLock();
    return block;
@@ -240,7 +237,8 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
    if (fReadBlocks->GetSize() >= kMAX_READ_SIZE){
       TFPBlock* movedBlock = (TFPBlock*) fReadBlocks->First();
       movedBlock = (TFPBlock*)fReadBlocks->Remove(movedBlock);
-      AddRecycleBlock(movedBlock);
+      delete movedBlock;
+      movedBlock = 0;
    }
 
    fReadBlocks->Add(block);
@@ -248,22 +246,6 @@ void TFilePrefetch::AddReadBlock(TFPBlock* block)
    fReadBlockAdded->Signal();
 }
 
-//____________________________________________________________________________________________
-void TFilePrefetch::AddRecycleBlock(TFPBlock* block)
-{
-   // Safe method to add a block to the recycleList.
-
-   TMutex *mutexBlocks = fMutexRecycleList;
-   mutexBlocks->Lock();
-
-   if (fRecycleBlocks->GetSize() >= kMAX_RECYCLE_SIZE){
-      delete block;
-   }
-   else{
-      fRecycleBlocks->Add(block);
-   }
-   mutexBlocks->UnLock();
-}
 
 //____________________________________________________________________________________________
 TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t noblock)
@@ -271,18 +253,18 @@ TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t nobl
    // Create a new block or recycle an old one.
 
    TFPBlock* blockObj = 0;
-   TMutex *mutexRecycle = fMutexRecycleList;
+   TMutex *mutexRead = fMutexRecycleList;
 
-   mutexRecycle->Lock();
+   mutexRead->Lock();
 
-   if (fRecycleBlocks->GetSize()){
-      blockObj = static_cast<TFPBlock*>(fRecycleBlocks->First());
-      fRecycleBlocks->Remove(blockObj);
+   if (fReadBlocks->GetSize() >= kMAX_READ_SIZE){
+      blockObj = static_cast<TFPBlock*>(fReadBlocks->First());
+      fReadBlocks->Remove(blockObj);
       blockObj->ReallocBlock(offset, len, noblock);
-      mutexRecycle->UnLock();
+      mutexRead->UnLock();
    }
    else{
-      mutexRecycle->UnLock();
+      mutexRead->UnLock();
       blockObj = new TFPBlock(offset, len, noblock);
    }
    return blockObj;

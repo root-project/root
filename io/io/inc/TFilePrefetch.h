@@ -72,7 +72,6 @@ private:
    TFile      *fFile;              // reference to the file
    TList      *fPendingBlocks;     // list of pending block to be read
    TList      *fReadBlocks;        // list of block read
-   TList      *fRecycleBlocks;     // list of recycled blocks
    TThread    *fConsumer;          // consumer thread
    TMutex     *fMutexPendingList;  // mutex for the pending list
    TMutex     *fMutexReadList;     // mutex for the list of read blocks
