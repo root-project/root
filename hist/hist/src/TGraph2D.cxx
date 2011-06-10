@@ -371,7 +371,7 @@ TGraph2D::TGraph2D(const char *name,const char *title,
 //______________________________________________________________________________
 TGraph2D::TGraph2D(Int_t n)
          : TNamed("Graph2D","Graph2D"), TAttLine(1,1,1), TAttFill(0,1001),
-           TAttMarker(), fNpoints(0)
+           TAttMarker(), fNpoints(n)
 {
    // Graph2D constructor. The arrays fX, fY and fZ should be filled via
    // calls to SetPoint
