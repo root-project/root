@@ -61,10 +61,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 
-ifeq ($(FAIL),)
-PrefetchReading: 
-	$(WarnFailTest)
-else
+#ifeq ($(FAIL),)
+#PrefetchReading: 
+#	$(WarnFailTest)
+#else
 PrefetchReading: PrefetchReading.clog
 	$(TestDiff)
-endif
+#endif
