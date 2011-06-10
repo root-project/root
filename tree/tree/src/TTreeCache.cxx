@@ -470,12 +470,13 @@ Bool_t TTreeCache::FillBuffer()
            }
          }
         
-         if (fReverseRead){ //reverse reading with prefetching
+         if (fReverseRead){ 
+            //reverse reading with prefetching
             if (fEntryCurrent >0 && entry < fEntryNext){
                //we can prefetch the next buffer
-               entry = fEntryCurrent - tree->GetAutoFlush() * fFillTimes;
-               if (entry < 0)
-                  entry = 0;
+               if (entry > fEntryCurrent)
+                  entry = fEntryCurrent - tree->GetAutoFlush() * fFillTimes;
+               if (entry < 0) entry = 0;
             }
             else if (fEntryCurrent >= 0)
                //we are still reading from the oldest buffer, no need to prefetch a new one
@@ -489,13 +490,15 @@ Bool_t TTreeCache::FillBuffer()
            if (fEnablePrefetching){
               if (entry < 0 && fEntryNext > 0)
                  entry = fEntryCurrent;
-              if (entry >= fEntryCurrent){
-                 entry = fEntryNext;
-                fFirstBuffer = !fFirstBuffer;
-             }
-              else
+              else if (entry > fEntryCurrent){
+                 if (entry < fEntryNext)
+                    entry = fEntryNext;
+              }
+              else {
                 //we are still reading from the oldest buffer, no need to prefetch a new one
                 return kFALSE;
+              }
+              fFirstBuffer = !fFirstBuffer;
            }
          }
       }
