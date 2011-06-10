@@ -4267,8 +4267,8 @@ void TH1::LabelsDeflate(Option_t *ax)
       if (obj->GetUniqueID()) nbins++;
    }
    if (nbins < 1) nbins = 1;
-   TH1 *hold = (TH1*)Clone();
-   hold->SetDirectory(0);
+   TH1 hold(*this);
+   hold.SetDirectory(0);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Double_t xmin = axis->GetXmin();
@@ -4279,9 +4279,9 @@ void TH1::LabelsDeflate(Option_t *ax)
    //Int_t  nbinsx = fXaxis.GetNbins();
    //Int_t  nbinsy = fYaxis.GetNbins();
    //Int_t  nbinsz = fZaxis.GetNbins();
-   Int_t  nbinsx = hold->GetXaxis()->GetNbins();
-   Int_t  nbinsy = hold->GetYaxis()->GetNbins();
-   Int_t  nbinsz = hold->GetZaxis()->GetNbins();
+   Int_t  nbinsx = hold.GetXaxis()->GetNbins();
+   Int_t  nbinsy = hold.GetYaxis()->GetNbins();
+   Int_t  nbinsz = hold.GetZaxis()->GetNbins();
    Int_t ncells = nbinsx+2;
    if (GetDimension() > 1) ncells *= nbinsy+2;
    if (GetDimension() > 2) ncells *= nbinsz+2;
@@ -4297,19 +4297,18 @@ void TH1::LabelsDeflate(Option_t *ax)
    for (binz=1;binz<=nbinsz;binz++) {
       for (biny=1;biny<=nbinsy;biny++) {
          for (binx=1;binx<=nbinsx;binx++) {
-            bin = hold->GetBin(binx,biny,binz);
+            bin = hold.GetBin(binx,biny,binz);
             ibin= GetBin(binx,biny,binz);
-            cu  = hold->GetBinContent(bin);
+            cu  = hold.GetBinContent(bin);
             SetBinContent(ibin,cu);
             if (errors) {
-               err = hold->GetBinError(bin);
+               err = hold.GetBinError(bin);
                SetBinError(ibin,err);
             }
          }
       }
    }
    fEntries = oldEntries;
-   delete hold;
 }
 
 //______________________________________________________________________________
@@ -4326,8 +4325,8 @@ void TH1::LabelsInflate(Option_t *ax)
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
-   TH1 *hold = (TH1*)Clone();
-   hold->SetDirectory(0);
+   TH1 hold(*this);
+   hold.SetDirectory(0);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Int_t  nbxold = fXaxis.GetNbins();
@@ -4360,14 +4359,14 @@ void TH1::LabelsInflate(Option_t *ax)
    for (binz=1;binz<=nbinsz;binz++) {
       for (biny=1;biny<=nbinsy;biny++) {
          for (binx=binxmin;binx<=binxmax;binx++) {
-            bin = hold->GetBin(binx,biny,binz);
+            bin = hold.GetBin(binx,biny,binz);
             ibin= GetBin(binx,biny,binz);
             if (binx > nbxold+1 || biny > nbyold || binz > nbzold) bin = -1;
-            if (bin > 0) cu  = hold->GetBinContent(bin);
+            if (bin > 0) cu  = hold.GetBinContent(bin);
             else         cu = 0;
             SetBinContent(ibin,cu);
             if (errors) {
-               if (bin > 0) err = hold->GetBinError(bin);
+               if (bin > 0) err = hold.GetBinError(bin);
                else         err = 0;
                SetBinError(ibin,err);
             }
@@ -4375,7 +4374,6 @@ void TH1::LabelsInflate(Option_t *ax)
       }
    }
    fEntries = oldEntries;
-   delete hold;
 }
 
 //______________________________________________________________________________
