@@ -162,17 +162,23 @@ void THLimitsFinder::SetLimitsFinder(THLimitsFinder *finder)
 }
 
 //______________________________________________________________________________
-void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &BinLow, Double_t &BinHigh, 
-                      Int_t &nbins, Double_t &BinWidth, Option_t *option)
+void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,
+                              Double_t &BinLow, Double_t &BinHigh, 
+                              Int_t &nbins, Double_t &BinWidth,
+                              Option_t *option)
 {
 // static function to compute reasonable axis limits
 //
 // Input parameters:
 //
-//  A1,A2 : Old WMIN,WMAX .
-//  BinLow,BinHigh : New WMIN,WMAX .
-//  nold   : Old NDIV .
-//  nbins    : New NDIV .
+//  A1,A2          : Original axis limits
+//  BinLow,BinHigh : Optimized axis limits. They should be initialized by the 
+//                   calling method for instance to 0.
+//  nold           : Original number of divisions.
+//  nbins          : Optimized number of divisions.
+//  BinWidth       : Optimized bin width. It should be initialized by the 
+//                   calling method for instance to 0.
+//  option         : "T" means Time axis.
 
    Int_t lwid, kwid;
    Int_t ntemp = 0;
