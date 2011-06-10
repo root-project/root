@@ -2835,12 +2835,13 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    char   *cmd = 0;
    char  *q;
 
-   if (patbuf0.Contains("://")) {
-      TUrl urlpath(patbuf0, kTRUE);
-      TString proto = urlpath.GetProtocol();
-      if (!proto.EqualTo("file")) // don't expand urls!!!
-         return kFALSE;
-   }
+   Int_t old_level = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kFatal; // Explicitly remove all messages
+   TUrl urlpath(patbuf0, kTRUE);
+   TString proto = urlpath.GetProtocol();
+   gErrorIgnoreLevel = old_level;
+   if (!proto.EqualTo("file")) // don't expand urls!!!
+      return kFALSE;
 
    // skip leading blanks
    while (*patbuf == ' ') {
