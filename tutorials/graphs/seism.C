@@ -1,5 +1,13 @@
 // strip chart example
 // Author: Rene Brun
+#include "TStopwatch.h"
+#include "TDatime.h"
+#include "TStyle.h"
+#include "TH1F.h"
+#include "TCanvas.h"
+#include "TSystem.h"
+#include "TRandom.h"
+#include <stdio.h>
    
 void seism() {
    
