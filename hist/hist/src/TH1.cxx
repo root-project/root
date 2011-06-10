@@ -4523,8 +4523,9 @@ void TH1::LabelsDeflate(Option_t *ax)
       if (ibin > nbins) nbins = ibin; 
    }
    if (nbins < 1) nbins = 1;
-   TH1 hold(*this);
-   hold.SetDirectory(0);
+   TH1 *hold = (TH1*)IsA()->New();;
+   hold->SetDirectory(0);
+   Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Double_t xmin = axis->GetXmin();
@@ -4545,16 +4546,17 @@ void TH1::LabelsDeflate(Option_t *ax)
    // For this reason we use AddBinContent method
    Double_t oldEntries = fEntries;
    Int_t bin,binx,biny,binz;
-   for (bin=0; bin < hold.fNcells; ++bin) { 
-      hold.GetBinXYZ(bin,binx,biny,binz);
+   for (bin=0; bin < hold->fNcells; ++bin) { 
+      hold->GetBinXYZ(bin,binx,biny,binz);
       Int_t ibin = GetBin(binx,biny,binz);
-      Double_t cu = hold.GetBinContent(bin);
+      Double_t cu = hold->GetBinContent(bin);
       AddBinContent(ibin,cu);
       if (errors) { 
-         fSumw2.fArray[ibin] += hold.fSumw2.fArray[bin];
+         fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
       }
    }
    fEntries = oldEntries;
+   delete hold;
 }
 
 //______________________________________________________________________________
@@ -4571,8 +4573,9 @@ void TH1::LabelsInflate(Option_t *ax)
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
-   TH1 hold(*this);
-   hold.SetDirectory(0);
+   TH1 *hold = (TH1*)IsA()->New();;
+   hold->SetDirectory(0);
+   Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Int_t  nbxold = fXaxis.GetNbins();
@@ -4597,16 +4600,17 @@ void TH1::LabelsInflate(Option_t *ax)
    Int_t bin,ibin,binx,biny,binz;
    for (ibin =0; ibin < fNcells; ibin++) { 
       GetBinXYZ(ibin,binx,biny,binz);
-      bin = hold.GetBin(binx,biny,binz);
+      bin = hold->GetBin(binx,biny,binz);
       // NOTE that overflow in hold will be not considered
       if (binx > nbxold  || biny > nbyold || binz > nbzold) bin = -1;
       if (bin > 0)  { 
-         Double_t cu  = hold.GetBinContent(bin);
+         Double_t cu  = hold->GetBinContent(bin);
          AddBinContent(ibin,cu);
-         if (errors) fSumw2.fArray[ibin] += hold.fSumw2.fArray[bin];
+         if (errors) fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
       }
    }
    fEntries = oldEntries;
+   delete hold;
 }
 
 //______________________________________________________________________________
