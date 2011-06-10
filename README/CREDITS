@@ -97,6 +97,7 @@ D: PROOF contributions
 N: Brian Bockelman
 E: bbockelm@math.unl.edu
 D: THDFSFile for accessing the Hadoop file system
+D: Improvement to ROOT I/O disk and memory efficiency. 
 
 N: Sebastian Boeser
 E: sboeser@ifh.de
