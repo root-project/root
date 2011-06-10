@@ -50,6 +50,7 @@ protected:
    Double_t      fRealTime;      //Real time
    Double_t      fCpuTime;       //Cpu time
    Double_t      fDiskTime;      //Time spent in pure raw disk IO
+   Double_t      fUnzipTime;     //Time spent uncompressing the data.
    Double_t      fCompress;      //Tree compression factor      
    TString       fName;          //name of this TTreePerfStats
    TString       fHostInfo;      //name of the host system, ROOT version and date
@@ -87,6 +88,7 @@ public:
    virtual Double_t GetRealTime()  const {return fRealTime;}
    TStopwatch      *GetStopwatch() const {return fWatch;}
    virtual Int_t    GetTreeCacheSize() const {return fTreeCacheSize;}
+   virtual Double_t GetUnzipTime() const {return fUnzipTime; }
    virtual void     Paint(Option_t *chopt="");
    virtual void     Print(Option_t *option="") const;
 
@@ -96,6 +98,7 @@ public:
    virtual void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) {}
    virtual void     FileOpenEvent(TFile *, const char *, Double_t) {}
    virtual void     FileReadEvent(TFile *file, Int_t len, Double_t start);
+   virtual void     FileUnzipEvent(TFile *file, Long64_t pos, Double_t start, Int_t complen, Int_t objlen);
    virtual void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) {}
 
    virtual void     SaveAs(const char *filename="",Option_t *option="") const;
@@ -116,6 +119,7 @@ public:
    virtual void     SetRealNorm(Double_t rnorm) {fRealNorm = rnorm;}
    virtual void     SetRealTime(Double_t rtime) {fRealTime = rtime;}
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
+   virtual void     SetUnzipTime(Double_t uztime) {fUnzipTime = uztime;}
 
    ClassDef(TTreePerfStats,1)  // TTree I/O performance measurement
 };

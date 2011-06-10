@@ -58,7 +58,10 @@ class TBranch : public TNamed , public TAttFill {
 
 protected:
    // TBranch status bits
-   enum { kAutoDelete = BIT(15) };
+   enum EStatusBits {
+      kAutoDelete = BIT(15),
+      kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+   };
 
    static Int_t fgCount;          //! branch counter
    Int_t       fCompress;        //  (=1 branch is compressed, 0 otherwise)
@@ -73,6 +76,9 @@ protected:
    Int_t       fNleaves;         //! Number of leaves
    Int_t       fReadBasket;      //! Current basket number when reading
    Long64_t    fReadEntry;       //! Current entry number when reading
+   Long64_t    fFirstBasketEntry;//! First entry in the current basket.
+   Long64_t    fNextBasketEntry; //! Next entry that will requires us to go to the next basket
+   TBasket    *fCurrentBasket;   //! Pointer to the current basket.
    Long64_t    fEntries;         //  Number of entries
    Long64_t    fFirstEntry;      //  Number of the first entry in this branch
    Long64_t    fTotBytes;        //  Total number of bytes in all leaves before compression
@@ -97,7 +103,10 @@ protected:
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b); 
    ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use. 
    void     ReadLeavesImpl(TBuffer &b);
-
+   void     ReadLeaves0Impl(TBuffer &b);
+   void     ReadLeaves1Impl(TBuffer &b);
+   void     ReadLeaves2Impl(TBuffer &b);
+   
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 

@@ -38,7 +38,8 @@ namespace std {} using namespace std;
 //_________________________________________________________________________
 TBasketSQL::TBasketSQL() : TBasket()
 {
-  // Default constructor
+   // Default constructor.
+
 }
 
 //_________________________________________________________________________
@@ -47,7 +48,7 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
                          vector<Int_t> *vc, TSQLRow **r) :
   fResultPtr(rs),fRowPtr(r)
 { 
-   // Regular constructor
+   // Regular constructor.
 
    SetName(name);
    SetTitle(title);
@@ -76,6 +77,7 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
       for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
    }
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
+   
 }
 
 //_________________________________________________________________________

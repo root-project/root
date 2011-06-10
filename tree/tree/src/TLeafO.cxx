@@ -125,7 +125,7 @@ void TLeafO::ReadBasket(TBuffer &b)
 //*-*                  ===========================================
 
    if (!fLeafCount && fNdata == 1) {
-      b >> fValue[0];
+      b.ReadBool(fValue[0]);
    }else {
       if (fLeafCount) {
          Long64_t entry = fBranch->GetReadEntry();
