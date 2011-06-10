@@ -377,6 +377,11 @@ TGraph2D::TGraph2D(Int_t n)
    // calls to SetPoint
 
    Build(n);
+   for (Int_t i=0; i<fNpoints; i++) {
+      fX[i] = 0.;
+      fY[i] = 0.;
+      fZ[i] = 0.;
+   }   
 }
 
 
