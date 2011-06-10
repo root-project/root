@@ -40,7 +40,6 @@ TFilePrefetch::TFilePrefetch(TFile* file)
    fReadBlocks = new TList();
    fMutexReadList = new TMutex();
    fMutexPendingList = new TMutex();
-   fMutexRecycleList = new TMutex();
    fNewBlockAdded = new TCondition(0);
    fReadBlockAdded = new TCondition(0);
    fSem = new TSemaphore(0);
@@ -61,7 +60,6 @@ TFilePrefetch::~TFilePrefetch()
    delete fReadBlocks;
    delete fMutexReadList;
    delete fMutexPendingList;
-   delete fMutexRecycleList;
    delete fNewBlockAdded;
    delete fReadBlockAdded;
    delete fSem;
@@ -253,7 +251,7 @@ TFPBlock* TFilePrefetch::CreateBlockObj(Long64_t* offset, Int_t* len, Int_t nobl
    // Create a new block or recycle an old one.
 
    TFPBlock* blockObj = 0;
-   TMutex *mutexRead = fMutexRecycleList;
+   TMutex *mutexRead = fMutexReadList;
 
    mutexRead->Lock();
 

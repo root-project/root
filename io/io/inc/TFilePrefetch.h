@@ -75,7 +75,6 @@ private:
    TThread    *fConsumer;          // consumer thread
    TMutex     *fMutexPendingList;  // mutex for the pending list
    TMutex     *fMutexReadList;     // mutex for the list of read blocks
-   TMutex     *fMutexRecycleList;  // mutex for the list of recycled blocks
    TCondition *fNewBlockAdded;     // condition used to signal the addition of a new pending block
    TCondition *fReadBlockAdded;    // condition usd to signal the addition of a new red block
    TSemaphore *fSem;               // semaphore used to kill the consumer thread
@@ -95,7 +94,6 @@ public:
    TFPBlock *GetPendingBlock();
 
    void      AddReadBlock(TFPBlock*);
-   void      AddRecycleBlock(TFPBlock*);
    Bool_t    ReadBuffer(char*, Long64_t, Int_t);
    void      ReadBlock(Long64_t*, Int_t*, Int_t);
    TFPBlock *CreateBlockObj(Long64_t*, Int_t*, Int_t);
