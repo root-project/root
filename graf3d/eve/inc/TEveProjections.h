@@ -132,7 +132,8 @@ public:
    virtual Bool_t      AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
    virtual Int_t       SubSpaceId(const TEveVector&) const { return 0; }
    virtual Bool_t      IsOnSubSpaceBoundrary(const TEveVector&) const { return kFALSE; }
-   virtual void        BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr=1e-10f);
+   virtual void        BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr);
+   virtual void        BisectBreakPoint(TEveVector& vL, TEveVector& vR, Bool_t project_result=kFALSE, Float_t depth=0);
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    // utils to draw axis

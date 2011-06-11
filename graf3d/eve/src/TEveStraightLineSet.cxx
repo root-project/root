@@ -306,9 +306,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
             trans->MultiplyIP(bp1);
             trans->MultiplyIP(bp2);
          }
-         proj.BisectBreakPoint(bp1, bp2, 1e-10f);
-         proj.ProjectVector(bp1, fDepth);
-         proj.ProjectVector(bp2, fDepth);
+         proj.BisectBreakPoint(bp1, bp2, kTRUE, fDepth);
 
          AddLine(p1, bp1)->fId = l->fId;
          AddLine(bp2, p2)->fId = l->fId;
