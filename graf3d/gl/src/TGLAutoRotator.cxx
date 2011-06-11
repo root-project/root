@@ -25,6 +25,13 @@
 // W's are angular velocities.
 // ATheta -- Theta amplitude in units of Pi/2.
 // ADolly -- In/out amplitude in units of initial distance.
+//
+// Can also save images automatically.
+
+// fGUIOutMode is used internally between TGLAutoRotator and TGLViewerEditor,
+// allowed values are:
+//   1 - animated gif
+//   2 - a series of png images
 
 ClassImp(TGLAutoRotator);
 
@@ -36,7 +43,9 @@ TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
    fWPhi  (0.40),
    fWTheta(0.15), fATheta(0.5),
    fWDolly(0.30), fADolly(0.4),
-   fTimerRunning(kFALSE)
+   fTimerRunning(kFALSE),
+   fImageCount(0), fImageAutoSave(kFALSE),
+   fImageGUIBaseName("animation"), fImageGUIOutMode(1)
 {
    // Constructor.
 
@@ -212,7 +221,7 @@ void TGLAutoRotator::StartImageAutoSave(const TString& filename)
 
    if ( ! filename.Contains("%"))
    {
-      Error("StartImageAutoSave", "Name should include a '%%' character, like 'image-%%04d.png'. Not starting.");
+      Error("StartImageAutoSave", "Name should include a '%%' character, like 'image-%%05d.png'. Not starting.");
       return;
    }
 
@@ -227,4 +236,40 @@ void TGLAutoRotator::StopImageAutoSave()
    // Stops automatic saving of images.
 
    fImageAutoSave = kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLAutoRotator::SetImageGUIOutMode(Int_t m)
+{
+   // Set output mode for GUI operation:
+   //   1 - animated gif;
+   //   2 - a series of pngs
+
+   if (m < 1 || m > 2)
+   {
+      Warning("SetImageGUIOutMode", "Invalid value, ignoring");
+      return;
+   }
+   fImageGUIOutMode = m;
+}
+
+//______________________________________________________________________________
+void TGLAutoRotator::StartImageAutoSaveWithGUISettings()
+{
+   // Start auto-saving images as set-up via GUI.
+
+   if (fImageGUIOutMode == 1)
+   {
+      TString name = fImageGUIBaseName + ".gif+";
+      StartImageAutoSaveAnimatedGif(name);
+   }
+   else if (fImageGUIOutMode == 2)
+   {
+      TString name = fImageGUIBaseName + "-%05d.png";
+      StartImageAutoSave(name);
+   }
+   else
+   {
+      Warning("StartImageAutoSaveWithGUISettings", "Unsupported mode '%d'.", fImageGUIOutMode);
+   }
 }
