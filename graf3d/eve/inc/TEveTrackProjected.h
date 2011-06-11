@@ -26,7 +26,6 @@ private:
    TEveTrackProjected& operator=(const TEveTrackProjected&); // Not implemented
 
    Int_t GetBreakPointIdx(Int_t start);
-   void  GetBreakPoint(TEveVector& vL, TEveVector& vR);
 
    TEveVector*          fOrigPnts;     // original track points
 

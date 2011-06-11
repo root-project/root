@@ -332,15 +332,37 @@ void TEveProjection::SetPastFixZFac(Float_t x)
 }
 
 //______________________________________________________________________________
-void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr)
+void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t /*eps_sqr*/)
 {
    // Find break-point on both sides of the discontinuity.
-   // They still need to be projected.
+   // They still need to be projected after the call.
+   // This is an obsolete version of the method that required manual
+   // specification of precision -- this lead to (infrequent) infinite loops.
+
+   static Bool_t warnedp = kFALSE;
+
+   if (!warnedp)
+   {
+      Warning("BisectBreakPoint", "call with eps_sqr argument is obsolete - please use the new signature.");
+      warnedp = kTRUE;
+   }
+
+   BisectBreakPoint(vL, vR, kFALSE);
+}
+
+//______________________________________________________________________________
+void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR,
+                                      Bool_t project_result, Float_t depth)
+{
+   // Find break-point on both sides of the discontinuity.
+   // If project_result is true, the resulting break points will be projected
+   // with given depth value.
 
    TEveVector vM, vLP, vMP;
-   while ((vL-vR).Mag2() > eps_sqr)
+   Int_t n_loops = TMath::CeilNint(TMath::Log2(1e12 * (vL-vR).Mag2() / (0.5f*(vL+vR)).Mag2()) / 2);
+   while (--n_loops >= 0)
    {
-      vM.Mult(vL+vR, 0.5f);
+      vM.Mult(vL + vR, 0.5f);
       vLP.Set(vL); ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
       vMP.Set(vM); ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
 
@@ -348,13 +370,23 @@ void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t ep
       {
          vL.Set(vM);
          vR.Set(vM);
-         return;
+         break;
       }
 
       if (AcceptSegment(vLP, vMP, 0.0f))
+      {
          vL.Set(vM);
+      }
       else
+      {
          vR.Set(vM);
+      }
+   }
+
+   if (project_result)
+   {
+      ProjectVector(vL, depth);
+      ProjectVector(vR, depth);
    }
 }
 

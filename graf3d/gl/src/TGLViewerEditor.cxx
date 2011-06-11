@@ -15,6 +15,7 @@
 #include "TGNumberEntry.h"
 #include "TGButtonGroup.h"
 #include "TGColorSelect.h"
+#include "TGTextEntry.h"
 #include "TVirtualGL.h"
 #include "TG3DLine.h"
 #include "TGButton.h"
@@ -77,6 +78,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fCamOverlayOn(0),
    fClipSet(0),
    fARotDt(0), fARotWPhi(0), fARotATheta(0), fARotWTheta(0), fARotADolly(0), fARotWDolly(0),
+   fASavImageGUIBaseName(0), fASavImageGUIOutMode(0),
    fStereoZeroParallax(0), fStereoEyeOffsetFac(0), fStereoFrustumAsymFac(0),
    fViewer(0),
    fIsInPad(kTRUE)
@@ -141,6 +143,9 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fARotWTheta->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotADolly->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotWDolly->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
+
+   fASavImageGUIBaseName->Connect("TextChanged(char*", "TGLViewerEditor", this, "DoASavImageGUIBaseName(char*)");
+   fASavImageGUIOutMode->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "DoASavImageGUIOutMode(Int_t)");
 
    fStereoZeroParallax  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateStereo()");
    fStereoEyeOffsetFac  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateStereo()");
@@ -218,6 +223,9 @@ void TGLViewerEditor::SetModel(TObject* obj)
       fARotWTheta->SetNumber(r->GetWTheta());
       fARotADolly->SetNumber(r->GetADolly());
       fARotWDolly->SetNumber(r->GetWDolly());
+
+      fASavImageGUIBaseName->SetText(r->GetImageGUIBaseName());
+      fASavImageGUIOutMode ->SetButton(r->GetImageGUIOutMode());
    }
 
    if (fViewer->GetStereo())
@@ -603,6 +611,36 @@ void TGLViewerEditor::CreateExtrasTab()
 
    tab->AddFrame(p, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
+   // ----- Auto Save Images -----
+
+   p = new TGGroupFrame(tab, "Auto save images", kVerticalFrame);
+
+   fASavImageGUIBaseName = new TGTextEntry(p);
+   fASavImageGUIBaseName->SetDefaultSize(160, 0);
+   p->AddFrame(fASavImageGUIBaseName, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 4, 0));
+
+   fASavImageGUIOutMode = new TGButtonGroup(p, "Output mode", kChildFrame|kHorizontalFrame);
+   new TGRadioButton(fASavImageGUIOutMode, "GIF+      ");
+   new TGRadioButton(fASavImageGUIOutMode, "PNG set   ");
+   fASavImageGUIOutMode->SetLayoutHints(new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 2, -10));
+   p->AddFrame(fASavImageGUIOutMode, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
+
+   {
+      TGCompositeFrame *l = new TGHorizontalFrame(p);
+
+      TGTextButton *b = new TGTextButton(l, "Start");
+      b->Connect("Clicked()", "TGLViewerEditor", this, "DoASavImageStart()");
+      l->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+
+      b = new TGTextButton(l, "Stop");
+      b->Connect("Clicked()", "TGLViewerEditor", this, "DoASavImageStop()");
+      l->AddFrame(b, new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
+
+      p->AddFrame(l, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 4, 0));
+   }
+
+   tab->AddFrame(p, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
+
    // ----- Stereo -----
 
    fStereoFrame = p = new TGGroupFrame(tab, "Stereo", kVerticalFrame);
@@ -717,6 +755,54 @@ void TGLViewerEditor::DoRotatorStop()
    // Stop auto-rotator.
 
    fViewer->GetAutoRotator()->Stop();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoASavImageGUIBaseName(const char* t)
+{
+   // Update base-name.
+
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   r->SetImageGUIBaseName(t);
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoASavImageGUIOutMode(Int_t m)
+{
+   // Update output mode.
+
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   r->SetImageGUIOutMode(m);
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoASavImageStart()
+{
+   // Start auto-rotator image auto-save.
+
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   if (r->GetImageAutoSave())
+   {
+      Warning("DoASavImageStart", "AutoSave in progress.");
+      return;
+   }
+
+   r->StartImageAutoSaveWithGUISettings();
+}
+
+//______________________________________________________________________________
+void TGLViewerEditor::DoASavImageStop()
+{
+   // Stop auto-rotator image auto-save.
+
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   if (!r->GetImageAutoSave())
+   {
+      Warning("DoASavImageStop", "AutoSave not in progress.");
+      return;
+   }
+
+   r->StopImageAutoSave();
 }
 
 //______________________________________________________________________________

@@ -44,6 +44,9 @@ protected:
    Int_t      fImageCount;
    Bool_t     fImageAutoSave;
 
+   TString    fImageGUIBaseName;
+   Int_t      fImageGUIOutMode;
+
 public:
    TGLAutoRotator(TGLViewer* v);
    virtual ~TGLAutoRotator();
@@ -88,6 +91,14 @@ public:
    void     StartImageAutoSaveAnimatedGif(const TString& filename);
    void     StartImageAutoSave(const TString& filename);
    void     StopImageAutoSave();
+
+   TString  GetImageGUIBaseName() const               { return fImageGUIBaseName;  }
+   void     SetImageGUIBaseName(const TString& gname) { fImageGUIBaseName = gname; }
+
+   Int_t    GetImageGUIOutMode() const  { return fImageGUIOutMode; }
+   void     SetImageGUIOutMode(Int_t m);
+
+   void     StartImageAutoSaveWithGUISettings();
 
    ClassDef(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
 };

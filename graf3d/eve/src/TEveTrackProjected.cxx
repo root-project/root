@@ -79,35 +79,6 @@ void TEveTrackProjected::UpdateProjection()
 }
 
 //______________________________________________________________________________
-void TEveTrackProjected::GetBreakPoint(TEveVector& vL, TEveVector& vR)
-{
-   // With bisection calculate break-point vertices.
-   // Returns projected coordinates.
-
-   TEveProjection *projection = fManager->GetProjection();
-
-   TEveVector vM, vLP, vMP;
-   Int_t n_loops = TMath::CeilNint(TMath::Log2(1e12 * (vL-vR).Mag2() / (0.5f*(vL+vR)).Mag2()) / 2);
-   while (--n_loops >= 0)
-   {
-      vM.Mult(vL+vR, 0.5f);
-      vLP.Set(vL); projection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
-      vMP.Set(vM); projection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
-      if (projection->AcceptSegment(vLP, vMP, 0.0f))
-      {
-         vL.Set(vM);
-      }
-      else
-      {
-         vR.Set(vM);
-      }
-   }
-
-   projection->ProjectVector(vL, fDepth);
-   projection->ProjectVector(vR, fDepth);
-}
-
-//______________________________________________________________________________
 Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
 {
    // Findex index of the last point that lies within the same
@@ -197,7 +168,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
       TEveVector vL = fOrigPnts[bR];
       TEveVector vR = fOrigPnts[bR + 1];
-      GetBreakPoint(vL, vR);
+      projection->BisectBreakPoint(vL, vR, kTRUE, fDepth);
       vvec.push_back(vL);
       fBreakPoints.push_back((Int_t)vvec.size());
       vvec.push_back(vR);

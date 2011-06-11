@@ -30,6 +30,7 @@ class TGRadioButton;
 class TGColorSelect;
 class TGComboBox;
 class TGButton;
+class TGTextEntry;
 class TGLViewer;
 class TGTab;
 
@@ -95,11 +96,14 @@ private:
    TGNumberEntry    *fARotATheta, *fARotWTheta;
    TGNumberEntry    *fARotADolly, *fARotWDolly;
 
+   TGTextEntry      *fASavImageGUIBaseName;
+   TGButtonGroup    *fASavImageGUIOutMode;
+
    TGNumberEntry    *fStereoZeroParallax;
    TGNumberEntry    *fStereoEyeOffsetFac;
    TGNumberEntry    *fStereoFrustumAsymFac;
 
-   //Model
+   // Model
    TGLViewer        *fViewer;
    Bool_t	     fIsInPad;
 
@@ -137,7 +141,7 @@ public:
    void DoAnnotation();
    void DoDrawCameraCenter();
    void UpdateCameraCenter();
-   //Axis manipulation
+   // Axis manipulation
    void UpdateViewerAxes(Int_t id);
    void UpdateViewerReference();
    void DoCameraOverlay();
@@ -145,6 +149,10 @@ public:
    void UpdateRotator();
    void DoRotatorStart();
    void DoRotatorStop();
+   void DoASavImageGUIBaseName(const char* t);
+   void DoASavImageGUIOutMode(Int_t m);
+   void DoASavImageStart();
+   void DoASavImageStop();
    void UpdateStereo();
 
    void DetachFromPad(){fIsInPad = kFALSE;}
