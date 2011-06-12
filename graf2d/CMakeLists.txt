@@ -20,4 +20,8 @@ endif()
 if(gviz)
   add_subdirectory(gviz)
 endif()
+if(fitsio)
+  add_subdirectory(fitsio)
+endif()
+
 
