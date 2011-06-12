@@ -1,4 +1,5 @@
 #---Check for installed packages depending on the build options/components eamnbled -
+include(ExternalProject)
 
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
@@ -133,20 +134,42 @@ endif()
 #---Check for GSL library---------------------------------------------------------------
 if(mathmore)
   message(STATUS "Looking for GSL")
-  find_package(GSL)
-  if(NOT GSL_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "GSL package not found and mathmore component required")
-    else()
+  if(NOT builtin_gsl)
+    find_package(GSL)
+    if(NOT GSL_FOUND)
+      message(STATUS "GSL not found. Set enviroment variable GSL_DIR to point to your GSL installation")
+      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'") 
+      message(STATUS "               For the time being switching OFF 'mathmore' option")
       set(mathmore OFF CACHE BOOL "" FORCE)
-      message(STATUS "GSL not found. Switching off mathmore option")
     endif()
+  else()
+    set(gsl_version 1.15)
+    message(STATUS "Downloading and building GSL version ${gsl_version}") 
+    ExternalProject_Add(
+      GSL
+      URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+    )
+    set(GSL_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    set(GSL_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lgsl -lgslcblas -lm)
   endif()
 endif()
+
 
 #---Check for Python installation-------------------------------------------------------
 if(python)
   message(STATUS "Looking for Python")
+  #---First look for the python interpreter and fix the version of it for the libraries--
+  find_package(PythonInterp)
+  if(PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
+                    OUTPUT_VARIABLE PYTHON_VERSION)
+    message(STATUS "Found Python interpreter version ${PYTHON_VERSION}")
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
+                    OUTPUT_VARIABLE PYTHON_PREFIX)
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
+  endif()
   find_package(PythonLibs)
   if(NOT PYTHONLIBS_FOUND)
     if(fail-on-missing)
@@ -156,9 +179,6 @@ if(python)
       message(STATUS "Python not found. Switching off python option")
     endif()
   else()
-    find_package(PythonInterp)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
-                    OUTPUT_VARIABLE PYTHON_VERSION)
   endif()
 endif()
 
@@ -393,6 +413,33 @@ if(fftw3)
     endif()
   endif()
 endif()
+
+#---Check for fitsio-------------------------------------------------------------------
+if(fitsio)
+  if(builtin_cfitsio)
+    set(cfitsio_version 3.280)
+    string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
+    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}") 
+    ExternalProject_Add(
+      CFITSIO
+      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz 
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+      BUILD_IN_SOURCE 1
+    )
+    set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    set(CFITSIO_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lcfitsio)
+  else()
+    message(STATUS "Looking for CFITSIO")  
+    find_package(CFITSIO)
+    if(NOT CFITSIO_FOUND)
+      message(STATUS "CFITSIO not found. You can enable the option 'builtin_cfitsio' to build the library internally'") 
+      message(STATUS "                   For the time being switching off 'fitsio' option")
+      set(fitsio OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 
 #---Check Shadow password support----------------------------------------------------
 if(shadowpw)

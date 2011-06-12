@@ -66,6 +66,8 @@ ROOT_BUILD_OPTION(builtin_freetype OFF "Built included libfreetype, or use syste
 ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")        
 ROOT_BUILD_OPTION(builtin_zlib OFF "Built included libz, or use system libz")        
+ROOT_BUILD_OPTION(builtin_gsl OFF "Built the GSL library internally (downloading tarfile from the Web)")        
+ROOT_BUILD_OPTION(builtin_cfitsio OFF "Built the FITSIO library internally (downloading tarfile from the Web)")        
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")             
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")               
 ROOT_BUILD_OPTION(cintex ON "Build the libCintex Reflex interface library")              
