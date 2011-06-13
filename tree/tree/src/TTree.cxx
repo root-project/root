@@ -2442,7 +2442,7 @@ TFile* TTree::ChangeFile(TFile* file)
       ++nus;
       Warning("ChangeFile", "file %s already exist, trying with %d underscores", fname, nus+1);
    }
-   Int_t compress = file->GetCompressionLevel();
+   Int_t compress = file->GetCompressionSettings();
    TFile* newfile = TFile::Open(fname, "recreate", "chain files", compress);
    Printf("Fill: Switching to new file: %s", fname);
    // The current directory may contain histograms and trees.
@@ -2716,7 +2716,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    }
    Int_t newcomp = -1;
    if (nfile) {
-      newcomp = nfile->GetCompressionLevel();
+      newcomp = nfile->GetCompressionSettings();
    }
 
    //
@@ -2733,7 +2733,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       }
       TBranch* branch = leaf->GetBranch();
       if (branch && (newcomp > -1)) {
-         branch->SetCompressionLevel(newcomp);
+         branch->SetCompressionSettings(newcomp);
       }
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
@@ -5801,7 +5801,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
          if (comp > 1 && comp < minComp) {
             if (pDebug) printf("Disabling compression for branch : %s\n",branch->GetName());
-            branch->SetCompressionLevel(0);
+            branch->SetCompressionSettings(0);
          }
       }
       memFactor = Double_t(maxMemory)/Double_t(newMemsize);
@@ -7065,12 +7065,12 @@ void TTree::SetCircular(Long64_t maxEntries)
          TFile* bfile = fDirectory->GetFile();
          Int_t compress = 1;
          if (bfile) {
-            compress = bfile->GetCompressionLevel();
+            compress = bfile->GetCompressionSettings();
          }
          Int_t nb = fBranches.GetEntriesFast();
          for (Int_t i = 0; i < nb; i++) {
             TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-            branch->SetCompressionLevel(compress);
+            branch->SetCompressionSettings(compress);
          }
       }
    } else {

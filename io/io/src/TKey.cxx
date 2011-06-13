@@ -61,7 +61,7 @@
 #include "TVirtualStreamerInfo.h"
 #include "TSchemaRuleSet.h"
 
-extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 const Int_t kMAXBUF = 0xffffff;
@@ -186,19 +186,19 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    fObjlen    = lbuf - fKeylen;
 
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
-   if (cxlevel && fObjlen > 256) {
-      if (cxlevel == 2) cxlevel--;
-      Int_t nbuffers = fObjlen/kMAXBUF;
+   Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
+   if (cxlevel > 0 && fObjlen > 256) {
+      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];
       noutot = 0;
       nzip   = 0;
-      for (Int_t i=0;i<=nbuffers;i++) {
-         if (i == nbuffers) bufmax = fObjlen -nzip;
+      for (Int_t i = 0; i < nbuffers; ++i) {
+         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXBUF;
-         R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
@@ -277,19 +277,19 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    fObjlen    = lbuf - fKeylen;
 
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
-   if (cxlevel && fObjlen > 256) {
-      if (cxlevel == 2) cxlevel--;
-      Int_t nbuffers = fObjlen/kMAXBUF;
+   Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
+   if (cxlevel > 0 && fObjlen > 256) {
+      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];
       noutot = 0;
       nzip   = 0;
-      for (Int_t i=0;i<=nbuffers;i++) {
-         if (i == nbuffers) bufmax = fObjlen -nzip;
+      for (Int_t i = 0; i < nbuffers; ++i) {
+         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXBUF;
-         R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);

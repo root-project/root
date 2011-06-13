@@ -64,7 +64,7 @@ protected:
    };
 
    static Int_t fgCount;          //! branch counter
-   Int_t       fCompress;        //  (=1 branch is compressed, 0 otherwise)
+   Int_t       fCompress;        //  Compression level and algorithm
    Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
    Int_t       fEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;     //  Last basket number written
@@ -146,7 +146,9 @@ public:
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
-   virtual Int_t     GetCompressionLevel() const {return fCompress;}
+           Int_t     GetCompressionAlgorithm() const;
+           Int_t     GetCompressionLevel() const;
+           Int_t     GetCompressionSettings() const;
    TDirectory       *GetDirectory() const {return fDirectory;}
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
    virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
@@ -194,7 +196,9 @@ public:
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
-   virtual void      SetCompressionLevel(Int_t level=1);
+   void              SetCompressionAlgorithm(Int_t algorithm=0);
+   void              SetCompressionLevel(Int_t level=1);
+   void              SetCompressionSettings(Int_t settings=1);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );
@@ -212,5 +216,23 @@ public:
 
    ClassDef(TBranch,12);  //Branch descriptor
 };
+
+//______________________________________________________________________________
+inline Int_t TBranch::GetCompressionAlgorithm() const
+{
+   return (fCompress < 0) ? -1 : fCompress / 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TBranch::GetCompressionLevel() const
+{
+   return (fCompress < 0) ? -1 : fCompress % 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TBranch::GetCompressionSettings() const
+{
+   return (fCompress < 0) ? -1 : fCompress;
+}
 
 #endif

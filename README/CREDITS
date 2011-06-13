@@ -179,6 +179,10 @@ N: Kyle Cranmer
 E: cranmer@cern.ch
 D: contribution in RooStats
 
+N: David Dagenhart 
+E: wdd@fnal.gov
+D: Support for LZMA compression in ROOT files
+
 N: Bastien Dallapiazza
 E: bastien.dallapiazza@epfl.ch
 D: TSpider, TParallelCoord classes

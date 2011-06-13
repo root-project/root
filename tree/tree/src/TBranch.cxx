@@ -11,6 +11,7 @@
 
 #include "TBranch.h"
 
+#include "Compression.h"
 #include "TBasket.h"
 #include "TBranchBrowsable.h"
 #include "TBrowser.h"
@@ -332,7 +333,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
    if ((compress == -1) && fTree->GetDirectory()) {
       TFile* bfile = fTree->GetDirectory()->GetFile();
       if (bfile) {
-         fCompress = bfile->GetCompressionLevel();
+         fCompress = bfile->GetCompressionSettings();
       }
    }
 
@@ -2146,17 +2147,52 @@ void TBranch::SetBufferAddress(TBuffer* buf)
 }
 
 //______________________________________________________________________________
+void TBranch::SetCompressionAlgorithm(Int_t algorithm)
+{
+   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (fCompress < 0) {
+      fCompress = 100 * algorithm + 1;
+   } else {
+      int level = fCompress % 100;
+      fCompress = 100 * algorithm + level;
+   }
+
+   Int_t nb = fBranches.GetEntriesFast();
+   for (Int_t i=0;i<nb;i++) {
+      TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->SetCompressionAlgorithm(algorithm);
+   }
+}
+
+//______________________________________________________________________________
 void TBranch::SetCompressionLevel(Int_t level)
 {
-   //*-*-*-*-*-*-*-*Set the branch/subbranches compression level
-   //*-*            ============================================
+   if (level < 0) level = 0;
+   if (level > 99) level = 99;
+   if (fCompress < 0) {
+      fCompress = level;
+   } else {
+      int algorithm = fCompress / 100;
+      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      fCompress = 100 * algorithm + level;
+   }
 
-   fCompress = level;
    Int_t nb = fBranches.GetEntriesFast();
-
    for (Int_t i=0;i<nb;i++) {
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       branch->SetCompressionLevel(level);
+   }
+}
+
+//______________________________________________________________________________
+void TBranch::SetCompressionSettings(Int_t settings)
+{
+   fCompress = settings;
+
+   Int_t nb = fBranches.GetEntriesFast();
+   for (Int_t i=0;i<nb;i++) {
+      TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
+      branch->SetCompressionSettings(settings);
    }
 }
 

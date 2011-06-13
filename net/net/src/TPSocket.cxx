@@ -201,7 +201,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
    fLocalAddress   = sock->GetLocalInetAddress();
    fBytesSent      = sock->GetBytesSent();
    fBytesRecv      = sock->GetBytesRecv();
-   fCompress       = sock->GetCompressionLevel();
+   fCompress       = sock->GetCompressionSettings();
    fSecContext     = sock->GetSecContext();
    fRemoteProtocol = sock->GetRemoteProtocol();
    fServType       = (TSocket::EServiceType)sock->GetServType();
@@ -511,8 +511,8 @@ Int_t TPSocket::Send(const TMessage &mess)
 
    mess.SetLength();   //write length in first word of buffer
 
-   if (fCompress > 0 && mess.GetCompressionLevel() == 0)
-      const_cast<TMessage&>(mess).SetCompressionLevel(fCompress);
+   if (GetCompressionLevel() > 0 && mess.GetCompressionLevel() == 0)
+      const_cast<TMessage&>(mess).SetCompressionSettings(fCompress);
 
    if (mess.GetCompressionLevel() > 0)
       const_cast<TMessage&>(mess).Compress();

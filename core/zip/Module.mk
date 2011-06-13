@@ -13,13 +13,32 @@ ZIPDIRS      := $(ZIPDIR)/src
 ZIPDIRI      := $(ZIPDIR)/inc
 
 ##### libZip (part of libCore) #####
+ifeq ($(BUILDLZMA),yes)
 ZIPOLDH      := $(MODDIRI)/Bits.h 	\
 		$(MODDIRI)/Tailor.h 	\
 		$(MODDIRI)/ZDeflate.h	\
 		$(MODDIRI)/ZIP.h	\
-		$(MODDIRI)/ZTrees.h
+		$(MODDIRI)/ZTrees.h     \
+		$(MODDIRI)/R__LZMA.h    \
+		$(MODDIRI)/Compression.h
+else
+ZIPOLDH      := $(MODDIRI)/Bits.h 	\
+		$(MODDIRI)/Tailor.h 	\
+		$(MODDIRI)/ZDeflate.h	\
+		$(MODDIRI)/ZIP.h	\
+		$(MODDIRI)/ZTrees.h     \
+		$(MODDIRI)/Compression.h
+endif
+
+ifeq ($(BUILDLZMA),yes)
+ZIPOLDS      := $(MODDIRS)/ZDeflate.c	\
+		$(MODDIRS)/ZInflate.c   \
+		$(MODDIRS)/R__LZMA.c
+else
 ZIPOLDS      := $(MODDIRS)/ZDeflate.c	\
 		$(MODDIRS)/ZInflate.c
+endif
+
 ZIPNEWH	     := $(MODDIRI)/crc32.h 	\
 		$(MODDIRI)/deflate.h 	\
 		$(MODDIRI)/inffast.h 	\
@@ -49,7 +68,8 @@ else
 ZIPH	     := $(ZIPOLDH)
 ZIPS	     := $(ZIPOLDS)
 endif
-ZIPO         := $(call stripsrc,$(ZIPS:.c=.o))
+ZIPS1        := $(MODDIRS)/Compression.cxx
+ZIPO         := $(call stripsrc,$(ZIPS:.c=.o) $(ZIPS1:.cxx=.o))
 ZIPDEP       := $(ZIPO:.o=.d)
 
 # used in the main Makefile
@@ -75,3 +95,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ZIPDEP)
 
 distclean::     distclean-$(MODNAME)
+
+$(call stripsrc,$(MODDIRS))/R__LZMA.o: CFLAGS += -I$(LZMAINCDIR)

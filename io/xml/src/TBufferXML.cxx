@@ -23,6 +23,7 @@
 
 
 #include "TBufferXML.h"
+#include "Compression.h"
 #include "TXMLFile.h"
 
 #include "TObjArray.h"
@@ -40,9 +41,9 @@
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
 
-extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
-
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
+extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 
 #ifdef R__VISUAL_CPLUSPLUS
 #define FLong64    "%I64d"
@@ -130,7 +131,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
    SetBit(kTextBasedStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
-      SetCompressionLevel(XmlFile()->GetCompressionLevel());
+      SetCompressionSettings(XmlFile()->GetCompressionSettings());
    }
 }
 
@@ -379,6 +380,60 @@ void TBufferXML::ShiftStack(const char* errinfo)
 }
 
 //______________________________________________________________________________
+void TBufferXML::SetCompressionAlgorithm(Int_t algorithm)
+{
+   // See comments for function SetCompressionSettings
+   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (fCompressLevel < 0) {
+      // if the level is not defined yet use 1 as a default
+      fCompressLevel = 100 * algorithm + 1;
+   } else {
+      int level = fCompressLevel % 100;
+      fCompressLevel = 100 * algorithm + level;
+   }
+}
+
+//______________________________________________________________________________
+void TBufferXML::SetCompressionLevel(Int_t level)
+{
+   // See comments for function SetCompressionSettings
+   if (level < 0) level = 0;
+   if (level > 99) level = 99;
+   if (fCompressLevel < 0) {
+      // if the algorithm is not defined yet use 0 as a default
+      fCompressLevel = level;
+   } else {
+      int algorithm = fCompressLevel / 100;
+      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      fCompressLevel = 100 * algorithm + level;
+   }
+}
+
+//______________________________________________________________________________
+void TBufferXML::SetCompressionSettings(Int_t settings)
+{
+   // Used to specify the compression level and algorithm:
+   //  settings = 100 * algorithm + level
+   //
+   //  level = 0 no compression.
+   //  level = 1 minimal compression level but fast.
+   //  ....
+   //  level = 9 maximal compression level but slower and might use more memory.
+   // (For the currently supported algorithms, the maximum level is 9)
+   // If compress is negative it indicates the compression level is not set yet.
+   //
+   // The enumeration ROOT::ECompressionAlgorithm associates each
+   // algorithm with a number. There is a utility function to help
+   // to set the value of compress. For example,
+   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
+   // will build an integer which will set the compression to use
+   // the LZMA algorithm and compression level 1.  These are defined
+   // in the header file Compression.h.
+
+   fCompressLevel = settings;
+}
+
+//______________________________________________________________________________
 void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 {
    // write binary data block from buffer to xml
@@ -391,17 +446,23 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 
    char* fZipBuffer = 0;
 
-   Int_t complevel = fCompressLevel;
+   Int_t compressionLevel = GetCompressionLevel();
+   Int_t compressionAlgorithm = GetCompressionAlgorithm();
 
-   if ((Length() > 512) && (complevel>0)) {
+   if ((Length() > 512) && (compressionLevel > 0)) {
       int zipBufferSize = Length();
-      fZipBuffer = new char[zipBufferSize];
+      fZipBuffer = new char[zipBufferSize + 9];
       int dataSize = Length();
       int compressedSize = 0;
-      if (complevel>9) complevel = 9;
-      R__zip(complevel, &dataSize, Buffer(), &zipBufferSize, fZipBuffer, &compressedSize);
-      src = fZipBuffer;
-      srcSize = compressedSize;
+      R__zipMultipleAlgorithm(compressionLevel, &dataSize, Buffer(), &zipBufferSize,
+                              fZipBuffer, &compressedSize, compressionAlgorithm);
+      if (compressedSize > 0) {
+        src = fZipBuffer;
+        srcSize = compressedSize;
+      } else {
+        delete[] fZipBuffer;
+        fZipBuffer = 0;
+      }
    }
 
    TString res;
@@ -481,10 +542,17 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
    }
 
    if (fUnzipBuffer) {
+
+      int srcsize;
+      int tgtsize;
+      int status = R__unzip_header(&srcsize, (unsigned char*) fUnzipBuffer, &tgtsize);
+
       int unzipRes = 0;
-      R__unzip(&readSize, (unsigned char*) fUnzipBuffer, &blockSize,
-                          (unsigned char*) Buffer(), &unzipRes);
-      if (unzipRes!=blockSize)
+      if (status == 0) {
+        R__unzip(&readSize, (unsigned char*) fUnzipBuffer, &blockSize,
+                            (unsigned char*) Buffer(), &unzipRes);
+      }
+      if (status != 0 || unzipRes!=blockSize)
          Error("XmlReadBlock", "Decompression error %d", unzipRes);
       else
          if (gDebug>2) Info("XmlReadBlock","Unzip ok");

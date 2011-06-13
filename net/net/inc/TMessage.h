@@ -47,7 +47,7 @@ private:
    TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the message
    UInt_t   fWhat;        //Message type
    TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
-   Int_t    fCompress;    //Compression level from 0 (not compressed) to 9 (max compression)
+   Int_t    fCompress;    //Compression level and algorithm
    char    *fBufComp;     //Compressed buffer
    char    *fBufCompCur;  //Current position in compressed buffer
    char    *fCompPos;     //Position of fBufCur when message was compressed
@@ -81,8 +81,12 @@ public:
 
    void     EnableSchemaEvolution(Bool_t enable = kTRUE) { fEvolution = enable; }
    Bool_t   UsesSchemaEvolution() const { return fEvolution; }
-   void     SetCompressionLevel(Int_t level = 1);
-   Int_t    GetCompressionLevel() const { return fCompress; }
+   Int_t    GetCompressionAlgorithm() const;
+   Int_t    GetCompressionLevel() const;
+   Int_t    GetCompressionSettings() const;
+   void     SetCompressionAlgorithm(Int_t algorithm=0);
+   void     SetCompressionLevel(Int_t level=1);
+   void     SetCompressionSettings(Int_t settings=1);
    Int_t    Compress();
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
@@ -95,5 +99,23 @@ public:
 
    ClassDef(TMessage,0)  // Message buffer class
 };
+
+//______________________________________________________________________________
+inline Int_t TMessage::GetCompressionAlgorithm() const
+{
+   return (fCompress < 0) ? -1 : fCompress / 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TMessage::GetCompressionLevel() const
+{
+   return (fCompress < 0) ? -1 : fCompress % 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TMessage::GetCompressionSettings() const
+{
+   return (fCompress < 0) ? -1 : fCompress;
+}
 
 #endif

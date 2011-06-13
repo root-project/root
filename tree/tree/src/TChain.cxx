@@ -1889,7 +1889,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
       TBranch* branch = 0;
       TIter nextb(newTree->GetListOfBranches());
       while ((branch = (TBranch*) nextb())) {
-         branch->SetCompressionLevel(file->GetCompressionLevel());
+         branch->SetCompressionSettings(file->GetCompressionSettings());
       }
    }
 

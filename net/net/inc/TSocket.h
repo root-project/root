@@ -90,8 +90,7 @@ protected:
    TInetAddress  fAddress;        // remote internet address and port #
    UInt_t        fBytesRecv;      // total bytes received over this socket
    UInt_t        fBytesSent;      // total bytes sent using this socket
-   Int_t         fCompress;       // compression level from 0 (not compressed)
-                                  // to 9 (max compression)
+   Int_t         fCompress;       // Compression level and algorithm
    TInetAddress  fLocalAddress;   // local internet address and port #
    Int_t         fRemoteProtocol; // protocol of remote daemon
    TSecContext  *fSecContext;     // after a successful Authenticate call
@@ -149,7 +148,9 @@ public:
    virtual Int_t         GetLocalPort();
    UInt_t                GetBytesSent() const { return fBytesSent; }
    UInt_t                GetBytesRecv() const { return fBytesRecv; }
-   Int_t                 GetCompressionLevel() const { return fCompress; }
+   Int_t                 GetCompressionAlgorithm() const;
+   Int_t                 GetCompressionLevel() const;
+   Int_t                 GetCompressionSettings() const;
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
@@ -173,7 +174,9 @@ public:
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
-   void                  SetCompressionLevel(Int_t level = 1);
+   void                  SetCompressionAlgorithm(Int_t algorithm=0);
+   void                  SetCompressionLevel(Int_t level=1);
+   void                  SetCompressionSettings(Int_t settings=1);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
@@ -197,5 +200,23 @@ public:
 
    ClassDef(TSocket,0)  //This class implements client sockets
 };
+
+//______________________________________________________________________________
+inline Int_t TSocket::GetCompressionAlgorithm() const
+{
+   return (fCompress < 0) ? -1 : fCompress / 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TSocket::GetCompressionLevel() const
+{
+   return (fCompress < 0) ? -1 : fCompress % 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TSocket::GetCompressionSettings() const
+{
+   return (fCompress < 0) ? -1 : fCompress;
+}
 
 #endif

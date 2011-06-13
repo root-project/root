@@ -61,7 +61,7 @@ protected:
    Long64_t         fSeekInfo;       //Location on disk of StreamerInfo record
    Int_t            fD;              //File descriptor
    Int_t            fVersion;        //File format version
-   Int_t            fCompress;       //Compression level from 0(not compressed) to 9 (max compression)
+   Int_t            fCompress;       //Compression level and algorithm
    Int_t            fNbytesFree;     //Number of bytes for free segments structure
    Int_t            fNbytesInfo;     //Number of bytes for StreamerInfo record
    Int_t            fWritten;        //Number of objects written so far
@@ -169,7 +169,9 @@ public:
    TFileCacheRead     *GetCacheRead() const;
    TFileCacheWrite    *GetCacheWrite() const;
    TArrayC            *GetClassIndex() const { return fClassIndex; }
-   Int_t               GetCompressionLevel() const { return fCompress; }
+   Int_t               GetCompressionAlgorithm() const;
+   Int_t               GetCompressionLevel() const;
+   Int_t               GetCompressionSettings() const;
    Float_t             GetCompressionFactor();
    virtual Long64_t    GetEND() const { return fEND; }
    virtual Int_t       GetErrno() const;
@@ -222,7 +224,9 @@ public:
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetCacheRead(TFileCacheRead *cache);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
+   virtual void        SetCompressionAlgorithm(Int_t algorithm=0);
    virtual void        SetCompressionLevel(Int_t level=1);
+   virtual void        SetCompressionSettings(Int_t settings=1);
    virtual void        SetEND(Long64_t last) { fEND = last; }
    virtual void        SetOffset(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
@@ -294,7 +298,7 @@ friend class TAlienFile;
 
 private:
    TString  fOpt;        // Options
-   Int_t    fCompress;   // Compression factor
+   Int_t    fCompress;   // Compression level and algorithm
    Int_t    fNetOpt;     // Network options
    TFile   *fFile;       // TFile instance of the file being opened
 
@@ -319,5 +323,23 @@ public:
 };
 
 R__EXTERN TFile   *gFile;
+
+//______________________________________________________________________________
+inline Int_t TFile::GetCompressionAlgorithm() const
+{
+   return (fCompress < 0) ? -1 : fCompress / 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TFile::GetCompressionLevel() const
+{
+   return (fCompress < 0) ? -1 : fCompress % 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TFile::GetCompressionSettings() const
+{
+   return (fCompress < 0) ? -1 : fCompress;
+}
 
 #endif

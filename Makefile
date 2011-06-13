@@ -510,6 +510,11 @@ CORELIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 STATICEXTRALIBS += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 endif
 
+ifneq ($(strip $(LZMACLILIB)),)
+CORELIBEXTRA    += $(LZMALIBDIR)/$(LZMACLILIB)
+STATICEXTRALIBS += $(LZMALIBDIR)/$(LZMACLILIB)
+endif
+
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
 ifeq ($(EXPLICITLINK),yes)

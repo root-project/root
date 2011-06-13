@@ -33,8 +33,7 @@
   #define R__likely(expr) expr
 #endif
 
-
-extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 
@@ -884,10 +883,10 @@ Int_t TBasket::WriteBuffer()
    fHeaderOnly = kTRUE;
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
+   Int_t cxAlgorithm = fBranch->GetCompressionAlgorithm();
    if (cxlevel > 0) {
-      //if (cxlevel == 2) cxlevel--; RB: I cannot remember why we had this!
-      Int_t nbuffers = fObjlen/kMAXBUF;
-      Int_t buflen = fKeylen + fObjlen + 28; //add 28 bytes in case object is placed in a deleted gap
+     Int_t nbuffers = 1 + (fObjlen - 1) / kMAXBUF;
+     Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
          Warning("WriteBuffer", "Unable to allocate the compressed buffer");
@@ -899,11 +898,11 @@ Int_t TBasket::WriteBuffer()
       char *bufcur = &fBuffer[fKeylen];
       noutot = 0;
       nzip   = 0;
-      for (Int_t i=0;i<=nbuffers;i++) {
-         if (i == nbuffers) bufmax = fObjlen -nzip;
-         else               bufmax = kMAXBUF;
+      for (Int_t i = 0; i < nbuffers; ++i) {
+         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
+         else bufmax = kMAXBUF;
          //compress the buffer
-         R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          
          // test if buffer has really been compressed. In case of small buffers 
          // when the buffer contains random data, it may happen that the compressed
