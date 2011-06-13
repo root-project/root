@@ -123,6 +123,7 @@ private:
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
+   mutable Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
 
@@ -327,6 +328,7 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
+   void               SetCanSplit(Int_t splitmode);
    void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
    void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);

@@ -744,7 +744,7 @@ TClass::TClass() :
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fProperty(0),fVersionUsed(kFALSE), 
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -768,7 +768,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fProperty(0),fVersionUsed(kFALSE), 
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -818,7 +818,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fProperty(0),fVersionUsed(kFALSE), 
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -847,7 +847,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fProperty(0),fVersionUsed(kFALSE), 
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(kNone),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1106,6 +1106,7 @@ TClass::TClass(const TClass& cl) :
   fDirAutoAdd(cl.fDirAutoAdd),
   fStreamerFunc(cl.fStreamerFunc),
   fSizeof(cl.fSizeof),
+  fCanSplit(cl.fCanSplit),
   fProperty(cl.fProperty),
   fVersionUsed(cl.fVersionUsed),
   fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
@@ -1887,6 +1888,12 @@ Bool_t TClass::CanSplit() const
    // Note: add the possibility to set it for the class and the derived class.
    // save the info in TVirtualStreamerInfo
    // deal with the info in MakeProject
+   if (fCanSplit >= 0) {
+      // The user explicitly set the value
+      return fCanSplit != 0;
+   }
+   if (this == TObject::Class())  return kTRUE;
+   if (fName == "TClonesArray")   return kTRUE;
    if (fRefProxy)                 return kFALSE;
    if (InheritsFrom("TRef"))      return kFALSE;
    if (InheritsFrom("TRefArray")) return kFALSE;
@@ -1895,6 +1902,12 @@ Bool_t TClass::CanSplit() const
    if (fName.BeginsWith("TMatrixT<")) return kFALSE;
    if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
    if (InheritsFrom("TTree"))     return kFALSE;
+
+//   Uncommenting this would change the default bahavior and disallow the splitting by
+//   default.
+//   if (!GetCollectionProxy() && (GetStreamer()!=0 || (GetClassInfo() && gCint->ClassInfo_RootFlag(GetClassInfo()) & 1))) {
+//      return kFALSE;
+//   }
 
    // If we do not have a showMembers and we have a streamer,
    // we are in the case of class that can never be split since it is
@@ -1910,9 +1923,7 @@ Bool_t TClass::CanSplit() const
 
          // However we do not split collections of collections
          // nor collections of strings
-         // nor collections of pointers
-         // (actually we __could__ split collection of pointers to non-virtual class,
-         //  but we dont for now).
+         // nor collections of pointers (unless explicit request (see TBranchSTL)).
 
          if (GetCollectionProxy()->HasPointers()) return kFALSE;
 
@@ -4230,6 +4241,17 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
    } else {
       Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
    }
+}
+
+//______________________________________________________________________________
+void TClass::SetCanSplit(Int_t splitmode)
+{ 
+   // Set the splitability of this class:
+   //   -1: Use the default calculation
+   //    0: Disallow splitting
+   //    1: Always allow splitting.
+   
+   fCanSplit = splitmode;
 }
 
 //______________________________________________________________________________
