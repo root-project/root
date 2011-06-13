@@ -6,6 +6,8 @@
 #include "MemberWise.h"
 
 void writeMemberWise() {
+   TClass::GetClass("WithExplicitCannotSplit")->SetCanSplit(0);
+
    Holder holder;
    holder.Init();
    

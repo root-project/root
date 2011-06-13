@@ -56,6 +56,12 @@ public:
    WithAttachedStreamer(UInt_t index) : fOne("WithAttachedStreamer fOne",index),fTwo("WithAttachedStreamer fTwo",index) {}
 };
 
+class WithExplicitCannotSplit : WithAttachedStreamer {
+public:
+   WithExplicitCannotSplit() {}
+   WithExplicitCannotSplit(UInt_t index) : WithAttachedStreamer(index) {}
+};
+
 void WithAttachedStreamerStreamer(TBuffer &buf,void *obj) {
    if (buf.IsReading()) {
       cout << "Reading a WithAttachedStreamer\n";
@@ -89,6 +95,21 @@ public:
 #endif
 };
 
+class NeverWritten {
+   UInt_t fValue;
+#ifdef NewMember
+   UInt_t fData;
+public:
+   NeverWritten() : fValue(0),fData(0) {}
+
+   //   ClassDef(NeverWritten,3);
+#else
+public:
+   NeverWritten() : fValue(0) {}
+   //   ClassDef(NeverWritten,2);
+#endif
+};
+
 class Holder {
 public:
    Holder() : fPointer(0) {};
@@ -108,6 +129,8 @@ public:
       fAttachedStreamer.push_back(WithAttachedStreamer(8));
       fStreamerOnly.push_back(WithStreamerOnly(9));
       fStreamerOnly.push_back(WithStreamerOnly(10));
+      fCannotSplit.push_back(WithExplicitCannotSplit(11));
+      fCannotSplit.push_back(WithExplicitCannotSplit(12));
    }
    
    std::vector<Content>  fNormal;
@@ -116,7 +139,9 @@ public:
    std::vector<Content>  fNotSplit; //||
    std::vector<WithAttachedStreamer> fAttachedStreamer;
    std::vector<WithStreamerOnly> fStreamerOnly; //!
+   std::vector<WithExplicitCannotSplit> fCannotSplit;
    
+   std::vector<NeverWritten> fAlwaysEmpty;
 };
 
 #ifdef __MAKECINT__
@@ -124,5 +149,7 @@ public:
 #pragma link C++ class Content+;
 #pragma link C++ class Holder+;
 #pragma link C++ class WithAttachedStreamer+;
+#pragma link C++ class WithExplicitCannotSplit+;
 #pragma link C++ class WithStreamerOnly-;
+#pragma link C++ class NeverWritten+;
 #endif

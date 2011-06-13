@@ -7,7 +7,7 @@
 #include "MemberWise.h"
 
 void execMemberWise() {
-   
+ 
    TFile *f = TFile::Open("memberwise.root","READ");
    Holder *pointer;
    cout << "Reading in object-wise mode\n";
