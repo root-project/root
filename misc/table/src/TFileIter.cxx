@@ -178,7 +178,7 @@ TFileIter::TFileIter(const TFileIter &dst) : TListIter()
          fRootFile = TFile::Open(MapName(fRootFile->GetName())
             ,fRootFile->GetOption()
             ,fRootFile->GetTitle()
-            ,thisFile->GetCompressionLevel());
+            ,thisFile->GetCompressionSettings());
       }
    }
 

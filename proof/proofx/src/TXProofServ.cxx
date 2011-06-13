@@ -251,7 +251,7 @@ Int_t TXProofServ::CreateServer()
       return -1;
    }
    // Set compression level, if any
-   fSocket->SetCompressionLevel(fCompressMsg);
+   fSocket->SetCompressionSettings(fCompressMsg);
 
    // Set the title for debugging
    TString tgt("client");

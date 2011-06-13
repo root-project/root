@@ -276,7 +276,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    if (fTree->GetDirectory()) {
       TFile* bfile = fTree->GetDirectory()->GetFile();
       if (bfile) {
-         fCompress = bfile->GetCompressionLevel();
+         fCompress = bfile->GetCompressionSettings();
       }
    }
 
@@ -692,7 +692,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    fCompress = compress;
    if (compress == -1 && fTree->GetDirectory()) {
       TFile *bfile = fTree->GetDirectory()->GetFile();
-      if (bfile) fCompress = bfile->GetCompressionLevel();
+      if (bfile) fCompress = bfile->GetCompressionSettings();
    }
 
    if (basketsize < 100) basketsize = 100;
@@ -833,7 +833,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    if ((compress == -1) && fTree->GetDirectory()) {
       TFile* bfile = fTree->GetDirectory()->GetFile();
       if (bfile) {
-         fCompress = bfile->GetCompressionLevel();
+         fCompress = bfile->GetCompressionSettings();
       }
    }
 

@@ -13,6 +13,13 @@
  */
 
 #include "zlib.h"
+#include "RConfigure.h"
+
+#ifdef R__HAS_LZMACOMPRESSION
+#include "R__LZMA.h"
+#endif
+
+#include <stdio.h>
 
 /*
  *  bits.c by Jean-loup Gailly and Kai Uwe Rommel.
@@ -142,9 +149,16 @@ ulg R__bits_sent;   /* bit length of the compressed data */
 
 
 /* ===========================================================================
-   By default R__ZipMode = 1 (new zip compression algorithm.
-   If R__ZipMode is set to 0 (via R__SetZipMode) the old zlib is used
- */
+   R__ZipMode is used to select the compression algorithm when R__zip is called
+   and when R__zipMultipleAlgorithm is called with its last argument set to 0.
+   R__ZipMode = 1 : ZLIB compression algorithm is used (default)
+   R__ZipMode = 2 : LZMA compression algorithm is used
+   R__ZipMode = 0 or 3 : a very old compression algorithm is used
+   (the very old algorithm is supported for backward compatibility)
+   The LZMA algorithm requires the external XZ package be installed when linking
+   is done. LZMA typically has significantly higher compression factors, but takes
+   more CPU time and memory resources while compressing.
+*/
 int R__ZipMode = 1;
 
 /* ===========================================================================
@@ -402,77 +416,62 @@ local int R__mem_read(char *b, unsigned bsize)
 #define HDRSIZE 9
 static  int error_flag;
 
-void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm)
      /* int cxlevel;                      compression level */
      /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
      /* char *tgt, *src;                  source and target buffers */
-
+     /* compressionAlgorithm 0 = use global setting */
+     /*                      1 = zlib */
+     /*                      2 = lzma */
+     /*                      3 = old */
 {
+  if (cxlevel <= 0) {
+    *irep = 0;
+    return;
+  }
+
   int err;
   int method   = Z_DEFLATED;
 
-  if (R__ZipMode != 0) {
-    z_stream stream;
-    *irep = 0;
+  if (compressionAlgorithm == 0) {
+    compressionAlgorithm = R__ZipMode;
+  }
 
-    error_flag   = 0;
-    if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
-    if (error_flag != 0) return;
-    if (*srcsize > 0xffffff) R__error("source buffer too big");
-    if (error_flag != 0) return;
-
-
-    stream.next_in   = (Bytef*)src;
-    stream.avail_in  = (uInt)(*srcsize);
-
-    stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
-    stream.avail_out = (uInt)(*tgtsize);
-
-    stream.zalloc    = (alloc_func)0;
-    stream.zfree     = (free_func)0;
-    stream.opaque    = (voidpf)0;
-
-    err = deflateInit(&stream, cxlevel);
-    if (err != Z_OK) {
-       printf("error %d in deflateInit (zlib)\n",err);
-       return;
+  // The LZMA compression algorithm from the XZ package
+  if (compressionAlgorithm == 2) {
+#ifdef R__HAS_LZMACOMPRESSION
+    R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
+    return;
+#endif
+#ifndef R__HAS_LZMACOMPRESSION
+    compressionAlgorithm = 1;
+    static int warningGiven = 0;
+    if (warningGiven == 0) {
+      warningGiven = 1;
+      fprintf(stderr,"Warning R__zipMultipleAlgorithm:\n"
+              "There was a request to compress data using the LZMA\n"
+              "compression algorithm. But either the LZMA compression\n"
+              "libraries were not evailable when this root installation\n"
+              "was configured or LZMA compression was explicitly disabled.\n"
+              "ZLIB compression will be used instead. This warning will only\n"
+              "be given once per process\n");
     }
+    compressionAlgorithm = 1;
+#endif
+  }
 
-    err = deflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-       deflateEnd(&stream);
-       /* No need to print an error message. We simply abandon the compression
-          the buffer cannot be compressed or compressed buffer would be larger than original buffer
-          printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
-       */
-       return;
-    }
-
-    err = deflateEnd(&stream);
-
-    tgt[0] = 'Z';               /* Signature ZLib */
-    tgt[1] = 'L';
-    tgt[2] = (char) method;
-
-    in_size   = (unsigned) (*srcsize);
-    out_size  = stream.total_out;             /* compressed size */
-    tgt[3] = (char)(out_size & 0xff);
-    tgt[4] = (char)((out_size >> 8) & 0xff);
-    tgt[5] = (char)((out_size >> 16) & 0xff);
-
-    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
-    tgt[7] = (char)((in_size >> 8) & 0xff);
-    tgt[8] = (char)((in_size >> 16) & 0xff);
-
-    *irep = stream.total_out + HDRSIZE;
-  } else {
+  // The very old algorithm for backward compatibility
+  // 0 for selecting with R__ZipMode in a backward compatible way
+  // 3 for selecting in other cases
+  if (compressionAlgorithm == 3 || compressionAlgorithm == 0) {
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
+    if (cxlevel > 9) cxlevel = 9;
     level        = cxlevel;
 
     *irep        = 0;
     error_flag   = 0;
-    if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
+    if (*tgtsize <= 0) R__error("target buffer too small");
     if (error_flag != 0) return;
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
@@ -511,7 +510,72 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
 
     *irep     = out_offset;
     return;
+
+  // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
+  // algorithm setting
+  } else {
+
+    z_stream stream;
+    *irep = 0;
+
+    error_flag   = 0;
+    if (*tgtsize <= 0) R__error("target buffer too small");
+    if (error_flag != 0) return;
+    if (*srcsize > 0xffffff) R__error("source buffer too big");
+    if (error_flag != 0) return;
+
+
+    stream.next_in   = (Bytef*)src;
+    stream.avail_in  = (uInt)(*srcsize);
+
+    stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
+    stream.avail_out = (uInt)(*tgtsize);
+
+    stream.zalloc    = (alloc_func)0;
+    stream.zfree     = (free_func)0;
+    stream.opaque    = (voidpf)0;
+
+    if (cxlevel > 9) cxlevel = 9;
+    err = deflateInit(&stream, cxlevel);
+    if (err != Z_OK) {
+       printf("error %d in deflateInit (zlib)\n",err);
+       return;
+    }
+
+    err = deflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) {
+       deflateEnd(&stream);
+       /* No need to print an error message. We simply abandon the compression
+          the buffer cannot be compressed or compressed buffer would be larger than original buffer
+          printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
+       */
+       return;
+    }
+
+    err = deflateEnd(&stream);
+
+    tgt[0] = 'Z';               /* Signature ZLib */
+    tgt[1] = 'L';
+    tgt[2] = (char) method;
+
+    in_size   = (unsigned) (*srcsize);
+    out_size  = stream.total_out;             /* compressed size */
+    tgt[3] = (char)(out_size & 0xff);
+    tgt[4] = (char)((out_size >> 8) & 0xff);
+    tgt[5] = (char)((out_size >> 16) & 0xff);
+
+    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((in_size >> 8) & 0xff);
+    tgt[8] = (char)((in_size >> 16) & 0xff);
+
+    *irep = stream.total_out + HDRSIZE;
+    return;
   }
+}
+
+void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+{
+  R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep, 0);
 }
 
 void R__error(char *msg)
@@ -519,4 +583,3 @@ void R__error(char *msg)
   if (verbose) fprintf(stderr,"R__zip: %s\n",msg);
   error_flag = 1;
 }
-

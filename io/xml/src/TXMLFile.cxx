@@ -155,7 +155,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    fVersion    = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits      = 4;
    fOption     = option;
-   SetCompressionLevel(compression);
+   SetCompressionSettings(compression);
    fWritten    = 0;
    fSumBuffer  = 0;
    fSum2Buffer = 0;

@@ -181,6 +181,8 @@ private:
    static TString fgSysLogService;   // name of the syslog service (eg: proofm-0, proofw-0.67)
    static TString fgSysLogEntity;   // logging entity (<user>:<group>)
 
+   Int_t         GetCompressionLevel() const;
+
    void          RedirectOutput(const char *dir = 0, const char *mode = "w");
    Int_t         CatMotd();
    Int_t         UnloadPackage(const char *package);
@@ -458,5 +460,10 @@ public:
    virtual ~TIdleTOTimerGuard() { if (fIdleTOTimer) fIdleTOTimer->Start(-1, kTRUE); }
 };
 
+//______________________________________________________________________________
+inline Int_t TProofServ::GetCompressionLevel() const
+{
+   return (fCompressMsg < 0) ? -1 : fCompressMsg % 100;
+}
 
 #endif

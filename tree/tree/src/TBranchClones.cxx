@@ -96,7 +96,7 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
          bfile = tree->GetDirectory()->GetFile();
       }
       if (bfile) {
-         compress = bfile->GetCompressionLevel();
+         compress = bfile->GetCompressionSettings();
       }
    }
    char* cpointer = (char*) pointer;
@@ -181,9 +181,6 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
 
       leaflist.Form("%s[%s]/%s", member->GetName(), branchcount.Data(), itype);
       Int_t comp = compress;
-      if (type == 5) {
-         comp--;
-      }
       branchname.Form("%s.%s", name, rd->GetName());
       TBranch* branch  = new TBranch(this, branchname, this, leaflist, basketsize, comp);
       branch->SetBit(kIsClone);

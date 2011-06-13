@@ -296,6 +296,11 @@ SSLLIBDIR      := @ssllibdir@
 SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
 SSLSHARED      := @sslshared@
 
+BUILDLZMA      := @buildlzma@
+LZMALIBDIR     := @lzmalibdir@
+LZMACLILIB     := @lzmalib@
+LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
+
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=

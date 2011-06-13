@@ -20,13 +20,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMessage.h"
+#include "Compression.h"
 #include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
 #include "TFile.h"
 #include "TProcessID.h"
 
-
-extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 const Int_t kMAXBUF = 0xffffff;
@@ -224,23 +224,57 @@ void TMessage::SetWhat(UInt_t what)
 }
 
 //______________________________________________________________________________
-void TMessage::SetCompressionLevel(Int_t level)
+void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 {
-   // Set the message compression level. Can be between 0 and 9 with 0
-   // being no compression and 9 maximum compression. In general the default
-   // level of 1 is the best compromise between achieved compression and
-   // cpu time. Compression will only happen when the message is > 256 bytes.
-
-   if (level < 0) level = 0;
-   if (level > 9) level = 9;
-
-   if (level != fCompress && fBufComp) {
+   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   Int_t newCompress;
+   if (fCompress < 0) {
+      newCompress = 100 * algorithm + 1;
+   } else {
+      int level = fCompress % 100;
+      newCompress = 100 * algorithm + level;
+   }
+   if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
       fBufComp    = 0;
       fBufCompCur = 0;
       fCompPos    = 0;
    }
-   fCompress = level;
+   fCompress = newCompress;
+}
+
+//______________________________________________________________________________
+void TMessage::SetCompressionLevel(Int_t level)
+{
+   if (level < 0) level = 0;
+   if (level > 99) level = 99;
+   Int_t newCompress;
+   if (fCompress < 0) {
+      newCompress = level;
+   } else {
+      int algorithm = fCompress / 100;
+      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      newCompress = 100 * algorithm + level;
+   }
+   if (newCompress != fCompress && fBufComp) {
+      delete [] fBufComp;
+      fBufComp    = 0;
+      fBufCompCur = 0;
+      fCompPos    = 0;
+   }
+   fCompress = newCompress;
+}
+
+//______________________________________________________________________________
+void TMessage::SetCompressionSettings(Int_t settings)
+{
+   if (settings != fCompress && fBufComp) {
+      delete [] fBufComp;
+      fBufComp    = 0;
+      fBufCompCur = 0;
+      fCompPos    = 0;
+   }
+   fCompress = settings;
 }
 
 //______________________________________________________________________________
@@ -252,7 +286,9 @@ Int_t TMessage::Compress()
    // when the message increases in size in some pathological cases),
    // otherwise returns 0.
 
-   if (fCompress == 0) {
+   Int_t compressionLevel = GetCompressionLevel();
+   Int_t compressionAlgorithm = GetCompressionAlgorithm();
+   if (compressionLevel <= 0) {
       // no compression specified
       if (fBufComp) {
          delete [] fBufComp;
@@ -283,7 +319,7 @@ Int_t TMessage::Compress()
 
    Int_t hdrlen   = 2*sizeof(UInt_t);
    Int_t messlen  = Length() - hdrlen;
-   Int_t nbuffers = messlen / kMAXBUF;
+   Int_t nbuffers = 1 + (messlen - 1) / kMAXBUF;
    Int_t chdrlen  = 3*sizeof(UInt_t);   // compressed buffer header length
    Int_t buflen   = TMath::Max(512, chdrlen + messlen + 9*nbuffers);
    fBufComp       = new char[buflen];
@@ -292,12 +328,12 @@ Int_t TMessage::Compress()
    Int_t noutot   = 0;
    Int_t nzip     = 0;
    Int_t nout, bufmax;
-   for (Int_t i = 0; i <= nbuffers; i++) {
-      if (i == nbuffers)
+   for (Int_t i = 0; i < nbuffers; ++i) {
+      if (i == nbuffers - 1)
          bufmax = messlen - nzip;
       else
          bufmax = kMAXBUF;
-      R__zip(fCompress, &bufmax, messbuf, &bufmax, bufcur, &nout);
+      R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout, compressionAlgorithm);
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
          delete [] fBufComp;

@@ -774,7 +774,7 @@ Int_t TProofServ::CreateServer()
    fSocket = new TSocket(sock);
 
    // Set compression level, if any
-   fSocket->SetCompressionLevel(fCompressMsg);
+   fSocket->SetCompressionSettings(fCompressMsg);
 
    // debug hooks
    if (IsMaster()) {
@@ -3871,8 +3871,8 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
                     mbuf.Length(), fMsgSizeHWM);
             // Compress the message, if required; for these messages we do it already
             // here so we get the size; TXSocket does not do it twice.
-            if (fCompressMsg > 0) {
-               mbuf.SetCompressionLevel(fCompressMsg);
+            if (GetCompressionLevel() > 0) {
+               mbuf.SetCompressionSettings(fCompressMsg);
                mbuf.Compress();
                objsz = mbuf.CompLength();
             } else {
@@ -3897,8 +3897,8 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
       if (np > 0) {
          // Compress the message, if required; for these messages we do it already
          // here so we get the size; TXSocket does not do it twice.
-         if (fCompressMsg > 0) {
-            mbuf.SetCompressionLevel(fCompressMsg);
+         if (GetCompressionLevel() > 0) {
+            mbuf.SetCompressionSettings(fCompressMsg);
             mbuf.Compress();
             objsz = mbuf.CompLength();
          } else {
@@ -3950,8 +3950,8 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
          mbuf.WriteObject(o);
          // Compress the message, if required; for these messages we do it already
          // here so we get the size; TXSocket does not do it twice.
-         if (fCompressMsg > 0) {
-            mbuf.SetCompressionLevel(fCompressMsg);
+         if (GetCompressionLevel() > 0) {
+            mbuf.SetCompressionSettings(fCompressMsg);
             mbuf.Compress();
             objsz = mbuf.CompLength();
          } else {

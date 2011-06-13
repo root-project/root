@@ -234,7 +234,12 @@ protected:
 
    TXMLFile*        XmlFile();
 
-   void             SetCompressionLevel(int level) { fCompressLevel = level; }
+   Int_t            GetCompressionAlgorithm() const;
+   Int_t            GetCompressionLevel() const;
+   Int_t            GetCompressionSettings() const;
+   void             SetCompressionAlgorithm(Int_t algorithm=0);
+   void             SetCompressionLevel(Int_t level=1);
+   void             SetCompressionSettings(Int_t settings=1);
    void             SetXML(TXMLEngine* xml) { fXML = xml; }
 
    void             XmlWriteBlock(XMLNodePointer_t node);
@@ -324,12 +329,30 @@ protected:
    Bool_t           fCanUseCompact;        //!   flag indicate that basic type (like Int_t) can be placed in the same tag
    Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
    TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
-   Int_t            fCompressLevel;        //!   compress level used to minimize size of file 
+   Int_t            fCompressLevel;        //!   compression level and algorithm
 
    static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 ClassDef(TBufferXML,1) //a specialized TBuffer to read/write to XML files
 };
+
+//______________________________________________________________________________
+inline Int_t TBufferXML::GetCompressionAlgorithm() const
+{
+   return (fCompressLevel < 0) ? -1 : fCompressLevel / 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TBufferXML::GetCompressionLevel() const
+{
+   return (fCompressLevel < 0) ? -1 : fCompressLevel % 100;
+}
+
+//______________________________________________________________________________
+inline Int_t TBufferXML::GetCompressionSettings() const
+{
+   return (fCompressLevel < 0) ? -1 : fCompressLevel;
+}
 
 #endif
 

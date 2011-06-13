@@ -1663,8 +1663,8 @@ Int_t TXSocket::Send(const TMessage &mess)
 
    mess.SetLength();   //write length in first word of buffer
 
-   if (fCompress > 0 && mess.GetCompressionLevel() == 0)
-      const_cast<TMessage&>(mess).SetCompressionLevel(fCompress);
+   if (GetCompressionLevel() > 0 && mess.GetCompressionLevel() == 0)
+      const_cast<TMessage&>(mess).SetCompressionSettings(fCompress);
 
    if (mess.GetCompressionLevel() > 0)
       const_cast<TMessage&>(mess).Compress();

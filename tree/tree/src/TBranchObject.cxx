@@ -107,7 +107,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    if ((compress == -1) && tree->GetDirectory()) {
       TFile* bfile = tree->GetDirectory()->GetFile();
       if (bfile) {
-         fCompress = bfile->GetCompressionLevel();
+         fCompress = bfile->GetCompressionSettings();
       }
    }
    if (basketsize < 100) {

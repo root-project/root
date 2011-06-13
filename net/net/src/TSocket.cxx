@@ -21,6 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Bytes.h"
+#include "Compression.h"
 #include "NetErrors.h"
 #include "TEnv.h"
 #include "TError.h"
@@ -535,8 +536,8 @@ Int_t TSocket::Send(const TMessage &mess)
 
    mess.SetLength();   //write length in first word of buffer
 
-   if (fCompress > 0 && mess.GetCompressionLevel() == 0)
-      const_cast<TMessage&>(mess).SetCompressionLevel(fCompress);
+   if (GetCompressionLevel() > 0 && mess.GetCompressionLevel() == 0)
+      const_cast<TMessage&>(mess).SetCompressionSettings(fCompress);
 
    if (mess.GetCompressionLevel() > 0)
       const_cast<TMessage&>(mess).Compress();
@@ -1044,17 +1045,61 @@ Int_t TSocket::GetErrorCode() const
 }
 
 //______________________________________________________________________________
+void TSocket::SetCompressionAlgorithm(Int_t algorithm)
+{
+   // See comments for function SetCompressionSettings
+   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (fCompress < 0) {
+      // if the level is not defined yet use 1 as a default
+      fCompress = 100 * algorithm + 1;
+   } else {
+      int level = fCompress % 100;
+      fCompress = 100 * algorithm + level;
+   }
+}
+
+//______________________________________________________________________________
 void TSocket::SetCompressionLevel(Int_t level)
 {
-   // Set the message compression level. Can be between 0 and 9 with 0
-   // being no compression and 9 maximum compression. In general the default
-   // level of 1 is the best compromise between achieved compression and
-   // cpu time. Compression will only happen when the message is > 256 bytes.
-
+   // See comments for function SetCompressionSettings
    if (level < 0) level = 0;
-   if (level > 9) level = 9;
+   if (level > 99) level = 99;
+   if (fCompress < 0) {
+      // if the algorithm is not defined yet use 0 as a default
+      fCompress = level;
+   } else {
+      int algorithm = fCompress / 100;
+      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      fCompress = 100 * algorithm + level;
+   }
+}
 
-   fCompress = level;
+//______________________________________________________________________________
+void TSocket::SetCompressionSettings(Int_t settings)
+{
+   // Used to specify the compression level and algorithm:
+   //  settings = 100 * algorithm + level
+   //
+   //  level = 0, objects written to this file will not be compressed.
+   //  level = 1, minimal compression level but fast.
+   //  ....
+   //  level = 9, maximal compression level but slower and might use more memory.
+   // (For the currently supported algorithms, the maximum level is 9)
+   // If compress is negative it indicates the compression level is not set yet.
+   //
+   // The enumeration ROOT::ECompressionAlgorithm associates each
+   // algorithm with a number. There is a utility function to help
+   // to set the value of the argument. For example,
+   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
+   // will build an integer which will set the compression to use
+   // the LZMA algorithm and compression level 1.  These are defined
+   // in the header file Compression.h.
+   //
+   // Note that the compression settings may be changed at any time.
+   // The new compression settings will only apply to branches created
+   // or attached after the setting is changed and other objects written
+   // after the setting is changed.
+   fCompress = settings;
 }
 
 //______________________________________________________________________________

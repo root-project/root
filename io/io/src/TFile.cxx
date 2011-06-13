@@ -43,7 +43,7 @@
 //    25->28 [33->36] nfree       = Number of free data records
 //    29->32 [37->40] fNbytesName = Number of bytes in TNamed at creation time
 //    33->33 [41->41] fUnits      = Number of bytes for file pointers
-//    34->37 [42->45] fCompress   = Zip compression level
+//    34->37 [42->45] fCompress   = Compression level and algorithm
 //    38->41 [46->53] fSeekInfo   = Pointer to TStreamerInfo record
 //    42->45 [54->57] fNbytesInfo = Number of bytes in TStreamerInfo record
 //    46->63 [58->75] fUUID       = Universal Unique ID
@@ -77,6 +77,7 @@
 #endif
 
 #include "Bytes.h"
+#include "Compression.h"
 #include "Riostream.h"
 #include "Strlen.h"
 #include "TArrayC.h"
@@ -147,6 +148,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fSumBuffer       = 0;
    fSum2Buffer      = 0;
    fClassIndex      = 0;
+   fCompress        = 0;
    fProcessIDs      = 0;
    fNProcessIDs     = 0;
    fOffset          = 0;
@@ -247,18 +249,27 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // 4 bytes of the freed record on the file are overwritten by GAPSIZE
    // where GAPSIZE = -(Number of bytes occupied by the record).
    //
-   // Option compress is used to specify the compression level:
-   //  compress = 0 objects written to this file will not be compressed.
-   //  compress = 1 minimal compression level but fast.
+   // Option compress is used to specify the compression level and algorithm:
+   //  compress = 100 * algorithm + level
+   //  level = 0, objects written to this file will not be compressed.
+   //  level = 1, minimal compression level but fast.
    //  ....
-   //  compress = 9 maximal compression level but slow.
+   //  level = 9, maximal compression level but slower and might use more memory.
+   // (For the currently supported algorithms, the maximum level is 9)
+   // If compress is negative it indicates the compression level is not set yet.
    //
-   // Note that the compression level may be changed at any time.
-   // The new compression level will only apply to newly written objects.
-   // The function TFile::Map() shows the compression factor
-   // for each object written to this file.
-   // The function TFile::GetCompressionFactor returns the global
-   // compression factor for this file.
+   // The enumeration ROOT::ECompressionAlgorithm associates each
+   // algorithm with a number. There is a utility function to help
+   // to set the value of compress. For example,
+   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
+   // will build an integer which will set the compression to use
+   // the LZMA algorithm and compression level 1.  These are defined
+   // in the header file Compression.h.
+   //
+   // Note that the compression settings may be changed at any time.
+   // The new compression settings will only apply to branches created
+   // or attached after the setting is changed and other objects written
+   // after the setting is changed.
    //
    // In case the file does not exist or is not a valid ROOT file,
    // it is made a Zombie. One can detect this situation with a code like:
@@ -1896,24 +1907,61 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 }
 
 //______________________________________________________________________________
+void TFile::SetCompressionAlgorithm(Int_t algorithm)
+{
+   // See comments for function SetCompressionSettings
+   if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+   if (fCompress < 0) {
+      // if the level is not defined yet use 1 as a default
+      fCompress = 100 * algorithm + 1;
+   } else {
+      int level = fCompress % 100;
+      fCompress = 100 * algorithm + level;
+   }
+}
+
+//______________________________________________________________________________
 void TFile::SetCompressionLevel(Int_t level)
 {
-   // Set level of compression for this file:
-   //  level = 0 objects written to this file will not be compressed.
-   //  level = 1 minimal compression level but fast.
-   //  ....
-   //  level = 9 maximal compression level but slow.
-   //
-   // Note that the compression level may be changed at any time.
-   // The new compression level will only apply to newly written objects.
-   // The function TFile::Map shows the compression factor
-   // for each object written to this file.
-   // The function TFile::GetCompressionFactor returns the global
-   // compression factor for this file.
-
+   // See comments for function SetCompressionSettings
    if (level < 0) level = 0;
-   if (level > 9) level = 9;
-   fCompress = level;
+   if (level > 99) level = 99;
+   if (fCompress < 0) {
+      // if the algorithm is not defined yet use 0 as a default
+      fCompress = level;
+   } else {
+      int algorithm = fCompress / 100;
+      if (algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
+      fCompress = 100 * algorithm + level;
+   }
+}
+
+//______________________________________________________________________________
+void TFile::SetCompressionSettings(Int_t settings)
+{
+   // Used to specify the compression level and algorithm:
+   //  settings = 100 * algorithm + level
+   //
+   //  level = 0, objects written to this file will not be compressed.
+   //  level = 1, minimal compression level but fast.
+   //  ....
+   //  level = 9, maximal compression level but slower and might use more memory.
+   // (For the currently supported algorithms, the maximum level is 9)
+   // If compress is negative it indicates the compression level is not set yet.
+   //
+   // The enumeration ROOT::ECompressionAlgorithm associates each
+   // algorithm with a number. There is a utility function to help
+   // to set the value of the argument. For example,
+   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
+   // will build an integer which will set the compression to use
+   // the LZMA algorithm and compression level 1.  These are defined
+   // in the header file Compression.h.
+   //
+   // Note that the compression settings may be changed at any time.
+   // The new compression settings will only apply to branches created
+   // or attached after the setting is changed and other objects written
+   // after the setting is changed.
+   fCompress = settings;
 }
 
 //______________________________________________________________________________
