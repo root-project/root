@@ -425,13 +425,14 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      /*                      2 = lzma */
      /*                      3 = old */
 {
+  int err;
+  int method   = Z_DEFLATED;
+  static int warningGiven = 0;
+
   if (cxlevel <= 0) {
     *irep = 0;
     return;
   }
-
-  int err;
-  int method   = Z_DEFLATED;
 
   if (compressionAlgorithm == 0) {
     compressionAlgorithm = R__ZipMode;
@@ -445,7 +446,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 #endif
 #ifndef R__HAS_LZMACOMPRESSION
     compressionAlgorithm = 1;
-    static int warningGiven = 0;
     if (warningGiven == 0) {
       warningGiven = 1;
       fprintf(stderr,"Warning R__zipMultipleAlgorithm:\n"
