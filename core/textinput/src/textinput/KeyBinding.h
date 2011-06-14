@@ -31,6 +31,7 @@ namespace textinput {
       // Is can be misinterpreted as the start of a CSI terminal
       // sequence; use this to disambiguate.
       fAllowEsc = allow; fEscPending = false; }
+    bool IsEscPending() const { return fEscPending; }
 
   private:
     Editor::Command ToCommandCtrl(char In);
