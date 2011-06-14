@@ -558,8 +558,7 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
    //
    // Any leading directory part that is part of fIncludePath (see SetIncludePath)
    // will be removed. For ROOT, leading "include/" is removed; everything after
-   // is the include path. Only classes from TMVA are different; they are included
-   // as TMVA/ClassName.h.
+   // is the include path.
    //
    // If your software cannot be mapped into this scheme then derive your
    // own class from TPathDefinition and pass it to THtml::SetPathDefinition().
@@ -567,7 +566,6 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
    out_dir = "";
    if (!cl || !GetOwner()) return false;
 
-   const char* clname = cl->GetName();
    TString hdr;
    if (!GetOwner()->GetDeclFileName(cl, kFALSE, hdr))
       return false;
@@ -596,14 +594,6 @@ bool THtml::TPathDefinition::GetIncludeAs(TClass* cl, TString& out_dir) const
       if (posInc == kNPOS) return true;
       hdr.Remove(0, posInc + 5);
       out_dir = hdr;
-
-      // TMVA and RooStats special treatment:
-      // TMVA::Whatever claims to be in in math/tmva/inc/Whatever.h
-      // but it needs to get included as TMVA/Whatever.h
-      if (strstr(clname, "TMVA::"))
-         out_dir.Prepend("TMVA/");
-      if (strstr(clname, "RooStats::"))
-         out_dir.Prepend("RooStats/");
    }
 
    return (out_dir.Length());
@@ -625,24 +615,6 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    if (!included) return false;
 
    out_fsname = included;
-
-   if (!strncmp(included, "TMVA/", 5)) {
-      out_fsname.Remove(0, 4);
-      out_fsname.Prepend("tmva/inc");
-      return true;
-   }
-   // special treatment for nested histfactory
-   if (!strncmp(included, "RooStats/HistFactory/", 21)) {
-      out_fsname.Remove(0, 20);
-      out_fsname.Prepend("roofit/histfactory/inc");
-      return true;
-   }
-   // special treatment for roostats
-   if (!strncmp(included, "RooStats/", 9)) {
-      out_fsname.Remove(0, 8);
-      out_fsname.Prepend("roofit/roostats/inc");
-      return true;
-   }
 
    TString incBase(gSystem->BaseName(included));
    TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(incBase);
