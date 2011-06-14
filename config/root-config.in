@@ -446,7 +446,7 @@ macosx*)
    for f in $features ; do
       if test "x$f" = "xthread" ; then
          if [ $macosx_minor -ge 5 ]; then
-            auxcflags="-D_REENTRANT -pthread $auxcflags"
+            auxcflags="-pthread $auxcflags"
             auxlibs="-pthread $auxlibs"
          else
             auxcflags="-D_REENTRANT $auxcflags"
