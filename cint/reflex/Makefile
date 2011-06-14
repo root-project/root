@@ -33,6 +33,8 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
+.PRECIOUS: properties_rflx_tmp1.C iotype_rflx_tmp1.C updateMembers_rflx_tmp1.C properties_rflxdriver.C updateMembers_rflxdriver.C iotype_rflxdriver.C classVersion_rflx_tmp1.C iotype_rflx_tmp2.C properties_rflx_tmp2.C updateMembers_rflx_tmp2.C classVersion_rflxdriver.C properties_rflx.cpp classVersion_rflx_tmp2.C iotype_rflx.cpp classVersion_rflx.cpp updateMembers_rflx.cpp
+
 # the driver which includes the relevant files for the library:
 %_rflxdriver.C: %_rflx.cpp %_test.C TestHelper.h
 	$(CMDECHO) echo '#ifndef __CINT__' > $@
