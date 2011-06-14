@@ -29,9 +29,11 @@ class TGraphErrors;
 
 namespace RooStats {
 
+   //class HypoTestCalculator;
    class HybridCalculator;
    class FrequentistCalculator;
    class HypoTestCalculatorGeneric;
+   class TestStatistic;
 
 class HypoTestInverter : public IntervalCalculator {
 
@@ -42,21 +44,34 @@ public:
    // default constructor (used only for I/O)
    HypoTestInverter();
 
+   // constructor from generic hypotest calculator
+   HypoTestInverter( HypoTestCalculatorGeneric & hc,
+                     RooRealVar* scannedVariable =0, 
+                     double size = 0.05) ;
+
 
    // constructor from hybrid calculator
    HypoTestInverter( HybridCalculator & hc,
-                        RooRealVar& scannedVariable, 
-                        double size = 0.05) ;
+                     RooRealVar* scannedVariable = 0, 
+                     double size = 0.05) ;
 
    // constructor from frequentist calculator
    HypoTestInverter( FrequentistCalculator & hc,
-                        RooRealVar& scannedVariable, 
-                        double size = 0.05) ;
+                     RooRealVar* scannedVariable, 
+                     double size = 0.05) ;
 
+   // constructor from two ModelConfigs
+   HypoTestInverter( RooAbsData& data, ModelConfig &b, ModelConfig &sb,
+		      RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist, 
+		     double size = 0.05) ;
 
    virtual HypoTestInverterResult* GetInterval() const; 
 
+   // // get expected upper limit distributions
+   // SamplingDistribution* GetUpperLimitDistribution(RooRealVar& poi, RooArgSet& paramPoint) {return 0;}
 
+   // // get expected lower limit distributions
+   // SamplingDistribution* GetLowerLimitDistribution(RooRealVar& poi, RooArgSet& paramPoint) {return 0;}
 
    void Clear();
 
@@ -95,9 +110,20 @@ public:
    // destructor
    virtual ~HypoTestInverter() ;
 
+   // retrieved a reference to the internally used HypoTestCalculator 
+   // it might be invalid when the class is deleted
+   HypoTestCalculatorGeneric * GetHypoTestCalculator() const { return fCalculator0; }
+
+   // get the test statistic
+   TestStatistic * GetTestStatistic() const;
+
+   // set the test statistic
+   bool SetTestStatistic(TestStatistic& stat);
+
    // set verbose level (0,1,2)
    void SetVerbose(int level=1) { fVerbose = level; }
-    
+
+  
 protected:
     
    void CreateResults() const; 
@@ -126,6 +152,7 @@ private:
     
 
    HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
+   auto_ptr<HypoTestCalculatorGeneric> fHC;
    RooRealVar* fScannedVariable;     // pointer to the constrained variable
    mutable HypoTestInverterResult* fResults;
      

@@ -23,6 +23,7 @@ class RooRealVar;
 
 namespace RooStats {
 
+class SamplingDistribution;
 
 class HypoTestInverterResult : public SimpleInterval {
 
@@ -59,6 +60,14 @@ public:
 
    HypoTestResult * GetLastResult( ) const  { return GetResult(  fXValues.size()-1); }
 
+   // get expected lower limit distributions
+   SamplingDistribution* GetLowerLimitDistribution() const { return 0; }// not yet implemented 
+
+   // get expected upper limit distributions
+   // implemented using interpolation
+   SamplingDistribution* GetUpperLimitDistribution() const;
+
+
    // number of entries in the results array
    int ArraySize() const { return fXValues.size(); };
 
@@ -85,6 +94,10 @@ public:
    //function evaluates only a rought error on the lower limit. Be careful when using this estimation
    Double_t UpperLimitEstimatedError();
 
+   // return expected distribution of p-values (Cls or Clsplusb)
+   SamplingDistribution * GetExpectedDistribution(int index) const; 
+
+
 private:
 
    // merge with the content of another HypoTestInverterResult object
@@ -93,6 +106,10 @@ private:
    double CalculateEstimatedError(double target);
    int FindClosestPointIndex(double target);
    double FindInterpolatedLimit(double target);
+
+   SamplingDistribution * GetBackgroundDistribution() const; 
+
+   SamplingDistribution * GetSignalAndBackgroundDistribution(int index) const; 
 
 protected:
 

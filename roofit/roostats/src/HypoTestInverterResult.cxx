@@ -22,9 +22,11 @@
 
 #include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HybridResult.h"
+#include "RooStats/SamplingDistribution.h"
 
 #include "TF1.h"
 #include "TGraphErrors.h"
+#include <cmath>
 
 ClassImp(RooStats::HypoTestInverterResult)
 
@@ -250,4 +252,85 @@ Double_t HypoTestInverterResult::UpperLimitEstimatedError()
   if (fInterpolateUpperLimit) std::cout << "The upper limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
   return CalculateEstimatedError((1-ConfidenceLevel())/2);
+}
+
+SamplingDistribution *  HypoTestInverterResult::GetBackgroundDistribution() const { 
+   // get the background distribution
+   // from the first scanned point
+   HypoTestResult * firstResult = (HypoTestResult*) fYObjects.First();
+   if (!firstResult) return 0;
+   return (firstResult->GetBackGroundIsAlt() ? firstResult->GetAltDistribution() : firstResult->GetNullDistribution() );       
+}
+
+SamplingDistribution *  HypoTestInverterResult::GetSignalAndBackgroundDistribution(int index) const { 
+   // get the background distribution
+   // from the first scanned point
+   HypoTestResult * result = (HypoTestResult*) fYObjects.At(index);
+   if (!result) return 0;
+   return (!result->GetBackGroundIsAlt() ? result->GetAltDistribution() : result->GetNullDistribution() );       
+}
+
+SamplingDistribution *  HypoTestInverterResult::GetExpectedDistribution(int index) const { 
+   // get the expected p-value distribution at the scanned point index
+   
+   // get the S+B distribution 
+   SamplingDistribution * bDistribution = GetBackgroundDistribution();
+   SamplingDistribution * sbDistribution = GetSignalAndBackgroundDistribution(index);
+
+   // create a new HypoTestResult
+   HypoTestResult tempResult; 
+   tempResult.SetNullDistribution( bDistribution );
+   tempResult.SetAltDistribution( sbDistribution );
+   
+   std::vector<double> values(bDistribution->GetSize()); 
+   for (int i = 0; i < bDistribution->GetSize(); ++i) { 
+      tempResult.SetTestStatisticData( bDistribution->GetSamplingDistribution()[i] );
+      values[i] = (fUseCLs) ? tempResult.CLs() : tempResult.CLsplusb();
+   }
+   return new SamplingDistribution("expected values","expected values",values);
+}
+
+SamplingDistribution *  HypoTestInverterResult::GetUpperLimitDistribution() const { 
+
+   //std::cout << "Interpolate the upper limit between the 2 results closest to the target confidence level" << endl;
+
+  if (ArraySize()<2) {
+    std::cout << "Error: not enough points to get the inverted interval\n";
+    return 0; 
+  }
+
+  double target = 1-fConfidenceLevel;
+  SamplingDistribution * dist0 = GetExpectedDistribution(0);
+  SamplingDistribution * dist1 = GetExpectedDistribution(1);
+  int n = dist0->GetSize();
+  std::vector<double> limits(n);
+  for (int j = 0; j < n; ++j ) {
+     double y1 = dist0->GetSamplingDistribution()[j];
+     double y2 = dist1->GetSamplingDistribution()[j];
+     double v1 = std::abs(y1-target);
+     int i1 = 0;
+     double v2 = std::abs(y2-target);
+     int i2 = 1;
+
+     if (ArraySize()>2)
+        for (int i=2; i<ArraySize(); i++) {
+           double yi = GetExpectedDistribution(i)->GetSamplingDistribution()[j];
+           double vt = std::abs(y1-target);
+           if ( vt<v1 || vt<v2 ) {
+              if ( v1<v2 ) {
+                 v2 = vt;
+                 y2 = yi;
+                 i2 = i;
+              } else {
+                 v1 = vt;
+                 y1 = yi;
+                 i1 = i;
+              }
+           }
+        }
+     
+     limits[j] =  GetXValue(i1)+(target-y1)*(GetXValue(i2)-GetXValue(i1))/(y2-y1);
+  }
+  return new SamplingDistribution("Expected upper Limit","Expected upper limits",limits);
+  
 }
