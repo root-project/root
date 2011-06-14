@@ -50,7 +50,7 @@ Int_t runPrefetchReading()
      return 2;
    }
    TFile::SetReadaheadSize(0);  // (256*1024);
-   Long64_t nentries = T->GetEntries();
+   Long64_t nentries = 1000; // T->GetEntries();
 
    int efirst = 0;
    int elast  = efirst+nentries;
@@ -82,7 +82,7 @@ Int_t runPrefetchReading()
      if (i==2000) gDebug = 7;
      if (i % freq == 0){
        // for (Long64_t i=elast-1;i>=efirst;i--) {
-       if (i%freq == 0) printf("i = %lld\n",i);
+       if (i%freq == 0 || i==(elast-1)) printf("i = %lld\n",i);
        if (r.Rndm() > percententries) continue; 
        T->LoadTree(i);
        if (percentbranches < 1.00) {
