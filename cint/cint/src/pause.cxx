@@ -1682,8 +1682,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
             }
 #endif /* 1774 */
             G__redirectoutput(command, &store_stdout, &store_stderr, &store_stdin, 1, keyword, pipefile);
-            temp = strlen(command) - 1;
-            while (isspace(command[temp])) --temp;
+            if (strlen(command) > 0) {
+               temp = strlen(command) - 1;
+               while (temp && isspace(command[temp])) --temp;
+            } else temp = 0;
             if (command[temp] == ';') {
                syscom.Format("{%s}", command());
 #ifndef G__OLDIMPLEMENTATION1774
