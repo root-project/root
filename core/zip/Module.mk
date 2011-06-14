@@ -96,4 +96,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
+ifneq ($(strip $(LZMAINCDIR)),)
 $(call stripsrc,$(MODDIRS))/R__LZMA.o: CFLAGS += -I$(LZMAINCDIR)
+endif
