@@ -68,7 +68,7 @@ HAS_LDD:=$(shell which ldd 2>/dev/null)
 endif
 
 ifneq ($(HAS_LDD),)
-pthreadCheck=$(shell ls `ldd $(ROOTSYS)/bin/root.exe | grep libpthread.so | cut -d'>' -f2 | cut -d' ' -f2 | cut -d'.' -f1`-* 2>&1 | sed -e 's/.*\([0-9]\).\([0-9]\).\([0-9]\).*/\1 \\\* 100 + 10 \\\* \2 + \3 \\\< 235/' | xargs expr )
+pthreadCheck=$(shell ls `ldd $(ROOTSYS)/bin/root.exe | grep libpthread.so | cut -d'>' -f2 | cut -d' ' -f2 | cut -d'.' -f1`-* 2>&1 | sed -e 's/.*\([0-9]\).\([0-9]\).\([0-9]\).*/\1 \\\* 10000 + 100 \\\* \2 + \3 \\\< 20305/' | xargs expr )
 ifeq ($(pthreadCheck),1)
 RUN_PREFETCH=no
 endif
