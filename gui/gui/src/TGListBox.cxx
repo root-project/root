@@ -918,7 +918,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGLBContainer::HandleDoubleClick(Event_t *)
+Bool_t TGLBContainer::HandleDoubleClick(Event_t *ev)
 {
    // Handle double click mouse event in the listbox container.
 
@@ -927,6 +927,8 @@ Bool_t TGLBContainer::HandleDoubleClick(Event_t *)
          TGLBEntry *f = fLastActive;
          SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK),
                      f->EntryId(), 0);
+         DoubleClicked(f, ev->fCode);
+         DoubleClicked(f, ev->fCode, ev->fXRoot, ev->fYRoot);
       }
    }
    return kTRUE;
