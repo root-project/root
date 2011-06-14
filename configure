@@ -2906,7 +2906,7 @@ if test ! "x$enable_qt" = "xno" || \
         qtverneed="4.3.0"
         qttoonew="5.0.0"
         qttestdir=$qtmainincdir/../src/corelib/global
-        if test ! -d $qttestdir ; then
+        if test -d $qttestdir ; then
             qttestdir=$qtmainincdir/Qt
         fi
         check_qtvers "$qttestdir" $qtverneed $qttoonew
