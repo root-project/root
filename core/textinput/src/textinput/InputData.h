@@ -75,7 +75,7 @@ namespace textinput {
     int GetRaw() const { return fRaw; }
 
     EExtendedInput GetExtendedInput() const { return fExt; }
-    int GetModifier() const { return fMod & ~kIsRaw; }
+    unsigned char GetModifier() const { return fMod & ~kIsRaw; }
 
     void SetRaw(char R) { fRaw = R; fMod |= kIsRaw; }
     void SetExtended(EExtendedInput E) { fExt = E;  fMod &= ~kIsRaw; }
@@ -86,7 +86,7 @@ namespace textinput {
       char fRaw; // raw input character, if kIsRaw & fMod
       EExtendedInput fExt; // non-character input
     };
-    char fMod; // Modifiers, also stores union descriminator (kIsRaw)
+    unsigned char fMod; // Modifiers, also stores union descriminator (kIsRaw)
   };
 }
 #endif // TEXTINPUT_INPUTDATA_H
