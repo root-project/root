@@ -42,10 +42,15 @@ namespace textinput {
 
   Range
   Editor::ResetText() {
-    if (!fContext->GetLine().empty()
-        && !fContext->GetTextInput()->IsInputHidden()
-        && fContext->GetTextInput()->IsAutoHistAddEnabled()) {
+    bool addToHist = !fContext->GetLine().empty()
+      && !fContext->GetTextInput()->IsInputHidden()
+      && fContext->GetTextInput()->IsAutoHistAddEnabled();
+    if (addToHist) {
       fContext->GetHistory()->AddLine(fContext->GetLine().GetText());
+      if (fReplayHistEntry != (size_t) -1) {
+        // Added a line, thus renumber
+        ++fReplayHistEntry;
+      }
     }
     Range R(0, fContext->GetLine().length());
     fContext->GetLine().clear();
@@ -54,8 +59,8 @@ namespace textinput {
     fSearch.clear();
     CancelSpecialInputMode(R);
     if (fReplayHistEntry != (size_t) -1) {
-      fContext->SetLine(fContext->GetHistory()->GetLine(fReplayHistEntry));
       --fReplayHistEntry; // intentional overflow to -1
+      fContext->SetLine(fContext->GetHistory()->GetLine(fReplayHistEntry));
     }
     return R;
   }
