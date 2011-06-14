@@ -170,6 +170,9 @@ Bool_t TTreeCloner::Exec()
 {
    // Execute the cloning.
 
+   if (!IsValid()) {
+      return kFALSE;
+   }
    ImportClusterRanges();
    CopyStreamerInfos();
    CopyProcessIds();
