@@ -22,15 +22,15 @@ Int_t runPrefetchReading()
    TStopwatch sw;
    
    //set the reading mode to async prefetching
-   // gEnv->SetValue("TFile.AsyncPrefetching", 1);
+   gEnv->SetValue("TFile.AsyncPrefetching", 1);
    
    // open the local if any
    TString filename("atlasFlushed.root");
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
       // otherwise open the http file
-      //filename.Prepend("http://root.cern.ch/files/");
+      filename.Prepend("http://root.cern.ch/files/");
       //filename.Prepend("root://cache01.usatlas.bnl.gov//data/test1/");
-      filename.Prepend("http://www-root.fnal.gov/files/");
+      //filename.Prepend("http://www-root.fnal.gov/files/");
    }
 
    TFile *file = TFile::Open( filename );
@@ -50,7 +50,7 @@ Int_t runPrefetchReading()
      return 2;
    }
    TFile::SetReadaheadSize(0);  // (256*1024);
-   Long64_t nentries = 1000; // T->GetEntries();
+   Long64_t nentries = T->GetEntries();
 
    int efirst = 0;
    int elast  = efirst+nentries;
@@ -78,8 +78,8 @@ Int_t runPrefetchReading()
 //   return 0;
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
-     if (i%100 == 0 || i>2000) fprintf(stderr,"i.debug = %lld\n",i);
-     if (i==2000) gDebug = 7;
+     //if (i%100 == 0 || i>2000) fprintf(stderr,"i.debug = %lld\n",i);
+     // if (i==2000) gDebug = 7;
      if (i % freq == 0){
        // for (Long64_t i=elast-1;i>=efirst;i--) {
        if (i%freq == 0 || i==(elast-1)) printf("i = %lld\n",i);
@@ -98,6 +98,6 @@ Int_t runPrefetchReading()
      }
    }
  
-   fprintf(stderr, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
+   fprintf(stdout, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
    return 0;
 }
