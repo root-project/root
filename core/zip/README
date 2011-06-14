@@ -5,13 +5,15 @@ Only the useful code has been extracted from this tar file. It consists of:
 
  zip/inc:
    crc32.h deflate.h inffast.h inffixed.h inflate.h
-   inftrees.h trees.h zconf.h zlib.h zutil.h
+   inftrees.h trees.h zconf.h zlib.h zutil.h gzguts.h
 
  zip/src:
-   adler32.c compress.c crc32.c deflate.c gzio.c infback.c
+   adler32.c compress.c crc32.c deflate.c infback.c
    inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c
+   gzread.c gzwrite.c
 
-To put a new zlib version in ROOT, all these files must be replaced.
+To put a new zlib version in ROOT, all these files must be replaced
+and zconf.h needs to be edited to activate unistd.h when not on Win32.
 
 The zlib version number can be found in zip/inc/zlib.h.
 The current zlib is 1.2.3.
