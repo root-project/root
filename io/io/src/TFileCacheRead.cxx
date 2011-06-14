@@ -131,9 +131,12 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
       fPrefetch = new TFilePrefetch(file);
       const char* cacheDir = gEnv->GetValue("Cache.Directory", "");
       if (strcmp(cacheDir, ""))
-         if (!fPrefetch->SetCache((char*) cacheDir))
-            fprintf(stderr, "Error while trying to set the cache directory.\n");
-      fPrefetch->ThreadStart();
+        if (!fPrefetch->SetCache((char*) cacheDir))
+           fprintf(stderr, "Error while trying to set the cache directory.\n");
+      if (fPrefetch->ThreadStart()){
+         fprintf(stderr,"Error stating prefetching thread. Disabling prefetching.\n");
+         fEnablePrefetching = 0;
+      }
    }
    else //disable the async pref for local files
       fEnablePrefetching = 0;

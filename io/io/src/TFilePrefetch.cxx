@@ -54,15 +54,15 @@ TFilePrefetch::~TFilePrefetch()
    fSem->Post();
    fNewBlockAdded->Signal();
    fConsumer->Join();
-   fConsumer->Delete();
-
-   delete fPendingBlocks;
-   delete fReadBlocks;
-   delete fMutexReadList;
-   delete fMutexPendingList;
-   delete fNewBlockAdded;
-   delete fReadBlockAdded;
-   delete fSem;
+  
+   SafeDelete(fConsumer);
+   SafeDelete(fPendingBlocks);
+   SafeDelete(fReadBlocks);
+   SafeDelete(fMutexReadList);
+   SafeDelete(fMutexPendingList);
+   SafeDelete(fNewBlockAdded);
+   SafeDelete(fReadBlockAdded);
+   SafeDelete(fSem);
 }
 
 //____________________________________________________________________________________________
@@ -280,11 +280,11 @@ TThread* TFilePrefetch::GetThread() const
 Int_t TFilePrefetch::ThreadStart()
 {
    // Used to start the consumer thread.
-
-  fConsumer= new TThread((TThread::VoidRtnFunc_t) ThreadProc,
+   int rc;
+   fConsumer= new TThread((TThread::VoidRtnFunc_t) ThreadProc,
                               (void*) this);
-   fConsumer->Run();
-   return 1;
+   rc = fConsumer->Run();
+   return rc;
 }
 
 //____________________________________________________________________________________________
