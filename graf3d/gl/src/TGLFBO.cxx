@@ -130,12 +130,16 @@ void TGLFBO::Init(int w, int h, int ms_samples)
 
          delete [] modes;
       }
-      Info(eh.c_str(), "InitMultiSample coverage_samples=%d, color_samples=%d.", fMSCoverageSamples, fMSSamples);
+      if (gDebug > 0) {
+         Info(eh.c_str(), "InitMultiSample coverage_samples=%d, color_samples=%d.", fMSCoverageSamples, fMSSamples);
+      }
       InitMultiSample();
    }
    else
    {
-      printf("TGLFBO::Init InitStandard ...\n");
+      if (gDebug > 0) {
+         Info(eh.c_str(), "InitStandard (no multi-sampling).");
+      }
       InitStandard();
    }
 
