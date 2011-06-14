@@ -84,7 +84,7 @@ PrefetchReading: PrefetchReading.clog
 	$(TestDiff)
 endif
 
-%.o: atlasFlushed/%.cxx
+%.$(ObjSuf): atlasFlushed/%.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1
 
 atlasFlushed/atlasFlushedProjectDict1.cxx: atlasFlushed/atlasFlushedLinkDef1.h
