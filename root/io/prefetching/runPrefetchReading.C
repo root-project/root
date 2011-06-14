@@ -22,18 +22,21 @@ Int_t runPrefetchReading()
    TStopwatch sw;
    
    //set the reading mode to async prefetching
-   gEnv->SetValue("TFile.AsyncPrefetching", 1);
+   // gEnv->SetValue("TFile.AsyncPrefetching", 1);
    
    // open the local if any
    TString filename("atlasFlushed.root");
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
       // otherwise open the http file
-      filename.Prepend("http://root.cern.ch/files/");
+      //filename.Prepend("http://root.cern.ch/files/");
       //filename.Prepend("root://cache01.usatlas.bnl.gov//data/test1/");
+      filename.Prepend("http://www-root.fnal.gov/files/");
    }
 
    TFile *file = TFile::Open( filename );
    if (!file || file->IsZombie()) return 1;
+
+   // file->MakeProject("a01","*","RECREATE+");
 
    // Try the known names :)
    const char *names [] = { "E","Events","CollectionTree","ntuple","T" };
@@ -69,8 +72,14 @@ Int_t runPrefetchReading()
       T->StopCacheLearningPhase();
    }
   
+//   T->GetBranch("m_vec")->GetEntry(0);
+//   T->GetBranch("m_vec")->GetEntry(1);
+//   T->GetBranch("m_vec")->GetEntry(2);
+//   return 0;
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
+     if (i%100 == 0 || i>2000) fprintf(stderr,"i.debug = %lld\n",i);
+     if (i==2000) gDebug = 7;
      if (i % freq == 0){
        // for (Long64_t i=elast-1;i>=efirst;i--) {
        if (i%freq == 0) printf("i = %lld\n",i);
@@ -81,7 +90,7 @@ Int_t runPrefetchReading()
          int incr = nb * percentbranches;
          for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);   
          int count = 0;
-         int maxcount = 100 + 100 ;
+         int maxcount = 1000 + 100 ;
          for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos((double)count)); }
        } else {
          T->GetEntry(i);
@@ -89,6 +98,6 @@ Int_t runPrefetchReading()
      }
    }
  
-   fprintf(stdout, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
+   fprintf(stderr, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
    return 0;
 }

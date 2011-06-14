@@ -59,12 +59,15 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+RUN_PREFETCH=yes
+ifeq ($(FAIL)$(PLATFORM),win32)
+RUN_PREFETCH=no
+endif
 
-
-#ifeq ($(FAIL),)
-#PrefetchReading: 
-#	$(WarnFailTest)
-#else
+ifeq ($(RUN_PREFETCH),no)
+PrefetchReading: 
+	$(WarnFailTest)
+else
 PrefetchReading: PrefetchReading.clog
 	$(TestDiff)
-#endif
+endif
