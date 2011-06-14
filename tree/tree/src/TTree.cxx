@@ -2797,7 +2797,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (fastClone && (nentries < 0)) {
          if ( newtree->CopyEntries( this, -1, option ) < 0 ) {
             // There was a problem!
-            Error("Merge", "TTree has not been cloned\n");
+            Error("CloneTTree", "TTree has not been cloned\n");
             delete newtree;
             newtree = 0;
             return 0;
@@ -3072,6 +3072,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
             cloner.Exec();
          } else {
             if (i == 0) {
+               Warning("CopyEntries","%s",cloner.GetWarning());               
                // If the first cloning does not work, something is really wrong
                // (since apriori the source and target are exactly the same structure!)
                return -1;
