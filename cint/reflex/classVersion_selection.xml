@@ -10,8 +10,6 @@
    <class pattern="std::vector<With*>::*" />
 </exclusion>
 
-<class name="template class std::vector<std::string>" />
-<class name="template class MyTemp<std::vector<std::string> >" />
 
 <class name="WithClassDef"/>
 <class name="NoIO"/>

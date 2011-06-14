@@ -13,7 +13,12 @@ class NoIO {
    ClassDef(NoIO, 0);
 };
 
+class ReallyNoDict {
+   
+};
+
 class FromTObject: public TObject {
+   ReallyNoDict fTransientByComment; //! this is intended to be transient
    ClassDef(FromTObject, 13);
 };
 
