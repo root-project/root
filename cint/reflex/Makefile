@@ -47,11 +47,11 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".L $<+");}' > $@
 
 %_rflx_tmp2.C: %_rflxdriver.C
-	echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".x $<+");}' > $@
+	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".x $<+");}' > $@
 
 # and the actual test, building and "running" the library
 %_rflx.log: %_rflx_tmp1.C %_rflx_tmp2.C
-	(root -l -b -q $*_rflx_tmp1.C > /dev/null 2>&1 \
+	$(CMDECHO) (root -l -b -q $*_rflx_tmp1.C > /dev/null 2>&1 \
 	&& root -l -b -q $*_rflx_tmp2.C | grep -v 'Processing ' > $@ )|| cat $@
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
