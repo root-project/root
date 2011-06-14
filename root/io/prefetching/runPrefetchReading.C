@@ -32,11 +32,14 @@ Int_t runPrefetchReading()
       //filename.Prepend("root://cache01.usatlas.bnl.gov//data/test1/");
       //filename.Prepend("http://www-root.fnal.gov/files/");
    }
+   
+   TString library("atlasFlushed/atlasFlushed");
+   gSystem->Load(library);
 
    TFile *file = TFile::Open( filename );
    if (!file || file->IsZombie()) return 1;
 
-   // file->MakeProject("a01","*","RECREATE+");
+   // file->MakeProject("atlasFlushed","*","RECREATE+");
 
    // Try the known names :)
    const char *names [] = { "E","Events","CollectionTree","ntuple","T" };
