@@ -52,7 +52,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 # and the actual test, building and "running" the library
 %_rflx.log: %_rflx_tmp1.C %_rflx_tmp2.C
 	$(CMDECHO) (root -l -b -q $*_rflx_tmp1.C > /dev/null 2>&1 \
-	&& root -l -b -q $*_rflx_tmp2.C | grep -v 'Processing ' > $@ )|| cat $@
+	&& root -l -b -q $*_rflx_tmp2.C 2>&1 | grep -v 'Processing ' > $@)|| cat $@
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref

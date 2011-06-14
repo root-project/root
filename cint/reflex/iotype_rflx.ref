@@ -80,6 +80,9 @@ dm: ok.
 data member 'Tf', type 'Template<float>'
 cl: ok.
 dm: ok.
+Warning in <TClass::TClass>: no dictionary for class Template<vector<Double32_t> > is available
+Warning in <TStreamerInfo::Build:>: CIoType: Template<vector<Double32_t> > has no streamer or dictionary, data member "Tvd32" will not be saved
+Warning in <TStreamerInfo::Build:>: CIoType: Template<vector<Double32_t> > has no streamer or dictionary, data member "Tvdd32" will not be saved
 Comparing vd32 with vf
 relBytesDiff2 < 0.001: ok.
 Comparing vdd32 with vf
