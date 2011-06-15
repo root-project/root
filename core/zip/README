@@ -4,13 +4,13 @@ file can be downloaded from : http://www.zlib.org
 Only the useful code has been extracted from this tar file. It consists of: 
 
  zip/inc:
-   crc32.h deflate.h inffast.h inffixed.h inflate.h
-   inftrees.h trees.h zconf.h zlib.h zutil.h gzguts.h
+   crc32.h deflate.h gzguts.h inffast.h inffixed.h inflate.h
+   inftrees.h trees.h zconf.h zlib.h zutil.h
 
  zip/src:
-   adler32.c compress.c crc32.c deflate.c infback.c
-   inffast.c inflate.c inftrees.c trees.c uncompr.c zutil.c
-   gzread.c gzwrite.c
+   adler32.c compress.c crc32.c deflate.c gzclose.c gzlib.c gzread.c
+   gzwrite.c infback.c inffast.c inflate.c inftrees.c trees.c uncompr.c
+   zutil.c
 
 To put a new zlib version in ROOT, all these files must be replaced
 and zconf.h needs to be edited to activate unistd.h when not on Win32.

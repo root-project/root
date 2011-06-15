@@ -54,6 +54,8 @@ ZIPNEWS      := $(MODDIRS)/adler32.c    \
                 $(MODDIRS)/compress.c   \
                 $(MODDIRS)/crc32.c      \
                 $(MODDIRS)/deflate.c    \
+                $(MODDIRS)/gzclose.c    \
+                $(MODDIRS)/gzlib.c      \
                 $(MODDIRS)/gzread.c     \
                 $(MODDIRS)/gzwrite.c    \
                 $(MODDIRS)/infback.c    \
