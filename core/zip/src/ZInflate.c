@@ -5,7 +5,7 @@
 #include <string.h>
 
 #ifdef WIN32
-#define __STDC__
+#define __STDC__ 1
 #endif
 #ifdef __MWERKS__
 #define __STDC__
