@@ -447,7 +447,7 @@ macosx*)
       if test "x$f" = "xthread" ; then
          if [ $macosx_minor -ge 5 ]; then
             auxcflags="-pthread $auxcflags"
-            auxlibs="-pthread $auxlibs"
+            auxlibs="-lpthread $auxlibs"
          else
             auxcflags="-D_REENTRANT $auxcflags"
             auxlibs="-lpthread $auxlibs"
