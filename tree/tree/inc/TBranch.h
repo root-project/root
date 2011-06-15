@@ -47,6 +47,7 @@ class TBrowser;
 class TDirectory;
 class TFile;
 class TClonesArray;
+class TTreeCloner;
 
    const Int_t kDoNotProcess = BIT(10); // Active bit for branches
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
@@ -57,6 +58,7 @@ class TClonesArray;
 class TBranch : public TNamed , public TAttFill {
 
 protected:
+   friend class TTreeCloner;
    // TBranch status bits
    enum EStatusBits {
       kAutoDelete = BIT(15),
