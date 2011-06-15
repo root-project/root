@@ -88,6 +88,7 @@ ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GS
 ROOT_BUILD_OPTION(hdfs ON "HDFS support; requires libhdfs from HDFS >= 0.19.1")         
 ROOT_BUILD_OPTION(krb5 ON "Kerberos5 support, requires Kerberos libs")               
 ROOT_BUILD_OPTION(ldap ON "LDAP support, requires (Open)LDAP libs")                
+ROOT_BUILD_OPTION(lzma ON "LZMA support, requires the lzma library from XZ distribution")                
 ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)")            
 ROOT_BUILD_OPTION(memstat ${memstat_defvalue} "A memory statistics utility, helps to detect memory leaks")    
 ROOT_BUILD_OPTION(minuit2 OFF "Build the new libMinuit2 minimizer library")            
