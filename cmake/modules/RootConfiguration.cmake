@@ -323,6 +323,7 @@ set(hasmathmore ${has${mathmore}})
 set(haspthread ${has${CMAKE_USE_PTHREADS_INIT}})
 set(hasxft ${has${xft}})
 set(hascling ${has${cling}})
+set(haslzmacompression ${has${lzma}})
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)

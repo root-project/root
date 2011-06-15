@@ -450,7 +450,7 @@ endif()
 
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs alien chirp clarens cling dcache gfal glite globus hdfs monalisa pch peac pgsql sapdb srp)
+foreach(opt afs alien chirp clarens cling dcache gfal glite globus hdfs lzma monalisa pch peac pgsql sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
