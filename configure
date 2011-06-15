@@ -2259,7 +2259,7 @@ macosx)
         if test ! "x$macosx105" = "x"; then
             enable_thread="yes"
             threadflag="-pthread"
-            threadlib="-pthread"
+            threadlib="-lpthread"
             threadlibdir=
         else
             enable_thread="yes"
