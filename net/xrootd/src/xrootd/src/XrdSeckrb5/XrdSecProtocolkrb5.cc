@@ -11,10 +11,6 @@
 /*                   (author: G. Ganis, CERN)                                 */
 /******************************************************************************/
 
-//       $Id$
-
-const char *XrdSecProtocolkrb5CVSID = "$Id$";
-
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
@@ -43,8 +39,6 @@ extern "C" {
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdSys/XrdSysPriv.hh"
-#include "XrdOuc/XrdOucString.hh"
-#include "XrdSut/XrdSutAux.hh"
   
 /******************************************************************************/
 /*                               D e f i n e s                                */
@@ -287,12 +281,13 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
 
 // Get a service ticket for this principal
 //
+   bool caninittkn = (isatty(0) == 0 || isatty(1) == 0) ? 0 : 1;
    const char *reinitcmd = (client_options & XrdSecEXPTKN) ? "kinit -f" : "kinit";
    bool notdone = 1;
    bool reinitdone = 0;
    while (notdone)
       {if ((rc = (krb_rc)get_krbCreds(Service, &Creds)))
-          { if (!(client_options & XrdSecINITTKN) || reinitdone)
+          { if (!(client_options & XrdSecINITTKN) || reinitdone || !caninittkn)
                {krbClientContext.UnLock();
                 const char *m = (!(client_options & XrdSecINITTKN)) ?
                                 "No or invalid credentials" : "Unable to get credentials";
@@ -310,7 +305,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        if (client_options & XrdSecEXPTKN)
           {// Make sure the ticket is forwardable
            if (!(Creds->ticket_flags & TKT_FLG_FORWARDABLE))
-              { if ((client_options & XrdSecINITTKN) && !reinitdone)
+              { if ((client_options & XrdSecINITTKN) && !reinitdone && caninittkn)
                    { // Need to re-init
                     CLPRT("Existing ticket is not forwardable: re-init ");
                     rc = system(reinitcmd);
@@ -735,20 +730,43 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
 
 // Create the cache filename, expanding the keywords, if needed
 //
-    XrdOucString ccfn(XrdSecProtocolkrb5::ExpFile);
-
-// Resolve place-holders, if any
-//
-    if (XrdSutResolve(ccfn, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0)
-       return rc;
+    char ccfile[XrdSecMAXPATHLEN];
+    strcpy(ccfile, XrdSecProtocolkrb5::ExpFile);
+    int nlen = strlen(ccfile);
+    char *pusr = (char *) strstr(&ccfile[0], "<user>");
+    if (pusr)
+       {int ln = strlen(CName);
+        if (ln != 6) {
+           // Adjust the space
+           int lm = strlen(ccfile) - (int)(pusr + 6 - &ccfile[0]); 
+           memmove(pusr+ln, pusr+6, lm);
+        }
+        // Copy the name
+        memcpy(pusr, CName, ln);
+        // Adjust the length
+        nlen += (ln - 6);
+        }
+    char *puid = (char *) strstr(&ccfile[0], "<uid>");
     struct passwd *pw = getpwnam(CName);
-    if (!pw)
-       return rc;
-    if (ccfn.find("<uid>") != STR_NPOS)
-       {XrdOucString suid; if (pw) suid += (int) pw->pw_uid;
-        ccfn.replace("<uid>", suid.c_str());
-       }
-    char *ccfile = (char *) ccfn.c_str();
+    if (puid)
+       {char cuid[20] = {0};
+        if (pw)
+           sprintf(cuid, "%d", pw->pw_uid);
+        int ln = strlen(cuid);
+        if (ln != 5) {
+           // Adjust the space
+           int lm = strlen(ccfile) - (int)(puid + 5 - &ccfile[0]); 
+           memmove(puid+ln, pusr+5, lm);
+        }
+        // Copy the name
+        memcpy(puid, cuid, ln);
+        // Adjust the length
+        nlen += (ln - 5);
+        }
+
+// Terminate to the new length
+//
+    ccfile[nlen] = 0;
 
 // Point the received creds
 //

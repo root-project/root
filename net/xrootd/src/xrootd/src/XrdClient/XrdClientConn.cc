@@ -11,10 +11,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//         $Id$
-
-const char *XrdClientConnCVSID = "$Id$";
-
 #include "XrdClient/XrdClientDebug.hh"
 
 #include "XrdClient/XrdClientConnMgr.hh"
@@ -662,6 +658,9 @@ bool XrdClientConn::CheckHostDomain(XrdOucString hostToCheck)
     static XrdOucHash<int> knownHosts;
     static XrdOucString alloweddomains = EnvGetString(NAME_REDIRDOMAINALLOW_RE);
     static XrdOucString denieddomains = EnvGetString(NAME_REDIRDOMAINDENY_RE);
+    static XrdSysMutex knownHostsMutex;
+
+    XrdSysMutexHelper scopedLock(knownHostsMutex);
 
     // Check cached info
     int *he = knownHosts.Find(hostToCheck.c_str());
