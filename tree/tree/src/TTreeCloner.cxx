@@ -306,6 +306,10 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    }
 
    fFromBranches.AddLast(from);
+   if (!from->TestBit(TBranch::kDoNotUseBufferMap)) {
+      // Make sure that we reset the Buffer's map if needed.
+      to->ResetBit(TBranch::kDoNotUseBufferMap);
+   }
    fToBranches.AddLast(to);
 
    numBaskets += from->GetWriteBasket();
