@@ -11,10 +11,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//         $Id$
-
-const char *XrdClientConnCVSID = "$Id$";
-
 #include "XrdClient/XrdClientDebug.hh"
 
 #include "XrdClient/XrdClientConnMgr.hh"
@@ -274,8 +270,8 @@ short XrdClientConn::Connect(XrdClientUrlInfo Host2Conn,
 void XrdClientConn::Disconnect(bool ForcePhysicalDisc)
 {
     // Disconnect... is it so difficult? Yes!
-
-    ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
+    if( ConnectionManager->SidManager() )
+      ConnectionManager->SidManager()->GetAllOutstandingWriteRequests(fPrimaryStreamid, fWriteReqsToRetry);
 
     if (fMainReadCache && (DebugLevel() >= XrdClientDebug::kDUMPDEBUG) ) fMainReadCache->PrintCache();
 
@@ -662,6 +658,9 @@ bool XrdClientConn::CheckHostDomain(XrdOucString hostToCheck)
     static XrdOucHash<int> knownHosts;
     static XrdOucString alloweddomains = EnvGetString(NAME_REDIRDOMAINALLOW_RE);
     static XrdOucString denieddomains = EnvGetString(NAME_REDIRDOMAINDENY_RE);
+    static XrdSysMutex knownHostsMutex;
+
+    XrdSysMutexHelper scopedLock(knownHostsMutex);
 
     // Check cached info
     int *he = knownHosts.Find(hostToCheck.c_str());
