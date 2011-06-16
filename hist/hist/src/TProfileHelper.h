@@ -461,8 +461,9 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
       if (ibin > nbins) nbins = ibin; 
    }
    if (nbins < 1) nbins = 1;
-   T *hold = (T*)p->Clone();
+   T *hold = (T*)p->IsA()->New();;
    hold->SetDirectory(0);
+   p->Copy(*hold);
 
 
    Double_t xmin = axis->GetXmin();
@@ -504,8 +505,10 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
 
    TAxis *axis = p->GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
-   T *hold = (T*)p->Clone();
+   T *hold = (T*)p->IsA()->New();;
    hold->SetDirectory(0);
+   p->Copy(*hold);
+
 
    Int_t  nbxold = p->fXaxis.GetNbins();
    Int_t  nbyold = p->fYaxis.GetNbins();
