@@ -124,7 +124,14 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
 {
    // Create a plugin handler. Called by TPluginManager.
 
-   if (fPlugin.EndsWith(".C") && gROOT->LoadMacro(fPlugin, 0, kTRUE) == 0)
+   TString aclicMode, arguments, io;
+   TString fname = gSystem->SplitAclicMode(fPlugin, aclicMode, arguments, io);
+   Bool_t validMacro = kFALSE;
+   if (fname.EndsWith(".C") || fname.EndsWith(".cxx") || fname.EndsWith(".cpp") ||
+       fname.EndsWith(".cc"))
+      validMacro = kTRUE;
+
+   if (validMacro && gROOT->LoadMacro(fPlugin, 0, kTRUE) == 0)
       fIsMacro = kTRUE;
 
    if (fCtor.Contains("::")) {
