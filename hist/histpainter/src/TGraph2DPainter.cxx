@@ -771,7 +771,17 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    Bool_t colors   = opt.Contains("pcol");
    Int_t  ncolors  = gStyle->GetNumberOfColors();
    Int_t  it, theColor;
-
+   
+   // Initialize the levels on the Z axis
+   if (colors) {
+      Int_t ndiv   = gCurrentHist->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         gCurrentHist->SetContour(ndiv);
+      }
+      if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
+   }
+   
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
