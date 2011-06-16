@@ -4,6 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
 #TEST_TARGETS += FindSource ClassInModule
+TEST_TARGETS += MakeIndex
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -37,4 +38,18 @@ ClassInModule.log: runClassInModule.C
 	$(CMDECHO)$(CALLROOTEXE) -l -b -q $< 2>&1 | grep -v 'RooFit' | grep -v 'Copyright' | grep -v 'no dictionary for' > $@ 
 
 ClassInModule: ClassInModule.log
+	$(TestDiff)
+
+MakeIndex_filtered.log: MakeIndex.log
+	grep -v 'dot -' $< \
+	| grep -v 'Checking for Graphviz' \
+	| grep -v 'RooFit' \
+	| grep -v 'Copyright' \
+	| grep -v 'roofit.sourceforge' \
+	| grep -v 'no dictionary for' \
+	| grep -v 't open file' \
+	| grep -v ' scanning ' \
+	| grep -v '_Index.html' > $@
+
+MakeIndex: MakeIndex_filtered.log
 	$(TestDiff)
