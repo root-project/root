@@ -10,9 +10,16 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-// Full description with examples and pictures
-//
-//
+// Media are used to store properties related to tracking and which are useful
+// only when using geometry with a particle transport MC package (via VMC). One
+// may define several tracking media for a given material. The media ID are user
+// defined values that are not used by the geometry package. In case geometry
+// is used via VMC (in GEANT) these numbers are overwritten, so one can only
+// rely on these values after gMC->FinishGeometry() is called.
+// The media parameters are inspired from GEANT3 and the values defined make sense
+// in context of GEANT (3 but also 4) or FLUKA interfaces.
+////////////////////////////////////////////////////////////////////////////////
+
 #include "Riostream.h"
 #include "TGeoManager.h"
 #include "TGeoMedium.h"

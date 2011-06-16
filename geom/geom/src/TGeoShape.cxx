@@ -195,6 +195,23 @@ TGeoShape::~TGeoShape()
 }
 
 //_____________________________________________________________________________
+void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
+{
+// Test for shape navigation methods. Summary for test numbers:
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
+//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//    point with bigger distance. Compute DistFromOutside back from new point.
+//    Plot d-(d1+d2)
+//
+   if (!gGeoManager) {
+      Error("CheckShape","No geometry manager");
+      return;
+   }
+   TGeoShape *shape = (TGeoShape*)this;
+   gGeoManager->CheckShape(shape, testNo, nsamples, option);
+}
+   
+//_____________________________________________________________________________
 Double_t TGeoShape::ComputeEpsMch()
 {
 // Compute machine round-off double precision error as the smallest number that

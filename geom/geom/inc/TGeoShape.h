@@ -100,6 +100,7 @@ public:
    static Double_t       ComputeEpsMch();
    static Double_t       EpsMch();
    virtual Double_t      Capacity() const                        = 0;
+   void                  CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option="");
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t        Contains(Double_t *point) const         = 0;

@@ -3063,6 +3063,18 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 }
 
 //_____________________________________________________________________________
+void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
+{
+// Test for shape navigation methods. Summary for test numbers:
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
+//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//    point with bigger distance. Compute DistFromOutside back from new point.
+//    Plot d-(d1+d2)
+//
+   GetGeomPainter()->CheckShape(shape, testNo, nsamples, option);
+}
+    
+//_____________________________________________________________________________
 void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Double_t vz, Option_t *option)
 {
 // Geometry checking.
@@ -3245,7 +3257,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
 
       // instanciate writer
-      const char *cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
+      TString cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
       gROOT->ProcessLine(cmd);
       gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
 
@@ -3361,7 +3373,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    if (strstr(filename,".gdml")) {
       // import from a gdml file
       new TGeoManager("GDMLImport", "Geometry imported from GDML");
-      const char* cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
+      TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {

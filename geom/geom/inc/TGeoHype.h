@@ -79,7 +79,7 @@ public:
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   Int_t                 DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t inner) const;
+   Int_t                 DistToHype(Double_t *point, Double_t *dir, Double_t *s, Bool_t inner, Bool_t in) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

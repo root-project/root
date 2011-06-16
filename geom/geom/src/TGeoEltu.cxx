@@ -101,23 +101,18 @@ void TGeoEltu::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 // Compute normal to closest surface from POINT.
    Double_t a = fRmin;
    Double_t b = fRmax;
-   Double_t eps = TMath::Sqrt(point[0]*point[0]/(a*a)+point[1]*point[1]/(b*b))-1.;
-   if (eps<1E-4 && TMath::Abs(fDz-TMath::Abs(point[2]))<1E-5) {
+   Double_t safr = TMath::Abs(TMath::Sqrt(point[0]*point[0]/(a*a)+point[1]*point[1]/(b*b))-1.);
+   safr *= TMath::Min(a,b);
+   Double_t safz = TMath::Abs(fDz-TMath::Abs(point[2]));
+   if (safz<safr) {
       norm[0] = norm[1] = 0;
       norm[2] = TMath::Sign(1.,dir[2]);
       return;
-   }   
+   }
    norm[2] = 0.;
-   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t st = point[1]/r;
-   Double_t ct = point[0]/r;
-   Double_t rr = TMath::Sqrt(b*b*ct*ct+a*a*st*st);
-   norm[0] = b*ct/rr;
-   norm[1] = a*st/rr;
-   if (norm[0]*dir[0]+norm[1]*dir[1]<0) {
-      norm[0] = -norm[0];
-      norm[1] = -norm[1];
-   }   
+   norm[0] = point[0]*b*b;
+   norm[1] = point[1]*a*a;
+   TMath::Normalize(norm);
 }
 
 //_____________________________________________________________________________
@@ -192,28 +187,22 @@ Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    } else {
       if (dir[2]<0) snxt=-safz2/dir[2];
    } 
-   // do eliptical surface
    Double_t sz = snxt;
    Double_t xz=point[0]+dir[0]*sz;
    Double_t yz=point[1]+dir[1]*sz;
    if ((xz*xz/a2+yz*yz/b2)<=1) return snxt;
+   // do eliptical surface
+   Double_t tolerance = TGeoShape::Tolerance();
    Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
    Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
    Double_t w=point[0]*point[0]*b2+point[1]*point[1]*a2-a2*b2;
    Double_t d=v*v-u*w;
-   if (d<0) return snxt;
-   if (TGeoShape::IsSameWithinTolerance(u,0)) return snxt;
+   if (d<0 || TGeoShape::IsSameWithinTolerance(u,0)) return tolerance;
    Double_t sd=TMath::Sqrt(d);
-   Double_t tau1=(-v+sd)/u;
-   Double_t tau2=(-v+sd)/u;
+   snxt = (-v+sd)/u;
    
-   if (tau1<0) {
-      if (tau2<0) return snxt;
-   } else {
-      snxt=tau1;
-      if ((tau2>0) && (tau2<tau1)) return tau2;
-   }
-   return snxt;      
+   if (snxt<0) return tolerance;
+   return snxt;
 }
 
 //_____________________________________________________________________________
@@ -254,7 +243,7 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
-   Double_t zi;
+   Double_t xi,yi,zi,ndotd;
    if (!TGeoShape::IsSameWithinTolerance(dir[2],0)) {
       Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
       if (TGeoShape::IsSameWithinTolerance(u,0)) return TGeoShape::Big();
@@ -269,8 +258,16 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       for (Int_t j=0; j<2; j++) {
          if (tau[j]>=0) {
             zi=point[2]+tau[j]*dir[2];
-            if ((TMath::Abs(zi)-fDz)<0)
+            if ((TMath::Abs(zi)-fDz)<0) {
+               if (tau[j]<1.E-8) {
+                  xi=point[0]+tau[j]*dir[0];
+                  yi=point[1]+tau[j]*dir[1];
+                  // Dot product of un-normalized normal with direction
+                  ndotd = fRmax*fRmax*xi*dir[0]+fRmin*fRmin*yi*dir[1];
+                  if (ndotd>0) continue;
+               }   
                snxt=TMath::Min(snxt,tau[j]);
+            }   
          } 
       }
    }   

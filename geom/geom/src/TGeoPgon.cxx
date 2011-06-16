@@ -381,10 +381,10 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    if (TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[ipl+1])) {
       ipln = ipl;
    } else {   
-      if (fNz>3 && ipl>0 && ipl<fNz-3 && TGeoShape::IsSameWithinTolerance(fZ[ipl+1],fZ[ipl+2]) && TGeoShape::IsSameWithinTolerance(point[2],fZ[ipl+1])) {
+      if (fNz>3 && ipl>=0 && ipl<fNz-3 && TGeoShape::IsSameWithinTolerance(fZ[ipl+1],fZ[ipl+2]) && TMath::Abs(point[2]-fZ[ipl+1])<1.E-8) {
          ipln = ipl+1;
       } else {
-         if (ipl>1 && TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[ipl-1]) && TGeoShape::IsSameWithinTolerance(point[2],fZ[ipl])) ipln = ipl-1;
+         if (ipl>1 && TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[ipl-1]) && TMath::Abs(point[2]-fZ[ipl])<1.E-8) ipln = ipl-1;
       }   
    }
    if (ipln>0) {
@@ -734,20 +734,26 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
             Double_t doutp = (dout>TMath::Abs(snext-TGeoShape::Tolerance()))?dout:TGeoShape::Big();
             distr = TMath::Min(dinp, doutp);
             if (iphcrt==iphstart && ipl==iplstart) {
-               if (rproj<rpgin+TGeoShape::Tolerance()) {
+               if (rproj<rpgin+1.E-8) {
                   Double_t ndotd = dir[0]*cosph+dir[1]*sinph+dir[2]*(fRmin[ipl]-fRmin[ipl+1])/dz;
                   if (ndotd<0) {
                      snext = (din<0)?step:(step+din);
                      return kTRUE;
-                  }   
+                  } else {
+                     // Ignore din
+                     din = -TGeoShape::Big();
+                  }     
                   distr = TMath::Max(din,dout);
                   if (distr<TGeoShape::Tolerance()) distr=TGeoShape::Big();
-               } else if (rproj>rpgout-TGeoShape::Tolerance()) {
+               } else if (rproj>rpgout-1.E-8) {
                   Double_t ndotd = dir[0]*cosph+dir[1]*sinph+dir[2]*(fRmax[ipl]-fRmax[ipl+1])/dz;
                   if (ndotd>0) {
                      snext = (dout<0)?step:(step+dout);
                      return kTRUE;
-                  }
+                  } else {
+                     // Ignore dout
+                     dout = -TGeoShape::Big();
+                  }   
                   distr = TMath::Max(din,dout);    
                   if (distr<TGeoShape::Tolerance()) distr=TGeoShape::Big();
                }  
@@ -1141,7 +1147,7 @@ Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    if (onphi) {
       if (!icrossed) return snext;
       if (iph[0]<0 && sph[0]<TGeoShape::Tolerance()) return (snext+sph[0]);
-      if (iph[0]>=0 && sph[0]>TGeoShape::Tolerance()) return snext;
+      if (iph[0]>=0 && sph[0]>1.E-8) return snext;
    }
    // Fire-up slice crossing algorithm
    if (SliceCrossing(pt, dir, icrossed, iph, sph, snewcross, stepmax)) {

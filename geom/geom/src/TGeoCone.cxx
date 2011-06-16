@@ -1573,7 +1573,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
    Double_t tg2=0.5*(rmax2-rmax1)*zinv;
    rout = ro2+tg2*point[2];
    Bool_t inrmax = kFALSE;
-   if (rsq < rout*(rout+TGeoShape::Tolerance())) inrmax = kTRUE;
+   if (r < rout+TGeoShape::Tolerance()) inrmax = kTRUE;
    Bool_t inphi = kFALSE;
    cpsi=point[0]*cm+point[1]*sm;
    if (cpsi>r*cdfi-TGeoShape::Tolerance())  inphi = kTRUE;

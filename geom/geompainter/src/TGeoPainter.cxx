@@ -223,6 +223,18 @@ void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
    fChecker->CheckPoint(x,y,z,option);
 }   
 
+//_____________________________________________________________________________
+void TGeoPainter::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
+{
+// Test for shape navigation methods. Summary for test numbers:
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
+//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//    point with bigger distance. Compute DistFromOutside back from new point.
+//    Plot d-(d1+d2)
+//
+   fChecker->CheckShape(shape, testNo, nsamples, option);
+}
+
 //______________________________________________________________________________
 void TGeoPainter::ClearVisibleVolumes()
 {
@@ -760,7 +772,8 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
       if (has_pad) gPad->Update();
    }
    PaintShape(shape,"range");   
-   view->SetAutoRange(kTRUE);   
+   view->SetAutoRange(kFALSE);
+   view->SetPerspective();
    // Create a 3D viewer to paint us
    gPad->GetViewer3D(option);
 }
@@ -1191,6 +1204,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    TGeoShape::SetTransform(fGlobal);
    Bool_t drawDaughters = kTRUE;
    Bool_t vis = (top->IsVisible() && !top->IsAssembly());
+   Int_t transparency = 0;
 
    // Update pad attributes in case we need to paint VOL
    if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1199,7 +1213,6 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    if (top->IsVisBranch()) {
       fGeoManager->PushPath();
       fGeoManager->cd(fVisBranch.Data());
-      Int_t transparency;
       while (fGeoManager->GetLevel()) {
          vol = fGeoManager->GetCurrentVolume();
          if (!fVisLock) {
@@ -1263,6 +1276,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                line_color = vol->GetLineColor();
                line_width = vol->GetLineWidth();
                line_style = vol->GetLineStyle();
+               transparency = vol->GetTransparency();
                fPlugin->ProcessNode();
             }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1278,6 +1292,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                vol->SetLineColor(line_color);
                vol->SetLineWidth(line_width);
                vol->SetLineStyle(line_style);
+               vol->SetTransparency(transparency);
             }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
@@ -1296,6 +1311,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                line_color = vol->GetLineColor();
                line_width = vol->GetLineWidth();
                line_style = vol->GetLineStyle();
+               transparency = vol->GetTransparency();
                fPlugin->ProcessNode();
             }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
@@ -1311,6 +1327,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
                vol->SetLineColor(line_color);
                vol->SetLineWidth(line_width);
                vol->SetLineStyle(line_style);
+               vol->SetTransparency(transparency);
             }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);

@@ -2589,8 +2589,8 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    if (TMath::Abs(nsq)<1E-10) return TGeoShape::Big();
    Double_t rdotn=point[0]*dir[0]+point[1]*dir[1];
    Double_t b,d;
-   // only r>fRmax has to be considered
-   if (r>fRmax) {
+   // only r>fRmax coming inwards has to be considered
+   if (r>fRmax && rdotn<0) {
       TGeoTube::DistToTube(rsq, nsq, rdotn, fRmax, b, d);
       if (d>0) {
          s=-b-d;
@@ -2631,7 +2631,7 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // check phi planes
    if (tub) return snxt;
    Double_t un=dir[0]*s1-dir[1]*c1;
-   if (!TGeoShape::IsSameWithinTolerance(un,0)) {
+   if (un<-TGeoShape::Tolerance()) {
       s=(point[1]*c1-point[0]*s1)/un;
       if (s>=0) {
          xi=point[0]+s*dir[0];
@@ -2650,7 +2650,7 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       }
    }
    un=dir[0]*s2-dir[1]*c2;
-   if (!TGeoShape::IsSameWithinTolerance(un,0)) {
+   if (un>TGeoShape::Tolerance()) {
       s=(point[1]*c2-point[0]*s2)/un;
       if (s>=0) {
          xi=point[0]+s*dir[0];

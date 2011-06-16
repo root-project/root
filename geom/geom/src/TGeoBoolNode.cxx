@@ -1245,16 +1245,24 @@ Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t
    Bool_t inright = fRight->Contains(rpt);
    node->SetSelected(0);
    Double_t snext = 0.0;
-   if (inleft && inright) return snext;
+   if (inleft && inright) {
+      d1 = fLeft->DistFromInside(lpt,ldir,3);
+      d2 = fRight->DistFromInside(rpt,rdir,3);
+      if (d1<2*tol) inleft = kFALSE;
+      if (d2<2*tol) inright = kFALSE;
+      if (inleft && inright) return snext;
+   }   
 
    while (1) {
-      d1 = d2 = 0.0;
+      d1 = d2 = 0;
       if (!inleft)  {
          d1 = fLeft->DistFromOutside(lpt,ldir,3);
+         d1 = TMath::Max(d1,tol);
          if (d1>1E20) return TGeoShape::Big();
       }
       if (!inright) {  
          d2 = fRight->DistFromOutside(rpt,rdir,3);
+         d2 = TMath::Max(d2,tol);
          if (d2>1E20) return TGeoShape::Big();
       }
    

@@ -219,6 +219,7 @@ public:
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
+   void                   CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option);
    void                   ConvertReflections();
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawTracks(Option_t *option=""); // *MENU*
