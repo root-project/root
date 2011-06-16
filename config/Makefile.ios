@@ -20,18 +20,12 @@ IOSVERS       = 4.0
 else
 IOSVERS       = $(IPHONEOS_DEPLOYMENT_TARGET)
 endif
-IOS_MAJOR    := $(shell echo $(IOSVERS) | cut -d . -f 1)
 IOSSDK        = /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$(IOSVERS).sdk
 IOSSDKBIN     = /Developer/Platforms/iPhoneOS.platform/Developer/usr/bin
 
 # Compiler:
-ifeq ($(subst $(IOS_MAJOR),,1234),1234)
-CXX           = $(IOSSDKBIN)/clang++
-CC            = $(IOSSDKBIN)/clang
-else
 CXX           = $(IOSSDKBIN)/g++
 CC            = $(IOSSDKBIN)/gcc
-endif
 CXXFLAGS      = -arch armv7 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common -fvisibility-inlines-hidden \
                 $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK)
@@ -51,11 +45,7 @@ CINTCFLAGS    = -arch armv7 -pipe -W -Wall -fsigned-char -fno-common \
 COMPILER      = gnu
 
 # Linker:
-ifeq ($(subst $(IOS_MAJOR),,1234),1234)
-LD            = $(IOSSDKBIN)/clang++
-else
 LD            = $(IOSSDKBIN)/g++
-endif
 LDFLAGS       = $(OPT) -arch armv7 -isysroot $(IOSSDK) \
                 -miphoneos-version-min=$(IOSVERS)
 
