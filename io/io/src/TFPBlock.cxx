@@ -130,9 +130,9 @@ void TFPBlock::ReallocBlock(Long64_t* offset, Int_t* length, Int_t nb)
 
    Int_t aux = 0;
 
+   fPos = (Long64_t*) TStorage::ReAlloc(fPos, nb * sizeof(Long64_t), fNblock * sizeof(Long64_t));
+   fLen = TStorage::ReAllocInt(fLen, nb, fNblock);
    fNblock = nb;
-   fPos = new Long64_t[nb];
-   fLen = new Int_t[nb];
 
    for(Int_t i=0; i < nb; i++){
 
