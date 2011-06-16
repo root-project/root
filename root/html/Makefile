@@ -43,6 +43,7 @@ ClassInModule: ClassInModule.log
 MakeIndex_filtered.log: MakeIndex.log
 	grep -v 'dot -' $< \
 	| grep -v 'Checking for Graphviz' \
+	| grep -v 'dot: not found' \
 	| grep -v 'RooFit' \
 	| grep -v 'Copyright' \
 	| grep -v 'roofit.sourceforge' \
