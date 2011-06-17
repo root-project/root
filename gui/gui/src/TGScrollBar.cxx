@@ -95,7 +95,7 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
    if (p && p->InheritsFrom("TGScrollBar"))
       fStyle = gClient->GetStyle();
    
-   fBgndColor = GetDefaultFrameBackground();
+   fBgndColor = fBackground;
    fHighColor = gClient->GetResourcePool()->GetHighLightColor();
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
@@ -260,12 +260,12 @@ Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
       if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
          fBgndColor = fHighColor;
       } else {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
       if (event->fType == kLeaveNotify) {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
-      TGFrame::SetBackgroundColor(fBgndColor);
+      gVirtualX->SetWindowBackground(fId, fBgndColor);
       TGFrame::DoRedraw();
       DrawBorder();
       if (fParent && fParent->InheritsFrom("TGScrollBar")) {
@@ -300,7 +300,7 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fAccelerated = kFALSE;
 
-   fBgndColor = GetDefaultFrameBackground();
+   fBgndColor = fBackground;
    fHighColor = gClient->GetResourcePool()->GetHighLightColor();
 
    fMsgWindow = p;
@@ -332,10 +332,10 @@ Bool_t TGScrollBar::HandleCrossing(Event_t *event)
       if (event->fType == kEnterNotify) {
          fBgndColor = fHighColor;
       } else {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
       if (event->fType == kLeaveNotify) {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
       fHead->ChangeBackground(fBgndColor);
       fTail->ChangeBackground(fBgndColor);
