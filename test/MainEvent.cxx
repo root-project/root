@@ -207,10 +207,10 @@ int main(int argc, char **argv)
      // Create a ROOT Tree and one superbranch
       tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000); // autosave when 1 Gbyte written
-      tree->SetCacheSize(10000000);  //set a 10 MBytes cache (useless when writing local files)
+      tree->SetCacheSize(10000000);  // set a 10 MBytes cache (useless when writing local files)
       bufsize = 64000;
       if (split)  bufsize /= 4;
-      event = new Event();
+      event = new Event();           // By setting the value, we own the pointer and must delete it.
       TTree::SetBranchStyle(branchStyle);
       TBranch *branch = tree->Branch("event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
@@ -239,6 +239,8 @@ int main(int argc, char **argv)
          tree->Print();
       }
    }
+   // We own the event (since we set the branch address explicitly), we need to delete it.
+   delete event;  event = 0;
 
    //  Stop timer and print results
    timer.Stop();
