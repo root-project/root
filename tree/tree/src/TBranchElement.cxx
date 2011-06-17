@@ -472,9 +472,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             }
             SetReadLeavesPtr();
             return;
-         } else if (!strcmp(elem_type, "TClonesArray") || !strcmp(elem_type, "TClonesArray*")) {
+         } else if (element->GetClassPointer() == TClonesArray::Class()) {  
             // -- We are a TClonesArray element.
-            Bool_t ispointer = !strcmp(elem_type,"TClonesArray*");
+            Bool_t ispointer = element->IsaPointer();
             TClonesArray *clones;
             if (ispointer) {
                char **ppointer = (char**)(pointer);
