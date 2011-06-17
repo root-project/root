@@ -112,7 +112,7 @@ namespace textinput {
          iR != iE && nRead < nMax; ++iR) {
       while ((IsBlockingUntilEOL() && (fLastReadResult == kRRNone))
              || (nRead < nMax && (*iR)->HavePendingInput(waitForInput))
-             || fContext->GetKeyBinding()->IsEscPending()) {
+             || (*iR)->HaveBufferedInput()) {
         if ((*iR)->ReadInput(nRead, in)) {
           ProcessNewInput(in, R);
           DisplayNewInput(R, OldCursorPos);
