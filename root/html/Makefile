@@ -4,7 +4,9 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
 #TEST_TARGETS += FindSource ClassInModule
+ifneq ($(PLATFORM),win32)
 TEST_TARGETS += MakeIndex
+endif
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
