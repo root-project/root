@@ -55,7 +55,8 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                 :TObject(other),
                  fLevel(other.fLevel),
                  fArray(NULL),
-                 fMatrix(NULL)
+                 fMatrix(NULL),
+                 fClient(other.fClient)
 {
 // Copy constructor.
    if (fLevel) fArray = new UShort_t[fLevel];
@@ -73,6 +74,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
       fMatrix = new TGeoHMatrix();
       fMatrix->CopyFrom(other.fMatrix);
    }
+   fClient = other.fClient;
    return *this;
 }   
 
