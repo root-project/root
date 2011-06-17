@@ -151,7 +151,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
       bg->Insert(this, id);
    }
 
-   fBgndColor = GetDefaultFrameBackground();
+   fBgndColor = fBackground;
    fHighColor = gClient->GetResourcePool()->GetHighLightColor();
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
@@ -317,7 +317,7 @@ Bool_t TGButton::HandleButton(Event_t *event)
                            (Long_t) fUserData);
    }
    if ((fStyle > 0) && (event->fType == kButtonRelease)) {
-      fBgndColor = GetDefaultFrameBackground();
+      fBgndColor = fBackground;
    }
    DoRedraw();
    return kTRUE;
@@ -358,10 +358,10 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
       if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
          fBgndColor = fHighColor;
       } else {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
       if (event->fType == kLeaveNotify) {
-         fBgndColor = GetDefaultFrameBackground();
+         fBgndColor = fBackground;
       }
       DoRedraw();
    }
@@ -688,7 +688,10 @@ void TGTextButton::DoRedraw()
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
 
-   TGFrame::SetBackgroundColor(fBgndColor);
+   if (fStyle > 0)
+      gVirtualX->SetWindowBackground(fId, fBgndColor);
+   else
+      gVirtualX->SetWindowBackground(fId, fBackground);
    TGFrame::DoRedraw();
 
    if (fTMode & kTextLeft) {
@@ -1007,9 +1010,12 @@ void TGPictureButton::DoRedraw()
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
 
-   TGFrame::SetBackgroundColor(fBgndColor);
-
+   if (fStyle > 0)
+      gVirtualX->SetWindowBackground(fId, fBgndColor);
+   else
+      gVirtualX->SetWindowBackground(fId, fBackground);
    TGFrame::DoRedraw();
+
    if (fState == kButtonDown || fState == kButtonEngaged) {
       ++x; ++y;
       w--; h--;
