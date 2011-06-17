@@ -2547,7 +2547,7 @@ TGeoVolume *TGeoVolumeAssembly::Divide(TGeoVolume *cell, TGeoPatternFinder *patt
 // Assign to the assembly a collection of identical volumes positioned according
 // a predefined pattern. The option can be spacedout or touching depending on the empty
 // space between volumes.
-   if (fNodes && fNodes->GetEntriesFast()) {
+   if (fNodes) {
       Error("Divide", "Cannot divide assembly %s since it has nodes", GetName());
       return NULL;
    }
