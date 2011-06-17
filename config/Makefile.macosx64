@@ -28,8 +28,19 @@ MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
 endif
 
 # Compiler:
+# From "Apple clang version 3.0" (OSX 10.7 and IOS 5.0) we will take clang as default
+APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/^Apple.*version //p" | cut -d . -f 1)
+ifeq ($(APPLE_CLANG),)
+APPLE_CLANG  := 1
+endif
+
+ifeq ($(subst $(APPLE_CLANG),,12),12)
+CXX           = clang++
+CC            = clang
+else
 CXX           = g++
 CC            = gcc
+endif
 CXXFLAGS      = -m64 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 $(TARGETFLAGS)
@@ -48,7 +59,11 @@ CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
 COMPILER      = gnu
 
 # Linker:
+ifeq ($(subst $(APPLE_CLANG),,12),12)
+LD            = clang++
+else
 LD            = g++
+endif
 LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS)
 
 FORCELINK     = yes
@@ -95,21 +110,10 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
-ifneq ($(findstring gfortran, $(F77)),)
-ifeq ($(F77),)
-# only needed to get default compiler in ./configure
 F77           = gfortran
-endif
 F77FLAGS      = -m64 -std=legacy
-F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.dylib | grep /)
-F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a | grep /)
-endif
-
-ifneq ($(findstring g77, $(F77)),)
-F77           = g77
-F77FLAGS      = -m64
-F77LIBS       = -L$(FINK_DIR)/lib -lg2c
-endif
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.dylib 2>&1 | grep /)
+F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a 2>&1 | grep /)
 
 # Override default in Makefile.config
 INSTALL      := /bin/cp -pPR
@@ -120,4 +124,18 @@ ifeq ($(NEEDFINK),yes)
 FINK_CXXFLAGS := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
 FINK_CFLAGS   := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
 FINK_LDFLAGS  := $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
+endif
+
+ifeq ($(CONFIGURE),yes)
+showcxx:
+	@echo "$(CXX)"
+
+showcc:
+	@echo "$(CC)"
+
+showld:
+	@echo "$(LD)"
+
+showf77:
+	@echo "$(F77)"
 endif
