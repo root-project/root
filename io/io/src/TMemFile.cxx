@@ -74,7 +74,7 @@ TMemFile::TMemFile(const char *path, Option_t *option,
       }
       fWritable = kTRUE;
    } else {
-      fD = fD = SysOpen(path, O_RDONLY, 0644);
+      fD = SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened for reading", path);
          goto zombie;
@@ -125,7 +125,7 @@ TFile(path, "WEB", ftitle, compress), fBuffer(0)
       fWritable = kTRUE;
 
    } else {
-      fD = fD = SysOpen(path, O_RDONLY, 0644);
+      fD = SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened for reading", path);
          goto zombie;

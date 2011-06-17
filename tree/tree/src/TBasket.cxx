@@ -50,7 +50,7 @@ ClassImp(TBasket)
 //
 
 //_______________________________________________________________________
-TBasket::TBasket() : fCompressedBufferRef(0), fLastWriteBufferSize(0)
+TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
    // Default contructor.
 
@@ -67,7 +67,7 @@ TBasket::TBasket() : fCompressedBufferRef(0), fLastWriteBufferSize(0)
 }
 
 //_______________________________________________________________________
-TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fLastWriteBufferSize(0)
+TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
    // Constructor used during reading.
    fDisplacement  = 0;
@@ -84,7 +84,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
 
 //_______________________________________________________________________
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) : 
-   TKey(branch->GetDirectory()), fLastWriteBufferSize(0)
+   TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
    // Basket normal constructor, used during writing.
 
@@ -105,7 +105,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // Must initialize before calling Streamer()
-   if (branch && branch->GetTree()) {
+   if (branch->GetTree()) {
       fCompressedBufferRef = branch->GetTree()->GetTransientBuffer(fBufferSize);
       fOwnsCompressedBuffer = kFALSE;
       if (!fCompressedBufferRef) {
