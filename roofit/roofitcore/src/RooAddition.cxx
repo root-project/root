@@ -158,11 +158,16 @@ Double_t RooAddition::evaluate() const
   Double_t sum(0);
   const RooArgSet* nset = _set.nset() ;
 
+//   cout << "RooAddition::eval sum = " ;
+
   _setIter->Reset() ;
   RooAbsReal* comp ;
   while((comp=(RooAbsReal*)_setIter->Next())) {
-    sum += comp->getVal(nset) ;
+    Double_t tmp = comp->getVal(nset) ;
+//     cout << tmp << " " ;
+    sum += tmp ;
   }
+//   cout << " = " << sum << endl ;
   return sum ;
 }
 
@@ -213,6 +218,21 @@ Double_t RooAddition::defaultErrorLevel() const
 
   return 1.0 ;
 }
+
+
+
+//_____________________________________________________________________________
+Bool_t RooAddition::setData(RooAbsData& data, Bool_t cloneData) 
+{
+  _setIter->Reset() ;
+
+  RooAbsReal* arg;
+  while((arg=(RooAbsReal*)_setIter->Next())) {
+    arg->setData(data,cloneData) ;
+  }  
+  return kTRUE ;
+}
+
 
 
 //_____________________________________________________________________________

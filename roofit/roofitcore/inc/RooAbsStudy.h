@@ -36,6 +36,8 @@ public:
   RooAbsStudy() :  _storeDetails(kFALSE), _summaryData(0), _detailData(0), _ownDetailData(kTRUE) {} ;
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
+  virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
+  TObject* Clone(const char* newname="") const { return clone(newname) ; }
   virtual ~RooAbsStudy() ;
  
   virtual Bool_t attach(RooWorkspace& /*w*/) { return kFALSE ; } ;
@@ -48,6 +50,8 @@ public:
   RooLinkedList* detailedData() { return _detailData ; }
 
   void releaseDetailData() { _ownDetailData = kFALSE ; }
+
+  virtual void dump() {} ;
 
  protected:
 

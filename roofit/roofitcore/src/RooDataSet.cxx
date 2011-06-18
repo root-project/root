@@ -49,6 +49,7 @@
 #include "RooTreeDataStore.h"
 #include "RooCompositeDataStore.h"
 #include "RooTreeData.h"
+#include "RooSentinel.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -56,6 +57,119 @@ char* operator+( streampos&, char* );
 
 ClassImp(RooDataSet)
 ;
+
+
+char* RooDataSet::_poolBegin = 0 ;
+char* RooDataSet::_poolCur = 0 ;
+char* RooDataSet::_poolEnd = 0 ;
+#define POOLSIZE 1048576
+
+struct POOLDATA 
+{
+  void* _base ;
+} ;
+
+static std::list<POOLDATA> _memPoolList ;
+
+//_____________________________________________________________________________
+void RooDataSet::cleanup()
+{
+  // Clear memoery pool on exit to avoid reported memory leaks
+
+  std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
+  while(iter!=_memPoolList.end()) {
+    free(iter->_base) ;
+    iter->_base=0 ;
+    iter++ ;
+  }
+  _memPoolList.clear() ;
+}
+
+
+#ifdef USEMEMPOOL
+
+//_____________________________________________________________________________
+void* RooDataSet::operator new (size_t bytes)
+{
+  // Overloaded new operator guarantees that all RooDataSets allocated with new
+  // have a unique address, a property that is exploited in several places
+  // in roofit to quickly index contents on normalization set pointers. 
+  // The memory pool only allocates space for the class itself. The elements
+  // stored in the set are stored outside the pool.
+
+  //cout << " RooDataSet::operator new(" << bytes << ")" << endl ;
+
+  if (!_poolBegin || _poolCur+(sizeof(RooDataSet)) >= _poolEnd) {
+
+    if (_poolBegin!=0) {
+      oocxcoutD((TObject*)0,Caching) << "RooDataSet::operator new(), starting new 1MB memory pool" << endl ;
+    }
+
+    // Start pruning empty memory pools if number exceeds 3
+    if (_memPoolList.size()>3) {
+      
+      void* toFree(0) ;
+
+      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+
+	// If pool is empty, delete it and remove it from list
+	if ((*(Int_t*)(poolIter->_base))==0) {
+	  oocxcoutD((TObject*)0,Caching) << "RooDataSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
+
+	  toFree = poolIter->_base ;
+	  _memPoolList.erase(poolIter) ;
+	  break ;
+	}
+      }      
+
+      free(toFree) ;      
+    }
+    
+    void* mem = malloc(POOLSIZE) ;
+
+    _poolBegin = (char*)mem ;
+    // Reserve space for pool counter at head of pool
+    _poolCur = _poolBegin+sizeof(Int_t) ;
+    _poolEnd = _poolBegin+(POOLSIZE) ;
+
+    // Clear pool counter
+    *((Int_t*)_poolBegin)=0 ;
+    
+    POOLDATA p ;
+    p._base=mem ;
+    _memPoolList.push_back(p) ;
+
+    RooSentinel::activate() ;
+  }
+
+  char* ptr = _poolCur ;
+  _poolCur += bytes ;
+
+  // Increment use counter of pool
+  (*((Int_t*)_poolBegin))++ ;
+
+  return ptr ;
+
+}
+
+
+
+//_____________________________________________________________________________
+void RooDataSet::operator delete (void* ptr)
+{
+  // Memory is owned by pool, we need to do nothing to release it
+
+  // Decrease use count in pool that ptr is on
+  for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+    if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
+      (*(Int_t*)(poolIter->_base))-- ;
+      break ;
+    }
+  }
+  
+}
+
+#endif
 
 
 //_____________________________________________________________________________
@@ -91,7 +205,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   //                              
   // Import(const char*,         -- Import a dataset to be associated with the given state name of the index category
   //              RooDataSet&)      specified in Index(). If the given state name is not yet defined in the index
-  //                                category it will be added on the fly. The import command can be specified
+  //                               category it will be added on the fly. The import command can be specified
   //                                multiple times. 
   //
   // Link(const char*, RooDataSet&) -- Link contents of supplied RooDataSet to this dataset for given index category state name.
@@ -224,7 +338,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 
       // Take ownership of slice if requested
       if (ownLinked) {
-	addOwnedComponent(*hiter->second) ;
+	addOwnedComponent(hiter->first.c_str(),*hiter->second) ;
       }
     }
 

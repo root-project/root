@@ -48,8 +48,7 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
-
-
+  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
      
 
 protected:

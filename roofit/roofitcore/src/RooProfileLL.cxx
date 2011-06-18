@@ -238,7 +238,7 @@ void RooProfileLL::validateAbsMin() const
 
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
-    
+
     cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
 
 
@@ -263,7 +263,12 @@ void RooProfileLL::validateAbsMin() const
 
     // Save parameter values at abs minimum as well
     _paramAbsMin.removeAll() ;
-    _paramAbsMin.addClone(_par) ;
+
+    // Only store non-constant parameters here!
+    RooArgSet* tmp = (RooArgSet*) _par.selectByAttrib("Constant",kFALSE) ;
+    _paramAbsMin.addClone(*tmp) ;
+    delete tmp ;
+
     _obsAbsMin.addClone(_obs) ;
 
     // Save constant status of all parameters

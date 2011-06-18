@@ -55,6 +55,8 @@ class ToyMCStudy: public RooAbsStudy {
          storeDetailedOutput(kTRUE);
       }
 
+	RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }     
+
       virtual ~ToyMCStudy() {
       }
 

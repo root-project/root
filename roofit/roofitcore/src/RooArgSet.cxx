@@ -209,7 +209,7 @@ RooArgSet::RooArgSet(const RooArgList& list, const RooAbsArg* var1) :
   // objects with the same name, only the first is store in the set.
   // Warning messages will be printed for dropped items.
 
-  if (var1) {
+  if (var1 && !list.contains(*var1)) {
     add(*var1,kTRUE) ;
   }
   add(list,kTRUE) ; // verbose to catch duplicate errors
@@ -707,14 +707,14 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section
     return ;
   }
 
-  TIterator *iterator= createIterator();
+  TIterator *iterat= createIterator();
   RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
+  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
     os << next->GetName() << " = " ;
     next->writeToStream(os,kFALSE) ;
     os << endl ;
   }
-  delete iterator;  
+  delete iterat;  
 }
 
 

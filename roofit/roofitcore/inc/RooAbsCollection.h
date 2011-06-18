@@ -21,6 +21,7 @@
 #include "RooPrintable.h"
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
+#include "RooLinkedListIter.h"
 #include <string>
 
 class RooAbsCollection : public TObject, public RooPrintable {
@@ -96,6 +97,9 @@ public:
     // Create and return an iterator over the elements in this collection
     return _list.MakeIterator(dir); 
   }
+
+  RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
+
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
     return _list.GetSize(); 
@@ -146,11 +150,9 @@ public:
   void dump() const ;
 
   void releaseOwnership() { _ownCont = kFALSE ; }
+  void takeOwnership() { _ownCont = kTRUE ; }
 
   void sort(Bool_t ascend=kTRUE) { _list.Sort(ascend) ; }
-
-  void addClaim() { _claimCount++ ; }
-  void releaseClaim() { if (_claimCount>0) _claimCount-- ; }
 
 protected:
 
@@ -160,7 +162,6 @@ protected:
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
-  Int_t  _claimCount ; //! Number of external claims on contents
 
   void safeDeleteList() ;
 

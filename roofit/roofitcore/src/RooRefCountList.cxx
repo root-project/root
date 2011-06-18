@@ -39,7 +39,7 @@ ClassImp(RooRefCountList)
 
 //_____________________________________________________________________________
 RooRefCountList::RooRefCountList()
-  : RooLinkedList(17) 
+  : RooLinkedList(0) 
 { 
   // Default constructor construct lists with initial hash table size of 17
 }

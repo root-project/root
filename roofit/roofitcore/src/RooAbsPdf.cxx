@@ -844,14 +844,15 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
     
     nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,*cPars) ;
+    nllCons->setOperMode(ADirty) ;
     RooAbsReal* orignll = nll ;
 
     nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*nllCons)) ;
     nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;
   }
 
+  
   if (optConst) {
-
     nll->constOptimizeTestStatistic(RooAbsArg::Activate) ;
   }
 
@@ -1854,7 +1855,6 @@ Int_t RooAbsPdf::getGenerator(const RooArgSet &/*directVars*/, RooArgSet &/*gene
   // implementation, but otherwise its value is arbitrary. The default implemetation of
   // this method returns zero. Subclasses will usually implement this method using the
   // matchArgs() methods to advertise the algorithms they provide.
-
 
   return 0 ;
 }

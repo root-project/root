@@ -114,11 +114,12 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   _fracThresh[0] = 0 ;
   
   // Generate index category and all registered PDFS
-  TIterator* iter = model._pdfProxyList.MakeIterator() ;
+  _proxyIter = model._pdfProxyList.MakeIterator() ;
+  _allVarsPdf.add(allPdfVars) ;
   RooRealProxy* proxy ;
   RooAbsPdf* pdf ;
   Int_t i(1) ;
-  while((proxy=(RooRealProxy*)iter->Next())) {
+  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
     pdf=(RooAbsPdf*)proxy->absArg() ;
 
     // Create generator context for this PDF
@@ -132,7 +133,6 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&allPdfVars)) ;
     i++ ;
   }   
-  delete iter ;
     
   // Normalize fraction threshold array
   if (!_haveIdxProto) {
@@ -161,6 +161,7 @@ RooSimGenContext::~RooSimGenContext()
   delete[] _fracThresh ;
   delete _idxCatSet ;
   _gcList.Delete() ;
+  delete _proxyIter ;
 }
 
 
@@ -196,6 +197,9 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   } else {
     _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
   }
+  
+  // Update fractions reflecting possible new parameter values
+  updateFractions() ;
 
   // Forward initGenerator call to all components
   RooAbsGenContext* gc ;
@@ -213,27 +217,31 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
 {
   // Create an empty dataset to hold the events that will be generated
 
+  
   // If the observables do not contain the index, make a plain dataset
   if (!obs.contains(*_idxCat)) {
     return new RooDataSet(name,title,obs) ;
   }
 
-  // If all slices contain all observables minus the index, make a plain dataset
-  Bool_t allObsinAllSlices(kTRUE) ;
   TIterator* iter = _idxCat->typeIterator() ;
   RooCatType* state ;
-  while((state=(RooCatType*)iter->Next())) {
-    RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
-    RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
-    if (sliceObs->getSize()!=obs.getSize()-1) {
-      allObsinAllSlices = kFALSE ;
-    }
-    delete sliceObs ;
-  }
-  delete iter ;
-  if (allObsinAllSlices) {
-    return new RooDataSet(name,title,obs) ;
-  }
+
+//   // If all slices contain all observables minus the index, make a plain dataset
+//   Bool_t allObsinAllSlices(kTRUE) ;
+//   while((state=(RooCatType*)iter->Next())) {
+//     RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
+//     RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
+//     if (sliceObs->getSize()!=obs.getSize()-1) {
+//       allObsinAllSlices = kFALSE ;
+//     }
+//     delete sliceObs ;
+//   }
+//   delete iter ;
+//   if (allObsinAllSlices) {
+//     //return new RooDataSet(name,title,obs) ;
+//   }
+
+  //cout << "RooSimGenContext::createDataSet() creating composite linked dataset" << endl ;
 
   // Otherwise, make a composite linked dataset as output placeholder
   map<string,RooAbsData*> dmap ;
@@ -250,7 +258,9 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
   }
   delete iter ;
 
-  return new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
+  RooDataSet* ret = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
+
+  return ret ;
 }
 
 
@@ -292,6 +302,36 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 
   }
 }
+
+
+
+//_____________________________________________________________________________
+void RooSimGenContext::updateFractions()
+{
+  // No action needed if we have a proto index
+  if (_haveIdxProto) return ;
+
+  // Generate index category and all registered PDFS
+  RooRealProxy* proxy ;
+  RooAbsPdf* pdf ;
+  Int_t i(1) ;
+  _proxyIter->Reset() ;
+  while((proxy=(RooRealProxy*)_proxyIter->Next())) {
+    pdf=(RooAbsPdf*)proxy->absArg() ;
+    
+    // Fill fraction threshold array
+    _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&_allVarsPdf)) ;
+    i++ ;
+  }   
+    
+  // Normalize fraction threshold array
+  if (!_haveIdxProto) {
+    for(i=0 ; i<_numPdf ; i++) 
+      _fracThresh[i] /= _fracThresh[_numPdf] ;
+  }
+  
+}
+
 
 
 //_____________________________________________________________________________
