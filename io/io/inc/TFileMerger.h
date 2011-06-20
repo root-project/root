@@ -52,7 +52,6 @@ protected:
    TList         *fFileList;         // a list the file (TFile*) which shall be merged
    TFile         *fOutputFile;       // the outputfile for merging
    TString        fOutputFilename;   // the name of the outputfile for merging
-   TString        fOutputFilename1;  // the name of the temporary outputfile for merging
    Bool_t         fFastMethod;       // True if using Fast merging algorithm (default)
    Bool_t         fNoTrees;          // True if Trees should not be merged (default is kFALSE)
    Bool_t         fExplicitCompLevel;// True if the user explicitly requested a compressio level change (default kFALSE)
@@ -90,6 +89,7 @@ public:
    virtual Bool_t MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t incremental = kFALSE);
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
+   virtual void        RecursiveRemove(TObject *obj);
 
    ClassDef(TFileMerger,3)  // File copying and merging services
 };
