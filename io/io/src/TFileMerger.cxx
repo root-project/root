@@ -57,6 +57,8 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 
    fMergeList = new TList;
    fMergeList->SetOwner(kTRUE);
+   
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -64,6 +66,7 @@ TFileMerger::~TFileMerger()
 {
    // Cleanup.
 
+   gROOT->GetListOfCleanups()->Remove(this);
    SafeDelete(fFileList);
    SafeDelete(fMergeList);
    SafeDelete(fOutputFile);
@@ -179,6 +182,7 @@ Bool_t TFileMerger::Merge(Bool_t)
       }
    }
 
+   fOutputFile->SetBit(kMustCleanup);
    Bool_t result = MergeRecursive(fOutputFile, fFileList);
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
@@ -188,6 +192,7 @@ Bool_t TFileMerger::Merge(Bool_t)
    }
 
    // Cleanup
+   fOutputFile->ResetBit(kMustCleanup);
    SafeDelete(fOutputFile);
 
    // Remove local copies if there are any
@@ -494,3 +499,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
    return status;
 }
 
+//______________________________________________________________________________
+void TFileMerger::RecursiveRemove(TObject *obj)
+{
+   // Intercept the case where the output TFile is deleted!
+   
+   if (obj == fOutputFile) {
+      Fatal("RecursiveRemove","Output file of the TFile Merger (targetting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
+   }
+   
+}
