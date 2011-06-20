@@ -235,17 +235,17 @@ You can specify arguments and the data members in which to store the arguments.
 <para>For example:</para>
 
 <programlisting language="c++">class MyClass : public TObject {
-  private:
-    int      fV1;   <emphasis role="italic">// first variable</emphasis>
-    double   fV2;   <emphasis role="italic">// second variable</emphasis>
-    public:
-    int    GetV1() {return fV1;}
-    double GetV2() {return fV2;}
-    void   SetV1(int x1) { fV1 = x1;}     <emphasis role="italic">// *MENU*</emphasis>
-    void   SetV2(double d2) { fV2 = d2;}  <emphasis role="italic">// *MENU*</emphasis>
-    void   SetBoth(int x1, double d2) {fV1 = x1; fV2 = d2;}
+private:
+   int      fV1;   <emphasis role="italic">// first variable</emphasis>
+   double   fV2;   <emphasis role="italic">// second variable</emphasis>
+public:
+   int    GetV1() {return fV1;}
+   double GetV2() {return fV2;}
+   void   SetV1(int x1) { fV1 = x1;}     <emphasis role="italic">// *MENU*</emphasis>
+   void   SetV2(double d2) { fV2 = d2;}  <emphasis role="italic">// *MENU*</emphasis>
+   void   SetBoth(int x1, double d2) {fV1 = x1; fV2 = d2;}
 
-ClassDef (MyClass,1)
+   ClassDef (MyClass,1)
 }
 </programlisting>
 
@@ -330,7 +330,7 @@ the shape of the cursor when passing on top of an object. This is done with the
 
 <para>The argument <code>cursor</code> is the type of cursor. It may be:</para>
 
-<programlisting language="c++">kBottomLeft,  kBottomRight,   kTopLeft,
+<programlisting language="c++">kBottomLeft,  kBottomRight,  kTopLeft,
 kTopRight,    kBottomSide,   kLeftSide,
 kTopSide,     kRightSide,    kMove,
 kCross,       kArrowHor,     kArrowVer,
@@ -475,8 +475,7 @@ paragraph above). We get the pointer to the list:</para>
 
 <para>Then remove the object from this list:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>li-&gt;Remove(obj)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>li-&gt;Remove(obj)</code></emphasis>
 </programlisting>
 
 <para>The object will disappear from the pad as soon as the pad is updated (try
@@ -1746,8 +1745,7 @@ center of the histogram, with no border. If one wants the label position to be
 independent of the histogram coordinates, or user coordinates, one can use the
 option “<code>NDC</code>”. See “The Coordinate Systems of a Pad”.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold">pl = new TPaveLabel(-50,0,50,200,”Some text”)</emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">pl = new TPaveLabel(-50,0,50,200,”Some text”)</emphasis>
 root[] <emphasis role="bold">pl-&gt;SetBorderSize(0)</emphasis>
 root[] <emphasis role="bold">pl-&gt;Draw()</emphasis>
 </programlisting>
@@ -1926,8 +1924,7 @@ this kind of objects:</para>
 <para>Instead of the <code>wmin,wmax</code> arguments of the normal constructor, i.e. the limits of the axis, the name of a <emphasis role="bold"><code>TF1</code></emphasis> function can be specified. This function will be used to map the user coordinates to the axis values and ticks.</para>
 <para>The constructor is the following:</para>
 
-<programlisting language="c++">
-TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+<programlisting language="c++">TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
 const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 </programlisting>
 
@@ -1962,8 +1959,7 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 <title>Labels for Exponents</title>
 <para>By default, an exponent of the form 10^N is used when the label values are either all very small or very large. One can disable the exponent by calling:</para>
 
-<programlisting language="c++">
-<code>TAxis::SetNoExponent(kTRUE)</code>
+<programlisting language="c++">TAxis::SetNoExponent(kTRUE)
 </programlisting>
 
 <para>Note that this option is implicitly selected if the number of digits to draw a label is less than the <code>fgMaxDigits</code> global member. If the property <code>SetNoExponent</code> was set in <emphasis role="bold"><code>TAxis</code></emphasis> (via <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetNoExponent)</code>, the <emphasis role="bold"><code>TGaxis</code></emphasis> will inherit this property. <emphasis role="bold"><code>TGaxis</code></emphasis> is the class responsible for drawing the axis. The method <code>SetNoExponent</code> is also available from the axis context menu.</para>
@@ -1980,8 +1976,7 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 <title>Number of Digits in Labels</title>
 <para><emphasis role="bold"><code>TGaxis</code></emphasis><code>::fgMaxDigits</code> is the maximum number of digits permitted for the axis labels above which the notation with 10^N is used. It must be greater than 0. By default <code>fgMaxDigits</code> is 5 and to change it use the <emphasis role="bold"><code>TGaxis</code></emphasis><code>::SetMaxDigits</code>         method. For example to set <code>fgMaxDigits</code> to accept 6 digits and accept numbers like 900000 on an axis call:</para>
 
-<programlisting language="c++">
-TGaxis::SetMaxDigits(6)
+<programlisting language="c++">TGaxis::SetMaxDigits(6)
 </programlisting>
 
 </sect3>
@@ -2013,8 +2008,7 @@ TGaxis::SetMaxDigits(6)
 <title>Stripping Decimals</title>
 <para>Use the <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetStripDecimals</code> to strip decimals when drawing axis labels. By default, the option is set to true, and <emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis</code> removes trailing zeros after the dot in the axis labels, e.g. {0, 0.5, 1, 1.5, 2, 2.5, etc.}</para>
 
-<programlisting language="c++">
-TStyle::SetStripDecimals (Bool_t strip=kTRUE)
+<programlisting language="c++">TStyle::SetStripDecimals (Bool_t strip=kTRUE)
 </programlisting>
 
 <para>If this function is called with <code>strip=kFALSE</code>, <emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis()</code> will draw labels with the same number of digits after the dot, e.g. {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, etc.}</para>
@@ -2039,8 +2033,7 @@ TStyle::SetStripDecimals (Bool_t strip=kTRUE)
 <title>Axis with Time Units</title>
 <para>Histograms' axis can be defined as "time axis". To do that it is enough to activate the <code>SetTimeDisplay</code> attribute on a given axis. If <code>h</code> is a histogram, it is done the following way:</para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTimeDisplay(1);    <emphasis role="italic"><code>// X axis is a time axis</code></emphasis>
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeDisplay(1);    <emphasis role="italic"><code>// X axis is a time axis</code></emphasis>
 </programlisting>
 
 <para>Two parameters can be adjusted in order to define time axis: the time format and the time offset.</para>
@@ -2086,8 +2079,7 @@ h-&gt;GetXaxis()-&gt;SetTimeDisplay(1);    <emphasis role="italic"><code>// X ax
 </informaltable>
 <para>The other characters are output as is. For example to have a format like <code>dd/mm/yyyy</code> one should do:</para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%Y");
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%Y");
 </programlisting>
 
 <para>If the time format is not defined, a default one will be computed automatically.</para>
@@ -2098,8 +2090,7 @@ h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%Y");
 <para>This is a time in seconds in the UNIX standard UTC format (the universal time, not the local one), defining the starting date of a histogram axis. This date should be greater than 01/01/95 and is given in seconds. There are three ways to define the time offset:</para>
 <para>1. By setting the global default time offset:</para>
 
-<programlisting language="c++">
-TDatime da(2003,02,28,12,00,00);
+<programlisting language="c++">TDatime da(2003,02,28,12,00,00);
 gStyle-&gt;SetTimeOffset(da.Convert());
 </programlisting>
 
@@ -2107,23 +2098,20 @@ gStyle-&gt;SetTimeOffset(da.Convert());
 <para>2. By setting a time offset to a particular axis:</para>
 <para/>
 
-<programlisting language="c++">
-TDatime dh(2001,09,23,15,00,00);
+<programlisting language="c++">TDatime dh(2001,09,23,15,00,00);
 h-&gt;GetXaxis()-&gt;SetTimeOffset(dh.Convert());
 </programlisting>
 
 <para>3. Together with the time format using <code>SetTimeFormat</code>. The time offset can be specified using the control character %F after the normal time format. <code>%F</code> is followed by the date in the format: <code>yyyy-mm-dd hh:mm:ss</code>.</para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y%F2000-02-28 13:00:01");
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y%F2000-02-28 13:00:01");
 </programlisting>
 
 <para>Notice that this date format is the same used by the <emphasis role="bold"><code>TDatime</code></emphasis> function <code>AsSQLString</code>. If needed, this function can be used to translate a time in seconds into a character string which can be appended after <code>%F</code>. If the time format is not specified (before <code>%F</code>) the automatic one will be used. The following example illustrates the various possibilities.</para>
 <para/>
 <para/>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 gStyle-&gt;SetTitleH(0.08);
 TDatime da(2003,02,28,12,00,00);
 gStyle-&gt;SetTimeOffset(da.Convert());
@@ -2163,8 +2151,7 @@ ht3-&gt;Draw();
 <inlinemediaobject><imageobject><imagedata fileref="pictures/030000C8.png" width="211.05pt" depth="201.7pt"/></imageobject></inlinemediaobject>
 </para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 <emphasis role="italic"><code>   // Define the time offset as 2003, January 1st</code></emphasis>
 TDatime T0(2003,01,01,00,00,00);
 int X0 = T0.Convert();
@@ -2203,14 +2190,12 @@ h1-&gt;Draw();
 
 <para>A <emphasis role="bold"><code>TGaxis</code></emphasis> can be created the following way (a day has 86400 seconds):</para>
 
-<programlisting language="c++">
-TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
+<programlisting language="c++">TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
 </programlisting>
 
 <para>the "<code>t</code>" option (in lower case) means it is a "time axis". The axis goes form 100000 seconds before <code>TimeOffset </code>and 150000 seconds after. So the complete macro is:</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
 c1-&gt;Range(-10,-1,10,1);
 TGaxis *axis = new TGaxis(-8,-0.6,8,-0.6,-100000,150000,2405,"t");
@@ -2226,8 +2211,7 @@ axis-&gt;Draw();
 <para/>
 <para>The time format is specified with:</para>
 
-<programlisting language="c++">
-axis-&gt;SetTimeFormat("%d/%m/%Y");
+<programlisting language="c++">axis-&gt;SetTimeFormat("%d/%m/%Y");
 </programlisting>
 
 <para>The macro gives the following output:</para>
@@ -2236,8 +2220,7 @@ axis-&gt;SetTimeFormat("%d/%m/%Y");
 </para>
 <para>Thanks to the <emphasis role="bold"><code>TLatex</code></emphasis> directive <code>#splitline</code> it is possible to write the time labels on two lines. In the previous example changing the <code>SetTimeFormat</code> line by:</para>
 
-<programlisting language="c++">
-axis-&gt;SetLabelOffset(0.02);
+<programlisting language="c++">axis-&gt;SetLabelOffset(0.02);
 axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
 </programlisting>
 
@@ -2260,8 +2243,7 @@ axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
 
 <para>The first script is:</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 c1-&gt;Range(-10,-1,10,1);
 
@@ -2310,8 +2292,7 @@ axis8-&gt;Draw();
 
 <para>The second example shows the use of the second form of the constructor, with axis ticks position determined by a function <emphasis role="bold"><code>TF1</code></emphasis>:</para>
 
-<programlisting language="c++">
-void gaxis3a()
+<programlisting language="c++">void gaxis3a()
 {
 gStyle-&gt;SetOptStat(0);
 
@@ -2348,13 +2329,7 @@ A3-&gt;Draw();
 
 <para/>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// strip chart example</code></emphasis>
-
-
-</programlisting>
-
-<programlisting language="c++">
+<programlisting language="c++"><emphasis role="italic">// strip chart example</emphasis>
 <code>void seism() {</code>
 
 <code>   TStopwatch sw; sw.Start();</code>
@@ -2408,8 +2383,7 @@ A3-&gt;Draw();
 <title>Setting Text Alignment</title>
 <para>Text alignment may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttText</code></emphasis>, and there are many. We will take an example that may be transposed to other types. Suppose "<code>la</code>" is a <emphasis role="bold"><code>TLatex</code></emphasis> object. The alignment is set with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>la-&gt;SetTextAlign(align)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>la-&gt;SetTextAlign(align)</code></emphasis>
 </programlisting>
 
 <para>The parameter <code>align</code> is a <code>short</code> describing the alignment:</para>
@@ -2434,8 +2408,7 @@ root[] <emphasis role="bold"><code>la-&gt;SetTextAlign(align)</code></emphasis>
 <title>Setting Text Angle</title>
 <para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextAngle</code> to set the text angle. The <code>angle</code> is the degrees of the horizontal.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>la-&gt;SetTextAngle(angle)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">la-&gt;SetTextAngle(angle)</emphasis>
 </programlisting>
 
 </sect3>
@@ -2444,8 +2417,7 @@ root[] <emphasis role="bold"><code>la-&gt;SetTextAngle(angle)</code></emphasis>
 <title>Setting Text Color</title>
 <para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextColor</code> to set the text color. The <code>color</code> is the color index. The colors are described in "Color and Color Palettes".</para>
 
-<programlisting language="c++">
-root[] la-&gt;SetTextColor(color)
+<programlisting language="c++">root[] la-&gt;SetTextColor(color)
 </programlisting>
 
 </sect3>
@@ -2454,8 +2426,7 @@ root[] la-&gt;SetTextColor(color)
 <title>Setting Text Font</title>
 <para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextFont</code> to set the font. The parameter font is the font code, combining the font and precision:   <code>font = 10 * fontID + precision</code></para>
 
-<programlisting language="c++">
-root[] la-&gt;SetTextFont(font)
+<programlisting language="c++">root[] la-&gt;SetTextFont(font)
 </programlisting>
 
 <para>The table below lists the available fonts. The font IDs must be between 1 and 14. The precision can be:</para>
@@ -2755,8 +2726,7 @@ root[] la-&gt;SetTextFont(font)
 </informaltable>
 <para>This script makes the image of the different fonts:</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 textc = new TCanvas("textc","Example of text",1);
 for (int i=1;i&lt;15;i++) {
 cid = new char[8];
@@ -2778,14 +2748,12 @@ l-&gt;Draw();
 <title>How to use True Type Fonts</title>
 <para>You can activate the True Type Fonts by adding the following line in your <code>.rootrc</code> file.</para>
 
-<programlisting language="c++">
-Unix.*.Root.UseTTFonts:     true
+<programlisting language="c++">Unix.*.Root.UseTTFonts:     true
 </programlisting>
 
 <para>You can check that you indeed use the <code>TTF</code> in your Root session. When the <code>TTF</code> is active, you get the following message at the start of a session:  "Free Type Engine v1.x used to render TrueType fonts." You can also check with the command:</para>
 
-<programlisting language="c++">
-gEnv-&gt;Print()
+<programlisting language="c++">gEnv-&gt;Print()
 </programlisting>
 
 </sect3>
@@ -2794,8 +2762,7 @@ gEnv-&gt;Print()
 <title>Setting Text Size</title>
 <para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextSize</code> to set the text size.</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> la-&gt;SetTextSize(size)</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> la-&gt;SetTextSize(size)</code></emphasis>
 </programlisting>
 
 <para>The <code>size</code> is the text size expressed in percentage of the current pad size.</para>
@@ -2813,22 +2780,19 @@ root[]<emphasis role="bold"><code> la-&gt;SetTextSize(size)</code></emphasis>
 <title>Line Attributes</title>
 <para>All classes manipulating lines have to deal with line attributes: color, style and width. This is done by using secondary inheritance of the class <emphasis role="bold"><code>TAttLine</code></emphasis>. The line color may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line color is set with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>li-&gt;SetLineColor(color)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>li-&gt;SetLineColor(color)</code></emphasis>
 </programlisting>
 
 <para>The argument <code>color</code> is a color number. The colors are described in "Color and Color Palettes"</para>
 <para>The line style may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line style is set with:</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> li-&gt;SetLineStyle(style)</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> li-&gt;SetLineStyle(style)</code></emphasis>
 </programlisting>
 
 <para>The argument style is one of: <code>1=solid</code>, 2=dash, 3=dash-dot, 4=dot-dot.</para>
 <para>The line width may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line width is set with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>li-&gt;SetLineWidth(width)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>li-&gt;SetLineWidth(width)</code></emphasis>
 </programlisting>
 
 <para>The <code>width</code> is the width expressed in pixel units.</para>
@@ -2839,15 +2803,13 @@ root[] <emphasis role="bold"><code>li-&gt;SetLineWidth(width)</code></emphasis>
 <title>Fill Attributes</title>
 <para>Almost all graphics classes have a fill area somewhere. These classes have to deal with fill attributes. This is done by using secondary inheritance of the class <emphasis role="bold"><code>TAttFill</code></emphasis>. Fill color may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttFill</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>h</code>" is a <emphasis role="bold"><code>TH1F</code></emphasis> (1 dim histogram) object. The histogram fill color is set with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>h-&gt;SetFillColor(color)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>h-&gt;SetFillColor(color)</code></emphasis>
 </programlisting>
 
 <para>The color is a color number. The colors are described in "Color and color palettes"</para>
 <para>Fill style may be set by a method call. What is said here applies to all objects deriving from <code>TAttFill</code>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "h" is a <emphasis role="bold">TH1F</emphasis> (1 dim histogram) object. The histogram fill style is set with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>h-&gt;SetFillStyle(style)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>h-&gt;SetFillStyle(style)</code></emphasis>
 </programlisting>
 
 <para>The convention for style is: 0:hollow, 1001:solid, 2001:hatch style, <code>3000</code>+<code>pattern number</code>:patterns, 4000 to 4100:transparency, 4000:fully transparent, 4100: fully opaque.</para>
@@ -2886,14 +2848,12 @@ root[] <emphasis role="bold"><code>h-&gt;SetFillStyle(style)</code></emphasis>
 </para>
 <para>The list of currently supported basic colors (here dark and bright colors are not shown) are shown. The color numbers specified in the basic palette, and the picture above, can be viewed by selecting the menu entry Colors in the View canvas menu. The user may define other colors. To do this, one has to build a new <emphasis role="bold"><code>TColor</code></emphasis>:</para>
 
-<programlisting language="c++">
-TColor(Int_t color,Float_t r,Float_t g,Float_t b,const char* name)
+<programlisting language="c++">TColor(Int_t color,Float_t r,Float_t g,Float_t b,const char* name)
 </programlisting>
 
 <para>One has to give the color number and the three Red, Green, Blue values, each being defined from 0 (min) to 1(max). An optional name may be given. When built, this color is automatically added to the existing list of colors. If the color number already exists, one has to extract it from the list and redefine the RGB values. This may be done for example with:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>color=(TColor</code></emphasis><emphasis role="bold"><code>*)(gROOT</code></emphasis><emphasis role="bold"><code>-&gt;GetListOfColors()-&gt;At(index_color))</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>color=(TColor</code></emphasis><emphasis role="bold"><code>*)(gROOT</code></emphasis><emphasis role="bold"><code>-&gt;GetListOfColors()-&gt;At(index_color))</code></emphasis>
 root[] <emphasis role="bold"><code>color-&gt;SetRGB(r,g,b)</code></emphasis>
 </programlisting>
 
@@ -2904,23 +2864,20 @@ root[] <emphasis role="bold"><code>color-&gt;SetRGB(r,g,b)</code></emphasis>
 <title>Color Palette (for Histograms)</title>
 <para>Defining one color at a time may be tedious. The histogram classes (see Draw Options) use the color palette. For example,         <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw("col")</code> draws a 2-D histogram with cells represented by a box filled with a color <code>CI</code> function of the cell content. If the cell content is <code>N</code>, the color <code>CI</code> used will be the color number in <code>colors[N]</code>. If the maximum cell content is <code>&gt;ncolors</code>, all cell contents are scaled to <code>ncolors</code>. The current color palette does not have a class or global object of its own. It is defined in the current style as an array of color numbers. The current palette can be changed with:</para>
 
-<programlisting language="c++">
-<code>TStyle::SetPalette(Int_t ncolors,Int_t*color_indexes). </code>
+<programlisting language="c++"><code>TStyle::SetPalette(Int_t ncolors,Int_t*color_indexes). </code>
 </programlisting>
 
 <para>By default, or if <code>ncolors &lt;= 0</code>, a default palette (see above) of 50 colors is defined. The colors defined in this palette are good for coloring pads, labels, and other graphic objects. If <code>ncolors</code>         <code>&gt; 0</code> and <code>colors = 0</code>, the default palette is used with a maximum of <code>ncolors</code>. If <code>ncolors == 1 &amp;&amp; colors == 0</code>, then a pretty palette with a spectrum <code>Violet-&gt;Red</code> is created. It is recommended to use this pretty palette when drawing lego(s), surfaces or contours. For example, to set the current palette to the “<code>pretty</code>” one, do:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gStyle-&gt;SetPalette(1)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>gStyle-&gt;SetPalette(1)</code></emphasis>
 </programlisting>
 
-<para>A more complete example is shown below. It illustrates the definition of a custom palette. You can adapt it to suit your needs. In case you use it for contour coloring, with the current color/contour algorithm, always define two more colors than the number of contours.</para>
-<para/>
-<para/>
-<para/>
+<para>A more complete example is shown below. It illustrates the definition of a
+custom palette. You can adapt it to suit your needs. In case you use it for
+contour coloring, with the current color/contour algorithm, always define two
+more colors than the number of contours.</para>
 
-<programlisting language="c++">
-void palette() {              <emphasis role="italic"><code>// Example of creating new colors (purples)</code></emphasis>
+<programlisting language="c++">void palette() {              <emphasis role="italic"><code>// Example of creating new colors (purples)</code></emphasis>
 const Int_t colNum = 10;    <emphasis role="italic"><code>// and defining of a new palette</code></emphasis>
 Int_t palette[colNum];
 for (Int_t i=0; i&lt;colNum; i++) {
@@ -2947,23 +2904,28 @@ f2-&gt;Draw("cont");
 
 <sect1>
 <title>The Graphics Editor</title>
-<para>A new graphics editor took place in ROOT v4.0. The editor can be activated by selecting the Editor menu entry in the canvas View menu or one of the context menu entries for setting line, fill, marker or text attributes. The following object editors are available for the current ROOT version.</para>
+<para>A new graphics editor took place in ROOT v4.0. The editor can be activated
+by selecting the Editor menu entry in the canvas View menu or one of the context
+menu entries for setting line, fill, marker or text attributes. The following
+object editors are available for the current ROOT version.</para>
 
 <sect2>
 <title>TAxisEditor</title>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D5.png" width="75.8pt" depth="162.65pt"/></imageobject></inlinemediaobject></para>
-<para> This user interface gives the possibility for changing the following axis attributes:</para>
-<para>      color of the selected axis, the axis’ title and labels;</para>
-<para>      the length of thick parameters and the possibility to set them on both axis sides</para>
-<para>        (if <code>+-</code>  is selected);</para>
-<para>      to set logarithmic or linear scale along the selected axis with a choice for optimized</para>
-<para>        or more logarithmic labels;</para>
-<para>      primary, secondary and tertiary axis divisions can be set via the three number fields.</para>
-<para>      the axis title can be added or edited and the title’s color, position, offset, size and</para>
-<para>        font can be set interactively;</para>
-<para>      the color, size, and offset of axis labels can be set similarly. In addition, there is a</para>
-<para>        check box for no exponent choice, and another one for setting the same decimal</para>
-<para>        part for all labels.</para>
+  <para> This user interface gives the possibility for changing the following axis attributes:</para>
+  <itemizedlist>
+    <listitem><para>color of the selected axis, the axis’ title and labels;</para></listitem>
+  <listitem><para>the length of thick parameters and the possibility to set them on both axis sides
+    (if <code>+-</code>  is selected);</para></listitem>
+  <listitem><para>to set logarithmic or linear scale along the selected axis with a choice for optimized
+    or more logarithmic labels;</para></listitem>
+    <listitem><para>primary, secondary and tertiary axis divisions can be set via the three number fields;</para></listitem>
+  <listitem><para>the axis title can be added or edited and the title’s color, position, offset, size and
+    font can be set interactively;</para></listitem>
+  <listitem><para>the color, size, and offset of axis labels can be set similarly. In addition, there is a
+        check box for no exponent choice, and another one for setting the same decimal
+        part for all labels.</para></listitem>
+  </itemizedlist>
 </sect2>
 
 <sect2>
@@ -2990,8 +2952,7 @@ f2-&gt;Draw("cont");
 <title>Using the GUI</title>
 <para>In this example we will copy an entire canvas to a new one with <code>DrawClonePad</code>. Run the script <code>draw2dopt.C</code>.</para>
 
-<programlisting language="c++">
-root[] .x tutorials/hist/draw2dopt.C
+<programlisting language="c++">root[] .x tutorials/hist/draw2dopt.C
 </programlisting>
 
 <para>This creates a canvas with 2D histograms. To make a copy of the canvas follow the steps:</para>
@@ -3029,8 +2990,7 @@ root[] .x tutorials/hist/draw2dopt.C
 <title>Programmatically</title>
 <para>To copy and paste the four pads from the command line or in a script you would execute the following statements:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.x tutorials/</code></emphasis><emphasis role="bold"><code>hist/</code></emphasis><emphasis role="bold"><code>draw2dopt.C</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.x tutorials/</code></emphasis><emphasis role="bold"><code>hist/</code></emphasis><emphasis role="bold"><code>draw2dopt.C</code></emphasis>
 root[] <emphasis role="bold"><code>TCanvas c1("c1","Copy Paste",200,200,800,600);</code></emphasis>
 root[] <emphasis role="bold"><code>surfaces-&gt;cd(1);</code></emphasis> <emphasis role="italic"><code>// get the first pad</code></emphasis>
 root[] <emphasis role="bold"><code>TPad</code></emphasis><emphasis role="bold"><code> *p1 = gPad</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
@@ -3039,7 +2999,7 @@ root[] <emphasis role="bold"><code>TPad *p2 = gPad;</code></emphasis>
 root[] <emphasis role="bold"><code>cont-&gt;cd(3);</code></emphasis><emphasis role="italic"><code>// get the next pad</code></emphasis>
 root[] <emphasis role="bold"><code>TPad *p3 = gPad;</code></emphasis>
 root[] <emphasis role="bold"><code>c2h-&gt;cd(4);</code></emphasis><emphasis role="italic"><code>// get the next pad</code></emphasis>
-root[]<emphasis role="bold"><code> TPad *p4 = gPad;</code></emphasis>
+root[] <emphasis role="bold"><code> TPad *p4 = gPad;</code></emphasis>
 root[] <emphasis role="italic"><code>// to draw the four clones</code></emphasis>
 root[] <emphasis role="bold"><code>c1-&gt;cd();</code></emphasis>
 root[] <emphasis role="bold"><code>p1-&gt;DrawClone();</code></emphasis>
@@ -3056,8 +3016,7 @@ root[] <emphasis role="bold"><code>p4-&gt;DrawClone();</code></emphasis>
 <title>Legends</title>
 <para>Legends for a graph are obtained with a <emphasis role="bold"><code>TLegend</code></emphasis> object. This object points to markers, lines, boxes, histograms, graphs and represent their marker, line, fill attributes. Any object that has a marker or line or fill attribute may have an associated legend. A <emphasis role="bold"><code>TLegend</code></emphasis> is a panel with several entries (class <emphasis role="bold"><code>TLegendEntry</code></emphasis>) and is created by the constructor</para>
 
-<programlisting language="c++">
-TLegend(Double_t x1,Double_t y1,Double_t x2,Double_t y2,const char *header,
+<programlisting language="c++">TLegend(Double_t x1,Double_t y1,Double_t x2,Double_t y2,const char *header,
 Option_t *option)
 </programlisting>
 
@@ -3071,8 +3030,7 @@ Option_t *option)
 </itemizedlist>
 <para>The title is a regular entry and supports <emphasis role="bold"><code>TLatex</code></emphasis>. The default is no title (<code>header = 0</code>). The options are the same as for <emphasis role="bold"><code>TPave</code></emphasis>; by default, they are "<code>brNDC</code>". Once the legend box is created, one has to add the text with the <code>AddEntry()</code> method:</para>
 
-<programlisting language="c++">
-TLegendEntry* TLegend::AddEntry(TObject *obj, const char *label,Option_t *option)
+<programlisting language="c++">TLegendEntry* TLegend::AddEntry(TObject *obj, const char *label,Option_t *option)
 </programlisting>
 
 <para>The parameters are:</para>
@@ -3086,14 +3044,12 @@ TLegendEntry* TLegend::AddEntry(TObject *obj, const char *label,Option_t *option
 </itemizedlist>
 <para>One may also use the other form of the method <code>AddEntry</code>:</para>
 
-<programlisting language="c++">
-TLegendEntry* TLegend::AddEntry(const char *name,const char *label,                    Option_t *option)
+<programlisting language="c++">TLegendEntry* TLegend::AddEntry(const char *name,const char *label,                    Option_t *option)
 </programlisting>
 
 <para>Here <code>name</code> is the name of the object in the pad. Other parameters are as in the previous case. Next example shows how to create a legend:</para>
 
-<programlisting language="c++">
-leg = new TLegend(0.4,0.6,0.89,0.89);
+<programlisting language="c++">leg = new TLegend(0.4,0.6,0.89,0.89);
 leg-&gt;AddEntry(fun1,"One Theory","l");
 leg-&gt;AddEntry(fun3,"Another Theory","f");
 leg-&gt;AddEntry(gr,"The Data","p");
@@ -3122,15 +3078,13 @@ leg-&gt;Draw();
 <listitem><para>Select to print the canvas in the PostScript file format from the File menu / Save or Save As menu entries. By default, a PostScript file is generated, if you do not specify the file format.</para></listitem>
 <listitem><para>Click in the canvas area, near the edges, with the right mouse button and select the Print context menu entry. This will generate a file of canvas pointed to by c1. You can select the name of the PostScript file. If the file name is <code>xxx.ps</code>, you will generate a PostScript file named <code>xxx.ps</code>. If the file name is <code>xxx.eps</code>, you generate an encapsulated Postscript file instead. In your program (or script), you can type:</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-<code>c1-&gt;Print("xxx.ps")    </code><emphasis role="italic"><code>// or</code></emphasis>
+<programlisting language="c++"><code>c1-&gt;Print("xxx.ps")    </code><emphasis role="italic"><code>// or</code></emphasis>
 <code>c1-&gt;Print("xxx.eps") </code>
 </programlisting>
 
 <para>Next example prints the picture in the pad pointed by <code>pad1</code>.</para>
 
-<programlisting language="c++">
-<emphasis role="bold">pad1-&gt;Print("xxx.ps")</emphasis>
+<programlisting language="c++"><emphasis role="bold">pad1-&gt;Print("xxx.ps")</emphasis>
 </programlisting>
 
 <para>  The <emphasis role="bold"><code>TPad</code></emphasis><code>::Print </code>method has a second parameter called option. Its value can be:</para>
@@ -3155,8 +3109,7 @@ leg-&gt;Draw();
 <para>You do not need to specify this second parameter; you can indicate by the filename extension what format you want to save a canvas in (i.e. <code>canvas.ps</code>, <code>canvas.gif</code>, <code>canvas.C</code>, etc).</para>
 <para>The size of the PostScript picture, by default, is computed to keep the aspect ratio of the picture on the screen, where the size along <code>x</code> is always 20 cm. You can set the size of the PostScript picture before generating the picture with a command such as:</para>
 
-<programlisting language="c++">
-TPostScript myps("myfile.ps",111)
+<programlisting language="c++">TPostScript myps("myfile.ps",111)
 myps.Range(xsize,ysize);
 object-&gt;Draw();
 myps.Close();
@@ -3173,8 +3126,7 @@ constructor is the name of the file; the second one is the format option:</para>
 </itemizedlist>
 <para>You can set the default paper size with:</para>
 
-<programlisting language="c++">
-gStyle-&gt;SetPaperSize(xsize,ysize);
+<programlisting language="c++">gStyle-&gt;SetPaperSize(xsize,ysize);
 </programlisting>
 
 <para>You can resume writing again in this file with <code>myps.Open()</code>. Note that you may have several Post Script files opened simultaneously. Use <emphasis role="bold"><code>TPostScript</code></emphasis><code>::Text(x,y,"string")</code> to add text to a postscript file. This method writes the string in quotes into a PostScript file at position <code>x, y</code> in world coordinates.</para>
@@ -3199,16 +3151,14 @@ gStyle-&gt;SetPaperSize(xsize,ysize);
 <title>Writing Several Canvases to the Same PostScript File</title>
 <para>The following sequence writes the canvas to "<code>c1.ps</code>" and closes the postscript file:</para>
 
-<programlisting language="c++">
-TCanvas c1("c1");
+<programlisting language="c++">TCanvas c1("c1");
 h1.Draw();
 c1.Print("c1.ps");
 </programlisting>
 
 <para>If the Postscript file name finishes with "<code>(</code>", the file remains opened (it is not closed). If the Postscript file name finishes with "<code>)</code>" and the file has been opened with "<code>(</code>", the file is closed.</para>
 
-<programlisting language="c++">
-<code>{  </code>
+<programlisting language="c++"><code>{  </code>
 <code>   TCanvas c1("c1");</code>
 <code>   h1.Draw();</code>
 <code>   c1.Print("c1.ps(");  </code><emphasis role="italic"><code>// write canvas and keep the ps file open</code></emphasis>
@@ -3221,8 +3171,7 @@ c1.Print("c1.ps");
 
 <para>The <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Print("file.ps(")</code>         mechanism is very useful, but it can be a little inconvenient to have the action of opening/closing a file being atomic with printing a page. Particularly if pages are being generated in some loop, one needs to detect the special cases of first and last page. The "<code>[</code>" and "<code>]</code>" can be used instead of "<code>(</code>" and "<code>)</code>" as shown in the next example.</para>
 
-<programlisting language="c++">
-<code>c1.Print("file.ps[");      </code><emphasis role="italic"><code>// no actual ptint; just open file.ps</code></emphasis>
+<programlisting language="c++"><code>c1.Print("file.ps[");      </code><emphasis role="italic"><code>// no actual ptint; just open file.ps</code></emphasis>
 <code>for (i=0; i&lt;10; ++i) {</code>
 <code>   // fill canvas for context i</code>
 <code>   ...</code>
@@ -3235,8 +3184,7 @@ c1.Print("c1.ps");
 <para/>
 <para/>
 
-<programlisting language="c++">
-<code>{  </code>
+<programlisting language="c++"><code>{  </code>
 <code>   TFile f("hsimple.root");</code>
 <code>   TCanvas c1("c1","canvas",800,600);</code>
 <emphasis role="italic"><code>   //select PostScript  output type</code></emphasis>
@@ -3259,8 +3207,7 @@ c1.Print("c1.ps");
 
 <para>The next example does the same:</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 TFile f("hsimple.root");
 TCanvas c1("c1","canvas",800,600);
 <emphasis role="italic"><code>   //set x,y of printed page</code></emphasis>
@@ -3278,8 +3225,7 @@ TCanvas c1("c1","canvas",800,600);
 
 <para>This following example shows two pages. The canvas is divided. <emphasis role="bold"><code>TPostScript</code></emphasis><code>::NewPage</code> must be called before starting a new picture. <code>object-&gt;Draw</code> does not clear the canvas in this case because we clear only the pads and not the main canvas. Note that <code>c1-&gt;Update</code> must be called at the end of the first picture.</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 TFile *f1 = new TFile("hsimple.root");
 TCanvas *c1 = new TCanvas("c1");
 TPostScript *ps = new TPostScript("file.ps",112);
@@ -3306,8 +3252,7 @@ gSystem-&gt;Exec("gs file.ps");
 
 <para>The next one does the same:</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 TFile *f1 = new TFile("hsimple.root");
 TCanvas *c1 = new TCanvas("c1");
 c1-&gt;Divide(2,1);
@@ -3342,14 +3287,12 @@ gSystem-&gt;Exec("gs file.ps");  <emphasis role="italic"><code>// invoke PostScr
 </itemizedlist>
 <para>The "<code>Default</code>" style is created by:</para>
 
-<programlisting language="c++">
-TStyle *default = new TStyle("Default","Default Style");
+<programlisting language="c++">TStyle *default = new TStyle("Default","Default Style");
 </programlisting>
 
 <para>The "<code>Plain</code>" style can be used if you want to get a "conventional" PostScript output or if you are working on a monochrome display. The following example shows how to create it.</para>
 
-<programlisting language="c++">
-TStyle *plain  = new TStyle("Plain","Plain Style(no colors/fill areas)");
+<programlisting language="c++">TStyle *plain  = new TStyle("Plain","Plain Style(no colors/fill areas)");
 plain-&gt;SetCanvasBorderMode(0);
 plain-&gt;SetPadBorderMode(0);
 plain-&gt;SetPadColor(0);
@@ -3360,8 +3303,7 @@ plain-&gt;SetStatColor(0);
 
 <para>You can set the current style by:</para>
 
-<programlisting language="c++">
-gROOT-&gt;SetStyle(style_name);
+<programlisting language="c++">gROOT-&gt;SetStyle(style_name);
 </programlisting>
 
 <para>You can get a pointer to an existing style by:</para>
@@ -3372,16 +3314,14 @@ TStyle *style = gROOT-&gt;GetStyle(style_name);
 
 <para>You can create additional styles by:</para>
 
-<programlisting language="c++">
-TStyle *st1 = new TStyle("st1","my style");
+<programlisting language="c++">TStyle *st1 = new TStyle("st1","my style");
 st1-&gt;Set...
 st1-&gt;cd();<emphasis role="italic"><code>  // this becomes now the current style gStyle</code></emphasis>
 </programlisting>
 
 <para>In your <code>rootlogon.C</code> file, you can redefine the default parameters via statements like:</para>
 
-<programlisting language="c++">
-gStyle-&gt;SetStatX(0.7);
+<programlisting language="c++">gStyle-&gt;SetStatX(0.7);
 gStyle-&gt;SetStatW(0.2);
 gStyle-&gt;SetLabelOffset(1.2);
 gStyle-&gt;SetLabelFont(72);
@@ -3389,14 +3329,12 @@ gStyle-&gt;SetLabelFont(72);
 
 <para>Note that when an object is created, its attributes are taken from the current style. For example, you may have created a histogram in a previous session and saved it in a file. Meanwhile, if you have changed the style, the histogram will be drawn with the old attributes. You can force the current style attributes to be set when you read an object from a file by calling <code>ForceStyle</code> before reading the objects from the file.</para>
 
-<programlisting language="c++">
-gROOT-&gt;ForceStyle();
+<programlisting language="c++">gROOT-&gt;ForceStyle();
 </programlisting>
 
 <para>When you call <code>gROOT-&gt;ForceStyle()</code> and read an object from a ROOT file, the object’s method <code>UseCurrentStyle</code> is called. The attributes saved with the object are replaced by the current style attributes. You call also call <code>myObject-&gt;UseCurrentStyle()</code>         directly. For example if you have a canvas or pad with your histogram or any other object, you can force these objects to get the attributes of the current style by:</para>
 
-<programlisting language="c++">
-canvas-&gt;UseCurrentStyle();
+<programlisting language="c++">canvas-&gt;UseCurrentStyle();
 </programlisting>
 
 <para>The description of the style functions should be clear from the name of the <emphasis role="bold"><code>TStyle</code></emphasis> setters or getters. Some functions have an extended description, in particular:</para>
@@ -3432,8 +3370,7 @@ canvas-&gt;UseCurrentStyle();
 <title>Invoking a 3D viewer</title>
 <para>A 3D viewer can be created in a script by passing the appropriate option to <code>Draw() </code>when attaching the drawn object(s) to a pad. For a fuller explanation of pads, attaching objects with <code>Draw()</code> etc. refer to “Graphical Containers: Canvas and Pad”.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myShapes-&gt;Draw(“ogl”);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myShapes-&gt;Draw(“ogl”);</code></emphasis>
 </programlisting>
 
 <para>Valid option strings are:</para>
@@ -3488,14 +3425,12 @@ root[] <emphasis role="bold"><code>myShapes-&gt;Draw(“ogl”);</code></emphasi
 <para>Orthographic projections are generally constrained to look down one of the global axes of the world, with the other two axes lying horizontal/vertical on the viewer window. Therefore, XOY has the X-axis horizontal, the Y-axis vertical. You can always confirm the orientation and constraints of the camera in the world by enabling axis drawing in the “Guides” tab – see sections “Guides” and “Clipping” below. For orthographic camera a ruler-depicting current scene units is also available.</para>
 <para>You can also pick the current camera by obtaining a handle to the GL Viewer object behind the interface:</para>
 
-<programlisting language="c++">
-TGLViewer * v = (TGLViewer *)gPad-&gt;GetViewer3D();
+<programlisting language="c++">TGLViewer * v = (TGLViewer *)gPad-&gt;GetViewer3D();
 </programlisting>
 
 <para>calling the method <emphasis role="bold"><code>TGLViewer</code></emphasis><code>::SetCurrentCamera</code> with one of the <emphasis role="bold"><code>TGLViewer</code></emphasis><code>::ECameraType</code> types:</para>
 
-<programlisting language="c++">
-v-&gt;SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
+<programlisting language="c++">v-&gt;SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 </programlisting>
 
 <para>See also <code>$ROOTSYS/tutorials/gl/glViewerExercise.C</code>.</para>
@@ -3533,8 +3468,7 @@ v-&gt;SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 </itemizedlist>
 <para>Configure the camera by calling the methods <code>SetPerspectiveCamera(</code>) or <code>SetOrthographicCamera()</code> of <emphasis role="bold"><code>TGLViewer</code></emphasis>:</para>
 
-<programlisting language="c++">
-TGLViewer * v = (TGLViewer *)gPad-&gt;GetViewer3D();
+<programlisting language="c++">TGLViewer * v = (TGLViewer *)gPad-&gt;GetViewer3D();
 v-&gt;SetOrthoCamera(TGLViewer::kCameraOrthoXOY,left,right,top,bottom);
 ...
 v-&gt;SetPerspectiveCamera (camera,fov,dolly,center,hRotate,vRotate);
@@ -3562,8 +3496,7 @@ Black background.         Black background.   White background.
 </para>
 <para>Call method <emphasis role="bold"><code>TGLViewer</code></emphasis><code>::SetStyle</code> with one of <emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>RnrCtx</code></emphasis><code>::EDrawStyle </code>flags <code>kFill</code>, <code>kOutline</code>, <code>kWireFrame</code>:</para>
 
-<programlisting language="c++">
-v-&gt;SetStyle(TGLRnrCtx::kFill);
+<programlisting language="c++">v-&gt;SetStyle(TGLRnrCtx::kFill);
 </programlisting>
 
 </sect3>
@@ -3574,8 +3507,7 @@ v-&gt;SetStyle(TGLRnrCtx::kFill);
 <para>Light controls are located: Viewer Controls Pane  ‘Style’.</para>
 <para>Each light has a checkbox to enable/disable it. Set lights on/off with <emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>LightSet</code></emphasis><code>::SetLight</code> e.g.</para>
 
-<programlisting language="c++">
-v-&gt;GetLightSet()-&gt;SetLight(<emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>LightSet</code></emphasis>::kLightBottom, kFALSE);
+<programlisting language="c++">v-&gt;GetLightSet()-&gt;SetLight(<emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>LightSet</code></emphasis>::kLightBottom, kFALSE);
 </programlisting>
 
 </sect3>
@@ -3613,14 +3545,12 @@ v-&gt;GetLightSet()-&gt;SetLight(<emphasis role="bold"><code>TGL</code></emphasi
 </itemizedlist>
 <para>Set the current clip object with <emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>ClipSet</code></emphasis><code>::SetClipType</code></para>
 
-<programlisting language="c++">
-v-&gt;GetClipSet()-&gt;SetClipType(<emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>ClipSet</code></emphasis>::kClipPlane);
+<programlisting language="c++">v-&gt;GetClipSet()-&gt;SetClipType(<emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>ClipSet</code></emphasis>::kClipPlane);
 </programlisting>
 
 <para>Configure the clip object with <emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>ClipSet</code></emphasis><code>::SetClipState</code></para>
 
-<programlisting language="c++">
-Double_t planeEq[4] = {0.5,1.0,-1.0, 2.0};
+<programlisting language="c++">Double_t planeEq[4] = {0.5,1.0,-1.0, 2.0};
 v-&gt;GetClipSet()-&gt;SetClipState(<emphasis role="bold"><code>TGL</code></emphasis><emphasis role="bold"><code>ClipSet</code></emphasis>::kClipPlane, planeEq);
 </programlisting>
 
@@ -3655,8 +3585,7 @@ v-&gt;GetClipSet()-&gt;SetClipState(<emphasis role="bold"><code>TGL</code></emph
 <para>A single orange sphere of fixed view port (window) size can be shown at any arbitrary position. Enable / disable the drawing with ‘<emphasis role="italic">Show’</emphasis> checkbox. Enter X/Y/Z position in the edit boxes to set position. Initial position is at the center of the scene.</para>
 <para>Set the guides using <emphasis role="bold"><code>TGLViewer</code></emphasis><code>::SetGuideState</code> e.g. to enable edge axes, and enable a reference marker at world position 50, 60, 100:</para>
 
-<programlisting language="c++">
-Double_t refPos[3] = {50.0,60.0,100.0};
+<programlisting language="c++">Double_t refPos[3] = {50.0,60.0,100.0};
 v-&gt;SetGuideState(TGLUtil::kAxesEdge, kTRUE, refPos);
 </programlisting>
 
@@ -3767,8 +3696,7 @@ shape.GetBuffer3D(reqSections, localFrame);
 <title>Creating / Obtaining Viewer Handle</title>
 <para>External viewers are bound to a <emphasis role="bold"><code>TPad</code></emphasis> object (this may be removed as a requirement in the future). You can create or obtain the current viewer handle via the method:</para>
 
-<programlisting language="c++">
-TVirtualViewer3D * v = gPad-&gt;GetViewer3D("type");
+<programlisting language="c++">TVirtualViewer3D * v = gPad-&gt;GetViewer3D("type");
 </programlisting>
 
 <para>Here the “type” string defines the viewer type – currently one of:</para>
@@ -3779,26 +3707,29 @@ TVirtualViewer3D * v = gPad-&gt;GetViewer3D("type");
 </itemizedlist>
 <para>If no type is passed (null string), and there is no current viewer, then the type is defaulted to “<code>pad</code>”. If no type is passed and there is a current viewer, then this is returned – hence once a viewer is created it can be obtained elsewhere by:</para>
 
-<programlisting language="c++">
-TVirtualViewer3D * v = gPad-&gt;GetViewer3D();
+<programlisting language="c++">TVirtualViewer3D * v = gPad-&gt;GetViewer3D();
 </programlisting>
 
 </sect3>
 
 <sect3>
 <title>Opening / Closing Scenes</title>
-<para>Objects must be added to viewer between <code>BeginScene() </code>and         <code>EndScene()</code> calls e.g.</para>
+<para>Objects must be added to viewer between <code>BeginScene()</code> and
+<code>EndScene()</code> calls e.g.</para>
 
-<programlisting language="c++">
-viewer -&gt;<code> BeginScene</code>();
-<emphasis role="italic"><code>// Add objects</code></emphasis>
-viewer -&gt;         <code>EndScene</code>();
+<programlisting language="c++">viewer-&gt;BeginScene();
+<emphasis role="italic">// Add objects</emphasis>
+viewer -&gt;EndScene();
 </programlisting>
 
-<para>These calls enable the viewer to suspend redraws, and perform internal caching/setup. If the object you attach to the pad derives from <emphasis role="bold"><code>TAtt3D</code></emphasis>, then the pad will take responsibility for calling <code>BeginScene()</code> and <code>EndScene()</code> for you. You can always test if the scene is already open for object addition with:</para>
+<para>These calls enable the viewer to suspend redraws, and perform internal
+caching/setup. If the object you attach to the pad derives from
+<emphasis role="bold"><code>TAtt3D</code></emphasis>, then the pad will take
+responsibility for calling <code>BeginScene()</code> and <code>EndScene()</code>
+for you. You can always test if the scene is already open for object addition
+with:</para>
 
-<programlisting language="c++">
-viewer-&gt;BuildingScene();
+<programlisting language="c++">viewer-&gt;BuildingScene();
 </programlisting>
 
 <figure><title>Overview of 3D viewer architecture</title>
@@ -3829,10 +3760,10 @@ viewer-&gt;BuildingScene();
 <para/>
 <para><emphasis role="bold"><code>TBuffer3D</code></emphasis> classes are conceptually divided into enumerated sections: <code>kCore</code>, <code>kBoundingBox</code>, <code>kRaw</code> – see the class diagram and the file <code>TBuffer3D.h</code> for more details. The <emphasis role="bold"><code>TBuffer3D</code></emphasis> methods <code>SectionsValid()</code>, <code>SetSectionsValid()</code>, <code>ClearSectionsValid()</code> are used to test, set, clear these section validity flags e.g.</para>
 
-<programlisting language="c++">
-buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
-<code>…</code>if (buffer.SectionsValid(TBuffer3D:: kShapeSpecific)) {
+<programlisting language="c++">buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
 …
+if (buffer.SectionsValid(TBuffer3D:: kShapeSpecific)) {
+   …
 }
 </programlisting>
 
@@ -3846,8 +3777,7 @@ buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
 </itemizedlist>
 <para>If the viewer requires more sections to be completed (<code>kRaw/kRawSizes</code>) <emphasis role="bold"><code>TBuffer3D</code></emphasis><code>::AddObject()</code> will return flags indicating which ones, otherwise it returns <code>kNone</code>. If requested, you must fill the buffer, mark these sections valid, and call <emphasis role="bold"><code>TBuffer3D</code></emphasis><code>::AddObject</code> again, to complete adding the object. For example, in out <emphasis role="bold"><code>TGeo</code></emphasis> geometry package, in <emphasis role="bold"><code>TGeoPainter</code></emphasis><code>::PaintShape</code>, we perform the negotiation with viewer:</para>
 
-<programlisting language="c++">
-TVirtualViewer3D * viewer = gPad-&gt;GetViewer3D();
+<programlisting language="c++">TVirtualViewer3D * viewer = gPad-&gt;GetViewer3D();
 if (shape.IsA() != TGeoCompositeShape::Class()) {
 <emphasis role="italic"><code>   // Does viewer prefer local frame positions?</code></emphasis>
 Bool_t localFrame = viewer-&gt;PreferLocalFrame();
@@ -3868,8 +3798,7 @@ viewer-&gt;AddObject(buffer, &amp;addDaughters);
 
 <para>The buffer is supplied/filled by the appropriate <emphasis role="bold"><code>TShape</code></emphasis><code>::GetBuffer3D()</code> and <emphasis role="bold"><code>TShape</code></emphasis><code>::FillBuffer3D</code> overloads e.g. for a sphere in <emphasis role="bold"><code>TGeoSphere</code></emphasis>.</para>
 
-<programlisting language="c++">
-const TBuffer3D &amp;TGeoSphere::GetBuffer3D(Int_t reqSections,
+<programlisting language="c++">const TBuffer3D &amp;TGeoSphere::GetBuffer3D(Int_t reqSections,
 Bool_t localFrame) const {
 <emphasis role="italic"><code>   // Fills a static 3D buffer and returns a reference.</code></emphasis>
 static TBuffer3DSphere buffer;
@@ -3939,8 +3868,7 @@ return buffer;
 <para>You are not obliged to complete the <code>kBoundingBox</code> section, as any viewer requiring one internally (GL Viewer) will build it if you do not provide. However to do this the viewer will force you to provide the (expensive) raw tessellation, and the resulting box will be axis aligned with the overall scene, which is non-ideal for rotated shapes. As we need to support orientated (rotated) bounding boxes, <emphasis role="bold"><code>TBuffer3D</code></emphasis> requires the 6 vertices of the box. We also provide a convenience function, <emphasis role="bold"><code>TBuffer</code></emphasis><code>::SetAABoundingBox()</code>, for simpler case of setting an axis aligned bounding box. The bounding box should be filled in same frame (local / master) as the rest of the <emphasis role="bold"><code>TBuffer3D</code></emphasis>, and inaccordance with <code>fLocalFrame</code> flag.</para>
 <para>A typical example from TGeoBBox::FillBuffer3D:</para>
 
-<programlisting language="c++">
-if (reqSections &amp; TBuffer3D::kBoundingBox) {
+<programlisting language="c++">if (reqSections &amp; TBuffer3D::kBoundingBox) {
 Double_t halfLengths[3] = { fDX, fDY, fDZ };
 buffer.SetAABoundingBox(fOrigin, halfLengths);
 if (!buffer.fLocalFrame) {
@@ -3987,8 +3915,7 @@ buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
 <title>Physical IDs</title>
 <para>TVirtualViewer3D provides for two methods of object addition:</para>
 
-<programlisting language="c++">
-virtual Int_t AddObject(const TBuffer3D &amp;buffer, Bool_t * addChildren = 0)
+<programlisting language="c++">virtual Int_t AddObject(const TBuffer3D &amp;buffer, Bool_t * addChildren = 0)
 virtual Int_t AddObject(UInt_t physicalID, const TBuffer3D &amp; buffer,
 Bool_t *addChildren = 0)
 </programlisting>
