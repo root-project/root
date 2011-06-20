@@ -622,8 +622,12 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4)) ) {
+           strncmp(url.GetProtocol(),"rfio", 4) &&
+           strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
+      } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
+         host = "localhost";
+         url.SetProtocol("root");
       } else {
          host = url.GetHostFQDN();
       }
@@ -717,16 +721,17 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
       PDB(kPacketizer,2)
+         Info("TPacketizerAdaptive", "processing element '%s'", e->GetFileName());
+      PDB(kPacketizer,2)
          Info("TPacketizerAdaptive",
-              "processing element: first %lld, num %lld (cur %lld)", eFirst, eNum, cur);
+              " --> first %lld, elenum %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()) {
          // this element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive",
-                    "processing element: skip element cur %lld", cur);
+               Info("TPacketizerAdaptive", " --> skip element cur %lld", cur);
             continue;
          }
 
@@ -734,34 +739,37 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
             PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive",
-                    "processing element: drop element cur %lld", cur);
+               Info("TPacketizerAdaptive", " --> drop element cur %lld", cur);
             continue; // break ??
          }
 
-         // If this element contains the end of the global range
-         // adjust its number of entries
-         if (num != -1 && (first+num <= cur+eNum)) {
-            e->SetNum( first + num - cur );
-            PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive",
-                    "processing element: adjust end %lld", first + num - cur);
-            cur += eNum;
-            eNum = e->GetNum();
-         }
-
-         // If this element contains the start of the global range
-         // adjust its start and number of entries
          if (cur <= first) {
+            // If this element contains the start of the global range
+            // adjust its start and number of entries
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
             PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive",
-                    "processing element: adjust start %lld and end %lld",
+               Info("TPacketizerAdaptive", " --> adjust start %lld and end %lld",
                     eFirst + (first - cur), first + num - cur);
             cur += eNum;
             eNum = e->GetNum();
+
+         } else  if (num != -1 && (first+num <= cur+eNum)) {
+            // If this element contains the end of the global range
+            // adjust its number of entries
+            e->SetNum( first + num - cur );
+            PDB(kPacketizer,2)
+               Info("TPacketizerAdaptive", " --> adjust end %lld", first + num - cur);
+            cur += eNum;
+            eNum = e->GetNum();
+
+         } else {
+            // Increment the counter ...
+            PDB(kPacketizer,2)
+               Info("TPacketizerAdaptive", " --> increment 'cur' by %lld", eNum);
+            cur += eNum;
          }
+
       } else {
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
@@ -774,15 +782,18 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
             continue;
       }
       PDB(kPacketizer,2)
-         Info("TPacketizerAdaptive",
-              "processing element: next cur %lld", cur);
+         Info("TPacketizerAdaptive", " --> next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
-           strncmp(url.GetProtocol(),"rfio", 4)) ) {
+           strncmp(url.GetProtocol(),"rfio", 4) &&
+           strncmp(url.GetProtocol(),"file", 4)) ) {
          host = "no-host";
+      } else if ( url.IsValid() && !strncmp(url.GetProtocol(),"file", 4)) {
+         host = "localhost";
+         url.SetProtocol("root");
       } else {
          host = url.GetHostFQDN();
       }
@@ -818,10 +829,10 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          node = new TFileNode(nodeStr, fStrategy, fFilesToProcess);
          fFileNodes->Add( node );
          PDB(kPacketizer, 2)
-            Info("TPacketizerAdaptive", "creating new node '%s' for element", nodeStr.Data());
+            Info("TPacketizerAdaptive", " --> creating new node '%s' for element", nodeStr.Data());
       } else {
          PDB(kPacketizer, 2)
-            Info("TPacketizerAdaptive", "adding element to exiting node '%s'", nodeStr.Data());
+            Info("TPacketizerAdaptive", " --> adding element to exiting node '%s'", nodeStr.Data());
       }
 
       ++files;
