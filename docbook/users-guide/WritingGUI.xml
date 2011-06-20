@@ -129,8 +129,6 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
 void MyMainFrame::DoDraw() {
    <emphasis role="italic">// Draws function graphics in randomly choosen interval</emphasis>
    TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom-&gt;Rndm()*10);
-   f1-&gt;SetFillColor(19);
-   f1-&gt;SetFillStyle(1);
    f1-&gt;SetLineWidth(3);
    f1-&gt;Draw();
    TCanvas *fCanvas = fEcanvas-&gt;GetCanvas();
