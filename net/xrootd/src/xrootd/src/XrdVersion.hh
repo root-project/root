@@ -4,7 +4,7 @@
 #ifndef __XRD_VERSION_H__
 #define __XRD_VERSION_H__
 
-#define XrdVERSION  "v3.0.3"
+#define XrdVERSION  "v3.0.4"
 
 #if XrdDEBUG
 #define XrdVSTRING XrdVERSION "_dbg"

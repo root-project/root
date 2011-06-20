@@ -801,8 +801,10 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
                     if (!(pmask = Sel.Vec.hf & amask))    return SelFail(Sel,eROfs);
                     smask = 0;
                    }
-           else if (Sel.Opts & XrdCmsSelect::Trunc) {pmask = amask; smask = 0;}
-           else    pmask = ((smask = pinfo.ssvec & amask) ? 0 : amask);
+           else if (Sel.Opts & (XrdCmsSelect::Trunc | XrdCmsSelect::NewFile))
+                   {pmask = amask; smask = 0;}
+           else if ((smask = pinfo.ssvec & amask)) pmask = 0;
+           else pmask = smask = 0;
           } else {
            pmask = Sel.Vec.hf  & amask; 
            if (Sel.Opts & XrdCmsSelect::Online) {pmask &= ~Sel.Vec.pf; smask=0;}

@@ -27,4 +27,5 @@ libXrdPss_la_LIBADD =    ../XrdClient/libXrdClient.la \
                         ../XrdOuc/libXrdOuc.la \
                         ../XrdSec//libXrdSec.la \
                         ../XrdSecsss//libXrdSecsss.la \
-                        ../XrdSys/libXrdSys.la
+                        ../XrdSys/libXrdSys.la \
+                        ../XrdPosix/libXrdPosix.la

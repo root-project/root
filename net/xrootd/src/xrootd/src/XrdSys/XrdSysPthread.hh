@@ -195,6 +195,77 @@ XrdSysMutex *mtx;
 };
 
 /******************************************************************************/
+/*                           X r d S y s R W L o c k                          */
+/******************************************************************************/
+
+// XrdSysRWLock implements the standard POSIX wrlock mutex. The methods correspond
+//             to the equivalent pthread wrlock functions.
+  
+class XrdSysRWLock
+{
+public:
+
+inline int CondReadLock()
+       {if (pthread_rwlock_tryrdlock( &lock )) return 0;
+        return 1;
+       }
+inline int CondWriteLock()
+       {if (pthread_rwlock_trywrlock( &lock )) return 0;
+        return 1;
+       }
+
+inline void  ReadLock() {pthread_rwlock_rdlock(&lock);}
+inline void  WriteLock() {pthread_rwlock_wrlock(&lock);}
+
+inline void UnLock() {pthread_rwlock_unlock(&lock);}
+
+        XrdSysRWLock() {pthread_rwlock_init(&lock, NULL);}
+       ~XrdSysRWLock() {pthread_rwlock_destroy(&lock);}
+
+protected:
+
+pthread_rwlock_t lock;
+};
+
+/******************************************************************************/
+/*                     X r d S y s W R L o c k H e l p e r                    */
+/******************************************************************************/
+
+// XrdSysWRLockHelper : helper class for XrdSysRWLock
+  
+class XrdSysRWLockHelper
+{
+public:
+
+inline void   Lock(XrdSysRWLock *lock, bool rd = 1)
+                  {if (lck) {if (lck != lock) lck->UnLock();
+                                else return;
+                            }
+                   if (rd) lock->ReadLock();
+                      else lock->WriteLock();
+                   lck = lock;
+                  };
+
+inline void UnLock() {if (lck) {lck->UnLock(); lck = 0;}}
+
+            XrdSysRWLockHelper(XrdSysRWLock *l=0, bool rd = 1)
+                 { if (l) {if (rd) l->ReadLock();
+                              else l->WriteLock();
+                          }
+                   lck = l;
+                 }
+            XrdSysRWLockHelper(XrdSysRWLock &l, bool rd = 1)
+                 { if (rd) l.ReadLock();
+                      else l.WriteLock();
+                   lck = &l;
+                 }
+
+           ~XrdSysRWLockHelper() {if (lck) UnLock();}
+private:
+XrdSysRWLock *lck;
+};
+
+/******************************************************************************/
 /*                       X r d S y s S e m a p h o r e                        */
 /******************************************************************************/
 

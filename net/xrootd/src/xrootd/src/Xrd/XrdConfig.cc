@@ -8,10 +8,6 @@
 /*                DE-AC03-76-SFO0515 with the Deprtment of Energy             */
 /******************************************************************************/
 
-//         $Id$
-
-const char *XrdConfigCVSID = "$Id$";
-
 /*
    The default port number comes from:
    1) The command line option,
@@ -206,7 +202,7 @@ int XrdConfig::Configure(int argc, char **argv)
    const char *xrdInst="XRDINSTANCE=";
 
    static sockaddr myIPAddr;
-   int n, retc, dotrim = 1, NoGo = 0, aP = 1, clPort = -1, optbg = 0;
+   int n, retc, NoGo = 0, aP = 1, clPort = -1, optbg = 0;
    const char *temp;
    char c, buff[512], *dfltProt, *logfn = 0;
    long long logkeep = 0;
@@ -222,6 +218,17 @@ int XrdConfig::Configure(int argc, char **argv)
     retc = strlen(argv[0]);
     while(retc--) if (argv[0][retc] == '/') break;
     myProg = dfltProt = &argv[0][retc+1];
+
+// Setup the initial required protocol. The program name matches the protocol
+// name but may be arbitrarily suffixed. We need to ignore this suffix. So we
+// look for it here and it it exists we duplicate argv[0] (yes, loosing some
+// bytes - sorry valgrind) without the suffix.
+//
+   if (*dfltProt != '.' )
+      {char *p = dfltProt;
+       while (*p && *p != '.') p++;
+       if (*p == '.') {*p = '\0'; dfltProt = strdup(dfltProt); *p = '.';}
+      }
 
 // Process the options
 //
@@ -254,11 +261,12 @@ int XrdConfig::Configure(int argc, char **argv)
        case 'l': if (logfn) free(logfn);
                  logfn = strdup(optarg);
                  break;
-       case 'n': myInsName = optarg;
+       case 'n': myInsName = (!strcmp(optarg,"anon")||!strcmp(optarg,"default")
+                           ? 0 : optarg);
                  break;
        case 'p': if ((clPort = yport(&XrdLog, "tcp", optarg)) < 0) Usage(1);
                  break;
-       case 'P': dfltProt = optarg; dotrim = 0;
+       case 'P': dfltProt = optarg;
                  break;
        case 'R': if (!(getUG(optarg, myUid, myGid))) Usage(1);
                  break;
@@ -365,13 +373,8 @@ int XrdConfig::Configure(int argc, char **argv)
    XrdLog.Say(0, "Scalla is starting. . .");
    XrdLog.Say(XrdBANNER);
 
-// Setup the initial required protocol
+// Setup the initial required protocol.
 //
-   if (dotrim && *dfltProt != '.' )
-      {char *p = dfltProt;
-       while (*p && *p != '.') p++;
-       if (*p == '.') *p = '\0';
-      }
    Firstcp = Lastcp = new XrdConfigProt(strdup(dfltProt), 0, 0);
 
 // Process the configuration file, if one is present

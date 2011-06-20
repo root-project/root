@@ -32,7 +32,7 @@ OBJECTS = $(OBJLIB) $(OBJBIN)
 
 LIBRARY = $(LIBDIR)/libXrdFfs.a
 
-BINARY  = $(BINDIR)/xrootdfsd
+BINARY  = $(BINDIR)/xrootdfs
 
 BINDEPS = \
           $(LIBDIR)/libXrdFfs.a \

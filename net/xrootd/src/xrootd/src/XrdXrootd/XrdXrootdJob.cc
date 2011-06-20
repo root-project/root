@@ -99,7 +99,7 @@ XrdXrootdJob2Do::XrdXrootdJob2Do(XrdXrootdJob      *job,
 {
    int i;
    for (i = 0; i < 5 && args[i]; i++) theArgs[i] = strdup(args[i]);
-   for (; i < 5; i++)                 theArgs[i] = (char *)0;
+   for (i = i; i < 5; i++)            theArgs[i] = (char *)0;
    theJob     = job;
    JobNum     = jnum;
    JobMark    = 0;

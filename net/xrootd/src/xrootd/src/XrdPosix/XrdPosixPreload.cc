@@ -8,10 +8,6 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//           $Id$
-
-const char *XrdPosixPreloadCVSID = "$Id$";
-
 #include <sys/types.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -153,7 +149,8 @@ int     fcntl64(int fd, int cmd, ...)
 /******************************************************************************/
 /*                             f d a t a s y n c                              */
 /******************************************************************************/
-  
+// On Mac it is the same as fsync
+#if !defined(__macos__)
 extern "C"
 {
 int     fdatasync(int fildes)
@@ -163,6 +160,7 @@ int     fdatasync(int fildes)
    return XrdPosix_Fdatasync(fildes);
 }
 }
+#endif
 
 /******************************************************************************/
 /*                                f f l u s h                                 */

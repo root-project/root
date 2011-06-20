@@ -26,6 +26,8 @@ xrootdfrmincdir = $(includedir)/xrootd/XrdFrm
 ## deliverables
 
 bin_PROGRAMS = frm_admin frm_purged frm_xfragent frm_xfrd
+man8_MANS = ../../docs/man/frm_admin.8  ../../docs/man/frm_purged.8 \
+            ../../docs/man/frm_xfragent.8 ../../docs/man/frm_xfrd.8
 
 xrootdfrminc_HEADERS = XrdFrmAdmin.hh   \
                        XrdFrmCID.hh     \

@@ -180,7 +180,7 @@ static int sniffOutstandingFailedWriteReq(kXR_unt16 sid,
     // If it went into timeout or got a negative response
     // we add this req to the vector
     if ( (time(0) - p.sendtime > EnvGetLong(NAME_REQUESTTIMEOUT)) ||
-	 (p.rspstatuscode != kXR_ok) ) {
+	 (p.rspstatuscode != kXR_ok) || (p.rsperrno != kXR_noErrorYet) ) {
       data->reqs->Push_back(p.outstandingreq);
 
       // And we release the failed sid

@@ -68,7 +68,7 @@ ssize_t Write(const void *, off_t, size_t);
 int     Write(XrdSfsAio *aiop);
  
          // Constructor and destructor
-         XrdPssFile(const char *tid) {fd = -1; tident = tid;}
+         XrdPssFile(const char *tid) : tident(tid) {fd = -1;}
 
 virtual ~XrdPssFile() {if (fd >= 0) Close();}
 
@@ -121,6 +121,7 @@ static const char  *urlPlain;
 static int          urlPlen;
 static int          hdrLen;
 static const char  *hdrData;
+static const char  *urlRdr;
 static int          Workers;
 
 static char         allChmod;
@@ -129,6 +130,8 @@ static char         allMv;
 static char         allRmdir;
 static char         allRm;
 static char         allTrunc;
+
+static char         cfgDone;   // Configuration completed
 
          XrdPssSys() {}
 virtual ~XrdPssSys() {}
@@ -144,6 +147,8 @@ int    Configure(const char *);
 int    ConfigProc(const char *ConfigFN);
 int    ConfigXeq(char*, XrdOucStream&);
 int    ConfigN2N();
+int    xcach(XrdSysError *Eroute, XrdOucStream &Config);
+char  *xcapr(XrdSysError *Eroute, XrdOucStream &Config, char *pBuff);
 int    xconf(XrdSysError *Eroute, XrdOucStream &Config);
 int    xorig(XrdSysError *errp,   XrdOucStream &Config);
 int    xsopt(XrdSysError *Eroute, XrdOucStream &Config);

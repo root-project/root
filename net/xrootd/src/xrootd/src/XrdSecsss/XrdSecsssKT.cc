@@ -605,7 +605,7 @@ while((tp = kTab.GetToken()) && !Prob)
                 {Dest = (char *)&(ktNew->Data) + ktDesc[i].Offset;
                  Have |= ktDesc[i].What; What = ktDesc[i].Name;
                  if (ktDesc[i].Ctl)
-                    {if ((int)strlen(tp) >= ktDesc[i].Ctl) Prob=" is too long";
+                    {if ((int)strlen(tp) > ktDesc[i].Ctl) Prob=" is too long";
                         else if (Tag == 'k') keyX2B(ktNew, tp);
                                 else strcpy(Dest, tp);
                     } else {

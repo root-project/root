@@ -1,0 +1,190 @@
+.TH xrdcp 1 "8 March 2011"
+.SH NAME
+xrdcp - copy files
+.SH SYNOPSIS
+.nf
+
+\fBxrdcp\fR [\fIoptions\fR] \fIsource\fR \fIdestination\fR
+
+\fIoptions\fR: [\fB-adler\fR] [\fB-d\fR \fIlvl\fR] [\fB-D\fIproxyaddr\fB:\fIproxyport\fR]
+[\fB-DS\fR\fIpname stringval\fR] [\fB-DI\fR\fIpname numberval\fR] [\fB-f\fR] [\fB-F\fR]
+[\fB-force\fR] [\fB-h\fR] [\fB-md5\fR] [\fB-ML \fIlibname\fR] [\fB-np\fR] [\fB-OD\fR\fIopaqueinfo\fR]
+[\fB-OS\fR\fIopaqueinfo\fR] [\fB-P\fR] [\fB-R\fR] [\fB-s\fR] [\fB-S \fInum\fR] [\fB-v\fR] [\fB-version\fR]
+[\fB-x\fR] [\fB-X \fIrdr\fR]
+
+.fi
+.br
+.ad l
+.SH DESCRIPTION
+The \fBxrdcp\fR utility copies one or more files from one location to
+another. The data source and destination may be a local
+or remote file or directory.  Additionally, the data source may also reside
+on multiple servers.
+.SH OPTIONS
+\fB-adler\fR
+.RS 5
+calculate the adler32 checksum during transfers.
+This option may not be available on all platforms.
+
+.RE
+\fB-d\fR \fIlvl\fR
+.RS 5
+debug level: 1 (low), 2 (medium), 3 (high)
+
+.RE
+\fB-D\fIproxyaddr\fB:\fIproxyport\fR
+.RS 5
+use \fIproxyaddr\fB:\fIproxyport\fR as a SOCKS4 proxy. Only numerical addresses are supported.
+
+.RE
+\fB-DS\fR\fIpname stringval\fR
+.RS 5
+set the internal parameter \fIpname\fR with the string value \fIstringval\fR.
+
+.RE
+\fB-DI\fR\fIpname numberval\fR
+.RS 5
+set the internal parameter \fIpname\fR with the numeric value \fInumberval\fR.
+
+.RE
+\fB-f\fR   re-create a file if already present.
+
+.HP
+\fB-F\fR   set the 'force' flag for xrootd dest file opens (ignore
+if file is already opened).
+
+.RE
+\fB-force\fR
+.RS 5
+set 1-min (re)connect attempts to retry for up to 1
+week, to block until xrdcp is executed.
+
+.RE
+\fB-h\fR   display usage information.
+
+\fB-md5\fR calculate the md5 sum during transfers.
+
+\fB-ML \fIlibname\fR
+.RS 5
+use \fIlibname\fR as the external monitoring reporting library. The default
+name is "XrdCpMonitorClient.so". Make sure it is reachable.
+
+.RE
+\fB-np\fR   no progress bar.
+
+\fB-OD\fR\fIopaqueinfo\fR
+.RS 5
+add opaque information \fIopaqueinfo\fR to any destination xrootd URL.
+
+.RE
+\fB-OS\fR\fIopaqueinfo\fR
+.RS 5
+add opaque information \fIopaqueinfo\fR to any source xrootd URL.
+.RE
+.HP
+\fB-P\fR   request POSC (persist-on-successful-close) processing
+     to create a new file.
+
+.RE
+\fB-R\fR   recurse through source subdirectories.
+
+\fB-s\fR   silent mode.
+
+\fB-S \fInum\fR
+.RS 5
+use \fInum\fR additional parallel streams to do the transfer.
+The maximum value is 15. The default is 0 (i.e., use only the main stream).
+
+.RE
+\fB-v\fR   display summary output.
+
+\fB-version\fR
+.RS 5
+display version information.
+.RE
+.HP
+\fB-x\fR   activate the Xtreme copy algorithm. Use the source
+     hostname to query for additional sources.
+
+.RE
+\fB-x \fIrdr\fR
+.RS 5
+activate the Xtreme copy algorithm. Use \fIrdr\fR as hostname where to query
+for additional sources.
+
+.RE
+.SH OPERANDS
+\fIsource\fR
+.RS 5
+a local file, a local directory name suffixed by /, or
+an xrootd URL in the form of
+.ce 1
+\fBroot://[\fIuser\fB@\fR]\fIhost[\fB:\fIport\fR]\fB/\fIabsolutepath\fR
+The \fIabsolutepath\fR can be a directory. In this case the \fB-R\fR option can be
+fully honored only on a standalone server.
+
+.RE
+\fIdestination\fR
+.RS 5
+a local file, a local directory name suffixed by /, or
+an xrootd URL in the form
+.ce 1
+\fBroot://[\fIuser\fB@\fR]\fIhost[\fB:\fIport\fR]\fB/\fIabsolutepath\fR
+The \fIabsolutepath\fR can be a directory. In this case the \fB-R\fR option, the
+the \fIabsolutepath\fR must be a directory and all files are copied into this
+directory.
+
+.RE
+.SH EXAMPLES (GENERIC)
+.TP
+local file upload:
+.br
+.B $ xrdcp /tmp/myfile root://foo.bar.com//data/myfile
+.br
+.TP
+remote file download:
+.br
+.B $ xrdcp root://foo.bar.com//data/myfile /tmp/myfile
+.br
+.TP
+remote-remote copy:
+.br
+.B $ xrdcp root://foo.bar.com//data/myfile1 root://foo.bar.com//data/myfile2
+.br
+.fi
+.br
+.ad l
+.SH EXAMPLES (CASTOR)
+.TP
+local file upload to a Castor instance using a specific service class and stager:
+.br
+.B $ xrdcp /tmp/myfile root://<stagerhost>.cern.ch//castor/cern.ch/data/myfile -ODstagerHost=$STAGE_HOST&svcClass=$STAGE_SVCCLASS
+.br
+[ you need to escape the '&' in the shell ]
+.TP
+remote file download from a Castor instance using a specific stager:
+.br
+.B $ xrdcp /tmp/myfile root://<stagerhost>.cern.ch//castor/cern.ch/data/myfile -OSstagerHost=$STAGE_HOST
+.TP
+client-proxy copy to-/from- a Castor instance:
+.br
+.B $ xrdcp
+.br
+.B root://<stagerA>.cern.ch//castor/cern.ch/data/stagerA/myfile -OSstagerHost=<stagerA>
+.br
+.B root://<stagerB>.cern.ch//castor/cern.ch/data/stagerB/myfile -ODstagerHost=<stagerA>
+.br
+.br
+[ you cannot copy between stagers using the same logical filename in the castor namespace! ]
+.SH NOTES
+Documentation for all components associated with \fBxrdcp\fR can be found at
+http://xrootd.org/docs.html
+.SH DIAGNOSTICS
+Errors yield an error message and a non-zero exit status.
+.SH LICENSE
+License terms can be displayed by typing "\fBxrootd -H\fR".
+.SH SUPPORT LEVEL
+The \fBxrdcp\fR command is supported by the xrootd collaboration.
+Contact information can be found at
+.ce
+http://xrootd.org/contact.html

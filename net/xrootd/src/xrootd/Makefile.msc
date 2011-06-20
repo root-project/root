@@ -56,11 +56,14 @@ XRDNETLIB    = $(LIBDIR)/libXrdNet.lib
 XRDCLIENTLIB = $(LIBDIR)/libXrdClient.lib
 XRDCP        = $(BINDIR)/xrdcp.exe
 
-LIBS : $(LIBDIR) $(XRDSYSLIB) $(XRDOUCLIB) $(XRDNETLIB) $(XRDCLIENTLIB) $(BINDIR) $(XRDCP)
+LIBS : src\XrdVersion.hh $(LIBDIR) $(XRDSYSLIB) $(XRDOUCLIB) $(XRDNETLIB) $(XRDCLIENTLIB) $(BINDIR) $(XRDCP)
 
 .PHONY: $(LIBS) all
 
 all: $(LIBS)
+
+src\XrdVersion.hh:
+   if not exist src\XrdVersion.hh genversion.bat
 
 "$(LIBDIR)" :
     if not exist "$(LIBDIR)/$(NULL)" mkdir "$(LIBDIR)"
@@ -86,7 +89,7 @@ $(XRDNETLIB):
    cd..
    cd..
 
-$(XRDCLIENTLIB): $(XRDNETLIB) $(XRDOUCLIB) $(XRDSYSLIB)
+$(XRDCLIENTLIB): src\XrdVersion.hh $(XRDNETLIB) $(XRDOUCLIB) $(XRDSYSLIB)
    cd ./src/XrdClient
    $(MAKE) -f Makefile.msc CFG=$(MODCFG)
    cd..
@@ -136,6 +139,7 @@ clean :
 	-@erase /q /s *.idb
 	-@erase /q /s *.exp
 	-@erase /q /s *.manifest
+	-@erase /q src\XrdVersion.hh
 
 distclean:: clean
 	-@erase /q /s *.pdb

@@ -20,9 +20,9 @@ xrootdclientincdir = $(includedir)/xrootd/XrdClient
 #############################################################################
 ## deliverables (to be built / installed)
 bin_PROGRAMS = xrdcp xrd xprep xrdstagetool
+man1_MANS = ../../docs/man/xprep.1 ../../docs/man/xrd.1 ../../docs/man/xrdcp.1 \
+            ../../docs/man/xrdstagetool.1
 noinst_PROGRAMS = TestXrdClient TestXrdClient_read
-
-man1_MANS = xprep.1 xrd.1 xrdcp.1 xrdstagetool.1
 
 ## old automake versions do not know += operator for adding to a variable, so we have to do this
 ## very awkwardly using the EXTRA_ definition

@@ -112,12 +112,14 @@ int    XrdSecProtocolgsi::DefBits  = 512;
 int    XrdSecProtocolgsi::CACheck  = 1;
 int    XrdSecProtocolgsi::CRLCheck = 1;
 int    XrdSecProtocolgsi::GMAPOpt  = 1;
+bool   XrdSecProtocolgsi::GMAPuseDNname = 0;
 String XrdSecProtocolgsi::DefCrypto= "ssl";
 String XrdSecProtocolgsi::DefCipher= "aes-128-cbc:bf-cbc:des-ede3-cbc";
 String XrdSecProtocolgsi::DefMD    = "sha1:md5";
 String XrdSecProtocolgsi::DefError = "invalid credentials ";
 int    XrdSecProtocolgsi::PxyReqOpts = 0;
-int    XrdSecProtocolgsi::AuthzPxy = 0;
+int    XrdSecProtocolgsi::AuthzPxyWhat = -1;
+int    XrdSecProtocolgsi::AuthzPxyWhere = -1;
 XrdSysPlugin   *XrdSecProtocolgsi::GMAPPlugin = 0;
 XrdSecgsiGMAP_t XrdSecProtocolgsi::GMAPFun = 0;
 XrdSysPlugin   *XrdSecProtocolgsi::AuthzPlugin = 0;
@@ -657,13 +659,22 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
       //
       // GRID map check option
       //
-      //    0   do not use (DN will be used as identifier)
-      //    1   use if available
+      //    0   do not use (DN hash will be used as identifier)
+      //    1   use if available; otherwise as 0
       //    2   require
+      //   10   do not use (DN name will be used as identifier)
+      //   11   use if available; otherwise as 10
       const char *cogmap[] = { "do-not-use", "use-if-available", "require" };
+      const char *codnnm[] = { "DN hash", "DN name"};
+      if (opt.ogmap >= 10) {
+         GMAPuseDNname = 1;
+         opt.ogmap %= 10;
+      }
       if (opt.ogmap >= 0 && opt.ogmap <= 2)
          GMAPOpt = opt.ogmap;
-      DEBUG("grid map file option: "<<cogmap[GMAPOpt]);
+      DEBUG("user mapping file option: "<<cogmap[GMAPOpt]);
+      if (GMAPOpt < 2)
+         DEBUG("default option for entity name if no mapping available: "<<codnnm[(int)GMAPuseDNname]);
 
       //
       // Check existence of GRID map file
@@ -685,8 +696,8 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                } else {
                   ErrF(erp,kGSErrError,"'access' error on grid map file:",GMAPFile.c_str());
                   PRINT(erp->getErrText());
+                  return Parms;
                }
-               return Parms;
             } else {
                DEBUG("Grid map file: "<<GMAPFile<<" cannot be 'access'ed: do not use");
             }
@@ -721,18 +732,6 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                                        (const char *) opt.gmapfunparms))) {
                PRINT("Could not load plug-in: "<<opt.gmapfun<<": ignore");
             } else {
-               // Init or reset the cache
-               if (cacheGMAPFun.Empty()) {
-                  if (cacheGMAPFun.Init(100) != 0) {
-                     PRINT("Error initializing GMAPFun cache");
-                     return Parms;
-                  }
-               } else {
-                  if (cacheGMAPFun.Reset() != 0) {
-                     PRINT("Error resetting GMAPFun cache");
-                     return Parms;
-                  }
-               }
                hasgmapfun = 1;
             }
          } else {
@@ -740,11 +739,26 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                   " via 'authzfun') has already been successfully loaded");
          }
       }
+
+      if (hasgmapfun || hasauthzfun) {
+         // Init or reset the cache
+         if (cacheGMAPFun.Empty()) {
+            if (cacheGMAPFun.Init(100) != 0) {
+               PRINT("Error initializing GMAPFun cache");
+               return Parms;
+            }
+         } else {
+            if (cacheGMAPFun.Reset() != 0) {
+               PRINT("Error resetting GMAPFun cache");
+               return Parms;
+            }
+         }
+      }
       //
       // Disable GMAP if neither a grid mapfile nor a GMAP function are available
       if (!hasgmap && !hasgmapfun && !hasauthzfun) {
          if (GMAPOpt > 1) {
-            ErrF(erp,kGSErrError,"Grid mapping required, but neither a grid mapfile"
+            ErrF(erp,kGSErrError,"User mapping required, but neither a grid mapfile"
                                  " nor a mapping function are available");
             PRINT(erp->getErrText());
             return Parms;
@@ -769,10 +783,19 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
 
       //
       // Request for proxy export for authorization
-      if (opt.authzpxy == 1)
-         AuthzPxy = 1;
-      // Some notification
-      DEBUG("Export proxy for authorization (in XrdSecEntity.endorsement): "<<AuthzPxy);
+      // authzpxy = opt_what*10 + opt_where
+      //        opt_what   = 0  full chain
+      //                     1  last proxy only
+      //        opt_where  = 1  Entity.creds
+      //                     2  Entity.endorsements
+      if (opt.authzpxy > 0) {
+         AuthzPxyWhat = opt.authzpxy / 10;
+         AuthzPxyWhere = opt.authzpxy % 10;
+         // Some notification
+         const char *capxy_what = (AuthzPxyWhat == 1) ? "'last proxy only'" : "'full proxy chain'";
+         const char *capxy_where = (AuthzPxyWhere == 1) ? "XrdSecEntity.creds" : "XrdSecEntity.endorsements";
+         DEBUG("Export proxy for authorization in '"<<capxy_where<<"': "<<capxy_what);
+      }
 
       //
       // Template for the created proxy files
@@ -919,6 +942,8 @@ void XrdSecProtocolgsi::Delete()
    SafeFree(Entity.role);
    SafeFree(Entity.grps);
    SafeFree(Entity.endorsements);
+   SafeFree(Entity.creds);
+   Entity.credslen = 0;
    // Cleanup the handshake variables, if still there
    SafeDelete(hs);
    // Cleanup any other instance specific to this protocol
@@ -1632,10 +1657,10 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
             if (GMAPOpt == 2) {
                // It was required, so we fail
                kS_rc = kgST_error;
-               PRINT("ERROR: grid map required, but lookup failed - failure");
+               PRINT("ERROR: user mapping required, but lookup failed - failure");
                break;
             } else {
-               DEBUG("WARNING: grid map lookup failed - use DN as name");
+               DEBUG("WARNING: user mapping lookup failed - use DN or DN-hash as name");
             }
          } else {
             //
@@ -1657,18 +1682,18 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
                }
                if (ok) {
                   name = u;
-                  DEBUG("grid map: requested user is authorized: name is '"<<name<<"'");
+                  DEBUG("DN mapping: requested user is authorized: name is '"<<name<<"'");
                } else {
                   // The requested username is not in the list; we warn and default to the first
                   // found (to be Globus compliant)
                   if (name.find(',') != STR_NPOS) name.erase(name.find(','));
-                  PRINT("WARNING: grid map lookup ok, but the requested user is not"
+                  PRINT("WARNING: user mapping lookup ok, but the requested user is not"
                         " authorized ("<<user<<"). Instead, mapped as " << name << ".");
                }
             } else {
                // No username requested: we default to the first found (to be Globus compliant)
                if (name.find(',') != STR_NPOS) name.erase(name.find(','));
-               DEBUG("grid map lookup successful: name is '"<<name<<"'");
+               DEBUG("user mapping lookup successful: name is '"<<name<<"'");
             }
             Entity.name = strdup(name.c_str());
          }
@@ -1676,21 +1701,33 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
       // If not set, use DN
       if (!Entity.name || (strlen(Entity.name) <= 0)) {
          // No grid map: set the hash of the client DN as name
-         if (hs->Chain->EEChash()) {
+         if (!GMAPuseDNname && hs->Chain->EEChash()) {
             Entity.name = strdup(hs->Chain->EEChash());
+         } else if (GMAPuseDNname && hs->Chain->EECname()) {
+            Entity.name = strdup(hs->Chain->EECname());
          } else {
-            DEBUG("WARNING: DN missing: corruption? ");
+            PRINT("WARNING: DN missing: corruption? ");
          }
       }
 
       // Export proxy for authorization, if required
-      if (AuthzPxy == 1) {
-         // In string form
-         XrdSutBucket *b = XrdCryptosslX509ExportChain(hs->Chain, true);
+      if (AuthzPxyWhat >= 0) {
+         XrdSutBucket *b = (AuthzPxyWhat == 1 && hs->Chain->End()) ? hs->Chain->End()->Export()
+                                                                   : XrdCryptosslX509ExportChain(hs->Chain, true);
          XrdOucString s;
          b->ToString(s);
-         Entity.endorsements = strdup(s.c_str());
+         if (AuthzPxyWhere == 1) {
+            Entity.creds = strdup(s.c_str());
+            Entity.credslen = s.length();
+         } else {
+            // This should be deprecated
+            Entity.endorsements = strdup(s.c_str());
+         }
          delete b;
+         
+         DEBUG("Entity.endorsements: "<<(void *)Entity.endorsements);
+         DEBUG("Entity.creds:        "<<(void *)Entity.creds);
+         DEBUG("Entity.credslen:     "<<Entity.credslen);
       }
 
       if (hs->RemVers >= 10100) {
@@ -2041,8 +2078,10 @@ char *XrdSecProtocolgsiInit(const char mode,
                dlgpxy = atoi(op+8);
             } else if (!strncmp(op, "-exppxy:",8)) {
                exppxy = (const char *)(op+8);
+            } else if (!strncmp(op, "-authzpxy:",10)) {
+               authzpxy = atoi(op+10);
             } else if (!strncmp(op, "-authzpxy",9)) {
-               authzpxy = 1;
+               authzpxy = 11;
             }
          }
       }
@@ -4374,43 +4413,40 @@ void XrdSecProtocolgsi::QueryGMAP(XrdCryptoX509Chain *chain, int now, String &us
       return;
    }
 
-   // We chaeck the authorization plugin first, if any. This excludes any other check.
-   if (AuthzFun) {
-      // We export the full proxy and give it to the external plugin, so
-      // that it can take the decision using whatever it needs (including, e.g.,
-      // VOMS information).
-      // We do not use any cache in this case
-      XrdSutBucket *bucket = XrdCryptosslX509ExportChain(chain, true);
-      XrdOucString s;
-      bucket->ToString(s);
-      delete bucket;
-      char *name = (*AuthzFun)(s.c_str(), now);
-      if (name) {
-         usrs = name;
-         delete [] name;
-      }
-      // Empty string means failure (not-authorized, ...)
-      return;
-   }
-
    // Now we check the DN-mapping function and eventually the gridmap file.
    // The result can be cached for a while. 
    XrdSutPFEntry *cent = 0;
    const char *dn = chain->EECname();
-   if (GMAPFun) {
+   XrdOucString s;
+   const char *key = dn;
+   if (GMAPFun || AuthzFun) {
+      if (AuthzFun) {
+         // We export the full proxy and give it to the external plugin, so
+         // that it can take the decision using whatever it needs (including, e.g.,
+         // VOMS information).
+         XrdSutBucket *bucket = XrdCryptosslX509ExportChain(chain, true);
+         bucket->ToString(s);
+         delete bucket;
+         key = s.c_str();
+      }
       // We may have it in the cache
-      cent = cacheGMAPFun.Get(dn);
+      cent = cacheGMAPFun.Get(key);
       // Check expiration, if required
       if (GMAPCacheTimeOut > 0 &&
          (cent && (now - cent->mtime) > GMAPCacheTimeOut)) {
          // Invalidate the entry
-         cacheGMAPFun.Remove(dn);
+         cacheGMAPFun.Remove(key);
          cent = 0;
       }
       // Run the search via the external function
       if (!cent) {
-         char *name = (*GMAPFun)(dn, now);
-         if ((cent = cacheGMAPFun.Add(dn))) {
+         char *name;
+         if (GMAPFun) {
+            name = (*GMAPFun)(key, now);
+         } else {
+            name = (*AuthzFun)(key, now);
+         }
+         if ((cent = cacheGMAPFun.Add(key))) {
             if (name) {
                cent->status = kPFE_ok;
                // Add username
@@ -4444,7 +4480,7 @@ void XrdSecProtocolgsi::QueryGMAP(XrdCryptoX509Chain *chain, int now, String &us
    }
 
    // Lookup for 'dn' in the cache
-   cent = cacheGMAP.Get(dn);
+   cent = cacheGMAP.Get(key);
 
    // Add / Save the result, if any
    if (cent) {
@@ -4516,7 +4552,7 @@ XrdSecgsiGMAP_t XrdSecProtocolgsi::LoadGMAPFun(const char *plugin,
 
 //_____________________________________________________________________________
 XrdSecgsiAuthz_t XrdSecProtocolgsi::LoadAuthzFun(const char *plugin,
-                                             const char *parms)
+                                                 const char *parms)
 {  
    // Load the authorization function from the specified plug-in
    EPNAME("LoadAuthzFun");
@@ -4560,7 +4596,7 @@ XrdSecgsiAuthz_t XrdSecProtocolgsi::LoadAuthzFun(const char *plugin,
    
    // Init it
    if ((*ep)(params.c_str(), 0) == (char *)-1) {
-      PRINT("could not initialize 'XrdSecgsiGMAPFun()'");
+      PRINT("could not initialize 'XrdSecgsiAuthzFun()'");
       return (XrdSecgsiAuthz_t)0;
    }
    

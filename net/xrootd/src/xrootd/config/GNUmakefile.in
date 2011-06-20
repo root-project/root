@@ -83,6 +83,8 @@ clean: FORCE
 	      $(RM) -fr obj$(SUNCACHE);\
 	   fi;\
 	fi
+	$(ECHO)$(RM) -f src/XrdOuc/XrdOucFactoryBonjour.*
+	$(ECHO)$(RM) -f test-comp.*
 
 distclean: FORCE
 	@$(MAKE) $(TARGETS) MAKEXEQ=clean XMSG=Cleaning --no-print-directory

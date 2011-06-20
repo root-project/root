@@ -1,0 +1,31 @@
+.TH xrootdfsd 8 "8 March 2011"
+.SH NAME
+xrootdfsd - xrootd FUSE file system daemon
+.SH SYNOPSIS
+.nf
+
+\fBxrootdfsd\fR [\fIoptions\fR] \fIparameters\fR
+
+.fi
+.br
+.ad l
+.SH DESCRIPTION
+The \fBxrootdfsd\fR daemon provides a file system view of an xrootd cluster
+using FUSE.
+Usage synopsis can be displayed by typing "\fBxrootdfsd -h\fR".
+Short documentation can be found in a README file in the src/XrdFfs source
+directory.
+.SH NOTES
+Documentation for all components associated with \fBxrootdfsd\fR can be found at
+http://xrootd.org/docs.html
+.SH DIAGNOSTICS
+Errors yield an error message and a non-zero exit status.
+The program never exits upon success.  Use the umount command to terminate the
+program.
+.SH LICENSE
+License terms can be displayed by typing "\fBxrootd -H\fR".
+.SH SUPPORT LEVEL
+The \fBxrootdfsd\fR daemon is supported by the xrootd collaboration.
+Contact information can be found at
+.ce
+http://xrootd.org/contact.html

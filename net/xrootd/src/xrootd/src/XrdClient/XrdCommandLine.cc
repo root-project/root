@@ -358,6 +358,12 @@ void executeCd(XrdOucTokenizer &tkzer)
     char *parmname = tkzer.GetToken(0, 0);
     XrdOucString pathname;
 
+    if (!genadmin)
+    {
+        std::cout << "Not connected to any server." << std::endl << std::endl;
+        return;
+    }
+
     if (!parmname || !strlen(parmname))
     {
         std::cout << "A directory name is needed." << std::endl << std::endl;

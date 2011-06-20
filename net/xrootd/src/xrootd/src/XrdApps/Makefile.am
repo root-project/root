@@ -19,7 +19,8 @@
 ## deliverables
 
 bin_PROGRAMS = xrdadler32 cconfig mpxstats wait41
-
+man1_MANS = ../../docs/man/xrdadler32.1
+man8_MANS = ../../docs/man/mpxstats.8
 
 #############################################################################
 ## Build rules

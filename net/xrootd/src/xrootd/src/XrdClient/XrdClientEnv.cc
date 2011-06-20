@@ -65,6 +65,7 @@ XrdClientEnv::XrdClientEnv() {
    PutInt(NAME_TCP_KEEPALIVE_TIME,     DFLT_TCP_KEEPALIVE_TIME);
    PutInt(NAME_TCP_KEEPALIVE_INTERVAL, DFLT_TCP_KEEPALIVE_INTERVAL);
    PutInt(NAME_TCP_KEEPALIVE_PROBES,   DFLT_TCP_KEEPALIVE_PROBES);
+   PutInt(NAME_XRDCP_SIZE_HINT,        DFLT_XRDCP_SIZE_HINT);
 
    ImportInt( NAME_CONNECTTIMEOUT );
    ImportInt( NAME_REQUESTTIMEOUT );
@@ -90,6 +91,7 @@ XrdClientEnv::XrdClientEnv() {
    ImportInt( NAME_TCP_KEEPALIVE_TIME );
    ImportInt( NAME_TCP_KEEPALIVE_INTERVAL );
    ImportInt( NAME_TCP_KEEPALIVE_PROBES );
+   ImportInt( NAME_XRDCP_SIZE_HINT );
 }
 
 //------------------------------------------------------------------------------

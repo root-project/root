@@ -8,15 +8,20 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//           $Id$
 
-const char *XrdPosixPreload32CVSID = "$Id$";
-
-#if !defined(SUNX86) && defined(__LP64__) && !defined(_LP64)
+#ifdef  _LARGEFILE_SOURCE
 #undef  _LARGEFILE_SOURCE
+#endif
+
+#ifdef  _LARGEFILE64_SOURCE
+#undef  _LARGEFILE64_SOURCE
+#endif
+
+#ifdef  _FILE_OFFSET_BITS
 #undef  _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 32
 #endif
+
 #define XRDPOSIXPRELOAD32
 
 #include <errno.h>

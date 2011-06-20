@@ -290,7 +290,7 @@ void XrdOfs::Config_Display(XrdSysError &Eroute)
 
      if (evsObject)
         {bp = buff;
-         setBuff("       ofs.notify ", 11);              //  1234567890
+         setBuff("       ofs.notify ", 18);              //  1234567890
          if (evsObject->Enabled(XrdOfsEvs::Chmod))  setBuff("chmod ",  6);
          if (evsObject->Enabled(XrdOfsEvs::Closer)) setBuff("closer ", 7);
          if (evsObject->Enabled(XrdOfsEvs::Closew)) setBuff("closew ", 7);
@@ -430,6 +430,7 @@ int XrdOfs::ConfigRedir(XrdSysError &Eroute)
 {
    int isRedir = Options & isManager;
    int RMTopts = (Options & isServer ? XrdCms::IsTarget : 0)
+               | (Options & isProxy  ? XrdCms::IsProxy  : 0)
                | (Options & isMeta   ? XrdCms::IsMeta   : 0);
 
 // For manager roles, we simply do a standard config
@@ -454,6 +455,7 @@ int XrdOfs::ConfigRedir(XrdSysError &Eroute)
            return 1;
           }
        Balancer = new XrdCmsFinderTRG(Eroute.logger(),
+                         (Options & isProxy ? XrdCms::IsProxy : 0) |
                          (isRedir ? XrdCms::IsRedir : 0), myPort, 0);
        if (!Balancer->Configure(ConfigFN))
           {delete Balancer; Balancer = 0; return 1;}

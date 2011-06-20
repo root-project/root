@@ -208,11 +208,6 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    *(bP-1) = '\0';
    XrdOucEnv::Export("XRDEXPORTS", tmp); free(tmp);
 
-// Initialiaze for AIO
-//
-   if (!as_noaio) XrdXrootdAioReq::Init(as_segsize, as_maxperreq, as_maxpersrv);
-      else eDest.Say("Config warning: asynchronous I/O has been disabled!");
-
 // Initialize the security system if this is wanted
 //
    if (!SecLib) eDest.Say("Config warning: 'xrootd.seclib' not specified;"
@@ -243,6 +238,12 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
           eDest.Emsg("Config", "Warning! xrootd build version " XrdVERSION
                                "differs from file system version ", fsver);
       }
+
+// Initialiaze for AIO
+//
+        if (getenv("XRDXROOTD_NOAIO")) as_noaio = 1;
+   else if (!as_noaio) XrdXrootdAioReq::Init(as_segsize, as_maxperreq, as_maxpersrv);
+   else eDest.Say("Config warning: asynchronous I/O has been disabled!");
 
 // Create the file lock manager
 //

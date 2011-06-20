@@ -4,6 +4,8 @@
 # Author: Lukasz Janyst <ljanyst@cern.ch> (10.03.2011)
 #-------------------------------------------------------------------------------
 
+RCEXP='^[0-9]+\.[0-9]+\.[0-9]+\-rc.*$'
+
 #-------------------------------------------------------------------------------
 # Find a program
 #-------------------------------------------------------------------------------
@@ -116,11 +118,22 @@ if test $? -ne 0; then
 fi
 
 echo "[i] Working with version: $VERSION"
+
 if test x${VERSION:0:1} = x"v"; then
   VERSION=${VERSION:1}
 fi
+
+#-------------------------------------------------------------------------------
+# Deal with release candidates
+#-------------------------------------------------------------------------------
+RELEASE=1
+if test x`echo $VERSION | egrep $RCEXP` != x; then
+  RELEASE=0.`echo $VERSION | sed 's/.*-rc/rc/'`
+  VERSION=`echo $VERSION | sed 's/-rc.*//'`
+fi
+
 VERSION=`echo $VERSION | sed 's/-/./g'`
-echo "[i] RPM compliant version: $VERSION"
+echo "[i] RPM compliant version: $VERSION-$RELEASE"
 
 #-------------------------------------------------------------------------------
 # Create a tempdir and copy the files there
@@ -178,7 +191,8 @@ if test ! -r rhel/xrootd.spec.in; then
   echo "[!] The specfile template does not exist!" 1>&2
   exit 7
 fi
-cat rhel/xrootd.spec.in | sed "s/__VERSION__/$VERSION/" > $TEMPDIR/xrootd.spec
+cat rhel/xrootd.spec.in | sed "s/__VERSION__/$VERSION/" | \
+  sed "s/__RELEASE__/$RELEASE/" > $TEMPDIR/xrootd.spec
 
 #-------------------------------------------------------------------------------
 # Build the source RPM

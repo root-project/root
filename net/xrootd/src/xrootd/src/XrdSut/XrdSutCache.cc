@@ -34,6 +34,9 @@ XrdSutCache::~XrdSutCache()
 {
    // Destructor
 
+   // We are destroying the cache 
+   rwlock.WriteLock();
+   
    // Cleanup content
    while (cachemx > -1) {
       if (cachent[cachemx]) {
@@ -45,6 +48,9 @@ XrdSutCache::~XrdSutCache()
    // Cleanup table
    if (cachent)
       delete[] cachent;
+   
+   // Done
+   rwlock.UnLock();
 }
 
 //__________________________________________________________________
@@ -54,6 +60,9 @@ int XrdSutCache::Init(int capacity)
    // Later on, capacity is double each time more space is needed. 
    // Return 0 if ok, -1 otherwise
    EPNAME("Cache::Init");
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    // Make sure capacity makes sense; use a default, if not
    capacity = (capacity > 0) ? capacity : 100;
@@ -68,7 +77,7 @@ int XrdSutCache::Init(int capacity)
       utime = (kXR_int32)time(0);
       
       // Init hash table
-      if (Rehash() != 0) {
+      if (Rehash(0, 0) != 0) {
          DEBUG("problems initialising hash table");
          return 0 ;
       }
@@ -102,6 +111,9 @@ XrdSutPFEntry *XrdSutCache::Get(const char *ID, bool *wild)
       DEBUG("problems rehashing");
       return (XrdSutPFEntry *)0 ;
    }
+
+   // Lock for reading
+   XrdSysRWLockHelper isg(rwlock, 1);
 
    // Look in the hash first
    kXR_int32 *ie = hashtable.Find(ID);
@@ -153,6 +165,9 @@ XrdSutPFEntry *XrdSutCache::Add(const char *ID, bool force)
    XrdSutPFEntry *ent = Get(ID);
    if (ent)
       return ent;
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    //
    // Make sure there enough space for a new entry
@@ -207,7 +222,7 @@ XrdSutPFEntry *XrdSutCache::Add(const char *ID, bool force)
    utime = (kXR_int32)time(0);
 
    // Rebuild hash table
-   if (Rehash(force) != 0) {
+   if (Rehash(force, 0) != 0) {
       DEBUG("problems re-hashing");
       return (XrdSutPFEntry *)0 ;
    }
@@ -231,7 +246,10 @@ bool XrdSutCache::Remove(const char *ID, int opt)
       return 0 ;
    }
 
-   if (Rehash() != 0) {
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
+
+   if (Rehash(0, 0) != 0) {
       DEBUG("problems rehashing");
       return 0 ;
    }
@@ -276,7 +294,7 @@ bool XrdSutCache::Remove(const char *ID, int opt)
       utime = (kXR_int32)time(0);
       
       // Rebuild hash table
-      if (Rehash() != 0) {
+      if (Rehash(0, 0) != 0) {
          DEBUG("problems re-hashing");
          return 0 ;
       }
@@ -292,6 +310,9 @@ int XrdSutCache::Trim(int lifet)
    // Remove entries older then lifet seconds. If lifet <=0, compare
    // to lifetime, which can be set with SetValidity().
    // Return number of entries removed
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    //
    // Make sure lifet makes sense; if not, use internal default
@@ -325,6 +346,9 @@ int XrdSutCache::Reset(int newsz)
    // Remove all existing entries.
    // If newsz > -1, set new capacity to newsz, reallocating if needed
    // Return 0 if ok, -1 if problems reallocating.
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    // Loop over entries
    int i = cachemx;
@@ -363,6 +387,9 @@ void XrdSutCache::Dump(const char *msg)
    PRINT("//  Capacity:         "<<cachesz);
    PRINT("//  Max index filled: "<<cachemx);
    PRINT("//");
+
+   // Lock for reading
+   XrdSysRWLockHelper isg(rwlock, 1);
 
    if (cachesz > 0) {
 
@@ -412,6 +439,9 @@ int XrdSutCache::Load(const char *pfn)
       DEBUG("cached information for file "<<pfn<<" is up-to-date");
       return 0;
    }
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    // Attach to file and open it
    XrdSutPFile ff(pfn, kPFEopen);
@@ -505,7 +535,7 @@ int XrdSutCache::Load(const char *pfn)
    DEBUG("PF file "<<pfn<<" loaded in cache (found "<<ne<<" entries)");
 
    // Force update hash table
-   if (Rehash(1) != 0) {
+   if (Rehash(1, 0) != 0) {
       DEBUG("problems creating hash table");
       return -1;
    }
@@ -515,15 +545,19 @@ int XrdSutCache::Load(const char *pfn)
 
 
 //__________________________________________________________________
-int XrdSutCache::Rehash(bool force)
+int XrdSutCache::Rehash(bool force, bool lock)
 {
    // Update or create hahs table corresponding to the present content of the
    // cache
    // Return 0 if ok, -1 otherwise
    EPNAME("Cache::Rehash");
 
+   // Lock for writing
+   if (lock) rwlock.WriteLock();
+
    if (htmtime >= utime && !force) {
       TRACE(Dump, "hash table is up-to-date");
+      if (lock) rwlock.UnLock();
       return 0;
    }
 
@@ -544,6 +578,9 @@ int XrdSutCache::Rehash(bool force)
    }
    // Update modification time
    htmtime = (kXR_int32)time(0);
+
+   // Unlock
+   if (lock) rwlock.UnLock();
 
    DEBUG("Hash table updated (found "<<nht<<" active entries)");
    return 0;
@@ -573,6 +610,9 @@ int XrdSutCache::Flush(const char *pfn)
       DEBUG("cannot attach-to or create file "<<pfn<<" ("<<ff.LastErrStr()<<")");
       return -1;
    }
+
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
 
    //
    // Loop over cache entries
@@ -638,6 +678,9 @@ int XrdSutCache::Refresh()
       return 0;
    }
 
+   // Lock for writing
+   XrdSysRWLockHelper isg(rwlock, 0);
+
    if (Load(pfile.c_str()) != 0) {
       DEBUG("problems loading passwd information from file: "<<pfile);
       return -1;
@@ -650,4 +693,5 @@ int XrdSutCache::Refresh()
 
    return 0;
 }
+
 

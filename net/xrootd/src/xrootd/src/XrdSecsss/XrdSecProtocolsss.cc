@@ -609,6 +609,7 @@ XrdSecCredentials *XrdSecProtocolsss::Encode(XrdOucErrInfo      *einfo,
        int   rLen = 128 - dLen;
        *eodP++ = XrdSecsssRR_Data::theRand;
        XrdSecsssKT::genKey(rBuff, rLen);
+       if (!(*rBuff)) *rBuff = ~(*rBuff);
        XrdOucPup::Pack(&eodP, rBuff, rLen);
        dLen = eodP - (char *)rrData;
       }

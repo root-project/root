@@ -169,6 +169,7 @@ public:
            for (long i = oldsize; i < newsize; i++) {
               put(*item, size++);
            }
+           delete item;
         }
         else {
            for (long i = oldsize; i > newsize; i--)

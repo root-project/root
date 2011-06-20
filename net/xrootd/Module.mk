@@ -56,7 +56,7 @@ XRDPLUGINSA := $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
 XRDPLUGINS  := $(XRDPLUGINSA)
 XRDLIBS     := $(XRDPLUGINS)
 else
-XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdNetUtil.a \
+XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a \
                $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
 XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a \
@@ -314,7 +314,6 @@ $(XROOTDDIRL)/libXrdSut.$(XRDSOEXT): $(XROOTDBUILD)
 #
 $(XROOTDDIRL)/libXrdOuc.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdNet.a: $(XROOTDBUILD)
-$(XROOTDDIRL)/libXrdNetUtil.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdSys.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrd.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdClient.a: $(XROOTDBUILD)

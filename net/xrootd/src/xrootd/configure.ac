@@ -252,7 +252,7 @@ AC_CACHE_CHECK([whether gcc provide atomic ops], [ac_atomic_ops],
 [AC_TRY_RUN([
 int main()
 {
-    unsigned long val = 111, tmp, *mem = &val;
+    unsigned long long val = 111, tmp, *mem = &val;
 
     if (__sync_fetch_and_add(&val, 111) != 111 || val != 222) return 1;
     if (__sync_add_and_fetch(&val, 111) != 333)               return 1;
