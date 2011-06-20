@@ -240,7 +240,7 @@ int XrdXrootdFile::bin2hex(char *outbuff, char *inbuff, int inlen)
 
 // Format the data
 //
-    for (i = i; i < inlen; i++)
+    for (; i < inlen; i++)
        {outbuff[j++] = hv[(inbuff[i] >> 4) & 0x0f];
         outbuff[j++] = hv[ inbuff[i]       & 0x0f];
        }
