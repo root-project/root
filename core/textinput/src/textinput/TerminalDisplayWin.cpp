@@ -182,7 +182,6 @@ namespace textinput {
       }
     }
     fIsAttached = true;
-    NotifyTextChange(Range::AllWithPrompt());
   }
 
   void

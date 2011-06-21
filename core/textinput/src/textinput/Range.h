@@ -48,7 +48,7 @@ namespace textinput {
     Range& Extend(const Range& with);
     Range& Intersect(const Range& with);
     bool IsEmpty() const {
-       return fLength == 0 && fPromptUpdate != kNoPromptUpdate; }
+       return fLength == 0 && fPromptUpdate == kNoPromptUpdate; }
     void ExtendPromptUpdate(EPromptUpdate PU) {
       fPromptUpdate = (EPromptUpdate) ((int) fPromptUpdate | (int) PU); }
 
