@@ -261,7 +261,10 @@ are data fields in the same class.</para>
 <programlisting language="c++">void SetXXX(Int_t x1, Float_t y2); //*MENU* *ARGS={x1=&gt;fX1,y2=&gt;fY2}
 </programlisting>
 
-<para>If the arguments statement is present, the option dialog displayed when selecting <code>SetXXX field</code> will show the values of variables. We indicate to the system which argument corresponds to which data member of the class.</para>
+<para>If the arguments statement is present, the option dialog displayed when
+selecting <code>SetXXX field</code> will show the values of variables. We
+indicate to the system which argument corresponds to which data member of the
+class.</para>
 </sect3>
 </sect2>
 
@@ -1916,29 +1919,46 @@ this kind of objects:</para>
        Option_t* chopt,Double_t gridlength = 0)
 </programlisting>
 
-<para>The arguments <code>xmin, ymin</code> are the coordinates of the axis' start in the user coordinates system, <code>and xmax, ymax</code> are the end coordinates. The arguments <code>wmin</code> and <code>wmax</code> are the minimum (at the start) and maximum (at the end) values to be represented on the axis; <code>ndiv</code> is the number of divisions. The options, given by the “<code>chopt</code>” string are the following:</para>
+<para>The arguments <code>xmin, ymin</code> are the coordinates of the axis'
+start in the user coordinates system, <code>and xmax, ymax</code> are the end
+coordinates. The arguments <code>wmin</code> and <code>wmax</code> are the
+minimum (at the start) and maximum (at the end) values to be represented on
+the axis; <code>ndiv</code> is the number of divisions. The options, given by
+the “<code>chopt</code>” string are the following:</para>
 <itemizedlist>
-<listitem><para><code>chopt = 'G'</code>: logarithmic scale, default is linear.</para></listitem>
-<listitem><para><code>chopt = 'B'</code>: Blank axis (it is useful to superpose the axis).</para></listitem>
+<listitem><para><code>chopt = 'G'</code>: logarithmic scale, default is linear.
+</para></listitem>
+<listitem><para><code>chopt = 'B'</code>: Blank axis (it is useful to superpose
+the axis).</para></listitem>
 </itemizedlist>
-<para>Instead of the <code>wmin,wmax</code> arguments of the normal constructor, i.e. the limits of the axis, the name of a <emphasis role="bold"><code>TF1</code></emphasis> function can be specified. This function will be used to map the user coordinates to the axis values and ticks.</para>
+<para>Instead of the <code>wmin,wmax</code> arguments of the normal constructor,
+i.e. the limits of the axis, the name of a
+<emphasis role="bold"><code>TF1</code></emphasis> function can be specified.
+This function will be used to map the user coordinates to the axis values and
+ticks.</para>
 <para>The constructor is the following:</para>
 
 <programlisting language="c++">TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
 const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 </programlisting>
 
-<para>In such a way, it is possible to obtain exponential evolution of the tick marks position, or even decreasing. In fact, anything you like.</para>
+<para>In such a way, it is possible to obtain exponential evolution of the tick
+marks position, or even decreasing. In fact, anything you like.</para>
 </sect2>
 
 <sect2>
 <title>Orientation of Tick Marks on Axis</title>
-<para>Tick marks are normally drawn on the positive side of the axis, however, if <code>xmin = xmax</code>, then negative.</para>
+<para>Tick marks are normally drawn on the positive side of the axis, however,
+if <code>xmin = xmax</code>, then negative.</para>
 <itemizedlist>
-<listitem><para><code>chopt = '+</code>’<code>:</code> tick marks are drawn on Positive side. (Default)</para></listitem>
-<listitem><para><code>chopt = '-</code>’<code>:</code> tick marks are drawn on the negative side.</para></listitem>
-<listitem><para><code>chopt =</code> '+-’: tick marks are drawn on both sides of the axis.</para></listitem>
-<listitem><para><code>chopt = </code>‘<code>U</code>’<code>:</code> unlabeled axis, default is labeled.</para></listitem>
+<listitem><para><code>chopt = '+’: </code> tick marks are drawn on Positive
+side. (Default)</para></listitem>
+<listitem><para><code>chopt = '-’: </code> tick marks are drawn on the negative
+side.</para></listitem>
+<listitem><para><code>chopt = '+-’:</code> tick marks are drawn on both sides of
+the axis.</para></listitem>
+<listitem><para><code>chopt = ‘U’: </code> unlabeled axis, default is
+labeled.</para></listitem>
 </itemizedlist>
 </sect2>
 
@@ -1947,22 +1967,42 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 
 <sect3>
 <title>Position</title>
-<para>Labels are normally drawn on side opposite to tick marks. However, <code>chopt = '='</code>: on Equal side. The function <emphasis role="bold"><code>TAxis</code></emphasis><code>::CenterLabels()</code> sets the bit <code>kCenterLabels</code> and it is visible from <emphasis role="bold"><code>TAxis</code></emphasis> context menu. It centers the bin labels and it makes sense only when the number of bins is equal to the number of tick marks. The class responsible for drawing the axis <emphasis role="bold"><code>TGaxis</code></emphasis> inherits this property.</para>
+<para>Labels are normally drawn on side opposite to tick marks. However,
+<code>chopt = '='</code>: on Equal side. The function
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::CenterLabels()</code>
+sets the bit <code>kCenterLabels</code> and it is visible from
+<emphasis role="bold"><code>TAxis</code></emphasis> context menu. It centers the
+bin labels and it makes sense only when the number of bins is equal to the
+number of tick marks. The class responsible for drawing the axis
+<emphasis role="bold"><code>TGaxis</code></emphasis> inherits this
+property.</para>
 </sect3>
 
 <sect3>
 <title>Orientation</title>
-<para>Labels are normally drawn parallel to the axis. However, if <code>xmin = xmax</code>, then they are drawn orthogonal, and if <code>ymin=ymax</code> they are drawn parallel.</para>
+<para>Labels are normally drawn parallel to the axis. However, if
+<code>xmin = xmax</code>, then they are drawn orthogonal, and if
+<code>ymin=ymax</code> they are drawn parallel.</para>
 </sect3>
 
 <sect3>
 <title>Labels for Exponents</title>
-<para>By default, an exponent of the form 10^N is used when the label values are either all very small or very large. One can disable the exponent by calling:</para>
+<para>By default, an exponent of the form 10^N is used when the label values are
+either all very small or very large. One can disable the exponent by
+calling:</para>
 
 <programlisting language="c++">TAxis::SetNoExponent(kTRUE)
 </programlisting>
 
-<para>Note that this option is implicitly selected if the number of digits to draw a label is less than the <code>fgMaxDigits</code> global member. If the property <code>SetNoExponent</code> was set in <emphasis role="bold"><code>TAxis</code></emphasis> (via <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetNoExponent)</code>, the <emphasis role="bold"><code>TGaxis</code></emphasis> will inherit this property. <emphasis role="bold"><code>TGaxis</code></emphasis> is the class responsible for drawing the axis. The method <code>SetNoExponent</code> is also available from the axis context menu.</para>
+<para>Note that this option is implicitly selected if the number of digits to
+draw a label is less than the <code>fgMaxDigits</code> global member. If the
+property <code>SetNoExponent</code> was set in
+<emphasis role="bold"><code>TAxis</code></emphasis> (via
+<emphasis role="bold"><code>TAxis</code></emphasis><code>::SetNoExponent)</code>,
+the <emphasis role="bold"><code>TGaxis</code></emphasis> will inherit this
+property. <emphasis role="bold"><code>TGaxis</code></emphasis> is the class
+responsible for drawing the axis. The method <code>SetNoExponent</code> is also
+available from the axis context menu.</para>
 
 <figure><title>Y-axis with and without exponent labels</title>
 <para>
@@ -1974,7 +2014,13 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 
 <sect3>
 <title>Number of Digits in Labels</title>
-<para><emphasis role="bold"><code>TGaxis</code></emphasis><code>::fgMaxDigits</code> is the maximum number of digits permitted for the axis labels above which the notation with 10^N is used. It must be greater than 0. By default <code>fgMaxDigits</code> is 5 and to change it use the <emphasis role="bold"><code>TGaxis</code></emphasis><code>::SetMaxDigits</code>         method. For example to set <code>fgMaxDigits</code> to accept 6 digits and accept numbers like 900000 on an axis call:</para>
+<para><emphasis role="bold"><code>TGaxis</code></emphasis><code>::fgMaxDigits</code>
+is the maximum number of digits permitted for the axis labels above which the
+notation with 10^N is used. It must be greater than 0. By default
+<code>fgMaxDigits</code> is 5 and to change it use the
+<emphasis role="bold"><code>TGaxis</code></emphasis><code>::SetMaxDigits</code>
+method. For example to set <code>fgMaxDigits</code> to accept 6 digits and
+accept numbers like 900000 on an axis call:</para>
 
 <programlisting language="c++">TGaxis::SetMaxDigits(6)
 </programlisting>
@@ -1983,18 +2029,27 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 
 <sect3>
 <title>Tick Mark Positions</title>
-<para>Labels are centered on tick marks. However, if <code>xmin = xmax</code>, then they are right adjusted.</para>
+<para>Labels are centered on tick marks. However, if <code>xmin = xmax</code>,
+then they are right adjusted.</para>
 <itemizedlist>
-<listitem><para><code>chopt = 'R'</code>: labels are right adjusted on tick mark (default is centered)</para></listitem>
-<listitem><para><code>chopt = 'L'</code>: labels are left adjusted on tick mark.</para></listitem>
-<listitem><para><code>chopt = 'C'</code>: labels are centered on tick mark.</para></listitem>
-<listitem><para><code>chopt = 'M'</code>: In the Middle of the divisions.</para></listitem>
+<listitem><para><code>chopt = 'R'</code>: labels are right adjusted on tick mark
+(default is centered)</para></listitem>
+<listitem><para><code>chopt = 'L'</code>: labels are left adjusted on tick
+mark.</para></listitem>
+<listitem><para><code>chopt = 'C'</code>: labels are centered on tick
+mark.</para></listitem>
+<listitem><para><code>chopt = 'M'</code>: In the Middle of the
+divisions.</para></listitem>
 </itemizedlist>
 </sect3>
 
 <sect3>
 <title>Label Formatting</title>
-<para>Blank characters are stripped, and then the label is correctly aligned. The dot, if last character of the string, is also stripped. In the following, we have some parameters, like tick marks length and characters height (in percentage of the length of the axis, in user coordinates). The default values are as follows:</para>
+<para>Blank characters are stripped, and then the label is correctly aligned.
+The dot, if last character of the string, is also stripped. In the following,
+we have some parameters, like tick marks length and characters height (in
+percentage of the length of the axis, in user coordinates). The default values
+are as follows:</para>
 <itemizedlist>
 <listitem><para>Primary tick marks: 3.0 %</para></listitem>
 <listitem><para>Secondary tick marks: 1.5 %</para></listitem>
@@ -2006,12 +2061,21 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 
 <sect3>
 <title>Stripping Decimals</title>
-<para>Use the <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetStripDecimals</code> to strip decimals when drawing axis labels. By default, the option is set to true, and <emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis</code> removes trailing zeros after the dot in the axis labels, e.g. {0, 0.5, 1, 1.5, 2, 2.5, etc.}</para>
+<para>Use the
+<emphasis role="bold"><code>TStyle</code></emphasis><code>::SetStripDecimals</code>
+to strip decimals when drawing axis labels. By default, the option is set to
+true, and
+<emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis</code>
+removes trailing zeros after the dot in the axis labels, e.g.
+{0, 0.5, 1, 1.5, 2, 2.5, etc.}</para>
 
 <programlisting language="c++">TStyle::SetStripDecimals (Bool_t strip=kTRUE)
 </programlisting>
 
-<para>If this function is called with <code>strip=kFALSE</code>, <emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis()</code> will draw labels with the same number of digits after the dot, e.g. {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, etc.}</para>
+<para>If this function is called with <code>strip=kFALSE</code>,
+<emphasis role="bold"><code>TGaxis</code></emphasis><code>::PaintAxis()</code>
+will draw labels with the same number of digits after the dot, e.g.
+{0.0, 0.5, 1.0, 1.5, 2.0, 2.5, etc.}</para>
 </sect3>
 
 <sect3>
@@ -2031,16 +2095,23 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 
 <sect2>
 <title>Axis with Time Units</title>
-<para>Histograms' axis can be defined as "time axis". To do that it is enough to activate the <code>SetTimeDisplay</code> attribute on a given axis. If <code>h</code> is a histogram, it is done the following way:</para>
+<para>Histograms' axis can be defined as "time axis". To do that it is enough to
+activate the <code>SetTimeDisplay</code> attribute on a given axis. If
+<code>h</code> is a histogram, it is done the following way:</para>
 
 <programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeDisplay(1);    <emphasis role="italic"><code>// X axis is a time axis</code></emphasis>
 </programlisting>
 
-<para>Two parameters can be adjusted in order to define time axis: the time format and the time offset.</para>
+<para>Two parameters can be adjusted in order to define time axis: the time
+format and the time offset.</para>
 
 <sect3>
 <title>Time Format</title>
-<para>It defines the format of the labels along the time axis. It can be changed using the <emphasis role="bold"><code>TAxis</code></emphasis> method <code>SetTimeFormat</code>. The time format is the one used by the C function <code>strftime()</code>. It is a string containing the following formatting characters:</para>
+<para>It defines the format of the labels along the time axis. It can be changed
+using the <emphasis role="bold"><code>TAxis</code></emphasis> method
+<code>SetTimeFormat</code>. The time format is the one used by the C function
+<code>strftime()</code>. It is a string containing the following formatting
+characters:</para>
 <informaltable>
 <tgroup cols="2">
 <colspec colwidth="1440*" colname="column-1"/>
@@ -2052,12 +2123,12 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 <para/>
 </entry>
 <entry>
-<para>%aabbreviated weekday name</para>
-<para>%babbreviated month name</para>
-<para>%dday of the month (01-31)</para>
-<para>%mmonth (01-12)</para>
-<para>%yyear without century</para>
-<para>%Y         year with century</para>
+<para>%a abbreviated weekday name</para>
+<para>%b abbreviated month name</para>
+<para>%d day of the month (01-31)</para>
+<para>%m month (01-12)</para>
+<para>%y year without century</para>
+<para>%Y year with century</para>
 </entry>
 </row>
 <row>
@@ -2066,35 +2137,43 @@ const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
 <para/>
 </entry>
 <entry>
-<para>%Hhour (24-hour clock)</para>
-<para>%Ihour (12-hour clock)</para>
-<para>%plocal equivalent of AM or PM</para>
-<para>%Mminute (00-59)</para>
-<para>%Sseconds (00-61)</para>
-<para>%%%</para>
+<para>%H hour (24-hour clock)</para>
+<para>%I hour (12-hour clock)</para>
+<para>%p local equivalent of AM or PM</para>
+<para>%M minute (00-59)</para>
+<para>%S seconds (00-61)</para>
+<para>%% %</para>
 </entry>
 </row>
 </tbody>
 </tgroup>
 </informaltable>
-<para>The other characters are output as is. For example to have a format like <code>dd/mm/yyyy</code> one should do:</para>
+<para>The other characters are output as is. For example to have a format like
+<code>dd/mm/yyyy</code> one should do:</para>
 
 <programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%Y");
 </programlisting>
 
-<para>If the time format is not defined, a default one will be computed automatically.</para>
+<para>If the time format is not defined, a default one will be computed
+automatically.</para>
 </sect3>
 
 <sect3>
 <title>Time Offset</title>
-<para>This is a time in seconds in the UNIX standard UTC format (the universal time, not the local one), defining the starting date of a histogram axis. This date should be greater than 01/01/95 and is given in seconds. There are three ways to define the time offset:</para>
+<para>This is a time in seconds in the UNIX standard UTC format (the universal
+time, not the local one), defining the starting date of a histogram axis. This
+date should be greater than 01/01/95 and is given in seconds. There are three
+ways to define the time offset:</para>
 <para>1. By setting the global default time offset:</para>
 
 <programlisting language="c++">TDatime da(2003,02,28,12,00,00);
 gStyle-&gt;SetTimeOffset(da.Convert());
 </programlisting>
 
-<para>If no time offset is defined for a particular axis, the default time offset will be used. In the example above, notice the usage of <emphasis role="bold"><code>TDatime</code></emphasis> to translate an explicit date into the time in seconds required by <code>SetTimeFormat</code>.</para>
+<para>If no time offset is defined for a particular axis, the default time
+offset will be used. In the example above, notice the usage of
+<emphasis role="bold"><code>TDatime</code></emphasis> to translate an explicit
+date into the time in seconds required by <code>SetTimeFormat</code>.</para>
 <para>2. By setting a time offset to a particular axis:</para>
 <para/>
 
@@ -2102,85 +2181,111 @@ gStyle-&gt;SetTimeOffset(da.Convert());
 h-&gt;GetXaxis()-&gt;SetTimeOffset(dh.Convert());
 </programlisting>
 
-<para>3. Together with the time format using <code>SetTimeFormat</code>. The time offset can be specified using the control character %F after the normal time format. <code>%F</code> is followed by the date in the format: <code>yyyy-mm-dd hh:mm:ss</code>.</para>
+<para>3. Together with the time format using <code>SetTimeFormat</code>. The
+time offset can be specified using the control character %F after the normal
+time format. <code>%F</code> is followed by the date in the format:
+<code>yyyy-mm-dd hh:mm:ss</code>.</para>
 
 <programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y%F2000-02-28 13:00:01");
 </programlisting>
 
-<para>Notice that this date format is the same used by the <emphasis role="bold"><code>TDatime</code></emphasis> function <code>AsSQLString</code>. If needed, this function can be used to translate a time in seconds into a character string which can be appended after <code>%F</code>. If the time format is not specified (before <code>%F</code>) the automatic one will be used. The following example illustrates the various possibilities.</para>
-<para/>
-<para/>
+<para>Notice that this date format is the same used by the
+<emphasis role="bold"><code>TDatime</code></emphasis> function
+<code>AsSQLString</code>. If needed, this function can be used to translate a
+time in seconds into a character string which can be appended after
+<code>%F</code>. If the time format is not specified (before <code>%F</code>)
+the automatic one will be used. The following example illustrates the various
+possibilities.</para>
 
 <programlisting language="c++">{
-gStyle-&gt;SetTitleH(0.08);
-TDatime da(2003,02,28,12,00,00);
-gStyle-&gt;SetTimeOffset(da.Convert());
-ct = new TCanvas("ct","Time on axis",0,0,600,600);
-ct-&gt;Divide(1,3);
-ht1 = new TH1F("ht1","ht1",30000,0.,200000.);
-ht2 = new TH1F("ht2","ht2",30000,0.,200000.);
-ht3 = new TH1F("ht3","ht3",30000,0.,200000.);
-for (Int_t i=1;i&lt;30000;i++) {
-Float_t noise = gRandom-&gt;Gaus(0,120);
-ht1-&gt;SetBinContent(i,noise);
-ht2-&gt;SetBinContent(i,noise*noise);
-ht3-&gt;SetBinContent(i,noise*noise*noise);
-}
-ct-&gt;cd(1);
-ht1-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
-ht1-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
-ht1-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y%F2000-02-2813:00:01");
-ht1-&gt;Draw();
-ct-&gt;cd(2);
-ht2-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
-ht2-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
-ht2-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y");
-ht2-&gt;Draw();
-ct-&gt;cd(3);
-ht3-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
-TDatime dh(2001,09,23,15,00,00);
-ht3-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
-ht3-&gt;GetXaxis()-&gt;SetTimeOffset(dh.Convert());
-ht3-&gt;Draw();
+  gStyle-&gt;SetTitleH(0.08);
+  TDatime da(2003,02,28,12,00,00);
+  gStyle-&gt;SetTimeOffset(da.Convert());
+  ct = new TCanvas("ct","Time on axis",0,0,600,600);
+  ct-&gt;Divide(1,3);
+  ht1 = new TH1F("ht1","ht1",30000,0.,200000.);
+  ht2 = new TH1F("ht2","ht2",30000,0.,200000.);
+  ht3 = new TH1F("ht3","ht3",30000,0.,200000.);
+  for (Int_t i=1;i&lt;30000;i++) {
+    Float_t noise = gRandom-&gt;Gaus(0,120);
+    ht1-&gt;SetBinContent(i,noise);
+    ht2-&gt;SetBinContent(i,noise*noise);
+    ht3-&gt;SetBinContent(i,noise*noise*noise);
+  }
+  ct-&gt;cd(1);
+  ht1-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
+  ht1-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
+  ht1-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y%F2000-02-2813:00:01");
+  ht1-&gt;Draw();
+  ct-&gt;cd(2);
+  ht2-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
+  ht2-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
+  ht2-&gt;GetXaxis()-&gt;SetTimeFormat("%d/%m/%y");
+  ht2-&gt;Draw();
+  ct-&gt;cd(3);
+  ht3-&gt;GetXaxis()-&gt;SetLabelSize(0.06);
+  TDatime dh(2001,09,23,15,00,00);
+  ht3-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
+  ht3-&gt;GetXaxis()-&gt;SetTimeOffset(dh.Convert());
+  ht3-&gt;Draw();
 }
 </programlisting>
 
-<para>The output is shown in the figure below. If a time axis has no specified time offset, the global time offset will be stored in the axis data structure. The histogram limits are in seconds. If <code>wmin</code> and <code>wmax</code> are the histogram limits, the time axis will spread around the time offset value from <code>TimeOffset+wmin</code> to <code>TimeOffset+wmax</code>. Until now all examples had a lowest value equal to 0. The following example demonstrates how to define the histogram limits relatively to the time offset value.</para>
-<para>Figure 920 Time axis examples</para>
+<para>The output is shown in the figure below. If a time axis has no specified
+time offset, the global time offset will be stored in the axis data structure.
+The histogram limits are in seconds. If <code>wmin</code> and <code>wmax</code>
+are the histogram limits, the time axis will spread around the time offset value
+from <code>TimeOffset+wmin</code> to <code>TimeOffset+wmax</code>. Until now all
+examples had a lowest value equal to 0. The following example demonstrates how
+to define the histogram limits relatively to the time offset value.</para>
+
+<figure>
+<title>Time axis examples</title>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/030000C8.png" width="211.05pt" depth="201.7pt"/></imageobject></inlinemediaobject>
 </para>
+</figure>
 
 <programlisting language="c++">{
-<emphasis role="italic"><code>   // Define the time offset as 2003, January 1st</code></emphasis>
-TDatime T0(2003,01,01,00,00,00);
-int X0 = T0.Convert();
-gStyle-&gt;SetTimeOffset(X0);
+<emphasis role="italic">  // Define the time offset as 2003, January 1st</emphasis>
+  TDatime T0(2003,01,01,00,00,00);
+  int X0 = T0.Convert();
+  gStyle-&gt;SetTimeOffset(X0);
 
-<emphasis role="italic"><code>   // Define the lowest histogram limit as 2002,September 23rd</code></emphasis>
-TDatime T1(2002,09,23,00,00,00);
-int X1 = T1.Convert()-X0;
+<emphasis role="italic">  // Define the lowest histogram limit as 2002,September 23rd</emphasis>
+   TDatime T1(2002,09,23,00,00,00);
+   int X1 = T1.Convert()-X0;
 
-<emphasis role="italic"><code>   // Define the highest histogram limit as 2003, March 7th</code></emphasis>
-TDatime T2(2003,03,07,00,00,00);
-int X2 = T2.Convert(1)-X0;
+<emphasis role="italic">  // Define the highest histogram limit as 2003, March 7th</emphasis>
+  TDatime T2(2003,03,07,00,00,00);
+  int X2 = T2.Convert(1)-X0;
 
-TH1F * h1 = new TH1F("h1","test",100,X1,X2);
+  TH1F * h1 = new TH1F("h1","test",100,X1,X2);
 
-TRandom r;
-for (Int_t i=0;i&lt;30000;i++) {
-Double_t noise = r.Gaus(0.5*(X1+X2),0.1*(X2-X1));
-h1-&gt;Fill(noise);
-}
+  TRandom r;
+  for (Int_t i=0;i&lt;30000;i++) {
+    Double_t noise = r.Gaus(0.5*(X1+X2),0.1*(X2-X1));
+    h1-&gt;Fill(noise);
+  }
 
-h1-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
-h1-&gt;GetXaxis()-&gt;SetLabelSize(0.03);
-h1-&gt;GetXaxis()-&gt;SetTimeFormat("%Y/%m/%d");
-h1-&gt;Draw();
+  h1-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
+  h1-&gt;GetXaxis()-&gt;SetLabelSize(0.03);
+  h1-&gt;GetXaxis()-&gt;SetTimeFormat("%Y/%m/%d");
+  h1-&gt;Draw();
 }
 </programlisting>
 
-<para>The output is shown in the next figure. Usually time axes are created automatically via histograms, but one may also want to draw a time axis outside a "histogram context". Therefore, it is useful to understand how <emphasis role="bold"><code>TGaxis</code></emphasis> works for such axis. The time offset can be defined using one of the three methods described before. The time axis will spread around the time offset value. Actually, it will go from <code>TimeOffset+wmin</code> to <code>TimeOffset+wmax</code> where <code>wmin</code> and <code>wmax</code> are the minimum and maximum values (in seconds) of the axis. Let us take again an example. Having defined "2003, February 28 at 12h”, we would like to see the axis a day before and a day after.</para>
+<para>The output is shown in the next figure. Usually time axes are created
+automatically via histograms, but one may also want to draw a time axis outside
+a "histogram context". Therefore, it is useful to understand how
+<emphasis role="bold"><code>TGaxis</code></emphasis> works for such axis. The
+time offset can be defined using one of the three methods described before. The
+time axis will spread around the time offset value. Actually, it will go from
+<code>TimeOffset+wmin</code> to <code>TimeOffset+wmax</code> where
+<code>wmin</code> and <code>wmax</code> are the minimum and maximum values
+(in seconds) of the axis. Let us take again an example. Having defined
+"2003, February 28 at 12h”, we would like to see the axis a day before and a
+day after.</para>
 
 <figure><title>A histogram with time axis X</title>
 <para>
@@ -2188,23 +2293,26 @@ h1-&gt;Draw();
 </para>
 </figure>
 
-<para>A <emphasis role="bold"><code>TGaxis</code></emphasis> can be created the following way (a day has 86400 seconds):</para>
+<para>A <emphasis role="bold"><code>TGaxis</code></emphasis> can be created the
+following way (a day has 86400 seconds):</para>
 
 <programlisting language="c++">TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
 </programlisting>
 
-<para>the "<code>t</code>" option (in lower case) means it is a "time axis". The axis goes form 100000 seconds before <code>TimeOffset </code>and 150000 seconds after. So the complete macro is:</para>
+<para>the "<code>t</code>" option (in lower case) means it is a "time axis".
+The axis goes form 100000 seconds before <code>TimeOffset</code> and 150000
+seconds after. So the complete macro is:</para>
 
-<programlisting language="c++">{
-c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
-c1-&gt;Range(-10,-1,10,1);
-TGaxis *axis = new TGaxis(-8,-0.6,8,-0.6,-100000,150000,2405,"t");
-axis-&gt;SetLabelSize(0.03);
+<programlisting language="c++" width="80">{
+  c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
+  c1-&gt;Range(-10,-1,10,1);
+  TGaxis *axis = new TGaxis(-8,-0.6,8,-0.6,-100000,150000,2405,"t");
+  axis-&gt;SetLabelSize(0.03);
 
-TDatime da(2003,02,28,12,00,00);
-axis-&gt;SetTimeOffset(da.Convert());
-axis-&gt;SetTimeFormat("%d/%m/%Y");
-axis-&gt;Draw();
+  TDatime da(2003,02,28,12,00,00);
+  axis-&gt;SetTimeOffset(da.Convert());
+  axis-&gt;SetTimeFormat("%d/%m/%Y");
+  axis-&gt;Draw();
 }
 </programlisting>
 
@@ -2218,7 +2326,10 @@ axis-&gt;Draw();
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/030000CA.png" width="289.25pt" depth="32.3pt"/></imageobject></inlinemediaobject>
 </para>
-<para>Thanks to the <emphasis role="bold"><code>TLatex</code></emphasis> directive <code>#splitline</code> it is possible to write the time labels on two lines. In the previous example changing the <code>SetTimeFormat</code> line by:</para>
+<para>Thanks to the <emphasis role="bold"><code>TLatex</code></emphasis>
+directive <code>#splitline</code> it is possible to write the time labels on two
+lines. In the previous example changing the <code>SetTimeFormat</code> line
+by:</para>
 
 <programlisting language="c++">axis-&gt;SetLabelOffset(0.02);
 axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
@@ -2233,7 +2344,8 @@ axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
 
 <sect2>
 <title>Axis Examples</title>
-<para>To illustrate what was said, we provide two scripts. The first one creates the picture shown in the next figure.</para>
+<para>To illustrate what was said, we provide two scripts. The first one creates
+the picture shown in the next figure.</para>
 
 <figure><title>The first axis example</title>
 <para>
@@ -2244,43 +2356,43 @@ axis-&gt;SetTimeFormat("#splitline{%Y}{%d/%m}");
 <para>The first script is:</para>
 
 <programlisting language="c++">{
-c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
-c1-&gt;Range(-10,-1,10,1);
+  c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
+  c1-&gt;Range(-10,-1,10,1);
 
-TGaxis *axis1 = new TGaxis(-4.5,-0.2,5.5,-0.2,-6,8,510,"");
-axis1-&gt;SetName("axis1");
-axis1-&gt;Draw();
-TGaxis *axis2 = new TGaxis(4.5,0.2,5.5,0.2,0.001,10000,510,"G");
-axis2-&gt;SetName("axis2");
-axis2-&gt;Draw();
+  TGaxis *axis1 = new TGaxis(-4.5,-0.2,5.5,-0.2,-6,8,510,"");
+  axis1-&gt;SetName("axis1");
+  axis1-&gt;Draw();
+  TGaxis *axis2 = new TGaxis(4.5,0.2,5.5,0.2,0.001,10000,510,"G");
+  axis2-&gt;SetName("axis2");
+  axis2-&gt;Draw();
 
-TGaxis *axis3 = new TGaxis(-9,-0.8,-9,0.8,-8,8,50510,"");
-axis3-&gt;SetName("axis3");
-axis3-&gt;Draw();
-TGaxis *axis4 = new TGaxis(-7,-0.8,7,0.8,1,10000,50510,"G");
-axis4-&gt;SetName("axis4");
-axis4-&gt;Draw();
+  TGaxis *axis3 = new TGaxis(-9,-0.8,-9,0.8,-8,8,50510,"");
+  axis3-&gt;SetName("axis3");
+  axis3-&gt;Draw();
+  TGaxis *axis4 = new TGaxis(-7,-0.8,7,0.8,1,10000,50510,"G");
+  axis4-&gt;SetName("axis4");
+  axis4-&gt;Draw();
 
-TGaxis *axis5 = new TGaxis(-4.5,-6,5.5,-6,1.2,1.32,80506,"-+");
-axis5-&gt;SetName("axis5");
-axis5-&gt;SetLabelSize(0.03);
-axis5-&gt;SetTextFont(72);
-axis5-&gt;SetLabelOffset(0.025);
-axis5-&gt;Draw();
+  TGaxis *axis5 = new TGaxis(-4.5,-6,5.5,-6,1.2,1.32,80506,"-+");
+  axis5-&gt;SetName("axis5");
+  axis5-&gt;SetLabelSize(0.03);
+  axis5-&gt;SetTextFont(72);
+  axis5-&gt;SetLabelOffset(0.025);
+  axis5-&gt;Draw();
 
-TGaxis *axis6 = new TGaxis(-4.5,0.6,5.5,0.6,100,900,50510,"-");
-axis6-&gt;SetName("axis6");
-axis6-&gt;Draw();
-TGaxis *axis7 = new TGaxis(8,-0.8,8,0.8,0,9000,50510,"+L");
-axis7-&gt;SetName("axis7");
-axis7-&gt;SetLabelOffset(0.01);
-axis7-&gt;Draw();
+  TGaxis *axis6 = new TGaxis(-4.5,0.6,5.5,0.6,100,900,50510,"-");
+  axis6-&gt;SetName("axis6");
+  axis6-&gt;Draw();
+  TGaxis *axis7 = new TGaxis(8,-0.8,8,0.8,0,9000,50510,"+L");
+  axis7-&gt;SetName("axis7");
+  axis7-&gt;SetLabelOffset(0.01);
+  axis7-&gt;Draw();
 
-<emphasis role="italic"><code>// one can make axis top-&gt;bottom. However because of a problem,</code></emphasis>
-<emphasis role="italic"><code>// the two x values should not be equal</code></emphasis>
-TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
-axis8-&gt;SetName("axis8");
-axis8-&gt;Draw();
+<emphasis role="italic">  // one can make axis top-&gt;bottom. However because of a problem,</emphasis>
+<emphasis role="italic">  // the two x values should not be equal</emphasis>
+  TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
+  axis8-&gt;SetName("axis8");
+  axis8-&gt;Draw();
 }
 </programlisting>
 
@@ -2290,34 +2402,36 @@ axis8-&gt;Draw();
 </para>
 </figure>
 
-<para>The second example shows the use of the second form of the constructor, with axis ticks position determined by a function <emphasis role="bold"><code>TF1</code></emphasis>:</para>
+<para>The second example shows the use of the second form of the constructor,
+with axis ticks position determined by a function
+<emphasis role="bold"><code>TF1</code></emphasis>:</para>
 
 <programlisting language="c++">void gaxis3a()
 {
-gStyle-&gt;SetOptStat(0);
+  gStyle-&gt;SetOptStat(0);
 
-TH2F *h2 = new TH2F("h","Axes",2,0,10,2,-2,2);
-h2-&gt;Draw();
-TF1 *f1=new TF1("f1","-x",-10,10);
-TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
-A1-&gt;SetTitle("axis with decreasing values");
-A1-&gt;Draw();
+  TH2F *h2 = new TH2F("h","Axes",2,0,10,2,-2,2);
+  h2-&gt;Draw();
+  TF1 *f1=new TF1("f1","-x",-10,10);
+  TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
+  A1-&gt;SetTitle("axis with decreasing values");
+  A1-&gt;Draw();
 
-TF1 *f2=new TF1("f2","exp(x)",0,2);
-TGaxis *A2 = new TGaxis(1,1,9,1,"f2");
-A2-&gt;SetTitle("exponential axis");
-A2-&gt;SetLabelSize(0.03);
-A2-&gt;SetTitleSize(0.03);
-A2-&gt;SetTitleOffset(1.2);
-A2-&gt;Draw();
+  TF1 *f2=new TF1("f2","exp(x)",0,2);
+  TGaxis *A2 = new TGaxis(1,1,9,1,"f2");
+  A2-&gt;SetTitle("exponential axis");
+  A2-&gt;SetLabelSize(0.03);
+  A2-&gt;SetTitleSize(0.03);
+  A2-&gt;SetTitleOffset(1.2);
+  A2-&gt;Draw();
 
-TF1 *f3=new TF1("f3","log10(x)",0,800);
-TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505);
-A3-&gt;SetTitle("logarithmic axis");
-A3-&gt;SetLabelSize(0.03);
-A3-&gt;SetTitleSize(0.03);
-A3-&gt;SetTitleOffset(1.2);
-A3-&gt;Draw();
+  TF1 *f3=new TF1("f3","log10(x)",0,800);
+  TGaxis *A3 = new TGaxis(2,-2,2,0,"f3",505);
+  A3-&gt;SetTitle("logarithmic axis");
+  A3-&gt;SetLabelSize(0.03);
+  A3-&gt;SetTitleSize(0.03);
+  A3-&gt;SetTitleOffset(1.2);
+  A3-&gt;Draw();
 }
 </programlisting>
 
@@ -2330,42 +2444,42 @@ A3-&gt;Draw();
 <para/>
 
 <programlisting language="c++"><emphasis role="italic">// strip chart example</emphasis>
-<code>void seism() {</code>
+void seism() {
 
-<code>   TStopwatch sw; sw.Start();</code>
-<emphasis role="italic"><code>   //set time offset</code></emphasis>
-<code>   TDatime dtime;</code>
-<code>   gStyle-&gt;SetTimeOffset(dtime.Convert());</code>
-<code>   TCanvas *c1 = new TCanvas("c1","Time on axis",10,10,1000,500);</code>
-<code>   c1-&gt;SetFillColor(42);</code>
-<code>   c1-&gt;SetFrameFillColor(33);</code>
-<code>   c1-&gt;SetGrid();</code>
+  TStopwatch sw; sw.Start();
+<emphasis role="italic">  //set time offset</emphasis>
+  TDatime dtime;
+  gStyle-&gt;SetTimeOffset(dtime.Convert());
+  TCanvas *c1 = new TCanvas("c1","Time on axis",10,10,1000,500);
+  c1-&gt;SetFillColor(42);
+  c1-&gt;SetFrameFillColor(33);
+  c1-&gt;SetGrid();
 
-<code>   Float_t bintime = 1; </code>
-<code>   //one bin = 1 second. change it to set the time scale</code>
-<code>   TH1F *ht = new TH1F("ht","The ROOT seism",10,0,10*bintime);</code>
-<code>   Float_t signal = 1000;</code>
-<code>   ht-&gt;SetMaximum(signal);</code>
-<code>   ht-&gt;SetMinimum(-signal);</code>
-<code>   ht-&gt;SetStats(0);</code>
-<code>   ht-&gt;SetLineColor(2);</code>
-<code>   ht-&gt;GetXaxis()-&gt;SetTimeDisplay(1);</code>
-<code>   ht-&gt;GetYaxis()-&gt;SetNdivisions(520);</code>
-<code>   ht-&gt;Draw();</code>
+  Float_t bintime = 1; 
+  // one bin = 1 second. change it to set the time scale
+  TH1F *ht = new TH1F("ht","The ROOT seism",10,0,10*bintime);
+  Float_t signal = 1000;
+  ht-&gt;SetMaximum(signal);
+  ht-&gt;SetMinimum(-signal);
+  ht-&gt;SetStats(0);
+  ht-&gt;SetLineColor(2);
+  ht-&gt;GetXaxis()-&gt;SetTimeDisplay(1);
+  ht-&gt;GetYaxis()-&gt;SetNdivisions(520);
+  ht-&gt;Draw();
 
-<code>   for (Int_t i=1;i&lt;2300;i++) {</code>
-<emphasis role="italic"><code>      //======= Build a signal : noisy damped sine ======</code></emphasis>
-<code>      Float_t noise  = gRandom-&gt;Gaus(0,120);</code>
-<code>      if (i &gt; 700) </code>
-<code>         noise += signal*sin((i-700.)*6.28/30)*exp((700.-i)/300.);</code>
-<code>      ht-&gt;SetBinContent(i,noise);</code>
-<code>      c1-&gt;Modified();</code>
-<code>      c1-&gt;Update();</code>
-<code>      gSystem-&gt;ProcessEvents(); </code>
-<code>      //canvas can be edited during the loop</code>
-<code>   }</code>
-<code>   printf("Real Time = %8.3fs,Cpu Time = %8.3fsn",sw.RealTime(),sw.CpuTime());</code>
-<code>}</code>
+  for (Int_t i=1;i&lt;2300;i++) {
+<emphasis role="italic">    // Build a signal : noisy damped sine</emphasis>
+    Float_t noise  = gRandom-&gt;Gaus(0,120);
+    if (i &gt; 700) 
+      noise += signal*sin((i-700.)*6.28/30)*exp((700.-i)/300.);
+    ht-&gt;SetBinContent(i,noise);
+    c1-&gt;Modified();
+    c1-&gt;Update();
+    gSystem-&gt;ProcessEvents(); 
+    //canvas can be edited during the loop
+   }
+   printf("Real Time = %8.3fs,Cpu Time = %8.3fsn",sw.RealTime(),sw.CpuTime());
+}
 </programlisting>
 
 <para/>
@@ -2377,16 +2491,27 @@ A3-&gt;Draw();
 
 <sect2>
 <title>Text Attributes</title>
-<para>When a class contains text or derives from a text class, it needs to be able to set text attributes like font type, size, and color. To do so, the class inherits from the <emphasis role="bold"><code>TAttText</code></emphasis> class (a secondary inheritance), which defines text attributes. <emphasis role="bold"><code>TLatex</code></emphasis> and <emphasis role="bold"><code>TText</code></emphasis> inherit from <emphasis role="bold"><code>TAttText</code></emphasis>.</para>
+<para>When a class contains text or derives from a text class, it needs to be
+able to set text attributes like font type, size, and color. To do so, the class
+inherits from the <emphasis role="bold"><code>TAttText</code></emphasis> class
+(a secondary inheritance), which defines text attributes.
+<emphasis role="bold"><code>TLatex</code></emphasis> and
+<emphasis role="bold"><code>TText</code></emphasis> inherit from
+<emphasis role="bold"><code>TAttText</code></emphasis>.</para>
 
 <sect3>
 <title>Setting Text Alignment</title>
-<para>Text alignment may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttText</code></emphasis>, and there are many. We will take an example that may be transposed to other types. Suppose "<code>la</code>" is a <emphasis role="bold"><code>TLatex</code></emphasis> object. The alignment is set with:</para>
+<para>Text alignment may be set by a method call. What is said here applies to
+all objects deriving from <emphasis role="bold"><code>TAttText</code></emphasis>,
+and there are many. We will take an example that may be transposed to other types.
+Suppose "<code>la</code>" is a <emphasis role="bold"><code>TLatex</code></emphasis>
+object. The alignment is set with:</para>
 
-<programlisting language="c++">root[] <emphasis role="bold"><code>la-&gt;SetTextAlign(align)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">la-&gt;SetTextAlign(align)</emphasis>
 </programlisting>
 
-<para>The parameter <code>align</code> is a <code>short</code> describing the alignment:</para>
+<para>The parameter <code>align</code> is a <code>short</code> describing the
+alignment:</para>
 <para>
 <code>align  = 10*HorizontalAlign + VerticalAlign</code></para>
 <para>For horizontal alignment, the following convention applies:</para>
@@ -2401,12 +2526,15 @@ A3-&gt;Draw();
 <listitem><para>2 = centered</para></listitem>
 <listitem><para>3 = top</para></listitem>
 </itemizedlist>
-<para>For example, align: 11 = left adjusted and bottom adjusted; 32 = right adjusted and vertically centered.</para>
+<para>For example, align: 11 = left adjusted and bottom adjusted; 32 = right
+adjusted and vertically centered.</para>
 </sect3>
 
 <sect3>
 <title>Setting Text Angle</title>
-<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextAngle</code> to set the text angle. The <code>angle</code> is the degrees of the horizontal.</para>
+<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextAngle</code>
+to set the text angle. The <code>angle</code> is the degrees of the
+horizontal.</para>
 
 <programlisting language="c++">root[] <emphasis role="bold">la-&gt;SetTextAngle(angle)</emphasis>
 </programlisting>
@@ -2415,7 +2543,9 @@ A3-&gt;Draw();
 
 <sect3>
 <title>Setting Text Color</title>
-<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextColor</code> to set the text color. The <code>color</code> is the color index. The colors are described in "Color and Color Palettes".</para>
+<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextColor</code>
+to set the text color. The <code>color</code> is the color index. The colors are
+described in "Color and Color Palettes".</para>
 
 <programlisting language="c++">root[] la-&gt;SetTextColor(color)
 </programlisting>
@@ -2424,18 +2554,22 @@ A3-&gt;Draw();
 
 <sect3>
 <title>Setting Text Font</title>
-<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextFont</code> to set the font. The parameter font is the font code, combining the font and precision:   <code>font = 10 * fontID + precision</code></para>
+<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextFont</code>
+to set the font. The parameter font is the font code, combining the font and
+precision: <code>font = 10 * fontID + precision</code></para>
 
 <programlisting language="c++">root[] la-&gt;SetTextFont(font)
 </programlisting>
 
-<para>The table below lists the available fonts. The font IDs must be between 1 and 14. The precision can be:</para>
+<para>The table below lists the available fonts. The font IDs must be between 1
+and 14. The precision can be:</para>
 <itemizedlist>
 <listitem><para>Precision = 0 fast hardware fonts (steps in the size)</para></listitem>
 <listitem><para>Precision = 1 scalable and rotate-able hardware fonts (see below)</para></listitem>
 <listitem><para>Precision = 2 scalable and rotate-able hardware fonts</para></listitem>
 </itemizedlist>
-<para>When precision 0 is used, only the original non-scaled system fonts are used. The fonts have a minimum (4) and maximum (37) size in pixels. These fonts are fast and are of good quality. Their size varies with large steps and they cannot be rotated. Precision 1 and 2 fonts have a different behavior depending if True Type Fonts (TTF) are used or not. If TTF are used, you always get very good quality scalable and rotate-able fonts. However, TTF are slow. Precision 1 and 2 fonts have a different behavior for PostScript in case of <emphasis role="bold"><code>TLatex</code></emphasis> objects:</para>
+<para>When precision 0 is used, only the original non-scaled system fonts are used.
+The fonts have a minimum (4) and maximum (37) size in pixels. These fonts are fast and are of good quality. Their size varies with large steps and they cannot be rotated. Precision 1 and 2 fonts have a different behavior depending if True Type Fonts (TTF) are used or not. If TTF are used, you always get very good quality scalable and rotate-able fonts. However, TTF are slow. Precision 1 and 2 fonts have a different behavior for PostScript in case of <emphasis role="bold"><code>TLatex</code></emphasis> objects:</para>
 <itemizedlist>
 <listitem><para>With precision 1, the PostScript text uses the old convention (<code>see </code><emphasis role="bold"><code>TPostScript</code></emphasis>) for some special characters to draw sub and superscripts or Greek text.</para></listitem>
 <listitem><para>With precision 2, the "PostScript" special characters are drawn as such. To draw sub and superscripts it is highly recommended to use <emphasis role="bold"><code>TLatex</code></emphasis> objects instead.</para></listitem>
@@ -2448,15 +2582,6 @@ A3-&gt;Draw();
 </para>
 </figure>
 
-<para/>
-<para/>
-<para/>
-<para/>
-<para/>
-<para/>
-<para/>
-<para/>
-<para/>
 <para>The available fonts are:</para>
 <informaltable frame="all">
 <tgroup cols="5">
@@ -2727,18 +2852,18 @@ A3-&gt;Draw();
 <para>This script makes the image of the different fonts:</para>
 
 <programlisting language="c++">{
-textc = new TCanvas("textc","Example of text",1);
-for (int i=1;i&lt;15;i++) {
-cid = new char[8];
-sprintf(cid,"ID %d :",i);
-cid[7] = 0;
-lid = new TLatex(0.1,1-(double)i/15,cid);
-lid-&gt;SetTextFont(62);
-lid-&gt;Draw();
-l = new TLatex(.2,1-(double)i/15,"The quick brown fox is not here anymore")
-l-&gt;SetTextFont(i*10+2);
-l-&gt;Draw();
-}
+  textc = new TCanvas("textc","Example of text",1);
+  for (int i=1;i&lt;15;i++) {
+    cid = new char[8];
+    sprintf(cid,"ID %d :",i);
+    cid[7] = 0;
+    lid = new TLatex(0.1,1-(double)i/15,cid);
+    lid-&gt;SetTextFont(62);
+    lid-&gt;Draw();
+    l = new TLatex(.2,1-(double)i/15,"The quick brown fox is not here anymore")
+    l-&gt;SetTextFont(i*10+2);
+    l-&gt;Draw();
+  }
 }
 </programlisting>
 
@@ -2746,12 +2871,16 @@ l-&gt;Draw();
 
 <sect3>
 <title>How to use True Type Fonts</title>
-<para>You can activate the True Type Fonts by adding the following line in your <code>.rootrc</code> file.</para>
+<para>You can activate the True Type Fonts by adding the following line in your
+<code>.rootrc</code> file.</para>
 
 <programlisting language="c++">Unix.*.Root.UseTTFonts:     true
 </programlisting>
 
-<para>You can check that you indeed use the <code>TTF</code> in your Root session. When the <code>TTF</code> is active, you get the following message at the start of a session:  "Free Type Engine v1.x used to render TrueType fonts." You can also check with the command:</para>
+<para>You can check that you indeed use the <code>TTF</code> in your Root
+session. When the <code>TTF</code> is active, you get the following message at
+the start of a session:  "Free Type Engine v1.x used to render TrueType fonts."
+You can also check with the command:</para>
 
 <programlisting language="c++">gEnv-&gt;Print()
 </programlisting>
@@ -2760,7 +2889,9 @@ l-&gt;Draw();
 
 <sect3>
 <title>Setting Text Size</title>
-<para>Use <emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextSize</code> to set the text size.</para>
+<para>Use
+<emphasis role="bold"><code>TAttText</code></emphasis><code>::SetTextSize</code>
+to set the text size.</para>
 
 <programlisting language="c++">root[]<emphasis role="bold"><code> la-&gt;SetTextSize(size)</code></emphasis>
 </programlisting>
