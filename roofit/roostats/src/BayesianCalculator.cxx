@@ -497,7 +497,7 @@ private:
             const RooArgSet* genset=fGenParams->get(iter);
             RooAbsArg * arg = genset->find( fNuisParams[i].GetName() );
             RooRealVar * var = dynamic_cast<RooRealVar*>(arg);
-            assert( arg!= 0);
+            assert(var != 0);
             p[i] = var->getVal();
             ((RooRealVar &) fNuisParams[i]).setVal(p[i]);
          }

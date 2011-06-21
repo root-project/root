@@ -72,6 +72,7 @@ END_HTML
 //#include "RooStats/HistFactory/Helper.h"
 #include "Helper.h"
 #include "RooStats/HistFactory/LinInterpVar.h"
+#include "RooStats/HistFactory/FlexibleInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
 
 #define VERBOSE
@@ -322,7 +323,9 @@ namespace HistFactory{
     }
     if(systMap.size()>0){
       // this is epsilon(alpha_j), a piece-wise linear interpolation
-      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
+      //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
+      FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
+      interp.setAllInterpCodes(1); // changing default to piece-wise log interpolation from pice-wise linear
       proto->import(interp); // params have already been imported in first loop of this function
     } else{
       // some strange behavior if params,lowVec,highVec are empty.  
@@ -661,6 +664,7 @@ namespace HistFactory{
 	
       }
     }
+
 
     /////////////////////////////////////////
     ////////////////////////////////////

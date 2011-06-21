@@ -48,7 +48,25 @@ public:
 
    // function to return the estimated error on the value of the confidence level for the i^th entry in the results
    double GetYError( int index ) const ;
-    
+
+   // return the observed CLsplusb value  for the i-th entry
+   double CLsplusb( int index) const; 
+ 
+   // return the observed CLb value  for the i-th entry
+   double CLb( int index) const; 
+
+   // return the observed CLb value  for the i-th entry
+   double CLs( int index) const; 
+
+   // return the observed CLsplusb value  for the i-th entry
+   double CLsplusbError( int index) const; 
+ 
+   // return the observed CLb value  for the i-th entry
+   double CLbError( int index) const; 
+
+   // return the observed CLb value  for the i-th entry
+   double CLsError( int index) const; 
+   
    // return a pointer to the i^th result object
    HypoTestResult* GetResult( int index ) const ;   
 
@@ -62,10 +80,6 @@ public:
 
    // get expected lower limit distributions
    SamplingDistribution* GetLowerLimitDistribution() const { return 0; }// not yet implemented 
-
-   // get expected upper limit distributions
-   // implemented using interpolation
-   SamplingDistribution* GetUpperLimitDistribution() const;
 
 
    // number of entries in the results array
@@ -97,6 +111,25 @@ public:
    // return expected distribution of p-values (Cls or Clsplusb)
    SamplingDistribution * GetExpectedDistribution(int index) const; 
 
+   SamplingDistribution * GetBackgroundDistribution(int index = 0) const; 
+
+   SamplingDistribution * GetSignalAndBackgroundDistribution(int index) const; 
+
+   // get expected upper limit distributions
+   // implemented using interpolation
+   SamplingDistribution* GetUpperLimitDistribution( ) const;
+
+   // get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
+   double GetExpectedUpperLimit(double nsig = 0) const ; 
+
+   double FindInterpolatedLimit(double target);
+
+   enum InterpolOption_t { kLinear, kSpline };
+
+   // set the interpolation option, linear (kLinear ) or spline  (kSpline)
+   void SetInterpolationOption( InterpolOption_t opt) { fInterpolOption = opt; }
+   
+   InterpolOption_t GetInterpolationOption() const { return fInterpolOption; }
 
 private:
 
@@ -105,19 +138,19 @@ private:
 
    double CalculateEstimatedError(double target);
    int FindClosestPointIndex(double target);
-   double FindInterpolatedLimit(double target);
 
-   SamplingDistribution * GetBackgroundDistribution() const; 
+   double GetGraphX(const TGraph & g, double y0) const;
 
-   SamplingDistribution * GetSignalAndBackgroundDistribution(int index) const; 
-
+ 
 protected:
 
+   
    bool fUseCLs; 
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
    bool fFittedUpperLimit;
+   InterpolOption_t fInterpolOption;  // interpolatation option (linear or spline)
 
    double fLowerLimitError;
    double fUpperLimitError;
@@ -127,6 +160,7 @@ protected:
    TList fYObjects;
 
    friend class HypoTestInverter;
+   friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
    ClassDef(HypoTestInverterResult,1)  // HypoTestInverterResult class      

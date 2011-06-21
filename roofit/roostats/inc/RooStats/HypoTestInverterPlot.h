@@ -14,35 +14,44 @@
 #include "TNamed.h"
 
 class TGraphErrors; 
-
+class TMultiGraph;
 
 namespace RooStats {
 
-  class HypoTestInverterResult; 
+   class HypoTestInverterResult; 
 
-  class HypoTestInverterPlot : public TNamed {
+   class HypoTestInverterPlot : public TNamed {
+     
+   public:
 
-  public:
+      // constructor
+      HypoTestInverterPlot(HypoTestInverterResult* results ) ;
+ 
+      HypoTestInverterPlot( const char* name, 
+                            const char* title,
+                            HypoTestInverterResult* results ) ;
+     
+      // return a TGraphErrors for the observed plot 
+      TGraphErrors* MakePlot(Option_t *opt="") ;
 
-    // constructor
-    HypoTestInverterPlot( const char* name, 
-			  const char* title,
-			  HypoTestInverterResult* results ) ;
+      // return the TGraphAsymmErrors for the expected plots with the bands specified by 
+      TMultiGraph* MakeExpectedPlot(double sig1=1, double sig2=2) ;
 
-    TGraphErrors* MakePlot() ;
+      // Draw method
+      void Draw(Option_t *opt="");
 
-    // destructor
-    ~HypoTestInverterPlot() ;
+      // destructor
+      ~HypoTestInverterPlot() ;
 
-  private:
+   private:
 
-    HypoTestInverterResult* fResults;
+      HypoTestInverterResult* fResults;
 
-  protected:
+   protected:
 
-    ClassDef(HypoTestInverterPlot,1)  // HypoTestInverterPlot class
+      ClassDef(HypoTestInverterPlot,1)  // HypoTestInverterPlot class
 
-  };
+   };
 }
 
 #endif

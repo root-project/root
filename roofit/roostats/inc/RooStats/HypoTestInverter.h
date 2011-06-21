@@ -67,12 +67,6 @@ public:
 
    virtual HypoTestInverterResult* GetInterval() const; 
 
-   // // get expected upper limit distributions
-   // SamplingDistribution* GetUpperLimitDistribution(RooRealVar& poi, RooArgSet& paramPoint) {return 0;}
-
-   // // get expected lower limit distributions
-   // SamplingDistribution* GetLowerLimitDistribution(RooRealVar& poi, RooArgSet& paramPoint) {return 0;}
-
    void Clear();
 
    // set for a fixed scan in nbins
@@ -123,6 +117,7 @@ public:
    // set verbose level (0,1,2)
    void SetVerbose(int level=1) { fVerbose = level; }
 
+
   
 protected:
     
@@ -131,7 +126,9 @@ protected:
    // run the hybrid at a single point
    HypoTestResult * Eval( HypoTestCalculatorGeneric &hc, bool adaptive , double clsTarget) const;
 
-    
+   // helper functions 
+   static RooRealVar * GetVariableToScan(const HypoTestCalculatorGeneric &hc);    
+   static void CheckInputModels(const HypoTestCalculatorGeneric &hc, const RooRealVar & scanVar);    
 
 private:
 
@@ -147,14 +144,12 @@ private:
     
     
    // performance counter: remember how many toys have been thrown
-   mutable unsigned int fPerf_totalToysRun;
-
+   mutable unsigned int fTotalToysRun;
     
-
    HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
    auto_ptr<HypoTestCalculatorGeneric> fHC;
    RooRealVar* fScannedVariable;     // pointer to the constrained variable
-   mutable HypoTestInverterResult* fResults;
+   mutable HypoTestInverterResult* fResults; // pointer to the result 
      
    bool fUseCLs;
    double fSize;
