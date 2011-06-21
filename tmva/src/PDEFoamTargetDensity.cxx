@@ -59,9 +59,12 @@ TMVA::PDEFoamTargetDensity::PDEFoamTargetDensity(std::vector<Double_t> box, UInt
    : PDEFoamDensityBase(box)
    , fTarget(target)
 {
+   // User construcor
+   //
    // Parameters:
    //
-   // - box - size of sampling box in each dimension
+   // - box - size of the range-searching box (n-dimensional
+   //   std::vector)
    //
    // - target - the target number to calculate the density for
 }
@@ -78,8 +81,19 @@ TMVA::PDEFoamTargetDensity::PDEFoamTargetDensity(const PDEFoamTargetDensity &dis
 Double_t TMVA::PDEFoamTargetDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
 {
    // This function is needed during the foam buildup.  It returns the
-   // average target value within volume divided by volume (specified
-   // by fVolFrac).
+   // average target value within the range-searching box at point
+   // Xarg, divided by volume (specified by fBox).
+   //
+   // Parameters:
+   //
+   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
+   //
+   // - event_density - here the event density is stored
+   //
+   // Returns:
+   //
+   // Average target value in the range-searching volume at point
+   // 'Xarg', divided by the box volume.
 
    if (!fBst)
       Log() << kFATAL << "<PDEFoamTargetDensity::Density()> Binary tree not found!" << Endl;

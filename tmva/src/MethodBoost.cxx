@@ -403,8 +403,10 @@ void TMVA::MethodBoost::Train()
       if (fMethodIndex==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
       
       // get ROC integral and overlap integral for single method on
-      // training sample
-      fROC_training = GetBoostROCIntegral(kTRUE, Types::kTraining, kTRUE);
+      // training sample if fMethodWeightType == "ByROC" or the user
+      // wants detailed monitoring
+      if (fMethodWeightType == "ByROC" || fDetailedMonitoring)
+         fROC_training = GetBoostROCIntegral(kTRUE, Types::kTraining, kTRUE);
 	 
       // calculate method weight
       CalcMethodWeight();

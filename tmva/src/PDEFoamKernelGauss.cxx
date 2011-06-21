@@ -181,7 +181,8 @@ Float_t TMVA::PDEFoamKernelGauss::WeightGaus(PDEFoam *foam, PDEFoamCell* cell,
 
    // calc position of nearest edge of cell
    std::vector<Float_t> cell_center;
-   for (Int_t i = 0; i < foam->GetTotDim(); i++) {
+   cell_center.reserve(foam->GetTotDim());
+   for (Int_t i = 0; i < foam->GetTotDim(); ++i) {
       if (txvec[i] < 0.) txvec[i] = 0.;
       if (txvec[i] > 1.) txvec[i] = 1.;
       //cell_center.push_back(cellPosi[i] + (0.5*cellSize[i]));
@@ -194,7 +195,7 @@ Float_t TMVA::PDEFoamKernelGauss::WeightGaus(PDEFoam *foam, PDEFoamCell* cell,
    }
 
    Float_t distance = 0; // euclidean distance for weighting
-   for (Int_t i = 0; i < foam->GetTotDim(); i++)
+   for (Int_t i = 0; i < foam->GetTotDim(); ++i)
       distance += Sqr(txvec.at(i) - cell_center.at(i));
    distance = TMath::Sqrt(distance);
 

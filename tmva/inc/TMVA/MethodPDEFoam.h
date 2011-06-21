@@ -39,24 +39,6 @@
 //                                                                          //
 // MethodPDEFoam                                                            //
 //                                                                          //
-// The PDEFoam method is an                                                 //
-// extension of the PDERS method, which divides the multi-dimensional       //
-// phase space in a finite number of hyper-rectangles (cells) of constant   //
-// event density.                                                           //
-// This "foam" of cells is filled with averaged probability-density         //
-// information sampled from a training event sample.                        //
-//                                                                          //
-// For a given number of cells, the binning algorithm adjusts the size      //
-// and position of the cells inside the multidimensional phase space        //
-// based on a binary-split algorithm, minimizing the variance of the        //
-// event density in the cell.                                               //
-// The binned event density information of the final foam is stored in      //
-// binary trees, allowing for a fast and memory-efficient classification    //
-// of events.                                                               //
-//                                                                          //
-// The implementation of PDEFoam is based on the Monte-Carlo integration    //
-// package TFoam included in the analysis package ROOT.                     //
-//                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TRandom3
@@ -118,12 +100,12 @@
 
 namespace TMVA {
 
-   // kernel types
-   enum EKernel { kNone=0, kGaus=1, kLinN=2 };
-
    class MethodPDEFoam : public MethodBase {
 
    public:
+
+      // kernel types
+      typedef enum EKernel { kNone=0, kGaus=1, kLinN=2 } EKernel;
 
       MethodPDEFoam( const TString& jobName,
                      const TString& methodTitle,
@@ -159,6 +141,7 @@ namespace TMVA {
       // write/read pure foams to/from file
       void WriteFoamsToFile() const;
       void ReadFoamsFromFile();
+      PDEFoam* ReadClonedFoamFromFile(TFile*, const TString&);
 
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
@@ -254,10 +237,7 @@ namespace TMVA {
 
       std::vector<Float_t> fXmin, fXmax; // range for histograms and foams
 
-      // foams and densities
-      // foam[0]=signal, if Sig and BG are Seperated; else foam[0]=signal/bg
-      // foam[1]=background, if Sig and BG are Seperated; else it is not used
-      std::vector<PDEFoam*> fFoam;
+      std::vector<PDEFoam*> fFoam;    // grown PDEFoams
 
       // default initialisation called by all constructors
       void Init( void );

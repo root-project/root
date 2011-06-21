@@ -57,7 +57,13 @@ TMVA::PDEFoamEventDensity::PDEFoamEventDensity()
 //_____________________________________________________________________
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity(std::vector<Double_t> box)
    : PDEFoamDensityBase(box)
-{}
+{
+   // User construcor
+   //
+   // Parameters:
+   //
+   // - box - size of sampling box
+}
 
 //_____________________________________________________________________
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity(const PDEFoamEventDensity &distr)
@@ -69,14 +75,21 @@ TMVA::PDEFoamEventDensity::PDEFoamEventDensity(const PDEFoamEventDensity &distr)
 //_____________________________________________________________________
 Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
 {
-   // This function is needed during the foam buildup.  It return the
-   // event density within volume (specified by fBox).
+   // This function is needed during the foam buildup.  It returns the
+   // event density within the range-searching volume (specified by
+   // fBox).
    //
    // Parameters:
    //
-   // - Xarg - event vector (in [fXmin,fXmax])
+   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
    //
    // - event_density - here the event density is stored
+   //
+   // Returns:
+   //
+   // Number of events (event weights), which were found in the
+   // range-searching volume at point 'Xarg', divided by the box
+   // volume.
 
    if (!fBst)
       Log() << kFATAL << "<PDEFoamEventDensity::Density()> Binary tree not found!" << Endl;

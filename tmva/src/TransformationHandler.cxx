@@ -456,14 +456,19 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
    // - histograms for all input variables
    // - scatter plots for all pairs of input variables
 
-
    if (fRootBaseDir==0 && theDirectory == 0) return;
+
+   Log() << kINFO << "Plot event variables for ";
+   if (theDirectory !=0) Log()<< TString(theDirectory->GetName()) << Endl;
+   else Log() << GetName() << Endl;
 
    // extension for transformation type
    TString transfType = "";
    if (theDirectory == 0) {
       transfType += "_";
       transfType += GetName();
+   }else{ // you plot for the individual classifiers. Note, here the "statistics" still need to be calculated as you are in the testing phase
+      CalcStats(events);
    }
 
    const UInt_t nvar = fDataSetInfo.GetNVariables();
@@ -550,6 +555,7 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
                Double_t xmin = TMath::Max( GetMin( ( var_tgt*nvar )+ivar), mean - timesRMS*rms );
                Double_t xmax = TMath::Min( GetMax( ( var_tgt*nvar )+ivar), mean + timesRMS*rms );
       
+               //std::cout << "Class="<<cls<<" xmin="<<xmin << " xmax="<<xmax<<" mean="<<mean<<" rms="<<rms<<" timesRMS="<<timesRMS<<std::endl;
                // protection
                if (xmin >= xmax) xmax = xmin*1.1; // try first...
                if (xmin >= xmax) xmax = xmin + 1; // this if xmin == xmax == 0

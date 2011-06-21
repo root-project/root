@@ -61,7 +61,15 @@ TMVA::PDEFoamTarget::PDEFoamTarget()
 TMVA::PDEFoamTarget::PDEFoamTarget(const TString& Name, UInt_t target)
    : PDEFoam(Name)
    , fTarget(target)
-{}
+{
+   // User constructor
+   //
+   // Parameters:
+   //
+   // - Name - name of PDEFoam object
+   //
+   // - target - target number to range-search for
+}
 
 //_____________________________________________________________________
 TMVA::PDEFoamTarget::PDEFoamTarget(const PDEFoamTarget &From)

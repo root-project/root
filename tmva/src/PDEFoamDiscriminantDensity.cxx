@@ -60,7 +60,16 @@ TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity()
 TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity(std::vector<Double_t> box, UInt_t cls)
    : PDEFoamDensityBase(box)
    , fClass(cls)
-{}
+{
+   // User construcor:
+   //
+   // Parameters:
+   //
+   // - box - size of the range-searching box (n-dimensional
+   //   std::vector)
+   //
+   // - cls - event class used for the range-searching
+}
 
 //_____________________________________________________________________
 TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity(const PDEFoamDiscriminantDensity &distr)
@@ -74,8 +83,20 @@ TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity(const PDEFoamDiscri
 Double_t TMVA::PDEFoamDiscriminantDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
 {
    // This function is needed during the foam buildup.  It returns the
-   // average target value within volume divided by volume (specified
-   // by fVolFrac).
+   // average number density of events of type fClass within the
+   // range-searching volume (specified by fBox).
+   //
+   // Parameters:
+   //
+   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
+   //
+   // - event_density - here the event density is stored
+   //
+   // Returns:
+   //
+   // Number of events (event weights) of type fClass, which were
+   // found in the range-searching volume at point 'Xarg', divided by
+   // the box volume.
 
    if (!fBst)
       Log() << kFATAL << "<PDEFoamDiscriminantDensity::Density()> Binary tree not set!" << Endl;

@@ -137,7 +137,7 @@ namespace TMVA {
       EDTSeparation fDTSeparation; // BACKWARDS COMPATIBILITY: split cells according to decision tree logic
       Bool_t fPeekMax;         // BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
       PDEFoamDensityBase *fDistr;  //! distribution of training events
-      Timer *fTimer;           // timer for graphical output
+      Timer *fTimer;           //! timer for graphical output
       TObjArray *fVariableNames;// collection of all variable names
       mutable MsgLogger* fLogger;                     //! message logger
 
@@ -294,7 +294,7 @@ namespace TMVA {
       friend class PDEFoamKernelGauss;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoam,6) // Tree of PDEFoamCells
+      ClassDef(PDEFoam,7) // Tree of PDEFoamCells
    }; // end of PDEFoam
 
 }  // namespace TMVA

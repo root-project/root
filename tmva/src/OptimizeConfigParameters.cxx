@@ -60,6 +60,22 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
       Log() << kFATAL << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimization"
             << " --> exit" << Endl;
    }
+
+   Log() << kINFO << "Automatic optimisation of tuning parameters in " 
+         << GetMethod()->GetName() << " uses:" << Endl;
+
+   std::map<TString,TMVA::Interval>::iterator it;
+   for (it=fTuneParameters.begin(); it!=fTuneParameters.end();it++) {
+      Log() << kINFO << it->first 
+            << " in range from: " << it->second.GetMin()
+            << " to: " << it->second.GetMax()
+            << " in : " << it->second.GetNbins()  << " steps"
+            << Endl;
+   }
+   Log() << kINFO << " using the options: " << fFOMType << " and " << fOptimizationFitType << Endl;
+
+
+
 }
 
 //_______________________________________________________________________
@@ -108,13 +124,28 @@ std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
    }
    return fTunedParameters;
 
-}//_______________________________________________________________________
+}
+
+//_______________________________________________________________________
+std::vector< int > TMVA::OptimizeConfigParameters::GetScanIndices( int val, std::vector<int> base){
+   // helper function to scan through the all the combinations in the
+   // parameter space
+   std::vector < int > indices;
+   for (UInt_t i=0; i< base.size(); i++){
+      indices.push_back(val % base[i] );
+      val = int( floor( val / base[i] ) );
+   }
+   return indices;
+}
+
+//_______________________________________________________________________
 void TMVA::OptimizeConfigParameters::optimizeScan()
 {
    // do the actual optimization using a simple scan method, 
    // i.e. calcualte the FOM for 
    // different tuning paraemters and remember which one is
    // gave the best FOM
+
 
    Double_t      bestFOM=-1000000, currentFOM;
 
@@ -125,29 +156,60 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    // initialize all parameters in currentParameter
    currentParameters.clear();
    fTunedParameters.clear();
+
    for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
       currentParameters.insert(std::pair<TString,Double_t>(it->first,it->second.GetMin()));
       fTunedParameters.insert(std::pair<TString,Double_t>(it->first,it->second.GetMin()));
    }
    // now loop over all the parameters and get for each combination the figure of merit
+
+   // in order to loop over all the parameters, I first create an "array" (tune parameters)
+   // of arrays (the different values of the tune parameter)
+
+   std::vector< std::vector <Double_t> > v;
    for (it=fTuneParameters.begin(); it!=fTuneParameters.end(); it++){
-      for (Int_t ibin=0; ibin<it->second.GetNbins(); ibin++){
-         currentParameters[it->first] = it->second.GetElement(ibin);
-         GetMethod()->Reset();
-         GetMethod()->SetTuneParameters(currentParameters);
-         // now do the training for the current parameters:
-         GetMethod()->BaseDir()->cd();
-         GetMethod()->GetTransformationHandler().CalcTransformations(
-                                                                    GetMethod()->Data()->GetEventCollection());
-         GetMethod()->Train();
-         currentFOM = GetFOM(); 
-     
-         if (currentFOM > bestFOM) {
-            bestFOM = currentFOM;
-            for (std::map<TString,Double_t>::iterator iter=currentParameters.begin();
-                 iter != currentParameters.end(); iter++){
-              fTunedParameters[iter->first]=iter->second;
-            }
+      std::vector< Double_t > tmp;
+      for (Int_t k=0; k<it->second.GetNbins(); k++){
+         tmp.push_back(it->second.GetElement(k));
+      }
+      v.push_back(tmp);
+   }
+   Int_t Ntot = 1;
+   std::vector< int > Nindividual;
+   for (UInt_t i=0; i<v.size(); i++) {
+      Ntot *= v[i].size();
+      Nindividual.push_back(v[i].size());
+    }
+   //loop on the total number of differnt combinations
+   
+   for (int i=0; i<Ntot; i++){
+       UInt_t index=0;
+      std::vector<int> indices = GetScanIndices(i, Nindividual );
+      for (it=fTuneParameters.begin(), index=0; index< indices.size(); index++, it++){
+         currentParameters[it->first] = v[index][indices[index]];
+      }
+      Log() << kINFO << "--------------------------" << Endl;
+      Log() << kINFO <<"Settings being evaluated:" << Endl;
+      for (std::map<TString,Double_t>::iterator it_print=currentParameters.begin(); 
+           it_print!=currentParameters.end(); it_print++){
+         Log() << kINFO << "  " << it_print->first  << " = " << it_print->second << Endl;
+       }
+
+      GetMethod()->Reset();
+      GetMethod()->SetTuneParameters(currentParameters);
+      // now do the training for the current parameters:
+      GetMethod()->BaseDir()->cd();
+      GetMethod()->GetTransformationHandler().CalcTransformations(
+                                                                  GetMethod()->Data()->GetEventCollection());
+      GetMethod()->Train();
+      currentFOM = GetFOM(); 
+      Log() << kINFO << "FOM was found : " << currentFOM << "; current best is " << bestFOM << Endl;
+      
+      if (currentFOM > bestFOM) {
+         bestFOM = currentFOM;
+         for (std::map<TString,Double_t>::iterator iter=currentParameters.begin();
+              iter != currentParameters.end(); iter++){
+            fTunedParameters[iter->first]=iter->second;
          }
       }
    }
@@ -265,11 +327,13 @@ Double_t TMVA::OptimizeConfigParameters::GetFOM()
    }else{
       if      (fFOMType == "Separation")  fom = GetSeparation();
       else if (fFOMType == "ROCIntegral") fom = GetROCIntegral();
-      else if (fFOMType == "SigEffAt01")  fom = GetSigEffAt(0.1);
-      else if (fFOMType == "SigEffAt001") fom = GetSigEffAt(0.01);
+      else if (fFOMType == "SigEffAtBkgEff01")  fom = GetSigEffAtBkgEff(0.1);
+      else if (fFOMType == "SigEffAtBkgEff001") fom = GetSigEffAtBkgEff(0.01);
+      else if (fFOMType == "BkgRejAtSigEff05")  fom = GetBkgRejAtSigEff(0.5);
+      else if (fFOMType == "BkgEffAtSigEff05")  fom = GetBkgEffAtSigEff(0.5);
       else {
-         Log()<<kFATAL << " ERROR, you've specified as Figure of Merit in the \n"
-              << " parameter optimisation " << fFOMType << " which has not\n"
+         Log()<<kFATAL << " ERROR, you've specified as Figure of Merit in the "
+              << " parameter optimisation " << fFOMType << " which has not"
               << " been implemented yet!! ---> exit " << Endl;
       }
    }
@@ -395,7 +459,7 @@ Double_t TMVA::OptimizeConfigParameters::GetROCIntegral()
 
 
 //_______________________________________________________________________
-Double_t TMVA::OptimizeConfigParameters::GetSigEffAt(Double_t bkgEff) 
+Double_t TMVA::OptimizeConfigParameters::GetSigEffAtBkgEff(Double_t bkgEff) 
 {
    // calculate the signal efficiency for a given background efficiency 
 
@@ -408,7 +472,7 @@ Double_t TMVA::OptimizeConfigParameters::GetSigEffAt(Double_t bkgEff)
       std::cout << " Error in OptimizeConfigParameters GetSigEffAt, unequal histograms for sig and bkg.." << std::endl;
       std::exit(1);
    }else{
-     Double_t *bkgCumulator   = fMvaBkgFineBin->GetIntegral();
+      Double_t *bkgCumulator   = fMvaBkgFineBin->GetIntegral();
       Double_t *sigCumulator   = fMvaSigFineBin->GetIntegral();
 
       Int_t nbins=fMvaBkgFineBin->GetNbinsX();
@@ -429,3 +493,74 @@ Double_t TMVA::OptimizeConfigParameters::GetSigEffAt(Double_t bkgEff)
 }
 
 
+//__adaptated_by_marc-olivier.bettler@cern.ch__________________________
+//__________________________________________________________________________
+Double_t TMVA::OptimizeConfigParameters::GetBkgEffAtSigEff(Double_t sigEff) 
+{
+   // calculate the background efficiency for a given signal efficiency 
+
+   GetMVADists();
+   Double_t bkgEff=0;
+
+   // sanity checks
+   if ( (fMvaSigFineBin->GetXaxis()->GetXmin() !=  fMvaBkgFineBin->GetXaxis()->GetXmin()) ||
+        (fMvaSigFineBin->GetNbinsX() !=  fMvaBkgFineBin->GetNbinsX()) ){
+      std::cout << " Error in OptimizeConfigParameters GetBkgEffAt, unequal histograms for sig and bkg.." << std::endl;
+      std::exit(1);
+   }else{
+
+      Double_t *bkgCumulator   = fMvaBkgFineBin->GetIntegral();
+      Double_t *sigCumulator   = fMvaSigFineBin->GetIntegral();
+
+      Int_t nbins=fMvaBkgFineBin->GetNbinsX();
+      Int_t ibin=0;
+   
+      // std::cout << " bkgIntegral="<<bkgIntegral
+      //           << " sigIntegral="<<sigIntegral
+      //           << " bkgCumulator[nbins]="<<bkgCumulator[nbins]
+      //           << " sigCumulator[nbins]="<<sigCumulator[nbins]
+      //           << std::endl;
+
+      while ( sigCumulator[nbins]-sigCumulator[nbins-ibin] < sigEff) {
+         bkgEff = bkgCumulator[nbins]-bkgCumulator[nbins-ibin];
+         ibin++;
+      }
+   } 
+   return bkgEff;
+}
+
+//__adaptated_by_marc-olivier.bettler@cern.ch__________________________
+//__________________________________________________________________________
+Double_t TMVA::OptimizeConfigParameters::GetBkgRejAtSigEff(Double_t sigEff) 
+{
+   // calculate the background rejection for a given signal efficiency 
+
+   GetMVADists();
+   Double_t bkgRej=0;
+
+   // sanity checks
+   if ( (fMvaSigFineBin->GetXaxis()->GetXmin() !=  fMvaBkgFineBin->GetXaxis()->GetXmin()) ||
+        (fMvaSigFineBin->GetNbinsX() !=  fMvaBkgFineBin->GetNbinsX()) ){
+      std::cout << " Error in OptimizeConfigParameters GetBkgEffAt, unequal histograms for sig and bkg.." << std::endl;
+      std::exit(1);
+   }else{
+
+      Double_t *bkgCumulator   = fMvaBkgFineBin->GetIntegral();
+      Double_t *sigCumulator   = fMvaSigFineBin->GetIntegral();
+
+      Int_t nbins=fMvaBkgFineBin->GetNbinsX();
+      Int_t ibin=0;
+   
+      // std::cout << " bkgIntegral="<<bkgIntegral
+      //           << " sigIntegral="<<sigIntegral
+      //           << " bkgCumulator[nbins]="<<bkgCumulator[nbins]
+      //           << " sigCumulator[nbins]="<<sigCumulator[nbins]
+      //           << std::endl;
+
+      while ( sigCumulator[nbins]-sigCumulator[nbins-ibin] < sigEff) {
+         bkgRej = bkgCumulator[nbins-ibin];
+         ibin++;
+      }
+   } 
+   return bkgRej;
+}

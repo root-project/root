@@ -58,7 +58,16 @@ TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity()
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity(std::vector<Double_t> box, UInt_t cls)
    : PDEFoamDensityBase(box)
    , fClass(cls)
-{}
+{
+   // User construcor:
+   //
+   // Parameters:
+   //
+   // - box - size of the range-searching box (n-dimensional
+   //   std::vector)
+   //
+   // - cls - event class used for the range-searching
+}
 
 //_____________________________________________________________________
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity(const PDEFoamDecisionTreeDensity &distr)

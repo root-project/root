@@ -771,24 +771,26 @@ std::map<TString,Double_t>  TMVA::MethodBDT::OptimizeTuningParameters(TString fo
    Int_t min  = TMath::Max( 20,    ( ( N/10000 - (N/10000)%10)  ) );
    Int_t max  = TMath::Max( min*10, TMath::Min( 10000, ( ( N/10    - (N/10)   %100) ) ) );
 
-   tuneParameters.insert(std::pair<TString,Interval>("MaxDepth",       Interval(1,10,10)));    // stepsize 1
-   tuneParameters.insert(std::pair<TString,Interval>("NodeMinEvents",  Interval(min,max,10))); // 
-   tuneParameters.insert(std::pair<TString,Interval>("NTrees",         Interval(50,1000,20))); //  stepsize 50
-   // tuneParameters.insert(std::pair<TString,Interval>("NodePurityLimit",Interval(.4,.6,3)));   // stepsize .1
-   // tuneParameters.insert(std::pair<TString,Interval>("AdaBoostBeta",   Interval(.5,1.50,10)));   //== stepsize .1
+   tuneParameters.insert(std::pair<TString,Interval>("NTrees",         Interval(50,1000,5))); //  stepsize 50
+   tuneParameters.insert(std::pair<TString,Interval>("MaxDepth",       Interval(3,10,8)));    // stepsize 1
+   tuneParameters.insert(std::pair<TString,Interval>("NodeMinEvents",  Interval(min,max,5))); // 
+   //tuneParameters.insert(std::pair<TString,Interval>("NodePurityLimit",Interval(.4,.6,3)));   // stepsize .1
 
-   Log() << kINFO << "Automatic optimisation of tuning parameters in BDT uses:" << Endl;
-   
-   std::map<TString,TMVA::Interval>::iterator it;
-   
-   for (it=tuneParameters.begin(); it!=tuneParameters.end();it++) {
-      Log() << kINFO << it->first 
-            << " in range from: " << it->second.GetMin()
-            << " to: " << it->second.GetMax()
-            << " in : " << it->second.GetNbins()  << " steps"
-            << Endl;
+   // method-specific parameters
+   if        (fBoostType=="AdaBoost"){
+     tuneParameters.insert(std::pair<TString,Interval>("AdaBoostBeta",   Interval(.5,1.50,5)));   
+  
+   }else if (fBoostType=="Grad"){
+     tuneParameters.insert(std::pair<TString,Interval>("Shrinkage",      Interval(0.05,0.50,5)));  
+  
+   }else if (fBoostType=="Bagging" and fRandomisedTrees){
+     Int_t min_var  = TMath::FloorNint( GetNvar() * .25 );
+     Int_t max_var  = TMath::CeilNint(  GetNvar() * .75 ); 
+     tuneParameters.insert(std::pair<TString,Interval>("UseNvars",       Interval(min_var,max_var,4)));
+     
    }
-   Log() << kINFO << " using the options: " << fomType << " and " << fitType << Endl;
+   
+   
    OptimizeConfigParameters optimize(this, tuneParameters, fomType, fitType);
    tunedParameters=optimize.optimize();
 
