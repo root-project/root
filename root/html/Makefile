@@ -44,9 +44,11 @@ ClassInModule: ClassInModule.log
 
 MakeIndex_filtered.log: MakeIndex.log
 	$(CMDECHO)grep -v 'dot -' $< \
+	| grep -v '^$$' \
 	| grep -v 'Checking for Graphviz' \
 	| grep -v 'dot: not found' \
 	| grep -v 'dot: command not found' \
+	| grep -v 'dot version' \
 	| grep -v 'RooFit' \
 	| grep -v 'Copyright' \
 	| grep -v 'roofit.sourceforge' \
