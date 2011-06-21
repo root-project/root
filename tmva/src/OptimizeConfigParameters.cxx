@@ -133,7 +133,7 @@ std::vector< int > TMVA::OptimizeConfigParameters::GetScanIndices( int val, std:
    std::vector < int > indices;
    for (UInt_t i=0; i< base.size(); i++){
       indices.push_back(val % base[i] );
-      val = int( floor((float) (val / base[i]) ) );
+      val = int( floor( float(val / base[i]) ) );
    }
    return indices;
 }

@@ -783,7 +783,7 @@ std::map<TString,Double_t>  TMVA::MethodBDT::OptimizeTuningParameters(TString fo
    }else if (fBoostType=="Grad"){
      tuneParameters.insert(std::pair<TString,Interval>("Shrinkage",      Interval(0.05,0.50,5)));  
   
-   }else if (fBoostType=="Bagging" and fRandomisedTrees){
+   }else if (fBoostType=="Bagging" && fRandomisedTrees){
      Int_t min_var  = TMath::FloorNint( GetNvar() * .25 );
      Int_t max_var  = TMath::CeilNint(  GetNvar() * .75 ); 
      tuneParameters.insert(std::pair<TString,Interval>("UseNvars",       Interval(min_var,max_var,4)));
