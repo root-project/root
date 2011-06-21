@@ -43,7 +43,7 @@ ClassInModule: ClassInModule.log
 	$(TestDiff)
 
 MakeIndex_filtered.log: MakeIndex.log
-	grep -v 'dot -' $< \
+	$(CMDECHO)grep -v 'dot -' $< \
 	| grep -v 'Checking for Graphviz' \
 	| grep -v 'dot: not found' \
 	| grep -v 'dot: command not found' \
