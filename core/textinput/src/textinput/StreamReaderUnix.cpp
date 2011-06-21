@@ -177,6 +177,8 @@ namespace textinput {
       gExtKeyMap['[']['B'] = InputData::kEIDown;
       gExtKeyMap['[']['C'] = InputData::kEIRight;
       gExtKeyMap['[']['D'] = InputData::kEILeft;
+      gExtKeyMap['[']['F'] = InputData::kEIEnd; // Savannah 83478
+      gExtKeyMap['[']['H'] = InputData::kEIHome;
       gExtKeyMap['[']['O']['F'] = InputData::kEIEnd;
       gExtKeyMap['[']['O']['H'] = InputData::kEIHome;
       gExtKeyMap['[']['1']['~'] = InputData::kEIHome;
