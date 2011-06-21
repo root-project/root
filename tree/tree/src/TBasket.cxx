@@ -358,7 +358,7 @@ Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, Bool_t mustFree,
 }
 
 //_______________________________________________________________________
-static inline TBuffer* R__initializeReadBasketBuffer(TBuffer* bufferRef, Int_t len, TFile* file)
+static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t len, TFile* file)
 {
    // Initialize a buffer for reading if it is not already initialized
    
@@ -380,12 +380,12 @@ static inline TBuffer* R__initializeReadBasketBuffer(TBuffer* bufferRef, Int_t l
 }
 
 //_______________________________________________________________________
-void TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
+void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
 {
     // Initialize the compressed buffer; either from the TTree or create a local one.
     Bool_t compressedBufferExists = fCompressedBufferRef != NULL;
-    fCompressedBufferRef = R__initializeReadBasketBuffer(fCompressedBufferRef, len, file);
-    if (!compressedBufferExists) {
+    fCompressedBufferRef = R__InitializeReadBasketBuffer(fCompressedBufferRef, len, file);
+    if (R__unlikely(!compressedBufferExists)) {
         fOwnsCompressedBuffer = kTRUE;
     }
 }
@@ -431,21 +431,51 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       }
    }
 
+   // Determine which buffer to use, so that we can avoid a memcpy in case of 
+   // the basket was not compressed.
+   TBuffer* readBufferRef;
+   if (R__unlikely(fBranch->GetCompressionLevel()==0)) {
+      readBufferRef = fBufferRef;
+   } else {
+      readBufferRef = fCompressedBufferRef;
+   }
+
    // Initialize the buffer to hold the compressed data.
-   InitializeCompressedBuffer(len, file);
-   if (!fCompressedBufferRef) {
+   readBufferRef = R__InitializeReadBasketBuffer(readBufferRef, len, file);
+   if (!readBufferRef) {
        Error("ReadBasketBuffers", "Unable to allocate buffer.");
        return 1;
    }
-   rawCompressedBuffer = fCompressedBufferRef->Buffer();
 
    // Read from the file and unstream the header information.
-   if (file->ReadBuffer(rawCompressedBuffer,pos,len)) {
+   if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
       return 1;
    }
-   Streamer(*fCompressedBufferRef);
+   Streamer(*readBufferRef);
    if (IsZombie()) {
       return 1;
+   }
+
+   rawCompressedBuffer = readBufferRef->Buffer();
+
+   // Are we done?
+   if (R__unlikely(readBufferRef == fBufferRef)) // We expect most basket to be compressed.
+   {
+      if (R__likely(fObjlen+fKeylen == fNbytes)) {
+         // The basket was really not compressed as expected.
+         goto AfterBuffer;
+      } else {
+         // Well, somehow the buffer was compressed anyway, we have the compressed data in the uncompressed buffer
+         // Make sure the compressed buffer is initialized, and memcpy.
+         InitializeCompressedBuffer(len, file);
+         if (!fCompressedBufferRef) {
+            Error("ReadBasketBuffers", "Unable to allocate buffer.");
+            return 1;
+         }
+         fBufferRef->Reset();
+         rawCompressedBuffer = fCompressedBufferRef->Buffer();
+         memcpy(rawCompressedBuffer, fBufferRef->Buffer(), len);
+      }
    }
 
    // Initialize buffer to hold the uncompressed data
@@ -453,7 +483,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // the zip headers; this is no longer beforehand as the buffer lifetime is scoped
    // to the TBranch.
    uncompressedBufferLen = len > fObjlen+fKeylen ? len : fObjlen+fKeylen;
-   fBufferRef = R__initializeReadBasketBuffer(fBufferRef, uncompressedBufferLen, file);
+   fBufferRef = R__InitializeReadBasketBuffer(fBufferRef, uncompressedBufferLen, file);
    rawUncompressedBuffer = fBufferRef->Buffer();
    fBuffer = rawUncompressedBuffer;
 
