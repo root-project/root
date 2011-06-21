@@ -259,7 +259,6 @@ namespace textinput {
     fWritePos = Pos();
     fWriteLen = 0;
     fIsAttached = true;
-    NotifyTextChange(Range::AllWithPrompt());
   }
 
   void

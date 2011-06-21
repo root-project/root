@@ -93,7 +93,8 @@ namespace textinput {
 
     if (fLastReadResult == kRRNone) {
       GrabInputOutput();
-      UpdateDisplay(EditorRange(Range::AllText(), Range::AllWithPrompt()));
+      // Asking for input, so prompt must have been drawn already
+      UpdateDisplay(EditorRange(Range::AllText(), Range::AllText()));
     }
 
     size_t nRead = 0;
@@ -226,12 +227,11 @@ namespace textinput {
 
     GrabInputOutput();
 
-    // Already done by GrabInputOutput():
-    //R.Display = Range::AllText();
+    R.fDisplay = Range::AllWithPrompt();
     // Immediate refresh.
-    //std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
-    //              std::bind2nd(std::mem_fun(&Display::NotifyTextChange),
-    //                           R.Display));
+    std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
+                  std::bind2nd(std::mem_fun(&Display::NotifyTextChange),
+                               R.fDisplay));
     // Empty range.
     R.fDisplay = Range::Empty();
 
