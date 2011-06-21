@@ -148,7 +148,7 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
 //_____________________________________________________________________________
 void FlexibleInterpVar::setAllInterpCodes(int code){
 
-  for(int i=0; i<_interpCode.size(); ++i){
+  for(unsigned int i=0; i<_interpCode.size(); ++i){
     _interpCode.at(i) = code;
   }
 }
@@ -156,7 +156,7 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
 //_____________________________________________________________________________
 void FlexibleInterpVar::printAllInterpCodes(){
 
-  for(int i=0; i<_interpCode.size(); ++i){
+  for(unsigned int i=0; i<_interpCode.size(); ++i){
     coutI(InputArguments) <<"interp code for " << _paramList.at(i)->GetName() << " = " << _interpCode.at(i) <<endl;
   }
 
