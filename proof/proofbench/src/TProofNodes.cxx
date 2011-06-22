@@ -190,10 +190,10 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    TSlaveInfo *si = 0;
    TIter nxtnode(fNodes);
    TList *node = 0;
-   TIter *nxk = new TIter(fNodes);
+   TIter nxk(fNodes);
    TObject *key = 0;
 
-   while ((key = nxk->Next()) != 0) {
+   while ((key = nxk()) != 0) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
@@ -239,9 +239,8 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    // Rebuild
    Build();
 
-   SafeDelete(nxk);
-   nxk = new TIter(fNodes);
-   while ((key = nxk->Next()) != 0) {
+   nxk.Reset();
+   while ((key = nxk()) != 0) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
@@ -258,7 +257,6 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
          Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName()); 
       }
    }
-   SafeDelete(nxk);
 
    // Done
    return ret;

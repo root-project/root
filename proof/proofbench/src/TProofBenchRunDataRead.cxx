@@ -399,6 +399,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       if (fDirProofBench->cd(dirn)) {
          fListPerfPlots->Write(0, kOverwrite);
          fListPerfPlots->SetOwner(kFALSE);
+         fListPerfPlots->Clear();
       } else {
          Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
       }
