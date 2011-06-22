@@ -28,7 +28,7 @@ LZMALIBDIRI  := -I$(LZMALIBDIRS)/include
 LZMALIBS     := $(MODDIRS)/$(LZMAVERS)-win32.tar.gz
 LZMALIBA     := $(LZMALIBDIRS)/lib/liblzma.lib
 LZMADLLA     := $(LZMALIBDIRS)/lib/liblzma.dll
-LZMALIB      := $(LDIR)/liblzma.lib
+LZMALIB      := $(LPATH)/liblzma.lib
 LZMADLL      := bin/liblzma.dll
 else
 LZMALIBS     := $(MODDIRS)/$(LZMAVERS).tar.gz
@@ -87,7 +87,8 @@ ifeq ($(PLATFORM),win32)
 		cd $(call stripsrc,$(LZMADIRS)); \
 		if [ ! -d $(LZMAVERS) ]; then \
 			gunzip -c $(LZMALIBS) | tar xf -; \
-		fi;)
+		fi; \
+		touch $(LZMAVERS)/lib/liblzma.lib;)
 else
 		@(if [ -d $(LZMALIBDIRS) ]; then \
 			rm -rf $(LZMALIBDIRS); \
