@@ -384,7 +384,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
    fCleanups->Add(fClosedObjects); fClosedObjects->SetBit(kMustCleanup);
-   fCleanups->Add(fInterpreter);
+   fCleanups->Add(fInterpreter);   fInterpreter->SetBit(kMustCleanup);
 
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
@@ -487,7 +487,7 @@ TROOT::~TROOT()
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
-      fSockets->Delete();     SafeDelete(fSockets);     // and sockets
+      fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       delete fUUIDs;
       TProcessID::Cleanup();                            // and list of ProcessIDs
@@ -519,6 +519,7 @@ TROOT::~TROOT()
       SafeDelete(fProofs);
       SafeDelete(fDataSets);
       SafeDelete(fClipboard);
+
       fCleanups->Clear();
       delete fPluginManager; gPluginMgr = fPluginManager = 0;
       delete gClassTable;  gClassTable = 0;
@@ -650,6 +651,7 @@ void TROOT::CloseFiles()
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
          fCleanups->Add(fSockets);
+         fSockets->SetBit(kMustCleanup);
       }
       CallFunc_t *socketCloser = gInterpreter->CallFunc_Factory();
       Long_t offset = 0;
