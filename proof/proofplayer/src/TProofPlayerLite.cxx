@@ -214,11 +214,16 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
       if (!TSelector::IsStandardDraw(fn))
          HandleTimer(0); // force an update of final result
-      // Store process info
-      if (fPacketizer && fQuery)
-         fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
-                                       fPacketizer->GetInitTime(),
-                                       fPacketizer->GetProcTime());
+      if (fPacketizer) {
+         fPacketizer->StopProcess(kFALSE, kTRUE);
+         // The progress timer will now stop itself at the next call
+         fPacketizer->SetBit(TVirtualPacketizer::kIsDone);
+         // Store process info
+         if (fQuery)
+            fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
+                                          fPacketizer->GetInitTime(),
+                                          fPacketizer->GetProcTime());
+      }
       StopFeedback();
 
       if (GetExitStatus() != TProofPlayer::kAborted)
