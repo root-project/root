@@ -70,7 +70,7 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    tgt[7] = (char)((in_size >> 8) & 0xff);
    tgt[8] = (char)((in_size >> 16) & 0xff);
 
-   *irep = stream.total_out + kHeaderSize;
+   *irep = (int)stream.total_out + kHeaderSize;
 }
 
 void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
@@ -105,5 +105,5 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
    }
    lzma_end(&stream);
 
-   *irep = stream.total_out;
+   *irep = (int)stream.total_out;
 }
