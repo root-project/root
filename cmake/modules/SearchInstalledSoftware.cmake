@@ -444,10 +444,12 @@ endif()
 #---Check Shadow password support----------------------------------------------------
 if(shadowpw)
   if(NOT EXISTS /etc/shadow)  #---TODO--The test always succeeds because the actual file is protected
-    # set(shadowpw OFF)
+    if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
+      message(STATUS "Support Shadow password not found. Switching off shadowpw option")
+      set(shadowpw OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
 endif()
-
 
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs alien chirp clarens cling dcache gfal glite globus hdfs lzma monalisa pch peac pgsql sapdb srp)

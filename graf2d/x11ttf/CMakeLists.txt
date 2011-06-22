@@ -6,7 +6,7 @@ set(libname GX11TTF)
 
 ROOT_USE_PACKAGE(graf2d/graf)
 ROOT_USE_PACKAGE(graf2d/x11)
-include_directories(${FREETYPE_INCLUDE_DIRS})
+include_directories(${FREETYPE_INCLUDE_DIRS} ${X11_INCLUDE_DIR})
 
 ROOT_GENERATE_DICTIONARY(G__${libname} *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES GX11 Graf)
