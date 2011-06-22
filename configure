@@ -2,7 +2,7 @@
 #
 # A (not so) simple configure script.
 #
-# Authors: Christian Holm Christensen and Fons Rademakers
+# Authors: Christian Holm Christensen and Fons Rademakers.
 #
 # To help with debugging the script, some comments are preprended with
 # 3 '#' echo and 3 '%' - replace that pattern with echo and 3 '%' to
