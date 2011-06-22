@@ -303,12 +303,7 @@ int main(int argc, char **argv)
       int expectedSize = -1;
       if (comp == 0) expectedSize = 5558090;
       else if (comp == 101) expectedSize = 1257359;
-#ifdef R__HAS_LZMACOMPRESSION
       else if (comp == 201) expectedSize = 1115154;
-#endif
-#ifndef R__HAS_LZMACOMPRESSION
-      else if (comp == 201) expectedSize = 1257359;
-#endif
       else if (comp == 301) expectedSize = 1267841;
       else if (comp == 5) expectedSize = 1211000;
 
@@ -516,9 +511,6 @@ int main(int argc, char **argv)
       if (testBranch->GetCompressionSettings() != 203) exit(126);
 
 
-#ifndef R__HAS_LZMACOMPRESSION
-      if (comp == 201) comp = 101;
-#endif
       hfile->SetCompressionSettings(comp);
 
      // Create histogram to show write_time in function of time
