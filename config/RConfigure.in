@@ -23,6 +23,5 @@
 #@haspthread@ R__HAS_PTHREAD    /**/
 #@hasxft@ R__HAS_XFT    /**/
 #@hascling@ R__HAS_CLING   /**/
-#@haslzmacompression@ R__HAS_LZMACOMPRESSION   /**/
 
 #endif

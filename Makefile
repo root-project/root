@@ -71,7 +71,7 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/io math/mathcore net/net core/zip math/matrix \
+                io/io math/mathcore net/net core/zip core/lzma math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
@@ -498,21 +498,25 @@ STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO) $(TEXTINPUTO) $(CLINGO)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
+                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO) $(CLINGO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) \
                 $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO) $(CLINGDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
+
 ifneq ($(BUILTINZLIB),yes)
-CORELIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
+CORELIBEXTRA    += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 STATICEXTRALIBS += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 endif
 
-ifneq ($(strip $(LZMACLILIB)),)
-CORELIBEXTRA    += $(LZMALIBDIR)/$(LZMACLILIB)
-STATICEXTRALIBS += $(LZMALIBDIR)/$(LZMACLILIB)
+ifneq ($(BUILTINLZMA),yes)
+CORELIBEXTRA    += $(LZMALIBDIR) $(LZMACLILIB)
+STATICEXTRALIBS += $(LZMALIBDIR) $(LZMACLILIB)
+else
+CORELIBEXTRA    += $(LZMALIB)
+STATICEXTRALIBS += $(LZMALIB)
 endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####

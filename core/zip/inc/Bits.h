@@ -14,10 +14,7 @@
 
 #include "zlib.h"
 #include "RConfigure.h"
-
-#ifdef R__HAS_LZMACOMPRESSION
-#include "R__LZMA.h"
-#endif
+#include "ZipLZMA.h"
 
 #include <stdio.h>
 
@@ -427,7 +424,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 {
   int err;
   int method   = Z_DEFLATED;
-  static int warningGiven = 0;
 
   if (cxlevel <= 0) {
     *irep = 0;
@@ -440,24 +436,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == 2) {
-#ifdef R__HAS_LZMACOMPRESSION
     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
-#endif
-#ifndef R__HAS_LZMACOMPRESSION
-    compressionAlgorithm = 1;
-    if (warningGiven == 0) {
-      warningGiven = 1;
-      fprintf(stderr,"Warning R__zipMultipleAlgorithm:\n"
-              "There was a request to compress data using the LZMA\n"
-              "compression algorithm. But either the LZMA compression\n"
-              "libraries were not evailable when this root installation\n"
-              "was configured or LZMA compression was explicitly disabled.\n"
-              "ZLIB compression will be used instead. This warning will only\n"
-              "be given once per process\n");
-    }
-    compressionAlgorithm = 1;
-#endif
   }
 
   // The very old algorithm for backward compatibility

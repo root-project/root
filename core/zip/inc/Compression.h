@@ -1,3 +1,14 @@
+// @(#)root/zip:$Id$
+// Author: David Dagenhart   May 2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_Compression
 #define ROOT_Compression
 
@@ -9,8 +20,8 @@ namespace ROOT {
    // The default is to use the global setting
    // and the default of the global setting is to use the
    // ZLIB compression algorithm.  The LZMA algorithm
-   // will only work if the XZ package is installed where
-   // the executable is built. LZMA compression usually results
+   // (from the XZ package) is also available.
+   // The LZMA compression usually results
    // in greater compression factors, but takes more CPU time
    // and memory when compressing.  LZMA memory usage is particularly
    // high for compression levels 8 and 9.
@@ -31,4 +42,5 @@ namespace ROOT {
    int CompressionSettings(ECompressionAlgorithm algorithm,
                            int compressionLevel);
 }
+
 #endif

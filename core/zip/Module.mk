@@ -13,60 +13,44 @@ ZIPDIRS      := $(ZIPDIR)/src
 ZIPDIRI      := $(ZIPDIR)/inc
 
 ##### libZip (part of libCore) #####
-ifeq ($(BUILDLZMA),yes)
-ZIPOLDH      := $(MODDIRI)/Bits.h 	\
-		$(MODDIRI)/Tailor.h 	\
-		$(MODDIRI)/ZDeflate.h	\
-		$(MODDIRI)/ZIP.h	\
-		$(MODDIRI)/ZTrees.h     \
-		$(MODDIRI)/R__LZMA.h    \
-		$(MODDIRI)/Compression.h
-else
-ZIPOLDH      := $(MODDIRI)/Bits.h 	\
-		$(MODDIRI)/Tailor.h 	\
-		$(MODDIRI)/ZDeflate.h	\
-		$(MODDIRI)/ZIP.h	\
-		$(MODDIRI)/ZTrees.h     \
-		$(MODDIRI)/Compression.h
-endif
+ZIPOLDH      := $(MODDIRI)/Bits.h       \
+                $(MODDIRI)/Tailor.h     \
+                $(MODDIRI)/ZDeflate.h   \
+                $(MODDIRI)/ZIP.h        \
+                $(MODDIRI)/ZTrees.h     \
+                $(MODDIRI)/Compression.h
 
-ifeq ($(BUILDLZMA),yes)
-ZIPOLDS      := $(MODDIRS)/ZDeflate.c	\
-		$(MODDIRS)/ZInflate.c   \
-		$(MODDIRS)/R__LZMA.c
-else
-ZIPOLDS      := $(MODDIRS)/ZDeflate.c	\
-		$(MODDIRS)/ZInflate.c
-endif
+ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
+                $(MODDIRS)/ZInflate.c
 
-ZIPNEWH	     := $(MODDIRI)/crc32.h 	\
-		$(MODDIRI)/deflate.h 	\
-		$(MODDIRI)/inffast.h 	\
-		$(MODDIRI)/inffixed.h 	\
-		$(MODDIRI)/inflate.h	\
-		$(MODDIRI)/inftrees.h 	\
-		$(MODDIRI)/trees.h 	\
-		$(MODDIRI)/zconf.h 	\
-		$(MODDIRI)/zlib.h 	\
-		$(MODDIRI)/zutil.h
-ZIPNEWS	     := $(MODDIRS)/adler32.c 	\
-		$(MODDIRS)/compress.c 	\
-		$(MODDIRS)/crc32.c 	\
-		$(MODDIRS)/deflate.c 	\
-		$(MODDIRS)/gzio.c 	\
-		$(MODDIRS)/infback.c	\
-		$(MODDIRS)/inffast.c 	\
-		$(MODDIRS)/inflate.c 	\
-		$(MODDIRS)/inftrees.c 	\
-		$(MODDIRS)/trees.c 	\
-		$(MODDIRS)/uncompr.c 	\
-		$(MODDIRS)/zutil.c
+ZIPNEWH      := $(MODDIRI)/crc32.h      \
+                $(MODDIRI)/deflate.h    \
+                $(MODDIRI)/inffast.h    \
+                $(MODDIRI)/inffixed.h   \
+                $(MODDIRI)/inflate.h    \
+                $(MODDIRI)/inftrees.h   \
+                $(MODDIRI)/trees.h      \
+                $(MODDIRI)/zconf.h      \
+                $(MODDIRI)/zlib.h       \
+                $(MODDIRI)/zutil.h
+ZIPNEWS      := $(MODDIRS)/adler32.c    \
+                $(MODDIRS)/compress.c   \
+                $(MODDIRS)/crc32.c      \
+                $(MODDIRS)/deflate.c    \
+                $(MODDIRS)/gzio.c       \
+                $(MODDIRS)/infback.c    \
+                $(MODDIRS)/inffast.c    \
+                $(MODDIRS)/inflate.c    \
+                $(MODDIRS)/inftrees.c   \
+                $(MODDIRS)/trees.c      \
+                $(MODDIRS)/uncompr.c    \
+                $(MODDIRS)/zutil.c
 ifeq ($(BUILTINZLIB),yes)
-ZIPH	     := $(ZIPOLDH) $(ZIPNEWH)
-ZIPS	     := $(ZIPOLDS) $(ZIPNEWS)
+ZIPH         := $(ZIPOLDH) $(ZIPNEWH)
+ZIPS         := $(ZIPOLDS) $(ZIPNEWS)
 else
-ZIPH	     := $(ZIPOLDH)
-ZIPS	     := $(ZIPOLDS)
+ZIPH         := $(ZIPOLDH)
+ZIPS         := $(ZIPOLDS)
 endif
 ZIPS1        := $(MODDIRS)/Compression.cxx
 ZIPO         := $(call stripsrc,$(ZIPS:.c=.o) $(ZIPS1:.cxx=.o))
@@ -95,7 +79,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ZIPDEP)
 
 distclean::     distclean-$(MODNAME)
-
-ifneq ($(strip $(LZMAINCDIR)),)
-$(call stripsrc,$(MODDIRS))/R__LZMA.o: CFLAGS += -I$(LZMAINCDIR)
-endif

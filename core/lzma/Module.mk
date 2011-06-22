@@ -23,16 +23,15 @@ endif
 
 ##### liblzma.a #####
 ifeq ($(BUILTINLZMA),yes)
-LZMALIBS     := $(MODDIRS)/$(LZMAVERS).tar.gz
 ifeq ($(PLATFORM),win32)
-LZMALIBA     := $(LZMALIBDIRS)/objs/liblzma.lib
-LZMALIB      := $(LPATH)/liblzma.lib
-ifeq (yes,$(WINRTDEBUG))
-LZMACFG      := "liblzma - Win32 Debug Multithreaded"
+LZMALIBDIRI  := -I$(LZMALIBDIRS)/include
+LZMALIBS     := $(MODDIRS)/$(LZMAVERS)-win32.tar.gz
+LZMALIBA     := $(LZMALIBDIRS)/lib/liblzma.lib
+LZMADLLA     := $(LZMALIBDIRS)/lib/liblzma.dll
+LZMALIB      := $(LDIR)/liblzma.lib
+LZMADLL      := bin/liblzma.dll
 else
-LZMACFG      := "liblzma - Win32 Release Multithreaded"
-endif
-else
+LZMALIBS     := $(MODDIRS)/$(LZMAVERS).tar.gz
 LZMALIBA     := $(LZMALIBDIRS)/src/liblzma/.libs/liblzma.a
 LZMALIB      := $(LPATH)/liblzma.a
 endif
@@ -73,27 +72,22 @@ else
 		fi)
 endif
 
+ifeq ($(PLATFORM),win32)
+$(LZMADLL):      $(LZMALIBA)
+		cp $(LZMADLLA) $@
+endif
+
 $(LZMALIBA): $(LZMALIBS)
 		$(MAKEDIR)
 ifeq ($(PLATFORM),win32)
-ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
-		@$(RSYNC) --exclude '.svn' --exclude '*.lib' $(LZMADIRS)/win $(call stripsrc,$(LZMADIRS))
-endif
 		@(if [ -d $(LZMALIBDIRS) ]; then \
 			rm -rf $(LZMALIBDIRS); \
 		fi; \
-		echo "*** Building $@..."; \
+		echo "*** Extracting $@..."; \
 		cd $(call stripsrc,$(LZMADIRS)); \
 		if [ ! -d $(LZMAVERS) ]; then \
 			gunzip -c $(LZMALIBS) | tar xf -; \
-		fi; \
-		cd $(LZMAVERS)/builds/win32/visualc; \
-		cp ../../../../win/lzma.mak .; \
-		cp ../../../../win/lzma.dep .; \
-		unset MAKEFLAGS; \
-		nmake -nologo -f lzma.mak \
-		CFG=$(LZMACFG) \
-		NMAKECXXFLAGS="$(BLDCXXFLAGS) -D_CRT_SECURE_NO_DEPRECATE")
+		fi;)
 else
 		@(if [ -d $(LZMALIBDIRS) ]; then \
 			rm -rf $(LZMALIBDIRS); \
@@ -173,14 +167,7 @@ all-$(MODNAME): $(LZMAO)
 clean-$(MODNAME):
 		@rm -f $(LZMAO)
 ifeq ($(BUILTINLZMA),yes)
-ifeq ($(PLATFORM),win32)
-		-@(if [ -d $(LZMALIBDIRS)/builds/win32/visualc ]; then \
-			cd $(LZMALIBDIRS)/builds/win32/visualc; \
-			unset MAKEFLAGS; \
-			nmake -nologo -f lzma.mak \
-			CFG=$(LZMACFG) clean; \
-		fi)
-else
+ifneq ($(PLATFORM),win32)
 		-@(if [ -d $(LZMALIBDIRS) ]; then \
 			cd $(LZMALIBDIRS); \
 			$(MAKE) clean; \
@@ -197,9 +184,7 @@ ifeq ($(BUILTINLZMA),yes)
 		@rm -f $(LZMALIB)
 endif
 ifeq ($(PLATFORM),win32)
-ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
-		@rm -rf $(call stripsrc,$(LZMADIRS)/win)
-endif
+		@rm -f $(LZMADLL)
 endif
 
 distclean::     distclean-$(MODNAME)

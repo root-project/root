@@ -19,10 +19,7 @@ static const int qflag = 0;
 
 #include "zlib.h"
 #include "RConfigure.h"
-
-#ifdef R__HAS_LZMACOMPRESSION
-#include "R__LZMA.h"
-#endif
+#include "ZipLZMA.h"
 
 
 /* inflate.c -- put in the public domain by Mark Adler
@@ -1138,18 +1135,6 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
     return 1;
   }
 
-#ifndef R__HAS_LZMACOMPRESSION
-  if (src[0] == 'X' && src[1] == 'Z' && src[2] == 0) {
-    fprintf(stderr, "Error R__unzip_header:\n"
-          "There was a request to uncompress data using the LZMA\n"
-          "compression algorithm. But either the LZMA compression\n"
-          "libraries were not evailable when this root installation\n"
-          "was configured or LZMA compression was explicitly disabled.\n"
-          "Uncompression failed.\n");
-   return 1;
-  }
-#endif
-
   *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
   *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
 
@@ -1178,18 +1163,6 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     fprintf(stderr,"Error R__unzip: error in header\n");
     return;
   }
-
-#ifndef R__HAS_LZMACOMPRESSION
-  if (src[0] == 'X' && src[1] == 'Z' && src[2] == 0) {
-    fprintf(stderr, "Error R__unzip:\n"
-          "There was a request to uncompress data using the LZMA\n"
-          "compression algorithm. But either the LZMA compression\n"
-          "libraries were not evailable when this root installation\n"
-          "was configured or LZMA compression was explicitly disabled.\n"
-          "Uncompression failed.\n");
-    return;
-  }
-#endif
 
   ibufptr = src + HDRSIZE;
   ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
@@ -1240,12 +1213,10 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     *irep = stream.total_out;
     return;
   }
-#ifdef R__HAS_LZMACOMPRESSION
   else if (src[0] == 'X' && src[1] == 'Z') {
     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
     return;
   }
-#endif
 
   /* Old zlib format */
   if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {

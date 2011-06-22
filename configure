@@ -48,6 +48,7 @@ options="                    \
    enable_builtin_glew       \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
+   enable_builtin_lzma       \
    enable_castor             \
    enable_chirp              \
    enable_cintex             \
@@ -68,7 +69,6 @@ options="                    \
    enable_hdfs               \
    enable_krb5               \
    enable_ldap               \
-   enable_lzma               \
    enable_mathmore           \
    enable_memstat            \
    enable_minuit2            \
@@ -157,6 +157,7 @@ enable_builtin_ftgl=no
 enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_zlib=no
+enable_builtin_lzma=no
 enable_afdsmgrd=no
 
 # Remove old log file
@@ -167,6 +168,8 @@ rm -f $logfile
 #
 envvars="
 THREAD           \
+ZLIB             \
+LZMA             \
 OPENGL           \
 MYSQL            \
 ORACLE           \
@@ -191,7 +194,6 @@ AVAHI            \
 ALIEN            \
 ASIMAGE          \
 LDAP             \
-LZMA             \
 GLOBUS_LOCATION  \
 GLITE            \
 MEMSTAT          \
@@ -1341,6 +1343,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-glew       Built included libGLEW, or use system libGLEW
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
+  builtin-lzma       Built included liblzma, or use system liblzma
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
@@ -1359,7 +1362,6 @@ enable/disable options, prefix with either --enable- or --disable-
   hdfs               HDFS support; requires libhdfs from HDFS >= 0.19.1
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
-  lzma               LZMA support, requires the lzma library from the XZ distribution
   genvector          Build the new libGenVector library
   mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
   memstat            A memory statistics utility, helps to detect memory leaks
@@ -1450,8 +1452,6 @@ with options, prefix with --with-, enables corresponding support
   krb5-libdir        Kerberos5 support, location of libkrb5
   ldap-incdir        LDAP support, location of ldap.h
   ldap-libdir        LDAP support, location of libldap
-  lzma-incdir        LZMA support, location of lzma.h
-  lzma-libdir        LZMA support, location of liblzma
   monalisa-incdir    Monalisa support, location of ApMon.h
   monalisa-libdir    Monalisa support, location of libapmoncpp
   mysql-incdir       MySQL support, location of mysql.h
@@ -1611,6 +1611,7 @@ win32)
    enable_builtin_glew="yes"
    enable_builtin_pcre="yes"
    enable_builtin_zlib="yes"
+   enable_builtin_lzma="yes"
    top_builddir=`cygpath -u $top_builddir`
    top_srcdir=`cygpath -u $top_srcdir`
    ;;
@@ -1753,8 +1754,6 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
-      --with-lzma-incdir=*)    lzmaincdir=$optarg    ; enable_lzma="yes"    ;;
-      --with-lzma-libdir=*)    lzmalibdir=$optarg    ; enable_lzma="yes"    ;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
@@ -2385,7 +2384,7 @@ result "$enable_builtin_pcre"
 
 ######################################################################
 #
-### echo %%% Use included ZLib or use systems
+### echo %%% Use included zLib or use systems
 #
 if test "x$enable_builtin_zlib" = "xno" ; then
     check_header "zlib.h" "" \
@@ -2420,6 +2419,47 @@ if test "x$enable_builtin_zlib" = "xno" ; then
 fi
 message "Checking whether to build included zlib"
 result "$enable_builtin_zlib"
+
+######################################################################
+#
+### echo %%% Use included lzma or use systems
+#
+# (See http://tukaani.org/xz/)
+#
+if test "x$enable_builtin_lzma" = "xno" ; then
+    check_header "lzma.h" "" \
+        $LZMA ${LZMA:+$LZMA/include} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include/lzma /usr/local/include/lzma \
+        /opt/lzma/include /usr/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_lzma=yes
+    else
+        lzmainc=$found_hdr
+        lzmaincdir=$found_dir
+    fi
+
+    check_library "liblzma" "$enable_shared" "" \
+        $LZMA ${LZMA:+$LZMA/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lzma/lib /usr/local/lib \
+        /usr/lib/lzma /usr/local/lib/lzma /usr/lzma/lib /usr/lib \
+        /usr/lzma /usr/local/lzma /opt/lzma /opt/lzma/lib
+    if test "x$found_lib" = "x" ; then
+        lzmalib=""
+        lzmalibdir=""
+        enable_builtin_lzma="yes"
+    else
+        lzmalib="$found_lib"
+        lzmalibdir="$found_dir"
+    fi
+
+    if test "x$lzmaincdir" = "x" || test "x$lzmalib" = "x"; then
+        enable_builtin_lzma="yes"
+    fi
+fi
+message "Checking whether to build included lzma"
+result "$enable_builtin_lzma"
 
 ######################################################################
 #
@@ -3906,55 +3946,6 @@ if test ! "x$enable_ldap" = "xno"; then
 fi
 check_explicit "$enable_ldap" "$enable_ldap_explicit" \
      "Explicitly required LDAP dependencies not fulfilled"
-
-######################################################################
-#
-### echo %%% LZMA Support - Third party libraries
-#
-# (See http://tukaani.org/xz/)
-#
-# If the user has set the flags "--disable-lzma", we don't check for
-# LZMA at all.
-#
-if test ! "x$enable_lzma" = "xno"; then
-    # Check for lzma include and library
-    check_header "lzma.h" "$lzmaincdir" $LZMA $LZMA/include \
-        /usr/include /usr/local/include /usr/local/lzma/include \
-        /usr/include/lzma /usr/include/openlzma /usr/lzma/include \
-        /usr/local/include/lzma /usr/local/include/openlzma \
-        /usr/lzma /usr/local/lzma /opt/lzma /opt/lzma/include
-    lzmainc=$found_hdr
-    lzmaincdir=$found_dir
-
-    lzmalibdir1="$lzmalibdir"
-    lzmalib=""
-    lzmalibdir=""
-
-    check_library liblzma staticonly "$lzmalibdir1" \
-      $LZMA $LZMA/lib /usr/local/lzma/lib /usr/local/lib \
-      /usr/lib/lzma /usr/local/lib/lzma /usr/lzma/lib /usr/lib \
-      /usr/lzma /usr/local/lzma /opt/lzma /opt/lzma/lib
-    if test "x$found_lib" = "x" ; then
-      lzmalib=""
-      lzmalibdir=""
-      enable_lzma="no"
-    else
-      lzmalib="$found_lib"
-      lzmalibdir="$found_dir"
-    fi
-
-    if test "x$lzmaincdir" = "x" || test "x$lzmalib" = "x"; then
-        enable_lzma="no"
-        haslzmacompression="undef"
-    else
-        haslzmacompression="define"
-    fi
-else
-    haslzmacompression="undef"
-fi
-
-check_explicit "$enable_lzma" "$enable_lzma_explicit" \
-     "Explicitly required LZMA dependencies not fulfilled"
 
 ######################################################################
 #
@@ -6347,8 +6338,12 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@zlibincdir@|$zlibincdir|"            \
     -e "s|@zliblib@|$zliblib|"                  \
     -e "s|@zliblibdir@|$zliblibdir|"            \
+    -e "s|@builtinlzma@|$enable_builtin_lzma|"  \
+    -e "s|@lzmaincdir@|$lzmaincdir|"            \
+    -e "s|@lzmalib@|$lzmalib|"                  \
+    -e "s|@lzmalibdir@|$lzmalibdir|"            \
     -e "s|@buildcintex@|$enable_cintex|"        \
-    -e "s|@buildcling@|$enable_cling|"        \
+    -e "s|@buildcling@|$enable_cling|"          \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
@@ -6394,9 +6389,6 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@ldapincdir@|$ldapincdir|"            \
     -e "s|@ldaplib@|$ldaplib|"                  \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
-    -e "s|@lzmaincdir@|$lzmaincdir|"            \
-    -e "s|@lzmalib@|$lzmalib|"                  \
-    -e "s|@lzmalibdir@|$lzmalibdir|"            \
     -e "s|@ldflags@||"                          \
     -e "s|@libdir@|$libdir|"                    \
     -e "s|@macrodir@|$macrodir|"                \
@@ -6502,7 +6494,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildfitsio@|$enable_fitsio|"        \
     -e "s|@buildgl@|$enable_opengl|"            \
     -e "s|@buildldap@|$enable_ldap|"            \
-    -e "s|@buildlzma@|$enable_lzma|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \
     -e "s|@buildpgsql@|$enable_pgsql|"          \
     -e "s|@buildodbc@|$enable_odbc|"            \
@@ -6587,7 +6578,6 @@ sed \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascling@|$hascling|"           \
-    -e "s|@haslzmacompression@|$haslzmacompression|" \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

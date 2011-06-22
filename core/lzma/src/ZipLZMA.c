@@ -15,6 +15,11 @@
 
 void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
+   uint64_t out_size;             /* compressed size */
+   unsigned in_size   = (unsigned) (*srcsize);
+   lzma_stream stream = LZMA_STREAM_INIT;
+   lzma_ret returnStatus;
+
    *irep = 0;
 
    if (*tgtsize <= 0) {
@@ -25,8 +30,6 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
       return;
    }
 
-   lzma_stream stream = LZMA_STREAM_INIT;
-   lzma_ret returnStatus;
    if (cxlevel > 9) cxlevel = 9;
    returnStatus = lzma_easy_encoder(&stream,
                                     (uint32_t)(cxlevel),
@@ -56,8 +59,8 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    tgt[1] = 'Z';
    tgt[2] = 0;
 
-   unsigned in_size   = (unsigned) (*srcsize);
-   uint64_t out_size  = stream.total_out;             /* compressed size */
+   in_size   = (unsigned) (*srcsize);
+   out_size  = stream.total_out;             /* compressed size */
 
    tgt[3] = (char)(out_size & 0xff);
    tgt[4] = (char)((out_size >> 8) & 0xff);
@@ -72,10 +75,10 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
 
 void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
-   *irep = 0;
-
    lzma_stream stream = LZMA_STREAM_INIT;
    lzma_ret returnStatus;
+
+   *irep = 0;
 
    returnStatus = lzma_stream_decoder(&stream, 
                                       UINT64_MAX,
