@@ -151,8 +151,8 @@ namespace textinput {
     if (!IsTTY()) return;
 
     // Default color, reset previous bold etc.
-    static const char text[] = {(char)0x1b, '[', '0', 'm', 0};
-    WriteRawString(text, 4);
+    static const char text[] = {(char)0x1b, '[', '0', 'm'};
+    WriteRawString(text, sizeof(text));
 
     if (CIdx == 0) return;
 
@@ -190,7 +190,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::MoveFront() {
-    static const char text[] = {(char)0x1b, '[', '1', 'G', 0};
+    static const char text[] = {(char)0x1b, '[', '1', 'G'};
     if (!IsTTY()) return;
     WriteRawString(text, sizeof(text));
   }
@@ -231,7 +231,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::EraseToRight() {
-    static const char text[] = {(char)0x1b, '[', 'K', 0};
+    static const char text[] = {(char)0x1b, '[', 'K'};
     if (!IsTTY()) return;
     WriteRawString(text, sizeof(text));
   }
