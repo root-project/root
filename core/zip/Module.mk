@@ -13,31 +13,15 @@ ZIPDIRS      := $(ZIPDIR)/src
 ZIPDIRI      := $(ZIPDIR)/inc
 
 ##### libZip (part of libCore) #####
-ifeq ($(BUILDLZMA),yes)
-ZIPOLDH      := $(MODDIRI)/Bits.h       \
-                $(MODDIRI)/Tailor.h     \
-                $(MODDIRI)/ZDeflate.h   \
-                $(MODDIRI)/ZIP.h        \
-                $(MODDIRI)/ZTrees.h     \
-                $(MODDIRI)/R__LZMA.h    \
-                $(MODDIRI)/Compression.h
-else
 ZIPOLDH      := $(MODDIRI)/Bits.h       \
                 $(MODDIRI)/Tailor.h     \
                 $(MODDIRI)/ZDeflate.h   \
                 $(MODDIRI)/ZIP.h        \
                 $(MODDIRI)/ZTrees.h     \
                 $(MODDIRI)/Compression.h
-endif
 
-ifeq ($(BUILDLZMA),yes)
-ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
-                $(MODDIRS)/ZInflate.c   \
-                $(MODDIRS)/R__LZMA.c
-else
 ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
                 $(MODDIRS)/ZInflate.c
-endif
 
 ZIPNEWH      := $(MODDIRI)/crc32.h      \
                 $(MODDIRI)/deflate.h    \
@@ -99,6 +83,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ZIPDEP)
 
 distclean::     distclean-$(MODNAME)
-
-##### extra rules ######
-$(call stripsrc,$(ZIPDIRS)/R__LZMA.o): CFLAGS += $(LZMAINCDIR:%=-I%)

@@ -73,6 +73,11 @@ ZLIBLIBDIR     := @zliblibdir@
 ZLIBCLILIB     := @zliblib@
 ZLIBINCDIR     := $(filter-out /usr/include, @zlibincdir@)
 
+BUILTINLZMA    := @builtinlzma@
+LZMALIBDIR     := @lzmalibdir@
+LZMACLILIB     := @lzmalib@
+LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
+
 BUILDGL        := @buildgl@
 OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@
@@ -296,7 +301,7 @@ SSLLIBDIR      := @ssllibdir@
 SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
 SSLSHARED      := @sslshared@
 
-BUILDLZMA      := @buildlzma@
+BUILTINLZMA    := @builtinlzma@
 LZMALIBDIR     := @lzmalibdir@
 LZMACLILIB     := @lzmalib@
 LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
