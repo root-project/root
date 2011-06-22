@@ -83,7 +83,7 @@ else
 			gunzip -c $(PCRELIBS) | tar xf -; \
 		fi; \
 		cd $(PCREVERS); \
-		PCRECC=$(CC); \
+		PCRECC="$(CC)"; \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			PCRECC="cc"; \
 		fi; \

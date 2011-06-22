@@ -114,7 +114,7 @@ ifeq ($(PLATFORM),win32)
 		@touch $(ASTEPMAKE)
 else
 		@(cd $(ASTEPDIRS); \
-		ACC=$(CC); \
+		ACC="$(CC)"; \
 		ACFLAGS="-O"; \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
@@ -293,8 +293,8 @@ endif
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ASIMAGEO): $(ASTEPLIB) $(FREETYPEDEP)
+$(ASIMAGEO): $(ASTEPDEP) $(FREETYPEDEP)
 $(ASIMAGEO): CXXFLAGS += $(FREETYPEINC) $(ASTEPDIRI)
 
-$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): $(ASTEPLIB)
+$(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): $(ASTEPDEP)
 $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASIMAGEDO): CXXFLAGS += $(ASTEPDIRI)

@@ -91,7 +91,7 @@ else
 			gunzip -c $(FREETYPELIBS) | tar xf -; \
 		fi; \
 		cd $(FREETYPEVERS); \
-		FREECC=$(CC); \
+		FREECC="$(CC)"; \
 		if [ "$(CC)" = "icc" ]; then \
 			FREECC="icc -wd188 -wd181"; \
 		fi; \
