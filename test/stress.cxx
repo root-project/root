@@ -94,6 +94,7 @@
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TClassTable.h>
+#include <Compression.h>
 #include "Event.h"
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
@@ -873,7 +874,7 @@ void stress9tree(TTree *tree, Int_t realTestNum)
 {
 // Test selections via TreeFormula
 // tree is a TTree when called by stress9
-// tree is a TChain when called from stres11
+// tree is a TChain when called from stress11
 // This is a quite complex test checking the results of TTree::Draw
 // or TChain::Draw with an explicit loop on events.
 // Also a good test for the interpreter
@@ -1193,6 +1194,9 @@ void stress10()
    for (file=0;file<10;file++) {
       snprintf(filename,20,"Event_%d.root",file);
       chfile[file] = new TFile(filename,"recreate");
+      if (file>=5) {
+         chfile[file]->SetCompressionAlgorithm(ROOT::kLZMA);
+      }
       chTree[file] = (TTree*)tree->CloneTree(0);
    }
 
