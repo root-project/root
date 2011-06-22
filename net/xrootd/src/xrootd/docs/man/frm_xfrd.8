@@ -1,0 +1,33 @@
+.TH frm_xfrd 8 "8 March 2011"
+.SH NAME
+frm_xfrd - File Residency Manager transfer daemon
+.SH SYNOPSIS
+.nf
+
+\fBfrm_xfrd\fR [\fIoptions\fR]
+
+.fi
+.br
+.ad l
+.SH DESCRIPTION
+The \fBfrm_xfrd\fR daemon automatically copies files in and out
+of the data server.  It is part of the File Residency Manager software suite.
+Usage synopsis can be displayed by typing "\fBfrm_xfrd -h\fR".
+Complete HTML documentation can be found at
+
+.ce 
+http://xrootd.org/doc/prod/frm_config.htm
+.SH NOTES
+Documentation for all components associated with \fBfrm_xfrd\fR can be found at
+http://xrootd.org/docs.html
+.SH DIAGNOSTICS
+Configuration errors yield an error message and a non-zero exit status.
+The program never exits upon success.
+Use the kill command or "/etc/init.d/frm_xfrd stop" to terminate the program.
+.SH LICENSE
+License terms can be displayed by typing "\fBxrootd -H\fR".
+.SH SUPPORT LEVEL
+The \fBfrm_xfrd\fR daemon is supported by the xrootd collaboration.
+Contact information can be found at
+.ce
+http://xrootd.org/contact.html

@@ -34,6 +34,7 @@
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdSys/XrdSysPlugin.hh"
+#include "XrdSys/XrdSysPthread.hh"
 
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucTList.hh"
@@ -64,6 +65,7 @@ const char  *XrdPssSys::urlPlain  =  0;
 int          XrdPssSys::urlPlen   =  0;
 int          XrdPssSys::hdrLen    =  0;
 const char  *XrdPssSys::hdrData   =  0;
+const char  *XrdPssSys::urlRdr    =  0;
 int          XrdPssSys::Workers   = 16;
 
 char         XrdPssSys::allChmod  =  0;
@@ -72,6 +74,8 @@ char         XrdPssSys::allMv     =  0;
 char         XrdPssSys::allRm     =  0;
 char         XrdPssSys::allRmdir  =  0;
 char         XrdPssSys::allTrunc  =  0;
+
+char         XrdPssSys::cfgDone   =  0;
 
 namespace XrdProxy
 {
@@ -83,6 +87,32 @@ static const int maxHLen = 1024;
 }
 
 using namespace XrdProxy;
+
+  
+/******************************************************************************/
+/*            E x t e r n a l   T h r e a d   I n t e r f a c e s             */
+/******************************************************************************/
+
+void *XrdPssConfigFfs(void *carg)
+{
+   XrdPssSys *myPSS = (XrdPssSys *)carg;
+
+// Initialize the Ffs (we don't use xrd_init() as it messes up the settings
+// We also do not initialize secsss as we don't know how to effectively use it.
+//
+// XrdFfsMisc_xrd_secsss_init();
+   XrdFfsMisc_refresh_url_cache(myPSS->urlRdr);
+   XrdFfsDent_cache_init();
+   XrdFfsWcache_init();
+   XrdFfsQueue_create_workers(myPSS->Workers);
+
+// Tell everyone waiting for this initialization to complete. We use the trick
+// that in all systems a caharcter is atomically accessed and a single change
+// in value will be detected in a consistent way.
+//
+   myPSS->cfgDone = 1;
+   return (void *)0;
+}
 
 /******************************************************************************/
 /*                             C o n f i g u r e                              */
@@ -106,6 +136,7 @@ int XrdPssSys::Configure(const char *cfn)
                                                  {0,     0        }
                                                 };
    const char *xP;
+   pthread_t tid;
    char *eP, theRdr[maxHLen+1024];
    int i, NoGo = 0;
 
@@ -162,20 +193,27 @@ int XrdPssSys::Configure(const char *cfn)
       else if ((xP = rindex(eP, ' '))) xP++;
               else xP = eP;
 
-// Initialize the Ffs (we don't use xrd_init() as it messes up the settings
-// We also do not initialize secsss as we don't know how to effectively use it.
+// Tell xrootd to disable async I/O as it just will slow everything down
 //
-   strcpy(&theRdr[urlPlen], xP);
-// XrdFfsMisc_xrd_secsss_init();
-   XrdFfsMisc_refresh_url_cache(theRdr);
-   XrdFfsDent_cache_init();
-   XrdFfsWcache_init();
-   XrdFfsQueue_create_workers(Workers);
+   XrdOucEnv::Export("XRDXROOTD_NOAIO", "1");
+
+// Setup the redirection url
+//
+   strcpy(&theRdr[urlPlen], xP); urlRdr = strdup(theRdr);
 
 // Allocate an Xroot proxy object (only one needed here). Tell it to not
-// shadow open files with real file descriptors (we will be honest).
+// shadow open files with real file descriptors (we will be honest). This can
+// be done before we initialize the ffs.
 //
    Xroot = new XrdPosixXrootd(-32768, 16384);
+
+// Now spwan a thread to complete ffs initialization which may hang for a while
+//
+   if (XrdSysThread::Run(&tid, XrdPssConfigFfs, (void *)this, 0, "Ffs Config"))
+      {eDest.Emsg("Config", errno, "start ffs configurator"); return 1;}
+
+// All done
+//
    return 0;
 }
 
@@ -295,6 +333,7 @@ int XrdPssSys::ConfigXeq(char *var, XrdOucStream &Config)
 
    // Process items. for either a local or a remote configuration
    //
+   TS_Xeq("memcache",      xcach);
    TS_Xeq("config",        xconf);
    TS_Xeq("origin",        xorig);
    TS_Xeq("setopt",        xsopt);
@@ -306,6 +345,157 @@ int XrdPssSys::ConfigXeq(char *var, XrdOucStream &Config)
    eDest.Say("Config warning: ignoring unknown directive '",var,"'.");
    Config.Echo();
    return 0;
+}
+  
+/******************************************************************************/
+/*                                 x c a c h                                  */
+/******************************************************************************/
+
+/* Function: xcach
+
+   Purpose:  To parse the directive: cache <keyword> <value> [...]
+
+             <keyword> is one of the following:
+             debug     {0 | 1 | 2}
+             logstats  enables stats logging
+             max2cache largest read to cache   (can be suffixed with k, m, g).
+             mode      {r | w}
+             pagesize  size of each cache page (can be suffixed with k, m, g).
+             preread   [minpages [minrdsz]] [perf nn [recalc]]
+             r/w       enables caching for files opened read/write.
+             sfiles    {on | off | .<sfx>}
+             size      size of cache in bytes  (can be suffixed with k, m, g).
+
+   Output: 0 upon success or 1 upon failure.
+*/
+
+int XrdPssSys::xcach(XrdSysError *Eroute, XrdOucStream &Config)
+{
+   long long llVal, cSize=-1, m2Cache=-1, pSize=-1;
+   const char *ivN = 0;
+   char  *val, *sfSfx = 0, sfVal = '0', lgVal = '0', dbVal = '0', rwVal = '0';
+   char eBuff[2048], pBuff[1024], *eP;
+   struct sztab {const char *Key; long long *Val;} szopts[] =
+               {{"max2cache", &m2Cache},
+                {"pagesize",  &pSize},
+                {"size",      &cSize}
+               };
+   int i, numopts = sizeof(szopts)/sizeof(struct sztab);
+
+// If we have no parameters, then we just use the defaults
+//
+   if (!(val = Config.GetWord()))
+      {XrdOucEnv::Export("XRDPOSIX_CACHE", "mode=s&optwr=1"); return 0;}
+   *pBuff = 0;
+
+do{for (i = 0; i < numopts; i++) if (!strcmp(szopts[i].Key, val)) break;
+
+   if (i < numopts)
+      {if (!(val = Config.GetWord())) ivN = szopts[i].Key;
+          else if (XrdOuca2x::a2sz(*Eroute,szopts[i].Key,val,&llVal,0)) return 1;
+                  else *(szopts[i].Val) = llVal;
+      } else {
+            if (!strcmp("debug", val))
+               {if (!(val = Config.GetWord())
+                || ((*val < '0' || *val > '3') && !*(val+1))) ivN = "debug";
+                   else dbVal = *val;
+               }
+       else if (!strcmp("logstats", val)) lgVal = '1';
+       else if (!strcmp("preread", val))
+               {if ((val = xcapr(Eroute, Config, pBuff))) continue;
+                if (*pBuff == '?') return 1;
+                break;
+               }
+       else if (!strcmp("r/w", val)) rwVal = '1';
+       else if (!strcmp("sfiles", val))
+               {if (sfSfx) {free(sfSfx); sfSfx = 0;}
+                     if (!(val = Config.GetWord())) ivN = "sfiles";
+                else if (!strcmp("on",  val)) sfVal = '1';
+                else if (!strcmp("off", val)) sfVal = '0';
+                else if (*val == '.' && strlen(val) < 16) sfSfx = strdup(val);
+                else ivN = "sfiles";
+               }
+       else {Eroute->Emsg("Config","invalid cache keyword -", val); return 1;}
+     }
+
+   if (ivN)
+      {if (!val) Eroute->Emsg("Config","cache", ivN,"value not specified.");
+          else   Eroute->Emsg("Config", val, "is invalid for cache", ivN);
+       return 1;
+      }
+  } while ((val = Config.GetWord()));
+
+// Construct the envar string
+//
+   strcpy(eBuff, "mode=s&maxfiles=16384"); eP = eBuff + strlen(eBuff);
+   if (cSize > 0)    eP += sprintf(eP, "&cachesz=%lld", cSize);
+   if (dbVal != '0') eP += sprintf(eP, "&debug=%c", dbVal);
+   if (m2Cache > 0)  eP += sprintf(eP, "&max2cache=%lld", m2Cache);
+   if (pSize > 0)    eP += sprintf(eP, "&pagesz=%lld", pSize);
+   if (lgVal != '0') strcat(eP, "&optlg=1");
+   if (sfVal != '0' || sfSfx)
+      {if (!sfSfx)   strcat(eP, "&optsf=1");
+          else {strcat(eP, "&optsf="); strcat(eBuff, sfSfx); free(sfSfx);}
+      }
+   if (rwVal != '0') strcat(eP, "&optwr=1");
+   if (*pBuff)       strcat(eP, pBuff);
+
+   XrdOucEnv::Export("XRDPOSIX_CACHE", eBuff);
+   return 0;
+}
+  
+/******************************************************************************/
+/*                                 x c a p r                                  */
+/******************************************************************************/
+
+/* Function: xcapr
+
+   Purpose:  To parse the directive: preread [pages [minrd]] [perf pct [calc]]
+
+             pages     minimum number of pages to preread.
+             minrd     minimum size   of read  (can be suffixed with k, m, g).
+             perf      preread performance (0 to 100).
+             calc      calc perf every n bytes (can be suffixed with k, m, g).
+*/
+
+char *XrdPssSys::xcapr(XrdSysError *Eroute, XrdOucStream &Config, char *pBuff)
+{
+   long long minr = 0, maxv = 0x7fffffff, recb = 50*1024*1024;
+   int minp = 1, perf = 90, Spec = 0;
+   char *val;
+
+// Check for our options
+//
+   *pBuff = '?';
+   if ((val = Config.GetWord()) && isdigit(*val))
+      {if (XrdOuca2x::a2i(*Eroute,"preread pages",val,&minp,0,32767)) return 0;
+       if ((val = Config.GetWord()) && isdigit(*val))
+          {if (XrdOuca2x::a2sz(*Eroute,"preread rdsz",val,&minr,0,maxv))
+              return 0;
+           val = Config.GetWord();
+          }
+       Spec = 1;
+      }
+   if (val && !strcmp("perf", val))
+      {if (!(val = Config.GetWord()))
+          {Eroute->Emsg("Config","cache", "preread perf value not specified.");
+           return 0;
+          }
+       if (XrdOuca2x::a2i(*Eroute,"perf",val,&perf,0,100)) return 0;
+       if ((val = Config.GetWord()) && isdigit(*val))
+          {if (XrdOuca2x::a2sz(*Eroute,"perf recalc",val,&recb,0,maxv))
+              return 0;
+           val = Config.GetWord();
+          }
+       Spec = 1;
+      }
+
+// Construct new string
+//
+   if (!Spec) strcpy(pBuff,"&optpr=1&aprminp=1");
+      else sprintf(pBuff,  "&optpr=1&aprtrig=%lld&aprminp=%d&aprcalc=%lld"
+                           "&aprperf=%d",minr,minp,recb,perf);
+   return val;
 }
   
 /******************************************************************************/
@@ -335,10 +525,10 @@ int XrdPssSys::xconf(XrdSysError *Eroute, XrdOucStream &Config)
 
 do{for (i = 0; i < numopts; i++) if (!strcmp(Xopts[i].Key, val)) break;
 
-   if (i > numopts)
+   if (i >= numopts)
       Eroute->Say("Config warning: ignoring unknown config option '",val,"'.");
       else {if (!(val = Config.GetWord()))
-               {Eroute->Emsg("Config", "config", val, "value not specified.");
+               {Eroute->Emsg("Config","config",Xopts[i].Key,"value not specified.");
                 return 1;
                }
 

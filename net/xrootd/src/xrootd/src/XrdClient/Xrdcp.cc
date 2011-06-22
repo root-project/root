@@ -30,6 +30,7 @@ const char *XrdcpCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sstream>
 #ifndef WIN32
 #include <sys/time.h>
 #include <unistd.h>
@@ -88,7 +89,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (8*1024*1024)
 #define XRDCP_XRDRASIZE          (30*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision$ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004-2011 by the XRootD collaboration. Version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -207,7 +208,32 @@ void print_chksum(const char* src, unsigned long long bytesread, unsigned adler)
   }
 }
 
+//------------------------------------------------------------------------------
+// Check if the opaque data provide the file size information and add it
+// if needed
+//------------------------------------------------------------------------------
+XrdOucString AddSizeHint( const char *dst, off_t size )
+{
+  // to be removed when we have no more <3.0.4 servers
+  // needed because of a bug fixed by 787446f38296698d2881ed45d3009336bde0834d
+  if( !EnvGetLong( NAME_XRDCP_SIZE_HINT ) )
+    return dst;
 
+  XrdOucString dest = dst;
+  std::stringstream s;
+  if( dest.find( "?oss.asize=" ) == STR_NPOS &&
+      dest.find( "&oss.asize=" ) == STR_NPOS )
+  {
+    s << dst;
+    if( dest.find( "?" ) == STR_NPOS )
+      s << "?";
+    else
+      s << "&";
+    s << "oss.asize=" << size;
+    dest = s.str().c_str();
+  }
+  return dest;
+}
 
 
 // The body of a thread which reads from the global
@@ -581,9 +607,11 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
    cpnfo.XrdCli->Stat(&stat);
    cpnfo.len = stat.size;
    
+   XrdOucString dest = AddSizeHint( dst, stat.size );
+
    // if xrddest if nonzero, then the file is already opened for writing
    if (!*xrddest) {
-      *xrddest = new XrdClient(dst);
+      *xrddest = new XrdClient(dest.c_str());
       
       if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
                               xrd_wr_flags)) {
@@ -743,6 +771,12 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
          delete cpnfo.XrdCli;
          cpnfo.XrdCli = 0;
       }
+   }
+
+   if( !(*xrddest)->Close() )
+   {
+      PrintLastServerError(*xrddest);
+      return 1;
    }
 
    delete *xrddest;
@@ -987,7 +1021,11 @@ int doCp_xrd2loc(const char *src, const char *dst) {
       cout << endl;
    }
 
-   if (cpnfo.len != bytesread) retvalue = 13;
+   if (cpnfo.len != bytesread)
+   {
+      PrintLastServerError( cpnfo.XrdCli );
+      retvalue = 13;
+   }
 
 #ifdef HAVE_XRDCRYPTO
    if (md5) MD_5->Final();
@@ -1052,10 +1090,12 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
      return -1;
    }
 
+   XrdOucString dest = AddSizeHint( dst, stat.st_size );
+
    // if xrddest if nonzero, then the file is already opened for writing
    if (!*xrddest) {
 
-      *xrddest = new XrdClient(dst);
+      *xrddest = new XrdClient(dest.c_str());
       if (!PedanticOpen4Write(*xrddest, kXR_ur | kXR_uw | kXR_gw | kXR_gr | kXR_or,
                            xrd_wr_flags) ) {
 	 cerr << "Error opening remote destination file " << dst << endl;
@@ -1158,9 +1198,15 @@ int doCp_loc2xrd(XrdClient **xrddest, const char *src, const char * dst) {
       print_summary(src, dst, bytesread, adler);
    }     
 #endif
-   
+
    pthread_cancel(myTID);
    pthread_join(myTID, &thret);
+
+   if( !(*xrddest)->Close() )
+   {
+      PrintLastServerError(*xrddest);
+      return 1;
+   }
 
    delete *xrddest;
    *xrddest = 0;
@@ -1236,6 +1282,12 @@ int main(int argc, char**argv) {
    char *srcpath = 0, *destpath = 0;
    memset (BWMHost, 0, sizeof(BWMHost));
 
+   if (argc == 2 && !strcmp( argv[1], "-version" ) )
+   {
+      std::cerr << XRDCP_VERSION << std::endl;
+      exit(0);
+   }
+
    if (argc < 3) {
       PrintUsage();
       exit(1);
@@ -1281,7 +1333,7 @@ int main(int argc, char**argv) {
 	continue;
       }
 
-      if ( (strstr(argv[i], "-v") == argv[i])) {
+      if ( !strcmp(argv[i], "-v") ) {
 	summary=true;
 	continue;
       }
@@ -1458,6 +1510,11 @@ int main(int argc, char**argv) {
 	continue;
      }
 #endif
+
+      if ( !strcmp(argv[i], "-version") ) {
+         std::cerr << XRDCP_VERSION << std::endl;
+         continue;
+      }
 
       // Any other par is ignored
       if ( (strstr(argv[i], "-") == argv[i]) && (strlen(argv[i]) > 1) ) {

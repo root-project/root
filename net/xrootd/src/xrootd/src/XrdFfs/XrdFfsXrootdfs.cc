@@ -24,6 +24,7 @@
 #ifdef HAVE_FUSE
 #include <fuse.h>
 #include <fuse/fuse_opt.h>
+#include <ctype.h>
 #include <string.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -51,11 +52,12 @@ struct XROOTDFS {
     char *cns;
     char *fastls;
     char *daemon_user;
+    char *ssskeytab;
     bool ofsfwd;
 };
 
 struct XROOTDFS xrootdfs;
-static struct fuse_opt xrootdfs_opts[10];
+static struct fuse_opt xrootdfs_opts[11];
 
 enum { OPT_KEY_HELP, OPT_KEY_SECSSS, };
 
@@ -71,7 +73,17 @@ static void* xrootdfs_init(struct fuse_conn_info *conn)
 
     if (xrootdfs.daemon_user != NULL)
     {
-        pw = getpwnam(xrootdfs.daemon_user);
+        int i, len;
+        len = strlen(xrootdfs.daemon_user);
+        for (i=0; i<len; i++)  // daemon_user can be both string name or uid
+        {
+            if (isdigit(xrootdfs.daemon_user[i]) == 0) 
+            {
+                pw = getpwnam(xrootdfs.daemon_user);
+                break;
+            }
+        }
+        if (i == len) pw = getpwuid(atoi(xrootdfs.daemon_user));
         setgid((gid_t)pw->pw_gid);
         setuid((uid_t)pw->pw_uid);
     }
@@ -997,19 +1009,39 @@ static int xrootdfs_getxattr(const char *path, const char *name, char *value,
             return strlen(nworkers);
         else if (size >= strlen(nworkers))
         {
-             size = strlen(nworkers);
-             if (size != 0)
-             {
-                  value[0] = '\0';
-                  strcat(value, nworkers);
-             }
-             return size;
+            size = strlen(nworkers);
+            if (size != 0)
+            {
+                 value[0] = '\0';
+                 strcat(value, nworkers);
+            }
+            return size;
         }
         else
         {
             errno = ERANGE;
             return -1;
         }
+    }
+    else if (!strcmp(name, "xrootdfs.file.permission"))
+    {
+        char xattr[256];
+        strcat(rootpath,xrootdfs.rdr);
+        strcat(rootpath,path);
+
+        XrdFfsMisc_xrd_secsss_register(fuse_get_context()->uid, fuse_get_context()->gid);
+        XrdFfsMisc_xrd_secsss_editurl(rootpath, fuse_get_context()->uid);
+
+        xattrlen = XrdFfsPosix_getxattr(rootpath, "xroot.xattr.ofs.ap", xattr, 255);
+        if (size == 0) 
+            return xattrlen;
+        else
+            size = xattrlen;
+
+        strncpy(value, xattr, size);
+        value[size] = '\0';
+       
+        return size;
     }
 
     if (xrootdfs.cns != NULL)
@@ -1075,16 +1107,19 @@ static void xrootdfs_usage(const char *progname)
 "usage: %s mountpoint options\n"
 "\n"
 "XrootdFS options:\n"
-"    -h -help --help        print help\n"
+"    -h -help --help          print help\n"
+"\n"
+"Default options:\n"
+"    fsname=xrootdfs,allow_other,max_write=131072,attr_timeout=10,entry_timeout=10,negative_timeout=5\n"
 "\n"
 "[Required]\n"
-"    -rdr=redirector_url    root URL of the Xrootd redirector\n"
+"    -o rdr=redirector_url    root URL of the Xrootd redirector\n"
 "\n"
 "[Optional]\n"
-"    -cns=cns_server_url    root URL of the CNS server\n"
-"    -R=username            cause XrootdFS to switch effective uid to that of username if possible\n"
-"    -fastls=RDR            set to RDR when CNS is presented will cause stat() to go to redirector\n"
-"    -sss                   use Xrootd seciruty module \"sss\"\n"
+"    -o cns=cns_server_url    root URL of the CNS server\n"
+"    -o uid=username          cause XrootdFS to switch effective uid to that of username if possible\n"
+"    -o fastls=RDR            set to RDR when CNS is presented will cause stat() to go to redirector\n"
+"    -o sss[=keytab]          use Xrootd seciruty module \"sss\", specifying a keytab file is optional\n"
 "\n", progname);
 }
 
@@ -1100,9 +1135,6 @@ static int xrootdfs_opt_proc(void* data, const char* arg, int key, struct fuse_a
       case FUSE_OPT_KEY_NONOPT:
         return 1;
       case OPT_KEY_SECSSS:  
-/* this specify using "sss" security module. the actually location of the key is 
-   determined by shell enviornment variable XrdSecsssKT (or default locations). 
-   The location of the key should not appear in command line. */
         setenv("XROOTDFS_SECMOD", "sss", 1);
         return 0;
       case OPT_KEY_HELP:
@@ -1149,45 +1181,63 @@ int main(int argc, char *argv[])
     xrootdfs_oper.removexattr	= xrootdfs_removexattr;
 
 /* Define XrootdFS options */
-    struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    char **cmdline_opts;
 
-    xrootdfs_opts[0].templ = "-rdr=%s";
+    cmdline_opts = (char **) malloc(sizeof(char*) * (argc + 3));
+    cmdline_opts[0] = argv[0];
+    cmdline_opts[1] = strdup("-o");
+    cmdline_opts[2] = strdup("fsname=xrootdfs,allow_other,max_write=131072,attr_timeout=10,entry_timeout=10,negative_timeout=5");
+    for (int i = 1; i <= argc; i++)
+        cmdline_opts[i+2] = argv[i];
+
+    struct fuse_args args = FUSE_ARGS_INIT(argc + 2, cmdline_opts);
+
+    xrootdfs_opts[0].templ = "rdr=%s";
     xrootdfs_opts[0].offset = offsetof(struct XROOTDFS, rdr);
     xrootdfs_opts[0].value = 0;
 
-    xrootdfs_opts[1].templ = "-cns=%s";
+    xrootdfs_opts[1].templ = "cns=%s";
     xrootdfs_opts[1].offset = offsetof(struct XROOTDFS, cns);
     xrootdfs_opts[1].value = 0;
 
-    xrootdfs_opts[2].templ = "-fastls=%s";
+    xrootdfs_opts[2].templ = "fastls=%s";
     xrootdfs_opts[2].offset = offsetof(struct XROOTDFS, fastls);
     xrootdfs_opts[2].value = 0;
 
-    xrootdfs_opts[3].templ = "-R=%s";
+    xrootdfs_opts[3].templ = "uid=%s";
     xrootdfs_opts[3].offset = offsetof(struct XROOTDFS, daemon_user);
     xrootdfs_opts[3].value = 0;
 
-    xrootdfs_opts[4].templ = "-ofsfwd=%s";
+    xrootdfs_opts[4].templ = "ofsfwd=%s";
     xrootdfs_opts[4].offset = offsetof(struct XROOTDFS, ofsfwd);
     xrootdfs_opts[4].value = 0;
 
-    xrootdfs_opts[5].templ = "-sss";
+/* using "sss" security module. the actually location of the key is determined 
+   by shell enviornment variable XrdSecsssKT (or default locations). */
+
+/* The location of the key is not specified in command line. */
+    xrootdfs_opts[5].templ = "sss";
     xrootdfs_opts[5].offset = -1U;
     xrootdfs_opts[5].value = OPT_KEY_SECSSS;
 
-    xrootdfs_opts[6].templ = "-h";
-    xrootdfs_opts[6].offset = -1U;
-    xrootdfs_opts[6].value = OPT_KEY_HELP;
+/* The location of the key is specified in command line. */
+    xrootdfs_opts[6].templ = "sss=%s";
+    xrootdfs_opts[6].offset = offsetof(struct XROOTDFS, ssskeytab);
+    xrootdfs_opts[6].value = 0;
 
-    xrootdfs_opts[7].templ = "-help";
+    xrootdfs_opts[7].templ = "-h";
     xrootdfs_opts[7].offset = -1U;
     xrootdfs_opts[7].value = OPT_KEY_HELP;
 
-    xrootdfs_opts[8].templ = "--help";
+    xrootdfs_opts[8].templ = "-help";
     xrootdfs_opts[8].offset = -1U;
     xrootdfs_opts[8].value = OPT_KEY_HELP;
 
-    xrootdfs_opts[9].templ = NULL;
+    xrootdfs_opts[9].templ = "--help";
+    xrootdfs_opts[9].offset = -1U;
+    xrootdfs_opts[9].value = OPT_KEY_HELP;
+
+    xrootdfs_opts[10].templ = NULL;
 
 /* initialize struct xrootdfs */
 //    memset(&xrootdfs, 0, sizeof(xrootdfs));
@@ -1196,6 +1246,7 @@ int main(int argc, char *argv[])
     xrootdfs.fastls = NULL;
     xrootdfs.daemon_user = NULL;
     xrootdfs.ofsfwd = false;
+    xrootdfs.ssskeytab = NULL;
 
 /* Get options from environment variables first */
     xrootdfs.rdr = getenv("XROOTDFS_RDRURL");
@@ -1229,6 +1280,12 @@ int main(int argc, char *argv[])
     get a return status of rm, rmdir, mv and truncate.
  */
     if (xrootdfs.cns == NULL) xrootdfs.ofsfwd = false; 
+
+    if (xrootdfs.ssskeytab != NULL)
+    {
+        setenv("XROOTDFS_SECMOD", "sss", 1);
+        setenv("XrdSecsssKT", xrootdfs.ssskeytab, 1);
+    }
 
     XrdFfsMisc_xrd_init(xrootdfs.rdr,0);
     XrdFfsWcache_init();

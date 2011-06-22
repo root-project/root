@@ -35,8 +35,11 @@ case "$COMMAND" in
   'condrestart')
     handleDaemons condrestart xrootd $@
     ;;
+  'setup')
+    handleDaemons setup xrootd
+    ;;
   *)
-    echo "usage: $0 {start|stop|status|restart|condrestart}"
+    echo "usage: $0 {start|stop|status|restart|condrestart|setup}"
     ;;
 esac
 

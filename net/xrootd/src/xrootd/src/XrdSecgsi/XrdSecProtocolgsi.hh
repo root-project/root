@@ -117,7 +117,7 @@ enum kgsiErrors {
 #define SafeDelArray(x) { if (x) delete [] x ; x = 0; }
 #define SafeFree(x) { if (x) free(x) ; x = 0; }
 
-// External function for DN-username mapping
+// External functions for generic mapping
 typedef char *(*XrdSecgsiGMAP_t)(const char *, int);
 typedef char *(*XrdSecgsiAuthz_t)(const char *, int);
 
@@ -163,8 +163,9 @@ public:
                   certdir = 0; crldir = 0; crlext = 0; cert = 0; key = 0;
                   cipher = 0; md = 0; ca = 1 ; crl = 1;
                   proxy = 0; valid = 0; deplen = 0; bits = 512;
-                  gridmap = 0; gmapto = -1; gmapfun = 0; gmapfunparms = 0; authzfun = 0; authzfunparms = 0; ogmap = 1;
-                  dlgpxy = 0; sigpxy = 1; srvnames = 0; exppxy = 0; authzpxy = 0;}
+                  gridmap = 0; gmapto = -1;
+                  gmapfun = 0; gmapfunparms = 0; authzfun = 0; authzfunparms = 0;
+                  ogmap = 1; dlgpxy = 0; sigpxy = 1; srvnames = 0; exppxy = 0; authzpxy = 0;}
    virtual ~gsiOptions() { } // Cleanup inside XrdSecProtocolgsiInit
 };
 
@@ -288,13 +289,15 @@ private:
    static String           DefError;
    static String           GMAPFile;
    static int              GMAPOpt;
+   static bool             GMAPuseDNname;
    static int              GMAPCacheTimeOut;
    static XrdSysPlugin    *GMAPPlugin;
    static XrdSecgsiGMAP_t  GMAPFun;
    static XrdSysPlugin    *AuthzPlugin;
    static XrdSecgsiAuthz_t AuthzFun; 
    static int              PxyReqOpts;
-   static int              AuthzPxy;
+   static int              AuthzPxyWhat;
+   static int              AuthzPxyWhere;
    static String           SrvAllowedNames;
    //
    // Crypto related info
@@ -405,7 +408,7 @@ private:
    static int     LoadGMAP(int now); // Init or refresh the cache
    static XrdSecgsiGMAP_t            // Load alternative function for mapping
                   LoadGMAPFun(const char *plugin, const char *parms);
-   static XrdSecgsiAuthz_t            // Load alternative function for mapping based on the PEM string
+   static XrdSecgsiAuthz_t           // Load alternative function for mapping based on the PEM string
                   LoadAuthzFun(const char *plugin, const char *parms);
    static void    QueryGMAP(XrdCryptoX509Chain* chain, int now, String &name); //Lookup info for DN
 };

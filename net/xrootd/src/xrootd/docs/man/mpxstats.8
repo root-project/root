@@ -1,0 +1,34 @@
+.TH mpxstats 8 "8 March 2011"
+.SH NAME
+mpxstats - Multiplexing Monitor Statistics daemon
+.SH SYNOPSIS
+.nf
+
+\fBmpxstats\fR [\fIoptions\fR] \fB-p\fR \fIport\fR
+
+.fi
+.br
+.ad l
+.SH DESCRIPTION
+The \fBmpxstats\fR daemon multiplexes xrootd and cmsd monitoring data streams
+into a single sequential format suitable for ingestion by a monitoring agent
+(e.g. ganglia, MonaLisa, nagios, etc.).
+Usage synopsis can be displayed by typing "\fBmpxstats\fR".
+Complete HTML documentation can be found at
+
+.ce 
+http://xrootd.org/doc/prod/xrd_monitoring.htm
+.SH NOTES
+Documentation for all components associated with \fBmpxstats\fR can be found at
+http://xrootd.org/docs.html
+.SH DIAGNOSTICS
+Errors yield an error message and a non-zero exit status.
+The program never exits upon success.  Use the kill command to terminate the
+program.
+.SH LICENSE
+License terms can be displayed by typing "\fBxrootd -H\fR".
+.SH SUPPORT LEVEL
+The \fBmpxstats\fR daemon is supported by the xrootd collaboration.
+Contact information can be found at
+.ce
+http://xrootd.org/contact.html

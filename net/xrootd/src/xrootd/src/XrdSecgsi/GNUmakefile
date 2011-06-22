@@ -53,6 +53,7 @@ SOURCES = \
         XrdSecProtocolgsi.cc \
         XrdSecgsiProxy.cc \
         XrdSecgsitest.cc \
+        XrdSecgsiGMAPFunDN.cc \
         XrdSecgsiGMAPFunLDAP.cc
 
 HEADERS = \
@@ -70,17 +71,22 @@ OBJECTB = \
 OBJECTC = \
         $(OBJDIR)/XrdSecgsiGMAPFunLDAP.o
 
+OBJECTD = \
+        $(OBJDIR)/XrdSecgsiGMAPFunDN.o
+
 GSIEXTRACFLAGS = $(INCSSL) -DPERL5 $(CRYPTOSSLEXTRACFLAGS)
 
 LIBRARY = $(LIBDIR)/libXrdSecgsi.$(TYPESHLIB)
 
-LIBLDAP = $(LIBDIR)/libXrdSecgsiGMAPLDAP.$(TYPESHLIB)
+LIBGMLDAP = $(LIBDIR)/libXrdSecgsiGMAPLDAP.$(TYPESHLIB)
+
+LIBGMDN = $(LIBDIR)/libXrdSecgsiGMAPDN.$(TYPESHLIB)
 
 SECGSITEST = $(BINDIR)/xrdsecgsitest
 
 SECGSIPROXY = $(BINDIR)/xrdgsiproxy
 
-TARGETS = $(LIBRARY) $(LIBLDAP) $(SECGSIPROXY) $(SECGSITEST)
+TARGETS = $(LIBRARY) $(LIBGMLDAP) $(LIBGMDN) $(SECGSIPROXY) $(SECGSITEST)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #
@@ -111,9 +117,13 @@ $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 	@echo Creating shared library $(LIBRARY) 
 	$(ECHO)$(LD) $(OBJECTS) $(LDSO) $(LIBLIBS) $(LIBS) -o $(LIBRARY)
 
-$(LIBLDAP): $(OBJECTC)
-	@echo Creating shared library $(LIBLDAP) 
-	$(ECHO)$(LD) $(OBJECTC) $(LDSO) $(LIBS) -o $(LIBLDAP)
+$(LIBGMLDAP): $(OBJECTC)
+	@echo Creating shared library $(LIBGMLDAP) 
+	$(ECHO)$(LD) $(OBJECTC) $(LDSO) $(LIBS) -o $(LIBGMLDAP)
+
+$(LIBGMDN): $(OBJECTD)
+	@echo Creating shared library $(LIBGMDN) 
+	$(ECHO)$(LD) $(OBJECTD) $(LDSO) $(LIBDIR)/libXrdOuc.a $(LIBS) -o $(LIBGMDN)
 
 $(SECGSITEST): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SECGSITEST) 
@@ -158,4 +168,8 @@ $(OBJDIR)/XrdSecProtocolgsi.o: XrdSecProtocolgsi.cc XrdSysLogger.hh \
 $(OBJDIR)/XrdSecgsiGMAPFunLDAP.o: XrdSecgsiGMAPFunLDAP.cc
 	@echo Compiling XrdSecgsiGMAPFunLDAP.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecgsiGMAPFunLDAP.o XrdSecgsiGMAPFunLDAP.cc
+
+$(OBJDIR)/XrdSecgsiGMAPFunDN.o: XrdSecgsiGMAPFunDN.cc XrdOucHash.hh XrdOucString.hh
+	@echo Compiling XrdSecgsiGMAPFunDN.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecgsiGMAPFunDN.o XrdSecgsiGMAPFunDN.cc
 

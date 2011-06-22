@@ -157,6 +157,10 @@
 #define DFLT_TCP_KEEPALIVE_PROBES 9
 #define NAME_TCP_KEEPALIVE_PROBES (char *)"TCPKeepAliveProbes"
 
+// Enable/disable the file size hint in xrdcp
+#define DFLT_XRDCP_SIZE_HINT 1
+#define NAME_XRDCP_SIZE_HINT (char *)"XrdCpSizeHint"
+
 #define TRUE  1
 #define FALSE 0
 

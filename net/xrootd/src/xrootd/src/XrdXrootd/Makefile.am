@@ -13,6 +13,7 @@
 #       -fPIC/-rdynamic (for gcc)
 
 bin_PROGRAMS = xrootd
+man8_MANS = ../../docs/man/xrootd.8
 
 INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src
 

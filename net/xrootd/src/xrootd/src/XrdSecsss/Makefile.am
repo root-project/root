@@ -20,6 +20,7 @@ Secsssincdir = $(includedir)/xrootd/XrdSecsss
 lib_LTLIBRARIES = libXrdSecsss.la
 
 bin_PROGRAMS = xrdsssadmin
+man8_MANS = ../../docs/man/xrdsssadmin.8
 
 Secsssinc_HEADERS = XrdSecProtocolsss.hh  XrdSecsssID.hh  XrdSecsssKT.hh  XrdSecsssRR.hh
 

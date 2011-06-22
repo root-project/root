@@ -87,6 +87,24 @@ Run:
 xrootdfs.template is a template "rc" script for starting and stopping XrootdFS.
 One can make necessary changes and put it in /etc/init.d.
 
+One can also put XrootdFS mount points in /etc/fstab. That require mount.fuse be 
+installed (it is part of fuse RPM). The following is an example line in /etc/fstab:
+
+xrootdfsd /mnt fuse rdr=root://rdr.my.com//xrootd,uid=daemon 0 0
+
+Note XrootdFS binary (xrootdfsd) much be in $PATH, and all options are passed to 
+xrootdfsd via command line parameters without using environment variable.
+
+XrootdFS run with the following default options that can be overwritten at command 
+line or options in /etc/fstab:
+
+fsname=xrootdfs
+allow_other
+max_write=131072
+attr_timeout=10
+entry_timeout=10
+negative_timeout=5
+
 Extended file system attributes:
 ===============================
 
@@ -107,7 +125,7 @@ Setting extended attributes:
 xrootdfs.fs.nworkers : change the number of worker threads. By default
     XrootdFS will start 4 threads. One can also use environment varialbe
     XROOTDFS_NWORKERS to define the number of initial threads.
-xrootdfs.fs.dataserverlist : refresh the data server list.
+xrootdfs.fs.dataserverlist : refresh the data server list. (or "kill -USR1 pid")
 
 Release 3.0rc4 provides a utililty program, "xattr" for querying and setting 
 extended file system attributes. 

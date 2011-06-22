@@ -240,6 +240,9 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 	 (connectTry < connectMaxTry) && (!fConnModule->IsConnected()); 
 	 connectTry++) {
 
+        XrdClientUrlSet urlArray(fInitialUrl);
+        urlArray.Rewind();
+
 	XrdClientUrlInfo *thisUrl = 0;
 	urlstried = (urlstried == urlArray.Size()) ? 0 : urlstried;
 
@@ -1222,8 +1225,10 @@ bool XrdClient::Close() {
 
     // Use the sync one only if the file was opened for writing
     // To enforce the server side correct data flushing
+    bool status = true;
     if (IsOpenedForWrite())
-      fConnModule->DoWriteHardCheckPoint();
+      if( !fConnModule->DoWriteHardCheckPoint() )
+        status = false;
 
     fConnModule->SendGenCommand(&closeFileRequest,
 				0,
@@ -1233,7 +1238,7 @@ bool XrdClient::Close() {
     fOpenPars.opened = FALSE;
     fConnModule->Disconnect( false );
 
-    return TRUE;
+    return status;
 }
 
 

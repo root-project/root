@@ -6,9 +6,12 @@
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# Define the user account name which will be used to start the daemons
+# Define the user account name which will be used to start the daemons.
+# These may have many unexpected side effects, so be sure you know what you're
+# doing before playing with them.
 #-------------------------------------------------------------------------------
 XROOTD_USER=daemon
+XROOTD_GROUP=daemon
 
 #-------------------------------------------------------------------------------
 # Define the commandline options for the instances of the daemons.
@@ -18,17 +21,16 @@ XROOTD_USER=daemon
 #   NAME   - the name of the instance, any uppercase alphanumeric string
 #            without whitespaces is valid
 #-------------------------------------------------------------------------------
-#XROOTD_MAIN_OPTIONS="-l /var/log/xrootd/xrootd-main.log -c /etc/xrootd/xrootd-main.cf"
-#XROOTD_SECOND_OPTIONS="-l /var/log/xrootd/xrootd-second.log -c /etc/xrootd/xrootd-second.cf"
-#CMSD_MAIN_OPTIONS="-l /var/log/xrootd/cmsd-main.log -c /etc/xrootd/cmsd-main.cf"
-#FRMD_MAIN_OPTIONS="-l /var/log/xrootd/frmd-main.log -c /etc/xrootd/frmd-main.cf"
+XROOTD_DEFAULT_OPTIONS="-l /var/log/xrootd/xrootd.log -c /etc/xrootd/xrootd-clustered.cfg -k 7"
+#XROOTD_DEFAULT_OPTIONS="-l /var/log/xrootd/xrootd.log -c /etc/xrootd/xrootd-standalone.cfg -k 7"
+CMSD_DEFAULT_OPTIONS="-l /var/log/xrootd/cmsd.log -c /etc/xrootd/xrootd-clustered.cfg -k 7"
+FRMD_DEFAULT_OPTIONS="-l /var/log/xrootd/frmd.log -c /etc/xrootd/xrootd-clustered.cfg -k 7"
 
 #-------------------------------------------------------------------------------
 # Names of the instances to be started by default, the case doesn't matter,
-# the names will be converted to uppercase automatically, use space as a
+# the names will be converted to lowercase automatically, use space as a
 # separator
 #-------------------------------------------------------------------------------
-#XROOTD_INSTANCES="main"
-#XROOTD_INSTANCES="main second"
-#CMSD_INSTANCES="main"
-#FRMD_INSTANCES="main"
+XROOTD_INSTANCES="default"
+CMSD_INSTANCES="default"
+FRMD_INSTANCES="default"

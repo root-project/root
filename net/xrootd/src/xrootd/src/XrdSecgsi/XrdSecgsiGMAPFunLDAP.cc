@@ -34,8 +34,7 @@ extern "C"
 char *XrdSecgsiGMAPFun(const char *dn, int now)
 {
    // Implementation of XrdSecgsiGMAPFun querying an LDAP server
-   // for the distinguished name 'dn'; the unused argument is the time at
-   // which the function is called.
+   // for the distinguished name 'dn'
 
    // Init the relevant fields (only once)
    if (now <= 0) {

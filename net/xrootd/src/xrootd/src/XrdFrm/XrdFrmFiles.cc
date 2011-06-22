@@ -152,18 +152,16 @@ int XrdFrmFileset::Screen(int needLF)
 
 // Verify that we have all the relevant files (old mode only)
 //
-   if (!Config.runNew)
-      {if (!(baseFile()))
-          {if (Config.Fix)
-              {if (lockFile()) Remfix("Lock", lockPath());
-               if ( pinFile()) Remfix("Pin",  pinPath());
-              }
+   if (!Config.runNew && !baseFile())
+      {if (Config.Fix)
+          {if (lockFile()) Remfix("Lock", lockPath());
+           if ( pinFile()) Remfix("Pin",  pinPath());
            return 0;
           }
-       What = "No base file for";
             if (lockFile()) badFN = lockPath();
        else if ( pinFile()) badFN = pinPath();
        else return 0;
+       What = "No base file for";
       }
 
 // If no errors from above, try to get the copy time for this file

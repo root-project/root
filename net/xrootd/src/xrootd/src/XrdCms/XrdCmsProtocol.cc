@@ -518,17 +518,12 @@ XrdCmsRouting *XrdCmsProtocol::Admit()
 // Make sure that our role is compatible with the incomming role
 //
    Reason = 0;
-   if (Config.asServer())       // We are a supervisor
-      {if (Config.asProxy() && (!isProxy || isPeer))
-          Reason = "configuration only allows proxies";
-          else if (!isServ)
-          Reason = "configuration disallows peers and proxies";
-      } else {                  // We are a manager
-       if (Config.asProxy() &&   isServ)
-          Reason = "configuration only allows peers or proxies";
-          else if (isProxy)
-          Reason = "configuration disallows proxies";
-      }
+        if (Config.asProxy()) {if (!isProxy || isPeer)
+                                  Reason = "configuration only allows proxies";
+                              }
+   else if (isProxy)              Reason = "configuration disallows proxies";
+   else if (Config.asServer() && isPeer)
+                                  Reason = "configuration disallows peers";
    if (Reason) return Login_Failed(Reason);
 
 // The server may specify nostage and suspend

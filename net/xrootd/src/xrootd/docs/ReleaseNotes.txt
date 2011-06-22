@@ -6,6 +6,62 @@ Release Notes
 =============
 
 -------------
+Version 3.0.4
+-------------
+
++ **New features**
+   * xrdcp now has -version parameter
+   * xrdcp automatically ads the oss.asize hint to the url opaque data.
+     This functionality may be disabled by setting the XrdCpSizeHint
+     variable to 0 (XRD_XRDCPSIZEHIN in the shell).
+   * The client will try to resolve the server hostname on every retry to
+     enable DNS failovers.
+   * RPM: devel package split into libs-devel, client-devel and server-devel
+   * XrootdFS: all paramenters can be passed via command line, add -h.
+   * Allow a plugin (notably the proxy plugin) to disable async I/O.
+   * New class XrdSysRWLock interfacing the pthread_rwlock functionality
+   * In XrdSecEntity: Add new fields 'creds' and 'credslen' to be filled
+     with the raw client credentials
+   * In XrdSutCache: Use XrdSysRWLock to coordinate concurrent access to
+     the cache
+   * In XrdSecgsi:
+
+     - Add option to have Entity.name filled with the plain DN, instead of
+       the DN hash, when no mapping is requested or found.
+
+     - Enable cache also for authz mapping results.
+
+     - Do not require the existence of a grid-mapfile if gmapopt=2 and there is at least
+       a gmapfun or an authzfun defined.
+
+     - Add example of mapping function allowing to match parts of the DN
+
+     - Extend existing option 'authzpxy' to allow exporting the incoming client credentials in
+       XrdSecEntity.
+
++ **Major bug fixes**
+   * Async write errors are now being properly caught and reacted to.
+     XrdClient::Close will now fail if it cannot recover from async
+     write errors.
+   * xrdcp prints an error message and returns failure to the shell
+     when some of the write requests it issues fail.
+   * libXrdPosixPreload now builds with autotools and is included into
+     the xrootd-client RPM
+   * RPM: FFS moved from libs to client
+   * Properly parse oss.asize. This because a major problem when xrdcp started
+     adding this to the url which causes the copy to fail.
+   * Spin connection portion of proxy initialization to a background thread.
+     This prevents init.d hangs when a redirector is not available.
+
++ **Minor bug fixes**
+   * Test for 64-bit atomics instead 32-bit ones. Fixes build on 32-bit PowerPC.
+   * RPM: xrootd-fuse now depends on fuse
+   * Take correctly into accoutn summer time in calculating the time left for
+     a proxy validity
+   * Add support for Ubuntu 11 which uses the directory /usr/lib/`dpkg-architecture
+     -qDEB_HOST_MULTIARCH` to store platform dependent libraries.
+
+-------------
 Version 3.0.3
 -------------
 

@@ -282,12 +282,13 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
 
 // Get a service ticket for this principal
 //
+   bool caninittkn = (isatty(0) == 0 || isatty(1) == 0) ? 0 : 1;
    const char *reinitcmd = (client_options & XrdSecEXPTKN) ? "kinit -f" : "kinit";
    bool notdone = 1;
    bool reinitdone = 0;
    while (notdone)
       {if ((rc = (krb_rc)get_krbCreds(Service, &Creds)))
-          { if (!(client_options & XrdSecINITTKN) || reinitdone)
+          { if (!(client_options & XrdSecINITTKN) || reinitdone || !caninittkn)
                {krbClientContext.UnLock();
                 const char *m = (!(client_options & XrdSecINITTKN)) ?
                                 "No or invalid credentials" : "Unable to get credentials";
@@ -305,7 +306,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
        if (client_options & XrdSecEXPTKN)
           {// Make sure the ticket is forwardable
            if (!(Creds->ticket_flags & TKT_FLG_FORWARDABLE))
-              { if ((client_options & XrdSecINITTKN) && !reinitdone)
+              { if ((client_options & XrdSecINITTKN) && !reinitdone && caninittkn)
                    { // Need to re-init
                     CLPRT("Existing ticket is not forwardable: re-init ");
                     rc = system(reinitcmd);

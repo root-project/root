@@ -15,6 +15,7 @@
 #include <XrdSut/XrdSutPFEntry.hh>
 #include <XrdOuc/XrdOucHash.hh>
 #include <XrdOuc/XrdOucString.hh>
+#include <XrdSys/XrdSysPthread.hh>
 
 /******************************************************************************/
 /*                                                                            */
@@ -25,6 +26,7 @@
 class XrdSutCache
 {
 private:
+   XrdSysRWLock    rwlock;  // Access synchronizator
    int             cachesz; // Number of entries allocated
    int             cachemx; // Largest Index of allocated entries
    XrdSutPFEntry **cachent; // Pointers to filled entries
@@ -49,7 +51,7 @@ public:
    int            Load(const char *pfname);  // build cache of a pwd file
    int            Flush(const char *pfname = 0);   // flush content to pwd file
    int            Refresh();    // refresh content from source file
-   int            Rehash(bool force = 0);  // (re)build hash table
+   int            Rehash(bool force = 0, bool lock = 1);  // (re)build hash table
    void           SetLifetime(int lifet = 300) { lifetime = lifet; }
 
    // Cache management

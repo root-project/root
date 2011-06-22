@@ -11,6 +11,7 @@
 #####################################################
 # TARGETS
 bin_PROGRAMS = cmsd
+man8_MANS = ../../docs/man/cmsd.8 
 
 lib_LTLIBRARIES = libXrdCms.la
 

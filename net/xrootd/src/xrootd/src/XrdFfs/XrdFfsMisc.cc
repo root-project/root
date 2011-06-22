@@ -345,6 +345,9 @@ void XrdFfsMisc_xrd_secsss_init()
     XrdFfsMiscSecsss = true;
     XrdFfsMiscUent = new XrdSecEntity("");
     XrdFfsMiscSssid = new XrdSecsssID(XrdSecsssID::idDynamic);
+
+/* Enforce "sss" security */
+    setenv("XrdSecPROTOCOL", "sss", 1);
 }
 
 void XrdFfsMisc_xrd_secsss_register(uid_t user_uid, gid_t user_gid)
@@ -355,7 +358,7 @@ void XrdFfsMisc_xrd_secsss_register(uid_t user_uid, gid_t user_gid)
 
     if (XrdFfsMiscSecsss)
     {
-        sprintf(user_num, "%d", user_uid);
+        sprintf(user_num, "%x", user_uid);
         pthread_mutex_lock(&XrdFfsMiscSecsss_mutex);
     
         pw = getpwuid(user_uid);
@@ -374,7 +377,7 @@ void XrdFfsMisc_xrd_secsss_editurl(char *url, uid_t user_uid)
 
     if (XrdFfsMiscSecsss)
     {
-        sprintf(user_num, "%d", user_uid);
+        sprintf(user_num, "%x", user_uid);
      
         nurl[0] = '\0';
         strcat(nurl, "root://");

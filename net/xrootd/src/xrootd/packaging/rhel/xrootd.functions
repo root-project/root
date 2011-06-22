@@ -7,22 +7,127 @@
 . /etc/rc.d/init.d/functions
 
 #-------------------------------------------------------------------------------
+# Add the user accounts if needed and set up the directory ownership
+#-------------------------------------------------------------------------------
+function setupInstallation()
+{
+  XROOTD_USER=$1
+  XROOTD_GROUP=$2
+  getent group $XROOTD_GROUP >/dev/null || groupadd -r $XROOTD_GROUP
+  getent passwd $XROOTD_USER >/dev/null || \
+    useradd -r -g $XROOTD_GROUP -c "XRootD runtime user" \
+    -s /sbin/nologin -d /var/spool/xrootd $XROOTD_USER
+
+  chown $XROOTD_USER:$XROOTD_GROUP -R /var/spool/xrootd
+  chown $XROOTD_USER:$XROOTD_GROUP -R /var/log/xrootd
+  chown $XROOTD_USER:$XROOTD_GROUP -R /var/run/xrootd
+  chown $XROOTD_USER:$XROOTD_GROUP -R /etc/xrootd
+  chown $XROOTD_USER:$XROOTD_GROUP /etc/sysconfig/xrootd
+}
+
+#-------------------------------------------------------------------------------
+# Check if a file has the right permissions
+#-------------------------------------------------------------------------------
+function checkFile()
+{
+  FILE=$1
+  XROOTD_USER=$2
+  XROOTD_GROUP=$3
+
+  if test x"`stat -c %U $FILE`" != x$XROOTD_USER; then
+    echo "$FILE has wrong user ownership: \"`stat -c %U $FILE`\" instead of \"$XROOTD_USER\""
+    return 1
+  fi
+}
+
+#-------------------------------------------------------------------------------
+# Check a directory and it's permissions
+#-------------------------------------------------------------------------------
+function checkDirectory()
+{
+  DIRECTORY=$1
+  XROOTD_USER=$2
+  XROOTD_GROUP=$3
+
+  if test ! -d $DIRECTORY; then
+    echo "Directory: $DIRECTORY does not exist"
+    return 1
+  fi
+
+  for i in `find $DIRECTORY`; do
+    checkFile $i $XROOTD_USER $XROOTD_GROUP
+    if test $? -ne 0; then
+      return 1
+    fi
+  done
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# Check if the installation is in a sane state
+#-------------------------------------------------------------------------------
+function checkSanity()
+{
+  XROOTD_USER=$1
+  XROOTD_GROUP=$2
+
+  #-----------------------------------------------------------------------------
+  # Check if the user account exist
+  #-----------------------------------------------------------------------------
+  getent passwd $XROOTD_USER >/dev/null
+  if test $? -ne 0; then
+    echo "User account for: $XROOTD_USER doesn't exist"
+    return 1
+  fi
+
+  getent group $XROOTD_GROUP >/dev/null
+  if test $? -ne 0; then
+    echo "Group account for: $XROOTD_GROUP doesn't exist"
+    return 2
+  fi
+
+  #-----------------------------------------------------------------------------
+  # We need these directories to be owned by the xroot user for the init
+  # scripts to work properly, and we can safely change the ownership if
+  # it is wrong.
+  #-----------------------------------------------------------------------------
+  checkDirectory /var/spool/xrootd $XROOTD_USER $XROOTD_GROUP
+  if test $? -ne 0; then
+    chown $XROOTD_USER:$XROOTD_GROUP -R /var/spool/xrootd
+  fi
+
+  checkDirectory /var/run/xrootd $XROOTD_USER $XROOTD_GROUP
+  if test $? -ne 0; then
+    chown $XROOTD_USER:$XROOTD_GROUP -R /var/run/xrootd
+  fi
+}
+
+#-------------------------------------------------------------------------------
 # Start a daemon
 #-------------------------------------------------------------------------------
 function startDaemon()
 {
   ulimit -n 65536
-  echo -n "Starting xrootd ($1, $4): "
+
   DAEMON=$1
   EXEC=$2
   XROOTD_USER=$3
-  INSTANCE=$4
-  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
-  shift 4
+  XROOTD_GROUP=$4
+  INSTANCE=$5
+  PIDFILE="/var/run/xrootd/$DAEMON-$INSTANCE.pid"
+
+  # check sanity of the installation
+  checkSanity $XROOTD_USER $XROOTD_GROUP
+  if test $? -ne 0; then
+    echo "Please run: service xrootd setup"
+    return 1
+  fi
+
+  echo -n "Starting xrootd ($DAEMON, $INSTANCE): "
+  shift 5
 
   # useful for storing coredumps
-  mkdir -p /var/spool/xrootd/$INSTANCE
-  cd /var/spool/xrootd/$INSTANCE
+  cd /var/spool/xrootd
   daemon --user $XROOTD_USER --pidfile $PIDFILE $EXEC $@ -b -s $PIDFILE -n $INSTANCE
   RETVAL=$?
   echo
@@ -34,8 +139,8 @@ function startDaemon()
 #-------------------------------------------------------------------------------
 function stopDaemon()
 {
-  echo -n "Shutting down xrootd ($1, $4): "
-  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  echo -n "Shutting down xrootd ($1, $5): "
+  PIDFILE="/var/run/xrootd/$1-$5.pid"
   killproc -p $PIDFILE $1
   RETVAL=$?
   echo
@@ -47,8 +152,8 @@ function stopDaemon()
 #-------------------------------------------------------------------------------
 function statusOfTheDaemon()
 {
-  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
-  echo -n "[$4] "
+  PIDFILE="/var/run/xrootd/$1-$5.pid"
+  echo -n "[$5] "
   status -p $PIDFILE $1
   return $RETVAL
 }
@@ -58,7 +163,7 @@ function statusOfTheDaemon()
 #-------------------------------------------------------------------------------
 function condrestartDaemon()
 {
-  PIDFILE="/var/run/xrootd/$DAEMON-$4.pid"
+  PIDFILE="/var/run/xrootd/$1-$5.pid"
   status -p $PIDFILE $1 > /dev/null
   if test $? -ne 0; then
      return 0
@@ -89,6 +194,10 @@ function handleDaemons()
      XROOTD_USER="daemon"
   fi
 
+  if test x"$XROOTD_GROUP" = x; then
+     XROOTD_GROUP="daemon"
+  fi
+
   #-----------------------------------------------------------------------------
   # Determine the command to be run
   #-----------------------------------------------------------------------------
@@ -106,6 +215,10 @@ function handleDaemons()
       ;;
     'condrestart')
       CMD_HANDLER=condrestartDaemon
+      ;;
+    'setup')
+      setupInstallation $XROOTD_USER $XROOTD_GROUP
+      return $?
       ;;
     *)
       echo "Unrecognized command: $COMMAND"
@@ -142,18 +255,19 @@ function handleDaemons()
   else
     INSTANCES=$@
   fi
-  INSTANCES=`echo $INSTANCES | tr '[[:lower:]]' '[[:upper:]]'`
+  INSTANCES=`echo $INSTANCES | tr '[[:upper:]]' '[[:lower:]]'`
 
   #-----------------------------------------------------------------------------
   # Exec the command on the instances
   #-----------------------------------------------------------------------------
   STATUS=0
   for INSTANCE in $INSTANCES; do
-    eval OPTS=\$${CONFIG_NAME}_${INSTANCE}_OPTIONS
+    INSTANCE_UPPER=`echo $INSTANCE | tr '[[:lower:]]' '[[:upper:]]'`
+    eval OPTS=\$${CONFIG_NAME}_${INSTANCE_UPPER}_OPTIONS
     if test x"$OPTS" = x; then
       continue
     fi
-    $CMD_HANDLER $DAEMON $EXEC "$XROOTD_USER" $INSTANCE "$OPTS"
+    $CMD_HANDLER $DAEMON $EXEC "$XROOTD_USER" "$XROOTD_GROUP" $INSTANCE "$OPTS"
     if test $? -ne 0; then
       STATUS=1
     fi

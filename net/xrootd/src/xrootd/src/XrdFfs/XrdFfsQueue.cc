@@ -117,7 +117,12 @@ unsigned int XrdFfsQueue_count_tasks()
         else
 // this is wrong: 
 //          que_len = (unsigned int)2147483647 - (XrdFfsQueueTaskque_head->id - XrdFfsQueueTaskque_tail->id) + 1;
-            que_len = 4294967295u - (XrdFfsQueueTaskque_head->id - XrdFfsQueueTaskque_tail->id) + 1;
+
+//not accepted by c89
+//          que_len = (unsigned int)4294967295 - (XrdFfsQueueTaskque_head->id - XrdFfsQueueTaskque_tail->id) + 1;
+
+//this is not quite correct, but I imagine that the queue will never by so long >= 2147483647
+          que_len = (unsigned int)2147483647 - (XrdFfsQueueTaskque_head->id - XrdFfsQueueTaskque_tail->id) + 1+(unsigned int)2147483647+1;
     }
     pthread_mutex_unlock(&XrdFfsQueueTaskque_mutex);
     return que_len;

@@ -20,6 +20,7 @@ const char *XrdSecgsiProxyCVSID = "$Id$";
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <time.h>
@@ -675,7 +676,12 @@ void Display(XrdCryptoX509 *xp)
    // Key strength
    PRT("bits        : "<<xp->BitStrength());
    // Time left
-   int tl = xp->NotAfter() -(int)time(0);
+   time_t now = time(0);
+   int tl = xp->NotAfter() -(int)now;
+   // If GMT we need a correction because mktime use local time zone
+   struct tm ltn, gtn;
+   if (localtime_r(&now, &ltn) != 0 && gmtime_r(&now, &gtn) != 0)
+      tl += (int) difftime(mktime(&ltn), mktime(&gtn));
    int hh = (tl >= 3600) ? (tl/3600) : 0; tl -= (hh*3600); 
    int mm = (tl >= 60)   ? (tl/60)   : 0; tl -= (mm*60); 
    int ss = (tl >= 0)    ?  tl       : 0; 

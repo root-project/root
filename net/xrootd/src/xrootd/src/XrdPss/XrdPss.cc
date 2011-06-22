@@ -215,6 +215,7 @@ int XrdPssSys::Remdir(const char *path, int Opts)
 //
    if (!allRm) rc = XrdPosixXrootd::Rmdir(pbuff);
       else {if (!(*subPath)) return -EPERM;
+            if (!cfgDone)    return -EBUSY;
             rc = XrdFfsPosix_rmdirall(pbuff, subPath, myUid);
            }
 
@@ -241,8 +242,11 @@ int XrdPssSys::Rename(const char *oldname, const char *newname)
 
 // If we are not forwarding the request, manually execute it everywhere.
 //
-   if (allMv) return (XrdFfsPosix_renameall(urlPlain, oldname, newname, myUid)
-                    ? -errno : XrdOssOK);
+   if (allMv)
+      {if (!cfgDone) return -EBUSY;
+       return (XrdFfsPosix_renameall(urlPlain, oldname, newname, myUid)
+              ? -errno : XrdOssOK);
+      }
 
 // Convert path to URL
 //
@@ -338,6 +342,7 @@ int XrdPssSys::Unlink(const char *path, int Opts)
 //
    if (!allRm) rc = XrdPosixXrootd::Unlink(pbuff);
       else {if (!(*subPath)) return -EISDIR;
+            if (!cfgDone)    return -EBUSY;
             rc = XrdFfsPosix_unlinkall(pbuff, subPath, myUid);
            }
 
@@ -368,6 +373,7 @@ int XrdPssDir::Opendir(const char *dir_path)
 // Return an error if this object is already open
 //
    if (dirVec) return -XRDOSS_E8001;
+   if (!XrdProxySS.cfgDone) return -EBUSY;
 
 // Convert path to URL
 //
@@ -483,9 +489,13 @@ int XrdPssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
    if (!XrdPssSys::P2URL(pbuff, PBsz, path, 0, Cgi, CgiLen, tident))
       return -ENAMETOOLONG;
 
-// Return the result of this open
+// Try to open and if we failed, return an error
 //
-   return (fd = XrdPosixXrootd::Open(pbuff,Oflag,Mode)) < 0 ? -errno : XrdOssOK;
+   if ((fd = XrdPosixXrootd::Open(pbuff,Oflag,Mode)) < 0) return -errno;
+
+// All done
+//
+   return XrdOssOK;
 }
 
 /******************************************************************************/
@@ -724,7 +734,7 @@ char *XrdPssSys::P2URL(char *pbuff, int pblen, const char *path, int Split,
       {if (XrdProxySS.theN2N->lfn2pfn(path, Apath, sizeof(Apath))) return 0;
        fname = Apath;
       }
-   pathln = strlen(path);
+   pathln = strlen(fname);
 
 // If we have an Ident then usethe fd number as the userid. This allows us to
 // have one stream per open connection.
@@ -753,21 +763,21 @@ char *XrdPssSys::P2URL(char *pbuff, int pblen, const char *path, int Split,
    if (Split)
       {if ((subPath = rindex(fname+1, '/')) && *(subPath+1))
           {int n = subPath-fname;
-           strncpy(pbuff, fname, n); retPath = pbuff+n; *retPath++ = 0;
+           strncpy(retPath, fname, n); retPath += n; *retPath++ = 0;
            strcpy(retPath, subPath);
            pathln++;
           } else {
-           strcpy(pbuff, fname);
-           return pbuff+pathln;
+           strcpy(retPath, fname);
+           return retPath+pathln;
           }
-       } else strcpy(pbuff, fname);
+       } else strcpy(retPath, fname);
 
 // Add any cgi information
 //
    if (CgiLn)
-      {pbuff += pathln;
-       *pbuff++ = '?';
-       strcpy(pbuff, Cgi);
+      {idP = retPath + pathln;
+       *idP++ = '?';
+       strcpy(idP, Cgi);
       }
 
    return retPath;

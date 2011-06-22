@@ -261,7 +261,8 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
        case 'm': if (XrdOuca2x::a2i(Say,"max number",optarg,&myXfrMax))
                     Usage(1);
                  break;
-       case 'n': myInst = optarg;
+       case 'n': myInst = (!strcmp(optarg,"anon")||!strcmp(optarg,"default")
+                          ? 0 : optarg);
                  break;
        case 'O': isOTO = 1;
                  if (!ConfigOTO(optarg)) Usage(1);

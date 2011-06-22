@@ -11,6 +11,7 @@
 lib_LTLIBRARIES = libXrdSecpwd.la
 
 bin_PROGRAMS = xrdpwdadmin
+man8_MANS = ../../docs/man/xrdpwdadmin.8
 
 INCLUDES = -I$(top_srcdir)/src
 

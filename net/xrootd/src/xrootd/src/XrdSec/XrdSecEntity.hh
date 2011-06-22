@@ -35,12 +35,15 @@ public:
          char   *role;                    // Entity's role
          char   *grps;                    // Entity's group names
          char   *endorsements;            // Protocol specific endorsements
+         char   *creds;                   // Raw client credentials or certificate
+         int     credslen;                // Length of the 'cert' field
          char   *tident;                  // Trace identifier (do not touch)
 
          XrdSecEntity(const char *pName = "")
                         {strncpy(prot, pName, XrdSecPROTOIDSIZE-1);
                          prot[XrdSecPROTOIDSIZE-1] = '\0';
-                         name=host=vorg=role=grps=endorsements=tident = 0;
+                         name=host=vorg=role=grps=endorsements=creds=tident = 0;
+                         credslen = 0;
                         }
         ~XrdSecEntity() {}
 };

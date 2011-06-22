@@ -129,6 +129,9 @@ bool XrdClientAdmin::Connect()
 	(connectTry < connectMaxTry) && (!fConnModule->IsConnected()); 
 	connectTry++) {
 
+      XrdClientUrlSet urlArray(fInitialUrl);
+      urlArray.Rewind();
+
       XrdClientUrlInfo *thisUrl = 0;
       urlstried = (urlstried == urlArray.Size()) ? 0 : urlstried;
 
