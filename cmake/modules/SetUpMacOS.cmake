@@ -4,16 +4,20 @@ set(ROOT_PLATFORM macosx)
 Set(SYSLIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT} -ldl")
 Set(XLIBS "${XPMLIBDIR} ${XPMLIB} ${X11LIBDIR} -lXext -lX11")
 Set(CILIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} -ldl")
-Set(CRYPTLIBS "-lcrypt")
+#Set(CRYPTLIBS "-lcrypt")
+
+#---This is needed to help CMake to locate the X11 headers in the correct place and not under /usr/include
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/X11R6)
+#---------------------------------------------------------------------------------------------------------
 
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   EXECUTE_PROCESS(COMMAND sw_vers "-productVersion" 
                   COMMAND cut -d . -f 1-2 
-                  OUTPUT_VARIABLE MACOSX_VERSION)
+                  OUTPUT_VARIABLE MACOSX_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
   MESSAGE(STATUS "Found a Mac OS X System ${MACOSX_VERSION}")
   EXECUTE_PROCESS(COMMAND sw_vers "-productVersion" 
                   COMMAND cut -d . -f 2 
-                  OUTPUT_VARIABLE MACOSX_MINOR)
+                  OUTPUT_VARIABLE MACOSX_MINOR OUTPUT_STRIP_TRAILING_WHITESPACE)
                   
   if(${MACOSX_MINOR} GREATER 4)
     #TODO: check haveconfig and rpath -> set rpath true
