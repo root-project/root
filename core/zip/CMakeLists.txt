@@ -10,7 +10,9 @@ Set(ZipOldHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZDeflate.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZIP.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZTrees.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Compression.h
 )
+
 Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
@@ -68,7 +70,3 @@ list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
 set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
-
-
-
-
