@@ -10,7 +10,9 @@ Set(ZipOldHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZDeflate.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZIP.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZTrees.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Compression.h
 )
+
 Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
@@ -26,6 +28,7 @@ Set(ZipNewHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/trees.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/gzguts.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/zutil.h
 )
 
@@ -34,7 +37,10 @@ Set(ZipNewSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compress.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/crc32.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/deflate.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzio.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzclose.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzlib.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzread.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzwrite.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/infback.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/inffast.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/inflate.c
@@ -68,7 +74,3 @@ list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
 set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
-
-
-
-
