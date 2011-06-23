@@ -10,6 +10,7 @@ ROOT_USE_PACKAGE(core/textinput)
 ROOT_USE_PACKAGE(core/unix)
 ROOT_USE_PACKAGE(core/winnt)
 ROOT_USE_PACKAGE(core/zip)
+ROOT_USE_PACKAGE(core/lzma)
 ROOT_USE_PACKAGE(cint/cint)
 
 
@@ -30,6 +31,7 @@ if(WIN32)
   add_subdirectory(winnt)
 endif()
 add_subdirectory(zip)
+add_subdirectory(lzma)
 add_subdirectory(base)
 add_subdirectory(metautils)
 add_subdirectory(utils)
@@ -105,7 +107,7 @@ if(WIN32)
 endif()
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES} 
-                    LIBRARIES ${PCRE_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs})
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs})
  
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
 if(UNIX)
@@ -118,3 +120,7 @@ add_dependencies(Core TEXTINPUT_DICTIONARY)
 if(builtin_pcre)
   add_dependencies(Core PCRE)
 endif()
+if(builtin_lzma)
+  add_dependencies(Core LZMA)
+endif()
+

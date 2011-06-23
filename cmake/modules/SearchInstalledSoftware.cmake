@@ -54,6 +54,43 @@ if(builtin_pcre)
   endif()
 endif()
 
+#---Check for LZMA-------------------------------------------------------------------
+if(NOT builtin_lzma)
+  message(STATUS "Looking for LZMA")
+  find_package(LZMA)
+  if(LZMA_FOUND)
+  else()
+    message(STATUS "LZMA not found. Switching on builtin_lzma option")
+    set(builtin_lzma ON CACHE BOOL "" FORCE) 	
+  endif() 
+endif()
+if(builtin_lzma)
+  set(lzma_version 5.0.3)
+  message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
+  if(WIN32)
+    ExternalProject_Add(
+	  LZMA
+	  URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
+	  PREFIX LZMA
+	  INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND "" BUILD_COMMAND ""
+	  INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+	  BUILD_IN_SOURCE 1)
+    install(FILES ${CMAKE_BINARY_DIR}/bin/liblzma.dll DESTINATION bin)
+    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
+    set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
+  else() 
+    ExternalProject_Add(
+      LZMA
+      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz 
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared
+      BUILD_IN_SOURCE 1)
+    set(LZMA_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -llzma)
+    set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  endif()
+endif()
+
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
   message(STATUS "Looking for X11")
