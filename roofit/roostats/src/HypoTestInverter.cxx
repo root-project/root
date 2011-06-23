@@ -33,7 +33,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 #include "RooStats/HybridResult.h"
 
 #include "RooStats/HypoTestInverter.h"
-
+#include <cassert>
 
 #include "TF1.h"
 #include "TLine.h"
@@ -79,8 +79,66 @@ struct HypoTestWrapper {
    
 };
 
+ 
+RooRealVar * HypoTestInverter::GetVariableToScan(const HypoTestCalculatorGeneric &hc) { 
+    // get  the variable to scan 
+   // try first with null model if not go to alternate model
+   
+   RooRealVar * varToScan = 0;
+   const ModelConfig * mc = hc.GetNullModel();
+   if (mc) { 
+      const RooArgSet * poi  = mc->GetParametersOfInterest();
+      if (poi) varToScan = dynamic_cast<RooRealVar*> (poi->first() );
+   }
+   if (!varToScan) { 
+      mc = hc.GetAlternateModel();
+      if (mc) { 
+         const RooArgSet * poi  = mc->GetParametersOfInterest();
+         if (poi) varToScan = dynamic_cast<RooRealVar*> (poi->first() );
+      }
+   }
+   return varToScan;
+}
+
+void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,const RooRealVar & scanVariable) { 
+    // check  the model given the given hypotestcalculator  
+   const ModelConfig * modelSB = hc.GetNullModel();
+   const ModelConfig * modelB = hc.GetAlternateModel();
+   if (!modelSB || ! modelB) 
+      oocoutF((TObject*)0,InputArguments) << "HypoTestInverter - model are not existing" << std::endl;    
+   assert(modelSB && modelB);
+
+   oocoutI((TObject*)0,InputArguments) << "HypoTestInverter ---- Input models: \n"
+                                       << "\t\t using as S+B (null) model     : " 
+                                       << modelSB->GetName() << "\n" 
+                                       << "\t\t using as B (alternate) model  : " 
+                                       << modelB->GetName() << "\n" << std::endl; 
+
+   // check if scanVariable is included in B model pdf 
+   RooAbsPdf * bPdf = modelB->GetPdf();
+   const RooArgSet * bObs = modelB->GetObservables();
+   if (!bPdf || !bObs) { 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - B model has no pdf or observables defined" <<  std::endl; 
+      return;
+   }
+   RooArgSet * bParams = bPdf->getParameters(*bObs);
+   if (!bParams) { 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - pdf of B model has no parameters" << std::endl; 
+      return;
+   }
+   if (bParams->find(scanVariable.GetName() ) ) { 
+      const RooArgSet * poiB  = modelB->GetSnapshot();
+      if (!poiB ||  !poiB->find(scanVariable.GetName()) || 
+          ( (RooRealVar*)  poiB->find(scanVariable.GetName()) )->getVal() != 0 )
+         oocoutW((TObject*)0,InputArguments) << "HypoTestInverter - using a B model  with POI " 
+                                             <<    scanVariable.GetName()  << " not equal to zero "
+                                             << " user must check input model configurations " << endl;
+   }
+   delete bParams;
+}
 
 HypoTestInverter::HypoTestInverter( ) :
+   fTotalToysRun(0),
    fCalculator0(0),
    fScannedVariable(0),
    fResults(0),
@@ -92,11 +150,50 @@ HypoTestInverter::HypoTestInverter( ) :
   // default constructor (doesn't do anything) 
 }
 
+HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
+                                          RooRealVar* scannedVariable, double size ) :
+   fTotalToysRun(0),
+   fCalculator0(0),
+   fScannedVariable(scannedVariable), 
+   fResults(0),
+   fUseCLs(false),
+   fSize(size),
+   fVerbose(0),
+   fCalcType(kUndefined), 
+   fNBins(0), fXmin(1), fXmax(1)
+{
+   // get scanned variabke
+   if (!fScannedVariable) { 
+      fScannedVariable = HypoTestInverter::GetVariableToScan(hc);
+   }
+   if (!fScannedVariable) 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
+   else 
+      CheckInputModels(hc,*fScannedVariable);
+
+
+   // constructor from a generic HypoTestInverter
+   HybridCalculator * hybCalc = dynamic_cast<HybridCalculator*>(&hc);
+   if (hybCalc) { 
+      fCalcType = kHybrid;
+      fCalculator0 = hybCalc;
+      return;
+   }
+   FrequentistCalculator * freqCalc = dynamic_cast<FrequentistCalculator*>(&hc);
+   if (freqCalc) { 
+      fCalcType = kFrequentist;
+      fCalculator0 = freqCalc;
+      return;
+   }
+   oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Type of hypotest calculator is not supported " << std::endl;    
+}
+
 
 HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
-                                          RooRealVar& scannedVariable, double size ) :
+                                          RooRealVar* scannedVariable, double size ) :
+   fTotalToysRun(0),
    fCalculator0(&hc),
-   fScannedVariable(&scannedVariable), 
+   fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
    fSize(size),
@@ -105,13 +202,25 @@ HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
    fNBins(0), fXmin(1), fXmax(1)
 {
    // constructor from a reference to an HybridCalculator
+   // get scanned variabke
+   if (!fScannedVariable) { 
+      fScannedVariable = GetVariableToScan(hc);
+   }
+   if (!fScannedVariable) 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
+   else 
+      CheckInputModels(hc,*fScannedVariable);
+
 }
 
 
+
+
 HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
-                                          RooRealVar& scannedVariable, double size ) :
+                                          RooRealVar* scannedVariable, double size ) :
+   fTotalToysRun(0),
    fCalculator0(&hc),
-   fScannedVariable(&scannedVariable), 
+   fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
    fSize(size),
@@ -120,8 +229,47 @@ HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
    fNBins(0), fXmin(1), fXmax(1)
 {
    // constructor from a reference to a FrequentistCalculator 
+   // get scanned variabke
+   if (!fScannedVariable) { 
+      fScannedVariable = GetVariableToScan(hc);
+   }
+   if (!fScannedVariable) 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
+   else 
+      CheckInputModels(hc,*fScannedVariable);
 }
 
+
+//_________________________________________________________________________________________________
+HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, ModelConfig &sbModel,
+				    RooRealVar * scannedVariable,  ECalculatorType type, double size) :
+   fTotalToysRun(0),
+   fCalculator0(0),
+   fScannedVariable(scannedVariable), 
+   fResults(0),
+   fUseCLs(false),
+   fSize(size),
+   fVerbose(0),
+   fCalcType(type), 
+   fNBins(0), fXmin(1), fXmax(1)
+
+{
+   // Constructor from a model for B model and a model for S+B. 
+   // An HypoTestCalculator (Hybrid of Frequentis) will be ccreated using the 
+   // S+B model as the null and the B model as the alternate
+  if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, sbModel, bModel)); 
+  if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, sbModel, bModel)); 
+  fCalculator0 = fHC.get();
+   // get scanned variabke
+   if (!fScannedVariable) { 
+      fScannedVariable = GetVariableToScan(*fCalculator0);
+   }
+   if (!fScannedVariable) 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
+   else
+      CheckInputModels(*fCalculator0,*fScannedVariable);
+
+}
 
 HypoTestInverter::~HypoTestInverter()
 {
@@ -129,8 +277,27 @@ HypoTestInverter::~HypoTestInverter()
   
   // delete the HypoTestInverterResult
   if (fResults) delete fResults;
+  fCalculator0 = 0;
 }
 
+
+TestStatistic * HypoTestInverter::GetTestStatistic( ) const
+{
+  if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
+     return fCalculator0->GetTestStatSampler()->GetTestStatistic();
+  }
+  else 
+     return 0;
+} 
+
+bool HypoTestInverter::SetTestStatistic(TestStatistic& stat)
+{
+  if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
+    fCalculator0->GetTestStatSampler()->SetTestStatistic(&stat);
+    return true; 
+  }
+  else return false;
+} 
 void  HypoTestInverter::Clear()  { 
    // delete contained result and graph
    if (fResults) delete fResults; 
@@ -154,9 +321,10 @@ void  HypoTestInverter::CreateResults() const {
 
 HypoTestInverterResult* HypoTestInverter::GetInterval() const { 
    // run a fixed scan or the automatic scan 
+   // return a copy of the result object which will be managed by the user
 
    // if having a result with more thon one point return it
-   if (fResults && fResults->ArraySize() > 1) return fResults;
+   if (fResults && fResults->ArraySize() > 1) return (HypoTestInverterResult*)(fResults->Clone());
 
    if (fNBins > 0) {
       bool ret = RunFixedScan(fNBins, fXmin, fXmax); 
@@ -169,12 +337,22 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;    
    }
-   return fResults;
+   return (HypoTestInverterResult*)(fResults->Clone());
 }
 
 
 
 HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adaptive, double clsTarget) const {
+
+   //for debug
+   // std::cout << ">>>>>>>>>>> " << std::endl;
+   // std::cout << "alternate model " << std::endl;
+   // hc.GetAlternateModel()->GetNuisanceParameters()->Print("V");
+   // hc.GetAlternateModel()->GetParametersOfInterest()->Print("V");
+   // std::cout << "Null model " << std::endl;
+   // hc.GetNullModel()->GetNuisanceParameters()->Print("V");
+   // hc.GetNullModel()->GetParametersOfInterest()->Print("V");
+   // std::cout << "<<<<<<<<<<<<<<< " << std::endl;
 
    // run the hypothesis test 
    HypoTestResult *  hcResult = hc.GetHypoTest();
@@ -183,10 +361,12 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
       return hcResult; 
    }
 
-   // to be seen.......why CMS codes is  having this - need to check 
-#ifdef LATER_TBI
+   // since the b model is the alt need to set the flag
+   hcResult->SetBackgroundAsAlt(true);
+
+   // need to flip p-values for PL test statistic 
    bool flipPValues = false;
-   TestStatistics * testStat = hc.GetStatSapler()->GetTestStatistics();
+   TestStatistic * testStat = hc.GetTestStatSampler()->GetTestStatistic();
    if ( dynamic_cast<ProfileLikelihoodTestStat*>(testStat) ) { 
       // I need to flip the P-values
       flipPValues = true;
@@ -195,7 +375,6 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
    } else {
    //  hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+1e-9); // issue with < vs <= in discrete models
    }
-#endif
 
    double clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
    double clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
@@ -210,10 +389,9 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
    while (clsMidErr >= fgCLAccuracy && (clsTarget == -1 || fabs(clsMid-clsTarget) < 3*clsMidErr) ) {
       std::auto_ptr<HypoTestResult> more(hc.GetHypoTest());
       
-#ifdef LATER_TBI
       if (flipPValues)
          more->SetPValueIsRightTail(!more->GetPValueIsRightTail());
-#endif
+
       hcResult->Append(more.get());
       clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
       clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
@@ -230,7 +408,7 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
          std::endl;
    }
    
-   fPerf_totalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
+   fTotalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
 
 
    return hcResult;
@@ -269,7 +447,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
     
     // check if failed status
     if ( status==false ) {
-      std::cout << "Loop interupted because of failed status\n";
+      std::cout << "\t\tLoop interupted because of failed status\n";
       return false;
     }
   }
@@ -300,17 +478,23 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    // evaluate hybrid calculator at a single point
    fScannedVariable->setVal(rVal);
    // need to set value of rval in hybridcalculator
-   const ModelConfig * altModel = fCalculator0->GetAlternateModel();
-   RooArgSet poi; poi.add(*altModel->GetParametersOfInterest());
+   // assume null model is S+B and alternate is B only
+   const ModelConfig * sbModel = fCalculator0->GetNullModel();
+   RooArgSet poi; poi.add(*sbModel->GetParametersOfInterest());
    // set poi to right values 
    poi = RooArgSet(*fScannedVariable);
-   const_cast<ModelConfig*>(altModel)->SetSnapshot(poi);
+   const_cast<ModelConfig*>(sbModel)->SetSnapshot(poi);
 
    if (fVerbose > 0) 
-       oocoutP((TObject*)0,Eval) << "Running for " << fScannedVariable->GetName() << " = " << rVal << endl;
+      oocoutP((TObject*)0,Eval) << "Running for " << fScannedVariable->GetName() << " = " << fScannedVariable->getVal() << endl;
    
    // compute the results
    HypoTestResult* result =   Eval(*fCalculator0,adaptive,clTarget);
+   if (!result) { 
+      oocoutE((TObject*)0,Eval) << "HypoTestInverter - Error running point " << fScannedVariable->GetName() << " = " <<
+   fScannedVariable->getVal() << endl;
+      return false;
+   }
    
    double lastXtested;
    if ( fResults->ArraySize()!=0 ) lastXtested = fResults->GetXValue(fResults->ArraySize()-1);
@@ -575,7 +759,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
   oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunLimit - Result:    \n" 
                             << "\tLimit: " << r->GetName() << " < " << limit << " +/- " << limitErr << " @ " << (1-fSize) * 100 << "% CL\n";
-  if (fVerbose > 1) oocoutI((TObject*)0,Eval) << "Total toys: " << fPerf_totalToysRun << std::endl;
+  if (fVerbose > 1) oocoutI((TObject*)0,Eval) << "Total toys: " << fTotalToysRun << std::endl;
 
   // set value in results
   fResults->fUpperLimit = limit; 

@@ -111,6 +111,7 @@ class ToyMCSampler: public TestStatSampler {
          fProofConfig = NULL;
       }
 
+
       virtual ~ToyMCSampler() {
       }
 

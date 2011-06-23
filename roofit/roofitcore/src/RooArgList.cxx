@@ -286,13 +286,13 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
     return ;
   }
 
-  TIterator *iterator= createIterator();
+  TIterator *iterat= createIterator();
   RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
+  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
       next->writeToStream(os,kTRUE) ;
       os << " " ;
   }
-  delete iterator;  
+  delete iterat;  
   os << endl ;
 }
 
@@ -312,15 +312,15 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     return kTRUE ;
   }    
 
-  TIterator *iterator= createIterator();
+  TIterator *iterat= createIterator();
   RooStreamParser parser(is) ;
   RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
+  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
     if (!next->getAttribute("Dynamic")) {
       if (next->readFromStream(is,kTRUE,verbose)) {
 	parser.zapToEnd() ;
 	
-	delete iterator ;
+	delete iterat ;
 	return kTRUE ;
       }	
     } else {
@@ -335,7 +335,7 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
     }
   }
   
-  delete iterator;    
+  delete iterat;    
   return kFALSE ;  
 }
 

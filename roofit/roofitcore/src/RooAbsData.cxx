@@ -57,24 +57,39 @@
 ClassImp(RooAbsData)
 ;
 
-static std::set<RooAbsData*> _dlist ;
+static std::map<RooAbsData*,int> _dcc ;
+
 
 //_____________________________________________________________________________
-Bool_t RooAbsData::isAlive(RooAbsData* data) 
+void RooAbsData::claimVars(RooAbsData* data) 
 {
-  return _dlist.find(data)!=_dlist.end() ;
+  _dcc[data]++ ;
+  //cout << "RooAbsData(" << data << ") claim incremented to " << _dcc[data] << endl ;
 }
 
+
+//_____________________________________________________________________________
+Bool_t RooAbsData::releaseVars(RooAbsData* data) 
+{
+  // If return value is true variables can be deleted
+  if (_dcc[data]>0) {
+    _dcc[data]-- ;
+  }
+
+  //cout << "RooAbsData(" << data << ") claim decremented to " << _dcc[data] << endl ;
+  return (_dcc[data]==0) ;
+}
 
 
 //_____________________________________________________________________________
 RooAbsData::RooAbsData() 
 {
   // Default constructor
-  _dlist.insert(this) ;
+  claimVars(this) ;
   _dstore = 0 ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
+  //cout << "created dataset " << this << endl ;
 }
 
 
@@ -86,7 +101,8 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   // Constructor from a set of variables. Only fundamental elements of vars
   // (RooRealVar,RooCategory etc) are stored as part of the dataset
 
-  _dlist.insert(this) ;
+  //cout << "created dataset " << this << endl ;
+  claimVars(this) ;
 
   // clone the fundamentals of the given data set into internal buffer
   TIterator* iter = vars.createIterator() ;
@@ -123,7 +139,8 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 {
   // Copy constructor
 
-  _dlist.insert(this) ;
+  //cout << "created dataset " << this << endl ;
+  claimVars(this) ;
   _vars.addClone(other._vars) ;
 
   // reconnect any paramaterized ranges to internal dataset observables
@@ -148,7 +165,15 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 RooAbsData::~RooAbsData() 
 {
   // Destructor
-  _dlist.erase(this) ;
+  //cout << "deleting dataset " << this << endl ;
+
+  if (releaseVars(this)) {
+    // will cause content to be deleted subsequently in dtor
+    //cout << "RooAbsData(" << this << ") deleting variables" << endl ;
+  } else {
+    //cout << "RooAbsData(" << this << ") NOT deleting variables" << endl ;
+    _vars.releaseOwnership() ; 
+  }
   
   // delete owned contents.
   delete _dstore ;
@@ -156,8 +181,8 @@ RooAbsData::~RooAbsData()
   delete _cacheIter ;
 
   // Delete owned dataset components
-  for(list<RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
-    delete *iter ;
+  for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
+    delete iter->second ;
   }
 
 }
@@ -2243,6 +2268,35 @@ Bool_t RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
   return anyClient?ret:kFALSE ;
 }
 
+
+
+//_____________________________________________________________________________
+Bool_t RooAbsData::canSplitFast() const 
+{
+  
+  if (_ownedComponents.size()>0) {
+    return kTRUE ;
+  }
+  return kFALSE ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsData* RooAbsData::getSimData(const char* name)
+{
+  map<string,RooAbsData*>::iterator i = _ownedComponents.find(name) ;
+  if (i==_ownedComponents.end()) return 0 ;
+  return i->second ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsData::addOwnedComponent(const char* idxlabel, RooAbsData& data) 
+{ 
+  _ownedComponents[idxlabel]= &data ;
+}
 
 
 

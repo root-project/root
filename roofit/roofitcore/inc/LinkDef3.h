@@ -3,6 +3,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ class RooCacheManager<vector<double> >+ ;
+#pragma link C++ class list<RooAbsData*>+ ;
+#pragma link C++ class map<string,RooAbsData*>+ ;
 #pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;

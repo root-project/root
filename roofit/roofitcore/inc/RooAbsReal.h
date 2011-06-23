@@ -288,6 +288,8 @@ public:
   Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval) ;
 
 
+  virtual Bool_t setData(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE) { return kTRUE ; }
+
 protected:
 
   // PlotOn with command list

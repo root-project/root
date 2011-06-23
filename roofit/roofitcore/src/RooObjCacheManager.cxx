@@ -39,6 +39,8 @@ ClassImp(RooObjCacheManager)
    ;
 
 
+Bool_t RooObjCacheManager::_clearObsList(kFALSE) ;
+
 //_____________________________________________________________________________
 RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect) : 
   RooCacheManager<RooAbsCacheElement>(owner,maxSize), 
@@ -139,12 +141,38 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 
   _optCacheObservables = (RooArgSet*) obs.snapshot() ;
   _optCacheObsList.push_back(_optCacheObservables) ;
+//   if (_optCacheObsList.size()>200) {
+//     cout << "RooObjCacheManager::optimizeCacheMode(" << this << ") list size = " << _optCacheObsList.size() << endl ;
+//   }
 
   for (Int_t i=0 ; i<_size ; i++) {
     if (_object[i]) {
       _object[i]->optimizeCacheMode(obs,optNodes,processedNodes) ;
     }
   }
+}
+
+
+//_____________________________________________________________________________
+void RooObjCacheManager::sterilize() 
+{
+  RooCacheManager<RooAbsCacheElement>::sterilize() ;
+
+  // WVE - adding this causes trouble with IntegralMorpht????
+  // Perhaps this should not be done in sterilize, but be a separate operation
+  // called specially from RooAbsObsTestStatistic::setData()
+
+  if (_optCacheObservables && _clearObsList) {
+
+    list<RooArgSet*>::iterator iter = _optCacheObsList.begin() ;
+    for (; iter!=_optCacheObsList.end() ; ++iter) {
+      delete *iter ;
+    }
+    _optCacheObsList.clear() ;    
+    _optCacheObservables=0 ;
+    _optCacheModeSeen = kFALSE ;
+  }
+  
 }
 
 

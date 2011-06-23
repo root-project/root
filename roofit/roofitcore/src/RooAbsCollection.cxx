@@ -65,10 +65,9 @@ ClassImp(RooAbsCollection)
 
 //_____________________________________________________________________________
 RooAbsCollection::RooAbsCollection() :
-  _list(43),
+  _list(0),
   _ownCont(kFALSE), 
-  _name(),
-  _claimCount(0)
+  _name()
 {
   // Default constructor
 
@@ -79,10 +78,9 @@ RooAbsCollection::RooAbsCollection() :
 
 //_____________________________________________________________________________
 RooAbsCollection::RooAbsCollection(const char *name) :
-  _list(43),
+  _list(0),
   _ownCont(kFALSE), 
-  _name(name),
-  _claimCount(0)
+  _name(name)
 {
   // Empty collection constructor
 
@@ -97,8 +95,7 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   RooPrintable(other),
   _list(other._list.getHashTableSize()) , 
   _ownCont(kFALSE), 
-  _name(name),
-  _claimCount(0)
+  _name(name)
 {
   // Copy constructor. Note that a copy of a collection is always non-owning,
   // even the source collection is owning. To create an owning copy of
@@ -108,12 +105,12 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   if (!name) setName(other.GetName()) ;
   
   // Transfer contents (not owned)
-  TIterator *iterator= other.createIterator();
+  TIterator *iterat= other.createIterator();
   RooAbsArg *arg = 0;
-  while((arg= (RooAbsArg*)iterator->Next())) {
+  while((arg= (RooAbsArg*)iterat->Next())) {
     add(*arg);
   }
-  delete iterator;
+  delete iterat;
 }
 
 
@@ -124,13 +121,20 @@ RooAbsCollection::~RooAbsCollection()
   // Destructor
 
   // Delete all variables in our list if we own them
-  if(_ownCont && _claimCount==0){ 
+  if(_ownCont){ 
     safeDeleteList() ;
     //_list.Delete();
   }
   RooTrace::destroy(this) ;
 }
 
+
+
+//_____________________________________________________________________________
+RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const 
+{
+    return _list.iterator(dir) ;
+}
 
 
 //_____________________________________________________________________________
@@ -204,8 +208,8 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
     snapName.Append(GetName()) ;
   }
   RooAbsCollection* output = (RooAbsCollection*) create(snapName.Data()) ;
-  if (deepCopy || getSize()>100) {
-    output->setHashTableSize(100) ;
+  if (deepCopy || getSize()>1000) {
+    output->setHashTableSize(1000) ;
   }
   Bool_t error = snapshot(*output,deepCopy) ;
   if (error) {
@@ -235,13 +239,13 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
   //
 
   // Copy contents
-  TIterator *iterator= createIterator();
+  TIterator *iterat= createIterator();
   RooAbsArg *orig = 0;
-  while((0 != (orig= (RooAbsArg*)iterator->Next()))) {
+  while((0 != (orig= (RooAbsArg*)iterat->Next()))) {
     RooAbsArg *copy= (RooAbsArg*)orig->Clone();
     output.add(*copy);
   }
-  delete iterator;
+  delete iterat;
 
   TIterator* vIter = output.createIterator() ;
   RooAbsArg* var ;
@@ -910,7 +914,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
     os << indent << ClassName() << "::" << GetName() << ":" << (_ownCont?" (Owning contents)":"") << endl;
   }
 
-  TIterator *iterator= createIterator();
+  TIterator *iterat= createIterator();
   int index= 0;
   RooAbsArg *next = 0;
   TString deeper(indent);
@@ -920,19 +924,19 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
   Int_t maxNameLen(1) ;
   Int_t nameFieldLengthSaved = RooPrintable::_nameLength ;
   if (nameFieldLengthSaved==0) {
-    while((next=(RooAbsArg*)iterator->Next())) {
+    while((next=(RooAbsArg*)iterat->Next())) {
       Int_t len = strlen(next->GetName()) ;
       if (len>maxNameLen) maxNameLen = len ;
     }
-    iterator->Reset() ;
+    iterat->Reset() ;
     RooPrintable::nameFieldLength(maxNameLen+1) ;
   }
   
-  while((0 != (next= (RooAbsArg*)iterator->Next()))) {
+  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
     os << indent << setw(3) << ++index << ") ";
     next->printStream(os,contents,kSingleLine,"");
   }
-  delete iterator;
+  delete iterat;
   
   // Reset name field length, if modified
   RooPrintable::nameFieldLength(nameFieldLengthSaved) ;

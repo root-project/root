@@ -171,7 +171,7 @@ public:
     // Return the observables of _this_ pdf given the observables defined by 'data'
     return getObservables(&data) ; 
   }
-  virtual RooArgSet* getObservables(const RooArgSet* depList, Bool_t valueOnly=kTRUE) const ;
+  RooArgSet* getObservables(const RooArgSet* depList, Bool_t valueOnly=kTRUE) const ;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;

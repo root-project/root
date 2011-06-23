@@ -33,8 +33,10 @@ public:
 
   RooStudyPackage() ;
   RooStudyPackage(RooWorkspace& w) ;
+  RooStudyPackage(const RooStudyPackage&) ;
   void addStudy(RooAbsStudy& study) ;
-
+  TObject* Clone(const char* /*newname*/="") const { return new RooStudyPackage(*this) ; }
+  
   RooWorkspace& wspace() { return *_ws ; }
   std::list<RooAbsStudy*>& studies() { return _studies ; }
     
@@ -55,7 +57,6 @@ protected:
   RooWorkspace* _ws ;
   std::list<RooAbsStudy*> _studies ; 
 
-  RooStudyPackage(const RooStudyPackage&) ;
 	
   ClassDef(RooStudyPackage,1) // A general purpose workspace oriented parallelizing study manager
 } ;

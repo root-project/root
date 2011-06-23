@@ -42,6 +42,7 @@ protected:
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
   RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
+  void updateFractions() ;
 
   RooSimGenContext(const RooSimGenContext& other) ;
 
@@ -54,6 +55,9 @@ protected:
   TString _idxCatName ;           // Name of index category
   Int_t _numPdf ;                 // Number of generated PDFs
   Double_t* _fracThresh ;         //[_numPdf] Fraction threshold array
+
+  RooArgSet _allVarsPdf ; // All pdf variables
+  TIterator* _proxyIter ; // Iterator over pdf proxies
 
   ClassDef(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };

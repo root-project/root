@@ -420,15 +420,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //_____________________________________________________________________________
 Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 {
- // try something simple
- RooArgSet* nset2 = nset? getObservables(*nset) : 0 ;
- RooAbsReal* integral = createIntegral(nset2?*nset2:RooArgSet());
- delete nset2 ;
-
- double ret = integral->getVal();
- delete integral;
-
- return ret;
+  return getNorm(nset) ;
 }
 
 

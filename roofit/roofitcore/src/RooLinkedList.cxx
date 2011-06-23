@@ -47,6 +47,9 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 {
   // Constructor with hashing threshold. If collection size exceeds threshold
   // a hash table is added.
+//   if (htsize>0) {
+//     cout << "RooLinkedList::ctor htsize=" << htsize << endl ;
+//   }
 }
 
 
@@ -111,7 +114,7 @@ void RooLinkedList::setHashTableSize(Int_t size)
       _htableLink = 0 ;
     }
   } else {
-
+    
     // (Re)create hash tables
     if (_htableName) delete _htableName ;
     _htableName = new RooHashTable(size) ;
@@ -447,6 +450,11 @@ void RooLinkedList::Print(const char* opt) const
 }
 
 
+RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const 
+{
+  return RooLinkedListIter(this,dir) ;
+}
+
 
 //_____________________________________________________________________________
 TIterator* RooLinkedList::MakeIterator(Bool_t dir) const 
@@ -455,13 +463,6 @@ TIterator* RooLinkedList::MakeIterator(Bool_t dir) const
   return new RooLinkedListIter(this,dir) ;
 }
 
-
-//_____________________________________________________________________________
-RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const 
-{
-  // Return an iterator over this list
-  return RooLinkedListIter(this,dir) ;
-}
 
 
 

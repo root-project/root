@@ -362,6 +362,11 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& /*nullPOI*/) const {
    // This method generates a toy data set for the given parameter point taking
    // global observables into account.
 
+   if (fObservables == NULL) { 
+      ooccoutE((TObject*)NULL,InputArguments) << "Observables not set." << endl; 
+      return 0; 
+   }
+
    RooArgSet observables(*fObservables);
    if(fGlobalObservables  &&  fGlobalObservables->getSize()) {
       observables.remove(*fGlobalObservables);

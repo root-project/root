@@ -55,7 +55,7 @@ public:
   Int_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=0) ;  
 
   void reset() ;
-  void sterilize() ;
+  virtual void sterilize() ;
 
   Int_t lastIndex() const { 
     // Return index of slot used in last get or set operation

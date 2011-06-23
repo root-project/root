@@ -486,9 +486,9 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
   // starting with ourself as top node.
 
   if (!arg) {
-    if (list->getHashTableSize()==0) {
-      list->setHashTableSize(1000) ;
-    }
+//     if (list->getHashTableSize()==0) {
+//       list->setHashTableSize(1000) ;
+//     }
     arg=this ;
   }
 
@@ -624,34 +624,34 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
   RooArgSet leafList("leafNodeServerList") ;
   treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ;
   //leafNodeServerList(&leafList) ;
-  TIterator *sIter = leafList.createIterator() ;
+  RooLinkedListIter sIter = leafList.iterator() ;
 
   RooAbsArg* arg ;
   if (valueOnly) {
-    while ((arg=(RooAbsArg*)sIter->Next())) {
+    while ((arg=(RooAbsArg*)sIter.Next())) {
       if (arg->dependsOnValue(*dataList) && arg->isLValue()) {
 	depList->add(*arg) ;
       }
     }
   } else {
-    while ((arg=(RooAbsArg*)sIter->Next())) {
+    while ((arg=(RooAbsArg*)sIter.Next())) {
       if (arg->dependsOn(*dataList) && arg->isLValue()) {
 	depList->add(*arg) ;
       }
     }
   }
-  delete sIter ;
+  //delete sIter ;
 
-  // Call hook function for all branch nodes
-  RooArgSet branchList ;
-  branchNodeServerList(&branchList) ;
-  RooAbsArg* branch ;
-  TIterator* bIter = branchList.createIterator() ;
-  while((branch=(RooAbsArg*)bIter->Next())) {
-    branch->getObservablesHook(dataList, depList) ;
-  }
-  delete bIter ;
-
+//   // Call hook function for all branch nodes
+//   RooArgSet branchList ;
+//   branchNodeServerList(&branchList) ;
+//   RooAbsArg* branch ;
+//   RooLinkedListIter bIter = branchList.iterator() ;
+//   while((branch=(RooAbsArg*)bIter.Next())) {
+//     branch->getObservablesHook(dataList, depList) ;
+//   }
+//   //delete bIter ;
+  
   return depList ;
 }
 

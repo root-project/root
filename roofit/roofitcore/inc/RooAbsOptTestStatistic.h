@@ -45,7 +45,6 @@ public:
 
   RooAbsData& data() ;
   const RooAbsData& data() const ;
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
 
   virtual const char* cacheUniqueSuffix() const { return Form("_%lx", (ULong_t)_dataClone) ; }
@@ -58,6 +57,8 @@ public:
   const char* sealNotice() const { return _sealNotice.Data() ; }
 
 protected:
+
+  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
   friend class RooAbsReal ;
 

@@ -99,13 +99,18 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
 //   cout << "RooAbsOptTestStatistic::ctor(" << GetName() << "," << this << endl ;
   //FK: Desperate times, desperate measures. How can RooNLLVar call this ctor with dataClone=kFALSE?
-//   cout<<"Setting clonedata to 1"<<endl;
+  //   cout<<"Setting clonedata to 1"<<endl;
   cloneInputData=1;
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
-//     cout << "RooAbsOptTestStatistic::ctor not slave mode, do nothing" << endl ;
+    //cout << "RooAbsOptTestStatistic::ctor not slave mode, do nothing" << endl ;
     _normSet = 0 ;
+    _funcCloneSet = 0 ;
+    _dataClone = 0 ;
+    _funcClone = 0 ;
+    _projDeps = 0 ;
     _ownData = kFALSE ;
+    _sealed = kFALSE ;
     return ;
   }
 
@@ -342,14 +347,9 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   _func = _funcClone ;
   _data = _dataClone ;
 
-//   cout << "RooAbsOptTestStatistic::ctor call getVal()" << endl ;
   _funcClone->getVal(_normSet) ;
 
-  
-
-//   cout << "RooAbsOptTestStatistic::ctor start caching" << endl ;
   optimizeCaching() ;
-  
 }
 
 
@@ -444,10 +444,12 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
     } else {
       // If dataclone survives the test statistic, clean its cache transer
       // ownership of observables back to dataset
-      if (RooAbsData::isAlive(_dataClone)) {
-	_dataClone->resetCache() ;
+      if (RooAbsData::releaseVars(_dataClone)==kFALSE) {
 	_ownedDataObs.releaseOwnership() ;
       } 
+//       if (RooAbsData::isAlive(_dataClone)) {
+// 	_dataClone->resetCache() ;
+//       }      
     }
     delete _projDeps ;
   } 
@@ -650,12 +652,20 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData) 
+Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData) 
 { 
   // Change dataset that is used to given one. If cloneData is kTRUE, a clone of
   // in the input dataset is made.  If the test statistic was constructed with
   // a range specification on the data, the cloneData argument is ignore and
   // the data is always cloned.
+
+  if (operMode()==SimMaster) {
+    //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << endl ;    
+    return kFALSE ;
+  }
+  
+  //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << endl ;
+  //indata.Print("v") ;
 
   RooAbsData* origData = _dataClone ;
   Bool_t deleteOrigData = _ownData ;
@@ -676,48 +686,44 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     }
     _ownData = kTRUE ;
   } else {
-
-    //cout << "RAOTS::setData(" << GetName() << ") linking to existing data, claiming ownership of observables" << endl ;
-
+    
     _dataClone = &indata ;
     _ownData = kFALSE ;
-
+    
     // Add claim on observables to prevent these from being deleted when _dataClone is deleted
-    _dataClone->_vars.addClaim() ;
-
+    RooAbsData::claimVars(_dataClone) ;
+    
     // Prepare totake ownership of data observables
     obsToOwn.add(_dataClone->_vars) ;
   }    
+  
   // Attach function clone to dataset
+  Bool_t save = RooObjCacheManager::clearObsList() ;
+  RooObjCacheManager::doClearObsList(kTRUE) ;
+
   _funcClone->attachDataSet(*_dataClone) ;
+
+  RooObjCacheManager::doClearObsList(save) ;
 
   _data = _dataClone ;
 
   if (deleteOrigData) {
     delete origData ;
   } else {
-    if (RooAbsData::isAlive(origData)) {
-
-      //cout << "RAOTS::setData(" << GetName() << ") releasing previous data, which is still alive, transferring ownership of observables back to dataset" << endl ;
-
-      origData->resetCache() ;
-      // Release claim on observables so that dataset will delete them in dtor
-      origData->_vars.releaseClaim() ;
-
-      // Clear contents of _ownedDataObs, but do _not_ delete items
+    if (RooAbsData::releaseVars(origData)==kFALSE) {
       _ownedDataObs.releaseOwnership() ;
-      _ownedDataObs.removeAll() ;
     } else {
-      // Delete items in _ownedDataObs
-      //cout << "RAOTS::setData(" << GetName() << ") releasing previous data, which is still dead, deleting observables" << endl ;
-      _ownedDataObs.removeAll() ;
     }
+    _ownedDataObs.removeAll() ;
   }
 
   // Take ownership of observables of dataset 
   if (obsToOwn.getSize()>0) {
     _ownedDataObs.addOwned(obsToOwn) ;
   }
+
+  // Adjust internal event count
+  setEventCount(indata.numEntries()) ;
 
   setValueDirty() ;
   return kTRUE ;

@@ -118,6 +118,10 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)%p)->GetOutputList()",p)) ;
   aggregateData(olist) ;
+
+  // cleaning up                                                                                                                                           
+  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;                                                   
+  gROOT->ProcessLineFast(Form("((TProof*)%p)->GetInputList()->Remove((TObject*)%p) ;",p,(void*)_pkg) ) ;                                                   
   
 }
 

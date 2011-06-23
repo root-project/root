@@ -55,8 +55,19 @@ RooStudyPackage::RooStudyPackage() : _ws(0)
 
 
 //_____________________________________________________________________________
-RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(&w)
+RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(new RooWorkspace(w))
 {  
+}
+
+
+
+//_____________________________________________________________________________
+RooStudyPackage::RooStudyPackage(const RooStudyPackage& other) : TNamed(other), _ws(new RooWorkspace(*other._ws))
+{      
+  list<RooAbsStudy*>::const_iterator iter = other._studies.begin() ;
+  for (;iter!=other._studies.end() ; ++iter) {
+    _studies.push_back((*iter)->clone()) ;
+  }
 }
 
 
@@ -64,7 +75,6 @@ RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(&w)
 //_____________________________________________________________________________
 void RooStudyPackage::addStudy(RooAbsStudy& study) 
 {
-  cout << "RooStudyPackage(" << this << ") addStudy " << &study << endl ;
   _studies.push_back(&study) ;
 }
 

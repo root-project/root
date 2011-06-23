@@ -66,6 +66,7 @@ protected:
   } ;
   mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 
+
   Bool_t _haveLastCoef ;
 
   RooListProxy _funcList ;   //  List of component FUNCs
