@@ -335,9 +335,9 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
   // that also appears in the other set.
   
   if (&other==this) return *this ;
-
+  
   // Short cut for 1 element assignment
-  if (getSize()==other.getSize()==1 & oneSafe) {
+  if (getSize()==1 && getSize()==other.getSize() && oneSafe) {
     other.first()->syncCache() ;
     first()->copyCache(other.first()) ;
     return *this ;
