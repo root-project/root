@@ -29,7 +29,6 @@ LZMALIBS     := $(MODDIRS)/$(LZMAVERS)-win32.tar.gz
 LZMALIBA     := $(LZMALIBDIRS)/lib/liblzma.lib
 LZMADLLA     := $(LZMALIBDIRS)/lib/liblzma.dll
 LZMALIB      := $(LPATH)/liblzma.lib
-LZMADLL      := bin/liblzma.dll
 else
 LZMALIBS     := $(MODDIRS)/$(LZMAVERS).tar.gz
 LZMALIBA     := $(LZMALIBDIRS)/src/liblzma/.libs/liblzma.a
@@ -48,6 +47,13 @@ LZMAS        := $(MODDIRS)/ZipLZMA.c
 LZMAO        := $(call stripsrc,$(LZMAS:.c=.o))
 
 LZMADEP      := $(LZMAO:.o=.d)
+
+ifeq ($(BUILTINLZMA),yes)
+ifeq ($(PLATFORM),win32)
+LZMADLL      := bin/liblzma.dll
+ALLLIBS += $(LZMADLL)
+endif
+endif
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(LZMAH))
