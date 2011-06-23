@@ -802,7 +802,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
       if (n1 != n2) {
          if (rem) {
             if (n1 > n2) {
-               memmove(p + pos, cs, n2);
+               if (n2) memmove(p + pos, cs, n2);
                memmove(p + pos + n2, p + pos + n1, rem);
                goto finish;
             }
@@ -820,7 +820,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
             memmove(p + pos + n2, p + pos + n1, rem);
          }
       }
-      memmove(p + pos, cs, n2);
+      if (n2) memmove(p + pos, cs, n2);
 finish:
       SetSize(tot);
       p[tot] = 0;
