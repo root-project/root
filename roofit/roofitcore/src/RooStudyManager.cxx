@@ -135,17 +135,18 @@ void RooStudyManager::closeProof(Option_t *option)
   // where it is essential to properly close all connections and delete
   // the TProof instance (frees ports).
 
-  if (gROOT->GetListOfProofs()->LastIndex() != -1) {
+  if (gROOT->GetListOfProofs()->LastIndex() != -1  &&  gROOT->ProcessLineFast("TProof::gProof;"))
+  {
     gROOT->ProcessLineFast(Form("TProof::gProof->Close(\"%s\") ;",option)) ;
     gROOT->ProcessLineFast("TProof::gProof->CloseProgressDialog() ;") ;
 
     // CloseProgressDialog does not do anything when run without GUI. This detects
     // whether the proof instance is still there and deletes it if that is the case.
-    if (gROOT->GetListOfProofs()->LastIndex() != -1) {
+    if (gROOT->GetListOfProofs()->LastIndex() != -1  &&  gROOT->ProcessLineFast("TProof::gProof;")) {
       gROOT->ProcessLineFast("delete TProof::gProof ;") ;
     }
   } else {
-    ooccoutW((TObject*)NULL,Generation) << "Global Proof object not found. Cannot close connections." << endl ;
+    ooccoutI((TObject*)NULL,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
   }
 }
 

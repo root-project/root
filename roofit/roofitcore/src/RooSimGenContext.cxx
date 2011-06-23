@@ -223,30 +223,9 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
     return new RooDataSet(name,title,obs) ;
   }
 
-  TIterator* iter = _idxCat->typeIterator() ;
-  RooCatType* state ;
-
-//   // If all slices contain all observables minus the index, make a plain dataset
-//   Bool_t allObsinAllSlices(kTRUE) ;
-//   while((state=(RooCatType*)iter->Next())) {
-//     RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
-//     RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
-//     if (sliceObs->getSize()!=obs.getSize()-1) {
-//       allObsinAllSlices = kFALSE ;
-//     }
-//     delete sliceObs ;
-//   }
-//   delete iter ;
-//   if (allObsinAllSlices) {
-//     //return new RooDataSet(name,title,obs) ;
-//   }
-
-  //cout << "RooSimGenContext::createDataSet() creating composite linked dataset" << endl ;
-
-  // Otherwise, make a composite linked dataset as output placeholder
   map<string,RooAbsData*> dmap ;
-
-  iter = _idxCat->typeIterator() ;
+  RooCatType* state ;
+  TIterator* iter = _idxCat->typeIterator() ;
   while((state=(RooCatType*)iter->Next())) {
     RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
     RooArgSet* sliceObs = slicePdf->getObservables(obs) ;

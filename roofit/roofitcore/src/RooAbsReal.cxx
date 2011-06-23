@@ -2241,7 +2241,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     
     // If data set contains more rows than needed, make reduced copy first
     RooAbsData* projDataSel = (RooAbsData*)o.projData;
-    if (projDataNeededVars->getSize()<o.projData->get()->getSize()) {
+    if (projDataNeededVars && projDataNeededVars->getSize()<o.projData->get()->getSize()) {
       
       // Determine if there are any slice variables in the projection set
       RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*o.projData->get()) ;

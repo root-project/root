@@ -1084,6 +1084,8 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
     data->add(*globClone) ;
   }
 
+
+  delete iter ;
   delete globClone ;
   return data ;
 }

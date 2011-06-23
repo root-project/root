@@ -36,6 +36,7 @@
 
 #include "TClass.h"
 #include "TObjString.h"
+#include "TVirtualStreamerInfo.h"
 // #include "TGraphStruct.h"
 
 #include "RooMsgService.h"
@@ -1230,7 +1231,7 @@ Int_t RooAbsArg::numProxies() const
 {
   // Return the number of registered proxies.
 
-  return _proxyList.GetSize() ;
+  return _proxyList.GetEntries() ;
 }
 
 
@@ -2254,3 +2255,115 @@ const char* RooAbsArg::aggregateCacheUniqueSuffix() const
   delete iter ;
   return Form("%s",suffix.c_str()) ;
 }
+
+
+/*
+//_____________________________________________________________________________
+void RooAbsArg::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooAbsArg.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      if (R__v>4) {
+
+	// Streamer for V5 (current version)
+	R__b.ReadClassBuffer(RooAbsArg::Class(),this);
+	cout << "RooAbsArg::Streamer(" << GetName() << ") reading V5" << endl ;
+	
+      } else {
+
+	// Streamer for V4 (old version, need to convert proxyList from TList to TRefArray
+	
+	TNamed::Streamer(R__b);
+	RooPrintable::Streamer(R__b);
+
+	cout << "RooAbsArg::Streamer(" << GetName() << ") reading V4" << endl ;
+
+	_serverList.Streamer(R__b);
+	_clientList.Streamer(R__b);
+	_clientListShape.Streamer(R__b);
+	_clientListValue.Streamer(R__b);
+
+	// Convert TList to TRefArray
+	_proxyList.Streamer(R__b) ;
+// 	TList tmpProxyList ;
+// 	tmpProxyList.Streamer(R__b);
+// 	TIterator* iter = tmpProxyList.MakeIterator() ;
+// 	TObject* tmpObj ;
+// 	while ((tmpObj = iter->Next())) {
+// 	  _proxyList.Add(tmpObj) ;
+// 	}
+// 	delete iter ;
+// 	cout << " added " << _proxyList.GetEntries() << " objects to proxy list" << endl ;
+
+	{
+	  deque<RooAbsCache*> &R__stl =  _cacheList;
+	  R__stl.clear();
+	  TClass *R__tcl1 = TBuffer::GetClass(typeid(RooAbsCache));
+	  if (R__tcl1==0) {
+            Error("_cacheList streamer","Missing the TClass object for RooAbsCache!");
+            return;
+	  }
+	  int R__i, R__n;
+	  R__b >> R__n;
+	  for (R__i = 0; R__i < R__n; R__i++) {
+            RooAbsCache* R__t;
+            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {
+	      R__t = new RooAbsCache;
+	      R__t->Streamer(R__b);
+            } else {
+	      R__t = (RooAbsCache*)R__b.ReadObjectAny(R__tcl1);
+            }
+            R__stl.push_back(R__t);
+	  }
+	}
+	{
+	  set<std::string> &R__stl =  _boolAttrib;
+	  R__stl.clear();
+	  int R__i, R__n;
+	  R__b >> R__n;
+	  for (R__i = 0; R__i < R__n; R__i++) {
+            string R__t;
+            {TString R__str;
+	      R__str.Streamer(R__b);
+	      R__t = R__str.Data();}
+            R__stl.insert(R__t);
+	  }
+	}
+	{
+	  map<std::string,std::string> &R__stl =  _stringAttrib;
+	  R__stl.clear();
+	  int R__i, R__n;
+	  R__b >> R__n;
+	  for (R__i = 0; R__i < R__n; R__i++) {
+            string R__t;
+            {TString R__str;
+	      R__str.Streamer(R__b);
+	      R__t = R__str.Data();}
+            string R__t2;
+            {TString R__str;
+	      R__str.Streamer(R__b);
+	      R__t2 = R__str.Data();}
+            typedef string Value_t;
+            std::pair<Value_t const, string > R__t3(R__t,R__t2);
+            R__stl.insert(R__t3);
+	  }
+	}
+	R__b >> _valueDirty;
+	R__b >> _shapeDirty;
+	void *ptr__operMode = (void*)&_operMode;
+	R__b >> *reinterpret_cast<Int_t*>(ptr__operMode);
+	R__b >> _eocache;
+	R__b.CheckByteCount(R__s, R__c, RooAbsArg::IsA());
+      }
+   } else {
+     
+     R__b.WriteClassBuffer(RooAbsArg::Class(),this);
+     
+   }
+}
+
+*/

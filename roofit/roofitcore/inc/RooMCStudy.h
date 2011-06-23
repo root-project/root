@@ -57,7 +57,7 @@ public:
   // Result accessors
   const RooArgSet* fitParams(Int_t sampleNum) const ;
   const RooFitResult* fitResult(Int_t sampleNum) const ;
-  const RooDataSet* genData(Int_t sampleNum) const ;
+  const RooAbsData* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
   const RooDataSet* genParDataSet() const { 
     // Return dataset with generator parameters for each toy. When constraints are used these

@@ -110,6 +110,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   RooSentinel::activate() ;
 
   // Store function reference
+  _evalCounter = 0 ;
   _extV = 0 ;
   _func = &function ;
   _logfile = 0 ;
@@ -1145,6 +1146,7 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
 
   // Calculate the function for these parameters
   f= context->_func->getVal() ;
+  context->_evalCounter++ ;
   if ( RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 ) {
 
     if (context->_printEvalErrors>=0) {

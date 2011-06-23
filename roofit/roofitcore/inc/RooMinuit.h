@@ -71,6 +71,9 @@ public:
 
   static void cleanup() ;
   
+  Int_t evalCounter() const { return _evalCounter ; }
+  void zeroEvalCount() { _evalCounter = 0 ; }
+
 protected:
 
   friend class RooAbsPdf ;
@@ -97,6 +100,7 @@ protected:
 
 private:
 
+  Int_t       _evalCounter ;
   Int_t       _printLevel ;
   Int_t       _warnLevel ;
   Int_t       _status ;

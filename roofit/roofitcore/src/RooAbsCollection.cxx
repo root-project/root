@@ -329,12 +329,19 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 
 
 //_____________________________________________________________________________
-RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other) 
+RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe) 
 {
   // The assignment operator sets the value of any argument in our set
   // that also appears in the other set.
-
+  
   if (&other==this) return *this ;
+
+  // Short cut for 1 element assignment
+  if (getSize()==other.getSize()==1 & oneSafe) {
+    other.first()->syncCache() ;
+    first()->copyCache(other.first()) ;
+    return *this ;
+  }
 
   RooAbsArg *elem, *theirs ;
   RooLinkedListIter iter = _list.iterator() ;

@@ -1102,7 +1102,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 //_____________________________________________________________________________
-Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) 
+Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries, Bool_t oneSafe) 
 {
   // Return the weight at given coordinates with optional
   // interpolation. If intOrder is zero, the weight
@@ -1120,8 +1120,8 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   }
 
   // Handle no-interpolation case
-  if (intOrder==0) {
-    _vars.assignValueOnly(bin) ;
+  if (intOrder==0) {    
+    _vars.assignValueOnly(bin,oneSafe) ;
     Int_t idx = calcTreeIndex() ;
     //cout << "intOrder 0, idx = " << idx << endl ;
     if (correctForBinSize) {

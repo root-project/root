@@ -702,8 +702,13 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   RooObjCacheManager::doClearObsList(kTRUE) ;
 
   _funcClone->attachDataSet(*_dataClone) ;
-
+  
   RooObjCacheManager::doClearObsList(save) ;
+
+  //optimizeCaching() ;
+
+  // Activate constant-term optimization
+  //constOptimizeTestStatistic(Activate) ;
 
   _data = _dataClone ;
 

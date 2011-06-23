@@ -48,7 +48,7 @@ RooNormSetCache::RooNormSetCache(Int_t regSize) :
   _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
   // Construct normalization set manager with given initial size
-  _htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
+  //_htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
 
@@ -59,7 +59,7 @@ RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
 {
   // Copy constructor
 
-  _htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
+  //_htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
 
@@ -126,8 +126,10 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
   }
 
   // Expand cache if full 
-  if (_nreg==_regSize) expand() ;
+  //if (_nreg==_regSize) expand() ;
 
+  // Cycle when full
+  if (_nreg==_regSize) _nreg = 0 ;
 }
 
 

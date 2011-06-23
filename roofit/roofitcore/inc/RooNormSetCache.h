@@ -31,7 +31,7 @@ typedef RooArgSet* pRooArgSet ;
 class RooNormSetCache {
 
 public:
-  RooNormSetCache(Int_t regSize=10) ;
+  RooNormSetCache(Int_t regSize=64) ;
   RooNormSetCache(const RooNormSetCache& other) ;
   virtual ~RooNormSetCache() ;
 
