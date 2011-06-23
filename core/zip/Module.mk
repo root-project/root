@@ -33,6 +33,7 @@ ZIPNEWH      := $(MODDIRI)/crc32.h      \
                 $(MODDIRI)/zconf.h      \
                 $(MODDIRI)/zlib.h       \
                 $(MODDIRI)/zutil.h
+
 ZIPNEWS      := $(MODDIRS)/adler32.c    \
                 $(MODDIRS)/compress.c   \
                 $(MODDIRS)/crc32.c      \
