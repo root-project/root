@@ -101,7 +101,7 @@ else
 		cd $(LZMAVERS); \
 		LZMACC="$(CC)"; \
 		if [ "$(CC)" = "icc" ]; then \
-			LZMACC="icc -wd188 -wd181"; \
+			LZMACC="icc -wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128"; \
 		fi; \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			LZMACC="cc"; \
