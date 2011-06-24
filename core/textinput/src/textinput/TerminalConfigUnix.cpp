@@ -106,9 +106,10 @@ TerminalConfigUnix::HandleSignal(int signum) {
   signal(signum, SIG_DFL); // unregister ourselves
   raise(signum); // terminate through default handler
 
-  // should not end up here...
-  signal(signum, TerminalConfigUnix__handleSignal);
-  sSignalHandlerActive = false;
+  // No need to recover our state; there will be no "next time":
+  // the signal raised above will cause the program to quit.
+  //signal(signum, TerminalConfigUnix__handleSignal);
+  //sSignalHandlerActive = false;
 }
 
 void
