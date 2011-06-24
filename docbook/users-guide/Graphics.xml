@@ -2303,7 +2303,7 @@ following way (a day has 86400 seconds):</para>
 The axis goes form 100000 seconds before <code>TimeOffset</code> and 150000
 seconds after. So the complete macro is:</para>
 
-<programlisting language="c++" width="80">{
+<programlisting language="c++">{
   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
   c1-&gt;Range(-10,-1,10,1);
   TGaxis *axis = new TGaxis(-8,-0.6,8,-0.6,-100000,150000,2405,"t");
@@ -2569,12 +2569,24 @@ and 14. The precision can be:</para>
 <listitem><para>Precision = 2 scalable and rotate-able hardware fonts</para></listitem>
 </itemizedlist>
 <para>When precision 0 is used, only the original non-scaled system fonts are used.
-The fonts have a minimum (4) and maximum (37) size in pixels. These fonts are fast and are of good quality. Their size varies with large steps and they cannot be rotated. Precision 1 and 2 fonts have a different behavior depending if True Type Fonts (TTF) are used or not. If TTF are used, you always get very good quality scalable and rotate-able fonts. However, TTF are slow. Precision 1 and 2 fonts have a different behavior for PostScript in case of <emphasis role="bold"><code>TLatex</code></emphasis> objects:</para>
+The fonts have a minimum (4) and maximum (37) size in pixels. These fonts are
+fast and are of good quality. Their size varies with large steps and they cannot
+be rotated. Precision 1 and 2 fonts have a different behavior depending if True
+Type Fonts (TTF) are used or not. If TTF are used, you always get very good
+quality scalable and rotate-able fonts. However, TTF are slow. Precision 1 and 2
+fonts have a different behavior for PostScript in case of
+<emphasis role="bold"><code>TLatex</code></emphasis> objects:</para>
 <itemizedlist>
-<listitem><para>With precision 1, the PostScript text uses the old convention (<code>see </code><emphasis role="bold"><code>TPostScript</code></emphasis>) for some special characters to draw sub and superscripts or Greek text.</para></listitem>
-<listitem><para>With precision 2, the "PostScript" special characters are drawn as such. To draw sub and superscripts it is highly recommended to use <emphasis role="bold"><code>TLatex</code></emphasis> objects instead.</para></listitem>
+<listitem><para>With precision 1, the PostScript text uses the old convention
+(see <emphasis role="bold"><code>TPostScript</code></emphasis>) for some special
+characters to draw sub and superscripts or Greek text.</para></listitem>
+<listitem><para>With precision 2, the "PostScript" special characters are drawn
+as such. To draw sub and superscripts it is highly recommended to use
+<emphasis role="bold"><code>TLatex</code></emphasis> objects
+instead.</para></listitem>
 </itemizedlist>
-<para>For example: <code>font = 62 </code>is the font with ID <code>6 </code>and precision <code>2</code>.</para>
+<para>For example: <code>font = 62</code> is the font with ID <code>6</code> and
+precision <code>2</code>.</para>
 
 <figure><title>Font’s examples</title>
 <para>
@@ -2896,59 +2908,116 @@ to set the text size.</para>
 <programlisting language="c++">root[]<emphasis role="bold"><code> la-&gt;SetTextSize(size)</code></emphasis>
 </programlisting>
 
-<para>The <code>size</code> is the text size expressed in percentage of the current pad size.</para>
+<para>The <code>size</code> is the text size expressed in percentage of the
+current pad size.</para>
 <para>The text size in pixels will be:</para>
 <itemizedlist>
-<listitem><para>If current pad is horizontal, the size in pixels  = <code>textsize * canvas_height</code></para></listitem>
-<listitem><para>If current pad is vertical, the size in pixels      = <code>textsize * canvas_width</code></para></listitem>
+<listitem><para>If current pad is horizontal, the size in pixels  =
+<code>textsize * canvas_height</code></para></listitem>
+<listitem><para>If current pad is vertical, the size in pixels =
+<code>textsize * canvas_width</code></para></listitem>
 </itemizedlist>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D0.png" width="63.35pt" depth="36.6pt"/></imageobject></inlinemediaobject>The user interface for changing the text color, size, font and allignment looks like shown in this picture. It takes place in the editor frame anytime the selected object inherits the class <emphasis role="bold"><code>TAttText</code></emphasis><emphasis role="bold">.</emphasis></para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D0.png" width="63.35pt" depth="36.6pt"/></imageobject></inlinemediaobject>
+The user interface for changing the text color, size, font and allignment looks
+like shown in this picture. It takes place in the editor frame anytime the
+selected object inherits the class
+<emphasis role="bold"><code>TAttText</code></emphasis>.</para>
 <para/>
 </sect3>
 </sect2>
 
 <sect2>
 <title>Line Attributes</title>
-<para>All classes manipulating lines have to deal with line attributes: color, style and width. This is done by using secondary inheritance of the class <emphasis role="bold"><code>TAttLine</code></emphasis>. The line color may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line color is set with:</para>
+<para>All classes manipulating lines have to deal with line attributes: color,
+style and width. This is done by using secondary inheritance of the class
+<emphasis role="bold"><code>TAttLine</code></emphasis>. The line color may be
+set by a method call. What is said here applies to all objects deriving from
+<emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many
+(histograms, plots). We will take an example that may be transposed to other
+types. Suppose "<code>li</code>" is a
+<emphasis role="bold"><code>TLine</code></emphasis> object. The line color is
+set with:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>li-&gt;SetLineColor(color)</code></emphasis>
 </programlisting>
 
-<para>The argument <code>color</code> is a color number. The colors are described in "Color and Color Palettes"</para>
-<para>The line style may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line style is set with:</para>
+<para>The argument <code>color</code> is a color number. The colors are
+described in "Color and Color Palettes"</para>
+<para>The line style may be set by a method call. What is said here applies to
+all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>,
+and there are many (histograms, plots). We will take an example that may be
+transposed to other types. Suppose "<code>li</code>" is a
+<emphasis role="bold"><code>TLine</code></emphasis> object. The line style is
+set with:</para>
 
 <programlisting language="c++">root[]<emphasis role="bold"><code> li-&gt;SetLineStyle(style)</code></emphasis>
 </programlisting>
 
-<para>The argument style is one of: <code>1=solid</code>, 2=dash, 3=dash-dot, 4=dot-dot.</para>
-<para>The line width may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>li</code>" is a <emphasis role="bold"><code>TLine</code></emphasis> object. The line width is set with:</para>
+<para>The argument style is one of: 1=solid, 2=dash, 3=dash-dot, 4=dot-dot.</para>
+<para>The line width may be set by a method call. What is said here applies to
+all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>,
+and there are many (histograms, plots). We will take an example that may be
+transposed to other types. Suppose "<code>li</code>" is a
+<emphasis role="bold"><code>TLine</code></emphasis> object. The line width is
+set with:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>li-&gt;SetLineWidth(width)</code></emphasis>
 </programlisting>
 
 <para>The <code>width</code> is the width expressed in pixel units.</para>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D1.png" width="77.15pt" depth="35.35pt"/></imageobject></inlinemediaobject>The user interface for changing the line color, line width and style looks like shown in this picture. It takes place in the editor frame anytime the selected object inherits the class <emphasis role="bold"><code>TAtt</code></emphasis><emphasis role="bold"><code>Line</code></emphasis>.</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D1.png" width="77.15pt" depth="35.35pt"/></imageobject></inlinemediaobject>
+The user interface for changing the line color, line width and style looks like
+shown in this picture. It takes place in the editor frame anytime the selected
+object inherits the class
+<emphasis role="bold"><code>TAttLine</code></emphasis>.</para>
 </sect2>
 
 <sect2>
 <title>Fill Attributes</title>
-<para>Almost all graphics classes have a fill area somewhere. These classes have to deal with fill attributes. This is done by using secondary inheritance of the class <emphasis role="bold"><code>TAttFill</code></emphasis>. Fill color may be set by a method call. What is said here applies to all objects deriving from <emphasis role="bold"><code>TAttFill</code></emphasis>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "<code>h</code>" is a <emphasis role="bold"><code>TH1F</code></emphasis> (1 dim histogram) object. The histogram fill color is set with:</para>
+<para>Almost all graphics classes have a fill area somewhere. These classes have
+to deal with fill attributes. This is done by using secondary inheritance of the
+class <emphasis role="bold"><code>TAttFill</code></emphasis>. Fill color may be
+set by a method call. What is said here applies to all objects deriving from
+<emphasis role="bold"><code>TAttFill</code></emphasis>, and there are many
+(histograms, plots). We will take an example that may be transposed to other
+types. Suppose "<code>h</code>" is a
+<emphasis role="bold"><code>TH1F</code></emphasis> (1 dim histogram) object. The
+histogram fill color is set with:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>h-&gt;SetFillColor(color)</code></emphasis>
 </programlisting>
 
-<para>The color is a color number. The colors are described in "Color and color palettes"</para>
-<para>Fill style may be set by a method call. What is said here applies to all objects deriving from <code>TAttFill</code>, and there are many (histograms, plots). We will take an example that may be transposed to other types. Suppose "h" is a <emphasis role="bold">TH1F</emphasis> (1 dim histogram) object. The histogram fill style is set with:</para>
+<para>The color is a color number. The colors are described in "Color and color
+palettes"</para>
+<para>Fill style may be set by a method call. What is said here applies to all
+objects deriving from <code>TAttFill</code>, and there are many (histograms,
+plots). We will take an example that may be transposed to other types. Suppose
+"<code>h</code>" is a <emphasis role="bold">TH1F</emphasis> (1 dim histogram)
+object. The histogram fill style is set with:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>h-&gt;SetFillStyle(style)</code></emphasis>
 </programlisting>
 
-<para>The convention for style is: 0:hollow, 1001:solid, 2001:hatch style, <code>3000</code>+<code>pattern number</code>:patterns, 4000 to 4100:transparency, 4000:fully transparent, 4100: fully opaque.</para>
-<para>Fill styles &gt;3100 and &lt;3999 are hatches. They are defined according to the <code>FillStyle=3ijk</code> value as follows:</para>
+<para>The convention for style is: 0:hollow, 1001:solid, 2001:hatch style, 
+3000+pattern number:patterns, 4000 to 4100:transparency, 4000:fully transparent,
+4100: fully opaque.</para>
+<para>Fill styles &gt;3100 and &lt;3999 are hatches. They are defined according
+to the <code>FillStyle=3ijk</code> value as follows:</para>
 <itemizedlist>
-<listitem><para><code>i(1-9)</code> specifies the space between each hatch <code>(1=minimum space</code>, <code>9=maximum)</code>. The final spacing is set by <code>SetHatchesSpacing()</code> method and it is<code>*GetHatchesSpacing()</code>.</para></listitem>
-<listitem><para><code>j(0-9)</code> specifies the angle between 0 and 90 degres as follows: <code>0=0</code>, <code>1=10</code>, <code>2=20</code>, <code>3=30</code>, <code>4=45</code>, <code>5=not drawn</code>, <code>6=60</code>, <code>7=70</code>, <code>8=80</code> and <code>9=90</code>.</para></listitem>
-<listitem><para><code>k(0-9)</code> specifies the angle between 0 and 90 degres as follows: <code>0=180</code>, <code>1=170</code>, <code>2=160</code>, <code>3=150</code>, <code>4=135</code>, <code>5=not drawn</code>, <code>6=120</code>, <code>7=110</code>, <code>8=100</code> and <code>9=90</code>.</para></listitem>
+<listitem><para><code>i(1-9)</code> specifies the space between each hatch
+<code>(1=minimum space</code>, <code>9=maximum)</code>. The final spacing is set
+by <code>SetHatchesSpacing()</code> method and it
+is<code>*GetHatchesSpacing()</code>.</para></listitem>
+<listitem><para><code>j(0-9)</code> specifies the angle between 0 and 90 degres
+as follows: <code>0=0</code>, <code>1=10</code>, <code>2=20</code>,
+<code>3=30</code>, <code>4=45</code>, <code>5=not drawn</code>,
+<code>6=60</code>, <code>7=70</code>, <code>8=80</code> and
+<code>9=90</code>.</para></listitem>
+<listitem><para><code>k(0-9)</code> specifies the angle between 0 and 90 degres
+as follows: <code>0=180</code>, <code>1=170</code>, <code>2=160</code>,
+<code>3=150</code>, <code>4=135</code>, <code>5=not drawn</code>,
+<code>6=120</code>, <code>7=110</code>, <code>8=100</code> and
+<code>9=90</code>.</para></listitem>
 </itemizedlist>
 
 <figure><title>The various patterns</title>
@@ -2961,12 +3030,24 @@ to set the text size.</para>
 
 <sect2>
 <title>Color and Color Palettes</title>
-<para>At initialization time, a table of basic colors is generated when the first Canvas constructor is called. This table is a linked list, which can be accessed from the <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> object (see <emphasis role="bold"><code>TROOT</code></emphasis><code>::GetListOfColors()</code>). Each color has an index and when a basic color is defined, two "companion" colors are defined:</para>
+<para>At initialization time, a table of basic colors is generated when the
+first Canvas constructor is called. This table is a linked list, which can be
+accessed from the
+<emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis>
+object (see <emphasis role="bold"><code>TROOT</code></emphasis><code>::GetListOfColors()</code>).
+Each color has an index and when a basic color is defined, two "companion"
+colors are defined:</para>
 <itemizedlist>
 <listitem><para>the dark version (color index + 100)</para></listitem>
 <listitem><para>the bright version (color index + 150)</para></listitem>
 </itemizedlist>
-<para>The dark and bright colors are used to give 3-D effects when drawing various boxes (see <emphasis role="bold"><code>TWbox</code></emphasis>, <emphasis role="bold"><code>TPave</code></emphasis>, <emphasis role="bold"><code>TPaveText</code></emphasis>, <emphasis role="bold"><code>TPaveLabel</code></emphasis>, etc). If you have a black and white copy of the manual, here are the basic colors and their indices.</para>
+<para>The dark and bright colors are used to give 3-D effects when drawing
+various boxes (see <emphasis role="bold"><code>TWbox</code></emphasis>,
+<emphasis role="bold"><code>TPave</code></emphasis>,
+<emphasis role="bold"><code>TPaveText</code></emphasis>,
+<emphasis role="bold"><code>TPaveLabel</code></emphasis>, etc). If you have a
+black and white copy of the manual, here are the basic colors and their
+indices.</para>
 
 <figure><title>The basic ROOT colors</title>
 <para>
@@ -2977,28 +3058,49 @@ to set the text size.</para>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/image212.jpg" width="108.6pt" depth="162.9pt"/></imageobject></inlinemediaobject>
 </para>
-<para>The list of currently supported basic colors (here dark and bright colors are not shown) are shown. The color numbers specified in the basic palette, and the picture above, can be viewed by selecting the menu entry Colors in the View canvas menu. The user may define other colors. To do this, one has to build a new <emphasis role="bold"><code>TColor</code></emphasis>:</para>
+<para>The list of currently supported basic colors (here dark and bright colors
+are not shown) are shown. The color numbers specified in the basic palette, and
+the picture above, can be viewed by selecting the menu entry Colors in the View
+canvas menu. The user may define other colors. To do this, one has to build a
+new <emphasis role="bold"><code>TColor</code></emphasis>:</para>
 
 <programlisting language="c++">TColor(Int_t color,Float_t r,Float_t g,Float_t b,const char* name)
 </programlisting>
 
-<para>One has to give the color number and the three Red, Green, Blue values, each being defined from 0 (min) to 1(max). An optional name may be given. When built, this color is automatically added to the existing list of colors. If the color number already exists, one has to extract it from the list and redefine the RGB values. This may be done for example with:</para>
+<para>One has to give the color number and the three Red, Green, Blue values,
+each being defined from 0 (min) to 1(max). An optional name may be given. When
+built, this color is automatically added to the existing list of colors. If the
+color number already exists, one has to extract it from the list and redefine
+the RGB values. This may be done for example with:</para>
 
-<programlisting language="c++">root[] <emphasis role="bold"><code>color=(TColor</code></emphasis><emphasis role="bold"><code>*)(gROOT</code></emphasis><emphasis role="bold"><code>-&gt;GetListOfColors()-&gt;At(index_color))</code></emphasis>
-root[] <emphasis role="bold"><code>color-&gt;SetRGB(r,g,b)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">color=(TColor*)(gROOT-&gt;GetListOfColors()-&gt;At(index_color))</emphasis>
+root[] <emphasis role="bold">color-&gt;SetRGB(r,g,b)</emphasis>
 </programlisting>
 
-<para>Where <code>r</code>, <code>g</code> and <code>b</code> go from 0 to 1 and <code>index_color</code> is the color number you wish to change.</para>
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D4.png" width="69.45pt" depth="23.15pt"/></imageobject></inlinemediaobject>The user interface for changing the fill color and style looks like shown in this picture. It takes place in the editor frame anytime the selected object inherits the class <emphasis role="bold"><code>TAttFill</code></emphasis>.</para>
+<para>Where <code>r</code>, <code>g</code> and <code>b</code> go from 0 to 1 and
+<code>index_color</code> is the color number you wish to change.</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D4.png" width="69.45pt" depth="23.15pt"/></imageobject></inlinemediaobject>
+The user interface for changing the fill color and style looks like shown in
+this picture. It takes place in the editor frame anytime the selected object
+inherits the class <emphasis role="bold"><code>TAttFill</code></emphasis>.</para>
 
 <sect3>
 <title>Color Palette (for Histograms)</title>
-<para>Defining one color at a time may be tedious. The histogram classes (see Draw Options) use the color palette. For example,         <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw("col")</code> draws a 2-D histogram with cells represented by a box filled with a color <code>CI</code> function of the cell content. If the cell content is <code>N</code>, the color <code>CI</code> used will be the color number in <code>colors[N]</code>. If the maximum cell content is <code>&gt;ncolors</code>, all cell contents are scaled to <code>ncolors</code>. The current color palette does not have a class or global object of its own. It is defined in the current style as an array of color numbers. The current palette can be changed with:</para>
+<para>Defining one color at a time may be tedious. The histogram classes (see
+Draw Options) use the color palette. For example,
+<emphasis role="bold"><code>TH1</code></emphasis><code>::Draw("col")</code> draws
+a 2-D histogram with cells represented by a box filled with a color
+<code>CI</code> function of the cell content. If the cell content is
+<code>N</code>, the color <code>CI</code> used will be the color number in
+<code>colors[N]</code>. If the maximum cell content is <code>&gt;ncolors</code>,
+all cell contents are scaled to <code>ncolors</code>. The current color palette
+does not have a class or global object of its own. It is defined in the current
+style as an array of color numbers. The current palette can be changed with:</para>
 
 <programlisting language="c++"><code>TStyle::SetPalette(Int_t ncolors,Int_t*color_indexes). </code>
 </programlisting>
 
-<para>By default, or if <code>ncolors &lt;= 0</code>, a default palette (see above) of 50 colors is defined. The colors defined in this palette are good for coloring pads, labels, and other graphic objects. If <code>ncolors</code>         <code>&gt; 0</code> and <code>colors = 0</code>, the default palette is used with a maximum of <code>ncolors</code>. If <code>ncolors == 1 &amp;&amp; colors == 0</code>, then a pretty palette with a spectrum <code>Violet-&gt;Red</code> is created. It is recommended to use this pretty palette when drawing lego(s), surfaces or contours. For example, to set the current palette to the “<code>pretty</code>” one, do:</para>
+<para>By default, or if <code>ncolors &lt;= 0</code>, a default palette (see above) of 50 colors is defined. The colors defined in this palette are good for coloring pads, labels, and other graphic objects. If <code>ncolors &gt; 0</code> and <code>colors = 0</code>, the default palette is used with a maximum of <code>ncolors</code>. If <code>ncolors == 1 &amp;&amp; colors == 0</code>, then a pretty palette with a spectrum <code>Violet-&gt;Red</code> is created. It is recommended to use this pretty palette when drawing lego(s), surfaces or contours. For example, to set the current palette to the “<code>pretty</code>” one, do:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>gStyle-&gt;SetPalette(1)</code></emphasis>
 </programlisting>
@@ -3008,24 +3110,25 @@ custom palette. You can adapt it to suit your needs. In case you use it for
 contour coloring, with the current color/contour algorithm, always define two
 more colors than the number of contours.</para>
 
-<programlisting language="c++">void palette() {              <emphasis role="italic"><code>// Example of creating new colors (purples)</code></emphasis>
-const Int_t colNum = 10;    <emphasis role="italic"><code>// and defining of a new palette</code></emphasis>
-Int_t palette[colNum];
-for (Int_t i=0; i&lt;colNum; i++) {
-<emphasis role="italic"><code>    // get the color and if it does not exist create it</code></emphasis>
-if (! gROOT-&gt;GetColor(230+i) ){
-TColor *color = new TColor(230+i,1-(i/((colNum)*1.0)),0.3,0.5,"");
-} else {
-TColor *color = gROOT-&gt;GetColor(230+i);
-color-&gt;SetRGB(1-(i/((colNum)*1.0)),0.3,0.5);
-}
-palette[i] = 230+i;
-}
-gStyle-&gt;SetPalette(colNum,palette);
-TF2 *f2 = new TF2("f2","exp(-(x^2)-(y^2))",-3,3,-3,3);
-<emphasis role="italic"><code>  // two contours less than the number of colors in palette</code></emphasis>
-f2-&gt;SetContour(colNum-2);
-f2-&gt;Draw("cont");
+<programlisting language="c++">void palette() {
+  <emphasis role="italic">// Example of creating new colors (purples)</emphasis>
+  const Int_t colNum = 10;    <emphasis role="italic">// and defining of a new palette</emphasis>
+  Int_t palette[colNum];
+  for (Int_t i=0; i&lt;colNum; i++) {
+    <emphasis role="italic">// get the color and if it does not exist create it</emphasis>
+    if (! gROOT-&gt;GetColor(230+i) ){
+      TColor *color = new TColor(230+i,1-(i/((colNum)*1.0)),0.3,0.5,"");
+    } else {
+      TColor *color = gROOT-&gt;GetColor(230+i);
+      color-&gt;SetRGB(1-(i/((colNum)*1.0)),0.3,0.5);
+    }
+    palette[i] = 230+i;
+  }
+  gStyle-&gt;SetPalette(colNum,palette);
+  TF2 *f2 = new TF2("f2","exp(-(x^2)-(y^2))",-3,3,-3,3);
+  <emphasis role="italic">// two contours less than the number of colors in palette</emphasis>
+  f2-&gt;SetContour(colNum-2);
+  f2-&gt;Draw("cont");
 }
 </programlisting>
 
@@ -3043,156 +3146,233 @@ object editors are available for the current ROOT version.</para>
 <sect2>
 <title>TAxisEditor</title>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D5.png" width="75.8pt" depth="162.65pt"/></imageobject></inlinemediaobject></para>
-  <para> This user interface gives the possibility for changing the following axis attributes:</para>
-  <itemizedlist>
-    <listitem><para>color of the selected axis, the axis’ title and labels;</para></listitem>
-  <listitem><para>the length of thick parameters and the possibility to set them on both axis sides
-    (if <code>+-</code>  is selected);</para></listitem>
-  <listitem><para>to set logarithmic or linear scale along the selected axis with a choice for optimized
-    or more logarithmic labels;</para></listitem>
-    <listitem><para>primary, secondary and tertiary axis divisions can be set via the three number fields;</para></listitem>
-  <listitem><para>the axis title can be added or edited and the title’s color, position, offset, size and
-    font can be set interactively;</para></listitem>
-  <listitem><para>the color, size, and offset of axis labels can be set similarly. In addition, there is a
-        check box for no exponent choice, and another one for setting the same decimal
-        part for all labels.</para></listitem>
-  </itemizedlist>
+<para> This user interface gives the possibility for changing the following axis
+attributes:</para>
+<itemizedlist>
+<listitem><para>color of the selected axis, the axis’ title and labels;</para></listitem>
+<listitem><para>the length of thick parameters and the possibility to set them
+on both axis sides
+(if <code>+-</code>  is selected);</para></listitem>
+<listitem><para>to set logarithmic or linear scale along the selected axis with
+a choice for optimized
+or more logarithmic labels;</para></listitem>
+<listitem><para>primary, secondary and tertiary axis divisions can be set via
+the three number fields;</para></listitem>
+<listitem><para>the axis title can be added or edited and the title’s color,
+position, offset, size and
+font can be set interactively;</para></listitem>
+<listitem><para>the color, size, and offset of axis labels can be set similarly.
+In addition, there is a
+check box for no exponent choice, and another one for setting the same decimal
+part for all labels.</para></listitem>
+</itemizedlist>
 </sect2>
 
 <sect2>
 <title>TPadEditor</title>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000D6.png" width="76.05pt" depth="126.75pt"/></imageobject></inlinemediaobject></para>
-<para> It provides the following user interface:</para>
-<para>  Fixed aspect ratio – can be set for pad resizing.</para>
-<para>  Edit – sets pad or canvas as editable.</para>
-<para>  Crosshair – sets a cross hair on the pad.</para>
-<para>  TickX – set ticks along the X axis.</para>
-<para>  TickY – set ticks along the Y axis.</para>
-<para>  GridX  – set a grid along the X axis.</para>
-<para>  GridY – set a grid along the  Y axis.</para>
-<para>  The pad or canvas border size can be set if a sinken or a raised border mode is</para>
-<para>  selected; no border mode can be set too.</para>
+<itemizedlist>
+<listitem><para>It provides the following user interface:</para></listitem>
+<listitem><para>Fixed aspect ratio – can be set for pad resizing.</para></listitem>
+<listitem><para>Edit – sets pad or canvas as editable.</para></listitem>
+<listitem><para>Cross-hair – sets a cross hair on the pad.</para></listitem>
+<listitem><para>TickX – set ticks along the X axis.</para></listitem>
+<listitem><para>TickY – set ticks along the Y axis.</para></listitem>
+<listitem><para>GridX  – set a grid along the X axis.</para></listitem>
+<listitem><para>GridY – set a grid along the  Y axis.</para></listitem>
+<listitem><para>The pad or canvas border size can be set if a sunken or a raised
+border mode is</para></listitem>
+<listitem><para>selected; no border mode can be set too.</para></listitem>
+</itemizedlist>
 </sect2>
 </sect1>
 
 <sect1>
 <title>Copy and Paste</title>
-<para>You can make a copy of a canvas using <emphasis role="bold"><code>TCanvas</code></emphasis><code>::DrawClonePad</code>. This method is unique to <emphasis role="bold"><code>TCanvas</code></emphasis>. It clones the entire canvas to the active pad. There is a more general method <emphasis role="bold"><code>TObject</code></emphasis><code>::DrawClone</code>, which all objects descendents of <emphasis role="bold"><code>TObject</code></emphasis>, specifically all graphic objects inherit. Below are two examples, one to show the use of <code>DrawClonePad</code> and the other to show the use of <code>DrawClone</code>.</para>
+<para>You can make a copy of a canvas using
+<emphasis role="bold"><code>TCanvas</code></emphasis><code>::DrawClonePad</code>.
+This method is unique to <emphasis role="bold"><code>TCanvas</code></emphasis>.
+It clones the entire canvas to the active pad. There is a more general method
+<emphasis role="bold"><code>TObject</code></emphasis><code>::DrawClone</code>,
+which all objects descendent of <emphasis role="bold"><code>TObject</code></emphasis>,
+specifically all graphic objects inherit. Below are two examples, one to show
+the use of <code>DrawClonePad</code> and the other to show the use of
+<code>DrawClone</code>.</para>
 
 <sect2>
 <title>Using the GUI</title>
-<para>In this example we will copy an entire canvas to a new one with <code>DrawClonePad</code>. Run the script <code>draw2dopt.C</code>.</para>
+<para>In this example we will copy an entire canvas to a new one with
+<code>DrawClonePad</code>. Run the script <code>draw2dopt.C</code>.</para>
 
 <programlisting language="c++">root[] .x tutorials/hist/draw2dopt.C
 </programlisting>
 
-<para>This creates a canvas with 2D histograms. To make a copy of the canvas follow the steps:</para>
+<para>This creates a canvas with 2D histograms. To make a copy of the canvas
+follow the steps:</para>
 <itemizedlist>
 <listitem><para>Right-click on it to bring up the context menu</para></listitem>
 <listitem><para>Select <code>DrawClonePad</code></para></listitem>
 </itemizedlist>
-<para>This copies the entire canvas and all its sub-pads to a new canvas. The copied canvas is a deep clone, and all the objects on it are copies and independent of the original objects. For instance, change the fill on one of the original histograms, and the cloned histogram retains its attributes. <code>DrawClonePad</code> will copy the canvas to the active pad; the target does not have to be a canvas. It can also be a pad on a canvas.</para>
+<para>This copies the entire canvas and all its sub-pads to a new canvas. The
+copied canvas is a deep clone, and all the objects on it are copies and
+independent of the original objects. For instance, change the fill on one of the
+original histograms, and the cloned histogram retains its attributes.
+<code>DrawClonePad</code> will copy the canvas to the active pad; the target
+does not have to be a canvas. It can also be a pad on a canvas.</para>
 
-<figure><title>Diferent draw options</title>
+<figure><title>Different draw options</title>
 <para>
 <inlinemediaobject><imageobject><imagedata fileref="pictures/030000D7.png" width="253.25pt" depth="191.15pt"/></imageobject></inlinemediaobject>
 </para>
 </figure>
 
-<para>If you want to copy and paste a graphic object from one canvas or pad to another canvas or pad, you can do so with <code>DrawClone</code> method inherited from <emphasis role="bold"><code>TObject</code></emphasis>. All graphics objects inherit the <emphasis role="bold"><code>TObject</code></emphasis><code>::DrawClone</code> method. In this example, we create a new canvas with one histogram from each of the canvases from the script <code>draw2dopt.C</code>.</para>
+<para>If you want to copy and paste a graphic object from one canvas or pad to
+another canvas or pad, you can do so with <code>DrawClone</code> method inherited
+from <emphasis role="bold"><code>TObject</code></emphasis>. All graphics objects
+inherit the <emphasis role="bold"><code>TObject</code></emphasis><code>::DrawClone</code>
+method. In this example, we create a new canvas with one histogram from each of
+the canvases from the script <code>draw2dopt.C</code>.</para>
 <itemizedlist>
-<listitem><para>Start a new ROOT session and execute the script <code>draw2dopt.C</code></para></listitem>
-<listitem><para>Select a canvas displayed by the script, and create a new canvas <code>c1</code> from the File menu.</para></listitem>
-<listitem><para>Make sure that the target canvas (<code>c1</code>) is the active one by middle clicking on it. If you do this step right after step 2, c1 will be active.</para></listitem>
-<listitem><para>Select the pad with the first histogram you want to copy and paste.</para></listitem>
-<listitem><para>Right click on it to show the context menu, and select <code>DrawClone</code>.</para></listitem>
+<listitem><para>Start a new ROOT session and execute the script
+<code>draw2dopt.C</code></para></listitem>
+<listitem><para>Select a canvas displayed by the script, and create a new canvas
+<code>c1</code> from the File menu.</para></listitem>
+<listitem><para>Make sure that the target canvas (<code>c1</code>) is the active
+one by middle clicking on it. If you do this step right after step 2, c1 will be
+active.</para></listitem>
+<listitem><para>Select the pad with the first histogram you want to copy and
+paste.</para></listitem>
+<listitem><para>Right click on it to show the context menu, and select
+<code>DrawClone</code>.</para></listitem>
 <listitem><para>Leave the option blank and hit OK.</para></listitem>
 </itemizedlist>
-<para>Repeat these steps for one histogram on each of the canvases created by the script, until you have one pad from each type. If you wanted to put the same annotation on each of the sub pads in the new canvas, you could use <code>DrawClone</code> to do so. Here we added the date to each pad. The steps to this are:</para>
+<para>Repeat these steps for one histogram on each of the canvases created by
+the script, until you have one pad from each type. If you wanted to put the same
+annotation on each of the sub pads in the new canvas, you could use
+<code>DrawClone</code> to do so. Here we added the date to each pad. The steps
+to this are:</para>
 <itemizedlist>
-<listitem><para>Create the label in on of the pads with the graphics editor.</para></listitem>
-<listitem><para>Middle-click on the target pad to make it the active pad</para></listitem>
-<listitem><para>Use <code>DrawClone</code> method of the label to draw it in each of the other panels.</para></listitem>
+<listitem><para>Create the label in on of the pads with the graphics
+editor.</para></listitem>
+<listitem><para>Middle-click on the target pad to make it the active
+pad</para></listitem>
+<listitem><para>Use <code>DrawClone</code> method of the label to draw it in
+each of the other panels.</para></listitem>
 </itemizedlist>
-<para>The option in the <code>DrawClone</code> method argument is the Draw option for a histogram or graph. A call to <emphasis role="bold"><code>TH1</code></emphasis><code>::DrawClone</code> can clone the histogram with a different draw option.</para>
+<para>The option in the <code>DrawClone</code> method argument is the Draw
+option for a histogram or graph. A call to
+<emphasis role="bold"><code>TH1</code></emphasis><code>::DrawClone</code> can
+clone the histogram with a different draw option.</para>
 </sect2>
 
 <sect2>
 <title>Programmatically</title>
-<para>To copy and paste the four pads from the command line or in a script you would execute the following statements:</para>
+<para>To copy and paste the four pads from the command line or in a script you
+would execute the following statements:</para>
 
-<programlisting language="c++">root[] <emphasis role="bold"><code>.x tutorials/</code></emphasis><emphasis role="bold"><code>hist/</code></emphasis><emphasis role="bold"><code>draw2dopt.C</code></emphasis>
-root[] <emphasis role="bold"><code>TCanvas c1("c1","Copy Paste",200,200,800,600);</code></emphasis>
-root[] <emphasis role="bold"><code>surfaces-&gt;cd(1);</code></emphasis> <emphasis role="italic"><code>// get the first pad</code></emphasis>
-root[] <emphasis role="bold"><code>TPad</code></emphasis><emphasis role="bold"><code> *p1 = gPad</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
-root[] <emphasis role="bold"><code>lego-&gt;cd(2);</code></emphasis><emphasis role="italic"><code>// get the next pad</code></emphasis>
-root[] <emphasis role="bold"><code>TPad *p2 = gPad;</code></emphasis>
-root[] <emphasis role="bold"><code>cont-&gt;cd(3);</code></emphasis><emphasis role="italic"><code>// get the next pad</code></emphasis>
-root[] <emphasis role="bold"><code>TPad *p3 = gPad;</code></emphasis>
-root[] <emphasis role="bold"><code>c2h-&gt;cd(4);</code></emphasis><emphasis role="italic"><code>// get the next pad</code></emphasis>
-root[] <emphasis role="bold"><code> TPad *p4 = gPad;</code></emphasis>
-root[] <emphasis role="italic"><code>// to draw the four clones</code></emphasis>
-root[] <emphasis role="bold"><code>c1-&gt;cd();</code></emphasis>
-root[] <emphasis role="bold"><code>p1-&gt;DrawClone();</code></emphasis>
-root[] <emphasis role="bold"><code>p2-&gt;DrawClone();</code></emphasis>
-root[] <emphasis role="bold"><code>p3-&gt;DrawClone();</code></emphasis>
-root[] <emphasis role="bold"><code>p4-&gt;DrawClone();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">.x tutorials/hist/draw2dopt.C</emphasis>
+root[] <emphasis role="bold">TCanvas c1("c1","Copy Paste",200,200,800,600);</emphasis>
+root[] <emphasis role="bold">surfaces-&gt;cd(1);</emphasis> <emphasis role="italic">// get the first pad</emphasis>
+root[] <emphasis role="bold">TPad *p1 = gPad;</emphasis>
+root[] <emphasis role="bold">lego-&gt;cd(2);</emphasis><emphasis role="italic">// get the next pad</emphasis>
+root[] <emphasis role="bold">TPad *p2 = gPad;</emphasis>
+root[] <emphasis role="bold">cont-&gt;cd(3);</emphasis><emphasis role="italic">// get the next pad</emphasis>
+root[] <emphasis role="bold">TPad *p3 = gPad;</emphasis>
+root[] <emphasis role="bold">c2h-&gt;cd(4);</emphasis><emphasis role="italic">// get the next pad</emphasis>
+root[] <emphasis role="bold">TPad *p4 = gPad;</emphasis>
+root[] <emphasis role="italic">// to draw the four clones</emphasis>
+root[] <emphasis role="bold">c1-&gt;cd();</emphasis>
+root[] <emphasis role="bold">p1-&gt;DrawClone();</emphasis>
+root[] <emphasis role="bold">p2-&gt;DrawClone();</emphasis>
+root[] <emphasis role="bold">p3-&gt;DrawClone();</emphasis>
+root[] <emphasis role="bold">p4-&gt;DrawClone();</emphasis>
 </programlisting>
 
-<para>Note that the pad is copied to the new canvas in the same location as in the old canvas. For example if you were to copy the third pad of <code>surf</code> to the top left corner of the target canvas you would have to reset the coordinates of the cloned pad.</para>
+<para>Note that the pad is copied to the new canvas in the same location as in
+the old canvas. For example if you were to copy the third pad of <code>surf</code>
+to the top left corner of the target canvas you would have to reset the
+coordinates of the cloned pad.</para>
 </sect2>
 </sect1>
 
 <sect1>
 <title>Legends</title>
-<para>Legends for a graph are obtained with a <emphasis role="bold"><code>TLegend</code></emphasis> object. This object points to markers, lines, boxes, histograms, graphs and represent their marker, line, fill attributes. Any object that has a marker or line or fill attribute may have an associated legend. A <emphasis role="bold"><code>TLegend</code></emphasis> is a panel with several entries (class <emphasis role="bold"><code>TLegendEntry</code></emphasis>) and is created by the constructor</para>
+<para>Legends for a graph are obtained with a
+<emphasis role="bold"><code>TLegend</code></emphasis> object. This object points
+to markers, lines, boxes, histograms, graphs and represent their marker, line,
+fill attributes. Any object that has a marker or line or fill attribute may have
+an associated legend. A <emphasis role="bold"><code>TLegend</code></emphasis> is
+a panel with several entries (class
+<emphasis role="bold"><code>TLegendEntry</code></emphasis>) and is created by
+the constructor</para>
 
 <programlisting language="c++">TLegend(Double_t x1,Double_t y1,Double_t x2,Double_t y2,const char *header,
 Option_t *option)
 </programlisting>
 
-<para>The legend is defined with default coordinates, border size and option. The legend coordinates (NDC) in the current pad are <code>x1</code>, <code>y1</code>, <code>x2</code>, <code>y2</code>. The default text attributes for the legend are:</para>
+<para>The legend is defined with default coordinates, border size and option.
+The legend coordinates (NDC) in the current pad are <code>x1</code>,
+<code>y1</code>, <code>x2</code>, <code>y2</code>. The default text attributes
+for the legend are:</para>
 <itemizedlist>
-<listitem><para>Alignment= 12 left adjusted and vertically centered</para></listitem>
+<listitem><para>Alignment = 12 left adjusted and vertically centered</para></listitem>
 <listitem><para>Angle = 0 (degrees)</para></listitem>
-<listitem><para>Color= 1 (black)</para></listitem>
+<listitem><para>Color = 1 (black)</para></listitem>
 <listitem><para>Size = calculate when number of entries is known</para></listitem>
-<listitem><para>Font = helvetica-medium-r-normal scalable font = 42, and bold = 62 for title</para></listitem>
+<listitem><para>Font = helvetica-medium-r-normal scalable font = 42, and bold = 62
+for title</para></listitem>
 </itemizedlist>
-<para>The title is a regular entry and supports <emphasis role="bold"><code>TLatex</code></emphasis>. The default is no title (<code>header = 0</code>). The options are the same as for <emphasis role="bold"><code>TPave</code></emphasis>; by default, they are "<code>brNDC</code>". Once the legend box is created, one has to add the text with the <code>AddEntry()</code> method:</para>
+<para>The title is a regular entry and supports
+<emphasis role="bold"><code>TLatex</code></emphasis>. The default is no title
+(<code>header = 0</code>). The options are the same as for
+<emphasis role="bold"><code>TPave</code></emphasis>; by default, they are
+"<code>brand</code>". Once the legend box is created, one has to add the text
+with the <code>AddEntry()</code> method:</para>
 
 <programlisting language="c++">TLegendEntry* TLegend::AddEntry(TObject *obj, const char *label,Option_t *option)
 </programlisting>
 
 <para>The parameters are:</para>
 <itemizedlist>
-<listitem><para><code>*obj </code>is a pointer to an object having marker, line, or fill attributes (a histogram, or a graph)</para></listitem>
-<listitem><para><code>label</code> is the label to be associated to the object</para></listitem>
+<listitem><para><code>*obj </code>is a pointer to an object having marker, line,
+or fill attributes (a histogram, or a graph)</para></listitem>
+<listitem><para><code>label</code> is the label to be associated to the
+object</para></listitem>
 <listitem><para><code>option</code>:</para></listitem>
-<listitem><para>”L” draw line associated with line attributes of <code>obj</code>, if <code>obj</code> inherits from <emphasis role="bold"><code>TAttLine</code></emphasis>.</para></listitem>
-<listitem><para>”P” draw poly-marker associated with marker attributes of <code>obj</code>, if <code>obj</code> inherits <emphasis role="bold"><code>TAttMarker</code></emphasis>.</para></listitem>
-<listitem><para>”F” draw a box with fill associated with fill attributes of <code>obj</code>, if <code>obj</code> inherits <emphasis role="bold"><code>TAttFill</code></emphasis>.</para></listitem>
+<listitem><para>”L” draw line associated with line attributes of
+<code>obj</code>, if <code>obj</code> inherits from
+<emphasis role="bold"><code>TAttLine</code></emphasis>.</para></listitem>
+<listitem><para>”P” draw poly-marker associated with marker attributes of
+<code>obj</code>, if <code>obj</code> inherits
+<emphasis role="bold"><code>TAttMarker</code></emphasis>.</para></listitem>
+<listitem><para>”F” draw a box with fill associated with fill attributes of
+<code>obj</code>, if <code>obj</code> inherits
+ <emphasis role="bold"><code>TAttFill</code></emphasis>.</para></listitem>
 </itemizedlist>
 <para>One may also use the other form of the method <code>AddEntry</code>:</para>
 
-<programlisting language="c++">TLegendEntry* TLegend::AddEntry(const char *name,const char *label,                    Option_t *option)
+<programlisting language="c++">TLegendEntry* TLegend::AddEntry(const char *name,const char *label, Option_t *option)
 </programlisting>
 
-<para>Here <code>name</code> is the name of the object in the pad. Other parameters are as in the previous case. Next example shows how to create a legend:</para>
+<para>Here <code>name</code> is the name of the object in the pad. Other
+parameters are as in the previous case. Next example shows how to create a
+legend:</para>
 
 <programlisting language="c++">leg = new TLegend(0.4,0.6,0.89,0.89);
 leg-&gt;AddEntry(fun1,"One Theory","l");
 leg-&gt;AddEntry(fun3,"Another Theory","f");
 leg-&gt;AddEntry(gr,"The Data","p");
 leg-&gt;Draw();
-<emphasis role="italic"><code>// oops we forgot the blue line... add it after</code></emphasis>
+<emphasis role="italic">// oops we forgot the blue line... add it after</emphasis>
 leg-&gt;AddEntry(fun2,"#sqrt{2#pi} P_{T} (#gamma) latex  formula","f");
-<emphasis role="italic"><code>// and add a header (or "title") for the legend</code></emphasis>
+<emphasis role="italic">// and add a header (or "title") for the legend</emphasis>
 leg-&gt;SetHeader("The Legend Title");
 leg-&gt;Draw();
 </programlisting>
 
-<para>Here <code>fun1</code>, <code>fun2</code>, <code>fun3</code> and <code>gr</code> are pre-existing functions and graphs. You can edit the <emphasis role="bold"><code>TLegend</code></emphasis> by right clicking on it.</para>
+<para>Here <code>fun1</code>, <code>fun2</code>, <code>fun3</code> and
+<code>gr</code> are pre-existing functions and graphs. You can edit the
+<emphasis role="bold"><code>TLegend</code></emphasis> by right clicking on it.</para>
 
 <figure><title>A legend example</title>
 <para>
@@ -3204,13 +3384,22 @@ leg-&gt;Draw();
 
 <sect1>
 <title>The PostScript Interface</title>
-<para>To generate a PostScript (or encapsulated PostScript) file for a single image in a canvas, you can:</para>
+<para>To generate a PostScript (or encapsulated PostScript) file for a single
+image in a canvas, you can:</para>
 <itemizedlist>
-<listitem><para>Select to print the canvas in the PostScript file format from the File menu / Save or Save As menu entries. By default, a PostScript file is generated, if you do not specify the file format.</para></listitem>
-<listitem><para>Click in the canvas area, near the edges, with the right mouse button and select the Print context menu entry. This will generate a file of canvas pointed to by c1. You can select the name of the PostScript file. If the file name is <code>xxx.ps</code>, you will generate a PostScript file named <code>xxx.ps</code>. If the file name is <code>xxx.eps</code>, you generate an encapsulated Postscript file instead. In your program (or script), you can type:</para></listitem>
+<listitem><para>Select to print the canvas in the PostScript file format from
+the File menu / Save or Save As menu entries. By default, a PostScript file is
+generated, if you do not specify the file format.</para></listitem>
+<listitem><para>Click in the canvas area, near the edges, with the right mouse
+button and select the Print context menu entry. This will generate a file of
+canvas pointed to by c1. You can select the name of the PostScript file. If the
+file name is <code>xxx.ps</code>, you will generate a PostScript file named
+<code>xxx.ps</code>. If the file name is <code>xxx.eps</code>, you generate an
+encapsulated Postscript file instead. In your program (or script), you can
+type:</para></listitem>
 </itemizedlist>
-<programlisting language="c++"><code>c1-&gt;Print("xxx.ps")    </code><emphasis role="italic"><code>// or</code></emphasis>
-<code>c1-&gt;Print("xxx.eps") </code>
+<programlisting language="c++">c1-&gt;Print("xxx.ps")<emphasis role="italic"> // or</emphasis>
+c1-&gt;Print("xxx.eps")
 </programlisting>
 
 <para>Next example prints the picture in the pad pointed by <code>pad1</code>.</para>
@@ -3218,7 +3407,8 @@ leg-&gt;Draw();
 <programlisting language="c++"><emphasis role="bold">pad1-&gt;Print("xxx.ps")</emphasis>
 </programlisting>
 
-<para>  The <emphasis role="bold"><code>TPad</code></emphasis><code>::Print </code>method has a second parameter called option. Its value can be:</para>
+<para>The <emphasis role="bold"><code>TPad</code></emphasis><code>::Print</code>
+method has a second parameter called option. Its value can be:</para>
 <itemizedlist>
 <listitem><para><code> 0</code>   which is the default and is the same as "<code>ps</code>"</para></listitem>
 <listitem><para>"<code>ps</code>" a Postscript file is produced</para></listitem>
@@ -3237,8 +3427,13 @@ leg-&gt;Draw();
 <listitem><para>"<code>tiff</code>" a Tagged-Image File Format</para></listitem>
 <listitem><para>“<code>root</code>”a ROOT binary file is produced</para></listitem>
 </itemizedlist>
-<para>You do not need to specify this second parameter; you can indicate by the filename extension what format you want to save a canvas in (i.e. <code>canvas.ps</code>, <code>canvas.gif</code>, <code>canvas.C</code>, etc).</para>
-<para>The size of the PostScript picture, by default, is computed to keep the aspect ratio of the picture on the screen, where the size along <code>x</code> is always 20 cm. You can set the size of the PostScript picture before generating the picture with a command such as:</para>
+<para>You do not need to specify this second parameter; you can indicate by the
+filename extension what format you want to save a canvas in (i.e.
+<code>canvas.ps</code>, <code>canvas.gif</code>, <code>canvas.C</code>, etc).</para>
+<para>The size of the PostScript picture, by default, is computed to keep the
+aspect ratio of the picture on the screen, where the size along <code>x</code>
+is always 20 cm. You can set the size of the PostScript picture before
+generating the picture with a command such as:</para>
 
 <programlisting language="c++">TPostScript myps("myfile.ps",111)
 myps.Range(xsize,ysize);
@@ -3251,8 +3446,8 @@ The first parameter in the
 <emphasis role="bold"><code>TPostScript</code></emphasis>
 constructor is the name of the file; the second one is the format option:</para>
 <itemizedlist>
-<listitem><para>111 - <code>ps</code>  <code>portrait</code></para></listitem>
-<listitem><para>112 - <code>ps</code>  <code>landscape</code></para></listitem>
+<listitem><para>111 - <code>ps portrait</code></para></listitem>
+<listitem><para>112 - <code>ps landscape</code></para></listitem>
 <listitem><para>113 - <code>eps</code></para></listitem>
 </itemizedlist>
 <para>You can set the default paper size with:</para>
@@ -3260,34 +3455,44 @@ constructor is the name of the file; the second one is the format option:</para>
 <programlisting language="c++">gStyle-&gt;SetPaperSize(xsize,ysize);
 </programlisting>
 
-<para>You can resume writing again in this file with <code>myps.Open()</code>. Note that you may have several Post Script files opened simultaneously. Use <emphasis role="bold"><code>TPostScript</code></emphasis><code>::Text(x,y,"string")</code> to add text to a postscript file. This method writes the string in quotes into a PostScript file at position <code>x, y</code> in world coordinates.</para>
+<para>You can resume writing again in this file with <code>myps.Open()</code>.
+Note that you may have several Post Script files opened simultaneously. Use
+<emphasis role="bold"><code>TPostScript</code></emphasis><code>::Text(x,y,"string")</code>
+to add text to a postscript file. This method writes the string in quotes into
+a PostScript file at position <code>x, y</code> in world coordinates.</para>
 
 <sect2>
 <title>Special Characters</title>
 <para>The following characters have a special action on the PostScript file:</para>
 <itemizedlist>
-<listitem><para><code>`</code>  - go to Greek</para></listitem>
-<listitem><para> <code>'</code> -  go to special</para></listitem>
-<listitem><para><code>~</code>  - go to Zapf Dingbats</para></listitem>
-<listitem><para><code>? </code>- go to subscript</para></listitem>
-<listitem><para><code>^ </code>- go to superscript</para></listitem>
-<listitem><para><code>!</code>  - go to normal level of script</para></listitem>
-<listitem><para><code>&amp;</code>  - backspace one character</para></listitem>
-<listitem><para><code>#</code>  - end of Greek or of <code>ZapfDingbats</code></para></listitem>
+<listitem><para><code>`</code> - go to Greek</para></listitem>
+<listitem><para><code>'</code> - go to special</para></listitem>
+<listitem><para><code>~</code> - go to Zapf Dingbats</para></listitem>
+<listitem><para><code>?</code> - go to subscript</para></listitem>
+<listitem><para><code>^</code> - go to superscript</para></listitem>
+<listitem><para><code>!</code> - go to normal level of script</para></listitem>
+<listitem><para><code>&amp;</code> - backspace one character</para></listitem>
+<listitem><para><code>#</code> - end of Greek or of <code>ZapfDingbats</code></para></listitem>
 </itemizedlist>
-<para>These special characters are printed as such on the screen. To generate one of these characters on the PostScript file, you must escape it with the escape character "@". The use of these special characters is illustrated in several scripts referenced by the <emphasis role="bold"><code>TPostScript</code></emphasis> constructor.</para>
+<para>These special characters are printed as such on the screen. To generate
+one of these characters on the PostScript file, you must escape it with the
+escape character "@". The use of these special characters is illustrated in
+several scripts referenced by the
+<emphasis role="bold"><code>TPostScript</code></emphasis> constructor.</para>
 </sect2>
 
 <sect2>
 <title>Writing Several Canvases to the Same PostScript File</title>
-<para>The following sequence writes the canvas to "<code>c1.ps</code>" and closes the postscript file:</para>
+<para>The following sequence writes the canvas to "<code>c1.ps</code>" and
+closes the postscript file:</para>
 
 <programlisting language="c++">TCanvas c1("c1");
 h1.Draw();
 c1.Print("c1.ps");
 </programlisting>
 
-<para>If the Postscript file name finishes with "<code>(</code>", the file remains opened (it is not closed). If the Postscript file name finishes with "<code>)</code>" and the file has been opened with "<code>(</code>", the file is closed.</para>
+<para>If the Postscript file name finishes with "<code>(</code>", the file
+remains opened (it is not closed). If the Postscript file name finishes with "<code>)</code>" and the file has been opened with "<code>(</code>", the file is closed.</para>
 
 <programlisting language="c++"><code>{  </code>
 <code>   TCanvas c1("c1");</code>
@@ -3302,13 +3507,13 @@ c1.Print("c1.ps");
 
 <para>The <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Print("file.ps(")</code>         mechanism is very useful, but it can be a little inconvenient to have the action of opening/closing a file being atomic with printing a page. Particularly if pages are being generated in some loop, one needs to detect the special cases of first and last page. The "<code>[</code>" and "<code>]</code>" can be used instead of "<code>(</code>" and "<code>)</code>" as shown in the next example.</para>
 
-<programlisting language="c++"><code>c1.Print("file.ps[");      </code><emphasis role="italic"><code>// no actual ptint; just open file.ps</code></emphasis>
+<programlisting language="c++"><code>c1.Print("file.ps[");      </code><emphasis role="italic"><code>// no actual print; just open file.ps</code></emphasis>
 <code>for (i=0; i&lt;10; ++i) {</code>
 <code>   // fill canvas for context i</code>
 <code>   ...</code>
-<code>   c1.Print("file.ps");   </code><emphasis role="italic"><code>// actualy print canvas to file.ps</code></emphasis>
+<code>   c1.Print("file.ps");   </code><emphasis role="italic"><code>// actually print canvas to file.ps</code></emphasis>
 <code>}  // end loop</code>
-<code>c1.Print("file.ps]");     </code><emphasis role="italic"><code>// no actual ptint; just close file.ps</code></emphasis>
+<code>c1.Print("file.ps]");     </code><emphasis role="italic"><code>// no actual print; just close file.ps</code></emphasis>
 </programlisting>
 
 <para>The following script illustrates how to open a postscript file and draw several pictures. The generation of a new postscript page is automatic when <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Clear</code> is called by <code>object-&gt;Draw()</code>.</para>
@@ -3463,7 +3668,7 @@ gStyle-&gt;SetLabelFont(72);
 <programlisting language="c++">gROOT-&gt;ForceStyle();
 </programlisting>
 
-<para>When you call <code>gROOT-&gt;ForceStyle()</code> and read an object from a ROOT file, the object’s method <code>UseCurrentStyle</code> is called. The attributes saved with the object are replaced by the current style attributes. You call also call <code>myObject-&gt;UseCurrentStyle()</code>         directly. For example if you have a canvas or pad with your histogram or any other object, you can force these objects to get the attributes of the current style by:</para>
+<para>When you call <code>gROOT-&gt;ForceStyle()</code> and read an object from a ROOT file, the object's method <code>UseCurrentStyle</code> is called. The attributes saved with the object are replaced by the current style attributes. You call also call <code>myObject-&gt;UseCurrentStyle()</code>         directly. For example if you have a canvas or pad with your histogram or any other object, you can force these objects to get the attributes of the current style by:</para>
 
 <programlisting language="c++">canvas-&gt;UseCurrentStyle();
 </programlisting>
@@ -3475,7 +3680,7 @@ gStyle-&gt;SetLabelFont(72);
 <listitem><para><emphasis role="bold"><code>TStyle</code></emphasis><code>::SetOptStat</code></para></listitem>
 <listitem><para><emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>  to change the colors palette</para></listitem>
 <listitem><para><emphasis role="bold"><code>TStyle</code></emphasis><code>::SetTitleOffset</code></para></listitem>
-<listitem><para><emphasis role="bold"><code>TSTyle</code></emphasis><code>::SetOptDate(Int_t optdate)</code> to support several date formats. If <code>optdate</code> is non-null, the current date/time will be printed in the canvas. The position of the date string can be controlled by: <code>optdate</code> <code>=</code> <code>10*format </code>+<code> mode</code></para></listitem>
+<listitem><para><emphasis role="bold"><code>TStyle</code></emphasis><code>::SetOptDate(Int_t optdate)</code> to support several date formats. If <code>optdate</code> is non-null, the current date/time will be printed in the canvas. The position of the date string can be controlled by: <code>optdate = 10*format </code>+<code> mode</code></para></listitem>
 <listitem><para><code>mode = 1</code>   the date is printed in the bottom/left corner</para></listitem>
 <listitem><para><code>mode = 2</code>   date is printed in the bottom/right corner</para></listitem>
 <listitem><para><code>mode = 3</code>   date is printed in the top/right corner</para></listitem>
@@ -3523,7 +3728,7 @@ gStyle-&gt;SetLabelFont(72);
 
 <sect2>
 <title>The GL Viewer</title>
-<para>The GL Viewer uses  <uri xmlns:xlink="http://www.opengl.org/">OpenGL®</uri> (or compliant libraries such as  <uri xmlns:xlink="http://www.mesa3d.org/">Mesa3D</uri>) to generate high quality, high-performance 3D renderings, with sophisticated lighting, materials and rendering styles for 3D scenes. Many users will be able to take advantage of hardware acceleration of the underlying OpenGL commands by their computer’s video card, resulting is considerable performance gains – up to interactive manipulation of 1000’s of complex shapes in real-time.</para>
+<para>The GL Viewer uses  <uri xmlns:xlink="http://www.opengl.org/">OpenGL®</uri> (or compliant libraries such as  <uri xmlns:xlink="http://www.mesa3d.org/">Mesa3D</uri>) to generate high quality, high-performance 3D renderings, with sophisticated lighting, materials and rendering styles for 3D scenes. Many users will be able to take advantage of hardware acceleration of the underlying OpenGL commands by their computer's video card, resulting is considerable performance gains – up to interactive manipulation of 1000’s of complex shapes in real-time.</para>
 <para>The GL Viewer is supported on all official ROOT platforms (assuming you have suitable  <uri xmlns:xlink="http://www.opengl.org/">OpenGL®</uri> libraries), and is the main 3D viewer, which development effort is concentrated upon. As OpenGL® is a trademark we refer to our viewer built on this technology as the ‘GL Viewer’. The code for it can be found under <code>$ROOTSYS/gl</code>.</para>
 
 <figure><title>The GL 3D Viewer</title>
@@ -3538,10 +3743,10 @@ gStyle-&gt;SetLabelFont(72);
 <title>Projections Modes (Cameras)</title>
 <para>The GL Viewer supports two basic types of camera, which affect how the 3D world is projected onto the 2D render area:</para>
 <itemizedlist>
-<listitem><para>Perspective: Objects are drawn with characteristic ‘foreshortening’ effect, where distant objects appear smaller than near ones. This is useful for obtaining a ‘realworld’ views. The degree of foreshortening is affected by the currentcamera field of view (focal length of its ‘lens’) – see “Adjusting Cameras”.</para></listitem>
+<listitem><para>Perspective: Objects are drawn with characteristic ‘foreshortening’ effect, where distant objects appear smaller than near ones. This is useful for obtaining a ‘real world’ views. The degree of foreshortening is affected by the current camera field of view (focal length of its ‘lens’) – see “Adjusting Cameras”.</para></listitem>
 <listitem><para>Orthographic: Distance from camera does not affect object size. These projections are useful for measurement or checking alignments, as the sizes and angles between objects are preserved.</para></listitem>
 </itemizedlist>
-<para>You can select the active camera from the viewer’s Camera menu on the top menu bar. There are three perspective camera choices:</para>
+<para>You can select the active camera from the viewer's Camera menu on the top menu bar. There are three perspective camera choices:</para>
 <itemizedlist>
 <listitem><para>Perspective (Floor XOZ) Default</para></listitem>
 <listitem><para>Perspective (Floor YOZ)</para></listitem>
@@ -3690,7 +3895,7 @@ v-&gt;GetClipSet()-&gt;SetClipState(<emphasis role="bold"><code>TGL</code></emph
 
 <sect3>
 <title>Manipulators</title>
-<para><emphasis role="italic">Manipulators</emphasis> are GUI ‘widgets’ or controls attached to a 3D object in the viewer, allowing a direct manipulation of the object’s geometry. There are three manipulators for the three basic geometries transformations. In each case, the <emphasis role="italic">manipulator</emphasis> consists of three components, one for each local axis of the object, shown in standard colors: red (X), green (Y) and blue (Z).</para>
+<para><emphasis role="italic">Manipulators</emphasis> are GUI ‘widgets’ or controls attached to a 3D object in the viewer, allowing a direct manipulation of the object's geometry. There are three manipulators for the three basic geometries transformations. In each case, the <emphasis role="italic">manipulator</emphasis> consists of three components, one for each local axis of the object, shown in standard colors: red (X), green (Y) and blue (Z).</para>
 
 <figure><title>GL Viewer object manipulators</title>
 <para>
@@ -3729,7 +3934,7 @@ v-&gt;SetGuideState(TGLUtil::kAxesEdge, kTRUE, refPos);
 
 <sect3>
 <title>Editing Shapes</title>
-<para>When a shape is selected, the viewer’s control pane shows the user interface that allows you to review and adjust the color and geometry properties of the shape.</para>
+<para>When a shape is selected, the viewer's control pane shows the user interface that allows you to review and adjust the color and geometry properties of the shape.</para>
 <para>Note: At present modifications to the shapes are local to the viewer – they are not propagated back to external objects/client that published to the viewer. The changes are preserved only until the viewer is closed. In some cases, this will never be feasible as there is not a one-to-one correspondence between a shape in the viewer and a single external object in which the modification could be stored.</para>
 </sect3>
 
@@ -3821,7 +4026,7 @@ shape.GetBuffer3D(reqSections, localFrame);
 <para>   5. Fill optional parts of TBuffer3D as requested by viewer.</para>
 <para>        [ .... repeat 3/4/5 as required for other/child objects]</para>
 <para>   6. End scene on viewer.</para>
-<para>You should attach the top-level node of your external geometry (or the manager) to a <emphasis role="bold"><code>TPad</code></emphasis> object using <emphasis role="bold"><code>TObject</code></emphasis><code>::Draw()</code>, and perform the publishing to the viewer in your object’s <emphasis role="bold"><code>TObject</code></emphasis><code>::Paint()</code> overloaded method. See “Scene Rebuilds”, and example scripts, for more details.</para>
+<para>You should attach the top-level node of your external geometry (or the manager) to a <emphasis role="bold"><code>TPad</code></emphasis> object using <emphasis role="bold"><code>TObject</code></emphasis><code>::Draw()</code>, and perform the publishing to the viewer in your object's <emphasis role="bold"><code>TObject</code></emphasis><code>::Paint()</code> overloaded method. See “Scene Rebuilds”, and example scripts, for more details.</para>
 
 <sect3>
 <title>Creating / Obtaining Viewer Handle</title>
