@@ -89,6 +89,8 @@ class ToyMCSampler: public TestStatSampler {
 	_gs2 = NULL ;
 	_gs3 = NULL ;
 	_gs4 = NULL ;
+
+	fUseMultiGen = kFALSE ;
       }
       ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
          fTestStat(&ts), fSamplingDistName(ts.GetVarName()), fNToys(ntoys)
@@ -121,13 +123,16 @@ class ToyMCSampler: public TestStatSampler {
 	_gs2 = NULL ;
 	_gs3 = NULL ;
 	_gs4 = NULL ;
+
+	fUseMultiGen = kFALSE ;
       }
 
 
       virtual ~ToyMCSampler() {
       }
 
-      static void setUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
+      static void setAlwaysUseMultiGen(Bool_t flag) { fAlwaysUseMultiGen = flag ; }
+      void setUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
 
       // main interface
       virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramPoint);
@@ -296,10 +301,11 @@ class ToyMCSampler: public TestStatSampler {
       mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3
       mutable RooAbsPdf::GenSpec* _gs4 ; //! GenSpec #4
       
-      static Bool_t fUseMultiGen ; // Use PrepareMultiGen?
+      static Bool_t fAlwaysUseMultiGen ;  // Use PrepareMultiGen always
+      Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 
    protected:
-   ClassDef(ToyMCSampler,1) // A simple implementation of the TestStatSampler interface
+   ClassDef(ToyMCSampler,2) // A simple implementation of the TestStatSampler interface
 };
 }
 

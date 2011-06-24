@@ -79,7 +79,8 @@ namespace RooStats {
      }
      void SetOneSided(Bool_t flag=true) {fOneSided = flag;}
 
-     static void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+     static void setAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
+     void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -96,7 +97,7 @@ namespace RooStats {
        RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
        // simple
-       Bool_t reuse=fReuseNll ;
+       Bool_t reuse=(fReuseNll || fAlwaysReuseNll) ;
        
        Bool_t created(kFALSE) ;
        if (!reuse || fNll==0) {
@@ -331,10 +332,11 @@ namespace RooStats {
       //      Double_t fLastMLE;
       Bool_t fOneSided;
 
-      static Bool_t fReuseNll ;
+      static Bool_t fAlwaysReuseNll ;
+      Bool_t fReuseNll ;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,3)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,4)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

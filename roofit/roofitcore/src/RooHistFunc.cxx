@@ -279,3 +279,18 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 }
 
 
+//______________________________________________________________________________
+void RooHistFunc::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooHistFunc.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooHistFunc::Class(),this);
+      // WVE - interim solution - fix proxies here
+      _proxyList.Clear() ;
+      registerProxy(_depList) ;
+   } else {
+      R__b.WriteClassBuffer(RooHistFunc::Class(),this);
+   }
+}
+

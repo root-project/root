@@ -78,7 +78,7 @@
 #pragma link C++ class RooNumCdf+ ;
 #pragma link C++ class RooChangeTracker+ ;
 #pragma link C++ class RooNumRunningInt+ ;
-#pragma link C++ class RooHistFunc+ ;
+#pragma link C++ class RooHistFunc- ;
 #pragma link C++ class RooExpensiveObjectCache+ ;
 #pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
 #pragma link C++ class std::map<std::string,RooAbsPdf*>+ ;

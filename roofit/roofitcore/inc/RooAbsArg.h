@@ -407,6 +407,7 @@ public:
   friend class RooListProxy ;
   friend class RooObjectFactory ;
   friend class RooHistPdf ;
+  friend class RooHistFunc ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   void registerProxy(RooListProxy& proxy) ;
