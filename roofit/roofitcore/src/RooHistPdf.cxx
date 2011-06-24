@@ -477,3 +477,19 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
   return kFALSE ;
 }
 
+
+//______________________________________________________________________________
+void RooHistPdf::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooHistPdf.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooHistPdf::Class(),this);
+      // WVE - interim solution - fix proxies here
+      _proxyList.Clear() ;
+      registerProxy(_pdfObsList) ;
+   } else {
+      R__b.WriteClassBuffer(RooHistPdf::Class(),this);
+   }
+}
+

@@ -406,6 +406,7 @@ public:
   friend class RooSetProxy ;
   friend class RooListProxy ;
   friend class RooObjectFactory ;
+  friend class RooHistPdf ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   void registerProxy(RooListProxy& proxy) ;
@@ -429,7 +430,6 @@ public:
   friend class RooTreeData ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
-  friend class RooHistPdf ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) = 0 ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
@@ -465,7 +465,7 @@ public:
 
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
-  ClassDef(RooAbsArg,5) // Abstract variable
+  ClassDef(RooAbsArg,4) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  

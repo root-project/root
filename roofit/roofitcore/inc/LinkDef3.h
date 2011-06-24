@@ -52,7 +52,7 @@
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
-#pragma link C++ class RooHistPdf+ ;
+#pragma link C++ class RooHistPdf- ;
 #pragma link C++ class RooCachedPdf+ ;
 #pragma link C++ class RooFFTConvPdf+ ;
 #pragma link C++ class RooDataHistSliceIter+ ;
