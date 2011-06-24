@@ -10,18 +10,18 @@ docbookdirs="/usr/share/xml/docbook/stylesheet/docbook-xsl \
 fopjars="/usr/share/java/fop.jar \
          /sw/share/java/fop/fop.jar"
 
-if [ -d $oxygendir ]; then
+if [ -d "$oxygendir" ]; then
    docbookdirs="$oxygendir/frameworks/docbook/xsl"
    fopjars="$oxygendir/lib/fop.jar"
 fi
 
 for d in $docbookdirs; do
-   if [ -d $d ]; then
+   if [ -d "$d" ]; then
       docbook=$d
    fi
 done
 
-if [ -z $docbook ]; then
+if [ -z "$docbook" ]; then
    echo "$0: no docbook installation found"
    exit 1
 fi
@@ -30,12 +30,12 @@ if `which fop > /dev/null 2>& 1`; then
    fop=`which fop`
 else
    for f in $fopjars; do
-      if [ -f $f ]; then
+      if [ -f "$f" ]; then
          fopjar=$f
       fi
    done
 
-   if [ -z $fopjar ]; then
+   if [ -z "$fopjar" ]; then
       echo "$0: no fop.jar file found"
       exit 1
    fi
@@ -49,11 +49,12 @@ xsltproc --xinclude --output ROOTUsersGuide.fo \
    $docbook/fo/docbook.xsl \
    ROOTUsersGuide.xml
 
-if [ -x $fop ]; then
+if [ -x "$fop" ]; then
    $fop ROOTUsersGuide.fo ROOTUsersGuide.pdf
 else
    java -Xmx1024m -jar $fopjar ROOTUsersGuide.fo ROOTUsersGuide.pdf
 fi
+
 rm ROOTUsersGuide.fo
 
 exit 0
