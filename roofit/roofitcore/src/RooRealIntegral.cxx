@@ -1122,3 +1122,18 @@ void RooRealIntegral::printMultiline(ostream& os, Int_t contents, Bool_t verbose
 
 
 
+//_____________________________________________________________________________
+void RooRealIntegral::setCacheAllNumeric(Int_t ndim) {
+  // Global switch to cache all integral values that integrate at least ndim dimensions numerically 
+  _cacheAllNDim = ndim ;
+}
+
+
+//_____________________________________________________________________________
+Int_t RooRealIntegral::getCacheAllNumeric() 
+{
+  // Return minimum dimensions of numeric integration for which values are cached. 
+  return _cacheAllNDim ;
+}
+
+

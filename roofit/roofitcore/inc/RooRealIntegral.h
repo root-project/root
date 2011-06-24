@@ -64,15 +64,9 @@ public:
     return _cacheNum ;
   }
 
-  static void setCacheAllNumeric(Int_t ndim) {
-    // Global switch to cache all integral values that integrate at least ndim dimensions numerically 
-    _cacheAllNDim = ndim ;
-  }
+  static void setCacheAllNumeric(Int_t ndim) ;
 
-  static Int_t getCacheAllNumeric() {
-    // Return minimum dimensions of numeric integration for which values are cached. 
-    return _cacheAllNDim ;
-  }
+  static Int_t getCacheAllNumeric() ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
     // Forward plot sampling hint of integrand
