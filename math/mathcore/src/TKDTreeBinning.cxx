@@ -18,6 +18,7 @@
 #include "TKDTreeBinning.h"
 
 #include "Fit/BinData.h"
+#include "TRandom.h"
 
 ClassImp(TKDTreeBinning)
 
@@ -56,7 +57,7 @@ struct TKDTreeBinning::CompareDesc {
    const TKDTreeBinning* bins;
 };
 
-TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins)
+TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins, bool adjustBinEdges)
 // Class's constructor taking the size of the data points, dimension, a data array and the number 
 // of bins (default = 100). It is reccomended to have the number of bins as an exact divider of 
 // the data size.  
@@ -70,6 +71,7 @@ TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, 
 : fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fDim(dataDim),
 fDataSize(dataSize), fDataThresholds(std::vector<std::pair<Double_t, Double_t> >(fDim, std::make_pair(0., 0.))),
 fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
+   if (adjustBinEdges) SetBit(kAdjustBinEdges);
    if (data) {
       SetData(data);
       SetNBins(nBins);
@@ -195,6 +197,7 @@ void TKDTreeBinning::SetBinsContent() {
 
 void TKDTreeBinning::SetBinsEdges() {
    // Sets the bins' edges
+   //Double_t* rawBinEdges = fDataBins->GetBoundaryExact(fDataBins->GetNNodes());
    Double_t* rawBinEdges = fDataBins->GetBoundary(fDataBins->GetNNodes());
    fCheckedBinEdges = std::vector<std::vector<std::pair<Bool_t, Bool_t> > >(fDim, std::vector<std::pair<Bool_t, Bool_t> >(fNBins, std::make_pair(kFALSE, kFALSE)));
    fCommonBinEdges = std::vector<std::map<Double_t, std::vector<UInt_t> > >(fDim, std::map<Double_t, std::vector<UInt_t> >());
@@ -242,13 +245,19 @@ void TKDTreeBinning::SetCommonBinEdges(Double_t* binEdges) {
 }
 
 void TKDTreeBinning::ReadjustMinBinEdges(Double_t* binEdges) {
-   // Readjusts the bins' minimum edge
+   // Readjusts the bins' minimum edge by shifting it slightly lower 
+   // to avoid overlapping with the data
    for (UInt_t i = 0; i < fDim; ++i) {
       for (UInt_t j = 0; j < fNBins; ++j) {
          if (!fCheckedBinEdges[i][j].first) {
             Double_t binEdge = binEdges[(j * fDim + i) * 2];
             Double_t adjustedBinEdge = binEdge;
-            adjustedBinEdge -= 1.5 * std::numeric_limits<Double_t>::epsilon();
+            double eps = -10*std::numeric_limits<Double_t>::epsilon();
+            if (adjustedBinEdge != 0) 
+               adjustedBinEdge *= (1. + eps);
+            else 
+               adjustedBinEdge += eps;
+
             for (UInt_t k = 0; k < fCommonBinEdges[i][binEdge].size(); ++k) {
                UInt_t binEdgePos = fCommonBinEdges[i][binEdge][k];
                Bool_t isMinBinEdge = binEdgePos % 2 == 0;
@@ -266,11 +275,18 @@ void TKDTreeBinning::ReadjustMinBinEdges(Double_t* binEdges) {
 
 void TKDTreeBinning::ReadjustMaxBinEdges(Double_t* binEdges) {
    // Readjusts the bins' maximum edge
+   // and shift it sligtly higher
    for (UInt_t i = 0; i < fDim; ++i) {
       for (UInt_t j = 0; j < fNBins; ++j) {
          if (!fCheckedBinEdges[i][j].second) {
             Double_t& binEdge = binEdges[(j * fDim + i) * 2 + 1];
-            binEdge += 1.5 * std::numeric_limits<Double_t>::epsilon();
+            double eps = 10*std::numeric_limits<Double_t>::epsilon();
+            if (binEdge != 0) 
+               binEdge *= (1. + eps);
+            else 
+               binEdge += eps;
+
+
          }
       }
    }
@@ -360,6 +376,7 @@ UInt_t TKDTreeBinning::GetBinContent(UInt_t bin) const {
    this->Info("GetBinContent", "'bin' is between 0 and %d.", fNBins - 1);
    return 0;
 }
+
 
 TKDTreeID* TKDTreeBinning::GetTree() const {
    // Returns the kD-Tree structure of the binning
