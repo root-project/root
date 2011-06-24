@@ -216,22 +216,28 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
 
    Double_t t1 = 1.0;
    Double_t t2 = 0.0;
-   for (Int_t i = 0; (i < n) && (t1 != zero); i++) {
-      if (TMath::Abs(diag(i)) > tol) {
-         t1 *= (Double_t) diag(i);
-         while (TMath::Abs(t1) > one) {
-            t1 *= sixteenth;
-            t2 += four;
-         }
-         while (TMath::Abs(t1) < sixteenth) {
-            t1 *= sixteen;
-            t2 -= four;
-         }
-      } else {
-         t1 = zero;
-         t2 = zero;
-      }
-   }
+   Int_t niter2 =0; 
+   Int_t niter3 =0; 
+   for (Int_t i = 0; (((i < n) && (t1 !=zero ))); i++) { 
+      if (TMath::Abs(diag(i)) > tol) { 
+         t1 *= (Double_t) diag(i); 
+         while ( TMath::Abs(t1) < one) { 
+            t1 *= sixteenth; 
+            t2 += four; 
+            niter2++; 
+            if ( niter2>100) break; 
+         } 
+         while ( TMath::Abs(t1) < sixteenth)  { 
+            t1 *= sixteen; 
+            t2 -= four; 
+            niter3++; 
+            if (niter3>100) break; 
+         } 
+      } else { 
+         t1 = zero; 
+         t2 = zero; 
+      } 
+   } 
    d1 = t1;
    d2 = t2;
 
