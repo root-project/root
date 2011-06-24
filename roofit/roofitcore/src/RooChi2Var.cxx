@@ -222,10 +222,10 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
     Double_t eExt = nPdf-nData ;
 
-    Double_t eIntLo,eIntHi ;
-    hdata->weightError(eIntLo,eIntHi,_etype) ;
-    Double_t eInt = (eExt>0) ? eIntHi : eIntLo ;
-
+    // Double_t eIntLo,eIntHi ;
+//     hdata->weightError(eIntLo,eIntHi,_etype) ;
+//     Double_t eInt = (eExt>0) ? eIntHi : eIntLo ;
+    Double_t eInt = sqrt(nPdf) ;
     
     // Skip cases where pdf=0 and there is no data
     if (eInt==0. && nData==0. && nPdf==0) continue ;
@@ -233,7 +233,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
       coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
-		  << " has zero error, but function is not zero (" << nPdf << ")" << endl ;
+		  << " has zero error" << endl ;
       return 0 ;
     }
 

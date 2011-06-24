@@ -2119,3 +2119,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   }
   return string(instName) ;    
 }
+
+
+RooFactoryWSTool* RooFactoryWSTool::of() 
+{
+  return _of ;
+}
+

@@ -213,8 +213,8 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
     Double_t asym = 1.0*(N)/(N+M) ;
     Double_t approxErr = sqrt(4.0*n/(N+M)*(1-N/(N+M))/(N+M)) ;
 
-    asym1 = asym-nSigma*approxErr ;
-    asym2 = asym+nSigma*approxErr ;
+    asym1 = asym-nSigma*0.5*approxErr ;
+    asym2 = asym+nSigma*0.5*approxErr ;
     return kTRUE ;
   }
 
@@ -233,10 +233,10 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
   Double_t eff = (Double_t)(n)/(n+m) ;
   if(n > 0) {
     BinomialSumEff lower(n-1,m+1);
-    status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma*0.5);
   }
   else {
-    status= getInterval(&upper,0,eff,0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,0,eff,0.1,asym1,asym2,nSigma*0.5);
   }
 
   // undo the swap here

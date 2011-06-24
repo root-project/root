@@ -52,7 +52,7 @@
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
-#pragma link C++ class RooHistPdf+ ;
+#pragma link C++ class RooHistPdf- ;
 #pragma link C++ class RooCachedPdf+ ;
 #pragma link C++ class RooFFTConvPdf+ ;
 #pragma link C++ class RooDataHistSliceIter+ ;
@@ -78,7 +78,7 @@
 #pragma link C++ class RooNumCdf+ ;
 #pragma link C++ class RooChangeTracker+ ;
 #pragma link C++ class RooNumRunningInt+ ;
-#pragma link C++ class RooHistFunc+ ;
+#pragma link C++ class RooHistFunc- ;
 #pragma link C++ class RooExpensiveObjectCache+ ;
 #pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
 #pragma link C++ class std::map<std::string,RooAbsPdf*>+ ;

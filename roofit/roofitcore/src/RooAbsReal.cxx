@@ -248,6 +248,19 @@ Double_t RooAbsReal::getVal(const RooArgSet* nset) const
 }
 
 
+//_____________________________________________________________________________
+Int_t RooAbsReal::numEvalErrorItems() 
+{ 
+  return _evalErrorList.size() ; 
+}
+
+
+//_____________________________________________________________________________
+RooAbsReal::EvalErrorIter RooAbsReal::evalErrorIter() 
+{ 
+  return _evalErrorList.begin() ; 
+} 
+
 
 //_____________________________________________________________________________
 Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const

@@ -589,6 +589,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
   Bool_t allValid ;
 
+  Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   for(Int_t i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
@@ -597,8 +598,13 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       continue ; 
     }
 
-    
-    _varsww.assignValueOnly(((RooTreeDataStore*)ads)->_varsww) ;
+
+    if (isTDS) {
+      _varsww.assignValueOnly(((RooTreeDataStore*)ads)->_varsww) ;
+    } else {
+      _varsww.assignValueOnly(*ads->get()) ;
+    }
+
     destIter->Reset() ;
     // Check that all copied values are valid
     allValid=kTRUE ;

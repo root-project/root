@@ -254,11 +254,11 @@ public:
   static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=0) ;
   static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
-  static Int_t numEvalErrorItems() { return _evalErrorList.size() ; }
+  static Int_t numEvalErrorItems() ;
 
    
   typedef std::map<const RooAbsArg*,std::pair<std::string,std::list<EvalError> > >::const_iterator EvalErrorIter ; 
-  static EvalErrorIter evalErrorIter() { return _evalErrorList.begin() ; } 
+  static EvalErrorIter evalErrorIter() ;
 
   static void clearEvalErrorLog() ;
 
