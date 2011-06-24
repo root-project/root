@@ -58,6 +58,7 @@ class ProofConfig {
       }
 
       virtual ~ProofConfig() {
+         ProofConfig::CloseProof();
       }
 
       /// close all proof connections

@@ -78,10 +78,6 @@ public:
 
    HypoTestResult * GetLastResult( ) const  { return GetResult(  fXValues.size()-1); }
 
-   // get expected lower limit distributions
-   SamplingDistribution* GetLowerLimitDistribution() const { return 0; }// not yet implemented 
-
-
    // number of entries in the results array
    int ArraySize() const { return fXValues.size(); };
 
@@ -109,20 +105,37 @@ public:
    Double_t UpperLimitEstimatedError();
 
    // return expected distribution of p-values (Cls or Clsplusb)
-   SamplingDistribution * GetExpectedDistribution(int index) const; 
+   
+   SamplingDistribution * GetExpectedPValueDist(int index) const; 
 
-   SamplingDistribution * GetBackgroundDistribution(int index = 0) const; 
+   SamplingDistribution * GetBackgroundTestStatDist(int index ) const; 
 
-   SamplingDistribution * GetSignalAndBackgroundDistribution(int index) const; 
+   SamplingDistribution * GetSignalAndBackgroundTestStatDist(int index) const; 
+
+   // same in terms of alt and null
+   SamplingDistribution * GetNullTestStatDist(int index) const { 
+      return  GetSignalAndBackgroundTestStatDist(index);
+   }
+   SamplingDistribution * GetAltTestStatDist(int index) const { 
+      return  GetBackgroundTestStatDist(index);
+   }
+
+   // get expected lower limit distributions
+   // implemented using interpolation
+   SamplingDistribution* GetLowerLimitDistribution( ) const { return GetLimitDistribution(true); }
 
    // get expected upper limit distributions
    // implemented using interpolation
-   SamplingDistribution* GetUpperLimitDistribution( ) const;
+   SamplingDistribution* GetUpperLimitDistribution( ) const { return GetLimitDistribution(false); }
+
+   // get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
+   double GetExpectedLowerLimit(double nsig = 0) const ; 
 
    // get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
    double GetExpectedUpperLimit(double nsig = 0) const ; 
 
-   double FindInterpolatedLimit(double target);
+
+   double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0);
 
    enum InterpolOption_t { kLinear, kSpline };
 
@@ -139,7 +152,11 @@ private:
    double CalculateEstimatedError(double target);
    int FindClosestPointIndex(double target);
 
-   double GetGraphX(const TGraph & g, double y0) const;
+   SamplingDistribution* GetLimitDistribution(bool lower ) const;
+
+   double GetExpectedLimit(double nsig, bool lower ) const ; 
+
+   double GetGraphX(const TGraph & g, double y0, bool lowSearch = false, double xmin=1, double xmax=0) const;
 
  
 protected:
@@ -163,7 +180,7 @@ protected:
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,1)  // HypoTestInverterResult class      
+   ClassDef(HypoTestInverterResult,2)  // HypoTestInverterResult class      
 };
 }
 

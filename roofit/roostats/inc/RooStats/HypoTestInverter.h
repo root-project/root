@@ -80,7 +80,7 @@ public:
 
    bool RunFixedScan( int nBins, double xMin, double xMax ) const;
 
-   bool RunOnePoint( double thisX, bool afaptive = false, double clTarget = -1 ) const;
+   bool RunOnePoint( double thisX, bool adaptive = false, double clTarget = -1 ) const;
 
    //bool RunAutoScan( double xMin, double xMax, double target, double epsilon=0.005, unsigned int numAlgorithm=0 );
 
@@ -108,6 +108,10 @@ public:
    // it might be invalid when the class is deleted
    HypoTestCalculatorGeneric * GetHypoTestCalculator() const { return fCalculator0; }
 
+   // get the upper/lower limit distribution 
+   SamplingDistribution * GetLowerLimitDistribution(bool rebuild=false);
+   SamplingDistribution * GetUpperLimitDistribution(bool rebuild=false);
+
    // get the test statistic
    TestStatistic * GetTestStatistic() const;
 
@@ -117,6 +121,8 @@ public:
    // set verbose level (0,1,2)
    void SetVerbose(int level=1) { fVerbose = level; }
 
+   // set maximum number of toys 
+   void SetMaximumToys(int ntoys) { fMaxToys = ntoys;}
 
   
 protected:
@@ -144,7 +150,8 @@ private:
     
     
    // performance counter: remember how many toys have been thrown
-   mutable unsigned int fTotalToysRun;
+   mutable int fTotalToysRun;
+   int fMaxToys;  // maximum number of toys to run 
     
    HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
    auto_ptr<HypoTestCalculatorGeneric> fHC;

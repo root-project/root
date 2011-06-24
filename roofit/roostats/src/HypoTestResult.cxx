@@ -104,34 +104,34 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    // if no data is present use the other HypoTestResult's data
    if(IsNaN(fTestStatisticData)) fTestStatisticData = other->GetTestStatisticData();
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, fPValueIsRightTail);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, !fPValueIsRightTail);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
 
 
 //____________________________________________________________________
 void HypoTestResult::SetAltDistribution(SamplingDistribution *alt) {
    fAltDistr = alt;
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, !fPValueIsRightTail);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
 //____________________________________________________________________
 void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
    fNullDistr = null;
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, fPValueIsRightTail);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
 }
 //____________________________________________________________________
 void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
    fTestStatisticData = tsd;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, fPValueIsRightTail);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, !fPValueIsRightTail);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
 //____________________________________________________________________
 void HypoTestResult::SetPValueIsRightTail(Bool_t pr) {
    fPValueIsRightTail = pr;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, fPValueIsRightTail);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, !fPValueIsRightTail);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
 }
 
 //____________________________________________________________________
@@ -184,33 +184,23 @@ Double_t HypoTestResult::CLsError() const {
 
 // private
 //____________________________________________________________________
-void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, Bool_t pIsRightTail) {
+void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, Bool_t isNull) {
    // updates the pvalue if sufficient data is available
 
    if(IsNaN(fTestStatisticData)) return;
+   if(!distr) return;
 
    /* Got to be careful for discrete distributions:
-    * To get the right behaviour for limits, the p-value for the Null must not
-    * include the value of fTestStatistic (ie the value is in the confidence level),
-    * but for the Alt, it must be included.
-    *
-    * Technical note: to find out, whether we are doing the calc for Null or Alt,
-    * we compare the pIsRightTail given to this function to fPValueIsRightTail which
-    * always refers to the Null. Therefore, if they are equal it is the Null, if not
-    * it is the Alt.
+    * To get the right behaviour for limits, the p-value must 
+    * include the value of fTestStatistic both for Alt and Null cases
     */
-   if(distr) {
-      if(pIsRightTail) {
-         pvalue = distr->IntegralAndError(perror, fTestStatisticData, RooNumber::infinity(), kTRUE,
-            pIsRightTail == fPValueIsRightTail ? kFALSE : kTRUE,     // lowClosed
-            kTRUE       // highClosed
-         ); // [or( fTestStatistic, inf ]
-      }else{
-         pvalue = distr->IntegralAndError(perror, -RooNumber::infinity(), fTestStatisticData, kTRUE,
-            kTRUE,      // lowClosed
-            pIsRightTail == fPValueIsRightTail ? kFALSE : kTRUE      // highClosed
-         ); // [ -inf, fTestStatistic )or]
-      }
+   if(fPValueIsRightTail) {
+      pvalue = distr->IntegralAndError(perror, fTestStatisticData, RooNumber::infinity(), kTRUE,
+                                       kTRUE , kTRUE );   // always closed interval [ fTestStatistic, inf ] 
+
+   }else{
+      pvalue = distr->IntegralAndError(perror, -RooNumber::infinity(), fTestStatisticData, kTRUE,
+                                       kTRUE,  kTRUE  ); // // always closed  [ -inf, fTestStatistic ]
    }
 }
 

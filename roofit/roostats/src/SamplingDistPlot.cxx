@@ -232,6 +232,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    GetAbsoluteInterval(theMin, theMax, theYMax);
 
    RooRealVar xaxis("xaxis", fVarName.Data(), theMin, theMax);
+
+   //L.M. by drawing many times we create a memory leak ???
+   if (fRooPlot) delete fRooPlot;
+
+
    fRooPlot = xaxis.frame();
    fRooPlot->SetTitle("");
    fRooPlot->SetMaximum(theYMax);
@@ -240,13 +245,17 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    TH1F *obj = 0;
    while ((obj = (TH1F*) fIterator->Next())) {
       //obj->Draw(fIterator->GetOption());
-      fRooPlot->addTH1(obj, fIterator->GetOption());
+      // add cloned objects to avoid mem leaks
+      TH1 * cloneObj = (TH1*)obj->Clone();
+      cloneObj->SetDirectory(0);
+      fRooPlot->addTH1(cloneObj, fIterator->GetOption());
    }
 
    TIterator *otherIt = fOtherItems.MakeIterator();
    TObject *otherObj = NULL;
    while ((otherObj = otherIt->Next())) {
-      fRooPlot->addObject(otherObj, otherIt->GetOption());
+      TObject * cloneObj = otherObj->Clone();
+      fRooPlot->addObject(cloneObj, otherIt->GetOption());
    }
    delete otherIt;
 
