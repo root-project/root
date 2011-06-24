@@ -925,7 +925,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 	newSet.add(*arg) ;
       }
     }
-
+    delete iter ;
+    
 //     cout << "RooAbsArg::redirect with name change(" << GetName() << ") newSet = " << newSet << " origSet = " << newSetOrig << endl ;
 
   } else {
