@@ -184,7 +184,7 @@ Double_t HypoTestResult::CLsError() const {
 
 // private
 //____________________________________________________________________
-void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, Bool_t isNull) {
+void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, Bool_t /*isNull*/) {
    // updates the pvalue if sufficient data is available
 
    if(IsNaN(fTestStatisticData)) return;
