@@ -63,7 +63,8 @@ public:
 
   class GenSpec {
   public:
-    ~GenSpec() ;
+    virtual ~GenSpec() ;
+    GenSpec() { _genContext = 0 ; _protoData = 0 ; }
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, Bool_t extended, 
 	    Bool_t randProto, Bool_t resampleProto, TString dsetName) ;
@@ -78,6 +79,7 @@ public:
     Bool_t _randProto ;
     Bool_t _resampleProto ;
     TString _dsetName ;    
+    ClassDef(GenSpec,0) // Generation specification
   } ;
 
   GenSpec* prepareMultiGen(const RooArgSet &whatVars,  

@@ -38,9 +38,9 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardBayesianMCMCDemo(const char* infile = "",
-		      const char* workspaceName = "proto",
+		      const char* workspaceName = "combined",
 		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "expData"){
+		      const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
@@ -48,7 +48,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   ////////////////////////////////////////////////////////////
   const char* filename = "";
   if (!strcmp(infile,""))
-    filename = "results/example_channel1_GammaExample_model.root";
+    filename = "results/example_combined_GaussExample_model.root";
   else
     filename = infile;
   // Check if example input file exists

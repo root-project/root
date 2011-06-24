@@ -459,7 +459,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 	TString nameAttrib("ORIGNAME:") ;
 	nameAttrib.Append(node->GetName()) ;
 	clone->setAttribute(nameAttrib) ;
-	specNode->setStringAttribute("ORIGNAME",node->GetName()) ;
+	//specNode->setStringAttribute("ORIGNAME",node->GetName()) ;
 
 	// Add to one-time use list and life-time use list
 	clonedMasterNodes.add(*clone) ;

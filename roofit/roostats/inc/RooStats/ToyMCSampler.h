@@ -83,6 +83,12 @@ class ToyMCSampler: public TestStatSampler {
          fProtoData = NULL;
 
          fProofConfig = NULL;
+
+	_allVars = NULL ;
+	_gs1 = NULL ;
+	_gs2 = NULL ;
+	_gs3 = NULL ;
+	_gs4 = NULL ;
       }
       ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
          fTestStat(&ts), fSamplingDistName(ts.GetVarName()), fNToys(ntoys)
@@ -109,11 +115,19 @@ class ToyMCSampler: public TestStatSampler {
          fProtoData = NULL;
 
          fProofConfig = NULL;
+
+	_allVars = NULL ;
+	_gs1 = NULL ;
+	_gs2 = NULL ;
+	_gs3 = NULL ;
+	_gs4 = NULL ;
       }
 
 
       virtual ~ToyMCSampler() {
       }
+
+      static void setUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
 
       // main interface
       virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramPoint);
@@ -271,6 +285,18 @@ class ToyMCSampler: public TestStatSampler {
       const RooDataSet *fProtoData; // in dev
 
       ProofConfig *fProofConfig;   //!
+
+      // objects below cache information and are mutable and non-persistent
+      mutable RooArgSet* _allVars ; //! 
+      mutable list<RooAbsPdf*> _pdfList ; //!
+      mutable list<RooArgSet*> _obsList ; //!
+      mutable list<RooAbsPdf::GenSpec*> _gsList ; //!      
+      mutable RooAbsPdf::GenSpec* _gs1 ; //! GenSpec #1 
+      mutable RooAbsPdf::GenSpec* _gs2 ; //! GenSpec #2
+      mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3
+      mutable RooAbsPdf::GenSpec* _gs4 ; //! GenSpec #4
+      
+      static Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 
    protected:
    ClassDef(ToyMCSampler,1) // A simple implementation of the TestStatSampler interface

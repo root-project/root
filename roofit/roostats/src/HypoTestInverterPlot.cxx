@@ -20,6 +20,7 @@
 // include header file of this class 
 #include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HypoTestInverterResult.h"
+#include "RooStats/HypoTestPlot.h"
 
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
@@ -145,16 +146,16 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    if (doFirstBand) {
       g1 = new TGraphAsymmErrors(nEntries);
       if (nsig1 - int(nsig1) < 0.01) 
-         g1->SetTitle(TString::Format("Expected %s %d #sigma",pValueName.Data(),int(nsig1)) );
+         g1->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig1)) );
       else
-         g1->SetTitle(TString::Format("Expected %s %3.1f #sigma",pValueName.Data(),nsig1) );
+         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig1) );
    }
    if (doSecondBand) { 
       g2 = new TGraphAsymmErrors(nEntries);
       if (nsig2 - int(nsig2) < 0.01) 
-         g2->SetTitle(TString::Format("Expected %s %d #sigma",pValueName.Data(),int(nsig2)) );
+         g2->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig2)) );
       else 
-         g2->SetTitle(TString::Format("Expected %s %3.1f #sigma",pValueName.Data(),nsig2) );
+         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig2) );
    }
    double p[7]; 
    double q[7];
@@ -165,7 +166,7 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    p[4] = ROOT::Math::normal_cdf(nsig2);
    for (int j=0; j<nEntries; ++j) {
       int i = index[j]; // i is the order index 
-      SamplingDistribution * s = fResults->GetExpectedDistribution(i);
+      SamplingDistribution * s = fResults->GetExpectedPValueDist(i);
       const std::vector<double> & values = s->GetSamplingDistribution();
       double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
       TMath::Quantiles(values.size(), 5, x,q,p,false);
@@ -272,8 +273,6 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       gplot->GetYaxis()->SetTitle("p value");
    }
 
-   // draw again observed values otherwise will be covered by the bands
-   if (gobs) gobs->Draw("PL"); 
 
    TGraph *gclb = 0;
    if (drawCLb) { 
@@ -281,6 +280,8 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       if (gDirectory) gDirectory->Add(gclb); 
       gclb->SetMarkerColor(kBlue+4);
       gclb->Draw("PL");
+      // draw in red observed cls or clsb
+      gobs->SetMarkerColor(kRed);
    }
    TGraph * gclsb = 0;
    TGraph * gcls = 0;
@@ -300,6 +301,12 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
          gcls->SetLineStyle(3);
       }
    }
+   // draw again observed values otherwise will be covered by the bands
+   if (gobs) { 
+      gobs->Draw("PL"); 
+   }
+
+
    TLegend * l = new TLegend(0.6,0.6,0.9,0.9);
    if (gobs) l->AddEntry(gobs,"","PEL");
    if (gclsb) l->AddEntry(gclsb,"","PEL");
@@ -319,4 +326,35 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    // redraw the axis 
    if (gPad) gPad->RedrawAxis();
 
+}
+
+SamplingDistPlot * HypoTestInverterPlot::MakeTestStatPlot(int index, int type, int nbins) { 
+   // plot the test statistic distributions
+   // type =0  null and alt 
+   // type = 1 only null (S+B)
+   // type = 2 only alt  (B)
+   SamplingDistPlot * pl = 0;
+   if (type == 0) {  
+      HypoTestResult * result = (HypoTestResult*) fResults->fYObjects.At(index);
+      if (result) 
+         pl = new HypoTestPlot(*result, nbins );
+      return pl;
+   }
+   if (type == 1) { 
+      SamplingDistribution * sbDist = fResults->GetSignalAndBackgroundTestStatDist(index);
+      if (sbDist) { 
+         pl = new SamplingDistPlot( nbins);
+         pl->AddSamplingDistribution(sbDist);
+         return pl;
+      }
+   }
+   if (type == 2) { 
+      SamplingDistribution * bDist = fResults->GetBackgroundTestStatDist(index);
+      if (bDist) { 
+         pl = new SamplingDistPlot( nbins);
+         pl->AddSamplingDistribution(bDist);
+         return pl;
+      }
+   }
+   return 0; 
 }

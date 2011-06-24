@@ -39,20 +39,17 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardBayesianNumericalDemo(const char* infile = "",
-		      const char* workspaceName = "proto",
+		      const char* workspaceName = "combined",
 		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "expData"){
+		      const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
-
-  // note, use a different default file that BayesianCalculator can 
-  // deal with.  The direct numeric integration is limited to a few dimensions
   const char* filename = "";
-  if (!strcmp(infile,"")) 
-    filename = "results/example_channel1_ConstExample_model.root";
+  if (!strcmp(infile,""))
+    filename = "results/example_combined_GaussExample_model.root";
   else
     filename = infile;
   // Check if example input file exists

@@ -19,6 +19,7 @@
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
+#include "TRefArray.h"
 #include "RooPrintable.h"
 #include "RooRefCountList.h"
 #include "RooAbsCache.h"
@@ -464,7 +465,7 @@ public:
 
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
-  ClassDef(RooAbsArg,4) // Abstract variable
+  ClassDef(RooAbsArg,5) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  

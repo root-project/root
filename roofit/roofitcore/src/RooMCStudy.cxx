@@ -178,7 +178,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   RooArgSet allConstraints ;
   RooArgSet consPars ;
   if (cPars) {
-    RooArgSet* constraints = model.getConstraints(observables,*cPars,kTRUE) ;
+    RooArgSet* constraints = model.getAllConstraints(observables,*cPars,kTRUE) ;
     if (constraints) {
       allConstraints.add(*constraints) ;
       delete constraints ;
@@ -1010,7 +1010,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 
 
 //_____________________________________________________________________________
-const RooDataSet* RooMCStudy::genData(Int_t sampleNum) const 
+const RooAbsData* RooMCStudy::genData(Int_t sampleNum) const 
 {
   // Return the given generated dataset. This method will only return datasets
   // if during the run cycle it was indicated that generator data should be saved.
@@ -1027,7 +1027,7 @@ const RooDataSet* RooMCStudy::genData(Int_t sampleNum) const
     return 0 ;
   }
   
-  return (RooDataSet*) _genDataList.At(sampleNum) ;
+  return  (RooAbsData*) _genDataList.At(sampleNum) ;
 }
 
 

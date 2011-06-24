@@ -8,6 +8,41 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+The p-value of the null for a given test statistic is rigorously defined and
+this is the starting point for the following conventions.
+</p>
+
+<h3>Conventions used in this class</h3>
+<p>
+The p-value for the null and alternate are on the <b>same side</b> of the
+observed value of the test statistic. This is the more standard
+convention and avoids confusion when doing inverted tests.
+</p>
+<p>
+For exclusion, we also want the formula
+CLs = CLs+b / CLb to hold which therefore defines our conventions
+for CLs+b and CLb. CLs was specifically invented for exclusion
+and therefore all quantities need be related through the assignments
+as they are for exclusion: <b>CLs+b = p_{s+b}; CLb = p_b</b>. This
+is derived by considering the scenarios of a powerful and not powerful
+inverted test, where for the not so powerful test, CLs must be
+close to one.
+</p>
+<p>
+For results of Hypothesis tests,
+CLs has no similar direct interpretation as for exclusion and can
+be larger than one.
+</p>
+
+END_HTML
+*/
+//
+
+
 #ifndef ROOSTATS_HypoTestResult
 #define ROOSTATS_HypoTestResult
 
@@ -48,10 +83,10 @@ namespace RooStats {
       virtual Double_t AlternatePValue() const { return fAlternatePValue; }
 
       // Convert  NullPValue into a "confidence level"
-      virtual Double_t CLb() const { return !fBackgroundIsAlt ? 1.-NullPValue() : AlternatePValue(); }
+      virtual Double_t CLb() const { return !fBackgroundIsAlt ? NullPValue() : AlternatePValue(); }
 
       // Convert  AlternatePValue into a "confidence level"
-      virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : 1.-NullPValue(); }
+      virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : NullPValue(); }
 
       // CLs is simply CLs+b/CLb (not a method, but a quantity)
       virtual Double_t CLs() const {

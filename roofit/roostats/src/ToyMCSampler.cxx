@@ -149,7 +149,7 @@ class NuisanceParametersSampler {
 
 
 
-
+Bool_t ToyMCSampler::fUseMultiGen = kFALSE ;
 
 Bool_t ToyMCSampler::CheckConfig(void) {
    // only checks, no guessing/determination (do this in calculators,
@@ -190,20 +190,22 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    fNToys = (int)ceil((double)fNToys / (double)fProofConfig->GetNExperiments()); // round up
 
    // create the study instance for parallel processing
-   ToyMCStudy toymcstudy;
-   toymcstudy.SetToyMCSampler(*this);
-   toymcstudy.SetParamPointOfInterest(paramPointIn);
+   ToyMCStudy* toymcstudy = new ToyMCStudy ;
+   toymcstudy->SetToyMCSampler(*this);
+   toymcstudy->SetParamPoint(paramPointIn);
 
    // temporary workspace for proof to avoid messing with TRef
    RooWorkspace w(fProofConfig->GetWorkspace());
-   RooStudyManager studymanager(w, toymcstudy);
+   RooStudyManager studymanager(w, *toymcstudy);
    studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost(), fProofConfig->GetShowGui());
 
    SamplingDistribution *result = new SamplingDistribution(GetSamplingDistName().c_str(), GetSamplingDistName().c_str());
-   toymcstudy.merge(*result);
+   toymcstudy->merge(*result);
 
    // reset the number of toys
    fNToys = totToys;
+
+   delete toymcstudy ;
 
    return result;
 }
@@ -376,33 +378,37 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& /*nullPOI*/) const {
       RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>(fPdf);
       if(!simPdf){
 	RooDataSet *one = fPdf->generate(*fGlobalObservables, 1);
+	
 	const RooArgSet *values = one->get();
-	RooArgSet *allVars = fPdf->getVariables();
-	*allVars = *values;
-	delete allVars;
-	delete values;
+	if (!_allVars) {
+	  _allVars = fPdf->getVariables();
+	}
+	*_allVars = *values;
 	delete one;
+
       } else {
 
-         //try fix for sim pdf
-         TIterator* iter = simPdf->indexCat().typeIterator() ;
-         RooCatType* tt = NULL;
-         while((tt=(RooCatType*) iter->Next())) {
-            
-            // Get pdf associated with state from simpdf
-            RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
-            
-            // Generate only global variables defined by the pdf associated with this state
-            RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables) ;
-            RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
-	  
-            // Transfer values to output placeholder
-            *globtmp = *tmp->get(0) ;
-            
-            // Cleanup
-            delete globtmp ;
-            delete tmp ;
-         }
+	if (_pdfList.size()==0) {
+	  TIterator* citer = simPdf->indexCat().typeIterator() ;
+	  RooCatType* tt = NULL;
+	  while((tt=(RooCatType*) citer->Next())) {
+	    RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
+	    RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables) ;
+	    RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp,RooFit::NumEvents(1)) ;
+	    _pdfList.push_back(pdftmp) ;
+	    _obsList.push_back(globtmp) ;
+	    _gsList.push_back(gs) ;
+	  }
+	}
+
+	list<RooArgSet*>::iterator oiter = _obsList.begin() ;
+	list<RooAbsPdf::GenSpec*>::iterator giter = _gsList.begin() ;
+	for (list<RooAbsPdf*>::iterator iter = _pdfList.begin() ; iter != _pdfList.end() ; ++iter, ++giter, ++oiter) {
+	  //RooDataSet* tmp = (*iter)->generate(**oiter,1) ;	  
+	  RooDataSet* tmp = (*iter)->generate(**giter) ;
+	  **oiter = *tmp->get(0) ;
+	  delete tmp ;	  
+	}	
       }
    } 
    
@@ -469,8 +475,23 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
             if(protoData) data = pdf.generateBinned(observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true));
             else          data = pdf.generateBinned(observables, RooFit::Extended());
          }else{
-            if(protoData) data = pdf.generate      (observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true));
-            else          data = pdf.generate      (observables, RooFit::Extended());
+	   if(protoData) {
+	     if (fUseMultiGen) {
+	       if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true)) ; }
+	       data = pdf.generate(*_gs2) ;
+	     } else {
+	       data = pdf.generate      (observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true));
+	     }
+	   }
+            else  {
+	      if (fUseMultiGen) {
+		if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables,RooFit::Extended()) ; }
+		data = pdf.generate(*_gs1) ;
+	      } else {
+		data = pdf.generate      (observables, RooFit::Extended());
+	      }
+
+	    }
          }
       }else{
          oocoutE((TObject*)0,InputArguments)
@@ -482,11 +503,24 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
          if(protoData) data = pdf.generateBinned(observables, events, RooFit::ProtoData(*protoData, true, true));
          else          data = pdf.generateBinned(observables, events);
       }else{
-         if(protoData) data = pdf.generate      (observables, events, RooFit::ProtoData(*protoData, true, true));
-         else          data = pdf.generate      (observables, events);
+	if(protoData) {
+	  if (fUseMultiGen) {
+	    if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, RooFit::NumEvents(events), RooFit::ProtoData(*protoData, true, true)); }
+	    data = pdf.generate(*_gs3) ;
+	  } else {
+	    data = pdf.generate      (observables, events, RooFit::ProtoData(*protoData, true, true));
+	  }
+	} else {
+	  if (fUseMultiGen) {	    
+	    if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, RooFit::NumEvents(events)); }
+	    data = pdf.generate(*_gs4) ;
+	  } else {
+	    data = pdf.generate      (observables, events);
+	  }
+	}
       }
    }
-
+   
    return data;
 }
 

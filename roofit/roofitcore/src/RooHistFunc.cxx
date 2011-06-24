@@ -166,7 +166,8 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // Simplest scenario, integrate over all dependents
   RooAbsCollection *allVarsCommon = allVars.selectCommon(_depList) ;  
-  Bool_t intAllObs = (allVarsCommon->getSize()==_depList.getSize()) ;
+  Bool_t intAllObs = (allVarsCommon->getSize()==_depList.getSize()) ;  
+  delete allVarsCommon ;
   if (intAllObs && matchArgs(allVars,analVars,_depList)) {
     return 1000 ;
   }

@@ -78,6 +78,8 @@ namespace RooStats {
        if(fCachedBestFitParams) delete fCachedBestFitParams;
      }
      void SetOneSided(Bool_t flag=true) {fOneSided = flag;}
+
+     static void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -93,18 +95,38 @@ namespace RooStats {
        RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
        RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-
        // simple
-       RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(kFALSE));
-       RooAbsReal* profile = nll->createProfile(paramsOfInterest);
+       Bool_t reuse=fReuseNll ;
+       
+       Bool_t created(kFALSE) ;
+       if (!reuse || fNll==0) {
+	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
+	 created = kTRUE ;
+	 //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
+       }
+       if (reuse && !created) {
+	 //cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
+	 fNll->setData(data,kFALSE) ;
+ 	 if (fProfile) delete fProfile ; 
+ 	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest) ; 
+	 //fProfile->clearAbsMin() ;
+       }
+
+
        // make sure we set the variables attached to this nll
-       RooArgSet* attachedSet = nll->getVariables();
+       RooArgSet* attachedSet = fNll->getVariables();
+
        *attachedSet = paramsOfInterest;
+
+
        //       fPdf->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       profile->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       ((RooProfileLL*)profile)->nll().setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       nll->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
-       double ret = profile->getVal();
+       //cout << "evaluating profile LL" << endl ;
+       double ret = fProfile->getVal();
+       //       cout << "profile value = " << ret << endl ;
        //       cout <<"eval errors pdf = "<<fPdf->numEvalErrors() << endl;
        //       cout <<"eval errors profile = "<<profile->numEvalErrors() << endl;
        //       cout <<"eval errors profile->nll = "<<((RooProfileLL*)profile)->nll().numEvalErrors() << endl;
@@ -115,31 +137,35 @@ namespace RooStats {
        //       cout << "ret = " << ret << endl;
 
        if(fOneSided){
-	 double fit_favored_mu = ((RooProfileLL*) profile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
+	 double fit_favored_mu = ((RooProfileLL*) fProfile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
        
 	 if( fit_favored_mu > initial_mu_value)
 	   // cout <<"fit-favored_mu, initial value" << fit_favored_mu << " " << initial_mu_value<<endl;
 	   ret = 0 ;
        }
        delete attachedSet;
-       delete nll;
-       nll = 0; 
-       delete profile;
+
+       if (!reuse) {
+	 //cout << "deleting ProfileLL " << fNll << " " << fProfile << endl ;
+	 delete fNll;
+	 fNll = 0; 
+	 delete fProfile;
+	 fProfile = 0 ;
+       }
+
        RooMsgService::instance().setGlobalKillBelow(msglevel);
-       
+
        //////////////////////////////////////////////////////
        // return here and forget about the following code
        return ret;
-
-
-
-
+       
 
 
        //////////////////////////////////////////////////////////
        // OLD version with some handling for local minima
        // (not used right now)
        /////////////////////////////////////////////////////////
+
 
          bool needToRebuild = true; // try to avoid rebuilding if possible
 
@@ -212,13 +238,13 @@ namespace RooStats {
                RooArgSet* origParamVals = (RooArgSet*) paramsOfInterest.snapshot();
 
                // find minimum
-               RooMinuit minuit(*nll);
+               RooMinuit minuit(*fNll);
                minuit.setPrintLevel(-999);
                minuit.setNoWarn();
                minuit.migrad();
 
                // store the best fit values for future use
-               fCachedBestFitParams = (RooArgSet*) (nll->getParameters(data)->snapshot());
+               fCachedBestFitParams = (RooArgSet*) (fNll->getParameters(data)->snapshot());
 
                // restore parameters
                SetParameters(origParamVals, &paramsOfInterest);
@@ -285,6 +311,9 @@ namespace RooStats {
          //       cout << "now profileLL = " << value << endl;
          RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG);
          return value;
+
+
+       
       }
 
     
@@ -294,16 +323,18 @@ namespace RooStats {
 
 
    private:
-      RooProfileLL* fProfile;
+      RooProfileLL* fProfile; //!
       RooAbsPdf* fPdf;
-      RooNLLVar* fNll;
+      RooNLLVar* fNll; //!
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      Double_t fLastMLE;
       Bool_t fOneSided;
 
+      static Bool_t fReuseNll ;
+
    protected:
-      ClassDef(ProfileLikelihoodTestStat,2)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,3)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

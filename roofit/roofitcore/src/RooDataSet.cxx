@@ -931,6 +931,11 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   if (cutSpec) {
     select = new RooFormula("select",cutSpec,*get()) ;
   }
+  
+  // Shortcut for unweighted unselected datasets
+  if (!select && !cutRange && !isWeighted()) {
+    return numEntries() ;
+  }
 
   // Otherwise sum the weights in the event
   Double_t sumw(0) ;

@@ -68,7 +68,7 @@ class ToyMCStudy: public RooAbsStudy {
       Bool_t merge(SamplingDistribution& result);
 
       void SetToyMCSampler(ToyMCSampler& t) { fToyMCSampler = &t; }
-      void SetParamPointOfInterest(const RooArgSet& poi) { fParamPointOfInterest.add(poi); }
+      void SetParamPoint(const RooArgSet& poi) { fParamPointOfInterest.add(poi); }
 
    protected:
 

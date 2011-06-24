@@ -43,6 +43,8 @@ public:
 
   void clearAbsMin() { _absMinValid = kFALSE ; }
 
+  Int_t numEval() const { return _neval ; }
+
 
 protected:
 
@@ -63,7 +65,7 @@ protected:
   mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
   mutable RooArgSet _obsAbsMin ; // Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
-  
+  mutable Int_t _neval ; // Number evaluations used in last minimization
   Double_t evaluate() const ;
 
 

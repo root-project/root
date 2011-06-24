@@ -200,7 +200,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   if (_simCount>1) {
     result += sumWeight*log(1.0*_simCount) ;
   }
-
+  
   //cout << "RooNLLVar(first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << endl ;
 
   return result ;

@@ -155,7 +155,8 @@
 
 ClassImp(RooAbsPdf) 
 ;
-
+ClassImp(RooAbsPdf::GenSpec)
+;
 
 Int_t RooAbsPdf::_verboseEval = 0;
 Bool_t RooAbsPdf::_evalError = kFALSE ;
@@ -1699,7 +1700,9 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
   // combination than calling the standard generate() multiple times as 
   // initialization overhead is only incurred once.
 
-  Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
+  //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
+  Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
+
 
   return generate(*spec._genContext,spec._whatVars,spec._protoData,
 		  nEvt,kFALSE,spec._randProto,spec._resampleProto) ;
