@@ -47,6 +47,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          fFirstEval = true;
          fNullParameters = NULL;
          fAltParameters = NULL;
+	 fReuseNll=kFALSE ;
+	 fNllNull=NULL ;
+	 fNllAlt=NULL ;
       }
 
       //__________________________________
@@ -69,6 +72,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
          fNullParameters = (RooArgSet*) fNullPdf->getVariables()->snapshot();
          fAltParameters = (RooArgSet*) fAltPdf->getVariables()->snapshot();
+	 fReuseNll=kFALSE ;
+	 fNllNull=NULL ;
+	 fNllAlt=NULL ;
       }
       //__________________________________
       SimpleLikelihoodRatioTestStat(
@@ -93,13 +99,21 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
          fNullParameters = (RooArgSet*) nullParameters.snapshot();
          fAltParameters = (RooArgSet*) altParameters.snapshot();
+	 fReuseNll=kFALSE ;
+	 fNllNull=NULL ;
+	 fNllAlt=NULL ;
       }
 
       //______________________________
       virtual ~SimpleLikelihoodRatioTestStat() {
          if (fNullParameters) delete fNullParameters;
          if (fAltParameters) delete fAltParameters;
+	 if (fNllNull) delete fNllNull ;
+	 if (fNllAlt) delete fNllAlt ;
       }
+
+     static void setAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
+     void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
 
       //_________________________________________
       void SetNullParameters(const RooArgSet& nullParameters) {
@@ -149,24 +163,40 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
          RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-         RooAbsReal *nll;
-         nll = fNullPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	 Bool_t reuse = (fReuseNll || fAlwaysReuseNll) ;
+
+	 Bool_t created = kFALSE ;
+	 if (!fNllNull) {
+	   fNllNull = (RooNLLVar*) fNullPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	   created = kTRUE ;
+	 }
+	 if (reuse && !created) {
+	   fNllNull->setData(data, kFALSE) ;
+	 }
+
          // make sure we set the variables attached to this nll
-         RooArgSet* attachedSet = nll->getVariables();
+         RooArgSet* attachedSet = fNllNull->getVariables();
          *attachedSet = *fNullParameters;
          *attachedSet = nullPOI;
-         double nullNLL = nll->getVal();
+         double nullNLL = fNllNull->getVal();
 
-         delete nll;
+         delete fNllNull ; fNllNull = NULL ;
          delete attachedSet;
 
-         nll = fAltPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	 created = kFALSE ;
+	 if (!fNllAlt) {
+	   fNllAlt = (RooNLLVar*) fAltPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	   created = kTRUE ;
+	 }
+	 if (reuse && !created) {
+	   fNllAlt->setData(data, kFALSE) ;
+	 }
          // make sure we set the variables attached to this nll
-         attachedSet = nll->getVariables();
+         attachedSet = fNllAlt->getVariables();
          *attachedSet = *fAltParameters;
-         double altNLL = nll->getVal();
+         double altNLL = fNllAlt->getVal();
 
-         delete nll;
+         delete fNllAlt ; fNllAlt = NULL ;
          delete attachedSet;
 
          RooMsgService::instance().setGlobalKillBelow(msglevel);
@@ -186,6 +216,12 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       RooArgSet* fNullParameters;
       RooArgSet* fAltParameters;
       bool fFirstEval;
+
+      RooNLLVar* fNllNull ;
+      RooNLLVar* fNllAlt ;
+      static Bool_t fAlwaysReuseNll ;
+      Bool_t fReuseNll ;
+
 
    protected:
    ClassDef(SimpleLikelihoodRatioTestStat,1)

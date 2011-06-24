@@ -1,4 +1,4 @@
 
 #include "RooStats/ProfileLikelihoodTestStat.h"
 
-Bool_t RooStats::ProfileLikelihoodTestStat::fReuseNll = kFALSE ;
+Bool_t RooStats::ProfileLikelihoodTestStat::fAlwaysReuseNll = kFALSE ;
