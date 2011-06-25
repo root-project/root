@@ -532,7 +532,7 @@ int main(int argc,const char *argv[]) {
       s1=a.testAddition   (v1, t, t1, "Addition TLorentzVector      " );  
       s2=a.testAddition   (v2, t, t2, "Addition XYZTVector          "  ); 
       s3=a.testAddition   (v3, t, t3, "Addition PtEtaPhiEVector     " );       
-      a.check("Addition",s1,s2,s3);
+      a.check("Addition",s1,s2,s3,10);
 
 
       s1=a.testScale   (v1, t, t1, "Scale of TLorentzVector      " );  
@@ -543,12 +543,7 @@ int main(int argc,const char *argv[]) {
       s1=a.testDeltaR   (v1, t, t1,      "DeltaR   TLorentzVector      " );  
       s2=a.testDeltaR   (v2, t, t2,      "DeltaR   XYZTVector          " ); 
       s3=a.testDeltaR   (v3, t, t3,      "DeltaR   PtEtaPhiEVector     " ); 
-#ifdef WIN32
-      //windows is bad here 
       a.check("DeltaR",s1,s2,s3,10);      
-#else
-      a.check("DeltaR",s1,s2,s3);      
-#endif
 
 
       int n1, n2, n3; 
