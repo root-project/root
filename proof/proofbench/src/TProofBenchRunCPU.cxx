@@ -85,7 +85,6 @@ TProofBenchRunCPU::~TProofBenchRunCPU()
    // Destructor
    fProof=0;
    fDirProofBench=0;
-   if (fListPerfPlots) fListPerfPlots->SetOwner(kFALSE);
    SafeDelete(fListPerfPlots);
    SafeDelete(fCanvas);
    SafeDelete(fNodes);
@@ -408,6 +407,8 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          fDirProofBench->mkdir(dirn, "RunCPU results");
       if (fDirProofBench->cd(dirn)) {
          fListPerfPlots->Write(0, kOverwrite);
+         fListPerfPlots->SetOwner(kFALSE);
+         fListPerfPlots->Clear();
       } else {
          Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
       }

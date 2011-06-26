@@ -6554,7 +6554,6 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   if (SendResults(fSocket, mergerPlayer->GetOutputList()) != 0)
                      Warning("HandleSubmerger","kBeMerger: problems sending output list");
                   mergerPlayer->GetOutputList()->SetOwner(kTRUE);
-                  delete mergerPlayer;
 
                   PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: results sent to master");
                   // Signal the master that we are idle
@@ -6570,7 +6569,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   deleteplayer = kFALSE;
                }
                // Reset
-               mergerPlayer->ResetBit(TVirtualProofPlayer::kIsSubmerger);
+               SafeDelete(mergerPlayer);
             } else {
                Error("HandleSubmerger","kSendOutput: received not on worker");
             }
