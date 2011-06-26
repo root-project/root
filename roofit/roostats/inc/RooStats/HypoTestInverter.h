@@ -65,6 +65,7 @@ public:
 		      RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist, 
 		     double size = 0.05) ;
 
+
    virtual HypoTestInverterResult* GetInterval() const; 
 
    void Clear();
@@ -88,7 +89,7 @@ public:
 
    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 
-   virtual void  SetData(RooAbsData &) { } // not needed
+   virtual void  SetData(RooAbsData &);
      
    virtual void SetModel(const ModelConfig &) { } // not needed 
 
@@ -109,8 +110,12 @@ public:
    HypoTestCalculatorGeneric * GetHypoTestCalculator() const { return fCalculator0; }
 
    // get the upper/lower limit distribution 
-   SamplingDistribution * GetLowerLimitDistribution(bool rebuild=false);
-   SamplingDistribution * GetUpperLimitDistribution(bool rebuild=false);
+   SamplingDistribution * GetLowerLimitDistribution(bool rebuild=false, int nToys = 100);
+   SamplingDistribution * GetUpperLimitDistribution(bool rebuild=false, int nToys = 100);
+
+   // function to rebuild the distributions
+   SamplingDistribution * RebuildDistributions(bool isUpper=true, int nToys = 100, 
+                                               TList * clsDist = 0, TList *clsbDist= 0, TList * clbDist = 0);
 
    // get the test statistic
    TestStatistic * GetTestStatistic() const;
@@ -124,8 +129,16 @@ public:
    // set maximum number of toys 
    void SetMaximumToys(int ntoys) { fMaxToys = ntoys;}
 
+   // set numerical error in test statistic evaluation (default is zero)
+   void SetNumErr(double err) { fNumErr = err; }
   
 protected:
+
+   // copy c-tor 
+   HypoTestInverter(const HypoTestInverter & rhs);
+
+   // assignment 
+   HypoTestInverter & operator=(const HypoTestInverter & rhs);
     
    void CreateResults() const; 
 
@@ -165,6 +178,7 @@ private:
    int fNBins;
    double fXmin; 
    double fXmax; 
+   double fNumErr;
 
 protected:
 

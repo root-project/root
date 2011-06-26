@@ -147,13 +147,14 @@ HypoTestInverter::HypoTestInverter( ) :
    fSize(0),
    fVerbose(0),
    fCalcType(kUndefined), 
-   fNBins(0), fXmin(1), fXmax(1)
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
 {
   // default constructor (doesn't do anything) 
 }
 
 HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
-                                          RooRealVar* scannedVariable, double size ) :
+                                    RooRealVar* scannedVariable, double size ) :
    fTotalToysRun(0),
    fMaxToys(0),
    fCalculator0(0),
@@ -163,9 +164,17 @@ HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
    fSize(size),
    fVerbose(0),
    fCalcType(kUndefined), 
-   fNBins(0), fXmin(1), fXmax(1)
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
 {
-   // get scanned variabke
+   // Constructor from a HypoTestCalculatorGeneric
+   // The HypoTest calculator must be a FrequentistCalculator or HybridCalculator type 
+   // Other type of calculators are not supported.
+   // The calculator must be created before by using the S+B model for the null and 
+   // the B model for the alt
+   // If no variable to scan are given they are assumed to be the first variable
+   // from the parameter of interests of the null model
+
    if (!fScannedVariable) { 
       fScannedVariable = HypoTestInverter::GetVariableToScan(hc);
    }
@@ -174,8 +183,6 @@ HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
    else 
       CheckInputModels(hc,*fScannedVariable);
 
-
-   // constructor from a generic HypoTestInverter
    HybridCalculator * hybCalc = dynamic_cast<HybridCalculator*>(&hc);
    if (hybCalc) { 
       fCalcType = kHybrid;
@@ -203,10 +210,15 @@ HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
    fSize(size),
    fVerbose(0),
    fCalcType(kHybrid), 
-   fNBins(0), fXmin(1), fXmax(1)
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
 {
-   // constructor from a reference to an HybridCalculator
-   // get scanned variabke
+   // Constructor from a reference to a HybridCalculator 
+   // The calculator must be created before by using the S+B model for the null and 
+   // the B model for the alt
+   // If no variable to scan are given they are assumed to be the first variable
+   // from the parameter of interests of the null model
+
    if (!fScannedVariable) { 
       fScannedVariable = GetVariableToScan(hc);
    }
@@ -221,7 +233,7 @@ HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
 
 
 HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
-                                          RooRealVar* scannedVariable, double size ) :
+                                    RooRealVar* scannedVariable, double size ) :
    fTotalToysRun(0),
    fMaxToys(0),
    fCalculator0(&hc),
@@ -231,10 +243,15 @@ HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
    fSize(size),
    fVerbose(0),
    fCalcType(kFrequentist), 
-   fNBins(0), fXmin(1), fXmax(1)
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
 {
-   // constructor from a reference to a FrequentistCalculator 
-   // get scanned variabke
+   // Constructor from a reference to a FrequentistCalculator  
+   // The calculator must be created before by using the S+B model for the null and 
+   // the B model for the alt
+   // If no variable to scan are given they are assumed to be the first variable
+   // from the parameter of interests of the null model
+
    if (!fScannedVariable) { 
       fScannedVariable = GetVariableToScan(hc);
    }
@@ -257,15 +274,18 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
    fSize(size),
    fVerbose(0),
    fCalcType(type), 
-   fNBins(0), fXmin(1), fXmax(1)
-
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
 {
    // Constructor from a model for B model and a model for S+B. 
-   // An HypoTestCalculator (Hybrid of Frequentis) will be ccreated using the 
+   // An HypoTestCalculator (Hybrid of Frequentis) will be created using the 
    // S+B model as the null and the B model as the alternate
-  if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, sbModel, bModel)); 
-  if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, sbModel, bModel)); 
-  fCalculator0 = fHC.get();
+   // If no variable to scan are given they are assumed to be the first variable
+   // from the parameter of interests of the null model
+
+   if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, sbModel, bModel)); 
+   if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, sbModel, bModel)); 
+   fCalculator0 = fHC.get();
    // get scanned variabke
    if (!fScannedVariable) { 
       fScannedVariable = GetVariableToScan(*fCalculator0);
@@ -274,36 +294,72 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
       oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
    else
       CheckInputModels(*fCalculator0,*fScannedVariable);
+   
+}
 
+
+HypoTestInverter::HypoTestInverter(const HypoTestInverter & rhs) :
+   IntervalCalculator(),
+   fResults(0)
+{
+   // copy-constructor
+   // NOTE: this class does not copy the contained result and 
+   // the HypoTestCalculator, but only the pointers
+   // It requires the original HTI to be alive
+   (*this) = rhs;
+}
+
+HypoTestInverter & HypoTestInverter::operator= (const HypoTestInverter & rhs) {
+   // assignment operator
+   // NOTE: this class does not copy the contained result and 
+   // the HypoTestCalculator, but only the pointers
+   // It requires the original HTI to be alive
+   if (this == &rhs) return *this;
+   fTotalToysRun = 0;
+   fMaxToys = rhs.fMaxToys;
+   fCalculator0 = rhs.fCalculator0;
+   fScannedVariable = rhs.fScannedVariable; 
+   fUseCLs = rhs.fUseCLs;
+   fSize = rhs.fSize;
+   fVerbose = rhs.fVerbose;
+   fCalcType = rhs.fCalcType; 
+   fNBins = rhs.fNBins;
+   fXmin = rhs.fXmin;
+   fXmax = rhs.fXmax;
+   fNumErr = rhs.fNumErr;
+
+   return *this;
 }
 
 HypoTestInverter::~HypoTestInverter()
 {
-  // destructor
+   // destructor (delete the HypoTestInverterResult)
   
-  // delete the HypoTestInverterResult
-  if (fResults) delete fResults;
-  fCalculator0 = 0;
+   if (fResults) delete fResults;
+   fCalculator0 = 0;
 }
 
 
 TestStatistic * HypoTestInverter::GetTestStatistic( ) const
 {
-  if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
-     return fCalculator0->GetTestStatSampler()->GetTestStatistic();
-  }
-  else 
-     return 0;
+   // return the test statistic which is or will be used by the class
+   if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
+      return fCalculator0->GetTestStatSampler()->GetTestStatistic();
+   }
+   else 
+      return 0;
 } 
 
 bool HypoTestInverter::SetTestStatistic(TestStatistic& stat)
 {
-  if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
-    fCalculator0->GetTestStatSampler()->SetTestStatistic(&stat);
-    return true; 
-  }
-  else return false;
+   // set the test statistic to use
+   if(fCalculator0 &&  fCalculator0->GetTestStatSampler()){
+      fCalculator0->GetTestStatSampler()->SetTestStatistic(&stat);
+      return true; 
+   }
+   else return false;
 } 
+
 void  HypoTestInverter::Clear()  { 
    // delete contained result and graph
    if (fResults) delete fResults; 
@@ -312,7 +368,7 @@ void  HypoTestInverter::Clear()  {
 }   
 
 void  HypoTestInverter::CreateResults() const { 
-  // create a new HypoTestInverterResult to hold all computed results
+   // create a new HypoTestInverterResult to hold all computed results
    if (fResults == 0) {
       TString results_name = "result_";
       results_name += fScannedVariable->GetName();
@@ -326,8 +382,8 @@ void  HypoTestInverter::CreateResults() const {
 }
 
 HypoTestInverterResult* HypoTestInverter::GetInterval() const { 
-   // run a fixed scan or the automatic scan 
-   // return a copy of the result object which will be managed by the user
+   // Run a fixed scan or the automatic scan depending on the configuration
+   // Return a copy of the result object which will be managed by the user
 
    // if having a result with more thon one point return it
    if (fResults && fResults->ArraySize() > 1) return (HypoTestInverterResult*)(fResults->Clone());
@@ -343,12 +399,15 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;    
    }
-   return (HypoTestInverterResult*)(fResults->Clone());
+   return (fResults) ? (HypoTestInverterResult*)(fResults->Clone()) : 0;
 }
 
 
 
 HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adaptive, double clsTarget) const {
+   // Run the Hypothesis test at a previous configured point
+   //(internal function called by RunOnePoint)
+
 
    //for debug
    // std::cout << ">>>>>>>>>>> " << std::endl;
@@ -370,19 +429,16 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
    // since the b model is the alt need to set the flag
    hcResult->SetBackgroundAsAlt(true);
 
-   // need to flip p-values for PL test statistic 
 
-   bool flipPValues = false;
-   //TestStatistic * testStat = hc.GetTestStatSampler()->GetTestStatistic();
-//   if ( dynamic_cast<ProfileLikelihoodTestStat*>(testStat)  ) { 
-      // I need to flip the P-values
-      // flipPValues = true;
-      // hcResult->SetPValueIsRightTail(!hcResult->GetPValueIsRightTail());
-   //  hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+1e-9); // issue with < vs <= in discrete models
-//   }
-   // else {
-   // //  hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+1e-9); // issue with < vs <= in discrete models
-   // }
+   // bool flipPvalue = false;
+   // if (flipPValues)
+   //       hcResult->SetPValueIsRightTail(!hcResult->GetPValueIsRightTail());
+
+   // adjust for some numerical error in discrete models and == is not anymore 
+   if (hcResult->GetPValueIsRightTail() )
+      hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()-fNumErr); // issue with < vs <= in discrete models
+   else 
+      hcResult->SetTestStatisticData(hcResult->GetTestStatisticData()+fNumErr); // issue with < vs <= in discrete models
 
    double clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
    double clsMidErr = (fUseCLs ? hcResult->CLsError() : hcResult->CLsplusbError());
@@ -397,8 +453,8 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
    while (clsMidErr >= fgCLAccuracy && (clsTarget == -1 || fabs(clsMid-clsTarget) < 3*clsMidErr) ) {
       std::auto_ptr<HypoTestResult> more(hc.GetHypoTest());
       
-      if (flipPValues)
-         more->SetPValueIsRightTail(!more->GetPValueIsRightTail());
+      // if (flipPValues)
+      //    more->SetPValueIsRightTail(!more->GetPValueIsRightTail());
 
       hcResult->Append(more.get());
       clsMid    = (fUseCLs ? hcResult->CLs()      : hcResult->CLsplusb());
@@ -466,7 +522,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
 
 bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget) const
 {
-   // run only one point at the given value
+   // run only one point at the given POI value
 
    CreateResults();
 
@@ -538,7 +594,14 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
 
 
 bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccuracy, double relAccuracy, const double*hint) const {
+   // run an automatic scan until the desired accurancy is reached
+   // Start by default from the full interval (min,max) of the POI and then via bisection find the line crossing 
+   // the target line
+   // Optionally an hint can be provided and the scan will be done closer to that value
+   // If by bisection the desired accuracy will not be reached a fit to the points is performed
+   
 
+   // routine from G. Petrucciani (from HiggsCombination CMS package)
 // bool HybridNew::runLimit(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) {
 
    RooRealVar *r = fScannedVariable; 
@@ -795,7 +858,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
   return true;
 }
 
-SamplingDistribution * HypoTestInverter::GetLowerLimitDistribution(bool rebuild) {
+SamplingDistribution * HypoTestInverter::GetLowerLimitDistribution(bool rebuild, int nToys) {
    // get the distribution of lower limit
    // if rebuild = false (default) it will re-use the results of the scan done 
    // for obtained the observed limit and no extra toys will be generated
@@ -808,11 +871,17 @@ SamplingDistribution * HypoTestInverter::GetLowerLimitDistribution(bool rebuild)
       }
       return fResults->GetLowerLimitDistribution(); 
    }
-   oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::GetLowerLimitDistribution(true) - rebuild option not yet implemented\n";
-   return 0;
+
+   TList * clsDist = 0;
+   TList * clsbDist = 0;
+   if (fUseCLs) clsDist = &fResults->fExpPValues;
+   else clsbDist = &fResults->fExpPValues;
+                   
+   return RebuildDistributions(false, nToys,clsDist, clsbDist);
+
 }
 
-SamplingDistribution * HypoTestInverter::GetUpperLimitDistribution(bool rebuild) {
+SamplingDistribution * HypoTestInverter::GetUpperLimitDistribution(bool rebuild, int nToys) {
    // get the distribution of lower limit
    // if rebuild = false (default) it will re-use the results of the scan done 
    // for obtained the observed limit and no extra toys will be generated
@@ -825,6 +894,136 @@ SamplingDistribution * HypoTestInverter::GetUpperLimitDistribution(bool rebuild)
       }
       return fResults->GetUpperLimitDistribution(); 
    }
-   oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::GetUpperLimitDistribution(true) - rebuild option not yet implemented\n";
-   return 0;
+   
+   TList * clsDist = 0;
+   TList * clsbDist = 0;
+   if (fUseCLs) clsDist = &fResults->fExpPValues;
+   else clsbDist = &fResults->fExpPValues;
+                   
+   return RebuildDistributions(true, nToys,clsDist, clsbDist);
+}
+
+void HypoTestInverter::SetData(RooAbsData & data) {
+   if (fCalculator0) fCalculator0->SetData(data);
+}
+
+SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int nToys, TList * clsDist, TList * clsbDist, TList * clbDist) { 
+   // rebuild the sampling distributions by 
+   // generating some toys and find for each of theam a new upper limit
+   // Return the upper limit distribution and optionally also the pValue distributions for Cls, Clsb and Clbxs
+   // as a TList for each scanned point
+
+   if (!fScannedVariable || !fCalculator0) return 0;
+   // get first background snapshot
+   const ModelConfig * bModel = fCalculator0->GetAlternateModel();
+   const ModelConfig * sbModel = fCalculator0->GetNullModel();
+   if (!bModel || ! sbModel) return 0;
+   RooArgSet paramPoint;
+   if (!sbModel->GetParametersOfInterest()) return 0;
+   paramPoint.add(*sbModel->GetParametersOfInterest());
+
+   const RooArgSet * poibkg = bModel->GetSnapshot();
+   if (!poibkg) { 
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - bakground snapshot not existing" 
+                                          << " assume is for POI = 0" << std::endl;
+      fScannedVariable->setVal(0);
+      paramPoint = RooArgSet(*fScannedVariable);
+   }
+   else 
+      paramPoint = *poibkg; 
+   // generate data at bkg parameter point
+
+   ToyMCSampler * toymcSampler = dynamic_cast<ToyMCSampler *>(fCalculator0->GetTestStatSampler() );
+   if (!toymcSampler) {
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - no toy MC sampler existing" << std::endl;
+      return 0;
+   }
+
+   // loop on data to generate 
+   int nPoints = fNBins;
+
+   bool storePValues = clsDist || clsbDist || clbDist;
+   if (fNBins < 0 && storePValues) { 
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - cannot return p values distribution with the auto scan" << std::endl; 
+   } 
+
+   if (fResults) nPoints = fResults->ArraySize();
+   if (nPoints <=0) { 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - result is not existing and number of point to scan is not set" 
+                                          << std::endl;
+      return 0;
+   }
+
+   if (nToys <= 0) nToys = 100; // default value
+
+   std::vector<std::vector<double> > CLs_values(nPoints);
+   std::vector<std::vector<double> > CLsb_values(nPoints);
+   std::vector<std::vector<double> > CLb_values(nPoints);
+
+   for (int i = 0; i < nPoints; ++i) { 
+      CLs_values[i].reserve(nToys);
+      CLb_values[i].reserve(nToys);
+      CLsb_values[i].reserve(nToys);
+   }
+
+   std::vector<double> limit_values; limit_values.reserve(nToys);
+
+   oocoutI((TObject*)0,InputArguments) << "HypoTestInverter - rebuilding  the p value distributions by generating ntoys = "
+                                       << nToys << std::endl;
+
+
+   for (int itoy = 0; itoy < nToys; ++itoy) { 
+
+      oocoutP((TObject*)0,Eval) << "HypoTestInverter - RebuildDistributions - running toy # " << itoy << " / " 
+                                       << nToys << std::endl;      
+
+      RooAbsData * bkgdata = toymcSampler->GenerateToyData(paramPoint);
+
+      HypoTestInverter inverter = *this; 
+      inverter.SetData(*bkgdata);
+      
+      HypoTestInverterResult * r  = inverter.GetInterval();
+      
+      if (r == 0) continue;
+
+      double value = (isUpper) ? r->UpperLimit() : r->LowerLimit();
+      limit_values.push_back( value );
+
+      if (!storePValues) continue;
+
+      if (nPoints <= r->ArraySize()) {
+         oocoutW((TObject*)0,InputArguments) << "HypoTestInverterResult: skip extra points" << std::endl;
+      }
+
+      for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
+         CLs_values[ipoint].push_back( r->GetResult(ipoint)->CLs() );
+         CLsb_values[ipoint].push_back( r->GetResult(ipoint)->CLsplusb() );
+         CLb_values[ipoint].push_back( r->GetResult(ipoint)->CLb() );
+      }
+
+      delete r; 
+   }
+
+
+   if (storePValues) { 
+      if (clsDist) clsDist->SetOwner(true);
+      if (clbDist) clbDist->SetOwner(true);
+      if (clsbDist) clsbDist->SetOwner(true);
+      for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
+         if (clsDist) {
+            TString name = TString::Format("CLs_distrib_%d",ipoint);
+            clsDist->Add( new SamplingDistribution(name,name,CLs_values[ipoint] ) );
+         }
+         if (clbDist) {
+            TString name = TString::Format("CLb_distrib_%d",ipoint);
+            clbDist->Add( new SamplingDistribution(name,name,CLb_values[ipoint] ) );
+         }
+         if (clsbDist) {
+            TString name = TString::Format("CLsb_distrib_%d",ipoint);
+            clsbDist->Add( new SamplingDistribution(name,name,CLsb_values[ipoint] ) );
+         }
+      }
+   }
+   const char * disName = (isUpper) ? "upperLimit_dist" : "lowerLimit_dist";
+   return new SamplingDistribution(disName, disName, limit_values);
 }

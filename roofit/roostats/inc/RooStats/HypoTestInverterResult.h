@@ -81,6 +81,7 @@ public:
    // number of entries in the results array
    int ArraySize() const { return fXValues.size(); };
 
+   int FindIndex(double xvalue) const;
 
    // set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
    virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
@@ -174,13 +175,14 @@ protected:
 
    std::vector<double> fXValues;
 
-   TList fYObjects;
+   TList fYObjects;       // list of HypoTestResult for each point
+   TList fExpPValues;     // list of expected sampling distribution for each point
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,2)  // HypoTestInverterResult class      
+   ClassDef(HypoTestInverterResult,3)  // HypoTestInverterResult class      
 };
 }
 
