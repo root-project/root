@@ -488,15 +488,15 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    TProofMgr *m= 0;
 
    Bool_t isLite = kFALSE;
+
    // Resolve url; if empty the actions depend of the default
    TUrl u(uin);
-   TString host = u.GetHost();
-   if (host.IsNull()) {
-      host = gEnv->GetValue("Proof.LocalDefault", "lite");
-      if (host != "lite")
-         u.SetUrl("localhost");
+   TString proto = u.GetProtocol();
+   if (proto.IsNull()) {
+      u.SetUrl(gEnv->GetValue("Proof.LocalDefault", "lite://"));
+      proto = u.GetProtocol();
    }
-   if (host == "lite" || host == "__lite__") {
+   if (proto == "lite") {
 #ifndef WIN32
       isLite = kTRUE;
       u.SetHost("__lite__");
