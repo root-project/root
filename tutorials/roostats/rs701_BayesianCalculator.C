@@ -27,7 +27,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
 
   RooWorkspace* w = new RooWorkspace("w",true);
-  w->factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))");
+  w->factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,10]*Uniform(x))");
   w->factory("Gaussian::prior_b(b,1,1)");
   w->factory("PROD::model(pdf,prior_b)");
   RooAbsPdf* model = w->pdf("model");  // pdf*priorNuisance
@@ -39,7 +39,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   RooAbsPdf* priorPOI  = (RooAbsPdf *) w->factory("Uniform::priorPOI(s)");  
   RooAbsPdf* priorPOI2 = (RooAbsPdf *) w->factory("GenericPdf::priorPOI2('1/sqrt(@0)',s)");
 
-  w->factory("n[3]"); // observed number of events
+  w->factory("n[0]"); // observed number of events
   // create a data set with n observed events
   RooDataSet data("data","",RooArgSet(*(w->var("x")),*(w->var("n"))),"n");
   data.add(RooArgSet(*(w->var("x"))),w->var("n")->getVal());

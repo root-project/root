@@ -181,24 +181,41 @@ double HypoTestInverterResult::CLsplusbError( int index ) const
 }
 double HypoTestInverterResult::CLsError( int index ) const
 {
-  // function to return the error on the observed CLs value  for the i-th entry
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return -999;
-  }
-  return ((HypoTestResult*)fYObjects.At(index))->CLsError();  
+   // function to return the error on the observed CLs value  for the i-th entry
+   if ( index >= ArraySize() || index<0 ) {
+      oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
+      return -999;
+   }
+   return ((HypoTestResult*)fYObjects.At(index))->CLsError();  
 }
 
 
 HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
 {
-  if ( index >= ArraySize() || index<0 ) {
-    oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
-    return 0;
-  }
-
-  return ((HypoTestResult*) fYObjects.At(index));
+   // get the HypoTestResult object at the given index point
+   if ( index >= ArraySize() || index<0 ) {
+      oocoutE(this,InputArguments) << "Problem: You are asking for an impossible array index value\n";
+      return 0;
+   }
+   
+   return ((HypoTestResult*) fYObjects.At(index));
 }
+
+int HypoTestInverterResult::FindIndex(double xvalue) const
+{
+   // find the index corresponding at the poi value xvalue
+   // If no points is found return -1
+   // Note that a tolerance is used of 10^-12 to find the closest point
+  const double tol = 1.E-12;
+  for (int i=1; i<ArraySize(); i++) {
+     double xpoint = fXValues[i];
+     if ( (std::abs(xvalue) > 1 && TMath::AreEqualRel( xvalue, xpoint, tol) ) ||
+          (std::abs(xvalue) < 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )
+        return i; 
+  }
+  return -1;
+}
+
 
 struct InterpolatedGraph { 
    InterpolatedGraph( const TGraph & g, double target, const char * interpOpt) : 
@@ -275,7 +292,9 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
 double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSearch, double xmin, double xmax )
 {
-   // interpolate to find limit value
+   // interpolate to find a limit value
+   // Use a linear or a spline interpolation depending on the interpolation option
+
    ooccoutD(this,Eval) << "HypoTestInverterResult - " 
                        << "Interpolate the upper limit between the 2 results closest to the target confidence level" 
                        << std::endl;
@@ -422,6 +441,12 @@ SamplingDistribution *  HypoTestInverterResult::GetSignalAndBackgroundTestStatDi
 SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index) const { 
    // get the expected p-value distribution at the scanned point index
 
+   if (index < 0 || index >=  ArraySize() ) return 0; 
+
+   if (fExpPValues.GetSize() == ArraySize()  ) {
+      return (SamplingDistribution*)  fExpPValues.At(index)->Clone();
+   }
+   
    static bool useFirstB = false;
    // get the S+B distribution 
    int bIndex = (useFirstB) ? 0 : index;

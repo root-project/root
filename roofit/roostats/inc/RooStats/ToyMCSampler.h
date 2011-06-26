@@ -53,6 +53,9 @@ END_HTML
 
 namespace RooStats {
 
+// only used inside ToyMCSampler, ie "private" in the cxx file
+class NuisanceParametersSampler;
+
 class ToyMCSampler: public TestStatSampler {
 
    public:
@@ -83,6 +86,7 @@ class ToyMCSampler: public TestStatSampler {
          fProtoData = NULL;
 
          fProofConfig = NULL;
+         fNuisanceParametersSampler = NULL;
 
 	_allVars = NULL ;
 	_gs1 = NULL ;
@@ -117,6 +121,7 @@ class ToyMCSampler: public TestStatSampler {
          fProtoData = NULL;
 
          fProofConfig = NULL;
+         fNuisanceParametersSampler = NULL;
 
 	_allVars = NULL ;
 	_gs1 = NULL ;
@@ -128,8 +133,7 @@ class ToyMCSampler: public TestStatSampler {
       }
 
 
-      virtual ~ToyMCSampler() {
-      }
+      virtual ~ToyMCSampler();
 
       static void setAlwaysUseMultiGen(Bool_t flag) { fAlwaysUseMultiGen = flag ; }
       void setUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
@@ -140,9 +144,22 @@ class ToyMCSampler: public TestStatSampler {
       virtual SamplingDistribution* GetSamplingDistributionSingleWorker(RooArgSet& paramPoint);
 
 
-
       // generates toy data
-      virtual RooAbsData* GenerateToyData(RooArgSet& /*paramPoint*/) const;
+      //   without weight
+      virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint) const {
+         if(fExpectedNuisancePar) oocoutE((TObject*)NULL,InputArguments) << "ToyMCSampler: using expected nuisance parameters but ignoring weight. Use GetSamplingDistribution(paramPoint, weight) instead." << endl;
+         double weight;
+         return GenerateToyData(paramPoint, weight);
+      }
+      //   importance sampling without weight does not make sense
+      //   so the equivalent function to the one above is omitted
+      //
+      //   with weight
+      virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const;
+      virtual RooAbsData* GenerateToyDataImportanceSampling(RooArgSet& paramPoint, double& weight) const;
+
+      // generate global observables
+      virtual void GenerateGlobalObservables(void) const;
 
 
 
@@ -243,7 +260,10 @@ class ToyMCSampler: public TestStatSampler {
       }
 
       // for importance sampling, specifies the pdf to sample from
-      void SetImportanceDensity(RooAbsPdf *p) { fImportanceDensity = p; }
+      void SetImportanceDensity(RooAbsPdf *p) {
+         if(p) oocoutW((TObject*)NULL,InputArguments) << "ToyMCSampler Importance Sampling: This is in beta." << endl;
+         fImportanceDensity = p;
+      }
       // for importance sampling, a snapshot of the parameters used in importance density
       void SetImportanceSnapshot(const RooArgSet &s) { fImportanceSnapshot = &s; }
 
@@ -290,6 +310,8 @@ class ToyMCSampler: public TestStatSampler {
       const RooDataSet *fProtoData; // in dev
 
       ProofConfig *fProofConfig;   //!
+
+      mutable NuisanceParametersSampler *fNuisanceParametersSampler; //!
 
       // objects below cache information and are mutable and non-persistent
       mutable RooArgSet* _allVars ; //! 
