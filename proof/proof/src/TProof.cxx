@@ -305,6 +305,42 @@ Bool_t TMergerInfo::AreAllWorkersAssigned()
       return (fWorkers->GetSize() == fWorkersToMerge);
 }
 
+//______________________________________________________________________________
+static Int_t PoDCheckUrl(TString *_cluster)
+{
+   // This a private API function.
+   // It checks whether the connection string contains a PoD cluster protocol. 
+   // If it does, then the connection string will be changed to reflect
+   // a real PROOF connection string for a PROOF cluster managed by PoD.
+   // PoD: http://pod.gsi.de .
+   // Return -1 if the PoD request failed; return 0 otherwise.
+
+   if ( !_cluster )
+      return 0;
+
+   // trim spaces from both sides of the string
+   *_cluster = _cluster->Strip( TString::kBoth );
+   // PoD protocol string
+   const TString pod_prot("pod");
+
+   // URL test
+   // TODO: The URL test is to support remote PoD servers (not managed by pod-remote)
+   TUrl url( _cluster->Data() );
+   if( pod_prot.CompareTo(url.GetProtocol(), TString::kIgnoreCase) )
+      return 0;
+
+   // PoD cluster is used
+   // call pod-info in a batch mode (-b).
+   // pod-info will find either a local PoD cluster or
+   // a remote one, manged by pod-remote.
+   *_cluster = gSystem->GetFromPipe("pod-info -c -b");
+   if( 0 == _cluster->Length() ) {
+      Error("PoDCheckUrl", "PoD server is not running");
+      return -1;
+   }
+   return 0;
+}
+
 //------------------------------------------------------------------------------
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
                Int_t loglevel, const char *alias, TProofMgr *mgr)
@@ -10410,9 +10446,12 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 {
    // Start a PROOF session on a specific cluster. If cluster is 0 (the
    // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
-   // If cluster is "" (empty string) then we connect to a PROOF session
-   // on the localhost ("proof://localhost"). Via conffile a specific
-   // PROOF config file in the confir directory can be specified.
+   // If cluster is "lite://" we start a PROOF-lite session.
+   // If cluster is "" (empty string) then we connect to the cluster specified
+   // by 'Proof.LocalDefault', defaulting to "lite://".
+   // If cluster is "pod://" (case insensitive), then we connect to a PROOF cluster
+   // managed by PROOF on Demand (PoD, http://pod.gsi.de ).
+   // Via conffile a specific PROOF config file in the confir directory can be specified.
    // Use loglevel to set the default loging level for debugging.
    // The appropriate instance of TProofMgr is created, if not
    // yet existing. The instantiated TProof object is returned.
@@ -10451,6 +10490,10 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
    } else {
 
       TString clst(cluster);
+
+      // Check for PoD cluster
+      if (PoDCheckUrl( &clst ) < 0) return 0;
+
       if (clst.BeginsWith("workers=") || clst.BeginsWith("tunnel="))
          clst.Insert(0, "/?");
 

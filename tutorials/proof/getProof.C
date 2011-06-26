@@ -101,7 +101,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    Bool_t ext = (strcmp(uu.GetHost(), uref.GetHost()) ||
                  (uu.GetPort() != uref.GetPort())) ? kTRUE : kFALSE;
    if (ext && url && strlen(url) > 0) {
-      if (!strcmp(url, "lite")) {
+      if (!strcmp(url, "lite://")) {
          if (dir && strlen(dir) > 0) gEnv->SetValue("Proof.Sandbox", dir);
          if (nwrks > 0) uu.SetOptions(Form("workers=%d", nwrks));
       }
@@ -127,8 +127,12 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          // Done
          return p;
       } else {
-         if (ext)
-            Printf("getProof: could not get/start a valid session at %s - try local", url);
+ 	 if (ext) {
+            Printf("getProof: could not get/start a valid session at %s", url);
+            return p;
+         } else {
+            Printf("getProof: could not get/start a valid session at %s - try resarting the daemon", url);
+         }
       }
       if (p) delete p;
       p = 0;

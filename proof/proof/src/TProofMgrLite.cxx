@@ -73,8 +73,8 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
    }
 
    // Create the instance
-   TString u = (strlen(fUrl.GetOptions()) > 0) ? Form("lite/?%s", fUrl.GetOptions())
-                                               : "lite";
+   TString u("lite");
+   if (strlen(fUrl.GetOptions()) > 0) u.Form("lite/?%s", fUrl.GetOptions());
    TProof *p = new TProofLite(u, cfg, 0, loglevel, 0, this);
 
    if (p && p->IsValid()) {

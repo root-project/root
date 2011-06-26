@@ -503,7 +503,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    printf("******************************************************************\n");
 
    // Set dynamic mode
-   gDynamicStartup = (!strcmp(url,"lite")) ? kFALSE : dyn;
+   gDynamicStartup = (!strcmp(url,"lite://")) ? kFALSE : dyn;
 
    // Set verbosity
    gverbose = verbose;
@@ -530,7 +530,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (!skipds) {
       gSkipDataSetTest = kFALSE;
    } else {
-      gSkipDataSetTest = (!extcluster || !strcmp(url, "lite")) ? kFALSE : kTRUE;
+     gSkipDataSetTest = (!extcluster || !strcmp(url, "lite://")) ? kFALSE : kTRUE;
    }
 
    // Log file path
@@ -575,7 +575,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       printf("*  Using parallel unzip where relevant                          **\n");
       printf("******************************************************************\n");
    }
-   if (!strcmp(url,"lite") && gverbose > 0) {
+   if (!strcmp(url,"lite://") && gverbose > 0) {
       printf("*  PROOF-Lite session (tests #15 and #16 skipped)               **\n");
       printf("******************************************************************\n");
    }

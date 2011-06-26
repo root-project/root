@@ -260,6 +260,14 @@ void XrdProofConn::Connect(int)
       // And we wait a bit before retrying
       if (i < maxTry - 1) {
          TRACE(DBG, "connection attempt failed: sleep " << timeWait << " secs");
+         if (fUrl.Host == "lite" || fUrl.Host == "pod") {
+            const char *cdef = (fUrl.Host == "lite") ? " (or \"\": check 'Proof.LocalDefault')" : "";
+            const char *cnow = (fUrl.Host == "lite") ? "now " : "";
+            const char *cses = (fUrl.Host == "lite") ? "PROOF-Lite" : "PoD";
+            TRACE(ALL, "connection attempt to server \""<<fUrl.Host<<"\" failed. We are going to retry after some sleep,");
+            TRACE(ALL, "but if you intended to start a "<<cses<<" session instead, please note that you must");
+            TRACE(ALL, cnow<<"use \""<<fUrl.Host<<"://\" as connection string"<<cdef);
+         }
          sleep(timeWait);
       }
 
