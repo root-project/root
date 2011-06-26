@@ -125,6 +125,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   // default is the shortest interval.  here use central
   bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval
 
+
   SimpleInterval* interval = bayesianCalc.GetInterval();
 
   // make a plot (slightly inconsistent interface)
