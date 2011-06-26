@@ -125,7 +125,6 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   // default is the shortest interval.  here use central
   bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval
 
-  RooMsgService::instance().addStream(RooFit::DEBUG,Topic(NumIntegration));
 
   SimpleInterval* interval = bayesianCalc.GetInterval();
 
