@@ -341,14 +341,14 @@ namespace TMVA {
       TString          GetTrainingTMVAVersionString() const;
       TString          GetTrainingROOTVersionString() const;
 
-      TransformationHandler&        GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) 
-          { 
-	     if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation; 
-	  }
-      const TransformationHandler&  GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) const 
-          { 
-	     if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation; 
-	  }
+      TransformationHandler&        GetTransformationHandler(Bool_t takeReroutedIfAvailable=true)
+      {
+         if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
+      }
+      const TransformationHandler&  GetTransformationHandler(Bool_t takeReroutedIfAvailable=true) const
+      {
+         if(fTransformationPointer && takeReroutedIfAvailable) return *fTransformationPointer; else return fTransformation;
+      }
 
       void             RerouteTransformationHandler (TransformationHandler* fTargetTransformation) { fTransformationPointer=fTargetTransformation; }
 
@@ -413,7 +413,7 @@ namespace TMVA {
 
       // ---------- protected event and tree accessors -----------------------------
 
-      // names of input variables (if the original names are expressions, they are 
+      // names of input variables (if the original names are expressions, they are
       // transformed into regexps)
       const TString&   GetInternalVarName( Int_t ivar ) const { return (*fInputVars)[ivar]; }
       const TString&   GetOriginalVarName( Int_t ivar ) const { return DataInfo().GetVariableInfo(ivar).GetExpression(); }
@@ -435,18 +435,18 @@ namespace TMVA {
 
       // some basic statistical analysis
       void Statistics( Types::ETreeType treeType, const TString& theVarName,
-                       Double_t&, Double_t&, Double_t&, 
+                       Double_t&, Double_t&, Double_t&,
                        Double_t&, Double_t&, Double_t& );
 
-      // if TRUE, write weights only to text files 
+      // if TRUE, write weights only to text files
       Bool_t           TxtWeightsOnly() const { return kTRUE; }
 
    protected:
-      
+
       // access to event information that needs method-specific information
-      
-      Float_t GetTWeight( const Event* ev ) const { 
-         return (fIgnoreNegWeightsInTraining && (ev->GetWeight() < 0)) ? 0. : ev->GetWeight(); 
+
+      Float_t GetTWeight( const Event* ev ) const {
+         return (fIgnoreNegWeightsInTraining && (ev->GetWeight() < 0)) ? 0. : ev->GetWeight();
       }
 
       Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
@@ -479,13 +479,13 @@ namespace TMVA {
       // PDFs for classifier response (required to compute signal probability and Rarity)
       void             CreateMVAPdfs();
 
-      // for root finder 
+      // for root finder
       static Double_t  IGetEffForRoot( Double_t );  // interface
       Double_t         GetEffForRoot ( Double_t );  // implementation
 
       // used for file parsing
       Bool_t           GetLine( std::istream& fin, char * buf );
-      
+
       // fill test tree with classification or regression results
       virtual void     AddClassifierOutput    ( Types::ETreeType type );
       virtual void     AddClassifierOutputProb( Types::ETreeType type );
@@ -494,12 +494,13 @@ namespace TMVA {
 
    private:
 
-      void             AddInfoItem( void* gi, const TString& name, const TString& value) const;
+      void             AddInfoItem( void* gi, const TString& name,
+                                    const TString& value) const;
 
-      static void      CreateVariableTransforms(const TString& trafoDefinition, 
-						TMVA::DataSetInfo& dataInfo,
-						TMVA::TransformationHandler& transformationHandler,
-						TMVA::MsgLogger& log );
+      static void      CreateVariableTransforms(const TString& trafoDefinition,
+                                                TMVA::DataSetInfo& dataInfo,
+                                                TMVA::TransformationHandler& transformationHandler,
+                                                TMVA::MsgLogger& log );
 
 
       // ========== class members ==================================================
@@ -523,7 +524,7 @@ namespace TMVA {
    private:
 
       // MethodCuts redefines some of the evaluation variables and histograms -> must access private members
-      friend class MethodCuts; 
+      friend class MethodCuts;
 
       Bool_t           fDisableWriting;       //! set to true in order to suppress writing to XML
 
@@ -537,11 +538,11 @@ namespace TMVA {
       // naming and versioning
       TString          fJobName;             // name of job -> user defined, appears in weight files
       TString          fMethodName;          // name of the method (set in derived class)
-      Types::EMVA      fMethodType;          // type of method (set in derived class)      
+      Types::EMVA      fMethodType;          // type of method (set in derived class)
       TString          fTestvar;             // variable used in evaluation, etc (mostly the MVA)
       UInt_t           fTMVATrainingVersion; // TMVA version used for training
       UInt_t           fROOTTrainingVersion; // ROOT version used for training
-      Bool_t           fConstructedFromWeightFile; // is it obtained from weight file? 
+      Bool_t           fConstructedFromWeightFile; // is it obtained from weight file?
 
       // Directory structure: fMethodBaseDir/fBaseDir
       // where the first directory name is defined by the method type

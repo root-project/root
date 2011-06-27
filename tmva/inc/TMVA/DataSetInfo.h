@@ -14,7 +14,7 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - DESY, Germany                  *
  *                                                                                *
- * Copyright (c) 2008:                                                            *
+ * Copyright (c) 2008-2011:                                                       *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
  *      DESY Hamburg, Germany                                                     *
@@ -157,7 +157,7 @@ namespace TMVA {
 
       std::vector<TString> GetListOfVariables() const;
 
-      // correlation matrix 
+      // correlation matrix
       const TMatrixD*    CorrelationMatrix     ( const TString& className ) const;
       void               SetCorrelationMatrix  ( const TString& className, TMatrixD* matrix );
       void               PrintCorrelationMatrix( const TString& className );

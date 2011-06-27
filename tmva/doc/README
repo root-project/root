@@ -4,7 +4,7 @@
 
 TMVA Users Guide    : http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf
 TMVA home page      : http://tmva.sourceforge.net/
-TMVA developer page : http://sourceforge.net/projects/tmva
+TMVA download page  : http://sourceforge.net/projects/tmva
 TMVA mailing list   : http://sourceforge.net/mailarchive/forum.php?forum_name=tmva-users
 TMVA license (BSD)  : http://tmva.sourceforge.net/LICENSE
 
@@ -15,7 +15,7 @@ System requirements:
 
   TMVA has been tested to run on Linux, MAC/OSX and Windows platforms.
 
-  Running TMVA requires the availability of ROOT shared libraries with ROOT_VERSION >= 5.08
+  Running TMVA requires the availability of ROOT shared libraries with ROOT_VERSION >= 5.14
   (type "root-config --version" to see the version installed)
 
 ========================================================================================
@@ -26,64 +26,58 @@ Getting Started:
   How to compile the code:
   ------------------------
   /home> cd TMVA
-  /home/TMVA> source setup.[c]sh     // includes TMVA/lib in your lib path
-  /home/TMVA> cd src                              
-  /home/TMVA/src> make               // compile and build the library ../libTMVA.1.so
+  /home/TMVA> make                   # compile and build the library lib/libTMVA.1.so
 
-  How to run the code as ROOT macro: // training/testing of an academic example
+  How to run the code as ROOT macro: # training/testing of an academic example
   ----------------------------------
-  /home/TMVA> cd macros
+  /home/TMVA> cd test
+  /home/TMVA/test> source setup.sh   # setup script must be exectuted before running macros (use setup.csh for c-shell)
 
   --- For classification:
-  /home/TMVA/macros> root -l TMVAClassification.C                       // run all standard classifiers
-  /home/TMVA/macros> root -l TMVAClassification.C\(\"LD,Likelihood\"\)  // run LD and Likelihood classifiers
+  /home/TMVA/test> root -l TMVAClassification.C                       # run all standard classifiers (takes a while)
+  /home/TMVA/test> root -l TMVAClassification.C\(\"LD,Likelihood\"\)  # run LD and Likelihood classifiers
 
   --- For regression:
-  /home/TMVA/macros> root -l TMVARegression.C                           // run all regression algorithms
-  /home/TMVA/macros> root -l TMVARegression.C\(\"LD,KNN\"\)             // run LD and k-NN regression algorithms
+  /home/TMVA/test> root -l TMVARegression.C                           # run all regression algorithms n(takes a while)
+  /home/TMVA/test> root -l TMVARegression.C\(\"LD,KNN\"\)             # run LD and k-NN regression algorithms
 
   --> at the end of the jobs, a GUI will pop up: try to click through all the buttons;
       some of the lower buttons are method-specific, and will only work when the
       corresponding classifiers/regression algorithms have been trained/tested before
       (unless they are greyed out)
 
-  How to run the code as an executable: // training/testing of an academic example
+  How to run the code as an executable: 
   -------------------------------------
-  /home/TMVA> cd execs
-  /home/TMVA/execs> make
-  /home/TMVA/execs> ./TMVAClassification                                // run all standard classifiers 
-  /home/TMVA/execs> ./TMVAClassification LD Likelihood                  // run LD and Likelihood classifiers 
+  /home/TMVA/test> make
+  /home/TMVA/test> ./TMVAClassification                              # run all standard classifiers 
+  /home/TMVA/test> ./TMVAClassification LD Likelihood                # run LD and Likelihood classifiers 
 
-  ... and similar for regression
+  ... and similarly for regression
 
-  /home/TMVA/examples> root -l ../macros/TMVAGui.C // start the GUI
+  /home/TMVA/test> root -l TMVAGui.C   # start the GUI
+
+  How to run the code as an python script using PyROOT: 
+  -------------------------------------
+  /home/TMVA/test> make
+  /home/TMVA/test> python ./TMVAClassification.py --method LD,Likelihood
 
   How to apply the TMVA methods:
   -------------------------------------
-  /home/TMVA> cd macros
+  /home/TMVA> cd test
 
   --- For classification:
-  /home/TMVA/macros> root -l TMVAClassificationApplication.C                
-  /home/TMVA/macros> root -l TMVAClassificationApplication.C\(\"LD,Likelihood\"\) 
+  /home/TMVA/test> root -l TMVAClassificationApplication.C                
+  /home/TMVA/test> root -l TMVAClassificationApplication.C\(\"LD,Likelihood\"\) 
 
-  ... and similar for regression
+  ... and similar for regression.
+  ... and similar for executables.
 
   The directory structure:
   ------------------------
-  src/          : the TMVA source code
+  inc/          : the TMVA class headers
+  src/          : the TMVA class source
   lib/          : here you'll find the TMVA library (libTMVA.1.so) after compilation
-                  (copy it to you preferred library directory or include
-                   this directory in your LD_LIBRARY_PATH as it is done
-                   by: source setup.[c]sh
-  macros/       : example code of how to use the TMVA library with a ROOT macro
-                  uses input data from a Toy Monte Carlo;
-                  also: handy root macros which read and display the 
-                  results produced by TMVAClassification and TMVARegression
-  execs/        : same example code as in 'macros', but for using the TMVA library in an executable
-  execs/data    : the Toy Monte Carlo data 
-  python/       : example code of how to use the TMVA library with a python script;
-                  requires availability of PyROOT 
-  development/  : for use by developers only
+  test/         : example code for analysis macros and executables, the GUI and analysis scripts.
 
 ========================================================================================
 
@@ -158,11 +152,11 @@ Please report any problems and/or suggestions for improvements to the authors.
 
 ========================================================================================
 
-Copyright © (2005-2009):  
+Copyright © (2005-2010):  
 ------------------------
 
-   Andreas Hoecker, Peter Speckmayer, Jörg Stelzer (all: CERN, Switzerland),
-   Jan Therhaag, Eckhard von Toerne (both: U. Bonn, Germany), 
+   Andreas Hoecker, Peter Speckmayer, Jörg Stelzer (CERN, Switzerland),
+   Jan Therhaag, Eckhard von Toerne (U. Bonn, Germany), 
    Helge Voss (MPI-KP Heidelberg, Germany), 
 
 Contributed to TMVA have, please see: http://tmva.sourceforge.net/#authors
