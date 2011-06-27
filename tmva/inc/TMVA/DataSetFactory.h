@@ -73,23 +73,12 @@
 #endif
 
 namespace TMVA {
-   
+
    class DataSet;
    class DataSetInfo;
    class DataInputHandler;
    class TreeInfo;
    class MsgLogger;
-
-   typedef std::vector< Event* >                              EventVector;
-   typedef std::vector< EventVector >                         EventVectorOfClasses;
-   typedef std::map<Types::ETreeType,  EventVectorOfClasses > EventVectorOfClassesOfTreeType;
-   typedef std::map<Types::ETreeType,  EventVector >          EventVectorOfTreeType;
-
-   typedef std::vector< Double_t >                            ValuePerClass;
-   typedef std::map<Types::ETreeType,  ValuePerClass >        ValuePerClassOfTreeType;
-
-   typedef std::vector< Int_t >                               NumberPerClass;
-   typedef std::map<Types::ETreeType,  NumberPerClass >       NumberPerClassOfTreeType;
 
    // =============== maybe move these elswhere (e.g. into the tools )
 
@@ -139,7 +128,7 @@ namespace TMVA {
 
 
    template <typename F>
-   class null_t 
+   class null_t
    {
    private:
       // returns argF
@@ -157,7 +146,7 @@ namespace TMVA {
    }
 
 
-   
+
    template <typename F, typename G, typename H>
    class compose_binary_t : public std::binary_function<typename G::argument_type,
                                                         typename H::argument_type,
@@ -171,7 +160,7 @@ namespace TMVA {
       compose_binary_t(const F& _f, const G& _g, const H& _h) : f(_f), g(_g), h(_h) 
       {
       }
-      
+
       typename F::result_type operator()(const typename G::argument_type& argG,
                                          const typename H::argument_type& argH) const 
       {
@@ -218,12 +207,49 @@ namespace TMVA {
 
    class DataSetFactory {
 
+      typedef std::vector< Event* >                             EventVector;
+      typedef std::vector< EventVector >                        EventVectorOfClasses;
+      typedef std::map<Types::ETreeType, EventVectorOfClasses > EventVectorOfClassesOfTreeType;
+      typedef std::map<Types::ETreeType, EventVector >          EventVectorOfTreeType;
+
+      typedef std::vector< Double_t >                    ValuePerClass;
+      typedef std::map<Types::ETreeType, ValuePerClass > ValuePerClassOfTreeType;
+
+      class EventStats {
+      public:
+         Int_t    nTrainingEventsRequested;
+         Int_t    nTestingEventsRequested;
+         Int_t    nInitialEvents;
+         Int_t    nEvBeforeCut;
+         Int_t    nEvAfterCut;
+         Float_t  nWeEvBeforeCut;
+         Float_t  nWeEvAfterCut;
+         Double_t nNegWeights;
+         Float_t* varAvLength;
+         EventStats():
+            nTrainingEventsRequested(0),
+            nTestingEventsRequested(0),
+            nInitialEvents(0),
+            nEvBeforeCut(0),
+            nEvAfterCut(0),
+            nWeEvBeforeCut(0),
+            nWeEvAfterCut(0),
+            nNegWeights(0),
+            varAvLength(0)
+         {}
+         ~EventStats() { delete[] varAvLength; }
+         Float_t cutScaling() const { return Float_t(nEvAfterCut)/nEvBeforeCut; }
+      };
+
+      typedef std::vector< int >                            NumberPerClass;
+      typedef std::vector< EventStats >                     EvtStatsPerClass;
+
    public:
 
 
 
       // singleton class
-      static DataSetFactory& Instance() { if (!fgInstance) fgInstance = new DataSetFactory(); return *fgInstance; } 
+      static DataSetFactory& Instance() { if (!fgInstance) fgInstance = new DataSetFactory(); return *fgInstance; }
       static void destroyInstance() { if (fgInstance) { delete fgInstance; fgInstance=0; } }
 
       DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
@@ -231,34 +257,37 @@ namespace TMVA {
    protected:
 
       ~DataSetFactory();
-      
+
       DataSetFactory();
       static DataSetFactory *fgInstance;
 
       DataSet*  BuildInitialDataSet( DataSetInfo&, TMVA::DataInputHandler& );
       DataSet*  BuildDynamicDataSet( DataSetInfo& );
-     
-      // ---------- new versions
-      void      BuildEventVector    ( DataSetInfo& dsi, 
-                                      DataInputHandler& dataInput, 
-                                      EventVectorOfClassesOfTreeType& tmpEventVector);
-      
-      DataSet*  MixEvents           ( DataSetInfo& dsi, 
-                                      EventVectorOfClassesOfTreeType& tmpEventVector, 
-                                      NumberPerClassOfTreeType& nTrainTestEvents,
-                                      const TString& splitMode,
-                                      const TString& mixMode, 
-                                      const TString& normMode, 
-                                      UInt_t splitSeed);
-      
-      void      RenormEvents        ( DataSetInfo& dsi, 
-                                      EventVectorOfClassesOfTreeType& tmpEventVector,
-                                      const TString& normMode );
 
-      void      InitOptions         ( DataSetInfo& dsi, 
-                                      NumberPerClassOfTreeType& nTrainTestEvents, 
-                                      TString& normMode, UInt_t& splitSeed, TString& splitMode, TString& mixMode );
-      
+      // ---------- new versions
+      void      BuildEventVector ( DataSetInfo& dsi,
+                                   DataInputHandler& dataInput,
+                                   EventVectorOfClassesOfTreeType& eventsmap,
+                                   EvtStatsPerClass& eventCounts);
+
+      DataSet*  MixEvents        ( DataSetInfo& dsi,
+                                   EventVectorOfClassesOfTreeType& eventsmap,
+                                   EvtStatsPerClass& eventCounts,
+                                   const TString& splitMode,
+                                   const TString& mixMode,
+                                   const TString& normMode,
+                                   UInt_t splitSeed);
+
+      void      RenormEvents     ( DataSetInfo& dsi,
+                                   EventVectorOfClassesOfTreeType& eventsmap,
+                                   const EvtStatsPerClass& eventCounts,
+                                   const TString& normMode );
+
+      void      InitOptions      ( DataSetInfo& dsi,
+                                   EvtStatsPerClass& eventsmap,
+                                   TString& normMode, UInt_t& splitSeed,
+                                   TString& splitMode, TString& mixMode );
+
 
       // ------------------------
 
@@ -282,7 +311,7 @@ namespace TMVA {
       Bool_t                     fVerbose;           //! Verbosity
       TString                    fVerboseLevel;      //! VerboseLevel
 
-      // the event 
+      // the event
       mutable TTree*             fCurrentTree;       //! the tree, events are currently read from
       mutable UInt_t             fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)
 

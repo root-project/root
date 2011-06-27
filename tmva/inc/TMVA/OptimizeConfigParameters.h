@@ -74,6 +74,7 @@ namespace TMVA {
       std::map<TString,Double_t> optimize();
       
    private:
+      std::vector< int > GetScanIndices( int val, std::vector<int> base);
       void optimizeScan();
       void optimizeFit();
 
@@ -86,7 +87,9 @@ namespace TMVA {
       void GetMVADists();
       Double_t GetSeparation();
       Double_t GetROCIntegral();
-      Double_t GetSigEffAt( Double_t bkgEff = 0.1);
+      Double_t GetSigEffAtBkgEff( Double_t bkgEff = 0.1);
+      Double_t GetBkgEffAtSigEff( Double_t sigEff = 0.5);
+      Double_t GetBkgRejAtSigEff( Double_t sigEff = 0.5);
       
      
       MethodBase* const fMethod; // The MVA method to be evaluated
