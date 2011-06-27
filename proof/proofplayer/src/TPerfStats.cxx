@@ -158,7 +158,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    // Check what information to send
    fMonitorInfo = gEnv->GetValue("Proof.MonitorInfo", 1);
    if (fMonitorInfo == 0)
-      Info("TPerfStats", "sending old-structured information (no {memory,dataset} info)");
+      Info("TPerfStats", "sending old-structured information (no {memory,dataset,status} info)");
    
    // Extract the name of the dataset
    if (fMonitorInfo > 0) {
@@ -393,20 +393,19 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
 
    // Write to monitoring system, if requested
    if (!fMonitoringWriters.IsEmpty() && fMonitorPerPacket) {
-      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
-          !gProofServ->GetProof()->GetQueryResult()) {
+      TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
+                          gProofServ->GetProof()->GetQueryResult() : 0;
+      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
          Error("PacketEvent", "some required object are undefined (%p %p %p %p)",
                gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
               (gProofServ ? gProofServ->GetProof() : 0),
-              ((gProofServ && gProofServ->GetProof()) ?
-                gProofServ->GetProof()->GetQueryResult() : 0));
+              ((gProofServ && gProofServ->GetProof()) ? qr : 0));
          return;
       }
       
       TTimeStamp stop;
       TString identifier;
-      identifier.Form("%s-q%d", gProofServ->GetSessionTag(),
-                      gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
+      identifier.Form("%s-q%d", gProofServ->GetSessionTag(), qr->GetSeqNum());
 
       TList values;
       values.SetOwner();
@@ -437,6 +436,9 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
          // Dataset information
          values.Add(new TNamed("dataset", fDataSet.Data()));
          values.Add(new TParameter<int>("numfiles", fDataSetSize));
+         // Query status
+         Int_t est = (pst) ? pst->GetExitStatus() : -1;
+         values.Add(new TParameter<int>("status", est));
       }
 
       for (Int_t i = 0; i < fMonitoringWriters.GetEntries(); i++) {
@@ -594,6 +596,7 @@ void TPerfStats::WriteQueryLog()
    //   rmemmxm       BIGINT,                  (*)
    //   dataset       VARCHAR(512),            (*, **)
    //   numfiles      INT                      (*)
+   //   status        INT                      (*)
    // )
    // (*) Only for fMonitorInfo > 0
    // (**) Size controlled by variable Proof.Monitor.DataSetLen .
@@ -605,19 +608,18 @@ void TPerfStats::WriteQueryLog()
 
    // Write to monitoring system
    if (!fMonitoringWriters.IsEmpty()) {
-      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
-          !gProofServ->GetProof()->GetQueryResult()) {
+      TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
+                          gProofServ->GetProof()->GetQueryResult() : 0;
+      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
          Error("WriteQueryLog", "some required object are undefined (%p %p %p %p)",
                gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
               (gProofServ ? gProofServ->GetProof() : 0),
-              ((gProofServ && gProofServ->GetProof()) ?
-                gProofServ->GetProof()->GetQueryResult() : 0));
+              ((gProofServ && gProofServ->GetProof()) ? qr : 0));
          return;
       }
 
       TString identifier;
-      identifier.Form("%s-q%d", gProofServ->GetSessionTag(),
-                      gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
+      identifier.Form("%s-q%d", gProofServ->GetSessionTag(), qr->GetSeqNum());
 
       TList values;
       values.SetOwner();
@@ -648,6 +650,9 @@ void TPerfStats::WriteQueryLog()
          // Dataset information
          values.Add(new TNamed("dataset", fDataSet.Data()));
          values.Add(new TParameter<int>("numfiles", fDataSetSize));
+         // Query status
+         Int_t est = (pst) ? pst->GetExitStatus() : -1;
+         values.Add(new TParameter<int>("status", est));
       }
 
       for (Int_t i = 0; i < fMonitoringWriters.GetEntries(); i++) {

@@ -44,6 +44,7 @@ private:
    MsgSet_t    fMsgs;   // list of error messages
    MsgIter_t   fIter;   //!iterator in messages
 
+   Int_t       fExitStatus;  // Query exit status ((Int_t)TVirtualProofPlayer::EExitStatus or -1);
    Long_t      fVirtMemMax;  // Max virtual memory used by the worker
    Long_t      fResMemMax;   // Max resident memory used by the worker
 
@@ -58,11 +59,14 @@ public:
    void           Reset();
    const char    *NextMesg();
 
+   Int_t          GetExitStatus() const { return fExitStatus; }
    Long_t         GetResMemMax() const { return fResMemMax; }
    Long_t         GetVirtMemMax() const { return fVirtMemMax; }
+   
+   void           SetExitStatus(Int_t est) { fExitStatus = est; }
    void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1);
 
-   ClassDef(TStatus,2);  // Status class
+   ClassDef(TStatus,3);  // Status class
 };
 
 #endif
