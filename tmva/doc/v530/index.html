@@ -3,8 +3,8 @@
 <a name="tmva"></a> 
 <h3>TMVA</h3>
 
-TMVA version 4.1.1 is included in this root release. The changes with respect
-to ROOT 5.28 / TMVA 4.1.0 are are in detail:
+TMVA version 4.1.2 is included in this root release. The changes with respect
+to ROOT 5.28 / TMVA 4.1.0 are in detail:
 
 <h4>Variable transformations</h4>
 <ul>
@@ -44,9 +44,14 @@ to ROOT 5.28 / TMVA 4.1.0 are are in detail:
 
 <h4>Bug fixes</h4>
 <ul>
+    <li>Correct histogram boundaries in PlotVariable.</li>
+    <li>Correct scanning procedure in OptimizeTuningParameters.</li>
+    <li>Print the significance formula that is actually used</li>
+    <li>Small speed improvement for PDEFoam functions.</li>
     <li>Fix for MethodBoost which ensures that the method options for the boosted
        classifier are handled correctly during boosting.</li>
     <li>Fixed problems in classification of some methods when booking background
        training tree before signal one.</li>
     <li>Fixed preprocessing transformation bug in HMatrix</li>
+    <li>Several minor bug fixes for version 4.1.2</li>
 </ul>
