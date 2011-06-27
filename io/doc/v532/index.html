@@ -2,3 +2,69 @@
 <hr/> 
 <a name="io"></a> 
 <h3>I/O Libraries</h3>
+<h4>TMemFile</h4>
+Introduce <tt>TMemFile</tt> and update <tt>TFileMerger</tt> to support incremental merges.
+<p/>
+Add new tutorials ( <tt>net/treeClient.C</tt> + <tt>net/fastMergeServer.C</tt> )
+demonstrating how a <tt>TMemFile</tt> can be used to do parallel merge
+from many client. ( <tt>TMemFile</tt> still needs to be better integrated
+with <tt>TMessage</tt> and <tt>TSocket</tt>).
+<p/>
+The new <tt>TMemFile</tt> class support the <tt>TFile</tt> interface but only store
+the information in memory.   This version is limited to <tt>32MB</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TMessage mess;
+   ... 
+   mess->ReadFastArray(scratch,length);
+   transient = new TMemFile("hsimple.memroot",scratch,length);
+</pre>
+will copy the content of 'scratch' into the in-memory buffer
+created by/for the <tt>TMemFile</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TMemFile *file = new TMemFile("hsimple.memroot","RECREATE");
+</pre>
+Will create an empty in-memory of (currently fixed) size <tt>32MB</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   file->ResetAfterMerge(0);
+</pre>
+Will reset the objects in the <tt>TDirectory</tt> list of objects
+so that they are ready for more data accumulations (i.e.
+returns the data to 0 but keep the customizations).
+<h4>Other</h4>
+<ul>
+<li>Introduce the new function <tt>TFileMerger::IncrementalMerge</tt> will
+will <tt>Merge</tt> the list of file _with_ the content of the output
+file (if any).   This allows make several successive <tt>Merge</tt>
+into the same <tt>TFile</tt> object.
+</li><li>
+Introduce non-static version of <tt>TFile::Cp</tt> allows the copy of
+an existing <tt>TFile</tt> object.
+</li><li>
+Introduce new explicit interface for providing reseting 
+capability after a merge.  If a class has a method with 
+the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void ResetAfterMerge(TFileMergeInfo*);
+</pre>
+it will be used by a <tt>TMemFile</tt> to reset its objects after
+a merge operation has been done.
+<p/>
+If this method does not exist, the <tt>TClass</tt> will use
+a method with the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void Reset(Optiont_t *);
+</pre>
+</li><li>
+<tt>TClass</tt> now provides a quick access to these merging 
+function via <tt>TClass::GetResetAfterMerge</tt>.   The wrapper function
+is automatically created by rootcint and can be installed
+via <tt>TClass::SetResetAfterMerge</tt>.   The wrapper function should have
+the signature/type <tt>ROOT::ResetAfterMergeFunc_t</tt>:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void (*)(void *thisobj, TFileMergeInfo*);
+</pre>
+<tt>ResetAfterMerge</tt> functions were added to the following classes:
+<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranhcElement</tt>, 
+<tt>TBranchClones</tt>, <tt>TBranchObject</tt> and <tt>TBranchRef</tt>.
+</li>
+</ul>
