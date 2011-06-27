@@ -831,8 +831,26 @@ namespace HistFactory{
     // fix specified parameters
     for(unsigned int i=0; i<systToFix.size(); ++i){
       RooRealVar* temp = proto->var((systToFix.at(i)).c_str());
-      if(temp) temp->setConstant();
-      else cout << "could not find variable " << systToFix.at(i) << " could not set it to constant" << endl;
+      if(temp) {
+	// set the parameter constant
+	temp->setConstant();
+	
+	// remove the corresponding auxiliary observable from the global observables
+	RooRealVar* auxMeas = NULL;
+	if(systToFix.at(i)=="Lumi"){
+	  auxMeas = proto->var("nominalLumi");
+	} else {
+	  auxMeas = proto->var(Form("nom_%s",temp->GetName()));
+	}
+
+	if(auxMeas){
+	  const_cast<RooArgSet*>(proto->set("globalObservables"))->remove(*auxMeas);
+	} else{
+	  cout << "could not corresponding auxiliary measurement  " << Form("nom_%s",temp->GetName()) << endl;
+	}
+      } else {
+	cout << "could not find variable " << systToFix.at(i) << " could not set it to constant" << endl;
+      }
     }
 
     //////////////////////////////////////
