@@ -135,8 +135,8 @@ class ToyMCSampler: public TestStatSampler {
 
       virtual ~ToyMCSampler();
 
-      static void setAlwaysUseMultiGen(Bool_t flag) { fAlwaysUseMultiGen = flag ; }
-      void setUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
+      static void SetAlwaysUseMultiGen(Bool_t flag) { fgAlwaysUseMultiGen = flag ; }
+      void SetUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
 
       // main interface
       virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramPoint);
@@ -206,7 +206,9 @@ class ToyMCSampler: public TestStatSampler {
 
 
       // specify the values of parameters used when evaluating test statistic
-      virtual void SetParametersForTestStat(const RooArgSet& nullpoi) { fNullPOI = (RooArgSet*)nullpoi.snapshot(); }
+      virtual void SetParametersForTestStat(const RooArgSet& nullpoi) { 
+         if (fNullPOI) delete fNullPOI; fNullPOI = (RooArgSet*)nullpoi.snapshot(); 
+      }
       // Set the Pdf, add to the the workspace if not already there
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
       // How to randomize the prior. Set to NULL to deactivate randomization.
@@ -323,7 +325,7 @@ class ToyMCSampler: public TestStatSampler {
       mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3
       mutable RooAbsPdf::GenSpec* _gs4 ; //! GenSpec #4
       
-      static Bool_t fAlwaysUseMultiGen ;  // Use PrepareMultiGen always
+      static Bool_t fgAlwaysUseMultiGen ;  // Use PrepareMultiGen always
       Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 
    protected:

@@ -94,7 +94,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData);
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
-   if(fNullModel->GetSnapshot() == NULL) {
+   const RooArgSet * nullSnapshot = fNullModel->GetSnapshot();
+   if(nullSnapshot == NULL) {
       oocoutE((TObject*)0,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return 0;
    }
@@ -115,7 +116,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
 
    // evaluate test statistic on data
-   RooArgSet nullP(*fNullModel->GetSnapshot());
+   RooArgSet nullP(*nullSnapshot);
    double obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
    oocoutP((TObject*)0,Generation) << "Test Statistic on data: " << obsTestStat << endl;
 
@@ -157,7 +158,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    delete saveAll;
    delete altParams;
    delete nullParams;
-
+   delete nullSnapshot;
    return res;
 }
 

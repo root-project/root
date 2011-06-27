@@ -61,6 +61,7 @@ namespace RooStats {
         fCachedBestFitParams = 0;
         fLastData = 0;
 	fOneSided = false;
+        fReuseNll = false;
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
@@ -69,6 +70,7 @@ namespace RooStats {
        fCachedBestFitParams = 0;
        fLastData = 0;
        fOneSided = false;
+       fReuseNll = false;
      }
      virtual ~ProfileLikelihoodTestStat() {
        //       delete fRand;
@@ -79,8 +81,8 @@ namespace RooStats {
      }
      void SetOneSided(Bool_t flag=true) {fOneSided = flag;}
 
-     static void setAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
-     void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+     static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+     void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -97,7 +99,7 @@ namespace RooStats {
        RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
        // simple
-       Bool_t reuse=(fReuseNll || fAlwaysReuseNll) ;
+       Bool_t reuse=(fReuseNll || fgAlwaysReuseNll) ;
        
        Bool_t created(kFALSE) ;
        if (!reuse || fNll==0) {
@@ -332,7 +334,7 @@ namespace RooStats {
       //      Double_t fLastMLE;
       Bool_t fOneSided;
 
-      static Bool_t fAlwaysReuseNll ;
+      static Bool_t fgAlwaysReuseNll ;
       Bool_t fReuseNll ;
 
    protected:

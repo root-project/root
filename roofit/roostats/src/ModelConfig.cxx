@@ -127,9 +127,11 @@ void ModelConfig::Print(Option_t*) const {
    }
 
    // snapshot
-   if(GetSnapshot()) {
+   const RooArgSet * snapshot = GetSnapshot();
+   if(snapshot) {
       ccoutI(InputArguments) << "Snapshot:                " << endl;
-      GetSnapshot()->Print("v");
+      snapshot->Print("v");
+      delete snapshot;
    }
 
    ccoutI(InputArguments) << endl;
