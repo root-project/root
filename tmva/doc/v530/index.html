@@ -44,6 +44,13 @@ to ROOT 5.28 / TMVA 4.1.0 are in detail:
 
 <h4>Bug fixes</h4>
 <ul>
+
+    <li>Requested number of training and testing events was not
+    correct when pre-selection cuts were applied. Now the number of
+    requested events scales with the preselection efficiency and hence
+    does not need to be adjusted with the pre-selection. This also
+    corrects the problems seen in the Category classifierm, where
+    pre-selection is used to build the categories.</li>
     <li>Correct histogram boundaries in PlotVariable.</li>
     <li>Correct scanning procedure in OptimizeTuningParameters.</li>
     <li>Print the significance formula that is actually used</li>
