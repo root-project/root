@@ -4,6 +4,7 @@
 <h3>I/O</h3>
 <ul>
 <li>Add support for the Chirp filesystem.  To configure and build, chirp 3.2.2 must be installed.</li>
+
 <li>When a <tt>TFile</tt> object is deleted, make sure that CINT also 'removes' any global variables that might point to it.</li>
 <li>Fix support for the automatic addition to the current directory (for <tt>TTree</tt> and <tt>TH1</tt> for example) in <tt>TKey::Read(TObject*).</tt></li>
 <li>In <tt>TKey</tt>, properly handle error in the I/O routines.</li>
@@ -16,23 +17,104 @@ has the same version as the StreamerInfo in memory but the one on file need to b
 sure it will not be optimized.</li>
 <li>Fix the reading of empty collection of object when reading without the library.</li>
 <li>If the sequence of actions for streaming member-wise is not created correctly (i.e. where <tt>fReadMemberWise</tt> was null previously),
-we know explicitly issue a Fatal error:
+we now explicitly issue a Fatal error:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 Fatal in &lt;ReadSequence&gt;: The sequence of actions to read AliESDVertex:7 member-wise was not initialized.
 aborting
 </pre></li>
 <li>Add new optional parameter maxbuf to <tt>TXMLEngine::ParseFile()</tt> allowing the specification of the XML file size to be parsed. This fixes issue <a href=https://savannah.cern.ch/bugs/?78864>#78864</a>.</li>
-<li><h4>MakeProject</h4>
-  <ul>
-  <li>Add support for the case when the requested project/files in path that in not under the current directory</li>
-  <li>Generate the code/dictonary only for pair type that do not already have a dictionary</li>
-  </ul>
+<li>Add function <tt>TBuffer::AutoExpand</tt> to centralize the automatic buffer extension policy.  This enable the ability to tweak it later (for example instead of always doubling the size, increasing by only at most 2Mb or take hints from the number of entries already
+in a TBasket).</li>
+<li>Migrate the class <tt>TFileMerger</tt> from the proofplayer library to ROOT I/O library and update <tt>hadd</tt> to rely on
+ <tt>TFileMerger</tt> for everything but the command line argument parsing.</li>
+<li>Fix support for schema evolution from:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter<Int_t>* MyInt; //-> version 1</pre>to
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter<Int_t> MyInt; // version 2</pre>
 </li>
+<li>The TZIPFile compressed archive reader now supports the Zip64 format for
+archives and file members greater than 2 and 4 GB, respectively.</li>
 </ul>
+<h4>MakeProject</h4>
+ <ul>
+ <li>Add support for the case when the requested project/files in path that in not under the current directory</li>
+ <li>Generate the code/dictonary only for pair type that do not already have a dictionary</li>
+</ul>
+  
+<h4>LZMA Compression and compression Level setting</h4>
+
+ROOT I/O now support the LZMA compression algorithm to compress data in 
+addition to the ZLIB compression algorithm.
+LZMA compression typically results in smaller files, but takes more
+CPU time to compress data. To use the new feature, the external XZ
+package must be installed when ROOT is configured and built:
+
+Download 5.0.3 from here <a href="http://tukaani.org/xz/">tukaani.org</a>
+and make sure to configure with fPIC:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   ./configure CFLAGS='-fPIC'</pre>
+
+Then the client C++ code must call routines to explicitly request LZMA
+compression.<br/>
+<p/>
+ZLIB compression is still the default.
+
+<h5>Setting the Compression Level and Algorithm</h5>
+
+There are three equivalent ways to set the compression level and 
+algorithm. For example, to set the compression to the LZMA algorithm
+and compression level 5.
+<ol><li><pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title);
+f.SetCompressionSettings(ROOT::CompressionSettings(ROOT::kLZMA, 5));
+</pre></li>
+<li>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title, ROOT::CompressionSettings(ROOT::kLZMA, 5));
+</pre></li>
+<li>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title);
+f.SetCompressionAlgorithm(ROOT::kLZMA);
+f.SetCompressionLevel(5);
+</pre></li>
+</ol>
+These methods work for <tt>TFile</tt>, <tt>TBranch</tt>, <tt>TMessage</tt>, <tt>TSocket</tt>, and <tt>TBufferXML</tt>. 
+The compression algorithm and level settings only affect compression of
+data after they have been set. <tt>TFile</tt> passes its settings to a TTree's branches 
+only at the time the branches are created. This can be overidden by 
+explicitly setting the level and algorithm for the branch. These classes 
+also have the following methods to access the algorithm and level for 
+compression.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+Int_t GetCompressionAlgorithm() const;
+Int_t GetCompressionLevel() const;
+Int_t GetCompressionSettings() const;
+</pre>
+If the compression level is set to 0, then no compression will be
+done. All of the currently supported algorithms allow the level to be
+set to any value from 1 to 9. The higher the level, the larger the
+compression factors will be (smaller compressed data size). The
+tradeoff is that for higher levels more CPU time is used for
+compression and possibly more memory. The ZLIB algorithm takes less
+CPU time during compression than the LZMA algorithm, but the LZMA
+algorithm usually delivers higher compression factors.
+<p/>
+The header file core/zip/inc/Compression.h declares the function
+"CompressionSettings" and the enumeration for the algorithms.
+Currently the following selections can be made for the algorithm:
+kZLIB (1), kLZMA (2), kOldCompressionAlgo (3), and kUseGlobalSetting
+(0). The last option refers to an older interface used to control the
+algorithm that is maintained for backward compatibility. The following
+function is defined in core/zip/inc/Bits.h and it set the global
+variable.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+R__SetZipMode(int algorithm);
+</pre>
+If the algorithm is set to kUseGlobalSetting (0), the global variable
+controls the algorithm for compression operations.  This is the
+default and the default value for the global variable is kZLIB.
 
 <h4>Asynchronous Prefetching</h4>
-<ul>
-<li>The prefetching mechanism uses two new classes (<tt>TFilePrefetch</tt> 
+The prefetching mechanism uses two new classes (<tt>TFilePrefetch</tt> 
 and <tt>TFPBlock</tt>) to prefetch in advance a block of tree entries. There
 is a thread which takes care of actually transferring the blocks and
 making them available to the main requesting thread. Therefore, the time
@@ -40,46 +122,29 @@ spent by the main thread waiting for the data before processing considerably
 decreases. Besides the prefetching mechanisms there is also a local
 caching option which can be enabled by the user. Both capabilities are
 disabled by default and must be explicitly enabled by the user. 
-</li>
-
-<li>In order to enable the prefetching the user must set the rootrc environment
+</p>
+In order to enable the prefetching the user must set the rootrc environment
 variable <tt>TFile.AsyncPrefetching</tt> as follows: 
 <tt>gEnv->SetValue("TFile.AsyncPrefetching", 1)</tt>. Only when the
 prefetching is enabled can the user set the local cache directory in
 which the file transferred will be saved. For subsequent reads of the
 same file the system will use the local copy of the file from cache.
 To set up a local cache directory, the client can use the following commands:
-</li>
+
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-  TString cachedir="file:/tmp/xcache/";
-  // or using xrootd on port 2000  
-  // TString cachedir="root://localhost:2000//tmp/xrdcache1/";
-  gEnv->SetValue("Cache.Directory", cachedir.Data());
+TString cachedir="file:/tmp/xcache/";
+// or using xrootd on port 2000  
+// TString cachedir="root://localhost:2000//tmp/xrdcache1/";
+gEnv->SetValue("Cache.Directory", cachedir.Data());
 </pre>
 
-<li>The <tt>TFilePrefetch</tt> class is responsible for actually reading
+The <tt>TFilePrefetch</tt> class is responsible for actually reading
 and storing the requests received from the main thread. It also creates
 the working thread which will transfer all the information. Apart from
 managing the block requests, it also deals with caching the blocks on
 the local machine and retrieving them when necessary. 
-</li>
-
-<li>The <tt>TFPBlock</tt> class represents the encapsulation of a block
+</p>
+The <tt>TFPBlock</tt> class represents the encapsulation of a block
 request. It contains the chunks to be prefetched and also serves as a
-container for the information read.</li>
-
-<li>In order to accommodate the new prefetching mechanism the following
-files have been modified: <tt>TFileCacheRead.cxx/.h</tt>,
-<tt>TTreeCache.cxx/.h</tt> and to a less extent <tt>TXNetFile.cxx</tt>,
-<tt>TFile.h</tt>. Basically in <tt>TFileCacheRead</tt> we've added the
-logic for dealing with the second buffer that is prefetched. In
-<tt>TTreeCache</tt> during prefetching the method FillBuffer is called
-after each read so that once the main thread starts reading from the
-beginning of the last available buffer, the second thread starts
-prefetching the next block.
-</li>
-<li>
-The TZIPFile compressed archive reader now supports the Zip64 format for
-archives and file members greater than 2 and 4 GB, respectively.
-</li>
-</ul>
+container for the information read.
+</p>
