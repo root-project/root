@@ -22,14 +22,14 @@ we now explicitly issue a Fatal error:
 Fatal in &lt;ReadSequence&gt;: The sequence of actions to read AliESDVertex:7 member-wise was not initialized.
 aborting
 </pre></li>
-<li>Add new optional parameter maxbuf to <tt>TXMLEngine::ParseFile()</tt> allowing the specification of the XML file size to be parsed. This fixes issue <a href=https://savannah.cern.ch/bugs/?78864>#78864</a>.</li>
+<li>Add new optional parameter maxbuf to <tt>TXMLEngine::ParseFile()</tt> allowing the specification of the XML file size to be parsed. This fixes issue <a href="https://savannah.cern.ch/bugs/?78864">#78864</a>.</li>
 <li>Add function <tt>TBuffer::AutoExpand</tt> to centralize the automatic buffer extension policy.  This enable the ability to tweak it later (for example instead of always doubling the size, increasing by only at most 2Mb or take hints from the number of entries already
 in a TBasket).</li>
 <li>Migrate the class <tt>TFileMerger</tt> from the proofplayer library to ROOT I/O library and update <tt>hadd</tt> to rely on
  <tt>TFileMerger</tt> for everything but the command line argument parsing.</li>
 <li>Fix support for schema evolution from:
-<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter<Int_t>* MyInt; //-> version 1</pre>to
-<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter<Int_t> MyInt; // version 2</pre>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter&lt;Int_t&gt;* MyInt; //-&gt; version 1</pre>to
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   TParameter&lt;Int_t&gt; MyInt; // version 2</pre>
 </li>
 <li>The TZIPFile compressed archive reader now supports the Zip64 format for
 archives and file members greater than 2 and 4 GB, respectively.</li>
@@ -122,7 +122,7 @@ spent by the main thread waiting for the data before processing considerably
 decreases. Besides the prefetching mechanisms there is also a local
 caching option which can be enabled by the user. Both capabilities are
 disabled by default and must be explicitly enabled by the user. 
-</p>
+<p/>
 In order to enable the prefetching the user must set the rootrc environment
 variable <tt>TFile.AsyncPrefetching</tt> as follows: 
 <tt>gEnv->SetValue("TFile.AsyncPrefetching", 1)</tt>. Only when the
@@ -143,8 +143,8 @@ and storing the requests received from the main thread. It also creates
 the working thread which will transfer all the information. Apart from
 managing the block requests, it also deals with caching the blocks on
 the local machine and retrieving them when necessary. 
-</p>
+<p/>
 The <tt>TFPBlock</tt> class represents the encapsulation of a block
 request. It contains the chunks to be prefetched and also serves as a
 container for the information read.
-</p>
+<p/>

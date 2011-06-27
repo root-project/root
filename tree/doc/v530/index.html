@@ -5,12 +5,12 @@
 
 <h4>Performance</h4>
 <ul>
-<li>Introduce support for <tt>TTree</tt> with variable cluster size (i.e. value of <tt>fAutoFlush</tt>).</p>
+<li>Introduce support for <tt>TTree</tt> with variable cluster size (i.e. value of <tt>fAutoFlush</tt>).<p/>
 Iterating through the cluster should be done via the new class <tt>TTree::TClusterIterator</tt> (i.e. this replaces <tt>+= fAutoFlush</tt>):
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    TTree::TClusterIterator clusterIter = tree->GetClusterIterator(which_entry_to_start_from);
    Long64_t clusterStart;
-   while( (clusterStart = clusterIter()) < tree->GetEntries()) {
+   while( (clusterStart = clusterIter()) &lt; tree-&lt;GetEntries()) {
       printf("The cluster starts at %lld and ends at %lld\n",clusterStart,clusterIter.GetNextEntry()-1);
    }</pre>
 See <tt>TTreeCache::FillBuffer</tt> for a concrete usage example.
@@ -65,21 +65,21 @@ estimate size of one entry in the branch and no lower than 8 bytes).</li>
 <li>Update the branch split mechanism to  no longer split a base class
 that can not be split (i.e. respect the information returned
 by <tt>TStreamerElement::CannotSplit</tt> (and thus <tt>TClass::CanSplit</tt>).</li>
-<li>In <tt>TChain::ls</tt>, print the name of the chain and indent the list of files (this fixes <a href=https://savannah.cern.ch/bugs/?79909>#79909</a>).</li>
+<li>In <tt>TChain::ls</tt>, print the name of the chain and indent the list of files (this fixes <a href="https://savannah.cern.ch/bugs/?79909">#79909</a>).</li>
 <li>When setting <tt>fBranch</tt> in the loaded basket, make sure to set it also for the first/only basket ; this prevents a crash when calling <tt>SetBasketSize</tt> for a split top level branch in a file produced by v4.00/08.</li>
 <li>In <tt>TTree::Streamer</tt>, if the object we are reading in was already attached to a directory, let's make sure to unregister the object before setting <tt>fDirectory</tt> to zero.</li>
-<li>Prevent <tt>TChainIndex</tt> and <tt>TTreeIndex</tt> from finding the branches from the friend tree when looking up the value in the master/parent <tt>TTree</tt>.  This fixes <a href=https://savannah.cern.ch/bugs/?79166>#79166</a>.</li>
+<li>Prevent <tt>TChainIndex</tt> and <tt>TTreeIndex</tt> from finding the branches from the friend tree when looking up the value in the master/parent <tt>TTree</tt>.  This fixes <a href="https://savannah.cern.ch/bugs/?79166">#79166</a>.</li>
 <li>Update <tt>GetEntryNumberFriend</tt> and related functions to retun a Long64_t as needed.</li>
 <li>Fix the case of a split collection which contains a class with one
 data member which is an instance of a class with more than one base 
 class some of which are not split (for example if one the base class
 is std::vector&lt;int&gt;).</li>
-<li>Fix the problem reported at <a href=http://root.cern.ch/phpBB3/viewtopic.php?t=11890>#11890</a>
+<li>Fix the problem reported at <a href="http://root.cern.ch/phpBB3/viewtopic.php?t=11890">#11890</a>
 by making sure that <tt>TChain::ResetBranchAddress(TBranch*)</tt> also record the reset in the 
 chain's meta information about branches.</li>
 <li>Allow the output name passed to <tt>MakeProxy</tt> to be either a classname (to which will be added .h to make the filename) or a filename (which already has an extension).</li>
 <li>Allow (via the option <tt>kIgnoreMissingTopLevel</tt>) for the <tt>TTreeCloner</tt> to handle the case where the output <tt>TTree</tt> has more top level branches than the input <tt>TTree</tt> (this is usefull in case of 'horizontal' merging of TTrees and/or the case of copy and add.)</li>
-<li>Add support for csv files:</p>
+<li>Add support for csv files:<p/>
 Add support for other delimiters (like ',') and for direct import of files in the common .csv format in <tt>TTree::ReadFile</tt>.  To handle older .csv files, add support for '\r' carriage returns in addition to '\n' (which also works for "\r\n").</li>
 </ul>
 
