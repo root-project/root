@@ -25,7 +25,7 @@
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TMultiGraph.h"
-#include "TDirectory.h"
+#include "TROOT.h"
 #include "TLine.h"
 #include "TAxis.h"
 #include "TLegend.h"
@@ -237,26 +237,29 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    TGraph * gplot = 0;
    if (drawObs) { 
       gobs = MakePlot(); 
-      // add object to current directory to avoid mem leak
-      if (gDirectory) gDirectory->Add(gobs); 
+      // add object to top-level directory to avoid mem leak
+      if (gROOT) gROOT->Add(gobs); 
       if (drawAxis) { 
          gobs->Draw("APL");        
          gplot = gobs;
          gplot->GetHistogram()->SetTitle( GetTitle() );
       }
       else gobs->Draw("PL");
+
    }
    TMultiGraph * gexp = 0;
    if (drawExp) { 
       gexp = MakeExpectedPlot(); 
       // add object to current directory to avoid mem leak
-      if (gDirectory) gDirectory->Add(gexp); 
+      if (gROOT) gROOT->Add(gexp); 
       if (drawAxis && !drawObs) { 
          gexp->Draw("A");
          gexp->GetHistogram()->SetTitle( GetTitle() );
          gplot = (TGraph*) gexp->GetListOfGraphs()->First();
       }
-      else gexp->Draw();
+      else 
+         gexp->Draw();
+
    }
 
    // draw also an horizontal  line at the desired conf level
@@ -277,7 +280,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    TGraph *gclb = 0;
    if (drawCLb) { 
       gclb = MakePlot("CLb");
-      if (gDirectory) gDirectory->Add(gclb); 
+      if (gROOT) gROOT->Add(gclb); 
       gclb->SetMarkerColor(kBlue+4);
       gclb->Draw("PL");
       // draw in red observed cls or clsb
@@ -288,14 +291,14 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    if (draw2CL) { 
       if (fResults->fUseCLs) {
          gclsb = MakePlot("CLs+b");
-         if (gDirectory) gDirectory->Add(gclsb); 
+         if (gROOT) gROOT->Add(gclsb); 
          gclsb->SetMarkerColor(kBlue);
          gclsb->Draw("PL");
          gclsb->SetLineStyle(3);
       }
       else { 
          gcls = MakePlot("CLs");
-         if (gDirectory) gDirectory->Add(gcls); 
+         if (gROOT) gROOT->Add(gcls); 
          gcls->SetMarkerColor(kBlue);
          gcls->Draw("PL");
          gcls->SetLineStyle(3);
@@ -307,7 +310,10 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    }
 
 
-   TLegend * l = new TLegend(0.6,0.6,0.9,0.9);
+   double y0 = 0.6;
+   double verticalSize = (!gexp || !gcls || !gclsb ) ? 0.3 : 0.15;
+   double y1 = y0 + verticalSize;
+   TLegend * l = new TLegend(0.6,y0,0.9,y1);
    if (gobs) l->AddEntry(gobs,"","PEL");
    if (gclsb) l->AddEntry(gclsb,"","PEL");
    if (gcls) l->AddEntry(gcls,"","PEL");

@@ -81,14 +81,76 @@ HypoTestInverterResult::~HypoTestInverterResult()
 }
 
 
-bool HypoTestInverterResult::Add( const HypoTestInverterResult& /* otherResult */  )
+bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
 {
   /// Merge this HypoTestInverterResult with another
   /// HypoTestInverterResult passed as argument
 
-  std::cout << "Sorry, this function is not yet implemented\n";
+   int nThis = ArraySize();
+   int nOther = otherResult.ArraySize();
+   if (nOther == 0) return true;
+   if (nOther != otherResult.fYObjects.GetSize() ) return false; 
+   if (nThis != fYObjects.GetSize() ) return false; 
 
-  return true;
+   // cannot merge in case of inconsistent memebrs
+   if (fExpPValues.GetSize() > 0 && fExpPValues.GetSize() != nThis ) return false;
+   if (otherResult.fExpPValues.GetSize() > 0 && otherResult.fExpPValues.GetSize() != nOther ) return false;
+
+   oocoutI(this,Eval) << "HypoTestInverterResult::Add - merging result from " << otherResult.GetName()  
+                                << " in " << GetName() << std::endl;
+
+   bool addExpPValues = (fExpPValues.GetSize() == 0 && otherResult.fExpPValues.GetSize() > 0);
+   bool mergeExpPValues = (fExpPValues.GetSize() > 0 && otherResult.fExpPValues.GetSize() > 0);
+
+   if (nThis == 0) {
+      fXValues = otherResult.fXValues;
+      for (int i = 0; i < nOther; ++i) 
+         fYObjects.Add( otherResult.fYObjects.At(i)->Clone() );
+      for (int i = 0; i <  fExpPValues.GetSize() ; ++i)
+         fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
+   }
+   // now to common merge combining point with same value and adding extra ones 
+   for (int i = 0; i < nOther; ++i) {
+      double otherVal = otherResult.fXValues[i];
+      HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
+      if (otherHTR == 0) continue;
+      bool sameXFound = false;
+      for (int j = 0; j < nOther; ++j) {
+         double thisVal = fXValues[j];
+         
+            // if same value merge the result 
+            if ( (std::abs(otherVal) < 1  && TMath::AreEqualAbs(otherVal, thisVal,1.E-12) ) || 
+                 (std::abs(otherVal) >= 1 && TMath::AreEqualRel(otherVal, thisVal,1.E-12) ) ) {
+               HypoTestResult * thisHTR = (HypoTestResult*) fYObjects.At(j);               
+               thisHTR->Append(otherHTR);
+               sameXFound = true;
+               if (mergeExpPValues) { 
+                  ((SamplingDistribution*) fExpPValues.At(j))->Add( (SamplingDistribution*)otherResult.fExpPValues.At(i) );
+                  std::cout << "adding expected p -values " << std::endl;
+               }
+               break;
+            }
+      }
+      if (!sameXFound) { 
+         // add the new result 
+         fYObjects.Add(otherHTR->Clone() );
+         fXValues.push_back( otherVal);
+      }
+      // add in any case also when same x found
+      if (addExpPValues)  
+         fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
+
+   }
+   
+   if (ArraySize() > nThis) 
+      oocoutI(this,Eval) << "HypoTestInverterResult::Add  - new number of points is " << fXValues.size()
+                         << std::endl;
+   else 
+      oocoutI(this,Eval) << "HypoTestInverterResult::Add  - new toys/point is " 
+                         <<  ((HypoTestResult*) fYObjects.At(0))->GetNullDistribution()->GetSize() 
+                         << std::endl;
+      
+   return true;
 }
 
  
