@@ -1,10 +1,7 @@
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
-  <title></title>
-</head>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
 
-<body>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"><title></title></head><body>
 <br>
 
 <hr>
@@ -12,13 +9,24 @@
 
 <h3>Proof</h3>
 <ul>
+  <li>Backward incompatible changes</li>
+  <ul>
+    <li>Starting from this version, the string to be used in
+TProof::Open(...) to start a PROOF-Lite session changed to "lite://".
+This is because the&nbsp; string "lite" prevented the use of 'lite' as
+a possible name for a machine on the local domain. A reminder is
+printed if 'lite' is used and the connection fails. Note that, if
+Proof.LocalDefault is unset, TProof::Open("") can still be used to
+start a PROOF-Lite session. <br>
+    </li>
+  </ul>
   <li>New functionality
     <ul>
       <li>In TProof::Load, add the possibility to define a list of files to be
         sent because needed by the main macro file. The list is comma-separated
         and the first file is considered as the main one. For example<br>
         <br>
-        &#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         proof-&gt;Load("&lt;macropath&gt;/mymacro.C+,&lt;thispath&gt;/thisheader.h,&lt;thatpath&gt;/thatheader.h")<br>
         <br>
         will make sure that the files 'thisheader.h' and 'thatheader.h', needed
@@ -50,11 +58,11 @@
       <li>Add support for log file truncation. Truncation is disabled by
         default. Enabling is controlled by the rootrc variable<br>
         <br>
-        &#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;
-        ProofServ.LogFileMaxSize&#xa0;&#xa0;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        ProofServ.LogFileMaxSize&nbsp;&nbsp;
         {&lt;bytes&gt;|&lt;kilobytes&gt;K|&lt;megabytes&gt;M|&lt;gigabytes&gt;G}<br>
         <br>
-        &#xa0;indicating the max number of bytes. The number can be followed by
+        &nbsp;indicating the max number of bytes. The number can be followed by
         a {K,M,G} to indicate KBytes, MBytes or GBytes, respectively.</li>
       <li>Add new derivation of TList (TProofOutputList) to be used on the
         PROOF client to filter out PROOF internal objects when displaying or
@@ -70,8 +78,13 @@
       <li>Add possibility to start the proofserv with 'system()' instead of
         'fork()' as done in PROOF-Lite. A new switch 'usefrk' has been added to
         'xpd.proofservmgr' to control that. Default is still fork().</li>
+      <li>Added support for the protocol "pod://" in TProof::Open to
+automatically address the entry point of the available PoD installation.<br>
+      </li>
+
     </ul>
   </li>
+
   <li>Improvements
     <ul>
       <li>In TProof::ClearPackages, use the manager to execute the command on
@@ -94,7 +107,7 @@
       <li>Fix a few issues in SQL PROOF monitoring: in
         TSQLMonitoringWriter::SendParameters, drop ''' around field names in
         the INSERT string; also use TString::Format(...) instead of Form(...)
-        where relevant.&#xa0; In TPerfStats: call 'proofgroup' instead of
+        where relevant.&nbsp; In TPerfStats: call 'proofgroup' instead of
         'group' the field with the PROOF group (interference with the 'group'
         keyword in SQL); add new field 'querytag' VARCHAR(64) with the unique
         query tag; in WriteQueryLog fill also the field 'totevents'; in
@@ -110,7 +123,7 @@
       <li>Correctly honour selector abort status settings
         TSelector::kAbortProcess and TSelector::kAbortFile.</li>
       <li>Improve reporting of the non-processed {files, events} in the final
-        'MissingFiles' list.&#xa0; </li>
+        'MissingFiles' list.&nbsp; </li>
       <li>Improved algorithm for TPacketizerUnit to fix issue with non
         homogeneous machines.</li>
       <li>Improve the way the information about log files is saved in case of
@@ -182,5 +195,5 @@
     </ul>
   </li>
 </ul>
-</body>
-</html>
+
+</body></html>
