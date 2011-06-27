@@ -56,7 +56,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 #include "RooStats/HypoTestPlot.h"
 #include "RooStats/HypoTestInverterPlot.h"
 
-
+#include "RooStats/ProofConfig.h"
 
 ClassImp(RooStats::HypoTestInverter)
 
@@ -70,6 +70,7 @@ double HypoTestInverter::fgAbsAccuracy = 0.05;
 double HypoTestInverter::fgRelAccuracy = 0.05;
 std::string HypoTestInverter::fgAlgo = "logSecant";
 
+bool HypoTestInverter::fgCloseProof = false;
 
 // helper class to wrap the functionality of the various HypoTestCalculators
 
@@ -79,6 +80,12 @@ struct HypoTestWrapper {
    static void SetToys(HypoTestType * h, int toyNull, int toyAlt) { h->SetToys(toyNull,toyAlt); }
    
 };
+
+
+void HypoTestInverter::SetCloseProof(Bool_t flag) {
+// set flag to close proof for every new run
+   fgCloseProof  = flag;
+}
 
  
 RooRealVar * HypoTestInverter::GetVariableToScan(const HypoTestCalculatorGeneric &hc) { 
@@ -406,6 +413,8 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;    
    }
+
+   if (fgCloseProof) ProofConfig::CloseProof();
 
    return (fResults) ? (HypoTestInverterResult*)(fResults->Clone()) : 0;
 }
@@ -988,6 +997,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
    oocoutI((TObject*)0,InputArguments) << "HypoTestInverter - rebuilding  the p value distributions by generating ntoys = "
                                        << nToys << std::endl;
+
 
 
    for (int itoy = 0; itoy < nToys; ++itoy) { 
