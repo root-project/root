@@ -50,6 +50,65 @@ In the process of writing the new HypoTestInverter the conventions for p-values,
 
 <h4>HypoTestInverter, HypoTestInverterResult, HypoTestInverterPlot</h4>
 
+These classes have been rewritten for using them with the new hypothesis test calculators. The <tt>HypoTestInverter</tt>
+class can now be constructed by any generic <tt>HypoTestCalculator</tt>, and both the <tt>HybridCalculator</tt> and the new
+<tt>FrequentistCalculator</tt> are supported.
+
+The <tt>HypoTestInverter</tt> class can be constructed in two ways: either passing an
+<tt>HypoTestCalculator</tt> and a data set or by passing the model for the signal, for the background and a data set.
+In the first case the user configure the <tt>HypoTestCalculator</tt> before passing to the <tt>HypoTestInverter</tt>.
+It must be configured using as null model the signal plus background model as alternate model the background
+model. Optionally the user can pass the parameter to scan, if it is not passed, the first parameter of interest of the
+null model will be used. In the second case (when passing directly the model and the data) the <tt>HypoTestInverter</tt>
+can be configured to use either the frequentist or the hybrid calculator. The user can then configure the class
+afterwards. For example set the test statistic to use via the method <tt>SetTestStatistic</tt>, number of toys to run
+for each hypothesis, by retrieving the contained HypoTestCalculator:
+<pre>
+HypoTestInverter inverter(obsData, model_B, model_SB, parameterToScan, HypoTestInverter::kFrequentist);
+ProfileLikelihoodRatioTestStat profLR( *model_SB->GetPdf() );
+inverter.SetTestStatistic(&profLR);
+FrequentistCalculator * htcalc = (FrequentistCalculator*) inverter.GetHypoTestCalculator();
+htcalc->SetToys( ntoySB, ntoyB);
+</pre>
+
+The Inverter can then run using a fixed grid of npoint between xmin and xmax or by using an automatic scan, where a
+bisection algorithm is used.
+For running a fixed grid one needs to call <tt>SetFixedScan(npoints, xmin, xmax)</tt>, while for running an autoscan use
+the function <tt>SetAutoScan</tt>. The result is returned in the <tt>GetInterval</tt> function as an
+<tt>HypoTestInverterResult</tt> class. If a fixed grid is used the upper limit is obtained by using a interpolation on
+the scanned points. The interpolation can be linear or a spline (if
+<tt>result.SetInterpolationOption(HypoTestInverterResult::kSpline)</tt> is called).
+The upper limit, the expected P value distributions and also the upper limit distributions can be obtained from the
+result class. 
+<pre>
+HypoTestInverterResult * result = inverter.GetInterval();
+double upperLimit = result->UpperLimit();
+double expectedLimit = result->GetExpectedUpperLimit(0);
+</pre>
+
+The limit values, p values and bands can be drawn using the <tt>HypoTestInverterPlot</tt> class. Example:
+
+<pre>
+HypoTestInverterPlot * plot = new HypoTestInverterPlot("Result","POI Scan Result",result);
+plot->Draw("2CL CLb");
+</pre>
+
+<p>
+Where the Draw option "2CL CLb" draws in addition to the observed limit and bands, the observed CLs+b and CLb.
+The result is shown  in this figure:
+
+<pre>
+<img src="scan_cls.pdf">
+</pre>
+
 
 <h4>FrequentistCalculator</h4>
 This is a <tt>HypoTestCalculator</tt> that returns a <tt>HypoTestResult</tt> similar to the <tt>HybridCalculator</tt>.  The primary difference is that this tool profiles the nuisance parameters for the null model and uses those fixed values of the nuisance parameters for generating the pseudo-experiments, where the <tt>HybridCalculator</tt> smears/randomizes/marginalizes the nuisance parameters.
+
+<h4>BayesianCalculator</h4>
+Several improvements have been put in the class. In particular the possibility to set different integration types. One
+can set the different integration types available in the ROOT integration routines
+(ADAPTIVE, VEGAS, MISER, PLAIN for multi-dimension). In addition one can use an integration types by generating nuisance
+toy MC (method TOYMC). If the nuisance parameters are uncorrelated, this last method can scale up for a large number of
+nuisance parameters. It has been tested to work up to 50-100 parameters.   
+ 
