@@ -40,6 +40,10 @@ public:
    // destructor
    virtual ~HypoTestInverterResult();
 
+   // merge with the content of another HypoTestInverterResult object
+   bool Add( const HypoTestInverterResult& otherResult );
+
+
    // function to return the value of the parameter of interest for the i^th entry in the results
    double GetXValue( int index ) const ;
 
@@ -147,8 +151,6 @@ public:
 
 private:
 
-   // merge with the content of another HypoTestInverterResult object
-   bool Add( const HypoTestInverterResult& otherResult );
 
    double CalculateEstimatedError(double target);
    int FindClosestPointIndex(double target);

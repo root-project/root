@@ -34,6 +34,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 
 #include "RooStats/HypoTestInverter.h"
 #include <cassert>
+#include <cmath>
 
 #include "TF1.h"
 #include "TLine.h"
@@ -133,6 +134,7 @@ void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,cons
          oocoutW((TObject*)0,InputArguments) << "HypoTestInverter - using a B model  with POI " 
                                              <<    scanVariable.GetName()  << " not equal to zero "
                                              << " user must check input model configurations " << endl;
+      if (poiB) delete poiB;
    }
    delete bParams;
 }
@@ -385,20 +387,26 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
    // Run a fixed scan or the automatic scan depending on the configuration
    // Return a copy of the result object which will be managed by the user
 
-   // if having a result with more thon one point return it
-   if (fResults && fResults->ArraySize() > 1) return (HypoTestInverterResult*)(fResults->Clone());
+   // if having a result with more than one point return it
+   if (fResults && fResults->ArraySize() > 1) { 
+      oocoutI((TObject*)0,Eval) << "HypoTestInverter::GetInterval - return an already existing interval " << std::endl;          
+      return (HypoTestInverterResult*)(fResults->Clone());
+   }
 
    if (fNBins > 0) {
+      oocoutI((TObject*)0,Eval) << "HypoTestInverter::GetInterval - run a fixed scan" << std::endl;          
       bool ret = RunFixedScan(fNBins, fXmin, fXmax); 
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running a fixed scan " << std::endl;    
    }
    else { 
+      oocoutI((TObject*)0,Eval) << "HypoTestInverter::GetInterval - run an automatic scan" << std::endl;          
       double limit(0),err(0);
       bool ret = RunLimit(limit,err);
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;    
    }
+
    return (fResults) ? (HypoTestInverterResult*)(fResults->Clone()) : 0;
 }
 
@@ -568,12 +576,22 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    if ( fResults->ArraySize()!=0 ) lastXtested = fResults->GetXValue(fResults->ArraySize()-1);
    else lastXtested = -999;
 
-   if ( lastXtested==rVal ) {
+   if ( (std::abs(rVal) < 1 && TMath::AreEqualAbs(rVal, lastXtested,1.E-12) ) || 
+        (std::abs(rVal) >= 1 && TMath::AreEqualRel(rVal, lastXtested,1.E-12) ) ) {
      
-     std::cout << "Merge with previous result\n";
-     HypoTestResult* prevResult =  fResults->GetResult(fResults->ArraySize()-1);
-     prevResult->Append(result);
-     delete result; // t.b.c
+      oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunOnePoint - Merge with previous result for "
+                                << fScannedVariable->GetName() << " = " << rVal << std::endl;
+      HypoTestResult* prevResult =  fResults->GetResult(fResults->ArraySize()-1);
+      if (prevResult->GetNullDistribution() && prevResult->GetAltDistribution()) { 
+         prevResult->Append(result);
+         delete result;  // we can delete the result
+      }
+      else { 
+         // if it was empty we re-use it 
+         oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunOnePoint - replace previous empty result\n";
+         fResults->fYObjects.Remove( prevResult); 
+         fResults->fYObjects.Add(result);            
+      }
 
    } else {
      
@@ -991,8 +1009,8 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
       if (!storePValues) continue;
 
-      if (nPoints <= r->ArraySize()) {
-         oocoutW((TObject*)0,InputArguments) << "HypoTestInverterResult: skip extra points" << std::endl;
+      if (nPoints < r->ArraySize()) {
+         oocoutW((TObject*)0,InputArguments) << "HypoTestInverter: skip extra points" << std::endl;
       }
 
       for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
@@ -1002,6 +1020,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       }
 
       delete r; 
+      delete bkgdata;
    }
 
 
@@ -1009,6 +1028,9 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       if (clsDist) clsDist->SetOwner(true);
       if (clbDist) clbDist->SetOwner(true);
       if (clsbDist) clsbDist->SetOwner(true);
+
+      oocoutI((TObject*)0,InputArguments) << "HypoTestInverter: storing rebuilt p values  " << std::endl;
+
       for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
          if (clsDist) {
             TString name = TString::Format("CLs_distrib_%d",ipoint);
