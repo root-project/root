@@ -25,6 +25,7 @@
 
 #include "RooFit.h"
 
+#include "TMath.h"
 #include "Riostream.h"
 #include "Riostream.h"
 #include "RooGaussModel.h"
@@ -179,7 +180,7 @@ Double_t RooGaussModel::evaluate() const
     Double_t result(0) ;
     if (basisSign!=Minus) result += evalCerfRe(0,-u,c) ; 
     if (basisSign!=Plus)  result += evalCerfRe(0, u,c) ; 
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 1 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 1 " << endl; }
     return result ;
   }
 
@@ -190,7 +191,7 @@ Double_t RooGaussModel::evaluate() const
     if (_x==0.) return result ;
     if (basisSign!=Minus) result += -evalCerfIm(-_x,-u,c) ; 
     if (basisSign!=Plus)  result += -evalCerfIm( _x, u,c) ; 
-    if (isnan(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 3 " << endl; 
+    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 3 " << endl; 
     return result ;
   }
 
@@ -200,7 +201,7 @@ Double_t RooGaussModel::evaluate() const
     Double_t result(0) ;
     if (basisSign!=Minus) result += evalCerfRe(-_x,-u,c) ; 
     if (basisSign!=Plus)  result += evalCerfRe( _x, u,c) ; 
-    if (isnan(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 4 " << endl; 
+    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 4 " << endl; 
     return result ;  
   }
 
@@ -211,7 +212,7 @@ Double_t RooGaussModel::evaluate() const
     int sgn = ( basisType == coshBasis ? +1 : -1 );
     if (basisSign!=Minus) result += 0.5*(evalCerfRe(0,-u,c*(1-_y))+sgn*evalCerfRe(0,-u,c*(1+_y))) ; 
     if (basisSign!=Plus)  result += 0.5*(evalCerfRe(0, u,c*(1-_y))+sgn*evalCerfRe(0, u,c*(1+_y))) ; 
-    if (isnan(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 8 " << endl; 
+    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 8 " << endl; 
     return result ;
   }
 
@@ -331,7 +332,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
     if (_basisCode!=0 && basisSign==Both) result *= 2 ;    
     //cout << "Integral 1st form " << " result= " << result*ssfInt << endl;
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 1 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 1 " << endl; }
     return result*ssfInt ;
   }
 
@@ -357,7 +358,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t result(0) ;
     if (basisSign!=Minus) result += evalCerfInt(+1,0,tau,-umin,-umax,c).re();   
     if (basisSign!=Plus)  result += evalCerfInt(-1,0,tau, umin, umax,c).re();
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 3 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 3 " << endl; }
     return result*ssfInt ;
   }
 
@@ -371,7 +372,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (_x==0) return result*ssfInt ;
     if (basisSign!=Minus) result += -1*evalCerfInt(+1,-_x,tau,-umin,-umax,c).im();
     if (basisSign!=Plus)  result += -1*evalCerfInt(-1, _x,tau, umin, umax,c).im();      
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 4 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 4 " << endl; }
     return result*ssfInt ;
   }
 
@@ -381,7 +382,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     Double_t result(0) ;
     if (basisSign!=Minus) result += evalCerfInt(+1,-_x,tau,-umin,-umax,c).re();
     if (basisSign!=Plus)  result += evalCerfInt(-1, _x,tau, umin, umax,c).re();      
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 5 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 5 " << endl; }
     return result*ssfInt ;
   }
 
@@ -393,7 +394,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     int sgn = ( basisType == coshBasis ? +1 : -1 );
     if (basisSign!=Minus) result += 0.5*(evalCerfInt(+1,0,tau/(1-_y),-umin,-umax,c*(1-_y)).re()+ sgn*evalCerfInt(+1,0,tau/(1+_y),-umin,-umax,c*(1+_y)).re());
     if (basisSign!=Plus)  result += 0.5*(evalCerfInt(-1,0,tau/(1-_y), umin, umax,c*(1-_y)).re()+ sgn*evalCerfInt(-1,0,tau/(1+_y), umin, umax,c*(1+_y)).re());
-    if (isnan(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 6 " << endl; }
+    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 6 " << endl; }
     return result*ssfInt ;
   }
 
