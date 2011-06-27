@@ -23,6 +23,9 @@ if [ ! $ROOTSYS ]; then
     return 1
 fi
 
+export TMVASYS=$PWD
+
+
 # On MacOS X $DYLD_LIBRARY_PATH has to be modified, so:
 if [[ `root-config --platform` == "macosx" ]]; then
 

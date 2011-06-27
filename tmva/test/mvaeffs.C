@@ -138,6 +138,7 @@ class StatDialogMVAEffs {
    
    void SetFormula(const TString& f) { fFormula = f; }
    TString GetFormula();
+   TString GetFormulaString(){return fFormula;}
    TString GetLatexFormula();
    
    void ReadHistograms(TFile* file);
@@ -194,6 +195,7 @@ TString StatDialogMVAEffs::GetFormula()
    f.ReplaceAll("B","y");
    return f;
 }
+
 
 TString StatDialogMVAEffs::GetLatexFormula() 
 {
@@ -324,8 +326,8 @@ void StatDialogMVAEffs::UpdateSignificanceHists()
    MethodInfo* info(0);
    TString cname = "Classifier";
    if (cname.Length() >  maxLenTitle)  maxLenTitle = cname.Length();
-   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  S/sqrt(S+B)      NSig      NBkg   EffSig   EffBkg", 
-                       maxLenTitle, cname.Data() );
+   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg", 
+                       maxLenTitle, cname.Data(), GetFormulaString().Data() );
    cout << "--- " << setfill('=') << setw(str.Length()) << "" << setfill(' ') << endl;
    cout << "--- " << str << endl;
    cout << "--- " << setfill('-') << setw(str.Length()) << "" << setfill(' ') << endl;
@@ -475,7 +477,7 @@ void StatDialogMVAEffs::DrawHistograms()
       legend2->SetFillStyle( 1 );
       legend2->AddEntry(info->purS,"Signal purity","L");
       legend2->AddEntry(info->effpurS,"Signal efficiency*purity","L");
-      legend2->AddEntry(info->sSig,"S / #sqrt{S+B}","L");
+      legend2->AddEntry(info->sSig,GetLatexFormula().Data(),"L");
       legend2->Draw("same");
       legend2->SetBorderSize(1);
       legend2->SetMargin( 0.3 );
@@ -492,7 +494,7 @@ void StatDialogMVAEffs::DrawHistograms()
       tl.SetTextSize( 0.033 );
       Int_t maxbin = info->sSig->GetMaximumBin();
       info->line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
-      tl.DrawLatex( 0.15, 0.19, "events the maximum S / #sqrt{S+B} is");
+      tl.DrawLatex( 0.15, 0.19, "events the maximum "+GetLatexFormula()+" is");
       info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%3.4f when cutting at %3.4f",
                                                    info->maxSignificance, 
                                                    info->sSig->GetXaxis()->GetBinCenter(maxbin)) );

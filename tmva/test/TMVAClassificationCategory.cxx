@@ -21,11 +21,11 @@
  * macros (simply say: root -l <../macros/macro.C>), which can be conveniently    *
  * invoked through a GUI launched by the command                                  *
  *                                                                                *
- *    root -l TMVAGui.C                                                        *
+ *    root -l TMVAGui.C                                                           *
  **********************************************************************************/
 
 #include <cstdlib>
-#include <iostream> 
+#include <iostream>
 #include <map>
 #include <string>
 
@@ -44,12 +44,13 @@
 // two types of category methods are implemented
 Bool_t UseOffsetMethod = kTRUE;
 
-int main( int argc, char** argv ) 
+int main( int argc, char** argv )
 {
    //---------------------------------------------------------------
-   // Example for usage of different event categories with classifiers 
+   // Example for usage of different event categories with classifiers
 
-   std::cout << std::endl << "==> Start TMVAClassificationCategory" << std::endl;
+   std::cout << std::endl
+             << "==> Start TMVAClassificationCategory" << std::endl;
 
    bool batchMode = false;
 
@@ -62,7 +63,9 @@ int main( int argc, char** argv )
   std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D" );
   if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
-   TMVA::Factory *factory = new TMVA::Factory( "TMVAClassificationCategory", outputFile, factoryOptions );
+  TMVA::Factory *factory = new TMVA::Factory( "TMVAClassificationCategory",
+                                              outputFile,
+                                              factoryOptions );
 
    // Define the input variables used for the MVA training
    factory->AddVariable( "var1", 'F' );
@@ -70,16 +73,17 @@ int main( int argc, char** argv )
    factory->AddVariable( "var3", 'F' );
    factory->AddVariable( "var4", 'F' );
 
-   // You can add so-called "Spectator variables", which are not used in the MVA training,
-   // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
-   // input variables, the response values of all trained MVAs, and the spectator variables
+   // You can add so-called "Spectator variables", which are not used
+   // in the MVA training, but will appear in the final "TestTree"
+   // produced by TMVA. This TestTree will contain the input
+   // variables, the response values of all trained MVAs, and the
+   // spectator variables
    factory->AddSpectator( "eta" );
 
    // Load the signal and background event samples from ROOT trees
    TFile *input(0);
-   TString fname( "" );
-   if (UseOffsetMethod) fname = "data/toy_sigbkg_categ_offset.root";
-   else                 fname = "data/toy_sigbkg_categ_varoff.root";
+   TString fname = UseOffsetMethod ? "data/toy_sigbkg_categ_offset.root" : "data/toy_sigbkg_categ_varoff.root";
+
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- TMVAClassificationCategory: Accessing " << fname << std::endl;
@@ -108,7 +112,7 @@ int main( int argc, char** argv )
 
    // Tell the factory how to use the training and testing events
    factory->PrepareTrainingAndTestTree( mycuts, mycutb,
-                                        "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
+                                        "nTest_Signal=5500:nTrain_Background=3400:SplitMode=Random:NormMode=NumEvents" );
 
    // ---- Book MVA methods
 
@@ -117,14 +121,14 @@ int main( int argc, char** argv )
 
    // Likelihood
    factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood",
-                        "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
+                        "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" );
 
    // --- Categorised classifier
    TMVA::MethodCategory* mcat = 0;
 
    // The variable sets
    TString theCat1Vars = "var1:var2:var3:var4";
-   TString theCat2Vars = (UseOffsetMethod ? "var1:var2:var3:var4" : "var1:var2:var3");
+   TString theCat2Vars = UseOffsetMethod ? "var1:var2:var3:var4" : "var1:var2:var3";
 
    // Fisher with categories
    TMVA::MethodBase* fiCat = factory->BookMethod( TMVA::Types::kCategory, "FisherCat","" );
