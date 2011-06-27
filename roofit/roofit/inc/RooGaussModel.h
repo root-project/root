@@ -81,16 +81,8 @@ protected:
     return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
   }
 
-  // Calculate Re(exp(-u^2) cwerf(i(u+c)))
-  // added FMV, 08/17/03
-  inline Double_t evalCerfRe(Double_t u, Double_t c) const {
-    return exp(u*2*c+c*c) * RooMath::erfc(u+c);
-  }
-
   // Calculate common normalization factors 
-  // added FMV,07/24/03
   RooComplex evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
-  Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
 
   Bool_t _flatSFInt ;
 
