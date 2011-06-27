@@ -1061,7 +1061,7 @@ guess_architecture() {
     case "$arch:$chip:$rele" in
         aix*)                  arch=aix5            ;;
         osf1*:alpha:*)         arch=alphacxx6       ;;
-        freebsd*:*:7*)         arch=freebsd7        ;;
+        freebsd*:*:[789]*)     arch=freebsd7        ;;
         freebsd*:*:6*)         arch=freebsd5        ;;
         freebsd*:*:5*)         arch=freebsd5        ;;
         freebsd*:*:4*)         arch=freebsd4        ;;
