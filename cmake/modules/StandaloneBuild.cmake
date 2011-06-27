@@ -35,12 +35,12 @@ include_directories(${ROOT_INCLUDE_DIRS})
 link_directories(${ROOT_LIBRARY_DIRS})
 
 #---Configure and general additional files -------------------------------------------------------
-configure_file(${ROOTSYS}/cmake/modules/thisprojectsh.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.sh @ONLY)
-configure_file(${ROOTSYS}/cmake/modules/thisprojectcsh.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.csh @ONLY)
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.sh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.csh
-              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ 
-              DESTINATION bin)
+#configure_file(${ROOTSYS}/cmake/modules/thisprojectsh.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.sh @ONLY)
+#configure_file(${ROOTSYS}/cmake/modules/thisprojectcsh.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.csh @ONLY)
+#install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.sh
+#              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/this${CMAKE_PROJECT_NAME}.csh
+#              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ 
+#              DESTINATION bin)
 
 
 
