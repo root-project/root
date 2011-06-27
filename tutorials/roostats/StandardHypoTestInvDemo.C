@@ -261,7 +261,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(1);
-   if (optimize) profll.setReuseNLL(true);
+   if (optimize) profll.SetReuseNLL(true);
 
    TestStatistic * testStat = &slrts;
    if (testStatType == 1) testStat = &ropl;
@@ -275,7 +275,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
    //toymcs->SetNEventsPerToy(1);
    toymcs->SetTestStatistic(testStat);
-   if (optimize) toymcs->setUseMultiGen(true);
+   if (optimize) toymcs->SetUseMultiGen(true);
 
 
    if (type == 1) { 
