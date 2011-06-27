@@ -61,7 +61,7 @@ Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t &nLeft,
    Double_t parentIndex = nTot * this->GetSeparationIndex(nTot,targetTot,target2Tot);
    Double_t leftIndex   = ( (nTot - nLeft) * this->GetSeparationIndex(nTot-nLeft,targetTot-targetLeft,target2Tot-target2Left) );
    Double_t rightIndex  =    nLeft * this->GetSeparationIndex(nLeft,targetLeft,target2Left);
-
+    
    //  return 1/ (leftIndex + rightIndex);   
    return (parentIndex - leftIndex - rightIndex)/(parentIndex);   
 }

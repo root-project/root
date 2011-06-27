@@ -83,6 +83,7 @@ TMVA::MethodBoost::MethodBoost( const TString& jobName,
    , fMethodError(0)
    , fOrigMethodError(0)
    , fBoostWeight(0)
+   , fDetailedMonitoring(kFALSE)
    , fADABoostBeta(0)
    , fRandomSeed(0)
    , fBoostedMethodTitle(methodTitle)
@@ -109,6 +110,7 @@ TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
    , fMethodError(0)
    , fOrigMethodError(0)
    , fBoostWeight(0)
+   , fDetailedMonitoring(kFALSE)
    , fADABoostBeta(0)
    , fRandomSeed(0)
    , fBoostedMethodTitle("")
@@ -403,8 +405,10 @@ void TMVA::MethodBoost::Train()
       if (fMethodIndex==0 && fMonitorBoostedMethod) CreateMVAHistorgrams();
       
       // get ROC integral and overlap integral for single method on
-      // training sample
-      fROC_training = GetBoostROCIntegral(kTRUE, Types::kTraining, kTRUE);
+      // training sample if fMethodWeightType == "ByROC" or the user
+      // wants detailed monitoring
+      if (fMethodWeightType == "ByROC" || fDetailedMonitoring)
+         fROC_training = GetBoostROCIntegral(kTRUE, Types::kTraining, kTRUE);
 	 
       // calculate method weight
       CalcMethodWeight();

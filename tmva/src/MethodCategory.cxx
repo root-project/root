@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen, Eckhard von Toerne
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,17 +11,17 @@
  *      Virtual base class for all MVA method                                     *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Nadim Sah       <Nadim.Sah@cern.ch>      - Berlin, Germany                *
- *      Peter Speckmayer <Peter.Speckmazer@cern.ch> - CERN, Switzerland           *
- *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Jan Therhaag  <Jan.Therhaag@cern.ch>        - U of Bonn, Germany          *
- *      Eckhard v. Toerne  <evt@uni-bonn.de>        - U of Bonn, Germany          *
+ *      Andreas Hoecker   <Andreas.Hocker@cern.ch>   - CERN, Switzerland          *
+ *      Nadim Sah         <Nadim.Sah@cern.ch>        - Berlin, Germany            *
+ *      Peter Speckmayer  <Peter.Speckmazer@cern.ch> - CERN, Switzerland          *
+ *      Joerg Stelzer     <Joerg.Stelzer@cern.ch>    - MSU East Lansing, USA      *
+ *      Helge Voss        <Helge.Voss@cern.ch>       - MPI-K Heidelberg, Germany  *
+ *      Jan Therhaag      <Jan.Therhaag@cern.ch>     - U of Bonn, Germany         *
+ *      Eckhard v. Toerne <evt@uni-bonn.de>          - U of Bonn, Germany         *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
  *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
+ *      MSU East Lansing, USA                                                     *
  *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
@@ -151,12 +151,15 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
 //   std::cout << "set input done "  << std::endl;
 
    rearrangeTransformation->SetEnabled(kFALSE);
-   IMethod* addedMethod = ClassifierFactory::Instance().Create(addedMethodName,GetJobName(),theTitle,dsi,theOptions);
+   IMethod* addedMethod = ClassifierFactory::Instance().Create(addedMethodName,
+                                                               GetJobName(),
+                                                               theTitle,
+                                                               dsi,
+                                                               theOptions);
 
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
-
    if(method==0) return 0;
-   
+
    method->SetupMethod();
    method->ParseOptions();
    method->GetTransformationHandler().AddTransformation( rearrangeTransformation, -1 );
@@ -186,7 +189,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
 
    UInt_t newSpectatorIndex = primaryDSI.GetSpectatorInfos().size();
    fCategorySpecIdx.push_back(newSpectatorIndex);
-   
+
    primaryDSI.AddSpectator( Form("%s_cat%i:=%s", GetName(),(int)fMethods.size(),theCut.GetTitle()),
                             Form("%s:%s",GetName(),method->GetName()),
                             "pass", 0, 0, 'C' );
@@ -358,15 +361,10 @@ void TMVA::MethodCategory::Train()
    // specify the minimum # of training events and set 'classification'
    const Int_t  MinNoTrainingEvents = 10;
 
-   // THIS NEEDS TO BE CHANGED:
-//    TString what("Classification");
-//    what.ToLower();
-//    Types::EAnalysisType analysisType = ( what.CompareTo("regression")==0 ? Types::kRegression : Types::kClassification );
-
    Types::EAnalysisType analysisType = GetAnalysisType();
 
    // start the training
-   Log() << kINFO << "Train all sub-classifiers for " 
+   Log() << kINFO << "Train all sub-classifiers for "
          << (analysisType == Types::kRegression ? "Regression" : "Classification") << " ..." << Endl;
 
    // don't do anything if no sub-classifier booked
@@ -374,7 +372,7 @@ void TMVA::MethodCategory::Train()
       Log() << kINFO << "...nothing found to train" << Endl;
       return;
    }
-   
+
    std::vector<IMethod*>::iterator itrMethod;
 
    // iterate over all booked sub-classifiers  and train them
@@ -382,9 +380,9 @@ void TMVA::MethodCategory::Train()
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if(!mva) continue;
-      mva->SetAnalysisType(GetAnalysisType());
-      if (!mva->HasAnalysisType( analysisType, 
-                                 mva->DataInfo().GetNClasses(), 
+      mva->SetAnalysisType( analysisType );
+      if (!mva->HasAnalysisType( analysisType,
+                                 mva->DataInfo().GetNClasses(),
                                  mva->DataInfo().GetNTargets() ) ) {
          Log() << kWARNING << "Method " << mva->GetMethodTypeName() << " is not capable of handling " ;
          if (analysisType == Types::kRegression)
@@ -394,8 +392,6 @@ void TMVA::MethodCategory::Train()
          itrMethod = fMethods.erase( itrMethod );
          continue;
       }
-
-      mva->SetAnalysisType( analysisType );
       if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
 
          Log() << kINFO << "Train method: " << mva->GetMethodName() << " for "

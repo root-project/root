@@ -728,6 +728,7 @@ Double_t TMVA::PDEFoam::Eval(Double_t *xRand, Double_t &event_density)
    //
    // Transformation:  [0, 1] --> [xmin, xmax]
    std::vector<Double_t> xvec;
+   xvec.reserve(GetTotDim());
    for (Int_t idim = 0; idim < GetTotDim(); ++idim)
       xvec.push_back( VarTransformInvers(idim, xRand[idim]) );
 
@@ -1020,13 +1021,14 @@ std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>&
    // transformed event
    std::map<Int_t,Float_t> txvec;
    for (std::map<Int_t,Float_t>::const_iterator it=xvec.begin(); it!=xvec.end(); ++it)
-      txvec[it->first] = VarTransform(it->first, it->second);
+      txvec.insert(std::pair<Int_t, Float_t>(it->first, VarTransform(it->first, it->second)));
 
    // find all cells, which correspond to the transformed event
    std::vector<PDEFoamCell*> cells = FindCells(txvec);
 
    // get the cell values
    std::vector<Float_t> cell_values;
+   cell_values.reserve(cells.size());
    for (std::vector<PDEFoamCell*>::const_iterator cell_it=cells.begin(); 
 	cell_it != cells.end(); ++cell_it)
       cell_values.push_back(GetCellValue(*cell_it, cv));
@@ -1141,7 +1143,7 @@ std::vector<TMVA::PDEFoamCell*> TMVA::PDEFoam::FindCells(const std::vector<Float
    // copy the coordinates from 'txvec' into a map
    std::map<Int_t, Float_t> txvec_map;
    for (UInt_t i=0; i<txvec.size(); ++i)
-      txvec_map[i] = txvec.at(i);
+      txvec_map.insert(std::pair<Int_t, Float_t>(i, txvec.at(i)));
 
    // the cells found
    std::vector<PDEFoamCell*> cells(0);

@@ -51,7 +51,7 @@ using std::endl;
 // void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } } // DSMTEST removed
 
 //_______________________________________________________________________
-TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput ) 
+TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
    : fDataInput(dataInput),
      fDataSetInfoCollection(),
      fLogger( new MsgLogger("DataSetManager", kINFO) )
@@ -60,20 +60,20 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
 }
 
 //_______________________________________________________________________
-TMVA::DataSetManager::~DataSetManager() 
+TMVA::DataSetManager::~DataSetManager()
 {
    // destructor
 //   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
 
-   TMVA::DataSetFactory::destroyInstance(); 
+   TMVA::DataSetFactory::destroyInstance();
    
    delete fLogger;
 }
 
 //_______________________________________________________________________
-TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName ) 
+TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
 {
-   // Creates the singleton dataset 
+   // Creates the singleton dataset
    DataSetInfo* dsi = GetDataSetInfo( dsiName );
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
 

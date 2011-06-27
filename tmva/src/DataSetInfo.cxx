@@ -58,7 +58,7 @@
 #endif
 
 //_______________________________________________________________________
-TMVA::DataSetInfo::DataSetInfo(const TString& name) 
+TMVA::DataSetInfo::DataSetInfo(const TString& name)
    : TObject(),
      fDataSetManager(NULL),
      fName(name),
@@ -81,7 +81,7 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
 }
 
 //_______________________________________________________________________
-TMVA::DataSetInfo::~DataSetInfo() 
+TMVA::DataSetInfo::~DataSetInfo()
 {
    // destructor
    ClearDataSet();
@@ -101,6 +101,12 @@ void TMVA::DataSetInfo::ClearDataSet() const
    if(fDataSet!=0) { delete fDataSet; fDataSet=0; }
 }
 
+void
+TMVA::DataSetInfo::SetMsgType( EMsgType t ) const
+{
+   fLogger->SetMinType(t);
+}
+
 //_______________________________________________________________________
 TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className ) 
 {
@@ -118,12 +124,6 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
 
    return fClasses.back();
 }
-
-//_______________________________________________________________________
-void TMVA::DataSetInfo::SetMsgType( EMsgType t ) const 
-{  
-    fLogger->SetMinType(t);  
-} 
 
 //_______________________________________________________________________
 TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const 
@@ -166,12 +166,12 @@ std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::E
 //   fTargetsForMulticlass->resize( GetNClasses() );
    fTargetsForMulticlass->assign( GetNClasses(), 0.0 );
    fTargetsForMulticlass->at( ev->GetClass() ) = 1.0;
-   return fTargetsForMulticlass; 
+   return fTargetsForMulticlass;
 }
 
 
 //_______________________________________________________________________
-Bool_t TMVA::DataSetInfo::HasCuts() const 
+Bool_t TMVA::DataSetInfo::HasCuts() const
 {
    Bool_t hasCuts = kFALSE;
    for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
@@ -181,22 +181,26 @@ Bool_t TMVA::DataSetInfo::HasCuts() const
 }
 
 //_______________________________________________________________________
-const TMatrixD* TMVA::DataSetInfo::CorrelationMatrix( const TString& className ) const 
-{ 
+const TMatrixD* TMVA::DataSetInfo::CorrelationMatrix( const TString& className ) const
+{
    ClassInfo* ptr = GetClassInfo(className);
    return ptr?ptr->GetCorrelationMatrix():0;
 }
 
 //_______________________________________________________________________
-TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression, const TString& title, const TString& unit, 
-                                                    Double_t min, Double_t max, char varType,
-                                                    Bool_t normalized, void* external )
+TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression,
+                                                    const TString& title,
+                                                    const TString& unit,
+                                                    Double_t min, Double_t max,
+                                                    char varType,
+                                                    Bool_t normalized,
+                                                    void* external )
 {
-   // add a variable (can be a complex expression) to the set of variables used in
-   // the MV analysis
+   // add a variable (can be a complex expression) to the set of
+   // variables used in the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
-   fVariables.push_back(VariableInfo( regexpr, title, unit, 
+   fVariables.push_back(VariableInfo( regexpr, title, unit,
                                       fVariables.size()+1, varType, external, min, max, normalized ));
    fNeedsRebuilding = kTRUE;
    return fVariables.back();
@@ -211,17 +215,21 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const VariableInfo& varInfo)
 }
 
 //_______________________________________________________________________
-TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression, const TString& title, const TString& unit, 
-                                                  Double_t min, Double_t max, 
-                                                  Bool_t normalized, void* external )
+TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression,
+                                                  const TString& title,
+                                                  const TString& unit,
+                                                  Double_t min, Double_t max,
+                                                  Bool_t normalized,
+                                                  void* external )
 {
-   // add a variable (can be a complex expression) to the set of variables used in
-   // the MV analysis
+   // add a variable (can be a complex expression) to the set of
+   // variables used in the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
    char type='F';
-   fTargets.push_back(VariableInfo( regexpr, title, unit, 
-                                    fTargets.size()+1, type, external, min, max, normalized ));
+   fTargets.push_back(VariableInfo( regexpr, title, unit,
+                                    fTargets.size()+1, type, external, min,
+                                    max, normalized ));
    fNeedsRebuilding = kTRUE;
    return fTargets.back();
 }
@@ -235,7 +243,9 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const VariableInfo& varInfo){
 }
 
 //_______________________________________________________________________
-TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
+TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression,
+                                                     const TString& title,
+                                                     const TString& unit,
                                                      Double_t min, Double_t max, char type,
                                                      Bool_t normalized, void* external )
 {
@@ -243,7 +253,7 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression, 
    // the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
-   fSpectators.push_back(VariableInfo( regexpr, title, unit, 
+   fSpectators.push_back(VariableInfo( regexpr, title, unit,
                                        fSpectators.size()+1, type, external, min, max, normalized ));
    fNeedsRebuilding = kTRUE;
    return fSpectators.back();
@@ -282,7 +292,7 @@ void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString&
    if (className != "") {
       TMVA::ClassInfo* ci = AddClass(className);
       ci->SetWeight( expr );
-   } 
+   }
    else {
       // no class name specified, set weight for all classes
       if (fClasses.size()==0) {
@@ -321,7 +331,7 @@ void TMVA::DataSetInfo::AddCut( const TCut& cut, const TString& className )
    // set the cut for the classes
    if (className == "") {  // if no className has been given set the cut for all the classes
       for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
-         const TCut& oldCut = (*it)->GetCut(); 
+         const TCut& oldCut = (*it)->GetCut();
          (*it)->SetCut( oldCut+cut );
       }
    }
@@ -344,7 +354,7 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 
 //_______________________________________________________________________
 void TMVA::DataSetInfo::PrintCorrelationMatrix( const TString& className )
-{ 
+{
    // calculates the correlation matrices for signal and background, 
    // prints them to standard output, and fills 2D histograms
    Log() << kINFO << "Correlation matrix (" << className << "):" << Endl;
@@ -367,7 +377,7 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
       for (UInt_t jvar=0; jvar<nvar; jvar++) {
          (*tm)(ivar, jvar) = (*m)(ivar,jvar);
       }
-   }  
+   }
 
    TH2F* h2 = new TH2F( *tm );
    h2->SetNameTitle( hName, hTitle );
@@ -379,7 +389,7 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
    
    // present in percent, and round off digits
    // also, use absolute value of correlation coefficient (ignore sign)
-   h2->Scale( 100.0  ); 
+   h2->Scale( 100.0  );
    for (UInt_t ibin=1; ibin<=nvar; ibin++) {
       for (UInt_t jbin=1; jbin<=nvar; jbin++) {
          h2->SetBinContent( ibin, jbin, Int_t(h2->GetBinContent( ibin, jbin )) );
@@ -404,24 +414,24 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
    //     gROOT->SetStyle("Plain");
    //     TStyle* gStyle = gROOT->GetStyle( "Plain" );
    //     gStyle->SetPalette( 1, 0 );
-   //     TPaletteAxis* paletteAxis 
+   //     TPaletteAxis* paletteAxis
    //                   = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject( "palette" );
    // -------------------------------------------------------------------------------------
-   
+
    Log() << kDEBUG << "Created correlation matrix as 2D histogram: " << h2->GetName() << Endl;
-   
+
    return h2;
 }
 
 //_______________________________________________________________________
-TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const 
+TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
 {
    // returns data set
    if (fDataSet==0 || fNeedsRebuilding) {
       if(fDataSet!=0) ClearDataSet();
 //      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
       if( !fDataSetManager )
-	 Log() << kFATAL << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;
+         Log() << kFATAL << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;
       fDataSet = fDataSetManager->CreateDataSet(GetName());
 
       fNeedsRebuilding = kFALSE;

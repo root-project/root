@@ -200,8 +200,8 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t x)
 //_____________________________________________________________________
 void TMVA::PDEFoamVect::Print(Option_t *option) const
 {
-   streamsize wid = cout.width(); // saving current field width
    // Printout of all vector components
+   streamsize wid = cout.width(); // saving current field width
    if(!option) Error( "Print ", "No option set \n");
    cout << "(";
    for(Int_t i=0; i<fDim-1; i++) 

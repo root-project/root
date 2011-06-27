@@ -477,15 +477,29 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
                    ( ( TMath::Abs(sumOfNegWeights) < node->GetNBkgEvents() && iClassID != fSigClass) || 
                      ( TMath::Abs(sumOfNegWeights) < node->GetNSigEvents() && iClassID == fSigClass) ) ){
                UInt_t iev=fMyTrandom->Integer(eventSample.size());
-               // std::cout << "  so far...  I have still " << sumOfNegWeights 
-               //           << " now event " << iev << "("<<eventSample.size()<<") has " << eventSample[iev]->GetWeight()
-               //           << " class " << eventSample[iev]->GetClass() << "("<<iClassID<<")"
-               //           << " sig " << node->GetNSigEvents() << "("<<node->GetNSigEvents_unweighted()<< ")"
-               //           << " bkg " << node->GetNBkgEvents() << "("<<node->GetNBkgEvents_unweighted()<< ")"
-               //           << std::endl;
+
+               Log() << kWARNING
+                     << "  so far...  I have still " << sumOfNegWeights 
+                     << " now event " << iev << "("<<eventSample.size()<<") has " << eventSample[iev]->GetWeight()
+                     << " class " << eventSample[iev]->GetClass() << "("<<iClassID<<")"
+                     << " sig " << node->GetNSigEvents() << "("<<node->GetNSigEvents_unweighted()<< ")"
+                     << " bkg " << node->GetNBkgEvents() << "("<<node->GetNBkgEvents_unweighted()<< ")"
+                     << Endl;
                if (eventSample[iev]->GetWeight() > 0  && iClassID==eventSample[iev]->GetClass() ){               
                   sumOfNegWeights+=eventSample[iev]->GetWeight();
                   eventSample[iev]->SetDoNotBoost();
+
+                  // Double_t dist=0, minDist=10E270;
+                  // for (UInt_t ivar=0; ivar < GetNvar(); ivar++){
+                  //    for (UInt_t jvar=0; jvar<GetNvar(); jvar++){
+                  //       dist += (negEvents[nev]->GetValue(ivar)-fEventSample[iev]->GetValue(ivar))*
+                  //          //                           (*invCov)[ivar][jvar]*
+                  //          (negEvents[nev]->GetValue(jvar)-fEventSample[iev]->GetValue(jvar));
+                  //    }
+                  // }
+                  // Log() << kWARNING << "pair with event in dist^2="<<dist << "  dist="<<TMath::Sqrt(dist) << Endl;
+
+
                }
             }
          }

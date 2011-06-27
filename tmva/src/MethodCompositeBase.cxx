@@ -1,32 +1,32 @@
 // @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen
 
-/**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
- * Package: TMVA                                                                  *
- * Class  : MethodCompositeBase                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
- *                                                                                *
- * Description:                                                                   *
- *      Virtual base class for all MVA method                                     *
- *                                                                                *
- * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
- *      Or Cohen        <orcohenor@gmail.com>    - Weizmann Inst., Israel         *
- *                                                                                *
- * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
- *      LAPP, Annecy, France                                                      *
- *                                                                                *
- * Redistribution and use in source and binary forms, with or without             *
- * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/
+/*****************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis  *
+ * Package: TMVA                                                             *
+ * Class  : MethodCompositeBase                                              *
+ * Web    : http://tmva.sourceforge.net                                      *
+ *                                                                           *
+ * Description:                                                              *
+ *      Virtual base class for all MVA method                                *
+ *                                                                           *
+ * Authors (alphabetical):                                                   *
+ *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland         *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - MSU, USA                  *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany *
+ *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada    *
+ *      Or Cohen        <orcohenor@gmail.com>    - Weizmann Inst., Israel    *
+ *                                                                           *
+ * Copyright (c) 2005:                                                       *
+ *      CERN, Switzerland                                                    *
+ *      U. of Victoria, Canada                                               *
+ *      MPI-K Heidelberg, Germany                                            *
+ *      LAPP, Annecy, France                                                 *
+ *                                                                           *
+ * Redistribution and use in source and binary forms, with or without        *
+ * modification, are permitted according to the terms listed in LICENSE      *
+ * (http://tmva.sourceforge.net/LICENSE)                                     *
+ *****************************************************************************/
 
 //_______________________________________________________________________
 //
@@ -58,7 +58,7 @@ using std::vector;
 ClassImp(TMVA::MethodCompositeBase)
 
 //_______________________________________________________________________
-TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName, 
+TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 Types::EMVA methodType,
                                                 const TString& methodTitle,
                                                 DataSetInfo& theData,
@@ -71,7 +71,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
 //_______________________________________________________________________
 TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 DataSetInfo& dsi,
-                                                const TString& weightFile, 
+                                                const TString& weightFile,
                                                 TDirectory* theTargetDir )
    : TMVA::MethodBase( methodType, dsi, weightFile, theTargetDir ),
      fMethodIndex(0)
@@ -85,7 +85,7 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
    vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
 
    for (; itrMethod != itrMethodEnd; itrMethod++) {
-      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);    
+      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
    return 0;
@@ -102,26 +102,26 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
 
 
 //_______________________________________________________________________
-void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 {
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NMethods",   fMethods.size()   );
-   for (UInt_t i=0; i< fMethods.size(); i++) 
+   for (UInt_t i=0; i< fMethods.size(); i++)
    {
       void* methxml = gTools().AddChild( wght, "Method" );
       MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);
-      gTools().AddAttr(methxml,"Index",          i ); 
-      gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]); 
+      gTools().AddAttr(methxml,"Index",          i );
+      gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]);
       gTools().AddAttr(methxml,"MethodSigCut",   method->GetSignalReferenceCut());
       gTools().AddAttr(methxml,"MethodSigCutOrientation", method->GetSignalReferenceCutOrientation());
       gTools().AddAttr(methxml,"MethodTypeName", method->GetMethodTypeName());
-      gTools().AddAttr(methxml,"MethodName",     method->GetMethodName()   ); 
+      gTools().AddAttr(methxml,"MethodName",     method->GetMethodName()   );
       gTools().AddAttr(methxml,"JobName",        method->GetJobName());
-      gTools().AddAttr(methxml,"Options",        method->GetOptions()); 
+      gTools().AddAttr(methxml,"Options",        method->GetOptions());
       if (method->fTransformationPointer)
-	 gTools().AddAttr(methxml,"UseMainMethodTransformation",  TString("true")); 
+         gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("true"));
       else
-	 gTools().AddAttr(methxml,"UseMainMethodTransformation",  TString("false")); 
+         gTools().AddAttr(methxml,"UseMainMethodTransformation", TString("false"));
       method->AddWeightsXMLTo(methxml);
    }
 }
@@ -132,14 +132,14 @@ TMVA::MethodCompositeBase::~MethodCompositeBase( void )
    // delete methods
    vector<IMethod*>::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); itrMethod++) {
-      Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;    
+      Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;
       delete (*itrMethod);
    }
    fMethods.clear();
 }
 
 //_______________________________________________________________________
-void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode ) 
+void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 {
    // XML streamer
    UInt_t nMethods;
@@ -162,13 +162,13 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 
       Bool_t rerouteTransformation = kFALSE;
       if (gTools().HasAttr( ch, "UseMainMethodTransformation")) {
-	 TString rerouteString("");
-	 gTools().ReadAttr( ch, "UseMainMethodTransformation",  rerouteString );
-	 rerouteString.ToLower();
-	 if (rerouteString=="true")
-	    rerouteTransformation=kTRUE;
+         TString rerouteString("");
+         gTools().ReadAttr( ch, "UseMainMethodTransformation", rerouteString );
+         rerouteString.ToLower();
+         if (rerouteString=="true")
+            rerouteTransformation=kTRUE;
       }
-      
+
       //remove trailing "~" to signal that options have to be reused
       optionString.ReplaceAll("~","");
       //ignore meta-options for method Boost

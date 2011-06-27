@@ -73,7 +73,8 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& Name, SeparationBa
    //
    // - Name - name of the foam
    //
-   // - sepType - separation type used for the cell splitting
+   // - sepType - separation type used for the cell splitting (will be
+   //   deleted in the destructor)
    //
    // - cls - class to consider as signal when calcualting the purity
 }
@@ -89,8 +90,12 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const PDEFoamDecisionTree &From)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDecisionTree::~PDEFoamDecisionTree()
-{} //ToDo it seems that PDEFoamDecisionTree owns the fSepType object. 
-// this destructor proably needs to delete fSepType as well --> check this
+{
+   // Destructor
+   // deletes fSepType
+   if (fSepType)
+      delete fSepType;
+}
 
 //_____________________________________________________________________
 void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
@@ -113,6 +118,10 @@ void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
 
    // create edge histograms
    std::vector<TH1D*> hsig, hbkg, hsig_unw, hbkg_unw;
+   hsig.reserve(fDim);
+   hbkg.reserve(fDim);
+   hsig_unw.reserve(fDim);
+   hbkg_unw.reserve(fDim);
    for (Int_t idim = 0; idim < fDim; idim++) {
       hsig.push_back(new TH1D(Form("hsig_%i", idim),
                               Form("signal[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));

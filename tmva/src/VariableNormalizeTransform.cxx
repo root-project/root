@@ -401,6 +401,7 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
    gTools().ReadAttr(trfnode, "NVariables", nvars);
    // coverity[tainted_data_argument]
    gTools().ReadAttr(trfnode, "NTargets",   ntgts);
+   // coverity[tainted_data_argument]
 
    for( UInt_t ivar = 0; ivar < nvars; ++ivar ){
       fGet.push_back(std::make_pair<Char_t,UInt_t>('v',ivar));

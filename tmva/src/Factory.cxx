@@ -621,8 +621,8 @@ void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain, I
 
 //_______________________________________________________________________
 void TMVA::Factory::PrepareTrainingAndTestTree( const TCut& cut, const TString& opt )
-{ 
-   // prepare the training and test trees 
+{
+   // prepare the training and test trees
    // -> same cuts for signal and background
    SetInputTreesFromEventAssignTrees();
 
