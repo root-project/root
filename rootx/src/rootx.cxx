@@ -47,6 +47,16 @@
 #   endif
 #endif
 
+#if defined(R__FBSD)
+#   include <sys/param.h>
+#   if __FreeBSD_version >= 900007
+#      define HAVE_UTMPX_H
+#      ifndef ut_user
+#        define ut_user ut_name
+#      endif
+#   endif
+#endif
+
 #if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
     defined(__FreeBSD__) || defined(__Lynx__) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5))
