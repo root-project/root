@@ -39,7 +39,62 @@ archives and file members greater than 2 and 4 GB, respectively.</li>
  <li>Add support for the case when the requested project/files in path that in not under the current directory</li>
  <li>Generate the code/dictonary only for pair type that do not already have a dictionary</li>
 </ul>
-  
+
+<h4>Object Merging</h4>
+We introduced a new explicit interface for providing merging 
+capability.  If a class has a method with the name and 
+signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t Merge(TCollection *input, TFileMergeInfo*);
+</pre>
+it will be used by a <tt>TFileMerger</tt> (and thus by PROOF) to merge one or more
+other objects into the current object.   <tt>Merge</tt> should
+return a negative value if the merging failed.
+<p/>
+If this method does not exist, the <tt>TFileMerger</tt> will use
+a method with the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t Merge(TCollection *input);
+</pre>
+TClass now provides a quick access to these merging 
+function via <tt>TClass::GetMerge</tt>.   The wrapper function
+is automatically created by rootcint and can be installed
+via <tt>TClass::SetMerge</tt>.   The wrapper function should have
+the signature/type ROOT::MergeFunc_t:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   Long64_t (*)(void *thisobj, TCollection *input, TFileMergeInfo*);
+</pre>
+We added the  new <tt>Merge</tt> function to <tt>TTree</tt> and <tt>THStack</tt>.
+We also added the new <tt>Merge</tt> function to <tt>TQCommand</tt> as the
+existing <tt>TQCommand::Merge</tt> does <b>not</b> have the right
+semantic (in part because <tt>TQCommand</tt> is a collection). 
+<p/>
+In <tt>TFileMerger</tt>, we added a <tt>PrintLevel</tt> to allow hadd to request
+more output than regular <tt>TFileMerger</tt>.
+<p/>
+We removed all hard dependencies of <tt>TFileMerger</tt> on <tt>TH1</tt> and <tt>TTree</tt>.
+(Soft dependencies still exist to be able to disable the
+merging of <tt>TTrees</tt> and to be able to disable the <tt>AutoAdd</tt>
+behavior of <tt>TH1</tt>).
+<p/>
+The object <tt>TFileMergeInfo</tt> can be used inside the <tt>Merge</tt>
+function to pass information between runs of the <tt>Merge</tt>
+(see below).  In particular it contains:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TDirectory  *fOutputDirectory;  // Target directory where the merged object will be written.
+   Bool_t       fIsFirst;          // True if this is the first call to Merge for this series of object.
+   TString      fOptions;          // Additional text based option being passed down to customize the merge.
+   TObject     *fUserData;         // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
+</pre>
+The default in <tt>TFileMerger</tt> is to call <tt>Merge</tt> for every object
+in the series (i.e the collection has exactly one element) in
+order to save memory (by not having all the object in memory 
+at the same time).
+<p/>
+However for histograms, the default is to first load all the
+objects and then merge them in one go ; this is customizable
+when creating the <tt>TFileMerger</tt> object.
+
 <h4>LZMA Compression and compression Level setting</h4>
 
 ROOT I/O now support the LZMA compression algorithm to compress data in 
