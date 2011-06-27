@@ -85,7 +85,7 @@ namespace TMVA
       // returns density at a given point by range searching in BST
       virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) = 0;
 
-      ClassDef(PDEFoamDensityBase, 1) //Class for density
+      ClassDef(PDEFoamDensityBase, 1) // PDEFoam event density interface
    };  //end of PDEFoamDensityBase
 
 }  // namespace TMVA
