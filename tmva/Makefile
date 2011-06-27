@@ -57,10 +57,10 @@ DICTH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivat
 		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
 		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
 		VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h
-DICTH1       := $(patsubst %,inc/%,$(DICTH1))
-DICTH2       := $(patsubst %,inc/%,$(DICTH2))
-DICTH3       := $(patsubst %,inc/%,$(DICTH3))
-DICTH4       := $(patsubst %,inc/%,$(DICTH4))
+DICTH1       := $(patsubst %,inc/TMVA/%,$(DICTH1))
+DICTH2       := $(patsubst %,inc/TMVA/%,$(DICTH2))
+DICTH3       := $(patsubst %,inc/TMVA/%,$(DICTH3))
+DICTH4       := $(patsubst %,inc/TMVA/%,$(DICTH4))
 DICTH        := $(DICTH1) $(DICTH2) $(DICTH3) $(DICTH4)
 
 
@@ -76,7 +76,7 @@ UNAME = $(shell uname)
 default: shlib linklib
 
 # List of all source files to build
-HLIST   = $(filter-out $(SKIPHLIST),$(wildcard inc/*.h))
+HLIST   = $(filter-out $(SKIPHLIST),$(wildcard inc/TMVA/*.h))
 CPPLIST = $(filter-out $(SKIPCPPLIST),$(patsubst src/%,%,$(wildcard src/*.$(SrcSuf))))
 
 # List of all object files to build
@@ -87,12 +87,12 @@ DEPLIST=$(foreach var,$(CPPLIST:.$(SrcSuf)=.d),$(DEPDIR)/$(var))
 # Implicit rule to compile all classes
 sl:
 	if [[ ( ! -e TMVA ) ]]; then \
-		ln -sf inc TMVA; \
+		ln -sf inc/TMVA TMVA; \
 	fi
 
 $(OBJDIR)/%.o : src/%.cxx 
 	if [[ ( ! -e TMVA ) ]]; then \
-		ln -sf inc TMVA; \
+		ln -sf inc/TMVA TMVA; \
 	fi
 	@printf "Compiling $< ... "
 	@mkdir -p $(OBJDIR)
@@ -167,7 +167,7 @@ endif
 $(DEPDIR)/%.d: src/%.$(SrcSuf)
 	@mkdir -p $(DEPDIR)
 	if [[ ( ! -e TMVA ) ]]; then \
-		ln -sf inc TMVA; \
+		ln -sf inc/TMVA TMVA; \
 	fi
 	if test -f $< ; then \
 		printf "Building $(@F) ... "; \
