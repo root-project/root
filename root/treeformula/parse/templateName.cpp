@@ -5,6 +5,8 @@
 #include <TTree.h>
 #include <TFile.h>
 
+#include "TSystem.h"
+
 template <class T>
 struct B { int i; };
 
@@ -48,7 +50,9 @@ void makeclass()
   t->Print();
   t->MakeClass("cmakeclass");
   t->MakeProxy("cmakeproxy","forproxy.C");
+  gSystem->CopyFile("generatedSel.h","generatedSel.old");
   t->Draw("forproxy.C+","","goff");
+  gSystem->Exec("diff generatedSel.old generatedSel.h");
   t->ResetBranchAddresses();
 }
 

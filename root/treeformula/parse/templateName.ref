@@ -107,3 +107,122 @@ Info in <TTreePlayer::MakeClass>: Files: cmakeclass.h and cmakeclass.C generated
 Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 Info in <ACLiC>: modified script has already been compiled and loaded
 Info in <ACLiC>: it will be regenerated and reloaded!
+3,4c3,4
+< //   from TTree mytree/Icecube
+---
+> //   from TTree mytreemk/foo
+30c30
+< class C;
+---
+> class C2;
+60c60
+<    struct TPx_B_void_
+---
+>    struct TPx_C2
+62c62
+<       TPx_B_void_(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+---
+>       TPx_C2(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+67c67
+<       TPx_B_void_(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+---
+>       TPx_C2(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+74,75c74,75
+<       const B<void>* operator->() { return obj.GetPtr(); }
+<       TObjProxy<B<void> > obj;
+---
+>       const C2* operator->() { return obj.GetPtr(); }
+>       TObjProxy<C2 > obj;
+79,141d78
+<    struct TPx_C
+<       : public TPx_B_void_
+<    {
+<       TPx_C(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          TPx_B_void_(director, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          j          (director, "j")
+<       {};
+<       TPx_C(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          TPx_B_void_(director, parent, membername),
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername),
+<          j          (director, "j")
+<       {};
+<       TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const C* operator->() { return obj.GetPtr(); }
+<       TObjProxy<C > obj;
+< 
+<       TIntProxy   j;
+<    };
+<    struct TPx_B_void__1
+<    {
+<       TPx_B_void__1(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          i          (director, ffPrefix, "B<void>.i")
+<       {};
+<       TPx_B_void__1(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername),
+<          i          (director, ffPrefix, "B<void>.i")
+<       {};
+<       TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const B<void>* operator->() { return obj.GetPtr(); }
+<       TObjProxy<B<void> > obj;
+< 
+<       TIntProxy   i;
+<    };
+<    struct TPx_C_1
+<       : public TPx_B_void__1
+<    {
+<       TPx_C_1(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          TPx_B_void__1(director, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          j          (director, ffPrefix, "j")
+<       {};
+<       TPx_C_1(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          TPx_B_void__1(director, parent, membername),
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername),
+<          j          (director, ffPrefix, "j")
+<       {};
+<       TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const C* operator->() { return obj.GetPtr(); }
+<       TObjProxy<C > obj;
+< 
+<       TIntProxy   j;
+<    };
+144,149c81,83
+<    TPx_C         my_c;
+<    TPx_B_void_   baseB_void_;
+<    TIntProxy     j;
+<    TPx_C         my_c2;
+<    TPx_C_1       plot_my_i;
+<    TPx_C_1       against_my_i;
+---
+>    TPx_C2      my_c;
+>    TIntProxy   i;
+>    TPx_C2      other_c;
+157,162c91,93
+<       my_c         (&fDirector,"my_c"),
+<       baseB_void_  (&fDirector,"B<void>"),
+<       j            (&fDirector,"j"),
+<       my_c2        (&fDirector,"my_c2"),
+<       plot_my_i    (&fDirector,"plot_my_i."),
+<       against_my_i (&fDirector,"against_my_i.")
+---
+>       my_c       (&fDirector,"my_c"),
+>       i          (&fDirector,"i"),
+>       other_c    (&fDirector,"other_c.")
+185,188c116
+< #pragma link C++ class generatedSel::TPx_B_void_-;
+< #pragma link C++ class generatedSel::TPx_C-;
+< #pragma link C++ class generatedSel::TPx_B_void__1-;
+< #pragma link C++ class generatedSel::TPx_C_1-;
+---
+> #pragma link C++ class generatedSel::TPx_C2-;
