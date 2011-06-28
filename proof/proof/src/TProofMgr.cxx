@@ -496,7 +496,8 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
       u.SetUrl(gEnv->GetValue("Proof.LocalDefault", "lite://"));
       proto = u.GetProtocol();
    }
-   if (proto == "lite") {
+   TString host = u.GetHost();
+   if (proto == "lite" || host == "__lite__" ) {
 #ifndef WIN32
       isLite = kTRUE;
       u.SetHost("__lite__");
