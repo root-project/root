@@ -206,8 +206,8 @@ namespace ROOT {
    TClass *TGenericClassInfo::GetClass()
    {
       // Generate and return the TClass object.
-      R__LOCKGUARD2(gCINTMutex);
       if (!fClass && fAction) {
+         R__LOCKGUARD2(gCINTMutex);
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),
                                           GetInfo(),
