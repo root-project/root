@@ -309,6 +309,7 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
 
 HypoTestInverter::HypoTestInverter(const HypoTestInverter & rhs) :
    IntervalCalculator(),
+   fCalculator0(0), fScannedVariable(0),  // add these for Coverity
    fResults(0)
 {
    // copy-constructor
