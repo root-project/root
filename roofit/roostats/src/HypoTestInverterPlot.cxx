@@ -284,7 +284,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       gclb->SetMarkerColor(kBlue+4);
       gclb->Draw("PL");
       // draw in red observed cls or clsb
-      gobs->SetMarkerColor(kRed);
+      if (gobs) gobs->SetMarkerColor(kRed);
    }
    TGraph * gclsb = 0;
    TGraph * gcls = 0;
@@ -311,7 +311,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
 
 
    double y0 = 0.6;
-   double verticalSize = (!gexp || !gcls || !gclsb ) ? 0.3 : 0.15;
+   double verticalSize = (gexp || draw2CL || drawCLb ) ? 0.3 : 0.15;
    double y1 = y0 + verticalSize;
    TLegend * l = new TLegend(0.6,y0,0.9,y1);
    if (gobs) l->AddEntry(gobs,"","PEL");
