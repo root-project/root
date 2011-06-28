@@ -8,9 +8,43 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
-   BayesianCalculator class
-**/
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+BayesianCalculator is a concrete implementation of IntervalCalculator, providing the computation 
+of a credible interval using a Bayesian method. 
+The class works only for one single parameter of interest and it integrates the likelihood function with the given prior
+probability density function to compute the posterior probability. The result of the class is a one dimensional interval 
+(class SimpleInterval ), which is obtained from inverting the cumulative posterior distribution. 
+</p>
+
+<p>
+The interface allows one to construct the class by passing the data set, probability density function for the model, the prior
+functions and then the parameter of interest to scan. The nuisance parameters can also be passed to be marginalized when 
+computing the posterior. Alternatively, the class can be constructed by passing the data and the ModelConfig containing
+all the needed information (model pdf, prior pdf, parameter of interest, nuisance parameters, etc..)
+</p>
+<p>
+After configuring the calculator, one only needs to ask GetInterval(), which
+will return an SimpleInterval object. By default the extrem of the integral are obtained by inverting directly the
+cumulative posterior distribution. By using the method <tt>SetScanOfPosterior(nbins)</tt> the interval is then obtained by 
+scanning  the posterior function in the given number of points. The firts method is in general faster but it requires an
+integration one extra dimension  ( in the poi in addition to the nuisance parameters), therefore in some case it can be
+less robust.   
+</p>
+The class can also return the posterior function (method <tt>GetPosteriorFunction</tt>) or if needed the normalized
+posterior function (the posterior pdf) (method <tt>GetPosteriorPdf</tt>). A posterior plot is also obtained using 
+the <tt>GetPosteriorPlot</tt> method.
+<p>
+The class allows to use different integration methods for integrating in the nuisances and in the poi. All the numerical 
+integration methods of ROOT can be used via the method <tt>SetIntegrationType</tt> (see more in the documentation of
+this method).
+
+END_HTML
+*/
+//_________________________________________________
+
 
 // include other header files
 
@@ -117,7 +151,6 @@ struct  LikelihoodFunction {
    mutable double fMaxL;
 };
 
-//______________________________________________________________________
 
 // Posterior CDF Function class 
 // for integral of posterior function in nuisance and POI
@@ -603,7 +636,6 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
 						    const RooArgSet& POI,
 						    RooAbsPdf& priorPOI,
 						    const RooArgSet* nuisanceParameters ) :
-   //TNamed( TString(name), TString(title) ),
    fData(&data),
    fPdf(&pdf),
    fPOI(POI),
@@ -622,6 +654,7 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
    // Constructor from data set, model pdf, parameter of interests and prior pdf
    // If nuisance parameters are given they will be integrated according either to the prior or 
    // their constraint term included in the model
+
    if (nuisanceParameters) fNuisanceParameters.add(*nuisanceParameters); 
    // remove constant nuisance parameters 
    RemoveConstantParameters(&fNuisanceParameters);
@@ -643,7 +676,8 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fNumIterations(0),
    fValidInterval(false)
 {
-   // Constructor from a ModelConfig 
+   // Constructor from a data set and a ModelConfig 
+   // model pdf, poi and nuisances will be taken from the ModelConfig
    SetModel(model);
 }
 
@@ -676,7 +710,10 @@ void BayesianCalculator::ClearAll() const {
 }
 
 void BayesianCalculator::SetModel(const ModelConfig & model) {
-   // set the model
+   // set the model to use 
+   // The model pdf, prior pdf, parameter of interest and nuisances 
+   // will be taken according to the model 
+
    fPdf = model.GetPdf();
    fPriorPOI =  model.GetPriorPdf(); 
    // assignment operator = does not do a real copy the sets (must use add method) 
@@ -695,12 +732,13 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
 
 RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 {
-   // build and return the posterior function (not normalized) as a RooAbsReal
+   // Build and return the posterior function (not normalized) as a RooAbsReal
    // the posterior is obtained from the product of the likelihood function and the
    // prior pdf which is then intergated in the nuisance parameters (if existing).
    // A prior function for the nuisance can be specified either in the prior pdf object
    // or in the model itself. If no prior nuisance is specified, but prior parameters are then
    // the integration is performed assuming a flat prior for the nuisance parameters.        
+   // NOTE: the return object is managed by the class, users do not need to delete it
 
    if (fIntegratedLikelihood) return fIntegratedLikelihood; 
    if (fLikelihood) return fLikelihood; 
@@ -877,7 +915,8 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
 RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 {
-   // build and return the posterior pdf (i.e posterior function normalized to all range of poi
+   // Build and return the posterior pdf (i.e posterior function normalized to all range of poi)
+   // Note that an extra integration in the POI is required for the normalization
    // NOTE: user must delete the returned object 
    
    RooAbsReal * plike = GetPosteriorFunction();
@@ -895,7 +934,8 @@ RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 
 RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) const
 {
-  // return a RooPlot with the posterior  and the credibility region
+   // return a RooPlot with the posterior  and the credibility region
+   // NOTE: User takes ownership of the returned object 
 
    GetPosteriorFunction(); 
 
@@ -979,8 +1019,9 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    //  For lower limit use SetLeftSideTailFraction = 1
    //  For upper limit use SetLeftSideTailFraction = 0
    //  for shortest intervals use SetLeftSideTailFraction = -1 or call the method SetShortestInterval()
-   // NOTE: The BayesianCaluclator covers only the case with one
+   // NOTE: The BayesianCalculator covers only the case with one
    // single parameter of interest
+   // NOTE: User takes ownership of the returned object
 
    if (fValidInterval) 
       coutW(Eval) << "BayesianCalculator::GetInterval - recomputing interval for the same CL and same model" << std::endl;
@@ -1059,7 +1100,7 @@ double BayesianCalculator::GetMode() const {
 }
 
 void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double upperCutOff ) const { 
-   // compute the interval using RooFit
+   // internal function compute the interval using RooFit
 
    coutI(Eval) <<  "BayesianCalculator: Compute interval using RooFit:  posteriorPdf + createCdf + RooBrentRootFinder " << std::endl;
 
@@ -1106,7 +1147,7 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
 }
 
 void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upperCutOff ) const { 
-   // compute the interval using Cdf integration
+   // internal function compute the interval using Cdf integration
 
    fValidInterval = false; 
 
