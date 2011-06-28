@@ -98,9 +98,12 @@ Where the Draw option "2CL CLb" draws in addition to the observed limit and band
 The result is shown  in this figure:
 
 <pre>
-<img src="scan_cls.pdf">
+<img src="scan_cls.png">
 </pre>
 
+<p>
+A new tutorial <tt>StandardHypoTestInvDemo</tt> has been added to show the usage of this class and producing the picture
+as the one showed above.
 
 <h4>FrequentistCalculator</h4>
 This is a <tt>HypoTestCalculator</tt> that returns a <tt>HypoTestResult</tt> similar to the <tt>HybridCalculator</tt>.  The primary difference is that this tool profiles the nuisance parameters for the null model and uses those fixed values of the nuisance parameters for generating the pseudo-experiments, where the <tt>HybridCalculator</tt> smears/randomizes/marginalizes the nuisance parameters.
