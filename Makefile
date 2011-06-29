@@ -496,11 +496,11 @@ STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
 
 ##### libCore #####
 
-COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
+COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
                 $(CLIBO) $(METAUTILSO) $(TEXTINPUTO) $(CLINGO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) \
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
                 $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO) $(CLINGDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)

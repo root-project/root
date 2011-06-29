@@ -13,6 +13,12 @@ ZIPDIRS      := $(ZIPDIR)/src
 ZIPDIRI      := $(ZIPDIR)/inc
 
 ##### libZip (part of libCore) #####
+ZIPL         := $(MODDIRI)/LinkDef.h
+ZIPDS        := $(call stripsrc,$(MODDIRS)/G__Zip.cxx)
+ZIPDO        := $(ZIPDS:.cxx=.o)
+ZIPDH        := $(ZIPDS:.cxx=.h)
+ZIPDICTH     := $(MODDIRI)/Compression.h
+
 ZIPOLDH      := $(MODDIRI)/Bits.h       \
                 $(MODDIRI)/Tailor.h     \
                 $(MODDIRI)/ZDeflate.h   \
@@ -59,7 +65,7 @@ ZIPS         := $(ZIPOLDS)
 endif
 ZIPS1        := $(MODDIRS)/Compression.cxx
 ZIPO         := $(call stripsrc,$(ZIPS:.c=.o) $(ZIPS1:.cxx=.o))
-ZIPDEP       := $(ZIPO:.o=.d)
+ZIPDEP       := $(ZIPO:.o=.d) $(ZIPDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ZIPH))
@@ -73,14 +79,19 @@ INCLUDEFILES += $(ZIPDEP)
 include/%.h:    $(ZIPDIRI)/%.h
 		cp $< $@
 
+$(ZIPDS):      $(ZIPDICTH) $(ZIPL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c -DG__API $(ZIPDICTH) $(ZIPL)
+
 all-$(MODNAME): $(ZIPO)
 
 clean-$(MODNAME):
-		@rm -f $(ZIPO)
+		@rm -f $(ZIPO) $(ZIPDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(ZIPDEP)
+		@rm -f $(ZIPDEP) $(ZIPDS) $(ZIPDH)
 
 distclean::     distclean-$(MODNAME)

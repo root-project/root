@@ -226,7 +226,7 @@ Bool_t TStreamerElement::CannotSplit() const
    // the special characters "||" as the first characters in the
    // comment field.
 
-   if (strspn(GetTitle(),"||") == 2) return kTRUE;
+   if (GetTitle()[0] != 0 && strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type
 
