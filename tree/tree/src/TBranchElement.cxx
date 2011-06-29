@@ -2161,6 +2161,13 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       }
    }
 
+   if (object == 0)
+   {
+      // We have nowhere to read the data from (probably because the data member was
+      // 'dropped' from the current schema).
+      return 0;
+   }
+
    if (fType == 31) {
       TClonesArray* clones = (TClonesArray*) object;
       if (subarr) {
