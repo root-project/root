@@ -2753,7 +2753,15 @@ void TBranchElement::InitializeOffsets()
          }
       }
    }
-
+   else {
+      if (fID > -1) {
+         // Branch is *not* a top-level branch.
+         // Let's check if the target member is still present in memory
+         if (GetOffset() == TStreamerInfo::kMissing) {
+            fObject = 0;
+         }
+      }
+   }
    fInitOffsets = kTRUE;
 }
 
