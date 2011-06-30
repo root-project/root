@@ -783,6 +783,7 @@ Double_t TH2Poly::GetMaximum() const
    // Returns the maximum value of the histogram.
 
    if (fNcells==0) return 0;
+   if (fMaximum != -1111) return fMaximum;
 
    TH2PolyBin  *b;
 
@@ -807,6 +808,7 @@ Double_t TH2Poly::GetMaximum(Double_t maxval) const
    // Returns the maximum value of the histogram that is less than maxval.
 
    if (fNcells==0) return 0;
+   if (fMaximum != -1111) return fMaximum;
 
    TH2PolyBin  *b;
 
@@ -831,6 +833,7 @@ Double_t TH2Poly::GetMinimum() const
    // Returns the minimum value of the histogram.
 
    if (fNcells==0) return 0;
+   if (fMinimum != -1111) return fMinimum;
 
    TH2PolyBin  *b;
 
@@ -855,6 +858,7 @@ Double_t TH2Poly::GetMinimum(Double_t minval) const
    // Returns the minimum value of the histogram that is greater than minval.
 
    if (fNcells==0) return 0;
+   if (fMinimum != -1111) return fMinimum;
 
    TH2PolyBin  *b;
 
