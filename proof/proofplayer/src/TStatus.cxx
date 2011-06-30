@@ -30,7 +30,7 @@
 ClassImp(TStatus)
 
 //______________________________________________________________________________
-TStatus::TStatus() : fVirtMemMax(-1), fResMemMax(-1)
+TStatus::TStatus() : fExitStatus(-1), fVirtMemMax(-1), fResMemMax(-1)
 {
    // Deafult constructor.
 

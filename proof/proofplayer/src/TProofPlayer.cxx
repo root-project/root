@@ -2035,6 +2035,17 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 
    Long64_t rv = 0;
    if (fProof->IsMaster()) {
+
+      // Fill information for monitoring and stop it
+      TStatus *status = (TStatus *) fOutput->FindObject("PROOF_Status");
+      if (!status) {
+         // The query was aborted: let's add some info in the output list
+         status = new TStatus();
+         fOutput->Add(status);
+         TString emsg = TString::Format("Query aborted after %lld entries", GetEventsProcessed());
+         status->Add(emsg);        
+      }
+      status->SetExitStatus((Int_t) GetExitStatus());
       TPerfStats::Stop();
 
       PDB(kOutput,1) Info("Finalize","Calling Merge Output");
