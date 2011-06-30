@@ -580,13 +580,16 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                  "TSessionQueryFrame", fViewer->GetQueryFrame(),
                  "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                 "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
                  "TSessionQueryFrame", fViewer->GetQueryFrame(),
                  "IndicateStop(Bool_t)");
       fViewer->GetActDesc()->fProof->Connect(
-                  "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
-                  "TSessionQueryFrame", fViewer->GetQueryFrame(),
-                  "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
+                 "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
+                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                 "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)");
       // enable timer used for status bar icon's animation
       fViewer->EnableTimer();
       // change status bar right icon to connected pixmap
@@ -2690,9 +2693,10 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 
 //______________________________________________________________________________
 void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed,
-                                  Long64_t /*bytesread*/ , Float_t /*initTime*/,
+                                  Long64_t /*bytesread*/, Float_t /*initTime*/,
                                   Float_t /*procTime*/, Float_t /*evtrti*/,
-                                  Float_t /*mbrti*/)
+                                  Float_t /*mbrti*/, Int_t /*actw*/,
+                                  Int_t /*tses*/, Float_t /*eses*/)
 {
    // New version of Progress (just forward to the old version
    // for the time being).
@@ -2853,6 +2857,8 @@ void TSessionQueryFrame::IndicateStop(Bool_t aborted)
                this, "Progress(Long64_t,Long64_t)");
       fViewer->GetActDesc()->fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                this, "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fViewer->GetActDesc()->fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+               this, "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fViewer->GetActDesc()->fProof->Disconnect("StopProcess(Bool_t)", this,
                "IndicateStop(Bool_t)");
    }

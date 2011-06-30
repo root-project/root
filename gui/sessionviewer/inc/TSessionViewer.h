@@ -444,10 +444,14 @@ public:
    void     Feedback(TList *objs);
    void     Modified(Bool_t mod = kTRUE);
    void     Progress(Long64_t total, Long64_t processed);
-   void     Progress(Long64_t total, Long64_t processed,
-                     Long64_t bytesread, Float_t initTime,
-                     Float_t procTime, Float_t evtrti,
-                     Float_t mbrti);
+   void     Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                     Float_t initTime, Float_t procTime,
+                     Float_t evtrti, Float_t mbrti, Int_t actw, Int_t tses, Float_t eses);
+   void     Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                     Float_t initTime, Float_t procTime,
+                     Float_t evtrti, Float_t mbrti) {
+                     Progress(total, processed, bytesread, initTime, procTime,
+                              evtrti, mbrti, -1, -1, -1.); }
    void     ProgressLocal(Long64_t total, Long64_t processed);
    void     IndicateStop(Bool_t aborted);
    void     ResetProgressDialog(const char *selec, Int_t files, Long64_t first, Long64_t entries);
