@@ -2438,7 +2438,7 @@ Begin_Html
 
 3D implicit functions (<tt>TF3</tt>) can be drawn as iso-surfaces.
 The implicit function f(x,y,z) = 0 is drawn in cartesian coordinates.
-In the following example the options "FB" and "BB" suppress the 
+In the following example the options "FB" and "BB" suppress the
 "Front Box" and "Back Box" around the plot.
 
 End_Html
@@ -2901,8 +2901,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
          Int_t bin = th2->FindBin(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
-         if (bin>0) {curdist =1; goto FUNCTIONS;}
-         else return big;
+         if (bin>0) curdist = 1;
+         else       curdist = big;
+         goto FUNCTIONS;
       }
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
       if ( px > puxmin + delta2
@@ -6636,8 +6637,8 @@ void THistPainter::PaintScatterPlot(Option_t *option)
       char *blank = strstr(oscat," "); if (blank) *blank = 0;
       sscanf(oscat+5,"%lg",&scale);
    }
-   // use an independent instance of a random generator 
-   // instead of gRandom to avoid conflicts and 
+   // use an independent instance of a random generator
+   // instead of gRandom to avoid conflicts and
    // to get same random numbers when drawing the same histogram
    TRandom2 random;
    marker=0;
@@ -8020,7 +8021,7 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
 
 
    // use an independent instance of a random generator
-   // instead of gRandom to avoid conflicts and 
+   // instead of gRandom to avoid conflicts and
    // to get same random numbers when drawing the same histogram
    TRandom2 random;
 
