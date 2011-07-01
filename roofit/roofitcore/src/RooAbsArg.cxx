@@ -905,9 +905,11 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   if (newSetOrig.getSize()==0) return kFALSE ;
 
   // Strip any non-matchin removal nodes from newSetOrig
-  RooArgSet newSet ;
+  RooAbsCollection* newSet ;
+
   if (nameChange) {
 
+    newSet = new RooArgSet ;
     TIterator* iter = newSetOrig.createIterator() ;
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
@@ -916,22 +918,21 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 	
 	if (arg->getAttribute("REMOVE_ALL")) {
 // 	  cout << "RooAbsArg::redir including remove_all node " << arg->GetName() << endl ;
-	  newSet.add(*arg) ;
+	  newSet->add(*arg) ;
 	} else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
 // 	  cout << "RooAbsArg::redir including remove_from_" << GetName() << " node " << arg->GetName() << endl ;
-	  newSet.add(*arg) ;
+	  newSet->add(*arg) ;
 	}
       } else {
-	newSet.add(*arg) ;
+	newSet->add(*arg) ;
       }
     }
 
 //     cout << "RooAbsArg::redirect with name change(" << GetName() << ") newSet = " << newSet << " origSet = " << newSetOrig << endl ;
 
   } else {
-    newSet.add(newSetOrig) ;
+    newSet = (RooAbsCollection*) &newSetOrig ;
   }
-  
 
   // Replace current servers with new servers with the same name from the given list
   Bool_t ret(kFALSE) ;
@@ -958,7 +959,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   Bool_t propValue, propShape ;
   while ((oldServer=(RooAbsArg*)sIter->Next())) {
 
-    newServer= oldServer->findNewServer(newSet, nameChange);
+    newServer= oldServer->findNewServer(*newSet, nameChange);
 
     if (newServer && _verboseDirty) {
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
@@ -988,7 +989,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   setShapeDirty() ;
 
   // Take self out of newset disallowing cyclical dependencies
-  RooAbsCollection* newSet2 = (RooAbsCollection*) newSet.clone("newSet2") ;
+  RooAbsCollection* newSet2 = (RooAbsCollection*) newSet->clone("newSet2") ;
   newSet2->remove(*this,kTRUE,kTRUE) ;
 
   // Process the proxies
@@ -1009,9 +1010,13 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
   // Optional subclass post-processing
   for (Int_t i=0 ;i<numCaches() ; i++) {
-    ret |= getCache(i)->redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
+    ret |= getCache(i)->redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
   }
-  ret |= redirectServersHook(newSet,mustReplaceAll,nameChange,isRecursionStep) ;
+  ret |= redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
+
+  if (nameChange) {
+    delete newSet ;
+  }
 
   return ret ;
 }
