@@ -393,12 +393,12 @@ void  HypoTestInverter::CreateResults() const {
 
 HypoTestInverterResult* HypoTestInverter::GetInterval() const { 
    // Run a fixed scan or the automatic scan depending on the configuration
-   // Return a copy of the result object which will be managed by the user
+   // Return if needed a copy of the result object which will be managed by the user
 
-   // if having a result with more than one point return it
-   if (fResults && fResults->ArraySize() > 1) { 
+   // if having a result with at least  one point return it
+   if (fResults && fResults->ArraySize() >= 1) { 
       oocoutI((TObject*)0,Eval) << "HypoTestInverter::GetInterval - return an already existing interval " << std::endl;          
-      return (HypoTestInverterResult*)(fResults->Clone());
+      return  (HypoTestInverterResult*)(fResults->Clone());
    }
 
    if (fNBins > 0) {
@@ -417,7 +417,7 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
 
    if (fgCloseProof) ProofConfig::CloseProof();
 
-   return (fResults) ? (HypoTestInverterResult*)(fResults->Clone()) : 0;
+   return (HypoTestInverterResult*) (fResults->Clone());
 }
 
 
@@ -506,35 +506,36 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
    fResults->fFittedLowerLimit = false; 
    fResults->fFittedUpperLimit = false; 
 
-  // safety checks
-  if ( nBins<=0 ) {
-    std::cout << "Please provide nBins>0\n";
-    return false;
-  }
-  if ( nBins==1 && xMin!=xMax ) {
-    std::cout << "nBins==1 -> I will run for xMin (" << xMin << ")\n";
-  }
-  if ( xMin==xMax && nBins>1 ) { 
-    std::cout << "xMin==xMax -> I will enforce nBins==1\n";
-    nBins = 1;
-  }
-  if ( xMin>xMax ) {
-    std::cout << "Please provide xMin (" << xMin << ") smaller that xMax (" << xMax << ")\n";
-    return false;
-  } 
-  
-  for (int i=0; i<nBins; i++) {
-    double thisX = xMin+i*(xMax-xMin)/(nBins-1);
-    bool status = RunOnePoint(thisX);
-    
-    // check if failed status
-    if ( status==false ) {
-      std::cout << "\t\tLoop interupted because of failed status\n";
+   // safety checks
+   if ( nBins<=0 ) {
+      std::cout << "Please provide nBins>0\n";
       return false;
-    }
-  }
+   }
+   if ( nBins==1 && xMin!=xMax ) {
+      std::cout << "nBins==1 -> I will run for xMin (" << xMin << ")\n";
+   }
+   if ( xMin==xMax && nBins>1 ) { 
+      std::cout << "xMin==xMax -> I will enforce nBins==1\n";
+      nBins = 1;
+   }
+   if ( xMin>xMax ) {
+      std::cout << "Please provide xMin (" << xMin << ") smaller that xMax (" << xMax << ")\n";
+      return false;
+   } 
+   
+   double thisX = xMin;
+   for (int i=0; i<nBins; i++) {
+      if (i>0) thisX += i*(xMax-xMin)/(nBins-1);
+      bool status = RunOnePoint(thisX);
+  
+      // check if failed status
+      if ( status==false ) {
+         std::cout << "\t\tLoop interrupted because of failed status\n";
+         return false;
+      }
+   }
 
-  return true;
+   return true;
 }
 
 

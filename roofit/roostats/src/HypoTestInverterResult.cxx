@@ -69,8 +69,14 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    fLowerLimitError(0),
    fUpperLimitError(0)
 {
-  // constructor 
+   // constructor 
    fYObjects.SetOwner();
+   // put a cloned copy of scanned variable to set in the interval
+   // to avoid I/O problem of the Result class - 
+   // make the set owning the cloned copy (use clone istead of Clone to not copying all links)
+   fParameters.removeAll();
+   fParameters.takeOwnership();
+   fParameters.addOwned(*((RooRealVar *) scannedVariable.clone(scannedVariable.GetName()) ));
 }
 
 
@@ -363,9 +369,8 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
 
 
    if (ArraySize()<2) {
-      std::cout << "Error: not enough points to get the inverted interval\n";
-      if (target<0.5) return ((RooRealVar*)fParameters.first())->getMax();
-      else return ((RooRealVar*)fParameters.first())->getMin();
+      ooccoutW(this,Eval) << "HypoTestInverterResul - not enough points to get the inverted interval \n";
+      return (lowSearch) ? xmin : xmax;
    }
 
    // sort the values in x 

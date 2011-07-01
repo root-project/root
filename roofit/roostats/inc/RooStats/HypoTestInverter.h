@@ -134,6 +134,7 @@ public:
 
    // set flag to close proof for every new run
    static void SetCloseProof(Bool_t flag);
+
   
 protected:
 
