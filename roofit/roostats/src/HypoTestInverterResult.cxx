@@ -89,8 +89,16 @@ HypoTestInverterResult::~HypoTestInverterResult()
 
 bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
 {
-  /// Merge this HypoTestInverterResult with another
-  /// HypoTestInverterResult passed as argument
+   // Merge this HypoTestInverterResult with another
+   // HypoTestInverterResult passed as argument
+   // The merge is done by combining the HypoTestResult when the same point value exist in both results.
+   // If results exist at different points these are added in the new result
+   // NOTE: Merging of the expected p-values obtained with pseudo-data.
+   //  When expected p-values exist in the result (i.e. when rebuild option is used when getting the expected 
+   // limit distribuiton in the HYpoTestInverter) then the expected p-values are also merged. This is equivalent 
+   // at merging the pseudo-data. However there can be an inconsistency if the expected p-values have been 
+   // obtained with different toys. In this case the merge is done but a warning message is printed.
+
 
    int nThis = ArraySize();
    int nOther = otherResult.ArraySize();
@@ -107,6 +115,10 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
 
    bool addExpPValues = (fExpPValues.GetSize() == 0 && otherResult.fExpPValues.GetSize() > 0);
    bool mergeExpPValues = (fExpPValues.GetSize() > 0 && otherResult.fExpPValues.GetSize() > 0);
+
+   if (addExpPValues || mergeExpPValues)
+      oocoutI(this,Eval) << "HypoTestInverterResult::Add - merging also the expected p-values from pseudo-data" << std::endl;
+
 
    if (nThis == 0) {
       fXValues = otherResult.fXValues;
@@ -132,7 +144,11 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
                sameXFound = true;
                if (mergeExpPValues) { 
                   ((SamplingDistribution*) fExpPValues.At(j))->Add( (SamplingDistribution*)otherResult.fExpPValues.At(i) );
-                  std::cout << "adding expected p -values " << std::endl;
+                  // check if same toys have been used for the test statistic distribution
+                  int thisNToys = (thisHTR->GetNullDistribution() ) ? thisHTR->GetNullDistribution()->GetSize() : 0;
+                  int otherNToys = (otherHTR->GetNullDistribution() ) ? otherHTR->GetNullDistribution()->GetSize() : 0;
+                  if (thisNToys != otherNToys ) 
+                     oocoutW(this,Eval) << "HypoTestInverterResult::Add expexted p values have been generated with different toys " << thisNToys << " , " << otherNToys << std::endl;                  
                }
                break;
             }
@@ -145,6 +161,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       // add in any case also when same x found
       if (addExpPValues)  
          fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
+
 
    }
    
@@ -369,8 +386,11 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
 
 
    if (ArraySize()<2) {
-      ooccoutW(this,Eval) << "HypoTestInverterResul - not enough points to get the inverted interval \n";
-      return (lowSearch) ? xmin : xmax;
+      double val =  (lowSearch) ? xmin : xmax;
+      oocoutW(this,Eval) << "HypoTestInverterResult::FindInterpolatedLimit" 
+                         << " - not enough points to get the inverted interval - return " 
+                         <<  val << std::endl;
+      return val;
    }
 
    // sort the values in x 
@@ -440,12 +460,15 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target)
   // point.
    
   if (ArraySize()==0) {
-    std::cout << "Empty result \n";
+     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimateError" 
+                        << "Empty result \n";
     return 0;
   }
 
   if (ArraySize()<2) {
-    std::cout << "not enough points to get the inverted interval\n";
+     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimateError" 
+                        << " only  points - return its error\n"; 
+     return GetYError(0);
   }
  
   // The graph contains the points sorted by their x-value
@@ -543,12 +566,13 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
 
 SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower ) const { 
    // get the limit distribution (lower/upper depending on the flag)
+   // by interpolating  the expected p values for each point
 
-   //std::cout << "Interpolate the upper limit between the 2 results closest to the target confidence level" << endl;
 
   if (ArraySize()<2) {
-    std::cout << "Error: not enough points to get the inverted interval\n";
-    return 0; 
+     oocoutE(this,Eval) << "HypoTestInverterResult::GetLimitDistribution" 
+                        << " not  enought points -  return a NULL pointer " << std::endl; 
+     return 0; 
   }
 
   ooccoutD(this,Eval) << "HypoTestInverterResult - computing  limit distribution...." << std::endl;

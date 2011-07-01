@@ -525,7 +525,8 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
    
    double thisX = xMin;
    for (int i=0; i<nBins; i++) {
-      if (i>0) thisX += i*(xMax-xMin)/(nBins-1);
+      // for one bin scan at xMin
+      if (i>0) thisX += (xMax-xMin)/(nBins-1); 
       bool status = RunOnePoint(thisX);
   
       // check if failed status
