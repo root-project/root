@@ -1653,8 +1653,7 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t theta, phi, delta;
    TPolyMarker3D *pmfrominside = 0;
    TPolyMarker3D *pmfromoutside = 0;
-   new TCanvas("shape01", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
-   shape->Draw();
+   TCanvas *errcanvas = 0;
    TH1D *hist = new TH1D("hTest1", "Residual distance from inside/outside",200,-20, 0);
    hist->GetXaxis()->SetTitle("delta[cm] - first bin=overflow");
    hist->GetYaxis()->SetTitle("count");
@@ -1686,6 +1685,10 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          d1 = shape->DistFromInside(point,dir,3);
          if (d1>dmove || d1<TGeoShape::Tolerance()) {
             // Bad distance or bbox size, to debug
+            if (!errcanvas) {
+               errcanvas = new TCanvas("shape01", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+               shape->Draw();
+            }   
             printf("DistFromInside: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) %f/%f(max)\n",
                 point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,dmove);
             pmfrominside = new TPolyMarker3D(2);
@@ -1714,6 +1717,10 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          delta = dmove-d1-d2;
          if (TMath::Abs(delta)>1E-6 || dnext<2.*TGeoShape::Tolerance()) {
             // Error->debug this
+            if (!errcanvas) {
+               errcanvas = new TCanvas("shape01", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+               shape->Draw();
+            }   
             printf("Error: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d2=%f dmove=%f\n",
                 point[0],point[1],point[2],dir[0],dir[1],dir[2], d1,d2,dmove);                
             if (dnext<2.*TGeoShape::Tolerance()) {
@@ -1752,6 +1759,10 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
          if (dnext<d1-TGeoShape::Tolerance() || dnext>dmax) {
             printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) d1=%f d1p=%f\n",
                    pnew[0],pnew[1],pnew[2],dnew[0],dnew[1],dnew[2],d1,dnext);
+            if (!errcanvas) {
+               errcanvas = new TCanvas("shape01", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+               shape->Draw();
+            }   
             pmfrominside = new TPolyMarker3D(2);
             pmfrominside->SetMarkerStyle(24);
             pmfrominside->SetMarkerSize(0.4);
@@ -1777,8 +1788,8 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    }
    fTimer->Stop();
    fTimer->Print();
-   new TCanvas("Test01", "Residuals DistFromInside/Outside", 800, 600);
-   hist->Draw();
+//   new TCanvas("Test01", "Residuals DistFromInside/Outside", 800, 600);
+//   hist->Draw();
 }   
 
 //_____________________________________________________________________________
@@ -1845,7 +1856,9 @@ void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
             return;
          }
       }
-   }      
+   }
+   fTimer->Stop();
+   fTimer->Print();         
 }     
 
 //_____________________________________________________________________________
@@ -1898,7 +1911,7 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
       }
       for (i=0; i<kNtracks; i++) {
          dist = shape->DistFromInside(point,dir,3);
-         if (dist<TGeoShape::Tolerance() || dist>dmax) {         
+         if (dist>dmax) {         
             printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g\n",
                     point[0],point[1],point[2], dir[0], dir[1], dir[2], dist);
             if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
@@ -1941,6 +1954,8 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
          if ((itot%10) == 0) pm2->SetNextPoint(point[0],point[1],point[2]);
       }   
    }        
+   fTimer->Stop();
+   fTimer->Print();         
    if (errcanvas) {
       shape->Draw();
       pm1->Draw();
