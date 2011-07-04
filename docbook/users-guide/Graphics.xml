@@ -2953,7 +2953,7 @@ set with:</para>
 <programlisting language="c++">root[]<emphasis role="bold"><code> li-&gt;SetLineStyle(style)</code></emphasis>
 </programlisting>
 
-<para>The argument style is one of: 1=solid, 2=dash, 3=dash-dot, 4=dot-dot.</para>
+<para>The argument style is one of: 1=solid, 2=dash, 3=dot, 4=dash-dot.</para>
 <para>The line width may be set by a method call. What is said here applies to
 all objects deriving from <emphasis role="bold"><code>TAttLine</code></emphasis>,
 and there are many (histograms, plots). We will take an example that may be
