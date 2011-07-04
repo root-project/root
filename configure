@@ -2430,8 +2430,9 @@ if test "x$enable_builtin_lzma" = "xno" ; then
     check_header "lzma.h" "" \
         $LZMA ${LZMA:+$LZMA/include} \
         ${finkdir:+$finkdir/include} \
-        /usr/local/include /usr/include/lzma /usr/local/include/lzma \
-        /opt/lzma/include /usr/include
+        /usr/local/include /usr/include \
+        /usr/local/include/lzma /usr/include/lzma \
+        /opt/lzma/include
     if test "x$found_dir" = "x" ; then
         enable_builtin_lzma=yes
     else
