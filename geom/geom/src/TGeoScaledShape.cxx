@@ -88,6 +88,7 @@ void TGeoScaledShape::ComputeBBox()
       Error("ComputeBBox", "Scaled shape %s without shape", GetName());
       return;
    } 
+   if (fShape->IsAssembly()) fShape->ComputeBBox();
    TGeoBBox *box = (TGeoBBox*)fShape;
    const Double_t *orig = box->GetOrigin();
    Double_t point[3], master[3];
@@ -228,6 +229,13 @@ void TGeoScaledShape::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
+//_____________________________________________________________________________
+Bool_t TGeoScaledShape::IsAssembly() const
+{
+ // Returns true if the scaled shape is an assembly.
+   return fShape->IsAssembly(); 
+}
+   
 //_____________________________________________________________________________
 Bool_t TGeoScaledShape::IsReflected() const
 {

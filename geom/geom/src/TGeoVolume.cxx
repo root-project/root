@@ -1533,6 +1533,13 @@ void TGeoVolume::GrabFocus()
 }   
 
 //_____________________________________________________________________________
+Bool_t TGeoVolume::IsAssembly() const
+{
+// Returns true if the volume is an assembly or a scaled assembly.
+  return fShape->IsAssembly();
+}
+
+//_____________________________________________________________________________
 TGeoVolume *TGeoVolume::CloneVolume() const
 {
 // Clone this volume.
@@ -1662,7 +1669,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    CloneNodesAndConnect(vol);
    // The volume is now properly cloned, but with the same shape.
    // Reflect the shape (if any) and connect it.
-   if (fShape && !fShape->IsAssembly()) {
+   if (fShape) {
       TGeoShape *reflected_shape = 
          TGeoScaledShape::MakeScaledShape("", fShape, new TGeoScale(1.,1.,-1.));
       vol->SetShape(reflected_shape);
@@ -1975,10 +1982,6 @@ void TGeoVolume::SelectVolume(Bool_t clear)
 void TGeoVolume::SetVisibility(Bool_t vis)
 {
 // set visibility of this volume
-   if (IsAssembly()) {
-      Info("SetVisibility", "Volume %s: assemblies do not have visibility", GetName());
-      return;
-   }   
    TGeoAtt::SetVisibility(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
    fGeoManager->SetVisOption(4);
