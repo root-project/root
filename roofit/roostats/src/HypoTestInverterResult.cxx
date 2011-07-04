@@ -133,7 +133,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
       if (otherHTR == 0) continue;
       bool sameXFound = false;
-      for (int j = 0; j < nOther; ++j) {
+      for (int j = 0; j < nThis; ++j) {
          double thisVal = fXValues[j];
          
             // if same value merge the result 
