@@ -69,8 +69,9 @@ GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
                          $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB) $(MINICERNLIB)
-GEOMLIBDEPM            = $(IOLIB) $(MATHCORELIB)
-GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB) $(IOLIB) $(MATHCORELIB)
+GEOMLIBDEPM            = $(IOLIB) $(THREADLIB) $(MATHCORELIB)
+GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB) \
+                         $(IOLIB) $(MATHCORELIB)
 GEOMBUILDERLIBDEPM     = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
                          $(GEDLIB)
 QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
@@ -324,7 +325,7 @@ GLLIBEXTRA              = lib/libGraf3d.lib lib/libGui.lib lib/libGraf.lib \
 HBOOKLIBEXTRA           = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libTreePlayer.lib lib/libRIO.lib \
                           lib/libminicern.lib
-GEOMLIBEXTRA            = lib/libRIO.lib lib/libMathCore.lib
+GEOMLIBEXTRA            = lib/libRIO.lib lib/libThread.lib lib/libMathCore.lib
 GEOMPAINTERLIBEXTRA     = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                           lib/libHist.lib lib/libGpad.lib lib/libRIO.lib \
                           lib/libMathCore.lib
@@ -455,7 +456,7 @@ GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed \
                           -lMathCore -lTree -lTreePlayer -lRIO
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer \
                           -lRIO -lminicern
-GEOMLIBEXTRA            = -Llib -lRIO -lMathCore
+GEOMLIBEXTRA            = -Llib -lRIO -lThread -lMathCore
 GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad -lRIO \
                           -lMathCore
 GEOMBUILDERLIBEXTRA     = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
