@@ -318,6 +318,7 @@ $(XROOTDDIRL)/libXrdSys.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrd.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdClient.a: $(XROOTDBUILD)
 $(XROOTDDIRL)/libXrdSut.a: $(XROOTDBUILD)
+$(XROOTDDIRL)/libXrdNetUtil.a: $(XROOTDBUILD)
 
 ### General rules
 
