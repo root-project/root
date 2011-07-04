@@ -17,6 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfigure.h"
+
 #include "TProofBenchDataSet.h"
 #include "TClass.h"
 #include "TFileCollection.h"
@@ -139,7 +141,11 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
    TString selName("TSelHandleDataSet");
    if (!TClass::GetClass(selName)) {
       // Load the parfile
-      TString par = TString::Format("%s%s.par", kPROOF_BenchSrcDir, kPROOF_BenchDataSelPar);
+#ifdef R__HAVE_CONFIG
+      TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#else
+      TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#endif
       Info("Handle", "Uploading '%s' ...", par.Data());
       if (fProof->UploadPackage(par) != 0) {
          Error("Handle", "problems uploading '%s' - cannot continue", par.Data());

@@ -36,13 +36,15 @@
 #include "TRandom.h"
 #include "Event.h"
 #include "TProofServ.h"
+#include "TMacro.h"
 
 ClassImp(TSelEventGen)
 
 //______________________________________________________________________________
 TSelEventGen::TSelEventGen()
              : fBaseDir(""), fNEvents(100000), fNTracks(100), fNTracksMax(-1),
-               fRegenerate(kFALSE), fTotalGen(0), fFilesGenerated(0), fChain(0)
+               fRegenerate(kFALSE), fTotalGen(0), fFilesGenerated(0),
+               fGenerateFun(0), fChain(0)
 {
    // Constructor
    if (gProofServ){
@@ -188,6 +190,13 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          }
          continue;
       }
+      if (sinput.Contains("PROOF_GenerateFun")){
+         TNamed *a = dynamic_cast<TNamed*>(obj);
+         if (!(fGenerateFun = dynamic_cast<TMacro *>(fInput->FindObject(a->GetTitle())))) {
+            Error("SlaveBegin", "PROOF_GenerateFun requires the TMacro object in the input list");
+         }
+         continue;
+      }
    }
    
    if (!found_basedir){
@@ -227,7 +236,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
 }
 
 //______________________________________________________________________________
-Long64_t TSelEventGen::GenerateFiles(TString filename, Long64_t sizenevents)
+Long64_t TSelEventGen::GenerateFiles(const char *filename, Long64_t sizenevents)
 {
 //Generate files for IO-bound run
 //Input parameters
@@ -267,7 +276,7 @@ Long64_t TSelEventGen::GenerateFiles(TString filename, Long64_t sizenevents)
 //   f->SetCompressionLevel(0); //no compression
    Int_t ntrks = fNTracks;
    
-   Info("GenerateFiles", "Generating %s", filename.Data());   
+   Info("GenerateFiles", "Generating %s", filename);   
    while (sizenevents--){
       //event->Build(i++,fNTracksBench,0);
       if (fNTracksMax > fNTracks) {
@@ -278,8 +287,7 @@ Long64_t TSelEventGen::GenerateFiles(TString filename, Long64_t sizenevents)
       size_generated+=eventtree->Fill();
    }
    nentries=eventtree->GetEntries();
-   Info("GenerateFiles", "%s generated with %lld entries", filename.Data(),
-                                                              nentries);
+   Info("GenerateFiles", "%s generated with %lld entries", filename, nentries);
    savedir = gDirectory;
 
    f = eventtree->GetCurrentFile();
@@ -382,7 +390,12 @@ Bool_t TSelEventGen::Process(Long64_t entry)
 
    if (!filefound) {  // Generate
       gRandom->SetSeed(static_cast<UInt_t>(TMath::Hash(seed)));
-      entries_file = GenerateFiles(filename, neventstogenerate);
+      if (fGenerateFun) {
+         TString fargs = TString::Format("\"%s\",%lld", filename.Data(), neventstogenerate);        
+         entries_file = (Long64_t) fGenerateFun->Exec(fargs);
+      } else {
+         entries_file = GenerateFiles(filename, neventstogenerate);
+      }
 
       TFile *f = TFile::Open(filename);
       if (f && !f->IsZombie()) {
