@@ -231,6 +231,8 @@ public:
    TGeoNavigator         *AddNavigator();
    inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}   
    TGeoNavigator         *SetCurrentNavigator(Int_t inav) {return (fCurrentNavigator=(TGeoNavigator*)At(inav));}
+
+   ClassDef(TGeoNavigatorArray, 0)       // An array of navigators
 };   
 #endif
    
