@@ -122,7 +122,7 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuFavorites->AddEntry("&Add to Favorites", M_FAVORITES_ADD, 0, 
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, 0, 
+   fMenuFavorites->AddEntry("http://root.cern.ch/drupal/", fNbFavorites++, 0, 
                             gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
@@ -148,29 +148,34 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fHorizontalFrame = new TGHorizontalFrame(fVerticalFrame,727,600);
 
    fBack = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoBack.gif"));
+   fBack->SetStyle(gClient->GetStyle());
    fBack->SetToolTipText("Go Back");
    fHorizontalFrame->AddFrame(fBack, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fBack->Connect("Clicked()", "TGHtmlBrowser", this, "Back()");
 
    fForward = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoForward.gif"));
+   fForward->SetStyle(gClient->GetStyle());
    fForward->SetToolTipText("Go Forward");
    fHorizontalFrame->AddFrame(fForward, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fForward->Connect("Clicked()", "TGHtmlBrowser", this, "Forward()");
 
    fReload = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("ReloadPage.gif"));
+   fReload->SetStyle(gClient->GetStyle());
    fReload->SetToolTipText("Reload Page");
    fHorizontalFrame->AddFrame(fReload, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fReload->Connect("Clicked()", "TGHtmlBrowser", this, "Reload()");
 
    fStop = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("StopLoading.gif"));
+   fStop->SetStyle(gClient->GetStyle());
    fStop->SetToolTipText("Stop Loading");
    fHorizontalFrame->AddFrame(fStop, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
    fStop->Connect("Clicked()", "TGHtmlBrowser", this, "Stop()");
 
    fHome = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoHome.gif"));
+   fHome->SetStyle(gClient->GetStyle());
    fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern.ch)");
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern.ch\")");
+   fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern.ch/drupal/\")");
 
    // combo box
    fURLBuf   = new TGTextBuffer(256);
@@ -518,7 +523,7 @@ int main(int argc, char **argv)
    // Main application.
    
    TApplication theApp("App", &argc, argv);
-   new TGHtmlBrowser("http://root.cern.ch");
+   new TGHtmlBrowser("http://root.cern.ch/drupal/");
    theApp.Run();
    return 0;
 }
