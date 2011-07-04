@@ -90,12 +90,16 @@ private :
    TObjArray            *fGVolumes;         //! list of runtime volumes
    TObjArray            *fTracks;           //-> list of tracks attached to geometry
    TObjArray            *fPdgNames;         //-> list of pdg names for tracks
-   TObjArray            *fNavigators;       //! list of navigators
+//   TObjArray            *fNavigators;       //! list of navigators
    TList                *fMaterials;        //-> list of materials
    TList                *fMedia;            //-> list of tracking media
    TObjArray            *fNodes;            //-> current branch of nodes
    TObjArray            *fOverlaps;         //-> list of geometrical overlaps
    UChar_t              *fBits;             //! bits used for voxelization
+   // Map of navigatorr arrays per thread
+   typedef std::map<Long_t, TGeoNavigatorArray *>   NavigatorsMap_t;
+   typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
+   NavigatorsMap_t       fNavigators;       // Map between thread id's and navigator arrays
    TGeoNavigator        *fCurrentNavigator; //! current navigator
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
@@ -121,6 +125,7 @@ private :
    Int_t                 fNPNEId;           // number of PN entries having a unique ID
    Int_t                *fKeyPNEId;         //[fSizePNEId] array of uid values for PN entries
    Int_t                *fValuePNEId;       //[fSizePNEId] array of pointers to PN entries with ID's
+   Bool_t                fMultiThread;      //! Flag for multi-threading
 //--- private methods
 
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
@@ -145,7 +150,7 @@ public:
    Int_t                  AddTrack(Int_t id, Int_t pdgcode, TObject *particle=0);
    Int_t                  AddTrack(TVirtualGeoTrack *track);
    Int_t                  AddVolume(TGeoVolume *volume);
-   Int_t                  AddNavigator(TGeoNavigator *navigator);
+   TGeoNavigator         *AddNavigator();
    void                   ClearOverlaps();
    void                   RegisterMatrix(const TGeoMatrix *matrix);
    void                   SortOverlaps();
@@ -162,7 +167,7 @@ public:
    void                   GetBranchNames(Int_t *names) const;
    void                   GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    void                   GetBranchOnlys(Int_t *isonly) const;
-   Int_t                  GetNmany() const {return fCurrentNavigator->GetNmany();}
+   Int_t                  GetNmany() const {return GetCurrentNavigator()->GetNmany();}
    const char            *GetPdgName(Int_t pdg) const;
    void                   SetPdgName(Int_t pdg, const char *name);
    Bool_t                 IsFolder() const { return kTRUE; }
@@ -358,7 +363,7 @@ public:
    Int_t                  GetNtracks() const {return fNtracks;}
    TVirtualGeoTrack      *GetCurrentTrack() {return fCurrentTrack;}
    TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack*)((fNtracks>0)?fTracks->At(fNtracks-1):NULL);}
-   const Double_t        *GetLastPoint() const {return fCurrentNavigator->GetLastPoint();}
+   const Double_t        *GetLastPoint() const {return GetCurrentNavigator()->GetLastPoint();}
    TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
    Int_t                  GetTrackIndex(Int_t id) const;
    TVirtualGeoTrack      *GetTrackOfId(Int_t id) const;
@@ -367,33 +372,33 @@ public:
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
    Int_t                  GetSafeLevel() const;
-   Double_t               GetSafeDistance() const      {return fCurrentNavigator->GetSafeDistance();}
-   Double_t               GetLastSafety() const        {return fCurrentNavigator->GetLastSafety();}
-   Double_t               GetStep() const              {return fCurrentNavigator->GetStep();}
+   Double_t               GetSafeDistance() const      {return GetCurrentNavigator()->GetSafeDistance();}
+   Double_t               GetLastSafety() const        {return GetCurrentNavigator()->GetLastSafety();}
+   Double_t               GetStep() const              {return GetCurrentNavigator()->GetStep();}
    void                   InspectState() const;
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
-   Bool_t                 IsCheckingOverlaps() const   {return fCurrentNavigator->IsCheckingOverlaps();}
+   Bool_t                 IsCheckingOverlaps() const   {return GetCurrentNavigator()->IsCheckingOverlaps();}
    Bool_t                 IsMatrixTransform() const    {return fMatrixTransform;}
    Bool_t                 IsMatrixReflection() const   {return fMatrixReflection;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
-   Bool_t                 IsSameLocation() const {return fCurrentNavigator->IsSameLocation();}
+   Bool_t                 IsSameLocation() const {return GetCurrentNavigator()->IsSameLocation();}
    Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;
-   Bool_t                 IsStartSafe() const {return fCurrentNavigator->IsStartSafe();}
-   void                   SetCheckingOverlaps(Bool_t flag=kTRUE) {fCurrentNavigator->SetCheckingOverlaps(flag);}
-   void                   SetStartSafe(Bool_t flag=kTRUE)   {fCurrentNavigator->SetStartSafe(flag);}
+   Bool_t                 IsStartSafe() const {return GetCurrentNavigator()->IsStartSafe();}
+   void                   SetCheckingOverlaps(Bool_t flag=kTRUE) {GetCurrentNavigator()->SetCheckingOverlaps(flag);}
+   void                   SetStartSafe(Bool_t flag=kTRUE)   {GetCurrentNavigator()->SetStartSafe(flag);}
    void                   SetMatrixTransform(Bool_t on=kTRUE) {fMatrixTransform = on;}
    void                   SetMatrixReflection(Bool_t flag=kTRUE) {fMatrixReflection = flag;}
-   void                   SetStep(Double_t step) {fCurrentNavigator->SetStep(step);}
-   Bool_t                 IsCurrentOverlapping() const {return fCurrentNavigator->IsCurrentOverlapping();}
-   Bool_t                 IsEntering() const           {return fCurrentNavigator->IsEntering();}
-   Bool_t                 IsExiting() const            {return fCurrentNavigator->IsExiting();}
-   Bool_t                 IsStepEntering() const       {return fCurrentNavigator->IsStepEntering();}
-   Bool_t                 IsStepExiting() const        {return fCurrentNavigator->IsStepExiting();}
-   Bool_t                 IsOutside() const            {return fCurrentNavigator->IsOutside();}
-   Bool_t                 IsOnBoundary() const         {return fCurrentNavigator->IsOnBoundary();}
-   Bool_t                 IsNullStep() const           {return fCurrentNavigator->IsNullStep();}
+   void                   SetStep(Double_t step) {GetCurrentNavigator()->SetStep(step);}
+   Bool_t                 IsCurrentOverlapping() const {return GetCurrentNavigator()->IsCurrentOverlapping();}
+   Bool_t                 IsEntering() const           {return GetCurrentNavigator()->IsEntering();}
+   Bool_t                 IsExiting() const            {return GetCurrentNavigator()->IsExiting();}
+   Bool_t                 IsStepEntering() const       {return GetCurrentNavigator()->IsStepEntering();}
+   Bool_t                 IsStepExiting() const        {return GetCurrentNavigator()->IsStepExiting();}
+   Bool_t                 IsOutside() const            {return GetCurrentNavigator()->IsOutside();}
+   Bool_t                 IsOnBoundary() const         {return GetCurrentNavigator()->IsOnBoundary();}
+   Bool_t                 IsNullStep() const           {return GetCurrentNavigator()->IsNullStep();}
    Bool_t                 IsActivityEnabled() const    {return fActivity;}
-   void                   SetOutside(Bool_t flag=kTRUE) {fCurrentNavigator->SetOutside(flag);}
+   void                   SetOutside(Bool_t flag=kTRUE) {GetCurrentNavigator()->SetOutside(flag);}
    
 
    //--- cleaning
@@ -415,6 +420,7 @@ public:
    Int_t                 *GetIntBuffer(Int_t length);
    Double_t              *GetDblBuffer(Int_t length);
    void                   SetAllIndex();
+   void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
 
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
@@ -439,51 +445,51 @@ public:
    TObjArray             *GetListOfGShapes() const      {return fGShapes;}
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
-   TObjArray             *GetListOfNavigators() const   {return fNavigators;}
+   TGeoNavigatorArray    *GetListOfNavigators() const;
    TGeoElementTable      *GetElementTable();
 
    //--- modeler state getters/setters
    void                   DoBackupState();
    void                   DoRestoreState();
    TGeoNode              *GetNode(Int_t level) const  {return (TGeoNode*)fNodes->UncheckedAt(level);}
-   Int_t                  GetNodeId() const           {return fCurrentNavigator->GetNodeId();}
-   TGeoNode              *GetNextNode() const         {return fCurrentNavigator->GetNextNode();}
-   TGeoNode              *GetMother(Int_t up=1) const {return fCurrentNavigator->GetMother(up);}
-   TGeoHMatrix           *GetMotherMatrix(Int_t up=1) const {return fCurrentNavigator->GetMotherMatrix(up);}
+   Int_t                  GetNodeId() const           {return GetCurrentNavigator()->GetNodeId();}
+   TGeoNode              *GetNextNode() const         {return GetCurrentNavigator()->GetNextNode();}
+   TGeoNode              *GetMother(Int_t up=1) const {return GetCurrentNavigator()->GetMother(up);}
+   TGeoHMatrix           *GetMotherMatrix(Int_t up=1) const {return GetCurrentNavigator()->GetMotherMatrix(up);}
    TGeoHMatrix           *GetHMatrix();
-   TGeoHMatrix           *GetCurrentMatrix() const    {return fCurrentNavigator->GetCurrentMatrix();}
+   TGeoHMatrix           *GetCurrentMatrix() const    {return GetCurrentNavigator()->GetCurrentMatrix();}
    TGeoHMatrix           *GetGLMatrix() const         {return fGLMatrix;}
-   TGeoNavigator         *GetCurrentNavigator() const {return fCurrentNavigator;} 
-   TGeoNode              *GetCurrentNode() const      {return fCurrentNavigator->GetCurrentNode();}
+   TGeoNavigator         *GetCurrentNavigator() const;
+   TGeoNode              *GetCurrentNode() const      {return GetCurrentNavigator()->GetCurrentNode();}
    Int_t                  GetCurrentNodeId() const;
-   const Double_t        *GetCurrentPoint() const     {return fCurrentNavigator->GetCurrentPoint();}
-   const Double_t        *GetCurrentDirection() const {return fCurrentNavigator->GetCurrentDirection();}
-   TGeoVolume            *GetCurrentVolume() const {return fCurrentNavigator->GetCurrentVolume();}
-   const Double_t        *GetCldirChecked() const  {return fCurrentNavigator->GetCldirChecked();}
-   const Double_t        *GetCldir() const         {return fCurrentNavigator->GetCldir();}
-   const Double_t        *GetNormal() const        {return fCurrentNavigator->GetNormal();}
-   Int_t                  GetLevel() const         {return fCurrentNavigator->GetLevel();}
+   const Double_t        *GetCurrentPoint() const     {return GetCurrentNavigator()->GetCurrentPoint();}
+   const Double_t        *GetCurrentDirection() const {return GetCurrentNavigator()->GetCurrentDirection();}
+   TGeoVolume            *GetCurrentVolume() const {return GetCurrentNavigator()->GetCurrentVolume();}
+   const Double_t        *GetCldirChecked() const  {return GetCurrentNavigator()->GetCldirChecked();}
+   const Double_t        *GetCldir() const         {return GetCurrentNavigator()->GetCldir();}
+   const Double_t        *GetNormal() const        {return GetCurrentNavigator()->GetNormal();}
+   Int_t                  GetLevel() const         {return GetCurrentNavigator()->GetLevel();}
    Int_t                  GetMaxLevel() const      {return fNLevel;}
    const char            *GetPath() const;
-   Int_t                  GetStackLevel() const    {return fCurrentNavigator->GetStackLevel();}
+   Int_t                  GetStackLevel() const    {return GetCurrentNavigator()->GetStackLevel();}
    TGeoVolume            *GetMasterVolume() const  {return fMasterVolume;}
    TGeoVolume            *GetTopVolume() const     {return fTopVolume;}
    TGeoNode              *GetTopNode() const       {return fTopNode;}
    TGeoPhysicalNode      *GetPhysicalNode(Int_t i) const {return (TGeoPhysicalNode*)fPhysicalNodes->UncheckedAt(i);}
-   void                   SetCurrentPoint(Double_t *point) {fCurrentNavigator->SetCurrentPoint(point);}
-   void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fCurrentNavigator->SetCurrentPoint(x,y,z);}
-   void                   SetLastPoint(Double_t x, Double_t y, Double_t z) {fCurrentNavigator->SetLastPoint(x,y,z);}
-   void                   SetCurrentDirection(Double_t *dir) {fCurrentNavigator->SetCurrentDirection(dir);}
-   void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) {fCurrentNavigator->SetCurrentDirection(nx,ny,nz);}
-   void                   SetCldirChecked(Double_t *dir) {fCurrentNavigator->SetCldirChecked(dir);}
+   void                   SetCurrentPoint(Double_t *point) {GetCurrentNavigator()->SetCurrentPoint(point);}
+   void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) {GetCurrentNavigator()->SetCurrentPoint(x,y,z);}
+   void                   SetLastPoint(Double_t x, Double_t y, Double_t z) {GetCurrentNavigator()->SetLastPoint(x,y,z);}
+   void                   SetCurrentDirection(Double_t *dir) {GetCurrentNavigator()->SetCurrentDirection(dir);}
+   void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) {GetCurrentNavigator()->SetCurrentDirection(nx,ny,nz);}
+   void                   SetCldirChecked(Double_t *dir) {GetCurrentNavigator()->SetCldirChecked(dir);}
 
    //--- point/vector reference frame conversion
-   void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCurrentNavigator->LocalToMaster(local, master);}
-   void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {fCurrentNavigator->LocalToMasterVect(local, master);}
-   void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const {fCurrentNavigator->LocalToMasterBomb(local, master);}
-   void                   MasterToLocal(const Double_t *master, Double_t *local) const {fCurrentNavigator->MasterToLocal(master, local);}
-   void                   MasterToLocalVect(const Double_t *master, Double_t *local) const {fCurrentNavigator->MasterToLocalVect(master, local);}
-   void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const {fCurrentNavigator->MasterToLocalBomb(master, local);}
+   void                   LocalToMaster(const Double_t *local, Double_t *master) const {GetCurrentNavigator()->LocalToMaster(local, master);}
+   void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {GetCurrentNavigator()->LocalToMasterVect(local, master);}
+   void                   LocalToMasterBomb(const Double_t *local, Double_t *master) const {GetCurrentNavigator()->LocalToMasterBomb(local, master);}
+   void                   MasterToLocal(const Double_t *master, Double_t *local) const {GetCurrentNavigator()->MasterToLocal(master, local);}
+   void                   MasterToLocalVect(const Double_t *master, Double_t *local) const {GetCurrentNavigator()->MasterToLocalVect(master, local);}
+   void                   MasterToLocalBomb(const Double_t *master, Double_t *local) const {GetCurrentNavigator()->MasterToLocalBomb(master, local);}
    void                   MasterToTop(const Double_t *master, Double_t *top) const;
    void                   TopToMaster(const Double_t *top, Double_t *master) const;
 
@@ -500,20 +506,20 @@ public:
    TGeoVolume            *GetVolume(Int_t uid) const {return (TGeoVolume*)fUniqueVolumes->At(uid);}
    Int_t                  GetUID(const char *volname) const;
    Int_t                  GetNNodes() {if (!fNNodes) CountNodes(); return fNNodes;}
-   TGeoNodeCache         *GetCache() const         {return fCurrentNavigator->GetCache();}
+   TGeoNodeCache         *GetCache() const         {return GetCurrentNavigator()->GetCache();}
 //   void                   SetCache(const TGeoNodeCache *cache) {fCache = (TGeoNodeCache*)cache;}
    void                   SetAnimateTracks(Bool_t flag=kTRUE) {fIsGeomReading=flag;}
    virtual ULong_t        SizeOf(const TGeoNode *node, Option_t *option); // size of the geometry in memory
    void                   SelectTrackingMedia();
 
    //--- stack manipulation
-   Int_t                  PushPath(Int_t startlevel=0) {return fCurrentNavigator->PushPath(startlevel);}
-   Bool_t                 PopPath() {return fCurrentNavigator->PopPath();}
-   Bool_t                 PopPath(Int_t index) {return fCurrentNavigator->PopPath(index);}
-   Int_t                  PushPoint(Int_t startlevel=0) {return fCurrentNavigator->PushPoint(startlevel);}
-   Bool_t                 PopPoint() {return fCurrentNavigator->PopPoint();}
-   Bool_t                 PopPoint(Int_t index) {return fCurrentNavigator->PopPoint(index);}
-   void                   PopDummy(Int_t ipop=9999) {return fCurrentNavigator->PopDummy(ipop);}
+   Int_t                  PushPath(Int_t startlevel=0) {return GetCurrentNavigator()->PushPath(startlevel);}
+   Bool_t                 PopPath() {return GetCurrentNavigator()->PopPath();}
+   Bool_t                 PopPath(Int_t index) {return GetCurrentNavigator()->PopPath(index);}
+   Int_t                  PushPoint(Int_t startlevel=0) {return GetCurrentNavigator()->PushPoint(startlevel);}
+   Bool_t                 PopPoint() {return GetCurrentNavigator()->PopPoint();}
+   Bool_t                 PopPoint(Int_t index) {return GetCurrentNavigator()->PopPoint(index);}
+   void                   PopDummy(Int_t ipop=9999) {return GetCurrentNavigator()->PopDummy(ipop);}
 
    ClassDef(TGeoManager, 12)          // geometry manager
 };

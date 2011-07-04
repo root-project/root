@@ -76,6 +76,7 @@ TGeoNavigator::TGeoNavigator()
                fBackupState(0),
                fCurrentMatrix(0),
                fGlobalMatrix(0),
+               fDivMatrix(0),
                fPath()
                 
 {
@@ -123,6 +124,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
                fBackupState(0),
                fCurrentMatrix(0),
                fGlobalMatrix(0),
+               fDivMatrix(0),
                fPath()
                 
 {
@@ -137,6 +139,8 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
    }
    fCurrentMatrix = new TGeoHMatrix();
    fCurrentMatrix->RegisterYourself();
+   fDivMatrix = new TGeoHMatrix();
+   fDivMatrix->RegisterYourself();
    fOverlapClusters = new Int_t[fOverlapSize];
 }      
 
@@ -2379,4 +2383,17 @@ void TGeoNavigator::ResetAll()
       fCache = 0;
       BuildCache(dummy,nodeid);
    }
+}
+
+ClassImp(TGeoNavigatorArray)
+
+//______________________________________________________________________________
+TGeoNavigator *TGeoNavigatorArray::AddNavigator()
+{
+// Add a new navigator to the array.
+   TGeoNavigator *nav = new TGeoNavigator(fGeoManager);
+   nav->BuildCache(kTRUE, kFALSE);
+   Add(nav);
+   SetCurrentNavigator(GetEntriesFast()-1);
+   return nav;
 }

@@ -204,6 +204,15 @@ void TGeoPatternX::cd(Int_t idiv)
 }
 
 //_____________________________________________________________________________
+void TGeoPatternX::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   matrix.SetDx(fStart+idiv*fStep+0.5*fStep);
+}   
+
+//_____________________________________________________________________________
 TGeoPatternX::~TGeoPatternX()
 {
 // Destructor
@@ -345,6 +354,15 @@ void TGeoPatternY::cd(Int_t idiv)
 }
 
 //_____________________________________________________________________________
+void TGeoPatternY::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   matrix.SetDy(fStart+idiv*fStep+0.5*fStep);
+}   
+
+//_____________________________________________________________________________
 Bool_t TGeoPatternY::IsOnBoundary(const Double_t *point) const
 {
 // Checks if the current point is on division boundary
@@ -473,6 +491,15 @@ void TGeoPatternZ::cd(Int_t idiv)
    fCurrent=idiv; 
    fMatrix->SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
 }
+
+//_____________________________________________________________________________
+void TGeoPatternZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   matrix.SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
+}   
 
 //_____________________________________________________________________________
 Bool_t TGeoPatternZ::IsOnBoundary(const Double_t *point) const
@@ -668,6 +695,15 @@ void TGeoPatternParaX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
+//_____________________________________________________________________________
+void TGeoPatternParaX::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   matrix.SetDx(fStart+idiv*fStep+0.5*fStep);
+}   
+
 //______________________________________________________________________________
 // TGeoPatternParaY - a Y axis divison pattern for PARA shape
 //______________________________________________________________________________
@@ -789,6 +825,17 @@ void TGeoPatternParaY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    Int_t iaxis = 2;
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
+
+//_____________________________________________________________________________
+void TGeoPatternParaY::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   Double_t dy = fStart+idiv*fStep+0.5*fStep;
+   matrix.SetDx(fTxy*dy);
+   matrix.SetDy(dy);
+}   
 
 //______________________________________________________________________________
 // TGeoPatternParaZ - a Z axis divison pattern for PARA shape
@@ -913,6 +960,18 @@ void TGeoPatternParaZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    Int_t iaxis = 3;
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
+
+//_____________________________________________________________________________
+void TGeoPatternParaZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   Double_t dz = fStart+idiv*fStep+0.5*fStep;
+   matrix.SetDx(fTxz*dz);
+   matrix.SetDy(fTyz*dz);
+   matrix.SetDz((IsReflected())?-dz:dz);
+}   
 
 //______________________________________________________________________________
 // TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
@@ -1041,6 +1100,17 @@ void TGeoPatternTrapZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
+//_____________________________________________________________________________
+void TGeoPatternTrapZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   Double_t dz = fStart+idiv*fStep+0.5*fStep;
+   matrix.SetDx(fTxz*dz);
+   matrix.SetDy(fTyz*dz);
+   matrix.SetDz((IsReflected())?-dz:dz);
+}   
 
 //______________________________________________________________________________
 // TGeoPatternCylR - a cylindrical R divison pattern
@@ -1141,6 +1211,14 @@ void TGeoPatternCylR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
+//_____________________________________________________________________________
+void TGeoPatternCylR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+}   
+
 //______________________________________________________________________________
 // TGeoPatternCylPhi - a cylindrical phi divison pattern
 //______________________________________________________________________________ 
@@ -1161,7 +1239,11 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
    fEnd = 0;
    fStep = 0;
    fMatrix = 0;
-   fSinCos = 0;
+   fSinCos     = new Double_t[2*fNdivisions];
+   for (Int_t i = 0; i<fNdivisions; i++) {
+      fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
+      fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
+   }
 }
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1169,7 +1251,11 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
 {   
 // constructor
    fStep       = step;
-   fSinCos = 0;
+   fSinCos     = new Double_t[2*ndivisions];
+   for (Int_t i = 0; i<fNdivisions; i++) {
+      fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
+      fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
+   }
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1204,13 +1290,6 @@ void TGeoPatternCylPhi::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    fCurrent = idiv;
-   if (!fSinCos) {
-      fSinCos     = new Double_t[2*fNdivisions];
-      for (Int_t i = 0; i<fNdivisions; i++) {
-         fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-         fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-      }
-   }      
    ((TGeoRotation*)fMatrix)->FastRotZ(&fSinCos[2*idiv]);
 }
 
@@ -1276,6 +1355,33 @@ void TGeoPatternCylPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
    Int_t iaxis = 2;
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
+
+//_____________________________________________________________________________
+void TGeoPatternCylPhi::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoVolume.
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TGeoPatternCylPhi::Class(), this);
+      if (fNdivisions) {
+         fSinCos     = new Double_t[2*fNdivisions];
+         for (Int_t idiv = 0; idiv<fNdivisions; idiv++) {
+            fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+idiv*fStep));
+            fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+idiv*fStep));
+         }
+      }
+   } else {
+      R__b.WriteClassBuffer(TGeoPatternCylPhi::Class(), this);
+   }
+}
+
+//_____________________________________________________________________________
+void TGeoPatternCylPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+   matrix.FastRotZ(&fSinCos[2*idiv]);
+}   
 
 //______________________________________________________________________________
 // TGeoPatternSphR - a spherical R divison pattern
@@ -1345,6 +1451,14 @@ void TGeoPatternSphR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
+//_____________________________________________________________________________
+void TGeoPatternSphR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+}   
+
 //______________________________________________________________________________
 // TGeoPatternSphTheta - a spherical theta divison pattern
 //______________________________________________________________________________
@@ -1412,6 +1526,14 @@ void TGeoPatternSphTheta::SavePrimitive(ostream &out, Option_t * /*option*/ /*= 
    Int_t iaxis = 2;
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
+
+//_____________________________________________________________________________
+void TGeoPatternSphTheta::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+}   
 
 //______________________________________________________________________________
 // TGeoPatternSphPhi - a spherical phi divison pattern
@@ -1481,6 +1603,14 @@ void TGeoPatternSphPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
    out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
 }
 
+//_____________________________________________________________________________
+void TGeoPatternSphPhi::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+}   
+
 //______________________________________________________________________________
 // TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
 //______________________________________________________________________________   
@@ -1539,3 +1669,11 @@ TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t * 
 // find the node containing the query point
    return 0;
 }
+
+//_____________________________________________________________________________
+void TGeoPatternHoneycomb::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
+{
+// Fills external matrix with the local one corresponding to the given division
+// index.
+   matrix.Clear();
+}   

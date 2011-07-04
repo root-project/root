@@ -23,7 +23,7 @@
 #pragma link C++ class TGeoPatternParaZ+;
 #pragma link C++ class TGeoPatternTrapZ+;
 #pragma link C++ class TGeoPatternCylR+;
-#pragma link C++ class TGeoPatternCylPhi+;
+#pragma link C++ class TGeoPatternCylPhi-;
 #pragma link C++ class TGeoPatternSphR+;
 #pragma link C++ class TGeoPatternSphTheta+;
 #pragma link C++ class TGeoPatternSphPhi+;

@@ -200,7 +200,7 @@ public :
    virtual TGeoMatrix&  Inverse() const;
    void                 Clear(Option_t *option ="");
    Double_t             Determinant() const;
-   void                 FastRotZ(Double_t *sincos);
+   void                 FastRotZ(const Double_t *sincos);
    void                 GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2, Double_t &phi2,
                                   Double_t &theta3, Double_t &phi3) const;
    void                 GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const;
@@ -427,6 +427,7 @@ public :
    void                 Clear(Option_t *option ="");
    void                 CopyFrom(const TGeoMatrix *other);
    Double_t             Determinant() const;
+   void                 FastRotZ(const Double_t *sincos);
    virtual TGeoMatrix&  Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
    void                 Multiply(const TGeoMatrix *right);

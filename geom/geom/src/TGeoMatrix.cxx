@@ -870,7 +870,7 @@ void TGeoRotation::Clear(Option_t *)
 }
 
 //_____________________________________________________________________________
-void TGeoRotation::FastRotZ(Double_t *sincos)
+void TGeoRotation::FastRotZ(const Double_t *sincos)
 {
 // Perform a rotation about Z having the sine/cosine of the rotation angle.
    fRotationMatrix[0] = sincos[1];
@@ -2096,6 +2096,17 @@ TGeoMatrix *TGeoHMatrix::MakeClone() const
 // Make a clone of this matrix.
    TGeoMatrix *matrix = new TGeoHMatrix(*this);
    return matrix;
+}
+
+//_____________________________________________________________________________
+void TGeoHMatrix::FastRotZ(const Double_t *sincos)
+{
+// Perform a rotation about Z having the sine/cosine of the rotation angle.
+   fRotationMatrix[0] = sincos[1];
+   fRotationMatrix[1] = -sincos[0];
+   fRotationMatrix[3] = sincos[0];
+   fRotationMatrix[4] = sincos[1];
+   SetBit(kGeoRotation);
 }
 
 //_____________________________________________________________________________

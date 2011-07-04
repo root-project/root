@@ -84,6 +84,7 @@ private :
    TGeoCacheState       *fBackupState;      //! backup state
    TGeoHMatrix          *fCurrentMatrix;    //! current stored global matrix
    TGeoHMatrix          *fGlobalMatrix;     //! current pointer to cached global matrix
+   TGeoHMatrix          *fDivMatrix;        //! current local matrix of the selected division cell
    TString               fPath;             //! path to current node
     
 public :
@@ -162,6 +163,7 @@ public :
    TGeoVolume            *GetCurrentVolume() const {return fCurrentNode->GetVolume();}
    const Double_t        *GetCldirChecked() const  {return fCldirChecked;}
    const Double_t        *GetCldir() const         {return fCldir;}
+   TGeoHMatrix           *GetDivMatrix() const     {return fDivMatrix;}
 //   Double_t               GetNormalChecked() const {return fNormalChecked;}
    const Double_t        *GetNormal() const        {return fNormal;}
    Int_t                  GetLevel() const         {return fLevel;}
@@ -202,5 +204,33 @@ public :
    ClassDef(TGeoNavigator, 0)          // geometry navigator class
 };
 
+#ifndef ROOT_TObjArray
+#include "TObjArray.h"
+#endif
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoNavigatorArray - Class representing an array of navigators working //
+//   in a single thread.                                                  //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
+class TGeoNavigatorArray : public TObjArray
+{
+private:
+   TGeoNavigator         *fCurrentNavigator; // Current navigator
+   TGeoManager           *fGeoManager;       // Manager to which it applies
+   
+   TGeoNavigatorArray(const TGeoNavigatorArray&);
+   TGeoNavigatorArray& operator=(const TGeoNavigatorArray&);
+
+public:
+   TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(0), fGeoManager(mgr) {SetOwner();}
+   virtual ~TGeoNavigatorArray() {}
+   
+   TGeoNavigator         *AddNavigator();
+   inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}   
+   TGeoNavigator         *SetCurrentNavigator(Int_t inav) {return (fCurrentNavigator=(TGeoNavigator*)At(inav));}
+};   
 #endif
    
