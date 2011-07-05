@@ -283,7 +283,7 @@ void TGeoArb8::ComputeTwist()
       Fatal("ComputeTwist", "Shape %s type Arb8: Lower/upper faces defined with opposite clockwise", GetName());
       return;
    }
-   if (sum1>0.) {
+   if (sum1>TGeoShape::Tolerance()) {
       Error("ComputeTwist", "Shape %s type Arb8: Vertices must be defined clockwise in XY planes. Re-ordering...", GetName());
       Double_t xtemp, ytemp;
       xtemp = fXY[1][0];
