@@ -10497,12 +10497,15 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       // Check for PoD cluster
       if (PoDCheckUrl( &clst ) < 0) return 0;
 
-      if (clst.BeginsWith("workers=") || clst.BeginsWith("tunnel="))
-         clst.Insert(0, "/?");
+      if (clst.BeginsWith("workers=")) clst.Insert(0, "lite:///?");
+      if (clst.BeginsWith("tunnel=")) clst.Insert(0, "/?");
 
       // Parse input URL
       TUrl u(clst);
 
+      // *** GG, 060711: this does not seem to work any more (at XrdClient level)
+      // *** to be investigated (it is not really needed; static tunnels work).
+      // Dynamic tunnel:
       // Parse any tunning info ("<cluster>/?tunnel=[<tunnel_host>:]tunnel_port)
       TString opts(u.GetOptions());
       if (!opts.IsNull()) {
