@@ -5422,10 +5422,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    //   Rebin this histogram
    //
    //  -case 1  xbins=0
-   //   if newname is not blank a new temporary histogram hnew is created.
-   //   else the current histogram is modified (default)
-   //   The parameter ngroup indicates how many bins of this have to me merged
-   //   into one bin of hnew
+   //   If newname is blank (default), the current histogram is modified and
+   //   a pointer to it is returned. 
+   //
+   //   If newname is not blank, the current histogram is not modified, and a
+   //   new histogram is returned which is a Clone of the current histogram
+   //   with its name set to newname.
+   //   
+   //   The parameter ngroup indicates how many bins of this have to be merged
+   //   into one bin of the result.
+   // 
    //   If the original histogram has errors stored (via Sumw2), the resulting
    //   histograms has new errors correctly calculated.
    //
@@ -5433,21 +5439,28 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    //     h1->Rebin();  //merges two bins in one in h1: previous contents of h1 are lost
    //     h1->Rebin(5); //merges five bins in one in h1
    //     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
-   //                                       //merging 5 bins of h1 in one bin
+   //                                       // merging 5 bins of h1 in one bin
    //
    //   NOTE:  If ngroup is not an exact divider of the number of bins,
-   //          the top limit of the rebinned histogram is changed
-   //          to the upper edge of the bin=newbins*ngroup and the corresponding
-   //          bins are added to the overflow bin.
+   //          the top limit of the rebinned histogram is reduced
+   //          to the upper edge of the last bin that can make a complete
+   //          group. The remaining bins are added to the overflow bin.
    //          Statistics will be recomputed from the new bin contents.
    //
    //  -case 2  xbins!=0
-   //   a new histogram is created (you should specify newname).
-   //   The parameter is the number of variable size bins in the created histogram.
-   //   The array xbins must contain ngroup+1 elements that represent the low-edge
+   //   A new histogram is created (you should specify newname).
+   //   The parameter ngroup is the number of variable size bins in the created histogram.
+   //   The array xbins must contain ngroup+1 elements that represent the low-edges
    //   of the bins.
    //   If the original histogram has errors stored (via Sumw2), the resulting
    //   histograms has new errors correctly calculated.
+   //
+   //   NOTE:  The bin edges specified in xbins should correspond to bin edges
+   //          in the original histogram. If a bin edge in the new histogram is 
+   //          in the middle of a bin in the original histogram, all entries in 
+   //          the split bin in the original histogram will be transfered to the
+   //          lower of the two possible bins in the new histogram. This is 
+   //          probably not what you want.
    //
    //   examples: if h1 is an existing TH1F histogram with 100 bins
    //     Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
@@ -5474,14 +5487,14 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    if (!xbins) {
       Int_t nbg = nbins/ngroup;
       if (nbg*ngroup != nbins) {
-         Warning("Rebin", "ngroup=%d must be an exact divider of nbins=%d",ngroup,nbins);
+         Warning("Rebin", "ngroup=%d is not an exact divider of nbins=%d.",ngroup,nbins);
       }
    }
    else {
-   // in the case of xbins given (rebinning in variable bins) ngroup is the news number of bins.
-   //  and number of grouped bins is not constant.
+   // in the case that xbins is given (rebinning in variable bins), ngroup is 
+   // the new number of bins and number of grouped bins is not constant.
    // when looping for setting the contents for the new histogram we
-   // need to loop on all bins of original histogram. Set then ngroup=nbins
+   // need to loop on all bins of original histogram.  Then set ngroup=nbins
       newbins = ngroup;
       ngroup = nbins;
    }
@@ -5580,7 +5593,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
       oldbin += imax;
    }
-   // sum underfllow and overflow contents until startbin
+   // sum underflow and overflow contents until startbin
    binContent = 0;
    binError = 0;
    for (i = 0; i < startbin; ++i)  {
@@ -5600,7 +5613,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    if (oldErrors) hnew->SetBinError(newbins+1,TMath::Sqrt(binError));
    hnew->SetBit(kCanRebin,bitRebin);
 
-   //restore statistics and entries  modified by SetBinContent
+   // restore statistics and entries modified by SetBinContent
    hnew->SetEntries(entries);
    if (!resetStat) hnew->PutStats(stat);
    delete [] oldBins;
