@@ -887,7 +887,7 @@ void TFile::Close(Option_t *option)
       gROOT->GetListOfBrowsers()->RecursiveRemove(this);
       gROOT->GetListOfClosedObjects()->Add(this);
    } else {
-      // If we are a zombie, we are alread in the list of closed objects.
+      // If we are a zombie, we are already in the list of closed objects.
    }
 }
 
