@@ -42,13 +42,13 @@ TArrayI TColor::fgPalette(0);
 
 <a name="C00"></a><h3>Introduction</h3>
 
-Colors are defined by their Red, Green and blue components, simply called the
-RGB components. The colors are also known by the Hue, Light and saturation
+Colors are defined by their red, green and blue components, simply called the
+RGB components. The colors are also known by the hue, light and saturation
 components also known as the HLS components. When a new color is created the
 components of both color systems are computed.
 <p>
 At initialization time, a table of colors is generated. An existing color can
-be retrieve thanks to its index:
+be retrieved by its index:
 <br><pre>
    TColor *color = gROOT->GetColor(10);
 </pre>
@@ -84,7 +84,7 @@ Begin_Html
 
 <a name="C02"></a><h3>The color wheel</h3>
 The wheel contains the recommended 216 colors to be used in web applications.
-C
+
 The colors in the color wheel are created by <tt>TColor::CreateColorWheel</tt>.
 <p>
 Using this color set for your text, background or graphics will give your
@@ -121,8 +121,8 @@ Begin_Html
 The dark and bright color are used to give 3-D effects when drawing various
 boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
 <ul>
-   <li>The Dark colors have an index = color_index+100
-   <li>The Bright colors have an index = color_index+150
+   <li>The dark colors have an index = color_index+100
+   <li>The bright colors have an index = color_index+150
    <li>Two static functions return the bright and dark color number
        corresponding to a color index. If the bright or dark color does not
        exist, they are created:
@@ -132,7 +132,7 @@ boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
    </pre>
 </ul>
 
-<a name="C04"></a><h3>Gray scale view of of canvas with colors</h3>
+<a name="C04"></a><h3>Grayscale view of of canvas with colors</h3>
 One can toggle between a grayscale preview and the regular colored mode using
 <tt>TCanvas::SetGrayscale()</tt>. Note that in grayscale mode, access via RGB
 will return grayscale values according to ITU standards (and close to b&w
@@ -162,7 +162,7 @@ gStyle->SetPalette(...);
 </pre>
 <p>
 This function has two parameters: the number of colors in the palette and an
-array of containing the indices of colors in the pallette. The following small
+array of containing the indices of colors in the palette. The following small
 example demonstrates how to define and use the color palette:
 
 End_Html
@@ -183,9 +183,9 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p> To define more a complexe palette with a continous gradient of color, one
+<p> To define more a complex palette with a continuous gradient of color, one
 should use the static function <tt>TColor::CreateGradientColorTable()</tt>.
-The following example demostrates how to proceed:
+The following example demonstrates how to proceed:
 
 End_Html
 Begin_Macro(source)
@@ -206,12 +206,12 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>The function <tt>TColor::CreateGradientColorTable()</tt> performs automatically
-a call to </tt>gStyle->SetPalette()</tt>. So there is not need to add one.
+<p>The function <tt>TColor::CreateGradientColorTable()</tt> automatically 
+calls </tt>gStyle->SetPalette()</tt>, so there is not need to add one.
 <p>
 After a call to <tt>TColor::CreateGradientColorTable()</tt> it is sometimes
 useful to store the newly create palette for further use. In particular, it is
-recomended to do if one wants to switch between several user define palettes.
+recommended to do if one wants to switch between several user define palettes.
 To store a palette in an array it is enough to do:
 <br>
 <pre>
@@ -231,7 +231,7 @@ Later on to reuse the palette <tt>MyPalette</tt> it will be enough to do
 </pre>
 <p>
 As only one palette is active, one need to use <tt>TExec</tt> to be able to
-display plots using differents palettes on the same pad.
+display plots using different palettes on the same pad.
 The following macro illustrate this feature.
 End_Html
 Begin_Macro(source)
@@ -451,7 +451,7 @@ void TColor::InitializeColors()
 const char *TColor::AsHexString() const
 {
    /* Begin_html
-   Return color as hexidecimal string. This string can be directly passed
+   Return color as hexadecimal string. This string can be directly passed
    to, for example, TGClient::GetColorByName(). String will be reused so
    copy immediately if needed.
    End_html */
@@ -1348,7 +1348,7 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 {
    /* Begin_html
    Convert machine dependent pixel value (obtained via RGB2Pixel or
-   via Number2Pixel() or via TColor::GetPixel()) to a hexidecimal string.
+   via Number2Pixel() or via TColor::GetPixel()) to a hexadecimal string.
    This string can be directly passed to, for example,
    TGClient::GetColorByName(). String will be reused so copy immediately
    if needed.
@@ -1444,7 +1444,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    <li>NColors: Total number of colors in the table. Must be at least 1.
    </ul>
 
-   Returns a positive value on sucess and -1 on error.
+   Returns a positive value on success and -1 on error.
    <p>
    The table is constructed by tracing lines between the given points in
    RGB space.  Each color value may have a value between 0 and 1.  The
