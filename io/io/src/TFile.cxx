@@ -881,10 +881,14 @@ void TFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
-   R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfFiles()->Remove(this);
-   gROOT->GetListOfBrowsers()->RecursiveRemove(this);
-   gROOT->GetListOfClosedObjects()->Add(this);
+   if (!IsZombie()) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfFiles()->Remove(this);
+      gROOT->GetListOfBrowsers()->RecursiveRemove(this);
+      gROOT->GetListOfClosedObjects()->Add(this);
+   } else {
+      // If we are a zombie, we are alread in the list of closed objects.
+   }
 }
 
 //____________________________________________________________________________________
