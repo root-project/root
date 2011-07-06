@@ -28,8 +28,9 @@ MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
 endif
 
 # Compiler:
-# From "Apple clang version 3.0" (OSX 10.7 and IOS 5.0) we will take clang as default
-APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/^Apple.*version //p" | cut -d . -f 1)
+# From "Apple clang version ... (based on LLVM 3.0svn)"
+# i.e. OSX 10.7 we will take clang as default
+APPLE_CLANG  := $(shell clang -v 2>&1 | sed -n "s/.*based on LLVM //p" | cut -d . -f 1)
 ifeq ($(APPLE_CLANG),)
 APPLE_CLANG  := 1
 endif
