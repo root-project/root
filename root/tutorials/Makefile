@@ -60,7 +60,7 @@ TUTORIALSTESTS_VETO += math/testrandom unuran/unuranDemo unuran/unuranFoamTest
 endif
 
 ifeq ($(findstring roofit,$(shell root-config --features)),)
-TUTORIALSTESTS_VETO += roofit/% roostats/%
+TUTORIALSTESTS_VETO += roofit/% roostats/% histfactory/ModifyInterpolation%
 endif
 
 ifeq ($(findstring xml, $(shell root-config --features)),)
