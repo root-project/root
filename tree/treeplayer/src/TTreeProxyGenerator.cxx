@@ -1311,10 +1311,11 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                AnalyzeBranches(1,desc,dynamic_cast<TBranchElement*>(branch),info);
             }
             desc = AddClass(desc);
-            type = desc->GetName();
-            TString dataMemberName = branchname;
-            AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
-
+            if (desc) {
+               type = desc->GetName();
+               TString dataMemberName = branchname;
+               AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
+            }
             if ( branchname[strlen(branchname)-1] != '.' ) {
                // If there is no dot also include the data member directly
 
