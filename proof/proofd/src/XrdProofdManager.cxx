@@ -639,11 +639,6 @@ int XrdProofdManager::Config(bool rcf)
 
    // Work directory, if specified
    if (fWorkDir.length() > 0) {
-      // Make sure permissions are ok upstream
-      if (XrdProofdAux::AssertBaseDir(fWorkDir.c_str(), ui) != 0) {
-         XPDERR("permissions of working dir base '" << fWorkDir<< "' don't look rigth" );
-         return -1;
-      }
       // Make sure it exists
       if (XrdProofdAux::AssertDir(fWorkDir.c_str(), ui, fChangeOwn) != 0) {
          XPDERR("unable to assert working dir: " << fWorkDir);
