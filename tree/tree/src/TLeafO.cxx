@@ -82,6 +82,9 @@ void TLeafO::FillBasket(TBuffer &b)
 
    Int_t len = GetLen();
    if (fPointer) fValue = *fPointer;
+   if (IsRange()) {
+      if (fValue[0] > fMaximum) fMaximum = fValue[0];
+   }
    b.WriteFastArray(fValue,len);
 }
 

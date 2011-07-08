@@ -40,6 +40,8 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
+   virtual Int_t   GetMaximum() const { return fMaximum; }
+   virtual Int_t   GetMinimum() const { return fMinimum; }
    const char     *GetTypeName() const;
    Double_t        GetValue(Int_t i=0) const;
    virtual void   *GetValuePointer() const {return fValue;}
@@ -49,6 +51,8 @@ public:
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual void    ReadValue(istream & s);
    virtual void    SetAddress(void *add=0);
+   virtual void    SetMaximum(Short_t max) { fMaximum = max; }
+   virtual void    SetMinimum(Short_t min) { fMinimum = min; }
 
    ClassDef(TLeafS,1);  //A TLeaf for a 16 bit Integer data type.
 };

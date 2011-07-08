@@ -49,6 +49,8 @@ public:
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual void    ReadValue(istream & s);
    virtual void    SetAddress(void *add=0);
+   virtual void    SetMaximum(Bool_t max) { fMaximum = max; }
+   virtual void    SetMinimum(Bool_t min) { fMinimum = min; }
 
    ClassDef(TLeafO,1);  //A TLeaf for an 8 bit Integer data type.
 };
