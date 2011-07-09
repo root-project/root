@@ -37,6 +37,7 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 // For event type translation ExecuteEvent
 #include "Buttons.h"
