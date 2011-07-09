@@ -770,6 +770,13 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    // The viewer window most be fully contained within the desktop but
    // can be covered by other windows.
    // Returns false if something obvious goes wrong, true otherwise.
+   //
+   // The mage is saved using a frame-buffer object if the GL implementation
+   // claims to support it -- this claim is not always true, especially when
+   // running over ssh with drastically different GL implementations on the
+   // client and server sides. Set this in .rootrc to enforce creation of
+   // pictures using the back-buffer:
+   //   OpenGL.SavePicturesViaFBO: off
 
    if (fileName.EndsWith(".eps"))
    {
@@ -781,7 +788,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    }
    else
    {
-      if (GLEW_EXT_framebuffer_object)
+      if (GLEW_EXT_framebuffer_object && gEnv->GetValue("OpenGL.SavePicturesViaFBO", 1))
       {
          return SavePictureUsingFBO(fileName, fViewport.Width(), fViewport.Height(), kFALSE);
       }
