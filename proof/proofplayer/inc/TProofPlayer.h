@@ -68,6 +68,7 @@ class TMutex;
 class TStatus;
 class TTimer;
 class THashList;
+class TH1;
 
 
 //------------------------------------------------------------------------
@@ -264,6 +265,7 @@ protected:
    Bool_t              fMergeFiles;    // is True when merging output files centrally is needed
    TDSet              *fDSet;          //!tdset for current processing
    ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
+   Bool_t              fUseTH1Merge;   // If kTRUE forces use of TH1::Merge [kFALSE]
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -282,7 +284,8 @@ protected:
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0),
-                                           fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0)
+                                           fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0),
+                                           fUseTH1Merge(kFALSE)
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,
@@ -300,6 +303,7 @@ public:
    virtual void   StoreFeedback(TObject *slave, TList *out); // Adopts the list
    Int_t          Incorporate(TObject *obj, TList *out, Bool_t &merged);
    TObject       *HandleHistogram(TObject *obj);
+   Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list
    virtual void   MergeOutput();
