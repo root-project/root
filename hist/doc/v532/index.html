@@ -17,3 +17,24 @@
    palette are not 0 when the histogram content is 0.
 </li>
 </ul>
+
+<h4>TGraph</h4>
+<ul>
+   <li> <tt>TGraph::SavePrimitive()</tt> uses a greater precision to output the
+X and Y vectors. The following macro generated a wrong output (tmp.C).
+<pre>
+   void testGraphPrec() {
+      double offset=55.0;
+      TCanvas* myC = new TCanvas("myC","myC",600,400);
+      TGraph* gr=new TGraph();
+      for(int i=0;i<1000;i++){
+         double point_x = 3.0+((double) i)*1e-7;
+         double point_y = offset+((double) i)*1e-8;
+         gr->SetPoint(i,point_x,point_y);
+      }
+      gr->Draw("AP");
+      myC->Print("tmp.C");
+   }
+</pre>
+</li>
+</ul>
