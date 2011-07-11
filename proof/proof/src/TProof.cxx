@@ -10736,12 +10736,11 @@ void TProof::SaveWorkerInfo()
       }
    }
    
-   // Loop also over the list of bad workers (if they dfailed to startup they are not in
+   // Loop also over the list of bad workers (if they failed to startup they are not in
    // the overall list)
    TIter nxb(fBadSlaves);
    while ((wrk = (TSlave *) nxb())) {
       if (!fSlaves->FindObject(wrk)) {
-         wrk->Print();
          // Write out record for this worker
          fprintf(fwrk,"%s@%s:%d 0 %s %s.log\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(),
