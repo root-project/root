@@ -53,6 +53,7 @@ protected:
    Int_t   fNHist;               // Number of histograms to be created in default CPU runs
    TPBReadType *fReadType;       // Type of read (partial, full)
    TString fDataSet;             // Name of the dataset
+   Int_t   fNFilesWrk;           // Number of files generated files per worker
 
    TString fCPUSel;              // Selector to be used for CPU benchmarks
    TString fCPUPar;              // List of par files to be loaded for CPU benchmarks
@@ -89,6 +90,7 @@ public:
    Int_t OpenOutFile(Bool_t wrt = kFALSE, Bool_t verbose = kTRUE);
    Int_t SetOutFile(const char *outfile, Bool_t verbose = kTRUE);
    const char *GetOutFileName() const { return fOutFileName; }
+   void  SetNFilesWrk(Int_t nf = 0) { fNFilesWrk = (nf > 0) ? nf : 4; }
    void  SetNTries(Int_t nt) { if (nt > 0) fNtries = nt; }
    void  SetHistType(TPBHistType *histtype) { fHistType = histtype; }
    void  SetNHist(Int_t nh) { fNHist = nh; }

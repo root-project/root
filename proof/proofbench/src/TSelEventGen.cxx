@@ -121,7 +121,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
                   u.SetFile(TString::Format("%s/%s", fBaseDir.Data(), u.GetFile())); 
                if ((gSystem->AccessPathName(u.GetFile()) &&
                     gSystem->mkdir(u.GetFile(), kTRUE) == 0) ||
-                    gSystem->AccessPathName(u.GetFile(), kWritePermission)) {
+                    !gSystem->AccessPathName(u.GetFile(), kWritePermission)) {
                     // Directory is writable
                     fBaseDir = u.GetFile();
                     Info("SlaveBegin", "Using directory \"%s\"", fBaseDir.Data());
@@ -388,6 +388,22 @@ Bool_t TSelEventGen::Process(Long64_t entry)
       SafeDelete(f);
    } 
 
+   // Make sure there is enough space left of the device, if local
+   if (!gSystem->AccessPathName(fBaseDir)) {
+      Long_t devid, devbsz, devbtot, devbfree;
+      gSystem->GetFsInfo(fBaseDir, &devid, &devbsz, &devbtot, &devbfree);
+      // Must be more than 10% of space and at least 1 GB
+      Long_t szneed = 1024 * 1024 * 1024, tomb = 1024 * 1024;
+      if (devbfree * devbsz < szneed || devbfree < 0.1 * devbtot) {
+         Error("Process", "not enough free space on device (%ld MB < {%ld, %ld} MB):"
+                          " skipping generation of: %s",
+                          (devbfree * devbsz) / tomb,
+                          szneed / tomb, (Long_t) (0.1 * devbtot * devbsz / tomb),
+                          filename.Data());
+         fStatus = TSelector::kAbortFile;
+      }
+   }
+
    if (!filefound) {  // Generate
       gRandom->SetSeed(static_cast<UInt_t>(TMath::Hash(seed)));
       if (fGenerateFun) {
@@ -404,6 +420,7 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          f->Close();
       } else {
          Error("Process", "can not open generated file: %s", filename.Data());
+         fStatus = TSelector::kAbortFile;
          return kFALSE;
       }
       

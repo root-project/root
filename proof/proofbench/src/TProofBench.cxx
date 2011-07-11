@@ -49,7 +49,8 @@ ClassImp(TProofBench)
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
             : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
-              fDataSet("BenchDataSet"), fDataGenSel(kPROOF_BenchSelDataGenDef),
+              fDataSet("BenchDataSet"), fNFilesWrk(4),
+              fDataGenSel(kPROOF_BenchSelDataGenDef),
               fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE)
 {
    // Constructor: check PROOF and load selectors PAR
@@ -519,7 +520,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    // are
    //          "BenchDataSet", "event"
    // respectively.
-   // Default selecor is TSelEventGen. Use SetDataGenSel and SetDataGenOar to change it
+   // Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenOar to change it
    // and to pass the list of PARs defining the alternative selector.
    // These can be changed via dset, sel and fnroot, respectively.
    // The argument 'nevt' controls the number of events per file (-1 for the default,
@@ -577,7 +578,6 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    }
 
    // For files, 30000 evst each (about 600 MB total) per worker
-   Int_t files_per_node = 4;
    TString fn, fnr = (fnroot && strlen(fnroot) > 0) ? fnroot : "event";
    TProofNodes pn(fProof);
    TMap *filesmap = new TMap;
@@ -589,7 +589,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    while ((obj = nxnd()) != 0) {
       if ((wli = dynamic_cast<TList *>(nodesmap->GetValue(obj)))) {
          THashList *fli = new THashList;
-         Int_t nf = wli->GetSize() * files_per_node;
+         Int_t nf = wli->GetSize() * fNFilesWrk;
          TSlaveInfo *wi = (TSlaveInfo *) wli->First();
          while (nf--) {
             fn.Form("%s-%s-%d.root", fnr.Data(), wi->GetName(), kf++);
