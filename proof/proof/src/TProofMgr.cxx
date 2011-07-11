@@ -20,12 +20,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Bytes.h"
 #include "TError.h"
 #include "TEnv.h"
 #include "TList.h"
 #include "TProof.h"
 #include "TProofMgr.h"
 #include "TProofMgrLite.h"
+#include "TSocket.h"
 #include "TROOT.h"
 
 ClassImp(TProofMgr)
@@ -33,6 +35,22 @@ ClassImp(TProofMgr)
 // Sub-list of TROOT::fProofs with managers
 TList TProofMgr::fgListOfManagers;
 TProofMgr_t TProofMgr::fgTXProofMgrHook = 0;
+
+// Auxilliary structures for pinging
+// The client request
+typedef struct {
+   int first;
+   int second;
+   int third;
+   int fourth;
+   int fifth;
+} clnt_HS_t;
+// The body received after the first handshake's header
+typedef struct {
+   int msglen;
+   int protover;
+   int msgval;
+} srv_HS_t;
 
 //______________________________________________________________________________
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
@@ -607,6 +625,79 @@ void TProofMgr::SetTXProofMgrHook(TProofMgr_t pmh)
    fgTXProofMgrHook = pmh;
 }
 
+
+//______________________________________________________________________________
+Int_t TProofMgr::Ping(const char *url)
+{
+   // Non-blocking check for a PROOF service at 'url'
+   // Return
+   //        0 if a XProofd daemon is listening at 'url'
+   //       -1 if nothing is listening on the port (connection cannot be open)
+   //        1 if something is listening but not XProofd
+
+   if (!url || (url && strlen(url) <= 0)) {
+      ::Error("TProofMgr::Ping", "empty url - fail");
+      return -1;
+   }
+
+   TUrl u(url);
+   // Open the connection
+   TSocket s(u.GetHost(), u.GetPort());
+   if (!(s.IsValid())) {
+      if (gDebug > 0)
+         ::Info("TProofMgr::Ping", "could not open connection to %s:%d", u.GetHost(), u.GetPort());
+      return -1;
+   }
+   // Send the first bytes
+   clnt_HS_t initHS;
+   memset(&initHS, 0, sizeof(initHS));
+   initHS.third  = (int)host2net((int)1);
+   int len = sizeof(initHS);
+   s.SendRaw(&initHS, len);
+   // These 8 bytes are need by 'proofd' and discarded by XPD
+   int dum[2];
+   dum[0] = (int)host2net((int)4);
+   dum[1] = (int)host2net((int)2012);
+   s.SendRaw(&dum[0], sizeof(dum));
+   // Read first server response
+   int type;
+   len = sizeof(type);
+   int readCount = s.RecvRaw(&type, len); // 4(2+2) bytes
+   if (readCount != len) {
+      if (gDebug > 0)
+         ::Info("TProofMgr::Ping", "1st: wrong number of bytes read: %d (expected: %d)",
+                        readCount, len);
+      return 1;
+   }
+   // to host byte order
+   type = net2host(type);
+   // Check if the server is the eXtended proofd
+   if (type == 0) {
+      srv_HS_t xbody;
+      len = sizeof(xbody);
+      readCount = s.RecvRaw(&xbody, len); // 12(4+4+4) bytes
+      if (readCount != len) {
+         if (gDebug > 0)
+            ::Info("TProofMgr::Ping", "2nd: wrong number of bytes read: %d (expected: %d)",
+                           readCount, len);
+         return 1;
+      }
+      xbody.protover = net2host(xbody.protover);
+      xbody.msgval = net2host(xbody.msglen);
+      xbody.msglen = net2host(xbody.msgval);
+
+   } else if (type == 8) {
+      // Standard proofd
+      if (gDebug > 0) ::Info("TProofMgr::Ping", "server is PROOFD");
+      return 1;
+   } else {
+      // We don't know the server type
+      if (gDebug > 0) ::Info("TProofMgr::Ping", "unknown server type: %d", type);
+      return 1;
+   }
+   // Done
+   return 0;
+}
 
 //
 //  TProofDesc
