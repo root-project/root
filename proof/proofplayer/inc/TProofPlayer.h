@@ -302,7 +302,7 @@ public:
    void           StoreOutput(TList *out);   // Adopts the list
    virtual void   StoreFeedback(TObject *slave, TList *out); // Adopts the list
    Int_t          Incorporate(TObject *obj, TList *out, Bool_t &merged);
-   TObject       *HandleHistogram(TObject *obj);
+   TObject       *HandleHistogram(TObject *obj, Bool_t &merged);
    Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list

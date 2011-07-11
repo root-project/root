@@ -738,3 +738,12 @@ void TPerfStats::SetMemValues()
       if (pi.fMemResident > fgResMemMax) fgResMemMax = pi.fMemResident;
    }
 }
+
+//______________________________________________________________________________
+void TPerfStats::GetMemValues(Long_t &vmax, Long_t &rmax)
+{
+   // Get memory usage
+
+   vmax = fgVirtMemMax;
+   rmax = fgResMemMax;
+}

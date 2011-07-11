@@ -47,6 +47,8 @@ private:
    Int_t       fExitStatus;  // Query exit status ((Int_t)TVirtualProofPlayer::EExitStatus or -1);
    Long_t      fVirtMemMax;  // Max virtual memory used by the worker
    Long_t      fResMemMax;   // Max resident memory used by the worker
+   Long_t      fVirtMaxMst;  // Max virtual memory used by the master
+   Long_t      fResMaxMst;   // Max resident memory used by the master
 
 public:
    TStatus();
@@ -60,13 +62,13 @@ public:
    const char    *NextMesg();
 
    Int_t          GetExitStatus() const { return fExitStatus; }
-   Long_t         GetResMemMax() const { return fResMemMax; }
-   Long_t         GetVirtMemMax() const { return fVirtMemMax; }
+   Long_t         GetResMemMax(Bool_t master = kFALSE) const { return ((master) ? fResMaxMst : fResMemMax); }
+   Long_t         GetVirtMemMax(Bool_t master = kFALSE) const { return ((master) ? fVirtMaxMst : fVirtMemMax); }
    
    void           SetExitStatus(Int_t est) { fExitStatus = est; }
-   void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1);
+   void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1, Bool_t master = kFALSE);
 
-   ClassDef(TStatus,3);  // Status class
+   ClassDef(TStatus,4);  // Status class
 };
 
 #endif
