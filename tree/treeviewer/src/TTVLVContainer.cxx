@@ -97,7 +97,6 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    // TGTreeLVEntry constructor.
 
    // both alias and true name are initialized to name
-   fTrueName.InitialCapacity(1000);
    fContainer = (TTVLVContainer *) p;
 
    fTip = 0;
