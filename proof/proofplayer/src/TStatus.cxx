@@ -30,9 +30,10 @@
 ClassImp(TStatus)
 
 //______________________________________________________________________________
-TStatus::TStatus() : fExitStatus(-1), fVirtMemMax(-1), fResMemMax(-1)
+TStatus::TStatus() : fExitStatus(-1), fVirtMemMax(-1), fResMemMax(-1),
+                     fVirtMaxMst(-1), fResMaxMst(-1)
 {
-   // Deafult constructor.
+   // Default constructor.
 
    SetName("PROOF_Status");
    fIter = fMsgs.begin();
@@ -66,10 +67,18 @@ Int_t TStatus::Merge(TCollection *li)
          Add(i->c_str());
       
       SetMemValues(s->GetVirtMemMax(), s->GetResMemMax());
+      // Check the master values (relevantt if merging submaster info)
+      SetMemValues(s->GetVirtMemMax(kTRUE), s->GetResMemMax(kTRUE), kTRUE);
       PDB(kOutput,1)
          Info("Merge", "during: max virtual memory: %.2f MB \t"
                        "max resident memory: %.2f MB ",
                        GetVirtMemMax()/1024., GetResMemMax()/1024.);
+      if (GetVirtMemMax(kTRUE) > 0) {
+         PDB(kOutput,1)
+            Info("Merge", "during: max master virtual memory: %.2f MB \t"
+                        "max master resident memory: %.2f MB ",
+                        GetVirtMemMax(kTRUE)/1024., GetResMemMax(kTRUE)/1024.);
+      }
    }
 
    return fMsgs.size();
@@ -86,8 +95,10 @@ void TStatus::Print(Option_t * /*option*/) const
    for (; i != fMsgs.end(); i++)
       Printf("\t%s", (*i).c_str());
 
-   Printf(" Max virtual memory: %.2f MB \tMax resident memory: %.2f MB ",
+   Printf(" Max worker virtual memory: %.2f MB \tMax worker resident memory: %.2f MB ",
           GetVirtMemMax()/1024., GetResMemMax()/1024.);
+   Printf(" Max master virtual memory: %.2f MB \tMax master resident memory: %.2f MB ",
+          GetVirtMemMax(kTRUE)/1024., GetResMemMax(kTRUE)/1024.);
 }
 
 //______________________________________________________________________________
@@ -111,11 +122,16 @@ const char *TStatus::NextMesg()
 }
 
 //______________________________________________________________________________
-void TStatus::SetMemValues(Long_t vmem, Long_t rmem)
+void TStatus::SetMemValues(Long_t vmem, Long_t rmem, Bool_t master)
 {
    // Set max memory values
 
-   if (vmem > 0. && (fVirtMemMax < 0. || vmem > fVirtMemMax)) fVirtMemMax = vmem;
-   if (rmem > 0. && (fResMemMax < 0. || rmem > fResMemMax)) fResMemMax = rmem;
+   if (master) {
+      if (vmem > 0. && (fVirtMaxMst < 0. || vmem > fVirtMaxMst)) fVirtMaxMst = vmem;
+      if (rmem > 0. && (fResMaxMst < 0. || rmem > fResMaxMst)) fResMaxMst = rmem;
+   } else {
+      if (vmem > 0. && (fVirtMemMax < 0. || vmem > fVirtMemMax)) fVirtMemMax = vmem;
+      if (rmem > 0. && (fResMemMax < 0. || rmem > fResMemMax)) fResMemMax = rmem;
+   }
 }
 
