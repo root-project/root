@@ -2,3 +2,15 @@
 <hr/> 
 <a name="graf2d"></a> 
 <h3>2D Graphics Libraries</h3>
+
+<h4>TCanvas</h4>
+<ul>
+<li>The following sequence produced a <tt>SEG FAULT</tt>:
+   <pre>
+   root [0] TFile f("can.root")
+   root [1] TCanvas* can = (TCanvas*)f.Get("can")
+   root [2] gROOT->SetBatch(1)
+   root [3] can->Draw()
+   </pre>
+</li>
+</ul>
