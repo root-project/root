@@ -748,13 +748,19 @@ void TTreeViewer::BuildInterface()
    //--- label for Histogram text entry
    fBarLbl3 = new TGLabel(fToolBar,"Histogram");
    fToolBar->AddFrame(fBarLbl3, lo);
+
    //--- histogram name text entry
+   lo = new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 4,4,0,0);
+   fWidgets->Add(lo);
    fBarHist = new TGTextEntry(fToolBar, new TGTextBuffer(100));
-   fBarHist->SetWidth(50);
+   fBarHist->Resize(50, fBarHist->GetDefaultHeight());
+   fBarHist->SetDefaultSize(50, fBarHist->GetDefaultHeight());
    fBarHist->SetText("htemp");
-   fBarHist->SetToolTipText("Name of the histogram created by <Draw> command.");
    fToolBar->AddFrame(fBarHist, lo);
+
    //--- Hist check button
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 4,4,0,0);
+   fWidgets->Add(lo);
    fBarH = new TGCheckButton(fToolBar, "Hist");
    fBarH->SetToolTipText("Checked : redraw only current histogram");
    fBarH->SetState(kButtonUp);
