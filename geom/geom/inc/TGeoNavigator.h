@@ -225,6 +225,7 @@ private:
    TGeoNavigatorArray& operator=(const TGeoNavigatorArray&);
 
 public:
+   TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(0), fGeoManager(0) {}
    TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(0), fGeoManager(mgr) {SetOwner();}
    virtual ~TGeoNavigatorArray() {}
    
