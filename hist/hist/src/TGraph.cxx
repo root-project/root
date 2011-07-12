@@ -1921,13 +1921,15 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    SaveLineAttributes(out,"graph",1,1,1);
    SaveMarkerAttributes(out,"graph",1,1,1);
 
-   streamsize prec = out.precision();
-   for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   graph->SetPoint("<<i<<","<<setprecision(10)
-      <<fX[i]<<","<<fY[i]<<");"<<endl;
+   if (fNpoints >=1) {
+      streamsize prec = out.precision();
+      out.precision(10);
+      for (Int_t i=0;i<fNpoints;i++) {
+         out<<"   graph->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
+      }
+      out.precision(prec);
    }
-   out << setprecision(prec) << endl;
-
+   
    static Int_t frameNumber = 0;
    if (fHistogram) {
       frameNumber++;
