@@ -798,10 +798,15 @@ void TCanvas::Draw(Option_t *)
       if (fCh !=0) fWindowHeight = fCh+28;
       else         fWindowHeight = 600;
    }
-   fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
-                                             fWindowWidth, fWindowHeight);
-   fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
+   if (gROOT->IsBatch()) {   //We are in Batch mode
+      fCanvasImp  = gBatchGuiFactory->CreateCanvasImp(this, GetName(), fWindowWidth, fWindowHeight);
+      fBatch = kTRUE;
 
+   } else {                   //normal mode with a screen window
+      fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
+                                                fWindowWidth, fWindowHeight);
+      fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
+   }
    Build();
    ResizePad();
    fCanvasImp->Show();
