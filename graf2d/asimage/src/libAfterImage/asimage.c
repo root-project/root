@@ -801,7 +801,8 @@ destroy_image_layers( register ASImageLayer *l, int count, Bool reusable )
 size_t
 asimage_add_line_mono (ASImage * im, ColorPart color, CARD8 value, unsigned int y)
 {
-	if (AS_ASSERT(im) || color <0 || color >= IC_NUM_CHANNELS )
+   int colint = (int) color;
+	if (AS_ASSERT(im) || colint <0 || color >= IC_NUM_CHANNELS )
 		return 0;
 	if (y >= im->height)
 		return 0;
@@ -815,7 +816,8 @@ asimage_add_line_mono (ASImage * im, ColorPart color, CARD8 value, unsigned int 
 size_t
 asimage_add_line (ASImage * im, ColorPart color, register CARD32 * data, unsigned int y)
 {
-	if (AS_ASSERT(im) || color <0 || color >= IC_NUM_CHANNELS )
+   int colint = (int) color;
+	if (AS_ASSERT(im) || colint <0 || color >= IC_NUM_CHANNELS )
 		return 0;
 	if (y >= im->height)
 		return 0;
@@ -858,7 +860,8 @@ asimage_add_line_bgra (ASImage * im, register CARD32 * data, unsigned int y)
 unsigned int
 asimage_print_line (ASImage * im, ColorPart color, unsigned int y, unsigned long verbosity)
 {
-	if (AS_ASSERT(im) || color < 0 || color >= IC_NUM_CHANNELS )
+   int colint = (int) color;
+	if (AS_ASSERT(im) || colint < 0 || color >= IC_NUM_CHANNELS )
 		return 0;
 	if (y >= im->height)
 		return 0;
