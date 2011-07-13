@@ -326,7 +326,7 @@ public:
    void             Pyrset(int lun, int move);
    void             Pystat(int flag);
    void             Pytest(int flag);
-   void             Pytune(int itune);
+   //void             Pytune(int itune);   // not (anymore) in libPythia6
    void             Pyupda(int mupda, int lun);
    void             SetupTest();
 
