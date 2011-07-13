@@ -88,7 +88,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    // if (mode&kDropAllDefault) remove default template arguments
    /////////////////////////////////////////////////////////////////////////////
 
-   answ.erase(0,999);
+   answ.clear();
    int narg = fElements.size();
    int tailLoc = 0;
 
@@ -120,7 +120,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (!fElements[0].empty() && tailLoc) {
          tailLoc = 0;
       }
-      fElements[0].erase(0,999);
+      fElements[0].clear();
       mode&=(~8);
    }
    
