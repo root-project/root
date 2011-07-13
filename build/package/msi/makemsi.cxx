@@ -198,7 +198,10 @@ void MSIDir::AddFile(const char* file) {
 void MSIDir::Write(ostream& out) const {
    const DWORD bufsize = MAX_PATH;
    char pwd[bufsize];
-   ::GetCurrentDirectory(bufsize, pwd);
+   DWORD len = ::GetCurrentDirectory(bufsize, pwd);
+   if (len > 0 && pwd[len - 1] == '\\') {
+      pwd[len - 1] = 0;
+   }
 
    out << "<?xml version=\"1.0\" encoding=\"windows-1252\" ?>" << std::endl;
    out << "<Wix xmlns=\"http://schemas.microsoft.com/wix/2003/01/wi\">" << std::endl;
@@ -210,9 +213,9 @@ void MSIDir::Write(ostream& out) const {
    out << "   <Media Id=\"1\" Cabinet=\"ROOT.cab\" EmbedCab=\"yes\" />" << std::endl;
    out << "   <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">" << std::endl;
    out << "      <Component Id=\"EnvVars\" Guid=\"{0E85B756-F20C-4213-A292-4AD80A5FE21A}\">" << std::endl;
-   out << "         <Environment Id=\"ROOTSYS\" Name=\"ROOTSYS\" Action=\"set\" Part=\"all\" Value=\"[INSTALLLOCATION]\" />" << std::endl;
-   out << "         <Environment Id=\"PATHROOT\" Name=\"PATH\" Action=\"set\" Part=\"first\" Value=\"[INSTALLLOCATION]bin\" />" << std::endl;
-   out << "         <Environment Id=\"PATHPY\" Name=\"PYTHONPATH\" Action=\"set\" Part=\"first\" Value=\"[INSTALLLOCATION]bin\" />" << std::endl;
+   out << "         <Environment Id=\"ROOTSYS\" Name=\"ROOTSYS\" Action=\"set\" Part=\"all\" System=\"yes\" Value=\"[INSTALLLOCATION]\" />" << std::endl;
+   out << "         <Environment Id=\"PATHROOT\" Name=\"PATH\" Action=\"set\" Part=\"first\" System=\"yes\" Value=\"[INSTALLLOCATION]\\bin\" />" << std::endl;
+   out << "         <Environment Id=\"PATHPY\" Name=\"PYTHONPATH\" Action=\"set\" Part=\"first\" System=\"yes\" Value=\"[INSTALLLOCATION]\\bin\" />" << std::endl;
    out << "      </Component>" << std::endl;
    out << "      <Directory Id=\"DesktopFolder\">" << std::endl;
    out << "         <Component Id=\"DesktopIcon\" Guid=\"{BF68C3D3-D9AC-488d-A73F-1C732466DBF7}\">" << std::endl;
