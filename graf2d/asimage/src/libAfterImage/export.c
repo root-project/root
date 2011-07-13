@@ -166,7 +166,8 @@ ASImage2file( ASImage *im, const char *dir, const char *file,
 		unix_path2dos_path( realfilename );
 #endif
 	}
-	if( type >= ASIT_Unknown || type < 0 )
+   int typei = (int) type;
+	if( type >= ASIT_Unknown || typei < 0 )
 		show_error( "Hmm, I don't seem to know anything about format you trying to write file \"%s\" in\n.\tPlease check the manual", realfilename );
    	else if( as_image_file_writers[type] )
    		res = as_image_file_writers[type](im, realfilename, params);

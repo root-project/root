@@ -517,7 +517,8 @@ start_image_output( ASVisual *asv, ASImage *im, ASAltImFormats format,
 	if( AS_ASSERT(im) || AS_ASSERT(asv) )
 		return imout;
 
-	if( format < 0 || format == ASA_Vector || format >= ASA_Formats)
+   int formati = (int) format;
+   if( formati < 0 || format == ASA_Vector || format >= ASA_Formats)
 		return NULL;
 	if( asimage_format_handlers[format].check_create_asim_format )
 		if( !asimage_format_handlers[format].check_create_asim_format(asv, im, format) )

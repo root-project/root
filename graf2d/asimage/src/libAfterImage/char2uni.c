@@ -983,7 +983,8 @@ ASSupportedCharsets
 as_set_charset( ASSupportedCharsets new_charset )
 {
 
-	if( new_charset < 0 || new_charset >= SUPPORTED_CHARSETS_NUM )
+   int ncs = (int) new_charset;
+   if( ncs < 0 || new_charset >= SUPPORTED_CHARSETS_NUM )
 		new_charset = CHARSET_ISO8859_1 ;
 
 	as_current_charset = _as_supported_charsets[new_charset] ;
