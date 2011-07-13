@@ -370,7 +370,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    if (frac != 0) {
       for (UInt_t i = 0; i < strlen(frac); i++) {
          if (isdigit(frac[i])) {
-            if (ri.fFracNum < kMaxInt) {
+            if (ri.fFracNum + 9 < kMaxInt / 10) {
                ri.fFracNum = 10 * ri.fFracNum + (frac[i] - '0');
                ri.fFracDigits++;
                ri.fFracBase *= 10;
