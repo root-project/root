@@ -11,9 +11,6 @@
  * optimizations.  Most users will not need to touch this file.
  */
 
-#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
-#pragma warning (disable:4142)
-#endif
 
 /*
  * Define BITS_IN_JSAMPLE as either

@@ -1,6 +1,71 @@
 
+2011-01-13  sasha
+
+	* Changed version to 2.2.11 and fixed build to compile ASWallpaper
+
+2010-09-23  sasha
+
+	* fixed memory leak in xcf file loading
+	* fixed memory leak in tga image loading
+	* fixed minor memory leak in gif saving code.
+	* fixed memory leak in xml processing on image loading
+	* fixed major memory leak at vectorize_asimage
+	* Fixed BMP writing to not set compression to 1 - we don't use any
+
+2010-09-15  sasha
+
+	* fixed possible dereferencing of NULL pointer in asimage_destroy
+	  (minor)
+
+2010-09-08  sasha
+
+	* trimmed some dead code
+	* fixed visual2visual_prop bug in *size usage
+	* fixed param hidden warnings
+	*  corrected usage of get_xpm_string() to use proper enum value
+
+2010-09-03  sasha
+
+	* Fixed possible memory leak in xpm code when image is too big
+	* fixed unlikely but possible (if height>width) buffer overrun bug
+	  in gradient generation code
+	* Fixed unlikely but possible use of uninitialized variable in
+	  ASImage2xpmRawBuff
+
+2010-05-20  sasha
+
+	* updated to libjpeg v.8b
+
+2010-01-29  sasha
+
+	* added transupp to libjpeg just in case
+	* upgraded built-in libjpeg to version 8
+
+2009-12-11  sasha
+
+	* fixed segfault in on look change where previous look has obsolete
+	  font settings
+
+2009-11-12  sasha
+
+	* fixed export.c to properly assign default export values using
+	  union members - contributed by Axel Naumann
+
+2009-10-14  sasha
+
+	* fixed annoying ICC warnings in mystrdup use without libAfterBase
+
+2009-10-13  sasha
+
+	* minor fix in afterbase.c to correct ambiguity in evaluation order
+
+2009-08-25  sasha
+
+	* fixed ascompose to build without X libs
+
 2009-05-04  sasha
 
+	* updated ChangeLog for the release
 	* AfterStep release v 2.2.9
 
 2009-03-18  sasha

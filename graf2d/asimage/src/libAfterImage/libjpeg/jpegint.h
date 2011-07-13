@@ -301,7 +301,7 @@ struct jpeg_color_quantizer {
 #define jinit_color_converter	jICColor
 #define jinit_downsampler	jIDownsampler
 #define jinit_forward_dct	jIFDCT
-#define jinit_huff_encoder	jIHEncoder
+#define _jinit_huff_encoder	jIHEncoder
 #define jinit_arith_encoder	jIAEncoder
 #define jinit_marker_writer	jIMWriter
 #define jinit_master_decompress	jIDMaster
@@ -349,7 +349,8 @@ EXTERN(void) jinit_c_coef_controller JPP((j_compress_ptr cinfo,
 EXTERN(void) jinit_color_converter JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_downsampler JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_forward_dct JPP((j_compress_ptr cinfo));
-EXTERN(void) jinit_huff_encoder JPP((j_compress_ptr cinfo));
+EXTERN(void) _jinit_huff_encoder JPP((j_compress_ptr cinfo));
+#define jinit_huff_encoder _jinit_huff_encoder
 EXTERN(void) jinit_arith_encoder JPP((j_compress_ptr cinfo));
 EXTERN(void) jinit_marker_writer JPP((j_compress_ptr cinfo));
 /* Decompression module initialization routines */
@@ -362,7 +363,8 @@ EXTERN(void) jinit_d_post_controller JPP((j_decompress_ptr cinfo,
 					  boolean need_full_buffer));
 EXTERN(void) jinit_input_controller JPP((j_decompress_ptr cinfo));
 EXTERN(void) jinit_marker_reader JPP((j_decompress_ptr cinfo));
-EXTERN(void) jinit_huff_decoder JPP((j_decompress_ptr cinfo));
+EXTERN(void) _jinit_huff_decoder JPP((j_decompress_ptr cinfo));
+#define jinit_huff_decoder _jinit_huff_decoder
 EXTERN(void) jinit_arith_decoder JPP((j_decompress_ptr cinfo));
 EXTERN(void) jinit_inverse_dct JPP((j_decompress_ptr cinfo));
 EXTERN(void) jinit_upsampler JPP((j_decompress_ptr cinfo));

@@ -1554,7 +1554,7 @@ start_pass_huff (j_compress_ptr cinfo, boolean gather_statistics)
  */
 
 GLOBAL(void)
-jinit_huff_encoder (j_compress_ptr cinfo)
+_jinit_huff_encoder (j_compress_ptr cinfo) /* SASHA*/
 {
   huff_entropy_ptr entropy;
   int i;

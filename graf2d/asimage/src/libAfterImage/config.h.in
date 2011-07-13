@@ -15,7 +15,8 @@
 /* Define if using builtin libungif */
 #undef HAVE_BUILTIN_UNGIF
 
-/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'. */
+/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
+   */
 #undef HAVE_DIRENT_H
 
 /* Define to 1 if you have the <errno.h> header file. */

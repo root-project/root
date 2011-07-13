@@ -138,7 +138,7 @@ empty_mem_output_buffer (j_compress_ptr cinfo)
   if (dest->newbuffer != NULL)
     free(dest->newbuffer);
 
-  dest->newbuffer = (unsigned char*) nextbuffer;
+  dest->newbuffer = nextbuffer;
 
   dest->pub.next_output_byte = nextbuffer + dest->bufsize;
   dest->pub.free_in_buffer = dest->bufsize;
@@ -181,7 +181,7 @@ term_mem_destination (j_compress_ptr cinfo)
 {
   my_mem_dest_ptr dest = (my_mem_dest_ptr) cinfo->dest;
 
-  *dest->outbuffer = (unsigned char **) dest->buffer;
+  *dest->outbuffer = dest->buffer;
   *dest->outsize = dest->bufsize - dest->pub.free_in_buffer;
 }
 
@@ -262,6 +262,6 @@ jpeg_mem_dest (j_compress_ptr cinfo,
     *outsize = OUTPUT_BUF_SIZE;
   }
 
-  dest->pub.next_output_byte = dest->buffer = (JOCTET)*outbuffer;
+  dest->pub.next_output_byte = dest->buffer = *outbuffer;
   dest->pub.free_in_buffer = dest->bufsize = *outsize;
 }

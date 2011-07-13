@@ -1,5 +1,6 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
-
+#ifndef WIN32_CONFIG_H
+#define WIN32_CONFIG_H
 /* Define if memory allocation logging and debugging is desired */
 #undef DEBUG_ALLOCS
 
@@ -176,3 +177,5 @@ typedef unsigned char boolean;
 /* Define as `__inline' if that's what the C compiler calls it, or to nothing
    if it is not supported. */
 #define inline
+
+#endif

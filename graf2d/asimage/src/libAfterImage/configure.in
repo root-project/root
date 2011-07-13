@@ -6,7 +6,7 @@ dnl#Copyright (c) 2001,1998 Sasha Vasko <sasha at aftercode.net>
 dnl#Copyright (c) 1998 Juergen Sawinski <Juergen.Sawinski@urz.uni-heidelberg.de>
 dnl#Copyright (c) 1997 1998 Guylhem AZNAR <guylhem@oeil.qc.ca>
 
-AC_INIT(libAfterImage,1.19,as-bugs@afterstep.org,libAfterImage.tar)
+AC_INIT(libAfterImage,1.20,as-bugs@afterstep.org,libAfterImage.tar)
 
 AC_CONFIG_HEADER(config.h:config.h.in)
 

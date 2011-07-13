@@ -1506,7 +1506,7 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
  */
 
 GLOBAL(void)
-jinit_huff_decoder (j_decompress_ptr cinfo)
+_jinit_huff_decoder (j_decompress_ptr cinfo) /*SASHA*/
 {
   huff_entropy_ptr entropy;
   int i;

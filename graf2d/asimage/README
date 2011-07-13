@@ -42,11 +42,14 @@ Some files have been modified compare to the official libAfterImage version:
 
    libjpeg/jmorecfg.h and libjpeg/jconfig.h: fix a problem with boolean.
 
-   "configure":
+   configure.in: support clang++ by removing some warnings.
+
+   configure:
    - has been modified to look at the ".dylib" file extension to find
      the X11 libraries. This is needed on the Mac Leopard system.
    - the compiling option -Winline has been removed because it produced many
      warnings with gcc 4.3.
+   - support clang++ by removing some warnings.
 
    libAfterImage.mak:
    Remove the word "Warning" in the message
