@@ -122,14 +122,14 @@ GDMLLIBDEPM            = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
 UNURANLIBDEPM          = $(HISTLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 X11TTFLIBDEPM          = $(X11LIB) $(GRAFLIB)
-MONALISALIBDEPM        = $(NETLIB) $(IOLIB)
+MONALISALIBDEPM        = $(NETLIB) $(IOLIB) $(MATHCORELIB)
 EVELIBDEPM             = $(GEOMLIB) $(GEOMPAINTERLIB) $(G3DLIB) $(GUILIB) \
                          $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(PHYSICSLIB) \
                          $(GEDLIB) $(EGLIB) $(TREELIB) $(TREEPLAYERLIB) \
                          $(GLLIB) $(IOLIB) $(RINTLIB) $(MATHCORELIB)
 GVIZ3DLIBDEPM          = $(GUILIB) $(GEDLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
                          $(GEOMLIB) $(GLLIB)
-MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB)
+MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
@@ -386,7 +386,7 @@ MYSQLLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
 GDMLLIBEXTRA            = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                           lib/libRIO.lib
 UNURANLIBEXTRA          = lib/libHist.lib lib/libMathCore.lib
-MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib
+MONALISALIBEXTRA        = lib/libNet.lib lib/libRIO.lib lib/libMathCore.lib
 EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
                           lib/libGpad.lib lib/libGraf3d.lib lib/libGui.lib \
                           lib/libGraf.lib lib/libHist.lib lib/libPhysics.lib \
@@ -396,7 +396,8 @@ EVELIBEXTRA             = lib/libGeom.lib lib/libGeomPainter.lib \
 GVIZ3DLIBEXTRA          = lib/libGui.lib lib/libRGL.lib lib/libGeom.lib \
                           lib/libGed.lib lib/libGpad.lib lib/libGraf3d.lib \
                           lib/libGraf.lib
-MEMSTATLIBEXTRA         = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib
+MEMSTATLIBEXTRA         = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
+                          lib/libHist.lib lib/libRIO.lib
 MEMSTATGUILIBEXTRA      = lib/libMemStat.lib lib/libTree.lib lib/libGui.lib
 RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
                           lib/libThread.lib
@@ -516,12 +517,12 @@ PGSQLLIBEXTRA           = -Llib -lNet -lRIO
 MYSQLLIBEXTRA           = -Llib -lNet -lRIO
 GDMLLIBEXTRA            = -Llib -lGeom -lXMLIO -lHist -lRIO
 UNURANLIBEXTRA          = -Llib -lHist -lMathCore
-MONALISALIBEXTRA        = -Llib -lNet -lRIO
+MONALISALIBEXTRA        = -Llib -lNet -lRIO -lMathCore
 EVELIBEXTRA             = -Llib -lGeom -lGeomPainter -lGraf3d -lGui -lGpad \
                           -lGraf -lHist -lPhysics -lGed -lEG -lTree \
                           -lTreePlayer -lRGL -lRIO -lRint -lMathCore
 GVIZ3DLIBEXTRA          = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
-MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf
+MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf -lHist -lRIO
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
 FITSIOLIBEXTRA          = -Llib -lHist -lGpad -lGraf -lMatrix
