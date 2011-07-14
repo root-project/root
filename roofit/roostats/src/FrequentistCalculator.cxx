@@ -38,6 +38,8 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    // create profile keeping everything but nuisance parameters fixed
    RooArgSet allButNuisance(*fNullModel->GetPdf()->getParameters(*fData));
    allButNuisance.remove(*fNullModel->GetNuisanceParameters());
+   // remove also the constant parameters otherwise RooProfileLL will float them
+   RemoveConstantParameters(&allButNuisance);
    RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE));
    RooAbsReal* profile = nll->createProfile(allButNuisance);
    profile->getVal(); // this will do fit and set nuisance parameters to profiled values
@@ -98,6 +100,8 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    // create profile keeping everything but nuisance parameters fixed
    RooArgSet allButNuisance(*fAltModel->GetPdf()->getParameters(*fData));
    allButNuisance.remove(*fAltModel->GetNuisanceParameters());
+   // remove also the constant parameters otherwise RooProfileLL will float them
+   RemoveConstantParameters(&allButNuisance);
    RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE));
    RooAbsReal* profile = nll->createProfile(allButNuisance);
    profile->getVal(); // this will do fit and set nuisance parameters to profiled values
