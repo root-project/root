@@ -39,5 +39,25 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
+#include "TClass.h"
+#include "TClassEdit.h"
+#include "TROOT.h"
 
 ClassImp(TDictionary)
+
+TDictionary* TDictionary::GetDictionary(const char* name)
+{
+   // Retrieve the type (class, fundamental type, typedef etc)
+   // named "name". Returned object is either a TClass or TDataType.
+   // Returns 0 if the type is unknown.
+
+   TClassEdit::TSplitType stname(name, TClassEdit::kDropStd);
+   std::string shorttype;
+   stname.ShortType(shorttype, TClassEdit::kDropAllDefault);
+
+   TDictionary* ret = (TDictionary*)gROOT->GetListOfTypes()
+      ->FindObject(shorttype.c_str());
+   if (ret) return ret;
+
+   return TClass::GetClass(shorttype.c_str(), true);
+}
