@@ -49,7 +49,7 @@ XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
 XPDINCEXTRA  := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
 
-XPDLIBEXTRA  += $(XROOTDDIRL)/libXrdClient.lib
+XPDLIBEXTRA  := $(XROOTDDIRL)/libXrdClient.lib
 
 # used in the main Makefile
 PROOFDEXEH   := $(MODDIRI)/proofdp.h
@@ -127,8 +127,8 @@ XPROOFDEXE     :=
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
-                  -lXrdClient -lXrdSut -lXrd
+XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdNet -lXrdOuc \
+                  -lXrdSys -lXrdSut
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
