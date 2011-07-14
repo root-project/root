@@ -237,7 +237,7 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
+  virtual Double_t extendedTerm(Double_t observedEvents, const RooArgSet* nset=0) const ;
 
   static void clearEvalError() ;
   static Bool_t evalError() ;

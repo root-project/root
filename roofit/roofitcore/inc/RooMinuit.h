@@ -67,6 +67,7 @@ public:
   void setPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
+  void setMaxEvalMultiplier(Int_t n) { _maxEvalMult = n ; }
   Bool_t setLogFile(const char* logfile=0) ;  
 
   static void cleanup() ;
@@ -111,6 +112,7 @@ private:
   Int_t       _nPar ;
   Int_t       _printEvalErrors ;
   Bool_t      _doEvalErrorWall ;
+  Int_t       _maxEvalMult ;
   RooArgList* _floatParamList ;
   RooArgList* _initFloatParamList ;
   RooArgList* _constParamList ;

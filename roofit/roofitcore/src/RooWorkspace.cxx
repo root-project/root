@@ -1440,6 +1440,13 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     return kTRUE ;
   }
 
+  // Check if class is listed in a ROOTMAP file - if so we can skip it because it is in the root distribtion
+  const char* mapEntry = gInterpreter->GetClassSharedLibs(tc->GetName()) ;
+  if (mapEntry && strlen(mapEntry)>0) {
+    oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
+    return kTRUE ;
+  }
+
   // Retrieve file names through ROOT TClass interface
   string implfile = tc->GetImplFileName() ;
   string declfile = tc->GetDeclFileName() ;

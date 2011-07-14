@@ -188,10 +188,10 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       }
       //cout << "weight squared extended mode: sumW2 = " << sumW2 << " sumentries = " << _dataClone->sumEntries() << endl ;
       
-      result+= pdfClone->extendedTerm((Int_t)sumW2 , _dataClone->get());
+      result+= pdfClone->extendedTerm(sumW2 , _dataClone->get());
 
     } else {
-      result+= pdfClone->extendedTerm((Int_t)_dataClone->sumEntries(),_dataClone->get());
+      result+= pdfClone->extendedTerm(_dataClone->sumEntries(),_dataClone->get());
     }
   }    
 
