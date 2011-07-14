@@ -410,8 +410,19 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight)
    const RooArgSet* saveVars = (const RooArgSet*)allVars->snapshot();
 
    if(fNuisanceParametersSampler) { // use nuisance parameters?
+      // Construct a set of nuisance parameters that has the parameters
+      // in the input paramPoint removed. Therefore, no parameter in
+      // paramPoint is randomized.
+      // Therefore when a parameter is given (should be held fixed),
+      // but is also in the list of nuisance parameters, the parameter
+      // will be held fixed. This is useful for debugging to hold single
+      // parameters fixed although under "normal" circumstances it is
+      // randomized.
+      RooArgSet allVarsMinusParamPoint(*allVars);
+      allVarsMinusParamPoint.remove(paramPoint, kFALSE, kTRUE); // match by name
+
       // get nuisance parameter point and weight
-      fNuisanceParametersSampler->NextPoint(*allVars, weight);
+      fNuisanceParametersSampler->NextPoint(allVarsMinusParamPoint, weight);
    }else{
       weight = -1.0;
    }
@@ -470,8 +481,19 @@ RooAbsData* ToyMCSampler::GenerateToyDataImportanceSampling(RooArgSet& paramPoin
    const RooArgSet* saveVars = (const RooArgSet*)allVars->snapshot();
 
    if(fNuisanceParametersSampler) { // use nuisance parameters?
+      // Construct a set of nuisance parameters that has the parameters
+      // in the input paramPoint removed. Therefore, no parameter in
+      // paramPoint is randomized.
+      // Therefore when a parameter is given (should be held fixed),
+      // but is also in the list of nuisance parameters, the parameter
+      // will be held fixed. This is useful for debugging to hold single
+      // parameters fixed although under "normal" circumstances it is
+      // randomized.
+      RooArgSet allVarsMinusParamPoint(*allVars);
+      allVarsMinusParamPoint.remove(paramPoint, kFALSE, kTRUE); // match by name
+
       // get nuisance parameter point and weight
-      fNuisanceParametersSampler->NextPoint(*allVars, weight);
+      fNuisanceParametersSampler->NextPoint(allVarsMinusParamPoint, weight);
    }else{
       weight = -1.0;
    }
