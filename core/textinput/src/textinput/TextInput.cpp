@@ -67,6 +67,8 @@ namespace textinput {
     if (fLastReadResult == kRRReadEOLDelimiter) {
       // Input has been taken, we can continue reading.
       fLastReadResult = kRRNone;
+      // We will have to redraw the prompt, even if unchanged.
+      fNeedPromptRedraw = true;
     } // else keep EOF.
   }
 
