@@ -172,7 +172,8 @@ Double_t HypoTestResult::CLsError() const {
    // unsigned const int n_b = fNullDistr->GetSamplingDistribution().size();
    // unsigned const int n_sb = fAltDistr->GetSamplingDistribution().size();
 
-   if (CLb() == 0 ) return numeric_limits<double>::infinity();
+   // if CLb() == 0 CLs = -1 so return a -1 error
+   if (CLb() == 0 ) return -1;
 
    double cl_b_err2 = pow(CLbError(),2);
    double cl_sb_err2 = pow(CLsplusbError(),2);

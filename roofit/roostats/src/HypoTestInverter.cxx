@@ -508,20 +508,33 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
 
    // safety checks
    if ( nBins<=0 ) {
-      std::cout << "Please provide nBins>0\n";
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - Please provide nBins>0\n";
       return false;
    }
    if ( nBins==1 && xMin!=xMax ) {
-      std::cout << "nBins==1 -> I will run for xMin (" << xMin << ")\n";
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - nBins==1 -> I will run for xMin (" << xMin << ")\n";
    }
    if ( xMin==xMax && nBins>1 ) { 
-      std::cout << "xMin==xMax -> I will enforce nBins==1\n";
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin==xMax -> I will enforce nBins==1\n";
       nBins = 1;
    }
    if ( xMin>xMax ) {
-      std::cout << "Please provide xMin (" << xMin << ") smaller that xMax (" << xMax << ")\n";
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - Please provide xMin (" 
+                                          << xMin << ") smaller that xMax (" << xMax << ")\n";
       return false;
    } 
+
+   if (xMin < fScannedVariable->getMin()) {
+      xMin = fScannedVariable->getMin();
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin < lower bound, use xmin = "
+                                          << xMin << std::endl; 
+   }
+   if (xMax > fScannedVariable->getMin()) { 
+      xMax = fScannedVariable->getMax();
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMax > upper bound, use xmax = "   
+                                          << xMax << std::endl; 
+   }         
+
    
    double thisX = xMin;
    for (int i=0; i<nBins; i++) {
