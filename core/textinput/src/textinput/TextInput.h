@@ -99,6 +99,7 @@ namespace textinput {
     EReadResult fLastReadResult; // current input state
     TextInputContext* fContext; // context object
     mutable bool fActive; // whether textinput is controlling input/output
+    bool fNeedPromptRedraw; // whether the prompt should be redrawn on next attach
   };
 }
 #endif

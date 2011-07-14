@@ -33,7 +33,8 @@ namespace textinput {
   fLastKey(0),
   fMaxChars(0),
   fLastReadResult(kRRNone),
-  fActive(false)
+  fActive(false),
+  fNeedPromptRedraw(false)
   {
     fContext = new TextInputContext(this, HistFile);
     fContext->AddDisplay(display);
@@ -194,6 +195,7 @@ namespace textinput {
   TextInput::Redraw() {
     // Attach and redraw.
     GrabInputOutput();
+    fNeedPromptRedraw = false;
     UpdateDisplay(EditorRange(Range::AllText(), Range::AllWithPrompt()));
   }
 
@@ -206,6 +208,10 @@ namespace textinput {
     EditorRange ColModR(R);
     if (!R.fDisplay.IsEmpty() && fContext->GetColorizer()) {
       fContext->GetColorizer()->ProcessTextChange(ColModR, fContext->GetLine());
+    }
+    if (fNeedPromptRedraw) {
+       ColModR.fDisplay.fPromptUpdate = Range::kUpdateAllPrompts;
+       fNeedPromptRedraw = false;
     }
     if (!ColModR.fDisplay.IsEmpty()
         || ColModR.fDisplay.fPromptUpdate != Range::kNoPromptUpdate) {
@@ -228,6 +234,7 @@ namespace textinput {
     GrabInputOutput();
 
     R.fDisplay = Range::AllWithPrompt();
+    fNeedPromptRedraw = false;
     // Immediate refresh.
     std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
                   std::bind2nd(std::mem_fun(&Display::NotifyTextChange),
@@ -243,7 +250,11 @@ namespace textinput {
     if (fContext->GetColorizer()) {
       fContext->GetColorizer()->ProcessPromptChange(fContext->GetPrompt());
     }
-    if (!fActive) return;
+    if (!fActive) {
+       fNeedPromptRedraw = true;
+       return;
+    }
+    fNeedPromptRedraw = false;
     std::for_each(fContext->GetDisplays().begin(),
                   fContext->GetDisplays().end(),
                   std::bind2nd(std::mem_fun(&Display::NotifyTextChange),
