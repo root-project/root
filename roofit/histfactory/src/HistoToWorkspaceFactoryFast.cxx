@@ -209,11 +209,11 @@ namespace HistFactory{
         temp = (RooRealVar*) proto->factory(("alpha_"+sourceName.at(j)+range).c_str());
 
         // now add a constraint term for these parameters
-        string command=("Gaussian::alpha_"+sourceName.at(j)+"Constraint(alpha_"+sourceName.at(j)+",nom_"+sourceName.at(j)+"[0.,-10,10],1.)");
+        string command=("Gaussian::alpha_"+sourceName.at(j)+"Constraint(alpha_"+sourceName.at(j)+",nom_alpha_"+sourceName.at(j)+"[0.,-10,10],1.)");
         cout << command << endl;
         likelihoodTermNames.push_back(  proto->factory( command.c_str() )->GetName() );
-	proto->var(("nom_"+sourceName.at(j)).c_str())->setConstant();
-	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_"+sourceName.at(j)).c_str()));
+	proto->var(("nom_alpha_"+sourceName.at(j)).c_str())->setConstant();
+	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_alpha_"+sourceName.at(j)).c_str()));
 
       } 
 
