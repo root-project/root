@@ -298,7 +298,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                   l->Remove(tnew);
                } else {
                   Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
-s               }
+               }
                curdir->cd();
             }
          } else {
