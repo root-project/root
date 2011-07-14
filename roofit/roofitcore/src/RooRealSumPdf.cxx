@@ -420,7 +420,12 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //_____________________________________________________________________________
 Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 {
-  return getNorm(nset) ;
+  //  return getNorm(nset) ;
+  Double_t n = getNorm(nset) ;  
+  if (n<0) {
+    logEvalError("Expected number of events is negative") ;
+  }
+  return n ;
 }
 
 

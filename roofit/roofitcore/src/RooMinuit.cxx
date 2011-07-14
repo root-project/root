@@ -121,6 +121,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _printLevel = 1 ;
   _printEvalErrors = 10 ;
   _warnLevel = -999 ;
+  _maxEvalMult = 500 ;
   _doEvalErrorWall = kTRUE ;
 
   // Examine parameter list
@@ -300,7 +301,7 @@ Int_t RooMinuit::migrad()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
   arglist[1]= 1.0;       // tolerance
 
   synchronize(_verbose) ;
@@ -331,7 +332,7 @@ Int_t RooMinuit::hesse()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
   synchronize(_verbose) ;
   profileStart() ;
@@ -361,7 +362,7 @@ Int_t RooMinuit::minos()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
   synchronize(_verbose) ;
   profileStart() ;
@@ -407,7 +408,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
     }
     delete aIter ;
   }
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
   synchronize(_verbose) ;
   profileStart() ;
@@ -439,7 +440,7 @@ Int_t RooMinuit::seek()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
   synchronize(_verbose) ;
   profileStart() ;
@@ -469,7 +470,7 @@ Int_t RooMinuit::simplex()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
   arglist[1]= 1.0;       // tolerance
 
   synchronize(_verbose) ;
@@ -500,7 +501,7 @@ Int_t RooMinuit::improve()
   _theFitter->SetObjectFit(this) ;
 
   Double_t arglist[2];
-  arglist[0]= 500*_nPar; // maximum iterations
+  arglist[0]= _maxEvalMult*_nPar; // maximum iterations
 
   synchronize(_verbose) ;
   profileStart() ;

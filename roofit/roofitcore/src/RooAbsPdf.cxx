@@ -368,7 +368,6 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
   if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   Double_t ret = _norm->getVal() ;
-//   cout << "RooAbsPdf::getNorm(" << GetName() << ") norm obj = " << _norm->GetName() << endl ;
   if (ret==0.) {
     if(++_errorCount <= 10) {
       coutW(Eval) << "RooAbsPdf::getNorm(" << GetName() << ":: WARNING normalization is zero, nset = " ;  nset->Print("1") ;
@@ -629,7 +628,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
 
 //_____________________________________________________________________________
-Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const 
+Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const 
 {
   // Returned the extended likelihood term (Nexpect - Nobserved*log(NExpected)
   // of this PDF for the given number of observed events
