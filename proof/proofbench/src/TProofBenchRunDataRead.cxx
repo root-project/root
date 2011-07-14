@@ -282,7 +282,6 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             TTree* tnew=(TTree*)t->Clone("tnew");
 
             FillPerfStatProfiles(tnew, nactive);
-            tnew->SetDirectory(fDirProofBench);
 
             //change the name
             TString newname = TString::Format("%s_%s_%dwrks%dthtry", t->GetName(), GetName(), nactive, j);
@@ -294,10 +293,12 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                if (!fDirProofBench->GetDirectory(dirn))
                   fDirProofBench->mkdir(dirn, "RunDataRead results");
                if (fDirProofBench->cd(dirn)) {
+                  tnew->SetDirectory(fDirProofBench);
                   tnew->Write();
+                  l->Remove(tnew);
                } else {
                   Warning("Run", "cannot cd to subdirectory '%s' to store the results!", dirn.Data());
-               }
+s               }
                curdir->cd();
             }
          } else {
