@@ -72,11 +72,11 @@ NEEDFINK      = yes
 
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name @rpath/
+SOFLAGS       = -dynamiclib -single_module -Wl,-mark_dead_strippable_dylib \
+                -install_name @rpath/
 else
-SOFLAGS       = -dynamiclib -single_module \
-                -undefined dynamic_lookup -install_name $(LIBDIR)/
+SOFLAGS       = -dynamiclib -single_module -Wl,-mark_dead_strippable_dylib \
+                -install_name $(LIBDIR)/
 endif
 FORCELINK     = no
 NEEDFINK      = no

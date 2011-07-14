@@ -21,13 +21,13 @@ else
 EVENTLIB      = $(shell pwd)/$(EVENTSO)
 endif
 
-EVENTMTO        = EventMT.$(ObjSuf) EventMTDict.$(ObjSuf)
-EVENTMTS        = EventMT.$(SrcSuf) EventMTDict.$(SrcSuf)
-EVENTMTSO       = libEventMT.$(DllSuf)
+EVENTMTO      = EventMT.$(ObjSuf) EventMTDict.$(ObjSuf)
+EVENTMTS      = EventMT.$(SrcSuf) EventMTDict.$(SrcSuf)
+EVENTMTSO     = libEventMT.$(DllSuf)
 ifeq ($(PLATFORM),win32)
-EVENTMTLIB      = libEventMT.lib
+EVENTMTLIB    = libEventMT.lib
 else
-EVENTMTLIB      = $(shell pwd)/$(EVENTMTSO)
+EVENTMTLIB    = $(shell pwd)/$(EVENTMTSO)
 endif
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
@@ -139,7 +139,7 @@ ifeq ($(shell $(ROOTCONFIG) --has-tmva),yes)
 STRESSTMVAO   = stressTMVA.$(ObjSuf)
 STRESSTMVAS   = stressTMVA.$(SrcSuf)
 ifeq ($(PLATFORM),win32)
-STRESSTMVALIBS = '$(ROOTSYS)/lib/libTMVA.lib'  
+STRESSTMVALIBS = '$(ROOTSYS)/lib/libTMVA.lib'
 else
 STRESSTMVALIBS = -lTMVA -lMinuit -lXMLIO -lMLP -lTreePlayer
 endif
@@ -290,13 +290,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -324,13 +321,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -451,48 +445,44 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(LIBS) $(STRESSMATHLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 		$(MT_DLL)
-#endif
 endif
 endif
 endif
 
 $(STRESSMATH):   $(STRESSMATHO) $(TRACKMATHLIB)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSMATHO) $(LIBS) $(STRESSMATHLIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
 
 $(STRESSMATHMORE):   $(STRESSMATHMOREO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSMATHMORELIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
 $(STRESSTMVA):   $(STRESSTMVAO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSTMVALIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSTMVALIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 else
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSTMVALIBS)  $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(STRESSTMVALIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
@@ -624,13 +614,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -650,13 +637,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -676,13 +660,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -701,13 +682,10 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(PLATFORM),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@
+		$(LD) $(SOFLAGS)$@ $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(MACOSX_MINOR),4)
 		ln -sf $@ $(subst .$(DllSuf),.so,$@)
-else
-		$(LD) -bundle -undefined $(UNDEFOPT) $(LDFLAGS) $^ \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 endif
 endif
 else
@@ -731,7 +709,6 @@ $(STRESSHIST):  $(STRESSHISTO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
-
 
 clean:
 		@rm -f $(OBJS) $(TRACKMATHSRC) core *Dict.*
