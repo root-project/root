@@ -661,6 +661,7 @@ TProof::~TProof()
 
    // For those interested in our destruction ...
    Emit("~TProof()");
+   Emit("CloseWindow()");
 }
 
 //______________________________________________________________________________
@@ -2934,16 +2935,19 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                         if (TestBit(TProof::kIsClient) && !IsLite()) {
                            // In PROOFLite this has to be done once only in TProofLite::Process
                            TQueryResult *pq = fPlayer->GetCurrentQuery();
-                           pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
-                           // Add input objects (do not override remote settings, if any)
-                           TObject *xo = 0;
-                           TIter nxin(fPlayer->GetInputList());
-                           // Servers prior to 5.28/00 do not create the input list in the TQueryResult
-                           if (!pq->GetInputList()) pq->SetInputList(new TList());
-                           while ((xo = nxin()))
-                              if (!pq->GetInputList()->FindObject(xo->GetName())) pq->AddInput(xo->Clone());                             
-                           // If the last object, notify the GUI that the result arrived
-                           QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
+                           if (pq) {
+                              pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
+                              // Add input objects (do not override remote settings, if any)
+                              TObject *xo = 0;
+                              TIter nxin(fPlayer->GetInputList());
+                              // Servers prior to 5.28/00 do not create the input list in the TQueryResult
+                              if (!pq->GetInputList()) pq->SetInputList(new TList());
+                              while ((xo = nxin()))
+                                 if (!pq->GetInputList()->FindObject(xo->GetName()))
+                                    pq->AddInput(xo->Clone());                             
+                              // If the last object, notify the GUI that the result arrived
+                              QueryResultReady(TString::Format("%s:%s", pq->GetTitle(), pq->GetName()));
+                           }
                            // Processing is over
                            UpdateDialog();
                         }
@@ -3315,7 +3319,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             } else {
                (*mess) >> events;
             }
-            if (!abort && fPlayer) {
+            if (fPlayer) {
                if (fProtocol > 18) {
                   TList *listOfMissingFiles = 0;
                   if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
@@ -3332,6 +3336,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                      // This object is now owned by the packetizer
                      status = 0;
                   }
+                  if (status) fPlayer->AddEventsProcessed(status->GetEntries());
                } else {
                   fPlayer->AddEventsProcessed(events);
                }
@@ -6499,17 +6504,31 @@ Int_t TProof::DisablePackages()
    // Nothing more to do if we are a Lite-session
    if (IsLite()) return 0;
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(kDisablePackages);
-   Broadcast(mess, kUnique);
+   Int_t st = -1;
+   Bool_t done = kFALSE;
+   if (fManager) {
+      // Try to do it via XROOTD (new way)
+      if (fManager->Rm("~/packages/*", "-rf", "all") != -1) {
+         done = kTRUE;
+         st = 0;
+      }
+   }
+   if (!done) {
 
-   TMessage mess2(kPROOF_CACHE);
-   mess2 << Int_t(kDisableSubPackages);
-   Broadcast(mess2, fNonUniqueMasters);
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kDisablePackages);
+      Broadcast(mess, kUnique);
 
-   Collect(kAllUnique);
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kDisableSubPackages);
+      Broadcast(mess2, fNonUniqueMasters);
 
-   return fStatus;
+      Collect(kAllUnique);
+      st = fStatus;
+   }
+
+   // Done
+   return st;
 }
 
 //______________________________________________________________________________

@@ -4185,7 +4185,7 @@ void TProofServ::ProcessNext(TString *slb)
    } else {
       if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
          Warning("ProcessNext","the output list is empty!");
-      if (SendResults(fSocket) != 0)
+      if (SendResults(fSocket, fPlayer->GetOutputList()) != 0)
          Warning("ProcessNext", "problems sending output list");
       if (slb) slb->Form("%d -1 -1 %.3f", fPlayer->GetExitStatus(), pq->GetUsedCPU());
    }

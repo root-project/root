@@ -140,6 +140,7 @@ public:
    static void Stop();
    static void Setup(TList *input);
    static void SetMemValues();
+   static void GetMemValues(Long_t &vmax, Long_t &rmax);
 
    ClassDef(TPerfStats,0)  // Class for collecting PROOF statistics
 };
