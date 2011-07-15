@@ -49,12 +49,12 @@ ifeq ($(ARCH),aix5)
 		$(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(PLATFORM),macosx)
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB)
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB) $(EXPLLINKLIBS)
 ifneq ($(subst $(MACOSX_MINOR),,1234),1234)
 # We need to make both the .dylib and the .so for 10.1-10.4
 		$(CMDECHO) $(LD) -bundle -undefined $(UNDEFOPT) \
 		   $(LDFLAGS) $(EVENTO) \
-		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
+		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@) $(EXPLLINKLIBS)
 endif
 else
 ifeq ($(PLATFORM),win32)

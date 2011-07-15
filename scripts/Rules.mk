@@ -260,6 +260,7 @@ ifeq ($(ROOTGLIBS),)
    export ROOTGLIBS    := $(shell root-config --nonew --glibs)
 endif
 endif
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 
 ObjSuf   = o
 
