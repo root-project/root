@@ -3393,7 +3393,7 @@ if test ! "x$enable_gviz" = "xno"; then
                gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
            fi
        else
-           gvizlib="$gvizlibir $gvizlib1"
+           gvizlib="$gvizlibir $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
        fi
        if test "x$platform" = "xwin32"; then
            gvizcflags=
