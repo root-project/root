@@ -85,7 +85,7 @@ else
 SOFLAGS       = -dynamiclib -single_module -Wl,-mark_dead_strippable_dylib \
                 -install_name $(LIBDIR)/
 endif
-FORCELINK     = no
+FORCELINK     = yes
 NEEDFINK      = no
 else
 ifeq ($(subst $(MACOSX_MINOR),,123),123)

@@ -74,7 +74,7 @@ if [ "$R__PLATFORM" = "win32" ]; then
               lib/libCint.lib $R__EXTRA $syslibs"
       elif [ "$R__LIB" = "lib/libCore.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \
-              $libdir/${name}.exp lib/libCint.lib lib/libMathCore.lib \
+              $libdir/${name}.exp lib/libCint.lib \
               $R__EXTRA $syslibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib"
       elif [ "$R__LIB" = "lib/libminicern.dll" ]; then
          cmd="$R__LD $R__SOFLAGS $R__LDFLAGS -o $dlldir/${name}.dll $R__OBJS \

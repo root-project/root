@@ -61,7 +61,7 @@ if [ "x$EXPLICIT" = "xyes" ]; then
       if [ $LIB != "lib/libCore.$soext" ]; then
          EXPLLNKCORE="-Llib $NEEDREFLEX -lCore -lCint"
       else
-         EXPLLNKCORE="-Llib -lCint -lMathCore"
+         EXPLLNKCORE="-Llib -lCint"
       fi
    fi
    if [ $PLATFORM = "linux" ]; then
@@ -177,7 +177,7 @@ elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
        && [ $SONAME != "libReflex.dll" ] \
        && [ $SONAME != "libminicern.dll" ] ; then
       if [ $SONAME = "libCore.dll" ]; then
-         EXPLLNKCORE="-Llib -lCint -lMathCore"
+         EXPLLNKCORE="-Llib -lCint"
       else
          EXPLLNKCORE="-Llib -lCore -lCint"
       fi

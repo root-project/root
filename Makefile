@@ -506,21 +506,6 @@ COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
 
-ifeq ($(FORCELINK),yes)
-ifeq ($(PLATFORM),aix5)
-CORENEEDMATHCORE := -Wl,-u,.G__cpp_setupG__MathCore
-else
-CORENEEDMATHCORE    := -Wl,-u,_G__cpp_setupG__MathCore
-endif
-endif
-ifeq ($(PLATFORM),macosx)
-CORENEEDMATHCORE    :=  -Wl,-u,_G__cpp_setupG__MathCore
-endif
-ifeq ($(PLATFORM),win32)
-CORENEEDMATHCORE    := -include:_G__cpp_setupG__MathCore
-endif
-
-
 ifneq ($(BUILTINZLIB),yes)
 CORELIBEXTRA    += $(ZLIBLIBDIR) $(ZLIBCLILIB)
 STATICEXTRALIBS += $(ZLIBLIBDIR) $(ZLIBCLILIB)
@@ -783,11 +768,11 @@ endif
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO) $(CORENEEDMATHCORE)" \
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 else
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(CORELDFLAGS)" \
-	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO) $(CORENEEDMATHCORE)" \
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 endif
 
