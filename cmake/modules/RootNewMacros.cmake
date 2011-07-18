@@ -246,21 +246,32 @@ function(ROOT_LINKER_LIBRARY library)
   if(ARG_CMAKENOEXPORT)
     install(TARGETS ${library} RUNTIME DESTINATION bin
                                LIBRARY DESTINATION lib
-                               ARCHIVE DESTINATION lib)
+                               ARCHIVE DESTINATION lib
+                               COMPONENT libraries)
   else()
     install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
                                RUNTIME DESTINATION bin
                                LIBRARY DESTINATION lib
-                               ARCHIVE DESTINATION lib)
-    install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
+                               ARCHIVE DESTINATION lib
+                               COMPONENT libraries)
+    #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
   endif()
   if(WIN32)
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
-	  install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb CONFIGURATIONS Debug DESTINATION bin) 
-	  install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo/lib${library}.pdb CONFIGURATIONS RelWithDebInfo DESTINATION bin) 
-	else()
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb CONFIGURATIONS Debug RelWithDebInfo DESTINATION bin) 
-	endif()
+	    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb 
+	            CONFIGURATIONS Debug
+              DESTINATION bin
+              COMPONENT libraries) 
+	    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo/lib${library}.pdb 
+	            CONFIGURATIONS RelWithDebInfo 
+              DESTINATION bin
+              COMPONENT libraries) 
+	  else()
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb 
+              CONFIGURATIONS Debug RelWithDebInfo 
+              DESTINATION bin
+              COMPONENT libraries) 
+	  endif()
   endif()
 endfunction()
 
@@ -275,11 +286,10 @@ function(ROOT_MODULE_LIBRARY library)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
-  #install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${lib})
   install(TARGETS ${library} RUNTIME DESTINATION bin
                              LIBRARY DESTINATION lib
-                             ARCHIVE DESTINATION lib)
-  #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake) 
+                             ARCHIVE DESTINATION lib
+                             COMPONENT libraries)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -349,7 +359,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   add_custom_target( ${libprefix}${library}.rootmap ALL DEPENDS  ${outfile})
   set_target_properties(${libprefix}${library}.rootmap PROPERTIES FOLDER RootMaps )
   #---Install the rootmap file------------------------------------
-  install(FILES ${outfile} DESTINATION lib)
+  install(FILES ${outfile} DESTINATION lib COMPONENT libraries)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -362,7 +372,8 @@ function(ROOT_INSTALL_HEADERS)
     set(dirs inc/)
   endif()
   foreach(d ${dirs})  
-    install(DIRECTORY ${d} DESTINATION include 
+    install(DIRECTORY ${d} DESTINATION include
+                           COMPONENT headers 
                            PATTERN ".svn" EXCLUDE
                            REGEX "LinkDef" EXCLUDE )
   endforeach()
@@ -393,10 +404,9 @@ function(ROOT_EXECUTABLE executable)
   endif()
   #----Installation details------------------------------------------------------
   if(ARG_CMAKENOEXPORT)
-    install(TARGETS ${executable} RUNTIME DESTINATION ${bin})
+    install(TARGETS ${executable} RUNTIME DESTINATION ${bin} COMPONENT applications)
   else()
-    install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${bin})
-    install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
+    install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${bin} COMPONENT applications)
   endif()
 endfunction()
 

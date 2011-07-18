@@ -36,9 +36,11 @@ include(SearchInstalledSoftware)
 ROOT_SHOW_OPTIONS()
 
 #---Set the library version in the main CMakeLists.txt------------------------------------------
-set(ROOT_MAJOR_VERSION 5)
-set(ROOT_MINOR_VERSION 28)
-set(ROOT_PATCH_VERSION 00)
+file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
+string(STRIP ${versionstr} versionstr)
+string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
+string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
+string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
 set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -79,6 +81,8 @@ if(roofit)
 endif()
 
 include(PostInstalledSoftware)
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
+
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION .)
@@ -87,12 +91,55 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          PATTERN ".svn" EXCLUDE 
                          REGEX system.rootrc EXCLUDE 
                          REGEX root.mimes EXCLUDE)
-  install(DIRECTORY geom/   DESTINATION geom PATTERN ".svn" EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION fonts PATTERN ".svn" EXCLUDE)
   install(DIRECTORY icons/  DESTINATION icons PATTERN ".svn" EXCLUDE)
   install(DIRECTORY macros/ DESTINATION macros PATTERN ".svn" EXCLUDE)
   install(DIRECTORY man/    DESTINATION man PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY test/      DESTINATION test PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY tutorials/ DESTINATION tutorials PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY test/      DESTINATION test COMPONENT tests PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY tutorials/ DESTINATION tutorials COMPONENT tests PATTERN ".svn" EXCLUDE)
   install(DIRECTORY cmake/modules DESTINATION cmake PATTERN ".svn" EXCLUDE)
 endif()
+
+#---Packaging-------------------------------------------------------------------------------------
+include(InstallRequiredSystemLibraries)
+configure_file(cmake/modules/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
+configure_file(README/README README.txt COPYONLY)
+configure_file(LICENSE LICENSE.txt COPYONLY)
+set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/CMakeCPackOptions.cmake)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "ROOT project")
+set(CPACK_PACKAGE_VENDOR "HEPSoft")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.txt")
+set(CPACK_PACKAGE_VERSION_MAJOR ${ROOT_MAJOR_VERSION})
+set(CPACK_PACKAGE_VERSION_MINOR ${ROOT_MINOR_VERSION})
+set(CPACK_PACKAGE_VERSION_PATCH ${ROOT_PATCH_VERSION})
+set(CPACK_PACKAGE_RELOCATABLE True)
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "ROOT ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}")
+if(CMAKE_BUILD_TYPE STREQUAL Release)
+  set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${ROOT_VERSION}-${ROOT_ARCHITECTURE}")
+else()
+  set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${ROOT_VERSION}-${ROOT_ARCHITECTURE}-${CMAKE_BUILD_TYPE}")
+endif()
+set(CPACK_SOURCE_STRIP_FILES "")
+set(CPACK_PACKAGE_EXECUTABLES "root" "ROOT")
+include(CPack)
+
+#---Define components and installation types--------------------------------------------------
+cpack_add_install_type(full      DISPLAY_NAME "Full Installation")
+cpack_add_install_type(minimal   DISPLAY_NAME "Minimal Installation")
+cpack_add_install_type(developer DISPLAY_NAME "Developer Installation")
+cpack_add_component(applications DISPLAY_NAME "ROOT Applications" 
+                                 DESCRIPTION "ROOT executables such as root.exe"
+								 INSTALL_TYPES full minimal developer)
+cpack_add_component(libraries DISPLAY_NAME "ROOT Libraries" 
+                                 DESCRIPTION "All ROOT libraries and dictionaries"
+								 INSTALL_TYPES full minimal developer)
+cpack_add_component(headers DISPLAY_NAME "C++ Headers" 
+                                 DESCRIPTION "These are needed to do any development"
+								 INSTALL_TYPES full developer)
+cpack_add_component(tests DISPLAY_NAME "ROOT Tests and Tutorials" 
+                                 DESCRIPTION "These are needed to do any test and tutorial"
+								 INSTALL_TYPES full developer)
+								 
+								 
