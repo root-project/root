@@ -91,13 +91,13 @@ Else(CMAKE_COMPILER_IS_GNUCXX)
      Set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
      Set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
   
-  
- 
+   
    # Check icc compiler version and set compile flags according to the
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v  ERROR_VARIABLE _icc_version_info)
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v  
+                    ERROR_VARIABLE _icc_version_info ERROR_STRIP_TRAILING_WHITESPACE)
 
-    STRING(REGEX REPLACE "^Version[ ]([0-9]+)\\.[0-9]+" "\\1" ICC_MAJOR "${_icc_version_info}")
-    STRING(REGEX REPLACE "^Version[ ][0-9]+\\.([0-9]+)" "\\1" ICC_MINOR "${_icc_version_info}")
+    STRING(REGEX REPLACE "^Version[ ]([0-9]+)\\.[0-9]+.*" "\\1" ICC_MAJOR "${_icc_version_info}")
+    STRING(REGEX REPLACE "^Version[ ][0-9]+\\.([0-9]+).*" "\\1" ICC_MINOR "${_icc_version_info}")
 
     MESSAGE(STATUS "Found ICC major version ${ICC_MAJOR}")
     MESSAGE(STATUS "Found ICC minor version ${ICC_MINOR}")
@@ -125,6 +125,16 @@ Else(CMAKE_COMPILER_IS_GNUCXX)
       Set(ICC_GE_9  11)
       Set(ICC_GE_101 110)
     EndIf(ICC_MAJOR EQUAL 11)  
+
+    If(ICC_MAJOR EQUAL 12)  
+      Set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
+      Set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
+      Set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} ${BIT_ENVIRONMENT}")
+      Set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} ${BIT_ENVIRONMENT}")
+      Set(ICC_GE_9  12)
+      Set(ICC_GE_101 120)
+    EndIf(ICC_MAJOR EQUAL 12)  
+
   
      Set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
      Set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
