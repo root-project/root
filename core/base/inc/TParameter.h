@@ -69,6 +69,16 @@ public:
    void              SetMergeMode(char mergemode = '+') { ResetBit(kMultiply);
                                                           if (mergemode == '*') SetBit(kMultiply); }
 
+   virtual ULong_t  Hash() const { return fName.Hash(); }
+   virtual Bool_t   IsSortable() const { return kTRUE; }
+   virtual Int_t    Compare(const TObject *obj) const {
+      // Compare two TParameter objects. Returns 0 when equal, -1 when this is
+      // smaller and +1 when bigger (like strcmp).
+      
+      if (this == obj) return 0;
+      return fName.CompareTo(obj->GetName());
+   }
+
    virtual void ls(Option_t *) const {
       // Print this parameter content
       TROOT::IndentLevel();
