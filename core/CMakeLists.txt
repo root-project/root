@@ -74,6 +74,9 @@ set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
                             ${BASE1_DICTIONARY} ${BASE2_DICTIONARY}
                             COMPILE_FLAGS -I${PCRE_INCLUDE_DIR}
                            )
+set_source_files_properties(${CMAKE_SOURCE_DIR}/core/lzma/src/ZipLZMA.c
+                            COMPILE_FLAGS -I${LZMA_INCLUDE_DIR}
+                           )
 
 if(${GCC_MAJOR} EQUAL 4 AND ${GCC_MINOR} EQUAL 1)
   set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TString.cxx
