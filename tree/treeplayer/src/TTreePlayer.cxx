@@ -753,8 +753,29 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (isHbook) fprintf(fp,"#include <THbookFile.h>\n");
    if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
 
-// First loop on all leaves to generate dimension declarations
-   Int_t len, lenb,l;
+   // See if we can add any #include about the user data.
+   Int_t l;
+   fprintf(fp,"\n// Header file for the classes stored in the TTree if any.\n");
+   for (l=0;l<nleaves;l++) {
+      TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+      TBranch *branch = leaf->GetBranch();
+      TClass *cl = TClass::GetClass(branch->GetClassName());
+      if (cl && cl->IsLoaded()) {
+         const char *declfile = cl->GetDeclFileName();
+         if (declfile && declfile[0]) {
+            static const char *precstl = "prec_stl/";
+            static const unsigned int precstl_len = strlen(precstl);
+            if (strncmp(declfile,precstl,precstl_len) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+precstl_len);              
+            } else {
+               fprintf(fp,"#include \"%s\"\n",declfile);
+            }
+         }
+      }
+   }
+   
+   // First loop on all leaves to generate dimension declarations
+   Int_t len, lenb;
    char blen[1024];
    char *bname;
    Int_t *leaflen = new Int_t[nleaves];
