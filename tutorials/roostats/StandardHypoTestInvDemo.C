@@ -42,7 +42,8 @@ int nworkers = 2;
 
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
-                                     int type,  int testStatType, int npoints, double poimin, double poimax, int ntoys, bool useCls );
+                                     int type,  int testStatType, int npoints, double poimin, double poimax, int ntoys, 
+                                     bool useCls, bool useNumberCounting, const char * nuisPriorName);
 
 
 
@@ -58,7 +59,9 @@ void StandardHypoTestInvDemo(const char * fileName =0,
                              int npoints = 5,   
                              double poimin = 0,  
                              double poimax = 5, 
-                             int ntoys=1000 )    
+                             int ntoys=1000,
+                             bool useNumberCounting = false,
+                             const char * nuisPriorName = 0)    
 {
 /*
 
@@ -82,6 +85,12 @@ void StandardHypoTestInvDemo(const char * fileName =0,
 
     ntoys:         number of toys to use 
 
+    useNumberCounting:  set to true when using number counting events 
+
+    nuisPriorName:   name of prior for the nnuisance. This is often expressed as constraint term in the global model
+                     It is needed only when using the HybridCalculator (type=1)
+                     If not given by default the prior pdf from ModelConfig is used. 
+
     extra options are available as global paramters of the macro. They are: 
 
     plotHypoTestResult   plot result of tests at each point (TS distributions) 
@@ -102,7 +111,8 @@ void StandardHypoTestInvDemo(const char * fileName =0,
    HypoTestInverterResult * r = 0; 
    std::cout << w << "\t" << fileName << std::endl;
    if (w != NULL) {
-      r = RunInverter(w, modelSBName, modelBName, dataName, calculatorType, testStatType, npoints, poimin, poimax,  ntoys, useCls );    
+      r = RunInverter(w, modelSBName, modelBName, dataName, calculatorType, testStatType, npoints, poimin, poimax,  
+                      ntoys, useCls, useNumberCounting, nuisPriorName );    
       if (!r) { 
          std::cerr << "Error running the HypoTestInverter - Exit " << std::endl;
          return;          
@@ -175,7 +185,7 @@ void StandardHypoTestInvDemo(const char * fileName =0,
 HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, 
                                       const char * dataName, int type,  int testStatType, 
                                       int npoints, double poimin, double poimax, 
-                                      int ntoys, bool useCls ) 
+                                      int ntoys, bool useCls, bool useNumberCounting, const char * nuisPriorName ) 
 {
 
    std::cout << "Running HypoTestInverter on the workspace " << w->GetName() << std::endl;
@@ -273,7 +283,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    else hc = new HybridCalculator(*data, *bModel, *sbModel);
 
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
-   //toymcs->SetNEventsPerToy(1);
+   if (useNumberCounting) toymcs->SetNEventsPerToy(1);
    toymcs->SetTestStatistic(testStat);
    if (optimize) toymcs->SetUseMultiGen(true);
 
@@ -282,16 +292,27 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
       HybridCalculator *hhc = (HybridCalculator*) hc;
       hhc->SetToys(ntoys,ntoys); 
 
-      // check for nuisance prior pdf 
-      if (bModel->GetPriorPdf() && sbModel->GetPriorPdf() ) {
-         hhc->ForcePriorNuisanceAlt(*bModel->GetPriorPdf());
-         hhc->ForcePriorNuisanceNull(*sbModel->GetPriorPdf());
-      }
-      else {
-         if (bModel->GetNuisanceParameters() || sbModel->GetNuisanceParameters() ) {
+      // check for nuisance prior pdf in case of nuisance parameters 
+      if (bModel->GetNuisanceParameters() || sbModel->GetNuisanceParameters() ) {
+         RooAbsPdf * nuisPdf = 0; 
+         if (nuisPriorName) nuisPdf = w->pdf(nuisPriorName);
+         // use prior defined first in bModel (then in SbModel)
+         if (!nuisPdf)  { 
+            Info("StandardHypoTestInvDemo","No nuisance pdf given for the HybridCalculator - try to use the prior pdf from the model");
+            nuisPdf = (bModel->GetPriorPdf() ) ?  bModel->GetPriorPdf() : sbModel->GetPriorPdf();
+         }
+         if (!nuisPdf) { 
             Error("StandardHypoTestInvDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified");
             return 0;
          }
+         const RooArgSet * nuisParams = (bModel->GetNuisanceParameters() ) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
+         RooArgSet * np = nuisPdf->getObservables(*nuisParams);
+         if (np->getSize() == 0) { 
+            Warning("StandardHypoTestInvDemo","Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range");
+         }
+         delete np;
+         hhc->ForcePriorNuisanceAlt(*nuisPdf);
+         hhc->ForcePriorNuisanceNull(*nuisPdf);
       }
    } 
    else 
