@@ -36,7 +36,8 @@ else
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
 endif
-ifeq ($(MACOSX_MINOR),3)
+ifeq ($(ASPNGINCDIR),)
+# needed for the afterimage built-in libpng
 ASEXTRALIB   += -lz
 endif
 ASTEPDEP     := $(ASTEPLIB)

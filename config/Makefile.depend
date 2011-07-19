@@ -446,10 +446,8 @@ X3DLIBEXTRA             = -Llib -lGraf3d -lGui
 EGLIBEXTRA              = -Llib -lGraf3d -lGraf -lGpad -lMathCore
 VMCLIBEXTRA             = -Llib -lEG -lGeom -lMathCore
 PHYSICSLIBEXTRA         = -Llib -lMatrix -lMathCore
-PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
-                          $(FPYTHIA6LIB)
-PYTHIA8LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA8LIBDIR) \
-                          $(FPYTHIA8LIB)
+PYTHIA6LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics
+PYTHIA8LIBEXTRA         = -Llib -lEG -lGraf -lVMC -lPhysics
 X11TTFLIBEXTRA          = -Llib -lGX11 -lGraf
 TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO \
                           -lMathCore

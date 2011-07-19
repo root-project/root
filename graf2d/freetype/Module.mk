@@ -30,6 +30,7 @@ FREETYPEDIRI := $(FREETYPEDIRS)/$(FREETYPEVERS)/include
 
 ##### libfreetype #####
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
+FREETYPELDFLAGS :=
 ifeq ($(PLATFORM),win32)
 FREETYPELIB  := $(LPATH)/libfreetype.lib
 ifeq (yes,$(WINRTDEBUG))
@@ -42,10 +43,10 @@ endif
 else
 FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a)
 FREETYPELIB  := $(LPATH)/libfreetype.a
+FREETYPELDFLAGS := -lz
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
 FREETYPEDEP  := $(FREETYPELIB)
-FREETYPELDFLAGS :=
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)

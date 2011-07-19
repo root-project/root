@@ -3419,6 +3419,10 @@ if test ! "x$enable_pythia6" = "xno" ; then
         pythia6cppflags=-DPYTHIA6_${pythia6uscore}_UNDERSCORE
         pythia6lib=
         pythia6dir=
+        case $platform in
+            macosx) pythia6lib="-undefined dynamic_lookup" ;;
+            linux) 
+        esac
         result "Using custom pythia6 library with $pythia6uscore underscore"
     else
         check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
@@ -3826,8 +3830,8 @@ if test ! "x$enable_asimage" = "xno" ; then
           $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${ASPNG:+$ASPNG/include} \
           ${finkdir:+$finkdir/include} \
-          /usr/local/include /usr/include /usr/local/include/libpng \
-          /opt/include
+          /usr/local/include /usr/X11/include /usr/include \
+          /usr/local/include/libpng /opt/include
        aspngincdir=$found_dir
        if test ! "x$enable_astiff" = "xno" ; then
            check_header "tiffio.h" "" \
@@ -3861,7 +3865,7 @@ if test ! "x$enable_asimage" = "xno" ; then
            check_library $k "$enable_shared" "" \
                $ASIMAGE ${ASIMAGE:+$ASIMAGE/lib} ${ASPNG:+$ASPNG/lib} \
                ${finkdir:+$finkdir/lib} \
-               /usr/local/lib /usr/lib /opt/lib
+               /usr/local/lib /usr/X11/lib /usr/lib /opt/lib
            if test "x$k" = "xlibz" ; then
                found_libz=$found_lib
                found_dirz=$found_dir
