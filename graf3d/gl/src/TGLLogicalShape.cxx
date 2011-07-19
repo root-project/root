@@ -44,7 +44,7 @@
 // physical shapes which are using it.
 //
 // Display list information is also stored here, possibly per LOD
-// level. Most classes does not support LOD (only sphere and tube) and
+// level. Most classes do not support LOD (only sphere and tube) and
 // therefore reasonable defaults are encoded in the following virtual
 // functions:
 //
