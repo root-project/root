@@ -529,7 +529,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin < lower bound, use xmin = "
                                           << xMin << std::endl; 
    }
-   if (xMax > fScannedVariable->getMin()) { 
+   if (xMax > fScannedVariable->getMax()) { 
       xMax = fScannedVariable->getMax();
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMax > upper bound, use xmax = "   
                                           << xMax << std::endl; 
@@ -560,16 +560,18 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
    CreateResults();
 
    // check if rVal is in the range specified for fScannedVariable
-   if ( rVal<fScannedVariable->getMin() ) {
+   if ( rVal < fScannedVariable->getMin() ) {
       oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunOnePoint - Out of range: using the lower bound " 
                                           << fScannedVariable->getMin() 
                                           << " on the scanned variable rather than " << rVal<< "\n";
      rVal = fScannedVariable->getMin();
    }
-   if ( rVal>fScannedVariable->getMax() ) {
-      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunOnePoint - Out of range: using the upper bound " 
-                                          << fScannedVariable->getMax() 
-                                          << " on the scanned variable rather than " << rVal<< "\n";
+   if ( rVal > fScannedVariable->getMax() ) {
+      // print a message when you have a significative difference since rval is computed
+      if ( rVal > fScannedVariable->getMax()*(1.+1.E-12) )
+         oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::RunOnePoint - Out of range: using the upper bound " 
+                                             << fScannedVariable->getMax() 
+                                             << " on the scanned variable rather than " << rVal<< "\n";
      rVal = fScannedVariable->getMax();
    }
 

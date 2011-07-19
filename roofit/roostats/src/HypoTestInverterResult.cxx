@@ -317,8 +317,10 @@ struct InterpolatedGraph {
 
 double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool lowSearch, double axmin, double axmax) const  {
    // return the X value of the given graph for the target value y0
-   // the graph is evaluated using linea rinterpolation by default. 
+   // the graph is evaluated using linear interpolation by default. 
    // if option = "S" a TSpline3 is used 
+
+
 
    TString opt = "";
    if (fInterpolOption == kSpline)  opt = "S";
@@ -330,23 +332,29 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    // find reasanable xmin and xmax if not given
    const double * y = graph.GetY(); 
    int n = graph.GetN();
+   if (n < 2) {
+      ooccoutE(this,Eval) << "HypoTestInverterResult::GetGraphX - need at least 2 points for interpolation (n=" << n << ")\n";
+      return (n>0) ?  y[0] : 0;
+   } 
+
    double xmin = axmin; 
    double xmax = axmax;
+   // case no range is given check if need to extrapolate to lower/upper values 
    if (axmin >= axmax) { 
       xmin = graph.GetX()[0];
       xmax = graph.GetX()[n-1];
-      // test if extrapolation is needed (only for case full range is given)
-      if (n > 1) { 
-         // do lower extrapolation 
-         if ( (y[0] < y0 && y[1] < y[0]) || (y[0] > y0 && y[1] > y[0])  ) {         
-            const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
-            if (var) xmin = var->getMin();
-         }
-         // do upper extrapolation  
-         if ( (y[n-1] > y0 && y[n-2] > y[n-1]) || (y[n-1] < y0 && y[n-2] < y[n-1])  ) {         
-            const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
-            if (var) xmax = var->getMax();
-         }
+      // find ymin and ymax  and corresponding values 
+      double ymin = TMath::MinElement(n,y);
+      double ymax = TMath::MaxElement(n,y);
+      // do lower extrapolation 
+      if ( (ymax < y0 && !lowSearch) || ( ymin > y0 && lowSearch) ) { 
+         const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
+         if (var) xmin = var->getMin();
+      }
+      // do upper extrapolation  
+      if ( (ymax < y0 && lowSearch) || ( ymin > y0 && !lowSearch) ) { 
+         const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
+         if (var) xmax = var->getMax();
       }
    }
 
