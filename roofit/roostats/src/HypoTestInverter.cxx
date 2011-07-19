@@ -529,7 +529,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin < lower bound, use xmin = "
                                           << xMin << std::endl; 
    }
-   if (xMax > fScannedVariable->getMin()) { 
+   if (xMax > fScannedVariable->getMax()) { 
       xMax = fScannedVariable->getMax();
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMax > upper bound, use xmax = "   
                                           << xMax << std::endl; 
