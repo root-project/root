@@ -74,6 +74,7 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
    fObjects    = 0;
    fLogx       = kFALSE;
    fLogy       = kFALSE;
+   SetFillColor(0);
 }
 
 
@@ -89,6 +90,7 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
    fObjects    = new TList;
    fLogx       = kFALSE;
    fLogy       = kFALSE;
+   SetFillColor(0);
 }
 
 
