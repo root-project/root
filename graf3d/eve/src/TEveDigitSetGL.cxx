@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveDigitSetGL.h"
+#include "TEveFrameBoxGL.h"
 
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
@@ -33,7 +34,7 @@ Bool_t TEveDigitSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
    // Set color for rendering of the specified digit.
 
-   TEveDigitSet& DS = * (TEveDigitSet*)fExternalObj;
+   TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (DS.fSingleColor)
    {
@@ -60,6 +61,23 @@ Bool_t TEveDigitSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 }
 
 //______________________________________________________________________________
+void TEveDigitSetGL::DrawFrameIfNeeded(TGLRnrCtx& rnrCtx) const
+{
+   // Make a decision if the frame should be drawn.
+   // This depends on the render state (selection / highligt) and
+   // on values of members fSelectViaFrame and fHighlightFrame.
+
+   TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
+
+   if (DS.fFrame != 0 && ! rnrCtx.SecSelection() &&
+       ! (rnrCtx.Selection() && ! DS.fSelectViaFrame) &&
+       ! (rnrCtx.Highlight() && ! DS.fHighlightFrame))
+   {
+      TEveFrameBoxGL::Render(DS.fFrame);
+   }
+}
+
+//______________________________________________________________________________
 void TEveDigitSetGL::SetBBox()
 {
    // Set bounding box.
@@ -73,7 +91,7 @@ void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    // Draw the quad-set in highlight mode.
    // Incoming lvl is ignored -- physical shape always calls it with -1.
 
-   TEveDigitSet& DS = * (TEveDigitSet*)fExternalObj;
+   TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (AlwaysSecondarySelect())
    {
@@ -107,7 +125,7 @@ void TEveDigitSetGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& re
    // Calls DigitSelected(Int_t) in the model object with index of
    // selected point as the argument.
 
-   TEveDigitSet& DS = * (TEveDigitSet*)fExternalObj;
+   TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
 
    if (AlwaysSecondarySelect())
    {

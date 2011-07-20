@@ -53,6 +53,8 @@ TEveBoxSet::TEveBoxSet(const char* n, const char* t) :
    fDefHeight    (1),
    fDefDepth     (1),
 
+   fBoxSkip      (0),
+
    fDrawConeCap  (kFALSE)
 {
    // Constructor.

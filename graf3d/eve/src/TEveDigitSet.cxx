@@ -50,6 +50,20 @@
 //   UseSingleColor()
 // Palette controls will not work in this case.
 //
+// A pointer to a rectangle / box of class TEveFrameBox can be set via
+//   void SetFrame(TEveFrameBox* b);
+// A single TEveFrameBox can be shared among several digit-sets (it is
+// reference-counted). The following flafs affect how the frame-box will drawn
+// and used for selection and highlight:
+//   Bool_t fSelectViaFrame;
+//   Bool_t fHighlightFrame;
+//
+// TEveDigitSet is sub-lcassed from TEveSecondarySelectable -- this means
+// individual digits can be selected. By calling:
+//   TEveSecondarySelectable::SetAlwaysSecSelect(kTRUE);
+// one can enforce immediate feedback (highlight, tooltip and select on normal
+// left-mouse click) on given digit-set.
+//
 // See also:
 //   TEveQuadSet: rectangle, hexagon or line per digit
 //   TEveBoxSet   a 3D box per digit
@@ -75,6 +89,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fFrame          (0),
    fPalette        (0),
    fRenderMode     (kRM_AsIs),
+   fSelectViaFrame (kFALSE),
+   fHighlightFrame (kFALSE),
    fDisableLighting(kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),

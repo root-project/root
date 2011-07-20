@@ -11,7 +11,6 @@
 
 #include "TEveBoxSetGL.h"
 #include "TEveBoxSet.h"
-#include "TEveFrameBoxGL.h"
 
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
@@ -35,7 +34,7 @@ TEveBoxSetGL::TEveBoxSetGL() : TEveDigitSetGL(), fM(0), fBoxDL(0)
 {
    // Default constructor.
 
-   // fDLCache = false; // Disable display list.
+   fDLCache = kFALSE; // Disable display list, used internally for boxes, cones.
    fMultiColor = kTRUE;
 }
 
@@ -292,8 +291,11 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
    if (rnrCtx.SecSelection()) glPushName(0);
 
    Int_t boxSkip = 0;
-   if (rnrCtx.ShapeLOD() < 50)
-      boxSkip = 6 - (rnrCtx.ShapeLOD()+1)/10;
+   if (fM->fBoxSkip > 0 && rnrCtx.CombiLOD() < TGLRnrCtx::kLODHigh &&
+       !rnrCtx.SecSelection())
+   {
+      boxSkip = TMath::Nint(TMath::Power(fM->fBoxSkip, 2.0 - 0.02*rnrCtx.CombiLOD()));
+   }
 
    TEveChunkManager::iterator bi(fM->fPlex);
    if (rnrCtx.Highlight() && fHighlightSet)
@@ -475,11 +477,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       glPopAttrib();
    }
 
-   if (mB.fFrame != 0 && ! rnrCtx.SecSelection() &&
-       ! (rnrCtx.Highlight() && AlwaysSecondarySelect()))
-   {
-      TEveFrameBoxGL::Render(mB.fFrame);
-   }
+   DrawFrameIfNeeded(rnrCtx);
 }
 
 //______________________________________________________________________________

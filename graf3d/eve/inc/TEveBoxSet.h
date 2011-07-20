@@ -54,6 +54,8 @@ protected:
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B).
    Float_t           fDefDepth;     // Breadth assigned to third coordinate  (C).
 
+   Int_t             fBoxSkip;      // Number of boxes to skip for each drawn box during scene rotation.
+
    Bool_t            fDrawConeCap;
 
    static Int_t SizeofAtom(EBoxType_e bt);
@@ -86,6 +88,9 @@ public:
    void SetDefHeight(Float_t v) { fDefHeight = v ; }
    void SetDefDepth(Float_t v)  { fDefDepth  = v ; }
    void SetDrawConeCap(Bool_t x) { fDrawConeCap=x; StampObjProps(); }
+
+   Int_t GetBoxSkip()   const { return fBoxSkip; }
+   void  SetBoxSkip(Int_t bs) { fBoxSkip = bs; }
 
    ClassDef(TEveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
 };

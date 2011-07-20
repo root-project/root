@@ -12,7 +12,6 @@
 #include "TMath.h"
 
 #include "TEveQuadSetGL.h"
-#include "TEveFrameBoxGL.h"
 
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
@@ -102,11 +101,7 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glPopAttrib();
    }
 
-   if (mQ.fFrame != 0 && ! rnrCtx.SecSelection() && 
-       ! (rnrCtx.Highlight() && AlwaysSecondarySelect()))
-   {
-      TEveFrameBoxGL::Render(mQ.fFrame);
-   }
+   DrawFrameIfNeeded(rnrCtx);
 }
 
 //______________________________________________________________________________

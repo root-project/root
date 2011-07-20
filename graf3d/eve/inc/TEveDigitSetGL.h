@@ -30,6 +30,7 @@ protected:
    mutable const std::set<Int_t> *fHighlightSet;
 
    Bool_t SetupColor(const TEveDigitSet::DigitBase_t& q) const;
+   void   DrawFrameIfNeeded(TGLRnrCtx& rnrCtx) const;
 
 public:
    TEveDigitSetGL();

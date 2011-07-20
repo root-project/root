@@ -70,6 +70,8 @@ protected:
    TEveFrameBox*     fFrame;          //  Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
+   Bool_t            fSelectViaFrame; //  Allow selection via frame.
+   Bool_t            fHighlightFrame; //  Highlight frame when object is selected.
    Bool_t            fDisableLighting;//  Disable lighting for rendering.
    Bool_t            fHistoButtons;   //  Show histogram buttons in object editor.
 
@@ -145,6 +147,12 @@ public:
 
    TEveFrameBox* GetFrame() const { return fFrame; }
    void          SetFrame(TEveFrameBox* b);
+
+   Bool_t GetSelectViaFrame() const    { return fSelectViaFrame; }
+   void   SetSelectViaFrame(Bool_t sf) { fSelectViaFrame = sf; }
+
+   Bool_t GetHighlightFrame() const    { return fHighlightFrame; }
+   void   SetHighlightFrame(Bool_t hf) { fHighlightFrame = hf; }
 
    Bool_t GetValueIsColor()  const { return fValueIsColor; }
 
