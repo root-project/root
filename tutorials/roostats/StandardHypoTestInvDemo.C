@@ -37,8 +37,9 @@ bool plotHypoTestResult = true;
 bool useProof = true;
 bool optimize = false;
 bool writeResult = false;
-int nworkers = 2;
-
+int nworkers = 4;
+bool rebuild = false;
+int nToyToRebuild = 100;
 
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
@@ -360,6 +361,20 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
 
    HypoTestInverterResult * r = calc.GetInterval();
 
+   if (rebuild) {
+      calc.SetCloseProof(1);
+      SamplingDistribution * limDist = calc.GetUpperLimitDistribution(true,nToyToRebuild);
+      if (limDist) { 
+         std::cout << "expected up limit " << limDist->InverseCDF(0.5) << " +/- " 
+                   << limDist->InverseCDF(0.16) << "  " 
+                   << limDist->InverseCDF(0.84) << "\n"; 
+      }
+      else 
+         std::cout << "ERROR : failed to re-build distributions " << std::endl; 
+   }
+
+   //update r to a new re-freshed copied
+   r = calc.GetInterval();
 
    return r; 
 }
