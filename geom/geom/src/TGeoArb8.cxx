@@ -245,19 +245,24 @@ void TGeoArb8::ComputeTwist()
    Double_t twist[4];
    Bool_t twisted = kFALSE;
    Double_t dx1, dy1, dx2, dy2;
-   for (Int_t i=0; i<4; i++) {
+   Bool_t singleBottom = kTRUE;
+   Bool_t singleTop = kTRUE;
+   Int_t i;
+   for (i=0; i<4; i++) {
       dx1 = fXY[(i+1)%4][0]-fXY[i][0];
       dy1 = fXY[(i+1)%4][1]-fXY[i][1];
       if (TMath::Abs(dx1)<TGeoShape::Tolerance() && TMath::Abs(dy1)<TGeoShape::Tolerance()) {
          twist[i] = 0;
          continue;
       }   
+      singleBottom = kFALSE;   
       dx2 = fXY[4+(i+1)%4][0]-fXY[4+i][0];
       dy2 = fXY[4+(i+1)%4][1]-fXY[4+i][1];
       if (TMath::Abs(dx2)<TGeoShape::Tolerance() && TMath::Abs(dy2)<TGeoShape::Tolerance()) {
          twist[i] = 0;
          continue;
       }
+      singleTop = kFALSE;   
       twist[i] = dy1*dx2 - dx1*dy2;
       if (TMath::Abs(twist[i])<TGeoShape::Tolerance()) {
          twist[i] = 0;
@@ -271,10 +276,24 @@ void TGeoArb8::ComputeTwist()
       fTwist = new Double_t[4];
       memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
    }   
+   if (singleBottom) {
+      printf("Single Bottom\n");
+      for (i=0; i<4; i++) {
+         fXY[i][0] += 1.E-8*fXY[i+4][0];
+         fXY[i][1] += 1.E-8*fXY[i+4][1];
+      }
+   }      
+   if (singleTop) {
+      printf("Single Top\n");
+      for (i=0; i<4; i++) {
+         fXY[i+4][0] += 1.E-8*fXY[i][0];
+         fXY[i+4][1] += 1.E-8*fXY[i][1];
+      }
+   }      
    Double_t sum1 = 0.;
    Double_t sum2 = 0.;
    Int_t j;
-   for (Int_t i=0; i<4; i++) {
+   for (i=0; i<4; i++) {
       j = (i+1)%4;
       sum1 += fXY[i][0]*fXY[j][1]-fXY[j][0]*fXY[i][1];
       sum2 += fXY[i+4][0]*fXY[j+4][1]-fXY[j+4][0]*fXY[i+4][1];
