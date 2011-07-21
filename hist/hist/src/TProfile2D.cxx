@@ -208,9 +208,11 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 
    SetErrorOption(option);
 
-   fBinEntries.Set(fNcells);  //*-* create number of entries per cell array
+   if (!fgLazyAllocation) {
+      fBinEntries.Set(fNcells);  //*-* create number of entries per cell array
 
-   TH1::Sumw2();                   //*-* create sum of squares of weights array times y
+      TH1::Sumw2();                   //*-* create sum of squares of weights array times y
+   }
    if (fgDefaultSumw2) Sumw2();    // optionally create sum of squares of weights
 
    fZmin = zmin;
@@ -279,6 +281,36 @@ void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    TProfileHelper::Add(this, h1, h2, c1, c2);
 }
 
+
+//______________________________________________________________________________
+void TProfile2D::AddBinContent(Int_t bin)
+{
+   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //                   ==========================
+   AllocateIfEmpty();
+   TH2D::AddBinContent(bin);
+}
+ 
+//______________________________________________________________________________
+void TProfile2D::AddBinContent(Int_t bin, Double_t w)
+{
+   //                   Increment bin content by w
+   //                   ==========================
+
+   AllocateIfEmpty();
+   TH2D::AddBinContent(bin,w);
+}   
+
+//______________________________________________________________________________
+void TProfile2D::AllocateIfEmpty()
+{
+// Allocate the bins array (fArray), sum of weigths (fSumw2) and bin entries (fBinEntries)
+   if (!fN) {
+      TArrayD::Set(fNcells);
+      fBinEntries.Set(fNcells);
+      TH1::Sumw2();
+   }
+}
 
 //______________________________________________________________________________
 void TProfile2D::Approximate(Bool_t approx)
@@ -1727,6 +1759,18 @@ void TProfile2D::Scale(Double_t c1, Option_t * option)
    TProfileHelper::Scale(this, c1, option);
 }
 
+//______________________________________________________________________________
+void TProfile2D::SetBinContent(Int_t bin, Double_t content)
+{
+   // Set bin content
+   // see convention for numbering bins in TH1::GetBin
+   // In case the bin number is greater than the number of bins and
+   // the timedisplay option is set or the kCanRebin bit is set,
+   // the number of bins is automatically doubled to accomodate the new bin
+   AllocateIfEmpty();
+   TH2D::SetBinContent(bin,content);
+}
+   
 //______________________________________________________________________________
 void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 {

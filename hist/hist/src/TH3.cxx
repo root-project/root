@@ -3444,7 +3444,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
@@ -3458,7 +3458,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3470,7 +3470,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3488,6 +3488,7 @@ void TH3C::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayC::Set(fNcells);
    if (fArray[bin] < 127) fArray[bin]++;
 }
 
@@ -3497,6 +3498,7 @@ void TH3C::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayC::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -128 && newval < 128) {fArray[bin] = Char_t(newval); return;}
    if (newval < -127) fArray[bin] = -127;
@@ -3532,6 +3534,7 @@ Double_t TH3C::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH3C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3558,7 +3561,7 @@ void TH3C::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
-   TArrayC::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayC::Set(n);
 }
 
 //______________________________________________________________________________
@@ -3569,6 +3572,7 @@ void TH3C::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayC::Set(fNcells);
    fArray[bin] = Char_t (content);
 }
 
@@ -3727,7 +3731,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
-   TH3S::Set(fNcells);
+   if (!fgLazyAllocation) TH3S::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
@@ -3741,7 +3745,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TH3S::Set(fNcells);
+   if (!fgLazyAllocation) TH3S::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3753,7 +3757,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TH3S::Set(fNcells);
+   if (!fgLazyAllocation) TH3S::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3771,6 +3775,7 @@ void TH3S::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayS::Set(fNcells);
    if (fArray[bin] < 32767) fArray[bin]++;
 }
 
@@ -3780,6 +3785,7 @@ void TH3S::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayS::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -32768 && newval < 32768) {fArray[bin] = Short_t(newval); return;}
    if (newval < -32767) fArray[bin] = -32767;
@@ -3815,6 +3821,7 @@ Double_t TH3S::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH3S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3841,6 +3848,7 @@ void TH3S::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayS::Set(fNcells);
    fArray[bin] = Short_t (content);
 }
 
@@ -3852,7 +3860,7 @@ void TH3S::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
-   TArrayS::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayS::Set(n);
 }
 
 //______________________________________________________________________________
@@ -3981,7 +3989,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
-   TH3I::Set(fNcells);
+   if (!fgLazyAllocation) TH3I::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
@@ -3995,7 +4003,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4007,7 +4015,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4025,6 +4033,7 @@ void TH3I::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayI::Set(fNcells);
    if (fArray[bin] < 2147483647) fArray[bin]++;
 }
 
@@ -4034,6 +4043,7 @@ void TH3I::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayI::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
@@ -4069,6 +4079,7 @@ Double_t TH3I::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH3I*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4095,6 +4106,7 @@ void TH3I::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayI::Set(fNcells);
    fArray[bin] = Int_t (content);
 }
 
@@ -4106,7 +4118,7 @@ void TH3I::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
-   TArrayI::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayI::Set(n);
 }
 
 //______________________________________________________________________________
@@ -4203,7 +4215,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
@@ -4217,7 +4229,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4229,7 +4241,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4240,6 +4252,25 @@ TH3F::TH3F(const TH3F &h3f) : TH3(), TArrayF()
 
    ((TH3F&)h3f).Copy(*this);
 }
+
+//______________________________________________________________________________
+void TH3F::AddBinContent(Int_t bin)
+{
+   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //                   ==========================
+   if (!fN) TArrayF::Set(fNcells);
+   ++fArray[bin];
+}
+
+//______________________________________________________________________________
+void TH3F::AddBinContent(Int_t bin, Double_t w)
+{
+   //                   Increment bin content by w
+   //                   ==========================
+
+   if (!fN) TArrayF::Set(fNcells);
+   fArray[bin] += Float_t (w);
+}   
 
 //______________________________________________________________________________
 void TH3F::Copy(TObject &newth3) const
@@ -4270,6 +4301,7 @@ Double_t TH3F::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH3F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4296,6 +4328,7 @@ void TH3F::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayF::Set(fNcells);
    fArray[bin] = Float_t (content);
 }
 
@@ -4307,7 +4340,7 @@ void TH3F::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
-   TArrayF::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayF::Set(n);
 }
 
 //______________________________________________________________________________
@@ -4436,7 +4469,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    //*-*-*-*-*-*-*-*-*Normal constructor for fix bin size 3-D histograms*-*-*-*-*
    //*-*              ==================================================
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
@@ -4450,7 +4483,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4462,7 +4495,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
    //*-*            =======================================================
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -4474,6 +4507,25 @@ TH3D::TH3D(const TH3D &h3d) : TH3(), TArrayD()
    ((TH3D&)h3d).Copy(*this);
 }
 
+//______________________________________________________________________________
+void TH3D::AddBinContent(Int_t bin)
+{
+   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //                   ==========================
+   if (!fN) TArrayD::Set(fNcells);
+   ++fArray[bin];
+}
+
+//______________________________________________________________________________
+void TH3D::AddBinContent(Int_t bin, Double_t w)
+{
+   //                   Increment bin content by w
+   //                   ==========================
+
+   if (!fN) TArrayD::Set(fNcells);
+   fArray[bin] += Double_t (w);
+}   
+   
 //______________________________________________________________________________
 void TH3D::Copy(TObject &newth3) const
 {
@@ -4503,6 +4555,7 @@ Double_t TH3D::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH3D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -4515,7 +4568,6 @@ void TH3D::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
    //*-*            ===========================================
-
    TH3::Reset(option);
    TArrayD::Reset();
    // should also reset statistics once statistics are implemented for TH3
@@ -4529,6 +4581,7 @@ void TH3D::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayD::Set(fNcells);
    fArray[bin] = Double_t (content);
 }
 
@@ -4541,7 +4594,7 @@ void TH3D::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
    fNcells = n;
-   TArrayD::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayD::Set(n);
 }
 
 //______________________________________________________________________________

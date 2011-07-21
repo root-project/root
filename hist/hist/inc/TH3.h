@@ -62,6 +62,7 @@ protected:
 public:
    TH3(const TH3&);
    virtual ~TH3();
+   
    virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Copy(TObject &hnew) const;
            Int_t    Fill(Double_t) {return -1;}        //MayNotUse
@@ -264,9 +265,8 @@ public:
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3F(const TH3F &h3f);
    virtual ~TH3F();
-   virtual void      AddBinContent(Int_t bin) {++fArray[bin];}
-   virtual void      AddBinContent(Int_t bin, Double_t w)
-                                 {fArray[bin] += Float_t (w);}
+   virtual void      AddBinContent(Int_t bin);
+   virtual void      AddBinContent(Int_t bin, Double_t w);
    virtual void      Copy(TObject &hnew) const;
    virtual TH1      *DrawCopy(Option_t *option="") const;
    virtual Double_t  GetBinContent(Int_t bin) const;
@@ -304,9 +304,8 @@ public:
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3D(const TH3D &h3d);
    virtual ~TH3D();
-   virtual void      AddBinContent(Int_t bin) {++fArray[bin];}
-   virtual void      AddBinContent(Int_t bin, Double_t w)
-                                 {fArray[bin] += Double_t (w);}
+   virtual void      AddBinContent(Int_t bin);
+   virtual void      AddBinContent(Int_t bin, Double_t w);
    virtual void      Copy(TObject &hnew) const;
    virtual TH1      *DrawCopy(Option_t *option="") const;
    virtual Double_t  GetBinContent(Int_t bin) const;

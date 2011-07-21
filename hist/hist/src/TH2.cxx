@@ -2703,7 +2703,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2716,7 +2716,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -2727,7 +2727,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -2738,7 +2738,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -2749,7 +2749,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    // Constructor.
 
-   TArrayC::Set(fNcells);
+   if (!fgLazyAllocation) TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -2767,6 +2767,7 @@ void TH2C::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayC::Set(fNcells);
    if (fArray[bin] < 127) fArray[bin]++;
 }
 
@@ -2776,6 +2777,7 @@ void TH2C::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayC::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -128 && newval < 128) {fArray[bin] = Char_t(newval); return;}
    if (newval < -127) fArray[bin] = -127;
@@ -2810,6 +2812,7 @@ Double_t TH2C::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -2833,6 +2836,7 @@ void TH2C::SetBinContent(Int_t bin, Double_t content)
    // Set bin content
    fEntries++;
    fTsumw = 0;
+   if (!fN) TArrayC::Set(fNcells);
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Char_t (content);
@@ -2846,7 +2850,7 @@ void TH2C::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
-   TArrayC::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayC::Set(n);
 }
 
 //______________________________________________________________________________
@@ -2977,7 +2981,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayS::Set(fNcells);
+   if (!fgLazyAllocation) TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -2990,7 +2994,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayS::Set(fNcells);
+   if (!fgLazyAllocation) TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3001,7 +3005,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayS::Set(fNcells);
+   if (!fgLazyAllocation) TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3012,7 +3016,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayS::Set(fNcells);
+   if (!fgLazyAllocation) TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3023,7 +3027,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    // Constructor.
 
-   TArrayS::Set(fNcells);
+   if (!fgLazyAllocation) TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3041,6 +3045,7 @@ void TH2S::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayS::Set(fNcells);
    if (fArray[bin] < 32767) fArray[bin]++;
 }
 
@@ -3050,6 +3055,7 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayS::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -32768 && newval < 32768) {fArray[bin] = Short_t(newval); return;}
    if (newval < -32767) fArray[bin] = -32767;
@@ -3084,7 +3090,8 @@ Double_t TH2S::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
+   if (!fN) return 0.;
+   if (fBuffer) ((TH2S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (!fArray) return 0;
@@ -3109,6 +3116,7 @@ void TH2S::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayS::Set(fNcells);
    fArray[bin] = Short_t (content);
 }
 
@@ -3120,7 +3128,7 @@ void TH2S::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
-   TArrayS::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayS::Set(n);
 }
 
 //______________________________________________________________________________
@@ -3251,7 +3259,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -3264,7 +3272,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3275,7 +3283,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3286,7 +3294,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3297,7 +3305,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    // Constructor.
 
-   TArrayI::Set(fNcells);
+   if (!fgLazyAllocation) TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3315,6 +3323,7 @@ void TH2I::AddBinContent(Int_t bin)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayI::Set(fNcells);
    if (fArray[bin] < 2147483647) fArray[bin]++;
 }
 
@@ -3324,6 +3333,7 @@ void TH2I::AddBinContent(Int_t bin, Double_t w)
    //*-*-*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                ==========================
 
+   if (!fN) TArrayI::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
@@ -3358,6 +3368,7 @@ Double_t TH2I::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3383,6 +3394,7 @@ void TH2I::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayI::Set(fNcells);
    fArray[bin] = Int_t (content);
 }
 
@@ -3394,7 +3406,7 @@ void TH2I::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
-   TArrayI::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayI::Set(n);
 }
 
 //______________________________________________________________________________
@@ -3491,7 +3503,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -3504,7 +3516,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3515,7 +3527,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3526,7 +3538,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3537,7 +3549,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    // Constructor.
 
-   TArrayF::Set(fNcells);
+   if (!fgLazyAllocation) TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3568,6 +3580,25 @@ TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 }
 
 //______________________________________________________________________________
+void TH2F::AddBinContent(Int_t bin)
+{
+   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //                   ==========================
+   if (!fN) TArrayF::Set(fNcells);
+   ++fArray[bin];
+}
+
+//______________________________________________________________________________
+void TH2F::AddBinContent(Int_t bin, Double_t w)
+{
+   //                   Increment bin content by w
+   //                   ==========================
+
+   if (!fN) TArrayF::Set(fNcells);
+   fArray[bin] += Float_t (w);
+}   
+
+//______________________________________________________________________________
 void TH2F::Copy(TObject &newth2) const
 {
    // Copy.
@@ -3595,6 +3626,7 @@ Double_t TH2F::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3620,6 +3652,7 @@ void TH2F::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayF::Set(fNcells);
    fArray[bin] = Float_t (content);
 }
 
@@ -3631,7 +3664,7 @@ void TH2F::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
-   TArrayF::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayF::Set(n);
 }
 
 //______________________________________________________________________________
@@ -3774,7 +3807,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -3787,7 +3820,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3798,7 +3831,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 {
    // Constructor.
 
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3809,7 +3842,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 {
    // Constructor.
 
-   TArrayD::Set(fNcells);
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -3820,8 +3853,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 {
    // Constructor.
 
-   TArrayD::Set(fNcells);
-   if (fgDefaultSumw2) Sumw2();
+   if (!fgLazyAllocation) TArrayD::Set(fNcells);
+  if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3852,6 +3885,25 @@ TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 }
 
 //______________________________________________________________________________
+void TH2D::AddBinContent(Int_t bin)
+{
+   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //                   ==========================
+   if (!fN) TArrayD::Set(fNcells);
+   ++fArray[bin];
+}
+
+//______________________________________________________________________________
+void TH2D::AddBinContent(Int_t bin, Double_t w)
+{
+   //                   Increment bin content by w
+   //                   ==========================
+
+   if (!fN) TArrayD::Set(fNcells);
+   fArray[bin] += Double_t (w);
+}   
+   
+//______________________________________________________________________________
 void TH2D::Copy(TObject &newth2) const
 {
    // Copy.
@@ -3879,6 +3931,7 @@ Double_t TH2D::GetBinContent(Int_t bin) const
 {
    // Get bin content.
 
+   if (!fN) return 0.;
    if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -3904,6 +3957,7 @@ void TH2D::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
+   if (!fN) TArrayD::Set(fNcells);
    fArray[bin] = Double_t (content);
 }
 
@@ -3915,7 +3969,7 @@ void TH2D::SetBinsLength(Int_t n)
 
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
-   TArrayD::Set(n);
+   if (fN>0 && !fgLazyAllocation) TArrayD::Set(n);
 }
 
 //______________________________________________________________________________
