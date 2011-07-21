@@ -277,14 +277,12 @@ void TGeoArb8::ComputeTwist()
       memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
    }   
    if (singleBottom) {
-      printf("Single Bottom\n");
       for (i=0; i<4; i++) {
          fXY[i][0] += 1.E-8*fXY[i+4][0];
          fXY[i][1] += 1.E-8*fXY[i+4][1];
       }
    }      
    if (singleTop) {
-      printf("Single Top\n");
       for (i=0; i<4; i++) {
          fXY[i+4][0] += 1.E-8*fXY[i][0];
          fXY[i+4][1] += 1.E-8*fXY[i][1];
