@@ -37,8 +37,10 @@ ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
 endif
 ifeq ($(ASPNGINCDIR),)
+ifneq ($(PLATFORM),win32)
 # needed for the afterimage built-in libpng
 ASEXTRALIB   += -lz
+endif
 endif
 ASTEPDEP     := $(ASTEPLIB)
 ##### To trigger the debug printouts for libafterimage when ROOTBUILD=debug
