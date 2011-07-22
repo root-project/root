@@ -127,7 +127,7 @@ XPROOFDEXE     :=
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
-XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdNet -lXrdOuc \
+XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
@@ -181,7 +181,7 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) \
 		   $(SYSLIBS)
 
 $(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD) $(RPDCONNO)
-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPDLIBEXTRA) \
+		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPROOFDEXELIBS) \
 		   $(SYSLIBS) $(XPROOFDEXESYSLIBS)
 
 $(XPDLIB):      $(XPDO) $(XPDH) $(XPROOFDEXELIBS) $(ORDER_) $(MAINLIBS) \
@@ -226,6 +226,10 @@ $(XPDO): CXXFLAGS += -Wno-deprecated
 endif
 endif
 
+endif
+
+ifeq ($(PLATFORM),macosx)
+SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
 endif
 
 $(PROOFEXECVO): $(RPDCONNO) $(RPDPRIVO)
