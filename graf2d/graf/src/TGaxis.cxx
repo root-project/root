@@ -895,11 +895,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t maxDigits = 5;
    if (fAxis) maxDigits = fgMaxDigits;
 
-   TLine *lineaxis = new TLine();
    TLatex *textaxis = new TLatex();
-   lineaxis->SetLineColor(GetLineColor());
-   lineaxis->SetLineStyle(1);
-   lineaxis->SetLineWidth(GetLineWidth());
+   SetLineStyle(1); // axis line style
    textaxis->SetTextColor(GetTextColor());
    textaxis->SetTextFont(GetTextFont());
 
@@ -1001,7 +998,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       xpl2 = x1;
       ypl1 = y0;
       ypl2 = y1;
-      lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+      PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
    }
 
 //*-*-              Draw axis title if it exists
@@ -1232,7 +1229,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                }
             }
-            if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
             if (optionGrid) {
                if (ltick == 0) {
@@ -1282,7 +1279,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      }
                   }
                }
-               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
                if (optionGrid) {
                   if (ltick == 0) {
@@ -1326,7 +1323,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      }
                   }
                }
-               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
                if (optionGrid) {
                   if (ltick == 0) {
                      Rotate(xtick1,0,cosphi,sinphi,xx0,yy0 ,xpl2,ypl2);
@@ -1706,7 +1703,7 @@ L110:
                }
             }
          }
-         if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+         if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
          if (optionGrid) {
             Rotate(xone,0,cosphi,sinphi,x0,y0,xpl2,ypl2);
@@ -1799,7 +1796,7 @@ L160:
             }
             idn = n1a*2;
             if ((nbinin <= idn) || ((nbinin > idn) && (k == 5))) {
-               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
 //*-*- Draw the intermediate LOG labels if requested
 
@@ -1880,7 +1877,6 @@ L200:
 
 
 L210:
-   delete lineaxis;
    delete linegrid;
    delete textaxis;
 }
