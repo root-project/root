@@ -64,6 +64,9 @@ Some files have been modified compare to the official libAfterImage version:
 
    export.c: to fix a warning on Open Solaris:
    "initializer will be sign-extended: -1"
+
+   export.c and import.c:
+   OSX Lion comes with builtin libpng 1.5.1 which obsoletes some 1.2 constructs
    
    asimage.c, char2uni.c, export.c, imencdec.c:
    - fix a warning with clang:
