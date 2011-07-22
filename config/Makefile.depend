@@ -79,8 +79,8 @@ GQTLIBDEPM             = $(GUILIB) $(GPADLIB) $(GRAFLIB) $(RINTLIB)
 RUBYLIBDEPM            = $(HISTLIB) $(MATHCORELIB)
 GUIBLDLIBDEPM          = $(GUILIB) $(GRAFLIB) $(MATHCORELIB)
 FOAMLIBDEPM            = $(HISTLIB) $(MATHCORELIB)
-ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFPLAYERLIB) \
-                         $(NETLIB) $(IOLIB)
+ALIENLIBDEPM           = $(XMLLIB) $(NETXLIB) $(TREELIB) $(PROOFLIB) \
+                         $(PROOFPLAYERLIB) $(NETLIB) $(IOLIB)
 ROOFITCORELIBDEPM      = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                          $(MINUITLIB) $(IOLIB) $(MATHCORELIB) $(FOAMLIB)
 ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
@@ -340,7 +340,8 @@ GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
 XMLLIBEXTRA             = lib/libRIO.lib
 FOAMLIBEXTRA            = lib/libHist.lib lib/libMathCore.lib
 ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
-                          lib/libProofPlayer.lib lib/libNet.lib lib/RIO.lib
+                          lib/libProof.lib lib/libProofPlayer.lib \
+                          lib/libNet.lib lib/RIO.lib
 ROOFITCORELIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libMinuit.lib lib/libRIO.lib \
                           lib/libMathCore.lib lib/libFoam.lib
@@ -479,7 +480,8 @@ GUIBLDLIBEXTRA          = -Llib -lGui -lGraf -lMathCore
 GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
 FOAMLIBEXTRA            = -Llib -lHist -lMathCore
-ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProofPlayer -lNet -lRIO
+ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof -lProofPlayer \
+                          -lNet -lRIO
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
                           -lMathCore -lFoam
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
