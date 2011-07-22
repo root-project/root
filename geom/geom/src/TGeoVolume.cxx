@@ -1824,9 +1824,10 @@ void TGeoVolume::Streamer(TBuffer &R__b)
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::SetOption(const char * /*option*/)
+void TGeoVolume::SetOption(const char *option)
 {
 // Set the current options (none implemented)
+   fOption = option;
 }
 
 //_____________________________________________________________________________
