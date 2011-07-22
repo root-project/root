@@ -229,7 +229,7 @@ endif
 endif
 
 ifeq ($(PLATFORM),macosx)
-SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
+$(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
 endif
 
 $(PROOFEXECVO): $(RPDCONNO) $(RPDPRIVO)
