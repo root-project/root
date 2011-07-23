@@ -14,10 +14,11 @@
 // TGeoPgon - a polygone. It has at least 10 parameters :
 //            - the lower phi limit;
 //            - the range in phi;
-//            - the number of edges on each z plane;
+//            - the number of equal edges on each z plane;
 //            - the number of z planes (at least two) where the inner/outer 
 //              radii are changing;
-//            - z coordinate, inner and outer radius for each z plane
+//            - z coordinate, inner and outer radius of the inscribed cercle
+//              (distance from center to edges) for each z plane
 //
 //_____________________________________________________________________________
 //Begin_Html
