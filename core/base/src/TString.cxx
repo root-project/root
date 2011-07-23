@@ -143,6 +143,14 @@ void TString::InitChar(char c)
 }
 
 //______________________________________________________________________________
+TString::TString(char c)
+{
+   // Initialize a string with a single character.
+
+   InitChar(c);
+}
+
+//______________________________________________________________________________
 TString::TString(char c, Ssiz_t n)
 {
    // Initialize the first n locations of a TString with character c.

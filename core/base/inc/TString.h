@@ -258,7 +258,7 @@ public:
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
-   TString(char c) { InitChar(c); }
+   TString(char c);
    TString(char c, Ssiz_t s);
    TString(const TSubString &sub);
 
