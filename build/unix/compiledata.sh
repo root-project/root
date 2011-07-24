@@ -54,7 +54,7 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
    if [ $macosx_minor -ge 5 ]; then
       if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
          # If install_name is specified, remove it.
-         SOFLAGS="$OPT -dynamiclib -single_module -undefined dynamic_lookup"
+         SOFLAGS="$OPT -dynamiclib -single_module -Wl,-dead_strip_dylibs"
       fi
    elif [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -undefined dynamic_lookup"
@@ -102,7 +102,7 @@ echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
 echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
+   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi

@@ -79,13 +79,13 @@ CINTCFLAGS   += -D__DARWIN_UNIX03=1
 endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
-SOFLAGS       = -dynamiclib -single_module -Wl,-mark_dead_strippable_dylib \
+SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name @rpath/
 else
-SOFLAGS       = -dynamiclib -single_module -Wl,-mark_dead_strippable_dylib \
+SOFLAGS       = -dynamiclib -single_module -Wl,-dead_strip_dylibs \
                 -install_name $(LIBDIR)/
 endif
-FORCELINK     = yes
+FORCELINK     = no
 NEEDFINK      = no
 else
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
