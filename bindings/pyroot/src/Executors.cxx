@@ -291,7 +291,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
-//   2) drop '&' as as by ref/full type is often pretty much the same python-wise
+//   2) drop '&' as by ref/full type is often pretty much the same python-wise
 //   3) ROOT classes, either by ref/ptr or by value
 //   4) additional special case for enums
 //

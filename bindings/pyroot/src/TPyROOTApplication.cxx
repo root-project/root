@@ -81,7 +81,7 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
-// prevent crashes on accessing histor
+// prevent crashes on accessing history
    Gl_histinit( (char*)"-" );
 
 // prevent ROOT from exiting python

@@ -239,6 +239,7 @@ TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load, Boo
 {
    return GetClass( typeinfo.name(), load, silent );
 }
+
 //____________________________________________________________________________
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
 {
