@@ -97,7 +97,6 @@ stllibs: directories $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf)
 #$(LIBDIR)%.o: %.C
 #	@touch $@
 
-ifeq ($(PLATFORM),win32)
 $(LIBDIR)dtest_C.$(DllSuf) : $(LIBDIR)dequeHolder_C.$(DllSuf) 
 $(LIBDIR)ltest_C.$(DllSuf) : $(LIBDIR)listHolder_C.$(DllSuf)
 $(LIBDIR)vtest_C.$(DllSuf) : $(LIBDIR)vectorHolder_C.$(DllSuf)
@@ -105,7 +104,6 @@ $(LIBDIR)ttest_C.$(DllSuf) : $(LIBDIR)multisetHolder_C.$(DllSuf)
 $(LIBDIR)mtest_C.$(DllSuf) : $(LIBDIR)mapHolder_C.$(DllSuf)
 $(LIBDIR)stest_C.$(DllSuf) : $(LIBDIR)setHolder_C.$(DllSuf)
 $(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
-endif
 
 $(LIBDIR)dtest_C.$(DllSuf) : test.C dequeHolder.h  | $(ROOTCORELIBS)
 $(LIBDIR)ltest_C.$(DllSuf) : test.C listHolder.h  | $(ROOTCORELIBS)
