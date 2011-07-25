@@ -1510,7 +1510,7 @@ namespace {
          G__Doubleref(&libp->para[2]), 1 );
 
       PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (Double_t*)G__int(libp->para[3]), npar );
+         (Double_t*)G__int(libp->para[3]), -1 /* size unknown */ );
 
    // perform actual call
       result = PyObject_CallFunction( pyfunc, (char*)"OOOOi",
