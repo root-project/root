@@ -1877,7 +1877,7 @@ L200:
 
 
 L210:
-   delete linegrid;
+   if (optionGrid) delete linegrid;
    delete textaxis;
 }
 
