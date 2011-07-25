@@ -7,6 +7,9 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ClassTrick_C.$(DllSuf): ClassTrick.C Class_C.$(DllSuf)
+	$(BuildWithLib)
+
 run.out: Run.C ClassTrick_C.$(DllSuf)  Class_C.$(DllSuf) typeidtest_C.$(DllSuf)
 	$(CMDECHO)root -q -l -b Run.C >run.out 2>&1
 
