@@ -1027,6 +1027,7 @@ fGUIThreadHandle(0), fGUIThreadId(0)
       if (pLibName) {
          --pLibName; // skip trailing \\ or /
          while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
+         if (pLibName > buf) --pLibName; // skip trailing \\ or /
          *pLibName = 0;
          if (buf[0])
             Setenv("ROOTSYS", buf);
