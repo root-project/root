@@ -120,7 +120,7 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //dubna
                              3, //ganil
                              3, //e907
-                             3, //phobos2
+                             4, //phobos2
                              3, //hermes
                              3, //na35
                              3, //na47
