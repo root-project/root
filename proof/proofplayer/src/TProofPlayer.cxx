@@ -2394,7 +2394,7 @@ void TProofPlayerRemote::MergeOutput()
          PDB(kOutput,2) Info("MergeOutput","rawdir: '%s'", dir.Data());
          pf->SetDir(dir, kTRUE);
          // The worker ordinal
-         pf->SetWorkerOrdinal(gProofServ->GetOrdinal());
+         pf->SetWorkerOrdinal(gProofServ ? gProofServ->GetOrdinal() : "0");
          // The saved output file name, if any
          key.Form("PROOF_OutputFileName_%s", pf->GetFileName());
          if ((nm = (TNamed *) fOutput->FindObject(key.Data()))) {
