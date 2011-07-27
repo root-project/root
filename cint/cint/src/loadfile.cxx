@@ -2206,7 +2206,7 @@ int G__loadfile(const char *filenamein)
   len = strlen(filename);
   dllpost = G__getmakeinfo1("DLLPOST");
   if(
-#ifdef __APPLE__
+#if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5)
      (dlopen_preflight(filename)) || 
 #endif
      (len>3&& (strcmp(filename+len-3,".sl")==0 ||

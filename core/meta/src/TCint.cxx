@@ -2121,7 +2121,7 @@ const char* TCint::GetSharedLibs()
       }
       if (!needToSkip &&
            (
-#ifdef __APPLE__
+#if defined(R__MACOSX) && defined(MAC_OS_X_VERSION_10_5)
             (dlopen_preflight(filename)) || 
 #endif            
             (len>2 && strcmp(end-2,".a") == 0)    ||
