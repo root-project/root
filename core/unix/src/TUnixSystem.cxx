@@ -4453,6 +4453,14 @@ char *TUnixSystem::DynamicPathName(const char *lib, Bool_t quiet)
    char *name;
 
    int ext = 0, len = strlen(lib);
+#ifdef __APPLE__
+   // On a MAC, a library might not have any extensions, so let's try the raw
+   // name first.
+   name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
+   if (name) {
+      return name;
+   }
+#endif
    if (len > 3 && (!strcmp(lib+len-3, ".so")    ||
                    !strcmp(lib+len-3, ".dl")    ||
                    !strcmp(lib+len-4, ".dll")   ||
