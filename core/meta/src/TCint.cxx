@@ -47,6 +47,10 @@
 #include <set>
 #include <string>
 
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif
+
 using namespace std;
 
 R__EXTERN int optind;
@@ -2116,7 +2120,11 @@ const char* TCint::GetSharedLibs()
             needToSkip = (!strncmp(basename, excludelist[i], excludelen[i]));
       }
       if (!needToSkip &&
-           ((len>2 && strcmp(end-2,".a") == 0)    ||
+           (
+#ifdef __APPLE__
+            (dlopen_preflight(filename)) || 
+#endif            
+            (len>2 && strcmp(end-2,".a") == 0)    ||
             (len>3 && (strcmp(end-3,".sl") == 0   ||
                        strcmp(end-3,".dl") == 0   ||
                        strcmp(end-3,".so") == 0)) ||

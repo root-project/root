@@ -43,6 +43,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif
+
 #define G__OLDIMPLEMENTATION1849
 
 #ifdef G__SHAREDLIB
@@ -2201,7 +2205,11 @@ int G__loadfile(const char *filenamein)
 #ifdef G__SHAREDLIB
   len = strlen(filename);
   dllpost = G__getmakeinfo1("DLLPOST");
-  if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
+  if(
+#ifdef __APPLE__
+     (dlopen_preflight(filename)) || 
+#endif
+     (len>3&& (strcmp(filename+len-3,".sl")==0 ||
                strcmp(filename+len-3,".dl")==0 ||
                strcmp(filename+len-3,".so")==0)) ||
      (len>4&& (strcmp(filename+len-4,".dll")==0 ||
