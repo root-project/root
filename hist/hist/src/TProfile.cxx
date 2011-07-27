@@ -227,12 +227,10 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 
    SetErrorOption(option);
 
-   if (!fgLazyAllocation) {
-      fBinEntries.Set(fNcells);  //*-* create number of entries per bin array
+   fBinEntries.Set(fNcells);  //*-* create number of entries per bin array
 
-      // TH1::Sumw2 create sum of square of weights array times y (fSumw2) . This is always created for a TProfile
-      TH1::Sumw2();                   //*-* create sum of squares of weights array times y
-   }
+   // TH1::Sumw2 create sum of square of weights array times y (fSumw2) . This is always created for a TProfile
+   TH1::Sumw2();                   //*-* create sum of squares of weights array times y
    // TProfile::Sumw2 create sum of square of weight2 (fBinSumw2). This is needed only for profile filled with weights not 1
    if (fgDefaultSumw2) Sumw2();    // optionally create sum of squares of weights / bin 
 
@@ -306,35 +304,6 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    TProfileHelper::Add(this, h1, h2, c1, c2);
 }
 
-//______________________________________________________________________________
-void TProfile::AddBinContent(Int_t bin)
-{
-   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //                   ==========================
-   AllocateIfEmpty();
-   TH1D::AddBinContent(bin);
-}
- 
-//______________________________________________________________________________
-void TProfile::AddBinContent(Int_t bin, Double_t w)
-{
-   //                   Increment bin content by w
-   //                   ==========================
-
-   AllocateIfEmpty();
-   TH1D::AddBinContent(bin,w);
-}   
-
-//______________________________________________________________________________
-void TProfile::AllocateIfEmpty()
-{
-// Allocate the bins array (fArray), sum of weigths (fSumw2) and bin entries (fBinEntries)
-   if (!fN) {
-      TArrayD::Set(fNcells);
-      fBinEntries.Set(fNcells);
-      TH1::Sumw2();
-   }
-}
 
 //______________________________________________________________________________
 void TProfile::Approximate(Bool_t approx)
@@ -1660,18 +1629,6 @@ void TProfile::Scale(Double_t c1, Option_t * option)
    TProfileHelper::Scale(this, c1, option);
 }
 
-//______________________________________________________________________________
-void TProfile::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
-   AllocateIfEmpty();
-   TH1D::SetBinContent(bin,content);
-}
-   
 //______________________________________________________________________________
 void TProfile::SetBinEntries(Int_t bin, Double_t w)
 {

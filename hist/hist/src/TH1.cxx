@@ -525,7 +525,6 @@ Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
 Bool_t TH1::fgDefaultSumw2 = kFALSE;
 Bool_t TH1::fgStatOverflows= kFALSE;
-Bool_t TH1::fgLazyAllocation = kFALSE;
 
 extern void H1InitGaus();
 extern void H1InitExpo();
@@ -859,7 +858,7 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       Error("Add","Attempt to add a non-existing histogram");
       return;
    }
-   
+
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
@@ -1739,6 +1738,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    Double_t sum1=0, sum2=0;
    Double_t sumw1=0, sumw2=0;
 
+
    chi2 = 0;
    ndf = 0;
 
@@ -2201,7 +2201,7 @@ Double_t TH1::ComputeIntegral()
 
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
-   
+
    //   - Allocate space to store the integral and compute integral
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -2363,7 +2363,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
       Error("Add","Attempt to divide by a non-existing function");
       return;
    }
-   
+
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
@@ -4846,13 +4846,6 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
 }
 
 //______________________________________________________________________________
-Bool_t TH1::LazyAllocationStatus()
-{
-// Returns lazy histogram array allocation flag.
-   return fgLazyAllocation;
-}
-   
-//______________________________________________________________________________
 static Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
 {
    return TMath::Abs(a - b) < epsilon;
@@ -5819,14 +5812,6 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
    fgDefaultSumw2 = sumw2;
 }
 
-//______________________________________________________________________________
-void TH1::SetLazyAllocation(Bool_t flag)
-{
-// Enable/disable lazy histogram array allocation. If this is on, the array
-// is allocated during the first Fill of the histogram.
-   fgLazyAllocation = flag;
-}
-   
 //______________________________________________________________________________
 void TH1::SetTitle(const char *title)
 {
@@ -8225,7 +8210,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    //                    (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayC::Set(fNcells);
+   TArrayC::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
    if (fgDefaultSumw2) Sumw2();
@@ -8241,7 +8226,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //                    (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayC::Set(fNcells);
+   TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8255,7 +8240,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //                    (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation)  TArrayC::Set(fNcells);
+   TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8279,7 +8264,6 @@ void TH1C::AddBinContent(Int_t bin)
    //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //                   ==========================
 
-   if (!fN) TArrayC::Set(fNcells);
    if (fArray[bin] < 127) fArray[bin]++;
 }
 
@@ -8289,7 +8273,6 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
    //   -*-*-*-*-*-*-*-*Increment bin content by w*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //                   ==========================
 
-   if (!fN) TArrayC::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -128 && newval < 128) {fArray[bin] = Char_t(newval); return;}
    if (newval < -127) fArray[bin] = -127;
@@ -8324,7 +8307,6 @@ Double_t TH1C::GetBinContent(Int_t bin) const
 {
    // see convention for numbering bins in TH1::GetBin
 
-   if (!fN) return 0.;
    if (fBuffer) ((TH1C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -8353,7 +8335,6 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
-   if (!fN) TArrayC::Set(fNcells);
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
          while (bin >=  fNcells-1)  LabelsInflate();
@@ -8376,7 +8357,7 @@ void TH1C::SetBinsLength(Int_t n)
 
    if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
-   if (fN>0 && !fgLazyAllocation) TArrayC::Set(n);
+   TArrayC::Set(n);
 }
 
 //______________________________________________________________________________
@@ -8473,7 +8454,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayS::Set(fNcells);
+   TArrayS::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
    if (fgDefaultSumw2) Sumw2();
@@ -8489,7 +8470,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayS::Set(fNcells);
+   TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8503,7 +8484,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayS::Set(fNcells);
+   TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8527,7 +8508,6 @@ void TH1S::AddBinContent(Int_t bin)
    //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //                   ==========================
 
-   if (!fN) TArrayS::Set(fNcells);
    if (fArray[bin] < 32767) fArray[bin]++;
 }
 
@@ -8537,7 +8517,6 @@ void TH1S::AddBinContent(Int_t bin, Double_t w)
    //                   Increment bin content by w
    //                   ==========================
 
-   if (!fN) TArrayS::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -32768 && newval < 32768) {fArray[bin] = Short_t(newval); return;}
    if (newval < -32767) fArray[bin] = -32767;
@@ -8571,7 +8550,6 @@ TH1 *TH1S::DrawCopy(Option_t *option) const
 Double_t TH1S::GetBinContent(Int_t bin) const
 {
    // see convention for numbering bins in TH1::GetBin
-   if (!fN) return 0.;
    if (fBuffer) ((TH1S*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -8600,7 +8578,6 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
-   if (!fN) TArrayS::Set(fNcells);
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
          while (bin >=  fNcells-1)  LabelsInflate();
@@ -8623,7 +8600,7 @@ void TH1S::SetBinsLength(Int_t n)
 
    if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
-   if (fN>0 && !fgLazyAllocation) TArrayS::Set(n);
+   TArrayS::Set(n);
 }
 
 //______________________________________________________________________________
@@ -8719,7 +8696,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayI::Set(fNcells);
+   TArrayI::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
    if (fgDefaultSumw2) Sumw2();
@@ -8735,7 +8712,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayI::Set(fNcells);
+   TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8749,7 +8726,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayI::Set(fNcells);
+   TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8773,7 +8750,6 @@ void TH1I::AddBinContent(Int_t bin)
    //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //                   ==========================
 
-   if (!fN) TArrayI::Set(fNcells);
    if (fArray[bin] < 2147483647) fArray[bin]++;
 }
 
@@ -8783,7 +8759,6 @@ void TH1I::AddBinContent(Int_t bin, Double_t w)
    //                   Increment bin content by w
    //                   ==========================
 
-   if (!fN) TArrayI::Set(fNcells);
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
@@ -8817,7 +8792,6 @@ TH1 *TH1I::DrawCopy(Option_t *option) const
 Double_t TH1I::GetBinContent(Int_t bin) const
 {
    // see convention for numbering bins in TH1::GetBin
-   if (!fN) return 0.;
    if (fBuffer) ((TH1I*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -8846,7 +8820,6 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
-   if (!fN) TArrayI::Set(fNcells);
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
          while (bin >=  fNcells-1)  LabelsInflate();
@@ -8869,7 +8842,7 @@ void TH1I::SetBinsLength(Int_t n)
 
    if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
-   if (fN>0 && !fgLazyAllocation) TArrayI::Set(n);
+   TArrayI::Set(n);
 }
 
 //______________________________________________________________________________
@@ -8965,7 +8938,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayF::Set(fNcells);
+   TArrayF::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
    if (fgDefaultSumw2) Sumw2();
@@ -8981,7 +8954,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayF::Set(fNcells);
+   TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -8995,7 +8968,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayF::Set(fNcells);
+   TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -9031,25 +9004,6 @@ TH1F::~TH1F()
 }
 
 //______________________________________________________________________________
-void TH1F::AddBinContent(Int_t bin)
-{
-   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //                   ==========================
-   if (!fN) TArrayF::Set(fNcells);
-   ++fArray[bin];
-}
-
-//______________________________________________________________________________
-void TH1F::AddBinContent(Int_t bin, Double_t w)
-{
-   //                   Increment bin content by w
-   //                   ==========================
-
-   if (!fN) TArrayF::Set(fNcells);
-   fArray[bin] += Float_t (w);
-}   
-   
-//______________________________________________________________________________
 void TH1F::Copy(TObject &newth1) const
 {
    // Copy this to newth1.
@@ -9076,7 +9030,6 @@ TH1 *TH1F::DrawCopy(Option_t *option) const
 Double_t TH1F::GetBinContent(Int_t bin) const
 {
    // see convention for numbering bins in TH1::GetBin
-   if (!fN) return 0.;
    if (fBuffer) ((TH1F*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -9105,7 +9058,6 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
-   if (!fN) TArrayF::Set(fNcells);
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
          while (bin >=  fNcells-1)  LabelsInflate();
@@ -9128,7 +9080,7 @@ void TH1F::SetBinsLength(Int_t n)
 
    if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
-   if (fN>0 && !fgLazyAllocation) TArrayF::Set(n);
+   TArrayF::Set(n);
 }
 
 //______________________________________________________________________________
@@ -9225,7 +9177,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayD::Set(fNcells);
+   TArrayD::Set(fNcells);
 
    if (xlow >= xup) SetBuffer(fgBufferSize);
    if (fgDefaultSumw2) Sumw2();
@@ -9241,7 +9193,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation)  TArrayD::Set(fNcells);
+   TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -9255,7 +9207,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //           (see TH1::TH1 for explanation of parameters)
    //
    fDimension = 1;
-   if (!fgLazyAllocation) TArrayD::Set(fNcells);
+   TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
@@ -9291,25 +9243,6 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 }
 
 //______________________________________________________________________________
-void TH1D::AddBinContent(Int_t bin)
-{
-   //   -*-*-*-*-*-*-*-*Increment bin content by 1*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //                   ==========================
-   if (!fN) TArrayD::Set(fNcells);
-   ++fArray[bin];
-}
-
-//______________________________________________________________________________
-void TH1D::AddBinContent(Int_t bin, Double_t w)
-{
-   //                   Increment bin content by w
-   //                   ==========================
-
-   if (!fN) TArrayD::Set(fNcells);
-   fArray[bin] += Double_t (w);
-}   
-   
-//______________________________________________________________________________
 void TH1D::Copy(TObject &newth1) const
 {
    // Copy this to newth1
@@ -9336,7 +9269,6 @@ TH1 *TH1D::DrawCopy(Option_t *option) const
 Double_t TH1D::GetBinContent(Int_t bin) const
 {
    // see convention for numbering bins in TH1::GetBin
-   if (!fN) return 0.;
    if (fBuffer) ((TH1D*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
@@ -9365,7 +9297,6 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
-   if (!fN) TArrayD::Set(fNcells);
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
          while (bin >=  fNcells-1)  LabelsInflate();
@@ -9388,7 +9319,7 @@ void TH1D::SetBinsLength(Int_t n)
 
    if (n < 0) n = fXaxis.GetNbins() + 2;
    fNcells = n;
-   if (fN>0 && !fgLazyAllocation) TArrayD::Set(n);
+   TArrayD::Set(n);
 }
 
 //______________________________________________________________________________

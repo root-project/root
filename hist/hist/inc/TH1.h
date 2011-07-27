@@ -105,7 +105,6 @@ protected:
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
     static Bool_t fgDefaultSumw2;   //!flag to call TH1::Sumw2 automatically at histogram creation time
-    static Bool_t fgLazyAllocation; //!flag to allocate the histogram array only on the first fill
 
 public:
    static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
@@ -296,7 +295,6 @@ public:
    virtual void     LabelsDeflate(Option_t *axis="X");
    virtual void     LabelsInflate(Option_t *axis="X");
    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
-   static Bool_t    LazyAllocationStatus();
    virtual Long64_t Merge(TCollection *list);
    virtual void     Multiply(TF1 *h1, Double_t c1=1);
    virtual void     Multiply(const TH1 *h1);
@@ -346,7 +344,7 @@ public:
    virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
    virtual void     SetLabelSize(Float_t size=0.02, Option_t *axis="X");
-   static void      SetLazyAllocation(Bool_t flag=kTRUE);
+
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetName(const char *name); // *MENU*
@@ -517,8 +515,9 @@ public:
    TH1F(const TH1F &h1f);
    virtual ~TH1F();
 
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
+   virtual void     AddBinContent(Int_t bin, Double_t w)
+                                 {fArray[bin] += Float_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual Double_t GetBinContent(Int_t bin) const;
@@ -561,8 +560,9 @@ public:
    TH1D(const TH1D &h1d);
    virtual ~TH1D();
 
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
+   virtual void     AddBinContent(Int_t bin, Double_t w)
+                                 {fArray[bin] += Double_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual Double_t GetBinContent(Int_t bin) const;

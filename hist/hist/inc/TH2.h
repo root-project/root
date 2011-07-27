@@ -260,8 +260,9 @@ public:
    TH2F(const TMatrixFBase &m);
    TH2F(const TH2F &h2f);
    virtual ~TH2F();
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
+   virtual void     AddBinContent(Int_t bin, Double_t w)
+                                 {fArray[bin] += Float_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual Double_t GetBinContent(Int_t bin) const;
@@ -303,8 +304,9 @@ public:
    TH2D(const TMatrixDBase &m);
    TH2D(const TH2D &h2d);
    virtual ~TH2D();
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
+   virtual void     AddBinContent(Int_t bin, Double_t w)
+                                 {fArray[bin] += Double_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual Double_t GetBinContent(Int_t bin) const;

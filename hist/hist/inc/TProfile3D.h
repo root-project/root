@@ -84,9 +84,6 @@ public:
    virtual void      Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual void      Add(const TH1 *h1, Double_t c1=1);
    virtual void      Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
-   virtual void      AddBinContent(Int_t bin);
-   virtual void      AddBinContent(Int_t bin, Double_t w);
-           void      AllocateIfEmpty();
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t tmin, Double_t tmax, Option_t *option);
    virtual Int_t     BufferEmpty(Int_t action=0);
@@ -133,9 +130,6 @@ public:
    virtual void      RebinAxis(Double_t x, TAxis *axis);
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t bin, Int_t, Int_t, Double_t content) {SetBinContent(bin,content);}
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, 
                              Int_t nbinsy, Double_t ymin, Double_t ymax, 
