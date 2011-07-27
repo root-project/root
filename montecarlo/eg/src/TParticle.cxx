@@ -161,28 +161,28 @@ TParticle::~TParticle()
 }
 
 //______________________________________________________________________________
-Double_t TParticle::GetMass()
+Double_t TParticle::GetMass() const
 {
    // Return nominal particle mass from PDG table.
    return GetPDG()->Mass();
 }
 
 //______________________________________________________________________________
-Int_t TParticle::Beauty()
+Int_t TParticle::Beauty() const
 {
    // Return beauty quantum number.
    return GetPDG()->Beauty();
 }
 
 //______________________________________________________________________________
-Int_t TParticle::Charm()
+Int_t TParticle::Charm() const
 {
    // Return charm quantum number.
    return GetPDG()->Charm();
 }
 
 //______________________________________________________________________________
-Int_t TParticle::Strangeness()
+Int_t TParticle::Strangeness() const
 {
    // Return strangeness quantum number.
    return GetPDG()->Strangeness();
@@ -247,7 +247,7 @@ const char* TParticle::GetName() const {
 
 
 //______________________________________________________________________________
-TParticlePDG*  TParticle::GetPDG(Int_t mode)
+TParticlePDG*  TParticle::GetPDG(Int_t mode) const
 {
 // returns a pointer to the TParticlePDG object using the pdgcode
 // if mode == 0 (default) always get a fresh value for the pointer.
@@ -257,15 +257,13 @@ TParticlePDG*  TParticle::GetPDG(Int_t mode)
 // TClonesArray used in split mode in a Root TTree.
 
    if (!mode || !fParticlePDG) {
-      (((TParticle*)this)->fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode));
-      // when mutable will be allowed, change above line to the following line
-      //   fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);}
+      fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
    }
    return fParticlePDG;
 }
 
 //______________________________________________________________________________
-void TParticle::GetPolarisation(TVector3 &v)
+void TParticle::GetPolarisation(TVector3 &v) const
 {
    //return particle polarisation
    if(fPolarTheta == -99 && fPolarPhi == -99)

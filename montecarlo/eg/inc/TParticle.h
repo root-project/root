@@ -57,10 +57,7 @@ protected:
   Double_t       fPolarTheta;           // Polar angle of polarisation
   Double_t       fPolarPhi;             // azymutal angle of polarisation
 
-  TParticlePDG*  fParticlePDG;          //! reference to the particle record in PDG database
-  //the line above should be changed to the following line when all compilers
-  //will be able to digest the mutable keyword (We want to have GetPDG const !!)
-  //mutable TParticlePDG*  fParticlePDG;  //! reference to the particle record in PDG database
+  mutable TParticlePDG* fParticlePDG;   //! reference to the particle record in PDG database
   //----------------------------------------------------------------------------
   //  functions
   //----------------------------------------------------------------------------
@@ -99,14 +96,14 @@ public:
    Int_t          GetDaughter     (Int_t i)     const { return fDaughter[i];                                    }
    Int_t          GetLastDaughter ()            const { return fDaughter[1];                                    }
    Double_t       GetCalcMass     ()            const { return fCalcMass;                                       }
-   Double_t       GetMass         ();
+   Double_t       GetMass         ()            const;
    Int_t          GetNDaughters   ()            const { return fDaughter[1]>0 ? fDaughter[1]-fDaughter[0]+1 : 0;}
    Float_t        GetWeight       ()            const { return fWeight;                                         }
-   void           GetPolarisation(TVector3 &v);
-   TParticlePDG*  GetPDG          (Int_t mode = 0);
-   Int_t          Beauty          ();
-   Int_t          Charm           ();
-   Int_t          Strangeness     ();
+   void           GetPolarisation(TVector3 &v)  const;
+   TParticlePDG*  GetPDG          (Int_t mode = 0) const;
+   Int_t          Beauty          ()            const;
+   Int_t          Charm           ()            const;
+   Int_t          Strangeness     ()            const;
    void           Momentum(TLorentzVector &v)   const { v.SetPxPyPzE(fPx,fPy,fPz,fE);                           }
    void           ProductionVertex(TLorentzVector &v) const { v.SetXYZT(fVx,fVy,fVz,fVt);                       }
 
