@@ -1406,7 +1406,7 @@ void TGListTree::Draw(Handle_t id, Int_t yevent, Int_t hevent)
    fDefw = fDefh = 1;
 
    TGPosition pos = GetPagePosition();
-   x = -pos.fX;
+   x = 2-pos.fX;
    y = fMargin;
    item = fFirst;
 
