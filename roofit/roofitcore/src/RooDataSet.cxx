@@ -297,8 +297,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     // Make import mapping if index category is specified
     map<string,RooAbsData*> hmap ;  
     if (indexCat) {
-      char tmp[1024] ;
-      strlcpy(tmp,lnkSliceNames,1024) ;
+      char tmp[10240] ;
+      strlcpy(tmp,lnkSliceNames,10240) ;      
       char* token = strtok(tmp,",") ;
       TIterator* hiter = lnkSliceData.MakeIterator() ;
       while(token) {

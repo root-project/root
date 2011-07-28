@@ -587,9 +587,12 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
     Int_t n = cache._partList.getSize() ;
     
     Int_t i ;
+    RooLinkedListIter plIter = cache._partList.iterator() ;
+    RooLinkedListIter nlIter = cache._normList.iterator() ;
+
     for (i=0 ; i<n ; i++) {
-      partInt = ((RooAbsReal*)cache._partList.at(i)) ;
-      normSet = ((RooArgSet*)cache._normList.At(i)) ;    
+      partInt = (RooAbsReal*) plIter.Next() ; //((RooAbsReal*)cache._partList.at(i)) ;
+      normSet = (RooArgSet*) nlIter.Next() ; // ((RooArgSet*)cache._normList.At(i)) ;    
       Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
       //cout << "partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
       if (dynamic_cast<RooAbsPdf*>(partInt)) {
