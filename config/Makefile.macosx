@@ -126,7 +126,7 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
-F77           = gfortran
+F77ORG        = gfortran
 F77FLAGS      = -m32 -std=legacy
 F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib 2>&1 | grep /)
 F77LIBS      += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a 2>&1 | grep /)
@@ -153,5 +153,5 @@ showld:
 	@echo "$(LD)"
 
 showf77:
-	@echo "$(F77)"
+	@echo "$(F77ORG)"
 endif
