@@ -12,7 +12,11 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifeq ($(PLATFORM),macosx)
+pylib = $(strip $(shell python maclib.py) )
+else
 pylib = $(strip $(shell python -c 'import distutils.sysconfig, sys; print (distutils.sysconfig.get_config_var("LDLIBRARY") or ("Python%d%d" % (sys.version_info[0],sys.version_info[1]))),' ) )
+endif
 ifeq ($(PLATFORM),win32)
 pylibpath = $(strip $(shell python -c 'import os, sys; path = os.path.join(sys.prefix, "libs"); upath = path.replace("\\","/"); print upath; ' ) )
 export LIB:=$(pylibpath);$(LIB)
