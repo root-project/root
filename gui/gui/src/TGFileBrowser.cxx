@@ -1717,8 +1717,8 @@ void TGFileBrowser::PadModified()
 void TGFileBrowser::RequestFilter()
 {
    // Open a dialog box asking for a string to be used as filter (regexp), and
-   // add an entry in the map of filtered entries. Entering "*" will disable 
-   // filtering on the current list tree item.
+   // add an entry in the map of filtered entries. Entering "*" or empty string
+   // ("") will disable filtering on the current list tree item.
 
    char filter[1024];
    if (!fListLevel)
@@ -1726,15 +1726,21 @@ void TGFileBrowser::RequestFilter()
    // initialize with previous (active) filter string
    sprintf(filter, "%s", fFilterStr.Data());
    new TGInputDialog(gClient->GetRoot(), this, 
-                     "Enter filter expression (\'*\' to remove filter):",
+                     "Enter filter expression:\n(empty string \"\" or \"*\" to remove filter)",
                       filter, filter);
    // if user pressed cancel, update the status of the current list tree 
    // item and return
-   if (!strcmp(filter, "")) {
+   if ((filter[0] == 0) && (filter[1] == 0)) {
       CheckFiltered(fListLevel, kTRUE);
       return;
    }
-   if (strcmp(filter, "*")) {
+   else if (((filter[0] == 0) && (filter[1] == 1)) || !strcmp(filter, "*")) {
+      // if user entered "*" or "", just disable filtering for the current 
+      // list tree item
+      fFilterButton->SetState(kButtonUp);
+      fFilteredItems.erase(fListLevel);
+   }
+   else {
       // if user entered a string different from "*", use it to create an 
       // entry in the filter map
       fFilterStr = filter;
@@ -1744,12 +1750,6 @@ void TGFileBrowser::RequestFilter()
          fFilteredItems.erase(fListLevel);
       // insert a new entry for the current list tree item
       fFilteredItems.insert(std::make_pair(fListLevel, StrDup(filter)));
-   }
-   else {
-      // if user entered "*", just disable filtering for the current 
-      // list tree item
-      fFilterButton->SetState(kButtonUp);
-      fFilteredItems.erase(fListLevel);
    }
    // finally update the list tree
    fListTree->DeleteChildren(fListLevel);
