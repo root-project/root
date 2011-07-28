@@ -568,18 +568,6 @@ cint/cint/lib/G__c_%.o: cint/cint/lib/G__c_%.c
 	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
 	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
 
-G__%.o: G__%.cxx
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
-G__c_%.o: G__c_%.c
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
 cint/cint/%.o: cint/cint/%.cxx
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
@@ -604,9 +592,20 @@ build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.c
 
 define SRCTOOBJ_template
 $(1)/%_tmp.o: $(1)/%_tmp.cxx
-	$$(MAKEDIR)
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
 	$$(CXX) $$(OPT) $$(CXXFLAGS) $$(CXXOUT)$$@ -c $$<
+
+$(1)/src/G__%.o: $(1)/src/G__%.cxx
+	$$(MAKEDEP) -R -f$$(patsubst %.o,%.d,$$@) -Y -w 1000 -- \
+	  $$(CXXFLAGS) -D__cplusplus -I$$(CINTDIRL)/prec_stl \
+	  -I$$(CINTDIRSTL) -I$$(CINTDIR)/inc -- $$<
+	$$(CXX) $$(NOOPT) $$(CXXFLAGS) -I. -I$$(CINTDIR)/inc  $$(CXXOUT)$$@ -c $$<
+
+$(1)/src/G__c_%.o: $(1)/src/G__c_%.c
+	$$(MAKEDEP) -R -f$$(patsubst %.o,%.d,$$@) -Y -w 1000 -- \
+	  $$(CFLAGS) -I$$(CINTDIRL)/prec_stl \
+	  -I$$(CINTDIRSTL) -I$$(CINTDIR)/inc -- $$<
+	$$(CC) $$(NOOPT) $$(CFLAGS) -I. -I$$(CINTDIR)/inc  $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.cxx
 	$$(MAKEDIR)
