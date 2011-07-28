@@ -42,6 +42,7 @@
 
 #include "TGFileBrowser.h"
 #include "TRootBrowser.h"
+#include "TGInputDialog.h"
 
 #include "TVirtualPadEditor.h"
 #include "TGedEditor.h"
@@ -142,9 +143,9 @@ void TGFileBrowser::CreateBrowser()
    fDrawOption->AddEntry("text", dropt++);
    fTopFrame->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY |
                        kLHintsRight, 2, 2, 2, 2));
-   fTopFrame->AddFrame(new TGLabel(fTopFrame, "Draw Option: "),
+   fTopFrame->AddFrame(new TGLabel(fTopFrame, "Draw Option:"),
                        new TGLayoutHints(kLHintsCenterY | kLHintsRight,
-                       2, 2, 2, 2));
+                       5, 2, 2, 2));
 
    fSortButton = new TGPictureButton(fTopFrame, "bld_sortup.png");
    fSortButton->SetStyle(gClient->GetStyle());
@@ -153,11 +154,18 @@ void TGFileBrowser::CreateBrowser()
                        kLHintsLeft, 2, 2, 2, 2));
    fSortButton->Connect("Clicked()", "TGFileBrowser", this, "ToggleSort()");
 
-   fRefreshButton = new TGPictureButton(fTopFrame, "tb_refresh.xpm");
+   fFilterButton = new TGPictureButton(fTopFrame, "filter.png");
+   fFilterButton->SetStyle(gClient->GetStyle());
+   fFilterButton->SetToolTipText("Filter Content");
+   fTopFrame->AddFrame(fFilterButton, new TGLayoutHints(kLHintsCenterY |
+                       kLHintsLeft, 2, 2, 2, 2));
+   fFilterButton->Connect("Clicked()", "TGFileBrowser", this, "RequestFilter()");
+
+   fRefreshButton = new TGPictureButton(fTopFrame, "refresh.png");
    fRefreshButton->SetStyle(gClient->GetStyle());
    fRefreshButton->SetToolTipText("Refresh Current Folder");
    fTopFrame->AddFrame(fRefreshButton, new TGLayoutHints(kLHintsCenterY |
-                       kLHintsLeft, 2, 2, 2, 2));
+                       kLHintsLeft, 2, 5, 2, 2));
    fRefreshButton->Connect("Clicked()", "TGFileBrowser", this, "Refresh()");
 
    AddFrame(fTopFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop |
@@ -206,6 +214,7 @@ void TGFileBrowser::CreateBrowser()
    fFile        = 0;
    fNKeys       = 0;
    fCnt         = 0;
+   fFilterStr   = "*";
 
    TString gv = gEnv->GetValue("Browser.GroupView", "1000");
    Int_t igv = atoi(gv.Data());
@@ -332,6 +341,20 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
          fListLevel = 0;
       if (obj && obj->InheritsFrom("TSystemDirectory"))
          return;
+   }
+   if (fListLevel) {
+      TString oname = "";
+      if (name) oname = name;
+      else if (obj) oname = obj->GetName();
+      // check if the current item is filtered
+      mFiltered_i it = fFilteredItems.find(fListLevel);
+      if  (it != fFilteredItems.end()) {
+         // check if the item (object) name match the filter
+         const char *filter = (const char *)(*it).second;
+         TRegexp re(filter, kTRUE);
+         // if not, simply return, so no item will be added
+         if (oname.Index(re) == kNPOS) return;
+      }
    }
    const TGPicture *pic=0;
    if (obj && obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class()))
@@ -570,8 +593,13 @@ void TGFileBrowser::RecursiveRemove(TObject *obj)
       itm = fListTree->FindChildByData(0, gROOT->GetListOfFiles());
       if (itm)
          item = fListTree->FindChildByData(itm, obj);
-      if (item)
+      if (item) {
+         // if the item to be deleted has a filter, 
+         // delete its entry in the map
+         if (CheckFiltered(item))
+            fFilteredItems.erase(item);
          fListTree->DeleteItem(item);
+      }
       itm = fRootDir ? fRootDir->GetFirstChild() : 0;
       while (itm) {
          item = fListTree->FindItemByObj(itm, obj);
@@ -582,8 +610,13 @@ void TGFileBrowser::RecursiveRemove(TObject *obj)
          itm = itm->GetNextSibling();
       }
    }
-   if (!obj->InheritsFrom("TFile") && fRootDir)
+   if (!obj->InheritsFrom("TFile") && fRootDir) {
+      item = fListTree->FindItemByObj(fRootDir, obj);
+      // if the item to be deleted has a filter, delete its entry in the map
+      if (item && CheckFiltered(item))
+         fFilteredItems.erase(item);
       fListTree->RecursiveDeleteItem(fRootDir, obj);
+   }
    //fListTree->ClearViewPort();
 }
 
@@ -626,6 +659,10 @@ void TGFileBrowser::Update()
    if (curr) {
       TObject *obj = (TObject *) curr->GetUserData();
       if (obj && !obj->TestBit(kNotDeleted)) {
+         // if the item to be deleted has a filter,
+         // delete its entry in the map
+         if (CheckFiltered(curr))
+            fFilteredItems.erase(curr);
          fListTree->DeleteItem(curr);
          curr = 0;
          obj = 0;
@@ -640,6 +677,10 @@ void TGFileBrowser::Update()
             if ((res == 0) && (flags & 2)) {
                TString fullpath = FullPathName(curr);
                if (gSystem->AccessPathName(fullpath.Data())) {
+                  // if the item to be deleted has a filter,
+                  // delete its entry in the map
+                  if (CheckFiltered(curr))
+                     fFilteredItems.erase(curr);
                   fListTree->DeleteItem(curr);
                   curr = 0;
                   obj = 0;
@@ -668,6 +709,10 @@ void TGFileBrowser::Update()
                if (gSystem->AccessPathName(recpath.Data())) {
                   del = itm;
                   itm = itm->GetNextSibling();
+                  // if the item to be deleted has a filter,
+                  // delete its entry in the map
+                  if (CheckFiltered(del))
+                     fFilteredItems.erase(del);
                   fListTree->DeleteItem(del);
                }
             }
@@ -678,7 +723,10 @@ void TGFileBrowser::Update()
          }
       }
    }
+   TGListTreeItem *sav = fListLevel;
    DoubleClicked(item, 1);
+   fListLevel = sav;
+   CheckFiltered(fListLevel, kTRUE);
 
    if (selected && gPad && IsObjectEditable(selected->IsA())) {
       TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
@@ -896,6 +944,43 @@ void TGFileBrowser::CheckRemote(TGListTreeItem *item)
 }
 
 //______________________________________________________________________________
+Bool_t TGFileBrowser::CheckFiltered(TGListTreeItem *item, Bool_t but)
+{
+   // Check if there is a filter active on the children of the list tree item.
+   // If the but argument is true, the "filter" button state is set accordingly,
+   // and its tooltip will show the filter used.
+
+   Bool_t found = kFALSE;
+   TString filter;
+   // if there is no filter (the map is empty) then just return
+   if (fFilteredItems.empty())
+      return kFALSE;
+   mFiltered_i it = fFilteredItems.find(item);
+   if  (it != fFilteredItems.end()) {
+      // if the item is in the map, take the filter regexp string
+      filter = (const char *)(*it).second;
+      fFilterStr = filter;
+      found = kTRUE;
+   }
+   if (but) {
+      // if the but argument is true, change the button state 
+      // to reflect the filtering state
+      fFilterButton->SetState(found ? kButtonEngaged : kButtonUp);
+      if (found) {
+         // format the tooltip to display the regexp used as filter
+         filter.Prepend("Showing only \'");
+         filter += "\'";
+         fFilterButton->SetToolTipText(filter.Data());
+      }
+      else {
+         // reset the tooltip text
+         fFilterButton->SetToolTipText("Filter Content...");
+      }
+   }
+   return found;
+}
+
+//______________________________________________________________________________
 Bool_t TGFileBrowser::CheckSorted(TGListTreeItem *item, Bool_t but)
 {
    // Check if the list tree item children are alphabetically sorted.
@@ -929,6 +1014,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    fListLevel = item;
    if (!item) return;
    CheckSorted(item, kTRUE);
+   CheckFiltered(item, kTRUE);
    CheckRemote(item);
    TObject *selected = 0;
    TString fullpath = FullPathName(item);
@@ -1143,6 +1229,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    TCursorSwitcher switcher(this, fListTree);
    fListLevel = item;
    CheckSorted(item, kTRUE);
+   CheckFiltered(item, kTRUE);
    CheckRemote(item);
    TGListTreeItem *pitem = item->GetParent();
    TObject *obj = (TObject *) item->GetUserData();
@@ -1627,6 +1714,51 @@ void TGFileBrowser::PadModified()
 }
 
 //______________________________________________________________________________
+void TGFileBrowser::RequestFilter()
+{
+   // Open a dialog box asking for a string to be used as filter (regexp), and
+   // add an entry in the map of filtered entries. Entering "*" will disable 
+   // filtering on the current list tree item.
+
+   char filter[1024];
+   if (!fListLevel)
+      return;
+   // initialize with previous (active) filter string
+   sprintf(filter, "%s", fFilterStr.Data());
+   new TGInputDialog(gClient->GetRoot(), this, 
+                     "Enter filter expression (\'*\' to remove filter):",
+                      filter, filter);
+   // if user pressed cancel, update the status of the current list tree 
+   // item and return
+   if (!strcmp(filter, "")) {
+      CheckFiltered(fListLevel, kTRUE);
+      return;
+   }
+   if (strcmp(filter, "*")) {
+      // if user entered a string different from "*", use it to create an 
+      // entry in the filter map
+      fFilterStr = filter;
+      fFilterButton->SetState(kButtonEngaged);
+      // if there is already a filter on this item, delete it
+      if (CheckFiltered(fListLevel))
+         fFilteredItems.erase(fListLevel);
+      // insert a new entry for the current list tree item
+      fFilteredItems.insert(std::make_pair(fListLevel, StrDup(filter)));
+   }
+   else {
+      // if user entered "*", just disable filtering for the current 
+      // list tree item
+      fFilterButton->SetState(kButtonUp);
+      fFilteredItems.erase(fListLevel);
+   }
+   // finally update the list tree
+   fListTree->DeleteChildren(fListLevel);
+   DoubleClicked(fListLevel, 1);
+   fListTree->ClearViewPort();
+   fListTree->AdjustPosition(fListLevel);
+}
+
+//______________________________________________________________________________
 void TGFileBrowser::Selected(char *)
 {
    // A ROOT File has been selected in TGHtmlBrowser.
@@ -1690,3 +1822,5 @@ void TGFileBrowser::ToggleSort()
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(fListLevel);
 }
+
+

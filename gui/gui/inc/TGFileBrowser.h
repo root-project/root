@@ -21,6 +21,7 @@
 #endif
 
 #include <list>
+#include <map>
 
 class TGCanvas;
 class TGListTree;
@@ -40,6 +41,8 @@ public:
    typedef std::list<TGListTreeItem*> sLTI_t;
    typedef sLTI_t::iterator           sLTI_i;
    typedef sLTI_t::reverse_iterator   sLTI_ri;
+   typedef std::map<TGListTreeItem*, const char *> mFiltered_t;
+   typedef mFiltered_t::iterator      mFiltered_i;
 
 protected:
    TRootBrowser      *fNewBrowser;        // Pointer back to the Browser
@@ -55,6 +58,7 @@ protected:
    TContextMenu      *fContextMenu;       // pointer to context menu
    TGPictureButton   *fSortButton;        // "Sort" button 
    TGPictureButton   *fRefreshButton;     // "Refresh" button 
+   TGPictureButton   *fFilterButton;      // "Filter" button 
    const TGPicture   *fRootIcon;          // Root files icon
    const TGPicture   *fFileIcon;          // System files icon
    const TGPicture   *fCachedPic;         // Cached picture
@@ -69,6 +73,8 @@ protected:
    Bool_t             fDblClick;          // kTRUE if user double-clicked on a list tree item
 
    sLTI_t             fSortedItems;       // List of sorted list-tree items.
+   mFiltered_t        fFilteredItems;     // List of filtered list-tree items.
+   TString            fFilterStr;         // Filter expression string
 
    void CreateBrowser();
 
@@ -92,6 +98,7 @@ public:
    void        ApplyFilter(Int_t id);
    void        Chdir(TGListTreeItem *item);
    void        Checked(TObject *obj, Bool_t check);
+   Bool_t      CheckFiltered(TGListTreeItem *item, Bool_t but = kFALSE);
    void        CheckRemote(TGListTreeItem *item);
    Bool_t      CheckSorted(TGListTreeItem *item, Bool_t but = kFALSE);
    void        Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y);
@@ -104,6 +111,7 @@ public:
    void        GetObjPicture(const TGPicture **pic, TObject *obj);
    void        GotoDir(const char *path);
    void        PadModified();
+   void        RequestFilter();
    void        Selected(char *);
    void        ToggleSort();
    void        Update();
