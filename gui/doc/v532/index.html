@@ -9,11 +9,11 @@
 a filtering mechanism in the browser has been implemented. To filter the content of a file 
 (or a folder inside a file), simply click on the "Filter" button. A dialog will popup, asking 
 for a filtering expression string (regexp like). The filter will then be applied on the current 
-list tree item (folder) and will stay active until a wildcard ("*") expression is entered as 
-new filtering value. The filter button automatically reflects the status of any selected list 
-tree item, and if a filter is active on it, the button state is "engaged" and its tooltip shows 
-what is actually displayed in this file/folder. It is possible to filter several files/folders, 
-each one having its own filtering argument.
+list tree item (folder) and will stay active until a wildcard ("*") expression or an empty 
+string ("") is entered as new filtering value. The filter button automatically reflects the 
+status of any selected list tree item, and if a filter is active on it, the button state is 
+"engaged" and its tooltip shows what is actually displayed in this file/folder. It is possible 
+to filter several files/folders, each one having its own filtering argument.
 </li>
 </ul>
 
@@ -26,5 +26,13 @@ each one having its own filtering argument.
 <h4>TTreeViewer</h4>
 <ul>
 <li>Make the "Histogram" text entry expanding in X direction (i.e. resize it when resizing the tree viewer)
+</li>
+</ul>
+
+<h4>TGInputDialog</h4>
+<ul>
+<li>Implemented a hack to detect if user press cancel or if an empty string ("") has been selected. 
+When the Cancel button is pressed, the first two characters are reset to 0, and if the user select 
+an empty string ("") the first character is reset to 0 and the second one is set to 1.
 </li>
 </ul>
