@@ -1164,9 +1164,14 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                maininfo = previnfo = new TFormLeafInfoReference(cl, element, 0);
                numberOfVarDim += RegisterDimensions(code,maininfo,maininfo,kFALSE);
             }
-            cl = 0;
-            for(int i=0; i<leaf->GetBranch()->GetEntries()-readentry; ++i)  {
+            TVirtualRefProxy *refproxy = cl->GetReferenceProxy();
+            for(Long64_t i=0; i<leaf->GetBranch()->GetEntries()-readentry; ++i)  {
                R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+               void *refobj = maininfo->GetValuePointer(leaf,0);
+               if (refobj) {
+                  cl = refproxy->GetValueClass(refobj);
+               }
+               
                cl = ((TFormLeafInfoReference*)maininfo)->GetValueClass(leaf);
                if ( cl ) break;
             }
@@ -1521,6 +1526,19 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      numberOfVarDim += RegisterDimensions(code,-1);
                   }
                   prevUseReferenceObject = kFALSE;
+               } else {
+                  previnfo->fNext = new TFormLeafInfoReference(cl, element, offset);
+                  previnfo = previnfo->fNext;
+               }
+               TVirtualRefProxy *refproxy = cl->GetReferenceProxy();
+               cl = 0;
+               for(Long64_t entry=0; entry<leaf->GetBranch()->GetEntries()-readentry; ++entry)  {
+                  R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+                  void *refobj = maininfo->GetValuePointer(leaf,0);
+                  if (refobj) {
+                     cl = refproxy->GetValueClass(refobj);
+                  }
+                  if ( cl ) break;
                }
                needClass = kFALSE;
                mustderef = kTRUE;
