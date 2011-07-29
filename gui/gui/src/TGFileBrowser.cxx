@@ -1724,7 +1724,7 @@ void TGFileBrowser::RequestFilter()
    if (!fListLevel)
       return;
    // initialize with previous (active) filter string
-   sprintf(filter, "%s", fFilterStr.Data());
+   snprintf(filter, sizeof(filter), "%s", fFilterStr.Data());
    new TGInputDialog(gClient->GetRoot(), this, 
                      "Enter filter expression:\n(empty string \"\" or \"*\" to remove filter)",
                       filter, filter);

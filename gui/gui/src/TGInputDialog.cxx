@@ -171,6 +171,7 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTE_ENTER:
                // here copy the string from text buffer to return variable
+               // coverity[secure_coding]
                strcpy(fRetStr, fTE->GetBuffer()->GetString());
                // if user selected an empty string, set the second 
                // char to 1,in order to distinguish between empty string 
