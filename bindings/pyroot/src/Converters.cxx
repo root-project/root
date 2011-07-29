@@ -570,6 +570,18 @@ Bool_t PyROOT::TNonConstCStringConverter::SetArg(
    return CArraySetArg( pyobject, para, func, 'c', sizeof(char) );
 }
 
+//____________________________________________________________________________
+Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
+      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+{
+// attempt base class first (i.e. passing a string), but if that fails, try a buffer
+   if ( this->TCStringConverter::SetArg( pyobject, para, func ) )
+      return kTRUE;
+
+// apparently failed, try char buffer
+   PyErr_Clear();
+   return CArraySetArg( pyobject, para, func, 'B', sizeof(unsigned char) );
+}
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
@@ -1122,6 +1134,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( ULongLong )
    PYROOT_ARRAY_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstCString )
+   PYROOT_ARRAY_CONVERTER_FACTORY( NonConstUCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( IntArray )
@@ -1167,7 +1180,8 @@ namespace {
       NFp_t( "#define",            &CreateMacroConverter              ),
 
    // pointer/array factories
-      NFp_t( "unsigned char*",     &CreateCStringConverter            ),
+      NFp_t( "const unsigned char*", &CreateCStringConverter          ),
+      NFp_t( "unsigned char*",     &CreateNonConstUCStringConverter   ),
       NFp_t( "short*",             &CreateShortArrayConverter         ),
       NFp_t( "unsigned short*",    &CreateUShortArrayConverter        ),
       NFp_t( "int*",               &CreateIntArrayConverter           ),
