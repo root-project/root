@@ -564,6 +564,7 @@ void* TFormLeafInfo::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
    return GetLocalValuePointer(thisobj, instance);
 }
 
+//______________________________________________________________________________
 void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
 {
    // returns the address of the value pointed to by the
