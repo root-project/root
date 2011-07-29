@@ -602,6 +602,11 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
       Error("SetClass", "%s does not inherit from TObject", classname);
       return;
    }
+   if (!fClass->GetBaseClassOffset(TObject::Class())==0) {
+      MakeZombie();
+      Error("SetClass", "%s must inherit from TObject as the left most base class.", classname);
+      return;      
+   }
    Int_t nch = strlen(classname)+2;
    char *name = new char[nch];
    snprintf(name,nch, "%ss", classname);
