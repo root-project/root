@@ -198,6 +198,7 @@ Bool_t RooAbsData::changeObservableName(const char* from, const char* to)
   if (tmp) {
     tmp->SetName(to) ;
   }
+  return ret ;
 }
 
 
