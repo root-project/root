@@ -119,7 +119,7 @@
 //   Long64_t nentries = T->GetEntries();
 //   Int_t cachesize = 10000000; //10 MBytes
 //   T->SetCacheSize(cachesize); //<<<
-//   T->AddBranch("*",kTRUE);    //<<< add all branches to the cache
+//   T->AddBranchToCache("*",kTRUE);    //<<< add all branches to the cache
 //   T->Process('myselector.C+");
 //   //in the TSelector::Process function we read all branches
 //   T->GetEntry(i);
