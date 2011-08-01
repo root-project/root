@@ -522,6 +522,16 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
    } else {
       Long64_t clusterEstimate = 1;
       Long64_t cacheSize = fTree->GetCacheSize();
+      if (cacheSize == 0) {
+         // Humm ... let's double check on the file.
+         TFile *file = fTree->GetCurrentFile();
+         if (file) {
+            TFileCacheRead *cache = file->GetCacheRead();
+            if (cache) {
+               cacheSize = cache->GetBufferSize();
+            }
+         }
+      }
       if (cacheSize > 0) {
          clusterEstimate = fTree->GetEntries() * cacheSize / zipBytes;
          if (clusterEstimate == 0)
