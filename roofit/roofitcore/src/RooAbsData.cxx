@@ -192,7 +192,13 @@ RooAbsData::~RooAbsData()
 //_____________________________________________________________________________
 Bool_t RooAbsData::changeObservableName(const char* from, const char* to)
 {
-  return _dstore->changeObservableName(from,to) ;
+  Bool_t ret =  _dstore->changeObservableName(from,to) ;
+  
+  RooAbsArg* tmp = _vars.find(from) ;
+  if (tmp) {
+    tmp->SetName(to) ;
+  }
+  return ret ;
 }
 
 
