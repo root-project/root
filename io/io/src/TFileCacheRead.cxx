@@ -543,11 +543,22 @@ void TFileCacheRead::Sort()
    TMath::Sort(fNseek,fSeek,fSeekIndex,kFALSE);
    Int_t i;
    Int_t nb = 0;
+   Int_t effectiveNseek = 0;
    for (i=0;i<fNseek;i++) {
+      // Skip duplicates
       Int_t ind = fSeekIndex[i];
-      fSeekSort[i] = fSeek[ind];
-      fSeekSortLen[i] = fSeekLen[ind];
+      if (effectiveNseek!=0 && fSeek[ind]==fSeekSort[effectiveNseek-1]) 
+      {
+         if (fSeekSortLen[effectiveNseek-1] < fSeekLen[ind]) {
+            fSeekSortLen[effectiveNseek-1] = fSeekLen[ind];
+         }
+         continue;
+      }
+      fSeekSort[effectiveNseek] = fSeek[ind];
+      fSeekSortLen[effectiveNseek] = fSeekLen[ind];
+      ++effectiveNseek;
    }
+   fNseek = effectiveNseek;
    if (fNtot > fBufferSizeMin) {
       fBufferSize = fNtot + 100;
       delete [] fBuffer;
@@ -591,11 +602,22 @@ void TFileCacheRead::SecondSort()
    TMath::Sort(fBNseek,fBSeek,fBSeekIndex,kFALSE);
    Int_t i;
    Int_t nb = 0;
+   Int_t effectiveNseek = 0;
    for (i=0;i<fBNseek;i++) {
+      // Skip duplicates
       Int_t ind = fBSeekIndex[i];
-      fBSeekSort[i] = fBSeek[ind];
-      fBSeekSortLen[i] = fBSeekLen[ind];
+      if (effectiveNseek!=0 && fBSeek[ind]==fBSeekSort[effectiveNseek-1]) 
+      {
+         if (fBSeekSortLen[effectiveNseek-1] < fBSeekLen[ind]) {
+            fBSeekSortLen[effectiveNseek-1] = fBSeekLen[ind];
+         }
+         continue;
+      }
+      fBSeekSort[effectiveNseek] = fBSeek[ind];
+      fBSeekSortLen[effectiveNseek] = fBSeekLen[ind];
+      ++effectiveNseek;
    }
+   fBNseek = effectiveNseek;
    if (fBNtot > fBufferSizeMin) {
       fBufferSize = fBNtot + 100;
       delete [] fBuffer;
