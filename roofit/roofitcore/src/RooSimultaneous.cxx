@@ -1089,3 +1089,54 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
   delete globClone ;
   return data ;
 }
+
+
+
+//_____________________________________________________________________________
+RooArgSet* RooSimultaneous::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
+{
+  // Specialized version of getAllConstraints() that forwards call to components and merges results correctly for a simultaneous
+  // pdf construction.
+
+  // Forward to default implement if stripDisconnected is disabled
+  if (!stripDisconnected) return RooAbsPdf::getAllConstraints(observables,constrainedParams,stripDisconnected) ;
+  
+
+  return RooAbsPdf::getAllConstraints(observables,constrainedParams,stripDisconnected) ;
+
+  // If stripDisconnected is true, run getAllConstraints for each component pdf with strip=true and merge results
+  RooArgSet* ret = new RooArgSet("AllConstraints") ;
+
+  // Save copy of input constrained params
+  RooArgSet cParOrig(constrainedParams) ;
+
+  // Storage of final merged set of stripped constrained terms 
+  RooArgSet cParsStrippedMerged ;
+
+  const RooAbsCategoryLValue& idx = indexCat() ;
+  TIterator* iter = idx.typeIterator() ;
+  RooCatType* state ;
+  while ((state = (RooCatType*) iter->Next())) {
+
+    // Query constraints from each simpdf component starting with original cPars definition
+    RooArgSet cParsTmp(cParOrig) ;
+    RooAbsPdf* pdf = getPdf(state->GetName()) ;
+    RooArgSet* tmp = pdf->getAllConstraints(observables,cParsTmp,stripDisconnected) ;
+
+    // Save returned constraint terms
+    ret->add(*tmp,kFALSE) ;
+    // Merge constrained parameters from this term with global result
+    cParsStrippedMerged.add(cParsTmp,kTRUE) ;
+    delete tmp ;
+  }
+
+  // Substitute input list with stripped merged list 
+  constrainedParams.removeAll() ;
+  constrainedParams.add(cParsStrippedMerged) ;
+
+  return ret ;
+}
+
+
+
+
