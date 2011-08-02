@@ -47,6 +47,8 @@ END_HTML
 #include "RooNLLVar.h"
 
 #include "RooMinuit.h"
+#include "RooMinimizer.h"
+#include "Math/MinimizerOptions.h"
 
 namespace RooStats {
 
@@ -104,15 +106,15 @@ namespace RooStats {
        Bool_t created(kFALSE) ;
        if (!reuse || fNll==0) {
 	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
-	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
+	 //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
 	 created = kTRUE ;
 	 //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
        }
        if (reuse && !created) {
 	 //cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
 	 fNll->setData(data,kFALSE) ;
- 	 if (fProfile) delete fProfile ; 
- 	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest) ; 
+	 // 	 if (fProfile) delete fProfile ; 
+	 // 	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest) ; 
 	 //fProfile->clearAbsMin() ;
        }
 
@@ -123,12 +125,16 @@ namespace RooStats {
        *attachedSet = paramsOfInterest;
 
 
+       ///////////////////////////////////////////////////////////////////////
+       // Main profiling version as of 5.30
        //       fPdf->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       profile->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       ((RooProfileLL*)profile)->nll().setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //       nll->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
        //cout << "evaluating profile LL" << endl ;
-       double ret = fProfile->getVal();
+
+       //      double ret = fProfile->getVal();  // previous main evaluation
+
        //       cout << "profile value = " << ret << endl ;
        //       cout <<"eval errors pdf = "<<fPdf->numEvalErrors() << endl;
        //       cout <<"eval errors profile = "<<profile->numEvalErrors() << endl;
@@ -138,9 +144,55 @@ namespace RooStats {
        //       	 cout <<"eval errors = "<<profile->numEvalErrors() << endl;
        //       paramsOfInterest.Print("v");
        //       cout << "ret = " << ret << endl;
+       ///////////////////////////////////////////////////////////////////////
+
+
+       ///////////////////////////////////////////////////////////////////////
+       // New profiling based on RooMinimizer (allows for Minuit2)
+       // based on major speed increases seen by CMS for complex problems
+
+       // set the parameters of interest to be fixed for the conditional MLE
+       TIterator* it = paramsOfInterest.createIterator();
+       RooRealVar* tmpPar = NULL, *tmpParA=NULL;
+       while((tmpPar = (RooRealVar*)it->Next())){
+	 tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
+	 tmpParA->setConstant();
+       }
+       
+       // get the numerator
+       RooMinimizer minim(*fNll);
+       minim.setStrategy(0);
+       minim.setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
+       int statusN = minim.minimize(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+       double condML = fNll->getVal();
+
+
+       // set the parameters of interest back to floating
+       it->Reset();
+       while((tmpPar = (RooRealVar*)it->Next())){
+	 tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
+	 tmpParA->setConstant(false);
+       }
+       //       attachedSet->Print("v");
+       delete it;
+
+       // get the denominator
+       RooMinimizer minim2(*fNll);
+       minim2.setStrategy(0);
+       minim2.setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
+       int statusD = minim2.minimize(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+
+
+       double uncondML = fNll->getVal();
+
+
+       double ret=condML-uncondML;;
+
 
        if(fOneSided){
-	 double fit_favored_mu = ((RooProfileLL*) fProfile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
+	 //	 double fit_favored_mu = ((RooProfileLL*) fProfile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
+	 double fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
+	 //	 cout <<"fit favored mu = " << fit_favored_mu <<endl;
        
 	 if( fit_favored_mu > initial_mu_value)
 	   // cout <<"fit-favored_mu, initial value" << fit_favored_mu << " " << initial_mu_value<<endl;
@@ -152,11 +204,14 @@ namespace RooStats {
 	 //cout << "deleting ProfileLL " << fNll << " " << fProfile << endl ;
 	 delete fNll;
 	 fNll = 0; 
-	 delete fProfile;
+	 //	 delete fProfile;
 	 fProfile = 0 ;
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);
+
+       if(statusN!=0 || statusD!=0)
+	 ret= -1; // indicate failed fit
 
        //////////////////////////////////////////////////////
        // return here and forget about the following code
