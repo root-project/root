@@ -348,6 +348,8 @@ void TGTextEntry::Init()
    Resize(tw + 8, max_ascent + max_descent + 7);
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    fCursorX     = offset ;
    fCursorIX    = fStartIX = fEndIX = fOffset = 0;
    fSelectionOn = fCursorOn = kFALSE;
@@ -671,6 +673,8 @@ void TGTextEntry::SetEchoMode(EEchoMode mode)
    if (fEchoMode == mode) return;
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    fEchoMode = mode;
    if (GetEchoMode() == kNoEcho) { fCursorX = offset; }
    UpdateOffset();
@@ -699,6 +703,8 @@ void TGTextEntry::NewMark(Int_t newPos)
 
    TString dt = GetDisplayText();
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    Int_t x = fOffset + offset;
    Int_t len = dt.Length();
 
@@ -721,6 +727,8 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
    // See also NewMark().
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    if (GetEchoMode() == kNoEcho) { fCursorX = offset; return; }
 
    UpdateOffset();
@@ -1066,6 +1074,8 @@ void TGTextEntry::DoRedraw()
 
    Int_t x, y, max_ascent, max_descent, h;
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    TString dt  = GetDisplayText();               // text to be displayed
    Int_t len   = dt.Length();                    // length of displayed text
 
@@ -1341,6 +1351,8 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
 
       if (event->fCode == kButton1) {
          Int_t offset =  IsFrameDrawn() ? 4 : 0;
+         if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+            offset = 2;
          Int_t x = fOffset + offset;
          Int_t position     = GetCharacterIndex(event->fX - x);
          fSelectionOn = kFALSE;
@@ -1384,6 +1396,8 @@ Bool_t TGTextEntry::HandleMotion(Event_t *event)
    if (!IsEnabled() || (GetEchoMode() == kNoEcho)) return kTRUE;
 
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    Int_t x = fOffset + offset;
    Int_t position = GetCharacterIndex(event->fX - x); // + 1;
    fSelectionOn = kTRUE;
@@ -1401,6 +1415,8 @@ Bool_t TGTextEntry::HandleDoubleClick(Event_t *event)
    if (!IsEnabled()) return kTRUE;
 
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    Int_t x = fOffset + offset ;
 
    DoubleClicked();
@@ -1547,6 +1563,8 @@ Bool_t TGTextEntry::IsCursorOutOfFrame()
    //                                  GetDisplayText(), fCursorIX);
 
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    Int_t w = GetWidth();
    return ((fCursorX < offset) || (fCursorX > w-offset));
 }
@@ -1565,6 +1583,8 @@ void TGTextEntry::ScrollByChar()
    Int_t w = GetWidth();
    Int_t d;
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
 
    if (fCursorX < offset) {
       fOffset += charWidth;
@@ -1601,6 +1621,8 @@ void TGTextEntry::UpdateOffset()
    TString dt = GetDisplayText();
    Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data() , dt.Length());
    Int_t offset = IsFrameDrawn() ? 4 : 0;
+   if ((offset == 0) && fParent->InheritsFrom("TGComboBox"))
+      offset = 2;
    Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
    if (textWidth > 0 && textWidth > w) {                          // may need to scroll.
