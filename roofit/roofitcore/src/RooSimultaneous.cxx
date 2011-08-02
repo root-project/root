@@ -1101,9 +1101,6 @@ RooArgSet* RooSimultaneous::getAllConstraints(const RooArgSet& observables, RooA
   // Forward to default implement if stripDisconnected is disabled
   if (!stripDisconnected) return RooAbsPdf::getAllConstraints(observables,constrainedParams,stripDisconnected) ;
   
-
-  return RooAbsPdf::getAllConstraints(observables,constrainedParams,stripDisconnected) ;
-
   // If stripDisconnected is true, run getAllConstraints for each component pdf with strip=true and merge results
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
