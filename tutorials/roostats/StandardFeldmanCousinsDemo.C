@@ -37,7 +37,8 @@ builds the sampling distribution of the test statistic via toy Monte Carlo.
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/PointSetInterval.h"
 #include "RooStats/ConfidenceBelt.h"
-
+#include "TStopwatch.h"
+#include "Math/MinimizerOptions.h"
 
 using namespace RooFit;
 using namespace RooStats;
@@ -109,6 +110,13 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
     return;
   }
 
+  TStopwatch ts;
+  ts.Start();
+
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+  ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
+  ROOT::Math::MinimizerOptions::SetDefaultPrintLevel(-1);
+
   /////////////////////////////////////////////
   // create and use the FeldmanCousins tool
   // to find and plot the 95% confidence interval
@@ -176,5 +184,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   }
   histOfThresholds->SetMinimum(0);
   histOfThresholds->Draw();
+  ts.Stop();
+  ts.Print();
 
 }
