@@ -64,6 +64,10 @@ namespace RooStats {
         fLastData = 0;
 	fOneSided = false;
         fReuseNll = false;
+	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
@@ -73,6 +77,9 @@ namespace RooStats {
        fLastData = 0;
        fOneSided = false;
        fReuseNll = false;
+       fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+       fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
+       fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
      virtual ~ProfileLikelihoodTestStat() {
        //       delete fRand;
@@ -85,6 +92,10 @@ namespace RooStats {
 
      static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+
+     void SetMinimizer(const char* minimizer){ fMinimizer=minimizer;}
+     void SetStrategy(Int_t strategy){fStrategy=strategy;}
+     void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -159,11 +170,13 @@ namespace RooStats {
 	 tmpParA->setConstant();
        }
        
+       //       cout <<"using Minimizer: "<< fMinimizer<< " with strategy = " << fStrategy << endl;
+
        // get the numerator
        RooMinimizer minim(*fNll);
-       minim.setStrategy(0);
-       minim.setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
-       int statusN = minim.minimize(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+       minim.setStrategy(fStrategy);
+       minim.setPrintLevel(fPrintLevel);
+       int statusN = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
        double condML = fNll->getVal();
 
 
@@ -178,9 +191,9 @@ namespace RooStats {
 
        // get the denominator
        RooMinimizer minim2(*fNll);
-       minim2.setStrategy(0);
-       minim2.setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
-       int statusD = minim2.minimize(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+       minim2.setStrategy(fStrategy);
+       minim2.setPrintLevel(fPrintLevel);
+       int statusD = minim2.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
 
 
        double uncondML = fNll->getVal();
@@ -192,16 +205,13 @@ namespace RooStats {
        if(fOneSided){
 	 //	 double fit_favored_mu = ((RooProfileLL*) fProfile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
 	 double fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
-	 //	 cout <<"fit favored mu = " << fit_favored_mu <<endl;
        
 	 if( fit_favored_mu > initial_mu_value)
-	   // cout <<"fit-favored_mu, initial value" << fit_favored_mu << " " << initial_mu_value<<endl;
 	   ret = 0 ;
        }
        delete attachedSet;
 
        if (!reuse) {
-	 //cout << "deleting ProfileLL " << fNll << " " << fProfile << endl ;
 	 delete fNll;
 	 fNll = 0; 
 	 //	 delete fProfile;
@@ -213,166 +223,9 @@ namespace RooStats {
        if(statusN!=0 || statusD!=0)
 	 ret= -1; // indicate failed fit
 
-       //////////////////////////////////////////////////////
-       // return here and forget about the following code
        return ret;
-       
-
-
-       //////////////////////////////////////////////////////////
-       // OLD version with some handling for local minima
-       // (not used right now)
-       /////////////////////////////////////////////////////////
-
-
-         bool needToRebuild = true; // try to avoid rebuilding if possible
-
-         if (fLastData == &data) // simple pointer comparison for now (note NLL makes COPY of data)
-            needToRebuild = false;
-         else fLastData = &data; // keep a copy of pointer to original data
-
-         // pointer comparison causing problems.  See multiple datasets with same value of pointer
-         // but actually a new dataset
-         needToRebuild = true;
-
-         // check mem leak in NLL or Profile. Should remove.
-         // if(fProfile) needToRebuild = false;
-
-
-         if (needToRebuild) {
-            if (fProfile) delete fProfile;
-            if (fNll) delete fNll;
-
-            /*
-             RooNLLVar* nll = new RooNLLVar("nll","",*fPdf,data, RooFit::Extended());
-             fNll = nll;
-             fProfile = new RooProfileLL("pll","",*nll, paramsOfInterest);
-             */
-            RooArgSet* constrainedParams = fPdf->getParameters(data);
-            RemoveConstantParameters(constrainedParams);
-            //cout << "cons: " << endl;
-            //constrainedParams->Print("v");
-
-            RooNLLVar * nll2 = (RooNLLVar*) fPdf->createNLL(
-               data, RooFit::CloneData(kFALSE), RooFit::Constrain(*constrainedParams)
-            );
-            fNll = nll2;
-            fProfile = (RooProfileLL*) nll2->createProfile(paramsOfInterest);
-            delete constrainedParams;
-
-            //	 paramsOfInterest.Print("v");
-
-            // set parameters to previous best fit params, to speed convergence
-            // and to avoid local minima
-            if (fCachedBestFitParams) {
-               // store original values, since minimization will change them.
-               RooArgSet* origParamVals = (RooArgSet*) paramsOfInterest.snapshot();
-
-               // these parameters are not guaranteed to be the best for this data
-               SetParameters(fCachedBestFitParams, fProfile->getParameters(data));
-               // now evaluate to force this profile to evaluate and store
-               // best fit parameters for this data
-               fProfile->getVal();
-
-               // possibly store last MLE for reference
-               //	 Double mle = fNll->getVal();
-
-               // restore parameters
-               SetParameters(origParamVals, &paramsOfInterest);
-
-               // cleanup
-               delete origParamVals;
-
-            } else {
-
-               // store best fit parameters
-               // RooProfileLL::bestFitParams returns best fit of nuisance parameters only
-               //	   fCachedBestFitParams = (RooArgSet*) (fProfile->bestFitParams().clone("lastBestFit"));
-               // ProfileLL::getParameters returns current value of the parameters
-               //	   fCachedBestFitParams = (RooArgSet*) (fProfile->getParameters(data)->clone("lastBestFit"));
-               //cout << "making fCachedBestFitParams: " << fCachedBestFitParams << fCachedBestFitParams->getSize() << endl;
-
-               // store original values, since minimization will change them.
-               RooArgSet* origParamVals = (RooArgSet*) paramsOfInterest.snapshot();
-
-               // find minimum
-               RooMinuit minuit(*fNll);
-               minuit.setPrintLevel(-999);
-               minuit.setNoWarn();
-               minuit.migrad();
-
-               // store the best fit values for future use
-               fCachedBestFitParams = (RooArgSet*) (fNll->getParameters(data)->snapshot());
-
-               // restore parameters
-               SetParameters(origParamVals, &paramsOfInterest);
-
-               // evaluate to force this profile to evaluate and store
-               // best fit parameters for this data
-               fProfile->getVal();
-
-               // cleanup
-               delete origParamVals;
-
-            }
-
-         }
-         // issue warning if problems
-         if (!fProfile) {
-            cout << "problem making profile" << endl;
-         }
-
-         // set parameters to point being requested
-         SetParameters(&paramsOfInterest, fProfile->getParameters(data));
-
-         Double_t value = fProfile->getVal();
-
-         /*
-          // for debugging caching
-          cout << "current value of input params: " << endl;
-          paramsOfInterest.Print("verbose");
-
-          cout << "current value of params in profile: " << endl;
-          fProfile->getParameters(data)->Print("verbose");
-
-          cout << "cached last best fit: " << endl;
-          fCachedBestFitParams->Print("verbose");
-          */
-
-         // catch false minimum
-         if (value < 0) {
-            //	 cout << "ProfileLikelihoodTestStat: problem that profileLL = " << value
-            //	      << " < 0, indicates false min.  Try again."<<endl;
-            delete fNll;
-            delete fProfile;
-            /*
-             RooNLLVar* nll = new RooNLLVar("nll","",*fPdf,data, RooFit::Extended());
-             fNll = nll;
-             fProfile = new RooProfileLL("pll","",*nll, paramsOfInterest);
-             */
-
-            RooArgSet* constrainedParams = fPdf->getParameters(data);
-            RemoveConstantParameters(constrainedParams);
-
-            RooNLLVar * nll2 = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE), RooFit::Constrain(
-               *constrainedParams));
-            fNll = nll2;
-            fProfile = (RooProfileLL*) nll2->createProfile(paramsOfInterest);
-            delete constrainedParams;
-
-            // set parameters to point being requested
-            SetParameters(&paramsOfInterest, fProfile->getParameters(data));
-
-            value = fProfile->getVal();
-            //cout << "now profileLL = " << value << endl;
-         }
-         //       cout << "now profileLL = " << value << endl;
-         RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG);
-         return value;
-
-
-       
-      }
+             
+     }
 
     
       virtual const TString GetVarName() const {return "Profile Likelihood Ratio";}
@@ -391,9 +244,12 @@ namespace RooStats {
 
       static Bool_t fgAlwaysReuseNll ;
       Bool_t fReuseNll ;
+      TString fMinimizer;
+      Int_t fStrategy;
+      Int_t fPrintLevel;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,4)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,5)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 
