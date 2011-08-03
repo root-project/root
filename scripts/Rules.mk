@@ -195,7 +195,11 @@ locked_execution = \
    rm -r $(1).lock; \
    exit $$command_result
 
+ifeq ($(PWD)/,$(ROOTTEST_LOC))
+EVENTDIR = root/io/event
+else
 EVENTDIR = $(ROOTTEST_LOC)/root/io/event
+endif
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL),notest);)
 $(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)  
