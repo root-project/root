@@ -965,7 +965,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    if(opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
    if(opt.Contains("F")) optionFill = 1;  else optionFill = 0;
    if(opt.Contains("2") || opt.Contains("3") ||
-      opt.Contains("4")) optionE = 1;  else optionE = 0;
+      opt.Contains("4") || opt.Contains("5")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
 
    // If no "drawing" option is selected and if chopt<>' ' nothing is done.
@@ -2282,10 +2282,12 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   Bool_t option5 = kFALSE;
    if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
+   if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
    if (option3) {
       xline = new Double_t[2*theNpoints];
@@ -2364,7 +2366,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
          if (x2b > gPad->GetUxmax()) x2b = gPad->GetUxmax();
          if (y2b < gPad->GetUymin()) y2b = gPad->GetUymin();
          if (y2b > gPad->GetUymax()) y2b = gPad->GetUymax();
-         box.PaintBox(x1b, y1b, x2b, y2b);
+         if (option5) box.PaintBox(x1b, y1b, x2b, y2b, "l");
+         else         box.PaintBox(x1b, y1b, x2b, y2b);
          continue;
       }
 
@@ -2515,10 +2518,12 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   Bool_t option5 = kFALSE;
    if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
+   if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
    if (option3) {
       xline = new Double_t[2*theNpoints];
@@ -2599,7 +2604,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
          if (x2b > gPad->GetUxmax()) x2b = gPad->GetUxmax();
          if (y2b < gPad->GetUymin()) y2b = gPad->GetUymin();
          if (y2b > gPad->GetUymax()) y2b = gPad->GetUymax();
-         box.PaintBox(x1b, y1b, x2b, y2b);
+         if (option5) box.PaintBox(x1b, y1b, x2b, y2b, "l");
+         else         box.PaintBox(x1b, y1b, x2b, y2b);
          continue;
       }
 
@@ -2745,11 +2751,13 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Bool_t option2 = kFALSE;
    Bool_t option3 = kFALSE;
    Bool_t option4 = kFALSE;
+   Bool_t option5 = kFALSE;
    if (strchr(option,'0')) option0 = kTRUE;
    if (strchr(option,'2')) option2 = kTRUE;
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
-
+   if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
+   
    if (option3) {
       xline = new Double_t[2*theNpoints];
       yline = new Double_t[2*theNpoints];
@@ -2827,7 +2835,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
          if (x2b > gPad->GetUxmax()) x2b = gPad->GetUxmax();
          if (y2b < gPad->GetUymin()) y2b = gPad->GetUymin();
          if (y2b > gPad->GetUymax()) y2b = gPad->GetUymax();
-         box.PaintBox(x1b, y1b, x2b, y2b);
+         if (option5) box.PaintBox(x1b, y1b, x2b, y2b, "l");
+         else         box.PaintBox(x1b, y1b, x2b, y2b);
          continue;
       }
 
