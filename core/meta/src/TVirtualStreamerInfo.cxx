@@ -17,10 +17,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TClass.h"
 #include "TVirtualStreamerInfo.h"
 #include "TPluginManager.h"
 #include "TStreamerElement.h"
+#include "TError.h"
 
 
 TVirtualStreamerInfo *TVirtualStreamerInfo::fgInfoFactory    = 0;
@@ -151,9 +153,19 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
             return 0;
          fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
       } else {
-         gROOT->GetPluginManager()->Error("FindHandler",
-            "Cannot find plugin handler for TVirtualStreamerInfo!"
-            " Does $ROOTSYS/etc/plugins/TVirtualStreamerInfo exist?");
+         TString filename("$ROOTSYS/etc/plugins/TVirtualStreamerInfo");
+         gSystem->ExpandPathName(filename);
+         if (gSystem->AccessPathName(filename) > 0) {            
+            ::Fatal("TVirtualStreamerInfo::Factory",
+                    "Cannot find the plugin handlers for TVirtualStreamerInfo! "
+                    "$ROOTSYS/etc/plugins/TVirtualStreamerInfo does not exist "
+                    "or is inaccessible.");
+         } else {
+            ::Fatal("TVirtualStreamerInfo::Factory",
+                    "Cannot find the plugin handler for TVirtualStreamerInfo! "
+                    "However $ROOTSYS/etc/plugins/TVirtualStreamerInfo is accessible, "
+                    "Check the content of this directory!");
+         }
       }
    }
 
