@@ -263,6 +263,12 @@ A filled area is drawn through the end points of the vertical error bars.
 A smoothed filled area is drawn through the end points of the vertical error
 bars.
 </td></tr>
+
+<tr><th valign=top>"5"</th><td>
+Error rectangles are drawn like option "2". In addition the contour line
+around the boxes is drawn. This can be useful when boxes' fill colors are very
+light or in gray scale mode. 
+</td></tr>
 </table>
 <p>
 <tt>gStyle->SetErrorX(dx)</tt> controls the size of the error along x.
@@ -2757,7 +2763,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'3')) option3 = kTRUE;
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
-   
+
    if (option3) {
       xline = new Double_t[2*theNpoints];
       yline = new Double_t[2*theNpoints];
