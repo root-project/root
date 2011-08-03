@@ -185,6 +185,10 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
          } else {
             Error("Connect", "some severe error occurred while opening"
                   " the connection at %s - exit", url);
+            if (cadm && cadm->LastServerError())
+               Printf("   '%s'", cadm->LastServerError()->errmsg);
+            else
+               Printf("   (error message not available)");
             cadm = 0;
             return cadm;
          }

@@ -1811,7 +1811,7 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
       // Set error, in case of need
       fOpenError = kXR_NotAuthorized;
       LastServerError.errnum = fOpenError;
-      strcpy(LastServerError.errmsg, "unable to get protocol object.");
+      strcat(LastServerError.errmsg, ": unable to get protocol object.");
    }
 
    // Return the result of the negotiation
