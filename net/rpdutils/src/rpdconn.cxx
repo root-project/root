@@ -395,7 +395,11 @@ int rpdconn::senddesc(int desc)
 #ifndef HAVE_MSGHDR_ACCRIGHT
          struct cmsghdr *cmsg;
          int    myfds[1] = {desc};         // Contains the file descriptor to pass
+#ifdef R__MACOSX
+         char   buf[sizeof(struct cmsghdr) + sizeof (myfds)];
+#else
          char   buf[CMSG_SPACE(sizeof myfds)];  // ancillary data buffer
+#endif
          int   *fdptr = 0;
          msg.msg_control = buf;
          msg.msg_controllen = sizeof buf;
