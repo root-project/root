@@ -1,5 +1,6 @@
 // @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
+// Additional Contributions: Giovanni Petrucciani 
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -116,7 +117,13 @@ namespace RooStats {
        
        Bool_t created(kFALSE) ;
        if (!reuse || fNll==0) {
-	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
+	 RooArgSet* allParams = fPdf->getParameters(data);
+	 RooStats::RemoveConstantParameters(allParams);
+
+	 // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
+	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+
+	 //	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
 	 //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
 	 created = kTRUE ;
 	 //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
@@ -134,7 +141,7 @@ namespace RooStats {
        RooArgSet* attachedSet = fNll->getVariables();
 
        *attachedSet = paramsOfInterest;
-
+       RooArgSet* origAttachedSet = (RooArgSet*) attachedSet->snapshot();
 
        ///////////////////////////////////////////////////////////////////////
        // Main profiling version as of 5.30
@@ -162,6 +169,7 @@ namespace RooStats {
        // New profiling based on RooMinimizer (allows for Minuit2)
        // based on major speed increases seen by CMS for complex problems
 
+       /*
        // set the parameters of interest to be fixed for the conditional MLE
        TIterator* it = paramsOfInterest.createIterator();
        RooRealVar* tmpPar = NULL, *tmpParA=NULL;
@@ -173,11 +181,8 @@ namespace RooStats {
        //       cout <<"using Minimizer: "<< fMinimizer<< " with strategy = " << fStrategy << endl;
 
        // get the numerator
-       RooMinimizer minim(*fNll);
-       minim.setStrategy(fStrategy);
-       minim.setPrintLevel(fPrintLevel);
-       int statusN = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
-       double condML = fNll->getVal();
+       int statusN;
+       double condML = GetMinNLL(statusN);
 
 
        // set the parameters of interest back to floating
@@ -186,18 +191,34 @@ namespace RooStats {
 	 tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
 	 tmpParA->setConstant(false);
        }
-       //       attachedSet->Print("v");
        delete it;
 
        // get the denominator
-       RooMinimizer minim2(*fNll);
-       minim2.setStrategy(fStrategy);
-       minim2.setPrintLevel(fPrintLevel);
-       int statusD = minim2.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+       int statusD;
+       double uncondML = GetMinNLL(statusD);
+       */
 
 
-       double uncondML = fNll->getVal();
+       // other order
+       // get the numerator
+       RooArgSet* snap =  (RooArgSet*)paramsOfInterest.snapshot();
+       // get the denominator
+       int statusD;
+       double uncondML = GetMinNLL(statusD);
 
+       //       cout <<" reestablish snapshot"<<endl;
+       *attachedSet = *snap;
+
+       TIterator* it = paramsOfInterest.createIterator();
+       RooRealVar* tmpPar = NULL, *tmpParA=NULL;
+       while((tmpPar = (RooRealVar*)it->Next())){
+	 tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
+	 tmpParA->setConstant();
+       }
+       int statusN;
+       double condML = GetMinNLL(statusN);
+
+       *attachedSet = *origAttachedSet;
 
        double ret=condML-uncondML;;
 
@@ -210,6 +231,9 @@ namespace RooStats {
 	   ret = 0 ;
        }
        delete attachedSet;
+       delete origAttachedSet;
+       delete snap;
+       delete it;
 
        if (!reuse) {
 	 delete fNll;
@@ -225,13 +249,41 @@ namespace RooStats {
 
        return ret;
              
-     }
+     }     
+
+
 
     
       virtual const TString GetVarName() const {return "Profile Likelihood Ratio";}
       
       //      const bool PValueIsRightTail(void) { return false; } // overwrites default
 
+  private:
+      double GetMinNLL(int& status) {
+
+	RooMinimizer minim(*fNll);
+	minim.setStrategy(fStrategy);
+	minim.setPrintLevel(fPrintLevel);
+	//	minim.optimizeConst(true);
+	for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
+	  //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+	  status = minim.minimize(fMinimizer, "Minimize");
+	  if (status == 0) {  
+            break;
+	  } else {
+	    if (tries > 1) {
+	      printf("    ----> Doing a re-scan first\n");
+	      minim.minimize(fMinimizer,"Scan");
+	    }
+	    if (tries > 2) {
+	      printf("    ----> trying with strategy = 1\n");
+	     minim.setStrategy(1);
+	    }
+	  }
+	}
+	//	cout <<"fNll = " <<  fNll->getVal()<<endl;
+	return fNll->getVal();
+      }
 
    private:
       RooProfileLL* fProfile; //!
