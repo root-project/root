@@ -80,8 +80,6 @@ public:
 
   virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
-  virtual RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected=kTRUE) const ;
-  
 protected:
 
   void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
