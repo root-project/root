@@ -1062,7 +1062,7 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
             return kTRUE;
          }
          SetMenuState();
-         fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
+         fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kTRUE, kTRUE);
       }
       gDbl_clk = kFALSE;
       gTrpl_clk = kFALSE;

@@ -116,7 +116,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    xx = topx + x + 1;
    yy = topy + y + 1;
 
-   PlaceMenu(xx, yy, kFALSE, kTRUE);
+   PlaceMenu(xx, yy, kTRUE, kTRUE);
    // add some space for the right-side '?' (help)
    fMenuWidth += 5;
    Resize(GetDefaultWidth()+5, GetDefaultHeight());
