@@ -3837,6 +3837,7 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
    // included ShowOutput, to display the redirected output.
    // Returns 0 on success, -1 in case of error.
 
+   FILE *fout, *ferr;
    static int fd1=0, fd2=0;
    static fpos_t pos1=0, pos2=0;
    // Instance to be used if the caller does not passes 'h'
@@ -3864,7 +3865,7 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       fgetpos(stdout, &pos1);
       fd1 = _dup(fileno(stdout));
       // redirect stdout & stderr
-      if (freopen(file, m, stdout) == 0) {
+      if ((fout = freopen(file, m, stdout)) == 0) {
          SysError("RedirectOutput", "could not freopen stdout");
          if (fd1 > 0) {
             _dup2(fd1, fileno(stdout));
@@ -3878,7 +3879,7 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
       fflush(stderr);
       fgetpos(stderr, &pos2);
       fd2 = _dup(fileno(stderr));
-      if (freopen(file, m, stderr) == 0) {
+      if ((ferr = freopen(file, m, stderr)) == 0) {
          SysError("RedirectOutput", "could not freopen stderr");
          if (fd1 > 0) {
             _dup2(fd1, fileno(stdout));
@@ -3894,6 +3895,10 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
          fsetpos(stderr, &pos2);
          fd1 = fd2 = 0;
          return -1;
+      }
+      if (m[0] == 'a') {
+         fseek(fout, 0, SEEK_END);
+         fseek(ferr, 0, SEEK_END);
       }
    } else {
       // Restore stdout & stderr
