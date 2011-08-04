@@ -72,15 +72,6 @@
 
 #include "TFileMerger.h"
 
-TList *FileList;
-TFile *Target, *Source;
-Bool_t noTrees;
-Bool_t fastMethod;
-Bool_t reoptimize;
-
-int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
-int MergeRootfile( TDirectory *target, TList *sourcelist);
-
 //___________________________________________________________________________
 int main( int argc, char **argv )
 {
@@ -102,12 +93,11 @@ int main( int argc, char **argv )
       cout << " a slower method is used"<<endl;
       return 1;
    }
-   FileList = new TList();
 
    Bool_t force = kFALSE;
    Bool_t skip_errors = kFALSE;
-   reoptimize = kFALSE;
-   noTrees = kFALSE;
+   Bool_t reoptimize = kFALSE;
+   Bool_t noTrees = kFALSE;
 
    int ffirst = 2;
    Int_t newcomp = 1;
@@ -150,7 +140,6 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   fastMethod = kTRUE;
    for ( int i = ffirst; i < argc; i++ ) {
       if (argv[i] && argv[i][0]=='@') {
          std::ifstream indirect_file(argv[i]+1);
@@ -174,16 +163,18 @@ int main( int argc, char **argv )
          }
       }
    }
-   if (merger.HasCompressionChange() && !reoptimize) {
-      // Don't warn if the user any request re-optimization.
-      cout <<"Sources and Target have different compression levels"<<endl;
-      cout <<"Merging will be slower"<<endl;
+   if (reoptimize) {
+      merger.SetFastMethod(kFALSE);
+   } else {
+      if (merger.HasCompressionChange()) {
+         // Don't warn if the user any request re-optimization.
+         cout <<"Sources and Target have different compression levels"<<endl;
+         cout <<"Merging will be slower"<<endl;
+      }
    }
+   merger.SetNotrees(noTrees);
 
    Bool_t status = merger.Merge();
-
-   //must delete Target to avoid a problem with dictionaries in~ TROOT
-   delete Target;
 
    if (status) {
       return 0;
