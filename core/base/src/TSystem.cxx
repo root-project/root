@@ -1058,26 +1058,38 @@ again:
    iter++; c = inp; ier = 0;
    x = out; x[0] = 0;
 
+   p = 0; e = 0;
+   if (c[0] == '~' && c[1] == '/') { // ~/ case
+      p = HomeDirectory(); 
+      e = c + 1; 
+      if (p) {                         // we have smth to copy
+         strlcpy(x, p, kBufSize); 
+         x += strlen(p); 
+         c = e;
+      } else {
+         ++ier;
+         ++c;
+      }
+   } else if (c[0] == '~' && c[1] != '/') { // ~user case
+      n = strcspn(c+1, "/ ");
+      buff[0] = 0; 
+      strncat(buff, c+1, n);
+      p = HomeDirectory(buff); 
+      e = c+1+n; 
+      if (p) {                          // we have smth to copy
+         strlcpy(x, p, kBufSize); 
+         x += strlen(p); 
+         c = e;
+      } else {
+         ++ier;
+         ++c;
+      }
+   }
+
    for ( ; c[0]; c++) {
 
       p = 0; e = 0;
-      if (c[0] == '~' && c[1] == '/') { // ~/ case
-         p = HomeDirectory(); e = c + 1; if (!p) ier++;
-      }
-      if (p) {                         // we have smth to copy
-         strlcpy(x, p, kBufSize); x += strlen(p); c = e-1; continue;
-      }
 
-      p = 0;
-      if (c[0] == '~' && c[1] != '/') { // ~user case
-         n = strcspn(c+1, "/ "); buff[0] = 0; strncat(buff, c+1, n);
-         p = HomeDirectory(buff); e = c+1+n; if (!p) ier++;
-      }
-      if (p) {                          // we have smth to copy
-         strlcpy(x, p, kBufSize); x += strlen(p); c = e-1; continue;
-      }
-
-      p = 0;
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
          strlcpy(buff, WorkingDirectory(), kBufSize);
          p = buff;
