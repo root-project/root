@@ -347,7 +347,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   nextsource = (TFile*)sourcelist->After( nextsource );
                } while (nextsource);
                // Merge the list, if still to be done
-               if (oneGo) {
+               if (oneGo || info.fIsFirst) {
                   ROOT::MergeFunc_t func = obj->IsA()->GetMerge();
                   func(obj, &inputs, &info);
                   info.fIsFirst = kFALSE;
@@ -406,6 +406,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   }
                   nextsource = (TFile*)sourcelist->After( nextsource );
                }
+               // Merge the list, if still to be done
+               if (info.fIsFirst) {
+                  Int_t error = 0;
+                  obj->Execute("Merge", listHargs.Data(), &error);
+                  info.fIsFirst = kFALSE;
+                  listH.Delete();
+               }
             }
          } else if (obj->InheritsFrom(TObject::Class()) &&
                     obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*") ) {
@@ -456,6 +463,13 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                      }
                   }
                   nextsource = (TFile*)sourcelist->After( nextsource );
+               }
+               // Merge the list, if still to be done
+               if (info.fIsFirst) {
+                  Int_t error = 0;
+                  obj->Execute("Merge", listHargs.Data(), &error);
+                  info.fIsFirst = kFALSE;
+                  listH.Delete();
                }
             }
          } else {
