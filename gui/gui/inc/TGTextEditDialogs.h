@@ -99,7 +99,7 @@ protected:
    TGIcon            *fPrinterIcon;                // printer icon
    TGButton          *fPrintButton;                // print button
    TGButton          *fCancelButton;               // cancel button
-   TGTextEntry       *fPrinterEntry;               // printer text entry widget
+   TGComboBox        *fPrinterEntry;               // printer list combo widget
    TGTextEntry       *fPrintCommandEntry;          // command text entry widget
    TGTextBuffer      *fBPrinter, *fBPrintCommand;  // printer and command text buffers
    TGLabel           *fLPrinter, *fLPrintCommand;  // printer and command labels
@@ -112,6 +112,7 @@ public:
    virtual ~TGPrintDialog();
 
    virtual void   CloseWindow();
+   virtual void   GetPrinters();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    ClassDef(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget

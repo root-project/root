@@ -38,6 +38,8 @@
 #include "TGIcon.h"
 #include "TGMsgBox.h"
 #include "TGComboBox.h"
+#include "TSystem.h"
+#include "TObjArray.h"
 
 #include <stdlib.h>
 
@@ -354,17 +356,15 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fBPrintCommand->AddText(0, *printProg);
    fPrintCommandEntry = new TGTextEntry(fF3, fBPrintCommand);
    fPrintCommandEntry->Associate(this);
-   fPrintCommandEntry->Resize(100, fPrintCommandEntry->GetDefaultHeight());
+   fPrintCommandEntry->Resize(150, fPrintCommandEntry->GetDefaultHeight());
 
    fF3->AddFrame(fLPrintCommand, fL5);
    fF3->AddFrame(fPrintCommandEntry, fL6);
 
    fLPrinter = new TGLabel(fF4, new TGHotString("Printer:"));
-   fBPrinter = new TGTextBuffer(20);
-   fBPrinter->AddText(0, *printerName);
-   fPrinterEntry = new TGTextEntry(fF4, fBPrinter);
-   fPrinterEntry->Associate(this);
-   fPrinterEntry->Resize(100, fPrinterEntry->GetDefaultHeight());
+   fPrinterEntry = new TGComboBox(fF4, *printerName);
+   fBPrinter = fPrinterEntry->GetTextEntry()->GetBuffer();
+   fPrinterEntry->Resize(150, fPrinterEntry->GetTextEntry()->GetDefaultHeight());
    fF4->AddFrame(fLPrinter, fL5);
    fF4->AddFrame(fPrinterEntry, fL6);
 
@@ -385,6 +385,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    MapSubwindows();
    Resize(GetDefaultSize());
 
+   GetPrinters();
    CenterOnParent();
 
    SetWindowName("Print");
@@ -423,6 +424,57 @@ void TGPrintDialog::CloseWindow()
    // re-used.
 
    DeleteWindow();
+}
+
+//______________________________________________________________________________
+void TGPrintDialog::GetPrinters()
+{
+   // Ask the system fo the list of available printers and populate the combo
+   // box. If there is a default printer, select it in the list.
+
+   TObject *obj;
+   Int_t idx = 1, dflt =1;
+
+   if (gVirtualX->InheritsFrom("TGX11")) {
+      if (!gSystem->Which(gSystem->Getenv("PATH"), "lpstat", kExecutePermission))
+         return;
+      TString defaultprinter = gSystem->GetFromPipe("lpstat -d");
+      TString printerlist = gSystem->GetFromPipe("lpstat -v");
+      TObjArray *tokens = printerlist.Tokenize("\n");
+      TIter iter(tokens);
+      while((obj = iter())) {
+         TString line = obj->GetName();
+         TObjArray *tk = line.Tokenize(" ");
+         TString pname = ((TObject*)tk->At(2))->GetName();
+         if (pname.EndsWith(":")) pname.Remove(pname.Last(':'));
+         //if (pname.Contains(":")) pname.Remove(pname.Last(':'));
+         if (defaultprinter.Contains(pname)) {
+            dflt = idx;
+            fPrinterEntry->GetTextEntry()->SetText(pname.Data(), kFALSE);
+         }
+         fPrinterEntry->AddEntry(pname.Data(), idx++);
+      }
+   }
+   else {
+      TString defaultprinter = gSystem->GetFromPipe("WMIC Path Win32_Printer where Default=TRUE Get DeviceID");
+      TString printerlist = gSystem->GetFromPipe("WMIC Path Win32_Printer Get DeviceID");
+      defaultprinter.Remove(0, defaultprinter.First('\n')); // remove "Default"
+      printerlist.Remove(0, printerlist.First('\n')); // remove "DeviceID"
+      printerlist.ReplaceAll("\r", "");
+      TObjArray *tokens = printerlist.Tokenize("\n");
+      TIter iter(tokens);
+      while((obj = iter())) {
+         TString pname = obj->GetName();
+         pname.Remove(TString::kTrailing, ' ');
+         if (defaultprinter.Contains(pname)) {
+            dflt = idx;
+            fPrinterEntry->GetTextEntry()->SetText(pname.Data(), kFALSE);
+         }
+         fPrinterEntry->AddEntry(pname.Data(), idx++);
+      }
+   }
+   fPrinterEntry->Select(dflt, kFALSE);
+   fPrinterEntry->Layout();
 }
 
 //______________________________________________________________________________
