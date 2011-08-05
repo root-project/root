@@ -501,7 +501,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                   info.fIsFirst = kFALSE;
                   if (error) {
                      Error("MergeRecursive", "calling Merge() on '%s' with the corresponding object in '%s'",
-                           obj->GetName(), nextsource->GetName());
+                           obj->GetName(), key->GetName());
                   }
                } else {
                   while (nextsource) {
@@ -560,7 +560,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                   obj->Execute("Merge", listHargs.Data(), &error);
                   if (error) {
                      Error("MergeRecursive", "calling Merge() on '%s' with the corresponding object in '%s'",
-                           obj->GetName(), nextsource->GetName());
+                           obj->GetName(), key->GetName());
                   }
                } else {
                   while (nextsource) {
