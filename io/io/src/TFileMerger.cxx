@@ -470,7 +470,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                                  Error("MergeRecursive", "calling Merge() on '%s' with the corresponding object in '%s'",
                                        obj->GetName(), nextsource->GetName());
                               }
-                           inputs.Delete();
+                              inputs.Delete();
                            }
                         }
                      }
