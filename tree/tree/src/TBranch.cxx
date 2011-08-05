@@ -1868,14 +1868,14 @@ void TBranch::ReadLeavesImpl(TBuffer& b)
 //______________________________________________________________________________
 void TBranch::ReadLeaves0Impl(TBuffer&)
 {
-   // Loop on all leaves of this branch to read Basket buffer.
+   // Read zero leaves without the overhead of a loop.
    
 }
 
 //______________________________________________________________________________
 void TBranch::ReadLeaves1Impl(TBuffer& b)
 {
-   // Loop on all leaves of this branch to read Basket buffer.
+   // Read one leaf without the overhead of a loop.
    
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
 }
@@ -1883,7 +1883,7 @@ void TBranch::ReadLeaves1Impl(TBuffer& b)
 //______________________________________________________________________________
 void TBranch::ReadLeaves2Impl(TBuffer& b)
 {
-   // Loop on all leaves of this branch to read Basket buffer.
+   // Read two leaves without the overhead of a loop.
    
    ((TLeaf*) fLeaves.UncheckedAt(0))->ReadBasket(b);
    ((TLeaf*) fLeaves.UncheckedAt(1))->ReadBasket(b);
