@@ -1170,9 +1170,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                void *refobj = maininfo->GetValuePointer(leaf,0);
                if (refobj) {
                   cl = refproxy->GetValueClass(refobj);
-               }
-               
-               cl = ((TFormLeafInfoReference*)maininfo)->GetValueClass(leaf);
+               }               
                if ( cl ) break;
             }
             if ( !cl )  {
