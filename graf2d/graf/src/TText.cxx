@@ -377,6 +377,12 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    // into account the text angle (angle = kFALSE). If angle is set to kTRUE
    // w and h take the angle into account.
 
+   const char *text = GetTitle();
+   if (!strlen(text)) {
+      w = h = 0;
+      return;
+   }
+   
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
