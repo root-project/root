@@ -436,8 +436,9 @@ void TGPrintDialog::GetPrinters()
    Int_t idx = 1, dflt =1;
 
    if (gVirtualX->InheritsFrom("TGX11")) {
-      if (!gSystem->Which(gSystem->Getenv("PATH"), "lpstat", kExecutePermission))
-         return;
+      char *lpstat = gSystem->Which(gSystem->Getenv("PATH"), "lpstat", 
+                                    kExecutePermission);
+      if (lpstat == 0) return;
       TString defaultprinter = gSystem->GetFromPipe("lpstat -d");
       TString printerlist = gSystem->GetFromPipe("lpstat -v");
       TObjArray *tokens = printerlist.Tokenize("\n");
@@ -454,6 +455,7 @@ void TGPrintDialog::GetPrinters()
          }
          fPrinterEntry->AddEntry(pname.Data(), idx++);
       }
+      delete [] lpstat;
    }
    else {
       TString defaultprinter = gSystem->GetFromPipe("WMIC Path Win32_Printer where Default=TRUE Get DeviceID");
