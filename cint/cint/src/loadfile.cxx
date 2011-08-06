@@ -2198,6 +2198,7 @@ int G__loadfile(const char *filenamein)
   G__no_exec_compile = 0;
   G__asm_exec = 0;
 
+  bool failed_shl_load = false;
 #ifdef G__SHAREDLIB
   len = strlen(filename);
   dllpost = G__getmakeinfo1("DLLPOST");
@@ -2238,6 +2239,10 @@ int G__loadfile(const char *filenamein)
       int allsl = G__shl_load(G__ifile.name);
       if (allsl != -1) {
          G__srcfile[fentry].slindex = allsl;
+      } else {
+         G__scratch_upto(G__srcfile[fentry].dictpos);
+         failed_shl_load = true;
+         goto G__loadfile_cleanup;
       }
 #else
       // don't load any shared libs
@@ -2331,7 +2336,10 @@ int G__loadfile(const char *filenamein)
   }
 
 
-  /******************************************************
+#if !defined(ROOTBUILD) && !defined(G__BUILDING_CINTTMP)
+G__loadfile_cleanup:
+#endif
+   /******************************************************
    * restore parser parameters
    ******************************************************/
   pragmacompile_filenum = G__ifile.filenum;
@@ -2364,8 +2372,13 @@ int G__loadfile(const char *filenamein)
   G__security = store_security;
 #endif
   if(G__return>G__RETURN_NORMAL) {
-    G__UnlockCriticalSection();
-    return(G__LOADFILE_FAILURE);
+     if (failed_shl_load) {
+        // Since the shl_load fail not declared an interpreter
+        // error, we need to clear G__return, right here.
+        G__return=G__RETURN_NORMAL;
+     }
+     G__UnlockCriticalSection();
+     return(G__LOADFILE_FAILURE);
   }
 
 
