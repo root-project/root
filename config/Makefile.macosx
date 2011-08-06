@@ -128,8 +128,10 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 # Fortran:
 F77ORG        = gfortran
 F77FLAGS      = -m32 -std=legacy
+ifneq ($(F77),)
 F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.dylib 2>&1 | grep /)
 F77LIBS      += $(shell $(F77) -m32 -print-file-name=libgfortranbegin.a 2>&1 | grep /)
+endif
 
 # Override default in Makefile.config
 INSTALL      := /bin/cp -pPR
