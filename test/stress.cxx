@@ -805,12 +805,17 @@ void stress8(Int_t nevent)
   // First step: make sure the Event shared library exists
   // This test dynamic linking when running in interpreted mode
    if (!TClassTable::GetDict("Event")) {
-      Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-      Int_t st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
+      Int_t st1 = -1;
+      if (gSystem->DynamicPathName("$ROOTSYS/test/libEvent",kTRUE)) {
+         st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
+      }
       if (st1 == -1) {
-         st1 = gSystem->Load("test/libEvent");
+         if (gSystem->DynamicPathName("test/libEvent",kTRUE)) {
+            st1 = gSystem->Load("test/libEvent");
+         }
          if (st1 == -1) {
             printf("===>stress8 will try to build the libEvent library\n");
+            Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
             if (UNIX) gSystem->Exec("(cd $ROOTSYS/test; make Event)");
             else      gSystem->Exec("(cd %ROOTSYS%\\test && nmake libEvent.dll)");
             st1 = gSystem->Load("$(ROOTSYS)/test/libEvent");
