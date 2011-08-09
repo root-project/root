@@ -66,8 +66,8 @@ void tclread()
    TClonesArray *arr = new TClonesArray("TLine");
    T->GetBranch("tcl")->SetAutoDelete(kFALSE);
    T->SetBranchAddress("tcl",&arr);
-   Int_t nentries = (Int_t)(T->GetEntries());
-   for (Int_t ev=0;ev<nentries;ev++) {
+   Long64_t nentries = T->GetEntries();
+   for (Long64_t ev=0;ev<nentries;ev++) {
       arr->Clear();
       T->GetEntry(ev);
       Int_t nlines = arr->GetEntriesFast();

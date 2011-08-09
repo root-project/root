@@ -133,10 +133,10 @@ void tree4r()
   TBranch *branch  = t4->GetBranch("event_split");
   branch->SetAddress(&event);
    
-  Int_t nevent = (Int_t)t4->GetEntries();
+  Long64_t nevent = t4->GetEntries();
   Int_t nselected = 0;
   Int_t nb = 0;
-  for (Int_t i=0;i<nevent;i++) {    
+  for (Long64_t i=0;i<nevent;i++) {    
     //read branch "fNtrack"only
     bntrack->GetEntry(i);  
           

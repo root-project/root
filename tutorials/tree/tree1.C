@@ -74,8 +74,8 @@ void tree1r()
    TH2F *hpxpy = new TH2F("hpxpy","py vs px",30,-3,3,30,-3,3);
    
    //read all entries and fill the histograms
-   Int_t nentries = (Int_t)t1->GetEntries();
-   for (Int_t i=0;i<nentries;i++) {
+   Long64_t nentries = t1->GetEntries();
+   for (Long64_t i=0;i<nentries;i++) {
      t1->GetEntry(i);
      hpx->Fill(px);
      hpxpy->Fill(px,py);

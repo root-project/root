@@ -93,15 +93,15 @@ void CompareTrees() {
    TF->SetBranchAddress("z",&fz);
    T->AddFriend(TF);
    
-   Int_t nentries = (Int_t)T->GetEntries();
+   Long64_t nentries = T->GetEntries();
    Int_t nok = 0;
-   for (Int_t i=0;i<nentries;i++) {
+   for (Long64_t i=0;i<nentries;i++) {
       T->GetEntry(i);
       if (fRun == Run && fEvent==Event && x==fx && y==fy &&z==fz) {
          nok++;
       } else {
          if (TF->GetEntryWithIndex(Run,Event) > 0) {
-            if (i <100) printf("i=%d, Run=%d, Event=%d, x=%g, y=%g, z=%g,  : fRun=%d, fEvent=%d, fx=%g, fy=%g, fz=%g\n",i,Run,Event,x,y,z,fRun,fEvent,fx,fy,fz);
+            if (i <100) printf("i=%lld, Run=%d, Event=%d, x=%g, y=%g, z=%g,  : fRun=%d, fEvent=%d, fx=%g, fy=%g, fz=%g\n",i,Run,Event,x,y,z,fRun,fEvent,fx,fy,fz);
          } 
       } 
    }

@@ -31,8 +31,8 @@ void tv3Read1() {
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("v3",&v);
    TH1F *h1 = new TH1F("x","x component of TVector3",100,-3,3);
-   Int_t nentries = Int_t(T->GetEntries());
-   for (Int_t i=0;i<nentries;i++) {
+   Long64_t nentries = T->GetEntries();
+   for (Long64_t i=0;i<nentries;i++) {
       T->GetEntry(i);
       h1->Fill(v->x());
    }
@@ -47,8 +47,8 @@ void tv3Read1() {
    T->SetBranchAddress("v3",&v);
    TBranch *by = T->GetBranch("fY");
    TH1F *h2 = new TH1F("y","y component of TVector3",100,-5,20);
-   Int_t nentries = Int_t(T->GetEntries());
-   for (Int_t i=0;i<nentries;i++) {
+   Long64_t nentries = T->GetEntries();
+   for (Long64_t i=0;i<nentries;i++) {
       by->GetEntry(i);
       h2->Fill(v->y());
    }

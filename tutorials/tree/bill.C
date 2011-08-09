@@ -26,6 +26,7 @@
 #include "TStopwatch.h"
 #include "TKey.h"
 #include "TTree.h"
+#include "TROOT.h"
    
 const Int_t N = 10000;       //number of events to be processed
 TStopwatch timer;
@@ -97,8 +98,8 @@ void billtr(Int_t compress) {
    TTree *T = (TTree*)f.Get("T");
    T->SetBranchAddress("event",&h);
    TH1F *hmeant = new TH1F("hmeant","hist mean from tree",100,0,1);
-   Int_t nentries = (Int_t)T->GetEntries();
-   for (Int_t i=0;i<nentries;i++) {
+   Long64_t nentries = T->GetEntries();
+   for (Long64_t i=0;i<nentries;i++) {
       T->GetEntry(i);
       hmeant->Fill(h->GetMean());
    }

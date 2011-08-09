@@ -10,7 +10,7 @@ void copytree3() {
    //Get old file, old tree and set top branch address
    TFile *oldfile = new TFile("$ROOTSYS/test/Event.root");
    TTree *oldtree = (TTree*)oldfile->Get("T");
-   Int_t nentries = (Int_t)oldtree->GetEntries();
+   Long64_t nentries = oldtree->GetEntries();
    Event *event   = 0;
    oldtree->SetBranchAddress("event",&event);
 
@@ -18,7 +18,7 @@ void copytree3() {
    TFile *newfile = new TFile("small.root","recreate");
    TTree *newtree = oldtree->CloneTree(0);
 
-   for (Int_t i=0;i<nentries; i++) {
+   for (Long64_t i=0;i<nentries; i++) {
       oldtree->GetEntry(i);
       if (event->GetNtrack() > 605) newtree->Fill();
       event->Clear();

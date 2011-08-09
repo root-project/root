@@ -7,7 +7,15 @@
 // .x jets.C
 //
 //Author: Rene Brun
-      
+
+#include "TFile.h"
+#include "TTree.h"
+#include "TRandom.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "JetEvent.h"
+#include "Riostream.h"
+    
 void write(Int_t nev=100) {
    //write nev Jet events
    TFile f("JetEvent.root","recreate");
@@ -30,9 +38,9 @@ void read() {
   TTree *T = (TTree*)f.Get("T");
   JetEvent *event = 0;
   T->SetBranchAddress("event", &event);
-  Int_t nentries = (Int_t)T->GetEntries();
+  Long64_t nentries = T->GetEntries();
   
-  for (Int_t ev=0;ev<nentries;ev++) {
+  for (Long64_t ev=0;ev<nentries;ev++) {
       T->GetEntry(ev);
       if (ev) continue; //dump first event only
       cout << " Event: "<< ev
@@ -48,14 +56,14 @@ void pileup(Int_t nev=200) {
   //randomly among the nentries
   TFile f("JetEvent.root");
   TTree *T = (TTree*)f.Get("T");
-  Int_t nentries = (Int_t)T->GetEntries();
+  // Long64_t nentries = T->GetEntries();
   
   const Int_t LOOPMAX=10;
   JetEvent *events[LOOPMAX];
   Int_t loop;
   for (loop=0;loop<LOOPMAX;loop++) events[loop] = 0;
-  for (Int_t ev=0;ev<nev;ev++) {
-      if (ev%10 == 0) printf("building pileup: %d\n",ev);
+  for (Long64_t ev=0;ev<nev;ev++) {
+      if (ev%10 == 0) printf("building pileup: %lld\n",ev);
       for (loop=0;loop<LOOPMAX;loop++) {
          Int_t rev = gRandom->Uniform(LOOPMAX);
          T->SetBranchAddress("event", &events[loop]);
