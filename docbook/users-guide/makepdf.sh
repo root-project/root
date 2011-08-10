@@ -4,7 +4,8 @@
 
 oxygendir="/Applications/oxygen"
 
-docbookdirs="/usr/share/xml/docbook/stylesheet/docbook-xsl \
+docbookdirs="/usr/share/sgml/docbook/xsl-stylesheets-1.75.2 \
+             /usr/share/xml/docbook/stylesheet/docbook-xsl \
              /sw/share/xml/xsl/docbook-xsl"
 
 fopjars="/usr/share/java/fop.jar \
