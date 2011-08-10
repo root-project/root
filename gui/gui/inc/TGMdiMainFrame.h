@@ -219,6 +219,7 @@ public:
    Long_t           GetNumberOfFrames() const { return fNumberOfFrames; }
 
    void             SetResizeMode(Int_t mode = kMdiDefaultResizeMode);
+   void             UpdateMdiButtons();
 
    TGRectangle      GetBBox() const;
    TGRectangle      GetMinimizedBBox() const;

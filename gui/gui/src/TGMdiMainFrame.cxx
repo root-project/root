@@ -101,6 +101,8 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
       main->BindKey(this, keycode, kKeyControlMask | kKeyShiftMask);
       keycode = gVirtualX->KeysymToKeycode(kKey_F4);
       main->BindKey(this, keycode, kKeyControlMask);
+      ((TGFrame *)main)->Connect("ProcessedConfigure(Event_t*)", 
+                                 "TGMdiMainFrame", this, "UpdateMdiButtons()");
    }
 
    MapSubwindows();
@@ -212,6 +214,7 @@ void TGMdiMainFrame::AddMdiFrame(TGMdiFrame *frame)
 
    fCurrentX += travel->GetDecorFrame()->GetTitleBar()->GetHeight() + fBorderWidth * 2;
    fCurrentY += travel->GetDecorFrame()->GetTitleBar()->GetHeight() + fBorderWidth * 2;
+   travel->GetDecorFrame()->SetMdiButtons(travel->GetDecorFrame()->GetMdiButtons());
 
    fNumberOfFrames++;
 
@@ -559,6 +562,23 @@ void TGMdiMainFrame::Layout()
    if (fCurrent && fCurrent->GetDecorFrame()->IsMaximized())
       fCurrent->GetDecorFrame()->MoveResize(0, 0, fWidth - 2 *fBorderWidth, fHeight -
                                    2 * fBorderWidth);
+}
+
+//______________________________________________________________________________
+void TGMdiMainFrame::UpdateMdiButtons()
+{
+   // Update the status of MDI buttons in the decor frame of all children.
+
+   static Bool_t done = kFALSE;
+   TGMdiFrameList *travel;
+   if (done) return;
+   for (travel = fChildren; travel; travel = travel->GetNext()) {
+      if (!travel->GetDecorFrame()->IsMaximized() && 
+          !travel->GetDecorFrame()->IsMinimized()) {
+         travel->GetDecorFrame()->SetMdiButtons(travel->GetDecorFrame()->GetMdiButtons());
+      }
+   }
+   done = kTRUE;
 }
 
 //______________________________________________________________________________
