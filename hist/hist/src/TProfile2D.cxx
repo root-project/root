@@ -1228,8 +1228,6 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    opt.ToLower();
    
 
-   Int_t nx = fXaxis.GetNbins();
-   Int_t ny = fYaxis.GetNbins();
 
    // Create the projection histogram
    char *pname = (char*)name;
@@ -1238,7 +1236,20 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
       pname = new char[nch];
       snprintf(pname,nch,"%s%s",GetName(),name);
    }
-   TH2D *h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+   Int_t nx = fXaxis.GetNbins();
+   Int_t ny = fYaxis.GetNbins();
+   const TArrayD *xbins = fXaxis.GetXbins();
+   const TArrayD *ybins = fYaxis.GetXbins();
+   TH2D * h1 = 0;
+   if (xbins->fN == 0 && ybins->fN == 0) {
+      h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+   } else if (xbins->fN == 0) {
+      h1 = new TH2D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny, ybins->GetArray() );
+   } else if (ybins->fN == 0) {
+      h1 = new TH2D(pname,GetTitle(),nx,xbins->GetArray(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+   } else {
+      h1 = new TH2D(pname,GetTitle(),nx,xbins->GetArray(),ny,ybins->GetArray() );
+   }
    Bool_t computeErrors = kFALSE;
    Bool_t cequalErrors  = kFALSE;
    Bool_t binEntries    = kFALSE;
