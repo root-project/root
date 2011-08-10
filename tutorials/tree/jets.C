@@ -13,7 +13,10 @@
 #include "TRandom.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#ifdef __CINT__
+#else
 #include "JetEvent.h"
+#endif
 #include "Riostream.h"
     
 void write(Int_t nev=100) {
