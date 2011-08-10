@@ -324,6 +324,59 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 }
 
 //______________________________________________________________________________
+Track &Track::operator=(const Track &orig)
+{
+   // Copy a track
+   
+   TObject::operator=(orig);
+   fPx = orig.fPx;
+   fPy = orig.fPy;
+   fPz = orig.fPx; 
+   fRandom = orig.fRandom;
+   fMass2 = orig.fMass2;
+   fBx = orig.fBx;
+   fBy = orig.fBy;
+   fMeanCharge = orig.fMeanCharge;
+   fXfirst = orig.fXfirst;
+   fXlast  = orig.fXlast;
+   fYfirst = orig.fYfirst;
+   fYlast  = orig.fYlast;
+   fZfirst = orig.fZfirst;
+   fZlast  = orig.fZlast;
+   fCharge = orig.fCharge;
+   
+   fVertex[0] = orig.fVertex[0];
+   fVertex[1] = orig.fVertex[1];
+   fVertex[2] = orig.fVertex[2];
+   fNpoint = orig.fNpoint;
+   if (fNsp > orig.fNsp) {
+      fNsp = orig.fNsp;
+      if (fNsp == 0) {
+         delete [] fPointValue;
+      } else {
+         for(int i=0; i<fNsp; i++) {
+            fPointValue[i] = orig.fPointValue[i];
+         }         
+      }
+   } else {
+      fNsp = orig.fNsp;
+      if (fNsp) {
+         fPointValue = new Double32_t[fNsp];
+         for(int i=0; i<fNsp; i++) {
+            fPointValue[i] = orig.fPointValue[i];
+         }
+      } else {
+         fPointValue = 0;
+      }
+   }
+   fValid  = orig.fValid;
+   
+   fTriggerBits = orig.fTriggerBits;
+   
+   return *this;
+}
+
+//______________________________________________________________________________
 void Track::Clear(Option_t * /*option*/)
 {
    fTriggerBits.Clear(); 

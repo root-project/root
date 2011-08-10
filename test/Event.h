@@ -50,6 +50,8 @@ public:
    Track(const Track& orig);
    Track(Float_t random);
    virtual ~Track() {Clear();}
+   Track &operator=(const Track &orig);
+
    void          Clear(Option_t *option="");
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
