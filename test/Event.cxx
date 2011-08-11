@@ -192,8 +192,8 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    // is called. If tracks[i] is 0, a new Track object will be created
    // otherwise the previous Track[i] will be overwritten.
 
-   TClonesArray &tracks = *fTracks;
-   Track *track = new(tracks[fNtrack++]) Track(random);
+   Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
+   track->Set(random);
    //Save reference to last Track in the collection of Tracks
    fLastTrack = track;
    //Save reference in fHighPt if track is a high Pt track
@@ -252,7 +252,7 @@ void Event::SetRandomVertex() {
 }
 
 //______________________________________________________________________________
-Track::Track(const Track &orig) : TObject(orig)
+Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
 {
    // Copy a track object
 
@@ -286,9 +286,6 @@ Track::Track(const Track &orig) : TObject(orig)
       fPointValue = 0;
    }
    fValid  = orig.fValid;
-
-   fTriggerBits = orig.fTriggerBits;
-
 }
 
 //______________________________________________________________________________
@@ -373,12 +370,16 @@ Track &Track::operator=(const Track &orig)
       fNsp = orig.fNsp;
       if (fNsp == 0) {
          delete [] fPointValue;
+         fPointValue = 0;
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = orig.fPointValue[i];
          }         
       }
    } else {
+      if (fNsp) {
+         delete [] fPointValue;
+      }
       fNsp = orig.fNsp;
       if (fNsp) {
          fPointValue = new Double32_t[fNsp];
@@ -399,9 +400,79 @@ Track &Track::operator=(const Track &orig)
 //______________________________________________________________________________
 void Track::Clear(Option_t * /*option*/)
 {
+   // Note that we intend on using TClonesArray::ConstructedAt, so we do not
+   // need to delete any of the arrays.
+
+   TObject::Clear();
    fTriggerBits.Clear(); 
-   delete [] fPointValue; 
-   fPointValue = 0; 
+}
+
+//______________________________________________________________________________
+void Track::Set(Float_t random)
+{
+   // Set the values of the Track data members.
+   
+   Float_t a,b,px,py;
+   gRandom->Rannor(px,py);
+   fPx = px;
+   fPy = py;
+   fPz = TMath::Sqrt(px*px+py*py);
+   fRandom = 1000*random;
+   if (fRandom < 10) fMass2 = 0.106;
+   else if (fRandom < 100) fMass2 = 0.8;
+   else if (fRandom < 500) fMass2 = 4.5;
+   else if (fRandom < 900) fMass2 = 8.9;
+   else  fMass2 = 9.8;
+   gRandom->Rannor(a,b);
+   fBx = 0.1*a;
+   fBy = 0.1*b;
+   fMeanCharge = 0.01*gRandom->Rndm(1);
+   gRandom->Rannor(a,b);
+   fXfirst = a*10;
+   fXlast  = b*10;
+   gRandom->Rannor(a,b);
+   fYfirst = a*12;
+   fYlast  = b*16;
+   gRandom->Rannor(a,b);
+   fZfirst = 50 + 5*a;
+   fZlast  = 200 + 10*b;
+   fCharge = Double32_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   
+   fVertex[0] = gRandom->Gaus(0,0.1);
+   fVertex[1] = gRandom->Gaus(0,0.2);
+   fVertex[2] = gRandom->Gaus(0,10);
+   fNpoint = Int_t(60+10*gRandom->Rndm(1));
+   Int_t newNsp = Int_t(3*gRandom->Rndm(1));
+   if (fNsp > newNsp) {
+      fNsp = newNsp;
+      if (fNsp == 0) {
+         delete [] fPointValue;
+         fPointValue = 0;
+      } else {
+         for(int i=0; i<fNsp; i++) {
+            fPointValue[i] = i+1;
+         }         
+      }
+      
+   } else {
+      if (fNsp) {
+         delete [] fPointValue;
+      }
+      fNsp = newNsp;
+      if (fNsp) {
+         fPointValue = new Double32_t[fNsp];
+         for(int i=0; i<fNsp; i++) {
+            fPointValue[i] = i+1;
+         }
+      } else {
+         fPointValue = 0;
+      }
+   }
+   fValid  = Int_t(0.6+gRandom->Rndm(1));
 }
 
 //______________________________________________________________________________

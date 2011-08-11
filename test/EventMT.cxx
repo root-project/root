@@ -232,7 +232,7 @@ void Event::SetRandomVertex() {
 }
 
 //______________________________________________________________________________
-Track::Track(const Track &orig) : TObject(orig)
+Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
 {
    // Copy a track object
 
@@ -266,9 +266,6 @@ Track::Track(const Track &orig) : TObject(orig)
       fPointValue = 0;
    }
    fValid  = orig.fValid;
-
-   fTriggerBits = orig.fTriggerBits;
-
 }
 
 //______________________________________________________________________________
@@ -353,12 +350,16 @@ Track &Track::operator=(const Track &orig)
       fNsp = orig.fNsp;
       if (fNsp == 0) {
          delete [] fPointValue;
+         fPointValue = 0;
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = orig.fPointValue[i];
          }         
       }
    } else {
+      if (fNsp) {
+         delete [] fPointValue;
+      }
       fNsp = orig.fNsp;
       if (fNsp) {
          fPointValue = new Double32_t[fNsp];

@@ -41,7 +41,7 @@ Collections act as flexible alternatives to traditional data structures of compu
 
 <programlisting language="c++">
 if (myObject-&gt;InheritsFrom("TParticle") {
-printf("myObject is a TParticlen");
+   printf("myObject is a TParticlen");
 }
 </programlisting>
 
@@ -118,17 +118,17 @@ These include:</para>
 
 <programlisting language="c++">
 class TEvent : public TObject {
-private:
-TList *fTracks;  <code>//list of all tracks</code>
-TList *fVertex1; <code>//subset of tracks part of vertex1</code>
-TList *fVertex2; <code>//subset of tracks part of vertex2</code>
+   private:
+   TList *fTracks;  <code>//list of all tracks</code>
+   TList *fVertex1; <code>//subset of tracks part of vertex1</code>
+   TList *fVertex2; <code>//subset of tracks part of vertex2</code>
 };
 TEvent::~TEvent()
 {
-fTracks-&gt;Delete();
-delete fTracks;
-delete fVertex1;
-delete fVertex2;
+   fTracks-&gt;Delete();
+   delete fTracks;
+   delete fVertex1;
+   delete fVertex2;
 }
 </programlisting>
 
@@ -152,23 +152,23 @@ delete fVertex2;
 
 <programlisting language="c++">
 class TObjNum : public TObject {
-private:
-Int_t  num; <code> // TObjNum is a simple container for an integer.</code>
+   private:
+   Int_t  num; <code> // TObjNum is a simple container for an integer.</code>
 public:
-TObjNum(Int_t i = 0) : num(i) { }
-~TObjNum() { }
-void     SetNum(Int_t i) { num = i; }
-Int_t    GetNum() const { return num; }
-void     Print(Option_t *) const
-{ printf("num = %dn", num); }
-Bool_t   IsEqual(TObject *obj) const
-{ return num == ((TObjNum*)obj)-&gt;num; }
-Bool_t   IsSortable() const { return kTRUE; }
-Int_t    Compare(const TObject *obj) const
-{ if (num &lt; ((TObjNum*)obj)-&gt;num) return -1;
-else if (num &gt; ((TObjNum*)obj)-&gt;num) return 1;
-else return 0; }
-ULong_t  Hash() const { return num; }
+   TObjNum(Int_t i = 0) : num(i) { }
+   ~TObjNum() { }
+   void     SetNum(Int_t i) { num = i; }
+   Int_t    GetNum() const { return num; }
+   void     Print(Option_t *) const
+      { printf("num = %dn", num); }
+   Bool_t   IsEqual(TObject *obj) const
+      { return num == ((TObjNum*)obj)-&gt;num; }
+   Bool_t   IsSortable() const { return kTRUE; }
+   Int_t    Compare(const TObject *obj) const
+      { if (num &lt; ((TObjNum*)obj)-&gt;num) return -1;
+        else if (num &gt; ((TObjNum*)obj)-&gt;num) return 1;
+        else return 0; }
+   ULong_t  Hash() const { return num; }
 };
 </programlisting>
 
@@ -264,7 +264,7 @@ GetListOfPrimitives()-&gt;ForEach(TObject,Draw)();
 <programlisting language="c++">
 TIter next(GetListOfTracks());
 while ((TTrack *obj = (TTrack *)next()))
-obj-&gt;Draw();
+   obj-&gt;Draw();
 </programlisting>
 <itemizedlist>
 <listitem><para>Using the <emphasis role="bold"><code>TObjLink</code></emphasis> list entries (that wrap the <emphasis role="bold"><code>TObject</code></emphasis>*):</para></listitem>
@@ -272,8 +272,8 @@ obj-&gt;Draw();
 <programlisting language="c++">
 TObjLink *lnk = GetListOfPrimitives()-&gt;FirstLink();
 while (lnk) {
-lnk-&gt;GetObject()-&gt;Draw();
-lnk = lnk-&gt;Next();
+   lnk-&gt;GetObject()-&gt;Draw();
+   lnk = lnk-&gt;Next();
 }
 </programlisting>
 <itemizedlist>
@@ -282,8 +282,8 @@ lnk = lnk-&gt;Next();
 <programlisting language="c++">
 TFree *idcur = this;
 while (idcur) {
-...
-idcur = (TFree*)GetListOfFree()-&gt;After(idcur);
+   ...
+   idcur = (TFree*)GetListOfFree()-&gt;After(idcur);
 }
 </programlisting>
 
@@ -309,7 +309,7 @@ idcur = (TFree*)GetListOfFree()-&gt;After(idcur);
 <programlisting language="c++">
 for (int i = 0; i &lt;= fArr.GetLast(); i++)
 if ((track = (TTrack*)fArr[i]))     <emphasis role="italic"><code>// or fArr.At(i)</code></emphasis>
-track-&gt;Draw();
+   track-&gt;Draw();
 </programlisting>
 
 <para>Main features of <emphasis role="bold"><code>TObjArray</code></emphasis> are simple, well-known array semantics. <emphasis role="bold">Overhead per element</emphasis>: none, except possible over sizing of <code>fCont</code>.</para>
@@ -334,12 +334,12 @@ track-&gt;Draw();
 <programlisting language="c++">
 TObjArray a(10000);
 while (TEvent *ev = (TEvent *)next()) {        <emphasis role="italic"><code>// O(100000)</code></emphasis>
-for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {     <emphasis role="italic"><code>// O(10000)</code></emphasis>
-a[i] = new TTrack(x,y,z,...);
-...
-}
-...
-a.Delete();
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {     <emphasis role="italic"><code>// O(10000)</code></emphasis>
+      a[i] = new TTrack(x,y,z,...);
+      ...
+   }
+   ...
+   a.Delete();
 }
 </programlisting>
 
@@ -349,12 +349,13 @@ a.Delete();
 <programlisting language="c++">
 TClonesArray a("TTrack", 10000);
 while (TEvent *ev = (TEvent *)next()) {      <code>// O(100000</code><emphasis role="italic">)</emphasis>
-for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {   <code>// O(10000)</code>
-new(a[i]) TTrack(x,y,z,...);
-...
-}
-...
-a.Delete();
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {   <code>// O(10000)</code>
+      TTrack *track = (Track*)a.ConstructedAt(i);
+      track->Set(x,y,z,...);
+      ...
+   }
+   ...
+   a.Clear(); // Or Clear("C") if the track objects must be returned (via Track::Clear) to a default state.
 }
 </programlisting>
 
@@ -370,9 +371,9 @@ a.Delete();
 <programlisting language="c++">
 template&lt;class T&gt;
 class ArrayContainer {
-private:
-T *member[10];
-...
+   private:
+   T *member[10];
+   ...
 };
 </programlisting>
 

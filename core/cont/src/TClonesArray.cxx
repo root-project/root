@@ -41,12 +41,30 @@
 //         ...                                                          //
 //      }                                                               //
 //      ...                                                             //
-//      a.Delete();                                                     //
+//      a.Delete(); // or a.Clear() or a.Clear("C")                     //
+//   }                                                                  //
+//                                                                      //
+// To reduce the number of call to the constructor (especially useful   //
+// if the user class requires memory allocation), the object can be     //
+// added (and constructed when needed) using ConstructedAt which only   //
+// calls the constructor once per slot.                                 //
+//                                                                      //
+//   TClonesArray a("TTrack", 10000);                                   //
+//   while (TEvent *ev = (TEvent *)next()) {      // O(100000) events   //
+//      for (int i = 0; i < ev->Ntracks; i++) {   // O(10000) tracks    //
+//         TTrack *track = (TTrack*)a.ConstructedAt(i);                 //
+//         track->Set(x,y,z,....);                                      //
+//         ...                                                          //
+//         ...                                                          //
+//      }                                                               //
+//      ...                                                             //
+//      a.Clear(); // or a.Clear("C");                                  //
 //   }                                                                  //
 //                                                                      //
 // Note: the only supported way to add objects to a TClonesArray is     //
-// via the new with placement method. The diffrent Add() methods of     //
-// TObjArray and its base classes are not allowed.                      //
+// via the new with placement method or the ConstructedAt method.       //
+// The other Add() methods ofTObjArray and its base classes are not     //
+// allowed.                                                             //
 //                                                                      //
 // Considering that a new/delete costs about 70 mus on a 300 MHz HP,    //
 // O(10^9) new/deletes will save about 19 hours.                        //
@@ -318,6 +336,52 @@ void TClonesArray::Compress()
 }
 
 //______________________________________________________________________________
+TObject *TClonesArray::ConstructedAt(Int_t idx)
+{
+   // Get an object at index 'idx' that is guaranteed to have been constructed.
+   // It might be either a freshly allocated object or one that had already been
+   // allocated (and assumingly used).  In the later case, it is the callers 
+   // responsability to insure that the object is returned to a known state,
+   // usually by calling the Clear method on the TClonesArray.
+   //
+   // Tests to see if the destructor has been called on the object.  
+   // If so, or if the object has never been constructed the class constructor is called using
+   // New().  If not, return a pointer to the correct memory location.
+   // This explicitly to deal with TObject classes that allocate memory
+   // which will be reset (but not deallocated) in their Clear()
+   // functions.
+   
+   TObject *obj = (*this)[idx];
+   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+      return obj;
+   }
+   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+}
+   
+//______________________________________________________________________________
+TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
+{
+   // Get an object at index 'idx' that is guaranteed to have been constructed.
+   // It might be either a freshly allocated object or one that had already been
+   // allocated (and assumingly used).  In the later case, the function Clear
+   // will be called and passed the value of 'clear_options'
+   //
+   // Tests to see if the destructor has been called on the object.  
+   // If so, or if the object has never been constructed the class constructor is called using
+   // New().  If not, return a pointer to the correct memory location.
+   // This explicitly to deal with TObject classes that allocate memory
+   // which will be reset (but not deallocated) in their Clear()
+   // functions.
+   
+   TObject *obj = (*this)[idx];
+   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+      obj->Clear(clear_options);
+      return obj;
+   }
+   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+}
+
+//______________________________________________________________________________
 void TClonesArray::Clear(Option_t *option)
 {
    // Clear the clones array. Only use this routine when your objects don't
@@ -332,12 +396,19 @@ void TClonesArray::Clear(Option_t *option)
 
    if (option && option[0] == 'C') {
       const char *cplus = strstr(option,"+");
+      if (cplus) {
+         cplus = cplus + 1;
+      } else {
+         cplus = "";
+      }
       Int_t n = GetEntriesFast();
       for (Int_t i = 0; i < n; i++) {
          TObject *obj = UncheckedAt(i);
          if (obj) {
-            if (cplus) obj->Clear(cplus+1);
-            else obj->Clear();
+            obj->Clear(cplus);
+            obj->ResetBit( kHasUUID ); 
+            obj->ResetBit( kIsReferenced ); 
+            obj->SetUniqueID( 0 );
          }
       }
    }
@@ -829,9 +900,14 @@ TObject *&TClonesArray::operator[](Int_t idx)
    if (idx >= fSize)
       Expand(TMath::Max(idx+1, GrowBy(fSize)));
 
-   if (!fKeep->fCont[idx])
+   if (!fKeep->fCont[idx]) {
       fKeep->fCont[idx] = (TObject*) TStorage::ObjectAlloc(fClass->Size());
-
+      // Reset the bit so that:
+      //    obj = myClonesArray[i];
+      //    obj->TestBit(TObject::kNotDeleted)
+      // will behave correctly.
+      memset(fKeep->fCont[idx], 0, sizeof(TObject));  // TClonesArray requires the class to start with the TObject part.
+   }
    fCont[idx] = fKeep->fCont[idx];
 
    fLast = TMath::Max(idx, GetAbsLast());

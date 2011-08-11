@@ -1467,7 +1467,8 @@ fTracks-&gt;BypassStreamer(kFALSE);    <emphasis role="italic"><code>// use the 
 <programlisting language="c++">
 <code>TRef   fLastTrack;         </code>    <emphasis role="italic"><code>//pointer to last track</code></emphasis>
 <code>…</code>
-<code>Track *track = new(tracks[fNtrack++])Track(random);</code>
+<code>Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
+track->Set(random);</code>
 <emphasis role="italic"><code>// Save reference to last Track in the collection of Tracks</code></emphasis>
 <code>fLastTrack = track;</code>
 </programlisting>

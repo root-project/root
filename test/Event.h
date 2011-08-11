@@ -46,12 +46,13 @@ private:
    TBits        fTriggerBits;  //Bits triggered by this track.
 
 public:
-   Track() { fPointValue = 0; }
+   Track() : fTriggerBits(64) { fNsp = 0; fPointValue = 0; }
    Track(const Track& orig);
    Track(Float_t random);
    virtual ~Track() {Clear();}
    Track &operator=(const Track &orig);
 
+   void          Set(Float_t random);
    void          Clear(Option_t *option="");
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }

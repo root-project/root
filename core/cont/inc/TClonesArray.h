@@ -18,7 +18,7 @@
 // TClonesArray                                                         //
 //                                                                      //
 // An array of clone TObjects. The array expands automatically when     //
-// adding elements (shrinking can be done by hand).                     //
+// adding elements (shrinking can be done explicitly).                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -66,6 +66,8 @@ public:
    void             AddBefore(const TObject *, TObject *) { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
+   TObject         *ConstructedAt(Int_t idx);
+   TObject         *ConstructedAt(Int_t idx, Option_t *clear_options);
    void             SetClass(const char *classname,Int_t size=1000);
    void             SetClass(const TClass *cl,Int_t size=1000);
 
