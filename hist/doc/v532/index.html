@@ -11,6 +11,21 @@
    with option COLZ.</li>
 </ul>
 
+<h4>TEfficiency</h4>
+<ul>
+<li>list holding the associated functions is created only on demand</li>
+<li>default constructor creates two dummy histograms</li>
+<li>can now be filled with weights (only Bayesian methods and the normal
+approximation are supported) </li>
+<li>update <tt>TEfficiency::SavePrimitive</tt> to store also the set bits</li>
+</ul>
+
+<h4>TGraphAsymmErrors</h4>
+<ul>
+<li>add option to <tt>TGraphAsymmErrors::Divide</tt> for interpreting the given
+histograms as ratio of Poisson means<li>
+</ul>
+
 <h4>TPaletteAxis</h4>
 <ul>
 <li>In <tt>TPaletteAxis::Paint()</tt> now makes sure the min and max of the

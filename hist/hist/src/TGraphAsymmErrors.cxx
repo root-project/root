@@ -347,21 +347,37 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 {
    // Fill this TGraphAsymmErrors by dividing two 1-dimensional histograms pass/total
    //
+   // This method serves two purposes:
+   //
+   // 1) calculating efficiencies:
+   // ----------------------------
+   //
    // The assumption is that the entries in "pass" are a subset of those in
    // "total". That is, we create an "efficiency" graph, where each entry is
    // between 0 and 1, inclusive.
    //
    // If the histograms are not filled with unit weights, the number of effective
-   // entries is used which might lead to wrong results.
+   // entries is used to normalise the bin contents which might lead to wrong results.
    // Begin_Latex effective entries = #frac{(#sum w_{i})^{2}}{#sum w_{i}^{2}}End_Latex
    //
    // The points are assigned a x value at the center of each histogram bin.
    // The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the
-   // bayesian one where the estimated efficiency is given by
-   // Begin_Latex eff = #frac{pass + a}{total + a + b} End_Latex.
+   // bayesian methods where the result depends on the chosen option.
    //
    // If the denominator becomes 0 or pass >  total, the corresponding bin is
    // skipped.
+   //
+   // 2) calculating ratios of two Poisson means (option 'pois'):
+   // --------------------------------------------------------------
+   //
+   // The two histograms are interpreted as independent Poisson processes and the ratio
+   // Begin_Latex #tau = #frac{n_{1}}{n_{2}} = #frac{#varepsilon}{1 - #varepsilon} with #varepsilon = #frac{n_{1}}{n_{1} + n_{2}} End_Latex
+   // The histogram 'pass' is interpreted as n_{1} and the total histogram
+   // is used for n_{2}
+   //
+   // The (asymmetric) uncertainties of the Poisson ratio are linked to the uncertainties
+   // of efficiency by a parameter transformation:
+   // Begin_Latex #Delta #tau_{low/up} = #frac{1}{(1 - #varepsilon)^{2}} #Delta #varepsilon_{low/up} End_Latex
    //
    // The x errors span each histogram bin (lowedge ... lowedge+width)
    // The y errors depend on the chosen statistic methode which can be determined
@@ -382,6 +398,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    // - mode  : use mode of posterior for Bayesian interval (default is mean)
    // - shortest: use shortest interval (done by default if mode is set)
    // - central: use central interval (done by default if mode is NOT set)
+   // - pois: interpret histograms as poisson ratio instead of efficiency
    // - e0    : plot (in Bayesian case) efficiency and interval for bins where total=0
    //           (default is to skip them)
    //
@@ -405,12 +422,6 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //check dimension of histograms; only 1-dimensional ones are accepted
    if((pass->GetDimension() > 1) || (total->GetDimension() > 1)) {
       Error("Divide","passed histograms are not one-dimensional");
-      return;
-   }
-
-   //check consistency of histograms, allowing weights
-   if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
-      Error("Divide","passed histograms are not consistent");
       return;
    }
 
@@ -440,7 +451,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //(is only used in the frequentist cases.)
    Double_t (*pBound)(Int_t,Int_t,Double_t,Bool_t) = &TEfficiency::ClopperPearson; // default method
    //confidence level
-   Double_t conf = 0.683;
+   Double_t conf = 0.682689492137;
    //values for bayesian statistics
    Bool_t bIsBayesian = false;
    Double_t alpha = 1;
@@ -528,12 +539,40 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       useShortestInterval = true;
    }
 
+   // interpret as Poisson ratio
+   Bool_t bPoissonRatio = false;
+   if(option.Contains("pois") ) {
+      bPoissonRatio = true;
+      option.ReplaceAll("pois","");
+   }
+
    // weights works only in case of Normal approximation or Bayesian
    if (bEffective && !bIsBayesian && pBound != &TEfficiency::Normal ) {
       Warning("Divide","Histograms have weights: only Normal or Bayesian error calculation is supported");
       Info("Divide","Using now the Normal approximation for weighted histograms");
    }
 
+   if(bPoissonRatio)
+   {
+     if(pass->GetDimension() != total->GetDimension()) {
+       Error("Divide","passed histograms are not of the same dimension");
+       return;
+     }
+     
+     if(!TEfficiency::CheckBinning(*pass,*total)) {
+       Error("Divide","passed histograms are not consistent");
+       return;
+     }
+   }
+   else
+   {
+     //check consistency of histograms, allowing weights
+     if(!TEfficiency::CheckConsistency(*pass,*total,"w")) {
+       Error("Divide","passed histograms are not consistent");
+       return;
+     }
+   }
+   
    //Set the graph to have a number of points equal to the number of histogram
    //bins
    Int_t nbins = pass->GetNbinsX();
@@ -565,6 +604,12 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           pw =  pass->GetBinContent(b);
           pw2 = pass->GetSumw2()->At(b);
 
+	  if(bPoissonRatio)
+	  {
+	    tw += pw;
+	    tw2 += pw2;
+	  }
+
           if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
 
           // in the case of weights have the formula only for
@@ -577,6 +622,9 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           t = int( total->GetBinContent(b) + 0.5);
           p = int(pass->GetBinContent(b) + 0.5);
 
+	  if(bPoissonRatio)
+	    t += p;
+	  
           if (!t && !plot0Bins) continue; // skip bins with total = 0
        }
 
@@ -638,6 +686,16 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
             low = pBound(t,p,conf,false);
             upper = pBound(t,p,conf,true);
          }
+      }
+      // treat as Poisson ratio
+      if(bPoissonRatio && eff != 1)
+      {
+	Double_t cor = 1./pow(1 - eff,2);
+	Double_t ratio = eff/(1 - eff);
+	low = ratio - cor * (eff - low);
+	upper = ratio + cor * (upper - eff);
+	eff = ratio;
+	std::cout << ratio << std::endl;
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);

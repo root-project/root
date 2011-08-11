@@ -38,9 +38,9 @@ public:
       //enumaration type for different statistic options for calculating confidence intervals
       //kF* ... frequentist methods; kB* ... bayesian methods      
       enum EStatOption {
-	 kFCP = 0,                             //Clopper-Pearson interval (recommended by PDG)
-	 kFNormal,                            //normal approximation
-	 kFWilson,                           //Wilson interval
+	 kFCP = 0,                         //Clopper-Pearson interval (recommended by PDG)
+	 kFNormal,                         //normal approximation
+	 kFWilson,                         //Wilson interval
 	 kFAC,                             //Agresti-Coull interval
 	 kFFC,                             //Feldman-Cousins interval
 	 kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
@@ -69,7 +69,8 @@ protected:
 	 kIsBayesian       = BIT(14),              //bayesian statistics are used
          kPosteriorMode    = BIT(15),              //use posterior mean for best estimate (Bayesian statistics)
          kShortestInterval = BIT(16),              // use shortest interval
-         kUseBinPrior      = BIT(17)               // use a different prior for each bin
+         kUseBinPrior      = BIT(17),              // use a different prior for each bin
+         kUseWeights       = BIT(18)               // use weights
       };
 
       void          Build(const char* name,const char* title);      
@@ -100,6 +101,7 @@ public:
       void          Draw(Option_t* opt = "");
       virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
+      void          FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
       Int_t         Fit(TF1* f1,Option_t* opt="");
       // use trick of -1 to return global parameters
@@ -116,7 +118,7 @@ public:
       Int_t         GetGlobalBin(Int_t binx,Int_t biny=0,Int_t binz=0) const;
       TGraphAsymmErrors*   GetPaintedGraph() const { return fPaintGraph; }     
       TH2*          GetPaintedHistogram() const { return fPaintHisto; }     
-      TList*        GetListOfFunctions() const {return fFunctions;}
+      TList*        GetListOfFunctions();
       const TH1*    GetPassedHistogram() const {return fPassedHistogram;}
       EStatOption   GetStatisticOption() const {return fStatisticOption;}
       const TH1*    GetTotalHistogram() const {return fTotalHistogram;}
@@ -134,7 +136,7 @@ public:
       void          SetName(const char* name);
       Bool_t        SetPassedEvents(Int_t bin,Int_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
-      void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); if(on) SetShortestInterval(); } 
+      void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); SetShortestInterval(on); } 
       void          SetPosteriorAverage(Bool_t on = true) { SetBit(kPosteriorMode,!on); } 
       void          SetShortestInterval(Bool_t on = true) { SetBit(kShortestInterval,on); } 
       void          SetCentralInterval(Bool_t on = true) { SetBit(kShortestInterval,!on); } 
@@ -142,12 +144,14 @@ public:
       void          SetTitle(const char* title);
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
-      void          SetWeight(Double_t weight);    
+      void          SetUseWeightedEvents();
+      void          SetWeight(Double_t weight);
       Bool_t        UsesBayesianStat() const {return TestBit(kIsBayesian);}
       Bool_t        UsesPosteriorMode() const   {return TestBit(kPosteriorMode) && TestBit(kIsBayesian);} 
       Bool_t        UsesShortestInterval() const   {return TestBit(kShortestInterval) && TestBit(kIsBayesian);} 
       Bool_t        UsesPosteriorAverage() const   {return !UsesPosteriorMode();} 
-      Bool_t        UsesCentralInterval() const   {return !UsesShortestInterval();} 
+      Bool_t        UsesCentralInterval() const   {return !UsesShortestInterval();}
+      Bool_t        UsesWeights() const {return TestBit(kUseWeights);}
 
       static Bool_t CheckBinning(const TH1& pass,const TH1& total);
       static Bool_t CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt="");
