@@ -153,7 +153,7 @@ TObject::~TObject()
 
    fBits &= ~kNotDeleted;
 
-   if (fgObjectStat && gObjectTable) gObjectTable->Remove(this);
+   if (fgObjectStat && gObjectTable) gObjectTable->RemoveQuietly(this);
 }
 
 //______________________________________________________________________________
