@@ -268,12 +268,12 @@ void TGMdiDecorFrame::Move(Int_t x, Int_t y)
    if (x < 0) {
       fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
    }
-
    if (y < 0) {
       fMdiMainFrame->SetVsbPosition(fMdiMainFrame->GetViewPort()->GetHeight());
    }
    TGCompositeFrame::Move(x, y);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
+   if (IsMapped()) fMdiMainFrame->Layout();
 }
 
 //______________________________________________________________________________
@@ -284,13 +284,12 @@ void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x < 0) {
       fMdiMainFrame->SetHsbPosition(fMdiMainFrame->GetViewPort()->GetWidth());
    }
-
    if (y < 0) {
       fMdiMainFrame->SetVsbPosition(fMdiMainFrame->GetViewPort()->GetHeight());
    }
-
    TGCompositeFrame::MoveResize(x, y, w, h);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
+   if (IsMapped()) fMdiMainFrame->Layout();
 }
 
 //______________________________________________________________________________
@@ -312,8 +311,10 @@ Bool_t TGMdiDecorFrame::HandleConfigureNotify(Event_t *event)
       if ((fWidth != newW) || (fHeight != newH)) {
          Resize(newW, newH);
       }
+      fMdiMainFrame->Layout();
       return kTRUE;
    }
+   fMdiMainFrame->Layout();
    return kFALSE;
 }
 
