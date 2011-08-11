@@ -194,6 +194,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
    // TMinuit level is shift by 1 -1 means 0;
    arglist[0] = PrintLevel() - 1;
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
+   if (PrintLevel() == 0) SuppressMinuitWarnings();
 }
 
 
@@ -356,6 +357,7 @@ bool TMinuitMinimizer::SetVariableValue(unsigned int ivar, double val) {
 
    double arglist[2]; 
    int ierr = 0; 
+
    arglist[0] = ivar+1;  // TMinuit starts from 1 
    arglist[1] = val;
    fMinuit->mnexcm("SET PAR",arglist,2,ierr);
@@ -751,6 +753,16 @@ void TMinuitMinimizer::PrintResults() {
       fMinuit->mnprin(4,fMinuit->fAmin);
    else
       fMinuit->mnprin(3,fMinuit->fAmin);
+}
+
+void TMinuitMinimizer::SuppressMinuitWarnings(bool nowarn) { 
+   // suppress Minuit2 warnings
+   double arglist = 0; 
+   int ierr = 0; 
+   if (nowarn) 
+      fMinuit->mnexcm("SET NOW",&arglist,0,ierr);
+   else 
+      fMinuit->mnexcm("SET WAR",&arglist,0,ierr);
 }
 
 

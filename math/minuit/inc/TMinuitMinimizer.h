@@ -208,7 +208,10 @@ public:
    /// static function to switch on/off usage of static global TMinuit instance (gMinuit)
    /// By default it is used (i.e. is on). Method returns the previous state
    bool static UseStaticMinuit(bool on = true); 
-   
+
+   /// suppress the minuit warnings (if called with false will enable them)
+   /// By default they are suppressed only when the printlevel is <= 0
+   void SuppressMinuitWarnings(bool nowarn=true);
 
 protected: 
 
