@@ -273,7 +273,7 @@ void TGMdiDecorFrame::Move(Int_t x, Int_t y)
    }
    TGCompositeFrame::Move(x, y);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
-   if (IsMapped()) fMdiMainFrame->Layout();
+   if (IsMapped() && !IsMaximized()) fMdiMainFrame->Layout();
 }
 
 //______________________________________________________________________________
@@ -289,7 +289,7 @@ void TGMdiDecorFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
    TGCompositeFrame::MoveResize(x, y, w, h);
    if (IsMinimized()) fMinimizedUserPlacement = kTRUE;
-   if (IsMapped()) fMdiMainFrame->Layout();
+   if (IsMapped() && !IsMaximized()) fMdiMainFrame->Layout();
 }
 
 //______________________________________________________________________________
