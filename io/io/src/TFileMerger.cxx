@@ -40,15 +40,53 @@
 #include "TROOT.h"
 #include "TMemFile.h"
 
+#ifdef WIN32
+// For _getmaxstdio
+#include <stdio.h> 
+#else
+// For getrlimit
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
+
 ClassImp(TFileMerger)
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
 
+static const Int_t kCpProgress = BIT(14);
+static const Int_t kCintFileNumber = 100;
+//______________________________________________________________________________
+static Int_t R__GetSystemMaxOpenedFiles()
+{
+   // Return the maximum number of allowed opened files minus some wiggle room
+   // for CINT or at least of the standard library (stdio).
+   int maxfiles;
+#ifdef WIN32
+   maxfiles = _getmaxstdio();
+#else
+   rlimit filelimit;
+   if (getrlimit(RLIMIT_NOFILE,&filelimit)==0) {
+      maxfiles = filelimit.rlim_cur;
+   } else {
+      // We could not get the value from getrlimit, let's return a reasonable default.
+      maxfiles = 512;
+   }
+#endif
+   if (maxfiles > kCintFileNumber) {
+      return maxfiles - kCintFileNumber;
+   } else if (maxfiles > 5) {
+      return maxfiles - 5;
+   } else {
+      return maxfiles;
+   }
+}
+
+
 //______________________________________________________________________________
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
             : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fExplicitCompLevel(kFALSE), fCompressionChange(kFALSE),
-              fPrintLevel(0),
+              fPrintLevel(0), fMaxOpenedFiles( R__GetSystemMaxOpenedFiles() ),
               fLocal(isLocal), fHistoOneGo(histoOneGo)
 {
    // Create file merger object.
@@ -58,6 +96,9 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 
    fMergeList = new TList;
    fMergeList->SetOwner(kTRUE);
+   
+   fExcessFiles = new TList;
+   fExcessFiles->SetOwner(kTRUE);
    
    gROOT->GetListOfCleanups()->Add(this);
 }
@@ -71,6 +112,7 @@ TFileMerger::~TFileMerger()
    SafeDelete(fFileList);
    SafeDelete(fMergeList);
    SafeDelete(fOutputFile);
+   SafeDelete(fExcessFiles);
 }
 
 //______________________________________________________________________________
@@ -80,6 +122,7 @@ void TFileMerger::Reset()
 
    fFileList->Clear();
    fMergeList->Clear();
+   fExcessFiles->Clear();
 }
 
 //______________________________________________________________________________
@@ -93,6 +136,18 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    
    TFile *newfile = 0;
    TString localcopy;
+   
+   if (fFileList->GetEntries() >= (fMaxOpenedFiles-1)) {
+
+      TObjString *urlObj = new TObjString(url);
+      fMergeList->Add(urlObj);
+
+      urlObj = new TObjString(url);
+      urlObj->SetBit(kCpProgress);
+      fExcessFiles->Add(urlObj);
+      
+      return kTRUE;
+   }
    
    if (fLocal) {
       TUUID uuid;
@@ -118,8 +173,6 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
       
       fFileList->Add(newfile);
       
-      if (!fMergeList)
-         fMergeList = new TList;
       TObjString *urlObj = new TObjString(url);
       fMergeList->Add(urlObj);
       
@@ -133,7 +186,7 @@ Bool_t TFileMerger::AddAdoptFile(TFile *source, Bool_t cpProgress)
    // Add the TFile to this file merger and give ownership of the TFile to this
    // object (unless kFALSE is returned).
    // 
-   // Return kTRUE if the addition was successfull.
+   // Return kTRUE if the addition was successful.
    
    if (source == 0) {
       return kFALSE;
@@ -217,6 +270,7 @@ void TFileMerger::PrintFiles(Option_t *options)
    // Print list of files being merged.
 
    fFileList->Print(options);
+   fExcessFiles->Print(options);
 }
 
 
@@ -241,25 +295,32 @@ Bool_t TFileMerger::IncrementalMerge(Bool_t)
    }
    
    fOutputFile->SetBit(kMustCleanup);
-   Bool_t result = MergeRecursive(fOutputFile, fFileList, kTRUE);
+   
+   Bool_t result = kTRUE;
+   while (result && fFileList->GetEntries()>0) {
+      result = MergeRecursive(fOutputFile, fFileList, kTRUE);
+      // Remove local copies if there are any
+      TIter next(fFileList);
+      TFile *file;
+      while ((file = (TFile*) next())) {
+         // close the files
+         file->Close();
+         // remove the temporary files
+         if(fLocal) {
+            TString p(file->GetPath());
+            p = p(0, p.Index(':',0));
+            gSystem->Unlink(p);
+         }
+      }
+      fFileList->Clear();
+      if (fExcessFiles->GetEntries() > 0) {
+         OpenExcessFiles();
+      }
+   }
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
       fOutputFile->Write("",TObject::kOverwrite);
-   }
-   
-   // Remove local copies if there are any
-   TIter next(fFileList);
-   TFile *file;
-   while ((file = (TFile*) next())) {
-      // close the files
-      file->Close();
-      // remove the temporary files
-      if(fLocal) {
-         TString p(file->GetPath());
-         p = p(0, p.Index(':',0));
-         gSystem->Unlink(p);
-      }
    }
    Clear();
    return result;
@@ -286,31 +347,38 @@ Bool_t TFileMerger::Merge(Bool_t)
    }
 
    fOutputFile->SetBit(kMustCleanup);
-   Bool_t result = MergeRecursive(fOutputFile, fFileList);
+   Bool_t result = kTRUE;
+   while (result && fFileList->GetEntries()>0) {
+      result = MergeRecursive(fOutputFile, fFileList);
+
+      // Remove local copies if there are any
+      TIter next(fFileList);
+      TFile *file;
+      while ((file = (TFile*) next())) {
+         // close the files
+         file->Close();
+         // remove the temporary files
+         if(fLocal) {
+            TString p(file->GetPath());
+            p = p(0, p.Index(':',0));
+            gSystem->Unlink(p);
+         }
+      }
+      fFileList->Clear();
+      if (fExcessFiles->GetEntries() > 0) {
+         OpenExcessFiles();         
+      }
+   }
    if (!result) {
       Error("Merge", "error during merge of your ROOT files");
    } else {
       // But Close is required so the file is complete.
       fOutputFile->Close();
    }
-
+   
    // Cleanup
    fOutputFile->ResetBit(kMustCleanup);
    SafeDelete(fOutputFile);
-
-   // Remove local copies if there are any
-   TIter next(fFileList);
-   TFile *file;
-   while ((file = (TFile*) next())) {
-      // close the files
-      file->Close();
-      // remove the temporary files
-      if(fLocal) {
-         TString p(file->GetPath());
-         p = p(0, p.Index(':',0));
-         gSystem->Unlink(p);
-      }
-   }
    return result;
 }
 
@@ -679,6 +747,47 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
 }
 
 //______________________________________________________________________________
+Bool_t TFileMerger::OpenExcessFiles()
+{
+   // Open up to fMaxOpenedFiles of the excess files.
+   
+   Int_t nfiles = 0;
+   TIter next(fExcessFiles);
+   TObjString *url = 0;
+   TString localcopy;
+   while( nfiles < (fMaxOpenedFiles-1) && ( url = (TObjString*)next() ) ) {
+      TFile *newfile = 0;
+      if (fLocal) {
+         TUUID uuid;
+         localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
+         if (!TFile::Cp(url->GetName(), localcopy, url->TestBit(kCpProgress))) {
+            Error("OpenExcessFiles", "cannot get a local copy of file %s", url->GetName());
+            return kFALSE;
+         }
+         newfile = TFile::Open(localcopy, "READ");
+      } else {
+         newfile = TFile::Open(url->GetName(), "READ");
+      }
+      
+      if (!newfile) {
+         if (fLocal)
+            Error("OpenExcessFiles", "cannot open local copy %s of URL %s",
+                  localcopy.Data(), url->GetName());
+         else
+            Error("OpenExcessFiles", "cannot open file %s", url->GetName());
+         return kFALSE;
+      } else {
+         if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
+         
+         fFileList->Add(newfile);
+         ++nfiles;
+         fExcessFiles->Remove(url);
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TFileMerger::RecursiveRemove(TObject *obj)
 {
    // Intercept the case where the output TFile is deleted!
@@ -687,4 +796,22 @@ void TFileMerger::RecursiveRemove(TObject *obj)
       Fatal("RecursiveRemove","Output file of the TFile Merger (targetting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
    }
    
+}
+
+//______________________________________________________________________________
+void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
+{
+   // Set a limit to the number file that TFileMerger will opened at one time.
+   // If the request is higher than the system limit, we reset it to the system limit.
+   // If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
+
+   Int_t sysmax = R__GetSystemMaxOpenedFiles();
+   if (newmax < sysmax) {
+      fMaxOpenedFiles = newmax;
+   } else {
+      fMaxOpenedFiles = sysmax;
+   }
+   if (fMaxOpenedFiles < 2) {
+      fMaxOpenedFiles = 2;
+   }
 }

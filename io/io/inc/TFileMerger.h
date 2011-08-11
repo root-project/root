@@ -58,10 +58,13 @@ protected:
    Bool_t         fCompressionChange;// True if the output and input have different compression level (default kFALSE)
    Int_t          fPrintLevel;       // How much information to print out at run time.
 
+   Int_t          fMaxOpenedFiles;  // Maximum number of files opened at the same time by the TFileMerger.
    Bool_t         fLocal;           // Makes local copies of merging files if True (default is kTRUE)
    Bool_t         fHistoOneGo;      // Merger histos in one go (default is kTRUE)
    TList         *fMergeList;       // list of TObjString containing the name of the files need to be merged
+   TList         *fExcessFiles;     //! List of TObjString containing the name of the files not yet added to fFileList due to user or system limitiation on the max number of files opened.
 
+   Bool_t         OpenExcessFiles();
 public:   
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
    virtual ~TFileMerger();
@@ -72,6 +75,8 @@ public:
    const char *GetOutputFileName() const { return fOutputFilename; }
    TList      *GetMergeList() const { return fMergeList;  }
    TFile      *GetOutputFile() const { return fOutputFile; }
+   Int_t       GetMaxOpenedFies() const { return fMaxOpenedFiles; }
+   void        SetMaxOpenedFiles(Int_t newmax);
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
@@ -91,7 +96,7 @@ public:
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
    virtual void        RecursiveRemove(TObject *obj);
 
-   ClassDef(TFileMerger,3)  // File copying and merging services
+   ClassDef(TFileMerger,4)  // File copying and merging services
 };
 
 #endif

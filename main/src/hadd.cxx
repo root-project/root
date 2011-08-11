@@ -77,7 +77,7 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
-      cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] targetfile source1 [source2 source3 ...]" << endl;
+      cout << "Usage: " << argv[0] << " [-f[0-9]] [-k] [-T] [-O] [-n maxopenedfiles] targetfile source1 [source2 source3 ...]" << endl;
       cout << "This program will add histograms from a list of root files and write them" << endl;
       cout << "to a target root file. The target file is newly created and must not " << endl;
       cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
@@ -85,6 +85,7 @@ int main( int argc, char **argv )
       cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input files but skip the offending files instead." << endl;
       cout << "If the option -T is used, Trees are not merged" <<endl;
       cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<endl;
+      cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, 0 request to use the system maximum." << endl;
       cout << "When -the -f option is specified, one can also specify the compression" <<endl;
       cout << "level of the target file. By default the compression level is 1, but" <<endl;
       cout << "if \"-f0\" is specified, the target file will not be compressed." <<endl;
@@ -98,6 +99,7 @@ int main( int argc, char **argv )
    Bool_t skip_errors = kFALSE;
    Bool_t reoptimize = kFALSE;
    Bool_t noTrees = kFALSE;
+   Int_t maxopenedfiles = 0;
 
    int ffirst = 2;
    Int_t newcomp = 1;
@@ -113,6 +115,20 @@ int main( int argc, char **argv )
          ++ffirst;
       } else if ( strcmp(argv[a],"-O") == 0 ) {
          reoptimize = kTRUE;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-n") == 0 ) {
+         if (a+1 >= argc) {
+            cerr << "Error: no maximum number of opened was provided after -n.\n";
+         } else {
+            long request = strtol(argv[a+1], 0, 10);
+            if (request < kMaxLong && request > 0) {
+               maxopenedfiles = (Int_t)request;
+               ++a;
+               ++ffirst;
+            } else {
+               cerr << "Error: could not parse the max number of opened file passed after -n: " << argv[a+1] << ". We will use the system maximum.\n";
+            }
+         }
          ++ffirst;
       } else if ( argv[a][0] == '-' ) {
          char ft[4];
@@ -134,6 +150,9 @@ int main( int argc, char **argv )
 
    TFileMerger merger(kFALSE,kFALSE);
    merger.SetPrintLevel(99);
+   if (maxopenedfiles > 0) {
+      merger.SetMaxOpenedFiles(maxopenedfiles);
+   }
    if (!merger.OutputFile(argv[ffirst-1],force,newcomp) ) {
       cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
       cerr << "Pass \"-f\" argument to force re-creation of output file." << endl;
@@ -173,7 +192,6 @@ int main( int argc, char **argv )
       }
    }
    merger.SetNotrees(noTrees);
-
    Bool_t status = merger.Merge();
 
    if (status) {
