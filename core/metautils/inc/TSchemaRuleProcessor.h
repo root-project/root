@@ -88,9 +88,10 @@ namespace ROOT
                  
                   // Split between the typename and the membername
                   // Take in consideration template names.
-                  for(std::string::size_type i=0; i<elem.size(); ++i) {
-                     if (elem[i]=='<') { ++level; }
-                     else if (elem[i]=='>') { --level; }
+                  for(std::string::size_type j=elem.size(); j>0; --j) {
+                     std::string::size_type i = j-1;
+                     if (elem[i]=='<') { --level; }
+                     else if (elem[i]=='>') { ++level; }
                      else if (level == 0 && isspace(elem[i])) {
                         type = elem.substr( 0, i );
                         // At the first iteration we know we have a space.
