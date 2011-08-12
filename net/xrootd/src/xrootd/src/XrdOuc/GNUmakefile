@@ -186,11 +186,11 @@ $(OBJDIR)/XrdOucBonjour.o: XrdOucBonjour.cc XrdOucBonjour.hh XrdSysError.hh \
                            XrdOucFactoryBonjour.hh \
                            XrdProtLoad.hh
 	@echo Compiling XrdOucBonjour.cc
-	$(ECHO)$(CC) -c $(CFLAGS) $(CFHASLIBDNSSD) $(CFHASLIBAVAHI) $(INCLUDE) XrdOucBonjour.cc -o $(OBJDIR)/XrdOucBonjour.o
+	$(ECHO)$(CC) -c $(CFLAGS) $(BJRFLAGS) $(CFHASLIBDNSSD) $(CFHASLIBAVAHI) $(INCLUDE) XrdOucBonjour.cc -o $(OBJDIR)/XrdOucBonjour.o
 
 $(OBJDIR)/XrdOucFactoryBonjour.o: XrdOucBonjour.hh XrdSysError.hh \
                                 XrdSysHeaders.hh XrdOucString.hh XrdSysPthread.hh \
                                 XrdOucFactoryBonjour.hh XrdOucFactoryBonjour.cc XrdConfig.hh \
                                 XrdInet.hh XrdProtLoad.hh
 	@echo Compiling XrdOucFactoryBonjour.cc
-	$(ECHO)$(CC) -c $(CFLAGS) $(CFHASLIBDNSSD) $(INCLUDE) XrdOucFactoryBonjour.cc -o $(OBJDIR)/XrdOucFactoryBonjour.o
+	$(ECHO)$(CC) -c $(CFLAGS) $(BJRFLAGS) $(CFHASLIBDNSSD) $(INCLUDE) XrdOucFactoryBonjour.cc -o $(OBJDIR)/XrdOucFactoryBonjour.o

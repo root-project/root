@@ -25,7 +25,7 @@ extern XrdSysError  XrdLog;               // Defined in XrdMain.cc
 /*                        B o n j o u r   r e c o r d                         */
 /******************************************************************************/
 
-#if !defined(__macos__)
+#if !defined(R__BJRDNSSD)
 AvahiStringList *XrdOucBonjourRecord::GetTXTAvahiList()
 {
    AvahiStringList *list;
@@ -239,9 +239,9 @@ XrdOucBonjourFactory *XrdOucBonjourFactory::FactoryByPlatform()
    // There is room to improvement here, refining how we detect the operating
    // system and taking into account how to deal with Windows, since there is a
    // project to port Avahi to Win32 (natively) and mDNS is currently supported.
-#if defined(__macos__)  // We are on Mac OS X, so load the mDNS version.
+#if defined(R__BJRDNSSD)  // We are on Mac OS X, so load the mDNS version.
    return new XrdOucAppleBonjourFactory();
-#elif defined(__linux__) // We are on GNU/Linux, so load the Avahi version.
+#elif defined(R__BJRAVAHI) // We are on GNU/Linux, so load the Avahi version.
    return new XrdOucAvahiBonjourFactory();
 #else // Currently, Windows is not supported (altough with mDNS can be).
    return NULL;

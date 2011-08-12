@@ -1,4 +1,4 @@
-#! /bin/sh
+a#! /bin/sh
 ################################################################################
 #
 #          $Id$
@@ -2561,17 +2561,19 @@ fi
 # it. If not, check if we had the Bonjour library. If not, and Bonjour was
 # enabled, issue an error.
 
-# Cleanup.
+# Cleanup
 rm -fr "src/XrdOuc/XrdOucFactoryBonjour.cc" "src/XrdOuc/XrdOucFactoryBonjour.hh"
 
-# Check.
+# Check
+bjrflags=
 if test "x$enable_bonjour" = "xyes" && test "x$haslibavahi" != "x" ; then
    # Having Avahi implies having also the dns_sd compatibility layer.
-   echo "Creating XrdOucFactoryBonjour symlinks to XrdOucAppleBonjour ..."
+   echo "Creating XrdOucFactoryBonjour symlinks to XrdOucAvahiBonjour ..."
    cd src/XrdOuc
    ln -s "XrdOucAvahiBonjour.cc" "XrdOucFactoryBonjour.cc"
    ln -s "XrdOucAvahiBonjour.hh" "XrdOucFactoryBonjour.hh"
    cd ../..
+   bjrflags="-DR__BJRAVAHI"
 else
    if test "x$enable_bonjour" = "xyes" && test "x$haslibdnssd" != "x" ; then
       # If we don't have Avahi, it means that everything will be on Bonjour.
@@ -2580,6 +2582,7 @@ else
       ln -s "XrdOucAppleBonjour.cc" "XrdOucFactoryBonjour.cc"
       ln -s "XrdOucAppleBonjour.hh" "XrdOucFactoryBonjour.hh"
       cd ../../
+      bjrflags="-DR__BJRDNSSD"
    else
       if test "x$enable_bonjour" = "xyes" ; then
          # Reaching this poing means that we want Bonjour, but not libraries were
@@ -3159,6 +3162,7 @@ sed -e "s|@arch@|$arch|"                 \
     -e "s|@haslibz@|$haslibz|" \
     -e "s|@libz@|$libz|" \
     -e "s|@buildbjr@|$buildbjr|" \
+    -e "s|@bjrflags@|$bjrflags|" \
     -e "s|@haslibdnssd@|$haslibdnssd|" \
     -e "s|@libdnssd@|$libdnssd|" \
     -e "s|@haslibavahi@|$haslibavahi|" \
