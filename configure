@@ -1464,9 +1464,9 @@ with options, prefix with --with-, enables corresponding support
   oracle-libdir      Oracle support, location of libocci
   pgsql-incdir       PostgreSQL support, location of libpq-fe.h
   pgsql-libdir       PostgreSQL support, location of libpq
-  pythia6-libdir     PYHTIA6 support, location of libPythia6
-  pythia8-incdir     PYHTIA8 support, location of Pythia8 includes
-  pythia8-libdir     PYHTIA8 support, location of libpythia8.so
+  pythia6-libdir     PYTHIA6 support, location of libPythia6
+  pythia8-incdir     PYTHIA8 support, location of Pythia8 includes
+  pythia8-libdir     PYTHIA8 support, location of libpythia8.so
   python-incdir      Python support, location of Python.h
   python-libdir      Python support, location of libpython
   qt-incdir          Qt support, location of Qt/qglobal.h
@@ -2495,15 +2495,6 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
         "$opengllibdir" $opengllibdirs
     opengllib=$found_lib
     opengllibdir=$found_dir
-
-    # Mac OS X 10.5.0 problem
-    if test "x$platform" = "xmacosx"; then
-       if test "x$macosx106" = "x"; then
-          if test ! "x$macosx105" = "x"; then
-             opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib"
-          fi
-       fi
-    fi
 
     check_library "libGLU libMesaGLU" "$enable_shared" \
         "$keep" $opengllibdirs
