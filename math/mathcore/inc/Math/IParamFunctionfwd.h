@@ -21,20 +21,6 @@ namespace ROOT {
 
    namespace Math { 
 
-
-#ifdef OLD
-
-      template<class DimensionType> class IParametricFunction; 
-      template<class DimensionType> class IParametricGradFunction; 
-
-      typedef IParametricFunction<OneDim>        IParamFunction;   
-      typedef IParametricFunction<MultiDim>      IParamMultiFunction; 
-
-      typedef IParametricGradFunction<OneDim>        IParamGradFunction; 
-      typedef IParametricGradFunction<MultiDim>      IParamMultiGradFunction; 
-
-#endif
-
       class IParametricFunctionOneDim; 
       class IParametricGradFunctionOneDim; 
       class IParametricFunctionMultiDim; 

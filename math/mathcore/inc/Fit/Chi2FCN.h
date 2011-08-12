@@ -53,16 +53,6 @@ namespace ROOT {
    namespace Fit { 
 
 
-template<class FunType> 
-struct ModelFunctionTrait { 
-   typedef  ::ROOT::Math::IParamMultiFunction ModelFunc;
-};
-template<>      
-struct ModelFunctionTrait<ROOT::Math::IMultiGradFunction>  { 
-   typedef  ::ROOT::Math::IParamMultiGradFunction ModelFunc;
-};
-
-
 
 //___________________________________________________________________________________
 /** 
@@ -80,7 +70,8 @@ public:
    typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction; 
    typedef typename  BaseObjFunction::BaseFunction BaseFunction; 
 
-   typedef  typename ModelFunctionTrait<FunType>::ModelFunc IModelFunction;
+   //typedef  typename ::ROOT::Math::ParamFunctionTrait<FunType>::PFType IModelFunction;
+   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
    typedef typename BaseObjFunction::Type_t Type_t;
 
    /** 
@@ -138,7 +129,7 @@ public:
       return FitUtil::EvaluateChi2Residual(fFunc, fData, x, i, g); 
    }
 
-   // need to be virtual to be instantited
+   // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const { 
       // evaluate the chi2 gradient
       FitUtil::EvaluateChi2Gradient(fFunc, fData, x, g, fNEffPoints);

@@ -18,25 +18,6 @@ namespace ROOT {
 
    namespace Math { 
 
-#ifdef OLD
-      template<class DimensionType> class IBaseFunction; 
-      template<class DimensionType> class IGradientFunction; 
-
-
-      /// tag for multi-dimensional functions
-      struct MultiDim {}; 
-      
-      /// tag for one-dimensional functions
-      struct OneDim {}; 
-
-
-      typedef IBaseFunction<OneDim>        IGenFunction;   
-      typedef IBaseFunction<MultiDim>      IMultiGenFunction; 
-
-      typedef IGradientFunction<OneDim>        IGradFunction; 
-      typedef IGradientFunction<MultiDim>      IMultiGradFunction; 
-#endif
-
       class IBaseFunctionOneDim; 
       class IGradientFunctionOneDim; 
       class IBaseFunctionMultiDim; 
