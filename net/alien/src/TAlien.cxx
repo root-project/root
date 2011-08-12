@@ -643,7 +643,7 @@ TGridCollection *TAlien::OpenCollection(const char *collectionfile,
         TGridResult* gridResult = alien->GetCollection(lfn);
         if (!gridResult) {
           Error("OpenCollection",
-                "Could not retrieve collection %d from the catalog", collectionfile);
+                "Could not retrieve collection %s from the catalog", collectionfile);
           return 0;
         }
 
