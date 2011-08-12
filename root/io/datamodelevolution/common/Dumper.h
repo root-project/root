@@ -221,27 +221,33 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
       //------------------------------------------------------------------------
       if( member->IsBasic() )
       {
+         Int_t datatype = member->GetDataType()->GetType();
          const char *type = member->GetTrueTypeName();
-         switch( type[0] )
+         switch( datatype )
          {
-            case 'i':
+            case kInt_t:
                out << *(int *)(((char *)obj) + member->GetOffset());
                break;
-            case 'd':
+            case kUInt_t:
+               out << *(unsigned int *)(((char *)obj) + member->GetOffset());
+               break;
+            case kDouble_t:
+            case kDouble32_t:
                out << *(double *)(((char *)obj) + member->GetOffset());
                break;
-            case 'f':
+            case kFloat_t:
+            case kFloat16_t:
                out << *(float *)(((char *)obj) + member->GetOffset());
                break;
-            case 's':
+            case kShort_t:
                out << *(short *)(((char *)obj) + member->GetOffset());
                break;
-            case 'b':
+            case kBool_t:
                out << *(bool *)(((char *)obj) + member->GetOffset()); 
                //debug: << ' ' << (void*)obj << ' ' << member->GetOffset() << ' ' << (void*)(((char *)obj) + member->GetOffset());
                break;
             default:
-               out << "unknown type: " << type;
+               out << "unsupported type: " << type << " (" << datatype << ")";
          }
          out << endl;
       }

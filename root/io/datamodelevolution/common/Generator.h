@@ -35,7 +35,17 @@ float genFloat()
 }
 
 
+bool genBool( )
+{
+   return gRandom->Integer(2) >= 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
+}
+
 int genInt( int max = 30 )
+{
+   return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
+}
+
+unsigned int genUInt( int max = 30 )
 {
    return gRandom->Integer(max) + 1; // 1+(int)(max * (random() / ((double)RAND_MAX + 1.0))); 
 }
@@ -228,22 +238,32 @@ void generate( void* obj, TClass* cl )
       //------------------------------------------------------------------------
       if( member->IsBasic() )
       {
-            const char *type = member->GetTrueTypeName();
-         switch( type[0] )
+         Int_t datatype = member->GetDataType()->GetType();
+         const char *type = member->GetTrueTypeName();
+         switch( datatype )
          {
-            case 'i':
+            case kInt_t:
                *(int *)(((char *)obj) + member->GetOffset()) = genInt();
                break;
-            case 'd':
+            case kUInt_t:
+               *(unsigned int *)(((char *)obj) + member->GetOffset()) = genUInt();
+               break;
+            case kDouble_t:
+            case kDouble32_t:
                *(double *)(((char *)obj) + member->GetOffset()) = genDouble();
                break;
-            case 'f':
+            case kFloat_t:
+            case kFloat16_t:
                *(float *)(((char *)obj) + member->GetOffset()) = genFloat();
                break;
-            case 's':
+            case kShort_t:
                *(short *)(((char *)obj) + member->GetOffset()) = genShort();
                break;
+            case kBool_t: // Don't change these values.
+               *(bool *)(((char *)obj) + member->GetOffset()) = genBool();
+               break;
             default:
+               std::cout << "Case not handled in test generate():" << type << " in " << cl->GetName() << std::endl;
                break;
          }
       }
