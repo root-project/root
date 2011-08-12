@@ -69,13 +69,13 @@ test1_cxx.$(DllSuf): DataModelV1.h
 read_test1_cxx.$(DllSuf): DataModelV1.h
 
 test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 test1: test1.clog
 	$(TestDiff)
 
 read_test1.clog: read_test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf) test1
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l read_test1.cxx+ > read_test1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l read_test1.cxx+ > read_test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 test1.comp.log: read_test1.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 0) > test1.comp.log
@@ -84,27 +84,27 @@ read_test1: test1.comp.log
 	$(TestDiff)
 
 reflex_test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > reflex_test1.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > reflex_test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 test2_cxx.$(DllSuf): DataModelV2.h
 
 test2.clog: test2_cxx.$(DllSuf) test1 libDataModelV2_dictcint.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+ > test2.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+ > test2.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 test2.comp.log: test2.clog
-	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1) > test2.comp.log
+	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1) > test2.comp.log 
 
 test2: test2.comp.log
 	$(TestDiff)
 
 reflex_test2.clog: test2_cxx.$(DllSuf) libDataModelV2_dictrflx.$(DllSuf) reflex_test1
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > reflex_test2.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > reflex_test2.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 reflex_test2.comp.log: reflex_test2.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1 -d reflex_ ) > reflex_test2.comp.log
 
 test3.clog: test3_cxx.$(DllSuf) test2  libDataModelV3_dictcint.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
 test3.comp.log: test3.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 2) > test3.comp.log

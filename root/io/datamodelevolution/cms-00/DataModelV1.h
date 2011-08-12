@@ -6,13 +6,35 @@
 #include <utility>
 #include <vector>
 
-class ClassAIns
-{
+namespace CMS {
+   class ClassAIns
+   {
    public:
+      struct Transient {
+         Transient() : fCached(false) {}
+         bool fCached; //! 
+      };
+      
       ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
    private:
       int    m_a;
       double m_b;
+   };
+}
+
+class ClassAIns
+{
+public:
+   struct Transient {
+      Transient() : fCached(false) {}
+      bool fCached; //! 
+   };
+   
+   ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
+private:
+   int    m_a;
+   double m_b;
+   ClassAIns::Transient m_cache; //!
 };
 
 class ClassABase
@@ -33,7 +55,7 @@ class ClassA: public ClassABase
    private:
       double    m_c;
       ClassAIns m_d;
-      int       m_e;
+      unsigned int  m_e;
       int       m_unit;
 };
 
@@ -95,6 +117,38 @@ namespace Gaudi {
 
 namespace LHCb {
 
+   class RefLeft {
+   private:
+      long fValue;
+   public:
+      void Set(long v) { fValue = v; }
+      long GetValue() { return fValue; }
+      RefLeft() : fValue(0) {}
+
+   };
+
+   class RefRight {
+   private:
+      long fValue;
+   public:
+      void Set(long v) { fValue = v; }
+      long GetValue() { return fValue; };
+      RefRight() : fValue(0) {}
+
+   };
+
+   class Ref {
+   private:
+      long fLeft;
+      long fRight;
+   public:
+      void SetLeft(long v) { fLeft = v; }
+      void SetRight(long v) { fRight = v; }
+      Ref() : fLeft(0),fRight(0) {}
+      
+   };
+
+
 // The interesting part is LHCb::Node:  
 class Node  {
 private:
@@ -114,6 +168,7 @@ class Track /* : public KeyedObject<int> */  {
 public:
    Track() { m_nodes.push_back(new LHCb::Node()); }
    ~Track() { for(unsigned int i=0; i<m_nodes.size(); ++i) { delete m_nodes[i]; }; m_nodes.clear(); }
+   void SetRef(long l, long r) { fLeft.Set(l); fRight.Set(r); }
 private:    
    double                            m_chi2PerDoF;           ///< Chi2 per degree of freedom of the track
    int                               m_nDoF;                 ///< Number of degrees of freedom of the track
@@ -129,5 +184,9 @@ private:
    Gaudi::TrackProjectionMatrixMis   m_projections_file;     ///< the projection matrix
    //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
    //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one
+
+   RefLeft  fLeft;
+   RefRight fRight;
+   
 };
 }

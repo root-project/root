@@ -130,6 +130,7 @@ int test1(const char *mode = "") {
    dump( vDS, o14 );
    
    LHCb::Track ltrack;
+   ltrack.SetRef(2,3);
 
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file

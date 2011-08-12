@@ -12,7 +12,7 @@
 #include <cstdlib>
 #include <../common/Dumper.h>
 #include <../common/Generator.h>
-#include <DataModelV1.h>
+#include <DataModelV2.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
@@ -157,6 +157,7 @@ int test2(const char *mode = "")
    //---------------------------------------------------------------------------
    // Dump what was read
    //---------------------------------------------------------------------------
+   printf("Track value: left: %ld right: %ld\n",ltrack->GetLeft(),ltrack->GetRight());
    int var = 0;
    out.dump( objA,   ++var, "S" );
    out.dump( objANS,   var, "NS" );

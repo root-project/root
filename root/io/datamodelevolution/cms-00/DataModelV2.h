@@ -10,11 +10,17 @@
 class ClassAIns
 {
 public:
+   struct Transient {
+      Transient() : fCached(false) {}
+      bool fCached; //! 
+   };
+   
    ClassAIns(): m_a( 12 ), m_b( 32.23 ), m_unit(-1) {}
 private:
    int    m_a;
    double m_b;
    int    m_unit;
+   ClassAIns::Transient m_cache; //!
 public:
    void SetUnit(int unit) { m_unit = unit; }
 };
@@ -112,6 +118,37 @@ namespace Gaudi {
 }
 
 namespace LHCb {
+   class RefLeft {
+   private:
+      long fValue;
+   public:
+      long GetValue() { return fValue; }
+      RefLeft() : fValue(0) {}
+
+   };
+
+   class RefRight {
+   private:
+      long fValue;
+   public:
+      long GetValue() { return fValue; };
+      RefRight() : fValue(0) {}
+
+   };
+
+   class Ref {
+   private:
+      long fLeft;
+      long fRight;
+   public:
+      long GetRight() { return fRight; }
+      long GetLeft() { return fLeft; }
+      void SetLeft(long v) { fLeft = v; }
+      void SetRight(long v) { fRight = v; }
+      Ref() : fLeft(0),fRight(0) {}
+      
+   };
+
 
 // The interesting part is LHCb::Node:  
 class Node  {
@@ -133,6 +170,8 @@ class Track /* : public KeyedObject<int> */  {
 public:
    Track() { m_nodes.push_back(new LHCb::Node()); }
    ~Track() { for(unsigned int i=0; i<m_nodes.size(); ++i) { delete m_nodes[i]; }; m_nodes.clear(); }
+   long GetRight() { return fRef.GetRight(); }
+   long GetLeft() { return fRef.GetLeft(); }
 private:    
    double                            m_chi2PerDoF;           ///< Chi2 per degree of freedom of the track
    int                               m_nDoF;                 ///< Number of degrees of freedom of the track
@@ -147,5 +186,8 @@ private:
    std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes
    //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
    //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one
+
+   Ref fRef;
+
 };
 }
