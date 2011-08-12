@@ -73,9 +73,10 @@ bool testTEfficiency_vs_TGA(int nexp=1000,int statOpt = TEfficiency::kBUniform,b
       double eu2 = e->GetEfficiencyErrorUp(1);
 
       bool ok = true; 
-      if (eff2 != eff) { cerr << "Different efficiency " << eff2 << "  vs  " << eff << endl; ok=false;}
-      if (el2 != el)  { cerr << "Different low error " << el2 << "  vs  " << el << endl; ok = false; }
-      if (eu2 != eu)  { cerr << "Different up  error " << eu2 << "  vs " << eu << endl; ok = false; }
+      double tol = 1.E-12;
+      if (!TMath::AreEqualAbs(eff2, eff, 1.E-14)) { cerr << "Different efficiency " << eff2 << "  vs  " << eff << endl; ok=false;}
+      if (!TMath::AreEqualAbs(el2, el, 1.E-14))  { cerr << "Different low error " << el2 << "  vs  " << el << endl; ok = false; }
+      if (!TMath::AreEqualAbs(eu2, eu, 1.E-14))  { cerr << "Different up  error " << eu2 << "  vs " << eu << endl; ok = false; }
       if (!ok) { 
          cerr << "Iteration " << i << ":\t Error for (k,n) " << int(k) << " , " << int(n) << endl;
          break;
