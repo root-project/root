@@ -906,7 +906,14 @@ TObject *&TClonesArray::operator[](Int_t idx)
       //    obj = myClonesArray[i];
       //    obj->TestBit(TObject::kNotDeleted)
       // will behave correctly.
-      memset(fKeep->fCont[idx], 0, sizeof(TObject));  // TClonesArray requires the class to start with the TObject part.
+      // TObject::kNotDeleted is one of the higher bit that is not settable via the public
+      // interface.
+      static size_t fbitsOffset = 0;
+      if (fbitsOffset == 0) {
+         fbitsOffset = TObject::Class()->GetDataMemberOffset("fBits");
+      }
+      char *fbitsAddress = ((char*)fKeep->fCont[idx]) + fbitsOffset;
+      *(UInt_t*)fbitsAddress = 0;
    }
    fCont[idx] = fKeep->fCont[idx];
 
