@@ -597,6 +597,9 @@ Int_t TRefArray::IndexOf(const TObject *obj) const
 
    Int_t i;
    if (obj) {
+      if (!TProcessID::IsValid(fPID)) {
+         return fLowerBound-1;
+      }
       for (i = 0; i < fSize; i++)
          if (fUIDs[i] && fPID->GetObjectWithID(fUIDs[i]) == obj)
             return i+fLowerBound;
@@ -660,6 +663,7 @@ TObject *TRefArray::RemoveAt(Int_t idx)
 
    TObject *obj = 0;
    if (fUIDs[i]) {
+      if (!TProcessID::IsValid(fPID)) return 0;
       obj = fPID->GetObjectWithID(fUIDs[i]);
       fUIDs[i] = 0;
       // recalculate array size

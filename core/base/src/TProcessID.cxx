@@ -153,6 +153,7 @@ void TProcessID::Cleanup()
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
+   fgPIDs = 0;
 }
 
 //______________________________________________________________________________
@@ -280,6 +281,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 
    R__LOCKGUARD2(gROOTMutex);
 
+   if (fgPIDs==0) return kFALSE;
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
    if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
    return kFALSE;

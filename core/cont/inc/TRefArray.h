@@ -171,6 +171,7 @@ inline TObject *TRefArray::operator[](Int_t at) const
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
       if (!fPID) return 0;
+      if (!TProcessID::IsValid(fPID)) return 0;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
       if (obj==0) obj = GetFromTable(j);
       return obj;
@@ -185,6 +186,7 @@ inline TObject *TRefArray::At(Int_t at) const
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
       if (!fPID) return 0;
+      if (!TProcessID::IsValid(fPID)) return 0;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
       if (obj==0) obj = GetFromTable(j);
       return obj;
