@@ -73,3 +73,9 @@ ifneq ($(filter -O%,$(OPT)),)
    $(call stripsrc,$(IODIRS)/TStreamerInfoReadBuffer.o): CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
 endif
 endif
+ifeq ($(GCC_VERS),gcc-4.5)
+ifneq ($(filter -O%,$(OPT)),)
+   $(call stripsrc,$(IODIRS)/TStreamerInfoReadBuffer.o): CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
+endif
+endif
+
