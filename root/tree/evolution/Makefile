@@ -133,3 +133,8 @@ missingArray.clog: missingArray.root missingArray2_cc.$(DllSuf)
 missingArray: missingArray.clog
 	$(TestDiff)
 
+missingCollection.root: writeMissingCollection_cxx.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeMissingCollection.cxx+ > writeMissingCollection.clog 2>&1 || handleError.sh --result=$$? --log=writeMissingCollection.clog
+
+execMissingCollection.clog: missingCollection.root
+
