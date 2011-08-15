@@ -65,10 +65,12 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GLEWLIB)
+$(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
+                $(GLEWLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
-		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
+		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
+		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
@@ -107,6 +109,7 @@ $(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.
 $(GLDO): NOOPT = $(OPT)
