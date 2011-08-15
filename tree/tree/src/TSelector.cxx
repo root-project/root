@@ -170,16 +170,23 @@ TSelector *TSelector::GetSelector(const char *filename)
 
    ClassInfo_t *cl = gCint->ClassInfo_Factory();
    Bool_t ok = kFALSE;
+   Bool_t nameFound = kFALSE;
    while (gCint->ClassInfo_Next(cl)) {
       if (localname == gCint->ClassInfo_FullName(cl)) {
+         nameFound = kTRUE;
          if (gCint->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
          break;
       }
    }
    if (!ok) {
       if (fromFile) {
-         ::Error("TSelector::GetSelector",
-         "file %s does not have a valid class deriving from TSelector", filename);
+         if (nameFound) {
+            ::Error("TSelector::GetSelector",
+                    "The class %s in file %s does not derive from TSelector.", localname.Data(), filename);
+         } else {
+            ::Error("TSelector::GetSelector",
+                    "The file %s does not define a class named %s.", filename, localname.Data());
+         }
       } else {
          if (autoloaderr)
             ::Error("TSelector::GetSelector", "class %s could not be loaded", filename);
