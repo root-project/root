@@ -333,6 +333,50 @@ check_libpic() {
 }
 
 #_____________________________________________________________________
+check_libcompat() {
+    # This function will try to find out if a library [$1] contains 
+    # compatible 64 bit or 32 bit code matching the selected architecture.
+    # Currently only MacOS X supports universal libs.
+    # The result of the check is stored in is_libcompat, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    is_libcompat=0
+    ret=0
+
+    # Assert that we got enough arguments
+    if test $# -ne 1 ; then
+        echo "check_libcompat: not 1 argument"
+        return 1
+    fi
+
+    # Save arguments in logical names
+    chklibcompat=$1
+    logmsg "Checking if $chklibcompat contains compatible code"
+
+    case $arch in
+    macosx)
+        logmsg " file -L $chklibcompat | grep 'i386'"
+        if file -L $chklibcompat | grep 'i386' > /dev/null 2>& 1 ; then
+            ret=1
+        fi
+        ;;
+    macosx64)
+        logmsg " file -L $chklibcompat | grep 'x86_64'"
+        if file -L $chklibcompat | grep 'x86_64' > /dev/null 2>& 1 ; then
+            ret=1
+        fi
+        ;;
+    esac
+
+    logmsg " result: $ret"
+    if test $ret -eq 1 ; then
+        is_libcompat=1
+        logmsg " is a compatible library"
+    fi
+}
+
+#_____________________________________________________________________
 check_lib64() {
     # This function will try to find out if a library [$1] contains 64 bit
     # or 32 bit code. Currently works only for linux.
@@ -501,6 +545,12 @@ check_library() {
                                 break 4
                             fi
                         else
+                            if test "x$checklibcompat" = "xyes" ; then
+                                check_libcompat $n
+                                if test $is_libcompat -eq 0 ; then
+                                    break 4
+                                fi
+                            fi
                             found_dir=$l
                             found_lib=$j
                             if test "x$arch" = "linux"; then
@@ -1594,6 +1644,9 @@ hpuxia64acc)
 solaris64CC5)
    logmsg "Will check Solaris 64bit libraries"
    checksolaris64="yes" ;;
+macosx*)
+   logmsg "Will check for compatible libraries"
+   checklibcompat="yes" ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
    message "Checking for iOS SDK"
@@ -3381,10 +3434,10 @@ if test ! "x$enable_gviz" = "xno"; then
                enable_gviz="no"
            else
                gvizcflags=-DGVIZ_STATIC
-               gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
+               gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat -lz"
            fi
        else
-           gvizlib="$gvizlibir $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
+           gvizlib="$gvizlibir $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat -lz"
        fi
        if test "x$platform" = "xwin32"; then
            gvizcflags=
