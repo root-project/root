@@ -71,45 +71,53 @@
 //                                                                      //
 //  NOTE 1
 //  ======
-// C/C++ offer the possibility to allocate and delete memory.
-// Forgetting to delete allocated memory is a programming error that originate "leaks",
-// i.e. the memory of your process grows and eventually your program crashes.
-// Even if you *always* delete the allocated memory, the recovered space may not be
-// efficiently reused. The process knows that there are portions of free memory,
-// but when you allocate it again, a fresh piece of memory is grabbed.
-// Your program is free from semantic errors, but the total memory of your process
-// still grows. Moreover your program's memory is full of "holes" which reduce the
-// efficiency of memory access, this is called "memory fragmentation".
-// Moreover new / delete are expensive operations in terms of CPU time.
+// C/C++ offers the possibility of allocating and deleting memory.
+// Forgetting to delete allocated memory is a programming error called a
+// "memory leak", i.e. the memory of your process grows and eventually
+// your program crashes. Even if you *always* delete the allocated
+// memory, the recovered space may not be efficiently reused. The
+// process knows that there are portions of free memory, but when you
+// allocate it again, a fresh piece of memory is grabbed. Your program
+// is free from semantic errors, but the total memory of your process
+// still grows, because your program's memory is full of "holes" which
+// reduce the efficiency of memory access; this is called "memory
+// fragmentation". Moreover new / delete are expensive operations in
+// terms of CPU time.
 //
-// Without entering into technical details, the TClonesArray allow to "reuse" the
-// same portion of memory for new/delete avoiding memory fragmentation and memory
-// growth and improving by orders of magnitude the performance. Every time the
-// memory of the TClonesArray has to be reused, the Clear() method is employed.
-// To provide its benefits, each TClonesArray must be allocated *once* per process
-// and disposed of (deleted) *only when not needed any more*.
-// So a job should see *only one* deletion for each TClonesArray, which should be
-// "Cleared()" in between several times. Keep deleting a TClonesArray is a double
-// waste. Not only you do not avoid memory fragmentation, but you worsen it because
-// the TClonesArray itself is a rather heavy structure, and there is quite some
-// code in the destructor, so you have more memory fragmentation and slower code.
+// Without entering into technical details, TClonesArray allows you to
+// "reuse" the same portion of memory for new/delete avoiding memory
+// fragmentation and memory growth and improving the performance by
+// orders of magnitude. Every time the memory of the TClonesArray has
+// to be reused, the Clear() method is used. To provide its benefits,
+// each TClonesArray must be allocated *once* per process and disposed
+// of (deleted) *only when not needed any more*.
+//
+// So a job should see *only one* deletion for each TClonesArray,
+// which should be Clear()ed during the job several times. Deleting a
+// TClonesArray is a double waste. Not only you do not avoid memory
+// fragmentation, but you worsen it because the TClonesArray itself
+// is a rather heavy structure, and there is quite some code in the
+// destructor, so you have more memory fragmentation and slower code.
 //
 //  NOTE 2
 //  ======
 //
 // When investigating misuse of TClonesArray, please make sure of the following:
 //
-//    * Use Clear() or Clear("C") instead of Delete(). This will improve program
-//      execution time.
+//    * Use Clear() or Clear("C") instead of Delete(). This will improve
+//      program execution time.
 //    * TClonesArray object classes containing pointers allocate memory.
-//      To avoid causing memory leaks, special Clear("C") must be used for
-//      clearing TClonesArray. When option "C" is specified, ROOT automatically
-//      executes the Clear() method (by default it is empty contained in TObject).
-//      This method must be overridden in the relevant TClonesArray object class,
-//      implementing the reset procedure for pointer objects.
-//    * To reduce memory fragmentation, please make sure that the TClonesArrays
-//      are not destroyed and created on every event.
-//      They must only be constructed/destructed at the beginning/end of the run.
+//      To avoid causing memory leaks, special Clear("C") must be used
+//      for clearing TClonesArray. When option "C" is specified, ROOT
+//      automatically executes the Clear() method (by default it is
+//      empty contained in TObject). This method must be overridden in
+//      the relevant TClonesArray object class, implementing the reset
+//      procedure for pointer objects.
+//    * To reduce memory fragmentation, please make sure that the
+//      TClonesArrays are not destroyed and created on every event. They
+//      must only be constructed/destructed at the beginning/end of the
+//      run.
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -477,7 +485,7 @@ void TClonesArray::ExpandCreate(Int_t n)
 {
    // Expand or shrink the array to n elements and create the clone
    // objects by calling their default ctor. If n is less than the current size
-   // the array is shrinked and the allocated space is freed.
+   // the array is shrunk and the allocated space is freed.
    // This routine is typically used to create a clonesarray into which
    // one can directly copy object data without going via the
    // "new (arr[i]) MyObj()" (i.e. the vtbl is already set correctly).
@@ -494,7 +502,7 @@ void TClonesArray::ExpandCreate(Int_t n)
       if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-         // The object has been delete (or never initilized)
+         // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
       fCont[i] = fKeep->fCont[i];
@@ -532,7 +540,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
       if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
       } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-         // The object has been delete (or never initilized)
+         // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
       fCont[i] = fKeep->fCont[i];
@@ -803,7 +811,7 @@ void TClonesArray::Streamer(TBuffer &b)
             if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
             } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
-               // The object has been delete (or never initialized)
+               // The object has been deleted (or never initialized)
                fClass->New(fKeep->fCont[i]);
             }
 
