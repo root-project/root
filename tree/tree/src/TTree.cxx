@@ -138,9 +138,9 @@
 //         STLcollection is the address of a pointer to std::vector, std::list,
 //         std::deque, std::set or std::multiset containing pointers to objects.
 //         If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
-//         then the collection will be written in split mode. Ie. if it contains objects of 
+//         then the collection will be written in split mode, e.g. if it contains objects of 
 //         any types deriving from TTrack this function will sort the objects
-//         basing on their type and store them in separate branches in split
+//         based on their type and store them in separate branches in split
 //         mode.
 //
 //  ==> branch->SetAddress(Void *address)
@@ -443,7 +443,7 @@ TTree::TFriendLock::TFriendLock(const TFriendLock& tfl) :
 //______________________________________________________________________________
 TTree::TFriendLock& TTree::TFriendLock::operator=(const TTree::TFriendLock& tfl)
 {
-   //assignement operator
+   //assignment operator
    if(this!=&tfl) {
       fTree=tfl.fTree;
       fMethodBit=tfl.fMethodBit;
@@ -513,7 +513,7 @@ TTree::TClusterIterator::TClusterIterator(TTree *tree, Long64_t firstEntry) : fT
 Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
 {
    // In the case where the cluster size was not fixed (old files and 
-   // case where autoflush was explicilty set to zero, we need estimate
+   // case where autoflush was explicitly set to zero, we need estimate
    // a cluster size in relation to the size of the cache.
 
    Long64_t zipBytes = fTree->GetZipBytes();
@@ -1090,7 +1090,7 @@ Long64_t TTree::AutoSave(Option_t* option)
    //
    //   Note that calling TTree::AutoSave too frequently (or similarly calling
    //   TTree::SetAutoSave with a small value) is an expensive operation.
-   //   You should make tests for your own application to find a compromize
+   //   You should make tests for your own application to find a compromise
    //   between speed and the quantity of information you may loose in case of
    //   a job crash.
    //
@@ -1112,7 +1112,7 @@ Long64_t TTree::AutoSave(Option_t* option)
    //   when writing the new header.
    //
    //   The function returns the number of bytes written to the file.
-   //   if the number of bytes is null, an error has occured while writing
+   //   if the number of bytes is null, an error has occurred while writing
    //   the header to the file.
    //
    //   How to write a Tree in one process and view it from another process
@@ -1387,7 +1387,7 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
    //   Each entry in the collection becomes a top level branch if the
    //   corresponding class is not a collection. If it is a collection, the entry
    //   in the collection becomes in turn top level branches, etc.
-   //   The splitlevel is decreased by 1 everytime a new collection is found.
+   //   The splitlevel is decreased by 1 every time a new collection is found.
    //   For example if list is a TObjArray*
    //     - if splitlevel = 1, one top level branch is created for each element
    //        of the TObjArray.
@@ -1409,24 +1409,24 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
    // corresponding to the collection or object names. It is important
    // to give names to collections to avoid misleading branch names or
    // identical branch names. By default collections have a name equal to
-   // the corresponding class name, eg the default name for a TList is "TList".
+   // the corresponding class name, e.g. the default name for a TList is "TList".
    //
    // Example--------------------------------------------------------------:
    /*
    {
          TTree T("T","test list");
-         TList *l = new TList();
+         TList *list = new TList();
 
          TObjArray *a1 = new TObjArray();
          a1->SetName("a1");
-         l->Add(a1);
+         list->Add(a1);
          TH1F *ha1a = new TH1F("ha1a","ha1",100,0,1);
          TH1F *ha1b = new TH1F("ha1b","ha1",100,0,1);
          a1->Add(ha1a);
          a1->Add(ha1b);
          TObjArray *b1 = new TObjArray();
          b1->SetName("b1");
-         l->Add(b1);
+         list->Add(b1);
          TH1F *hb1a = new TH1F("hb1a","hb1",100,0,1);
          TH1F *hb1b = new TH1F("hb1b","hb1",100,0,1);
          b1->Add(hb1a);
@@ -1434,13 +1434,13 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
 
          TObjArray *a2 = new TObjArray();
          a2->SetName("a2");
-         l->Add(a2);
+         list->Add(a2);
          TH1S *ha2a = new TH1S("ha2a","ha2",100,0,1);
          TH1S *ha2b = new TH1S("ha2b","ha2",100,0,1);
          a2->Add(ha2a);
          a2->Add(ha2b);
 
-         T.Branch(l,16000,2);
+         T.Branch(list,16000,2);
          T.Print();
    }
    */
@@ -1577,12 +1577,11 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //            if nelem is a leaf name, it is used as the variable size of the array, 
    //            otherwise return 0.
    //         If leaf name has the form var[nelem], where nelem is a digit, then
    //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])
+   //         If leaf name has the form of a multi-dimension array (e.g. var[nelem][nelem2])
    //            where nelem and nelem2 are digits) then
    //            it is used as a 2 dimensional array of fixed size.
    //         Any of other form is not supported.
@@ -3622,8 +3621,8 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  MinIf$(formula,condition)
    //  MaxIf$(formula,condition): return the minimum (maximum) (within one TTree entry)
    //                    of the value of the elements of the formula given as a parameter
-   //                    if they match the condition. If not element match the condition, the result is zero.  To avoid the
-   //                    the result is zero.  To avoid the consequent peak a zero, use the
+   //                    if they match the condition. If no element matches the condition, 
+   //                    the result is zero.  To avoid the resulting peak at zero, use the
    //                    pattern:
    //    tree->Draw("MinIf$(formula,condition)","condition");
    //                    which will avoid calculation MinIf$ for the entries that have no match
@@ -4961,7 +4960,8 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 //______________________________________________________________________________
 TLeaf* TTree::GetLeaf(const char* aname)
 {
-   // Return pointer to the 1st Leaf named name in any Branch of this Tree or any branch in the list of friend trees.
+   // Return pointer to the 1st Leaf named name in any Branch of this 
+   // Tree or any branch in the list of friend trees.
    //
    //  aname may be of the form branchname/leafname
 
@@ -5015,7 +5015,7 @@ TLeaf* TTree::GetLeaf(const char* aname)
                continue;
             }
          }
-         // The start of the branch name is indentical to the content
+         // The start of the branch name is identical to the content
          // of 'aname' before the first '/'.
          // Let's make sure that it is not longer (we are trying
          // to avoid having jet2/value match the branch jet23
@@ -5237,7 +5237,7 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
    // If maxmemory is non null and positive SetMaxVirtualSize is called
    // with this value. Default for maxmemory is 2000000000 (2 Gigabytes).
    // The function returns the total number of baskets read into memory
-   // if negative an error occured while loading the branches.
+   // if negative an error occurred while loading the branches.
    // This method may be called to force branch baskets in memory
    // when random access to branch entries is required.
    // If random access to only a few branches is required, you should
@@ -5268,7 +5268,7 @@ Long64_t TTree::LoadTree(Long64_t entry)
    // through the friends tree, let return
    if (kLoadTree & fFriendLockStatus) {
       // We need to return a negative value to avoid a circular list of friend
-      // to think that there is always an entry somewhere in the lisst.
+      // to think that there is always an entry somewhere in the list.
       return -1;
    }
 

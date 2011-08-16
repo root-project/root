@@ -23,11 +23,11 @@ ClassImp(TButton)
 //______________________________________________________________________________
 //  A TButton object is a user interface object.
 //  A TButton has a name and an associated action.
-//  When the button is clicked with the left mouse button, the cooresponding
+//  When the button is clicked with the left mouse button, the corresponding
 //  action is executed.
-//  A Tbutton can be created by direct invokation of the constructors
+//  A TButton can be created by direct invocation of the constructors
 //  or via the graphics editor.
-//  The Action can be set via TButton::SetMethod.
+//  The action can be set via TButton::SetMethod.
 //  The action can be any command. Examples of actions:
 //     "34+78" When the button is clicked, the result of addition is printed.
 //     ".x macro.C" . Clicking the button executes the macro macro.C

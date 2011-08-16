@@ -229,7 +229,7 @@ All histogram classes are derived from the base class TH1
              <li>"a" sort by alphabetic order
              <li>">" sort by decreasing values
              <li>"<" sort by increasing values
-             <li>"h" draw labels horizonthal
+             <li>"h" draw labels horizontal
              <li>"v" draw labels vertical
              <li>"u" draw labels up (end of label right adjusted)
              <li>"d" draw labels down (start of label left adjusted)
@@ -1009,7 +1009,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    Double_t nEntries = TMath::Abs( c1*h1->GetEntries() + c2*h2->GetEntries() );
    Double_t s1[kNstat], s2[kNstat], s3[kNstat];
 
-// statistics can be preserbed only in case of positive coefficients
+// statistics can be preserved only in case of positive coefficients
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1*c2 < 0);
    if (!resetStats) {
@@ -1703,7 +1703,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //
    //     "OF" = overflows included
    //     "UF" = underflows included
-   //         by default underflows and overlows are not included
+   //         by default underflows and overflows are not included
    //
    //  - igood:
    //       igood=0 - no problems
@@ -1848,7 +1848,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
 
 
-   //get number of events in histogramm
+   //get number of events in histogram
    if (comparisonUU && scaledHistogram) {
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
@@ -2248,7 +2248,7 @@ void TH1::Copy(TObject &obj) const
    //             =======================================
    //
    // Note that this function does not copy the list of associated functions.
-   // Use TObJect::Clone to make a full copy of an histogram.
+   // Use TObject::Clone to make a full copy of an histogram.
 
    if (((TH1&)obj).fDirectory) {
       // We are likely to change the hash value of this object
@@ -2277,7 +2277,7 @@ void TH1::Copy(TObject &obj) const
 
    // copy the Buffer (needs to do after calling Get/SetBinContent 
    // which will call BufferEmpty. Maybe one should call 
-   // assigment operator on the TArrayD
+   // assignment operator on the TArrayD
    if (fBuffer) {
       Double_t *buf = new Double_t[fBufferSize];
       for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
@@ -2424,8 +2424,8 @@ void TH1::Divide(const TH1 *h1)
 //   Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
 //   The resulting errors are calculated assuming uncorrelated histograms.
-//   See the other TH1::Divide that gives the possibility to optionaly
-//   compute Binomial errors.
+//   See the other TH1::Divide that gives the possibility to optionally
+//   compute binomial errors.
 //
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
@@ -3493,7 +3493,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     Access to the fit status
 //     =====================
 //     The status of the fit can be obtained converting the TFitResultPtr to an integer
-//     indipendently if the fit option "S" is used or not:
+//     independently if the fit option "S" is used or not:
 //     TFitResultPtr r = h=>Fit(myFunc,opt);
 //     Int_t fitStatus = r;
 //
@@ -4620,7 +4620,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    //  option = "a" sort by alphabetic order
    //         = ">" sort by decreasing values
    //         = "<" sort by increasing values
-   //         = "h" draw labels horizonthal
+   //         = "h" draw labels horizontal
    //         = "v" draw labels vertical
    //         = "u" draw labels up (end of label right adjusted)
    //         = "d" draw labels down (start of label left adjusted)
@@ -4941,7 +4941,7 @@ Long64_t TH1::Merge(TCollection *li)
    // will be merged, no matter what their order is.
    // If overflows are present and limits are different the function will fail.
    // The function returns the total number of entries in the result histogram
-   // if the merge is successfull, -1 otherwise.
+   // if the merge is successful, -1 otherwise.
    //
    // IMPORTANT remark. The axis x may have different number
    // of bins and different limits, BUT the largest bin width must be
@@ -6671,7 +6671,7 @@ Double_t TH1::GetRMSError(Int_t axis) const
    //  Value returned is standard deviation of sample standard deviation.
    //  Note that it is an approximated value which is valid only in the case that the
    //  original data distribution is Normal. The correct one would require
-   //  the 4-th momentum value, which cannot be accuratly estimated from an histogram since
+   //  the 4-th momentum value, which cannot be accurately estimated from an histogram since
    //  the x-information for all entries is not kept.
 
    return GetRMS(axis+10);
@@ -6818,7 +6818,7 @@ Double_t TH1::GetKurtosis(Int_t axis) const
 void TH1::GetStats(Double_t *stats) const
 {
    // fill the array stats from the contents of this histogram
-   // The array stats must be correctly dimensionned in the calling program.
+   // The array stats must be correctly dimensioned in the calling program.
    // stats[0] = sumw
    // stats[1] = sumw2
    // stats[2] = sumwx
@@ -7335,7 +7335,7 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
    //  Set the number and values of contour levels.
    //
    //  By default the number of contour levels is set to 20. The contours values
-   //  in the array "levels" should be specify un increasing order.
+   //  in the array "levels" should be specified in increasing order.
    //
    //  if argument levels = 0 or missing, equidistant contours are computed
 
@@ -8330,7 +8330,7 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
+   // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;
@@ -8573,7 +8573,7 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
+   // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;
@@ -8815,7 +8815,7 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
+   // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;
@@ -9053,7 +9053,7 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
+   // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;
@@ -9292,7 +9292,7 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accomodate the new bin
+   // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;

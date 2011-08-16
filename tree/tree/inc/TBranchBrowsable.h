@@ -91,7 +91,7 @@ private:
    static void RegisterDefaultGenerators();
    const TBranch    *fBranch; // pointer to the branch element representing the top object
    const TVirtualBranchBrowsable *fParent; // parent method if this method is member of a returned class
-   TList            *fLeaves; // pointer to laves
+   TList            *fLeaves; // pointer to leaves
    TClass           *fClass; // pointer to TClass representing our type (i.e. return type for methods), 0 if basic type
    Bool_t            fTypeIsPointer; // return type is pointer to class
    static std::list<MethodCreateListOfBrowsables_t> fgGenerators; // list of MethodCreateListOfBrowsables_t called by CreateListOfBrowsables
@@ -160,7 +160,7 @@ protected:
    TCollectionPropertyBrowsable(const char* name, const char* title, 
       const char* draw, const TBranch* branch, const TVirtualBranchBrowsable* parent=0): 
    TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fDraw(draw) {
-      // contrsuctor, which sets the name and title according to the parameters
+      // constructor, which sets the name and title according to the parameters
       // (and thus differently than our base class TVirtualBranchBrowsable)
       SetNameTitle(name, title);
    }
