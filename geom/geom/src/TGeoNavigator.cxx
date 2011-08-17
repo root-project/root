@@ -189,6 +189,8 @@ TGeoNavigator::TGeoNavigator(const TGeoNavigator& gm)
       fDirection[i] = gm.fDirection[i];
       fLastPoint[i] = gm.fLastPoint[i];
    }
+   fDivMatrix = new TGeoHMatrix();
+   fDivMatrix->RegisterYourself();
 }      
 
 //_____________________________________________________________________________
@@ -237,6 +239,8 @@ TGeoNavigator& TGeoNavigator::operator=(const TGeoNavigator& gm)
          fDirection[i] = gm.fDirection[i];
          fLastPoint[i] = gm.fLastPoint[i];
       }
+      fDivMatrix = new TGeoHMatrix();
+      fDivMatrix->RegisterYourself();
    }
    return *this;   
 }
