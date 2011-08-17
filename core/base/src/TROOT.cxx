@@ -1380,8 +1380,10 @@ void TROOT::InitSystem()
       if (gSystem->Init())
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
 
-      if (!gSystem->HomeDirectory())
+      if (!gSystem->HomeDirectory()) {
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: HOME directory not set\n");
+         fprintf(stderr, "Fix this by defining the HOME shell variable\n");
+      }
 
       // read default files
       gEnv = new TEnv(".rootrc");
@@ -1409,7 +1411,6 @@ void TROOT::InitSystem()
       fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
 
       TObject::SetObjectStat(gEnv->GetValue("Root.ObjectStat", 0));
-
    }
 }
 
