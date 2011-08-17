@@ -3,23 +3,15 @@
 <title>Appendix A: Install and Build ROOT</title>
 
 <sect1>
-<title>ROOT Copyright and Licensing Agreement:</title>
-<para>This is a reprint of the copyright and licensing agreement of ROOT:</para>
-<para>Copyright (C) 1995-2003, René Brun and Fons Rademakers.</para>
-<para>All rights reserved.</para>
-<para/>
-<para>ROOT Software Terms and Conditions</para>
-<para>The authors hereby grant permission to use, copy, and distribute this software and its documentation for any purpose, provided that existing copyright notices are retained in all copies and that this notice is included verbatim in any distributions. Additionally, the authors grant permission to modify this software and its documentation for any purpose, provided that such modifications are not distributed without the explicit consent of the authors and that existing copyright notices are retained in all copies. Users of the software are asked to feed back problems, benefits, and/or suggestions about the software to the ROOT Development Team:  <uri xmlns:xlink="mailto:rootdev@root.cern.ch">rootdev@root.cern.ch</uri> Support for this software - fixing of bugs, incorporation of new features - is done on a best effort basis. All bug fixes and enhancements will be made available under the same terms and conditions as the original software. </para>
-<para/>
-<para>IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
-<para/>
-<para>THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.</para>
+<title>License</title>
+<para>ROOT is made available under the LGPL v2.1 license. For full details see the file LICENSE in the ROOT distribution.</para>
 </sect1>
 
 <sect1>
 <title>Installing ROOT</title>
-<para>To install ROOT you will need to go to the ROOT website at:  <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri></para>
-<para>You have a choice to download the binaries or the source. The source is quicker to transfer since it is only 3.4 MB, but you will need to compile and link it. The binaries range from 7.4 MB to 11 MB depending on the target platform.</para>
+    <para>To install ROOT you will need to go to the ROOT website at: <uri xmlns:xlink="http://root.cern.ch/drupal/content/downloading-root">http://root.cern.ch/drupal/content/downloading-root</uri></para>
+<para>You have a choice to download the binaries or the source. The source is quicker to transfer since it is only 31 MB, but you will need to compile and link it.
+    The binaries range from 50 MB to 100 MB depending on the target platform.</para>
 </sect1>
 
 <sect1>
@@ -34,11 +26,11 @@
 
 <sect1>
 <title>Installing Precompiled Binaries</title>
-<para>The binaries are available for downloading from  <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri>. Once downloaded you need to unzip and de-tar the file. For example, if you have downloaded ROOT v2.25 for HPUX:</para>
+    <para>The binaries are available for downloading from  <uri xmlns:xlink="http://root.cern.ch/drupal/content/downloading-root">http://root.cern.ch/drupal/content/downloading-root</uri>. Once downloaded you need to unzip and de-tar the file. For example, if you have downloaded ROOT v2.25 for HPUX:</para>
 
 <programlisting language="c++">
-<emphasis role="bold"><code>% gunzip root_v2.25.00.HP-UX.B.10.20.tar.gz</code></emphasis>
-<emphasis role="bold"><code>% tar xvf root_v2.25.00.HP-UX.B.10.20.tar</code></emphasis>
+<emphasis role="bold"><code>% gunzip root_v5.30.00.Linux-slc5-gcc4.3.tar.gz</code></emphasis>
+<emphasis role="bold"><code>% tar xvf root_v5.30.00.Linux-slc5-gcc4.3.tar</code></emphasis>
 </programlisting>
 
 <para>This will create the directory root. Before getting started read the file README/README. Also, read the Introduction chapter for an explanation of the directory structure.</para>
@@ -46,37 +38,39 @@
 
 <sect1>
 <title>Installing the Source</title>
-<para>You have a choice to download a compressed (tar ball) file containing the source, or you can login to the source code change control (CVS) system and check out the most recent source. The compressed file is a one time only choice; every time you would like to upgrade you will need to download the entire new version. Choosing the CVS option will allow you to get changes as they are submitted by the developers and you can stay up to date.</para>
+<para>You have a choice to download a compressed (tar ball) file containing the source, or you can use the Subversion (svn) source code change control system and
+    check out the most recent source. The compressed file is a one time only choice; every time you would like to upgrade you will need to download the
+    entire new version. Choosing the CVS option will allow you to get changes as they are submitted by the developers and you can stay up to date.</para>
 
 <sect2>
 <title>Installing and Building the Source from a Compressed File</title>
-<para>To install the ROOT source you can download the tar file containing all the source files from the ROOT website. The first thing you should do is to get the latest version as a tar file. Unpack the source tar file, this creates directory ‘root’:</para>
+<para>To install the ROOT source you can download the tar file containing all the source files from the ROOT website. The first thing you
+    should do is to get the latest version as a tar file. Unpack the source tar file, this creates directory ‘root’:</para>
 
 <programlisting language="c++">
-<emphasis role="bold"><code>% tar zxvf root_v2.25.xx.source.tar.gz</code></emphasis>
+<emphasis role="bold"><code>% tar zxvf root_v5.30.xx.source.tar.gz</code></emphasis>
 </programlisting>
 
-<para>Set <code>ROOTSYS</code> to the directory where you want root to be installed:</para>
-
-<programlisting language="c++">
-% <emphasis role="bold"><code>export ROOTSYS=&lt;path&gt;/root</code></emphasis>
-</programlisting>
-
-<para>Now type the build commands:</para>
+<para>Type the build commands:</para>
 
 <programlisting language="c++">
 <emphasis role="bold"><code>% cd root </code></emphasis>
 <emphasis role="bold"><code>% ./configure --help</code></emphasis>
-<emphasis role="bold"><code>% ./configure &lt;target&gt;</code></emphasis>
-<emphasis role="bold"><code>% gmake</code></emphasis>
-<emphasis role="bold"><code>% gmake install</code></emphasis>
+<emphasis role="bold"><code>% ./configure [&lt;arch&gt;]</code></emphasis>
+<emphasis role="bold"><code>% (g)make</code></emphasis>
 </programlisting>
 
-<para>Add <code>$ROOTSYS/bin</code> to <code>PATH</code> and <code>$</code><code>ROOTSYS/lib to LD_LIBRARY_PATH</code>:</para>
+<para>Add <code>bin/</code> to <code>PATH</code> and <code>lib/ to LD_LIBRARY_PATH</code>. For the
+                sh shell family do:</para>
 
 <programlisting language="c++">
-<emphasis role="bold"><code>% export PATH=$ROOTSYS/bin:$PATH</code></emphasis>
-<emphasis role="bold"><code>% export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH</code></emphasis>
+<emphasis role="bold"><code>% . bin/thisroot.sh</code></emphasis>
+</programlisting>
+
+<para>and for the csh shell family do:</para>
+    
+<programlisting language="c++">
+<emphasis role="bold"><code>% source bin/thisroot.csh</code></emphasis>
 </programlisting>
 
 <para>Try running root:</para>
@@ -89,7 +83,8 @@
 
 <sect3>
 <title>Target directory</title>
-<para>By default, ROOT will be built in the <code>$ROOTSYS</code> directory. In that case the whole system (binaries, sources, tutorials, etc.) will be located under the <code>$ROOTSYS</code> directory. </para>
+<para>By default, ROOT will be built in the <code>$ROOTSYS</code> directory. In that case the whole system (binaries, sources, tutorials, etc.) 
+    will be located under the <code>$ROOTSYS</code> directory. </para>
 </sect3>
 
 <sect3>
@@ -109,50 +104,38 @@
 <para>To use the libraries you have to define either ‘<code>PYTHIA=&lt;</code><code>pythiadir</code><code>&gt;</code>’ or the configure flag <code>‘--with-pythia=&lt;pythiadir&gt;</code>’. The same applies for Pythia6.</para>
 
 <sect3>
-<title>Installing the Source from CVS</title>
-<para>This paragraph describes how to checkout and build ROOT from CVS for UNIX systems. For description of a checkout for other platforms, please see ROOT installation web page:  <uri xmlns:xlink="http://root.cern.ch/root/CVS.html">http://root.cern.ch/root/CVS.html</uri><code>. </code></para>
-<para>Note: The syntax is for <code>ba(sh)</code>, if you use <code>a t(csh)</code> you have to substitute export with <code>setenv</code>.</para>
+<title>Installing the Source from Subversion</title>
+<para>This paragraph describes how to checkout and build ROOT from Subversion for Unix systems. For description of a checkout
+    for other platforms, please see ROOT installation web page: 
+    <uri xmlns:xlink="http://root.cern.ch/drupal/content/installing-root-source">http://root.cern.ch/drupal/content/installing-root-source</uri>.</para>
 
 <programlisting language="c++">
-<emphasis role="bold"><code>% export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs</code></emphasis>
-<emphasis role="bold"><code>% cvs login</code></emphasis>
-% (Logging in to cvs@root.cern.ch)
-<emphasis role="bold"><code>% CVS password: cvs</code></emphasis>
-<emphasis role="bold"><code>% cvs –z3 checkout root</code></emphasis>
+<emphasis role="bold"><code>% svn co http://root.cern.ch/svn/root/trunk root</code></emphasis>
 U root/…
 U …
 <emphasis role="bold"><code>% cd root</code></emphasis>
 <emphasis role="bold"><code>% ./configure –-help</code></emphasis>
-<emphasis role="bold"><code>% ./configure &lt;platform&gt;</code></emphasis>
-<emphasis role="bold"><code>% gmake</code></emphasis>
+<emphasis role="bold"><code>% ./configure [&lt;arch&gt;]</code></emphasis>
+<emphasis role="bold"><code>% (g)make</code></emphasis>
 </programlisting>
 
-<para>If you are a part of collaboration, you may need to use setup procedures specific to the particular development environment prior to running <code>gmake</code>. You only need to run <code>cvs</code> login once. It will remember anonymous password in your <code>$HOME/.cvspass</code> file. For more install instructions and options, see the file README/INSTALL. </para>
+<para>If you are a part of collaboration, you may need to use setup procedures specific to the particular development environment prior to
+    running <code>(g)make</code>. For more install instructions and options, see the file README/INSTALL. </para>
 </sect3>
 
 <sect3>
-<title>CVS for Windows</title>
-<para>Although there exists a native version of CVS for Windows, we only support the build process under the <code>Cygwin</code> environment. You must have CVS version 1.10 or newer. The checkout and build procedure is similar to that for UNIX. For detailed install instructions, see the file REAMDE/INSTALL. </para>
-</sect3>
-
-<sect3>
-<title>Converting a Tar Ball to a Working CVS Sandbox</title>
-<para>You may want to consider downloading the source as a tar ball and converting it to CVS because it is faster to download the tar ball than checking out the entire source with CVS. Our source tar ball contains CVS information. If your tar ball is dated June 1, 2000 or later, it is already set up to talk to our public server (root.cern.ch). You just need to download and unpack the tar ball and then run following commands: </para>
-
-<programlisting language="c++">
-<emphasis role="bold"><code>% cd root </code></emphasis>
-<emphasis role="bold"><code>% cvs -z3 update -d -P </code></emphasis>
-<emphasis role="bold"><code>% ./configure &lt;platform&gt; </code></emphasis>
-</programlisting>
-
+<title>Subversion for Windows</title>
+<para>Although there exists a native version of Subversion for Windows, we only support the build process under the <code>Cygwin</code> environment.
+    You must have svn version 1.6 or newer. The checkout and build procedure is similar to that for UNIX. 
+    For detailed install instructions, see the file REAMDE/INSTALL. </para>
 </sect3>
 
 <sect3>
 <title>Staying up-to-date</title>
-<para>To keep your local ROOT source up-to-date with the CVS repository you should regularly run the command: </para>
+<para>To keep your local ROOT source up-to-date with the Subversion repository you should regularly run the command: </para>
 
 <programlisting language="c++">
-<emphasis role="bold"><code>% cvs -z3 update -d –P</code></emphasis>
+<emphasis role="bold"><code>% svn up</code></emphasis>
 </programlisting>
 
 </sect3>
@@ -895,4 +878,3 @@ Rint.Canvas.HighLightColor:      5
 </itemizedlist>
 </sect1>
 </chapter>
-
