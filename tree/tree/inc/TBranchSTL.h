@@ -35,6 +35,7 @@ class TBranchSTL: public TBranch {
       virtual Int_t          Fill();
       virtual void           FillLeaves( TBuffer& b );
       virtual const char    *GetClassName() const { return fClassName.Data(); }
+      virtual Int_t          GetExpectedType(TClass *&clptr,EDataType &type);
       virtual Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 );
       virtual TStreamerInfo *GetInfo() const;
       virtual void           Print(Option_t*) const;

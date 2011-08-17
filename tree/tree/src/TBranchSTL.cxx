@@ -502,6 +502,39 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
    return totalBytes;
 }
 
+
+//______________________________________________________________________________
+Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
+{
+   // Fill expectedClass and expectedType with information on the data type of the
+   // object/values contained in this branch (and thus the type of pointers
+   // expected to be passed to Set[Branch]Address
+   // return 0 in case of success and > 0 in case of failure.
+   
+   expectedClass = 0;
+   expectedType = kOther_t;
+   
+   if (fID < 0) {
+      expectedClass = TClass::GetClass( fContName );
+   } else {
+      // Case of an object data member.  Here we allow for the
+      // variable name to be ommitted.  Eg, for Event.root with split
+      // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
+      TStreamerElement* element = (TStreamerElement*) GetInfo()->GetElems()[fID];
+      if (element) {
+         expectedClass = element->GetClassPointer();
+         if (!expectedClass) {
+            Error("GetExpectedType", "TBranchSTL did not find the TClass for %s", element->GetTypeNameBasic());
+            return 1;
+         }
+      } else {
+         Error("GetExpectedType", "Did not find the type for %s",GetName());
+         return 2;
+      }
+   }
+   return 0;
+}
+
 //------------------------------------------------------------------------------
 TStreamerInfo* TBranchSTL::GetInfo() const
 {
