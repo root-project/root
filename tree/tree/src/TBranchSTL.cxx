@@ -268,7 +268,12 @@ Int_t TBranchSTL::Fill()
          // for it
          //---------------------------------------------------------------------
          elPointers = new std::vector<void*>();//vectClass->GetCollectionProxy()->New();
-         brName.Form( "%s.%s", GetName(), actClass->GetName() );
+         if (fName.Length() && fName[fName.Length()-1]=='.') {
+            // The top level branch already has a trailing dot.
+            brName.Form( "%s%s", GetName(), actClass->GetName() );
+         } else {
+            brName.Form( "%s.%s", GetName(), actClass->GetName() );
+         }
          elBranch   = new TBranchElement( this, brName,
                                           vectClass->GetCollectionProxy(),
                                           fBasketSize, fSplitLevel-1  );
