@@ -268,7 +268,7 @@ void* TCint::fgSetOfSpecials = 0;
 ClassImp(TCint)
 
 //______________________________________________________________________________
-TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), fSharedLibs(""), fSharedLibsSerial(-1)
+TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), fSharedLibs(""),fSharedLibsSerial(-1),fGlobalsListSerial(-1)
 {
    // Initialize the CINT interpreter interface.
 
@@ -774,6 +774,11 @@ void TCint::UpdateListOfGlobals()
       // It already called us again.
       return;
    }
+
+   if (fGlobalsListSerial == G__DataMemberInfo::SerialNumber()) {
+      return;
+   }
+   fGlobalsListSerial = G__DataMemberInfo::SerialNumber();
 
    R__LOCKGUARD2(gCINTMutex);
 
@@ -1865,7 +1870,7 @@ Int_t TCint::AutoLoad(const char *cls)
    Int_t oldvalue = G__set_class_autoloading(0);
 
    // lookup class to find list of dependent libraries
-   TString deplibs = gInterpreter->GetClassSharedLibs(cls);
+   TString deplibs = GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
@@ -2161,8 +2166,14 @@ const char *TCint::GetClassSharedLibs(const char *cls)
       // convert "-" to " ", since class names may have
       // blanks and TEnv considers a blank a terminator
       c.ReplaceAll(" ", "-");
-      const char *libs = fMapfile->GetValue(c, "");
-      return (*libs) ? libs : 0;
+      // Use TEnv::Lookup here as the rootmap file must start with Library.
+      // and do not support using any stars (so we do not need to waste time
+      // with the search made by TEnv::GetValue).
+      TEnvRec *libs_record = fMapfile->Lookup(c);
+      if (libs_record) {
+         const char *libs = libs_record->GetValue();
+         return (*libs) ? libs : 0;
+      }
    }
    return 0;
 }

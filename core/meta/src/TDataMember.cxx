@@ -439,12 +439,14 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
       TIter nextglobal(globals);                //iterate through all global to find
       while ((global=(TGlobal*)nextglobal())) { // values belonging to this enum type
-         gtypename = global->GetTypeName();
-         if (strcmp(gtypename,etypename)==0) {
-            Int_t *value = (Int_t*)(global->GetAddress());
-            Long_t l     = (Long_t)(*value);
-            TOptionListItem *it = new TOptionListItem(this,l,0,0,global->GetName(),global->GetName());
-            fOptions->Add(it);
+         if (global->Property() & G__BIT_ISENUM) {
+            gtypename = global->GetTypeName();
+            if (strcmp(gtypename,etypename)==0) {
+               Int_t *value = (Int_t*)(global->GetAddress());
+               Long_t l     = (Long_t)(*value);
+               TOptionListItem *it = new TOptionListItem(this,l,0,0,global->GetName(),global->GetName());
+               fOptions->Add(it);
+            }
          }
       }
 
