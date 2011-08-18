@@ -495,20 +495,23 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
       if (j < ndim) { 
          // need an adapter from a multi-dim function to a one-dimensional
          ROOT::Math::OneDimMultiFunctionAdapter<const IModelFunction &> f1D(func,x,0,p);
-         // select optimal step size  (use 10--3 by default as was done in TF1:
-         double kEps = 0.001;
+         // select optimal step size  (use 10--2 by default as was done in TF1:
+         double kEps = 0.01;
          double kPrecision = 1.E-8;
          for (unsigned int icoord = 0; icoord < ndim; ++icoord) { 
             // calculate derivative for each coordinate 
             if (ex[icoord] > 0) {               
                //gradCalc.Gradient(x, p, fval, &grad[0]);
                f1D.SetCoord(icoord);
-               // optimal spep size (maybe should take average or  range in points) 
+               // optimal spep size (take ex[] as scale for the points and 1% of it 
                double x0= x[icoord];
-               double h = std::max( kEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
+               double h = std::max( kEps* std::abs(ex[icoord]), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
                double deriv = derivator.Derivative1(f1D, x[icoord], h);  
                double edx = ex[icoord] * deriv; 
                e2 += edx * edx;  
+#ifdef DEBUG
+               std::cout << "error for coord " << icoord << " = " << ex[icoord] << " deriv " << deriv << std::endl;
+#endif
             }
          } 
       }
@@ -516,7 +519,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
       double resval = w2 * ( y - fval ) *  ( y - fval); 
 
 #ifdef DEBUG      
-      std::cout << x[0] << "  " << y << " ex " << e2 << " ey  " << ey << " params : "; 
+      std::cout << x[0] << "  " << y << " ex " << ex[0] << " ey  " << ey << " params : "; 
       for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << "\tresval = " << resval << std::endl; 
@@ -537,7 +540,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    //if (nRejected != 0)  nPoints = n - nRejected;   
 
 #ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nPoints << /* " rejected = " << nRejected */ << std::endl;
+   std::cout << "chi2 = " << chi2 << " n = " << nPoints  << std::endl;
 #endif
 
    return chi2;
