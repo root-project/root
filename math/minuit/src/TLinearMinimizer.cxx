@@ -35,7 +35,7 @@
 // they are the derivatives w.r.t the parameters of the model function 
 template<class Func> 
 struct BasisFunction { 
-   BasisFunction(Func & f, int k) : 
+   BasisFunction(const Func & f, int k) : 
       fKPar(k), 
       fFunc(&f) 
    {}
@@ -45,7 +45,7 @@ struct BasisFunction {
    }
 
    unsigned int fKPar; // param component
-   Func * fFunc; 
+   const Func * fFunc; 
 };
 
 
@@ -134,12 +134,13 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    }
    fObjFunc = chi2func;
 
-   // get model function
-   typedef  Chi2Func::IModelFunction ModelFunc; 
-   const ModelFunc & modfunc =  chi2func->ModelFunction(); 
+   // need to get the gradient parametric model function
+   typedef  ROOT::Math::IParamMultiGradFunction ModelFunc; 
+   const  ModelFunc * modfunc = dynamic_cast<const ModelFunc*>( &(chi2func->ModelFunction()) ); 
+   assert(modfunc != 0);
+
    fDim = chi2func->NDim(); // number of parameters
    fNFree = fDim;
-
    // get the basis functions (derivatives of the modelfunc)
    TObjArray flist; 
    for (unsigned int i = 0; i < fDim; ++i) { 
@@ -147,7 +148,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
       // when creating TF1 (if onother function with same name exists it is 
       // deleted since it is added in function list in gROOT 
       // fix the problem using meaniful names (difficult to re-produce)
-      BasisFunction<const ModelFunc> bf(modfunc,i); 
+      BasisFunction<ModelFunc > bf(*modfunc,i); 
       TUUID u; 
       std::string fname = "_LinearMinimimizer_BasisFunction_" + 
          std::string(u.AsString() );
@@ -160,7 +161,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
 
    // create TLinearFitter (do it now because olny now now the coordinate dimensions)
    if (fFitter) delete fFitter; // reset by deleting previous copy
-   fFitter = new TLinearFitter( static_cast<const ModelFunc::BaseFunc&>(modfunc).NDim() ); 
+   fFitter = new TLinearFitter( static_cast<const ModelFunc::BaseFunc&>(*modfunc).NDim() ); 
 
    fFitter->StoreData(fRobust); //  need a copy of data in case of robust fitting 
 

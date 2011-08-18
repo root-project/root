@@ -17,6 +17,10 @@
 #include "Math/IFunction.h"
 #endif
 
+// #ifndef ROOT_Math_IParamFunctionfwd
+// #include "Math/IParamFunctionfwd.h"
+// #endif
+
 namespace ROOT { 
 
    namespace Math { 
@@ -114,9 +118,30 @@ private:
       typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
 
 
+      // useful template definition to use these interface in 
+      // generic programming
+      // (comment them out since they are not used anymore) 
+/*
+      template<class FunType> 
+      struct ParamFunctionTrait { 
+         typedef  IParamMultiFunction PFType;
+      };
+
+      // specialization for the gradient param functions
+      template<>      
+      struct ParamFunctionTrait<ROOT::Math::IMultiGradFunction>  { 
+         typedef  IParamMultiGradFunction PFType;
+      };
+*/
+
+
    } // end namespace Math
 
 } // end namespace ROOT
+
+
+
+
 
 
 #endif /* ROOT_Math_FitMethodFunction */
