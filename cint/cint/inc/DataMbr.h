@@ -67,6 +67,8 @@ G__DataMemberInfo {
   const char *FileName();
   int LineNumber();
 
+  static int SerialNumber();
+
  private:
   long handle;
   long index;

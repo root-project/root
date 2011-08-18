@@ -3445,6 +3445,9 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       var->next->tagnum = var->tagnum;
       var = var->next;
       ++index_of_var;
+      if (G__p_local==0) {
+         ++G__globals_serial;
+      }
    }
    int ig15 = var->allvar;
    //

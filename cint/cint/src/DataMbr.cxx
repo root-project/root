@@ -254,6 +254,11 @@ void Cint::G__DataMemberInfo::SetGlobalcomp(G__SIGNEDCHAR_T globalcomp)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+int Cint::G__DataMemberInfo::SerialNumber()
+{
+   return G__globals_serial;
+}
+///////////////////////////////////////////////////////////////////////////
 int Cint::G__DataMemberInfo::IsValid()
 {
   if(handle) {
