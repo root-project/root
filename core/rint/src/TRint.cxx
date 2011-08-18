@@ -376,7 +376,21 @@ void TRint::Run(Bool_t retrn)
             char cmd[kMAXPATHLEN+50];
             if (!fNcmd)
                printf("\n");
+            Bool_t rootfile = kFALSE;
+            
             if (file->String().EndsWith(".root") || file->String().BeginsWith("file:")) {
+               rootfile = kTRUE;
+            } else {
+               FILE *mayberootfile = fopen(file->String(),"rb");
+               if (mayberootfile) {
+                  char header[5];
+                  if (fgets(header,5,mayberootfile)) {
+                     rootfile = strncmp(header,"root",4)==0;
+                  }
+                  fclose(mayberootfile);
+               }
+            }
+            if (rootfile) {
                file->String().ReplaceAll("\\","/");
                const char *rfile = (const char*)file->String();
                Printf("Attaching file %s as _file%d...", rfile, nfile);
