@@ -1019,6 +1019,10 @@ Element TMath::KOrdStat(Size n, const Element *a, Size k, Size *work)
    // If work is supplied, it is used to store the sorting index and
    // assumed to be >= n. If work=0, local storage is used, either on
    // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+   // Note that the work index array will not contain the sorted indices but 
+   // all indeces of the smaller element in arbitrary order in work[0,...,k-1] and 
+   // all indeces of the larger element in arbitrary order in work[k+1,..,n-1]
+   // work[k] will contain instead the index of the returned element.
    //
    // Taken from "Numerical Recipes in C++" without the index array
    // implemented by Anna Khreshuk.
