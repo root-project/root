@@ -40,6 +40,8 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
+   virtual Int_t   GetMaximum() const {return fMaximum;}
+   virtual Int_t   GetMinimum() const {return fMinimum;}
    const char     *GetTypeName() const;
    Double_t        GetValue(Int_t i=0) const;
    virtual void   *GetValuePointer() const {return fValue;}

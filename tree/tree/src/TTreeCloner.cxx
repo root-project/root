@@ -32,6 +32,9 @@
 #include "TLeafB.h"
 #include "TLeafI.h"
 #include "TLeafL.h"
+#include "TLeafS.h"
+#include "TLeafO.h"
+#include "TLeafC.h"
 
 #include <algorithm>
 
@@ -300,6 +303,29 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
                toleaf->SetMaximum( fromleaf->GetMaximum() );
             if (fromleaf->GetMinimum() < toleaf->GetMinimum())
                toleaf->SetMinimum( fromleaf->GetMinimum() );
+         } else if (fromleaf_gen->IsA()==TLeafS::Class()) {
+            TLeafS *fromleaf = (TLeafS*)fromleaf_gen;
+            TLeafS *toleaf   = (TLeafS*)toleaf_gen;
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+         } else if (fromleaf_gen->IsA()==TLeafO::Class()) {
+            TLeafO *fromleaf = (TLeafO*)fromleaf_gen;
+            TLeafO *toleaf   = (TLeafO*)toleaf_gen;
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+         } else if (fromleaf_gen->IsA()==TLeafC::Class()) {
+            TLeafC *fromleaf = (TLeafC*)fromleaf_gen;
+            TLeafC *toleaf   = (TLeafC*)toleaf_gen;
+            if (fromleaf->GetMaximum() > toleaf->GetMaximum())
+               toleaf->SetMaximum( fromleaf->GetMaximum() );
+            if (fromleaf->GetMinimum() < toleaf->GetMinimum())
+               toleaf->SetMinimum( fromleaf->GetMinimum() );
+            if (fromleaf->GetLenStatic() > toleaf->GetLenStatic())
+               toleaf->SetLen(fromleaf->GetLenStatic());
          }
       }
 
