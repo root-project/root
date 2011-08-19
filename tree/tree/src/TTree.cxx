@@ -3724,14 +3724,18 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //     ====================================
    //  When option contains "norm" the output histogram is normalized to 1.
    //
-   //     Saving the result of Draw to a TEventList or a TEntryList
-   //     =========================================================
+   //     Saving the result of Draw to a TEventList, a TEntryList or a TEntryListArray 
+   //     ============================================================================
    //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
    //  instead of histogramming one variable.
    //  If varexp0 has the form >>elist , a TEventList object named "elist"
    //  is created in the current directory. elist will contain the list
    //  of entry numbers satisfying the current selection.
    //  If option "entrylist" is used, a TEntryList object is created
+   //  If the selection contains arrays, vectors or any container class and option 
+   //  "entrylistarray" is used, a TEntryListArray object is created
+   //  containing also the subentries satisfying the selection, i.e. the indices of
+   //  the branches which hold containers classes.
    //  Example:
    //    tree.Draw(">>yplus","y>0")
    //    will create a TEventList object named "yplus" in the current directory.
@@ -3740,6 +3744,8 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    to print the list of entry numbers in the list.
    //    tree.Draw(">>yplus", "y>0", "entrylist")
    //    will create a TEntryList object names "yplus" in the current directory
+   //    tree.Draw(">>yplus", "y>0", "entrylistarray")
+   //    will create a TEntryListArray object names "yplus" in the current directory
    //
    //  By default, the specified entry list is reset.
    //  To continue to append data to an existing list, use "+" in front
@@ -3748,7 +3754,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //      will not reset yplus, but will enter the selected entries at the end
    //      of the existing list.
    //
-   //      Using a TEventList or a TEntryList as Input
+   //      Using a TEventList, TEntryList or TEntryListArray as Input
    //      ===========================
    //  Once a TEventList or a TEntryList object has been generated, it can be used as input
    //  for TTree::Draw. Use TTree::SetEventList or TTree::SetEntryList to set the
@@ -3767,9 +3773,9 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  with it, unless the user extracts it by calling GetEntryList() function.
    //  See also comments to SetEventList() function of TTree and TChain.
    //
-   //  If arrays are used in the selection critera, the entry entered in the
-   //  list are all the entries that have at least one element of the array that
-   //  satisfy the selection.
+   //  If arrays are used in the selection criteria and TEntryListArray is not used,
+   //  all the entries that have at least one element of the array that satisfy the selection
+   //  are entered in the list.
    //  Example:
    //      tree.Draw(">>pyplus","fTracks.fPy>0");
    //      tree->SetEventList(pyplus);
@@ -3786,6 +3792,16 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //      tree->Draw("fTracks.fPy");
    //  will draw the fPy of only the tracks that have a positive fPy.
    //
+   //  To draw only the elements that match a selection in case of arrays,
+   //  you can also use TEntryListArray (faster in case of a more general selection).
+   //  Example:
+   //      tree.Draw(">>pyplus","fTracks.fPy>0", "entrylistarray");
+   //      tree->SetEntryList(pyplus);
+   //      tree->Draw("fTracks.fPy");
+   //  
+   //  will draw the fPy of only the tracks that have a positive fPy, 
+   //  but without redoing the selection.   
+   //      
    //  Note: Use tree->SetEventList(0) if you do not want use the list as input.
    //
    //      How to obtain more info from TTree::Draw

@@ -460,6 +460,10 @@ N: Josef Leydold
 E: leydold@statmath.wu-wien.ac.at
 D: UNURAN package and interfaces
 
+N: Bruno Lenzi
+E: Bruno.Lenzi@cern.ch
+D: TEntryListArray
+
 N: Sergey Linev
 E: S.Linev@gsi.de
 D: XML interface package

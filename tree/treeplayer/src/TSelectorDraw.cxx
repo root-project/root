@@ -34,6 +34,7 @@
 #include "TCut.h"
 #include "TEntryList.h"
 #include "TEventList.h"
+#include "TEntryListArray.h"
 #include "THLimitsFinder.h"
 #include "TStyle.h"
 #include "TClass.h"
@@ -78,6 +79,8 @@ TSelectorDraw::TSelectorDraw()
    fOldEstimate    = 0;
    fForceRead      = 0;
    fWeight         = 1;
+   fCurrentSubEntry = -1;
+   fTreeElistArray  = 0;
 }
 
 //______________________________________________________________________________
@@ -128,6 +131,7 @@ void TSelectorDraw::Begin(TTree *tree)
    Bool_t profile = kFALSE;
    Bool_t optSame = kFALSE;
    Bool_t optEnlist = kFALSE;
+   Bool_t optEnlistArray = kFALSE;
    Bool_t optpara = kFALSE;
    Bool_t optcandle = kFALSE;
    Bool_t opt5d = kFALSE;
@@ -137,7 +141,12 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    if (opt.Contains("entrylist")) {
       optEnlist = kTRUE;
-      opt.ReplaceAll("entrylist", "");
+      if (opt.Contains("entrylistarray")) {
+         optEnlistArray = kTRUE;
+         opt.ReplaceAll("entrylistarray", "");
+      } else {
+         opt.ReplaceAll("entrylist", "");
+      }
    }
    if (opt.Contains("para")) {
       optpara = kTRUE;
@@ -165,6 +174,9 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    fCleanElist = kFALSE;
    fTreeElist = inElist;
+   
+   fTreeElistArray = inElist ? dynamic_cast<TEntryListArray*>(fTreeElist) : 0;
+   
 
    if (inElist && inElist->GetReapplyCut()) {
       realSelection *= inElist->GetTitle();
@@ -390,14 +402,22 @@ void TSelectorDraw::Begin(TTree *tree)
                return;
             }
             if (!enlist) {
-               enlist = new TEntryList(hname, realSelection.GetTitle());
+               if (optEnlistArray) {
+                  enlist = new TEntryListArray(hname, realSelection.GetTitle());
+               } else {
+                  enlist = new TEntryList(hname, realSelection.GetTitle());
+               }
             }
             if (enlist) {
                if (!hnameplus) {
                   if (enlist == inElist) {
                      // We have been asked to reset the input list!!
                      // Let's set it aside for now ...
-                     inElist = new TEntryList(*enlist);
+                     if (optEnlistArray) {
+                        inElist = new TEntryListArray(*enlist);
+                     } else {
+                        inElist = new TEntryList(*enlist);
+                     }
                      fCleanElist = kTRUE;
                      fTree->SetEntryList(inElist);
                   }
@@ -409,8 +429,7 @@ void TSelectorDraw::Begin(TTree *tree)
                   enlist->SetTitle(upd.GetTitle());
                }
             }
-         }
-         else {
+         } else {
             //write into a TEventList
             evlist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
 
@@ -1137,7 +1156,7 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
 }
 
 //______________________________________________________________________________
-void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
+void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 {
    // Called in the entry loop for all entries accepted by Select.
    // Complex case with multiplicity.
@@ -1147,6 +1166,12 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 
    // No data at all, let's move on to the next entry.
    if (!ndata) return;
+
+   // If the entry list is a TEntryListArray, get the selected subentries for this entry
+   TEntryList *subList = 0;
+   if (fTreeElistArray) {
+      subList = fTreeElistArray->GetSubListForEntry(entry, fTree->GetTree());
+   }
 
    Int_t nfill0 = fNfill;
 
@@ -1159,7 +1184,8 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
 
    // Always call EvalInstance(0) to insure the loading
    // of the branches.
-   if (fW[fNfill]) {
+   if (fW[fNfill] && (!subList || subList->Contains(0))) {
+      if (fDimension == 0 && fSelectMultiple) fCurrentSubEntry = (Long64_t) 0; // to fill TEntryListArray
       for (Int_t i = 0; i < fDimension; ++i) {
          if (fVar[i]) fVal[i][fNfill] = fVar[i]->EvalInstance(0);
       }
@@ -1176,6 +1202,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
    Double_t ww = fW[nfill0];
 
    for (Int_t i = 1; i < ndata; i++) {
+      if (subList && !subList->Contains(i)) continue;
       if (fSelectMultiple) {
          // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0 
          ww = fWeight * fSelect->EvalInstance(i);
@@ -1185,10 +1212,11 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t /*entry*/)
                if (!fVarMultiple[k]) fVal[k][fNfill] = fVar[k]->EvalInstance(0);
             }
          }
+         if (fDimension == 0) fCurrentSubEntry = (Long64_t) i; // to fill TEntryListArray
       }
       for (Int_t k = 0; k < fDimension; ++k) {
          if (fVarMultiple[k]) fVal[k][fNfill] = fVar[k]->EvalInstance(i);
-         else                fVal[k][fNfill] = fVal[k][nfill0];
+         else                 fVal[k][fNfill] = fVal[k][nfill0];
       }
       fW[fNfill] = ww;
 
@@ -1296,14 +1324,17 @@ void TSelectorDraw::TakeAction()
    else if (fAction ==  4)((TProfile*)fObject)->FillN(fNfill, fVal[1], fVal[0], fW);
    //__________________________Event List______________________________
    else if (fAction ==  5) {
-      if (fObject->InheritsFrom(TEntryList::Class())){
+      if (fObject->InheritsFrom(TEntryListArray::Class())) {
+         TEntryListArray *enlistarray = (TEntryListArray*)fObject;
+         Long64_t enumb = fTree->GetTree()->GetReadEntry();
+         enlistarray->Enter(enumb, 0, fCurrentSubEntry);
+      } else if (fObject->InheritsFrom(TEntryList::Class())) {
          TEntryList *enlist = (TEntryList*)fObject;
          Long64_t enumb = fTree->GetTree()->GetReadEntry();
          enlist->Enter(enumb);
-      }
-      else {
+      } else {
          TEventList *evlist = (TEventList*)fObject;
-         Long64_t enumb = fTree->GetChainOffset() + fTree->GetTree()->GetReadEntry();
+         Long64_t enumb = fTree->GetChainOffset() + fTree->GetTree()->GetReadEntry(); 
          if (evlist->GetIndex(enumb) < 0) evlist->Enter(enumb);
       }
    }

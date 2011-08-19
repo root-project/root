@@ -28,6 +28,7 @@
 class TTreeFormula;
 class TTreeFormulaManager;
 class TH1;
+class TEntryListArray;
 
 class TSelectorDraw : public TSelector {
 
@@ -39,6 +40,7 @@ protected:
    TTreeFormula  *fSelect;         //  Pointer to selection formula
    TTreeFormulaManager *fManager;  //  Pointer to the formula manager
    TObject       *fTreeElist;      //  pointer to Tree Event list
+   TEntryListArray *fTreeElistArray;   //!  pointer to Tree Event list array
    TH1           *fOldHistogram;   //! Pointer to previously used histogram
    Int_t          fAction;         //! Action type
    Long64_t       fDraw;           //! Last entry loop number when object was drawn
@@ -59,7 +61,8 @@ protected:
    Bool_t         fSelectMultiple; //  true if selection has a variable index
    Bool_t         fCleanElist;     //  true if original Tree elist must be saved
    Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
-
+   Long64_t       fCurrentSubEntry; // Current subentry when fSelectMultiple is true. Used to fill TEntryListArray
+   
 protected:
    virtual void      ClearFormula();
    virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");

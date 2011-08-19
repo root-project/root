@@ -27,6 +27,7 @@
 #pragma link C++ class TChainElement;
 #pragma link C++ class TCut+;
 #pragma link C++ class TEntryList+;
+#pragma link C++ class TEntryListArray+;
 #pragma link C++ class TEntryListFromFile+;
 #pragma link C++ class TEntryListBlock+;
 #pragma link C++ class TEventList-;
