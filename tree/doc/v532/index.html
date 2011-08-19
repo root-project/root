@@ -2,3 +2,52 @@
 <hr/> 
 <a name="tree"></a> 
 <h3>Tree Libraries</h3>
+<h4>TEntryListArray: a list of entries and subentries in a TTree or TChain</h4>
+
+TEntryListArray is an extension of TEntryList, used to hold selected entries and subentries (sublists) for when the user has a TTree with containers (vectors, arrays, ...).
+End_Html
+
+<h5> Usage with TTree::Draw to select entries and subentries </h5> 
+<ol>
+<li> <b>To fill a list <i>elist</i> </b>:
+    <pre>
+     tree->Draw(">> elist", "x > 0", "entrylistarray"); 
+    </pre>
+<li> <b>To use a list to select entries and subentries:</b>
+  <pre>
+     tree->SetEntryList(elist);
+     tree->Draw("y");
+     tree->Draw("z");
+  </pre>
+</ol>
+
+Its main purpose is to improve the performance of a code that needs to apply complex cuts on TTree::Draw multiple times. After the first call above to TTree::Draw, a TEntryListArray is created and filled with the entries and the indices of the arrays that satisfied the selection cut (x > 0). In the subsequent calls to TTree::Draw, only these entries / subentries are used to fill histograms.
+
+<h5> About the class </h5>
+
+The class derives from TEntryList and can be used basically in the same way. This same class is used to keep entries and subentries, so there are two types of TEntryListArray's:
+
+<ol>
+<li> The ones that only hold subentries 
+  <ul><li> fEntry is set to the entry# for which the subentries correspond
+  <li> fSubLists must be 0</ul>
+<li> The ones that hold entries and eventually lists with subentries in fSubLists.
+  <ul><li> fEntry = -1 for those
+  <li> If there are no sublists for a given entry, all the subentries will be used in the selection </ul>
+</ol>
+
+<h5> Additions with respect to TEntryList </h5>
+<ol><li> Data members:
+ <ul><li> fSubLists: a container to hold the sublists
+ <li> fEntry: the entry number if the list is used to hold subentries
+ <li> fLastSubListQueried and fSubListIter: a pointer to the last sublist queried and an iterator to resume the loop from the last sublist queried (to speed up selection and insertion in TTree::Draw) </ul>
+<li> Public methods:
+  <ul><li> Contains, Enter and Remove with subentry as argument
+  <li> GetSubListForEntry: to return the sublist corresponding to the given entry </ul>
+<li> Protected methods:
+  <ul><li> AddEntriesAndSubLists: called by Add when adding two TEntryList arrays with sublists
+  <li> ConvertToTEntryListArray: convert TEntryList to TEntryListArray
+  <li> RemoveSubList: to remove the given sublist
+  <li> RemoveSubListForEntry: to remove the sublist corresponding to the given entry
+  <li> SetEntry: to get / set a sublist for the given entry </ul>
+</ol>  
