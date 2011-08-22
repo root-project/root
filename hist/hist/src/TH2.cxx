@@ -680,6 +680,10 @@ void TH2::DoFitSlices(bool onX,
    if (opt.Contains("g4")) {ngroup = 4; opt.ReplaceAll("g4","");}
    if (opt.Contains("g5")) {ngroup = 5; opt.ReplaceAll("g5","");}
 
+   // implement option S sliding merge for each bin using in conjunction with a given Gn
+   Int_t nstep = ngroup;
+   if (opt.Contains("s"))  nstep = 1;
+
    //default is to fit with a gaussian
    if (f1 == 0) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
@@ -730,7 +734,9 @@ void TH2::DoFitSlices(bool onX,
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
    Long64_t nentries;
-   for (bin=firstbin;bin<=lastbin;bin += ngroup) {
+   // in case of sliding merge nstep=1, i.e. do slices starting for every bin
+   // now do not slices case with overflow (makes more sense)
+   for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
       TH1D *hp;
       if (onX)
          hp= ProjectionX("_temp",bin,bin+ngroup-1,"e");
@@ -777,6 +783,8 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    //     "G3" merge 3 consecutive bins along X
    //     "G4" merge 4 consecutive bins along X
    //     "G5" merge 5 consecutive bins along X
+   //     "S"  sliding merge: merge n consecutive bins along X accordingly to what Gn is given.
+   //          It makes sense when used together with a Gn option
    //
    // The generated histograms are returned by adding them to arr, if arr is not NULL.
    // arr's SetOwner() is called, to signal that it is the user's respponsability to
@@ -831,6 +839,8 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    //     "G3" merge 3 consecutive bins along Y
    //     "G4" merge 4 consecutive bins along Y
    //     "G5" merge 5 consecutive bins along Y
+   //     "S"  sliding merge: merge n consecutive bins along Y accordingly to what Gn is given.
+   //          It makes sense when used together with a Gn option
    //
    // The generated histograms are returned by adding them to arr, if arr is not NULL.
    // arr's SetOwner() is called, to signal that it is the user's respponsability to
