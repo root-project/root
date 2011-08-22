@@ -1405,8 +1405,9 @@ void TProofServ::HandleSocketInput()
       // If something wrong went on during processing and we do not have
       // any worker anymore, we shutdown this session
       Bool_t masterOnly = gEnv->GetValue("Proof.MasterOnly", kFALSE);
+      Bool_t dynamicStartup = gEnv->GetValue("Proof.DynamicStartup", kFALSE);
       Int_t ngwrks = fProof->GetListOfActiveSlaves()->GetSize() + fProof->GetListOfInactiveSlaves()->GetSize();
-      if (rc == 0 && ngwrks == 0 && !masterOnly) {
+      if (rc == 0 && ngwrks == 0 && !masterOnly && !dynamicStartup) {
          SendAsynMessage(" *** No workers left: cannot continue! Terminating ... *** ");
          Terminate(0);
       }
