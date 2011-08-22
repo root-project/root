@@ -898,10 +898,6 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       }      
       GetStats(s1);
       h1->GetStats(s2);
-      for (Int_t i=0;i<kNstat;i++) {
-         if (i == 1) s1[i] += c1*c1*s2[i];
-         else        s1[i] += c1*s2[i];
-      }
    }
 
    SetMinimum();
@@ -923,11 +919,38 @@ void TH1::Add(const TH1 *h1, Double_t c1)
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = this->GetBinError(bin);
                Double_t w1 = 1., w2 = 1.;
-               if (e1 > 0) w1 = 1./(e1*e1);
-               if (e2 > 0) w2 = 1./(e2*e2);
-               SetBinContent(bin, (w1*y1 + w2*y2)/(w1 + w2));
-               if (fSumw2.fN) fSumw2.fArray[bin] = 1./(w1 + w2);
-            } else {
+               // consider all special cases  when bin errors are zero
+               // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+               if (e1 > 0 )   
+                  w1 = 1./(e1*e1);
+               else if (h1->fSumw2.fN) { 
+                  w1 = 1.E200; // use an arbitrary huge value
+                  if (y1 == 0) { 
+                     // use an estimated error from the global histogram scale
+                     double sf = (s2[0] != 0) ? s2[1]/s2[0] : 1;  
+                     w1 = 1./(sf*sf); 
+                  }
+               }
+               if (e2 > 0)    
+                  w2 = 1./(e2*e2);
+               else if (fSumw2.fN) { 
+                  w2 = 1.E200; // use an arbitrary huge value
+                  if (y2 == 0) { 
+                     // use an estimated error from the global histogram scale
+                     double sf = (s1[0] != 0) ? s1[1]/s1[0] : 1;  
+                     w2 = 1./(sf*sf); 
+                  }
+               }              
+               double y =  (w1*y1 + w2*y2)/(w1 + w2);
+               SetBinContent(bin, y);
+               if (fSumw2.fN) { 
+                  double err2 =  1./(w1 + w2);
+                  if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
+                  fSumw2.fArray[bin] = err2;
+               }               
+            } 
+            //normal case of addition between histograms
+            else {
                cu  = c1*factor*h1->GetBinContent(bin);
                AddBinContent(bin,cu);
                if (fSumw2.fN) {
@@ -945,6 +968,10 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       ResetStats();
    }
    else {
+      for (Int_t i=0;i<kNstat;i++) {
+         if (i == 1) s1[i] += c1*c1*s2[i];
+         else        s1[i] += c1*s2[i];
+      }
       PutStats(s1);
       SetEntries(entries);
    }
@@ -1061,11 +1088,39 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = h2->GetBinError(bin);
                Double_t w1 = 1., w2 = 1.;
-               if (e1 > 0) w1 = 1./(e1*e1);
-               if (e2 > 0) w2 = 1./(e2*e2);
-               SetBinContent(bin, (w1*y1 + w2*y2)/(w1 + w2));
-               if (fSumw2.fN) fSumw2.fArray[bin] = 1./(w1 + w2);
-            } else {
+               // consider all special cases  when bin errors are zero
+               // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+               if (e1 > 0 )   
+                  w1 = 1./(e1*e1);
+               else if (h1->fSumw2.fN) { 
+                  w1 = 1.E200; // use an arbitrary huge value
+                  if (y1 == 0 ) { 
+                     // use an estimated error from the global histogram scale
+                     double sf = (s1[0] != 0) ? s1[1]/s1[0] : 1;  
+                     w1 = 1./(sf*sf); 
+                  }
+               }
+               if (e2 > 0)    
+                  w2 = 1./(e2*e2);
+               else if (h2->fSumw2.fN) { 
+                  w2 = 1.E200; // use an arbitrary huge value
+                  if (y2 == 0) { 
+                     // use an estimated error from the global histogram scale
+                     double sf = (s2[0] != 0) ? s2[1]/s2[0] : 1;  
+                     w2 = 1./(sf*sf); 
+                  }
+               }              
+               double y =  (w1*y1 + w2*y2)/(w1 + w2);
+               SetBinContent(bin, y);
+               if (fSumw2.fN) { 
+                  double err2 =  1./(w1 + w2);
+                  if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
+                  fSumw2.fArray[bin] = err2;
+               }               
+            } 
+
+            // case of histogram Addition 
+            else {
                if (normWidth) {
                   Double_t w = wx*wy*wz;
                   cu  = c1*h1->GetBinContent(bin)/w;
