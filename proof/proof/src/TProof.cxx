@@ -1549,6 +1549,14 @@ void TProof::Close(Option_t *opt)
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
 
+      if (fChains) {
+         while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
+            // remove "chain" from list
+            chain->SetProof(0);
+            RemoveChain(chain);
+         }
+      }
+
       if (IsProofd()) {
 
          gROOT->GetListOfProofs()->Remove(this);
@@ -10911,6 +10919,10 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
                dsn2.Remove(ienl);
             }
             if ((fc = mgr->GetDataSet(dsn2.Data()))) {
+               // Save dataset name in TFileInfo's title to use it in TDset 
+               TIter nxfi(fc->GetList());
+               TFileInfo *fi = 0;
+               while ((fi = (TFileInfo *) nxfi())) { fi->SetTitle(dsn2.Data()); }
                dsnparse = dsn2;
                if (!dataset) {
                   // This is our dataset
