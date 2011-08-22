@@ -262,8 +262,9 @@ Int_t TEntryListArray::Contains(Long64_t entry, TTree *tree, Long64_t subentry)
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
-      if (fCurrent) {
-         return dynamic_cast<TEntryListArray*>(fCurrent)->Contains(localentry, 0, subentry);
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray) {
+         return currentArray->Contains(localentry, 0, subentry);
       }
       return 0;
    }
@@ -336,15 +337,17 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
-      if (fCurrent) {
-         if ((result = dynamic_cast<TEntryListArray*>(fCurrent)->Enter(localentry, 0, subentry)))
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray) {
+         if ((result = currentArray->Enter(localentry, 0, subentry)))
             if (fLists) ++fN;
       }
       return result;
    }
    if (fLists) {
       if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
-      if ((result = dynamic_cast<TEntryListArray*>(fCurrent)->Enter(entry, 0, subentry))) {
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray && (result = currentArray->Enter(entry, 0, subentry))) {
          ++fN;
       }
       return result;
@@ -377,7 +380,10 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
       if (fCurrent) {
-         return dynamic_cast<TEntryListArray*>(fCurrent)->GetSubListForEntry(localentry);
+         TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+         if (currentArray) {
+            return currentArray->GetSubListForEntry(localentry);
+         }
       }
       return 0;
    }
@@ -475,7 +481,8 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
-      if (fCurrent && (result = dynamic_cast<TEntryListArray*>(fCurrent)->Remove(localentry, 0, subentry))) {
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray && (result = currentArray->Remove(localentry, 0, subentry))) {
          if (fLists) {
             --fN;
          }
@@ -484,7 +491,8 @@ Bool_t TEntryListArray::Remove(Long64_t entry, TTree *tree, Long64_t subentry)
    }
    if (fLists) {
       if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
-      if ((result = dynamic_cast<TEntryListArray*>(fCurrent)->Remove(entry, 0, subentry)) && fLists) {
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray && (result = currentArray->Remove(entry, 0, subentry)) && fLists) {
          --fN;
       }
       return result;
@@ -513,8 +521,9 @@ Bool_t TEntryListArray::RemoveSubList(TEntryListArray *e, TTree *tree)
    if (!e) return 0;
    if (tree) {
       SetTree(tree->GetTree());
-      if (fCurrent) {
-         return dynamic_cast<TEntryListArray*>(fCurrent)->RemoveSubList(e);
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray) {
+         return currentArray->RemoveSubList(e);
       }
    }
 
@@ -539,8 +548,9 @@ Bool_t TEntryListArray::RemoveSubListForEntry(Long64_t entry, TTree *tree)
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
-      if (fCurrent) {
-         return dynamic_cast<TEntryListArray*>(fCurrent)->RemoveSubListForEntry(localentry);
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray) {
+         return currentArray->RemoveSubListForEntry(localentry);
       }
    }
    return RemoveSubList(GetSubListForEntry(entry));
@@ -572,11 +582,9 @@ TEntryListArray* TEntryListArray::SetEntry(Long64_t entry, TTree *tree)
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
-      if (fCurrent) {
-         TEntryListArray *e = dynamic_cast<TEntryListArray*>(fCurrent);
-         if (e) {
-            return e->SetEntry(localentry);
-         }
+      TEntryListArray *currentArray = dynamic_cast<TEntryListArray*>(fCurrent);
+      if (currentArray) {
+         return currentArray->SetEntry(localentry);
       }
       return 0;
    }
