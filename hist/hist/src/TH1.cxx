@@ -885,17 +885,15 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 
 //   - Add statistics
    Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() );
-   Double_t s1[kNstat], s2[kNstat];
+
 // statistics can be preserbed only in case of positive coefficients
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
    Bool_t resetStats = (c1 < 0);
+   Double_t s1[kNstat] = {0};
+   Double_t s2[kNstat] = {0};
    if (!resetStats) {
       // need to initialize to zero s1 and s2 since 
       // GetStats fills only used elements depending on dimension and type
-      for (Int_t i=0;i<kNstat;i++) {
-         s1[i] = 0; 
-         s2[i] = 0; 
-      }      
       GetStats(s1);
       h1->GetStats(s2);
    }
@@ -1034,18 +1032,16 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
 //   - Add statistics
    Double_t nEntries = TMath::Abs( c1*h1->GetEntries() + c2*h2->GetEntries() );
-   Double_t s1[kNstat], s2[kNstat], s3[kNstat];
 
 // statistics can be preserved only in case of positive coefficients
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
+   Double_t s1[kNstat] = {0};
+   Double_t s2[kNstat] = {0};
+   Double_t s3[kNstat];
    Bool_t resetStats = (c1*c2 < 0);
    if (!resetStats) {
       // need to initialize to zero s1 and s2 since 
       // GetStats fills only used elements depending on dimension and type
-      for (Int_t i=0;i<kNstat;i++) {
-         s1[i] = 0; 
-         s2[i] = 0; 
-      }      
       h1->GetStats(s1);
       h2->GetStats(s2);
       for (Int_t i=0;i<kNstat;i++) {
