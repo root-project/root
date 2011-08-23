@@ -744,6 +744,10 @@ N: Tomasz Sosnicki
 E: tom.sosnicki@gmail.com
 D: contribution to gviz3d/TStructViewer
 
+N: Marcelo Sousa
+E: marcelo.sousa@cern.ch
+D: Amazon S3 and Google Storage I/O plugins
+
 N: Peter Speckmayer
 E: Peter.Speckmayer@cern.ch
 D: author of the TMVA package
