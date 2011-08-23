@@ -20,6 +20,17 @@ NETDH        := $(NETDS:.cxx=.h)
 
 NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+ifeq ($(CRYPTOLIB),)
+NETNOCRYPTO  := -DR__NO_CRYPTO
+NETH         := $(filter-out $(MODDIRI)/TAS3File.h,$(NETH))
+NETH         := $(filter-out $(MODDIRI)/TGTFile.h,$(NETH))
+NETH         := $(filter-out $(MODDIRI)/THTTPMessage.h,$(NETH))
+NETS         := $(filter-out $(MODDIRS)/TAS3File.cxx,$(NETS))
+NETS         := $(filter-out $(MODDIRS)/TGTFile.cxx,$(NETS))
+NETS         := $(filter-out $(MODDIRS)/THTTPMessage.cxx,$(NETS))
+else
+NETNOCRYPTO  :=
+endif
 NETO         := $(call stripsrc,$(NETS:.cxx=.o))
 
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
@@ -46,12 +57,12 @@ include/%.h:    $(NETDIRI)/%.h
 $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNet.$(SOEXT) $@ "$(NETO) $(NETDO)" \
-		   "$(NETLIBEXTRA)"
+		   "$(NETLIBEXTRA) $(CRYPTOLIBDIR) $(CRYPTOLIB)"
 
 $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
+		$(ROOTCINTTMP) -f $@ -c $(NETNOCRYPTO) $(NETH) $(NETL)
 
 $(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
 		$(RLIBMAP) -o $@ -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)

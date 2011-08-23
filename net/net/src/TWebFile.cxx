@@ -134,6 +134,9 @@ TWebFile::TWebFile(const char *url, Option_t *opt) : TFile(url, "WEB")
    if (option.Contains("HEADONLY", TString::kIgnoreCase))
       headOnly = kTRUE;
 
+   if (option == "IO")
+      return;
+
    Init(headOnly);
 }
 

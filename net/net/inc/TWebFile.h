@@ -42,6 +42,9 @@ friend class TWebSocket;
 friend class TWebSystem;
 
 private:
+	TWebFile() : fSocket(0) { }
+
+protected:
    mutable Long64_t  fSize;             // file size
    TSocket          *fSocket;           // socket for HTTP/1.1 (stays alive between calls)
    TUrl              fProxy;            // proxy URL
@@ -57,32 +60,31 @@ private:
 
    static TUrl       fgProxy;           // globally set proxy URL
 
-   TWebFile() : fSocket(0) { }
-   void        Init(Bool_t readHeadOnly);
-   void        CheckProxy();
-   TString     BasicAuthentication();
-   Int_t       GetHead();
-   Int_t       GetLine(TSocket *s, char *line, Int_t maxsize);
-   Int_t       GetHunk(TSocket *s, char *hunk, Int_t maxsize);
-   const char *HttpTerminator(const char *start, const char *peeked, Int_t peeklen);
-   Int_t       GetFromWeb(char *buf, Int_t len, const TString &msg);
-   Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg);
-   Bool_t      ReadBuffer10(char *buf, Int_t len);
-   Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-   void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
+   virtual void        Init(Bool_t readHeadOnly);
+   virtual void        CheckProxy();
+   virtual TString     BasicAuthentication();
+   virtual Int_t       GetHead();
+   virtual Int_t       GetLine(TSocket *s, char *line, Int_t maxsize);
+   virtual Int_t       GetHunk(TSocket *s, char *hunk, Int_t maxsize);
+   virtual const char *HttpTerminator(const char *start, const char *peeked, Int_t peeklen);
+   virtual Int_t       GetFromWeb(char *buf, Int_t len, const TString &msg);
+   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg);
+   virtual Bool_t      ReadBuffer10(char *buf, Int_t len);
+   virtual Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   virtual void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
 
 public:
    TWebFile(const char *url, Option_t *opt="");
    TWebFile(TUrl url, Option_t *opt="");
    virtual ~TWebFile();
 
-   Long64_t    GetSize() const;
-   Bool_t      IsOpen() const;
-   Int_t       ReOpen(Option_t *mode);
-   Bool_t      ReadBuffer(char *buf, Int_t len);
-   Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-   void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   virtual Long64_t    GetSize() const;
+   virtual Bool_t      IsOpen() const;
+   virtual Int_t       ReOpen(Option_t *mode);
+   virtual Bool_t      ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
