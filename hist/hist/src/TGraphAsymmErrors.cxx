@@ -695,7 +695,6 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 	low = ratio - cor * (eff - low);
 	upper = ratio + cor * (upper - eff);
 	eff = ratio;
-	std::cout << ratio << std::endl;
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);
