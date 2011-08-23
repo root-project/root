@@ -2843,7 +2843,10 @@ void TFile::ReadStreamerInfo()
       TObjLink *lnk = list->FirstLink();
       while (lnk) {
          info = (TStreamerInfo*)lnk->GetObject();
-
+         if (info == 0) {
+            lnk = lnk->Next();
+            continue;
+         }
          if (info->IsA() != TStreamerInfo::Class()) {
             if (mode==1) {
                TObject *obj = (TObject*)info;
@@ -2865,6 +2868,11 @@ void TFile::ReadStreamerInfo()
          }
          // This is a quick way (instead of parsing the name) to see if this is
          // the description of an STL container.
+         if (info->GetElements()==0) {
+            Warning("ReadStreamerInfo","The StreamerInfo for %s does not have a list of elements.",info->GetName());
+            lnk = lnk->Next();
+            continue;
+         }
          TObject *element = info->GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
 
