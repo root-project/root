@@ -34,7 +34,7 @@ namespace textinput {
     bool IsEscPending() const { return fEscPending; }
 
   private:
-    Editor::Command ToCommandCtrl(char In);
+    Editor::Command ToCommandCtrl(char In, bool HadEscPending);
     Editor::Command ToCommandEsc(char In);
     Editor::Command ToCommandExtended(InputData::EExtendedInput EI,
                                       bool HadEscPending);

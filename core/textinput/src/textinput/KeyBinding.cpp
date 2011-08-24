@@ -25,7 +25,7 @@ namespace textinput {
     fEscPending = false;
     if (In.IsRaw()) {
       if (In.GetModifier() & InputData::kModCtrl) {
-        return ToCommandCtrl(In.GetRaw());
+        return ToCommandCtrl(In.GetRaw(), HadEscPending);
       }
 
       if (HadEscPending) {
@@ -39,7 +39,8 @@ namespace textinput {
   }
 
   Editor::Command
-  KeyBinding::ToCommandCtrl(char In) {
+  KeyBinding::ToCommandCtrl(char In,
+                            bool HadEscPending) {
     // Control was pressed and In was hit. Convert to command.
     typedef Editor::Command C;
     switch (In) {
@@ -51,7 +52,12 @@ namespace textinput {
       case 'e' - 0x60: return C(Editor::kMoveEnd);
       case 'f' - 0x60: return C(Editor::kMoveRight);
       case 'g' - 0x60: return C(Editor::kMoveRight);
-      case 'h' - 0x60: return C(Editor::kCmdDelLeft);
+      case 'h' - 0x60:
+        if (HadEscPending) {
+          return C(Editor::kCmdCutPrevWord);
+        } else {
+          return C(Editor::kCmdDelLeft);
+        }
       case 'i' - 0x60: return C(Editor::kCmdComplete);
       case 'j' - 0x60: return C(Editor::kCmdEnter);
       case 'k' - 0x60: return C(Editor::kCmdCutToEnd);
@@ -74,7 +80,12 @@ namespace textinput {
       case 'z' - 0x60:
         return C(In, Editor::kCKControl);
       case 0x1f: return C(Editor::kCmdUndo);
-      case 0x7f: return C(Editor::kCmdDelLeft); // MacOS
+      case 0x7f: // MacOS
+        if (HadEscPending) {
+          return C(Editor::kCmdCutPrevWord);
+        } else {
+          return C(Editor::kCmdDelLeft); 
+        }
       default: return C(In, Editor::kCKError);
     }
     // Cannot reach:
@@ -114,7 +125,12 @@ namespace textinput {
       case InputData::kEIRight: return C(Editor::kMoveRight);
       case InputData::kEIPgUp: return C(Editor::kCmdIgnore);
       case InputData::kEIPgDown: return C(Editor::kCmdIgnore);
-      case InputData::kEIBackSpace: return C(Editor::kCmdDelLeft);
+      case InputData::kEIBackSpace:
+        if (HadEscPending) {
+          return C(Editor::kCmdCutPrevWord);
+        } else {
+          return C(Editor::kCmdDelLeft);
+        }
       case InputData::kEIDel:
         if (HadEscPending) {
           return C(Editor::kCmdCutPrevWord);
