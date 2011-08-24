@@ -92,15 +92,17 @@ namespace textinput {
       }
     }
     if (NewHistEntry != (size_t) -1) {
-      if (NewHistEntry != fCurHistEntry) {
-        fCurHistEntry = NewHistEntry;
-        Line = Hist->GetLine(fCurHistEntry);
-        R.fEdit.Extend(Range::AllText());
-        R.fDisplay.Extend(Range::AllText());
-        // Resets mode, thus can't call:
-        // ProcessMove(kMoveEnd, R);
-        fContext->SetCursor(Line.length());
-      }
+      // No, even if they are unchanged: we might have
+      // subsequent ^R updates triggered by faking a different
+      // fCurHistEntry.
+      // if (NewHistEntry != fCurHistEntry) {
+      fCurHistEntry = NewHistEntry;
+      Line = Hist->GetLine(fCurHistEntry);
+      R.fEdit.Extend(Range::AllText());
+      R.fDisplay.Extend(Range::AllText());
+      // Resets mode, thus can't call:
+      // ProcessMove(kMoveEnd, R);
+      fContext->SetCursor(Line.length());
       return true;
     }
 
@@ -195,6 +197,21 @@ namespace textinput {
         fSearch.erase(fSearch.length() - 1);
         SetReverseHistSearchPrompt(R.fDisplay);
         if (UpdateHistSearch(R)) return kPRSuccess;
+        return kPRError;
+      } else if (M == kCmdReverseSearch) {
+        // Search again. Move to older hist entry:
+        size_t prevHistEntry = fCurHistEntry;
+        // intentional overflow from -1 to 0:
+        if (fCurHistEntry + 1 >= fContext->GetHistory()->GetSize()) {
+          return kPRError;
+        }
+        if (fCurHistEntry == (size_t)-1) {
+          fCurHistEntry = 0;
+        } else {
+          ++fCurHistEntry;
+        }
+        if (UpdateHistSearch(R)) return kPRSuccess;
+        fCurHistEntry = prevHistEntry;
         return kPRError;
       } else {
         CancelSpecialInputMode(R.fDisplay);
