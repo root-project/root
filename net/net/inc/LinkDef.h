@@ -54,7 +54,7 @@
 #ifndef R__NO_CRYPTO
 #pragma link C++ class THTTPMessage+;
 #pragma link C++ class TAS3File+;
-#pragma link C++ class TGTFile+;
+#pragma link C++ class TGSFile+;
 #endif
 
 #endif
