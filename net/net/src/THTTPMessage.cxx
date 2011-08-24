@@ -30,11 +30,17 @@
 
 #include "THTTPMessage.h"
 #include "TBase64.h"
+#if defined(MAC_OS_X_VERSION_10_7)
+#include <CommonCrypto/CommonHMAC.h>
+#define SHA_DIGEST_LENGTH 20
+#else
 #include <openssl/sha.h>
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -48,19 +54,19 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
 {
    // THTTPMessage for HTTP requests without the Range attribute.
 
-   fVerb        = mverb;
-   fPath        = mpath;
-   fBucket      = mbucket;
-   fHost        = mhost;
-   fDate        = DatimeToTString();
-   fAuthPrefix  = maprefix;
-   fAccessId    = maid;
-   fAccessIdKey = maidkey;
-   fHasRange    = kFALSE;
-   fInitByte    = 0;
-   fFinalByte   = 0;
-   fSignature   = Sign();
-}
+   fVerb         = mverb;
+   fPath         = mpath;
+   fBucket       = mbucket;
+   fHost         = mhost;
+   fDate         = DatimeToTString();
+   fAuthPrefix   = maprefix;
+   fAccessId     = maid;
+   fAccessIdKey  = maidkey;
+   fHasRange     = false;
+   fInitByte     = 0;
+   fFinalByte    = 0;
+   fSignature    = Sign();
+}                
 
 //______________________________________________________________________________
 THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
@@ -126,11 +132,16 @@ TString THTTPMessage::Sign()
 
    sign += "/"+GetBucket()+GetPath();
    char digest[SHA_DIGEST_LENGTH] = {0};
-   unsigned int *sd = NULL;
-
    TString key = GetAccessIdKey();
+	
+   #if defined(MAC_OS_X_VERSION_10_7)
+   CCHmac(kCCHmacAlgSHA1, key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest);
+   #else
+   unsigned int *sd = NULL;
+   HMAC(EVP_sha1(), key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest, sd);	
+   #endif
 
-   HMAC(EVP_sha1(), key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest, sd);
+
 
    return TBase64::Encode((const char *) digest, SHA_DIGEST_LENGTH);
 }
