@@ -40,30 +40,30 @@
 #endif
 
 enum EHTTP_Verb {
-   GET,
-   POST,
-   PUT,
-   DELETE,
-   HEAD,
-   COPY
+   kGET,
+   kPOST,
+   kPUT,
+   kDELETE,
+   kHEAD,
+   kCOPY
 };
 
 class THTTPMessage : public TObject{
 
 private:
-   enum EHTTP_Verb verb;
-   TString path;
-   TString bucket;
-   TString host;
-   TString date;
-   TString auth_prefix;
-   TString access_id;
-   TString access_id_key;
-   Bool_t  has_range;
-   Int_t   init_byte;
-   Int_t   final_byte;
+   enum EHTTP_Verb fVerb;  //HTTP Verb
+   TString fPath;          //Given path to be parsed        
+   TString fBucket;        //Bucket associated with the file
+   TString fHost;          //Server name
+   TString fDate;          //Date
+   TString fAuthPrefix;    //Authentication prefix to distinguish between GT and AWS3
+   TString fAccessId;      //User id 
+   TString fAccessIdKey;   //Secret key
+   Bool_t  fHasRange;      //GET request with range
+   Int_t   fInitByte;      //Initial byte if range
+   Int_t   fFinalByte;     //Final byte if range
 
-   TString signature;
+   TString fSignature;     //Message signature
 
 protected:
    TString Sign();
@@ -77,19 +77,19 @@ public:
    virtual ~THTTPMessage() { }
    THTTPMessage &operator=(const THTTPMessage& rhs);
 
-   EHTTP_Verb GetHTTPVerb() const { return verb; }
-   TString    GetPath() const { return path; }
-   TString    GetBucket() const { return bucket; }
-   TString    GetHost() const { return host; }
-   TString    GetDatime() const { return date; }
-   TString    GetAuthPrefix() const { return auth_prefix; }
-   TString    GetAccessId() const { return access_id; }
-   TString    GetAccessIdKey() const { return access_id_key; }
-   Int_t      GetInitByte() const { return init_byte; }
-   Int_t      GetFinalByte() const { return final_byte; }
-   TString    GetSignature() const { return signature; }
+   EHTTP_Verb GetHTTPVerb() const { return fVerb; }
+   TString    GetPath() const { return fPath; }
+   TString    GetBucket() const { return fBucket; }
+   TString    GetHost() const { return fHost; }
+   TString    GetDatime() const { return fDate; }
+   TString    GetAuthPrefix() const { return fAuthPrefix; }
+   TString    GetAccessId() const { return fAccessId; }
+   TString    GetAccessIdKey() const { return fAccessIdKey; }
+   Int_t      GetInitByte() const { return fInitByte; }
+   Int_t      GetFinalByte() const { return fFinalByte; }
+   TString    GetSignature() const { return fSignature; }
 
-   Bool_t     HasRange() const { return has_range; }
+   Bool_t     HasRange() const { return fHasRange; }
 
    TString DatimeToTString() const;
    TString HTTPVerbToTString() const;

@@ -45,11 +45,11 @@ private:
    TGTFile();
   
 protected:
-   TString auth_prefix;
-   TString access_id;
-   TString access_key;
-   TUrl    fServer;
-   TString fBucket;
+   TString fAuthPrefix;  //Authentication prefix for Google Storage
+   TString fAccessId;    //User id 
+   TString fAccessKey;   //Secret key
+   TUrl    fServer;      //Server url
+   TString fBucket;      //Bucket name
       
    Int_t  GetHead();
    Bool_t ReadBuffer10(char *buf, Int_t len);
@@ -58,9 +58,9 @@ public:
    TGTFile(const char *url, Option_t * option = "GT");
    virtual ~TGTFile() { }
 
-   TString GetAuthPrefix() const { return auth_prefix; }
-   TString GetAccessId() const { return access_id; }
-   TString GetAccessKey() const { return access_key; }
+   TString GetAuthPrefix() const { return fAuthPrefix; }
+   TString GetAccessId() const { return fAccessId; }
+   TString GetAccessKey() const { return fAccessKey; }
    TUrl    GetUrl() const { return fServer; }
    TString GetBucket() const { return fBucket; }
 

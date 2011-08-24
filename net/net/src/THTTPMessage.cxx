@@ -48,18 +48,18 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
 {
    // THTTPMessage for HTTP requests without the Range attribute.
 
-   verb           = mverb;
-   path           = mpath;
-   bucket         = mbucket;
-   host           = mhost;
-   date           = DatimeToTString();
-   auth_prefix    = maprefix;
-   access_id      = maid;
-   access_id_key  = maidkey;
-   has_range      = false;
-   init_byte      = 0;
-   final_byte     = 0;
-   signature      = Sign();
+   fVerb        = mverb;
+   fPath        = mpath;
+   fBucket      = mbucket;
+   fHost        = mhost;
+   fDate        = DatimeToTString();
+   fAuthPrefix  = maprefix;
+   fAccessId    = maid;
+   fAccessIdKey = maidkey;
+   fHasRange    = kFALSE;
+   fInitByte    = 0;
+   fFinalByte   = 0;
+   fSignature   = Sign();
 }
 
 //______________________________________________________________________________
@@ -69,18 +69,18 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
 {
    // THTTPMessage for HTTP Get Requests with Range.
 
-   verb           = mverb;
-   path           = mpath;
-   bucket         = mbucket;
-   host           = mhost;
-   date           = DatimeToTString();
-   auth_prefix    = maprefix;
-   access_id      = maid;
-   access_id_key  = maidkey;
-   has_range      = true;
-   init_byte       = ibyte;
-   final_byte      = fbyte;
-   signature      = Sign();
+   fVerb        = mverb;
+   fPath        = mpath;
+   fBucket      = mbucket;
+   fHost        = mhost;
+   fDate        = DatimeToTString();
+   fAuthPrefix  = maprefix;
+   fAccessId    = maid;
+   fAccessIdKey = maidkey;
+   fHasRange    = kTRUE;
+   fInitByte    = ibyte;
+   fFinalByte   = fbyte;
+   fSignature   = Sign();
 }
 
 //______________________________________________________________________________
@@ -90,18 +90,18 @@ THTTPMessage &THTTPMessage::operator=(const THTTPMessage &rhs)
 
    if (this != &rhs){
       TObject::operator=(rhs);
-      verb           = rhs.verb;
-      path           = rhs.path;
-      bucket         = rhs.bucket;
-      host           = rhs.host;
-      date           = rhs.date;
-      has_range      = rhs.has_range;
-      init_byte      = rhs.init_byte;
-      final_byte     = rhs.final_byte;
-      auth_prefix    = rhs.auth_prefix;
-      access_id      = rhs.access_id;
-      access_id_key  = rhs.access_id_key;
-      signature      = rhs.signature;
+      fVerb        = rhs.fVerb;
+      fPath        = rhs.fPath;
+      fBucket      = rhs.fBucket;
+      fHost        = rhs.fHost;
+      fDate        = rhs.fDate;
+      fHasRange    = rhs.fHasRange;
+      fInitByte    = rhs.fInitByte;
+      fFinalByte   = rhs.fFinalByte;
+      fAuthPrefix  = rhs.fAuthPrefix;
+      fAccessId    = rhs.fAccessId;
+      fAccessIdKey = rhs.fAccessIdKey;
+      fSignature   = rhs.fSignature;
    }
    return *this;
 }
@@ -140,13 +140,13 @@ TString THTTPMessage::HTTPVerbToTString() const
 {
    EHTTP_Verb mverb = GetHTTPVerb();
    switch(mverb){
-      case GET:    return TString("GET");
-      case POST:   return TString("POST");
-      case PUT:    return TString("PUT");
-      case DELETE: return TString("DELETE");
-      case HEAD:   return TString("HEAD");
-      case COPY:   return TString("COPY");
-      default:     return TString("");
+      case kGET:    return TString("GET");
+      case kPOST:   return TString("POST");
+      case kPUT:    return TString("PUT");
+      case kDELETE: return TString("DELETE");
+      case kHEAD:   return TString("HEAD");
+      case kCOPY:   return TString("COPY");
+      default:      return TString("");
    }
 }
 
@@ -176,7 +176,7 @@ TString THTTPMessage::CreateHead() const
 //______________________________________________________________________________
 TString THTTPMessage::CreateHost() const
 {
-   return (bucket.EqualTo("")) ? "Host: "+GetHost() : "Host: "+GetBucket()+"."+GetHost();
+   return (fBucket.EqualTo("")) ? "Host: "+GetHost() : "Host: "+GetBucket()+"."+GetHost();
 }
 
 //______________________________________________________________________________

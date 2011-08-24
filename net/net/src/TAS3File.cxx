@@ -67,9 +67,9 @@ TAS3File::TAS3File(const char *path, Option_t *opt) : TWebFile(path, "IO")
    TString option = opt;
 
    if(option == "AS3"){
-      auth_prefix = TString("AWS");
-      access_id   = TString(getenv("S3_ACCESS_ID"));
-      access_key  = TString(getenv("S3_ACCESS_KEY"));
+      fAuthPrefix = TString("AWS");
+      fAccessId   = TString(getenv("S3_ACCESS_ID"));
+      fAccessKey  = TString(getenv("S3_ACCESS_KEY"));
    }else{
       Error("TGTFile","plugin %s not yet implemented", option.Data());
       goto zombie;
@@ -89,7 +89,7 @@ Int_t TAS3File::GetHead()
    // Clone of TWebFile::GetHead except it uses THTTPMessage to generate
    // the HTTP request.
 
-   THTTPMessage s3head = THTTPMessage(HEAD, fRealName, GetBucket(),
+   THTTPMessage s3head = THTTPMessage(kHEAD, fRealName, GetBucket(),
                                       GetUrl().GetHost(), GetAuthPrefix(),
                                       GetAccessId(), GetAccessKey());
 
@@ -221,7 +221,7 @@ Bool_t TAS3File::ReadBuffer10(char *buf, Int_t len)
    // request created by THTTPMessage and returns the buffer.
    // Returns kTRUE in case of error.
 
-   THTTPMessage s3get = THTTPMessage(GET, fRealName, GetBucket(),
+   THTTPMessage s3get = THTTPMessage(kGET, fRealName, GetBucket(),
                                      GetUrl().GetHost(), GetAuthPrefix(),
                                      GetAccessId(), GetAccessKey(),
                                      fOffset, fOffset+len-1);

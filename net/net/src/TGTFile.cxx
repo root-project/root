@@ -66,9 +66,9 @@ TGTFile::TGTFile(const char *path, Option_t * opt) : TWebFile(path, "IO")
    TString option = opt;
 
    if(option == "GT"){
-      auth_prefix = TString("GOOG1");
-      access_id   = TString(getenv("GT_ACCESS_ID"));
-      access_key  = TString(getenv("GT_ACCESS_KEY"));
+      fAuthPrefix = TString("GOOG1");
+      fAccessId   = TString(getenv("GT_ACCESS_ID"));
+      fAccessKey  = TString(getenv("GT_ACCESS_KEY"));
    }else{
       Error("TGTFile","plugin %s not yet implemented", option.Data());
       goto zombie;
@@ -88,7 +88,7 @@ Int_t TGTFile::GetHead()
    // Clone of TWebFile::GetHead except it uses THTTPMessage to generate
    // the HTTP request.
 
-   THTTPMessage s3head = THTTPMessage(HEAD, fRealName, GetBucket(),
+   THTTPMessage s3head = THTTPMessage(kHEAD, fRealName, GetBucket(),
                                       GetUrl().GetHost(), GetAuthPrefix(),
                                       GetAccessId(), GetAccessKey());
 
@@ -220,7 +220,7 @@ Bool_t TGTFile::ReadBuffer10(char *buf, Int_t len)
    // request created by THTTPMessage and returns the buffer.
    // Returns kTRUE in case of error.
 
-   THTTPMessage s3get = THTTPMessage(GET, fRealName, GetBucket(),
+   THTTPMessage s3get = THTTPMessage(kGET, fRealName, GetBucket(),
                                      GetUrl().GetHost(), GetAuthPrefix(),
                                      GetAccessId(), GetAccessKey(),
                                      fOffset, fOffset+len-1);
