@@ -510,8 +510,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    // Notify/warn about the dynamic startup option, if any
    TUrl uu(url), udef(urldef);
-   Bool_t extcluster = (strcmp(uu.GetHost(), udef.GetHost()) ||
-                       (uu.GetPort() != udef.GetPort())) ? kTRUE : kFALSE;
+   Bool_t extcluster = ((strcmp(uu.GetHost(), udef.GetHost()) ||
+                        (uu.GetPort() != udef.GetPort())) && strcmp(url,"lite://"))? kTRUE : kFALSE;
    if (gDynamicStartup && gverbose > 0) {
       // Check url
       if (extcluster) {
