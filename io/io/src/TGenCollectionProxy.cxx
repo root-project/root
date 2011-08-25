@@ -1007,7 +1007,9 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
                Clear("force");
             else
                fClear.invoke(fEnv);
-            ++fEnv->fRefCount;
+            // Commit no longer use the environment and thus no longer decrease
+            // the count.  Consequently we no longer should increase it here.
+            // ++fEnv->fRefCount;
             fEnv->fSize  = n;
 
             TStaging *s;
