@@ -126,7 +126,7 @@ TString THTTPMessage::Sign()
    sign += "\n"; // GetContentType()
    sign += DatimeToTString() + "\n";
 
-   if(GetAuthPrefix() == "GOOG1"){
+   if (GetAuthPrefix() == "GOOG1") {
       sign += "x-goog-api-version:1\n";
    }
 
@@ -134,14 +134,12 @@ TString THTTPMessage::Sign()
    char digest[SHA_DIGEST_LENGTH] = {0};
    TString key = GetAccessIdKey();
 	
-   #if defined(MAC_OS_X_VERSION_10_7)
+#if defined(MAC_OS_X_VERSION_10_7)
    CCHmac(kCCHmacAlgSHA1, key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest);
-   #else
+#else
    unsigned int *sd = NULL;
    HMAC(EVP_sha1(), key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest, sd);	
-   #endif
-
-
+#endif
 
    return TBase64::Encode((const char *) digest, SHA_DIGEST_LENGTH);
 }

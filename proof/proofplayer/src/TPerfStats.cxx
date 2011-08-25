@@ -41,8 +41,7 @@
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TTimeStamp.h"
-#include "TVirtualMonitoring.h"
-
+#include "TProofMonSender.h"
 
 ClassImp(TPerfEvent)
 ClassImp(TPerfStats)
@@ -122,7 +121,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fNumEvents(0),
       fSlaves(0), fDoHist(kFALSE),
       fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE),
-      fMonitorPerPacket(kFALSE), fMonitoringWriters(3),
+      fMonitorPerPacket(kFALSE), fMonSenders(3),
       fDataSet("+++none+++"), fDataSetSize(-1), fOutput(output)
 {
    // Normal constructor.
@@ -138,7 +137,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))
       if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
 
-   PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
+   PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
 
    fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
    fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
@@ -154,45 +153,38 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    fMonitorPerPacket = (perpacket == 1) ? kTRUE : kFALSE;
    if (fMonitorPerPacket)
       Info("TPerfStats", "sending full information after each packet");
- 
-   // Check what information to send
-   fMonitorInfo = gEnv->GetValue("Proof.MonitorInfo", 1);
-   if (fMonitorInfo == 0)
-      Info("TPerfStats", "sending old-structured information (no {memory,dataset,status} info)");
    
    // Extract the name of the dataset
-   if (fMonitorInfo > 0) {
-      TObject *o = 0;
-      TIter nxi(input);
-      while ((o = nxi()))
-         if (!strncmp(o->ClassName(), "TDSet", strlen("TDSet"))) break;
-      if (o) {
-         TDSet *dset = (TDSet *) o;
-         fDataSetSize = dset->GetNumOfFiles();
-         if (fDataSetSize > 0) {
-            fDataSet = "";
-            TString grus = (gProofServ) ? TString::Format("/%s/%s/", gProofServ->GetGroup(),
-                                                                     gProofServ->GetUser()) : "";
-            TString dss = dset->GetName(), ds;
-            Ssiz_t fd = 0, nq = kNPOS;
-            while (dss.Tokenize(ds, fd, "[,| ]")) {
-               if ((nq = ds.Index("?")) != kNPOS) ds.Remove(nq);
-               ds.ReplaceAll(grus, "");
-               if (!fDataSet.IsNull()) fDataSet += ",";
-               fDataSet += ds;
-            }
+   TObject *o = 0;
+   TIter nxi(input);
+   while ((o = nxi()))
+      if (!strncmp(o->ClassName(), "TDSet", strlen("TDSet"))) break;
+   if (o) {
+      fDSet = (TDSet *) o;
+      fDataSetSize = fDSet->GetNumOfFiles();
+      if (fDataSetSize > 0) {
+         fDataSet = "";
+         TString grus = (gProofServ) ? TString::Format("/%s/%s/", gProofServ->GetGroup(),
+                                                                  gProofServ->GetUser()) : "";
+         TString dss = fDSet->GetName(), ds;
+         Ssiz_t fd = 0, nq = kNPOS;
+         while (dss.Tokenize(ds, fd, "[,| ]")) {
+            if ((nq = ds.Index("?")) != kNPOS) ds.Remove(nq);
+            ds.ReplaceAll(grus, "");
+            if (!fDataSet.IsNull()) fDataSet += ",";
+            fDataSet += ds;
          }
       }
-
-      // Dataset string limited in length: get the authorized size
-      fDataSetLen = gEnv->GetValue("Proof.Monitor.DataSetLen", 512);
-      if (fDataSetLen != 512)
-         Info("TPerfStats", "dataset string length truncated to %d chars", fDataSetLen);
-      if (fDataSet.Length() > fDataSetLen) fDataSet.Resize(fDataSetLen);
-      //
-      PDB(kGlobal,1)
-         Info("TPerfStats", "dataset: '%s', # files: %d", fDataSet.Data(), fDataSetSize);
    }
+
+   // Dataset string limited in length: get the authorized size
+   fDataSetLen = gEnv->GetValue("Proof.Monitor.DataSetLen", 512);
+   if (fDataSetLen != 512)
+      Info("TPerfStats", "dataset string length truncated to %d chars", fDataSetLen);
+   if (fDataSet.Length() > fDataSetLen) fDataSet.Resize(fDataSetLen);
+   //
+   PDB(kMonitoring,1)
+      Info("TPerfStats", "dataset: '%s', # files: %d", fDataSet.Data(), fDataSetSize);
  
    if ((isMaster && (fDoTrace || fDoTraceRate)) || (!isMaster && fDoSlaveTrace)) {
       // Construct tree
@@ -285,40 +277,57 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       
       TString mons = gEnv->GetValue("ProofServ.Monitoring", ""), mon;
       Ssiz_t fmon = 0;
-      TVirtualMonitoringWriter *monWriter = 0;
+      TProofMonSender *monSender = 0;
       while (mons.Tokenize(mon, fmon, "[,|\\\\]")) {
          if (mon != "") {
             // Extract arguments (up to 9 'const char *')
             TString a[10];
             Int_t from = 0;
-            TString tok;
+            TString tok, sendopts;
             Int_t na = 0;
-            while (mon.Tokenize(tok, from, " "))
-               a[na++] = tok;
+            while (mon.Tokenize(tok, from, " ")) {
+               if (tok.BeginsWith("sendopts:")) {
+                  tok.ReplaceAll("sendopts:", "");
+                  sendopts = tok;
+               } else {
+                  a[na++] = tok;
+               }
+            }
             na--;
             // Get monitor object from the plugin manager
             TPluginHandler *h = 0;
-            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualMonitoringWriter", a[0]))) {
+            if ((h = gROOT->GetPluginManager()->FindHandler("TProofMonSender", a[0]))) {
                if (h->LoadPlugin() != -1) {
-                  monWriter =
-                     (TVirtualMonitoringWriter *) h->ExecPlugin(na, a[1].Data(), a[2].Data(), a[3].Data(),
-                                                                  a[4].Data(), a[5].Data(), a[6].Data(),
-                                                                  a[7].Data(), a[8].Data(), a[9].Data());
-                  if (monWriter && monWriter->IsZombie()) SafeDelete(monWriter);
+                  monSender =
+                     (TProofMonSender *) h->ExecPlugin(na, a[1].Data(), a[2].Data(), a[3].Data(),
+                                                           a[4].Data(), a[5].Data(), a[6].Data(),
+                                                           a[7].Data(), a[8].Data(), a[9].Data());
+                  if (monSender && monSender->TestBit(TObject::kInvalidObject)) SafeDelete(monSender);
+                  if (monSender && monSender->SetSendOptions(sendopts) != 0) SafeDelete(monSender);
                }
             }
          }
 
-         if (monWriter) {
-            fMonitoringWriters.Add(monWriter);
-            PDB(kGlobal,1)
+         if (monSender) {
+            fMonSenders.Add(monSender);
+            PDB(kMonitoring,1)
                Info("TPerfStats", "created monitoring object: %s - # of active monitors: %d",
-                                  mon.Data(), fMonitoringWriters.GetEntries());
+                                  mon.Data(), fMonSenders.GetEntries());
             fDoQuota = kTRUE;
          }
-         monWriter = 0;
+         monSender = 0;
       }
    }
+}
+
+//______________________________________________________________________________
+TPerfStats::~TPerfStats()
+{
+   // Destructor
+
+   // Shutdown the monitor writers, if any
+   fMonSenders.SetOwner(kTRUE);
+   fMonSenders.Delete();
 }
 
 //______________________________________________________________________________
@@ -373,7 +382,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fPerfEvent = 0;
    }
 
-   PDB(kGlobal,1)
+   PDB(kMonitoring,1)
       Info("PacketEvent","%s: fDoHist: %d, fPacketsHist: %p, eventsprocessed: %lld",
                          slave, fDoHist, fPacketsHist, eventsprocessed);
 
@@ -392,7 +401,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
    }
 
    // Write to monitoring system, if requested
-   if (!fMonitoringWriters.IsEmpty() && fMonitorPerPacket) {
+   if (!fMonSenders.IsEmpty() && fMonitorPerPacket) {
       TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
                           gProofServ->GetProof()->GetQueryResult() : 0;
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
@@ -421,31 +430,37 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
       
-      // If the new style has been requested
-      if (fMonitorInfo > 0) {
-         // Memory usage on workers
-         TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
-         // This most likely will be always NULL when sending from GetNextPacket ...
-         Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
-         Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
-         values.Add(new TParameter<Long64_t>("vmemmxw", vmxw));
-         values.Add(new TParameter<Long64_t>("rmemmxw", rmxw));
-         // Memory usage on master
-         values.Add(new TParameter<Long64_t>("vmemmxm", (Long64_t) fgVirtMemMax));
-         values.Add(new TParameter<Long64_t>("rmemmxm", (Long64_t) fgResMemMax));
-         // Dataset information
-         values.Add(new TNamed("dataset", fDataSet.Data()));
-         values.Add(new TParameter<int>("numfiles", fDataSetSize));
-         // Query status
-         Int_t est = (pst) ? pst->GetExitStatus() : -1;
-         values.Add(new TParameter<int>("status", est));
-      }
+      // Memory usage on workers
+      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
+      // This most likely will be always NULL when sending from GetNextPacket ...
+      Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
+      Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
+      values.Add(new TParameter<Long64_t>("vmemmxw", vmxw));
+      values.Add(new TParameter<Long64_t>("rmemmxw", rmxw));
+      // Memory usage on master
+      values.Add(new TParameter<Long64_t>("vmemmxm", (Long64_t) fgVirtMemMax));
+      values.Add(new TParameter<Long64_t>("rmemmxm", (Long64_t) fgResMemMax));
+      // Dataset information
+      values.Add(new TNamed("dataset", fDataSet.Data()));
+      values.Add(new TParameter<int>("numfiles", fDataSetSize));
+      // Missing files
+      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
+      Int_t nmiss = (mfls && mfls->GetSize() > 0) ? mfls->GetSize() : 0;
+      values.Add(new TParameter<int>("missfiles", nmiss));
+      // Query status
+      Int_t est = (pst) ? pst->GetExitStatus() : -1;
+      values.Add(new TParameter<int>("status", est));
+      // Root version
+      TString rver = TString::Format("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
+      values.Add(new TNamed("rootver", rver.Data()));
 
-      for (Int_t i = 0; i < fMonitoringWriters.GetEntries(); i++) {
-         TVirtualMonitoringWriter *m = (TVirtualMonitoringWriter *) fMonitoringWriters[i];
-         if (m && !m->SendParameters(&values, identifier)) {
-            Error("PacketEvent", "sending of monitoring info failed (%s)", m->GetName());
-         } else if (!m) {
+      for (Int_t i = 0; i < fMonSenders.GetEntries(); i++) {
+         TProofMonSender *m = (TProofMonSender *) fMonSenders[i];
+         if (m) {
+            // Send query summary
+            if (m->SendSummary(&values, identifier) != 0)
+               Error("PacketEvent", "sending of summary info failed (%s)", m->GetName());
+         } else {
             Warning("PacketEvent", "undefined entry found in monitors array for id: %d", i);
          }
       }
@@ -576,38 +591,15 @@ Long64_t TPerfStats::GetBytesRead() const
 //______________________________________________________________________________
 void TPerfStats::WriteQueryLog()
 {
-   // Connect to SQL server and register query log used for quotas.
-   // The <proofquerylog> table has the format:
-   // CREATE TABLE <proofquerylog> (
-   //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-   //   user          VARCHAR(32) NOT NULL,
-   //   proofgroup    VARCHAR(32),
-   //   begin         DATETIME,
-   //   end           DATETIME,
-   //   walltime      INT,
-   //   cputime       FLOAT,
-   //   bytesread     BIGINT,
-   //   events        BIGINT,
-   //   workers       INT
-   //   querytag      VARCHAR(64) NOT NULL,
-   //   vmemmxw       BIGINT,                  (*)
-   //   rmemmxw       BIGINT,                  (*)
-   //   vmemmxm       BIGINT,                  (*)
-   //   rmemmxm       BIGINT,                  (*)
-   //   dataset       VARCHAR(512),            (*, **)
-   //   numfiles      INT                      (*)
-   //   status        INT                      (*)
-   // )
-   // (*) Only for fMonitorInfo > 0
-   // (**) Size controlled by variable Proof.Monitor.DataSetLen .
-   // The name of the table is set while initializing the monitor writer object.
-   // The same info is send to Monalisa (or other monitoring systems) in the
-   // form of a list of name,value pairs.
+   // Send to the connected monitoring servers information related to this query.
+   // The information is of three types: 'summary', 'dataset' and 'files'.
+   // Actual 'table' formatting is done by the relevant sender, implementation of
+   // TProofMonSender, where the details are given.
 
    TTimeStamp stop;
 
    // Write to monitoring system
-   if (!fMonitoringWriters.IsEmpty()) {
+   if (!fMonSenders.IsEmpty()) {
       TQueryResult *qr = (gProofServ && gProofServ->GetProof()) ?
                           gProofServ->GetProof()->GetQueryResult() : 0;
       if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() || !qr) {
@@ -636,30 +628,43 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
       
-      // If the new style has been requested
-      if (fMonitorInfo > 0) {
-         // Memory usage on workers
-         TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
-         Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
-         Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
-         values.Add(new TParameter<Long64_t>("vmemmxw", vmxw));
-         values.Add(new TParameter<Long64_t>("rmemmxw", rmxw));
-         // Memory usage on master
-         values.Add(new TParameter<Long64_t>("vmemmxm", (Long64_t) fgVirtMemMax));
-         values.Add(new TParameter<Long64_t>("rmemmxm", (Long64_t) fgResMemMax));
-         // Dataset information
-         values.Add(new TNamed("dataset", fDataSet.Data()));
-         values.Add(new TParameter<int>("numfiles", fDataSetSize));
-         // Query status
-         Int_t est = (pst) ? pst->GetExitStatus() : -1;
-         values.Add(new TParameter<int>("status", est));
-      }
+      // Memory usage on workers
+      TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
+      Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
+      Long64_t rmxw = (pst) ? (Long64_t) pst->GetResMemMax() : -1;
+      values.Add(new TParameter<Long64_t>("vmemmxw", vmxw));
+      values.Add(new TParameter<Long64_t>("rmemmxw", rmxw));
+      // Memory usage on master
+      values.Add(new TParameter<Long64_t>("vmemmxm", (Long64_t) fgVirtMemMax));
+      values.Add(new TParameter<Long64_t>("rmemmxm", (Long64_t) fgResMemMax));
+      // Dataset information
+      values.Add(new TNamed("dataset", fDataSet.Data()));
+      values.Add(new TParameter<int>("numfiles", fDataSetSize));
+      // Missing files
+      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
+      Int_t nmiss = (mfls && mfls->GetSize() > 0) ? mfls->GetSize() : 0;
+      values.Add(new TParameter<int>("missfiles", nmiss));
+      // Query status
+      Int_t est = (pst) ? pst->GetExitStatus() : -1;
+      values.Add(new TParameter<int>("status", est));
+      // Root version
+      TString rver = TString::Format("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
+      values.Add(new TNamed("rootver", rver.Data()));
 
-      for (Int_t i = 0; i < fMonitoringWriters.GetEntries(); i++) {
-         TVirtualMonitoringWriter *m = (TVirtualMonitoringWriter *) fMonitoringWriters[i];
-         if (m && !m->SendParameters(&values, identifier)) {
-            Error("WriteQueryLog", "sending of monitoring info failed (%s)", m->GetName());
-         } else if (!m) {
+      TList *missingfiles = (TList *) fOutput->FindObject("MissingFiles");
+      for (Int_t i = 0; i < fMonSenders.GetEntries(); i++) {
+         TProofMonSender *m = (TProofMonSender *) fMonSenders[i];
+         if (m) {
+            // Send query summary
+            if (m->SendSummary(&values, identifier) != 0)
+               Error("WriteQueryLog", "sending of summary info failed (%s)", m->GetName());
+            // Send dataset information
+            if (m->SendDataSetInfo(fDSet, missingfiles, fTzero.AsString("s"), identifier) != 0)
+               Error("WriteQueryLog", "sending of dataset info failed (%s)", m->GetName());
+            // Send file information
+            if (m->SendFileInfo(fDSet, missingfiles, fTzero.AsString("s"), identifier) != 0)
+               Error("WriteQueryLog", "sending of files info failed (%s)", m->GetName());
+         } else {
             Warning("WriteQueryLog", "undefined entry found in monitors array for id: %d", i);
          }
       }
