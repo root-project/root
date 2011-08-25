@@ -85,7 +85,7 @@ int main( int argc, char **argv )
       cout << "If the option -k is used, hadd will not exit on corrupt or non-existant input files but skip the offending files instead." << endl;
       cout << "If the option -T is used, Trees are not merged" <<endl;
       cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<endl;
-      cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, 0 request to use the system maximum." << endl;
+      cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0 to request to use the system maximum." << endl;
       cout << "When -the -f option is specified, one can also specify the compression" <<endl;
       cout << "level of the target file. By default the compression level is 1, but" <<endl;
       cout << "if \"-f0\" is specified, the target file will not be compressed." <<endl;
@@ -121,7 +121,7 @@ int main( int argc, char **argv )
             cerr << "Error: no maximum number of opened was provided after -n.\n";
          } else {
             long request = strtol(argv[a+1], 0, 10);
-            if (request < kMaxLong && request > 0) {
+            if (request < kMaxLong && request >= 0) {
                maxopenedfiles = (Int_t)request;
                ++a;
                ++ffirst;
@@ -140,6 +140,11 @@ int main( int argc, char **argv )
                ++ffirst;
                break;
             }
+         }
+         if (!force) {
+            // Bad argument
+            cerr << "Error: option " << argv[a] << " is not a supported option.\n";
+            ++ffirst;
          }
       }
    }
