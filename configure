@@ -3405,6 +3405,12 @@ if test ! "x$enable_gviz" = "xno"; then
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib4=$found_lib
+    check_library "libexpat expat" "$enable_shared" "$gvizlibdir" \
+        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib
+    gvizlib5=$found_lib
+    gvizlibdir5=$found_dir
 
     # the plugin libraries are in the directory "$gvizlibdir"/graphviz
     gvizlibpdir=""
@@ -3419,7 +3425,7 @@ if test ! "x$enable_gviz" = "xno"; then
         ${finkdir:+$finkdir/lib/graphviz} \
         /usr/local/lib/graphviz /usr/lib/graphviz
     gvizlibp1=$found_lib
-    gvizlibpir=$found_dir
+    gvizlibpdir=$found_dir
 
     if test "x$gvizincdir" = "x" || test "x$gvizlib1"  = "x" ||
        test "x$gvizlib2"   = "x" || test "x$gvizlib3"  = "x" ||
@@ -3434,14 +3440,20 @@ if test ! "x$enable_gviz" = "xno"; then
                enable_gviz="no"
            else
                gvizcflags=-DGVIZ_STATIC
-               gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat -lz"
+               gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 $gvizlibdir5 $gvizlib5 -lz"
            fi
        else
-           gvizlib="$gvizlibir $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat -lz"
+           gvizlib="$gvizlibir $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 $gvizlibdir5 $gvizlib5 -lz"
        fi
        if test "x$platform" = "xwin32"; then
            gvizcflags=
            gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4"
+       else
+           if test "x$gvizlib5" = "x" ; then
+               enable_gviz="no"
+               gvizlib=
+               gvizcflags=
+           fi
        fi
     fi
 fi
