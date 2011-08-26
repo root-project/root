@@ -6208,7 +6208,8 @@ char TTree::GetNewlineValue(istream &inputStream)
    long inPos = inputStream.tellg();
    char newline = '\n';
    while(1) {
-     char c = inputStream.get();
+     char c = 0;
+     inputStream.get(c);
      if(!inputStream.good()) {
        Error("ReadStream","Error reading stream: no newline found.");
        return 0;
