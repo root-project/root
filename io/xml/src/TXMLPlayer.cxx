@@ -959,10 +959,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
    TClass* argcl[2];
    TString argtname[2];
 
-   if (isstr)
-      stltyp = TVirtualStreamerInfo::kSTLstring;
-   else
-      if (TClassEdit::IsSTLCont(contcl->GetName())) {
+   if (!isstr && TClassEdit::IsSTLCont(contcl->GetName())) {
          string shortTypeName =
             TClassEdit::ShortType(contcl->GetName(), TClassEdit::kDropStlDefault);
          int nestedLoc = 0;
@@ -1022,7 +1019,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
 
       if (stltyp<0) return false;
    }
-
+   
    Bool_t akaarrayaccess = (narg==1) && (argtype[0]<20);
 
    char tabs[30], tabs2[30];
