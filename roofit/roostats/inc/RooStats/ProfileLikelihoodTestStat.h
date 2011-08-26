@@ -206,34 +206,37 @@ namespace RooStats {
        int statusD;
        double uncondML = GetMinNLL(statusD);
 
-       //       cout <<" reestablish snapshot"<<endl;
-       *attachedSet = *snap;
+       // get best fit value for one-sided interval 
+       double fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
 
-       TIterator* it = paramsOfInterest.createIterator();
-       RooRealVar* tmpPar = NULL, *tmpParA=NULL;
-       while((tmpPar = (RooRealVar*)it->Next())){
-	 tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
-	 tmpParA->setConstant();
+       double ret = 0; 
+       int statusN = 0;
+
+       // do the conditional ML (the numerator) only when fit value is smaller than test value
+       if (!fOneSided || fit_favored_mu <= initial_mu_value) {  
+
+          //       cout <<" reestablish snapshot"<<endl;
+          *attachedSet = *snap;
+
+          // set the POI to constant
+          RooLinkedListIter it = paramsOfInterest.iterator();
+          RooRealVar* tmpPar = NULL, *tmpParA=NULL;
+          while((tmpPar = (RooRealVar*)it.Next())){
+             tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
+             tmpParA->setConstant();
+          }
+
+          double condML = GetMinNLL(statusN);
+
+          ret=condML-uncondML;
        }
-       int statusN;
-       double condML = GetMinNLL(statusN);
 
+       // need to restore the values ?
        *attachedSet = *origAttachedSet;
 
-       double ret=condML-uncondML;;
-
-
-       if(fOneSided){
-	 //	 double fit_favored_mu = ((RooProfileLL*) fProfile)->bestFitObs().getRealValue(firstPOI->GetName()) ;
-	 double fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
-       
-	 if( fit_favored_mu > initial_mu_value)
-	   ret = 0 ;
-       }
        delete attachedSet;
        delete origAttachedSet;
        delete snap;
-       delete it;
 
        if (!reuse) {
 	 delete fNll;
