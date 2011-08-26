@@ -1453,7 +1453,7 @@ void TStreamerInfo::BuildOld()
       }
 
       // Now let's deal with Schema evolution
-      Int_t newType = kNoType_t;
+      Int_t newType = -1;
       TClassRef newClass;
 
       if (dm && dm->IsPersistent()) {
@@ -1466,7 +1466,8 @@ void TStreamerInfo::BuildOld()
                //printf("found fBits, changing dtype from %d to 15\n", dtype);
                newType = kBits;
             } else {            
-               newType = dm->GetDataType()->GetType();
+               // All the values of EDataType have the same semantic in EReadWrite 
+               newType = (EReadWrite)dm->GetDataType()->GetType();
             }
             if ((newType == ::kChar_t) && isPointer && !isArray && !hasCount) {
                newType = ::kCharStar;
@@ -1476,7 +1477,7 @@ void TStreamerInfo::BuildOld()
                newType += kOffsetL;
             }
          }
-         if (newType == 0) {
+         if (newType == -1) {
             newClass = TClass::GetClass(dm->GetTypeName());
          }
       } else {
@@ -1487,10 +1488,10 @@ void TStreamerInfo::BuildOld()
                TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(element->GetName());
                newClass = newElems ?  newElems->GetClassPointer() : 0;
                if (newClass == 0) {
-                  newType = newElems ? newElems->GetType() : kNoType_t;
+                  newType = newElems ? newElems->GetType() : -1;
                   if (!(newType < kObject)) {
                      // sanity check.
-                     newType = kNoType_t;
+                     newType = -1;
                   }
                }
             } else {
@@ -1499,18 +1500,19 @@ void TStreamerInfo::BuildOld()
                   newType = element->GetType();
                   if (!(newType < kObject)) {
                      // sanity check.
-                     newType = kNoType_t;
+                     newType = -1;
                   }
                }
             }
          }
       }
 
-      if (newType) {
+      if (newType > 0) {
          // Case of a numerical type
          if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
+               // coverity[first_enum_type] - All the values of EDataType have the same semantic in EReadWrite 
                Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
@@ -1698,7 +1700,7 @@ void TStreamerInfo::BuildOld()
                  || element->GetType() == kTObject || element->GetType() == kTNamed || element->GetType() == kTString )) {
                // We had Type* ... ; //-> or Type ...;
                // this is completely compatible with the same and with a embedded object.
-               if (newType != kNoType_t) {
+               if (newType != -1) {
                   if (newType == kObjectp || newType == kAnyp
                       || newType == kObject || newType == kAny
                       || newType == kTObject || newType == kTNamed || newType == kTString) {
@@ -1713,7 +1715,7 @@ void TStreamerInfo::BuildOld()
                   cannotConvert = kTRUE;
                }
             } else if (element->GetType() == kObjectP || element->GetType() == kAnyP) {
-               if (newType != kNoType_t) {
+               if (newType != -1) {
                   if (newType == kObjectP || newType == kAnyP ) {
                      // nothing to do}
                   } else {
@@ -1728,6 +1730,7 @@ void TStreamerInfo::BuildOld()
          if (cannotConvert) {
             element->SetNewType(-2);
             if (gDebug > 0) {
+               // coverity[first_enum_type] - All the values of EDataType have the same semantic in EReadWrite 
                Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
