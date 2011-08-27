@@ -349,6 +349,16 @@ class genDictionary(object) :
               newselector.append(sel)
     return newselector
 #----------------------------------------------------------------------------------
+  def resolveIoRulesTypedef( self, ioRules ):
+    newRules = {}
+    for name in ioRules:
+      tdname = normalizeClass(self.resolveTypedefName(name),True)
+      print name," vs ",tdname
+      if (tdname != name):
+        newRules[tdname] = ioRules[name]
+      newRules[name] = ioRules[name]
+    return newRules
+#----------------------------------------------------------------------------------
   def selclasses(self, sel, deep) :
     selec = []
     if sel :
@@ -569,8 +579,9 @@ class genDictionary(object) :
       for inc in includes:
         f.write( '#include <%s>\n' % (inc,) )
       f.write( '\n' )
+    if (ioReadRules): ioReadRules = self.resolveIoRulesTypedef(ioReadRules)
+    if (ioReadRawRules): ioReadRawRules = self.resolveIoRulesTypedef(ioReadRawRules)
 
-  
     #------------------------------------------------------------------------------
     # Process ClassDef implementation before writing: sets 'extra' properties
     #------------------------------------------------------------------------------
