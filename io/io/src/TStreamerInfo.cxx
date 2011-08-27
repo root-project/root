@@ -1512,7 +1512,7 @@ void TStreamerInfo::BuildOld()
          if (element->GetType() != newType) {
             element->SetNewType(newType);
             if (gDebug > 0) {
-               // coverity[first_enum_type] - All the values of EDataType have the same semantic in EReadWrite 
+               // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite 
                Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
@@ -1730,7 +1730,7 @@ void TStreamerInfo::BuildOld()
          if (cannotConvert) {
             element->SetNewType(-2);
             if (gDebug > 0) {
-               // coverity[first_enum_type] - All the values of EDataType have the same semantic in EReadWrite 
+               // coverity[mixed_enums] - All the values of EDataType have the same semantic in EReadWrite 
                Info("BuildOld", "element: %s %s::%s has new type: %s/%d", element->GetTypeName(), GetName(), element->GetName(), dm ? dm->GetFullTypeName() : TDataType::GetTypeName((EDataType)newType), newType);
             }
          }
