@@ -3606,7 +3606,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
                                       "movl  %2,%%ecx \n"              \
                                       "cld \n"                         \
                                       "rep \n"                         \
-                                      "stosl %%eax,(%%edi) \n"         \
+                                      "stosl \n"                       \
                                       : /* no output registers */      \
                                       :"g" (val), "g" (dst), "g" (lng) \
                                       :"eax","edi","ecx"               \
