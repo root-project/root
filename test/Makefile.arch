@@ -6,7 +6,11 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+ifeq ($(ROOTSYS),)
+ROOTCONFIG   := ../bin/root-config
+else
 ROOTCONFIG   := root-config
+endif
 
 ARCH         := $(shell $(ROOTCONFIG) --arch)
 PLATFORM     := $(shell $(ROOTCONFIG) --platform)
