@@ -191,17 +191,17 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //         to the output buffer. Example:
    //             X         ; variable X, type Float_t
    //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
+   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //            if nelem is a leaf name, it is used as the variable size of the array, 
    //            otherwise return 0.
-   //            The leaf refered to by neleme **MUST** be an int (/I), 
-   //         If leaf name has the form var[nelem], where nelem is a digit, then
+   //            The leaf referred to by nelem **MUST** be an int (/I), 
+   //         If leaf name has the form var[nelem], where nelem is a non-negative integers, then
    //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])
-   //            where nelem and nelem2 are digits) then
+   //         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
+   //            where nelem and nelem2 are non-negative integers) then
    //            it is used as a 2 dimensional array of fixed size.
    //         Any of other form is not supported.
    //
@@ -212,7 +212,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //
    //       * bufsize is the buffer size in bytes for this branch
    //         The default value is 32000 bytes and should be ok for most cases.
-   //         You can specify a larger value (eg 256000) if your Tree is not split
+   //         You can specify a larger value (e.g. 256000) if your Tree is not split
    //         and each entry is large (Megabytes)
    //         A small value for bufsize is optimum if you intend to access
    //         the entries in the Tree randomly and your Tree is in split mode.
@@ -300,16 +300,16 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
    //         to the output buffer. Example:
    //             X         ; variable X, type Float_t
    //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
+   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //         If nelem is a leaf name, it is used as the variable size of the array.
-   //              The leaf refered to by neleme **MUST** be an int (/I).
-   //         If leaf name has the form var[nelem], where nelem is a digit, then
+   //              The leaf referred to by nelem **MUST** be an int (/I).
+   //         If leaf name has the form var[nelem], where nelem is a non-negative integer, then
    //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2])
-   //            where nelem and nelem2 are digits) then
+   //         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
+   //            where nelem and nelem2 are non-negative integer) then
    //            it is used as a 2 dimensional array of fixed size.
    //         Any of other form is not supported.
    //

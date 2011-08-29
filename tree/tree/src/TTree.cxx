@@ -1068,7 +1068,8 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
    fFriends->Add(fe);
    TTree* t = fe->GetTree();
    if (warn && (t->GetEntries() < fEntries)) {
-      Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %lld than its parent tree: %lld", tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
+      Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %lld than its parent tree: %lld", 
+              tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
    }
    return fe;
 }
@@ -1256,7 +1257,8 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
    if (addr && *addr) {
       actualClass = ptrClass->GetActualClass(*addr);
       if (!actualClass) {
-         Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part", branchname, ptrClass->GetName());
+         Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part",
+                 branchname, ptrClass->GetName());
          actualClass = ptrClass;
       } else if ((ptrClass != actualClass) && !actualClass->InheritsFrom(ptrClass)) {
          Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", actualClass->GetName(), branchname, ptrClass->GetName());
@@ -1320,7 +1322,8 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
       }
    }
    if (!actualClass) {
-      Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part", branchname, ptrClass->GetName());
+      Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part",
+              branchname, ptrClass->GetName());
       actualClass = ptrClass;
    } else if ((ptrClass != actualClass) && !actualClass->InheritsFrom(ptrClass)) {
       Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", actualClass->GetName(), branchname, ptrClass->GetName());
@@ -1357,7 +1360,8 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
    }
    actualClass = ptrClass->GetActualClass(addobj);
    if (!actualClass) {
-      Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part", branchname, ptrClass->GetName());
+      Warning("Branch", "The actual TClass corresponding to the object provided for the definition of the branch \"%s\" is missing.\n\tThe object will be truncated down to its %s part",
+              branchname, ptrClass->GetName());
       actualClass = ptrClass;
    } else if ((ptrClass != actualClass) && !actualClass->InheritsFrom(ptrClass)) {
       Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", actualClass->GetName(), branchname, ptrClass->GetName());
@@ -1573,16 +1577,16 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //         to the output buffer. Example:
    //             X         ; variable X, type Float_t
    //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
+   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //            if nelem is a leaf name, it is used as the variable size of the array, 
    //            otherwise return 0.
-   //         If leaf name has the form var[nelem], where nelem is a digit, then
+   //         If leaf name has the form var[nelem], where nelem is a non-negative integer, then
    //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi-dimension array (e.g. var[nelem][nelem2])
-   //            where nelem and nelem2 are digits) then
+   //         If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2])
+   //            where nelem and nelem2 are non-negative integer) then
    //            it is used as a 2 dimensional array of fixed size.
    //         Any of other form is not supported.
    //
@@ -1593,7 +1597,7 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //
    //       * bufsize is the buffer size in bytes for this branch
    //         The default value is 32000 bytes and should be ok for most cases.
-   //         You can specify a larger value (eg 256000) if your Tree is not split
+   //         You can specify a larger value (e.g. 256000) if your Tree is not split
    //         and each entry is large (Megabytes)
    //         A small value for bufsize is optimum if you intend to access
    //         the entries in the Tree randomly and your Tree is in split mode.
@@ -1678,7 +1682,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    //
    //    bufsize is the buffer size in bytes for this branch
    //    The default value is 32000 bytes and should be ok for most cases.
-   //    You can specify a larger value (eg 256000) if your Tree is not split
+   //    You can specify a larger value (e.g. 256000) if your Tree is not split
    //    and each entry is large (Megabytes)
    //    A small value for bufsize is optimum if you intend to access
    //    the entries in the Tree randomly and your Tree is in split mode.
@@ -1828,7 +1832,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             if (strlen(index) != 0) {
                // We are a pointer to a varying length array of basic types.
                //check that index is a valid data member name
-               //if member is part of an object (eg fA and index=fN)
+               //if member is part of an object (e.g. fA and index=fN)
                //index must be changed from fN to fA.fN
                TString aindex (rd->GetName());
                Ssiz_t rdot = aindex.Last('.');
@@ -1977,7 +1981,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Int_
    //
    //    bufsize is the buffer size in bytes for this branch
    //    The default value is 32000 bytes and should be ok for most cases.
-   //    You can specify a larger value (eg 256000) if your Tree is not split
+   //    You can specify a larger value (e.g. 256000) if your Tree is not split
    //    and each entry is large (Megabytes)
    //    A small value for bufsize is optimum if you intend to access
    //    the entries in the Tree randomly and your Tree is in split mode.
@@ -2162,7 +2166,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
 
    // Note: The branch constructor which takes a folder as input
    //       creates top-level branch names with dots in them to
-   //       indicate the folder heirarchy.
+   //       indicate the folder hierarchy.
    char* dot = (char*) strchr(name, '.');
    Int_t nch = strlen(name);
    Bool_t dotlast = kFALSE;
@@ -2230,7 +2234,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
                //        constructor which takes a folder as input.
                //        The internal dots in the name are in place of
                //        of the original slashes and represent the
-               //        folder heirarchy.
+               //        folder hierarchy.
                if (isBase) {
                   // FIXME: This is very strange, this is the only case where
                   //        we create a branch for a base class that does
@@ -2594,7 +2598,8 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    } else if ((expectedType != kOther_t) && (datatype != kOther_t) && (expectedType != kNoType_t) && (datatype != kNoType_t) && (expectedType != datatype)) {
       if (datatype != kChar_t) {
          // For backward compatibility we assume that (char*) was just a cast and/or a generic address
-         Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" (%d) by the branch: %s", TDataType::GetTypeName(datatype), datatype, TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" (%d) by the branch: %s", 
+               TDataType::GetTypeName(datatype), datatype, TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
          return kMismatch;
       }
    }
@@ -4621,14 +4626,14 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //     getall = 1 : get all branches
    //
    //  The function returns the number of bytes read from the input buffer.
-   //  If entry does not exist  the function returns 0.
-   //  If an I/O error occurs,  the function returns -1.
+   //  If entry does not exist the function returns 0.
+   //  If an I/O error occurs, the function returns -1.
    //
-   //  If the Tree has friends, also read the friends entry
+   //  If the Tree has friends, also read the friends entry.
    //
    //  To activate/deactivate one or more branches, use TBranch::SetBranchStatus
    //  For example, if you have a Tree with several hundred branches, and you
-   //  are interested only by branches named "u" and "v", do
+   //  are interested only by branches named "a" and "b", do
    //     mytree.SetBranchStatus("*",0); //disable all branches
    //     mytree.SetBranchStatus("a",1);
    //     mytree.SetBranchStatus("b",1);
@@ -4664,21 +4669,21 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //       T.GetEntry(i);
    //       // the object event has been filled at this point
    //    }
-   //   The default (recommended). At the first entry an object of the
-   //   class Event will be created and pointed by event.
-   //   At the following entries, event will be overwritten by the new data.
-   //   All internal members that are TObject* are automatically deleted.
-   //   It is important that these members be in a valid state when GetEntry
-   //   is called. Pointers must be correctly initialized.
-   //   However these internal members will not be deleted if the characters "->"
-   //   are specified as the first characters in the comment field of the data
-   //   member declaration.
+   //   The default (recommended). At the first entry an object of the class
+   //   Event will be created and pointed by event. At the following entries,
+   //   event will be overwritten by the new data. All internal members that are
+   //   TObject* are automatically deleted. It is important that these members
+   //   be in a valid state when GetEntry is called. Pointers must be correctly
+   //   initialized. However these internal members will not be deleted if the
+   //   characters "->" are specified as the first characters in the comment
+   //   field of the data member declaration.
+   //
    //   If "->" is specified, the pointer member is read via pointer->Streamer(buf).
-   //   In this case, it is assumed that the pointer is never null (case
-   //   of pointer TClonesArray *fTracks in the Event example).
-   //   If "->" is not specified, the pointer member is read via buf >> pointer.
-   //   In this case the pointer may be null. Note that the option with "->"
-   //   is faster to read or write and it also consumes less space in the file.
+   //   In this case, it is assumed that the pointer is never null (case of
+   //   pointer TClonesArray *fTracks in the Event example). If "->" is not
+   //   specified, the pointer member is read via buf >> pointer. In this case
+   //   the pointer may be null. Note that the option with "->" is faster to
+   //   read or write and it also consumes less space in the file.
    //
    //   OPTION 2
    //   --------
@@ -4704,9 +4709,9 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //    }
    //
    //  It is strongly recommended to use the default option 1. It has the
-   //  additional advantage that functions like TTree::Draw (internally
-   //  calling TTree::GetEntry) will be functional even when the classes in the
-   //  file are not available.
+   //  additional advantage that functions like TTree::Draw (internally calling
+   //  TTree::GetEntry) will be functional even when the classes in the file are
+   //  not available.
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
@@ -5819,7 +5824,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          }
          newMemsize += newBsize;
          // For this number to be somewhat accurate when newBsize is 'low'
-         // we do not include any space for meta data in the requested size (newBsize) even-thouh SetBasketSize will 
+         // we do not include any space for meta data in the requested size (newBsize) even-though SetBasketSize will 
          // not let it be lower than 100+TBranch::fEntryOffsetLen.
          newBaskets += 1+Int_t(totBytes/newBsize); 
          if (pass == 0) continue;
@@ -5836,7 +5841,12 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
       Double_t bmin_new = bmin*memFactor;
       Double_t bmax_new = bmax*memFactor;
       static const UInt_t hardmax = 1*1024*1024*1024; // Really, really never give more than 1Gb to a single buffer.
-      static const UInt_t hardmin = 8;                // Really, really never go lower than 8 bytes (we use this number so that the calculation of the number of basket is consistent but in fact SetBasketSize will not let the size go below 100+TBranch::fEntryOffsetLen)
+
+      // Really, really never go lower than 8 bytes (we use this number
+      // so that the calculation of the number of basket is consistent
+      // but in fact SetBasketSize will not let the size go below
+      // 100+TBranch::fEntryOffsetLen)
+      static const UInt_t hardmin = 8;
       bmin = (bmin_new > hardmax) ? hardmax : ( bmin_new < hardmin ? hardmin : (UInt_t)bmin_new );
       bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;         
    }

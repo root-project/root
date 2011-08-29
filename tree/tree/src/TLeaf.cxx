@@ -87,7 +87,7 @@ TLeaf::TLeaf(const TLeaf& lf) :
 //______________________________________________________________________________
 TLeaf& TLeaf::operator=(const TLeaf& lf) 
 {
-   //assignement operator
+   //assignment operator
    if(this!=&lf) {
       TNamed::operator=(lf);
       fNdata=lf.fNdata;
@@ -154,14 +154,14 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    //  If leaf name has the form var[nelem], where nelem is alphanumeric, then
    //     if nelem is a leaf name, return countval = 1 and the pointer to 
    //          the leaf named nelem, otherwise return 0.
-   //  If leaf name has the form var[nelem], where nelem is a digit, then
+   //  If leaf name has the form var[nelem], where nelem is a non-negative integer, then
    //     return countval = nelem and a null pointer.
-   //  If leaf name has the form of a multi dimenantion array (eg var[nelem][nelem2] 
-   //     where nelem and nelem2 are digits) then
-   //     return countval = product of all dimension size and a null pointer.
-   //  If leaf name has the form var[... (and do not match the previous 2
+   //  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2] 
+   //     where nelem and nelem2 are non-negative integers) then
+   //     return countval = product of all dimension sizes and a null pointer.
+   //  If leaf name has the form var[... (and does not match the previous 2
    //     cases) return countval = -1 and null pointer;
-   //  Otherwise return countval=1 and a null pointer.
+   //  Otherwise return countval = 1 and a null pointer.
    //
 
    countval = 1;
@@ -185,7 +185,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    *bright = 0;
    nch = strlen(countname);
 
-   // Now search a branch name with a leave name = countname
+   // Now search a branch name with a leaf name = countname
    // We search for the leaf in the ListOfLeaves from the TTree. We can in principle
    // access the TTree by calling fBranch()->GetTree(), but fBranch is not set if this
    // method is called from the TLeaf constructor. In that case, use global pointer
