@@ -281,7 +281,9 @@ locname=`basename $ROOTTESTLOC`
 svn co $SVN_HOST/svn/roottest/$SVN_BRANCH $locname > $locname/gmake.log 2>&1
 
 cd $ROOTTESTLOC
-$MAKE clean >> gmake.log 2>&1 
+mv gmake.log gmake.keep
+$MAKE clean >> gmake.keep 2>&1 
+mv gmake.keep gmake.log 
 $MAKE -k >> gmake.log 2>&1 
 result=$?
 upload_log gmake.log roottest_
