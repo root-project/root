@@ -354,6 +354,15 @@ check_libcompat() {
     chklibcompat=$1
     logmsg "Checking if $chklibcompat contains compatible code"
 
+    chkfilecompat=
+    if [ "x`basename $chklibcompat .a`" != "x`basename $chklibcompat`" ]; then
+        # we have an archive .a file
+        chkfilecompat=`ar t $chklibcompat | awk '{if (NR == 2) print $1}'`
+        logmsg " ar x $chklibcompat $chkfilecompat"
+        ar x $chklibcompat $chkfilecompat
+        chklibcompat=$chkfilecompat
+    fi
+
     case $arch in
     macosx)
         logmsg " file -L $chklibcompat | grep 'i386'"
@@ -368,6 +377,11 @@ check_libcompat() {
         fi
         ;;
     esac
+
+    if test "x$chkfilecompat" != "x" && test -f $chkfilecompat ; then
+        logmsg " rm -f $chkfilecompat"
+        rm -f $chkfilecompat
+    fi
 
     logmsg " result: $ret"
     if test $ret -eq 1 ; then
