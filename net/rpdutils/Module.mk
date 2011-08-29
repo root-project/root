@@ -117,3 +117,6 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)
+ifeq ($(MACOSX_MINOR),7)
+$(call stripsrc,$(RPDUTILDIRS)/rpdutils.o): CXXFLAGS += -Wno-deprecated-declarations
+endif

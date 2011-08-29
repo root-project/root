@@ -141,3 +141,6 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)
 $(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR) $(AFSEXTRACFLAGS)
+ifeq ($(MACOSX_MINOR),7)
+$(call stripsrc,$(AUTHDIRS)/TAuthenticate.o): CXXFLAGS += -Wno-deprecated-declarations
+endif
