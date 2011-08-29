@@ -62,6 +62,7 @@ fi
 ulimit -t 3600
 
 MAKE=gmake
+#MAKE=echo
 ROOT_MAKEFLAGS=
 ROOTTEST_MAKEFLAGS=
 CONFIGURE_OPTION="--enable-roofit --enable-tmva "
@@ -70,7 +71,8 @@ ROOTMARKS=n/a
 FITROOTMARKS=n/a
 
 SHOW_TOP=yes
-UPLOAD_LOCATION=flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/
+UPLOAD_LOCATION=flxi06.fnal.gov:/afs/.fnal.gov/files/expwww/root/html/roottest/
+UPLOAD_SYNC="ssh -x flxi06.fnal.gov bin/flush_webarea"
 SVN_HOST=http://root.cern.ch
 SVN_BRANCH=trunk
 unset ROOTSYS
@@ -104,6 +106,12 @@ export PATH
 #echo The path is $PATH
 #echo The library path is $LD_LIBRARY_PATH
 
+upload_sync() {
+    if [ "x$UPLOAD_SYNC" != "x" ] ; then
+       eval $UPLOAD_SYNC
+    fi
+}
+
 error_handling() {
     cd $ROOTSYS
     write_summary
@@ -120,18 +128,26 @@ Error: $2
 See full log file at http://www-root.fnal.gov/roottest/summary.shtml
 EOF
     fi
-    ssh -x flxi02 bin/flush_webarea
+    upload_sync
     exit $1
 }
 
 upload_log() {    
     target_name=$2$1.$host$configname
-    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
+    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
+    result=$?
+    if test $result != 0; then 
+        cat scp.log 
+    fi
 }
 
 upload_datafile() {
     target_name=$host$configname.`basename $1`
     scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
+    result=$?
+    if test $result != 0; then 
+        cat scp.log 
+    fi
 }
 
 one_line() {
@@ -289,4 +305,4 @@ cd $ROOTSYS
 write_summary
 upload_log summary.log
 
-ssh -x flxi02 bin/flush_webarea
+upload_sync

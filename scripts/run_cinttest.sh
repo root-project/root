@@ -26,6 +26,8 @@ fi
 MAKE=gmake
 REALTIME=n/a
 USERTIME=n/a
+UPLOAD_LOCATION=flxi06.fnal.gov:/afs/.fnal.gov/files/expwww/root/html/roottest/
+UPLOAD_SYNC="ssh -x flxi06.fnal.gov bin/flush_webarea"
 
 host=`hostname -s`
 dir=`dirname $0`
@@ -35,6 +37,12 @@ dir=`dirname $0`
 . $dir/run_cinttest.$host.config
 
 ulimit -t 3600
+
+upload_sync() {
+    if [ "x$UPLOAD_SYNC" != "x" ] ; then
+       eval $UPLOAD_SYNC
+    fi
+}
 
 error_handling() {
     cd $CINTSYSDIR
@@ -52,13 +60,16 @@ Error: $2
 See full log file at http://www-root.fnal.gov/roottest/cint_summary.shtml
 EOF
     fi
-    ssh -x flxi02 bin/flush_webarea
+    upload_sync
     exit $1
 }
 
 upload_log() {    
     target_name=$2$1.$host
-    scp $1 flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/cint-today/$target_name > scp.log 2>&1 
+    scp $1 $UPLOAD_LOCATION/cint-today/$target_name > scp.log 2>&1 
+    if test $result != 0; then 
+        cat scp.log 
+    fi
 }
 
 na="N/A"
@@ -228,4 +239,4 @@ TOPDIR=`dirname $CINTSYSDIR`
 runbuild $TOPDIR ""
 # runbuild $TOPDIR new
 
-ssh -x flxi02 bin/flush_webarea
+upload_sync
