@@ -60,8 +60,7 @@ TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
    fFileInfoVrs = 1;
 
    // Transfer verbosity requirements
-   PDB(TProofDebug::kMonitoring,1)
-      if (fWriter) fWriter->Verbose(kTRUE);
+   PDB(kMonitoring,1) if (fWriter) fWriter->Verbose(kTRUE);
 }
 
 //________________________________________________________________________
@@ -154,8 +153,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
    }
    TList *xrecs = recs;
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendSummary", "preparing (qid: '%s')", id);
+   PDB(kMonitoring,1) Info("SendSummary", "preparing (qid: '%s')", id);
 
    // Do not send duplicated information
    TObject *qtag = recs->FindObject("querytag");
@@ -177,7 +175,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
       }
    }
 
-   PDB(TProofDebug::kMonitoring,1)
+   PDB(kMonitoring,1)
       Info("SendSummary", "sending (%d entries)", xrecs->GetSize());
 
    // Now we are ready to send
@@ -258,7 +256,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
       return -1;
    }
 
-   PDB(TProofDebug::kMonitoring,1)
+   PDB(kMonitoring,1)
       Info("SendDataSetInfo", "preparing (qid: '%s')", qid);
 
    TList plets;
@@ -290,8 +288,9 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
             }
          }
       } else if ((dsete = dynamic_cast<TDSet *>(o))) {
-         PDB(TProofDebug::kMonitoring,1)
-            Info("SendDataSetInfo", "dset '%s' (%d files)", o->GetName(), dsete->GetListOfElements()->GetSize());
+         PDB(kMonitoring,1)
+            Info("SendDataSetInfo", "dset '%s' (%d files)",
+                                    o->GetName(), dsete->GetListOfElements()->GetSize());
          TIter nxee(dsete->GetListOfElements());
          while ((ee = (TDSetElement *) nxee())) {
             dse = ee->GetDataSet();
@@ -349,7 +348,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
    TParameter<Int_t> *pi_missfiles = new TParameter<Int_t>("missfiles", -1);
    values.Add(pi_missfiles);
 
-   PDB(TProofDebug::kMonitoring,1)
+   PDB(kMonitoring,1)
       Info("SendDataSetInfo", "sending (%d entries)", plets.GetSize());
 
    Bool_t rc = kTRUE;
@@ -420,8 +419,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
       return -1;
    }
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendFileInfo", "preparing (qid: '%s')", qid);
+   PDB(kMonitoring,1) Info("SendFileInfo", "preparing (qid: '%s')", qid);
 
    THashList hmiss;
    if (missing) {
@@ -449,8 +447,9 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
    TParameter<Int_t> *pi_status = new TParameter<Int_t>("status", -1);
    values.Add(pi_status);
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendFileInfo", "sending (%d entries)", dset->GetListOfElements()->GetSize());
+   PDB(kMonitoring,1)
+      Info("SendFileInfo", "sending (%d entries)",
+                           dset->GetListOfElements()->GetSize());
 
    // Loop over files
    Bool_t rc = kTRUE;
@@ -473,8 +472,9 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
          fneh.Form("file_%x", TString(TUrl(fne.Data()).GetFile()).Hash());
          if (!(rc = fWriter->SendParameters(&values, fneh.Data()))) break;
       } else if ((dsete = dynamic_cast<TDSet *>(o))) {
-         PDB(TProofDebug::kMonitoring,1)
-            Info("SendFileInfo", "dset '%s' (%d files)", o->GetName(), dsete->GetListOfElements()->GetSize());
+         PDB(kMonitoring,1)
+            Info("SendFileInfo", "dset '%s' (%d files)",
+                                 o->GetName(), dsete->GetListOfElements()->GetSize());
          TIter nxee(dsete->GetListOfElements());
          while ((ee = (TDSetElement *) nxee())) {
             fne = ee->GetName();
