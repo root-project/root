@@ -342,6 +342,7 @@ check_libcompat() {
     # will be overwritten at next invocation of this function.
 
     is_libcompat=0
+    is_libnotcompat=0
     ret=0
 
     # Assert that we got enough arguments
@@ -387,6 +388,9 @@ check_libcompat() {
     if test $ret -eq 1 ; then
         is_libcompat=1
         logmsg " is a compatible library"
+    else
+        is_libnotcompat=1
+        logmsg " is a not-compatible library"
     fi
 }
 
@@ -5519,6 +5523,14 @@ if test ! "x$enable_mathmore" = "xno"; then
             $GSL ${GSL:+$GSL/lib} ${GSL:+$GSL/.libs} \
             ${finkdir:+$finkdir/lib} \
             /usr/local/lib /usr/lib /opt/gsl/lib
+
+        if test "x$checklibcompat" = "xyes" ; then
+            if test $is_libnotcompat -eq 1 ; then
+                # on OSX if libgsl exists but is not compatible
+                gslskip="skip"
+                enable_mathmore="no"
+            fi
+        fi
 
         if test ! "x$found_lib" = "x"; then
             gsllibs=$found_lib
