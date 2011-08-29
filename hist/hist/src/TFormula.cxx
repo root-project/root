@@ -37,8 +37,8 @@ ClassImp(TFormula)
 //*-*-*-*-*-*-*-*-*-*-*The  F O R M U L A  class*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
 //*-*
-//*-*   This class has been implemented by begin_html <a href="http://pcbrun.cern.ch/nicolas/index.html">Nicolas Brun</a> end_html(age 18).
-//*-*   ========================================================
+//*-*   This class has been implemented by Nicolas Brun (age 18).
+//*-*   =========================================================
 //Begin_Html
 /*
 <img src="gif/tformula_classtree.gif">
