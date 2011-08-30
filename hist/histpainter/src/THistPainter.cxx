@@ -5157,23 +5157,26 @@ void THistPainter::PaintErrors(Option_t *)
       }
 
       //          draw the error bars
-
       if (optionE && drawmarker) {
-         if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
-         if (yi1 + s2y < yi4) gPad->PaintLine(xi3,yi1 + s2y,xi4,yi4);
+         if ((yi3 < yi1 - s2y) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1 - s2y,ymax));
+         if ((yi1 + s2y < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1 + s2y, ymin),xi4,yi4);
          // don't duplicate the horizontal line
          if (Hoption.Hist != 2){
-            if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
-            if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
+            if (yi1<ymax && yi1>ymin) {
+              if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
+              if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
+            }
          }
       }
       if (optionE && !drawmarker && ey1 != 0) {
-         if (yi3 < yi4) gPad->PaintLine(xi3,yi3,xi4,yi4);
-         if (yi1 < yi4) gPad->PaintLine(xi3,yi1,xi4,yi4);
+         if ((yi3 < yi1) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1,ymax));
+         if ((yi1 < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1,ymin),xi4,yi4);
          // don't duplicate the horizontal line
          if (Hoption.Hist != 2){
-            if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
-            if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
+            if (yi1<ymax && yi1>ymin) {
+               if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
+               if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
+            }
          }
       }
 
