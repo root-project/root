@@ -438,7 +438,11 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    }
    
    // Separate info per server
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,30,0)
    TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster(), kTRUE);
+#else
+   TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster());
+#endif
    if (!mpref) {
       SafeDelete(fcref);
       Error("GetDataSet", "problems classifying info on per-server base");

@@ -130,7 +130,11 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
    }
 
    // Get information per server
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,30,0)
    TMap *fcmap = fc->GetFilesPerServer(fProof->GetMaster(), kTRUE);
+#else
+   TMap *fcmap = fc->GetFilesPerServer(fProof->GetMaster());
+#endif
    if (!fcmap) {
       Error("Handle", "could not create map with per-server info for dataset '%s'", dset);
       return -1;
