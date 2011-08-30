@@ -628,6 +628,7 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
       
+      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
       // Memory usage on workers
       TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
       Long64_t vmxw = (pst) ? (Long64_t) pst->GetVirtMemMax() : -1;
@@ -641,7 +642,6 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TNamed("dataset", fDataSet.Data()));
       values.Add(new TParameter<int>("numfiles", fDataSetSize));
       // Missing files
-      TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
       Int_t nmiss = (mfls && mfls->GetSize() > 0) ? mfls->GetSize() : 0;
       values.Add(new TParameter<int>("missfiles", nmiss));
       // Query status
@@ -651,7 +651,6 @@ void TPerfStats::WriteQueryLog()
       TString rver = TString::Format("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
       values.Add(new TNamed("rootver", rver.Data()));
 
-      TList *missingfiles = (TList *) fOutput->FindObject("MissingFiles");
       for (Int_t i = 0; i < fMonSenders.GetEntries(); i++) {
          TProofMonSender *m = (TProofMonSender *) fMonSenders[i];
          if (m) {
@@ -659,10 +658,10 @@ void TPerfStats::WriteQueryLog()
             if (m->SendSummary(&values, identifier) != 0)
                Error("WriteQueryLog", "sending of summary info failed (%s)", m->GetName());
             // Send dataset information
-            if (m->SendDataSetInfo(fDSet, missingfiles, fTzero.AsString("s"), identifier) != 0)
+            if (m->SendDataSetInfo(fDSet, mfls, fTzero.AsString("s"), identifier) != 0)
                Error("WriteQueryLog", "sending of dataset info failed (%s)", m->GetName());
             // Send file information
-            if (m->SendFileInfo(fDSet, missingfiles, fTzero.AsString("s"), identifier) != 0)
+            if (m->SendFileInfo(fDSet, mfls, fTzero.AsString("s"), identifier) != 0)
                Error("WriteQueryLog", "sending of files info failed (%s)", m->GetName());
          } else {
             Warning("WriteQueryLog", "undefined entry found in monitors array for id: %d", i);
