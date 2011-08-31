@@ -188,11 +188,10 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    Int_t nworkersnode = sworkers.Atoi();
    Int_t ret = nworkersnode;
    TSlaveInfo *si = 0;
-   TIter nxtnode(fNodes);
    TList *node = 0;
-   TIter nxk(fNodes);
    TObject *key = 0;
 
+   TIter nxk(fNodes);
    while ((key = nxk()) != 0) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
@@ -239,8 +238,9 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    // Rebuild
    Build();
 
-   nxk.Reset();
-   while ((key = nxk()) != 0) {
+   // Build() destroyes fNodes so we need to re-create the iterator, resetting is not enough ...
+   TIter nxkn(fNodes);
+   while ((key = nxkn()) != 0) {
       if ((node = dynamic_cast<TList *>(fNodes->GetValue(key)))) {
          TIter nxtworker(node);
          Int_t nactiveworkers = 0;
