@@ -286,6 +286,9 @@ int colleration(double *x,double *y,int ndat)
   tmp=y[0];
   
   for (i=0;i<ndat;i++) y[i] = y[i]/tmp; 
+
+  free(im);
+
   return(0);
 }
 
