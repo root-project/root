@@ -1677,7 +1677,7 @@ namespace {
 //- TMinuit behavior -----------------------------------------------------------
    class TMinuitSetFCN : public TPretendInterpreted {
    public:
-      TMinuitSetFCN() : TPretendInterpreted( 1 ) {}
+      TMinuitSetFCN( int nArgs = 1 ) : TPretendInterpreted( nArgs ) {}
 
    public:
       virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(PyObject* callable)" ); }
@@ -1731,6 +1731,34 @@ namespace {
          Py_DECREF( newArgs );
          Py_DECREF( method );
          return result;
+      }
+   };
+
+   class TMinuitFitterSetFCN : public TMinuitSetFCN {
+   public:
+      TMinuitFitterSetFCN() : TMinuitSetFCN( 1 ) {}
+
+   public:
+      virtual PyObject* GetPrototype()
+      {
+         return PyROOT_PyUnicode_FromString(
+            "TMinuitFitter::SetFCN(PyObject* callable)" );
+      }
+
+      virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
+
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      {
+      // expected signature: ( pyfunc )
+         int argc = PyTuple_GET_SIZE( args );
+         if ( argc != 1 ) {
+            PyErr_Format( PyExc_TypeError,
+               "TMinuitFitter::SetFCN(PyObject* callable, ...) =>\n"
+               "    takes exactly 1 argument (%d given)", argc );
+            return 0;              // reported as an overload failure
+         }
+
+         return TMinuitSetFCN::operator()( self, args, 0, 0 );
       }
    };
 
@@ -2141,6 +2169,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
+
+   if ( name == "TFitter" )   // allow call with python callable (this is not correct)
+      return Utility::AddToClass( pyclass, "SetFCN", new TMinuitFitterSetFCN );
 
    if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
