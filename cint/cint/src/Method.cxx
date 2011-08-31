@@ -107,7 +107,7 @@ void Cint::G__MethodInfo::Init(G__ClassInfo *belongingclassin
 
   // reach to desired page
   for(i=0;i<funcpage&&ifunc2;i++) ifunc2=ifunc2->next;
-  G__ASSERT(ifunc2->page == funcpage);
+  G__ASSERT(!ifunc || ifunc2->page == funcpage);
 
   if(ifunc2) {
     handle = (long)G__get_ifunc_ref(ifunc2);
