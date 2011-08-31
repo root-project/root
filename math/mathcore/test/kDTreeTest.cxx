@@ -69,6 +69,7 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
    delete kdtree;
    Float_t end = Mem();
    printf("Memory leak %f KB\n", end-before);
+   delete[] data0;
    return;	
 }
 
@@ -85,7 +86,7 @@ void TestMembers()
    TKDTreeIF *kdtree = 0x0;
    Int_t npoints = 33; 
    Int_t bsize = 10;
-   Float_t *data0 =  new Float_t[200]; //not to reallocate each time
+   Float_t *data0 = new Float_t[200]; //not to reallocate each time
    Float_t *data1 = new Float_t[200];
    for (Int_t i=0;i<npoints;i++) {
       data0[i]= gRandom->Rndm();
@@ -104,7 +105,7 @@ void TestMembers()
       data0[i]= gRandom->Rndm();
       data1[i]= gRandom->Rndm();
    }
-      kdtree = new TKDTreeIF(npoints, 2, bsize);
+   kdtree = new TKDTreeIF(npoints, 2, bsize);
    kdtree->SetData(0, data0);
    kdtree->SetData(1, data1);
    kdtree->Build();
@@ -162,8 +163,8 @@ void TestMembers()
 
 
 
-   delete data0;
-   delete data1;
+   delete[] data0;
+   delete[] data1;
 }
 
 
@@ -206,6 +207,7 @@ void TestConstr(const Int_t npoints, const Int_t bsize)
    delete kdtree2;
    Float_t end = Mem();
    printf("Memory leak %f KB\n", end-before);
+   delete[] data0;
    return;
 }
 
@@ -248,6 +250,7 @@ void TestSpeed(Int_t npower2, Int_t bsize)
     delete kdtree;
   }
   g->Draw("apl");
+  delete[] data0;
   return;
 }
 
