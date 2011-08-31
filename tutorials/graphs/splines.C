@@ -54,9 +54,9 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
   for(Int_t nnp=2; nnp<=np; ++nnp) {
 
     // Calculate the knots
-    if(xx) delete  xx;
+    if(xx) delete[] xx;
     xx = new Double_t[nnp];
-    if(yy) delete yy;
+    if(yy) delete[] yy;
     yy = new Double_t[nnp];
     for (Int_t i=0; i<nnp; ++i) {
       xx[i]=a+(b-a)*TMath::Power(i/Double_t (nnp-1),power);

@@ -143,7 +143,7 @@ void getGaussRnd( TArrayD& v, const TMatrixD& sqrtMat, TRandom& R )
       for (Int_t j=0; j<=i; j++) v[i] += sqrtMat(i,j) * tmpVec[j];
    }
 
-   delete tmpVec;
+   delete[] tmpVec;
 }
 
 // create the data

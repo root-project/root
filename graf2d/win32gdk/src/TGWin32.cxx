@@ -2499,7 +2499,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          stmp[pt] = '\0';
          TTF::GetTextExtent(ddx, h, stmp);
          dx = ddx;
-         delete stmp;
+         delete[] stmp;
       }
 
       if (pt < len_text) {
