@@ -880,7 +880,6 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
    Int_t offset;
    register UInt_t i;
    TMatrixD *mat=0;
-   double *layer_pixels=0;
    
    width  = Int_t(fSizes->GetAt(0));
    height = Int_t(fSizes->GetAt(1));
@@ -888,6 +887,8 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
    pixels_per_layer = UInt_t(width) * UInt_t(height);
    offset = layer * pixels_per_layer;
    
+   double *layer_pixels = new double[pixels_per_layer];
+
    if ((opt[0] == 'S') || (opt[0] == 's')) {
       //Stretch
       // Get the maximum and minimum pixel values in the layer to auto-stretch pixels
@@ -923,7 +924,6 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
       
    } else {
       //No stretching
-      layer_pixels = new double[pixels_per_layer];
       mat = new TMatrixD(height, width);
       
       for (i = 0; i < pixels_per_layer; i++) {
