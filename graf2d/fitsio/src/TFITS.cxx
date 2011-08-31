@@ -905,6 +905,8 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
          }
       }
       
+      layer_pixels = new double[pixels_per_layer];
+      
       if (maxval == minval) {
          //plain image
          for (i = 0; i < pixels_per_layer; i++) {
@@ -913,7 +915,6 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
       } else {
          factor = 1.0 / (maxval-minval);
          mat = new TMatrixD(height, width);
-         layer_pixels = new double[pixels_per_layer];
       
          for (i = 0; i < pixels_per_layer; i++) {
             layer_pixels[i] = factor * (fPixels->GetAt(offset + i) - minval);
