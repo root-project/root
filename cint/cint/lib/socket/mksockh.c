@@ -114,6 +114,7 @@ int main() {
   fprintf(fp,"\n");
   fprintf(fp,"#endif\n");
 
+  fclose(fp);
 
   return(0);
 }
