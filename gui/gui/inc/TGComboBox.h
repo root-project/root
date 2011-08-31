@@ -41,10 +41,15 @@ class TGScrollBarElement;
 class TGTextEntry;
 
 class TGComboBoxPopup : public TGCompositeFrame {
+
 protected:
    TGListBox *fListBox;
    TGLBEntry *fSelected;
 
+private:
+   TGComboBoxPopup(const TGComboBoxPopup&);            // Not implemented
+   TGComboBoxPopup& operator=(const TGComboBoxPopup&); // Not implemented
+   
 public:
    TGComboBoxPopup(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kVerticalFrame,
@@ -64,7 +69,7 @@ public:
 class TGComboBox : public TGCompositeFrame, public TGWidget {
 
 private:
-   TGComboBox(const TGComboBox&);       // Not implemented
+   TGComboBox(const TGComboBox&);            // Not implemented
    TGComboBox& operator=(const TGComboBox&); // Not implemented
 
 protected:
