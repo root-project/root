@@ -456,7 +456,7 @@ All histogram classes are derived from the base class TH1
 <h4>Setting histogram graphics attributes</h4>
 
      The histogram classes inherit from the attribute classes:
-       TAttLine, TAttFill, TAttMarker and TAttText.
+       TAttLine, TAttFill, and TAttMarker.
      See the member functions of these classes for the list of options.
 
 <h4>Giving titles to the X, Y and Z axis</h4>

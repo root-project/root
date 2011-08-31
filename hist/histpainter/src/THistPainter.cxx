@@ -574,7 +574,7 @@ All the histograms read after this call will use the current style.
 
 
 The histogram classes inherit from the attribute classes:
-<tt>TAttLine</tt>, <tt>TAttFill</tt>, <tt>TAttMarker</tt> and <tt>TAttText</tt>.
+<tt>TAttLine</tt>, <tt>TAttFill</tt> and <tt>TAttMarker</tt>.
 See the description of these classes for the list of options.
 
 
