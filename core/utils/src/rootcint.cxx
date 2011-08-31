@@ -524,7 +524,7 @@ const char *GetExePath()
    while ((p = strchr(p, '\\')))
       *(p++) = '/';
    exepath = buf;
-   delete buf;
+   delete[] buf;
 #endif
    }
    return exepath.c_str();
@@ -4834,11 +4834,17 @@ int main(int argc, char **argv)
          il = i;
          if (i != argc-1) {
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
+            if (use_preprocessor) {
+               fclose(bundle);
+            }
             return 1;
          }
       }
       if (!strcmp(argv[i], "-c")) {
          Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
+         if (use_preprocessor) {
+            fclose(bundle);
+         }
          return 1;
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
