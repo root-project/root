@@ -888,10 +888,10 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       strncpy(workname, name, size);
       workname[size] = 0;
       TDirectory *tmpdir = mkdir(workname,title);
+      delete[] workname;
       if (!tmpdir) return 0;
       if (!newdir) newdir = tmpdir;
       tmpdir->mkdir(slash+1);
-      delete[] workname;
       return newdir;
    }
 
