@@ -2170,7 +2170,7 @@ struct G__var_array* G__blockscope::allocatevariable(G__TypeReader& type
   }
 
   // traverse scope variables and check if there is name duplication
-  while(var) {
+  while(true) {
     for(ig15=0;ig15<var->allvar;ig15++) {
       if(name==var->varnamebuf[ig15]) {
         // error duplicated variable name in scope
