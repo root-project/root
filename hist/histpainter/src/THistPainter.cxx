@@ -2900,10 +2900,19 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (fH->GetDimension() == 2) {
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
-         Int_t bin = th2->FindBin(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
-         if (bin>0) curdist = 1;
-         else       curdist = big;
-         goto FUNCTIONS;
+         Double_t xmin, ymin, xmax, ymax;
+         gPad->GetRangeAxis(xmin, ymin, xmax, ymax);
+         Double_t pxu = gPad->AbsPixeltoX(px);
+         Double_t pyu = gPad->AbsPixeltoY(py);
+         if ((pxu>xmax) || (pxu < xmin) || (pyu>ymax) || (pyu < ymin)) {
+            curdist = big;
+            goto FUNCTIONS;
+         } else {
+            Int_t bin = th2->FindBin(pxu, pyu);
+            if (bin>0) curdist = 1;
+            else       curdist = big;
+            goto FUNCTIONS;
+         }
       }
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
       if ( px > puxmin + delta2
