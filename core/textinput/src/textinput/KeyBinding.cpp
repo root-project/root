@@ -15,7 +15,7 @@
 #include "textinput/KeyBinding.h"
 
 namespace textinput {
-  KeyBinding::KeyBinding(): fEscPending(false), fAllowEsc(true) {}
+  KeyBinding::KeyBinding(): fEscPending(false), fEscCmdEnabled(false) {}
   KeyBinding::~KeyBinding() {}
 
   Editor::Command KeyBinding::ToCommand(InputData In) {
@@ -141,7 +141,8 @@ namespace textinput {
       case InputData::kEITab: return C(Editor::kCmdComplete);
       case InputData::kEIEnter: return C(Editor::kCmdEnter);
       case InputData::kEIEsc:
-        if (fAllowEsc) {
+        if (!fEscCmdEnabled) {
+          // ESC can be CSI intro
           if (HadEscPending) {
             return C(Editor::kCmdEsc);
           }

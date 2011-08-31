@@ -113,7 +113,7 @@ namespace textinput {
   void
   Editor::CancelSpecialInputMode(Range& DisplayR) {
     if (fMode == kInputMode) return;
-    fContext->GetKeyBinding()->SetAllowEscModifier(false);
+    fContext->GetKeyBinding()->EnableEscCmd(false);
     SetEditorPrompt(Text());
     DisplayR.ExtendPromptUpdate(Range::kUpdateEditorPrompt);
     fMode = kInputMode;
@@ -377,7 +377,7 @@ namespace textinput {
         fMode = kHistSearchMode;
         fSearch.clear();
         SetReverseHistSearchPrompt(R.fDisplay);
-        fContext->GetKeyBinding()->SetAllowEscModifier(true);
+        fContext->GetKeyBinding()->EnableEscCmd(true);
         if (UpdateHistSearch(R)) return kPRSuccess;
         return kPRError;
       case kCmdHistReplay:
