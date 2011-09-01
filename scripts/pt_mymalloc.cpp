@@ -11,7 +11,7 @@
 #include <string.h>
 #include <string>
 #include <errno.h>
-#include "TVirtualMutex.h"
+#include <pthread.h>
 
 using namespace std;
 static void *(*old_malloc_hook)(size_t, const void *);
@@ -26,7 +26,7 @@ static void writeMem(void);
 int fd;
 long arr [4];
 char* fifoname;
-TVirtualMutex* gPTMallocMutex = 0;
+pthread_mutex_t pt_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Override initializing hook from the C library. */
 void (*__malloc_initialize_hook)(void) = init_my_hooks;
@@ -35,6 +35,7 @@ static void init_my_hooks(void) {
    static char envPreload[] = "LD_PRELOAD=";
    putenv(envPreload);
 
+   pthread_mutex_init(&pt_mutex, 0);
   {
     fifoname = getenv("PT_FIFONAME");
     /*
@@ -63,7 +64,7 @@ static void init_my_hooks(void) {
 
 static void *my_malloc_hook(size_t size, const void *caller)
 {
-  R__LOCKGUARD(gPTMallocMutex);
+  pthread_mutex_lock(&pt_mutex);
 
   char *result;
 
@@ -87,6 +88,8 @@ static void *my_malloc_hook(size_t size, const void *caller)
   __free_hook = my_free_hook;
   __realloc_hook = my_realloc_hook;
 
+  pthread_mutex_unlock(&pt_mutex);
+
   return (void*) (result+sizeof(int)+sizeof(size_t));
 }
 
@@ -94,7 +97,7 @@ static void my_free_hook (void *ptr, const void *caller)
 {
   if (ptr==0) return;
 
-  R__LOCKGUARD(gPTMallocMutex);
+  pthread_mutex_lock(&pt_mutex);
 
   __free_hook = old_free_hook;
   __malloc_hook = old_malloc_hook;
@@ -109,6 +112,7 @@ static void my_free_hook (void *ptr, const void *caller)
     __free_hook = my_free_hook;
     __malloc_hook = my_malloc_hook;
     __realloc_hook = my_realloc_hook;
+    pthread_mutex_unlock(&pt_mutex);
     return;
   }
   size_t v2=* (size_t *) ((char*)ptr-sizeof(size_t));
@@ -121,13 +125,15 @@ static void my_free_hook (void *ptr, const void *caller)
   __free_hook = my_free_hook;
   __malloc_hook = my_malloc_hook;
   __realloc_hook = my_realloc_hook;
+
+  pthread_mutex_unlock(&pt_mutex);
 }
 
 static void *my_realloc_hook(void *ptr, size_t size, const void *caller)
 {
   char *result;
 
-  R__LOCKGUARD(gPTMallocMutex);
+  pthread_mutex_lock(&pt_mutex);
 
   __malloc_hook = old_malloc_hook;
   __free_hook = old_free_hook;
@@ -173,13 +179,17 @@ static void *my_realloc_hook(void *ptr, size_t size, const void *caller)
   __free_hook = my_free_hook;
   __realloc_hook = my_realloc_hook;
 		 
-  if (v1!=699692586 || size==0) return (void*) (result); 
+ pthread_mutex_unlock(&pt_mutex); 
+
+ if (v1!=699692586 || size==0) return (void*) (result); 
   else return (void*) (result+sizeof(int)+sizeof(size_t)); 
 }
 
 static void writeMem(void)
 {
   
+  pthread_mutex_destroy(&pt_mutex);
+
   if (write(fd,&arr,4*sizeof(long))==-1)
       printf("Error in writing %s\n", strerror( errno ));
 }

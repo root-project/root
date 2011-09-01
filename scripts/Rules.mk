@@ -134,7 +134,7 @@ $(ROOTTEST_LOC)scripts/pt_collector: $(ROOTTEST_LOC)scripts/pt_collector.cpp $(R
 	$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@
 
 $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
-	$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -L$(ROOTSYS)/lib -lThread -lCore -lCint -ldl -o $@ 
+	$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@ 
 
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
 	@LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
