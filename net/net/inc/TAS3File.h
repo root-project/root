@@ -56,7 +56,7 @@ protected:
    Bool_t ReadBuffer10(char *buf, Int_t len);
 
 public:
-   TAS3File(const char *url, Option_t * option = "AS3");
+   TAS3File(const char *url, Option_t *opt="");
    virtual ~TAS3File() { }
 
    TString GetAuthPrefix() const { return fAuthPrefix; }

@@ -1,3 +1,4 @@
+
 // @(#)root/io:$Id$
 // Author: Rene Brun   28/11/94
 
@@ -4000,7 +4001,9 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
       //
       // Adjust the type according to findings
       type = (localFile) ? kLocal : type;
-   } else if (!strncmp(name, "http:", 5)) {
+   } else if (!strncmp(name, "http:", 5) ||
+              !strncmp(name, "as3:", 4) ||
+              !strncmp(name, "gs:", 3)) {
       //
       // Web file
       type = kWeb;

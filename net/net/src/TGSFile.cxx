@@ -35,25 +35,29 @@
 ClassImp(TGSFile)
 
 //______________________________________________________________________________
-TGSFile::TGSFile(const char *path, Option_t * opt) : TWebFile(path, "IO")
+TGSFile::TGSFile(const char *path, Option_t *) : TWebFile(path, "IO")
 {
    // For TGSFile to properly work you need to set up
-   // environment variables GT_ACCESS_ID and GT_ACCESS_KEY
-   // The format of the path is: server/bucket/file
-   // Example: f = new TGSFile("gs://commondatastorage.googleapis.com/roots3/hsimple.root")
+   // environment variables GT_ACCESS_ID and GT_ACCESS_KEY.
+   // The format of the path is: server/bucket/file, e.g.
+   // f = new TGSFile("gs://commondatastorage.googleapis.com/roots3/hsimple.root")
 
-   TString tpath = TString(path);
+   TString tpath = path;
 
    Int_t begPath = 5, slash = 0, i = 0;
 
-   if(tpath.BeginsWith("gs://") == kFALSE){
-		Error("TGSFile","invalid path %s",path);
+   if (tpath.BeginsWith("gs://") == kFALSE) {
+		Error("TGSFile", "invalid path %s", path);
+      goto zombie;
    }
 
    while (i < 2 && begPath < tpath.Length()) {
       slash = tpath.Index('/', begPath);
 
-      if (slash == kNPOS) Error("TGSFile","invalid path %s", path);
+      if (slash == kNPOS) {
+         Error("TGSFile","invalid path %s", path);
+         goto zombie;
+      }
 
       switch(i){
          case 0:
@@ -67,20 +71,18 @@ TGSFile::TGSFile(const char *path, Option_t * opt) : TWebFile(path, "IO")
       begPath = slash+1;
    }
 
-   TString option = opt;
-
-   if(option == "GT"){
-      fAuthPrefix = TString("GOOG1");
-      fAccessId   = TString(getenv("GT_ACCESS_ID"));
-      fAccessKey  = TString(getenv("GT_ACCESS_KEY"));
-   }else{
-      Error("TGSFile","plugin %s not yet implemented", option.Data());
+   fAuthPrefix = "GOOG1";
+   fAccessId   = gSystem->Getenv("GT_ACCESS_ID");
+   fAccessKey  = gSystem->Getenv("GT_ACCESS_KEY");
+   if (fAccessId == "" || fAccessKey == "") {
+      if (fAccessId == "")  Error("TGSFile", "shell variable GT_ACCESS_ID not set");
+      if (fAccessKey == "") Error("TGSFile", "shell variable GT_ACCESS_KEY not set");
       goto zombie;
    }
 
    Init(kFALSE);
    return;
-
+   
 zombie:
    MakeZombie();
    gDirectory = gROOT;

@@ -36,21 +36,29 @@
 ClassImp(TAS3File)
 
 //______________________________________________________________________________
-TAS3File::TAS3File(const char *path, Option_t *opt) : TWebFile(path, "IO")
+TAS3File::TAS3File(const char *path, Option_t *) : TWebFile(path, "IO")
 {
    // For TAS3File to properly work you need to set up
    // environment variables S3_ACCESS_ID and S3_ACCESS_KEY
    // The format of the path is: server/bucket/file
-   // Example: f = new TAS3File("s3-eu-west-1.amazonaws.com/roots3/hsimple.root")
+   // Example: f = new TAS3File("as3://s3-eu-west-1.amazonaws.com/roots3/hsimple.root")
+   
+   TString tpath = path;
 
-   TString tpath = TString(path);
+   Int_t begPath = 6, slash = 0, i = 0;
 
-   Int_t begPath = 0, slash = 0, i = 0;
+   if (tpath.BeginsWith("as3://") == kFALSE) {
+		Error("TAS3File", "invalid path %s", path);
+      goto zombie;
+   }
 
    while (i < 2 && begPath < tpath.Length()) {
       slash = tpath.Index('/', begPath);
 
-      if (slash == kNPOS) Error("TAS3File","path %s is not in the correct format", path);
+      if (slash == kNPOS) {
+         Error("TAS3File","invalid path %s", path);
+         goto zombie;
+      }
 
       switch(i){
          case 0:
@@ -64,20 +72,18 @@ TAS3File::TAS3File(const char *path, Option_t *opt) : TWebFile(path, "IO")
       begPath = slash+1;
    }
 
-   TString option = opt;
-
-   if(option == "AS3"){
-      fAuthPrefix = TString("AWS");
-      fAccessId   = TString(getenv("S3_ACCESS_ID"));
-      fAccessKey  = TString(getenv("S3_ACCESS_KEY"));
-   }else{
-      Error("TGTFile","plugin %s not yet implemented", option.Data());
+   fAuthPrefix = "AWS";
+   fAccessId   = gSystem->Getenv("S3_ACCESS_ID");
+   fAccessKey  = gSystem->Getenv("S3_ACCESS_KEY");
+   if (fAccessId == "" || fAccessKey == "") {
+      if (fAccessId == "")  Error("TAS3File", "shell variable S3_ACCESS_ID not set");
+      if (fAccessKey == "") Error("TAS3File", "shell variable S3_ACCESS_KEY not set");
       goto zombie;
    }
 
    Init(kFALSE);
    return;
-
+   
 zombie:
    MakeZombie();
    gDirectory = gROOT;

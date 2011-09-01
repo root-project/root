@@ -55,7 +55,7 @@ protected:
    Bool_t ReadBuffer10(char *buf, Int_t len);
   
 public:
-   TGSFile(const char *url, Option_t * option = "GT");
+   TGSFile(const char *url, Option_t *opt="");
    virtual ~TGSFile() { }
 
    TString GetAuthPrefix() const { return fAuthPrefix; }
