@@ -284,7 +284,7 @@ cd $ROOTTESTLOC
 mv gmake.log gmake.keep
 $MAKE clean >> gmake.keep 2>&1 
 mv gmake.keep gmake.log 
-$MAKE -k >> gmake.log 2>&1 
+$MAKE -k $ROOTTEST_MAKEFLAGS >> gmake.log 2>&1 
 result=$?
 upload_log gmake.log roottest_
 
