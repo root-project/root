@@ -412,6 +412,10 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //
    // The function returns 1 if the file is successfully connected, 0 otherwise.
 
+   if(name==0 || name[0]=='\0') {
+      Error("AddFile", "No file name; no files connected");
+      return 0;
+   }
 
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
