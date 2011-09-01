@@ -215,8 +215,9 @@ EVENTDIR = $(ROOTTEST_LOC)/root/io/event
 endif
 $(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)  
 	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL),notest);)
+
 $(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)  
-	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory bigeventTest.success,notest);)
+	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) EVENT=Event$(ExeSuf) CURRENTDIR=$(EVENTDIR) --no-print-directory bigeventTest.success,notest);)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
