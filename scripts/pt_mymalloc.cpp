@@ -32,7 +32,8 @@ TVirtualMutex* gPTMallocMutex = 0;
 void (*__malloc_initialize_hook)(void) = init_my_hooks;
 
 static void init_my_hooks(void) {
-  putenv("LD_PRELOAD=");
+   static const char envPreload[] = "LD_PRELOAD=";
+   putenv(envPreload);
 
   {
     fifoname = getenv("PT_FIFONAME");

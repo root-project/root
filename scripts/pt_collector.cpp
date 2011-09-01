@@ -69,7 +69,7 @@ int main(int argc, char** argv)
       execvp(argv[0],argv);    
     } else
     {
-      long arr [3];
+      long arr[4];
       int fd,status;
       string string1(argv[argc-1]);
       char *fileName,*progName; 
