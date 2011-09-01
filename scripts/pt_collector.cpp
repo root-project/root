@@ -342,6 +342,21 @@ int main(int argc, char** argv)
 	  } //endif (nevent>3)	   
 	} //endif (nevent>2)  
 	  
+	
+
+	if (event->outlier>0){ 
+	  cout<<"Performance decrease for test "<<progName<<" in file "<<fileName<<endl;
+	  cout<<"CPU-time (in seconds): changed from "<<data->meanTime<<" to "<<event->cputime<<endl;
+	  cout<<"Dynamical memory (in kilobyte): peak memory usage changed from "<<data->meanHeappeak<<" to "<<event->heappeak<<", size allocated memory changed from "<<data->meanHeapalloc<<" to "<<event->heapalloc<<", size memory leaks changed from "<<data->meanHeapleak<<" to "<<event->heapleak<<endl;
+	  timeav=data->meanTime;
+	  timestd=data->squareTime;// take old values	    
+	  memav=data->meanHeappeak; 
+	  memstd=data->squareHeappeak;
+	  allocmean=data->meanHeapalloc;
+	  allocstd=data->squareHeapalloc;	    
+	  leakmean=data->meanHeapleak;
+	  leakstd=data->squareHeapleak;
+	}
 	event->meanTime=timeav;
 	event->varTime=timestd;
 	event->meanHeappeak=memav;
@@ -349,17 +364,11 @@ int main(int argc, char** argv)
 	event->meanHeapalloc=allocmean;
 	event->varHeapalloc=allocstd;
 	event->meanHeapleak=leakmean;
-	event->varHeapleak=leakstd;
-
-	if (event->outlier>0){ 
-	  cout<<"Performance decrease for test "<<progName<<" in file "<<fileName<<endl;
-	  cout<<"CPU-time (in seconds): changed from "<<data->meanTime<<" to "<<event->cputime<<endl;
-	  cout<<"Dynamical memory (in kilobyte): peak memory usage changed from "<<data->meanHeappeak<<" to "<<event->heappeak<<", size allocated memory changed from "<<data->meanHeapalloc<<" to "<<event->heapalloc<<", size memory leaks changed from "<<data->meanHeapleak<<" to "<<event->heapleak<<endl;
-	}
-	     
+	event->varHeapleak=leakstd;     
 	t->SetBranchAddress("event", &event);
 	delete data;
       } //endelse
+
 #ifdef PT_DEBUG
       fout <<" "<<"WRITE CURRENT "<<event->testnumber<<" "<<event->testtime<< " "<<event->testname <<" cputime "<<event->cputime<<" heappeak  "<<event->heappeak<<" heapalloc "<<event->heapalloc<<" heapleak  "<<event->heapleak<<" --  mean heap  "<<event->meanHeappeak<<" std heap  "<<event->varHeappeak<<" mean cputime "<<event->meanTime<<" std cputime "<<event->varTime<<" outlier "<<event->outlier<<"\n";
       fout<<"Exit status now "<<WEXITSTATUS(status)<<" "<<status<<"\n\n";
@@ -382,7 +391,7 @@ int main(int argc, char** argv)
       sstm<< "Distribution of CPU time for test '" << progName << "'.";
       title = new char[sstm.str().length() + 1];
       strcpy(title, sstm.str().c_str());       
-      t->Draw("cputime:testnumber");
+      t->Draw("cputime:testtime");
       gr = (TGraph*)gPad->GetPrimitive("Graph");
       c1->SetFillColor(42);
       c1->SetGrid(); 
@@ -399,7 +408,6 @@ int main(int argc, char** argv)
       c1->GetFrame()->SetBorderSize(12);
       c1->Modified();
       c1->SaveAs(imageName);
-      delete gr;
       c1->Clear();
       
       sstm.str("");
@@ -427,7 +435,6 @@ int main(int argc, char** argv)
       c1->GetFrame()->SetBorderSize(12);
       c1->Modified();
       c1->SaveAs(imageName);
-      delete gr;
       c1->Clear();
 
       sstm.str("");
@@ -455,7 +462,6 @@ int main(int argc, char** argv)
       c1->GetFrame()->SetBorderSize(12);
       c1->Modified();
       c1->SaveAs(imageName);
-      delete gr;
       c1->Clear();
 
       sstm.str("");
@@ -483,6 +489,7 @@ int main(int argc, char** argv)
       c1->GetFrame()->SetBorderSize(12);
       c1->Modified();
       c1->SaveAs(imageName);
+
       delete gr;
       delete c1;
       */
