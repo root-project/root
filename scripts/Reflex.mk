@@ -21,7 +21,7 @@ HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 
 # The dictionary:
 %_rflx.cpp: %_selection.xml %.h
-	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log
+	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log || (cat $@.log && exit 1)
 
 %_cint.cpp: %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^
