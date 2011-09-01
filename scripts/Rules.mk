@@ -126,7 +126,20 @@ TESTTIMEPOST :=  RUNNINGWITHTIMING=1 2>&1 ) 2> $(TESTTIMINGFILE).tmp &&  cat $(T
 TESTTIMEACTION = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l -n '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/$*","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
 endif
 
-.PHONY: valgrind
+.PHONY: valgrind perftrack
+$(ROOTTEST_LOC)scripts/pt_data_dict.cpp: $(ROOTTEST_LOC)scripts/pt_data.h $(ROOTTEST_LOC)scripts/pt_Linkdef.h
+	rootcint -f $@ -c $^
+
+$(ROOTTEST_LOC)scripts/pt_collector: $(ROOTTEST_LOC)scripts/pt_collector.cpp $(ROOTTEST_LOC)scripts/pt_data_dict.cpp
+	$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@
+
+$(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
+	$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -L$(ROOTSYS)/lib -lThread -lCore -lCint -ldl -o $@ 
+
+perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
+	@LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
+          CALLROOTEXE="$< root.exe"
+
 $(ROOTTEST_LOC)scripts/analyze_valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind.cxx
 	$(CXX) $< -o $@
 valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind
@@ -550,7 +563,11 @@ LibSuf        = so
 endif
 endif
 
+ifeq ($(PT),)
 CALLROOTEXE  ?= root.exe
+else
+CALLROOTEXE  ?= $(ROOTTEST_LOC)scripts/pt_collector root.exe
+endif
 export CALLROOTEXE
 
 ifneq ($(MAKECMDGOALS),clean)
