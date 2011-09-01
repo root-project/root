@@ -289,7 +289,18 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    //            ... do something with f ...
    //         }
    //
-   // The function returns the total number of files connected.
+   // Return value:
+   //
+   // If nentries>0 (including the default of kBigNumber) and no
+   // wildcarding is used, ALWAYS returns 1 without regard to whether
+   // the file exists or contains the correct tree.
+   //
+   // If wildcarding is used, regardless of the value of nentries,
+   // returns the number of files matching the name without regard to
+   // whether they contain the correct tree.
+   //
+   // If nentries<=0 and wildcarding is not used, return 1 if the file
+   // exists and contains the correct tree and 0 otherwise.
 
    // case with one single file
    if (!TString(name).MaybeWildcard()) {
