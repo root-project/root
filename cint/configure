@@ -22,7 +22,7 @@ shift
 
 # configure settings to build CINT
 
-ARCHS=(linux linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 msvc8 msvc9 solaris solarisgcc freebsd)
+ARCHS=(linux linuxicc macos macosx64 djgpp cygwin mingw mwerks hpux aix msvc7 msvc8 msvc9 msvc10 solaris solarisgcc freebsd)
 
 #############################################################
 ###
@@ -291,6 +291,11 @@ function config_msvc9 {
     CXXMACROS="$CXXMACROS -D_CRT_SECURE_NO_DEPRECATE=1"
 }
 
+function config_msvc10 {
+    config_msvc9
+    STREAMDIR=vc10strm
+}
+
 function config_solarisgcc {
     TAILOPT=-
     config_GCC_defaults
@@ -425,7 +430,9 @@ function guess_arch {
     elif [ "x`uname -a|grep -i freebsd`" != "x" ]; then
         GUESSEDARCH=$arch
     elif cl.exe >/dev/null 2>&1; then
-        if [ "x`cl 2>&1|grep 'Version 15'`" != "x" ]; then
+        if [ "x`cl 2>&1|grep 'Version 16'`" != "x" ]; then
+            GUESSEDARCH=msvc10
+        elif [ "x`cl 2>&1|grep 'Version 15'`" != "x" ]; then
             GUESSEDARCH=msvc9
         elif [ "x`cl 2>&1|grep 'Version 14'`" != "x" ]; then
             GUESSEDARCH=msvc8
