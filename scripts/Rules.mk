@@ -128,17 +128,19 @@ endif
 
 .PHONY: valgrind perftrack
 $(ROOTTEST_LOC)scripts/pt_data_dict.cpp: $(ROOTTEST_LOC)scripts/pt_data.h $(ROOTTEST_LOC)scripts/pt_Linkdef.h
-	rootcint -f $@ -c $^
+	$(CMDECHO)rootcint -f $@ -c $^
 
 $(ROOTTEST_LOC)scripts/pt_collector: $(ROOTTEST_LOC)scripts/pt_collector.cpp $(ROOTTEST_LOC)scripts/pt_data_dict.cpp
-	$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@
+	$(CMDECHO)$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@
 
 $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
-	$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@ 
+	$(CMDECHO)$(CXX) -g $< -shared -fPIC -Wall `root-config --cflags` -o $@ 
 
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
-	@LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
+	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
           CALLROOTEXE="$< root.exe"
+	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
+	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.gif'  | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
 
 $(ROOTTEST_LOC)scripts/analyze_valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind.cxx
 	$(CXX) $< -o $@
