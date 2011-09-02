@@ -1,14 +1,13 @@
-#include <malloc.h>
 #include <sys/types.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <string>
 #include <errno.h>
-#include <pthread.h>
 #include <dlfcn.h>
+#include <fcntl.h>
+#include <malloc.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -64,7 +63,7 @@ private:
       if (fifoname) {
          fFifoFD = open(fifoname, O_WRONLY);
          if (fFifoFD < 0) {
-            printf("%s:%d: Error opening FIFO: %s\n", __FILE__, __LINE__, strerror(errno)); 
+            printf("%s:%d: Error opening FIFO %s: %s\n", __FILE__, __LINE__, fifoname, strerror(errno)); 
          }
       } else {
          printf("%s:%d: %s not set: %s\n", __FILE__, __LINE__, fifoenv, strerror(errno)); 
@@ -77,7 +76,7 @@ private:
       pthread_mutex_destroy(&fgPTMutex);
 
       if (fFifoFD >= 0 && write(fFifoFD, &fPerfData, sizeof(fPerfData))==-1)
-         printf("Error in writing %s\n", strerror(errno));
+         printf("%s:%d: Error writing statistics to fifo: %s\n", __FILE__, __LINE__, strerror(errno)); 
    }
 
    void SetFunc(void** ppFunc, const char* name) const {
@@ -85,7 +84,7 @@ private:
       *ppFunc = dlsym(RTLD_NEXT, name);
       const char* error = dlerror();
       if (error != NULL) {
-         fputs(error, stderr);
+         printf("%s:%d: Error looking for original symbol %s: %s\n", __FILE__, __LINE__, name, error);
          exit(1);
       }
    }
