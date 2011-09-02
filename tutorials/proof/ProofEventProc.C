@@ -16,6 +16,8 @@
 #include "TPad.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TParameter.h"
+#include "TRandom.h"
 
 
 void ProofEventProc::Begin(TTree *)
@@ -67,7 +69,21 @@ void ProofEventProc::SlaveBegin(TTree *tree)
    fPxPyHist->GetYaxis()->SetTitle("p_{Y}");
 
    fOutput->Add(fPxPyHist);
+   
+   // Abort test, if any
+   TParameter<Int_t> *pi = 0;
+   if (fInput) 
+      pi = dynamic_cast<TParameter<Int_t> *>(fInput->FindObject("ProofEventProc_TestAbort"));
+   if (pi) fTestAbort = pi->GetVal();
+   if (fTestAbort < -1 || fTestAbort > 1) {
+      Info("SlaveBegin", "unsupported value for the abort test: %d not in [-1,1] - ignore", fTestAbort);
+      fTestAbort = -1;
+   } else if (fTestAbort > -1) {
+      Info("SlaveBegin", "running abort test: %d", fTestAbort);
+   }
 
+   if (fTestAbort == 0) 
+      Abort("Test abortion during init", kAbortProcess);
 }
 
 Bool_t ProofEventProc::Process(Long64_t entry)
@@ -90,12 +106,20 @@ Bool_t ProofEventProc::Process(Long64_t entry)
    //  Assuming that fChain is the pointer to the TChain being processed,
    //  use fChain->GetTree()->GetEntry(entry).
 
+   if (fTestAbort == 1) {
+      Double_t rr = gRandom->Rndm();
+      if (rr > 0.999) {
+         Info("Process", "%lld -> %f", entry, rr); 
+         Abort("Testing file abortion", kAbortFile);
+         return kTRUE;
+      }
+   }
+
    if (fFullRead) {
       fChain->GetTree()->GetEntry(entry);
    } else {
       b_event_fNtrack->GetEntry(entry);
    }
-
 
    if (fNtrack > 0) {
       if (!fFullRead) b_fTracks->GetEntry(entry);
@@ -105,7 +129,7 @@ Bool_t ProofEventProc::Process(Long64_t entry)
             if (curtrack) {
                fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
                fPxPyHist->Fill(curtrack->GetPx(),curtrack->GetPy());
-               fPzHist->Fill(curtrack->GetPz());
+               if (j == 0) fPzHist->Fill(curtrack->GetPz());
             }
          }
          fTracks->Clear("C");

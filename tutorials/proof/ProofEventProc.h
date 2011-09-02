@@ -48,6 +48,9 @@ public :
 
    // Read controller
    Bool_t          fFullRead;
+   
+   // Abortion test
+   Int_t           fTestAbort;   // -1 none, 0 init, 1 file
 
    //Output hist
    TH1F* fPtHist;
@@ -75,8 +78,8 @@ public :
    TBranch        *b_event_fTriggerBits;   //!
    TBranch        *b_event_fIsValid;   //!
 
-   ProofEventProc(TTree *) { fFullRead = kTRUE; }
-   ProofEventProc() { }
+   ProofEventProc(TTree *) { fFullRead = kTRUE; fTestAbort = -1; }
+   ProofEventProc() { fFullRead = kTRUE; fTestAbort = -1; }
    virtual ~ProofEventProc() { }
    virtual Int_t   Version() const {return 1;}
    virtual void    Begin(TTree *);
@@ -144,6 +147,8 @@ Bool_t ProofEventProc::Notify()
    // will be retrieved. It is normaly not necessary to make changes
    // to the generated code, but the routine can be extended by the
    // user if needed.
+
+   Info("Notify", "processing file: %s", fChain->GetCurrentFile()->GetName());
 
    // Get branch pointers
    b_event_fType = fChain->GetBranch("fType[20]");
