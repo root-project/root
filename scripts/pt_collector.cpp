@@ -21,15 +21,18 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
-#include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TROOT.h>
 #include <TError.h>
 #include <TCanvas.h>
 #include <TFrame.h>
 #include <TAxis.h>
-
+#include <TH1.h>
+#include <TH2.h>
 //#define PT_DEBUG
 using namespace std;
+
+void saveGraph(Int_t n,double *x,double * y,double * e,const char *ytitle,char * imageName,char * progName);
 
 int main(int argc, char** argv)
 {
@@ -38,7 +41,7 @@ int main(int argc, char** argv)
   stringstream sstm;
   const char* fifoName;
   char *nameEnv,*path;
-
+  
 #ifdef PT_DEBUG 
   ofstream fout("pt_monitor.txt",ios::app);
   if (!fout) cout << "Cannot open output file pt_monitor.txt\n";
@@ -79,8 +82,9 @@ int main(int argc, char** argv)
       TFile* f;
       TTree *t;
       ULong64_t hashVal;
-      pt_data *event;
+      pt_data *event,*data;
       size_t pos;
+      Int_t i,nevent;
 
       fd=open(fifoName, O_RDONLY); 
       if( fd < 0 ) printf( "Error opening file in PP: %s\n", strerror( errno ) );
@@ -155,6 +159,7 @@ int main(int argc, char** argv)
       event->z2=0;
       event->z3=0;
       event->z4=0;
+      event->svn=gROOT->GetSvnRevision();
 
       f=new TFile(fileName, "UPDATE");
       if (f==0) printf("CANNOT create file %s\n",fileName); 
@@ -167,8 +172,6 @@ int main(int argc, char** argv)
 	t->Branch("event", &event);
       }
       else{
-	Int_t i,nevent;
-	pt_data *data;
 	double memav,timeav,memstd,timestd,z,allocstd,allocmean,leakstd,leakmean;
 	int timetest,heaptest,alloctest,leaktest,k;
 	timetest=heaptest=alloctest=leaktest=0;
@@ -338,11 +341,8 @@ int main(int argc, char** argv)
 	    fout<<"Tests heapleak: z=="<<z<<"? "<<leaktest<<"\n";
 #endif
 	    event->outlier=timetest+heaptest+leaktest+alloctest;
-
 	  } //endif (nevent>3)	   
 	} //endif (nevent>2)  
-	  
-	
 
 	if (event->outlier>0){ 
 	  cout<<"Performance decrease for test "<<progName<<" in file "<<fileName<<endl;
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
 	event->meanHeapleak=leakmean;
 	event->varHeapleak=leakstd;     
 	t->SetBranchAddress("event", &event);
-	delete data;
+	
       } //endelse
 
 #ifdef PT_DEBUG
@@ -376,123 +376,76 @@ int main(int argc, char** argv)
 #endif
       t->Fill();      
       f->Write("",TObject::kOverwrite);          
-      
-      /*
-      gErrorIgnoreLevel=3000;
-      char *imageName,*title ;
-      TCanvas *c1 = new TCanvas("c1","Performance Monitoring Plots",200,10,700,500);
-      TGraph *gr;
+           
+      gErrorIgnoreLevel=3000;     
+     
+      double *x,*etime,*eheappeak,*eheapleak,*eheapalloc,*ytime,*yheappeak,*yheapalloc,*yheapleak;
+      char *imageName; 
+      const char* ytitle;
 
+      nevent = t->GetEntries();
+      t->SetBranchAddress("event", &data);
+      x=new double[nevent];
+      ytime=new double[nevent];
+      yheappeak=new double[nevent];
+      yheapalloc=new double[nevent];
+      yheapleak=new double[nevent];
+      etime=new double[nevent];
+      eheappeak=new double[nevent]; 
+      eheapalloc=new double[nevent]; 
+      eheapleak=new double[nevent];
+      for (i=0;i<nevent;i++){
+	t->GetEvent(i);
+	x[i]=(double)data->svn;
+	ytime[i]=data->cputime;
+	yheappeak[i]=data->heappeak;
+	yheapleak[i]=data->heapleak;
+	yheapalloc[i]=data->heapalloc;
+	etime[i]=data->varTime;
+	eheappeak[i]=data->varHeappeak;
+	eheapalloc[i]=data->varHeapalloc;
+	eheapleak[i]=data->varHeapleak; 
+      }
+      
       sstm.str("");
       sstm<< "pt_" << string1 << hashVal << "_cputime.gif";
       imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str());
-      sstm.str("");
-      sstm<< "Distribution of CPU time for test '" << progName << "'.";
-      title = new char[sstm.str().length() + 1];
-      strcpy(title, sstm.str().c_str());       
-      t->Draw("cputime:testtime");
-      gr = (TGraph*)gPad->GetPrimitive("Graph");
-      c1->SetFillColor(42);
-      c1->SetGrid(); 
-      gr->SetLineColor(2);
-      gr->SetLineWidth(0);
-      gr->SetMarkerColor(4);
-      gr->SetMarkerStyle(21);
-      gr->SetTitle(title);
-      gr->GetXaxis()->SetTitle("X title");
-      gr->GetYaxis()->SetTitle("Y title");
-      gr->Draw();
-      c1->Update();
-      c1->GetFrame()->SetFillColor(21);
-      c1->GetFrame()->SetBorderSize(12);
-      c1->Modified();
-      c1->SaveAs(imageName);
-      c1->Clear();
-      
+      strcpy(imageName, sstm.str().c_str());           
+      ytitle="CPU time [s]";
+      saveGraph(nevent,x,ytime,etime,ytitle,imageName,progName);
+
       sstm.str("");
       sstm<< "pt_" << string1 << hashVal << "_heappeak.gif";
       imageName = new char[sstm.str().length() + 1];
       strcpy(imageName, sstm.str().c_str());
-      sstm.str("");
-      sstm<< "Distribution of Heap peak usage for test '" << progName << "'.";
-      title = new char[sstm.str().length() + 1];
-      strcpy(title, sstm.str().c_str());       
-      t->Draw("heappeak:testnumber");
-      gr = (TGraph*)gPad->GetPrimitive("Graph");
-      c1->SetFillColor(42);
-      c1->SetGrid(); 
-      gr->SetLineColor(2);
-      gr->SetLineWidth(0);
-      gr->SetMarkerColor(4);
-      gr->SetMarkerStyle(21);
-      gr->SetTitle(title);
-      gr->GetXaxis()->SetTitle("X title");
-      gr->GetYaxis()->SetTitle("Y title");
-      gr->Draw();
-      c1->Update();
-      c1->GetFrame()->SetFillColor(21);
-      c1->GetFrame()->SetBorderSize(12);
-      c1->Modified();
-      c1->SaveAs(imageName);
-      c1->Clear();
+      ytitle="Peak heap usage [kB]";
+      saveGraph(nevent,x,yheappeak,eheappeak,ytitle,imageName,progName);
 
       sstm.str("");
       sstm<< "pt_" << string1 << hashVal << "_heapalloc.gif";
       imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str());
-      sstm.str("");
-      sstm<< "Distribution of Heap alloc usage for test '" << progName << "'.";
-      title = new char[sstm.str().length() + 1];
-      strcpy(title, sstm.str().c_str());       
-      t->Draw("heapalloc:testnumber");
-      gr = (TGraph*)gPad->GetPrimitive("Graph");
-      c1->SetFillColor(42);
-      c1->SetGrid(); 
-      gr->SetLineColor(2);
-      gr->SetLineWidth(0);
-      gr->SetMarkerColor(4);
-      gr->SetMarkerStyle(21);
-      gr->SetTitle(title);
-      gr->GetXaxis()->SetTitle("X title");
-      gr->GetYaxis()->SetTitle("Y title");
-      gr->Draw();
-      c1->Update();
-      c1->GetFrame()->SetFillColor(21);
-      c1->GetFrame()->SetBorderSize(12);
-      c1->Modified();
-      c1->SaveAs(imageName);
-      c1->Clear();
+      strcpy(imageName, sstm.str().c_str()); 
+      ytitle="Size of total allocated memory [kB]";
+      saveGraph(nevent,x,yheapalloc,eheapalloc,ytitle,imageName,progName);
 
       sstm.str("");
       sstm<< "pt_" << string1 << hashVal << "_heapleak.gif";
       imageName = new char[sstm.str().length() + 1];
       strcpy(imageName, sstm.str().c_str());
-      sstm.str("");
-      sstm<< "Distribution of Heap leak usage for test '" << progName << "'.";
-      title = new char[sstm.str().length() + 1];
-      strcpy(title, sstm.str().c_str());       
-      t->Draw("heapleak:testnumber");
-      gr = (TGraph*)gPad->GetPrimitive("Graph");
-      c1->SetFillColor(42);
-      c1->SetGrid(); 
-      gr->SetLineColor(2);
-      gr->SetLineWidth(0);
-      gr->SetMarkerColor(4);
-      gr->SetMarkerStyle(21);
-      gr->SetTitle(title);
-      gr->GetXaxis()->SetTitle("X title");
-      gr->GetYaxis()->SetTitle("Y title");
-      gr->Draw();
-      c1->Update();
-      c1->GetFrame()->SetFillColor(21);
-      c1->GetFrame()->SetBorderSize(12);
-      c1->Modified();
-      c1->SaveAs(imageName);
+      ytitle="Size of memory leaks [kB]";
+      saveGraph(nevent,x,yheapleak,eheapleak,ytitle,imageName,progName);
 
-      delete gr;
-      delete c1;
-      */
+      delete x;
+      delete ytime;
+      delete yheappeak;
+      delete yheapalloc;
+      delete yheapleak;
+      delete etime;
+      delete eheappeak;
+      delete eheapalloc;
+      delete eheapleak;
+
+      delete data;
       if (event->outlier>0){ 
 	delete event;
 	delete t;
@@ -503,3 +456,31 @@ int main(int argc, char** argv)
     }
   return 0;
 } 
+
+
+void saveGraph(Int_t n,double *x,double * y,double * e,const char *ytitle,char * imageName,char * progName)
+{ 
+  char * title;
+  stringstream sstm;
+  TCanvas *c1;
+  TGraphErrors *g;
+  sstm<< "Distribution of "<<ytitle<<" for test '" << progName << "'.";
+  title = new char[sstm.str().length() + 1];
+  strcpy(title, sstm.str().c_str()); ;
+  c1 = new TCanvas("c1","Performance Monitoring Plots",200,80,1500,1000); 
+  c1->SetFillColor(32);
+  c1->SetGrid();
+  g = new TGraphErrors(n,x,y,0,e);
+  g->SetTitle(title);
+  g->SetMarkerColor(4);
+  g->SetMarkerStyle(20); // 7 probably faster (not scalable)
+  g->SetLineColor(2);
+  g->GetXaxis()->SetTitle("SVN revision");
+  g->GetXaxis()->SetTitleOffset(1.0);
+  g->GetYaxis()->SetTitle(ytitle);
+  g->GetYaxis()->SetTitleOffset(1.5);  
+  g->Draw("AP");
+  c1->SaveAs(imageName);
+  delete c1;
+  delete g;
+}

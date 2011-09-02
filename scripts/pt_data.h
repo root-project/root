@@ -5,6 +5,7 @@ class pt_data: public TObject {
  public:
  pt_data(): testname(0), testtime(0) {}
   int outlier;
+  int svn;
   unsigned int testnumber;
   TString testname;
   TString testtime;  
