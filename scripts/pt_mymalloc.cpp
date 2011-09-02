@@ -1,12 +1,8 @@
 #include <malloc.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <stdio.h>
-#include <fstream>
-#include <sstream>
 #include <fcntl.h>
-#include <iostream>
 #include <unistd.h>
 #include <string.h>
 #include <string>
@@ -16,8 +12,43 @@
 
 using namespace std;
 
-struct PerfTrackMallocInterposition {
+// Intercepts calls to malloc, realloc, free, by planting replacement symbols.
+// This library is meant to be LD_PRELOAD'ed to do its job.
+//
+// Collects statistics and pipes them back through a FIFO specified in the
+// env var PT_FIFONAME.
+//
+// Manipulates allocations by prepending a TAG value of size int and the size of
+// the allocation (size_t).
+//
+// The initialization of the counting structures and forwarding function pointers
+// happens upon the first call to malloc / realloc / free; this assumes that no
+// threads have been created before the first call to malloc / realloc / free.
+//
+
+class PerfTrackMallocInterposition {
+public:
+   static PerfTrackMallocInterposition& Instance() {
+      static PerfTrackMallocInterposition pt;
+      return pt;
+   }
+
+   void* Malloc(size_t size);
+   void* Realloc(void* ptr, size_t size);
+   void  Free(void* ptr);
+
+private:
+   // Statistics elements
+   enum EPerfDataType {
+      kPDCurrentHeap,
+      kPDMaxHeap,
+      kPDSumAllocs,
+      kPDTag,
+      kNumPerfDataTypes
+   };
+
    PerfTrackMallocInterposition(): fFifoFD(-1), fPerfData() {
+      // Initialize data structures, mutex, fifo.
       SetFunc((void**)&fPMalloc, "malloc");
       SetFunc((void**)&fPRealloc, "realloc");
       SetFunc((void**)&fPFree, "free");
@@ -27,20 +58,22 @@ struct PerfTrackMallocInterposition {
       static char envPreload[] = "LD_PRELOAD=";
       putenv(envPreload);
 
-      const char* fifoname = getenv("PT_FIFONAME");
+      // Open the FIFO:
+      static const char* fifoenv = "PT_FIFONAME";
+      const char* fifoname = getenv(fifoenv);
       if (fifoname) {
          fFifoFD = open(fifoname, O_WRONLY);
-         if (fFifoFD < 0) printf( "Error opening file: %s\n", strerror( errno ) ); 
+         if (fFifoFD < 0) {
+            printf("%s:%d: Error opening FIFO: %s\n", __FILE__, __LINE__, strerror(errno)); 
+         }
       } else {
-         printf("Error: PT_FIFONAME not set!\n");
-         int * i = (int*)0x123;
-         *i = 12;
+         printf("%s:%d: %s not set: %s\n", __FILE__, __LINE__, fifoenv, strerror(errno)); 
       }
-      fPerfData[3]=699692586; // for collector to know that stored values are valid
-
+      fPerfData[kPDTag]=699692586; // for collector to know that stored values are valid
    }
 
    ~PerfTrackMallocInterposition() {
+      // Tear down.
       pthread_mutex_destroy(&fgPTMutex);
 
       if (fFifoFD >= 0 && write(fFifoFD, &fPerfData, sizeof(fPerfData))==-1)
@@ -48,6 +81,7 @@ struct PerfTrackMallocInterposition {
    }
 
    void SetFunc(void** ppFunc, const char* name) const {
+      // Find the next (i.e. not ours :-) symbol called name.
       *ppFunc = dlsym(RTLD_NEXT, name);
       const char* error = dlerror();
       if (error != NULL) {
@@ -56,100 +90,112 @@ struct PerfTrackMallocInterposition {
       }
    }
 
+   void IncHeap(size_t size) {
+      // Increase our heap statistics counter.
+      fPerfData[kPDCurrentHeap] += size; // heap
+      fPerfData[kPDSumAllocs] += size; // only allocs
+      if (fPerfData[kPDCurrentHeap] > fPerfData[kPDMaxHeap])
+         fPerfData[kPDMaxHeap] = fPerfData[kPDCurrentHeap];
+   }
+
    void* (*fPMalloc)(size_t);
    void* (*fPRealloc)(void*, size_t);
    void  (*fPFree)(void*);
 
    int fFifoFD; // file decriptor of FIFO
-   long fPerfData[4]; // 0: heap, 1: maxheap, 2: sum allocs, 3: 699692586
-   static pthread_mutex_t fgPTMutex;
+   long fPerfData[kNumPerfDataTypes]; // statistics data
+   static pthread_mutex_t fgPTMutex; // protects statistics in multithreaded.
 };
 
 pthread_mutex_t PerfTrackMallocInterposition::fgPTMutex = PTHREAD_MUTEX_INITIALIZER;
 
-PerfTrackMallocInterposition& gPT() {
-   static PerfTrackMallocInterposition pt;
-   return pt;
-}
-
-void *malloc(size_t size)
-{
-  pthread_mutex_lock(&gPT().fgPTMutex);
-  char* result = (char *)(*gPT().fPMalloc)(size+sizeof(int)+sizeof(size_t));
-
-  gPT().fPerfData[0]+=size; // heap
-  gPT().fPerfData[2]+=size; // only allocs
-  if (gPT().fPerfData[0]>gPT().fPerfData[1]) gPT().fPerfData[1]=gPT().fPerfData[0]; // maximum (peak) heap
-  pthread_mutex_unlock(&gPT().fgPTMutex);
+void* PerfTrackMallocInterposition::Malloc(size_t size) {
+   // Malloc with statistics
+   pthread_mutex_lock(&fgPTMutex);
+   char* result = (char *)(*fPMalloc)(size+sizeof(int)+sizeof(size_t));
+   IncHeap(size);
+   pthread_mutex_unlock(&fgPTMutex);
    
-  *(int *)result=699692586;
-  *(size_t *)(result+sizeof(int))=size;
+   *(int *)result=699692586;
+   *(size_t *)(result+sizeof(int))=size;
 
-  return (void*) (result+sizeof(int)+sizeof(size_t));
+   return (void*) (result+sizeof(int)+sizeof(size_t));
 }
 
-void free(void *ptr)
-{
-  if (ptr==0) return;
-
-  int v1=*(int *) ((char*)ptr-sizeof(int)-sizeof(size_t));      
-  if (v1!=699692586){
-     (*gPT().fPFree)(ptr);
-     return;
-  }
-  size_t v2=* (size_t *) ((char*)ptr-sizeof(size_t));
-
-  pthread_mutex_lock(&gPT().fgPTMutex);
-
-  gPT().fPerfData[0]-=v2;
- 
-  (*gPT().fPFree)((char*)ptr-sizeof(int)-sizeof(size_t)); 
-
-  pthread_mutex_unlock(&gPT().fgPTMutex);
-}
-
-void *realloc(void *ptr, size_t size)
-{
+void* PerfTrackMallocInterposition::Realloc(void* ptr, size_t size) {
+   // Realloc with statistics
   char *result;
   int v1=699692586;
   if (ptr!=0) v1=*(int *) ((char*)ptr-sizeof(int)-sizeof(size_t));
 
-  pthread_mutex_lock(&gPT().fgPTMutex);
+  pthread_mutex_lock(&fgPTMutex);
   if (v1!=699692586 || ptr==0){ 
     if (ptr==0 && size!=0){ // behaves as malloc   
-      gPT().fPerfData[0]+=size; // heap mem
-      gPT().fPerfData[2]+=size; // only allocs
-      if (gPT().fPerfData[0]>gPT().fPerfData[1]) gPT().fPerfData[1]=gPT().fPerfData[0]; // maximum heap
-	       
-      result=(char *)(*gPT().fPRealloc)(0,size+sizeof(int)+sizeof(size_t));       
+       IncHeap(size);
+      result=(char *)(*fPRealloc)(0,size+sizeof(int)+sizeof(size_t));       
       *(int *)result=699692586;
       *(size_t *)(result+sizeof(int))=size;
     }
-    else{  
-      result=(char *)(*gPT().fPRealloc)(ptr,size); // old realloc call 
+    else {
+      result=(char *)(*fPRealloc)(ptr,size); // old realloc call 
     }
   }
   else
     {
       size_t v2=*(size_t *) ((char*)ptr-sizeof(size_t));
       if (size==0){ // behaves as free
-	gPT().fPerfData[0]-=v2;
-	result=(char *)(*gPT().fPRealloc)((char*)ptr-sizeof(int)-sizeof(size_t),0);
+	fPerfData[kPDCurrentHeap]-=v2;
+	result=(char *)(*fPRealloc)((char*)ptr-sizeof(int)-sizeof(size_t),0);
       }
       else{
-	gPT().fPerfData[0]=gPT().fPerfData[0]+size-v2; // heap
-	gPT().fPerfData[2]=gPT().fPerfData[2]+size-v2; // only allocs
-	if (gPT().fPerfData[0]>gPT().fPerfData[1]) gPT().fPerfData[1]=gPT().fPerfData[0]; // maximum heap
+         IncHeap(size-v2);
 		 
-	result = (char *)(*gPT().fPRealloc)((char*)ptr-sizeof(int)-sizeof(size_t),size+sizeof(int)+sizeof(size_t));
+	result = (char *)(*fPRealloc)((char*)ptr-sizeof(int)-sizeof(size_t),size+sizeof(int)+sizeof(size_t));
 	*(int *)result=699692586;
 	*(size_t *)(result+sizeof(int))=size;
       }
     }
 		 
- pthread_mutex_unlock(&gPT().fgPTMutex); 
+ pthread_mutex_unlock(&fgPTMutex); 
 
  if (v1!=699692586 || size==0) return (void*) (result); 
   else return (void*) (result+sizeof(int)+sizeof(size_t)); 
+
+}
+
+
+void PerfTrackMallocInterposition::Free(void* ptr) {
+   // Free with statistics
+   if (ptr==0) return;
+
+  int v1=*(int *) ((char*)ptr-sizeof(int)-sizeof(size_t));      
+  if (v1!=699692586){
+     (*fPFree)(ptr);
+     return;
+  }
+  size_t v2=* (size_t *) ((char*)ptr-sizeof(size_t));
+
+  pthread_mutex_lock(&fgPTMutex);
+
+  fPerfData[kPDCurrentHeap]-=v2;
+ 
+  (*fPFree)((char*)ptr-sizeof(int)-sizeof(size_t)); 
+
+  pthread_mutex_unlock(&fgPTMutex);
+
+}
+
+// Replacement symbols:
+
+void *malloc(size_t size) {
+   return PerfTrackMallocInterposition::Instance().Malloc(size);
+}
+
+void free(void *ptr) {
+   PerfTrackMallocInterposition::Instance().Free(ptr);
+}
+
+void *realloc(void *ptr, size_t size) {
+   return PerfTrackMallocInterposition::Instance().Realloc(ptr, size);
 }
 
