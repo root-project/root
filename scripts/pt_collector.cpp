@@ -123,7 +123,7 @@ int main(int argc, char** argv)
       pos=string1.find("/",0); // '/' must not be contained in file name
       while(string::npos != pos){
 	string1.erase(pos,1);
-	pos =string1.find("/",pos+1);   
+	pos =string1.find("/",pos);   
       }     
       hashVal = TString::Hash(string1.c_str(),string1.length());
       pos = string1.find("."); // cut file name after first '.'
@@ -165,13 +165,19 @@ int main(int argc, char** argv)
       if (f==0) printf("CANNOT create file %s\n",fileName); 
       f->GetObject("PerftrackTree",t);  
       if (t==0) {
-#ifdef PT_DEBUG
-	fout<<"New Tree \n";
-#endif
 	t = new TTree("PerftrackTree","Performance monitoring tree");	
 	t->Branch("event", &event);
+#ifdef PT_DEBUG
+	fout<<"New Tree \n";
+	fout <<" "<<"WRITE CURRENT "<<event->testnumber<<" "<<event->testtime<< " "<<event->testname <<" cputime "<<event->cputime<<" heappeak  "<<event->heappeak<<" heapalloc "<<event->heapalloc<<" heapleak  "<<event->heapleak<<" --  mean heap  "<<event->meanHeappeak<<" std heap  "<<event->varHeappeak<<" mean cputime "<<event->meanTime<<" std cputime "<<event->varTime<<" outlier "<<event->outlier<<"\n";
+	fout<<"Exit status now "<<WEXITSTATUS(status)<<" "<<status<<"\n\n";
+	fout.close();
+#endif
+	t->Fill();      
+	f->Write("",TObject::kOverwrite);  
       }
-      else{
+      else
+      {
 	double memav,timeav,memstd,timestd,z,allocstd,allocmean,leakstd,leakmean;
 	int timetest,heaptest,alloctest,leaktest,k;
 	timetest=heaptest=alloctest=leaktest=0;
@@ -367,90 +373,90 @@ int main(int argc, char** argv)
 	event->varHeapleak=leakstd;     
 	t->SetBranchAddress("event", &event);
 	
-      } //endelse
-
 #ifdef PT_DEBUG
-      fout <<" "<<"WRITE CURRENT "<<event->testnumber<<" "<<event->testtime<< " "<<event->testname <<" cputime "<<event->cputime<<" heappeak  "<<event->heappeak<<" heapalloc "<<event->heapalloc<<" heapleak  "<<event->heapleak<<" --  mean heap  "<<event->meanHeappeak<<" std heap  "<<event->varHeappeak<<" mean cputime "<<event->meanTime<<" std cputime "<<event->varTime<<" outlier "<<event->outlier<<"\n";
-      fout<<"Exit status now "<<WEXITSTATUS(status)<<" "<<status<<"\n\n";
-      fout.close();
+	fout <<" "<<"WRITE CURRENT "<<event->testnumber<<" "<<event->testtime<< " "<<event->testname <<" cputime "<<event->cputime<<" heappeak  "<<event->heappeak<<" heapalloc "<<event->heapalloc<<" heapleak  "<<event->heapleak<<" --  mean heap  "<<event->meanHeappeak<<" std heap  "<<event->varHeappeak<<" mean cputime "<<event->meanTime<<" std cputime "<<event->varTime<<" outlier "<<event->outlier<<"\n";
+	fout<<"Exit status now "<<WEXITSTATUS(status)<<" "<<status<<"\n\n";
+	fout.close();
 #endif
-      t->Fill();      
-      f->Write("",TObject::kOverwrite);          
-           
-      gErrorIgnoreLevel=3000;     
+	t->Fill();      
+	f->Write("",TObject::kOverwrite);  
+
+	gErrorIgnoreLevel=3000;     
      
-      double *x,*etime,*eheappeak,*eheapleak,*eheapalloc,*ytime,*yheappeak,*yheapalloc,*yheapleak;
-      char *imageName; 
-      const char* ytitle;
+	double *x,*etime,*eheappeak,*eheapleak,*eheapalloc,*ytime,*yheappeak,*yheapalloc,*yheapleak;
+	char *imageName; 
+	const char* ytitle;
 
-      nevent = t->GetEntries();
-      t->SetBranchAddress("event", &data);
-      x=new double[nevent];
-      ytime=new double[nevent];
-      yheappeak=new double[nevent];
-      yheapalloc=new double[nevent];
-      yheapleak=new double[nevent];
-      etime=new double[nevent];
-      eheappeak=new double[nevent]; 
-      eheapalloc=new double[nevent]; 
-      eheapleak=new double[nevent];
-      for (i=0;i<nevent;i++){
-	t->GetEvent(i);
-	x[i]=(double)data->svn;
-	ytime[i]=data->cputime;
-	yheappeak[i]=data->heappeak;
-	yheapleak[i]=data->heapleak;
-	yheapalloc[i]=data->heapalloc;
-	etime[i]=data->varTime;
-	eheappeak[i]=data->varHeappeak;
-	eheapalloc[i]=data->varHeapalloc;
-	eheapleak[i]=data->varHeapleak; 
-      }
+	nevent = t->GetEntries();
+	t->SetBranchAddress("event", &data);
+	x=new double[nevent];
+	ytime=new double[nevent];
+	yheappeak=new double[nevent];
+	yheapalloc=new double[nevent];
+	yheapleak=new double[nevent];
+	etime=new double[nevent];
+	eheappeak=new double[nevent]; 
+	eheapalloc=new double[nevent]; 
+	eheapleak=new double[nevent];
+	for (i=0;i<nevent;i++){
+	  t->GetEvent(i);
+	  x[i]=(double)data->svn;
+	  ytime[i]=data->cputime;
+	  yheappeak[i]=data->heappeak;
+	  yheapleak[i]=data->heapleak;
+	  yheapalloc[i]=data->heapalloc;
+	  etime[i]=data->varTime;
+	  eheappeak[i]=data->varHeappeak;
+	  eheapalloc[i]=data->varHeapalloc;
+	  eheapleak[i]=data->varHeapleak; 
+	}
       
-      sstm.str("");
-      sstm<< "pt_" << string1 << hashVal << "_cputime.gif";
-      imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str());           
-      ytitle="CPU time [s]";
-      saveGraph(nevent,x,ytime,etime,ytitle,imageName,progName);
+	sstm.str("");
+	sstm<< "pt_" << string1 << hashVal << "_cputime.gif";
+	imageName = new char[sstm.str().length() + 1];
+	strcpy(imageName, sstm.str().c_str());           
+	ytitle="CPU time [s]";
+	saveGraph(nevent,x,ytime,etime,ytitle,imageName,progName);
 
-      sstm.str("");
-      sstm<< "pt_" << string1 << hashVal << "_heappeak.gif";
-      imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str());
-      ytitle="Peak heap usage [kB]";
-      saveGraph(nevent,x,yheappeak,eheappeak,ytitle,imageName,progName);
+	sstm.str("");
+	sstm<< "pt_" << string1 << hashVal << "_heappeak.gif";
+	imageName = new char[sstm.str().length() + 1];
+	strcpy(imageName, sstm.str().c_str());
+	ytitle="Peak heap usage [kB]";
+	saveGraph(nevent,x,yheappeak,eheappeak,ytitle,imageName,progName);
 
-      sstm.str("");
-      sstm<< "pt_" << string1 << hashVal << "_heapalloc.gif";
-      imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str()); 
-      ytitle="Size of total allocated memory [kB]";
-      saveGraph(nevent,x,yheapalloc,eheapalloc,ytitle,imageName,progName);
+	sstm.str("");
+	sstm<< "pt_" << string1 << hashVal << "_heapalloc.gif";
+	imageName = new char[sstm.str().length() + 1];
+	strcpy(imageName, sstm.str().c_str()); 
+	ytitle="Size of total allocated memory [kB]";
+	saveGraph(nevent,x,yheapalloc,eheapalloc,ytitle,imageName,progName);
 
-      sstm.str("");
-      sstm<< "pt_" << string1 << hashVal << "_heapleak.gif";
-      imageName = new char[sstm.str().length() + 1];
-      strcpy(imageName, sstm.str().c_str());
-      ytitle="Size of memory leaks [kB]";
-      saveGraph(nevent,x,yheapleak,eheapleak,ytitle,imageName,progName);
+	sstm.str("");
+	sstm<< "pt_" << string1 << hashVal << "_heapleak.gif";
+	imageName = new char[sstm.str().length() + 1];
+	strcpy(imageName, sstm.str().c_str());
+	ytitle="Size of memory leaks [kB]";
+	saveGraph(nevent,x,yheapleak,eheapleak,ytitle,imageName,progName);
 
-      delete x;
-      delete ytime;
-      delete yheappeak;
-      delete yheapalloc;
-      delete yheapleak;
-      delete etime;
-      delete eheappeak;
-      delete eheapalloc;
-      delete eheapleak;
+	delete x;
+	delete ytime;
+	delete yheappeak;
+	delete yheapalloc;
+	delete yheapleak;
+	delete etime;
+	delete eheappeak;
+	delete eheapalloc;
+	delete eheapleak;
+	delete data;
 
-      delete data;
-      if (event->outlier>0){ 
-	delete event;
-	delete t;
-	return 1;
-      }
+	if (event->outlier>0){ 
+	  delete event;
+	  delete t;
+	  return 1;
+	}
+      } //endelse (tree exists)
+          
       delete event;    
       delete t;
     }
