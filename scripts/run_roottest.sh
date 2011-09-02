@@ -135,8 +135,8 @@ EOF
 upload_log() {    
     target_name=$2$1.$host$configname
     scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
-    result=$?
-    if test $result != 0; then 
+    scp_result=$?
+    if test $scp_result != 0; then 
         cat scp.log 
     fi
 }
@@ -144,8 +144,8 @@ upload_log() {
 upload_datafile() {
     target_name=$host$configname.`basename $1`
     scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
-    result=$?
-    if test $result != 0; then 
+    scp_result=$?
+    if test $scp_result != 0; then 
         cat scp.log 
     fi
 }
