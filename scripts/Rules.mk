@@ -67,7 +67,7 @@ ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.d *.o *.obj *.so *.def *.exp *
 	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog \
 	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
-.PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz
+.PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz perftrack.tar.gz
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
 DEPENDENCIES_INCLUDES := $(wildcard *.d)
@@ -139,8 +139,14 @@ $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
 	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
           CALLROOTEXE="$< root.exe"
-	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
-	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.gif'  | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
+
+# For now logs.tar.gz is a phony target
+perftrack.tar.gz:
+	$(CMDECHO) rm -f perftrack.tar perftrack.tar.gz; touch perftrack.tar ; \
+		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' | xargs -I{}  tar -uf perftrack.tar "{}" ; gzip  perftrack.tar 
+
+#	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
+#	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.gif'  | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
 
 $(ROOTTEST_LOC)scripts/analyze_valgrind: $(ROOTTEST_LOC)scripts/analyze_valgrind.cxx
 	$(CXX) $< -o $@

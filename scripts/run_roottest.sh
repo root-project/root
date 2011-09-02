@@ -71,7 +71,8 @@ ROOTMARKS=n/a
 FITROOTMARKS=n/a
 
 SHOW_TOP=yes
-UPLOAD_LOCATION=flxi06.fnal.gov:/afs/.fnal.gov/files/expwww/root/html/roottest/
+UPLOAD_HOST=flxi06.fnal.gov
+UPLOAD_LOCATION=/afs/.fnal.gov/files/expwww/root/html/roottest/
 UPLOAD_SYNC="ssh -x flxi06.fnal.gov bin/flush_webarea"
 SVN_HOST=http://root.cern.ch
 SVN_BRANCH=trunk
@@ -134,7 +135,7 @@ EOF
 
 upload_log() {    
     target_name=$2$1.$host$configname
-    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
+    scp $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
     scp_result=$?
     if test $scp_result != 0; then 
         cat scp.log 
@@ -142,17 +143,33 @@ upload_log() {
 }
 
 upload_datafile() {
-    target_name=$host$configname.`basename $1`
-    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
-    scp_result=$?
-    if test $scp_result != 0; then 
-        cat scp.log 
+    if test "x$1" = "x--untar" ; then
+       untar=yes
+       shift
     fi
+    if test -e $1 ; then
+       target_name=$host$configname.`basename $1`
+       scp $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
+       scp_result=$?
+       if test $scp_result != 0; then 
+          cat scp.log
+       else
+          if test "x$untar" = "xyes" ; then 
+             untar_name=$host$configname.data
+             ssh $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name ; tar xfz ../$target_name" 
+          fi
+       fi
+    fi
+}
+
+one_anchor() {
+   echo "<a href=\"root-today/$1\">$2</a>"
 }
 
 one_line() {
    ref=$1
    status=$2
+   extra=$3
 
    sline="<td style=\"width: 100px; background:lime; text-align: center;\" >"
    nline="<td style=\"width: 100px; background:gray; text-align: center;\" >"
@@ -160,11 +177,11 @@ one_line() {
    rline="</td>"
 
    if test "x$status" = "x$success"; then
-      line="$sline <a href="root-today/$ref">$status</a>           $rline"
+      line="$sline <a href=\"root-today/$ref\">$status</a> $extra          $rline"
    elif test "x$status" = "x$na"; then
-      line="$nline <a href="root-today/$ref">$status</a>           $rline"
+      line="$nline <a href=\"root-today/$ref\">$status</a> $extra          $rline"
    else
-      line="$fline <a href="root-today/$ref">$status</a>           $rline"
+      line="$fline <a href=\"root-today/$ref\">$status</a> $extra          $rline"
    fi
    echo $line
 }
@@ -178,7 +195,12 @@ write_summary() {
        testline=`one_line test_gmake.log.$host$configname $teststatus`
      stressline=`one_line speedresult.log.$host$configname  $teststatus`
    roottestline=`one_line roottest_gmake.log.$host$configname $rootteststatus`
+if [ -e $ROOTTESTLOC/perftrack.tar.gz ] ; then 
+ extra="`one_anchor $host$configname.data "Performance Tracking"`"
+ roottimingline="`one_line $host$configname.roottesttiming.root $rootteststatus "$extra" `"
+else
  roottimingline=`one_line $host$configname.roottesttiming.root $rootteststatus`
+fi
  logsbundleline=`one_line $host$configname.logs.tar.gz $rootteststatus`
 
    date=`date +"%b %d %Y"`
@@ -288,10 +310,12 @@ $MAKE -k $ROOTTEST_MAKEFLAGS >> gmake.log 2>&1
 result=$?
 upload_log gmake.log roottest_
 
-gmake logs.tar.gz >> gmake.log 2>&1
+$MAKE logs.tar.gz >> gmake.log 2>&1
+$MAKE perftrack.tar.gz >> gmake.log 2>&1
 
 upload_datafile roottesttiming.root
 upload_datafile logs.tar.gz
+upload_datafile --untar perftrack.tar.gz
 
 grep FAIL $PWD/gmake.log
 tail $PWD/gmake.log
