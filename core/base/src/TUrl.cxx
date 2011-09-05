@@ -189,11 +189,7 @@ tryfile:
       SetProtocol(u, kTRUE);
       *s = sav;
       s += 3;
-      if (!*s) {
-         // error if we are at end of string
-         fPort = -1;
-         goto cleanup;
-      }
+      // allow url of form: "proto://"
    } else {
       if (defaultIsFile) {
          char *newu = new char [strlen("file:") + strlen(u0) + 1];

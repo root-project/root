@@ -7,6 +7,7 @@ MODNAME      := proofbench
 MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
+PBPARDIR     := $(ROOT_SRCDIR)/etc/proof/proofbench
 
 PROOFBENCHDIR  := $(MODDIR)
 PROOFBENCHDIRS := $(PROOFBENCHDIR)/src
@@ -39,7 +40,7 @@ PBDPARS     += $(wildcard $(MODDIRS)/TSel*.cxx)
 PBDPARH     := $(filter-out $(MODDIRI)/TSelHist%, $(PBDPARH))
 PBDPARS     := $(filter-out $(MODDIRS)/TSelHist%, $(PBDPARS))
 
-PBDPAR      := $(call stripsrc,$(MODDIRS)/ProofBenchDataSel.par)
+PBDPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchDataSel.par)
 
 ##### ProofBenchCPUSel PAR file #####
 PBCPARDIR   := $(call stripsrc,$(PROOFBENCHDIRS)/ProofBenchCPUSel)
@@ -47,7 +48,7 @@ PBCPARINF   := $(PBCPARDIR)/PROOF-INF
 PBCPARH     := $(MODDIRI)/TProofBenchTypes.h $(MODDIRI)/TSelHist.h
 PBCPARS     := $(MODDIRS)/TSelHist.cxx
 
-PBCPAR      := $(call stripsrc,$(MODDIRS)/ProofBenchCPUSel.par)
+PBCPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchCPUSel.par)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
@@ -105,6 +106,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		par=`basename $(PBDPAR)`; \
 		pardir=`basename $(PBDPARDIR)`; \
 		tar cf - $$pardir | gzip > $$par; \
+		mv $$par $(PBPARDIR); \
 		cd $$builddir; \
 		rm -fr $(PBDPARDIR))
 
@@ -134,6 +136,7 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		par=`basename $(PBCPAR)`; \
 		pardir=`basename $(PBCPARDIR)`; \
 		tar cf - $$pardir | gzip > $$par; \
+		mv $$par $(PBPARDIR); \
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 

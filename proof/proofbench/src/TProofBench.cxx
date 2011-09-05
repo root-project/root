@@ -17,6 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfigure.h"
+
 #include "TProofBench.h"
 #include "Getline.h"
 #include "TProofBenchRunCPU.h"
@@ -531,7 +533,11 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       // Is it the default selector?
       if (fDataGenSel == kPROOF_BenchSelDataGenDef) {
          // Load the parfile
-         TString par = TString::Format("%s%s.par", kPROOF_BenchSrcDir, kPROOF_BenchDataSelPar);
+#ifdef R__HAVE_CONFIG
+         TString par = TString::Format("%s/%s%s.par", ROOTETCDIR, kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#else
+         TString par = TString::Format("$ROOTSYS/etc/%s%s.par", kPROOF_BenchParDir, kPROOF_BenchDataSelPar);
+#endif
          Info("MakeDataSet", "uploading '%s' ...", par.Data());
          if (fProof->UploadPackage(par) != 0) {
             Error("MakeDataSet", "problems uploading '%s' - cannot continue", par.Data());
@@ -546,21 +552,21 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
          if (fDataGenPar.IsNull()) {
             Error("MakeDataSet", "you should load the class '%s' before running the benchmark", fDataGenSel.Data());
             return -1;
-         } else {
-            TString par;
-            Int_t from = 0;
-            while (fDataGenPar.Tokenize(par, from, ",")) {
-               Info("MakeDataSet", "Uploading '%s' ...", par.Data());
-               if (fProof->UploadPackage(par) != 0) {
-                  Error("MakeDataSet", "problems uploading '%s' - cannot continue", par.Data());
-                  return -1;
-               }
-               Info("MakeDataSet", "Enabling '%s' ...", par.Data());
-               if (fProof->EnablePackage(par) != 0) {
-                  Error("MakeDataSet", "problems enabling '%s' - cannot continue", par.Data());
-                  return -1;
-               }
-            }
+         }
+      }
+      // Load additional PAR files, if any or required by the alternative selector
+      TString par;
+      Int_t from = 0;
+      while (fDataGenPar.Tokenize(par, from, ",")) {
+         Info("MakeDataSet", "Uploading '%s' ...", par.Data());
+         if (fProof->UploadPackage(par) != 0) {
+            Error("MakeDataSet", "problems uploading '%s' - cannot continue", par.Data());
+            return -1;
+         }
+         Info("MakeDataSet", "Enabling '%s' ...", par.Data());
+         if (fProof->EnablePackage(par) != 0) {
+            Error("MakeDataSet", "problems enabling '%s' - cannot continue", par.Data());
+            return -1;
          }
       }
       // Check

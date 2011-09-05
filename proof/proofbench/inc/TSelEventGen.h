@@ -34,6 +34,7 @@
 #endif
 
 class TList;
+class TMacro;
 
 class TSelEventGen : public TSelector {
 
@@ -49,9 +50,11 @@ private:
    TObject* fTotalGen;                        //events generated on this worker
    TList* fFilesGenerated;                    //list of files generated
 
+   TMacro  *fGenerateFun;                     //Macro with the function to generate the files
+
 protected:
 
-   Long64_t GenerateFiles(TString filename, Long64_t sizenevents);
+   Long64_t GenerateFiles(const char *filename, Long64_t sizenevents);
 
 public :
 

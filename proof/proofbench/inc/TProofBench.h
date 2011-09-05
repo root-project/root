@@ -98,8 +98,8 @@ public:
    void  SetCPUPar(const char *par) { fCPUPar = par; }
    void  SetDataSel(const char *sel) { fDataSel = sel; }
    void  SetDataPar(const char *par) { fDataPar = par; }
-   void  SetDataGetSel(const char *sel) { fDataGenSel = sel; }
-   void  SetDataGetPar(const char *par) { fDataGenPar = par; }
+   void  SetDataGenSel(const char *sel) { fDataGenSel = sel; }
+   void  SetDataGenPar(const char *par) { fDataGenPar = par; }
 
    void  SetProofDS(TProof *p);
 

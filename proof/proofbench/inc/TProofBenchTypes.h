@@ -27,6 +27,7 @@
 
 const char* const kPROOF_BenchCPUSelPar  = "ProofBenchCPUSel";  // PAR with bench CPU selectors
 const char* const kPROOF_BenchDataSelPar = "ProofBenchDataSel";  // PAR with bench data selectors
+const char* const kPROOF_BenchParDir     = "proof/proofbench/";  // Dir with ProofBench Par files (under 'etc')
 const char* const kPROOF_BenchSrcDir     = "proof/proofbench/src/";  // Dir with ProofBench Src files
 const char* const kPROOF_BenchIncDir     = "proof/proofbench/inc/";  // Dir with ProofBench Inc files
 const char* const kPROOF_BenchSelCPUDef  = "TSelHist";   // default CPU selector
