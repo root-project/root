@@ -21,7 +21,6 @@ class TF1;
 class TFumili : public  TVirtualFitter {
 private:
    Int_t fMaxParam;     //
-   Int_t fMaxParam2;    // fMaxParam*fMaxParam
    Int_t fNlog;         //
    Int_t fNfcn;         // Number of FCN calls;
    Int_t fNED1;         // Number of experimental vectors X=(x1,x2,...xK)

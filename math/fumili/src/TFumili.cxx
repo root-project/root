@@ -129,7 +129,6 @@ TFumili::TFumili(Int_t maxpar)
    //
    fMaxParam = TMath::Max(maxpar,25);
    if (fMaxParam>200) fMaxParam=200;
-   fMaxParam2 *= fMaxParam;
    BuildArrays();
 
    fNumericDerivatives = true;
@@ -154,6 +153,10 @@ TFumili::TFumili(Int_t maxpar)
    fNmaxIter= 150;
    fNstepDec= 3;
    fLastFixed = -1;
+
+   fAKAPPA = 0.;
+   fGT = 0.;
+   for (int i = 0; i<5; ++i) fINDFLG[i] = 0;
 
    SetName("Fumili");
    gFumili = this;
