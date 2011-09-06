@@ -7,6 +7,7 @@ class pt_data: public TObject {
   int outlier;
   int svn;
   unsigned int testnumber;
+  unsigned int counter;
   TString testname;
   TString testtime;  
   double heapalloc;
