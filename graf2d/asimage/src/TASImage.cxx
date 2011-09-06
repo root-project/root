@@ -5205,7 +5205,7 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
 
       // generate scans to fill while we still have
       //  a right edge as well as a left edge.
-      i = min(ppt[nextleft].fY, ppt[nextright].fY) - y;
+      i = TMath::Min(ppt[nextleft].fY, ppt[nextright].fY) - y;
 
       // in case of non-convex polygon
       if (i < 0) {
