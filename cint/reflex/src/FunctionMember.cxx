@@ -410,7 +410,7 @@ Reflex::FunctionMember::GenerateDict(DictionaryGenerator& generator) const {
          StdString_Iterator parnam;
 
          for (params = TypeOf().FunctionParameter_Begin(), parnam = FunctionParameterName_Begin();
-              params != TypeOf().FunctionParameter_End(), parnam != FunctionParameterName_End();
+              params != TypeOf().FunctionParameter_End() && parnam != FunctionParameterName_End();
               ++params, ++parnam) {
             // THESE SHOULD ALSO INCLUDE DEFAULT VALUES,
             // LIKE int i=5 FunctionParameterDefault_Begin(), _End
