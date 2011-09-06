@@ -171,7 +171,7 @@ namespace textinput {
       WriteRawString(buf.c_str(), buf.length());
     } else {
       int ANSIIdx = GetClosestColorIdx16(C);
-      char buf[] = {'\x1b', '[', '3', '0' + (ANSIIdx % 8), 'm', 0};
+      char buf[] = {'\x1b', '[', '3', static_cast<char>('0' + (ANSIIdx % 8)), 'm', 0};
       if (ANSIIdx > 7) buf[2] += 6;
       WriteRawString(buf, 5);
     }
