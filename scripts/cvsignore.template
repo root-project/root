@@ -18,3 +18,5 @@
 .gdb_history
 .root_hist
 *.success
+pt_*.root
+pt_*.gif
