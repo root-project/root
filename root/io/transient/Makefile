@@ -15,6 +15,8 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 
+.PRECIOUS: missingdict_rflx_cpp.$(DllSuf) missingdict_rflx.cpp
+
 transientTest.log: TBigDSWriteEvent_cxx.$(DllSuf)  TBigDSWriteParticle_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run.C 2>&1 > transientTest.log
 

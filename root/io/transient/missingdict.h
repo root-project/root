@@ -1,5 +1,15 @@
 #include "missingdict_part1.h"
 
+class RflxTransient { 
+   //... 
+   Value fType; 
+};
+
+class TransientHolder { 
+   // ... 
+   RflxTransient fTransient;  //
+};
+
 class Content {
 public:
   typedef Value value_type;
@@ -14,4 +24,6 @@ public:
 
 void missingdict() {
   TClass::GetClass("Content")->GetStreamerInfo()->ls();
+  TClass::GetClass("TransientHolder")->GetStreamerInfo()->ls();
 }
+
