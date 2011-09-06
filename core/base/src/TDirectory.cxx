@@ -922,10 +922,8 @@ void TDirectory::ls(Option_t *option) const
    TString opta = option;
    TString opt  = opta.Strip(TString::kBoth);
    Bool_t memobj  = kTRUE;
-   Bool_t diskobj = kTRUE;
    TString reg = "*";
    if (opt.BeginsWith("-m")) {
-      diskobj = kFALSE;
       if (opt.Length() > 2)
          reg = opt(2,opt.Length());
    } else if (opt.BeginsWith("-d")) {
