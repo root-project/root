@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer Foo.so \
+CLEAN_TARGETS += file.root memory.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer Foo.so \
 	 *.log $(ALL_LIBRARIES) *.exe
 TEST_TARGETS +=  check Memory ucharshow
 

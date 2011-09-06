@@ -1,5 +1,6 @@
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two merged \
-	Event*.root dt_reference.root CloneTree.root cal.root Tuple_merge.root TestFile2.root \
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog copiedEvent* Event.h one two \
+   merged/Event* merged/libEvent* merged/dt_reference.root \
+   Event*.root dt_reference.root CloneTree.root cal.root Tuple_merge.root TestFile2.root \
    output.root TestMerged.root mix_merge.root mix_int.root mix_char.root execmisstop.root \
    TestFile1.root Tuple_merge.root missplit-1.root missplit-99.root missplit.fail.root
 

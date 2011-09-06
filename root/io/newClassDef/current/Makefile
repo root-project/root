@@ -1,7 +1,7 @@
 TEST_TARGETS += currentTest
 CLEAN_TARGETS += $(ALL_LIBRARIES) \
 	ti_files $(DICTS) $(DICTS_H) ii_files \
-	*.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root \
+	*.$(ObjSuf) *.$(DllSuf) *.lib *.def test.root \
 	 so_locations *~ *.exp .def *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)

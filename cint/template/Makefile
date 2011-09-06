@@ -1,5 +1,5 @@
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += *.log *.root $(ALL_LIBRARIES) *.out
+CLEAN_TARGETS += *.log $(ALL_LIBRARIES) *.out
 
 #Set the list of target to make while testing
 TEST_TARGETS += templateSingleton longlong usingtemplate operator1 simpleSeparateDict forwardDecl constructorTest typenameTest \

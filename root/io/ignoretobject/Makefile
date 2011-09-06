@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.clog *.log *.tmp
+CLEAN_TARGETS += *.so $(ALL_LIBRARIES) *.clog *.log *.tmp
 TEST_TARGETS += IgnoreTObject
 
 ifeq ($(strip $(ROOTTEST_HOME)),)

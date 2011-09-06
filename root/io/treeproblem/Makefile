@@ -1,5 +1,5 @@
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log file.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += libs check
