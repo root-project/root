@@ -4068,8 +4068,7 @@ void StrcpyWithEsc(string& escaped, const char *original)
    // Copy original into escaped BUT make sure that the \ characters
    // are properly escaped (on Windows temp files have \'s).
 
-   int j, k;
-   j = 0; k = 0;
+   int j = 0;
    escaped = "";
    while (original[j] != '\0') {
       if (original[j] == '\\')
