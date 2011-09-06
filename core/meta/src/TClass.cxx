@@ -1544,6 +1544,10 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
+   if (fClassVersion == 0) {
+      isTransient = kTRUE;
+   }
+
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
