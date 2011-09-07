@@ -7,3 +7,4 @@ Called Other::Other(OTHER_ROOT_IO*)
 Called Default::Default(TRootIOCtor*)
 Called Typedef::Typedef(MyCtor*) typedefed from TRootIoCtor
 Called Pointers::Pointers()
+Called WithTemplate::WithTemplate<T>() T=P13OTHER_ROOT_IO
