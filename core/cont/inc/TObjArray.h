@@ -67,6 +67,7 @@ public:
       return GetAbsLast() + 1;   //only OK when no gaps
    }
    Int_t            GetLast() const;
+   TObject        **GetObjectRef() const { return fCont; };
    TObject        **GetObjectRef(const TObject *obj) const;
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const;

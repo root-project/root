@@ -50,6 +50,18 @@
 
 ClassImp(TBranchElement)
 
+#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
+#if !defined(R__unlikely)
+  #define R__unlikely(expr) __builtin_expect(!!(expr), 0)
+#endif
+#if !defined(R__likely)
+  #define R__likely(expr) __builtin_expect(!!(expr), 1)
+#endif
+#else
+  #define R__unlikely(expr) expr
+  #define R__likely(expr) expr
+#endif
+
 //______________________________________________________________________________
 namespace {
    void RemovePrefix(TString& str, const char* prefix) {
@@ -931,6 +943,8 @@ inline TStreamerInfo* TBranchElement::GetInfoImp() const
 {
    // -- Get streamer info for the branch class.
 
+   // Note: we need to find a way to reduce the complexity of 
+   // this often executed condition.
    if (!fInfo || (fInfo && (!fInit || !fInfo->IsCompiled()))) {
       const_cast<TBranchElement*>(this)->InitInfo();
    }
@@ -1898,18 +1912,21 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // to search for the referenced object in the proper element of the
    // proper branch.
    TBranchRef* bref = fTree->GetBranchRef();
-   if (bref) {
+   if (R__unlikely(bref)) {
       fBranchID = bref->SetParent(this, fBranchID);
       bref->SetRequestedEntry(entry);
    }
 
    Int_t nbytes = 0;
 
-   if (IsAutoDelete()) {
+   if (R__unlikely(IsAutoDelete())) {
       SetBit(kDeleteObject);
       SetAddress(fAddress);
+   } else {
+      if (R__unlikely(!fAddress && !fTree->GetMakeClass())) {
+         SetupAddressesImpl();
+      }
    }
-   SetupAddresses();
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
@@ -1957,7 +1974,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       nbytes += nb;
    }
 
-   if (fTree->Debug() > 0) {
+   if (R__unlikely(fTree->Debug() > 0)) {
       if ((entry >= fTree->GetDebugMin()) && (entry <= fTree->GetDebugMax())) {
          Info("GetEntry", "%lld, branch=%s, nbytes=%d", entry, GetName(), nbytes);
       }
@@ -3390,7 +3407,6 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    TVirtualCollectionProxy *proxy = GetCollectionProxy();
    TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
 
-
    TVirtualCollectionIterators *iter = fBranchCount->fIterators;
    b.ReadSequenceVecPtr(*fReadActionSequence,iter->fBegin,iter->fEnd);
 }
@@ -3458,13 +3474,12 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
    }
    fNdata = n;
    TClonesArray* clones = (TClonesArray*) fObject;
-   if (!clones) {
-      return;
-   }
    if (clones->IsZombie()) {
       return;
    }
-   clones->Clear();
+   // The salient part of Clear is now 'duplicated in ExpandCreateFast (i.e. the 
+   // setting to zero of the unused slots), so we no longer need to call Clear explicitly
+   //    clones->Clear();
    clones->ExpandCreateFast(fNdata);
 }
 
@@ -3474,7 +3489,9 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    // -- Read leaves into i/o buffers for this branch.
    // Case of a data member within a TClonesArray (fType == 31).
 
-   ValidateAddress();
+   // No need to validate the address here, if we are a member of a split ClonesArray,
+   // fID is positive
+   //   ValidateAddress();
 
    if (fObject == 0)
    {
@@ -3483,14 +3500,13 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
       return;
    }
 
+   // Note, we could (possibly) save some more, by configuring the action
+   // based on the value of fOnfileObject rather than pushing in on a stack.
    R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    // TClonesArray sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
    TClonesArray* clones = (TClonesArray*) fObject;
-   if (!clones) {
-      return;
-   }
    if (clones->IsZombie()) {
       return;
    }
@@ -3498,7 +3514,7 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    if (info==0) return;
    // Since info is not null, fReadActionSequence is not null either.
 
-   char **arr = (char **)clones->GetObjectRef(0);
+   char **arr = (char **)clones->GetObjectRef();
    char **end = arr + fNdata;
    b.ReadSequenceVecPtr(*fReadActionSequence,arr,end);
 }
@@ -4562,6 +4578,15 @@ void TBranchElement::SetupAddresses()
       // -- Do nothing if already setup or if we are a MakeClass tree.
       return;
    }
+   SetupAddressesImpl();
+}
+
+//______________________________________________________________________________
+void TBranchElement::SetupAddressesImpl()
+{
+   // -- If the branch address is not set,  we set all addresses starting with
+   // the top level parent branch.  This is required to be done in order for
+   // GetOffset to be correct and for GetEntry to run.
 
    if (TestBit(kDoNotProcess|kAddressSet)) {
       // -- Do nothing if we have been told not to.

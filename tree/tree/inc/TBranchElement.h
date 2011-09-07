@@ -139,7 +139,8 @@ protected:
    void ReadLeavesMemberCounter(TBuffer& b);
    void SetReadLeavesPtr();
    void SetReadActionSequence();
-
+   void SetupAddressesImpl();
+   
 // Public Interface.
 public:
    TBranchElement();
