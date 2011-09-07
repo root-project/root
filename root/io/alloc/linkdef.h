@@ -8,5 +8,10 @@
 #pragma link C++ class Pointers+;
 #pragma link C++ class WithTemplate+;
 
+#pragma link C++ function WithTemplate::WithTemplate(OTHER_ROOT_IO*);
+
 #pragma link C++ ioctortype OTHER_ROOT_IO;
 #pragma link C++ ioctortype G4_ROOT_IO;
+
+//#pragma link C++ function WithTemplate::WithTemplate(Int_t);
+//#pragma link C++ function WithTemplate::WithTemplate(Double_t);

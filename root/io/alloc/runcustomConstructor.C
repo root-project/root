@@ -28,7 +28,7 @@
    c->New();
 
    c = gROOT->GetClass("WithTemplate");
-   //c->New();
+   c->New();
 
    return 0;
 }
