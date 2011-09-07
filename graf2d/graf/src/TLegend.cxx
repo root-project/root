@@ -446,17 +446,31 @@ TLegendEntry *TLegend::GetEntry() const
    Int_t nRows = GetNRows();
    if ( nRows == 0 ) return 0;
 
-   Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
+   Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY())-fY1;
    Double_t yspace = (fY2 - fY1)/nRows;
+   
+   Int_t nColumns = GetNColumns();
+   Double_t xmouse = gPad->AbsPixeltoX(gPad->GetEventX())-fX1;
+   Double_t xspace = 0.;
+   if (nColumns > 0) xspace = (fX2 - fX1)/nColumns;
 
-   Double_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
+   Int_t ix = 1;
+   if (xspace > 0.) ix = (Int_t)(xmouse/xspace)+1;
+   if (ix > nColumns) ix = nColumns;
+   if (ix < 1)        ix = 1;
+   
+   Int_t iy = nRows-(Int_t)(ymouse/yspace);
+   if (iy > nRows) iy = nRows;
+   if (iy < 1)     iy = 1;
+   
+   Int_t nloops = TMath::Min(ix+(nColumns*(iy-1)), fPrimitives->GetSize());
+
    TIter next(fPrimitives);
-   TLegendEntry *entry;
-   while (( entry = (TLegendEntry *)next() )) {
-      ybottomOfEntry -= yspace;
-      if ( ybottomOfEntry < ymouse ) return entry;
-   }
-   return 0;
+   TLegendEntry *entry = 0;
+
+   for (Int_t i=1; i<= nloops; i++) entry = (TLegendEntry *)next();
+
+   return entry;
 }
 
 
@@ -869,7 +883,7 @@ void TLegend::SetEntryLabel( const char* label )
    /* Begin_Html
    Edit the label of the entry pointed to by the mouse.
    End_Html */
-
+   
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( entry ) entry->SetLabel( label );
 }
