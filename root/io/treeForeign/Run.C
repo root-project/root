@@ -6,5 +6,6 @@ TTree *T = (TTree*)test->Get("T");
 T->Print();
 T->Scan("myvar");
 T->Scan("arr.chunk.myvar[0]");
+T->Scan("arr.chunk.myvar");
  return 0;
 }
