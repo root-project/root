@@ -132,9 +132,10 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
          newPosition = SetPositionAt(curNode,newTranslation[0],newTranslation[1],newTranslation[2]);
          if (newPosition) {;} //intentionally not used         
       }
-   } 
-   newPosition =  SetPositionAt(*curPosition);
-//         printf(" new level %d %s\n",fDepth, curNode->GetName());
+   } else {
+      newPosition =  SetPositionAt(*curPosition);
+      // printf(" new level %d %s\n",fDepth, curNode->GetName();
+   }
    if (newPosition) newPosition->SetId(curPositionId);
    return newPosition;
 }
@@ -143,6 +144,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
 void TVolumeViewIter::ResetPosition(Int_t level, TVolumePosition *newPosition)
 {
    //to be documented
+
    Int_t thisLevel = level;
    if (!thisLevel) thisLevel = fDepth;
    TVolumePosition *thisPosition  =  (TVolumePosition *) GetPosition(level);
@@ -154,6 +156,7 @@ void TVolumeViewIter::ResetPosition(Int_t level, TVolumePosition *newPosition)
 void TVolumeViewIter::Reset(TDataSet *l,Int_t depth)
 {
    //to be documented
+
    TDataSetIter::Reset(l,depth);
 }
 
@@ -161,6 +164,7 @@ void TVolumeViewIter::Reset(TDataSet *l,Int_t depth)
 TVolumePosition *TVolumeViewIter::SetPositionAt(TVolume *node,Double_t x, Double_t y, Double_t z, TRotMatrix *matrix)
 {
    //to be documented
+
    if (!fPositions)  fPositions = new TObjArray(100);
    TVolumePosition *position =  (TVolumePosition *) fPositions->At(fDepth);
    if (position) position->Reset(node,x,y,z,matrix);
@@ -175,6 +179,7 @@ TVolumePosition *TVolumeViewIter::SetPositionAt(TVolume *node,Double_t x, Double
 TVolumePosition *TVolumeViewIter::SetPositionAt(TVolumePosition &curPosition)
 {
    //to be documented
+
    if (!fPositions)  fPositions = new TObjArray(100);
    TVolumePosition *position =  (TVolumePosition *) fPositions->At(fDepth);
    if (position) *position = curPosition;
