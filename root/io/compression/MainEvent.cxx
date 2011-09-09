@@ -105,6 +105,8 @@ int main(int argc, char **argv)
 {
    TROOT simple("simple","Example of creation of a tree");
 
+   gRandom->SetSeed(42); // make tests reproducible
+
    TMessage * message = new TMessage();
    int testValue = -2;
    message->SetCompressionSettings(testValue);
@@ -301,23 +303,23 @@ int main(int argc, char **argv)
         exit(29);
       }
       int expectedSize = -1;
-      if (comp == 0) expectedSize = 5558090;
-      else if (comp == 101) expectedSize = 1257359;
-      else if (comp == 201) expectedSize = 1115154;
-      else if (comp == 301) expectedSize = 1267841;
-      else if (comp == 5) expectedSize = 1211000;
+      if (comp == 0) expectedSize = 5529199;
+      else if (comp == 101) expectedSize = 1254808;
+      else if (comp == 201) expectedSize = 1116706;
+      else if (comp == 301) expectedSize = 1265018;
+      else if (comp == 5) expectedSize = 1208369;
 
       if (expectedSize > 0 &&
           (tree->GetZipBytes() > expectedSize + 5000 ||
            tree->GetZipBytes() < expectedSize - 5000)) {
-        std::cerr << "Compressed TTree size differs from"
-                     " size expected for the input parameters.\n"
-                     "The expected size may need tuning as compression "
-                     "libraries and other things change.\n";
-	std::cerr << "compression setting = " << comp 
-                  << "  expected compressed TTree size = " << expectedSize
-                  << "  actual size = " << tree->GetZipBytes() << std::endl;
-        exit(27);
+         std::cerr << "Compressed TTree size differs from"
+                      " size expected for the input parameters.\n"
+                      "The expected size may need tuning as compression "
+                      "libraries and other things change.\n";
+         std::cerr << "compression setting = " << comp 
+                   << "  expected compressed TTree size = " << expectedSize
+                   << "  actual size = " << tree->GetZipBytes() << std::endl;
+         exit(27);
       }
       nevent = TMath::Max(nevent,nentries);
       if (read == 1) {  //read sequential
