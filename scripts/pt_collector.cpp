@@ -488,11 +488,8 @@ void saveGraph(Int_t n,double *x,double * y,double * e,const char *ytitle,char *
   c1->SetFillColor(32);
   c1->SetGrid();
   g = new TGraphErrors(n,x,y,0,e);
-  
-  /*cout<<"Min "<<g->GetXMin()<<" Max "<<g->GetMaximum()<<endl; 
-    if (g->GetMinimum()>v*0.99) g->SetMinimum(v*0.99);
-    if (g->GetMaximum()<v*1.01) g->SetMaximum(v*1.01);
-    cout<<"Min "<<g->GetMinimum()<<" Max "<<g->GetMaximum()<<endl; */
+  if (g->GetMinimum()>v*0.99) g->SetMinimum(v*0.99);
+  if (g->GetMaximum()<v*1.01) g->SetMaximum(v*1.01);
   g->SetTitle(title);
   g->SetMarkerColor(4);
   g->SetMarkerStyle(20); // 7 probably faster (not scalable)
