@@ -99,6 +99,8 @@
 int MainEvent(Int_t nevent = 400,Int_t comp = 1, Int_t split = 1,
               Int_t arg4 = 1, Int_t arg5 = 600)
 {
+   gRandom->SetSeed(30); // make tests reproducible
+
    //Int_t nevent = 400;     // by default create 400 events
    //Int_t comp   = 1;       // by default file is compressed
    //Int_t split  = 1;       // by default, split Event in sub branches
