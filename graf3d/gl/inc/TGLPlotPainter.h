@@ -276,6 +276,9 @@ public:
 
    Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
    
+   void SetDrawFrontBox(Bool_t b) {fBackBox.SetDrawFront(b);}
+   void SetDrawBackBox(Bool_t b) {fBackBox.SetDrawBack(b);}
+   
 protected:
    const TColor    *GetPadColor()const;
    //

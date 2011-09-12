@@ -45,6 +45,9 @@ private:
    Double_t               fRangeXU;
    Double_t               fRangeYU;
    Double_t               fRangeZU;
+   
+   Bool_t                 fDrawBack;
+   Bool_t                 fDrawFront;
 
 public:
 
@@ -74,9 +77,18 @@ public:
 
    static const Int_t    fgFramePlanes[][4];
    static const Int_t    fgBackPairs[][2];
+   static const Int_t    fgFrontPairs[][2];
    static const Double_t fgNormals[][3];
+   
+   void SetDrawFront(Bool_t d) {fDrawFront = d;}
+   Bool_t GetDrawFront() const {return fDrawFront;}
+
+   void SetDrawBack(Bool_t d) {fDrawBack = d;}
+   Bool_t GetDrawBack() const {return fDrawBack;}
 
 private:
+   void DrawBack(Int_t selectedPart, Bool_t selectionPass, const std::vector<Double_t> &zLevels, Bool_t highColor)const;
+   void DrawFront()const;
    void DrawBackPlane(Int_t plane, Bool_t selectionPass,
                       const std::vector<Double_t> &zLevels)const;
 

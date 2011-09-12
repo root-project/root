@@ -590,34 +590,62 @@ void TGLHistPainter::Paint(Option_t *o)
    }
 }
 
+namespace {
+
+Bool_t FindAndRemoveOption(TString &options, const char *toFind)
+{
+   const UInt_t len = std::strlen(toFind);
+   const Ssiz_t index = options.Index(toFind);
+
+   if (index != kNPOS) {
+      options.Remove(index, len);
+      return kTRUE;
+   }
+   
+   return kFALSE;
+}
+
+}
+
 //______________________________________________________________________________
 TGLHistPainter::PlotOption_t
-TGLHistPainter::ParsePaintOption(const TString &option)const
+TGLHistPainter::ParsePaintOption(const TString &o)const
 {
-   //In principle, we can have several conflicting options: "lego surf pol sph",
+   //In principle, we can have several conflicting options: "lego surf pol sph", surfbb: surf, fb, bb.
    //but only one will be selected, which one - depends on parsing order in this function.
-   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian, kFALSE, kFALSE, gPad->GetLogx(),
+   
+   TString options(o);
+   
+   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian, kTRUE, kTRUE, gPad->GetLogx(),
                                 gPad->GetLogy(), gPad->GetLogz()};
+
    //Check coordinate system type.
-   if (option.Index("pol") != kNPOS)
+   if (FindAndRemoveOption(options, "pol"))
       parsedOption.fCoordType = kGLPolar;
-   if (option.Index("cyl") != kNPOS)
+   if (FindAndRemoveOption(options, "cyl"))
       parsedOption.fCoordType = kGLCylindrical;
-   if (option.Index("sph") != kNPOS)
+   if (FindAndRemoveOption(options, "sph"))
       parsedOption.fCoordType = kGLSpherical;
-   //Define plot type
-   if (option.Index("lego") != kNPOS)
+
+   //Define plot type.
+   if (FindAndRemoveOption(options, "lego"))
       fStack ? parsedOption.fPlotType = kGLStackPlot : parsedOption.fPlotType = kGLLegoPlot;
-   if (option.Index("surf") != kNPOS)
+   if (FindAndRemoveOption(options, "surf"))
       parsedOption.fPlotType = kGLSurfacePlot;
-   if (option.Index("tf3") != kNPOS)
+   if (FindAndRemoveOption(options, "tf3"))
       parsedOption.fPlotType = kGLTF3Plot;
-   if (option.Index("box") != kNPOS)
+   if (FindAndRemoveOption(options, "box"))
       parsedOption.fPlotType = kGLBoxPlot;
-   if (option.Index("iso") != kNPOS)
+   if (FindAndRemoveOption(options, "iso"))
       parsedOption.fPlotType = kGLIsoPlot;
-   if (option.Index("col") != kNPOS)
+   if (FindAndRemoveOption(options, "col"))
       parsedOption.fPlotType = kGLVoxel;
+
+   //Check BB and FB options.
+   if (FindAndRemoveOption(options, "bb"))
+      parsedOption.fBackBox = kFALSE;
+   if (FindAndRemoveOption(options, "fb"))
+      parsedOption.fFrontBox = kFALSE;
 
    return parsedOption;
 }
@@ -662,6 +690,9 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
       fCoord.SetZLog(gPad->GetLogz());
       fCoord.SetCoordType(option.fCoordType);
       fGLPainter->AddOption(addOption);
+      
+      fGLPainter->SetDrawFrontBox(option.fFrontBox);
+      fGLPainter->SetDrawBackBox(option.fBackBox);
    } else
       fPlotType = kGLDefaultPlot;
 }

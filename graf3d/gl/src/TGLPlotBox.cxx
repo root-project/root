@@ -47,6 +47,13 @@ const Int_t TGLPlotBox::fgBackPairs[][2] =
     {1, 0}
    };
 
+const Int_t TGLPlotBox::fgFrontPairs[][2] = 
+   {
+    {3, 0},
+    {0, 1},
+    {1, 2},
+    {2, 3}
+   };
 //______________________________________________________________________________
 TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                : fFrameColor(0),
@@ -81,13 +88,10 @@ TGLPlotBox::~TGLPlotBox()
    // Empty dtor to suppress g++ warnings.
 }
 
-
 //______________________________________________________________________________
-void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
-                         Bool_t highColor)const
+void TGLPlotBox::DrawBack(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
+                          Bool_t highColor)const
 {
-   // Draw back box for a plot.
-
    using namespace Rgl;
    TGLDisableGuard depthTest(GL_DEPTH_TEST); //[0-0]
    glDepthMask(GL_FALSE);//[1
@@ -108,9 +112,9 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       glMaterialfv(GL_FRONT, GL_DIFFUSE, backColor);
       if (selected == 1) {
          fXOYSelectable ?
-                         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
                         :
-                         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
+                        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
       }
    } else
       ObjectIDToColor(1, highColor);//Bottom plane, encoded as 1 in a selection buffer.
@@ -121,9 +125,8 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       if (selected == 1)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
       else if (selected == 2)
-         fSelectablePairs[fFrontPoint][0] ?
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
-           :glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
+         fSelectablePairs[fFrontPoint][0] ? glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
+                                          : glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
    } else
       ObjectIDToColor(2, highColor);//Left plane, encoded as 2 in a selection buffer.
 
@@ -133,9 +136,8 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       if (selected == 2)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
       else if (selected == 3)
-         fSelectablePairs[fFrontPoint][1] ?
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
-           :glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
+         fSelectablePairs[fFrontPoint][1] ? glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
+                                          : glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
    } else
       ObjectIDToColor(3, highColor); //Right plane, encoded as 3 in a selection buffer.
 
@@ -148,6 +150,37 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       glDisable(GL_BLEND);//2]
       glDisable(GL_LINE_SMOOTH);//3]
    }
+}
+
+//______________________________________________________________________________
+void TGLPlotBox::DrawFront()const
+{
+   using namespace Rgl;
+
+   const TGLDisableGuard lightGuard(GL_LIGHTING);
+//   const TGLEnableGuard blend(GL_BLEND);
+//   const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
+   
+  // glColor4d(0., 0., 0., 0.8);
+   glColor3d(0., 0., 0.);
+   
+   const Int_t *vertInd = fgFramePlanes[fgFrontPairs[fFrontPoint][0]];   
+   DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
+   
+   vertInd = fgFramePlanes[fgFrontPairs[fFrontPoint][1]];
+   DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
+}
+
+//______________________________________________________________________________
+void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
+                         Bool_t highColor)const
+{
+   // Draw back box for a plot.
+   if (fDrawBack)
+      DrawBack(selected, selectionPass, zLevels, highColor);
+
+   if (fDrawFront && !selectionPass)
+      DrawFront();
 }
 
 
