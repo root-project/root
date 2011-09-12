@@ -56,31 +56,32 @@ ClassImp(TGraphPainter);
 <a name="GP00"></a><h3>Introduction</h3>
 
 Graphs are drawn via the painter <tt>TGraphPainter</tt> class. This class
-implement all the various techniques need to display the various kind of
+implements all the various techniques needed to display the various kind of
 graphs ie: <tt>TGraph</tt>, <tt>TGraphAsymmErrors</tt>,
 <tt>TGraphBentErrors</tt> and <tt>TGraphErrors</tt>.
 
 <p>
-To draw a graph "<tt>g</tt>" is enough to do:
+To draw a graph "<tt>g</tt>" it's enough to do:
 <pre>
    g->Draw("AL");
 </pre>
 
 
-The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means that the axis
-syetem should be define (option <tt>"A"</tt>) and that the graph should
-be drawn as a simple line (option <tt>"L"</tt>). By default a graph is drawn
-in the current pad in the current coordinates system. To define a suitable
-coordinates system and drawn the axis the option <tt>"A"</tt> must be
-specified.
+The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means:
+<ol>
+<li>axis should be drawn (option <tt>"A"</tt>),</li>
+<li>the graph should be drawn as a simple line (option <tt>"L"</tt>).</li>
+</ol>
+By default a graph is drawn in the current pad in the current coordinates system.
+To define a suitable coordinates' system and draw the axis the option
+<tt>"A"</tt> must be specified.
 <p>
 <tt>TGraphPainter</tt> offers many options to paint the various kind of graphs.
 <p>
-The <tt>TGraphPainter</tt> class specializes in the drawing of graphs. It is
-separated from the graph so that one can have graphs without the
+It is separated from the graph classes so that one can have graphs without the
 graphics overhead, for example in a batch program.
 <p>
-When a displayed graph is modified, there is not need to call the
+When a displayed graph is modified, there is no need to call the
 <tt>Draw()</tt> method again; the image will be refreshed the next time the
 pad will be updated.
 <p>A pad is updated after one of these three actions:
@@ -100,11 +101,11 @@ Axis are drawn around the graph
 </td></tr>
 
 <tr><th valign=top>"L"</th><td>
-A simple polyline between every points is drawn
+A simple polyline is drawn
 </td></tr>
 
 <tr><th valign=top>"F"</th><td>
-A fill area is drawn ('CF' draw a smooth fill area)
+A fill area is drawn ('CF' draw a smoothed fill area)
 </td></tr>
 
 <tr><th valign=top>"C"</th><td>
@@ -116,11 +117,11 @@ A Star is plotted at each point
 </td></tr>
 
 <tr><th valign=top>"P"</th><td>
-Idem with the current marker
+The current marker is plotted at each point
 </td></tr>
 
 <tr><th valign=top>"B"</th><td>
-A Bar chart is drawn at each point
+A Bar chart is drawn
 </td></tr>
 
 <tr><th valign=top>"1"</th><td>
@@ -139,8 +140,8 @@ The Y-axis is drawn on the right side of the plot.
 <p>
 
 Several drawing options can be combined. In the following example the graph
-is drawn as a smooth curve (option "C") and with markers (option "P"). The
-option "A" request the definition of the axis.
+is drawn as a smooth curve (option "C") with markers (option "P").
+The option "A" request the axis drawing.
 
 End_Html
 Begin_Macro(source)
@@ -192,9 +193,9 @@ case the line width number is interpreted as:
 </pre>
 <ul>
 <li> The two digits number <tt>"ll"</tt> represent the normal line width
-<li> The two digits number  <tt>"ff"</tt> is the filled area width.
-<li> The sign of "ffll" allows to flip the filled area from one side of the line to
-     the other.
+<li> The two digits number  <tt>"ff"</tt> represent the filled area width.
+<li> The sign of "ffll" allows to flip the filled area from one side of the line
+     to the other.
 </ul>
 The current fill area attributes are used to draw the hatched zone.
 
@@ -207,8 +208,7 @@ Begin_Html
 <a name="GP03"></a><h3>Graphs with error bars</h3>
 Three classes are available to handle graphs with error bars:
 <tt>TGraphErrors</tt>, <tt>TGraphAsymmErrors</tt> and <tt>TGraphBentErrors</tt>.
-In addition to the drawing options previously described, the graphs with error
-bars can be drawn with the following extra options:
+The following drawing options are specific to graphs with error bars:
 <p>
 <table border=0>
 
@@ -230,7 +230,7 @@ The size of the arrow is set to 2/3 of the marker size.
 
 <tr><th valign=top>"X"</th><td>
 By default the error bars are drawn. If option "X" is specified,
-the errors are not drawn. The graph with errors in drawn like a normal graph.
+the errors are not drawn. A graph with errors is drawn like a normal graph.
 </td></tr>
 
 <tr><th valign=top>"||"</th><td>
@@ -241,12 +241,12 @@ systematic errors on top of a graph with statistical errors.
 
 <tr><th valign=top>"[]"</th><td>
 Does the same as option "||" except that it draws additionnal tick marks at the
-end of the vertical/horizonthal lines. This makes less ambiguous plots
+end of the vertical/horizonthal lines. It makes plots less ambiguous
 in case several graphs are drawn on the same picture.
 </td></tr>
 
 <tr><th valign=top>"0"</th><td>
-By default, when a data point is outside the visible range along the Y axis the error
+By default, when a data point is outside the visible range along the Y axis, the error
 bars are not drawn. Combined with other options, this option forces error bars'
 drawing for the data points outside the visible range along the Y axis.
 </td></tr>
@@ -298,7 +298,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>The option "3" allows to shows the error as band.
+<p>The option "3" shows the errors as a band.
 
 End_Html
 Begin_Macro(source)
@@ -319,8 +319,8 @@ Begin_Html
 
 <p>The option "4" is similar to the option "3" except that the band is smoothed.
 As the following picture shows, this option should be used carefuly because
-the smoothing algorithm may show some (huge) "bouncing" effects. In some case
-looks nicer than the option "3" (because it is smooth) but it can be
+the smoothing algorithm may show some (huge) "bouncing" effects. In some cases
+it looks nicer than option "3" (because it is smooth) but it can be
 misleading.
 
 End_Html
@@ -449,7 +449,7 @@ Begin_Html
 
 <a name="GP04"></a><h3>TGraphPolar options</h3>
 
-The drawing options for the polar graphs are the following values:
+The drawing options for the polar graphs are the following:
 
 <table border=0>
 
