@@ -2050,7 +2050,7 @@ void TUnixSystem::StackTrace()
 #ifdef ROOTETCDIR
       gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
 #else
-      gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
+      gdbscript.Form("%s/etc/gdb-backtrace.sh ", Getenv("ROOTSYS"));
 #endif
    }
 
@@ -2670,8 +2670,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       return 0;
 
 #if !defined(R__MACOSX)
-   char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
-                              kExecutePermission);
+   char *exe = Which(Getenv("PATH"), gApplication->Argv(0), kExecutePermission);
    if (!exe) {
       once = kTRUE;
       return 0;
@@ -3699,8 +3698,13 @@ const char *TUnixSystem::UnixHomedirectory(const char *name)
       if (mydir[0])
          return mydir;
       pw = getpwuid(getuid());
-      if (pw) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN);
+      if (pw && pw->pw_dir) {
+         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
+         mydir[sizeof(mydir)-1] = '\0';
+         return mydir;
+      } else if (gSystem->Getenv("HOME")) {
+         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
+         mydir[sizeof(mydir)-1] = '\0';
          return mydir;
       }
    }
