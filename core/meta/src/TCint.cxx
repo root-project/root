@@ -1012,8 +1012,10 @@ Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
    if (tagnum >= 0) {
       G__ClassInfo info(tagnum);
       // If autoloading is off then Property() == 0 for autoload entries.
-      if (!autoload && !info.Property())
-         return kTRUE;
+      if (!autoload && !info.Property()) {
+          delete [] classname;
+          return kTRUE;
+      }
       if (info.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
          // We are now sure that the entry is not in fact an autoload entry.
          delete [] classname;
