@@ -1073,21 +1073,26 @@ TEfficiency::~TEfficiency()
    //default destructor
 
    //delete all function in fFunctions
+   // use same logic as in TH1 destructor 
+   // (see TH1::~TH1 code in TH1.cxx)
    if(fFunctions) {
-      
-      TIter next(fFunctions);
+      fFunctions->SetBit(kInvalidObject);
       TObject* obj = 0;
-      while((obj = next())) {
-	 delete obj;
+      while ((obj  = fFunctions->First())) {
+         while(fFunctions->Remove(obj)) { }
+         if (!obj->TestBit(kNotDeleted)) {
+            break;
+         }
+         delete obj;
+         obj = 0;
       }
-
-      fFunctions->Delete();
+      delete fFunctions;
+      fFunctions = 0;
    }
 
    if(fDirectory)
       fDirectory->Remove(this);
    
-   delete fFunctions;
    delete fTotalHistogram;
    delete fPassedHistogram;
    delete fPaintGraph;
