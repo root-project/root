@@ -1067,8 +1067,9 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
    //         D R A W   S U B P O L Y G O N
       if (k < 3) continue;
       for (i = 1; i <= k; ++i) {
-         x[i - 1] = p3[i*3 - 3];
-         y[i - 1] = p3[i*3 - 2];
+         x[i-1] = p3[i*3-3];
+         y[i-1] = p3[i*3-2];
+         if (TMath::IsNaN(x[i-1]) || TMath::IsNaN(y[i-1])) return;
       }
       if (ilev==1) {
          icol=gPad->GetFillColor();
@@ -4650,7 +4651,6 @@ void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
 
    static Int_t iwhat[21] = { 1,3,5,65,50,67,74,51,177,105,113,58,165,178,
                               254,252,250,190,205,188,181 };
-
    Int_t j, i, i1, i2, i3, ir, irt=0, k, k1, k2, incr, icase=0, n;
    Int_t itr[3];
 
@@ -6151,6 +6151,5 @@ void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
       if (k<0) k = -k;
       view->WCtoNDC(&xyz[k-1][0], &p3[i-1][0]);
    }
-
    FillPolygon(np, (Double_t *)p3, (Double_t *)t);
 }
