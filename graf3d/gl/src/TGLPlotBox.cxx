@@ -64,7 +64,9 @@ TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                  fFrontPoint(0),
                  fRangeXU(1.),
                  fRangeYU(1.),
-                 fRangeZU(1.)
+                 fRangeZU(1.),
+                 fDrawBack(kTRUE),
+                 fDrawFront(kTRUE)
 {
    // Constructor.
    //Front point is 0.
