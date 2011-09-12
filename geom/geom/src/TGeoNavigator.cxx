@@ -2162,7 +2162,17 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
       Double_t dy = (y-fLastPoint[1]);
       Double_t dz = (z-fLastPoint[2]);
       Double_t dsq = dx*dx+dy*dy+dz*dz;
-      if (dsq<fLastSafety*fLastSafety) return kTRUE;
+      if (dsq<fLastSafety*fLastSafety) {
+         if (change) {
+            fPoint[0] = x;
+            fPoint[1] = y;
+            fPoint[2] = z;
+            memcpy(fLastPoint, fPoint, 3*sizeof(Double_t));
+            fLastSafety -= TMath::Sqrt(dsq);
+         }
+         return kTRUE;
+      }  
+      if (change) fLastSafety = 0;
    }
    if (fCurrentOverlapping) {
 //      TGeoNode *current = fCurrentNode;
