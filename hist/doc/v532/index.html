@@ -42,6 +42,20 @@ outside the plot frame. This option did not clip the error bars correctly.
 </li>
 </ul>
 
+<h4>TPainter3dAlgorithms</h4>
+<ul>
+<li>Protection against possible NaN added. The following macro produced wrong 
+   plots.
+<pre>
+   {
+      TCanvas * canvas = new TCanvas("glC","C",800,800);
+      TH3D *h = new TH3D("h3","h3",150,0,20,150,-5,5,150,-5,5);
+      ntuple->Draw("px:py+1:pz+4.7>>h3","","Q");
+   }
+</pre>
+</li>
+</ul>
+
 <h4>TGraph</h4>
 <ul>
    <li> <tt>TGraph::SavePrimitive()</tt> uses a greater precision to output the
