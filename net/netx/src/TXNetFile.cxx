@@ -117,7 +117,7 @@ TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
    // (multiple options can be set concurrently)
    TUrl urlnoanchor(url);
    // Set debug level
-   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", -1));
+   EnvPutInt(NAME_DEBUG, gEnv->GetValue("XNet.Debug", 0));
 
    // Set environment, if needed
    if (!fgInitDone || strstr(urlnoanchor.GetOptions(),"checkenv")) {
