@@ -308,9 +308,9 @@ public:
    virtual   Int_t    WriteClassBuffer(const TClass *cl, void *pointer) = 0;
 
    // Utilites to streamer using sequences.
-   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *object) = 0;
-   virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
-   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object) = 0;
+   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
 
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);

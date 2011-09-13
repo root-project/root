@@ -104,10 +104,13 @@ protected:
 
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b); 
    ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use. 
+   typedef void (TBranch::*FillLeaves_t)(TBuffer &b); 
+   FillLeaves_t fFillLeaves;     //! Pointer to the FillLeaves implementation to use. 
    void     ReadLeavesImpl(TBuffer &b);
    void     ReadLeaves0Impl(TBuffer &b);
    void     ReadLeaves1Impl(TBuffer &b);
    void     ReadLeaves2Impl(TBuffer &b);
+   void     FillLeavesImpl(TBuffer &b);
    
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
@@ -118,6 +121,7 @@ protected:
    TString  GetRealFileName() const;
 
 private:
+   Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    TBranch(const TBranch&);             // not implemented
    TBranch& operator=(const TBranch&);  // not implemented
 
@@ -134,7 +138,6 @@ public:
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
    virtual Int_t     Fill();
-   virtual void      FillLeaves(TBuffer &b);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);
            Int_t     FlushBaskets();

@@ -300,9 +300,9 @@ public:
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
 
-   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
-   virtual Int_t ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
-   virtual Int_t ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
+   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    static    void     SetFloatFormat(const char* fmt = "%e");
    static const char* GetFloatFormat();

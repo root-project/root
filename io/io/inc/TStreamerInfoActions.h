@@ -131,6 +131,7 @@ namespace TStreamerInfoActions {
       
       TActionSequence *CreateCopy();      
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
+      static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
       TActionSequence *CreateSubSequence(const std::vector<Int_t> &element_ids, size_t offset);      
       
       void Print(Option_t * = "") const;

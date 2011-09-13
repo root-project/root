@@ -134,7 +134,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    TStreamerInfo *thisVar = this;
 #endif
 
-   b.IncrementLevel(thisVar);
+   Bool_t needIncrement = !( arrayMode & 2 );
+   arrayMode = arrayMode & (~2);
+   
+   if (needIncrement) b.IncrementLevel(thisVar);
 
    //mark this class as being used in the current file
    b.TagStreamerInfo(thisVar);
@@ -154,7 +157,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
    for (Int_t i=first;i<last;i++) {
 
-      b.SetStreamerElementNumber(i);
+      if (needIncrement) b.SetStreamerElementNumber(i);
       TStreamerElement *aElement = (TStreamerElement*)fElem[i];
 
       Int_t ioffset = eoffset+fOffset[i];
@@ -390,7 +393,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             Int_t *x=(Int_t*)(arr[0]+ioffset);
             b << *x;
             if (i == last-1) {
-               b.DecrementLevel(thisVar);
+               if (needIncrement) b.DecrementLevel(thisVar);
                return x[0]; // info used by TBranchElement::FillLeaves
             }
             continue;
@@ -821,7 +824,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
       }
    }
 
-   b.DecrementLevel(thisVar);
+   if (needIncrement) b.DecrementLevel(thisVar);
 
    return 0;
 }

@@ -106,8 +106,10 @@ private:
    ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
    ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
 
-   TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of read action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteObjectWise;     //! List of write action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWise;     //! List of write action resulting from the compilation for use in member wise streaming.
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
@@ -122,7 +124,8 @@ private:
 private:
    TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
-
+   void AddReadAction(Int_t index, TStreamerElement* element);
+   void AddWriteAction(Int_t index, TStreamerElement* element);
 public:
 
    //status bits
@@ -201,6 +204,8 @@ public:
    ULong_t            *GetElems()   const {return fElem;}
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWise : fWriteObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNumber()  const {return fNumber;}
    Int_t              *GetLengths() const {return fLength;}

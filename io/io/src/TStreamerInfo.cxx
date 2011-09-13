@@ -146,6 +146,8 @@ TStreamerInfo::TStreamerInfo()
    
    fReadObjectWise = 0;
    fReadMemberWise = 0;
+   fWriteObjectWise = 0;
+   fWriteMemberWise = 0;
 }
 
 //______________________________________________________________________________
@@ -177,6 +179,8 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    
    fReadObjectWise = 0;
    fReadMemberWise = 0;
+   fWriteObjectWise = 0;
+   fWriteMemberWise = 0;
 }
 
 //______________________________________________________________________________
@@ -195,6 +199,8 @@ TStreamerInfo::~TStreamerInfo()
 
    delete fReadObjectWise;
    delete fReadMemberWise;
+   delete fWriteObjectWise;
+   delete fWriteMemberWise;
 
    if (!fElements) return;
    fElements->Delete();
@@ -1854,6 +1860,8 @@ void TStreamerInfo::Clear(Option_t *option)
       
       if (fReadObjectWise) fReadObjectWise->fActions.clear();
       if (fReadMemberWise) fReadMemberWise->fActions.clear();
+      if (fWriteObjectWise) fWriteObjectWise->fActions.clear();
+      if (fWriteMemberWise) fWriteMemberWise->fActions.clear();
    }
 }
 

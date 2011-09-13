@@ -38,6 +38,7 @@ protected:
    TRefTable *fRefTable;        // pointer to the TRefTable
 
    void    ReadLeavesImpl(TBuffer &b);
+   void    FillLeavesImpl(TBuffer &b);
 
 public:
    TBranchRef();
@@ -45,7 +46,6 @@ public:
    virtual ~TBranchRef();
    virtual void    Clear(Option_t *option="");
    virtual Int_t   Fill();
-   virtual void    FillLeaves(TBuffer &b);
    TRefTable      *GetRefTable() const {return fRefTable;}
    virtual Bool_t  Notify();
    virtual void    Print(Option_t *option="") const;

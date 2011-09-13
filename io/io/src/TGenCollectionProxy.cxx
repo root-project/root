@@ -524,6 +524,7 @@ TGenCollectionProxy::TGenCollectionProxy(const TGenCollectionProxy& copy)
    fOnFileClass    = copy.fOnFileClass;
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
    fConversionReadMemberWise = 0;
+   fWriteMemberWise = 0;
    fProperties     = copy.fProperties;
    fFunctionCreateIterators    = copy.fFunctionCreateIterators;
    fFunctionDeleteTwoIterators = copy.fFunctionDeleteTwoIterators;
@@ -565,6 +566,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    }
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
    fConversionReadMemberWise   = 0;
+   fWriteMemberWise            = 0;
    fFunctionCreateIterators    = 0;
    fFunctionDeleteTwoIterators = 0;
 }
@@ -611,6 +613,7 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    }
    fReadMemberWise = new TObjArray(TCollection::kInitCapacity,-1);
    fConversionReadMemberWise   = 0;
+   fWriteMemberWise            = 0;
    fFunctionCreateIterators    = 0;
    fFunctionDeleteTwoIterators = 0;
 }
@@ -652,6 +655,7 @@ TGenCollectionProxy::~TGenCollectionProxy()
       delete fConversionReadMemberWise;
       fConversionReadMemberWise = 0;
    }
+   delete fWriteMemberWise;
 }
 
 //______________________________________________________________________________
@@ -1506,7 +1510,17 @@ TStreamerInfoActions::TActionSequence *TGenCollectionProxy::GetWriteMemberWiseAc
 {
    // Return the set of action necessary to stream out this collection member-wise.
  
-   R__ASSERT(0 /* Not Implemented yet */);
-   return 0;
+  TStreamerInfoActions::TActionSequence *result = fWriteMemberWise;
+  if (result == 0) {
+     // Need to create it.
+     TClass *valueClass = GetValueClass();
+     TVirtualStreamerInfo *info = 0;
+     if (valueClass) {
+        info = valueClass->GetStreamerInfo();
+     }
+     result = TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(info,*this);
+     fWriteMemberWise=result;
+  }
+  return result;
 }
 

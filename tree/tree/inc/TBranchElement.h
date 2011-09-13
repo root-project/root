@@ -96,6 +96,7 @@ protected:
    Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
    std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.
    TStreamerInfoActions::TActionSequence *fReadActionSequence;  //! Set of actions to be executed to extract the data from the basket.
+   TStreamerInfoActions::TActionSequence *fFillActionSequence; //! Set of actions to be executed to write the data to the basket.
    TVirtualCollectionIterators           *fIterators;     //! holds the iterators when the branch is of fType==4.
    TVirtualCollectionPtrIterators        *fPtrIterators;  //! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
 
@@ -141,6 +142,20 @@ protected:
    void SetReadActionSequence();
    void SetupAddressesImpl();
    
+   void FillLeavesImpl(TBuffer& b);
+   void FillLeavesMakeClass(TBuffer& b);
+   void FillLeavesCollection(TBuffer& b);
+   void FillLeavesCollectionSplitVectorPtrMember(TBuffer& b);
+   void FillLeavesCollectionSplitPtrMember(TBuffer& b);
+   void FillLeavesCollectionMember(TBuffer& b);
+   void FillLeavesClones(TBuffer& b);
+   void FillLeavesClonesMember(TBuffer& b);
+   void FillLeavesCustomStreamer(TBuffer& b);
+   void FillLeavesMemberBranchCount(TBuffer& b);
+   void FillLeavesMemberCounter(TBuffer& b);
+   void FillLeavesMember(TBuffer& b);
+   void SetFillLeavesPtr();
+   void SetFillActionSequence();
 // Public Interface.
 public:
    TBranchElement();
@@ -155,7 +170,6 @@ public:
 
    virtual void             Browse(TBrowser* b);
    virtual Int_t            Fill();
-   virtual void             FillLeaves(TBuffer& b);
    virtual TBranch         *FindBranch(const char *name);
    virtual TLeaf           *FindLeaf(const char *name);
    virtual char            *GetAddress() const;

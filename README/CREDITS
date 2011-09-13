@@ -404,6 +404,10 @@ N: Lukasz Janyst
 E: ljanyst@cern.ch
 D: split vector<T*> and schema evolution
 
+N: Chris Jones
+E: cdj@fnal.gov
+D: Optimizations of the write portion of TStreamerInfo and TBranchElement.
+
 N: Luke Jones
 E: jones@netoffice.com
 D: class TGraphDelaunay
@@ -434,7 +438,7 @@ D: contrinutions to TMath, TH1::Chi2Test, TFitter::GraphFitChisquare
 
 N: Daniele Francesco Kruse
 E: punkle.64@gmail.com
-D: contrinution to the GDML interface
+D: contribution to the GDML interface
 
 N: Dmytro Kustov
 E: Dmytro.Kustov@cern.ch

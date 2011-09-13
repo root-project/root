@@ -46,6 +46,7 @@ TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
    // Default constructor.
 
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
+   fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
 }
 
 
@@ -78,6 +79,7 @@ TBranchRef::TBranchRef(TTree *tree)
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
+   fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
 }
 
 
@@ -104,15 +106,6 @@ Int_t TBranchRef::Fill()
 
    Int_t nbytes = TBranch::Fill();
    return nbytes;
-}
-
-//______________________________________________________________________________
-void TBranchRef::FillLeaves(TBuffer &b)
-{
-   // This function called by TBranch::Fill overloads TBranch::FillLeaves.
-
-   if (!fRefTable) fRefTable = new TRefTable(this,100);
-   fRefTable->FillBuffer(b);
 }
 
 //______________________________________________________________________________
@@ -178,6 +171,16 @@ void TBranchRef::ReadLeavesImpl(TBuffer &b)
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->ReadBuffer(b);
 }
+
+//______________________________________________________________________________
+void TBranchRef::FillLeavesImpl(TBuffer &b)
+{
+   // This function called by TBranch::Fill overloads TBranch::FillLeaves.
+
+   if (!fRefTable) fRefTable = new TRefTable(this,100);
+   fRefTable->FillBuffer(b);
+}
+
 
 //______________________________________________________________________________
 void TBranchRef::Reset(Option_t *option)

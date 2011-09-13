@@ -3413,7 +3413,7 @@ Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers
    //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo(objvers);
    //return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
-   return ReadSequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)),arr,end);
+   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)),arr,end);
 }
 
 //______________________________________________________________________________
@@ -3424,7 +3424,10 @@ Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
    char **arr = reinterpret_cast<char**>(a->GetObjectRef(0));
    //a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
-   return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
+   //return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
+   char **end = arr + nobjects;
+   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
+   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)),arr,end);   
 }
 
 //______________________________________________________________________________
@@ -3526,7 +3529,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    }
 
    // Deserialize the object.
-   ReadSequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer);
+   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer);
    if (sinfo->IsRecovered()) count=0;
 
    // Check that the buffer position corresponds to the byte count.
@@ -3622,7 +3625,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    }
 
    //deserialize the object
-   ReadSequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer );
+   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer );
    if (sinfo->TStreamerInfo::IsRecovered()) R__c=0; // 'TStreamerInfo::' avoids going via a virtual function.
 
    // Check that the buffer position corresponds to the byte count.
@@ -3659,9 +3662,10 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    //write the class version number and reserve space for the byte count
    UInt_t R__c = WriteVersion(cl, kTRUE);
 
-   //serialize the object
-   void *ptr = &pointer;
-   sinfo->WriteBufferAux(*this,(char**)ptr,-1,1,0,0); // NOTE: expanded
+   //NOTE: In the future Philippe wants this to happen via a custom action
+   TagStreamerInfo(sinfo);
+   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char*)pointer);
+
 
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
@@ -3671,7 +3675,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 }
 
 //______________________________________________________________________________
-Int_t TBufferFile::ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj) 
+Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj) 
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
@@ -3700,7 +3704,7 @@ Int_t TBufferFile::ReadSequence(const TStreamerInfoActions::TActionSequence &seq
 }
 
 //______________________________________________________________________________
-Int_t TBufferFile::ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
@@ -3729,7 +3733,7 @@ Int_t TBufferFile::ReadSequenceVecPtr(const TStreamerInfoActions::TActionSequenc
 }
 
 //______________________________________________________________________________
-Int_t TBufferFile::ReadSequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    

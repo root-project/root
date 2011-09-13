@@ -304,6 +304,7 @@ protected:
    typedef std::vector<EnvironBase_t*>     Proxies_t;
    mutable TObjArray *fReadMemberWise;                                   //Array of bundle of TStreamerInfoActions to stream out (read)
    mutable std::map<std::string, TObjArray*> *fConversionReadMemberWise; //Array of bundle of TStreamerInfoActions to stream out (read) derived from another class.
+   mutable TStreamerInfoActions::TActionSequence *fWriteMemberWise;
    typedef void (*Sizing_t)(void *obj, size_t size);
    typedef void* (*Feedfunc_t)(void *from, void *to, size_t size);
    typedef void* (*ArrIterfunc_t)(void *from, size_t size);
