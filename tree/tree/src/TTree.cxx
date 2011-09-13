@@ -6855,13 +6855,20 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
    //    T.setBranchStatus("e",1);
    //    T.GetEntry(i);
    //
+   //  bname is interpreted as a wildcarded TRegexp (see TRegexp::MakeWildcard).
+   //  Thus, "a*b" or "a.*b" matches branches starting with "a" and ending with
+   //  "b", but not any other branch with an "a" followed at some point by a
+   //  "b". For this second behavior, use "*a*b*". Note that TRegExp does not
+   //  support '|', and so you cannot select, e.g. track and shower branches
+   //  with "track|shower".
+   // 
    //  WARNING! WARNING! WARNING!
-   //  SetBranchStatus is matching the branch based on regular expression match
-   //  of the branch 'name' and not on the branch hierarchy!
-   //  In order to be able to selectively enable a top level object that is 'split'
-   //  you need to make sure the name of the top level branch is prefixed to the
-   //  sub-branches' name(by adding a dot ('.') at the end of the Branch creation
-   //  and use the corresponding regular expression.
+   //  SetBranchStatus is matching the branch based on match of the branch
+   //  'name' and not on the branch hierarchy! In order to be able to
+   //  selectively enable a top level object that is 'split' you need to make
+   //  sure the name of the top level branch is prefixed to the sub-branches'
+   //  name (by adding a dot ('.') at the end of the Branch creation and use the
+   //  corresponding bname.
    //
    //  I.e If your Tree has been created in split mode with a parent branch "parent."
    //  (note the trailing dot).
