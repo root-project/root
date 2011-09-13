@@ -79,16 +79,19 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    fPlotPainter->AddOption(option);
 
    Ssiz_t pos = option.Index("fb");
-
    if (pos != kNPOS) {
       option.Remove(pos, 2);
       fPlotPainter->SetDrawFrontBox(kFALSE);
    }
 
    pos = option.Index("bb");
-
    if (pos != kNPOS)
       fPlotPainter->SetDrawBackBox(kFALSE);
+
+   pos = option.Index("a");
+   if (pos != kNPOS)
+      fPlotPainter->SetDrawAxes(kFALSE);
+
 
    fPlotPainter->InitGeometry();
 
@@ -128,8 +131,10 @@ void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
    // Axes
    const Rgl::PlotTranslation trGuard(fPlotPainter);
 
-   TGLAxisPainterBox axe_painter;
-   axe_painter.SetUseAxisColors(kFALSE);
-   axe_painter.SetFontMode(TGLFont::kPixmap);
-   axe_painter.PlotStandard(rnrCtx, fM, fBoundingBox);
+   if (fPlotPainter->GetDrawAxes()) {
+      TGLAxisPainterBox axe_painter;
+      axe_painter.SetUseAxisColors(kFALSE);
+      axe_painter.SetFontMode(TGLFont::kPixmap);
+      axe_painter.PlotStandard(rnrCtx, fM, fBoundingBox);
+   }
 }

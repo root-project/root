@@ -532,6 +532,7 @@ struct TGLHistPainter::PlotOption_t {
    EGLCoordType fCoordType;
    Bool_t       fBackBox;
    Bool_t       fFrontBox;
+   Bool_t       fDrawAxes;
    Bool_t       fLogX;
    Bool_t       fLogY;
    Bool_t       fLogZ;
@@ -616,8 +617,9 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
    
    TString options(o);
    
-   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian, kTRUE, kTRUE, gPad->GetLogx(),
-                                gPad->GetLogy(), gPad->GetLogz()};
+   PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian,
+                                kTRUE, kTRUE, kTRUE, //Show back box, show front box, show axes.
+                                gPad->GetLogx(), gPad->GetLogy(), gPad->GetLogz()};
 
    //Check coordinate system type.
    if (FindAndRemoveOption(options, "pol"))
@@ -646,6 +648,10 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
       parsedOption.fBackBox = kFALSE;
    if (FindAndRemoveOption(options, "fb"))
       parsedOption.fFrontBox = kFALSE;
+      
+   //Check A option.
+   if (FindAndRemoveOption(options, "a"))
+      parsedOption.fDrawAxes = kFALSE;
 
    return parsedOption;
 }
@@ -693,6 +699,7 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
       
       fGLPainter->SetDrawFrontBox(option.fFrontBox);
       fGLPainter->SetDrawBackBox(option.fBackBox);
+      fGLPainter->SetDrawAxes(option.fDrawAxes);
    } else
       fPlotType = kGLDefaultPlot;
 }

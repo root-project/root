@@ -65,7 +65,8 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordina
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
                     fSelectionBase(kTrueColorSelectionBase),
-                    fDrawPalette(kFALSE)
+                    fDrawPalette(kFALSE),
+                    fDrawAxes(kTRUE)
 {
    //TGLPlotPainter's ctor.
    if (gPad) {
@@ -96,7 +97,8 @@ TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlo
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
                     fSelectionBase(kTrueColorSelectionBase),
-                    fDrawPalette(kFALSE)
+                    fDrawPalette(kFALSE),
+                    fDrawAxes(kTRUE)
 {
    //TGLPlotPainter's ctor.
    if (gPad) {
@@ -127,7 +129,8 @@ TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
                     fSelectionBase(kTrueColorSelectionBase),
-                    fDrawPalette(kFALSE)
+                    fDrawPalette(kFALSE),
+                    fDrawAxes(kTRUE)
 {
    //TGLPlotPainter's ctor.
    if (gPad) {
@@ -162,11 +165,6 @@ void TGLPlotPainter::Paint()
    fCamera->SetCamera();
    //
    glClear(GL_DEPTH_BUFFER_BIT);
-   //
-/*   if (fCamera->ViewportChanged()) {
-      std::cout<<"Set need update\n";
-      fUpdateSelection = kTRUE;
-   }*/
    //Set light.
    const Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
    glLightfv(GL_LIGHT0, GL_POSITION, pos);
@@ -194,7 +192,7 @@ void TGLPlotPainter::Paint()
    //switch it off now.
    glDepthMask(GL_FALSE);//0]
 
-   if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
+   if (fCoord && fCoord->GetCoordType() == kGLCartesian && fDrawAxes) {
 
       Bool_t old = gPad->TestBit(TGraph::kClipFrame);
       if (!old)
