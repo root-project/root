@@ -2123,7 +2123,7 @@ bool SavePuk()
    }
    XrdSutTimeString(now, tstr, 1);
    PukFile += tstr;
-   delete tstr;
+   delete [] tstr;
    //
    // Open file, truncating if it exists already
    int fd = open(PukFile.c_str(),O_WRONLY | O_CREAT | O_TRUNC, 0600);

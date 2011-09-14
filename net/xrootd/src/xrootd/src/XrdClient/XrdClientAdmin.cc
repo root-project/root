@@ -655,7 +655,7 @@ bool XrdClientAdmin::Mv(const char *fileSrc, const char *fileDest)
    ret = fConnModule->SendGenCommand(&mvFileRequest, data,
 				     NULL, NULL, FALSE, (char *)"Mv");
 
-   delete(data);
+   delete [] data;
 
    return ret;
 }
