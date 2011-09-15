@@ -1,1 +1,2 @@
-#pragma link C++ class pt_data+;
+#pragma link C++ class PTVal+;
+#pragma link C++ class PTData+;

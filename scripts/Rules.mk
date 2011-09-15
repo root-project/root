@@ -138,7 +138,7 @@ $(ROOTTEST_LOC)scripts/ptpreload.so: $(ROOTTEST_LOC)scripts/pt_mymalloc.cpp
 
 perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.so
 	$(CMDECHO) LD_LIBRARY_PATH=$(ROOTTEST_LOC)/scripts:$$LD_LIBRARY_PATH $(MAKE) -C $$PWD $(filter-out perftrack,$(MAKECMDGOALS)) \
-          CALLROOTEXE="$< root.exe"
+          CALLROOTEXE="$< "$(ROOTTEST_LOC)" root.exe"
 
 # For now logs.tar.gz is a phony target
 perftrack.tar.gz:
