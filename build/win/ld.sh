@@ -37,7 +37,7 @@ fi
 
 if [ "$dll" != "" ]; then
    $dir/makeresource.sh "$dll" \
-      && rc $debug -Iinclude /Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1
+      && rc $debug -Iinclude -Fo"${dll}.res" "${dll}.rc" > /dev/null 2>&1
    if [ -r "${dll}.res" ]; then
       args="$args ${dll}.res"
    fi
