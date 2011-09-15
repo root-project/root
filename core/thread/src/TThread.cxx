@@ -298,6 +298,7 @@ void TThread::Constructor()
    SetComment("Constructor: MainMutex Locking");
    Lock();
    SetComment("Constructor: MainMutex Locked");
+   memset(fTsd, 0, 20*sizeof(void*));
    fTsd[0] = gPad;
    fTsd[1] = 0;    // For TClass
 
