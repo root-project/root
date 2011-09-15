@@ -56,24 +56,24 @@ ClassImp(TGraphPainter);
 <a name="GP00"></a><h3>Introduction</h3>
 
 Graphs are drawn via the painter <tt>TGraphPainter</tt> class. This class
-implements all the various techniques needed to display the various kind of
-graphs ie: <tt>TGraph</tt>, <tt>TGraphAsymmErrors</tt>,
-<tt>TGraphBentErrors</tt> and <tt>TGraphErrors</tt>.
+implements techniques needed to display the various kind of
+graphs i.e.: <tt>TGraph</tt>, <tt>TGraphErrors</tt>,
+<tt>TGraphBentErrors</tt> and <tt>TGraphAsymmErrors</tt>.
 
 <p>
-To draw a graph "<tt>g</tt>" it's enough to do:
+To draw a graph "<tt>grph</tt>" it's enough to do:
 <pre>
-   g->Draw("AL");
+   grph->Draw("AL");
 </pre>
 
 
-The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means:
+<p>The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means:
 <ol>
-<li>axis should be drawn (option <tt>"A"</tt>),</li>
-<li>the graph should be drawn as a simple line (option <tt>"L"</tt>).</li>
+<li>The axis should be drawn (option <tt>"A"</tt>),</li>
+<li>The graph should be drawn as a simple line (option <tt>"L"</tt>).</li>
 </ol>
-By default a graph is drawn in the current pad in the current coordinates system.
-To define a suitable coordinates' system and draw the axis the option
+By default a graph is drawn in the current pad in the current coordinate system.
+To define a suitable coordinate system and draw the axis the option
 <tt>"A"</tt> must be specified.
 <p>
 <tt>TGraphPainter</tt> offers many options to paint the various kind of graphs.
@@ -81,12 +81,12 @@ To define a suitable coordinates' system and draw the axis the option
 It is separated from the graph classes so that one can have graphs without the
 graphics overhead, for example in a batch program.
 <p>
-When a displayed graph is modified, there is no need to call the
-<tt>Draw()</tt> method again; the image will be refreshed the next time the
+When a displayed graph is modified, there is no need to call 
+<tt>Draw()</tt> again; the image will be refreshed the next time the
 pad will be updated.
 <p>A pad is updated after one of these three actions:
 <ol>
-<li>  a carriage control on the ROOT command line,
+<li>  a carriage return on the ROOT command line,
 <li>  a click inside the pad,
 <li>  a call to <tt>TPad::Update</tt>.
 </ol>
@@ -125,7 +125,7 @@ A Bar chart is drawn
 </td></tr>
 
 <tr><th valign=top>"1"</th><td>
-ylow=rwymin
+UNDOCUMENTED
 </td></tr>
 
 <tr><th valign=top>"X+"</th><td>
@@ -139,9 +139,9 @@ The Y-axis is drawn on the right side of the plot.
 </table>
 <p>
 
-Several drawing options can be combined. In the following example the graph
-is drawn as a smooth curve (option "C") with markers (option "P").
-The option "A" request the axis drawing.
+Drawing options can be combined. In the following example the graph
+is drawn as a smooth curve (option "C") with markers (option "P") and 
+with axes (option "A").
 
 End_Html
 Begin_Macro(source)
@@ -186,7 +186,7 @@ possible to draw a filled area on one side of the line. This is useful to show
 exclusion zones.
 
 <p>This drawing mode is activated when the absolute value of the graph line
-width (set thanks to <tt>SetLineWidth()</tt>) is greater than 99. In that
+width (set by <tt>SetLineWidth()</tt>) is greater than 99. In that
 case the line width number is interpreted as:
 <pre>
       100*ff+ll = ffll
@@ -213,9 +213,8 @@ The following drawing options are specific to graphs with error bars:
 <table border=0>
 
 <tr><th valign=top>"Z"</th><td>
-By default horizonthal and vertical small lines are drawn at
-the end of the error bars. If option "z" or "Z" is specified,
-these lines are not drawn.
+Do not draw small horizontal and vertical lines the end of the error bars. 
+Without "Z", the default is to draw these.
 </td></tr>
 
 <tr><th valign=top>">"</th><td>
@@ -229,26 +228,30 @@ The size of the arrow is set to 2/3 of the marker size.
 </td></tr>
 
 <tr><th valign=top>"X"</th><td>
-By default the error bars are drawn. If option "X" is specified,
-the errors are not drawn. A graph with errors is drawn like a normal graph.
+Do not draw error bars.  By default, graph classes that have errors 
+are drawn with the errors (TGraph itself has no errors, and so this option
+has no effect.)
 </td></tr>
 
 <tr><th valign=top>"||"</th><td>
-Only the end vertical/horizonthal lines
-of the error bars are drawn. This option is interesting to superimpose
-systematic errors on top of a graph with statistical errors.
+Draw ONLY the small vertical/horizontal lines at the ends of the
+error bars, without drawing the bars themselves. This option is
+interesting to superimpose statistical-only errors on top of a graph
+with statistical+systematic errors.
 </td></tr>
 
 <tr><th valign=top>"[]"</th><td>
-Does the same as option "||" except that it draws additionnal tick marks at the
-end of the vertical/horizonthal lines. It makes plots less ambiguous
+Does the same as option "||" except that it draws additional marks at the
+ends of the small vertical/horizontal lines. It makes plots less ambiguous
 in case several graphs are drawn on the same picture.
 </td></tr>
 
 <tr><th valign=top>"0"</th><td>
-By default, when a data point is outside the visible range along the Y axis, the error
-bars are not drawn. Combined with other options, this option forces error bars'
-drawing for the data points outside the visible range along the Y axis.
+By default, when a data point is outside the visible range along the Y
+axis, the error bars are not drawn. Combined with other options (WHAT
+OTHER OPTIONS?), this option forces error bars' drawing for the data
+points outside the visible range along the Y axis. (DOES NOT SEEM TO
+WORK)
 </td></tr>
 
 <tr><th valign=top>"2"</th><td>
@@ -317,11 +320,11 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>The option "4" is similar to the option "3" except that the band is smoothed.
-As the following picture shows, this option should be used carefuly because
-the smoothing algorithm may show some (huge) "bouncing" effects. In some cases
-it looks nicer than option "3" (because it is smooth) but it can be
-misleading.
+<p>The option "4" is similar to the option "3" except that the band
+is smoothed. As the following picture shows, this option should be
+used carefully because the smoothing algorithm may show some (huge)
+"bouncing" effects. In some cases it looks nicer than option "3"
+(because it is smooth) but it can be misleading.
 
 End_Html
 Begin_Macro(source)
@@ -454,19 +457,19 @@ The drawing options for the polar graphs are the following:
 <table border=0>
 
 <tr><th valign=top>"O"</th><td>
-Polar labels are paint orthogonally to the polargram radius.
+Polar labels are drawn orthogonally to the polargram radius.
 </td></tr>
 
 <tr><th valign=top>"P"</th><td>
-Polymarker are paint at each point position.
+Polymarker are drawn at each point position.
 </td></tr>
 
 <tr><th valign=top>"E"</th><td>
-Paint error bars.
+Draw error bars.
 </td></tr>
 
 <tr><th valign=top>"F"</th><td>
-Paint fill area (closed polygon).
+Draw fill area (closed polygon).
 </td></tr>
 
 <tr><th valign=top>"A"</th><td>
@@ -541,8 +544,8 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
    <p>
    npoints : Number of points in gxwork and in gywork.
    <ul>
-   <li> opt = 1 CompulteLogs is called from PaintGrapHist
-   <li> opt = 0 CompulteLogs is called from PaintGraph
+   <li> opt = 1 ComputeLogs is called from PaintGrapHist
+   <li> opt = 0 ComputeLogs is called from PaintGraph
    </ul>
    End_Html */
 
@@ -1041,13 +1044,13 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       rwymin = minimum;
       rwymax = maximum;
 
-      // Create a temporary histogram and fill each channel with the
+      // Create a temporary histogram and fill each bin with the
       // function value.
       char chopth[8] = " ";
       if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
       if (!theGraph->GetHistogram()) {
-         // the graph is created with at least as many channels as there are
+         // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
          rwxmin = uxmin;
          rwxmax = uxmax;
@@ -1339,59 +1342,58 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    <li> npoints : Number of points in X or in Y.
    <li> x[npoints] or x[0] : x coordinates or (xmin,xmax).
    <li> y[npoints] or y[0] : y coordinates or (ymin,ymax).
-   <li> chopt : Option.
+   <li> chopt : Options.
    </ul>
    <p>
    The aspect of the graph is done according to the value of the chopt.
    <p>
    <table border=0>
    <tr><th valign=top>"R"</th><td>
-   Graph is drawn horizontaly, parallel to X axis. (default is vertically,
+   Graph is drawn horizontally, parallel to X axis. (default is vertically,
    parallel to Y axis)
    <br>
    If option R is selected the user must give:
    <ul>
    <li> 2 values for Y (y[0]=YMIN and y[1]=YMAX)
-   <li> N values for X, one for each channel.
+   <li> N values for X, one for each bin.
    </ul>
    Otherwise the user must give:
    <ul>
-   <li> N values for Y, one for each channel.
+   <li> N values for Y, one for each bin.
    <li> 2 values for X (x[0]=XMIN and x[1]=XMAX)
    </ul>
    </td></tr>
 
    <tr><th valign=top>"L"</th><td>
-   A simple polyline beetwen every points is drawn
+   A simple polyline between the points is drawn
    </td></tr>
 
    <tr><th valign=top>"H"</th><td>
-   An Histogram with equidistant bins is drawn
+   A Histogram with equidistant bins is drawn
    as a polyline.
    </td></tr>
 
    <tr><th valign=top>"F"</th><td>
-   An histogram with equidistant bins is drawn
-   as a fill area. Contour is not drawn unless
-   chopt='H' is also selected..
+   A histogram with equidistant bins is drawn
+   as a fill area. If "H" is also used, a countour is drawn.
    </td></tr>
 
    <tr><th valign=top>"N"</th><td>
-   Non equidistant bins (default is equidistant)
-   If N is the number of channels array X and Y
-   must be dimensionned as follow:
+   Non-equidistant bins (default is equidistant)
+   If N is the number of bins, arrays X and Y
+   must be dimensioned as follows:
    If option R is not selected (default) then
    the user must give:
-     (N+1) values for X (limits of channels).
-      N values for Y, one for each channel.
+     (N+1) values for X (bin limits).
+      N values for Y, one for each bin.
    Otherwise the user must give:
-     (N+1) values for Y (limits of channels).
-      N values for X, one for each channel.
+     (N+1) values for Y (bin limits).
+      N values for X, one for each bin.
    </td></tr>
 
    <tr><th valign=top>"F1"</th><td>
-   Idem as 'F' except that fill area is no more
-   reparted arround axis X=0 or Y=0 .
+   Same as "F" except that the fill area is no more
+   reparted around axis X=0 or Y=0. (INCOMPREHENSIBLE)
    </td></tr>
 
    <tr><th valign=top>"F2"</th><td>
@@ -1407,11 +1409,11 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    </td></tr>
 
    <tr><th valign=top>"P"</th><td>
-   Idem with the current marker
+   Draw points with the default marker (not a star as with "*")
    </td></tr>
 
    <tr><th valign=top>"P0"</th><td>
-   Idem with the current marker. Empty bins also drawn
+   Same as "P", but empty bins also drawn.
    </td></tr>
 
    <tr><th valign=top>"B"</th><td>
@@ -3641,20 +3643,20 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
    /* Begin_Html
    Smooth a curve given by N points.
    <p>
-   The original code come from an underlaying routine for Draw based on the
+   The original code is from an underlaying routine for Draw based on the
    CERN GD3 routine TVIPTE:
    <pre>
         Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
    </pre>
    This method draws a smooth tangentially continuous curve through
-   the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I))
-   the curve is approximated by a polygonal arc of short vectors .
-   the data points can represent open curves, P(1) != P(N) or closed
-   curves P(2) == P(N) . If a tangential discontinuity at P(I) is
-   required , then set P(I)=P(I+1) . loops are also allowed .
+   the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I)).
+   The curve is approximated by a polygonal arc of short vectors.
+   The data points can represent open curves, P(1) != P(N) or closed
+   curves P(2) == P(N). If a tangential discontinuity at P(I) is
+   required, then set P(I)=P(I+1). Loops are also allowed.
    <p>
-   Reference Marlow and Powell,Harwell report No.R.7092.1972
-   MCCONALOGUE,Computer Journal VOL.13,NO4,NOV1970Pp392 6
+   Reference Marlow and Powell, Harwell report No.R.7092.1972
+   MCCONALOGUE, Computer Journal VOL.13, NO4, NOV1970P p392 6
    <p>
    <ul>
    <li>  npoints   : Number of data points.
