@@ -61,9 +61,9 @@ graphs i.e.: <tt>TGraph</tt>, <tt>TGraphErrors</tt>,
 <tt>TGraphBentErrors</tt> and <tt>TGraphAsymmErrors</tt>.
 
 <p>
-To draw a graph "<tt>grph</tt>" it's enough to do:
+To draw a graph "<tt>graph</tt>" it's enough to do:
 <pre>
-   grph->Draw("AL");
+   graph->Draw("AL");
 </pre>
 
 
@@ -125,7 +125,8 @@ A Bar chart is drawn
 </td></tr>
 
 <tr><th valign=top>"1"</th><td>
-UNDOCUMENTED
+When a graph is drawn as a bar chart, this option makes the bars start from
+the bottom of the pad. By default they start at 0.
 </td></tr>
 
 <tr><th valign=top>"X+"</th><td>
@@ -178,6 +179,28 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+<p>The following macro shows the option "B" usage. It can be combined with the 
+option "1".
+ 
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c47 = new TCanvas("c47","c47",200,10,600,400);
+   c47->Divide(1,2);
+   const Int_t n = 20;
+   Double_t x[n], y[n];
+   for (Int_t i=0;i<n;i++) {
+      x[i] = i*0.1;
+      y[i] = 10*sin(x[i]+0.2)-6;
+   }
+   gr = new TGraph(n,x,y);
+   gr->SetFillColor(38);
+   c47->cd(1); gr->Draw("AB");
+   c47->cd(2); gr->Draw("AB1");
+ return c47;
+}
+End_Macro
+Begin_Html
 
 <a name="GP02"></a><h3>Exclusion graphs</h3>
 
@@ -234,7 +257,7 @@ has no effect.)
 </td></tr>
 
 <tr><th valign=top>"||"</th><td>
-Draw ONLY the small vertical/horizontal lines at the ends of the
+Draw only the small vertical/horizontal lines at the ends of the
 error bars, without drawing the bars themselves. This option is
 interesting to superimpose statistical-only errors on top of a graph
 with statistical+systematic errors.
@@ -248,10 +271,8 @@ in case several graphs are drawn on the same picture.
 
 <tr><th valign=top>"0"</th><td>
 By default, when a data point is outside the visible range along the Y
-axis, the error bars are not drawn. Combined with other options (WHAT
-OTHER OPTIONS?), this option forces error bars' drawing for the data
-points outside the visible range along the Y axis. (DOES NOT SEEM TO
-WORK)
+axis, the error bars are not drawn. This option forces error bars' drawing for
+the data points outside the visible range along the Y axis (see example below).
 </td></tr>
 
 <tr><th valign=top>"2"</th><td>
@@ -301,6 +322,25 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+<p>The option "0" shows the error bars for data points outside range.
+ 
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c48 = new TCanvas("c48","c48",200,10,600,400);
+   float x[]     = {1,2,3};
+   float err_x[] = {0,0,0};
+   float err_y[] = {5,5,5};
+   float y[]     = {1,4,9};
+   TGraphErrors tg(3,x,y,err_x,err_y);
+   c48->Divide(2,1);
+   c48->cd(1); gPad->DrawFrame(0,0,4,8); tg.Draw("PC");
+   c48->cd(2); gPad->DrawFrame(0,0,4,8); tg.Draw("0PC");
+   return c48;
+} 
+End_Macro
+Begin_Html
+ 
 <p>The option "3" shows the errors as a band.
 
 End_Html
@@ -1393,7 +1433,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 
    <tr><th valign=top>"F1"</th><td>
    Same as "F" except that the fill area is no more
-   reparted around axis X=0 or Y=0. (INCOMPREHENSIBLE)
+   reparted around axis X=0 or Y=0. See the "Option 1" example in the class
+   description.
    </td></tr>
 
    <tr><th valign=top>"F2"</th><td>
@@ -1795,8 +1836,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       }
    }
 
-   //              Draw the histogram with a smooth Curve. The computing
-   //              of the smoothing is done by the routine IGRAp1
+   //              Draw the histogram with a smooth Curve.
+   //              The smoothing is done by the method Smooth()
 
    if (optionCurve) {
       if (!optionFill) drawtype = 1;
@@ -3699,9 +3740,7 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
       return;
    }
 
-   //  Decode the type of curve according to
-   //  chopt of IGHIST.
-   //  ('S', 'SA', 'SA1' ,'XS', 'XSA', or 'XSA1')
+   //  Decode the type of curve (drawtype).
 
    loptx = kFALSE;
    jtype  = (drawtype%1000)-10;
@@ -3765,10 +3804,10 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
       y[i] = (y[i]-symin)*yratio;
    }
 
-   //           finished is minus one if we must draw a straight line from P(k-1)
-   //           to P(k). finished is one if the last call to IPL has  <  N2
-   //           points. finished is zero otherwise. npt counts the X and Y
-   //           coordinates in work . When npt=N2 a call to IPL is made.
+   //          "finished" is minus one if we must draw a straight line from P(k-1)
+   //          to P(k). "finished" is one if the last call to PaintPolyLine has < n2
+   //          points. "finished" is zero otherwise. npt counts the X and Y
+   //          coordinates in work . When npt=n2 a call to IPL is made.
 
    finished = 0;
    npt      = 1;
@@ -3805,7 +3844,7 @@ L40:
 
 L50:
    if (k >= npoints) {
-      finished = 1;  //*-*-  Prepare to clear out remaining short vectors before returning
+      finished = 1;  // Prepare to clear out remaining short vectors before returning
       if (npt > 1) goto L310;
       goto L390;
    }
@@ -3814,7 +3853,7 @@ L50:
 L60:
    km = k-1;
    if (k > npoints) {
-      finished = 1;  //*-*-  Prepare to clear out remaining short vectors before returning
+      finished = 1;  // Prepare to clear out remaining short vectors before returning
       if (npt > 1) goto L310;
       goto L390;
    }
@@ -3842,7 +3881,7 @@ L100:
 L110:
    if (!flgis) goto L50;
 
-//*-*-           Carry forward the direction cosines from the previous arc.
+   //           Carry forward the direction cosines from the previous arc.
 
 L120:
    co = ct;
@@ -3920,7 +3959,7 @@ L170:
 
    xt = xo;
    yt = yo;
-   if (finished < 0) {  //*-*- Draw a straight line between (xo,yo) and (xt,yt)
+   if (finished < 0) {  // Draw a straight line between (xo,yo) and (xt,yt)
       xt += dx;
       yt += dy;
       goto L300;
