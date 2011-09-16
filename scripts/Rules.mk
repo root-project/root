@@ -103,7 +103,7 @@ ifeq ($(PLATFORM),win32)
    override ROOTTEST_HOME := $(ROOTTEST_HOME2)
    export PATH:=${PATH}:${ROOTTEST_LOC}/scripts
 else
-   export ROOTTEST_LOC := $(shell readlink -m -n $(ROOTTEST_HOME))/
+   export ROOTTEST_LOC := $(shell readlink -f -n $(ROOTTEST_HOME))/
    export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
 endif
 
