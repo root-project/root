@@ -513,14 +513,12 @@ int main(int argc, char** argv)
       delete graphs;
 
       if (newdata.outlier) {
+         ReportFailures(newdata, test, file);
          RevertOutlierStat(tree, newdata);
       }
 
       DeleteOldEntries(tree, newdata.historyThinningCounter, file);
       UpdateTree(tree, newdata);
-      if (newdata.outlier) {
-         ReportFailures(newdata, test, file);
-      }
    }
 }
 
