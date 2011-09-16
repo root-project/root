@@ -2902,9 +2902,53 @@ Int_t TProofServ::SetupCommon()
    }
    ResolveKeywords(fDataDir);
    if (gSystem->AccessPathName(fDataDir))
-      gSystem->mkdir(fDataDir, kTRUE);
+      if (gSystem->mkdir(fDataDir, kTRUE) != 0) {
+         Warning("SetupCommon", "problems creating path '%s' (errno: %d)",
+                                fDataDir.Data(), TSystem::GetErrno());
+      }
    if (gProofDebugLevel > 0)
       Info("SetupCommon", "data directory set to %s", fDataDir.Data());
+
+   // Check and apply possible options
+   // (see http://root.cern.ch/drupal/content/configuration-reference-guide#datadir)
+   TString dataDirOpts = gEnv->GetValue("ProofServ.DataDirOpts","");
+   if (!dataDirOpts.IsNull()) {
+      // Do they apply to this server type
+      Bool_t doit = kTRUE;
+      if ((IsMaster() && !dataDirOpts.Contains("M")) ||
+         (!IsMaster() && !dataDirOpts.Contains("W"))) doit = kFALSE;
+      if (doit) {
+         // Get the wanted mode
+         UInt_t m = 0755;
+         if (dataDirOpts.Contains("g")) m = 0775;
+         if (dataDirOpts.Contains("a") || dataDirOpts.Contains("o")) m = 0777;
+         if (gProofDebugLevel > 0)
+            Info("SetupCommon", "requested mode for data directories is '%o'", m);
+         // Loop over paths
+         FileStat_t st;
+         TString p, subp;
+         Int_t from = 0;
+         if (fDataDir.BeginsWith("/")) p = "/";
+         while (fDataDir.Tokenize(subp, from, "/")) {
+            if (subp.IsNull()) continue;
+            p += subp;
+            if (gSystem->GetPathInfo(p, st) == 0) {
+               if (st.fUid == (Int_t) getuid() && st.fGid == (Int_t) getgid()) {
+                  if (gSystem->Chmod(p.Data(), m) != 0) {
+                     Warning("SetupCommon", "problems setting mode '%o' on path '%s' (errno: %d)",
+                                            m, p.Data(), TSystem::GetErrno());  
+                     break;
+                  }
+               }
+               p += "/";
+            } else {
+               Warning("SetupCommon", "problems stat-ing path '%s' (errno: %d; datadir: %s)",
+                                       p.Data(), TSystem::GetErrno(), fDataDir.Data());  
+               break;
+            }
+         }
+      }
+   }
 
    // List of directories where to look for global packages
    TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");

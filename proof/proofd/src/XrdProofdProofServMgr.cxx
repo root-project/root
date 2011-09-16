@@ -1964,12 +1964,12 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       fcp.Close();
 
       TRACE(FORK, (int)getpid()<<": user: "<<p->Client()->User()<<
-                  ", uid: "<<getuid()<<", euid:"<<geteuid());
+                  ", uid: "<<getuid()<<", euid:"<<geteuid()<<", psrv: "<<xps->ROOT()->PrgmSrv());
       // Run the program
       execv(xps->ROOT()->PrgmSrv(), argvv);
 
       // We should not be here!!!
-      TRACE(XERR, "returned from execv: bad, bad sign !!!");
+      TRACE(XERR, "returned from execv: bad, bad sign !!! errno:" << (int)errno);
       exit(1);
    }
 
@@ -4427,7 +4427,8 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p,
 
    // If applicable, make sure that the private data dir for this user exists 
    // and has the right permissions
-   if (fMgr->DataDir() && strlen(fMgr->DataDir()) > 0 && ord && stag) {
+   if (fMgr->DataDir() && strlen(fMgr->DataDir()) > 0 &&
+       fMgr->DataDirOpts() && strlen(fMgr->DataDirOpts()) > 0 && ord && stag) {
       XrdProofUI ui;
       XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
       XrdOucString dgr, dus[3];
