@@ -416,11 +416,9 @@ int main(int argc,char **argv)
    /* Remove nonexistant file system objects or non-directories, */
    /* if requested */
    if(existance) {
-      struct Cell_s *next;
       for(previous = 0, current = pathlist;
           current;
           current = current -> next) {
-         next = current->next;
          sb.st_mode = -1;
          if(stat(current->value,&sb) ||
             (sb.st_mode & S_IFMT) != S_IFDIR) {
@@ -444,11 +442,9 @@ int main(int argc,char **argv)
       add_at_front(&pathlist,make_Cell("/sbin"));
       add_at_front(&pathlist,make_Cell("/bin"));
       /* Remove nonexistant file system objects or non-directories */
-      struct Cell_s *next;
       for(previous = 0, current = pathlist;
           current;
           current = current -> next) {
-         next = current->next;
          sb.st_mode = -1;
          if(stat(current->value,&sb) ||
             (sb.st_mode & S_IFMT) != S_IFDIR) {
