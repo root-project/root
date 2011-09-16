@@ -8,14 +8,13 @@ public:
       *this = prev;
       fVal = val;
       fSumVal2 += val * val;
-      fMean = fMean * (newnum - 1) + val;
-      double var2 = fSumVal2 - fMean * fMean;
+      fMean = (fMean * (newnum - 1) + val) / newnum;
+      double var2 = fSumVal2 / newnum - fMean * fMean;
       if (var2 > 0.) {
-         fVar = sqrt(var2) / newnum;
+         fVar = sqrt(var2);
       } else {
          fVar = 0.;
       }
-      fMean /= newnum;
    }
 
    double fVal; // Measurement
