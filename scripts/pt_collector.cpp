@@ -487,7 +487,7 @@ int main(int argc, char** argv)
    ++argv;
    --argc;
 
-   TString cwd(getcwd(NULL, 0));
+   TString cwd(gSystem->pwd());
 
    // build fifo name
    TString fifoName(cwd);
