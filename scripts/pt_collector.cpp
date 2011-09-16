@@ -204,9 +204,9 @@ void FillData(const PTMeasurement& results, TTree* tree, PTData& newdata) {
    newdata.date = ctime(&rawtime);
 
    double resdata[4] = {
-      results.memory[kMemAlloc]/1024., // in kilobyte
       results.memory[kMemLeak]/1024.,
       results.memory[kMemPeak]/1024.,
+      results.memory[kMemAlloc]/1024., // in kilobyte
       results.utime + results.stime // in seconds
    };
 
@@ -400,6 +400,8 @@ void SaveGraphs(PTGraphColl* graphs, const TString& dataFileName, const TString&
 
    TCanvas *c1 = new TCanvas("c1","Performance Monitoring Plots",1200,800);
    TText* title = new TText(.1, .95, testName);
+   title->SetTextFont((title->GetTextFont() / 10) * 10 + 3); // scalable, pixels
+   title->SetTextSizePixels(24);
    title->Draw();
    c1->Update();
    UInt_t w, h;
@@ -434,12 +436,12 @@ void SaveGraphs(PTGraphColl* graphs, const TString& dataFileName, const TString&
       TMultiGraph* mg = new TMultiGraph();
       listMG.Add(mg);
       if (graphs->gr[i]->limit->GetN() > 0)
-         mg->Add(graphs->gr[i]->limit, "P2");
+         mg->Add(graphs->gr[i]->limit, "P5");
       if (graphs->gr[i]->bad->GetN() > 0)
          mg->Add(graphs->gr[i]->bad, "P");
       if (graphs->gr[i]->good->GetN() > 0)
          mg->Add(graphs->gr[i]->good, "LP");
-      //mg->SetTitle(measurementNames[i]);
+      mg->SetTitle(measurementNames[i]);
 
       graphPad->cd(i + 1);
       mg->Draw("A");
@@ -448,8 +450,8 @@ void SaveGraphs(PTGraphColl* graphs, const TString& dataFileName, const TString&
 
       mg->GetXaxis()->SetTitle("SVN revision");
       mg->GetXaxis()->SetTitleOffset(1.0);
-      mg->GetYaxis()->SetTitle(measurementNames[i]);
-      mg->GetYaxis()->SetTitleOffset(1.5);  
+      //mg->GetYaxis()->SetTitle(measurementNames[i]);
+      //mg->GetYaxis()->SetTitleOffset(1.5);  
 
       static const double delta = 1E-4;
       double v = (mg->GetHistogram()->GetMinimum() + mg->GetHistogram()->GetMaximum()) / 2.;
