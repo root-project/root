@@ -1555,11 +1555,13 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    fprintf(fp,"   TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile.Data());
    fprintf(fp,"   if (!f) {\n");
    fprintf(fp,"      f = new TFile(\"%s\");\n",treefile.Data());
-   if (gDirectory != gFile) {
-      fprintf(fp,"      f->cd(\"%s\");\n",gDirectory->GetPath());
-   }
    fprintf(fp,"   }\n");
-   fprintf(fp,"   TTree *%s = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName(),fTree->GetName());
+   if (fTree->GetDirectory() != fTree->GetCurrentFile()) {
+      fprintf(fp,"    TDirectory * dir = (TDirectory*)f->Get(\"%s\");\n",fTree->GetDirectory()->GetPath());
+      fprintf(fp,"    dir->GetObject(\"%s\",tree);\n\n",fTree->GetName());
+   } else {
+      fprintf(fp,"    f->GetObject(\"%s\",tree);\n\n",fTree->GetName());
+   }
    if (ischain) {
       fprintf(fp,"#else // SINGLE_TREE\n\n");
       fprintf(fp,"   // The following code should be used if you want this code to access a chain\n");
