@@ -38,8 +38,8 @@ INCLUDEFILES += $(PQ2DEP)
 include/%.h:    $(PQ2DIRI)/%.h
 		cp $< $@
 
-$(PQ2):       $(PQ2O) $(PQ2LIBSDEP)
-		$(LD) $(LDFLAGS) -o $@ $(PQ2O)  $(RPATH) $(PQ2LIBS) $(SYSLIBS)
+$(PQ2):         $(PQ2O) $(PQ2LIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(PQ2O) $(RPATH) $(PQ2LIBS) $(SYSLIBS)
 
 all-$(MODNAME): $(PQ2)
 
