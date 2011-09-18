@@ -25,6 +25,9 @@
 //   '+'             // Positive closure (1 or more)                    //
 //   '?'             // Optional closure (0 or 1)                       //
 //                                                                      //
+//   Note that the '|' operator (union) is not supported, nor are       //
+//   parentheses (grouping). Therefore "a|b" does not match "a".        //
+//                                                                      //
 //   Standard classes like [:alnum:], [:alpha:], etc. are not supported,//
 //   only [a-zA-Z], [^ntf] and so on.                                   //
 //                                                                      //
@@ -42,8 +45,10 @@ ClassImp(TRegexp)
 //______________________________________________________________________________
 TRegexp::TRegexp(const char *re, Bool_t wildcard)
 {
-   // Create a regular expression from the input string. If wildcard is true
-   // then the input string contains a wildcard expression (see MakeWildcard()).
+   // Create a regular expression from the input string. If wildcard is
+   // true then the input string will first be interpreted as a wildcard
+   // expression by MakeWildcard(), and the result then interpreted as a
+   // regular expression.
 
    if (wildcard)
       GenPattern(MakeWildcard(re));
@@ -198,9 +203,9 @@ const char *TRegexp::MakeWildcard(const char *re)
 //______________________________________________________________________________
 Ssiz_t TRegexp::Index(const TString& string, Ssiz_t* len, Ssiz_t i) const
 {
-   // Find the first occurance of the regexp in string and return the position.
-   // Len is length of the matched string and i is the offset at which the
-   // matching should start.
+   // Find the first occurance of the regexp in string and return the
+   // position, or -1 if there is no match. Len is length of the matched
+   // string and i is the offset at which the matching should start.
 
    if (fStat != kOK)
       Error("TRegexp::Index", "Bad Regular Expression");
@@ -239,8 +244,9 @@ TRegexp::EStatVal TRegexp::Status()
 //______________________________________________________________________________
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the position.
-   // Start is the offset at which the search should start.
+   // Find the first occurance of the regexp in string and return the
+   // position, or -1 if there is no match. Start is the offset at which
+   // the search should start.
 
    Ssiz_t len;
    return r.Index(*this, &len, start); // len not used
@@ -249,9 +255,9 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t start) const
 //______________________________________________________________________________
 Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 {
-   // Find the first occurance of the regexp in string and return the position.
-   // Extent is length of the matched string and start is the offset at which
-   // the matching should start.
+   // Find the first occurance of the regexp in string and return the
+   // position, or -1 if there is no match. Extent is length of the matched
+   // string and start is the offset at which the matching should start.
 
    return r.Index(*this, extent, start);
 }
