@@ -2933,7 +2933,7 @@ Int_t TProofServ::SetupCommon()
             if (subp.IsNull()) continue;
             p += subp;
             if (gSystem->GetPathInfo(p, st) == 0) {
-               if (st.fUid == (Int_t) getuid() && st.fGid == (Int_t) getgid()) {
+               if (st.fUid == (Int_t) gSystem->GetUid() && st.fGid == (Int_t) gSystem->GetGid()) {
                   if (gSystem->Chmod(p.Data(), m) != 0) {
                      Warning("SetupCommon", "problems setting mode '%o' on path '%s' (errno: %d)",
                                             m, p.Data(), TSystem::GetErrno());  
