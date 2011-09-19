@@ -417,7 +417,7 @@ void SaveGraphs(PTGraphColl* graphs, const TString& dataFileName, const TString&
    UInt_t w, h;
    title->GetBoundingBox(w, h);
    TPad* graphPad = new TPad("graphPad", "graphPad", 0., 0.,
-                             1., .95,
+                             1., .92,
                              -1, 0, 0);
    graphPad->Draw();
    graphPad->Divide(2, (kNumMeasurements + 1) / 2, 0.);
