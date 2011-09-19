@@ -25,6 +25,7 @@ The class supports merging.
 
 #include "RooStats/SamplingDistribution.h"
 #include "RooNumber.h"
+#include "TMath.h"
 #include <algorithm>
 #include <iostream>
 #include <cmath>
@@ -168,6 +169,44 @@ Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t norm
    return IntegralAndError(error, low,high, normalize, lowClosed, highClosed);
 }
 
+//___________________________________________________________________________
+void SamplingDistribution::SortValues() const { 
+
+   // first need to sort the values and then compute the 
+   // running sum of the weights and of the weight square 
+   // needed later for computing the integral
+
+   unsigned int n = fSamplingDist.size();
+   std::vector<unsigned int> index(n);
+   TMath::SortItr(fSamplingDist.begin(), fSamplingDist.end(), index.begin(), false );
+
+   // compute the empirical CDF and cache in a vector 
+   fSumW = std::vector<double>( n );
+   fSumW2 = std::vector<double>( n );
+
+   std::vector<double> sortedDist( n);
+   std::vector<double> sortedWeights( n);
+
+   for(unsigned int i=0; i <n; i++) {
+      unsigned int j = index[i];
+      if (i > 0) { 
+         fSumW[i] += fSumW[i-1]; 
+         fSumW2[i] += fSumW2[i-1]; 
+      }
+      fSumW[i] += fSampleWeights[j];
+      fSumW2[i] += fSampleWeights[j]*fSampleWeights[j];
+      // sort also the sampling distribution and the weights
+      sortedDist[i] = fSamplingDist[ j] ;
+      sortedWeights[i] = fSampleWeights[ j] ;
+   }
+   
+   // save the sorted distribution
+   fSamplingDist = sortedDist; 
+   fSampleWeights = sortedWeights;
+   
+
+}
+
 //_______________________________________________________
 Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize, Bool_t lowClosed, Bool_t
                                                 highClosed) const
@@ -176,28 +215,35 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
    // Normalization can be turned off.
    // compute also the error on the integral 
 
-   Double_t sum  = 0;
-   Double_t sum2 = 0; 
-   for(unsigned int i=0; i<fSamplingDist.size(); i++) {
-      double value = fSamplingDist[i];
+   int n = fSamplingDist.size();
+   if (int(fSumW.size()) != n) 
+      SortValues();
 
-      if((lowClosed  ? value >= low  : value > low)  &&
-         (highClosed ? value <= high : value < high))
-      {
-         sum  += fSampleWeights[i];
-         sum2 += fSampleWeights[i] * fSampleWeights[i];
-      }
+
+   // TMath::Binary search returns lower index value
+   int indexLow = TMath::BinarySearch( n, &fSamplingDist[0], low) + 1; 
+   if (!lowClosed && indexLow > 0 && low == fSamplingDist[indexLow-1] ) indexLow = indexLow -1;
+
+
+   int indexHigh = TMath::BinarySearch( n, &fSamplingDist[0], high); 
+   if (!highClosed && indexHigh < n-1 && high == fSamplingDist[indexHigh+1]  ) indexHigh = indexHigh-1;
+
+   // indexLow cannot be smaller than zero and indexHigh cannot be larger than n
+   assert(indexLow >= 0 && indexHigh < n);
+
+
+   double sum = 0; 
+   double sum2 = 0;
+   if (indexLow <  n &&  indexHigh > 0) {  
+      sum  = fSumW[indexHigh] - fSumW[indexLow];
+      sum2  = fSumW2[indexHigh] - fSumW2[indexLow];
    }
 
-
-
    if(normalize) {
-      Double_t norm  = 0;
-      Double_t norm2 = 0;
-      for(unsigned int i=0; i<fSamplingDist.size(); i++) {
-         norm += fSampleWeights[i];
-         norm2+= fSampleWeights[i]*fSampleWeights[i];
-      }
+
+      double norm  = fSumW.back();
+      double norm2 = fSumW2.back();
+
       sum /= norm;
 
       // use formula for binomial error in case of weighted events 
@@ -237,9 +283,8 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
 {
    // returns the inverse of the cumulative distribution function, with variations depending on number of samples
 
-  // will need to deal with weights, but for now:
-  std::sort(fSamplingDist.begin(), fSamplingDist.end());
-
+   if (fSumW.size() != fSamplingDist.size()) 
+      SortValues();
 
   // Acceptance regions are meant to be inclusive of (1-\alpha) of the probability
   // so the returned values of the CDF should make this easy.
@@ -311,9 +356,8 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
 Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
 {
    // returns the inverse of the cumulative distribution function
-
-  // will need to deal with weights, but for now:
-  std::sort(fSamplingDist.begin(), fSamplingDist.end());
+   if (fSumW.size() != fSamplingDist.size()) 
+      SortValues();
 
   // casting will round down, eg. give i
   int nominal = (unsigned int) (pvalue*fSamplingDist.size());

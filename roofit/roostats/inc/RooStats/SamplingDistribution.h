@@ -83,15 +83,22 @@ namespace RooStats {
     Double_t CDF(Double_t x) const;
 
   private:
-    std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
-    std::vector<Double_t> fSampleWeights; // vector of weights for the samples
+
+    mutable std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
+    mutable std::vector<Double_t> fSampleWeights; // vector of weights for the samples
     // store a RooRealVar that this distribution corresponds to?
 
     TString fVarName;
+
+    mutable std::vector<Double_t> fSumW;   //! Chached vector with sum of the weight used to compute integral 
+    mutable std::vector<Double_t> fSumW2;  //! Chached vector with sum of the weight used to compute integral error 
     
   protected:
+
+    // internal function to sort values
+    void SortValues() const;
     
-    ClassDef(SamplingDistribution,1)  // Class containing the results of the HybridCalculator
+    ClassDef(SamplingDistribution,2)  // Class containing the results of the HybridCalculator
   };
 }
 

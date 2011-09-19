@@ -117,23 +117,24 @@ namespace RooStats {
        
        Bool_t created(kFALSE) ;
        if (!reuse || fNll==0) {
-	 RooArgSet* allParams = fPdf->getParameters(data);
-	 RooStats::RemoveConstantParameters(allParams);
+          RooArgSet* allParams = fPdf->getParameters(data);
+          RooStats::RemoveConstantParameters(allParams);
 
-	 // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+          // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
+          fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 
-	 //	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
-	 //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
-	 created = kTRUE ;
-	 //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
+          //	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
+          //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
+          created = kTRUE ;
+          delete allParams;
+          //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
        }
        if (reuse && !created) {
-	 //cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
-	 fNll->setData(data,kFALSE) ;
-	 // 	 if (fProfile) delete fProfile ; 
-	 // 	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest) ; 
-	 //fProfile->clearAbsMin() ;
+          //cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
+          fNll->setData(data,kFALSE) ;
+          // 	 if (fProfile) delete fProfile ; 
+          // 	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest) ; 
+          //fProfile->clearAbsMin() ;
        }
 
 
@@ -218,6 +219,10 @@ namespace RooStats {
           //       cout <<" reestablish snapshot"<<endl;
           *attachedSet = *snap;
 
+          // in case no nuisance parameters are present
+          // no need to minimize just evaluate the nll
+          double condML = 0; 
+
           // set the POI to constant
           RooLinkedListIter it = paramsOfInterest.iterator();
           RooRealVar* tmpPar = NULL, *tmpParA=NULL;
@@ -226,7 +231,16 @@ namespace RooStats {
              tmpParA->setConstant();
           }
 
-          double condML = GetMinNLL(statusN);
+          // check if there are non-const parameters so it is worth to do the minimization
+          RooArgSet allParams(*attachedSet); 
+          RooStats::RemoveConstantParameters(&allParams);
+          
+          if (allParams.getSize() == 0 ) {
+             condML = fNll->getVal(); 
+          }
+          else { 
+             condML = GetMinNLL(statusN);
+          }
 
           ret=condML-uncondML;
        }

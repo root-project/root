@@ -33,6 +33,9 @@ END_HTML
 #include "RooStats/TestStatistic.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
+#include "RooMinimizer.h"
+#include "Math/MinimizerOptions.h"
+
 
 namespace RooStats {
 
@@ -47,6 +50,11 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
      // constructor
      //      fPdf = pdf;
      //      fParameter = parameter;
+
+	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+
    }
    //__________________________________
    MaxLikelihoodEstimateTestStat(RooAbsPdf& pdf, RooRealVar& parameter) :
@@ -55,6 +63,10 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
       // constructor
       //      fPdf = pdf;
       //      fParameter = parameter;
+	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+
    }
 
   //______________________________
@@ -73,16 +85,56 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     return ret;
     */
 
-    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
-    RooAbsReal* profile = nll->createProfile(RooArgSet());
-    profile->getVal();
-    RooArgSet* vars = profile->getVariables();
-    RooMsgService::instance().setGlobalKillBelow(msglevel);
-    double ret = vars->getRealValue(fParameter->GetName());
-    delete vars;
-    delete nll;
-    delete profile;
-    return ret;
+    RooArgSet* allParams = fPdf->getParameters(data);
+    RooStats::RemoveConstantParameters(allParams);
+
+    // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
+    RooAbsReal* nll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+
+    //RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
+
+    // RooAbsReal* profile = nll->createProfile(RooArgSet());
+    // profile->getVal();
+    // RooArgSet* vars = profile->getVariables();
+    // RooMsgService::instance().setGlobalKillBelow(msglevel);
+    // double ret = vars->getRealValue(fParameter->GetName());
+    // delete vars;
+    // delete nll;
+    // delete profile;
+    // return ret;
+
+
+     RooMinimizer minim(*nll);
+     minim.setStrategy(fStrategy);
+     //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
+     minim.setPrintLevel(fPrintLevel-1);
+     int status = -1;
+     //	minim.optimizeConst(true);
+     for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
+	  //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+        status = minim.minimize(fMinimizer, "Minimize");
+        if (status == 0) {  
+           break;
+        } else {
+           if (tries > 1) {
+	      printf("    ----> Doing a re-scan first\n");
+	      minim.minimize(fMinimizer,"Scan");
+	    }
+           if (tries > 2) {
+	      printf("    ----> trying with strategy = 1\n");
+              minim.setStrategy(1);
+           }
+        }
+     }
+     std::cout << "BEST FIT values " << std::endl;
+     allParams->Print("V");
+
+     RooMsgService::instance().setGlobalKillBelow(msglevel);
+     delete nll;
+
+     if (status != 0) return -1; 
+     return fParameter->getVal();
+
 
   }
   
@@ -100,6 +152,11 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
       RooAbsPdf *fPdf;
       RooRealVar *fParameter;
       bool fUpperLimit;
+      TString fMinimizer;
+      Int_t fStrategy;
+      Int_t fPrintLevel;
+
+
 
    protected:
    ClassDef(MaxLikelihoodEstimateTestStat,1)
