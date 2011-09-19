@@ -20,7 +20,7 @@ PQ2DEP       := $(PQ2O:.o=.d)
 PQ2          := bin/pq2
 
 ##### Libraries needed #######
-PQ2LIBS      := -lProof -lMatrix -lHist -lTree \
+PQ2LIBS      := -lProof -lHist -lMatrix -lTree \
                 -lRIO -lNet -lThread $(BOOTLIBS) 
 PQ2LIBSDEP    = $(ORDER_) $(CORELIB) $(CINTLIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(TREELIB) $(MATRIXLIB) $(MATHCORELIB) $(PROOFLIB) $(THREADLIB)
