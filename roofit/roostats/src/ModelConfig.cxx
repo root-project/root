@@ -202,17 +202,17 @@ void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
    // helper functions to avoid code duplication
    if ( !GetWS() ) return;
 
-   if ( ! GetWS()->set(name) ) {
-      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-      // use option to import missing constituents
-      // TODO IS THIS A BUG? if content with same name exist they will not be imported ?
-      // See ModelConfig::GuessObsAndNuissance(...) for example of the problem.
-
-      GetWS()->defineSet(name, set,true);
-
-      RooMsgService::instance().setGlobalKillBelow(level) ;
+   if (  GetWS()->set(name) ) {
+      GetWS()->removeSet(name);
    }
+   
+   RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+
+   GetWS()->defineSet(name, set,true);
+
+   RooMsgService::instance().setGlobalKillBelow(level) ;
+   
 }
    
 void ModelConfig::ImportPdfInWS(const RooAbsPdf & pdf) { 

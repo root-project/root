@@ -204,6 +204,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    mh.SetType(MetropolisHastings::kLog);
    mh.SetSign(MetropolisHastings::kNegative);
    mh.SetParameters(*params);
+   mh.SetParametersOfInterest(fPOI); // needed for keeping only POI in the chain
    mh.SetProposalFunction(*fPropFunc);
    mh.SetNumIters(fNumIters);
 
