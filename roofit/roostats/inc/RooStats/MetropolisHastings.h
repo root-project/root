@@ -44,7 +44,7 @@ namespace RooStats {
       MetropolisHastings();
 
       // alternate constructor
-      MetropolisHastings(RooAbsReal& function, RooArgSet& paramsOfInterest,
+      MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
             ProposalFunction& proposalFunction, Int_t numIters);
 
       virtual ~MetropolisHastings() {}
@@ -55,8 +55,8 @@ namespace RooStats {
 
       // specify the parameters of interest in the interval
       // kbelasco: should clone before removing constant parameters?
-      virtual void SetParameters(RooArgSet& set)
-      { fParameters = &set; RemoveConstantParameters(fParameters); }
+      virtual void SetParameters(const RooArgSet& set)
+      { fParameters.removeAll();  fParameters.add(set);  RemoveConstantParameters(&fParameters); }
       // set the proposal function for suggesting new points for the MCMC
       virtual void SetProposalFunction(ProposalFunction& proposalFunction)
       { fPropFunc = &proposalFunction; }
@@ -77,7 +77,7 @@ namespace RooStats {
 
    protected:
       RooAbsReal* fFunction; // function that will generate likelihood values
-      RooArgSet* fParameters; // RooRealVars that define parameter space
+      RooArgSet fParameters; // RooRealVars that define parameter space
       ProposalFunction* fPropFunc; // Proposal function for MCMC integration
       Int_t fNumIters; // number of iterations to run metropolis algorithm
       Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first

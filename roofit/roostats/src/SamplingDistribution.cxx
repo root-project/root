@@ -286,6 +286,10 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
    if (fSumW.size() != fSamplingDist.size()) 
       SortValues();
 
+   if (!TMath::AreEqualRel(fSumW.back(), fSumW2.back(), 1.E-6) ) 
+      Warning("InverseCDF","Estimation of Quantiles (InverseCDF) for weighted events is not yet supported");
+      
+
   // Acceptance regions are meant to be inclusive of (1-\alpha) of the probability
   // so the returned values of the CDF should make this easy.
   // in particular:
@@ -358,6 +362,9 @@ Double_t SamplingDistribution::InverseCDFInterpolate(Double_t pvalue)
    // returns the inverse of the cumulative distribution function
    if (fSumW.size() != fSamplingDist.size()) 
       SortValues();
+
+   if (!TMath::AreEqualRel(fSumW.back(), fSumW2.back(), 1.E-6) ) 
+      Warning("InverseCDFInterpolate","Estimation of Quantiles (InverseCDF) for weighted events is not yet supported.");
 
   // casting will round down, eg. give i
   int nominal = (unsigned int) (pvalue*fSamplingDist.size());

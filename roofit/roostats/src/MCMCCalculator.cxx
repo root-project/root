@@ -203,7 +203,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    mh.SetFunction(*nll);
    mh.SetType(MetropolisHastings::kLog);
    mh.SetSign(MetropolisHastings::kNegative);
-   mh.SetParameters(*params);
+   mh.SetParameters(fPOI);
    mh.SetProposalFunction(*fPropFunc);
    mh.SetNumIters(fNumIters);
 

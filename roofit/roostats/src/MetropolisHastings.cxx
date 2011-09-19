@@ -103,7 +103,6 @@ MetropolisHastings::MetropolisHastings()
 {
    // default constructor
    fFunction = NULL;
-   fParameters = NULL;
    fPropFunc = NULL;
    fNumIters = 0;
    fNumBurnInSteps = 0;
@@ -111,7 +110,7 @@ MetropolisHastings::MetropolisHastings()
    fType = kTypeUnset;
 }
 
-MetropolisHastings::MetropolisHastings(RooAbsReal& function, RooArgSet& paramsOfInterest,
+MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
       ProposalFunction& proposalFunction, Int_t numIters)
 {
    fFunction = &function;
@@ -125,7 +124,7 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, RooArgSet& paramsOf
 
 MarkovChain* MetropolisHastings::ConstructChain()
 {
-   if (!fParameters || !fPropFunc || !fFunction) {
+   if (fParameters.getSize() == 0 || !fPropFunc || !fFunction) {
       coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
                      " function, or (log) likelihood function" << endl;
          return NULL;
@@ -139,13 +138,13 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
    RooArgSet x;
    RooArgSet xPrime;
-   x.addClone(*fParameters);
+   x.addClone(fParameters);
    RandomizeCollection(x);
-   xPrime.addClone(*fParameters);
+   xPrime.addClone(fParameters);
    RandomizeCollection(xPrime);
 
    MarkovChain* chain = new MarkovChain();
-   chain->SetParameters(*fParameters);
+   chain->SetParameters(fParameters);
 
    Int_t weight = 0;
    Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
@@ -171,7 +170,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // steps we should have to take for any reasonable (log) likelihood function
    while (i < 1000 && hadEvalError) {
       RandomizeCollection(x);
-      RooStats::SetParameters(&x, fParameters);
+      RooStats::SetParameters(&x, &fParameters);
       xL = fFunction->getVal();
 
       if (fType == kLog) {
@@ -208,7 +207,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
       fPropFunc->Propose(xPrime, x);
 
-      RooStats::SetParameters(&xPrime, fParameters);
+      RooStats::SetParameters(&xPrime, &fParameters);
       xPrimeL = fFunction->getVal();
 
       // check if log-likelihood for xprime had an error status
@@ -220,7 +219,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
       // why evaluate the last point again, can't we cache it?
       // kbelasco: commenting out lines below to add/test caching support
-      //RooStats::SetParameters(&x, fParameters);
+      //RooStats::SetParameters(&x, &fParameters);
       //xL = fFunction->getVal();
 
       if (fType == kLog) {
