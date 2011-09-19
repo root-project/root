@@ -40,6 +40,8 @@ bool writeResult = false;
 int nworkers = 4;
 bool rebuild = false;
 int nToyToRebuild = 100;
+double nToysRatio = 2; // ratio Ntoys S+b/ntoysB
+double maxPOI = -1;
 
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
@@ -272,11 +274,21 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(1);
-   if (optimize) profll.SetReuseNLL(true);
+   if (optimize) { 
+      profll.SetReuseNLL(true);
+      slrts.SetReuseNLL(true);
+   }
+
+   RooRealVar * mu = dynamic_cast<RooRealVar*>(sbModel->GetParametersOfInterest()->first());
+   if (maxPOI > 0) mu->setMax(maxPOI);  // increase limit
+   assert(mu != 0);
+   MaxLikelihoodEstimateTestStat maxll(*sbModel->GetPdf(),*mu); 
+
 
    TestStatistic * testStat = &slrts;
    if (testStatType == 1) testStat = &ropl;
    if (testStatType == 2 || testStatType == 3) testStat = &profll;
+   if (testStatType == 4) testStat = &maxll;
   
    
    HypoTestCalculatorGeneric *  hc = 0;
@@ -286,12 +298,20 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
    if (useNumberCounting) toymcs->SetNEventsPerToy(1);
    toymcs->SetTestStatistic(testStat);
-   if (optimize) toymcs->SetUseMultiGen(true);
+   if (optimize) { 
+      // work only of b pdf and s+b pdf are the same
+      if (bModel->GetPdf() == sbModel->GetPdf() ) 
+         toymcs->SetUseMultiGen(true);
+   }
 
 
    if (type == 1) { 
       HybridCalculator *hhc = (HybridCalculator*) hc;
-      hhc->SetToys(ntoys,ntoys); 
+      hhc->SetToys(ntoys,ntoys/nToysRatio); // can use less ntoys for b hypothesis 
+
+      // remove global observables from ModelConfig
+      bModel->SetGlobalObservables(RooArgSet() );
+      sbModel->SetGlobalObservables(RooArgSet() );
 
       // check for nuisance prior pdf in case of nuisance parameters 
       if (bModel->GetNuisanceParameters() || sbModel->GetNuisanceParameters() ) {
@@ -317,7 +337,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
       }
    } 
    else 
-      ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys); 
+      ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/nToysRatio); 
 
    // Get the result
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
