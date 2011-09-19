@@ -33,6 +33,18 @@ histograms as ratio of Poisson means<li>
 <li>In <tt>TPaletteAxis::Paint()</tt> now makes sure the min and max of the
    palette are not 0 when the histogram content is 0.
 </li>
+<li> on Ubuntu the following macro crashed. A char variable was too small.
+<pre>
+   { 
+      TCanvas *tmp = new TCanvas(); 
+      TH2F *h1 = new TH2F("h1","h1",40,0.,10.,40,1.e-2,1.e2); 
+      h1->Fill(5,10); 
+      h1->Draw("COLZ"); 
+      tmp->SetLogz(); 
+      h1->GetZaxis()->SetNdivisions(110,kFALSE); 
+   } 
+</pre>
+</li>
 </ul>
 
 <h4>THistPainter</h4>
