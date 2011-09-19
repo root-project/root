@@ -73,11 +73,11 @@ public:
 class PTGraphColl {
 public:
    PTGraphColl(Long64_t n) {
-      for (int i = 0; i < kNumMeasurements; ++i) 
+      for (int i = 0; i < kNumMeasurements; ++i)
          gr[i] = new PTGraph(n);
    }
    ~PTGraphColl() {
-      for (int i = 0; i < kNumMeasurements; ++i) 
+      for (int i = 0; i < kNumMeasurements; ++i)
          delete gr[i];
    }
 
@@ -119,12 +119,12 @@ void InvokeChild(char** argv, const TString& roottestHome){
 PTMeasurement ReceiveResults(const TString& fifoName) {
    // Retrieve the measurements from the FIFO and from the child's usage data.
 
-   int fd = open(fifoName, O_RDONLY); 
+   int fd = open(fifoName, O_RDONLY);
    if (fd < 0) {
       printf("Error pt_collector: opening FIFO %s, %s\n", fifoName.Data(), strerror(errno));
       exit(1);
    }
- 
+
    // read child performance information
    int status;
    wait(&status);
@@ -136,9 +136,9 @@ PTMeasurement ReceiveResults(const TString& fifoName) {
    // get memory
    PTMeasurement results;
    read(fd, &results, 4*sizeof(long));
-   unlink(fifoName); 
+   unlink(fifoName);
    if (results.memory[3] != 699692586){
-      printf("Error pt_collector: could not read memory usage from FIFO %s\n", fifoName.Data());; 
+      printf("Error pt_collector: could not read memory usage from FIFO %s\n", fifoName.Data());;
       exit(1);
    }
 
@@ -174,7 +174,7 @@ TTree* GetTree(TString& fileName, TString& testName, int argc, char** argv, cons
 
    TFile* file = TFile::Open(fileName, "UPDATE");
    if (!file || file->IsZombie()) {
-      printf("Error pt_collector: could not open data file %s\n", fileName.Data());; 
+      printf("Error pt_collector: could not open data file %s\n", fileName.Data());
       exit(1);
    }
 
@@ -185,6 +185,16 @@ TTree* GetTree(TString& fileName, TString& testName, int argc, char** argv, cons
       tree = new TTree("PerftrackTree", "Performance tracking data");
       tree->Branch("event", &data);
       tree->GetUserInfo()->Add(new TObjString(testName));
+   } else {
+      TObject* userInfoTest = tree->GetUserInfo()->FindObject(testName);
+      if (!userInfoTest) {
+         // We have a hash collision: there is another test with a
+         // different name writing into the same ROOT file as the
+         // current test.
+         // We can't do much about it; just ignore this test for
+         // performance tracking.
+         exit(0);
+      }
    }
    return tree;
 }
@@ -308,7 +318,7 @@ void UpdateGraphs(PTGraphColl* graphs, const PTData& newdata) {
 void RevertOutlierStat(TTree* tree, PTData& newdata) {
    // The new measurement is an outlier; update its integrated statistics data
    // to not take the current measurement into account.
-   
+
    PTData emptydata;
    PTData* prevdata = &emptydata;
    if (tree->GetEntries()) {
@@ -371,7 +381,7 @@ void DeleteOldEntries(TTree *&tree, unsigned int historyThinningCounter, const T
    ULong64_t newStatEntries = 0;
    for (ULong64_t i = 0; i < nevent; i++){
       tree->GetEntry(i);
-      if (data->outlier != 0) { 
+      if (data->outlier != 0) {
          newT->Fill();
          continue;
       }
@@ -381,7 +391,7 @@ void DeleteOldEntries(TTree *&tree, unsigned int historyThinningCounter, const T
          // Set stat entries to the current number of entries
          // Gives new entries after history deletion more weight
          data->statEntries = newStatEntries;
-	
+
          newT->Fill();
       }
    }
@@ -451,7 +461,7 @@ void SaveGraphs(PTGraphColl* graphs, const TString& dataFileName, const TString&
       mg->GetXaxis()->SetTitle("SVN revision");
       mg->GetXaxis()->SetTitleOffset(1.0);
       //mg->GetYaxis()->SetTitle(measurementNames[i]);
-      //mg->GetYaxis()->SetTitleOffset(1.5);  
+      //mg->GetYaxis()->SetTitleOffset(1.5);
 
       static const double delta = 1E-4;
       double v = (mg->GetHistogram()->GetMinimum() + mg->GetHistogram()->GetMaximum()) / 2.;
