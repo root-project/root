@@ -412,7 +412,7 @@ void TPaletteAxis::Paint(Option_t *)
       gPad->PaintBox(xmin,y1,xmax,y2);
    }
    Int_t ndiv  = fH->GetZaxis()->GetNdivisions()%100; //take primary divisions only
-   char chopt[5] = "S   ";
+   char chopt[6] = "S   ";
    chopt[1] = 0;
    strncat(chopt, "+L", 2);
    if (ndiv < 0) {
