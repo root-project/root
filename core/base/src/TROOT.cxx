@@ -634,8 +634,11 @@ namespace {
          }
          cursor = cursor->Next();
       };
-      // Now were done, clear the list
-      files->Clear();
+      // Now were done, clear the list but do not delete the objecs as 
+      // they have been moved to the list of closed objects and must be 
+      // deleted from there in order to avoid a double delete from a
+      // use objects (on the interpreter stack).
+      files->Clear("nodelete");  
    }
 }
 
