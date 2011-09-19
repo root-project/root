@@ -136,6 +136,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
       return NULL;
    }
 
+   if (fPOI.getSize() == 0) fPOI.add(fParameters);
+
    RooArgSet x;
    RooArgSet xPrime;
    x.addClone(fParameters);
@@ -144,7 +146,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
    RandomizeCollection(xPrime);
 
    MarkovChain* chain = new MarkovChain();
-   chain->SetParameters(fParameters);
+   // only the POI will be added to the chain
+   chain->SetParameters(fPOI);
 
    Int_t weight = 0;
    Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;

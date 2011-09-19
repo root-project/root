@@ -54,7 +54,10 @@ namespace RooStats {
       virtual MarkovChain* ConstructChain();
 
       // specify the parameters of interest in the interval
-      // kbelasco: should clone before removing constant parameters?
+      // only the POI will be added in the chain
+      virtual void SetParametersOfInterest(const RooArgSet& set)
+      { fPOI.removeAll();  fPOI.add(set);  RemoveConstantParameters(&fPOI); }      
+      // specify all the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& set)
       { fParameters.removeAll();  fParameters.add(set);  RemoveConstantParameters(&fParameters); }
       // set the proposal function for suggesting new points for the MCMC
@@ -77,7 +80,8 @@ namespace RooStats {
 
    protected:
       RooAbsReal* fFunction; // function that will generate likelihood values
-      RooArgSet fParameters; // RooRealVars that define parameter space
+      RooArgSet fParameters; // RooRealVars that define all parameter space
+      RooArgSet fPOI; // RooRealVars that define only the POI
       ProposalFunction* fPropFunc; // Proposal function for MCMC integration
       Int_t fNumIters; // number of iterations to run metropolis algorithm
       Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first

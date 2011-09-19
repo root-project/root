@@ -47,7 +47,7 @@ namespace RooStats {
 
   inline void RemoveConstantParameters(RooArgSet* set){
     RooArgSet constSet;
-    TIter it = set->createIterator();
+    RooLinkedListIter it = set->iterator();
     RooRealVar *myarg; 
     while ((myarg = (RooRealVar *)it.Next())) { 
       if(myarg->isConstant()) constSet.add(*myarg);
@@ -59,16 +59,25 @@ namespace RooStats {
   inline void RandomizeCollection(RooAbsCollection& set,
                                   Bool_t randomizeConstants = kTRUE)
   {
-    TIterator* it = set.createIterator();
+    RooLinkedListIter it = set.iterator();
     RooRealVar* var;
-  
-    while ((var = (RooRealVar*)it->Next()) != NULL)
-      if (!var->isConstant() || randomizeConstants)
-         var->randomize();
 
-    delete it;
+    // repeat loop tpo avoid calling isConstant for nothing 
+    if (randomizeConstants) { 
+       while ((var = (RooRealVar*)it.Next()) != NULL)
+         var->randomize();
+    }
+    else {
+       // exclude constants variables
+      while ((var = (RooRealVar*)it.Next()) != NULL)
+      if (!var->isConstant() )
+         var->randomize();
+    }
+
+
   }
 
 }
+
 
 #endif
