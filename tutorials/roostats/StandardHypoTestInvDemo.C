@@ -276,7 +276,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    if (testStatType == 3) profll.SetOneSided(1);
    if (optimize) { 
       profll.SetReuseNLL(true);
-      slrts.SetReuseNLL(true);
+      slrts.setReuseNLL(true);
    }
 
    RooRealVar * mu = dynamic_cast<RooRealVar*>(sbModel->GetParametersOfInterest()->first());
