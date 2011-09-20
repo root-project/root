@@ -99,7 +99,7 @@ private :
    // Map of navigatorr arrays per thread
    typedef std::map<Long_t, TGeoNavigatorArray *>   NavigatorsMap_t;
    typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
-   NavigatorsMap_t       fNavigators;       // Map between thread id's and navigator arrays
+   NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
    TGeoNavigator        *fCurrentNavigator; //! current navigator
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
