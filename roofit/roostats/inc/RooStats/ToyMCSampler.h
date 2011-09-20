@@ -210,7 +210,7 @@ class ToyMCSampler: public TestStatSampler {
          if (fNullPOI) delete fNullPOI; fNullPOI = (RooArgSet*)nullpoi.snapshot(); 
       }
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
+      virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
       // How to randomize the prior. Set to NULL to deactivate randomization.
       virtual void SetPriorNuisance(RooAbsPdf* pdf) { fPriorNuisance = pdf; }
       // specify the nuisance parameters (eg. the rest of the parameters)
@@ -279,7 +279,8 @@ class ToyMCSampler: public TestStatSampler {
       // helper for GenerateToyData
       RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=NULL, int forceEvents=0) const;
 
-
+      // helper method for clearing  the cache
+      void ClearCache();
 
       TestStatistic *fTestStat; // test statistic that is being sampled
       RooAbsPdf *fPdf; // model

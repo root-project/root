@@ -20,7 +20,6 @@
 // include header file of this class 
 #include "RooStats/HypoTestInverterResult.h"
 
-#include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HybridResult.h"
 #include "RooStats/SamplingDistribution.h"
 #include "RooMsgService.h"
@@ -479,21 +478,27 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target)
      return GetYError(0);
   }
  
-  // The graph contains the points sorted by their x-value
-  HypoTestInverterPlot plot("plot", "", this);
-  TGraphErrors* graph = plot.MakePlot();
-  double* xs = graph->GetX();
+    // make a TGraph Errors with the sorted points
+  std::vector<unsigned int> indx(fXValues.size());
+  TMath::SortItr(fXValues.begin(), fXValues.end(), indx.begin(), false); 
+  // make a graph with the sorted point
+  TGraphErrors graph(ArraySize());
+  for (int i = 0; i < ArraySize(); ++i) {
+     graph.SetPoint(i, GetXValue(indx[i]), GetYValue(indx[i] ) );
+     graph.SetPointError(i, 0.,  GetYError(indx[i]) );
+  }
+
+  double* xs = graph.GetX();
   const double minX = xs[0];
   const double maxX = xs[ArraySize()-1];
 
   TF1 fct("fct", "exp([0] * x + [1] * x**2)", minX, maxX);
-  graph->Fit(&fct,"Q");
+  graph.Fit(&fct,"Q EX0");
 
   int index = FindClosestPointIndex(target);
   double m = fct.Derivative( GetXValue(index) );
   double theError = fabs( GetYError(index) / m);
 
-  delete graph;
 
   return theError;
 }
