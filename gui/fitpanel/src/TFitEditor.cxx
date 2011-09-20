@@ -3093,6 +3093,7 @@ TF1* TFitEditor::HasFitFunction()
    
    // Get the list of functions of the fit object
    TList *lf = GetFitObjectListOfFunctions();
+   TF1* func = 0;
 
    // If it exists
    if ( lf ) {
@@ -3102,11 +3103,11 @@ TF1* TFitEditor::HasFitFunction()
 
       // Then add all these functions to the fPrefFit structure.
       TObject *obj2;
-      TIter next(lf, kIterBackward);
+      TIter next(lf, kIterForward);
       // Go over all the elements in lf
       while ((obj2 = next())) {
          if (obj2->InheritsFrom(TF1::Class())) {
-            TF1* func = (TF1 *)obj2;
+            func = (TF1 *)obj2;
             fPrevFitIter it;
             // No go over all elements in fPrevFit
             for ( it = fPrevFit.begin(); it != fPrevFit.end(); ++it) {
@@ -3133,6 +3134,7 @@ TF1* TFitEditor::HasFitFunction()
       FillFunctionList();
       fDrawAdvanced->SetState(kButtonUp);
 
+
    } else {
       // If there is no prev fit functions.
       fTypeFit->Select(kFP_UFUNC);
@@ -3143,7 +3145,8 @@ TF1* TFitEditor::HasFitFunction()
    }
 
    fDrawAdvanced->SetState(kButtonDisabled);
-   return 0;
+
+   return func;
 }
 
 //______________________________________________________________________________
