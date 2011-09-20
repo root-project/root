@@ -132,8 +132,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
 
    // Data dir
    fDataDir = "";        // Default <workdir>/<user>/data
-   fDataDirOpts = "gW";  // Default: user and group can write in it; create directories
-                         //          only for workers (or any type)
+   fDataDirOpts = "";    // Default: no action
 
    // Rootd file serving enabled by default in readonly mode
    fRootdExe = "<>";
