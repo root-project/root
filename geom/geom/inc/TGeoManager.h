@@ -99,7 +99,12 @@ private :
    // Map of navigatorr arrays per thread
    typedef std::map<Long_t, TGeoNavigatorArray *>   NavigatorsMap_t;
    typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
+   typedef std::map<Long_t, Int_t>                  ThreadsMap_t;
+   typedef ThreadsMap_t::const_iterator             ThreadsMapIt_t;
+   
    NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
+   static ThreadsMap_t   fgThreadId;        //! Thread id's map
+   static Int_t          fgNumThreads;      //! Number of registered threads
    TGeoNavigator        *fCurrentNavigator; //! current navigator
    TGeoVolume           *fCurrentVolume;    //! current volume
    TGeoVolume           *fTopVolume;        //! top level volume in geometry
@@ -421,6 +426,8 @@ public:
    Double_t              *GetDblBuffer(Int_t length);
    void                   SetAllIndex();
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
+   static Int_t           ThreadId();
+   static void            ClearThreadsMap();
 
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");

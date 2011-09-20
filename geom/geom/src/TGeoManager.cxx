@@ -323,8 +323,10 @@ TGeoManager *gGeoManager = 0;
 
 ClassImp(TGeoManager)
 
-Bool_t TGeoManager::fgLock = kFALSE;
+Bool_t TGeoManager::fgLock         = kFALSE;
 Int_t  TGeoManager::fgVerboseLevel = 1;
+Int_t  TGeoManager::fgNumThreads   = 0;
+TGeoManager::ThreadsMap_t TGeoManager::fgThreadId;
 
 //_____________________________________________________________________________
 TGeoManager::TGeoManager()
@@ -395,6 +397,7 @@ TGeoManager::TGeoManager()
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      ClearThreadsMap();
    } else {
       Init();
       gGeoIdentity = 0;
@@ -490,6 +493,7 @@ void TGeoManager::Init()
    fKeyPNEId = 0;
    fValuePNEId = 0;
    fMultiThread = kFALSE;
+   ClearThreadsMap();
 }
 
 //_____________________________________________________________________________
@@ -564,6 +568,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
    //copy constructor
    for(Int_t i=0; i<256; i++)
       fPdgId[i]=gm.fPdgId[i];
+   ClearThreadsMap();
 }
 
 //_____________________________________________________________________________
@@ -639,6 +644,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      ClearThreadsMap();
    }
    return *this;
 }
@@ -686,6 +692,7 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
+   ClearThreadsMap();
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -851,6 +858,33 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
    return kTRUE;
 }
 
+//_____________________________________________________________________________
+void TGeoManager::ClearThreadsMap()
+{
+// Clear the current map of threads. This will be filled again by the calling
+// threads via ThreadId calls.
+   TThread::Lock();
+   fgThreadId.clear();
+   fgNumThreads = 0;
+   TThread::UnLock();
+}
+
+//_____________________________________________________________________________
+Int_t TGeoManager::ThreadId()
+{
+// Translates the current thread id to an ordinal number. This can be used to
+// manage data which is pspecific for a given thread.
+   Int_t tid = 0;
+   Long_t selfId = TThread::SelfId();
+   TGeoManager::ThreadsMapIt_t it = fgThreadId.find(selfId);
+   if (it != fgThreadId.end()) return it->second;
+   // Map needs to be updated.
+   fgThreadId[selfId] = fgNumThreads;
+   tid = fgNumThreads++;
+   TThread::UnLock();
+   return tid;
+}   
+   
 //_____________________________________________________________________________
 void TGeoManager::Browse(TBrowser *b)
 {
