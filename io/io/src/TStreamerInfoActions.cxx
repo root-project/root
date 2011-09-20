@@ -1461,7 +1461,7 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
       fReadObjectWise->AddAction( UseCache, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
    }            
    if (fReadMemberWise) {
-      // This is for streaming via a TClonesArray.
+      // This is for streaming via a TClonesArray (or a vector of pointers of this type).
       
       if (element->TestBit(TStreamerElement::kCache)) {
          TConfiguredAction action( GetVectorReadAction(this,element,fType[i],i,fOffset[i]) );
@@ -1612,7 +1612,7 @@ void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement* /*element*/ )
    }
 #endif
    if (fWriteMemberWise) {
-      // This is for streaming via a TClonesArray.
+      // This is for streaming via a TClonesArray (or a vector of pointers of this type).
 
 #if defined(CDJ_NO_COMPILE)
       if (element->TestBit(TStreamerElement::kCache)) {
