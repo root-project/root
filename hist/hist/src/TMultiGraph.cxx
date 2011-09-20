@@ -971,6 +971,8 @@ void TMultiGraph::Paint(Option_t *option)
       char *ytitle = 0;
       Int_t firstx = 0;
       Int_t lastx  = 0;
+      Bool_t timedisplay = kFALSE;
+      char *timeformat = 0;
 
       if (fHistogram) {
          //cleanup in case of a previous unzoom
@@ -978,6 +980,7 @@ void TMultiGraph::Paint(Option_t *option)
             nch = strlen(fHistogram->GetXaxis()->GetTitle());
             firstx = fHistogram->GetXaxis()->GetFirst();
             lastx  = fHistogram->GetXaxis()->GetLast();
+            timedisplay = fHistogram->GetXaxis()->GetTimeDisplay();
             if (nch) {
                xtitle = new char[nch+1];
                strlcpy(xtitle,fHistogram->GetXaxis()->GetTitle(),nch+1);
@@ -986,6 +989,11 @@ void TMultiGraph::Paint(Option_t *option)
             if (nch) {
                ytitle = new char[nch+1];
                strlcpy(ytitle,fHistogram->GetYaxis()->GetTitle(),nch+1);
+            }
+            nch = strlen(fHistogram->GetXaxis()->GetTimeFormat());
+            if (nch) {
+              timeformat = new char[nch+1];
+              strlcpy(timeformat,fHistogram->GetXaxis()->GetTimeFormat(),nch+1);
             }
             delete fHistogram;
             fHistogram = 0;
@@ -1071,6 +1079,8 @@ void TMultiGraph::Paint(Option_t *option)
          if (xtitle) {fHistogram->GetXaxis()->SetTitle(xtitle); delete [] xtitle;}
          if (ytitle) {fHistogram->GetYaxis()->SetTitle(ytitle); delete [] ytitle;}
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
+         if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
+         if (timeformat) {fHistogram->GetXaxis()->SetTimeFormat(timeformat); delete [] timeformat;}
       }
       fHistogram->Paint("0");
    }
