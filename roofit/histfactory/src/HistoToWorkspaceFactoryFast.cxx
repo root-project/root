@@ -231,7 +231,7 @@ namespace HistFactory{
       lowHist.at(j);
       highHist.at(j);
       RooDataHist* lowDHist = new RooDataHist((prefix+str.str()+"lowDHist").c_str(),"",*proto->var(fObsName.c_str()),lowHist.at(j));
-      RooDataHist* highDHist = new RooDataHist((prefix+str.str()+"lowDHist").c_str(),"",*proto->var(fObsName.c_str()),highHist.at(j));
+      RooDataHist* highDHist = new RooDataHist((prefix+str.str()+"highDHist").c_str(),"",*proto->var(fObsName.c_str()),highHist.at(j));
       RooHistFunc* lowFunc = new RooHistFunc((prefix+str.str()+"low").c_str(),"",*proto->var(fObsName.c_str()),*lowDHist,0) ;
       RooHistFunc* highFunc = new RooHistFunc((prefix+str.str()+"high").c_str(),"",*proto->var(fObsName.c_str()),*highDHist,0) ;
       lowSet.add(*lowFunc);
