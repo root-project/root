@@ -28,6 +28,27 @@ approximation are supported) </li>
 histograms as ratio of Poisson means<li>
 </ul>
 
+<h4>TMultiGraph</h4>
+<ul>
+<li>The following macro did not show the x-axis in TimeDisplay mode. The 
+<tt>mg->GetYaxis()->UnZoom();</tt> command erased the TimeDisplay attribute of 
+the axis. (fix from beischer@physik.rwth-aachen.de).
+<pre>
+{ 
+   TMultiGraph* mg = new TMultiGraph; 
+   TGraph* g = new TGraph; 
+   for (int i = 0; i < 100; i++) g->SetPoint(i, 1289420808+i, i+2); 
+   mg->Add(g, "P"); 
+   mg->Draw("AP"); 
+   mg->GetXaxis()->SetTimeDisplay(1); 
+   mg->GetYaxis()->UnZoom(); 
+   gPad->Modified(); 
+   gPad->Update(); 
+} 
+</pre>
+</li>
+</ul>
+
 <h4>TPaletteAxis</h4>
 <ul>
 <li>In <tt>TPaletteAxis::Paint()</tt> now makes sure the min and max of the
