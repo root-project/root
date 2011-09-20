@@ -492,6 +492,15 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
    
    fTotalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
 
+   // set sampling distribution name
+   TString nullDistName = TString::Format("%s_%s_%4.2f",hcResult->GetNullDistribution()->GetName(),
+                                         fScannedVariable->GetName(), fScannedVariable->getVal() );
+   TString altDistName = TString::Format("%s_%s_%4.2f",hcResult->GetAltDistribution()->GetName(),
+                                        fScannedVariable->GetName(), fScannedVariable->getVal() );
+
+   hcResult->GetNullDistribution()->SetName(nullDistName);
+   hcResult->GetAltDistribution()->SetName(altDistName);
+   
 
    return hcResult;
 } 

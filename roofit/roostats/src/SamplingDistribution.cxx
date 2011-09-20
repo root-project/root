@@ -220,23 +220,42 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
       SortValues();
 
 
-   // TMath::Binary search returns lower index value
-   int indexLow = TMath::BinarySearch( n, &fSamplingDist[0], low) + 1; 
-   if (!lowClosed && indexLow > 0 && low == fSamplingDist[indexLow-1] ) indexLow = indexLow -1;
+   // use std::upper_bounds returns lower index value
+   int indexLow = -1; 
+   int indexHigh = -1;
+   if (!lowClosed)  { 
+      indexLow = std::upper_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin();
+      if (indexLow > 0) indexLow -= 1;
+   } 
+   else { 
+      // case of closed intervals want to include lower part 
+      indexLow = std::lower_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin();
+      if (indexLow > 0) indexLow -= 1;
+   }
 
 
-   int indexHigh = TMath::BinarySearch( n, &fSamplingDist[0], high); 
-   if (!highClosed && indexHigh < n-1 && high == fSamplingDist[indexHigh+1]  ) indexHigh = indexHigh-1;
+   if (highClosed) { 
+      indexHigh = std::upper_bound( fSamplingDist.begin(), fSamplingDist.end() , high) - fSamplingDist.begin() -1;
+   }
+   else { 
+      indexHigh = std::lower_bound( fSamplingDist.begin(), fSamplingDist.end() , high) - fSamplingDist.begin() -1;
 
-   // indexLow cannot be smaller than zero and indexHigh cannot be larger than n
+   }
+   
+
    assert(indexLow >= 0 && indexHigh < n);
-
 
    double sum = 0; 
    double sum2 = 0;
-   if (indexLow <  n &&  indexHigh > 0) {  
-      sum  = fSumW[indexHigh] - fSumW[indexLow];
-      sum2  = fSumW2[indexHigh] - fSumW2[indexLow];
+
+   if (indexHigh >= 0) {  
+      sum  = fSumW[indexHigh]; 
+      sum2  = fSumW2[indexHigh]; 
+
+      if (indexLow < n && indexLow > 1) {
+         sum -= fSumW[indexLow];
+         sum2 -= fSumW2[indexLow];
+      }
    }
 
    if(normalize) {

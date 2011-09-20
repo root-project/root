@@ -23,6 +23,7 @@ objects.
 #include "TStyle.h"
 #include "TLine.h"
 #include "TFile.h"
+#include "TVirtualPad.h"  // for gPad
 
 #include <algorithm>
 #include <iostream>
@@ -271,6 +272,12 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
       gStyle->SetOptLogy(fLogYaxis);
    }
    fRooPlot->Draw();
+
+   // apply this since gStyle does not work for RooPlot
+   if (gPad) { 
+      gPad->SetLogx(fLogXaxis);
+      gPad->SetLogy(fLogYaxis);
+   }
 
    return;
 }

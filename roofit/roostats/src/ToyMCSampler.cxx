@@ -159,6 +159,7 @@ Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kFALSE ;
 ToyMCSampler::~ToyMCSampler() {
    if(fNuisanceParametersSampler) delete fNuisanceParametersSampler;
    if (fNullPOI) delete fNullPOI;
+   ClearCache();
 }
 
 
@@ -629,7 +630,35 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
 }
 
 
+void ToyMCSampler::ClearCache() { 
+   // clear the cache obtained from the pdf used for speeding the toy and global observables generation
+   // needs to be called every time the model pdf (fPdf) changes 
 
 
+   if (_gs1) delete _gs1; 
+   _gs1 = 0;
+   if (_gs2) delete _gs2; 
+   _gs2 = 0;
+   if (_gs3) delete _gs3; 
+   _gs3 = 0;
+   if (_gs4) delete _gs4; 
+   _gs4 = 0;
+
+   // no need to delete the _pdfList since it is managed by the RooSimultaneous object
+   if (_pdfList.size() > 0) { 
+      std::list<RooArgSet*>::iterator oiter = _obsList.begin();
+      for (std::list<RooAbsPdf::GenSpec*>::iterator giter  = _gsList.begin(); giter != _gsList.end(); ++giter, ++oiter) {
+         delete *oiter; 
+         delete *giter; 
+      }
+      _pdfList.clear();
+      _obsList.clear();
+      _gsList.clear();
+   }
+
+   //LM: is this set really needed ??
+   if (_allVars) delete _allVars; 
+   _allVars = 0;
+}
 
 } // end namespace RooStats

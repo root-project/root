@@ -82,6 +82,10 @@ namespace RooStats {
       // specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
 
+      // specify the parameters to store in the Markov chain 
+      // By default all the parameters are stored 
+      virtual void SetChainParameters(const RooArgSet & set) { fChainParams.removeAll(); fChainParams.add(set); }
+
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
 
@@ -172,6 +176,7 @@ namespace RooStats {
       Double_t fSize;   // size of the test (eg. specified rate of Type I error)
       RooArgSet   fPOI;        // parameters of interest for interval
       RooArgSet   fNuisParams; // nuisance parameters for interval (not really used)
+      RooArgSet   fChainParams; // parameters to store in the chain (if not specified they are all of them )
       mutable ProposalFunction* fPropFunc; // Proposal function for MCMC integration
       RooAbsPdf * fPdf;        // pointer to common PDF (owned by the workspace)
       RooAbsPdf * fPriorPdf;   // pointer to prior  PDF (owned by the workspace)
@@ -205,7 +210,7 @@ namespace RooStats {
          delete it;
       }
 
-      ClassDef(MCMCCalculator,1) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
+      ClassDef(MCMCCalculator,2) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };
 }
 

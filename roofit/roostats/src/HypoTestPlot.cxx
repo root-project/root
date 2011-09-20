@@ -39,12 +39,12 @@ void HypoTestPlot::ApplyResult(HypoTestResult& result) {
       if(alt) AddSamplingDistribution(alt, "NORMALIZE HIST");
       if(null) AddSamplingDistribution(null, "NORMALIZE HIST");
    }else{
-      if(!result.GetPValueIsRightTail()) {
+      if(result.GetPValueIsRightTail()) {
          if(alt) AddSamplingDistributionShaded(alt, result.GetTestStatisticData(), RooNumber::infinity(), "NORMALIZE HIST");
-         if(null) AddSamplingDistributionShaded(null, -RooNumber::infinity(), result.GetTestStatisticData(), "NORMALIZE HIST");
+         if(null) AddSamplingDistributionShaded(null, result.GetTestStatisticData(), RooNumber::infinity() , "NORMALIZE HIST");
       }else{
          if(alt) AddSamplingDistributionShaded(alt, -RooNumber::infinity(), result.GetTestStatisticData(), "NORMALIZE HIST");
-         if(null) AddSamplingDistributionShaded(null, result.GetTestStatisticData(), RooNumber::infinity(), "NORMALIZE HIST");
+         if(null) AddSamplingDistributionShaded(null, - RooNumber::infinity(), result.GetTestStatisticData() , "NORMALIZE HIST");
       }
    }
 
