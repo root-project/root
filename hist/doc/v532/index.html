@@ -54,6 +54,16 @@ outside the plot frame. This option did not clip the error bars correctly.
 </li>
 </ul>
 
+<h4>TGraphPainter</h4>
+<ul>
+<li>In <tt>TGraphPainter::PaintGraphErrors</tt> and related functions, the caps
+that are drawn when option "[]" is specified are drawn as a sequence of three
+separate lines. This results in an ugly concave jag at each corner. The caps are
+now drawn using TPad::PaintPolyLine, the default miter line joins makes those
+jags go away.
+</li>
+</ul>
+
 <h4>TPainter3dAlgorithms</h4>
 <ul>
 <li>Protection against possible NaN added. The following macro produced wrong 
