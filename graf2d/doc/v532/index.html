@@ -26,6 +26,14 @@
 </li>
 </ul>
 
+<h4>TSVG</h4>
+<ul>
+<li>When saving canvas as an svg image, the "times" character (i. e. in "x10^3"
+statement above axis) was saved as utf "&#0772;" (combining macron) whereas it 
+schould be "&#215;" (multiplication sign). It is now fixed.
+</li>
+</ul>
+
 <h4>TText</h4>
 <ul>
 <li> <tt>TText::GetBoundingBox</tt> now returns 0 when the string is empty. Previously it returned
