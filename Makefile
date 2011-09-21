@@ -315,8 +315,8 @@ BOOTLIBS     := -lCore -lCint -lMathCore
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
-ROOTLIBS     := $(BOOTLIBS) -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix -lThread
+ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad \
+                -lTree -lMatrix -lNet -lThread $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
@@ -326,11 +326,11 @@ BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
-ROOTLIBS     := $(BOOTLIBS) $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
-                $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
-                $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
-                $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib \
-                $(LPATH)/libThread.lib
+ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
+                $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
+                $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
+                $(LPATH)/libMatrix.lib $(LPATH)/libNet.lib \
+                $(LPATH)/libThread.lib $(BOOTLIBS)
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
