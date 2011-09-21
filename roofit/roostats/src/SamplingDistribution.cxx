@@ -223,14 +223,13 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
    // use std::upper_bounds returns lower index value
    int indexLow = -1; 
    int indexHigh = -1;
-   if (!lowClosed)  { 
-      indexLow = std::upper_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin();
-      if (indexLow > 0) indexLow -= 1;
+   if (lowClosed)  { 
+      // case of closed intervals want to include lower part 
+      indexLow = std::lower_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin() -1;
    } 
    else { 
-      // case of closed intervals want to include lower part 
-      indexLow = std::lower_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin();
-      if (indexLow > 0) indexLow -= 1;
+      // case of open intervals
+      indexLow = std::upper_bound( fSamplingDist.begin(), fSamplingDist.end() , low) - fSamplingDist.begin() - 1;
    }
 
 
@@ -243,7 +242,7 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
    }
    
 
-   assert(indexLow >= 0 && indexHigh < n);
+   assert(indexLow < n && indexHigh < n);
 
    double sum = 0; 
    double sum2 = 0;
@@ -252,7 +251,7 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
       sum  = fSumW[indexHigh]; 
       sum2  = fSumW2[indexHigh]; 
 
-      if (indexLow < n && indexLow > 1) {
+      if (indexLow >= 0) {
          sum -= fSumW[indexLow];
          sum2 -= fSumW2[indexLow];
       }
