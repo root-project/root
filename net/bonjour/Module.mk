@@ -68,4 +68,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(BONJO): CXXFLAGS += $(BONJINCDIR:%=-I%)
+$(BONJO): CXXFLAGS += $(BONJINCDIR:%=-I%) $(DNSSDINCDIR:%=-I%)
