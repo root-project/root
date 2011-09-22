@@ -3688,7 +3688,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
     else
         case $platform in
             linux)
-                check_link $hdfslib "$hdfslibdir" hdfsConnect
+                check_link "$hdfslib $jvmlib" "$hdfslibdir $jvmlibdir" hdfsConnect
                 if test $link_result -eq 0 ; then
                     enable_hdfs="no"
                 fi
@@ -3699,7 +3699,9 @@ if test ! "x$enable_hdfs" = "xno" ; then
                 fi
                 ;;
         esac
-        echo "HDFS disabled due to failed compile and link test"
+        if test "x$enable_hdfs" = "xno"; then
+            echo "HDFS disabled due to failed compile and link test"
+        fi
     fi
 fi
 check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
@@ -6711,7 +6713,7 @@ rm -f RConfigOptions.tmp
 if test ! "x$enable_ruby" = "xno"; then
    echo "" >> RConfigOptions-out.tmp
    ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
-   sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
+   sed 's/^\([0-9]\)\.\([0-9]\).*$/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
    tr '@' '\n' >> RConfigOptions-out.tmp
 fi
 
@@ -7101,7 +7103,7 @@ fi
 result ""
 if test "x$issue_explicitlink_warning" = "xyes"; then
     result "*** Explicit linking is required ror Ruby support."
-    result "*** If lib/*.so's exsist created without explicit linking,"
+    result "*** If lib/*.so's exist created without explicit linking,"
     result "*** please remove them first using: rm -f lib/*.so."
     result ""
 fi
