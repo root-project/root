@@ -51,6 +51,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 
 extern "C" {
@@ -248,7 +249,7 @@ Long64_t TChirpFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 }
 
 //_____________________________________________________________________________
-Int_t TChirpFile::SysSync(Int_t fd)
+Int_t TChirpFile::SysSync(Int_t /*fd*/)
 {
    return chirp_reli_fsync(chirp_file_ptr, time(0) + chirp_root_timeout);
 }
