@@ -4994,7 +4994,7 @@ TLeaf* TTree::GetLeaf(const char* aname)
       return 0;
    }
    TLeaf *leaf = 0;
-   char* slash = (char*) strchr(aname, '/');
+   char* slash = (char*) strrchr(aname, '/');
    char* name = 0;
    UInt_t nbch = 0;
    if (slash) {
