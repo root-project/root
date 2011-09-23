@@ -119,14 +119,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-# Require Reflex support?
-ifeq ($(BUILDREFLEX),yes)
-$(PYROOTO): CXXFLAGS += -DPYROOT_USE_REFLEX $(PYTHONINCDIR:%=-I%) -Iinclude/cint
-$(PYROOTLIB): ROOTLIBS += $(RFLX_REFLEXLL)
-$(PYROOTLIB): $(REFLEXLIB)
-else
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
-endif
 $(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
 ifeq ($(GCC_MAJOR),4)
 $(PYROOTO): CXXFLAGS += -fno-strict-aliasing
