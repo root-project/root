@@ -170,10 +170,12 @@ int XrdSecProtocolsss::Authenticate(XrdSecCredentials *cred,
   
 void XrdSecProtocolsss::Delete()
 {
+// Delete things that get re-allocated every time. The staticID is allocated
+// only once so it must stick around for every instance of this object.
+//
      if (Entity.host)         free(Entity.host);
      if (urName)              free(urName);
      if (idBuff)              free(idBuff);
-     if (staticID)            free(staticID);
      if (keyTab && keyTab != ktObject) delete keyTab;
 
      delete this;
