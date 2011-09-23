@@ -1014,6 +1014,27 @@ TFile* TChain::GetFile() const
 }
 
 //______________________________________________________________________________
+TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
+{
+   // -- Return a pointer to the leaf name in the current tree.
+   
+   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->GetLeaf(branchname, leafname);
+   }
+   if (fTree) {
+      return fTree->GetLeaf(branchname, leafname);
+   }
+   LoadTree(0);
+   if (fTree) {
+      return fTree->GetLeaf(branchname, leafname);
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TLeaf* TChain::GetLeaf(const char* name)
 {
    // -- Return a pointer to the leaf name in the current tree.

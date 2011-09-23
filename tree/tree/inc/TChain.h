@@ -96,6 +96,7 @@ public:
    virtual Long64_t  GetEntryNumber(Long64_t entry) const;
    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
    TFile            *GetFile() const;
+   virtual TLeaf    *GetLeaf(const char* branchname, const char* leafname);
    virtual TLeaf    *GetLeaf(const char* name);
    virtual TObjArray *GetListOfBranches();
    //                Warning, GetListOfFiles returns the list of TChainElements (not the list of files)

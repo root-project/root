@@ -4979,52 +4979,41 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 }
 
 //______________________________________________________________________________
-TLeaf* TTree::GetLeaf(const char* aname)
+TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
 {
    // Return pointer to the 1st Leaf named name in any Branch of this 
    // Tree or any branch in the list of friend trees.
    //
-   //  aname may be of the form branchname/leafname
-
-   if (aname == 0) return 0;
-
-   // We already have been visited while recursively looking
-   // through the friends tree, let return
-   if (kGetLeaf & fFriendLockStatus) {
-      return 0;
-   }
+   // The leaf name can contain the name of a friend tree with the
+   // syntax: friend_dir_and_tree.full_leaf_name
+   // the friend_dir_and_tree can be of the form
+   //    TDirectoryName/TreeName
+   
    TLeaf *leaf = 0;
-   char* slash = (char*) strrchr(aname, '/');
-   char* name = 0;
-   UInt_t nbch = 0;
-   if (slash) {
-      name = slash + 1;
-      nbch = slash - aname;
-      TString brname(aname,nbch);
-      TBranch *branch = FindBranch(brname);
+   if (branchname) {
+      TBranch *branch = FindBranch(branchname);
       if (branch) {
-         leaf = branch->GetLeaf(name);
+         leaf = branch->GetLeaf(leafname);
          if (leaf) {
             return leaf;
          }
-      }
-   } else {
-      name = (char*) aname;
+      }      
    }
    TIter nextl(GetListOfLeaves());
    while ((leaf = (TLeaf*)nextl())) {
-      if (strcmp(leaf->GetName(),name)) continue;
-      if (slash) {
+      if (strcmp(leaf->GetName(),leafname)) continue;
+      if (branchname) {
+         UInt_t nbch = strlen(branchname);
          TBranch *br = leaf->GetBranch();
          const char* brname = br->GetName();
          TBranch *mother = br->GetMother();
-         if (strncmp(brname,aname,nbch)) {
+         if (strncmp(brname,branchname,nbch)) {
             if (mother != br) {
                const char *mothername = mother->GetName();
                UInt_t motherlen = strlen(mothername);
-               if (nbch > motherlen && strncmp(mothername,aname,motherlen)==0 && (mothername[motherlen-1]=='.' || aname[motherlen]=='.')) {
+               if (nbch > motherlen && strncmp(mothername,branchname,motherlen)==0 && (mothername[motherlen-1]=='.' || branchname[motherlen]=='.')) {
                   // The left part of the requested name match the name of the mother, let's see if the right part match the name of the branch.
-                  if (strncmp(brname,aname+motherlen+1,nbch-motherlen-1)) {
+                  if (strncmp(brname,branchname+motherlen+1,nbch-motherlen-1)) {
                      // No it does not
                      continue;
                   } // else we have match so we can proceed.
@@ -5053,11 +5042,11 @@ TLeaf* TTree::GetLeaf(const char* aname)
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
       if (t) {
-         leaf = t->GetLeaf(aname);
+         leaf = t->GetLeaf(leafname);
          if (leaf) return leaf;
       }
    }
-
+   
    //second pass in the list of friends when the leaf name
    //is prefixed by the tree name
    TString strippedArg;
@@ -5065,23 +5054,67 @@ TLeaf* TTree::GetLeaf(const char* aname)
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
       if (t==0) continue;
-      char *subname = (char*)strstr(name,fe->GetName());
-      if (subname != name) continue;
+      char *subname = (char*)strstr(leafname,fe->GetName());
+      if (subname != leafname) continue;
       Int_t l = strlen(fe->GetName());
       subname += l;
       if (*subname != '.') continue;
       subname++;
-      if (slash) {
-         strippedArg = aname;
-         strippedArg.Remove(nbch+1);
-      } else {
-         strippedArg = "";
-      }
       strippedArg += subname;
-      leaf = t->GetLeaf(strippedArg);
+      leaf = t->GetLeaf(branchname,subname);
       if (leaf) return leaf;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
+{
+   // Return pointer to the 1st Leaf named name in any Branch of this 
+   // Tree or any branch in the list of friend trees.
+   //
+   // The leaf name can contain the name of a friend tree with the
+   // syntax: friend_dir_and_tree.full_leaf_name
+   // the friend_dir_and_tree can be of the form
+   //    TDirectoryName/TreeName
+
+   if (leafname == 0) return 0;
+   
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kGetLeaf & fFriendLockStatus) {
+      return 0;
+   }
+   
+   return GetLeafImpl(branchname,leafname);
+}
+   
+//______________________________________________________________________________
+TLeaf* TTree::GetLeaf(const char* aname)
+{
+   // Return pointer to the 1st Leaf named name in any Branch of this 
+   // Tree or any branch in the list of friend trees.
+   //
+   // aname may be of the form branchname/leafname
+
+   if (aname == 0) return 0;
+
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kGetLeaf & fFriendLockStatus) {
+      return 0;
+   }
+   char* slash = (char*) strrchr(aname, '/');
+   char* name = 0;
+   UInt_t nbch = 0;
+   if (slash) {
+      name = slash + 1;
+      nbch = slash - aname;
+      TString brname(aname,nbch);
+      return GetLeafImpl(brname.Data(),name);
+   } else {
+      return GetLeafImpl(0,aname);
+   }
 }
 
 //______________________________________________________________________________

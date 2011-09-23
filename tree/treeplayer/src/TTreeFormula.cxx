@@ -4931,17 +4931,16 @@ void TTreeFormula::UpdateFormulaLeaves()
    // A safer alternative would be to recompile the whole thing .... However
    // currently compile HAS TO be called from the constructor!
 
-   TString names(kMaxLen);
    Int_t nleaves = fLeafNames.GetEntriesFast();
    ResetBit( kMissingLeaf );
    for (Int_t i=0;i<nleaves;i++) {
       if (!fTree) break;
       if (!fLeafNames[i]) continue;
-      names.Form("%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
-      TLeaf *leaf = fTree->GetLeaf(names);
+      
+      TLeaf *leaf = fTree->GetLeaf(fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       fLeaves[i] = leaf;
       if (fBranches[i] && leaf) {
-         fBranches[i]=leaf->GetBranch();
+         fBranches[i] = leaf->GetBranch();
          // Since sometimes we might no read all the branches for all the entries, we 
          // might sometimes only read the branch count and thus reset the colleciton
          // but might not read the data branches, to insure that a subsequent read 
