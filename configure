@@ -4110,7 +4110,8 @@ if test ! "x$enable_ruby" = "xno" ; then
     fi
     check_header "ruby.h" "$rubyincdir" \
         $RUBYDIR ${RUBYDIR:+$RUBYDIR/include} \
-        $rubysysincdir $rubysysincdir2
+        $rubysysincdir $rubysysincdir2 \
+        /usr/local/include/ruby /usr/include/ruby
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
@@ -4123,7 +4124,8 @@ if test ! "x$enable_ruby" = "xno" ; then
     check_library "$check_library_options" \
         "$enable_shared" "$rubylibdir" \
         $RUBYDIR ${RUBYDIR:+$RUBYDIR/lib} \
-        $rubysyslibdir
+        $rubysyslibdir \
+        /usr/local/lib /usr/lib
     rubylib=$found_lib
     rubylibdir=$found_dir
 
