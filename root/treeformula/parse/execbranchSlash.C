@@ -11,7 +11,7 @@ TTree *createTree() {
    TTree *T = new TTree("T", "");
 
    double val;
-   gRandom->SetSeed(0);
+   gRandom->SetSeed(10);
 
    T->Branch(bname.c_str(), &val, "val/D");
    T->Branch("simple",&val);
