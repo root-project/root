@@ -143,7 +143,7 @@ perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.
 # For now logs.tar.gz is a phony target
 perftrack.tar.gz:
 	$(CMDECHO) rm -f perftrack.tar perftrack.tar.gz; touch perftrack.tar ; \
-                $(CALLROOTEXEBUILD) -b -l -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; 
+                $(CALLROOTEXEBUILD) -b -l -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; \ 
 		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' -o -name pt_index.html | xargs -I{}  tar --transform=s/pt_index.html/index.html/ -u -f perftrack.tar "{}" ; gzip  perftrack.tar 
 
 #	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
