@@ -219,7 +219,7 @@ Bool_t TODBCStatement::StoreResult()
 
       if (nameLength>0) {
          fBuffer[n].fBnamebuffer = new char[nameLength+1];
-         strcpy(fBuffer[n].fBnamebuffer, (const char*) columnName);
+         strlcpy(fBuffer[n].fBnamebuffer, (const char*) columnName, nameLength+1);
       }
    }
 
@@ -1031,19 +1031,24 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
    if (addr==0) return kFALSE;
 
-   int len = value==0 ? 0 : strlen(value);
+   if (value) {
+      int len = strlen(value);
 
-   if (len>=fBuffer[npar].fBelementsize) {
-      len = fBuffer[npar].fBelementsize;
-      strlcpy((char*) addr, value, len+1);
-      fBuffer[npar].fBlenarray[fBufferCounter] = len;
-   } else
-   if (len>0) {
-      strcpy((char*) addr, value);
-      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
+      if (len>=fBuffer[npar].fBelementsize) {
+         len = fBuffer[npar].fBelementsize;
+         strlcpy((char*) addr, value, len+1);
+         fBuffer[npar].fBlenarray[fBufferCounter] = len;
+         
+      } else if (len>0) {
+         strlcpy((char*) addr, value, maxsize);
+         fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
+      } else {
+         *((char*) addr) = 0;
+         fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
+      }
    } else {
       *((char*) addr) = 0;
-      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
+      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;      
    }
 
    return kTRUE;

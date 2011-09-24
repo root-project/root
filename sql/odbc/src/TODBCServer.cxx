@@ -251,8 +251,8 @@ TList* TODBCServer::ListData(Bool_t isdrivers)
    SQLSMALLINT reslen1, reslen2;
    
    do {
-      strcpy(namebuf, ""); 
-      strcpy(optbuf, "");
+      strlcpy(namebuf, "",2048); 
+      strlcpy(optbuf, "",2048);
       if (isdrivers)
          retcode = SQLDrivers(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT), 
                      (SQLCHAR*) namebuf, sizeof(namebuf), &reslen1,

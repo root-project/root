@@ -27,6 +27,8 @@ ClassImp(TPgSQLStatement)
 
 #ifdef PG_VERSION_NUM
 
+static const Int_t kBindStringSize = 25;
+
 //______________________________________________________________________________
 TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    TSQLStatement(errout),
@@ -293,7 +295,7 @@ void TPgSQLStatement::SetBuffersNumber(Int_t numpars)
 
    fBind = new char*[fNumBuffers];
    for(int i=0; i<fNumBuffers; ++i){
-      fBind[i]=new char[25]; //big enough to handle text rep. of 64 bit number
+      fBind[i] = new char[kBindStringSize]; //big enough to handle text rep. of 64 bit number
    }
    fFieldName = new char*[fNumBuffers];
 
@@ -516,7 +518,7 @@ Bool_t TPgSQLStatement::SetInt(Int_t npar, Int_t value)
 {
    // Set parameter value as integer.
 
-   sprintf(fBind[npar],"%d",value);
+   snprintf(fBind[npar],kBindStringSize,"%d",value);
 
    return kTRUE;
 }
@@ -526,7 +528,7 @@ Bool_t TPgSQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
    // Set parameter value as unsinged integer.
 
-   sprintf(fBind[npar],"%u",value);
+   snprintf(fBind[npar],kBindStringSize,"%u",value);
 
    return kTRUE;
 }
@@ -536,7 +538,7 @@ Bool_t TPgSQLStatement::SetLong(Int_t npar, Long_t value)
 {
    // Set parameter value as long.
 
-   sprintf(fBind[npar],"%ld",value);
+   snprintf(fBind[npar],kBindStringSize,"%ld",value);
 
    return kTRUE;
 }
@@ -546,7 +548,7 @@ Bool_t TPgSQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
    // Set parameter value as 64-bit integer.
 
-   sprintf(fBind[npar],"%lld",(Long64_t)value);
+   snprintf(fBind[npar],kBindStringSize,"%lld",(Long64_t)value);
 
    return kTRUE;
 }
@@ -556,7 +558,7 @@ Bool_t TPgSQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
    // Set parameter value as unsinged 64-bit integer.
 
-   sprintf(fBind[npar],"%llu",(ULong64_t)value);
+   snprintf(fBind[npar],kBindStringSize,"%llu",(ULong64_t)value);
 
    return kTRUE;
 }
@@ -566,7 +568,7 @@ Bool_t TPgSQLStatement::SetDouble(Int_t npar, Double_t value)
 {
    // Set parameter value as double value.
 
-   sprintf(fBind[npar],"%lf",value);
+   snprintf(fBind[npar],kBindStringSize,"%lf",value);
 
    return kTRUE;
 }
@@ -607,7 +609,7 @@ Bool_t TPgSQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    // Set parameter value as date.
 
    TDatime d =TDatime(year,month,day,0,0,0);
-   sprintf(fBind[npar],"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
 
    return kFALSE;
 }
@@ -618,7 +620,7 @@ Bool_t TPgSQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    // Set parameter value as time.
 
    TDatime d=TDatime(2000,1,1,hour,min,sec);
-   sprintf(fBind[npar],"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
 
@@ -628,7 +630,7 @@ Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day
    // Set parameter value as date & time.
 
    TDatime d=TDatime(year,month,day,hour,min,sec);
-   sprintf(fBind[npar],"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
 
@@ -638,7 +640,7 @@ Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t 
    // Set parameter value as timestamp.
 
    TDatime d(year,month,day,hour,min,sec);
-   sprintf(fBind[npar],"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
 
