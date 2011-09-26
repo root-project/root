@@ -36,14 +36,31 @@ schould be "&#215;" (multiplication sign). It is now fixed.
 
 <h4>TText</h4>
 <ul>
-<li> <tt>TText::GetBoundingBox</tt> now returns 0 when the string is empty. Previously it returned
-undefined numbers.
+<li> <tt>TText::GetBoundingBox</tt> now returns 0 when the string is empty.
+Previously it returned undefined numbers.
 </li>
 </ul>
 
 <h4>TLegend</h4>
 <ul>
-<li> <tt>Rewrite <tt>TLegend::GetEntry()</tt> to take the number of columns in the legend into account.
-The previous version considered there was always only one column in a <tt>TLegend</tt>.
+<li> Rewrite <tt>TLegend::GetEntry()</tt> to take the number of columns in the
+legend into account. The previous version considered there was always only one
+column in a <tt>TLegend</tt>.
 </li>
+</ul>
+
+<h4>TPaveLabel</h4>
+<ul>
+<li>The following macro entered an infinite loop: 
+<pre>
+   {
+      int x[10], y[10]; int i;
+      for(i = 0; i < 10; i++) {x[i] = 10*i;y[i] = i;}
+      TGraph *gr = new TGraph(10,x,y);
+      gr->Draw("AL");  
+      TPaveLabel *hello = new TPaveLabel(0.2,0.4,0.8,0.6,"Hello World");
+      hello->Draw();
+   }
+</pre>
+<li>
 </ul>
