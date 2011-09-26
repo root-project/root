@@ -657,6 +657,8 @@ TTree::TTree()
 
    fMaxEntryLoop = 1000000000;
    fMaxEntryLoop *= 1000;
+   
+   fBranches.SetOwner(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -752,6 +754,8 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 
    // We become the current tree.
    gTree = this;
+
+   fBranches.SetOwner(kTRUE);
 
    // If title starts with "/" and is a valid folder name, a superbranch
    // is created.
@@ -7610,6 +7614,8 @@ void TTree::Streamer(TBuffer& b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
+
+         fBranches.SetOwner(kTRUE); // True needed only for R__v < 19 and most R__v == 19
 
          if (fTreeIndex) {
             fTreeIndex->SetTree(this);
