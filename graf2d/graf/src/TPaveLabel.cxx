@@ -165,11 +165,18 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    latex.SetTextColor(GetTextColor());
    latex.SetTextSize(labelsize);
    if (automat) {
-      UInt_t w,h;
+      UInt_t w,h,w1;
       latex.GetTextExtent(w,h,GetTitle());
       labelsize = h/hh;
       Double_t wxlabel   = TMath::Abs(gPad->XtoPixel(x2) - gPad->XtoPixel(x1));
-      while (w > 0.99*wxlabel) { labelsize *= 0.99*wxlabel/w;latex.SetTextSize(labelsize); latex.GetTextExtent(w,h,GetTitle());}
+      latex.GetTextExtent(w1,h,GetTitle());
+      while (w > 0.99*wxlabel) {
+         labelsize *= 0.99*wxlabel/w;
+         latex.SetTextSize(labelsize);
+         latex.GetTextExtent(w,h,GetTitle());
+         if (w==w1) break;
+         else w1=w;
+      }
       if (h < 1) h = 1;
       if (h==1) {
       labelsize   = Double_t(h)/hh;
