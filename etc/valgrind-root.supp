@@ -65,6 +65,26 @@
 }
 
 {
+   TClass thread local storage
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN12_GLOBAL__N_118TClassLocalStorage10GetStorageEPK6TClass
+}
+
+{
+   TThread global mutex
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN8TStorage11ObjectAllocEm
+   fun:_ZN7TObjectnwEm
+   fun:_ZN7TThread4InitEv
+   fun:_ZN7TThread11ConstructorEv
+   fun:_ZN7TThreadC1EPKcPFPvS2_ES2_NS_9EPriorityE
+}
+
+{
    TClass's list of base classes (TDataMember elements)
    Memcheck:Leak
    fun:_Znwm
@@ -154,6 +174,30 @@
    Memcheck:Leak
    fun:_Znwm
    fun:_ZN23TCollectionProxyFactory24GenEmulatedClassStreamerEPKc
+}
+
+{
+   CollectionProxy objects
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNK19TGenCollectionProxy8GenerateEv
+   fun:_ZNK6TClass18GetCollectionProxyEv
+}
+
+{
+   Part of CollectionProxy objects
+   Memcheck:Leak
+   fun:_Znwm
+   ...
+   fun:_ZN19TGenCollectionProxyC1ERKS_
+}
+
+{
+   Part of CollectionProxy objects
+   Memcheck:Leak
+   fun:_Znam
+   ...
+   fun:_ZN19TGenCollectionProxyC1ERKS_
 }
 
 {
