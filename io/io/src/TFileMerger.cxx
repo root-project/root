@@ -717,12 +717,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
             if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
             } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
-               if ( obj->Write( key->GetName(), TObject::kSingleKey | TObject::kOverwrite ) <= 0 ) {
+               if ( obj->Write( oldkeyname, TObject::kSingleKey | TObject::kOverwrite ) <= 0 ) {
                   status = kFALSE;
                }
                ((TCollection*)obj)->SetOwner();
             } else {
-               if ( obj->Write( key->GetName(), TObject::kOverwrite ) <= 0) {
+               if ( obj->Write( oldkeyname, TObject::kOverwrite ) <= 0) {
                   status = kFALSE;
                }
             }
