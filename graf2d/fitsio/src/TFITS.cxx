@@ -906,8 +906,6 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
          }
       }
       
-      layer_pixels = new double[pixels_per_layer];
-      
       if (maxval == minval) {
          //plain image
          for (i = 0; i < pixels_per_layer; i++) {
