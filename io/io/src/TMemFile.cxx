@@ -134,8 +134,6 @@ TFile(path, "WEB", ftitle, compress), fBuffer(0)
       fWritable = kFALSE;
    }
 
-   fBuffer = new UChar_t[fgDefaultBlockSize];
-   fSize = fgDefaultBlockSize;
    memcpy(fBuffer,buffer,size);
 
    Init(create || recreate);
@@ -183,7 +181,11 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fMustFlush = kTRUE;
    fInitDone = kFALSE;
 
-   fFree         = 0;
+   if (fFree) {
+      fFree->Delete();
+      delete fFree;
+      fFree      = 0;
+   }
    fWritten      = 0;
    fSumBuffer    = 0;
    fSum2Buffer   = 0;
@@ -194,6 +196,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fClassIndex   = 0;
    fSeekInfo     = 0;
    fNbytesInfo   = 0;
+   delete fProcessIDs;
    fProcessIDs   = 0;
    fNProcessIDs  = 0;
    fOffset       = 0;
