@@ -296,6 +296,8 @@ Bool_t TFileMerger::IncrementalMerge(Bool_t)
    
    fOutputFile->SetBit(kMustCleanup);
    
+   TDirectory::TContext ctxt(0);
+   
    Bool_t result = kTRUE;
    while (result && fFileList->GetEntries()>0) {
       result = MergeRecursive(fOutputFile, fFileList, kTRUE);
@@ -346,6 +348,8 @@ Bool_t TFileMerger::Merge(Bool_t)
       }
    }
 
+   TDirectory::TContext ctxt(0);
+   
    fOutputFile->SetBit(kMustCleanup);
    Bool_t result = kTRUE;
    while (result && fFileList->GetEntries()>0) {
@@ -515,7 +519,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
                         ndir->cd();
-                        TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                        TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
                            TObject *hobj = key2->ReadObj();
                            if (!hobj) {
@@ -577,7 +581,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
                         ndir->cd();
-                        TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                        TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
                            TObject *hobj = key2->ReadObj();
                            if (!hobj) {
@@ -636,7 +640,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
                         ndir->cd();
-                        TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                        TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
                            TObject *hobj = key2->ReadObj();
                            if (!hobj) {
@@ -684,7 +688,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                   TDirectory *ndir = nextsource->GetDirectory(path);
                   if (ndir) {
                      ndir->cd();
-                     TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
+                     TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                      if (key2) {
                         TObject *nobj = key2->ReadObj();
                         if (!nobj) {
