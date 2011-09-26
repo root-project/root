@@ -2053,9 +2053,6 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
       return 0;
    }
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
    if (gDebug) {
       if (!GetTitle() || strlen(GetTitle()) == 0)
          Info("Write", "writing name = %s", GetName());
@@ -2070,11 +2067,6 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    WriteHeader();                     // Now write file header
    fMustFlush = kTRUE;
 
-   if (cursav) {
-      cursav->cd();
-   } else {
-      gDirectory = 0;
-   }
    return nbytes;
 }
 
