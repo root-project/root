@@ -25,6 +25,7 @@
 #include "TArrayC.h"
 #include "TKey.h"
 #include "TClass.h"
+#include "TVirtualMutex.h"
 #include <errno.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -206,6 +207,11 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    }
 
    fSysOffset    = 0;
+   
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfFiles()->Remove(this);
+   }
 
    {
       TDirectory::TContext ctxt(gDirectory, this);
