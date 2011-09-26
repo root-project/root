@@ -415,6 +415,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
    
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
+   allNames.SetOwner(kTRUE);
    ((THashList*)target->GetList())->Rehash(nguess);
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
    
