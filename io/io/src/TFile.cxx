@@ -517,7 +517,7 @@ TFile::~TFile()
       gInterpreter->ResetGlobalVar(this);
    }
 
-   if (1|| gDebug)
+   if (gDebug)
       Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
 }
 
