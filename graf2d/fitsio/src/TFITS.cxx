@@ -931,7 +931,7 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
       }
    }
 
-   mat->Use(height, width, layer_pixels);
+   if (mat) mat->Use(height, width, layer_pixels);
 
    return mat;
 }
