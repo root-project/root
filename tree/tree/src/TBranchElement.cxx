@@ -2198,6 +2198,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          case TClassEdit::kMultiMap:
             break;
          default:
+            ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
             for (Int_t i = 0; i < nbranches; ++i) {
                TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
                Int_t nb = branch->GetEntry(entry, getall);
