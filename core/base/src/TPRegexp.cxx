@@ -727,18 +727,18 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
    //              less than N. Anything remaining is in the last field.
    // Returns:   - number of fields found
 
-   typedef std::pair<int, int>   Marker_t;
-   typedef std::vector<Marker_t> MarkerVec_t;
+   typedef std::pair<int, int>   MarkerLoc_t;
+   typedef std::vector<MarkerLoc_t> MarkerLocVec_t;
 
    // stores the marks for the split
-   MarkerVec_t oMarks;
+   MarkerLocVec_t oMarks;
 
    // this is a list of current trailing empty matches if maxfields is
    //   unspecified or 0.  If there is stuff in it and a non-empty match
    //   is found, then everything in here is pushed into oMarks and then
    //   the new match is pushed on.  If the end of the string is reached
    //   and there are empty matches in here, they are discarded.
-   MarkerVec_t oCurrentTrailingEmpties;
+   MarkerLocVec_t oCurrentTrailingEmpties;
 
    Int_t nOffset = 0;
    Int_t nMatchesFound = 0;
@@ -752,7 +752,7 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
       ++nMatchesFound;
 
       if (fMarkers[1] - fMarkers[0] == 0) {
-         oMarks.push_back(Marker_t(nOffset, nOffset + 1));
+         oMarks.push_back(MarkerLoc_t(nOffset, nOffset + 1));
          ++nOffset;
          if (nOffset >= s.Length())
             break;
@@ -768,14 +768,14 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
                           oCurrentTrailingEmpties.end());
             oCurrentTrailingEmpties.clear();
          }
-         oMarks.push_back(Marker_t(nOffset, fMarkers[0]));
+         oMarks.push_back(MarkerLoc_t(nOffset, fMarkers[0]));
       } else {
          // empty match
          if (maxfields == 0) {
             // store for possible later inclusion
-            oCurrentTrailingEmpties.push_back(Marker_t(nOffset, nOffset));
+            oCurrentTrailingEmpties.push_back(MarkerLoc_t(nOffset, nOffset));
          } else {
-            oMarks.push_back(Marker_t(nOffset, nOffset));
+            oMarks.push_back(MarkerLoc_t(nOffset, nOffset));
          }
       }
 
@@ -783,14 +783,14 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
 
       if (matchRes > 1) {
          for (Int_t i = 1; i < matchRes; ++i)
-            oMarks.push_back(Marker_t(fMarkers[2*i], fMarkers[2*i + 1]));
+            oMarks.push_back(MarkerLoc_t(fMarkers[2*i], fMarkers[2*i + 1]));
       }
    }
 
 
    // if there were no matches found, push the whole thing on
    if (nMatchesFound == 0) {
-      oMarks.push_back(Marker_t(0, s.Length()));
+      oMarks.push_back(MarkerLoc_t(0, s.Length()));
    }
    // if we ran out of matches, then append the rest of the string
    //   onto the end of the last split field
@@ -806,7 +806,7 @@ Int_t TPMERegexp::Split(const TString& s, Int_t maxfields)
                           oCurrentTrailingEmpties.begin(),
                           oCurrentTrailingEmpties.end());
          }
-         oMarks.push_back(Marker_t(nOffset, s.Length()));
+         oMarks.push_back(MarkerLoc_t(nOffset, s.Length()));
       }
    }
 
