@@ -61,9 +61,14 @@ namespace RooStats{
 
     Double_t GetSWeight(Int_t numEvent, const char* sVariable) const;
 
+
     
   protected:
-    
+
+     enum { 
+        kOwnData = BIT(20)
+     };
+     
     RooArgList fSWeightVars;
 
     //  RooListProxy fSWeightVars;

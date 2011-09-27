@@ -71,8 +71,8 @@ using namespace RooStats;
 //__________________________________________________________________
 SPlot::~SPlot()
 {
-  if(fSData)
-    delete fSData;
+   if(TestBit(kOwnData) && fSData)
+      delete fSData;
 
 }
 
@@ -139,8 +139,10 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
 	     bool includeWeights, bool cloneData, const char* newName):
   TNamed(name, title)
 {
-  if(cloneData == 1)
+   if(cloneData == 1) {
     fSData = (RooDataSet*) data.Clone(newName);
+    SetBit(kOwnData);
+   }
   else
     fSData = (RooDataSet*) &data;
 
