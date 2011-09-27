@@ -704,16 +704,17 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + TStreamerInfo::kAny: {
          char *loc = thisobj+fOffset;
 
-         Int_t len, index, sub_instance;
+         Int_t len, index;
+         //Int_t sub_instance;
 
          if (fNext) len = fNext->GetArrayLength();
          else len = 1;
          if (len) {
             index = instance / len;
-            sub_instance = instance % len;
+            // sub_instance = instance % len;
          } else {
             index = instance;
-            sub_instance = 0;
+            // sub_instance = 0;
          }
 
          loc += index*fElement->GetClassPointer()->Size();

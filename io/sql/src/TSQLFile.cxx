@@ -1091,7 +1091,7 @@ Bool_t TSQLFile::ReadConfigurations()
    // should be found, otherwise will be error
    fSQLIOversion = 0;
 
-   Int_t lock = 0;
+   // Int_t lock = 0;
 
    #define ReadIntCfg(name, target)                        \
      if ((field.CompareTo(name, TString::kIgnoreCase)==0)) \
@@ -1121,7 +1121,7 @@ Bool_t TSQLFile::ReadConfigurations()
       ReadIntCfg(sqlio::cfg_UseTransactions, fUseTransactions)
       ReadIntCfg(sqlio::cfg_UseIndexes, fUseIndexes)
       ReadIntCfg(sqlio::cfg_ModifyCounter, fModifyCounter)
-      ReadIntCfg(sqlio::cfg_LockingMode, lock)
+      // ReadIntCfg(sqlio::cfg_LockingMode, lock)
       {
          Error("ReadConfigurations","Invalid configuration field %s", field.Data());
          fSQLIOversion = 0;

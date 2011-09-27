@@ -3448,9 +3448,10 @@ Int_t TAuthenticate::GenRSAKeys()
    // works as expected
    Bool_t notOk = 1;
    rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
-   Int_t l_n = 0, l_e = 0, l_d = 0;
+   Int_t l_n = 0, l_d = 0;
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
-#if R__RSADEB
+#if R__RSADE
+   Int_t l_e;
    char buf[rsa_STRLEN];
 #endif
 
@@ -3499,7 +3500,9 @@ Int_t TAuthenticate::GenRSAKeys()
       TRSA_fun::RSA_num_sput()(&rsa_n, buf_n, rsa_STRLEN);
       l_n = strlen(buf_n);
       TRSA_fun::RSA_num_sput()(&rsa_e, buf_e, rsa_STRLEN);
+#if R__RSADEB
       l_e = strlen(buf_e);
+#endif
       TRSA_fun::RSA_num_sput()(&rsa_d, buf_d, rsa_STRLEN);
       l_d = strlen(buf_d);
 

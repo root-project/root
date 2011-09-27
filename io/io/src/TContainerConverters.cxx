@@ -177,11 +177,11 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       if (v > 1) fName.Streamer(b);
       s.Streamer(b);
       strncpy(classv,s.Data(),255);
-      Int_t clv = 0;
+      //Int_t clv = 0;
       char *semicolon = strchr(classv,';');
       if (semicolon) {
          *semicolon = 0;
-         clv = atoi(semicolon+1);
+         //clv = atoi(semicolon+1);
       }
       TClass *cl = TClass::GetClass(classv);
       if (!cl) {

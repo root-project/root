@@ -3668,9 +3668,9 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    TString cbase(expr);
    cbase.ReplaceAll("Double_t ","");
    int paran = cbase.First("(");
-   int nargs = 0;
+   // int nargs = 0;
    if (paran>0) {
-      nargs = 1;
+      //nargs = 1;
       cbase[paran]=0;
    }
 

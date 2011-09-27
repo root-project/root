@@ -742,7 +742,7 @@ void convert_cwn(Int_t id)
 
 
       // add support for 1-byte (Char_t) and 2-byte (Short_t) integers
-      Int_t nBytesUsed = 4; // default for integers
+      // Int_t nBytesUsed = 4; // default for integers
 
       if( itype == 2 ) {
          if( optcwn == 1 ) {
@@ -751,10 +751,10 @@ void convert_cwn(Int_t id)
             } else {
                if( nbits > 8 ) {
                   strlcat(fullname,"/S",1024);
-                  nBytesUsed = 2;
+                  //nBytesUsed = 2;
                } else {
                   strlcat(fullname,"/B",1024);
-                  nBytesUsed = 1;
+                  //nBytesUsed = 1;
                }
             }
          } else {
@@ -770,10 +770,10 @@ void convert_cwn(Int_t id)
             } else {
                if( nbits > 8 ) {
                   strlcat(fullname,"/s",1024);
-                  nBytesUsed = 2;
+                  //nBytesUsed = 2;
                } else {
                   strlcat(fullname,"/b",1024);
-                  nBytesUsed = 1;
+                  //nBytesUsed = 1;
                }
             }
          } else {

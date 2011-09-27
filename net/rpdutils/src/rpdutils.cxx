@@ -5371,8 +5371,9 @@ int RpdGenRSAKeys(int setrndinit)
    // works as expected
    bool notOK = 1;
    rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
-   int l_n = 0, l_e = 0, l_d = 0;
+   int l_n = 0, l_d = 0;
 #if R__RSADEB
+   Int_t l_e = 0;
    char buf[rsa_STRLEN];
 #endif
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
@@ -5424,7 +5425,9 @@ int RpdGenRSAKeys(int setrndinit)
       rsa_num_sput(&rsa_n, buf_n, rsa_STRLEN);
       l_n = strlen(buf_n);
       rsa_num_sput(&rsa_e, buf_e, rsa_STRLEN);
+#if R__RSADEB
       l_e = strlen(buf_e);
+#endif
       rsa_num_sput(&rsa_d, buf_d, rsa_STRLEN);
       l_d = strlen(buf_d);
 

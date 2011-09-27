@@ -1476,7 +1476,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
    TSQLClassInfo* sqlinfo = reg->f->RequestSQLClassInfo(cl->GetName(), version);
 
    TSQLTableData columns(reg->f, sqlinfo);
-   Bool_t needblob = kFALSE;
+   // Bool_t needblob = kFALSE;
 
    TSqlRawBuffer rawdata(reg, sqlinfo);
 
@@ -1520,7 +1520,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
          //reg->f->CreateRawTable(sqlinfo);
          //blobid = currrawid; // column will contain first raw id
          //reg->ConvertBlobs(&blobs, sqlinfo, currrawid);
-         needblob = kTRUE;
+         //needblob = kTRUE;
       }
       //blobs.Delete();
 

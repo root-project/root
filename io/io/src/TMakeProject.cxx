@@ -348,7 +348,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
    UInt_t len = strlen(clname);
    UInt_t nest = 0;
    UInt_t last = 0;
-   Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
+   //Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
 
    for (UInt_t i = 0; i < len; ++i) {
       switch (clname[i]) {
@@ -356,7 +356,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
             if (nest == 0 && clname[i+1] == ':') {
                TString incName(clname, i);
                GenerateMissingStreamerInfo(extrainfos, incName.Data(), kTRUE);
-               istemplate = kFALSE;
+               //istemplate = kFALSE;
             }
             break;
          case '<':

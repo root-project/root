@@ -1425,10 +1425,10 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
          TUrl *curl = fileInfo->GetCurrentUrl();
          const char *furl = curl->GetUrl();
          TString urlmod;
-         Bool_t mapped = kFALSE;
+         // Bool_t mapped = kFALSE;
          if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull())) {
             furl = urlmod.Data();
-            mapped = kTRUE;
+            // mapped = kTRUE;
          }
          TUrl url(furl);
          url.SetOptions("");
