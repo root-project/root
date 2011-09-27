@@ -1332,7 +1332,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
 #else
       fStream->open(fname, ofstream::out);
 #endif
-   if (fStream == 0) {
+   if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
       return;
    }
