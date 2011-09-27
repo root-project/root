@@ -894,7 +894,7 @@ again:
                      if (!gApplication->ReturnFromRun()) {
                         if ((TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
                            TVirtualPadEditor::Terminate();
-                        delete this;
+                        SendCloseMessage();
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
