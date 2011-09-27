@@ -245,7 +245,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   _highIter->Reset() ;
   _paramIter->Reset() ;
   int i=0;
-  while((param=(RooAbsReal*)_paramIter->Next())) {
+  while(_paramIter->Next() ) {
     func = (RooAbsReal*)_lowIter->Next() ;
     funcInt = func->createIntegral(analVars) ;
     cache->_lowIntList.addOwned(*funcInt) ;
@@ -306,6 +306,10 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
     ++i;
   }
+
+  delete funcIntIter; 
+  delete lowIntIter;
+  delete highIntIter; 
 
   return value;
 

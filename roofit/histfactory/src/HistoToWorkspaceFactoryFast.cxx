@@ -93,7 +93,8 @@ ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast)
 namespace RooStats{
 namespace HistFactory{
 
-  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(){}
+  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast() : 
+    fOut_f(0), pFile(0) {}
   HistoToWorkspaceFactoryFast::~HistoToWorkspaceFactoryFast(){
     fclose(pFile);
   }
@@ -132,8 +133,10 @@ namespace HistFactory{
                                                          /*high*/, int /*lowBin*/, int /*highBin*/ ){
     if(hist)
       cout << "processing hist " << hist->GetName() << endl;
-    else
+    else {
       cout << "hist is empty" << endl;
+      R__ASSERT(hist != 0);
+    }
 
 
     if(!proto->var(fObsName.c_str())){
@@ -262,7 +265,6 @@ namespace HistFactory{
         // remove "doRatio" and name can be changed when ws gets imported to the combined model.
         std::stringstream range;
         range<<"["<<itr->val<<","<<itr->low<<","<<itr->high<<"]";
-        RooRealVar* var = 0;
 
         string varname;
         if(!prodNames.empty()) prodNames+=",";
@@ -272,7 +274,7 @@ namespace HistFactory{
         else {
           varname=itr->name;
         }
-        var = (RooRealVar*) proto->factory((varname+range.str()).c_str());
+        proto->factory((varname+range.str()).c_str());
         prodNames+=varname;
       }
       overallNorm_times_sigmaEpsilon = es.name+"_"+channel+"_overallNorm_x_sigma_epsilon";
@@ -1061,7 +1063,7 @@ namespace HistFactory{
       }
     }
     
-    combined->import(*simData,Rename("asimovData"));
+    if (simData) combined->import(*simData,Rename("asimovData"));
 
     // now obs
     if(chs[0]->data("obsData")){

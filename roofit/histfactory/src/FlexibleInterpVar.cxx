@@ -43,6 +43,7 @@ FlexibleInterpVar::FlexibleInterpVar()
 {
   // Default constructor
   _paramIter = _paramList.createIterator() ;
+  _nominal = 0;
 }
 
 
