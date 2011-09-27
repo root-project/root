@@ -135,6 +135,15 @@
 }
 
 {
+   Strings allocated in TStreamerInfo::Compile
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN7TStringaSERK10TSubString
+   fun:_ZN13TStreamerInfo7CompileEv
+}
+
+{
    StreamerInfo virtual table mechanism
    Memcheck:Leak
    fun:_Znam
@@ -182,6 +191,14 @@
    fun:_Znwm
    fun:_ZNK19TGenCollectionProxy8GenerateEv
    fun:_ZNK6TClass18GetCollectionProxyEv
+}
+
+{
+   CollectionProxy objects
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZNK19TGenCollectionProxy8GenerateEv
+   fun:_ZN14TBranchElement4InitEP5TTreeP7TBranchPKcP23TVirtualCollectionProxyiii
 }
 
 {
