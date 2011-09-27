@@ -82,7 +82,8 @@ public:
       ROOT::NewFunc_t fCtor;       // Method cache for containee constructor
       ROOT::DesFunc_t fDtor;       // Method cache for containee destructor
       ROOT::DelFunc_t fDelete;     // Method cache for containee delete
-      unsigned int    fCase;       // type of data of Value_type
+      UInt_t          fCase;       // type of data of Value_type
+      UInt_t          fProperties; // Additional properties of the value type (kNeedDelete)
       TClassRef       fType;       // TClass reference of Value_type in collection
       EDataType       fKind;       // kind of ROOT-fundamental type
       size_t          fSize;       // fSize of the contained object

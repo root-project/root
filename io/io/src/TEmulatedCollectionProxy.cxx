@@ -151,6 +151,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                   return 0;
                }
                fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
+               if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
+                  fProperties |= kNeedDelete;
+               }
                if ( 0 == fValDiff )  {
                   fValDiff = fKey->fSize + fVal->fSize;
                   fValDiff += (slong - fKey->fSize%slong)%slong;
@@ -179,6 +182,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                break;
          }
          fPointers |= 0 != (fVal->fCase&G__BIT_ISPOINTER);
+         if (fPointers || (0 != (fVal->fProperties&kNeedDelete))) {
+            fProperties |= kNeedDelete;
+         }
          fClass = cl;
          return this;
       }

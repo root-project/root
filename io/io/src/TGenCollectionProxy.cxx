@@ -81,6 +81,11 @@ public:
    virtual void DeleteItem(bool force, void* ptr) const
    {
       if ( force && ptr ) {
+         if ( fVal->fProperties&kNeedDelete) {
+            TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+            TPushPop helper(proxy,ptr);
+            proxy->Clear("force");
+         }
          fVal->DeleteItem(ptr);
       }
    }
@@ -313,8 +318,21 @@ public:
 {
    }
    // Call to delete/destruct individual item
-   virtual void DeleteItem(Bool_t /* force */, void* ptr) const
+   virtual void DeleteItem(Bool_t force, void* ptr) const
    {
+      if (force) {
+         if ( fKey->fProperties&kNeedDelete) {
+            TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();
+            TPushPop helper(proxy,fKey->fCase&G__BIT_ISPOINTER ? *(void**)ptr : ptr);
+            proxy->Clear("force");
+         }
+         if ( fVal->fProperties&kNeedDelete) {
+            TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+            char *addr = ((char*)ptr)+fValOffset;
+            TPushPop helper(proxy,fVal->fCase&G__BIT_ISPOINTER ? *(void**)addr : addr);
+            proxy->Clear("force");
+         }
+      }
       if ( fKey->fCase&G__BIT_ISPOINTER ) {
          fKey->DeleteItem(*(void**)ptr);
       }
@@ -333,6 +351,7 @@ TGenCollectionProxy::Value::Value(const Value& copy)
 
    fType   = copy.fType;
    fCase   = copy.fCase;
+   fProperties = copy.fProperties;
    fKind   = copy.fKind;
    fSize   = copy.fSize;
    fCtor   = copy.fCtor;
@@ -347,6 +366,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
 
    std::string inside = (inside_type.find("const ")==0) ? inside_type.substr(6) : inside_type;
    fCase = 0;
+   fProperties = 0;
    fCtor = 0;
    fDtor = 0;
    fDelete = 0;
@@ -461,6 +481,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
             }
          }
          gCint->TypeInfo_Delete(ti);
+      }
+      if (fType) {
+         TVirtualCollectionProxy *proxy = fType->GetCollectionProxy();
+         if (proxy && (proxy->GetProperties() & kNeedDelete)) {
+            fProperties |= kNeedDelete;
+         }
       }
    }
    if ( fSize == std::string::npos ) {
@@ -668,26 +694,26 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
       return new TGenCollectionProxy(*this);
 
    switch(fSTL_type) {
-   case TClassEdit::kBitSet: {
-      return new TGenBitsetProxy(*this);
-   }
-   case TClassEdit::kVector: {
-      if (fValue->fKind == (EDataType)kBOOL_t) {
-         return new TGenVectorBoolProxy(*this);
-      } else {
-         return new TGenVectorProxy(*this);
-      }         
-   }
-   case TClassEdit::kList:
-      return new TGenListProxy(*this);
-   case TClassEdit::kMap:
-   case TClassEdit::kMultiMap:
-      return new TGenMapProxy(*this);
-   case TClassEdit::kSet:
-   case TClassEdit::kMultiSet:
-      return new TGenSetProxy(*this);
-   default:
-      return new TGenCollectionProxy(*this);
+      case TClassEdit::kBitSet: {
+         return new TGenBitsetProxy(*this);
+      }
+      case TClassEdit::kVector: {
+         if (fValue->fKind == (EDataType)kBOOL_t) {
+            return new TGenVectorBoolProxy(*this);
+         } else {
+            return new TGenVectorProxy(*this);
+         }         
+      }
+      case TClassEdit::kList:
+         return new TGenListProxy(*this);
+      case TClassEdit::kMap:
+      case TClassEdit::kMultiMap:
+         return new TGenMapProxy(*this);
+      case TClassEdit::kSet:
+      case TClassEdit::kMultiSet:
+         return new TGenSetProxy(*this);
+      default:
+         return new TGenCollectionProxy(*this);
    }
 }
 
@@ -759,7 +785,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
    if ( cl ) {
       fEnv    = 0;
       fName   = cl->GetName();
-      fPointers  = false;
+      fPointers   = false;
       int nested = 0;
       std::vector<std::string> inside;
       int num = TClassEdit::GetSplit(cl->GetName(),inside,nested);
@@ -789,7 +815,10 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
                
                fVal   = R__CreateValue(inside[2]);
                fKey   = R__CreateValue(inside[1]);
-               fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
+               fPointers = (0 != (fKey->fCase&G__BIT_ISPOINTER));
+               if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
+                  fProperties |= kNeedDelete;
+               }
                if ( 0 == fValDiff ) {
                   fValDiff = fKey->fSize + fVal->fSize;
                   fValDiff += (slong - fKey->fSize%slong)%slong;
@@ -815,6 +844,9 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
          }
 
          fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
+         if (fPointers || (0 != (fVal->fProperties&kNeedDelete))) {
+            fProperties |= kNeedDelete;
+         }
          fClass = cl;
          return this;
       }
@@ -948,7 +980,7 @@ void TGenCollectionProxy::Clear(const char* opt)
 {
    // Clear the emulated collection.
    if ( fEnv && fEnv->fObject ) {
-      if ( fPointers && opt && *opt=='f' ) {
+      if ( (fProperties & kNeedDelete) && opt && *opt=='f' ) {
          size_t i, n = *(size_t*)fSize.invoke(fEnv);
          if ( n > 0 ) {
             for (i=0; i<n; ++i)
@@ -1007,7 +1039,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          case TClassEdit::kMultiSet:
          case TClassEdit::kMap:
          case TClassEdit::kMultiMap:
-            if ( fPointers )
+            if ( (fProperties & kNeedDelete) )
                Clear("force");
             else
                fClear.invoke(fEnv);
@@ -1036,7 +1068,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          case TClassEdit::kVector:
          case TClassEdit::kList:
          case TClassEdit::kDeque:
-            if( fPointers ) {
+            if( (fProperties & kNeedDelete) ) {
                Clear("force");
             }
             fEnv->fSize = n;
@@ -1134,21 +1166,56 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
    // Call to delete/destruct individual item.
    if ( force && ptr ) {
       switch (fSTL_type) {
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
-         if ( fKey->fCase&G__BIT_ISPOINTER ) {
-            fKey->DeleteItem(*(void**)ptr);
-         }
-         if ( fVal->fCase&G__BIT_ISPOINTER ) {
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap: {
+            if ( fKey->fCase&G__BIT_ISPOINTER ) {
+               if (fKey->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,*(void**)ptr);
+                  proxy->Clear("force");
+               }
+               fKey->DeleteItem(*(void**)ptr);
+             } else {
+               if (fKey->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,ptr);
+                  proxy->Clear("force");
+               }
+            }               
             char *addr = ((char*)ptr)+fValOffset;
-            fVal->DeleteItem(*(void**)addr);
+            if ( fVal->fCase&G__BIT_ISPOINTER ) {
+               if ( fVal->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,*(void**)addr);
+                  proxy->Clear("force");
+               }
+               fVal->DeleteItem(*(void**)addr);
+           } else {
+               if ( fVal->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,addr);
+                  proxy->Clear("force");
+               }               
+            }
+            break;
          }
-         break;
-      default:
-         if ( fVal->fCase&G__BIT_ISPOINTER ) {
-            fVal->DeleteItem(*(void**)ptr);
+         default: {
+            if ( fVal->fCase&G__BIT_ISPOINTER ) {
+               if (fVal->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,*(void**)ptr);
+                  proxy->Clear("force");
+               }
+               fVal->DeleteItem(*(void**)ptr);
+            } else {
+               if (fVal->fProperties&kNeedDelete) {
+                  TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
+                  TPushPop helper(proxy,ptr);
+                  proxy->Clear("force");
+               }
+            }               
+            break;
          }
-         break;
       }
    }
 }

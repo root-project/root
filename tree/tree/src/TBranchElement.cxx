@@ -3929,6 +3929,17 @@ void TBranchElement::ReleaseObject()
       } else if (fType == 4) {
          // -- We are an STL container master branch.
          TVirtualCollectionProxy* proxy = GetCollectionProxy();
+         
+         Bool_t needDelete = proxy->GetProperties()&TVirtualCollectionProxy::kNeedDelete;
+         if (needDelete && fID >= 0) {
+            TVirtualStreamerInfo* si = GetInfoImp();
+            TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+            needDelete = !se->TestBit(TStreamerElement::kDoNotDelete);
+         }
+         if (needDelete) {
+            TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
+            proxy->Clear("force");
+         }
          if (!proxy) {
             Warning("ReleaseObject", "Cannot delete allocated STL container because I do not have a proxy!  branch: %s", GetName());
             fObject = 0;
@@ -3948,6 +3959,22 @@ void TBranchElement::ReleaseObject()
             Warning("ReleaseObject", "Cannot delete allocated object because I cannot instantiate a TClass object for its class!  branch: '%s' class: '%s'", GetName(), fBranchClass.GetClassName());
             fObject = 0;
          } else {
+            TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
+            
+            if (proxy) {
+               if (fID >= 0) {
+                  TVirtualStreamerInfo* si = GetInfoImp();
+                  TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+                  if (!se->TestBit(TStreamerElement::kDoNotDelete) && proxy->GetProperties()&TVirtualCollectionProxy::kNeedDelete) {
+                     TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
+                     proxy->Clear("force");
+                  }
+               } else if (proxy->GetProperties()&TVirtualCollectionProxy::kNeedDelete) {
+                  TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
+                  proxy->Clear("force");
+               }
+               
+            }
             cl->Destructor(fObject);
             fObject = 0;
          }
