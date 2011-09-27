@@ -71,7 +71,7 @@ ROOTMARKS=n/a
 FITROOTMARKS=n/a
 
 SHOW_TOP=yes
-UPLOAD_HOST=flxi06.fnal.gov
+UPLOAD_HOST=fnalu.fnal.gov
 UPLOAD_LOCATION=/afs/.fnal.gov/files/expwww/root/html/roottest/
 UPLOAD_SYNC="ssh -x flxi06.fnal.gov bin/flush_webarea"
 SVN_HOST=http://root.cern.ch
@@ -311,7 +311,9 @@ result=$?
 upload_log gmake.log roottest_
 
 $MAKE logs.tar.gz >> gmake.log 2>&1
-$MAKE perftrack.tar.gz >> gmake.log 2>&1
+if [ `echo $ROOTTEST_MAKEFLAGS  | grep -c perftrack` != 0 ] ; then
+   $MAKE perftrack.tar.gz >> gmake.log 2>&1
+fi
 
 upload_datafile roottesttiming.root
 upload_datafile logs.tar.gz
