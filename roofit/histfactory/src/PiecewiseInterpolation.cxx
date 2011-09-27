@@ -231,7 +231,6 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache = new CacheElem ;
 
   // Make list of function projection and normalization integrals 
-  RooAbsReal* param ;
   RooAbsReal *func ;
   //  const RooArgSet* nset = _paramList.nset() ;
 
