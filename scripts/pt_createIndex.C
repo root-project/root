@@ -54,10 +54,12 @@ const char *gPreamble = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitio
     "  <title>Performance summary for %s</title>\n"
     "</head>\n"
     "<body>\n" 
-    "<h1>Performance summary for %s</h1>"
-    "<img src=\"/icons/back.gif\" alt=\"[DIR]\">   <a href=\"..\">Parent Directory</a>\n";
+    "<h1>Performance summary for %s</h1>\n";
 
-const char *gDirFmt =  "<br/><img src=\"/icons/folder.gif\" alt=\"[DIR]\"> <a href=\"%s\">%s/</a>\n";
+const char *gTitles = "<tr><th align=\"right\"><img src=\"/icons/blank.gif\" alt=\"[ICO]\"></th><th>Name</th><th>Description</th></tr>\n";
+const char *gLine = "<tr><th colspan=\"2\"><hr></th></tr>\n";
+const char *gParentDir = "<tr><td colspan=\"2\"><table><tr><td><img src=\"/icons/back.gif\" alt=\"[DIR]\"></td><td><a href=\"..\">Parent Directory</a></td></tr></table> </td></tr>\n";
+const char *gDirFmt =  "<tr><td colspan=\"2\"><table><tr><td><img src=\"/icons/folder.gif\" alt=\"[DIR]\"></td><td><a href=\"%s\">%s/</a></td></tr></table> </td></tr>\n";
 
 const char *gFiles = "<td><a href=\"%s.gif\"><img src=\"%s.gif\" width=\"200\" height=\"200\"/></a>\n"
     "<br/><a href=\"%s.root\">%s.root</a></td>\n";
@@ -99,21 +101,29 @@ void scanDirectory(const char *dirname)
    fileList.Sort();
    TIter next(&dirList);
    TObjString *obj;
+   html += "<table width=\"500\">\n";
+   html += gLine;
+   html += gParentDir;
    while ( (obj = (TObjString*)next()) ) {
       html += TString::Format(gDirFmt,obj->GetName(),obj->GetName());
    }
-   html += "<table>\n";
-   next = &fileList;
-   while ( (obj = (TObjString*)next()) ) {
-      html += "<tr>";
-      html += TString::Format(gFiles,obj->GetName(),obj->GetName(),obj->GetName(),obj->GetName());
-      obj = (TObjString*)next();
-      if (obj) {
+   html += gLine;
+   
+   if (!fileList.IsEmpty()) {
+
+      next = &fileList;
+      while ( (obj = (TObjString*)next()) ) {
+         html += "<tr>";
          html += TString::Format(gFiles,obj->GetName(),obj->GetName(),obj->GetName(),obj->GetName());
-      } else {
-         html += "<td></td></tr>";
-         break;
+         obj = (TObjString*)next();
+         if (obj) {
+            html += TString::Format(gFiles,obj->GetName(),obj->GetName(),obj->GetName(),obj->GetName());
+         } else {
+            html += "<td></td></tr>";
+            break;
+         }
       }
+      html += gLine;
    }
    html += "</table>\n";
    dirList.Delete();

@@ -141,7 +141,7 @@ perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.
           CALLROOTEXE="$< "$(ROOTTEST_LOC)" root.exe"
 
 # For now logs.tar.gz is a phony target
-perftrack.tar.gz:
+perftrack.tar.gz: $(ROOTTEST_LOC)scripts/pt_createIndex_C.so
 	$(CMDECHO) rm -f perftrack.tar perftrack.tar.gz; touch perftrack.tar ; \
                 $(CALLROOTEXEBUILD) -b -l -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; \
 		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' -o -name pt_index.html | xargs -I{}  tar --transform=s/pt_index.html/index.html/ -u -f perftrack.tar "{}" ; gzip  perftrack.tar 
