@@ -26,11 +26,14 @@
 </li>
 </ul>
 
-<h4>TSVG</h4>
+<h4>TSVG - TPDF</h4>
 <ul>
 <li>When saving canvas as an svg image, the "times" character (i. e. in "x10^3"
 statement above axis) was saved as utf "&#0772;" (combining macron) whereas it 
 schould be "&#215;" (multiplication sign). It is now fixed.
+</li>
+<li> <tt>TSVG::Open</tt> and <tt>TPDF::Open</tt> now check if the output file 
+was successfully opened.
 </li>
 </ul>
 
