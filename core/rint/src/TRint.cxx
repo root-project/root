@@ -554,7 +554,9 @@ Bool_t TRint::HandleTermInput()
 
       if (gROOT->Timer()) timer.Start();
 
+#ifdef R__EH
       Bool_t added = kFALSE;
+#endif
 
       // This is needed when working with remote sessions
       SetBit(kProcessRemotely);
@@ -569,7 +571,9 @@ Bool_t TRint::HandleTermInput()
          } CATCH(excode) {
             // enable again input handler
             fInputHandler->Activate();
+#ifdef R__EH
             added = kTRUE;
+#endif
             Throw(excode);
          } ENDTRY;
 #ifdef R__EH

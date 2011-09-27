@@ -489,7 +489,6 @@ Bool_t TTreeSQL::CreateTable(const TString &table)
       return false;
    }
    Int_t i, j;
-   Int_t length;
    TString branchName, leafName, typeName;
    TString createSQL, alterSQL, str;
    Int_t nb = fBranches.GetEntriesFast();
@@ -506,7 +505,7 @@ Bool_t TTreeSQL::CreateTable(const TString &table)
          leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(j);
          leafName = leaf->GetName();
          typeName = ConvertTypeName(leaf->GetTypeName());
-         length = leaf->GetLenStatic();
+         // length = leaf->GetLenStatic();
 
          if(i == 0 && j == 0) {
             createSQL = "";

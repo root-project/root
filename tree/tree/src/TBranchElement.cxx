@@ -1428,9 +1428,7 @@ void TBranchElement::FillLeavesCollectionSplitVectorPtrMember(TBuffer& b)
   }
   
   // FIXME: This wont work if a pointer to vector is split!
-  Int_t n = 0;
   TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
-  n = GetCollectionProxy()->Size();
   // Note: We cannot pop the proxy here because we need it for the i/o.
   TStreamerInfo* si = (TStreamerInfo*)GetInfoImp();
   if (!si) {
@@ -1441,8 +1439,6 @@ void TBranchElement::FillLeavesCollectionSplitVectorPtrMember(TBuffer& b)
   TVirtualCollectionIterators *iter = fBranchCount->fIterators;
   R__ASSERT(0!=iter);
   b.ApplySequenceVecPtr(*fFillActionSequence,iter->fBegin,iter->fEnd);
-  
-  
 }
 
 //______________________________________________________________________________
@@ -1493,9 +1489,7 @@ void TBranchElement::FillLeavesCollectionMember(TBuffer& b)
   }
   
   // FIXME: This wont work if a pointer to vector is split!
-  Int_t n = 0;
   TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
-  n = GetCollectionProxy()->Size();
   // Note: We cannot pop the proxy here because we need it for the i/o.
   TStreamerInfo* si = (TStreamerInfo*)GetInfoImp();
   if (!si) {
@@ -2533,7 +2527,7 @@ void* TBranchElement::GetValuePointer() const
    } else {
       //return GetInfoImp()->GetValue(object,fID,j,-1);
       if (!GetInfoImp() || !object) return 0;
-      char **val = (char**)(object+GetInfoImp()->GetOffsets()[fID]);
+      char **val = (char**)(object+GetInfoImp()->GetOffsets()[prID]);
       return *val;
    }
 }
