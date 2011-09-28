@@ -41,8 +41,8 @@ TPythia6Decayer* TPythia6Decayer::Instance()
 
 //______________________________________________________________________________
 TPythia6Decayer::TPythia6Decayer()
-   : fBraPart(501)
-     fDecay(kMaxDecay)
+   : fDecay(kMaxDecay),
+   fBraPart(501)
 {
    // Constructor
    fBraPart.Reset(1);
