@@ -3931,20 +3931,20 @@ void TBranchElement::ReleaseObject()
          // -- We are an STL container master branch.
          TVirtualCollectionProxy* proxy = GetCollectionProxy();
          
-         Bool_t needDelete = proxy->GetProperties()&TVirtualCollectionProxy::kNeedDelete;
-         if (needDelete && fID >= 0) {
-            TVirtualStreamerInfo* si = GetInfoImp();
-            TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
-            needDelete = !se->TestBit(TStreamerElement::kDoNotDelete);
-         }
-         if (needDelete) {
-            TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
-            proxy->Clear("force");
-         }
          if (!proxy) {
             Warning("ReleaseObject", "Cannot delete allocated STL container because I do not have a proxy!  branch: %s", GetName());
             fObject = 0;
          } else {
+            Bool_t needDelete = proxy->GetProperties()&TVirtualCollectionProxy::kNeedDelete;
+            if (needDelete && fID >= 0) {
+               TVirtualStreamerInfo* si = GetInfoImp();
+               TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
+               needDelete = !se->TestBit(TStreamerElement::kDoNotDelete);
+            }
+            if (needDelete) {
+               TVirtualCollectionProxy::TPushPop helper(proxy,fObject);
+               proxy->Clear("force");
+            }
             proxy->Destructor(fObject);
             fObject = 0;
          }
