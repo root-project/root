@@ -73,6 +73,11 @@ the axis. (fix from beischer@physik.rwth-aachen.de).
 <li>The option E0 forces the error bars drawing even if the data point are
 outside the plot frame. This option did not clip the error bars correctly.
 </li>
+<li>
+Make sure  the unique canvas name generated in <tt>SetShowProjection</tt>
+starts with a letter, and not with a number, to avoid to generate wrong macro
+when the canvas is saved as a .C file.
+</li>
 </ul>
 
 <h4>TGraphPainter</h4>
