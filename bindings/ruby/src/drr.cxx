@@ -209,9 +209,11 @@ double rr_ctf1_fcn (double *x, double* par)
             info = NULL;
       }
 
-   if (info == NULL)
+   if (info == NULL) {
       rb_warn("Ruby user defined function has not been registered for %s (%p).",
               fcn->GetName(), fcn);
+      return 0.;
+   }
 
    int n = fcn->GetNpar();
    VALUE vx = rb_ary_new2 (n);
@@ -255,9 +257,11 @@ double rr_ctf2_fcn (double *x, double* par)
             info = NULL;
       }
 
-   if (info == NULL)
+   if (info == NULL) {
       rb_warn("Ruby user defined function has not been registered for %s (%p).",
               fcn->GetName(), fcn);
+      return 0.;
+   }
 
    int n = fcn->GetNpar();
    VALUE vx = rb_ary_new2 (n);
