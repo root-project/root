@@ -94,7 +94,11 @@ namespace RooStats{
 namespace HistFactory{
 
   HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast() : 
-    fOut_f(0), pFile(0) {}
+     fNomLumi(0), fLumiError(0), 
+     fLowBin(0), fHighBin(0), 
+     fOut_f(0), pFile(0)
+  {}
+
   HistoToWorkspaceFactoryFast::~HistoToWorkspaceFactoryFast(){
     fclose(pFile);
   }
@@ -136,6 +140,7 @@ namespace HistFactory{
     else {
       cout << "hist is empty" << endl;
       R__ASSERT(hist != 0);
+      return;
     }
 
 
@@ -1081,7 +1086,7 @@ namespace HistFactory{
 	}
       }
       
-      combined->import(*simData,Rename("obsData"));
+      if (simData) combined->import(*simData,Rename("obsData"));
     }
     
 
