@@ -214,9 +214,7 @@ namespace textinput {
 
   void
   TerminalDisplayUnix::MoveDown(size_t nLines /* = 1 */) {
-    if (!IsTTY()) return;
-    std::string moves(nLines, 0x0a);
-    WriteRawString(moves.c_str(), nLines);
+    MoveInternal('B', nLines);
   }
 
   void
