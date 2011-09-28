@@ -42,6 +42,7 @@ TPythia6Decayer* TPythia6Decayer::Instance()
 //______________________________________________________________________________
 TPythia6Decayer::TPythia6Decayer()
    : fBraPart(501)
+     fDecay(kMaxDecay)
 {
    // Constructor
    fBraPart.Reset(1);
@@ -257,7 +258,7 @@ void TPythia6Decayer::ForceDecay()
    case kNoDecay:
       TPythia6::Instance()->SetMSTJ(21,0);
       break;
-   case kNoDecayHeavy: break;
+   case kNoDecayHeavy: break; // cannot get here: early return above
    case kMaxDecay: break;
    }
 }
