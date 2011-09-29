@@ -931,6 +931,7 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
 
    if (mat) mat->Use(height, width, layer_pixels);
 
+   delete [] layer_pixels;
    return mat;
 }
 
