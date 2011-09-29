@@ -126,7 +126,12 @@ int main(int argc, char** argv) {
 	cerr << "caught exception: " << str << endl ;
       }
     else if(flag=="-number_counting_form")
-      topDriver(input);
+      try {
+         topDriver(input);
+      }
+      catch (std::string str) {
+	cerr << "caught exception: " << str << endl ;
+      }
     else
       cerr <<"unrecognized flag.  Options are -standard_form or -number_counting_form"<<endl;
 
