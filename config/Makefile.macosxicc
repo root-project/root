@@ -43,6 +43,12 @@ ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f1)
 ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
+ifeq ($(ICC_MAJOR),version)
+ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$3 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$3 }' | \
+                cut -d'.' -f2)
+endif
 
 ifeq ($(ICC_MAJOR),8)
 ifneq ($(ICC_MINOR),0)
