@@ -23,7 +23,39 @@
 
 #include <algorithm>
 
+#include <cctype>
+
 namespace textinput {
+
+  //Functions to find first/last non alphanumeric
+  size_t find_first_non_alnum(const std::string &str,
+                              std::string::size_type index = 0) {
+    bool atleast_one_alnum = false;
+    std::string::size_type len = str.length();
+    for(; index < len; ++index) {
+      const char c = str[index];
+      bool is_alpha = isalnum(c) || c == '_';
+      if (is_alpha) atleast_one_alnum = true;
+      else if (atleast_one_alnum) return index;
+    }
+    return std::string::npos;
+  }
+ 
+  size_t find_last_non_alnum(const std::string &str,
+                             std::string::size_type index = std::string::npos) {
+    std::string::size_type len = str.length();    
+    if (index == std::string::npos) index = len - 1;
+    bool atleast_one_alnum = false;
+    for(; index != std::string::npos; --index) {
+      const char c = str[index];
+      bool is_alpha = isalnum(c) || c == '_';
+      if (is_alpha) atleast_one_alnum = true;
+      else if (atleast_one_alnum) return index;
+    }
+    return std::string::npos;
+  }
+  //
+
   Editor::EProcessResult
   Editor::Process(Command cmd, EditorRange& R) {
     switch (cmd.GetKind()) {
@@ -336,6 +368,8 @@ namespace textinput {
         Line = fUndoBuf.back().first;
         fContext->SetCursor(fUndoBuf.back().second);
         fUndoBuf.pop_back();
+        R.fEdit.Extend(Range::AllText());
+        R.fDisplay.Extend(Range::AllText());
         return kPRSuccess;
       case kCmdHistNewer:
         // already newest?
@@ -422,16 +456,16 @@ namespace textinput {
 
   size_t
   Editor::FindWordBoundary(int Direction) {
-    static const char space[] = " \x9";
 
     const Text& Line = fContext->GetLine();
     size_t Cursor = fContext->GetCursor();
 
     if (Direction < 0 && Cursor < 2) return 0;
-    size_t ret = Direction > 0 ?
-      Line.GetText().find_first_of(space, Cursor + 1)
-    : Line.GetText().find_last_of(space, Cursor - 2);
 
+    size_t ret = Direction > 0 ?
+      find_first_non_alnum(Line.GetText(), Cursor + 1)
+    : find_last_non_alnum(Line.GetText(), Cursor - 2);
+  
     if (ret == std::string::npos) {
       if (Direction > 0) return Line.length();
       else return 0;
