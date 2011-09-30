@@ -163,17 +163,20 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                =====================
+   // Create a Branch as a child of a Tree
    //
-   //       * address is the address of the first item of a structure.
+   //       * address is the address of the first item of a structure
+   //         or the address of a pointer to an object (see example in TTree.cxx).
    //       * leaflist is the concatenation of all the variable names and types
    //         separated by a colon character :
-   //         The variable name and the variable type are separated by a slash (/).
-   //         The variable type may be 0,1 or 2 characters. If no type is given,
-   //         the type of the variable is assumed to be the same as the previous
-   //         variable. If the first variable does not have a type, it is assumed
-   //         of type F by default. The list of currently supported types is given below:
+   //         The variable name and the variable type are separated by a
+   //         slash (/). The variable type must be 1 character. (Characters
+   //         after the first are legal and will be appended to the visible
+   //         name of the leaf, but have no effect.) If no type is given, the
+   //         type of the variable is assumed to be the same as the previous
+   //         variable. If the first variable does not have a type, it is
+   //         assumed of type F by default. The list of currently supported
+   //         types is given below:
    //            - C : a character string terminated by the 0 character
    //            - B : an 8 bit signed integer (Char_t)
    //            - b : an 8 bit unsigned integer (UChar_t)
@@ -185,15 +188,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //            - D : a 64 bit floating point (Double_t)
    //            - L : a 64 bit signed integer (Long64_t)
    //            - l : a 64 bit unsigned integer (ULong64_t)
-   //
-   //         By default, a variable will be copied to the buffer with the number of
-   //         bytes specified in the type descriptor character. However, if the type
-   //         consists of 2 characters, the second character is an integer that
-   //         specifies the number of bytes to be used when copying the variable
-   //         to the output buffer. Example:
-   //             X         ; variable X, type Float_t
-   //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
+   //            - O : [the letter 'o', not a zero] a boolean (Bool_t)
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
@@ -225,8 +220,6 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
    //   only this object.
    //
    //    Note that this function is invoked by TTree::Branch
-   //
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Init(name,leaflist,compress);
 }
@@ -272,58 +265,10 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
-   //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                =====================
+   // Create a Branch as a child of another Branch
    //
-   //       * address is the address of the first item of a structure
-   //         or the address of a pointer to an object (see example).
-   //       * leaflist is the concatenation of all the variable names and types
-   //         separated by a colon character :
-   //         The variable name and the variable type are separated by a slash (/).
-   //         The variable type may be 0,1 or 2 characters. If no type is given,
-   //         the type of the variable is assumed to be the same as the previous
-   //         variable. If the first variable does not have a type, it is assumed
-   //         of type F by default. The list of currently supported types is given below:
-   //            - C : a character string terminated by the 0 character
-   //            - B : an 8 bit signed integer (Char_t)
-   //            - b : an 8 bit unsigned integer (UChar_t)
-   //            - S : a 16 bit signed integer (Short_t)
-   //            - s : a 16 bit unsigned integer (UShort_t)
-   //            - I : a 32 bit signed integer (Int_t)
-   //            - i : a 32 bit unsigned integer (UInt_t)
-   //            - F : a 32 bit floating point (Float_t)
-   //            - D : a 64 bit floating point (Double_t)
-   //            - L : a 64 bit signed integer (Long64_t)
-   //            - l : a 64 bit unsigned integer (ULong64_t)
-   //
-   //         By default, a variable will be copied to the buffer with the number of
-   //         bytes specified in the type descriptor character. However, if the type
-   //         consists of 2 characters, the second character is an integer that
-   //         specifies the number of bytes to be used when copying the variable
-   //         to the output buffer. Example:
-   //             X         ; variable X, type Float_t
-   //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
-   //
-   //         Arrays of values are supported with the following syntax:
-   //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //         If nelem is a leaf name, it is used as the variable size of the array.
-   //              The leaf referred to by nelem **MUST** be an int (/I).
-   //         If leaf name has the form var[nelem], where nelem is a non-negative integer, then
-   //            it is used as the fixed size of the array.
-   //         If leaf name has the form of a multi dimension array (e.g. var[nelem][nelem2])
-   //            where nelem and nelem2 are non-negative integer) then
-   //            it is used as a 2 dimensional array of fixed size.
-   //         Any of other form is not supported.
-   //
-   //   See an example of a Branch definition in the TTree constructor.
-   //
-   //   Note that in case the data type is an object, this branch can contain
-   //   only this object.
-   //
-   //    Note that this function is invoked by TTree::Branch
-   //
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // See documentation for 
+   // TBranch::TBranch(TTree *, const char *, void *, const char *, Int_t, Int_t) 
 
    Init(name,leaflist,compress);
 }
@@ -1133,8 +1078,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 //______________________________________________________________________________
 TBasket* TBranch::GetBasket(Int_t basketnumber)
 {
-   //*-*-*-*-*Return pointer to basket basketnumber in this Branch*-*-*-*-*-*
-   //*-*      ====================================================
+   //         Return pointer to basket basketnumber in this Branch
 
    static Int_t nerrors = 0;
 
@@ -1192,8 +1136,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 //______________________________________________________________________________
 Long64_t TBranch::GetBasketSeek(Int_t basketnumber) const
 {
-   //*-*-*-*-*Return address of basket in the file*-*-*-*-*-*
-   //*-*      ====================================
+   //         Return address of basket in the file
 
    if (basketnumber <0 || basketnumber > fWriteBasket) return 0;
    return fBasketSeek[basketnumber];
@@ -1499,8 +1442,7 @@ TBasket* TBranch::GetFreshBasket()
 //______________________________________________________________________________
 TLeaf* TBranch::GetLeaf(const char* name) const
 {
-   //*-*-*-*-*-*Return pointer to the 1st Leaf named name in thisBranch-*-*-*-*-*
-   //*-*        =======================================================
+   //           Return pointer to the 1st Leaf named name in thisBranch
 
    Int_t i;
    for (i=0;i<fNleaves;i++) {
@@ -1551,8 +1493,8 @@ TString TBranch::GetRealFileName() const
 //______________________________________________________________________________
 Int_t TBranch::GetRow(Int_t)
 {
-   //*-*-*-*-*Return all elements of one row unpacked in internal array fValues*-*
-   //*-*      =================================================================
+   // Return all elements of one row unpacked in internal array fValues
+   // [Actually just returns 1 (?)]
 
    return 1;
 }

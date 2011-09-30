@@ -62,7 +62,7 @@
 //            - D : a 64 bit floating point (Double_t)
 //            - L : a 64 bit signed integer (Long64_t)
 //            - l : a 64 bit unsigned integer (ULong64_t)
-//            - O : a boolean (Bool_t)
+//            - O : [the letter 'o', not a zero] a boolean (Bool_t)
 //       * If the address points to a single numerical variable, the leaflist is optional:
 //           int value;
 //           tree->Branch(branchname, &value);
@@ -1572,16 +1572,7 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //            - D : a 64 bit floating point (Double_t)
    //            - L : a 64 bit signed integer (Long64_t)
    //            - l : a 64 bit unsigned integer (ULong64_t)
-   //            - O : a boolean (Bool_t)
-   //
-   //         By default, a variable will be copied to the buffer with the number of
-   //         bytes specified in the type descriptor character. However, if the type
-   //         consists of 2 characters, the second character is an integer that
-   //         specifies the number of bytes to be used when copying the variable
-   //         to the output buffer. Example:
-   //             X         ; variable X, type Float_t
-   //             Y/I       : variable Y, type Int_t
-   //             Y/I2      ; variable Y, type Int_t converted to a 16 bit integer
+   //            - O : [the letter 'o', not a zero] a boolean (Bool_t)
    //
    //         Arrays of values are supported with the following syntax:
    //         If leaf name has the form var[nelem], where nelem is alphanumeric, then
