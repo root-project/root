@@ -1334,7 +1334,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
 #endif
    if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
-      return;
+      if (fStream == 0) return;
    }
 
    gVirtualPS = this;

@@ -135,7 +135,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
    fStream   = new ofstream(fname,ios::out);
    if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      return;
+      if (fStream == 0) return;
    }
 
    gVirtualPS = this;
