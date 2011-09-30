@@ -33,7 +33,12 @@ enum EDataType {
    kFloat_t  = 5,  kDouble_t =  8, kDouble32_t = 9,  kchar     = 10,
    kBool_t   = 18, kLong64_t = 16, kULong64_t  = 17, kOther_t  = -1,
    kNoType_t = 0,  kFloat16_t= 19,
-   kCounter =  6,  kCharStar = 7,  kBits     = 15 /* for compatibility with TStreamerInfo */
+   kCounter  =  6, kCharStar = 7,  kBits     = 15 /* for compatibility with TStreamerInfo */,
+   kVoid_t   = 20,
+
+   kDataTypeAliasUnsigned_t = 21,
+   // could add "long int" etc
+   kNumDataTypes
 };
 
 
@@ -45,6 +50,7 @@ private:
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
    TString           fTrueName; //True name of the (potential) underlying class 
+   static TDataType* fgBuiltins[kNumDataTypes]; //Array of builtins
 
    void CheckInfo();
    void SetType(const char *name);
@@ -65,7 +71,9 @@ public:
    Long_t         Property() const;
 
    static const char *GetTypeName(EDataType type);
+   static TDataType  *GetDataType(EDataType type);
    static EDataType GetType(const type_info &typeinfo);
+   static void AddBuiltins(TCollection* types);
 
    ClassDef(TDataType,0)  //Basic data type descriptor
 };

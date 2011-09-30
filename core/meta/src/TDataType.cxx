@@ -20,11 +20,14 @@
 
 #include "TDataType.h"
 #include "TInterpreter.h"
+#include "TCollection.h"
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
 
 ClassImp(TDataType)
+
+TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
 
 //______________________________________________________________________________
 TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
@@ -120,11 +123,14 @@ const char *TDataType::GetTypeName(EDataType type)
       case 17: return "ULong64_t";
       case 18: return "Bool_t";
       case 19: return "Float16_t";
+      case kVoid_t: return "void";
+      case kDataTypeAliasUnsigned_t: return "UInt_t";
       case kOther_t:  return "";
       case kNoType_t: return "";
       case kchar:     return "Char_t";
+      default: return "";
    }
-   return "";
+   return ""; // to silence compilers
 }
 
 //______________________________________________________________________________
@@ -359,4 +365,43 @@ void TDataType::CheckInfo()
       fProperty = gCint->TypedefInfo_Property(fInfo);
       fSize = gCint->TypedefInfo_Size(fInfo);
    }
+}
+
+//______________________________________________________________________________
+void TDataType::AddBuiltins(TCollection* types)
+{
+   // Create the TDataType objects for builtins.
+
+   if (fgBuiltins[kChar_t] == 0) {
+      // Add also basic types (like a identity typedef "typedef int int")
+      fgBuiltins[kChar_t] = new TDataType("char");
+      fgBuiltins[kUChar_t] = new TDataType("unsigned char");
+      fgBuiltins[kShort_t] = new TDataType("short");
+      fgBuiltins[kUShort_t] = new TDataType("unsigned short");
+      fgBuiltins[kInt_t] = new TDataType("int");
+      fgBuiltins[kUInt_t] = new TDataType("unsigned int");
+      fgBuiltins[kLong_t] = new TDataType("long");
+      fgBuiltins[kULong_t] = new TDataType("unsigned long");
+      fgBuiltins[kLong64_t] = new TDataType("long long");
+      fgBuiltins[kULong64_t] = new TDataType("unsigned long long");
+      fgBuiltins[kFloat_t] = new TDataType("float");
+      fgBuiltins[kDouble_t] = new TDataType("double");
+      fgBuiltins[kVoid_t] = new TDataType("void");
+      fgBuiltins[kBool_t] = new TDataType("bool");
+      fgBuiltins[kCharStar] = new TDataType("char*");
+
+      fgBuiltins[kDataTypeAliasUnsigned_t] = new TDataType("unsigned");
+   }
+
+   for (Int_t i = 0; i < (Int_t)kNumDataTypes; ++i) {
+      if (fgBuiltins[i]) types->Add(fgBuiltins[i]);
+   }
+}
+
+//______________________________________________________________________________
+TDataType* TDataType::GetDataType(EDataType type)
+{
+   // Given a EDataType type, get the TDataType* that represents it.
+   if (type == kOther_t) return 0;
+   return fgBuiltins[(int)type];
 }

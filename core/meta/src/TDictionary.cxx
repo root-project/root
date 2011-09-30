@@ -41,6 +41,7 @@
 #include "TDictionary.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDataType.h"
 #include "TROOT.h"
 
 ClassImp(TDictionary)
@@ -60,4 +61,17 @@ TDictionary* TDictionary::GetDictionary(const char* name)
    if (ret) return ret;
 
    return TClass::GetClass(shorttype.c_str(), true);
+}
+
+TDictionary* TDictionary::GetDictionary(const type_info &typeinfo)
+{
+   // Retrieve the type (class, fundamental type, typedef etc)
+   // with typeid typeinfo. Returned object is either a TClass or TDataType.
+   // Returns 0 if the type is unknown.
+
+   EDataType datatype = TDataType::GetType(typeinfo);
+   TDictionary* ret = TDataType::GetDataType(datatype);
+   if (ret) return ret;
+
+   return TClass::GetClass(typeinfo, true);
 }

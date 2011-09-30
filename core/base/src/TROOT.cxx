@@ -1248,24 +1248,7 @@ TCollection *TROOT::GetListOfTypes(Bool_t load)
    if (!fTypes) {
       fTypes = new THashTable(100, 3);
       load = kTRUE;
-
-      // Add also basic types (like a identity typedef "typedef int int")
-      fTypes->Add(new TDataType("char"));
-      fTypes->Add(new TDataType("unsigned char"));
-      fTypes->Add(new TDataType("short"));
-      fTypes->Add(new TDataType("unsigned short"));
-      fTypes->Add(new TDataType("int"));
-      fTypes->Add(new TDataType("unsigned int"));
-      fTypes->Add(new TDataType("unsigned"));
-      fTypes->Add(new TDataType("long"));
-      fTypes->Add(new TDataType("unsigned long"));
-      fTypes->Add(new TDataType("long long"));
-      fTypes->Add(new TDataType("unsigned long long"));
-      fTypes->Add(new TDataType("float"));
-      fTypes->Add(new TDataType("double"));
-      fTypes->Add(new TDataType("void"));
-      fTypes->Add(new TDataType("bool"));
-      fTypes->Add(new TDataType("char*"));
+      TDataType::AddBuiltins(fTypes);
    }
 
    if (!fInterpreter)
