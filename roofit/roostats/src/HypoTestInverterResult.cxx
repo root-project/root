@@ -660,28 +660,46 @@ double  HypoTestInverterResult::GetExpectedUpperLimit(double nsig ) const {
 double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const {
    // get expected limit (lower/upper) depending on the flag 
 
-   const int nEntries = ArraySize();
-   TGraph  g(nEntries);   
-
-   // sort the arrays based on the x values
-   std::vector<unsigned int> index(nEntries);
-   TMath::SortItr(fXValues.begin(), fXValues.end(), index.begin(), false);
-
    double p[1];
    double q[1];
    p[0] = ROOT::Math::normal_cdf(nsig,1);
-   for (int j=0; j<nEntries; ++j) {
-      int i = index[j]; // i is the order index 
-      SamplingDistribution * s = GetExpectedPValueDist(i);
-      const std::vector<double> & values = s->GetSamplingDistribution();
-      double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
-      TMath::Quantiles(values.size(), 1, x,q,p,false);
-      g.SetPoint(j, fXValues[i], q[0] );
-      delete s;
-   }
 
-   // interpolate the graph to obtain the limit
-   double target = 1-fConfidenceLevel;
-   return GetGraphX(g, target, lower);
+   // for CLs+b can get the quantiles of p-value distribution and 
+   // interpolate them
+   // In the case of CLs (since it is not a real p-value anymore but a ratio) 
+   // then it is needed to get first all limit distribution values and then the quantiles 
+
+   if (!fUseCLs) { 
+
+      const int nEntries = ArraySize();
+      TGraph  g(nEntries);   
+
+      // sort the arrays based on the x values
+      std::vector<unsigned int> index(nEntries);
+      TMath::SortItr(fXValues.begin(), fXValues.end(), index.begin(), false);
+
+      for (int j=0; j<nEntries; ++j) {
+         int i = index[j]; // i is the order index 
+         SamplingDistribution * s = GetExpectedPValueDist(i);
+         const std::vector<double> & values = s->GetSamplingDistribution();
+         double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
+         TMath::Quantiles(values.size(), 1, x,q,p,false);
+         g.SetPoint(j, fXValues[i], q[0] );
+         delete s;
+      }
+
+      // interpolate the graph to obtain the limit
+      double target = 1-fConfidenceLevel;
+      return GetGraphX(g, target, lower);
+
+   }
+   
+   // for CLS need to use the limit distribution 
+   SamplingDistribution * limitDist = GetLimitDistribution(lower); 
+   const std::vector<double> & values = limitDist->GetSamplingDistribution();
+   double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
+   TMath::Quantiles(values.size(), 1, x,q,p,false);
+   return q[0];
+   
 }
 
