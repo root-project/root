@@ -774,10 +774,9 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
    // import from a gdml file
    } else {
    // import from a root file
-      TFile *old = gFile;
+      TDirectory::TContext ctxt(0);
       TFile *f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
-         if (old) old->cd();
          printf("Error: TGeoVolume::Import : Cannot open file %s\n", filename);
          return 0;
       }
@@ -792,7 +791,6 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
             break;
          }
       }
-      if (old) old->cd();
       delete f;         
    }
    if (!volume) return NULL;
