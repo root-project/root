@@ -908,7 +908,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                   ndd[0] = ndd[1];
                }
             }
-            if (islices==1) {
+            if (islices<=1) {
                IntersectAndStore(ndd[0], slice1);
             } else {
                IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
@@ -1020,7 +1020,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                   ndd[0] = ndd[1];
                }
             }
-            if (islices==1) {
+            if (islices<=1) {
                IntersectAndStore(ndd[0], slice1);
             } else {
                IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
@@ -1132,7 +1132,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                   ndd[0] = ndd[1];
                }
             }
-            if (islices==1) {
+            if (islices<=1) {
                IntersectAndStore(ndd[0], slice1);
             } else {
                IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
@@ -1537,6 +1537,11 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
 //   UChar_t *bits = gGeoManager->GetBits();
    fNcandidates = 0;
    Int_t nbytes = 1+((nd-1)>>3);
+   if (!array1) {
+      memset(fBits1, 0xFF, nbytes*sizeof(UChar_t));
+      while (fNcandidates<nd) fCheckList[fNcandidates++] = fNcandidates;
+      return kTRUE;
+   }
    memcpy(fBits1, array1, nbytes*sizeof(UChar_t)); 
    Int_t current_byte;
    Int_t current_bit;
