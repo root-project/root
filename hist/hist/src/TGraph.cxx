@@ -350,15 +350,20 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 
 
 //______________________________________________________________________________
-TGraph::TGraph(const char *filename, const char *format, Option_t *)
+TGraph::TGraph(const char *filename, const char *format, Option_t *option)
        : TNamed("Graph",filename), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
-   // Graph constructor reading input from filename
-   // filename is assumed to contain at least two columns of numbers
+   // Graph constructor reading input from filename.
+   // filename is assumed to contain at least two columns of numbers.
    // the string format is by default "%lg %lg".
-   // this is a standard c formatting for scanf. If columns of numbers should be skipped,
-   // a "%*lg" for each column can be added, e.g. "%lg %*lg %lg" would read x-values from
-   // the first and y-values from the third column.
+   // this is a standard c formatting for scanf. If columns of numbers should be
+   // skipped, a "%*lg" or "%*s" for each column can be added,
+   // e.g. "%lg %*lg %lg" would read x-values from the first and y-values from
+   // the third column.
+   //
+   // To avoid using %*s for csv-like files, you can explicitly specify the
+   // delimiters with the "option" argument, e.g. option=" \t,;" for columns of
+   // figures separated by ',' or ';'
 
    Double_t x,y;
    TString fname = filename;
@@ -375,14 +380,87 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    if (!CtorAllocate()) return;
    std::string line;
    Int_t np=0;
-   while(std::getline(infile,line,'\n')){
-      if(2 != sscanf(line.c_str(),format,&x,&y) ) {
-         continue; // skip empty and ill-formed lines
+
+   // No delimiters specified (standard constructor).
+   if (strcmp(option,"")==0) {
+
+      while (std::getline(infile, line, '\n')) {
+         if (2 != sscanf(line.c_str(), format, &x, &y)) {
+            continue; //skip empty and ill-formed lines
+         }
+         SetPoint(np, x, y);
+         np++;
       }
-      SetPoint(np,x,y);
-      np++;
+      Set(np);
+
+   // A delimiter has been specified in "option"
+   } else {
+
+      // Checking format and creating its boolean counterpart
+      TString format_ = TString(format) ;
+      format_.ReplaceAll(" ", "") ;
+      format_.ReplaceAll("\t", "") ;
+      format_.ReplaceAll("lg", "") ;
+      format_.ReplaceAll("s", "") ;
+      format_.ReplaceAll("%*", "0") ;
+      format_.ReplaceAll("%", "1") ;
+      if (!format_.IsDigit()) {
+         Error("TGraph", "Incorrect input format! Allowed formats are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
+      }
+      Int_t ntokens = format_.Length() ;
+      Bool_t * isTokenToBeSaved = new Bool_t [ntokens] ;
+      for (Int_t idx = 0; idx < ntokens; idx++) {
+         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ;
+      }
+
+      // Initializing loop variables
+      Char_t buffer[10000] ;
+      Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
+      char * token = NULL ;
+      TString token_str = "" ;
+      Int_t token_idx = 0 ;
+      Double_t * value = new Double_t [2] ;  //x and y buffer
+      Int_t value_idx = 0 ;
+
+      // Looping
+      while (std::getline(infile, line, '\n')) {
+         if (line != "") {
+            strcpy(buffer, line.c_str()) ;  //necessary stage for strtok?
+            token = strtok(buffer, option) ;
+            while (token != NULL && value_idx < 2) {
+               if (isTokenToBeSaved[token_idx]) {
+                  token_str = TString(token) ;
+                  token_str.ReplaceAll("\t", "") ;
+                  if (!token_str.IsFloat()) {
+                     isLineToBeSkipped = kTRUE ;
+                     break ;
+                  } else {
+                     value[value_idx] = token_str.Atof() ;
+                     value_idx++ ;
+                  }
+               }
+               token = strtok(NULL, option) ; //next token
+               token_idx++ ;
+            }
+            if (!isLineToBeSkipped) {
+               x = value[0] ;
+               y = value[1] ;
+               SetPoint(np, x, y) ;
+               np++ ;
+            }
+         }
+         isLineToBeSkipped = kFALSE ;
+         token = NULL ;
+         token_idx = 0 ;
+         value_idx = 0 ;
+      }
+      Set(np) ;
+
+      // Cleaning
+      delete [] isTokenToBeSaved ;
+      delete [] value ;
+      delete token ;
    }
-   Set(np);
 }
 
 
@@ -1929,7 +2007,7 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       }
       out.precision(prec);
    }
-   
+
    static Int_t frameNumber = 0;
    if (fHistogram) {
       frameNumber++;
@@ -1959,12 +2037,12 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (l) {
       out<<"   multigraph->Add(graph,"<<quote<<l+10<<quote<<");"<<endl;
       return;
-   } 
+   }
    l = strstr(option,"th2poly");
    if (l) {
       out<<"   "<<l+7<<"->AddBin(graph);"<<endl;
       return;
-   } 
+   }
    out<<"   graph->Draw("<<quote<<option<<quote<<");"<<endl;
 }
 
