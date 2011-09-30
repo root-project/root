@@ -46,11 +46,14 @@
 //       * address is the address of the first item of a structure
 //       * leaflist is the concatenation of all the variable names and types
 //         separated by a colon character :
-//         The variable name and the variable type are separated by a slash (/).
-//         The variable type may be 0,1 or 2 characters. If no type is given,
-//         the type of the variable is assumed to be the same as the previous
-//         variable. If the first variable does not have a type, it is assumed
-//         of type F by default. The list of currently supported types is given below:
+//         The variable name and the variable type are separated by a
+//         slash (/). The variable type must be 1 character. (Characters
+//         after the first are legal and will be appended to the visible
+//         name of the leaf, but have no effect.) If no type is given, the
+//         type of the variable is assumed to be the same as the previous
+//         variable. If the first variable does not have a type, it is
+//         assumed of type F by default. The list of currently supported
+//         types is given below:
 //            - C : a character string terminated by the 0 character
 //            - B : an 8 bit signed integer (Char_t)
 //            - b : an 8 bit unsigned integer (UChar_t)
