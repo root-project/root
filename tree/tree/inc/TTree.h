@@ -159,6 +159,7 @@ protected:
    virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, Bool_t isptrptr, Int_t bufsize, Int_t splitlevel);
    friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
+   virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
    char             GetNewlineValue(istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
@@ -383,6 +384,7 @@ public:
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }
    virtual Double_t       *GetIndexValues() { return &fIndexValues.fArray[0]; }
    virtual TIterator      *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
+   virtual TLeaf          *GetLeaf(const char* branchname, const char* leafname);
    virtual TLeaf          *GetLeaf(const char* name);
    virtual TList          *GetListOfClones() { return fClones; }
    virtual TObjArray      *GetListOfBranches() { return &fBranches; }
