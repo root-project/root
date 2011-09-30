@@ -42,6 +42,9 @@
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
+#ifndef ROOT_TThreadSlots
+#include "TThreadSlots.h"
+#endif
 
 class TThreadImp;
 
@@ -92,7 +95,7 @@ private:
    VoidFunc_t     fFcnVoid;               // void  start function of thread
    void          *fThreadArg;             // thread start function arguments
    void          *fClean;                 // support of cleanup structure
-   void          *fTsd[20];               // thread specific data container
+   void          *fTsd[ROOT::kMaxThreadSlot]; // thread specific data container
    char           fComment[100];          // thread specific state comment
 
    static TThreadImp      *fgThreadImp;   // static pointer to thread implementation

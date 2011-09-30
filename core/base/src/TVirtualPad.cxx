@@ -12,6 +12,7 @@
 #include "TVirtualPad.h"
 #include "X3DBuffer.h"
 #include "TClass.h"
+#include "TThreadSlots.h"
 
 //______________________________________________________________________________
 //
@@ -21,7 +22,6 @@
 Size3D gVarSize3D;
 Size3D* gFuncSize3D(){ return &gVarSize3D; }
 
-void **(*gThreadTsd)(void*,Int_t) = 0;
 Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
 
 //______________________________________________________________________________
@@ -33,9 +33,8 @@ TVirtualPad *&TVirtualPad::Pad()
    if (!gThreadTsd)
       return currentPad;
    else
-      return *(TVirtualPad**)(*gThreadTsd)(&currentPad,0);
+      return *(TVirtualPad**)(*gThreadTsd)(&currentPad,ROOT::kPadThreadSlot);
 }
-
 
 ClassImp(TVirtualPad)
 

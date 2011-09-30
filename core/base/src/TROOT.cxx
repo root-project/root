@@ -124,6 +124,9 @@ extern "C" void R__SetZipMode(int);
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
+// For accesing TThread::Tsd indirectly.
+void **(*gThreadTsd)(void*,Int_t) = 0;
+
 //-------- Names of next three routines are a small homage to CMZ --------------
 //______________________________________________________________________________
 static Int_t IVERSQ()

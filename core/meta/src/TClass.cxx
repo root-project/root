@@ -62,6 +62,7 @@
 #include "TIsAProxy.h"
 #include "TSchemaRule.h"
 #include "TSystem.h"
+#include "TThreadSlots.h"
 
 #include <cstdio>
 #include <cctype>
@@ -2361,7 +2362,7 @@ namespace {
       TClassStreamer          *fStreamer;
 
       static TClassLocalStorage *GetStorage(const TClass *cl) {
-         void **thread_ptr = (*gThreadTsd)(0,1);
+         void **thread_ptr = (*gThreadTsd)(0,ROOT::kClassThreadSlot);
          if (thread_ptr) {
             if (*thread_ptr==0) *thread_ptr = new TExMap();
             TExMap *lmap = (TExMap*)(*thread_ptr);

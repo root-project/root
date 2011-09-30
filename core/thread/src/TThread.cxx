@@ -298,9 +298,7 @@ void TThread::Constructor()
    SetComment("Constructor: MainMutex Locking");
    Lock();
    SetComment("Constructor: MainMutex Locked");
-   memset(fTsd, 0, 20*sizeof(void*));
-   fTsd[0] = gPad;
-   fTsd[1] = 0;    // For TClass
+   memset(fTsd, 0, ROOT::kMaxThreadSlot*sizeof(void*));
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev = 0; fgMain = this;
@@ -804,6 +802,9 @@ void **TThread::Tsd(void *dflt, Int_t k)
 {
    // Static method returning a pointer to thread specific data container
    // of the calling thread.
+   // k should be between 0 and kMaxUserThreadSlot for user application.
+   // (and between kMaxUserThreadSlot and kMaxThreadSlot for ROOT libraries).
+   // See ROOT::EThreadSlotReservation
 
    TThread *th = TThread::Self();
 
