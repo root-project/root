@@ -27,7 +27,7 @@
 
 namespace textinput {
 
-  //Functions to find first/last non alphanumeric
+  // Functions to find first/last non alphanumeric ("word-boundaries")
   size_t find_first_non_alnum(const std::string &str,
                               std::string::size_type index = 0) {
     bool atleast_one_alnum = false;
@@ -40,10 +40,10 @@ namespace textinput {
     }
     return std::string::npos;
   }
- 
+
   size_t find_last_non_alnum(const std::string &str,
                              std::string::size_type index = std::string::npos) {
-    std::string::size_type len = str.length();    
+    std::string::size_type len = str.length();
     if (index == std::string::npos) index = len - 1;
     bool atleast_one_alnum = false;
     for(; index != std::string::npos; --index) {
@@ -54,7 +54,6 @@ namespace textinput {
     }
     return std::string::npos;
   }
-  //
 
   Editor::EProcessResult
   Editor::Process(Command cmd, EditorRange& R) {
@@ -465,7 +464,7 @@ namespace textinput {
     size_t ret = Direction > 0 ?
       find_first_non_alnum(Line.GetText(), Cursor + 1)
     : find_last_non_alnum(Line.GetText(), Cursor - 2);
-  
+
     if (ret == std::string::npos) {
       if (Direction > 0) return Line.length();
       else return 0;
