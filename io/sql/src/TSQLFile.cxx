@@ -687,22 +687,10 @@ void TSQLFile::Close(Option_t *option)
       fClassIndex = 0;
    }
 
-   TDirectory *cursav = gDirectory;
-   cd();
-
-   if (cursav == this || cursav->GetFile() == this) {
-      cursav = 0;
-   }
-
-   // Delete all supported directories structures from memory
-   TDirectoryFile::Close();
-   cd();      // Close() sets gFile = 0
-
-   if (cursav)
-      cursav->cd();
-   else {
-      gFile      = 0;
-      gDirectory = gROOT;
+   {
+      TDirectory::TContext ctxt(this);
+      // Delete all supported directories structures from memory
+      TDirectoryFile::Close();
    }
 
    //delete the TProcessIDs
