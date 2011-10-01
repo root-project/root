@@ -122,7 +122,7 @@
 ClassImp(TFileIter)
 
 //__________________________________________________________________________
-TFileIter::TFileIter(TFile *file) : fFileBackUp(0),fDirectoryBackUp(0), fNestedIterator(0)
+TFileIter::TFileIter(TFile *file) : fNestedIterator(0)
          , fRootFile(file)
          , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
          , fCursorPosition(-1),  fOwnTFile(kFALSE)
@@ -132,7 +132,7 @@ TFileIter::TFileIter(TFile *file) : fFileBackUp(0),fDirectoryBackUp(0), fNestedI
 }
 
 //__________________________________________________________________________
-TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0),fNestedIterator(0)
+TFileIter::TFileIter(TDirectory *directory) :  fNestedIterator(0)
          , fRootFile(directory)
          , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
          , fCursorPosition(-1),  fOwnTFile(kFALSE)
@@ -142,7 +142,7 @@ TFileIter::TFileIter(TDirectory *directory) :  fFileBackUp(0),fDirectoryBackUp(0
 }
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                     , Int_t compress, Int_t /*netopt*/) : fFileBackUp(0),fDirectoryBackUp(0),fNestedIterator(0)
+                     , Int_t compress, Int_t /*netopt*/) : fNestedIterator(0)
                                                          ,fRootFile(0)
                                                          ,fEventName("event"), fRunNumber(UInt_t(-1)) ,fEventNumber(UInt_t(-1))
                                                          ,fCursorPosition(-1), fOwnTFile(kFALSE)
@@ -162,7 +162,7 @@ TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
 
 //__________________________________________________________________________
 TFileIter::TFileIter(const TFileIter &dst) : TListIter()
-          ,fFileBackUp(0),  fDirectoryBackUp(0), fNestedIterator(0)
+          , fNestedIterator(0)
           ,fRootFile(dst.fRootFile),fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
           ,fEventNumber(dst.fRunNumber),
            fCursorPosition(-1),  fOwnTFile(dst.fOwnTFile)
@@ -509,13 +509,10 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
       else
          thisKey.SetName(obj->GetName());
 
-      if (fRootFile != gDirectory) {
-         SaveFileScope();
-         fRootFile->cd();
-      }
+      TDirectory::TContext ctxt(fRootFile); // Store the current directory, cd to fRootFile and at the end of the block restore the current directory.
+      
       wBytes = obj->Write(thisKey.GetKey());
       if (fRootFile->InheritsFrom(TFile::Class())) ((TFile*)fRootFile)->Flush();
-      if (fRootFile != gDirectory)     RestoreFileScope();
    }
    return wBytes;
 }

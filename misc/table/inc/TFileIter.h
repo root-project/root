@@ -62,8 +62,6 @@ class TFileIter : public TListIter {
 
 private:
 
-   TFile      *fFileBackUp;       //! temporary data-members
-   TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
    TFileIter *fNestedIterator;   //! The inner TFidrectory interator;
 
    virtual TIterator &operator=(const TIterator &) { return *this; }
@@ -79,8 +77,6 @@ protected:
 
    void     Initialize();
    TObject *ReadObj(const TKey *key) const;
-   void     RestoreFileScope();
-   void     SaveFileScope();
    TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
 
 public:
@@ -247,13 +243,5 @@ inline int TFileIter::operator!=(const char *name) const
 inline TObject *TFileIter::operator()(){ return Next(); }
 //__________________________________________________________________________
 inline TObject *TFileIter::operator()(Int_t  nSkip){ return Next(nSkip);}
-
-//__________________________________________________________________________
-inline void  TFileIter::SaveFileScope()
-{ fFileBackUp = gFile; fDirectoryBackUp = gDirectory; }
-
-//__________________________________________________________________________
-inline void TFileIter::RestoreFileScope()
-{  gFile = fFileBackUp; gDirectory = fDirectoryBackUp; }
 
 #endif
