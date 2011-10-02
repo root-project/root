@@ -2198,7 +2198,7 @@ void TMinuit::mnderi()
       Eval(nparx, fGin, fs1, fU, 4);        ++fNfcn;
       if (fs1 != fAmin) {
          df    = fAmin - fs1;
-         mnwarn("D", "MNDERI", Form("function value differs from AMIN by %12.3g",df));
+         mnwarn("D", "MNDERI", TString::Format("function value differs from AMIN by %12.3g",df));
          fAmin = fs1;
       }
       Printf("  FIRST DERIVATIVE DEBUG PRINTOUT.  MNDERI");
@@ -2267,7 +2267,7 @@ void TMinuit::mnderi()
       }
 //*-*-                          end of ICYC loop. too many iterations
       if (ncyc == 1) goto L50;
-      mnwarn("D", "MNDERI", Form("First derivative not converged. %g%g",fGrd[i-1],grbfor));
+      mnwarn("D", "MNDERI", TString::Format("First derivative not converged. %g%g",fGrd[i-1],grbfor));
 L50:
       ;
    }
@@ -2557,7 +2557,7 @@ void TMinuit::mnemat(Double_t *emat, Int_t ndim)
             k2 = k + nperln - 1;
             if (k2 > iz) k2 = iz;
             for (kk = k; kk <= k2; ++kk) {
-               ctemp += Form("%10.3e ",emat[i + kk*emat_dim1]);
+               ctemp += TString::Format("%10.3e ",emat[i + kk*emat_dim1]);
             }
             Printf("%s",(const char*)ctemp);
          }
@@ -2747,9 +2747,9 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
          lnow = llist;
          if (lnow > 4) lnow = 4;
          Printf(" **********");
-         ctemp = Form(" **%5d **%s",fIcomnd,(const char*)fCword);
+         ctemp.Form(" **%5d **%s",fIcomnd,(const char*)fCword);
          for (i = 1; i <= lnow; ++i) {
-            ctemp += Form("%12.4g",plist[i-1]);
+            ctemp += TString::Format("%12.4g",plist[i-1]);
          }
          Printf("%s",(const char*)ctemp);
          inonde = 0;
@@ -4064,7 +4064,7 @@ void TMinuit::mnhess()
    Eval(nparx, fGin, fs1, fU, 4);    ++fNfcn;
    if (fs1 != fAmin) {
       df    = fAmin - fs1;
-      mnwarn("D", "MNHESS", Form("function value differs from AMIN by %g",df));
+      mnwarn("D", "MNHESS", TString::Format("function value differs from AMIN by %g",df));
    }
    fAmin = fs1;
    if (ldebug) {
@@ -4124,7 +4124,7 @@ void TMinuit::mnhess()
             d *= 10;
          }
 L26:
-         mnwarn("W", "HESSE", Form("Second derivative zero for parameter%d",iext));
+         mnwarn("W", "HESSE", TString::Format("Second derivative zero for parameter%d",iext));
          goto L390;
 //*-*-                            SAG is not zero
 L30:
@@ -4155,7 +4155,7 @@ L30:
       }
 //*-*-                      end of step size loop
       if (!skip50)
-         mnwarn("D", "MNHESS", Form("Second Deriv. SAG,AIM= %d%g%g",iext,sag,aimsag));
+         mnwarn("D", "MNHESS", TString::Format("Second Deriv. SAG,AIM= %d%g%g",iext,sag,aimsag));
 
       ndex = i*(i + 1) / 2;
       fVhmat[ndex-1] = fG2[i-1];
@@ -4311,7 +4311,7 @@ void TMinuit::mnhes1()
          d *= .2;
       }
 //*-*-                                      loop satisfied = too many iter
-      mnwarn("D", "MNHES1", Form("Too many iterations on D1.%g%g",grdold,grdnew));
+      mnwarn("D", "MNHES1", TString::Format("Too many iterations on D1.%g%g",grdold,grdnew));
 L60:
       fDgrd[i-1] = TMath::Max(dgmin,TMath::Abs(grdold - grdnew));
    }
@@ -5044,7 +5044,7 @@ void TMinuit::mnmatu(Int_t kode)
    Printf(" PARAMETER  CORRELATION COEFFICIENTS  ");
    ctemp = "       NO.  GLOBAL";
    for (id = 1; id <= nparm; ++id) {
-      ctemp += Form(" %6d",fNexofi[id-1]);
+      ctemp += TString::Format(" %6d",fNexofi[id-1]);
    }
    Printf("%s",(const char*)ctemp);
    for (i = 1; i <= fNpar; ++i) {
@@ -5058,9 +5058,9 @@ void TMinuit::mnmatu(Int_t kode)
          fMATUvline[j-1] = fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(fVhmat[ndi-1]*fVhmat[ndj-1]));
       }
       nparm = TMath::Min(fNpar,ncoef);
-      ctemp = Form("      %3d  %7.5f ",ix,fGlobcc[i-1]);
+      ctemp.Form("      %3d  %7.5f ",ix,fGlobcc[i-1]);
       for (it = 1; it <= nparm; ++it) {
-         ctemp += Form(" %6.3f",fMATUvline[it-1]);
+         ctemp += TString::Format(" %6.3f",fMATUvline[it-1]);
       }
       Printf("%s",(const char*)ctemp);
       if (i <= nparm) continue;
@@ -5069,7 +5069,7 @@ void TMinuit::mnmatu(Int_t kode)
          nsofar = nparm;
          nparm  = TMath::Min(fNpar,nsofar + ncoef);
          for (it = nsofar + 1; it <= nparm; ++it) {
-            ctemp = ctemp + Form(" %6.3f",fMATUvline[it-1]);
+            ctemp = ctemp + TString::Format(" %6.3f",fMATUvline[it-1]);
          }
          Printf("%s",(const char*)ctemp);
          if (i <= nparm) break;
@@ -5789,7 +5789,7 @@ L122:
       if (fLwarn) fLphead = kTRUE;
    }
    if (b - a > 1e7) {
-      mnwarn("W", "PARAM DEF", Form("LIMITS ON PARAM%d TOO FAR APART.",k));
+      mnwarn("W", "PARAM DEF", TString::Format("LIMITS ON PARAM%d TOO FAR APART.",k));
       if (fLwarn) fLphead = kTRUE;
    }
    danger = (b - uk)*(uk - a);
@@ -6087,7 +6087,7 @@ void TMinuit::mnpint(Double_t &pexti, Int_t i1, Double_t &pinti)
          pexti   = alimi + (blimi - alimi)*.5*(TMath::Sin(a) + 1);
          fLimset = kTRUE;
          if (yy2 > 1) chbuf2 = " BROUGHT BACK INSIDE LIMITS.";
-         mnwarn("W", fCfrom, Form("VARIABLE%d%s",i,chbuf2.Data()));
+         mnwarn("W", fCfrom, TString::Format("VARIABLE%d%s",i,chbuf2.Data()));
       } else {
          pinti = TMath::ASin(yy);
       }
@@ -6383,10 +6383,10 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
    }
 //*-*-             report function value and status
    if (fval == fUndefi) cheval = " unknown       ";
-   else                 cheval = Form("%g",fval);
+   else                 cheval.Form("%g",fval);
 
    if (fEDM == fBigedm) chedm = " unknown  ";
-   else                 chedm = Form("%g",fEDM);
+   else                 chedm.Form("%g",fEDM);
 
    nc = fNfcn - fNfcnfr;
    Printf(" FCN=%s FROM %8s  STATUS=%10s %6d CALLS   %9d TOTAL"
@@ -6500,8 +6500,8 @@ L16:
          if (x3 == 0)        cx3 = " ";
          if (x3 == fUndefi)         cx3 = "   at limit   ";
       }
-      if (cx2 == "PLEASE GET X..")  cx2 = Form("%14.5e",x2);
-      if (cx3 == "PLEASE GET X..")  cx3 = Form("%14.5e",x3);
+      if (cx2 == "PLEASE GET X..")  cx2.Form("%14.5e",x2);
+      if (cx3 == "PLEASE GET X..")  cx3.Form("%14.5e",x3);
       Printf("%4d %-11s%14.5e%14.5e%-14s%-14s",i
                    ,(const char*)cnambf,fU[i-1],x1
                    ,(const char*)cx2,(const char*)cx3);
@@ -6553,13 +6553,13 @@ void TMinuit::mnpsdf()
    for (i = 1; i <= fNpar; ++i) {
       ndex = i*(i + 1) / 2;
       if (fVhmat[ndex-1] <= 0) {
-         mnwarn("W", fCfrom, Form("Negative diagonal element %d in Error Matrix",i));
+         mnwarn("W", fCfrom, TString::Format("Negative diagonal element %d in Error Matrix",i));
       }
       if (fVhmat[ndex-1] < dgmin) dgmin = fVhmat[ndex-1];
    }
    if (dgmin <= 0) {
       dg    = epspdf + 1 - dgmin;
-      mnwarn("W", fCfrom, Form("%g added to diagonal of error matrix",dg));
+      mnwarn("W", fCfrom, TString::Format("%g added to diagonal of error matrix",dg));
    } else {
       dg = 0;
    }
@@ -6591,7 +6591,7 @@ void TMinuit::mnpsdf()
       Printf(" EIGENVALUES OF SECOND-DERIVATIVE MATRIX:");
       ctemp = "       ";
       for (ip = 1; ip <= fNpar; ++ip) {
-         ctemp += Form(" %11.4e",fPstar[ip-1]);
+         ctemp += TString::Format(" %11.4e",fPstar[ip-1]);
       }
       Printf("%s", ctemp.Data());
    }
