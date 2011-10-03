@@ -467,13 +467,12 @@ print 'fit results: const =',par[0],',pitch =',par[1]
 
 <programlisting language="c++">
 from ROOT import TFile
-from ROOT import gDirectory
 
 <emphasis role="italic"><code># open the file</code></emphasis>
 myfile = TFile('tree1.root')
 
 <emphasis role="italic"><code># retrieve the ntuple of interest</code></emphasis>
-mychain = gDirectory.Get('t1')
+mychain = myfile.Get('t1')
 entries = mychain.GetEntriesFast()
 
 for jentry in xrange(entries):
