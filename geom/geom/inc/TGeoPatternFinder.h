@@ -40,13 +40,27 @@ protected :
    Double_t            fStep;           // division step length
    Double_t            fStart;          // starting point on divided axis
    Double_t            fEnd;            // ending point
-   Int_t               fCurrent;        // current division element
    Int_t               fNdivisions;     // number of divisions
    Int_t               fDivIndex;       // index of first div. node
-   TGeoMatrix         *fMatrix;         // generic matrix
    TGeoVolume         *fVolume;         // volume to which applies
-   Int_t               fNextIndex;      //! index of next node
 
+   struct ThreadData_t
+   {
+      TGeoMatrix      *fMatrix;         //! generic matrix
+      Int_t            fCurrent;        //! current division element
+      Int_t            fNextIndex;      //! index of next node
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+   mutable std::vector<ThreadData_t*> fThreadData; //! 
+   mutable Int_t                      fThreadSize; //!
+
+public:
+   ThreadData_t& GetThreadData()   const;
+   void          ClearThreadData() const;
+
+protected:
    TGeoPatternFinder(const TGeoPatternFinder&); 
    TGeoPatternFinder& operator=(const TGeoPatternFinder&);
 
@@ -57,16 +71,17 @@ public:
    // destructor
    virtual ~TGeoPatternFinder();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const = 0;
    virtual void        cd(Int_t /*idiv*/) {}
    virtual TGeoNode   *CdNext();
    virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t * /*dir*/=0) {return 0;} 
    virtual Int_t       GetByteCount() const {return 36;}
-   Int_t               GetCurrent()      {return fCurrent;}
+   Int_t               GetCurrent();//      {return fCurrent;}
    Int_t               GetDivIndex()     {return fDivIndex;}
    virtual Int_t       GetDivAxis()      {return 1;}
-   virtual TGeoMatrix *GetMatrix()       {return fMatrix;}
+   virtual TGeoMatrix *GetMatrix();//       {return fMatrix;}
    Int_t               GetNdiv() const   {return fNdivisions;}
-   Int_t               GetNext() const   {return fNextIndex;}
+   Int_t               GetNext() const;//   {return fNextIndex;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
    Double_t            GetStart() const  {return fStart;}
    Double_t            GetStep() const   {return fStep;}
@@ -76,16 +91,16 @@ public:
    Bool_t              IsReflected() const {return TObject::TestBit(kPatternReflected);}
    Bool_t              IsSpacedOut() const {return TObject::TestBit(kPatternSpacedOut);}
    virtual 
-   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
+   TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE) = 0;
    void                Reflect(Bool_t flag=kTRUE) {TObject::SetBit(kPatternReflected,flag);}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
-   void                SetNext(Int_t index)     {fNextIndex = index;}
+   void                SetNext(Int_t index);//     {fNextIndex = index;}
    void                SetRange(Double_t start, Double_t step, Int_t ndivisions);
    void                SetSpacedOut(Bool_t flag) {TObject::SetBit(kPatternSpacedOut,flag);}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
    virtual void        UpdateMatrix(Int_t , TGeoHMatrix &) const {}
 
-   ClassDef(TGeoPatternFinder, 3)              // patterns to divide volumes
+   ClassDef(TGeoPatternFinder, 4)              // patterns to divide volumes
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -108,6 +123,7 @@ public:
    // destructor
    virtual ~TGeoPatternX();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
@@ -138,6 +154,7 @@ public:
    // destructor
    virtual ~TGeoPatternY();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
@@ -168,6 +185,7 @@ public:
    // destructor
    virtual ~TGeoPatternZ();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
@@ -199,6 +217,7 @@ public:
    // destructor
    virtual ~TGeoPatternParaX();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 1;}
@@ -232,6 +251,7 @@ public:
    // destructor
    virtual ~TGeoPatternParaY();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 2;}
@@ -266,6 +286,7 @@ public:
    // destructor
    virtual ~TGeoPatternParaZ();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
    virtual Int_t       GetDivAxis()      {return 3;}
@@ -300,6 +321,7 @@ public:
    // destructor
    virtual ~TGeoPatternTrapZ();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    Double_t            GetTxz() const {return fTxz;}
    Double_t            GetTyz() const {return fTyz;}
    virtual void        cd(Int_t idiv);
@@ -332,7 +354,8 @@ public:
    // destructor
    virtual ~TGeoPatternCylR();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv;}
+   virtual TGeoMatrix* CreateMatrix() const;
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
@@ -372,6 +395,7 @@ public:
    // destructor
    virtual ~TGeoPatternCylPhi();
    // methods
+   virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 2;}
@@ -401,7 +425,8 @@ public:
    // destructor
    virtual ~TGeoPatternSphR();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv;}
+   virtual TGeoMatrix* CreateMatrix() const;
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual 
@@ -429,7 +454,8 @@ public:
    // destructor
    virtual ~TGeoPatternSphTheta();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv;}
+   virtual TGeoMatrix* CreateMatrix() const;
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual 
@@ -457,7 +483,8 @@ public:
    // destructor
    virtual ~TGeoPatternSphPhi();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv;}
+   virtual TGeoMatrix* CreateMatrix() const;
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual 
@@ -494,7 +521,9 @@ public:
    // destructor
    virtual ~TGeoPatternHoneycomb();
    // methods
-   virtual void        cd(Int_t idiv) {fCurrent=idiv;}
+   TGeoPatternFinder  *MakeCopy(Bool_t) {return 0;}
+   virtual TGeoMatrix* CreateMatrix() const;
+   virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
    virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
 
