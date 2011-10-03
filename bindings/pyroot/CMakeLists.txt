@@ -5,12 +5,6 @@ ROOT_USE_PACKAGE(math/mathcore)
 ROOT_USE_PACKAGE(tree/tree)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
-if(reflex)
-  add_definitions(-DPYROOT_USE_REFLEX )
-  ROOT_USE_PACKAGE(cint/reflex)
-  set(Reflexlib Reflex)
-endif()
-
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(PyROOT LINKDEF LinkDef.h)
 
