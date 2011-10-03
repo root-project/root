@@ -38,7 +38,6 @@ protected:
    Long64_t        fEntryMax;    //! last entry in the cache
    Long64_t        fEntryCurrent;//! current lowest entry number in the cache
    Long64_t        fEntryNext;   //! next entry number where cache must be filled
-   Long64_t        fZipBytes;    //! Total compressed size of branches in cache
    Int_t           fNbranches;   //! Number of branches in the cache
    Int_t           fNReadOk;     //Number of blocks read and found in the cache
    Int_t           fNReadMiss;   //Number of blocks read and not found in the chache
@@ -68,6 +67,9 @@ public:
    virtual ~TTreeCache();
    virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
+//   virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
+//   virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
+   const TObjArray    *GetCachedBranches() const { return fBranches; }
    Double_t            GetEfficiency() const;
    Double_t            GetEfficiencyRel() const;
    static Int_t        GetLearnEntries();

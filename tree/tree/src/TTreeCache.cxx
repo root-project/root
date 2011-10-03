@@ -250,7 +250,6 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fEntryMax(1),
    fEntryCurrent(-1),
    fEntryNext(-1),
-   fZipBytes(0),
    fNbranches(0),
    fNReadOk(0),
    fNReadMiss(0),
@@ -278,7 +277,6 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fEntryMax(tree->GetEntriesFast()),
    fEntryCurrent(-1),
    fEntryNext(0),
-   fZipBytes(0),
    fNbranches(0),
    fNReadOk(0),
    fNReadMiss(0),
@@ -333,7 +331,6 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
       fTree = b->GetTree();
       fBranches->AddAtAndExpand(b, fNbranches);
       fBrNames->Add(new TObjString(b->GetName()));
-      fZipBytes += b->GetZipBytes();
       fNbranches++;
       if (gDebug > 0) printf("Entry: %lld, registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
    }
@@ -865,7 +862,6 @@ void TTreeCache::StartLearningPhase()
    fIsLearning = kTRUE;
    fIsManual = kFALSE;
    fNbranches  = 0;
-   fZipBytes   = 0;
    if (fBrNames) fBrNames->Delete();
    fIsTransferred = kFALSE;
    fEntryCurrent = -1;
@@ -919,7 +915,6 @@ void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
       fIsLearning = kFALSE;
       fEntryNext = -1;
    }
-   fZipBytes  = 0;
    fNbranches = 0;
 
    TIter next(fBrNames);
@@ -930,7 +925,6 @@ void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
          continue;
       }
       fBranches->AddAt(b, fNbranches);
-      fZipBytes   += b->GetZipBytes();
       fNbranches++;
    }
 }
