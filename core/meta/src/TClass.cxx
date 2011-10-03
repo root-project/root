@@ -899,7 +899,7 @@ void TClass::Init(const char *name, Version_t cversion,
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
    // Always strip the default STL template arguments (from any template argument or the class name)
-   SetName(TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str());
+   fName           = TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str();
    fClassVersion   = cversion;
    fDeclFileName   = dfil ? dfil : "";
    fImplFileName   = ifil ? ifil : "";
@@ -1998,7 +1998,7 @@ TObject *TClass::Clone(const char *new_name) const
    }
    // Remove the copy before renaming it
    TClass::RemoveClass(copy);
-   copy->SetName(new_name);
+   copy->fName = new_name;
    TClass::AddClass(copy);
 
    copy->SetNew(fNew);
