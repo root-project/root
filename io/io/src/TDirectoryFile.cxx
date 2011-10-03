@@ -317,7 +317,9 @@ Bool_t TDirectoryFile::cd(const char *path)
    // in the file. Relative syntax is relative to "this" directory. E.g:
    // ../aa. Returns kTRUE in case of success.
 
-   return TDirectory::cd(path);
+   Bool_t ok = TDirectory::cd(path);
+   if (ok) TFile::CurrentFile() = fFile;
+   return ok;
 }
 
 //______________________________________________________________________________
@@ -325,6 +327,12 @@ void TDirectoryFile::CleanTargets()
 {
    // Clean the pointers to this object (gDirectory, TContext, etc.)
 
+
+   // After CleanTargets either gFile was changed appropriately
+   // by a cd() or needs to be set to zero.
+   if (gFile == this) {
+      gFile = 0;
+   }
    TDirectory::CleanTargets();
 }
 
@@ -357,10 +365,11 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
 
    //create a buffer where the object will be streamed
    {
-      // NOTE: do we still need to make this change to gDirectory? 
-      // From revision 1 to 41088, this used to be gFile = 0. 
-      TContext ctxt(0);
-      gDirectory = 0;  
+      // NOTE: do we still need to make this change to gFile?
+      // NOTE: This can not be 'gDirectory=0' as at least roofit expect gDirectory to not be null
+      // during the streaming ....
+      TFile *filsav = gFile;
+      gFile = 0;
       const Int_t bufsize = 10000;
       TBufferFile buffer(TBuffer::kWrite,bufsize);
       buffer.MapObject(obj);  //register obj in map to handle self reference
@@ -381,6 +390,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       newobj->Streamer(buffer);
       newobj->ResetBit(kIsReferenced);
       newobj->ResetBit(kCanDelete);
+      gFile = filsav;
    }
 
    if (autoadd) {

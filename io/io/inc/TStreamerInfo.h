@@ -271,8 +271,8 @@ public:
    Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
-   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name);
-   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name);
+   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent);
+   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent);
    virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
    virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
 

@@ -41,7 +41,7 @@ public:
 protected:
 
    // Some hack to avoid const-ness
-   virtual TGenCollectionProxy* InitializeEx();
+   virtual TGenCollectionProxy* InitializeEx(Bool_t silent);
 
    // Object input streamer
    void ReadItems(int nElements, TBuffer &b);
@@ -63,7 +63,7 @@ public:
    TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy);
 
    // Initializing constructor
-   TEmulatedCollectionProxy(const char* cl_name);
+   TEmulatedCollectionProxy(const char* cl_name, Bool_t silent);
 
    // Standard destructor
    virtual ~TEmulatedCollectionProxy();

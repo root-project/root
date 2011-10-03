@@ -39,7 +39,7 @@ public:
    TEmulatedMapProxy(const TEmulatedMapProxy& copy);
 
    // Initializing constructor
-   TEmulatedMapProxy(const char* cl_name);
+   TEmulatedMapProxy(const char* cl_name, Bool_t silent);
 
    // Standard destructor
    virtual ~TEmulatedMapProxy();

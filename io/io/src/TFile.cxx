@@ -115,6 +115,7 @@
 #include <set>
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
+#include "TThreadSlots.h"
 
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
@@ -906,16 +907,18 @@ TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, co
 }
 
 //____________________________________________________________________________________
-TFile* TFile::CurrentFile()
+TFile *&TFile::CurrentFile()
 {
    // Return the current ROOT file if any.
+   // Note that if 'cd' has been called on a TDirectory that does not belong to a file,
+   // gFile will be unchanged and still points to the file of the previous current
+   // directory that was a file.
    
-   TDirectory *current = TDirectory::CurrentDirectory();
-   if (current) {
-      return gDirectory->GetFile();
-   } else {
-      return 0;
-   }
+   static TFile *currentFile = 0;
+   if (!gThreadTsd)
+      return currentFile;
+   else
+      return *(TFile**)(*gThreadTsd)(&currentFile,ROOT::kFileThreadSlot);   
 }
 
 //______________________________________________________________________________

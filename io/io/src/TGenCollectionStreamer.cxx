@@ -58,7 +58,7 @@ TGenCollectionStreamer::~TGenCollectionStreamer()
 TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 {
    // Virtual copy constructor.
-   if (!fClass) Initialize();
+   if (!fClass) Initialize(kFALSE);
    return new TGenCollectionStreamer(*this);
 }
 
@@ -273,8 +273,8 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
    int nested = 0;
    std::vector<std::string> inside;
    TClassEdit::GetSplit(pinfo->GetName(), inside, nested);
-   Value first(inside[1]);
-   Value second(inside[2]);
+   Value first(inside[1],kFALSE);
+   Value second(inside[2],kFALSE);
    fValOffset = ((TStreamerElement*)pinfo->GetElements()->At(1))->GetOffset();
 
    fEnv->fSize = nElements;

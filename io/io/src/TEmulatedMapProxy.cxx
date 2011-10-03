@@ -37,8 +37,8 @@ TEmulatedMapProxy::TEmulatedMapProxy(const TEmulatedMapProxy& copy)
    }
 }
 
-TEmulatedMapProxy::TEmulatedMapProxy(const char* cl_name)
-   : TEmulatedCollectionProxy(cl_name)
+TEmulatedMapProxy::TEmulatedMapProxy(const char* cl_name, Bool_t silent)
+   : TEmulatedCollectionProxy(cl_name, silent)
 {
    // Build a Streamer for an emulated vector whose type is 'name'.
    if ( !(fSTL_type == TClassEdit::kMap || fSTL_type == TClassEdit::kMultiMap) )  {
@@ -54,7 +54,7 @@ TEmulatedMapProxy::~TEmulatedMapProxy()
 TVirtualCollectionProxy* TEmulatedMapProxy::Generate() const
 {
    // Virtual copy constructor.
-   if ( !fClass ) Initialize();
+   if ( !fClass ) Initialize(kFALSE);
    return new TEmulatedMapProxy(*this);
 }
 

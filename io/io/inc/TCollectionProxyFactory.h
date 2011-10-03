@@ -89,13 +89,13 @@ public:
 
 
    /// Generate emulated collection proxy for a given class
-   static TVirtualCollectionProxy* GenEmulatedProxy(const char* class_name);
+   static TVirtualCollectionProxy* GenEmulatedProxy(const char* class_name, Bool_t silent);
 
    /// Generate emulated class streamer for a given collection class
-   static TClassStreamer* GenEmulatedClassStreamer(const char* class_name);
+   static TClassStreamer* GenEmulatedClassStreamer(const char* class_name, Bool_t silent);
 
    /// Generate emulated member streamer for a given collection class
-   static TMemberStreamer* GenEmulatedMemberStreamer(const char* class_name);
+   static TMemberStreamer* GenEmulatedMemberStreamer(const char* class_name, Bool_t silent);
 
 
    /// Generate proxy from static functions

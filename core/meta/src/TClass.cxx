@@ -1053,14 +1053,14 @@ void TClass::Init(const char *name, Version_t cversion,
    ResetBit(kLoading);
 
    if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-      fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName() );
+      fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName(), silent );
       if (fCollectionProxy) {
          fSizeof = fCollectionProxy->Sizeof();
       } else if (!silent) {
          Warning("Init","Collection proxy for %s was not properly initialized!",GetName());
       }
       if (fStreamer==0) {
-         fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName() );
+         fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName(), silent );
       }
    }
 

@@ -4326,20 +4326,20 @@ void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 
 //______________________________________________________________________________
 TVirtualCollectionProxy*
-TStreamerInfo::GenEmulatedProxy(const char* class_name)
+TStreamerInfo::GenEmulatedProxy(const char* class_name, Bool_t silent)
 {
    // Generate emulated collection proxy for a given class.
 
-   return TCollectionProxyFactory::GenEmulatedProxy(class_name);
+   return TCollectionProxyFactory::GenEmulatedProxy(class_name, silent);
 }
 
 //______________________________________________________________________________
 TClassStreamer*
-TStreamerInfo::GenEmulatedClassStreamer(const char* class_name)
+TStreamerInfo::GenEmulatedClassStreamer(const char* class_name, Bool_t silent)
 {
    // Generate emulated class streamer for a given collection class.
 
-   return TCollectionProxyFactory::GenEmulatedClassStreamer(class_name);
+   return TCollectionProxyFactory::GenEmulatedClassStreamer(class_name, silent);
 }
 
 //______________________________________________________________________________

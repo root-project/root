@@ -48,7 +48,7 @@ namespace {
       return TClassEdit::kNotSTL;
    }
 
-   static TEmulatedCollectionProxy* GenEmulation(const char* class_name)  {
+   static TEmulatedCollectionProxy* GenEmulation(const char* class_name, Bool_t silent)  {
       // Generate an emulated collection proxy.
 
       if ( class_name )  {
@@ -63,10 +63,10 @@ namespace {
                return 0;
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
-               result = new TEmulatedMapProxy(class_name);
+               result = new TEmulatedMapProxy(class_name,silent);
                break;
             default:
-               result = new TEmulatedCollectionProxy(class_name);
+               result = new TEmulatedCollectionProxy(class_name,silent);
          }
          if ( result->IsValid() ) { 
             return result;
@@ -77,29 +77,29 @@ namespace {
 }
 
 TVirtualCollectionProxy*
-TCollectionProxyFactory::GenEmulatedProxy(const char* class_name)
+TCollectionProxyFactory::GenEmulatedProxy(const char* class_name, Bool_t silent)
 {
    // Generate emulated collection proxy for a given class.
 
-   return GenEmulation(class_name);
+   return GenEmulation(class_name, silent);
 }
 
 TClassStreamer*
-TCollectionProxyFactory::GenEmulatedClassStreamer(const char* class_name)
+TCollectionProxyFactory::GenEmulatedClassStreamer(const char* class_name, Bool_t silent)
 {
    // Generate emulated class streamer for a given collection class.
 
    TCollectionClassStreamer* s = new TCollectionClassStreamer();
-   s->AdoptStreamer(GenEmulation(class_name));
+   s->AdoptStreamer(GenEmulation(class_name, silent));
    return s;
 }
 
 TMemberStreamer*
-TCollectionProxyFactory::GenEmulatedMemberStreamer(const char* class_name)
+TCollectionProxyFactory::GenEmulatedMemberStreamer(const char* class_name, Bool_t silent)
 {
    // Generate emulated member streamer for a given collection class.
    TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-   s->AdoptStreamer(GenEmulation(class_name));
+   s->AdoptStreamer(GenEmulation(class_name, silent));
    return s;
 }
 

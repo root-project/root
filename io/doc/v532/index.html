@@ -8,10 +8,8 @@ gDirectory is now a thread local!
 The value of gDirectory and gFile are now all accessed via a static function of their respective class.  The access is made transparent via a CPP macro.
 
 <br/>Note: Whenever a thread has an associated TThread object, the value of gDirectory is now thread local, i.e. all modifications direct or indirect of gDirectory will not be seen by the other thread.   In particular this means that several I/O operations (including TDirectory::Write) are thread safe (<b>as long as all the required TClass and TStreamerInfo has been previously setup</b>).
-<br/>Note: This model does <b>not</b> support sharing TFile amongst threads (i.e. a TFile must be accessed from exactly <em>one</em> thread).   This means that whenever a TFile's control is <i>passed</i> from a thread to another, the code must explicitly reset gDirectory to another value or there is a risk for this gDirectory to point to a stale pointer if the other thread deletes the TFile object.  A TFile deletion will only affect the value of the local gDirectory.
+<br/>Note: This model does <b>not</b> support sharing TFile amongst threads (i.e. a TFile must be accessed from exactly <em>one</em> thread).   This means that whenever a TFile's control is <i>passed</i> from a thread to another, the code must explicitly reset gDirectory to another value or there is a risk for this gDirectory to point to a stale pointer if the other thread deletes the TFile object.  A TFile deletion will only affect the value of the local gDirectory and gFile.
 
-<br/>Note: gFile now always returns the file of the current directory or zero if the current directory is not a TDirectoryFile.   In particular this means that gFile itself is now read-only and can not be modified directly.
- 
 <h4>TMemFile</h4>
 Introduce <tt>TMemFile</tt> and update <tt>TFileMerger</tt> to support incremental merges.
 <p/>

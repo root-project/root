@@ -154,8 +154,8 @@ public:
    static void         SetCanDelete(Bool_t opt=kTRUE);
    static void         SetFactory(TVirtualStreamerInfo *factory);
 
-   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name) = 0;
-   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
+   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent) = 0;
+   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name, Bool_t silent) = 0;
    virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
    virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
    static TVirtualStreamerInfo *Factory();

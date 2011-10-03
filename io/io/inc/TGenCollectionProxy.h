@@ -91,7 +91,7 @@ public:
       // Copy constructor
       Value(const Value& inside);
       // Initializing constructor
-      Value(const std::string& info);
+      Value(const std::string& info, Bool_t silent);
       // Delete individual item from STL container
       void DeleteItem(void* ptr);
       
@@ -339,9 +339,9 @@ protected:
    DeleteTwoIterators_t fFunctionDeleteTwoIterators;
 
    // Late initialization of collection proxy
-   TGenCollectionProxy* Initialize() const;
+   TGenCollectionProxy* Initialize(Bool_t silent) const;
    // Some hack to avoid const-ness.
-   virtual TGenCollectionProxy* InitializeEx();
+   virtual TGenCollectionProxy* InitializeEx(Bool_t silent);
    // Call to delete/destruct individual contained item.
    virtual void DeleteItem(Bool_t force, void* ptr) const;
    // Allow to check function pointers.

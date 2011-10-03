@@ -158,7 +158,7 @@ public:
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);
-   static TFile*       CurrentFile(); // Return the current file for this thread.
+   static TFile      *&CurrentFile(); // Return the current file for this thread.
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*

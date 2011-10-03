@@ -360,7 +360,7 @@ TGenCollectionProxy::Value::Value(const Value& copy)
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy::Value::Value(const std::string& inside_type)
+TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
 {
    // Constructor.
 
@@ -395,7 +395,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
       // calling G__TypeInfo ti(inside.c_str());
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
-      fType = TClass::GetClass(intype.c_str());
+      fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
       if (fType && !fType->IsLoaded()) {
          if (intype != inside) {
             fCase |= G__BIT_ISPOINTER;
@@ -424,7 +424,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                fCase |= G__BIT_ISPOINTER;
                fSize = sizeof(void*);
             }
-            fType = TClass::GetClass(intype.c_str());
+            fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
             if (fType) {
                fCase  |= G__BIT_ISCLASS;
                fCtor   = fType->GetNew();
@@ -448,7 +448,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                prop |= G__BIT_ISCLASS;
             }
             if ( prop&G__BIT_ISCLASS ) {
-               fType = TClass::GetClass(intype.c_str());
+               fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
                R__ASSERT(fType);
                fCtor   = fType->GetNew();
                fDtor   = fType->GetDestructor();
@@ -688,7 +688,7 @@ TGenCollectionProxy::~TGenCollectionProxy()
 TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
 {
    // Virtual copy constructor
-   if ( !fValue ) Initialize();
+   if ( !fValue ) Initialize(kFALSE);
 
    if( fPointers )
       return new TGenCollectionProxy(*this);
@@ -718,13 +718,13 @@ TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy *TGenCollectionProxy::Initialize() const
+TGenCollectionProxy *TGenCollectionProxy::Initialize(Bool_t silent) const
 {
    // Proxy initializer
    TGenCollectionProxy* p = const_cast<TGenCollectionProxy*>(this);
    if ( fValue ) return p;
    const_cast<TGenCollectionProxy*>(this)->fProperties |= kIsInitialized;
-   return p->InitializeEx();
+   return p->InitializeEx(silent);
 }
 
 //______________________________________________________________________________
@@ -764,10 +764,10 @@ void TGenCollectionProxy::CheckFunctions() const
 }
 
 //______________________________________________________________________________
-static TGenCollectionProxy::Value *R__CreateValue(const std::string &name)
+static TGenCollectionProxy::Value *R__CreateValue(const std::string &name, Bool_t silent)
 {
    // Utility routine to issue a Fatal error is the Value object is not valid
-   TGenCollectionProxy::Value *val = new TGenCollectionProxy::Value( name );
+   TGenCollectionProxy::Value *val = new TGenCollectionProxy::Value( name, silent );
    if ( !val->IsValid() ) {
       Fatal("TGenCollectionProxy","Could not find %s!",name.c_str());
    }
@@ -775,13 +775,13 @@ static TGenCollectionProxy::Value *R__CreateValue(const std::string &name)
 }
       
 //______________________________________________________________________________
-TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
+TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 {
    // Proxy initializer
    R__LOCKGUARD2(gCollectionMutex);
    if (fValue) return this;
 
-   TClass *cl = fClass ? fClass.GetClass() : TClass::GetClass(fTypeinfo);
+   TClass *cl = fClass ? fClass.GetClass() : TClass::GetClass(fTypeinfo,kTRUE,silent);
    if ( cl ) {
       fEnv    = 0;
       fName   = cl->GetName();
@@ -811,10 +811,10 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             case TClassEdit::kMultiMap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-               fValue = R__CreateValue(nam);
+               fValue = R__CreateValue(nam, silent);
                
-               fVal   = R__CreateValue(inside[2]);
-               fKey   = R__CreateValue(inside[1]);
+               fVal   = R__CreateValue(inside[2], silent);
+               fKey   = R__CreateValue(inside[1], silent);
                fPointers = (0 != (fKey->fCase&G__BIT_ISPOINTER));
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
                   fProperties |= kNeedDelete;
@@ -833,7 +833,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
                inside[1] = "bool";
                // Intentional fall through
             default:
-               fValue = R__CreateValue(inside[1]);
+               fValue = R__CreateValue(inside[1], silent);
                
                fVal   = new Value(*fValue);
                if ( 0 == fValDiff ) {
@@ -860,7 +860,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
 TClass *TGenCollectionProxy::GetCollectionClass()
 {
    // Return a pointer to the TClass representing the container
-   return fClass ? fClass : Initialize()->fClass;
+   return fClass ? fClass : Initialize(kFALSE)->fClass;
 }
 
 //______________________________________________________________________________
@@ -869,7 +869,7 @@ Int_t TGenCollectionProxy::GetCollectionType()
    // Return the type of collection see TClassEdit::ESTLType
 
    if (!fClass) {
-      Initialize();
+      Initialize(kFALSE);
    }
    return fSTL_type;
 }
@@ -879,7 +879,7 @@ ULong_t TGenCollectionProxy::GetIncrement() {
    // Return the offset between two consecutive value_types (memory layout).
 
    if (!fValue) {
-      Initialize();
+      Initialize(kFALSE);
    }
    return fValDiff;
 }
@@ -898,7 +898,7 @@ Bool_t TGenCollectionProxy::HasPointers() const
 
    // Initialize proxy in case it hasn't been initialized yet
    if( !fValue )
-      Initialize();
+      Initialize(kFALSE);
 
    // The content of a map and multimap is always a 'pair' and hence
    // fPointers means "Flag to indicate if containee has pointers (key or value)"
@@ -911,7 +911,7 @@ TClass *TGenCollectionProxy::GetValueClass()
 {
    // Return a pointer to the TClass representing the content.
 
-   if (!fValue) Initialize();
+   if (!fValue) Initialize(kFALSE);
    return fValue ? fValue->fType.GetClass() : 0;
 }
 
@@ -920,7 +920,7 @@ void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)
 {
    // Set pointer to the TClass representing the content.
 
-   if (!fValue) Initialize();
+   if (!fValue) Initialize(kFALSE);
    fValue->fType = new_Value_type;
 }
 
@@ -929,7 +929,7 @@ EDataType TGenCollectionProxy::GetType()
 {
    // If the content is a simple numerical value, return its type (see TDataType)
 
-   if ( !fValue ) Initialize();
+   if ( !fValue ) Initialize(kFALSE);
    return fValue->fKind;
 }
 
@@ -1112,7 +1112,7 @@ void TGenCollectionProxy::PushProxy(void *objstart)
 
    gSlowIterator__Proxy.push_back(this);
 
-   if ( !fValue ) Initialize();
+   if ( !fValue ) Initialize(kFALSE);
    if ( !fProxyList.empty() ) {
       EnvironBase_t* back = fProxyList.back();
       if ( back->fObject == objstart ) {
@@ -1405,7 +1405,7 @@ TVirtualCollectionProxy::CreateIterators_t TGenCollectionProxy::GetFunctionCreat
    
    if ( fFunctionCreateIterators ) return fFunctionCreateIterators;
    
-   if ( !fValue ) InitializeEx();
+   if ( !fValue ) InitializeEx(kFALSE);
 
 //   fprintf(stderr,"GetFunctinCreateIterator for %s will give: ",fClass.GetClassName());
 //   if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
@@ -1432,7 +1432,7 @@ TVirtualCollectionProxy::CopyIterator_t TGenCollectionProxy::GetFunctionCopyIter
    // If the collection iterator are of that size or less, the iterator will be constructed in place in this location (new with placement)
    // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
    
-   if ( !fValue ) InitializeEx();
+   if ( !fValue ) InitializeEx(kFALSE);
 
    if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
       return TGenCollectionProxy__VectorCopyIterator;
@@ -1451,7 +1451,7 @@ TVirtualCollectionProxy::Next_t TGenCollectionProxy::GetFunctionNext(Bool_t read
    // If the end is not reached, 'Next' will return the address of the content unless the collection contains pointers in
    // which case 'Next' will return the value of the pointer.
    
-   if ( !fValue ) InitializeEx();
+   if ( !fValue ) InitializeEx(kFALSE);
 
    if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
       return TGenCollectionProxy__VectorNext;
@@ -1468,7 +1468,7 @@ TVirtualCollectionProxy::DeleteIterator_t TGenCollectionProxy::GetFunctionDelete
    // If the sizeof iterator is greater than fgIteratorArenaSize, call delete on the addresses,
    // Otherwise just call the iterator's destructor.
 
-   if ( !fValue ) InitializeEx();
+   if ( !fValue ) InitializeEx(kFALSE);
 
    if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
       return TGenCollectionProxy__VectorDeleteSingleIterators;
@@ -1487,7 +1487,7 @@ TVirtualCollectionProxy::DeleteTwoIterators_t TGenCollectionProxy::GetFunctionDe
 
    if ( fFunctionDeleteTwoIterators ) return fFunctionDeleteTwoIterators;
    
-   if ( !fValue ) InitializeEx();
+   if ( !fValue ) InitializeEx(kFALSE);
    
    if (fSTL_type==TClassEdit::kVector || (fProperties & kIsEmulated)) 
       fFunctionDeleteTwoIterators = TGenCollectionProxy__VectorDeleteTwoIterators;
