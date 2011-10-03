@@ -54,6 +54,7 @@ public: \
 // Wrapper class around the replacement for the gPad pointer.
 //
 //////////////////////////////////////////////////////////////////////////
+class TVirtualPad;
 struct TPadThreadLocal
 {
    operator TVirtualPad*() { return TVirtualPad::Pad(); }
@@ -62,10 +63,10 @@ struct TPadThreadLocal
    // Emulate the pointer behavior
    TVirtualPad*  operator->() { return TVirtualPad::Pad(); }
    TVirtualPad*& operator=(TVirtualPad *other) { return (TVirtualPad::Pad() = other); }
-   Bool_t operator!=(const TVirtualPad *other) const { return (TVirtualPad::Pad() != other); }
-   Bool_t operator!=(TVirtualPad *other) const { return (TVirtualPad::Pad() != other); }
-   Bool_t operator==(const TVirtualPad *other) const { return (TVirtualPad::Pad() == other); }
-   Bool_t operator==(TVirtualPad *other) const { return (TVirtualPad::Pad() == other); }
+   bool operator!=(const TVirtualPad *other) const { return (TVirtualPad::Pad() != other); }
+   bool operator!=(TVirtualPad *other) const { return (TVirtualPad::Pad() != other); }
+   bool operator==(const TVirtualPad *other) const { return (TVirtualPad::Pad() == other); }
+   bool operator==(TVirtualPad *other) const { return (TVirtualPad::Pad() == other); }
 };
 
 // Pretty printing routine for CINT
@@ -87,6 +88,8 @@ TPadThreadLocal gPad;
 // Wrapper class around the replacement for the gDirectory pointer.
 //
 //////////////////////////////////////////////////////////////////////////
+class TDirectory;
+class TFile;
 struct TDirectoryThreadLocal
 {
    operator TDirectory*() { return TDirectory::CurrentDirectory(); }
@@ -100,10 +103,10 @@ struct TDirectoryThreadLocal
    // Emulate the pointer behavior
    TDirectory*  operator->() { return TDirectory::CurrentDirectory(); }
    TDirectory*& operator=(TDirectory *other) { return (TDirectory::CurrentDirectory() = other); }
-   Bool_t operator!=(const TDirectory *other) const { return (TDirectory::CurrentDirectory() != other); }
-   Bool_t operator!=(TDirectory *other) const { return (TDirectory::CurrentDirectory() != other); }
-   Bool_t operator==(const TDirectory *other) const { return (TDirectory::CurrentDirectory() == other); }
-   Bool_t operator==(TDirectory *other) const { return (TDirectory::CurrentDirectory() == other); }
+   bool operator!=(const TDirectory *other) const { return (TDirectory::CurrentDirectory() != other); }
+   bool operator!=(TDirectory *other) const { return (TDirectory::CurrentDirectory() != other); }
+   bool operator==(const TDirectory *other) const { return (TDirectory::CurrentDirectory() == other); }
+   bool operator==(TDirectory *other) const { return (TDirectory::CurrentDirectory() == other); }
 };
 
 // Pretty printing routine for CINT
@@ -125,6 +128,7 @@ TDirectoryThreadLocal gDirectory;
 // Wrapper class around the replacement for the gFile pointer.
 //
 //////////////////////////////////////////////////////////////////////////
+class TFile;
 struct TFileThreadLocal
 {
    operator TFile*() { return TFile::CurrentFile(); }
@@ -133,10 +137,10 @@ struct TFileThreadLocal
    // Emulate the pointer behavior
    TFile*  operator->() { return TFile::CurrentFile(); }
    TFile*& operator=(TFile *other) { return (TFile::CurrentFile() = other); }
-   Bool_t operator!=(const TFile *other) const { return (TFile::CurrentFile() != other); }
-   Bool_t operator!=(TFile *other) const { return (TFile::CurrentFile() != other); }
-   Bool_t operator==(const TFile *other) const { return (TFile::CurrentFile() == other); }
-   Bool_t operator==(TFile *other) const { return (TFile::CurrentFile() == other); }
+   bool operator!=(const TFile *other) const { return (TFile::CurrentFile() != other); }
+   bool operator!=(TFile *other) const { return (TFile::CurrentFile() != other); }
+   bool operator==(const TFile *other) const { return (TFile::CurrentFile() == other); }
+   bool operator==(TFile *other) const { return (TFile::CurrentFile() == other); }
 };
 
 // Pretty printing routine for CINT
@@ -158,6 +162,7 @@ TFileThreadLocal gFile;
 // Wrapper class around the replacement for the gInterpreter pointer.
 //
 //////////////////////////////////////////////////////////////////////////
+class TInterpreter;
 struct TInterpreterWrapper
 {
    operator TInterpreter*() { return TInterpreter::Instance(); }
@@ -166,10 +171,10 @@ struct TInterpreterWrapper
    // Emulate the pointer behavior
    TInterpreter*  operator->() { return TInterpreter::Instance(); }
    TInterpreter*& operator=(TInterpreter *other) { return (TInterpreter::Instance() = other); }
-   Bool_t operator!=(const TInterpreter *other) const { return (TInterpreter::Instance() != other); }
-   Bool_t operator!=(TInterpreter *other) const { return (TInterpreter::Instance() != other); }
-   Bool_t operator==(const TInterpreter *other) const { return (TInterpreter::Instance() == other); }
-   Bool_t operator==(TInterpreter *other) const { return (TInterpreter::Instance() == other); }
+   bool operator!=(const TInterpreter *other) const { return (TInterpreter::Instance() != other); }
+   bool operator!=(TInterpreter *other) const { return (TInterpreter::Instance() != other); }
+   bool operator==(const TInterpreter *other) const { return (TInterpreter::Instance() == other); }
+   bool operator==(TInterpreter *other) const { return (TInterpreter::Instance() == other); }
 };
 
 // Pretty printing routine for CINT
@@ -191,6 +196,7 @@ TInterpreterWrapper gInterpreter;
 // Wrapper class around the replacement for the gVirtualX pointer.
 //
 //////////////////////////////////////////////////////////////////////////
+class TVirtualX;
 struct TVirtualXWrapper
 {
    operator TVirtualX*() { return TVirtualX::Instance(); }
@@ -199,10 +205,10 @@ struct TVirtualXWrapper
    // Emulate the pointer behavior
    TVirtualX*  operator->() { return TVirtualX::Instance(); }
    TVirtualX*& operator=(TVirtualX *other) { return (TVirtualX::Instance() = other); }
-   Bool_t operator!=(const TVirtualX *other) const { return (TVirtualX::Instance() != other); }
-   Bool_t operator!=(TVirtualX *other) const { return (TVirtualX::Instance() != other); }
-   Bool_t operator==(const TVirtualX *other) const { return (TVirtualX::Instance() == other); }
-   Bool_t operator==(TVirtualX *other) const { return (TVirtualX::Instance() == other); }
+   bool operator!=(const TVirtualX *other) const { return (TVirtualX::Instance() != other); }
+   bool operator!=(TVirtualX *other) const { return (TVirtualX::Instance() != other); }
+   bool operator==(const TVirtualX *other) const { return (TVirtualX::Instance() == other); }
+   bool operator==(TVirtualX *other) const { return (TVirtualX::Instance() == other); }
 };
 
 // Pretty printing routine for CINT
