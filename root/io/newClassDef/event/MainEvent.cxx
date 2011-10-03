@@ -88,6 +88,8 @@ int main(int argc, char **argv)
 {
    TROOT simple("simple","Example of creation of a tree");
 
+   gRandom->SetSeed(42); // make tests reproducible
+
    Int_t nevent = 400;     // by default create 400 events
    Int_t comp   = 1;       // by default file is compressed
    Int_t split  = 1;       // by default, split Event in sub branches
