@@ -27,8 +27,9 @@ namespace ROOT {
       kPadThreadSlot       = 20,
       kClassThreadSlot     = 21,
       kDirectoryThreadSlot = 22,
+      kFileThreadSlot      = 23,
       
-      kMaxThreadSlot       = 23  // Size of the array of thread local slots in TThread 
+      kMaxThreadSlot       = 24  // Size of the array of thread local slots in TThread 
    };
 }
 

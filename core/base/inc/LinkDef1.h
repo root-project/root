@@ -51,7 +51,6 @@
 #pragma link C++ global gPluginMgr;
 #pragma link C++ global gApplication;
 #pragma link C++ global gBenchmark;
-#pragma link C++ global gDirectory;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
 #pragma link C++ global gErrorAbortLevel;

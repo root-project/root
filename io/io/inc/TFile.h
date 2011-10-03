@@ -158,6 +158,7 @@ public:
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);
+   static TFile*       CurrentFile(); // Return the current file for this thread.
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
@@ -287,6 +288,13 @@ public:
    ClassDef(TFile,8)  //ROOT file
 };
 
+#ifndef __CINT__
+#define gFile (TFile::CurrentFile())
+
+#elif defined(__MAKECINT__)
+// To properly handle the use of gFile in header files (in static declarations)
+R__EXTERN TFile   *gFile;
+#endif
 
 //
 // Class holding info about the file being opened
@@ -321,8 +329,6 @@ public:
    Int_t       GetCompress() const { return fCompress; }
    Int_t       GetNetOpt() const { return fNetOpt; }
 };
-
-R__EXTERN TFile   *gFile;
 
 //______________________________________________________________________________
 inline Int_t TFile::GetCompressionAlgorithm() const

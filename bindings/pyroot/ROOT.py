@@ -229,8 +229,11 @@ class _ExpandMacroFunction( object ):
          return 1
       return 0
 
-_root.gPad      = _ExpandMacroFunction( "TVirtualPad", "Pad" )
-_root.gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
+_root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
+_root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
+_root.gDirectory   = _ExpandMacroFunction( "TDirectory",   "CurrentDirectory" )
+_root.gFile        = _ExpandMacroFunction( "TFile",        "CurrentFile" )
+_root.gInterpreter = _ExpandMacroFunction( "TInterpreter", "Instance" )
 
 
 ### special case pythonization --------------------------------------------------

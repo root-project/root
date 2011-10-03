@@ -22,8 +22,8 @@
 #include "TRegexp.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
+#include "TThreadSlots.h"
 
-TDirectory    *gDirectory;      //Pointer to current directory in memory
 Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
@@ -282,6 +282,17 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    return newobj;
 }
 
+//______________________________________________________________________________
+TDirectory *&TDirectory::CurrentDirectory()
+{
+   // Return the current directory for the current thread.
+   
+   static TDirectory *currentDirectory = 0;
+   if (!gThreadTsd)
+      return currentDirectory;
+   else
+      return *(TDirectory**)(*gThreadTsd)(&currentDirectory,ROOT::kDirectoryThreadSlot);
+}
 
 //______________________________________________________________________________
 TDirectory *TDirectory::GetDirectory(const char *apath,

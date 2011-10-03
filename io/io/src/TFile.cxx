@@ -116,9 +116,6 @@
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
 
-TFile *gFile;                 //Pointer to current file
-
-
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
@@ -906,6 +903,19 @@ TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, co
    // Creates key for object and converts data to buffer.
 
    return new TKey(obj, cl, name, bufsize, mother);
+}
+
+//____________________________________________________________________________________
+TFile* TFile::CurrentFile()
+{
+   // Return the current ROOT file if any.
+   
+   TDirectory *current = TDirectory::CurrentDirectory();
+   if (current) {
+      return gDirectory->GetFile();
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________

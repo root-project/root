@@ -635,8 +635,8 @@ TObject *TList::Remove(TObject *obj)
 
    // return object found, which may be (pointer wise) different than the
    // input object (depending on what IsEqual() is doing)
-   TObject *ob = lnk->GetObject();
 
+   TObject *ob = lnk->GetObject();
    if (lnk == fFirst) {
       fFirst = lnk->Next();
       if (lnk == fLast)

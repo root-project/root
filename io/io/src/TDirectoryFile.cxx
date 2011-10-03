@@ -303,7 +303,7 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    fList       = new THashList(100,50);
    fKeys       = new THashList(100,50);
    fMother     = motherDir;
-   fFile       = motherFile ? motherFile : gFile;
+   fFile       = motherFile ? motherFile : TFile::CurrentFile();
    SetBit(kCanDelete);
 }
 
@@ -317,9 +317,7 @@ Bool_t TDirectoryFile::cd(const char *path)
    // in the file. Relative syntax is relative to "this" directory. E.g:
    // ../aa. Returns kTRUE in case of success.
 
-   Bool_t ok = TDirectory::cd(path);
-   if (ok) gFile = fFile;
-   return ok;
+   return TDirectory::cd(path);
 }
 
 //______________________________________________________________________________
@@ -328,12 +326,6 @@ void TDirectoryFile::CleanTargets()
    // Clean the pointers to this object (gDirectory, TContext, etc.)
 
    TDirectory::CleanTargets();
-
-   // After CleanTargets either gFile was changed appropriately
-   // by a cd() or needs to be set to zero.
-   if (gFile == this) {
-      gFile = 0;
-   }
 }
 
 //______________________________________________________________________________
@@ -364,31 +356,32 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
    TObject *newobj = (TObject*)(pobj+baseOffset);
 
    //create a buffer where the object will be streamed
-   TFile *filsav = gFile;
-   gFile = 0;
-   const Int_t bufsize = 10000;
-   TBuffer *buffer = new TBufferFile(TBuffer::kWrite,bufsize);
-   buffer->MapObject(obj);  //register obj in map to handle self reference
    {
-      Bool_t isRef = obj->TestBit(kIsReferenced); 
-      ((TObject*)obj)->ResetBit(kIsReferenced);	
+      // NOTE: do we still need to make this change to gDirectory? 
+      // From revision 1 to 41088, this used to be gFile = 0. 
+      TContext ctxt(0);
+      gDirectory = 0;  
+      const Int_t bufsize = 10000;
+      TBufferFile buffer(TBuffer::kWrite,bufsize);
+      buffer.MapObject(obj);  //register obj in map to handle self reference
+      {
+         Bool_t isRef = obj->TestBit(kIsReferenced); 
+         ((TObject*)obj)->ResetBit(kIsReferenced);	
+         
+         ((TObject*)obj)->Streamer(buffer);
+         
+         if (isRef) ((TObject*)obj)->SetBit(kIsReferenced);
+      }
       
-      ((TObject*)obj)->Streamer(*buffer);
-      
-      if (isRef) ((TObject*)obj)->SetBit(kIsReferenced);
+      // read new object from buffer
+      buffer.SetReadMode();
+      buffer.ResetMap();
+      buffer.SetBufferOffset(0);
+      buffer.MapObject(newobj);  //register obj in map to handle self reference
+      newobj->Streamer(buffer);
+      newobj->ResetBit(kIsReferenced);
+      newobj->ResetBit(kCanDelete);
    }
-
-   // read new object from buffer
-   buffer->SetReadMode();
-   buffer->ResetMap();
-   buffer->SetBufferOffset(0);
-   buffer->MapObject(newobj);  //register obj in map to handle self reference
-   newobj->Streamer(*buffer);
-   newobj->ResetBit(kIsReferenced);
-   newobj->ResetBit(kCanDelete);
-   gFile = filsav;
-
-   delete buffer;
 
    if (autoadd) {
       ROOT::DirAutoAdd_t func = obj->IsA()->GetDirectoryAutoAdd();

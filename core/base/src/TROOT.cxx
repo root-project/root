@@ -800,21 +800,6 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
    TObject *temp = 0;
    where = 0;
 
-   if (!temp && !strcmp(name, "gPad")) {
-      temp = gPad;
-      if (gPad) {
-         TVirtualPad *canvas = gPad->GetVirtCanvas();
-         //this check in case call from TCanvas ctor
-         if (fCanvases->FindObject(canvas))
-            where = canvas;
-      }
-   }
-   if (!temp && !strcmp(name, "gVirtualX")) {
-      return gVirtualX;
-   }
-   if (!temp && !strcmp(name, "gInterpreter")) {
-      return gInterpreter;
-   }
    if (!temp) {
       temp  = fFiles->FindObject(name);
       where = fFiles;

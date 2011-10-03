@@ -14,8 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ global gFile;
-
 #pragma link C++ class TBufferFile;
 #pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TFile-;

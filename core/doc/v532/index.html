@@ -3,6 +3,17 @@
 <a name="core"></a> 
 <h3>Core Libraries</h3>
 
+<h4>Global Variable</h4>
+<ul>
+<li>The global values gPad, gVirtualX, gInterpreter, gDirectory and gFile
+are now all accessed via a static function of their respective class.  The 
+access is made transparent via a CPP macro.</li>
+<li>The access is now also made transparent from the CINT and python prompt.</li>
+<li>gPad, gVirtualX and gInterpreter are now accessible even when their value 
+is zero and they now properly support tab completion.</li>
+<li>See the important note in the I/O section on gDirectory and gFile which 
+are now thread local.</li>
+</ul>
 <h4>Dictionaries</h4>
 <ul>
 <li>The new interface <tt>TDictionary::GetDictionary(const char*)</tt> offers a

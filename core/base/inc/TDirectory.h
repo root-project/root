@@ -38,8 +38,6 @@ class TBrowser;
 class TKey;
 class TFile;
 
-R__EXTERN TDirectory *gDirectory;
-
 class TDirectory : public TNamed {
 public:
    /** @class Context
@@ -65,7 +63,7 @@ public:
          if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
       }
-      TContext(TDirectory* newCurrent) : fDirectory(gDirectory),fPrevious(0),fNext(0)
+      TContext(TDirectory* newCurrent) : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -121,6 +119,7 @@ public:
    virtual void        Clear(Option_t *option="");
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
+   static TDirectory *&CurrentDirectory();  // Return the current directory for this thread.   
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);
    virtual void        DeleteAll(Option_t *option="");
@@ -203,5 +202,13 @@ public:
 
    ClassDef(TDirectory,5)  //Describe directory structure in memory
 };
+
+#ifndef __CINT__
+#define gDirectory (TDirectory::CurrentDirectory())
+
+#elif defined(__MAKECINT__)
+// To properly handle the use of gDirectory in header files (in static declarations)
+R__EXTERN TDirectory *gDirectory;
+#endif
 
 #endif
