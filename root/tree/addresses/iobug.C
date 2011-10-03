@@ -51,8 +51,7 @@ void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, i
    g3->SetMarkerSize(1.5);
    g3->SetMarkerStyle(30);
 
-   delete gFile;
-   gFile = 0;
+   delete gFile; // This will set gFile to zero.
 
    TFile* f =  new TFile("problem.root", "RECREATE");
    TTree* t = new TTree("graphs", "problematic graphs");
