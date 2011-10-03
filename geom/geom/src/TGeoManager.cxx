@@ -692,7 +692,7 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
-   ClearThreadsMap();
+//   ClearThreadsMap();
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
