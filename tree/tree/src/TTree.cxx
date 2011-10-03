@@ -890,7 +890,7 @@ void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
    // If bname="*" all branches are added to the cache.
    // if subbranches is true all the branches of the subbranches are
    // also put to the cache.
-
+   
    TFile *f = GetCurrentFile();
    if (!f) return;
    TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
@@ -903,11 +903,38 @@ void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
    // Add branch b to the Tree cache.
    // if subbranches is true all the branches of the subbranches are
    // also put to the cache.
-
+   
    TFile *f = GetCurrentFile();
    if (!f) return;
    TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
    if (tc) tc->AddBranch(b,subbranches);
+}
+
+//______________________________________________________________________________
+void TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
+{
+   // Add branch with name bname to the Tree cache.
+   // If bname="*" all branches are added to the cache.
+   // if subbranches is true all the branches of the subbranches are
+   // also put to the cache.
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->DropBranch(bname,subbranches);
+}
+
+//______________________________________________________________________________
+void TTree::DropBranchFromCache(TBranch *b, Bool_t subbranches)
+{
+   // Add branch b to the Tree cache.
+   // if subbranches is true all the branches of the subbranches are
+   // also put to the cache.
+   
+   TFile *f = GetCurrentFile();
+   if (!f) return;
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   if (tc) tc->DropBranch(b,subbranches);
 }
 
 

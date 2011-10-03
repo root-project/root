@@ -435,6 +435,122 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 }
 
 //_____________________________________________________________________________
+void TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
+{
+   //Remove a branch to the list of branches to be stored in the cache
+   //this function is called by TBranch::GetBasket
+   
+   if (!fIsLearning) return;
+   
+   // Reject branch that are not from the cached tree.
+   if (!b || fOwner->GetTree() != b->GetTree()) return;
+   
+   //Is branch already in the cache?
+   if (fBranches->Remove(b)) {
+      --fNbranches;
+      if (gDebug > 0) printf("Entry: %lld, un-registering branch: %s\n",b->GetTree()->GetReadEntry(),b->GetName());
+   }
+   fBrNames->Remove(fBrNames->FindObject(b->GetName()));
+
+   // process subbranches
+   if (subbranches) {
+      TObjArray *lb = b->GetListOfBranches();
+      Int_t nb = lb->GetEntriesFast();
+      for (Int_t j = 0; j < nb; j++) {
+         TBranch* branch = (TBranch*) lb->UncheckedAt(j);
+         if (!branch) continue;
+         DropBranch(branch, subbranches);
+      }
+   }
+}
+
+
+//_____________________________________________________________________________
+void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
+{
+   // Remove a branch to the list of branches to be stored in the cache
+   // this is to be used by user (thats why we pass the name of the branch).
+   // It works in exactly the same way as TTree::SetBranchStatus so you
+   // probably want to look over ther for details about the use of bname
+   // with regular expresions.
+   // The branches are taken with respect to the Owner of this TTreeCache
+   // (i.e. the original Tree)
+   // NB: if bname="*" all branches are put in the cache and the learning phase stopped
+   
+   TBranch *branch, *bcount;
+   TLeaf *leaf, *leafcount;
+   
+   Int_t i;
+   Int_t nleaves = (fOwner->GetListOfLeaves())->GetEntriesFast();
+   TRegexp re(bname,kTRUE);
+   Int_t nb = 0;
+   
+   // first pass, loop on all branches
+   // for leafcount branches activate/deactivate in function of status
+   Bool_t all = kFALSE;
+   if (!strcmp(bname,"*")) all = kTRUE;
+   for (i=0;i<nleaves;i++)  {
+      leaf = (TLeaf*)(fOwner->GetListOfLeaves())->UncheckedAt(i);
+      branch = (TBranch*)leaf->GetBranch();
+      TString s = branch->GetName();
+      if (!all) { //Regexp gives wrong result for [] in name
+         TString longname; 
+         longname.Form("%s.%s",fOwner->GetName(),branch->GetName());
+         if (strcmp(bname,branch->GetName()) 
+             && longname != bname
+             && s.Index(re) == kNPOS) continue;
+      }
+      nb++;
+      DropBranch(branch, subbranches);
+      leafcount = leaf->GetLeafCount();
+      if (leafcount && !all) {
+         bcount = leafcount->GetBranch();
+         DropBranch(bcount, subbranches);
+      }
+   }
+   if (nb==0 && strchr(bname,'*')==0) {
+      branch = fOwner->GetBranch(bname);
+      if (branch) {
+         DropBranch(branch, subbranches);
+         ++nb;
+      }
+   }
+   
+   //search in list of friends
+   UInt_t foundInFriend = 0;
+   if (fOwner->GetListOfFriends()) {
+      TIter nextf(fOwner->GetListOfFriends());
+      TFriendElement *fe;
+      TString name;
+      while ((fe = (TFriendElement*)nextf())) {
+         TTree *t = fe->GetTree();
+         if (t==0) continue;
+         
+         // If the alias is present replace it with the real name.
+         char *subbranch = (char*)strstr(bname,fe->GetName());
+         if (subbranch!=bname) subbranch = 0;
+         if (subbranch) {
+            subbranch += strlen(fe->GetName());
+            if ( *subbranch != '.' ) subbranch = 0;
+            else subbranch ++;
+         }
+         if (subbranch) {
+            name.Form("%s.%s",t->GetName(),subbranch);
+            DropBranch(name, subbranches);
+         }
+      }
+   }
+   if (!nb && !foundInFriend) {
+      if (gDebug > 0) printf("DropBranch: unknown branch -> %s \n", bname);
+      return;
+   }
+   //if all branches are selected stop the learning phase
+   if (*bname == '*') {
+      fEntryNext = -1; // We are likely to have change the set of branches, so for the [re-]reading of the cluster.
+   }
+}
+
+//_____________________________________________________________________________
 Bool_t TTreeCache::FillBuffer()
 {
    // Fill the cache buffer with the branches in the cache.

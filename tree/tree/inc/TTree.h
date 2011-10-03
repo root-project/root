@@ -275,6 +275,8 @@ public:
 
    virtual void            AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual void            AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual void            DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
+   virtual void            DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);

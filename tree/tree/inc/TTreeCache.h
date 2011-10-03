@@ -67,8 +67,8 @@ public:
    virtual ~TTreeCache();
    virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
-//   virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
-//   virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
+   virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    const TObjArray    *GetCachedBranches() const { return fBranches; }
    Double_t            GetEfficiency() const;
    Double_t            GetEfficiencyRel() const;
