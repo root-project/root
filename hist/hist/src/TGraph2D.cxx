@@ -386,31 +386,124 @@ TGraph2D::TGraph2D(Int_t n)
 
 
 //______________________________________________________________________________
-TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *)
+TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
    : TNamed("Graph2D", filename), TAttLine(1, 1, 1), TAttFill(0, 1001),
      TAttMarker(), fNpoints(0)
 {
    // Graph2D constructor reading input from filename
-   // filename is assumed to contain at least three columns of numbers
-
-   Build(100);
+   // filename is assumed to contain at least three columns of numbers.
+   // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+   // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // Note in that case, the instanciation is about 2 times slower (http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=12955).
 
    Double_t x, y, z;
-   FILE *fp = fopen(filename, "r");
-   if (!fp) {
+   TString fname = filename;
+   gSystem->ExpandPathName(fname);
+
+   ifstream infile(fname.Data());
+   if (!infile.good()) {
       MakeZombie();
       Error("TGraph2D", "Cannot open file: %s, TGraph2D is Zombie", filename);
       return;
+   } else {
+      Build(100);
    }
-   char line[80];
+   std::string line;
    Int_t np = 0;
-   while (fgets(line, 80, fp)) {
-      sscanf(&line[0], format, &x, &y, &z);
-      SetPoint(np, x, y, z);
-      np++;
-   }
 
-   fclose(fp);
+   if (strcmp(option, "") == 0) { // No delimiters specified (standard constructor).
+
+      while (std::getline(infile, line, '\n')) {
+         if (3 != sscanf(line.c_str(), format, &x, &y, &z)) {
+            continue; // skip empty and ill-formed lines
+         }
+         SetPoint(np, x, y, z);
+         np++;
+      }
+
+   } else { // A delimiter has been specified in "option"
+
+      // Checking format and creating its boolean equivalent
+      TString format_ = TString(format) ;
+      format_.ReplaceAll(" ", "") ;
+      format_.ReplaceAll("\t", "") ;
+      format_.ReplaceAll("lg", "") ;
+      format_.ReplaceAll("s", "") ;
+      format_.ReplaceAll("%*", "0") ;
+      format_.ReplaceAll("%", "1") ;
+      if (!format_.IsDigit()) {
+         Error("TGraph2D", "Incorrect input format! Allowed format tags are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
+         return;
+      }
+      Int_t ntokens = format_.Length() ;
+      if (ntokens < 3) {
+         Error("TGraph2D", "Incorrect input format! Only %d tag(s) in format whereas 3 \"%%lg\" tags are expected!", ntokens);
+         return;
+      }
+      Int_t ntokensToBeSaved = 0 ;
+      Bool_t * isTokenToBeSaved = new Bool_t [ntokens] ;
+      for (Int_t idx = 0; idx < ntokens; idx++) {
+         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ; //atoi(&format_[idx]) does not work for some reason...
+         if (isTokenToBeSaved[idx] == 1) {
+            ntokensToBeSaved++ ;
+         }
+      }
+      if (ntokens >= 3 && ntokensToBeSaved != 3) { //first condition not to repeat the previous error message
+         Error("TGraph2D", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 3 and only 3 are expected!", ntokensToBeSaved);
+         return;
+      }
+
+      // Initializing loop variables
+      Char_t buffer[10000] ;
+      Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
+      char * token = NULL ;
+      TString token_str = "" ;
+      Int_t token_idx = 0 ;
+      Double_t * value = new Double_t [3] ;  //x,y,z buffers
+      Int_t value_idx = 0 ;
+
+      // Looping
+      while (std::getline(infile, line, '\n')) {
+         if (line != "") {
+            strcpy(buffer, line.c_str()) ;  //necessary stage for strtok?
+            token = strtok(buffer, option) ;
+            while (token != NULL && value_idx < 3) {
+               if (isTokenToBeSaved[token_idx]) {
+                  token_str = TString(token) ;
+                  token_str.ReplaceAll("\t", "") ;
+                  if (!token_str.IsFloat()) {
+                     isLineToBeSkipped = kTRUE ;
+                     break ;
+                  } else {
+                     value[value_idx] = token_str.Atof() ;
+                     value_idx++ ;
+                  }
+               }
+               token = strtok(NULL, option) ; //next token
+               token_idx++ ;
+            }
+            if (!isLineToBeSkipped && value_idx == 3) {
+               x = value[0] ;
+               y = value[1] ;
+               z = value[2] ;
+               SetPoint(np, x, y, z) ;
+               np++ ;
+            }
+         }
+         isLineToBeSkipped = kFALSE ;
+         token = NULL ;
+         token_idx = 0 ;
+         value_idx = 0 ;
+      }
+
+      // Cleaning
+      delete [] isTokenToBeSaved ;
+      delete [] value ;
+      delete token ;
+   }
+   infile.close();
 }
 
 
