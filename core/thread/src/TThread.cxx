@@ -48,6 +48,12 @@ volatile Int_t  TThread::fgXArt = 0;
 static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
 static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 
+static TMutex  *gMainInternalMutex = 0;
+
+static void ThreadInternalLock() { gMainInternalMutex->Lock(); }
+static void ThreadInternalUnLock() { gMainInternalMutex->UnLock(); }
+
+
 //------------------------------------------------------------------------------
 
 // Set gGlobalMutex to 0 when Thread library gets unloaded
@@ -271,10 +277,13 @@ void TThread::Init()
    if (fgThreadImp) return;
 
    fgThreadImp = gThreadFactory->CreateThreadImp();
+   gMainInternalMutex = new TMutex(kTRUE);
+
    fgMainId    = fgThreadImp->SelfId();
    fgMainMutex = new TMutex(kTRUE);
    gThreadTsd  = TThread::Tsd;
    gThreadXAR  = TThread::XARequest;
+
 
    // Create the single global mutex
    gGlobalMutex = new TMutex(kTRUE);
@@ -295,15 +304,15 @@ void TThread::Constructor()
    fHandle= 0;
    if (!fgThreadImp) Init();
 
-   SetComment("Constructor: MainMutex Locking");
-   Lock();
-   SetComment("Constructor: MainMutex Locked");
+   SetComment("Constructor: MainInternalMutex Locking");
+   ThreadInternalLock();
+   SetComment("Constructor: MainInternalMutex Locked");
    memset(fTsd, 0, ROOT::kMaxThreadSlot*sizeof(void*));
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev = 0; fgMain = this;
 
-   UnLock();
+   ThreadInternalUnLock();
    SetComment();
 
    // thread is set up in initialisation routine or Run().
@@ -319,15 +328,15 @@ TThread::~TThread()
 
    // Disconnect thread instance
 
-   SetComment("Destructor: MainMutex Locking");
-   Lock();
-   SetComment("Destructor: MainMutex Locked");
+   SetComment("Destructor: MainInternalMutex Locking");
+   ThreadInternalLock();
+   SetComment("Destructor: MainInternalMutex Locked");
 
    if (fPrev) fPrev->fNext = fNext;
    if (fNext) fNext->fPrev = fPrev;
    if (fgMain == this) fgMain = fNext;
 
-   UnLock();
+   ThreadInternalUnLock();
    SetComment();
    if (fHolder) *fHolder = 0;
 }
@@ -363,13 +372,13 @@ Int_t TThread::Exists()
    // Static method to check if threads exist.
    // Returns the number of running threads.
 
-   Lock();
+   ThreadInternalLock();
 
    Int_t num = 0;
    for (TThread *l = fgMain; l; l = l->fNext)
       num++; //count threads
 
-   UnLock();
+   ThreadInternalUnLock();
 
    return num;
 }
@@ -389,11 +398,11 @@ TThread *TThread::GetThread(Long_t id)
 
    TThread *myTh;
 
-   Lock();
+   ThreadInternalLock();
 
    for (myTh = fgMain; myTh && (myTh->fId != id); myTh = myTh->fNext) { }
 
-   UnLock();
+   ThreadInternalUnLock();
 
    return myTh;
 }
@@ -405,11 +414,11 @@ TThread *TThread::GetThread(const char *name)
 
    TThread *myTh;
 
-   Lock();
+   ThreadInternalLock();
 
    for (myTh = fgMain; myTh && (strcmp(name, myTh->GetName())); myTh = myTh->fNext) { }
 
-   UnLock();
+   ThreadInternalUnLock();
 
    return myTh;
 }
@@ -482,8 +491,8 @@ Int_t TThread::Run(void *arg)
 
    if (arg) fThreadArg = arg;
 
-   SetComment("Run: MainMutex locking");
-   Lock();
+   SetComment("Run: MainInternalMutex locking");
+   ThreadInternalLock();
    SetComment("Run: MainMutex locked");
 
    int iret = fgThreadImp->Run(this);
@@ -493,7 +502,7 @@ Int_t TThread::Run(void *arg)
    if (gDebug)
       Info("TThread::Run", "thread run requested");
 
-   UnLock();
+   ThreadInternalUnLock();
    SetComment();
    return iret;
 }
@@ -630,6 +639,8 @@ Int_t TThread::CleanUp()
    if (fgXActMutex)
       fgXActMutex->CleanUp();
 
+   gMainInternalMutex->CleanUp();
+
    if (th->fHolder)
       delete th;
 
@@ -763,7 +774,7 @@ void TThread::Ps()
       return;
    }
 
-   Lock();
+   ThreadInternalLock();
 
    int num = 0;
    for (l = fgMain; l; l = l->fNext)
@@ -794,7 +805,7 @@ void TThread::Ps()
       printf("\n");
    }  // end of loop
 
-   UnLock();
+   ThreadInternalUnLock();
 }
 
 //______________________________________________________________________________
