@@ -3513,6 +3513,12 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
+      if (fClassInfo /* && fRealData==0 */ &&  (gCint->ClassInfo_Property(fClassInfo) & kIsAbstract) ) {
+         // This class is abstract, we can not build a proper StreamerInfo unless we already have
+         // the list of real data.
+         // We have to wait until one of the derived class creates its StreamerInfo.
+         return 0;
+      }
       // We just were not able to find a streamer info, we have to make a new one.
       TMmallocDescTemp setreset;
       sinfo = TVirtualStreamerInfo::Factory()->NewInfo(const_cast<TClass*>(this));
@@ -3528,7 +3534,8 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
          //           to us by a global variable!  Don't call us unless you have
          //           set that variable properly with TStreamer::Optimize()!
          //
-         // FIXME: Why don't we call BuildOld() like we do below?  Answer: We are new and so don't have to do schema evolution?
+         // FIXME: Why don't we call BuildOld() like we do below?  
+         // Answer: We are new and so don't have to do schema evolution.
          sinfo->Build();
       }
    } else {
