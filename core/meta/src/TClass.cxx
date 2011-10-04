@@ -3513,7 +3513,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
-      if (fClassInfo /* && fRealData==0 */ &&  (gCint->ClassInfo_Property(fClassInfo) & kIsAbstract) ) {
+      if (fClassInfo && fRealData==0 &&  (gCint->ClassInfo_Property(fClassInfo) & kIsAbstract) ) {
          // This class is abstract, we can not build a proper StreamerInfo unless we already have
          // the list of real data.
          // We have to wait until one of the derived class creates its StreamerInfo.
