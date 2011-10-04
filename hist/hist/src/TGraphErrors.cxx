@@ -25,6 +25,7 @@
 #include "TVectorD.h"
 #include "TStyle.h"
 #include "TClass.h"
+#include "TSystem.h"
 #include <string>
 
 ClassImp(TGraphErrors)
@@ -222,7 +223,7 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 
 
 //______________________________________________________________________________
-TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
+TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *option)
    : TGraph(100)
 {
    // GraphErrors constructor reading input from filename
@@ -230,41 +231,136 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
    // convention for format (default="%lg %lg %lg %lg)
    //  format = "%lg %lg"         read only 2 first columns into X,Y
    //  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
-   //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY
+   //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY.
+   // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+   // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // Note in that case, the instanciation is about 2 times slower (http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=12955).
 
    if (!CtorAllocate()) return;
    Double_t x, y, ex, ey;
-   ifstream infile(filename);
+   TString fname = filename;
+   gSystem->ExpandPathName(fname);
+   ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
-      Error("TGrapherrors", "Cannot open file: %s, TGraphErrors is Zombie", filename);
+      Error("TGraphErrors", "Cannot open file: %s, TGraphErrors is Zombie", filename);
       fNpoints = 0;
       return;
    }
-   // count number of columns in format
-   Int_t ncol = CalculateScanfFields(format);
+   std::string line;
    Int_t np = 0;
 
-   std::string line;
-   while (std::getline(infile, line, '\n')) {
-      ex = ey = 0;
+   if (strcmp(option, "") == 0) { // No delimiters specified (standard constructor).
+
+      Int_t ncol = CalculateScanfFields(format);  //count number of columns in format
       Int_t res;
-      if (ncol < 3) {
-         res = sscanf(line.c_str(), format, &x, &y);
-      } else if (ncol < 4) {
-         res = sscanf(line.c_str(), format, &x, &y, &ey);
-      } else {
-         res = sscanf(line.c_str(), format, &x, &y, &ex, &ey);
+      while (std::getline(infile, line, '\n')) {
+         ex = ey = 0;
+         if (ncol < 3) {
+            res = sscanf(line.c_str(), format, &x, &y);
+         } else if (ncol < 4) {
+            res = sscanf(line.c_str(), format, &x, &y, &ey);
+         } else {
+            res = sscanf(line.c_str(), format, &x, &y, &ex, &ey);
+         }
+         if (res < 2) {
+            continue; //skip empty and ill-formed lines
+         }
+         SetPoint(np, x, y);
+         SetPointError(np, ex, ey);
+         np++;
       }
-      if (res < 2) {
-         // not a data line
-         continue;
+      Set(np);
+
+   } else { // A delimiter has been specified in "option"
+
+      // Checking format and creating its boolean equivalent
+      TString format_ = TString(format) ;
+      format_.ReplaceAll(" ", "") ;
+      format_.ReplaceAll("\t", "") ;
+      format_.ReplaceAll("lg", "") ;
+      format_.ReplaceAll("s", "") ;
+      format_.ReplaceAll("%*", "0") ;
+      format_.ReplaceAll("%", "1") ;
+      if (!format_.IsDigit()) {
+         Error("TGraphErrors", "Incorrect input format! Allowed format tags are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
+         return ;
       }
-      SetPoint(np, x, y);
-      SetPointError(np, ex, ey);
-      np++;
+      Int_t ntokens = format_.Length() ;
+      if (ntokens < 2) {
+         Error("TGraphErrors", "Incorrect input format! Only %d tag(s) in format whereas at least 2 \"%%lg\" tags are expected!", ntokens);
+         return ;
+      }
+      Int_t ntokensToBeSaved = 0 ;
+      Bool_t * isTokenToBeSaved = new Bool_t [ntokens] ;
+      for (Int_t idx = 0; idx < ntokens; idx++) {
+         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ; //atoi(&format_[idx]) does not work for some reason...
+         if (isTokenToBeSaved[idx] == 1) {
+            ntokensToBeSaved++ ;
+         }
+      }
+      if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 4)) { //first condition not to repeat the previous error message
+         Error("TGraphErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2,3 or 4 are expected!", ntokensToBeSaved);
+         return ;
+      }
+
+      // Initializing loop variables
+      Char_t buffer[10000] ;
+      Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
+      char * token = NULL ;
+      TString token_str = "" ;
+      Int_t token_idx = 0 ;
+      Double_t * value = new Double_t [4] ; //x,y,ex,ey buffers
+      for (Int_t k = 0; k < 4; k++) {
+         value[k] = 0. ;
+      }
+      Int_t value_idx = 0 ;
+
+      // Looping
+      while (std::getline(infile, line, '\n')) {
+         if (line != "") {
+            strcpy(buffer, line.c_str()) ;  //necessary stage for strtok?
+            token = strtok(buffer, option) ;
+            while (token != NULL && value_idx < ntokensToBeSaved) {
+               if (isTokenToBeSaved[token_idx]) {
+                  token_str = TString(token) ;
+                  token_str.ReplaceAll("\t", "") ;
+                  if (!token_str.IsFloat()) {
+                     isLineToBeSkipped = kTRUE ;
+                     break ;
+                  } else {
+                     value[value_idx] = token_str.Atof() ;
+                     value_idx++ ;
+                  }
+               }
+               token = strtok(NULL, option) ; //next token
+               token_idx++ ;
+            }
+            if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
+               x = value[0] ;
+               y = value[1] ;
+               ex = value[2] ;
+               ey = value[3] ;
+               SetPoint(np, x, y) ;
+               SetPointError(np, ex, ey);
+               np++ ;
+            }
+         }
+         isLineToBeSkipped = kFALSE ;
+         token = NULL ;
+         token_idx = 0 ;
+         value_idx = 0 ;
+      }
+      Set(np) ;
+
+      // Cleaning
+      delete [] isTokenToBeSaved ;
+      delete [] value ;
+      delete token ;
    }
-   Set(np);
+   infile.close();
 }
 
 
