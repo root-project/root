@@ -360,29 +360,31 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    // skipped, a "%*lg" or "%*s" for each column can be added,
    // e.g. "%lg %*lg %lg" would read x-values from the first and y-values from
    // the third column.
-   //
-   // To avoid using %*s for csv-like files, you can explicitly specify the
-   // delimiters with the "option" argument, e.g. option=" \t,;" for columns of
-   // figures separated by ',' or ';'
+   // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+   // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // Note in that case, the instanciation is about 2 times slower.
 
-   Double_t x, y;
+   Double_t x,y;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
 
    ifstream infile(fname.Data());
-   if (!infile.good()) {
+   if(!infile.good()){
       MakeZombie();
-      Error("TGraph", "Cannot open file: %s, TGraph is Zombie", filename);
+      Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
       fNpoints = 0;
+      return;
    } else {
       fNpoints = 100;  //initial number of points
    }
    if (!CtorAllocate()) return;
    std::string line;
-   Int_t np = 0;
+   Int_t np=0;
 
    // No delimiters specified (standard constructor).
-   if (strcmp(option, "") == 0) {
+   if (strcmp(option,"")==0) {
 
       while (std::getline(infile, line, '\n')) {
          if (2 != sscanf(line.c_str(), format, &x, &y)) {
@@ -393,7 +395,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       }
       Set(np);
 
-      // A delimiter has been specified in "option"
+   // A delimiter has been specified in "option"
    } else {
 
       // Checking format and creating its boolean counterpart
@@ -406,11 +408,24 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       format_.ReplaceAll("%", "1") ;
       if (!format_.IsDigit()) {
          Error("TGraph", "Incorrect input format! Allowed formats are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
+         return;
       }
       Int_t ntokens = format_.Length() ;
+      if (ntokens < 2) {
+         Error("TGraph", "Incorrect input format! Only %d tag(s) in format whereas 2 \"%%lg\" tags are expected!", ntokens);
+         return;
+      }
+      Int_t ntokensToBeSaved = 0 ;
       Bool_t * isTokenToBeSaved = new Bool_t [ntokens] ;
       for (Int_t idx = 0; idx < ntokens; idx++) {
-         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ;
+         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ; //atoi(&format_[idx]) does not work for some reason...
+         if (isTokenToBeSaved[idx] == 1) {
+            ntokensToBeSaved++ ;
+         }
+      }
+      if (ntokens >= 2 && ntokensToBeSaved != 2) { //first condition not to repeat the previous error message
+         Error("TGraph", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2 and only 2 are expected!", ntokensToBeSaved);
+         return;
       }
 
       // Initializing loop variables
@@ -419,7 +434,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       char * token = NULL ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
-      Double_t * value = new Double_t [2] ;  //x and y buffer
+      Double_t * value = new Double_t [2] ; //x,y buffers
       Int_t value_idx = 0 ;
 
       // Looping
@@ -442,7 +457,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                token = strtok(NULL, option) ; //next token
                token_idx++ ;
             }
-            if (!isLineToBeSkipped) {
+            if (!isLineToBeSkipped && value_idx == 2) {
                x = value[0] ;
                y = value[1] ;
                SetPoint(np, x, y) ;
@@ -461,6 +476,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       delete [] value ;
       delete token ;
    }
+   infile.close();
 }
 
 

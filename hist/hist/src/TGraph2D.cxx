@@ -396,7 +396,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
    // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
    // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
    // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
-   // Note in that case, the instanciation is about 2 times slower (http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=12955).
+   // Note in that case, the instanciation is about 2 times slower.
 
    Double_t x, y, z;
    TString fname = filename;
