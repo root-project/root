@@ -6692,20 +6692,30 @@ void TTree::SetAutoFlush(Long64_t autof)
    // The AutoFlush mechanism is disabled.
    //
    // Flushing the buffers at regular intervals optimize the location of
-   // consecutive entries on the disk.
+   // consecutive entries on the disk by creating clusters of baskets.
    //
-   // The value of autoflush determine a size in number of entries of
+   // A cluster of baskets is a set of baskets that contains all
+   // the data for a (consecutive) set of entries and that is stored 
+   // consecutively on the disk.   When reading all the branches, this 
+   // is the minimum set of baskets that the TTreeCache will read.
+   //
+   //
+
+   // Implementation note:
+   // 
+   // A positive value of autoflush determines the size (in number of entries) of
    // a cluster of baskets.
    //
    // If the value of autoflush is changed over time (this happens in 
-   // particular when fast merge files), we record the previous values
-   // in the arrays fClusterRangeEnd and fClusterSize.
-   // A range of entries where the size of the cluster of basket is
-   // the same (i.e the value of AutoFlush was constant) is called 
-   // a ClusterRange.
+   // particular when the TTree results from fast merging many trees), 
+   // we record the values of fAutoFlush in the data members:
+   //     fClusterRangeEnd and fClusterSize.
+   // In the code we refer to a range of entries where the size of the 
+   // cluster of baskets is the same (i.e the value of AutoFlush was 
+   // constant) is called a ClusterRange.
    // 
-   // The 2 arrays have fNClusterRange active values and have 
-   // fMaxClusterRange allocated entries.
+   // The 2 arrays (fClusterRangeEnd and fClusterSize) have fNClusterRange 
+   // active (used) values and have fMaxClusterRange allocated entries.
    // 
    // fClusterRangeEnd contains the last entries number of a cluster range.
    // In particular this means that the 'next' cluster starts at fClusterRangeEnd[]+1
@@ -6732,8 +6742,9 @@ void TTree::SetAutoFlush(Long64_t autof)
    //          index, prevEntry, fEntries - 1, fAutoFlush);
    //
    
-   // Note:  We store the end of the cluster rather than its start in order to completely
-   // avoid using the array if the cluster size never varies.
+   // Note:  We store the entry number corresponding to the end of the cluster 
+   // rather than its start in order to avoid using the array if the cluster 
+   // size never varies (If there is only one value of AutoFlush for the whole TTree).
 
    if (fAutoFlush > 0 || autof > 0) {
       // The mechanism was already enabled, let's record the previous
