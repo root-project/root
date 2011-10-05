@@ -497,7 +497,7 @@ void TGTextButton::Init()
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
-      fFontStruct = font->GetFontStruct();
+      if (font) fFontStruct = font->GetFontStruct();
    }
 
    fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
@@ -568,7 +568,7 @@ void TGTextButton::Layout()
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
-      fFontStruct = font->GetFontStruct();
+      if (font) fFontStruct = font->GetFontStruct();
    }
 
    fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
@@ -729,18 +729,20 @@ void TGTextButton::DoRedraw()
    if (fState == kButtonDisabled) {
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
-      Pixel_t fore = gc->GetForeground();
-      Pixel_t hi = GetHilightGC().GetForeground();
-      Pixel_t sh = GetShadowGC().GetForeground();
+      if (gc) {
+         Pixel_t fore = gc->GetForeground();
+         Pixel_t hi = GetHilightGC().GetForeground();
+         Pixel_t sh = GetShadowGC().GetForeground();
 
-      gc->SetForeground(hi);
-      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
+         gc->SetForeground(hi);
+         fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
 
-      gc->SetForeground(sh);
-      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
-      gc->SetForeground(fore);
+         gc->SetForeground(sh);
+         fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+         gc->SetForeground(fore);
+      }
    } else {
       fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
       if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
@@ -825,14 +827,14 @@ void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
 
-      if (!global) {
+      if (gc && !global) {
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
          fHasOwnFont = kTRUE;
       }
-
-      gc->SetFont(v);
-
-      fNormGC = gc->GetGC();
+      if (gc) {
+         gc->SetFont(v);
+         fNormGC = gc->GetGC();
+      }
       Layout();
    }
 }
@@ -858,13 +860,14 @@ void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
    TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
-   if (!global) {
+   if (gc && !global) {
       gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
       fHasOwnFont = kTRUE;
    }
-
-   gc->SetForeground(color);
-   fNormGC = gc->GetGC();
+   if (gc) {
+      gc->SetForeground(color);
+      fNormGC = gc->GetGC();
+   }
    fClient->NeedRedraw(this);
 }
 
@@ -1048,6 +1051,8 @@ void TGPictureButton::CreateDisabledPicture()
 
    TImage *img = TImage::Create();
    TImage *img2 = TImage::Create();
+
+   if (!img || !img2) return;
 
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
@@ -1400,19 +1405,21 @@ void TGCheckButton::DoRedraw()
 
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
-      Pixel_t fore = gc->GetForeground();
-      Pixel_t hi = GetHilightGC().GetForeground();
-      Pixel_t sh = GetShadowGC().GetForeground();
+      if (gc) {
+         Pixel_t fore = gc->GetForeground();
+         Pixel_t hi = GetHilightGC().GetForeground();
+         Pixel_t sh = GetShadowGC().GetForeground();
 
-      gc->SetForeground(hi);
-      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+         gc->SetForeground(hi);
+         fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
 
-      gc->SetForeground(sh);
-      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+         gc->SetForeground(sh);
+         fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
 
-      gc->SetForeground(fore);
+         gc->SetForeground(fore);
+      }
    } else {
       fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
       if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
@@ -1762,19 +1769,21 @@ void TGRadioButton::DoRedraw()
 
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
-      Pixel_t fore = gc->GetForeground();
-      Pixel_t hi = GetHilightGC().GetForeground();
-      Pixel_t sh = GetShadowGC().GetForeground();
+      if (gc) {
+         Pixel_t fore = gc->GetForeground();
+         Pixel_t hi = GetHilightGC().GetForeground();
+         Pixel_t sh = GetShadowGC().GetForeground();
 
-      gc->SetForeground(hi);
-      fTLayout->DrawText(fId, gc->GetGC(), tx + 1, ty + 1, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
+         gc->SetForeground(hi);
+         fTLayout->DrawText(fId, gc->GetGC(), tx + 1, ty + 1, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
 
-      gc->SetForeground(sh);
-      fTLayout->DrawText(fId, gc->GetGC(), tx, ty, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
+         gc->SetForeground(sh);
+         fTLayout->DrawText(fId, gc->GetGC(), tx, ty, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), tx, ty, hotpos - 1);
 
-      gc->SetForeground(fore);
+         gc->SetForeground(fore);
+      }
    } else {
       fTLayout->DrawText(fId, fNormGC, tx, ty, 0, -1);
       if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, tx, ty, hotpos-1);
@@ -2126,7 +2135,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
-      fFontStruct = font->GetFontStruct();
+      if (font) fFontStruct = font->GetFontStruct();
    }
 
    font->ComputeTextLayout(lstring, lstring.GetLength(),
@@ -2171,7 +2180,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    TIter iter1(list);
    do {
       entry = (TGMenuEntry *)iter1.Next();
-      if ((entry->GetStatus() & kMenuEnableMask) &&
+      if ((entry) && (entry->GetStatus() & kMenuEnableMask) &&
           !(entry->GetStatus() & kMenuHideMask) &&
           (entry->GetType() != kMenuSeparator) &&
           (entry->GetType() != kMenuLabel)) break;
@@ -2570,18 +2579,20 @@ void TGSplitButton::DoRedraw()
    if (fState == kButtonDisabled) {
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
-      Pixel_t fore = gc->GetForeground();
-      Pixel_t hi = GetHilightGC().GetForeground();
-      Pixel_t sh = GetShadowGC().GetForeground();
+      if (gc) {
+         Pixel_t fore = gc->GetForeground();
+         Pixel_t hi = GetHilightGC().GetForeground();
+         Pixel_t sh = GetShadowGC().GetForeground();
 
-      gc->SetForeground(hi);
-      fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
+         gc->SetForeground(hi);
+         fTLayout->DrawText(fId, gc->GetGC(), x + 1, y + 1, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x + 1, y + 1, hotpos - 1);
 
-      gc->SetForeground(sh);
-      fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
-      if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
-      gc->SetForeground(fore);
+         gc->SetForeground(sh);
+         fTLayout->DrawText(fId, gc->GetGC(), x, y, 0, -1);
+         if (hotpos) fTLayout->UnderlineChar(fId, gc->GetGC(), x, y, hotpos - 1);
+         gc->SetForeground(fore);
+      }
    } else {
       fTLayout->DrawText(fId, fNormGC, x, y, 0, -1);
       if (hotpos) fTLayout->UnderlineChar(fId, fNormGC, x, y, hotpos - 1);
@@ -2695,7 +2706,7 @@ void TGSplitButton::SetText(TGHotString *new_label)
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
-      fFontStruct = font->GetFontStruct();
+      if (font) fFontStruct = font->GetFontStruct();
    }
 
    UInt_t width = 0, bwidth = 0, dummy;
@@ -2773,15 +2784,14 @@ void TGSplitButton::SetFont(FontStruct_t font, Bool_t global)
       TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
 
-      if (!global) {
+      if ((gc) && !global) {
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
          fHasOwnFont = kTRUE;
       }
-
-      gc->SetFont(v);
-
-      fNormGC = gc->GetGC();
-
+      if (gc) {
+         gc->SetFont(v);
+         fNormGC = gc->GetGC();
+      }
       fClient->NeedRedraw(this);
    }
 }
@@ -2821,16 +2831,17 @@ void TGSplitButton::SetSplit(Bool_t split)
       fPopMenu->Connect("PoppedDown()", "TGSplitButton", this, "MBReleased()");
 
       TGMenuEntry *entry = fPopMenu->GetEntry(fEntryId);
+      if (entry) {
+         TGHotString *tmp = new TGHotString(*(entry->GetLabel()));
+         SetText(tmp);
 
-      TGHotString *tmp = new TGHotString(*(entry->GetLabel()));
-      SetText(tmp);
-
-      TString str("ItemClicked(=");
-      str += entry->GetEntryId();
-      str += ")";
-      Connect("Clicked()", "TGSplitButton", this, str);
-      fEntryId = entry->GetEntryId();
-      fPopMenu->HideEntry(fEntryId);
+         TString str("ItemClicked(=");
+         str += entry->GetEntryId();
+         str += ")";
+         Connect("Clicked()", "TGSplitButton", this, str);
+         fEntryId = entry->GetEntryId();
+         fPopMenu->HideEntry(fEntryId);
+      }
    } else {
       fStayDown = kTRUE;
       Disconnect(fPopMenu, "PoppedDown()");
@@ -3107,7 +3118,7 @@ void TGSplitButton::Layout()
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
-      fFontStruct = font->GetFontStruct();
+      if (font) fFontStruct = font->GetFontStruct();
    }
 
    fTLayout = font->ComputeTextLayout(fLabel->GetString(), 
@@ -3147,11 +3158,14 @@ void TGSplitButton::HandleMenu(Int_t id)
       const TList *list = fPopMenu->GetListOfEntries();
       TIter iter(list);
       fPopMenu->EnableEntry(fEntryId);
-      TGHotString *label = fPopMenu->GetEntry(id)->GetLabel();
-      TGHotString *tmp = new TGHotString(*label);
-      SetText(tmp);
+      TGMenuEntry *entry = fPopMenu->GetEntry(id);
+      if (entry) {
+         TGHotString *label = entry->GetLabel();
+         TGHotString *tmp = new TGHotString(*label);
+         SetText(tmp);
+      }
       fPopMenu->HideEntry(id);
-      fEntryId = fPopMenu->GetEntry(id)->GetEntryId();
+      if (entry) fEntryId = entry->GetEntryId();
    } else {
       SetState(kButtonUp);
       ItemClicked(id);
