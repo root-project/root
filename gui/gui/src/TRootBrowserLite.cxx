@@ -608,7 +608,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
             str = TString::Format("file://%s/%s\r\n",
                                   gSystem->UnixPathName(obj->GetTitle()),
                                   obj->GetName());
-            data.fData = (void *)strdup(str.Data());
+            data.fData = (void *)str.Data();
             data.fDataLength = str.Length()+1;
             data.fDataType = gVirtualX->InternAtom("text/uri-list", kFALSE);
             fi->SetDNDData(&data);

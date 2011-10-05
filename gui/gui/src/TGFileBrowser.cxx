@@ -1100,13 +1100,13 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    // returns an absolute path
 
    TGListTreeItem *parent, *itm = item;
-   TString dirname = itm->GetText();
+   char *s = strdup(itm->GetText());
 
    while ((parent=itm->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
+      s = gSystem->ConcatFileName(parent->GetText(), s);
       itm = parent;
    }
-   dirname = gSystem->ExpandPathName(dirname.Data());
+   TString dirname = gSystem->ExpandPathName(s);
    while (dirname.Contains(".lnk")) {
       Ssiz_t idx = dirname.Index(".lnk") + 4;
       TString resolved = dirname;
@@ -1114,6 +1114,7 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       resolved = gSystem->ExpandPathName(resolved.Data());
       dirname = resolved.Append(dirname.Remove(0, idx));
    }
+   delete [] s;
    return dirname;
 }
 
