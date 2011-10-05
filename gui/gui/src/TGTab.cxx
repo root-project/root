@@ -703,7 +703,7 @@ void TGTab::SetText(const char *text)
 {
    // Set text to current tab.
 
-   GetCurrentTab()->SetText(new TGString(text));
+   if (GetCurrentTab()) GetCurrentTab()->SetText(new TGString(text));
    GetLayoutManager()->Layout();
 }
 
