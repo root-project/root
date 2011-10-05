@@ -243,7 +243,9 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force, Int_t compr
    
    fExplicitCompLevel = kTRUE;
 
-   SafeDelete(fOutputFile);
+   TFile *oldfile = fOutputFile;
+   fOutputFile = 0; // This avoids the complaint from RecursiveRemove about the file being deleted which is here spurrious. (see RecursiveRemove).
+   SafeDelete(oldfile);
    
    fOutputFilename = outputfile;
    
