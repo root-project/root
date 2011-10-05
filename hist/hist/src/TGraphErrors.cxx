@@ -321,7 +321,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
       // Looping
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
-            strcpy(buffer, line.c_str()) ;  //necessary stage for strtok?
+            strlcpy(buffer, line.c_str(),10000) ;  //necessary stage for strtok?
             token = strtok(buffer, option) ;
             while (token != NULL && value_idx < ntokensToBeSaved) {
                if (isTokenToBeSaved[token_idx]) {
