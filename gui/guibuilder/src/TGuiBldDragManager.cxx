@@ -3265,11 +3265,12 @@ void TGuiBldDragManager::CloneEditable()
    }
 
    TString tmpfile = gSystem->TempDirectory();
-   tmpfile = gSystem->ConcatFileName(tmpfile.Data(), TString::Format("tmp%d.C",
+   char *s = gSystem->ConcatFileName(tmpfile.Data(), TString::Format("tmp%d.C",
                                      gRandom->Integer(100)));
-   Save(tmpfile.Data());
-   gROOT->Macro(tmpfile.Data());
-   gSystem->Unlink(tmpfile.Data());
+   Save(s);
+   gROOT->Macro(s);
+   gSystem->Unlink(s);
+   delete [] s;
 
    if (fClient->GetRoot()->InheritsFrom(TGFrame::Class())) {
       TGFrame *f = (TGFrame *)fClient->GetRoot();

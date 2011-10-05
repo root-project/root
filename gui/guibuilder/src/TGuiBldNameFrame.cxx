@@ -145,17 +145,15 @@ void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
    TGCompositeFrame *main = GetMdi(frame);
 
    if (main) {
-      if ((!fListTree) || (!fListTree->GetFirstItem()))
+      if (!fListTree->GetFirstItem())
          MapItems(main);
       else if ((fListTree->GetFirstItem()->GetUserData()) != main) {
          //different MDI
-         if (fListTree) {
-            //clear the list tree displayed
-            while (fListTree->GetFirstItem()) {
-               fListTree->DeleteItem(fListTree->GetFirstItem());
-            }
-            MapItems(main);
+         //clear the list tree displayed
+         while (fListTree->GetFirstItem()) {
+            fListTree->DeleteItem(fListTree->GetFirstItem());
          }
+         MapItems(main);
       }
       else // check if new items added or old ones reparented -> update tree
          CheckItems(main);
@@ -175,9 +173,7 @@ void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
    fClient->NeedRedraw(fListTree, kTRUE);
    fClient->NeedRedraw(fCanvas, kTRUE);
    DoRedraw();
-
 }
-
 
 //______________________________________________________________________________
 void TGuiBldNameFrame::UpdateName()
@@ -209,17 +205,15 @@ void TGuiBldNameFrame::UpdateName()
       frame->SetName(ch);
    }
 
-   if (fListTree) {
-      //clear the list tree displayed
-      while (fListTree->GetFirstItem()) {
-         fListTree->DeleteItem(fListTree->GetFirstItem());
-      }
+   //clear the list tree displayed
+   while (fListTree->GetFirstItem()) {
+      fListTree->DeleteItem(fListTree->GetFirstItem());
    }
 
    TGCompositeFrame *main = GetMdi(frame);
    MapItems(main);
 
-   if (fListTree) fClient->NeedRedraw(fListTree, kTRUE);
+   fClient->NeedRedraw(fListTree, kTRUE);
    fClient->NeedRedraw(fFrameName);
    DoRedraw();
 }
@@ -299,40 +293,37 @@ Bool_t TGuiBldNameFrame::CheckItems(TGCompositeFrame *main)
 
    TList *list = main->GetList(); //list of all elements in the frame
 
-   if (fListTree) {
+   TGFrameElement *el = 0;
+   TGListTreeItem *item = 0;
+   TIter next(list);
+   TGFrame *f = 0;
+   TGListTreeItem *par = 0;
 
-      TGFrameElement *el = 0;
-      TGListTreeItem *item = 0;
-      TIter next(list);
-      TGFrame *f = 0;
-      TGListTreeItem *par = 0;
-
-      while ((el = (TGFrameElement *) next())) {
-         if (el && (el->fFrame)) {
-            item = fListTree->FindItemByObj(fListTree->GetFirstItem(),
-                                            el->fFrame);
-            if (!item) {
-               f = (TGFrame*)el->fFrame->GetParent();
-               if (f) {
-                  par = fListTree->FindItemByObj(fListTree->GetFirstItem(), f);
-                  if (par)
-                     fListTree->AddItem(par, el->fFrame->GetName(), el->fFrame);
-               }
-               //return kTRUE; //selected item not found = is newly created
+   while ((el = (TGFrameElement *) next())) {
+      if (el && (el->fFrame)) {
+         item = fListTree->FindItemByObj(fListTree->GetFirstItem(),
+                                         el->fFrame);
+         if (!item) {
+            f = (TGFrame*)el->fFrame->GetParent();
+            if (f) {
+               par = fListTree->FindItemByObj(fListTree->GetFirstItem(), f);
+               if (par)
+                  fListTree->AddItem(par, el->fFrame->GetName(), el->fFrame);
             }
-            else if (item->GetParent() && item->GetParent()->GetUserData() !=
-                     el->fFrame->GetParent()) {
-               f = (TGFrame*)el->fFrame->GetParent();
-               if (f) {
-                  par = fListTree->FindItemByObj(fListTree->GetFirstItem(), f);
-                  if (par)
-                     fListTree->Reparent(item, par);
-               }
-               //return kTRUE; //parent of the item changed
+            //return kTRUE; //selected item not found = is newly created
+         }
+         else if (item->GetParent() && item->GetParent()->GetUserData() !=
+                  el->fFrame->GetParent()) {
+            f = (TGFrame*)el->fFrame->GetParent();
+            if (f) {
+               par = fListTree->FindItemByObj(fListTree->GetFirstItem(), f);
+               if (par)
+                  fListTree->Reparent(item, par);
             }
-            if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
-               CheckItems((TGCompositeFrame*)el->fFrame);
-            }
+            //return kTRUE; //parent of the item changed
+         }
+         if (el->fFrame->InheritsFrom(TGCompositeFrame::Class())) {
+            CheckItems((TGCompositeFrame*)el->fFrame);
          }
       }
    }
@@ -380,10 +371,12 @@ void TGuiBldNameFrame::SelectFrameByItem(TGListTreeItem* item, Int_t)
    // When list tree item is clicked, frame with that name is selected.
 
    TGFrame *frame = (TGFrame*)item->GetUserData();
-   ((TGFrame*)frame->GetParent())->SetEditable(kTRUE);
-   fManager->SelectFrame(frame);
-   frame->SetEditable(kTRUE);
-   fClient->NeedRedraw(frame);
+   if (frame) {
+      ((TGFrame*)frame->GetParent())->SetEditable(kTRUE);
+      fManager->SelectFrame(frame);
+      frame->SetEditable(kTRUE);
+      fClient->NeedRedraw(frame);
+   }
 }
 
 
