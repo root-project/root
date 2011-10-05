@@ -1772,6 +1772,7 @@ void TGMainFrame::SetIconPixmap(char **xpm_array)
    //    main_frame->SetIconPixmap(bld_rgb);
 
    TImage *img = TImage::Create();
+   if (!img) return;
    img->SetImageBuffer(xpm_array, TImage::kXpm);
    Pixmap_t pic = img->GetPixmap();
    if (pic) {
@@ -2089,13 +2090,14 @@ void TGGroupFrame::SetTextColor(Pixel_t color, Bool_t local)
    TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
-   if (local) {
+   if (gc && local) {
       gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
       fHasOwnFont = kTRUE;
    }
-
-   gc->SetForeground(color);
-   fNormGC = gc->GetGC();
+   if (gc) {
+      gc->SetForeground(color);
+      fNormGC = gc->GetGC();
+   }
    fClient->NeedRedraw(this);
 }
 
@@ -2113,14 +2115,14 @@ void TGGroupFrame::SetTextFont(FontStruct_t font, Bool_t local)
    TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
-   if (local) {
+   if (gc && local) {
       gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
       fHasOwnFont = kTRUE;
    }
-
-   gc->SetFont(v);
-   fNormGC = gc->GetGC();
-
+   if (gc) {
+      gc->SetFont(v);
+      fNormGC = gc->GetGC();
+   }
    fClient->NeedRedraw(this);
 }
 
@@ -2666,20 +2668,22 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
       connlist = (TList*)signalslist->Last();
       if (connlist) {
          conn = (TQConnection*)connlist->Last();
-         signal_name = connlist->GetName();
-         slot_name = conn->GetName();
-         Int_t eq = slot_name.First('=');
-         Int_t rb = slot_name.First(')');
-         if (eq != -1)
-            slot_name.Remove(eq, rb-eq);
-         out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name
-             << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
+         if (conn) {
+            signal_name = connlist->GetName();
+            slot_name = conn->GetName();
+            Int_t eq = slot_name.First('=');
+            Int_t rb = slot_name.First(')');
+            if (eq != -1)
+               slot_name.Remove(eq, rb-eq);
+            out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name
+                << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
 
-         TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
-         if (lsl) {
-            TObjString *slotel = (TObjString *)lsl->FindObject(slot_name);
-            if (!slotel)
-               lsl->Add(new TObjString(slot_name));
+            TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
+            if (lsl) {
+               TObjString *slotel = (TObjString *)lsl->FindObject(slot_name);
+               if (!slotel)
+                  lsl->Add(new TObjString(slot_name));
+            }
          }
       }
    }
