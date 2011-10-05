@@ -349,6 +349,7 @@ void TPolyLine3D::DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax
    TPolyLine3D *pl3d = (TPolyLine3D *)outline->First();
    if (!pl3d) {
       TView *view = gPad->GetView();
+      if (!view) return;
       TPolyLine3D *p1 = new TPolyLine3D(4);
       TPolyLine3D *p2 = new TPolyLine3D(4);
       TPolyLine3D *p3 = new TPolyLine3D(4);
