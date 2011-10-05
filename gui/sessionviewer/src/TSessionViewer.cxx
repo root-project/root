@@ -2925,7 +2925,7 @@ void TSessionQueryFrame::OnBtnFinalize()
       TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
       if (!item) return;
       TObject *obj = (TObject *)item->GetUserData();
-      if (obj->IsA() == TQueryDescription::Class()) {
+      if ((obj) && (obj->IsA() == TQueryDescription::Class())) {
          // as it can take time, set watch cursor
          gVirtualX->SetCursor(GetId(),gVirtualX->CreateCursor(kWatch));
          TQueryDescription *query = (TQueryDescription *)obj;
@@ -2971,7 +2971,7 @@ void TSessionQueryFrame::OnBtnShowLog()
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
    TObject *obj = (TObject *)item->GetUserData();
-   if (obj->IsA() != TQueryDescription::Class())
+   if ((!obj) || (obj->IsA() != TQueryDescription::Class()))
       return;
    TQueryDescription *query = (TQueryDescription *)obj;
    fViewer->ShowLog(query->fReference.Data());
@@ -3943,8 +3943,10 @@ void TSessionViewer::UpdateListOfProofs()
                            fSessionMenu->DisableEntry(kSessionConnect);
                            fPopupSrv->EnableEntry(kSessionDisconnect);
                            fSessionMenu->EnableEntry(kSessionDisconnect);
-                           fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
-                           fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+                           if (fToolBar->GetButton(kSessionDisconnect))
+                              fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
+                           if (fToolBar->GetButton(kSessionConnect))
+                              fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
                            fSessionFrame->SetLogLevel(fActDesc->fLogLevel);
                            // update session information frame
                            fSessionFrame->ProofInfos();
@@ -4400,7 +4402,8 @@ void TSessionViewer::Build()
    AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
    toolBarSep = new TGHorizontal3DLine(this);
    AddFrame(toolBarSep, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
-   fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
+   if (fToolBar->GetButton(kQuerySubmit))
+      fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
 
    fPopupSrv = new TGPopupMenu(fClient->GetDefaultRoot());
    fPopupSrv->AddEntry("Connect",kSessionConnect);
@@ -4439,7 +4442,8 @@ void TSessionViewer::Build()
    fSessionMenu->DisableEntry(kSessionShutdown);
    fSessionMenu->DisableEntry(kSessionCleanup);
    fSessionMenu->DisableEntry(kSessionReset);
-   fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
+   if (fToolBar->GetButton(kSessionDisconnect))
+      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
 
    //--- Horizontal mother frame -----------------------------------------------
    fHf = new TGHorizontalFrame(this, 10, 10);
@@ -4598,7 +4602,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
    TString msg;
 
    fSessionMenu->DisableEntry(kSessionAdd);
-   fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
+   if (fToolBar->GetButton(kQuerySubmit))
+      fToolBar->GetButton(kQuerySubmit)->SetState(kButtonDisabled);
    if (entry->GetParent() == 0) {  // PROOF
       // switch frames only if actual one doesn't match
       if (fActFrame != fServerFrame) {
@@ -4612,7 +4617,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fServerFrame->SetConnectEnabled(kFALSE);
       fPopupSrv->DisableEntry(kSessionConnect);
       fSessionMenu->DisableEntry(kSessionConnect);
-      fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+      if (fToolBar->GetButton(kSessionConnect))
+         fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
    }
    else if (entry->GetParent()->GetParent() == 0) { // Server
       if (entry->GetUserData()) {
@@ -4636,14 +4642,16 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       if ((fActDesc->fConnected) && (fActDesc->fAttached)) {
          fPopupSrv->DisableEntry(kSessionConnect);
          fSessionMenu->DisableEntry(kSessionConnect);
-         fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+         if (fToolBar->GetButton(kSessionConnect))
+            fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
          UpdateListOfPackages();
          fSessionFrame->UpdateListOfDataSets();
       }
       else {
          fPopupSrv->EnableEntry(kSessionConnect);
          fSessionMenu->EnableEntry(kSessionConnect);
-         fToolBar->GetButton(kSessionConnect)->SetState(kButtonUp);
+         if (fToolBar->GetButton(kSessionConnect))
+            fToolBar->GetButton(kSessionConnect)->SetState(kButtonUp);
       }
       // local session
       if (fActDesc->fLocal) {
@@ -4706,7 +4714,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       }
       if ((fActDesc->fConnected) && (fActDesc->fAttached) &&
           (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQueryRunning) &&
-          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQuerySubmitted) )
+          (fActDesc->fActQuery->fStatus != TQueryDescription::kSessionQuerySubmitted) &&
+          (fToolBar->GetButton(kQuerySubmit)) )
          fToolBar->GetButton(kQuerySubmit)->SetState(kButtonUp);
       // trick to update feedback histos
       OnCascadeMenu();
@@ -4800,7 +4809,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->EnableEntry(kSessionShutdown);
       fSessionMenu->EnableEntry(kSessionCleanup);
       fSessionMenu->EnableEntry(kSessionReset);
-      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
+      if (fToolBar->GetButton(kSessionDisconnect))
+         fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonUp);
       fQueryMenu->EnableEntry(kQuerySubmit);
       fPopupQry->EnableEntry(kQuerySubmit);
    }
@@ -4820,7 +4830,8 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionShutdown);
       fSessionMenu->DisableEntry(kSessionCleanup);
       fSessionMenu->DisableEntry(kSessionReset);
-      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
+      if (fToolBar->GetButton(kSessionDisconnect))
+         fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
       fQueryMenu->DisableEntry(kQuerySubmit);
       fPopupQry->DisableEntry(kQuerySubmit);
    }
@@ -4831,8 +4842,10 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       fSessionMenu->DisableEntry(kSessionShutdown);
       fSessionMenu->DisableEntry(kSessionCleanup);
       fSessionMenu->DisableEntry(kSessionReset);
-      fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
-      fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
+      if (fToolBar->GetButton(kSessionDisconnect))
+         fToolBar->GetButton(kSessionDisconnect)->SetState(kButtonDisabled);
+      if (fToolBar->GetButton(kSessionConnect))
+         fToolBar->GetButton(kSessionConnect)->SetState(kButtonDisabled);
       fQueryMenu->EnableEntry(kQuerySubmit);
       fPopupQry->EnableEntry(kQuerySubmit);
    }
@@ -4848,7 +4861,7 @@ void TSessionViewer::OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t /*btn*
    if (entry->GetParent()->GetParent() == 0) { // Server
       if (entry->GetUserData()) {
          TObject *obj = (TObject *)entry->GetUserData();
-         if (obj->IsA() != TSessionDescription::Class())
+         if ((!obj) || (obj->IsA() != TSessionDescription::Class()))
             return;
          fActDesc = (TSessionDescription*)obj;
          // if Proof valid, update connection infos
