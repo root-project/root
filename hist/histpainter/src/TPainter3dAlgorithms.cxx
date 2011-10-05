@@ -224,8 +224,10 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    TView *view = 0;
    if (gPad) view = gPad->GetView();
    if (!view) view = TView::CreateView(fSystem, rmin, rmax);
-   view->SetView(gPad->GetPhi(), gPad->GetTheta(), psi, i);
-   view->SetRange(rmin,rmax);
+   if (view) {
+      view->SetView(gPad->GetPhi(), gPad->GetTheta(), psi, i);
+      view->SetRange(rmin,rmax);
+   }
 }
 
 
