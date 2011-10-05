@@ -263,6 +263,7 @@ TGDNDManager::~TGDNDManager()
    if (fMask != kNone) gVirtualX->DeletePixmap(fMask);
 
    if (fDraggerTypes) delete[] fDraggerTypes;
+   if (fTypelist) delete[] fTypelist;
 }
 
 Atom_t TGDNDManager::GetDNDAware() { return fgDNDAware; }
@@ -690,7 +691,7 @@ Bool_t TGDNDManager::HandleDNDPosition(Window_t source, Int_t x_root, Int_t y_ro
 {
    // Handle DND position event.
 
-   Int_t x, y;
+   Int_t x = 0, y = 0;
    Window_t child;
    TGFrame *f = 0, *main = 0;
    TGWindow *w = 0;
