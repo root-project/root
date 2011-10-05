@@ -643,6 +643,7 @@ void convert_rwn(Int_t id)
    tree->Write();
    delete tree;
    delete [] x;
+   delete [] chtag_out;
 }
 
 //____________________________________________________________________________
