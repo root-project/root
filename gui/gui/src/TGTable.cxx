@@ -467,7 +467,7 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
       for (j = 0; j < ncolumns; j++) {
          TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label, i, 
                                              ntcolumns + j);
-         GetRow(i)->AddAt(cell, ntcolumns + j);
+         if (GetRow(i)) GetRow(i)->AddAt(cell, ntcolumns + j);
       }
    }
 
@@ -503,7 +503,7 @@ void TGTable::ExpandRows(UInt_t nrows)
       for (j = 0; j < ntcolumns ; j++) {
          TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label, 
                                              ntrows + i, j);
-         GetRow(ntrows + i)->AddAt(cell, j);
+         if (GetRow(ntrows + i)) GetRow(ntrows + i)->AddAt(cell, j);
       }
    }
    
@@ -525,7 +525,7 @@ UInt_t TGTable::GetCHdrWidth() const
    Int_t ncolumns = GetNTableColumns();
    UInt_t width = 0;
    for (Int_t i = 0; i < ncolumns; i++) {
-      width += GetColumnHeader(i)->GetWidth();
+      if (GetColumnHeader(i)) width += GetColumnHeader(i)->GetWidth();
    }
    return width;
 }
@@ -538,7 +538,7 @@ UInt_t TGTable::GetRHdrHeight() const
    Int_t nrows = GetNTableRows();
    UInt_t height = 0;
    for (Int_t i = 0; i < nrows; i++) {
-      height += GetRowHeader(i)->GetHeight();
+      if (GetRowHeader(i)) height += GetRowHeader(i)->GetHeight();
    }
    return height;
 }
@@ -575,9 +575,13 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
    for (i = 0; i < ntrows; i++) {
       for (j = 0; j < ncolumns; j++) {
          k = ntcolumns - ncolumns + j;
-         cell = (TGTableCell *)GetRow(i)->RemoveAt(k);
-         cell->DestroyWindow();
-         delete cell;
+         if (GetRow(i)) {
+            cell = (TGTableCell *)GetRow(i)->RemoveAt(k);
+            if (cell) {
+               cell->DestroyWindow();
+               delete cell;
+            }
+         }
       }
       GetRow(i)->Expand(ntcolumns - ncolumns);
    }
@@ -622,9 +626,13 @@ void TGTable::ShrinkRows(UInt_t nrows)
 
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ntcolumns ; j++) {
-         cell = (TGTableCell *)GetRow(ntrows - nrows + i)->RemoveAt(j);
-         cell->DestroyWindow();
-         delete cell;
+         if (GetRow(ntrows - nrows + i)) {
+            cell = (TGTableCell *)GetRow(ntrows - nrows + i)->RemoveAt(j);
+            if (cell) {
+               cell->DestroyWindow();
+               delete cell;
+            }
+         }
       }
       row = (TObjArray *)fRows->RemoveAt(ntrows - nrows + i);
       delete row;
@@ -655,13 +663,15 @@ void TGTable::UpdateHeaders(EHeaderType type)
       max = GetNTableColumns();
       for (i = 0; i < max; i++) {
          d = fCurrentRange->fXtl + i;
-         GetColumnHeader(i)->SetLabel(fInterface->GetColumnHeader(d));
+         if (GetColumnHeader(i) && fInterface->GetColumnHeader(d))
+            GetColumnHeader(i)->SetLabel(fInterface->GetColumnHeader(d));
       }
    } else if (type == kRowHeader) {
       max = GetNTableRows();
       for (i = 0; i < max; i++) {
          d = fCurrentRange->fYtl + i;
-         GetRowHeader(i)->SetLabel(fInterface->GetRowHeader(d));
+         if (GetRowHeader(i) && fInterface->GetRowHeader(d))
+            GetRowHeader(i)->SetLabel(fInterface->GetRowHeader(d));
       }
    }
 }
@@ -1241,7 +1251,7 @@ void TGTable::SetOddRowBackground(Pixel_t pixel)
       for (j = 0; j < ncolumns; j++) {
          if (i % 2) {
             cell = GetCell(i,j);
-            cell->SetBackgroundColor(fOddRowBackground);
+            if (cell) cell->SetBackgroundColor(fOddRowBackground);
          }
       }
    }
@@ -1269,7 +1279,7 @@ void TGTable::SetEvenRowBackground(Pixel_t pixel)
       for (j = 0; j < ncolumns; j++) {
          if (!(i % 2)) { 
             cell = GetCell(i,j);
-            cell->SetBackgroundColor(fEvenRowBackground);
+            if (cell) cell->SetBackgroundColor(fEvenRowBackground);
          }
       }
    }
@@ -1294,7 +1304,7 @@ void TGTable::SetHeaderBackground(Pixel_t pixel)
 
    for (i = 0; i < nrows; i++) {
       hdr = GetRowHeader(i);
-      hdr->SetBackgroundColor(fHeaderBackground);
+      if (hdr) hdr->SetBackgroundColor(fHeaderBackground);
    }
    UInt_t height = fCanvas->GetViewPort()->GetHeight();
    UInt_t width = fTableHeader->GetWidth();
@@ -1302,7 +1312,7 @@ void TGTable::SetHeaderBackground(Pixel_t pixel)
 
    for (j = 0; j < ncolumns; j++) {
       hdr = GetColumnHeader(j);
-      hdr->SetBackgroundColor(fHeaderBackground);
+      if (hdr) hdr->SetBackgroundColor(fHeaderBackground);
 //       gClient->NeedRedraw(hdr);
    }
    width = fCanvas->GetViewPort()->GetWidth();

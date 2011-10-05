@@ -153,8 +153,10 @@ void TGTableCell::Init(Bool_t resize)
       if(resize) {
          chdr = fTable->GetColumnHeader(fColumn);
          rhdr = fTable->GetRowHeader(fRow);
-         SetBackgroundColor(rhdr->GetBackground());
-         Resize(chdr->GetWidth(), rhdr->GetHeight());
+         if (rhdr) {
+            SetBackgroundColor(rhdr->GetBackground());
+            if (chdr) Resize(chdr->GetWidth(), rhdr->GetHeight());
+         }
       }
       SetBackgroundColor(fTable->GetRowBackground(fRow));
       // Upto here

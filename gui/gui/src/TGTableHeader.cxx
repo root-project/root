@@ -48,13 +48,13 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
    // TGTableHeader constuctor.
 
    if (type == kColumnHeader) {
-      fWidth = table->GetTableHeader()->GetWidth();
+      fWidth = (table) ? table->GetTableHeader()->GetWidth() : 80;
       fHeight = 25;
       fRow = 0;
       fColumn = position;
    } else if (type == kRowHeader) {
       fWidth = 80;
-      fHeight = table->GetTableHeader()->GetHeight();
+      fHeight = (table) ? table->GetTableHeader()->GetHeight() : 25;
       fRow = position;
       fColumn = 0;
    } else {
