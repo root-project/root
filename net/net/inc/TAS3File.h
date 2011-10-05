@@ -60,6 +60,7 @@ public:
    virtual ~TAS3File() { }
 
    Bool_t  ReadBuffer(char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) { return TWebFile::ReadBuffer(buf, pos, len); }
    TString GetAuthPrefix() const { return fAuthPrefix; }
    TString GetAccessId() const { return fAccessId; }
    TString GetAccessKey() const { return fAccessKey; }
