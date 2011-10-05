@@ -5,6 +5,7 @@
 #include "TTree.h"
 #include "TMemFile.h"
 #include "TRandom.h"
+#include "TError.h"
 #include "TFileMerger.h"
 
 #include "TServerSocket.h"
@@ -51,7 +52,11 @@ void fastMergeServer(bool cache = false) {
    TMemFile *transient = 0;
    
    TFileMerger merger(kFALSE,kFALSE);
-   merger.OutputFile("hserv-output1.root",kTRUE);   
+   merger.SetPrintLevel(0);
+
+   enum StatusKind {
+      kStartConnection = 0
+   };
    if (cache) new TFileCacheWrite(merger.GetOutputFile(),32*1024*1024);
    while (1) {
       TMessage *mess;
@@ -66,7 +71,7 @@ void fastMergeServer(bool cache = false) {
             ss->Close();         
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
-            client->Send(TString::Format("go %d",clientCount));
+            client->Send(clientCount, kStartConnection);
             ++clientCount;
             mon->Add(client);
             printf("Accept %d connections\n",clientCount);
@@ -76,7 +81,9 @@ void fastMergeServer(bool cache = false) {
       
       s->Recv(mess);
 
-      if (mess->What() == kMESS_STRING) {
+      if (mess==0) {
+         Error("fastMergeServer","The client did not send a message\n");
+      } else if (mess->What() == kMESS_STRING) {
          char str[64];
          mess->ReadString(str, 64);
          printf("Client %d: %s\n", clientCount, str);
@@ -90,30 +97,22 @@ void fastMergeServer(bool cache = false) {
             break;
          }
       } else if (mess->What() == kMESS_ANY) {
-         Long64_t length;
-         mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
-         // fprintf(stderr,"Seeing %lld bytes\n",length);
 
+         Long64_t length;
+         TString filename;
+         Int_t clientId;
+         mess->ReadInt(clientId);
+         mess->ReadTString(filename);
+         mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
+
+         Info("fastMergeServer","Receive input from client %d for %s",clientId,filename.Data());
+         
          delete transient;
          mess->ReadFastArray(scratch,length);
-         transient = new TMemFile("hsimple.memroot",scratch,length);
-//         mess->ReadFastArray(transient->GetBuffer(),end);
-//         transient->SetOffset(0);
-//         transient->SetEND(end);
-//         transient->ReadKeys();
-
+         transient = new TMemFile(filename,scratch,length);
+         merger.OutputFile(filename);
          merger.AddAdoptFile(transient);
 
-         TH1 *h; transient->GetObject("hpx",h);
-         if (h==0) transient->GetObject("hpxpy",h);
-         TTree *in; transient->GetObject("tree",in);
-
-         if (h) {
-            h->Print();
-         }
-         if (in) {
-            printf("Received %s with %lld\n",in->GetName(),in->GetEntries());
-         }
          merger.IncrementalMerge();
          transient = 0;
       } else if (mess->What() == kMESS_OBJECT) {
