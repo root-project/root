@@ -3278,7 +3278,7 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
       fill_asimage(fgVisual, fImage, 0, 0, fImage->width, fImage->height, ARGB32_White);
    }
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    x = l;
@@ -3791,7 +3791,7 @@ void TASImage::DrawLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2,
 {
    // Draw a line.
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
    DrawLineInternal(x1, y1, x2, y2, (UInt_t)color, thick);
 }
@@ -3988,7 +3988,7 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
       return;
    }
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    DrawHLine(y, x, x + w, (UInt_t)color, thick);
@@ -4010,7 +4010,7 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    Int_t w = TMath::Abs(x2 - x1);
    Int_t h = TMath::Abs(y2 - y1);
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
 
    if (!fImage) {
       w = w ? x+w : x+20;
@@ -4536,7 +4536,7 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
       return;
    }
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (x1 == x2) {
@@ -4556,7 +4556,7 @@ void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick
 {
    // Draw a polyline.
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    Int_t x0 = xy[0].GetX();
@@ -5253,7 +5253,7 @@ void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, const char *col,
    UInt_t *firstWidth = 0;   // output buffer
 
    Bool_t del = GetPolygonSpans(npt, ppt, &nspans, &firstPoint, &firstWidth);
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (nspans) {
@@ -5362,7 +5362,7 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
       return;
    }
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    EdgeTableEntry *pAET;  // the Active Edge Table
@@ -5727,7 +5727,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    if (!col) { // no color, make it black
       col = gROOT->GetColor(1);
    }
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col->AsHexString(), &color);
 
    // Align()
@@ -6197,7 +6197,7 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
    CARD32 *matrix;
    Bool_t use_cache = thick < kBrushCacheSize;
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (use_cache) {
@@ -6240,7 +6240,7 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
    CARD32 *matrix;
    Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (use_cache) {
@@ -6280,7 +6280,7 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
    CARD32 *matrix;
    Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
 ///matrix = new CARD32[sz];
@@ -6322,7 +6322,7 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    CARD32 *matrix;
    Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (use_cache) {
@@ -6363,7 +6363,7 @@ void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    CARD32 *matrix;
    Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
-   ARGB32 color;
+   ARGB32 color = ARGB32_White;
    parse_argb_color(col, &color);
 
    if (use_cache) {
