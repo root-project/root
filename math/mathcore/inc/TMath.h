@@ -282,7 +282,7 @@ namespace TMath {
    Double_t StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail=kTRUE);
    Double_t Vavilov(Double_t x, Double_t kappa, Double_t beta2);
    Double_t VavilovI(Double_t x, Double_t kappa, Double_t beta2);
-   Double_t Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);
+   Double_t Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t r = 4);
 
    /* ************************** */
    /* * Statistics over arrays * */
