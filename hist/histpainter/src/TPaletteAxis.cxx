@@ -329,6 +329,7 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
 
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz   = TMath::Abs(fH->GetContour());
+   if (ndivz <= 0) return 0;
    Int_t theColor,color;
    Double_t scale = ndivz/(wlmax - wlmin);
 
@@ -378,6 +379,7 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t ws    = wlmax-wlmin;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz = TMath::Abs(fH->GetContour());
+   if (ndivz <= 0) return;
    Int_t theColor,color;
    Double_t scale = ndivz/(wlmax - wlmin);
    for (Int_t i=0;i<ndivz;i++) {
