@@ -186,7 +186,7 @@ void TGraphStruct::Draw(Option_t *option)
       node->Draw();
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
-         node->Draw();
+         if (node) node->Draw();
       }
    }
 
