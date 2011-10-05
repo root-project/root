@@ -49,7 +49,7 @@ void TGridJDL::SetValue(const char *key, const char *value)
 {
    // Sets a value. If the entry already exists the old one is replaced.
 
-   TObject *object = fMap.FindObject(TString(key));
+   TObject *object = fMap.FindObject(key);
    TPair *pair = dynamic_cast<TPair*>(object);
    if (pair) {
       TObject *oldObject = pair->Key();
@@ -79,7 +79,7 @@ const char *TGridJDL::GetValue(const char *key)
    if (!key)
       return 0;
 
-   TObject *object = fMap.FindObject(TString(key));
+   TObject *object = fMap.FindObject(key);
    if (!object)
       return 0;
 
@@ -95,7 +95,7 @@ const char *TGridJDL::GetValue(const char *key)
    if (!string)
       return 0;
 
-   return string->GetString();
+   return string->GetName();
 }
 
 //______________________________________________________________________________
@@ -103,7 +103,7 @@ void TGridJDL::SetDescription(const char *key, const char* description)
 {
    // Sets a value. If the entry already exists the old one is replaced.
 
-   TObject *object = fDescriptionMap.FindObject(TString(key));
+   TObject *object = fDescriptionMap.FindObject(key);
    TPair *pair = dynamic_cast<TPair*>(object);
    if (pair) {
       TObject *oldObject = pair->Key();
@@ -133,7 +133,7 @@ const char *TGridJDL::GetDescription(const char *key)
    if (!key)
       return 0;
 
-   TObject *object = fDescriptionMap.FindObject(TString(key));
+   TObject *object = fDescriptionMap.FindObject(key);
    if (!object)
       return 0;
 
@@ -149,7 +149,7 @@ const char *TGridJDL::GetDescription(const char *key)
    if (!string)
       return 0;
 
-   return string->GetString();
+   return string->GetName();
 }
 
 //______________________________________________________________________________
@@ -226,17 +226,17 @@ TString TGridJDL::Generate()
                if (keyD) {
                   TObject *valueD = fDescriptionMap.GetValue(objectD);
                   TObjString *valueobjD = dynamic_cast<TObjString*>(valueD);
-                  if (valueobjD && !key->GetString().CompareTo(keyD->GetString())){
+                  if (valueobjD && !strcmp(key->GetName(), keyD->GetName())){
                      //Info("",Form("%s %s",key->GetString().Data(),keyD->GetString().Data()));
                      output += "# ";
-                     output += valueobjD->GetString();
+                     output += valueobjD->GetName();
                      output += "\n";
                   }
                }
             }
-            output += key->GetString();
+            output += key->GetName();
             output += " = ";
-            output += valueobj->GetString();
+            output += valueobj->GetName();
             output += ";\n\n";
          }
       }
