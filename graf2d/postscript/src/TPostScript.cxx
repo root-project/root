@@ -252,9 +252,6 @@ End_Html */
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
-const char   kBackslash = '\\';
-const Int_t  kLatex = BIT(10);
-
 Int_t TPostScript::fgLineJoin = 0;
 
 ClassImp(TPostScript)
