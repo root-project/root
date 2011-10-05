@@ -373,7 +373,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
    fPicture = pic;
    if (fPicture) {
       fTWidth += fPicture->GetWidth() + 4;
-      ((TGPicture *)pic)->AddReference();
+      ((TGPicture *)fPicture)->AddReference();
    }
    else
       fTWidth += 20;
@@ -432,7 +432,7 @@ void TGIconLBEntry::SetPicture(const TGPicture *pic)
 
    fClient->FreePicture(fPicture);
 
-   ((TGPicture *)pic)->AddReference();
+   if (pic) ((TGPicture *)pic)->AddReference();
 
    fPicture   = pic;
 }
