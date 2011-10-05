@@ -1216,7 +1216,8 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
          if (!gDNDManager->IsDragging()) {
             if (fBdown && ((abs(event->fX - fXDND) > 2) || (abs(event->fY - fYDND) > 2))) {
                if (gDNDManager && over_frame->IsDNDSource()) {
-                  SetDragPixmap(GetObjPicture(over_frame));
+                  const TGPicture *drag_pic = GetObjPicture(over_frame);
+                  if (drag_pic) SetDragPixmap(drag_pic);
                   gDNDManager->StartDrag(over_frame, event->fXRoot, event->fYRoot);
                }
             }
