@@ -941,7 +941,9 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
    if ((obj = fPlugins.FindObject(tabName))) {
       fPlugins.Remove(obj);
    }
-   TGFrameElement *el = (TGFrameElement *)edit->GetTabContainer(subpos)->GetList()->First();
+   TGFrameElement *el = 0;
+   if (edit->GetTabContainer(subpos))
+      el = (TGFrameElement *)edit->GetTabContainer(subpos)->GetList()->First();
    if (el && el->fFrame) {
       el->fFrame->SetFrameElement(0);
       if (el->fFrame->InheritsFrom("TGMainFrame")) {
