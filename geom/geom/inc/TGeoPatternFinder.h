@@ -32,17 +32,6 @@ class TGeoMatrix;
 
 class TGeoPatternFinder : public TObject
 {
-public:
-   struct ThreadData_t
-   {
-      TGeoMatrix      *fMatrix;         //! generic matrix
-      Int_t            fCurrent;        //! current division element
-      Int_t            fNextIndex;      //! index of next node
-
-      ThreadData_t();
-      ~ThreadData_t();
-   };
-
 protected :
    enum EGeoPatternFlags {
       kPatternReflected = BIT(14),
@@ -55,16 +44,23 @@ protected :
    Int_t               fDivIndex;       // index of first div. node
    TGeoVolume         *fVolume;         // volume to which applies
 
-   mutable std::vector<ThreadData_t*> fThreadData; //! 
-   mutable Int_t                      fThreadSize; //!
+   struct ThreadData_t
+   {
+      TGeoMatrix      *fMatrix;         //! generic matrix
+      Int_t            fCurrent;        //! current division element
+      Int_t            fNextIndex;      //! index of next node
 
-public:
-   ThreadData_t& GetThreadData()   const;
-   void          ClearThreadData() const;
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+   mutable std::vector<ThreadData_t*> fThreadData; //! Vector of thread private transient data
+   mutable Int_t                      fThreadSize; //! Size of the thread vector
 
 protected:
    TGeoPatternFinder(const TGeoPatternFinder&); 
    TGeoPatternFinder& operator=(const TGeoPatternFinder&);
+   ThreadData_t& GetThreadData()   const;
+   void          ClearThreadData() const;
 
 public:
    // constructors
