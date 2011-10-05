@@ -59,6 +59,7 @@ public:
    TAS3File(const char *url, Option_t *opt="");
    virtual ~TAS3File() { }
 
+   Bool_t  ReadBuffer(char *buf, Int_t len);
    TString GetAuthPrefix() const { return fAuthPrefix; }
    TString GetAccessId() const { return fAccessId; }
    TString GetAccessKey() const { return fAccessKey; }

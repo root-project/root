@@ -47,7 +47,7 @@ TGSFile::TGSFile(const char *path, Option_t *) : TWebFile(path, "IO")
    Int_t begPath = 5, slash = 0, i = 0;
 
    if (tpath.BeginsWith("gs://") == kFALSE) {
-		Error("TGSFile", "invalid path %s", path);
+      Error("TGSFile", "invalid path %s", path);
       goto zombie;
    }
 
@@ -219,6 +219,12 @@ Int_t TGSFile::GetHead()
 }
 
 //______________________________________________________________________________
+Bool_t TGSFile::ReadBuffer(char *buf, Int_t len)
+{
+   return ReadBuffer10(buf,len);
+}
+
+//______________________________________________________________________________
 Bool_t TGSFile::ReadBuffer10(char *buf, Int_t len)
 {
    // Read specified byte range from Google Storage.
@@ -226,11 +232,18 @@ Bool_t TGSFile::ReadBuffer10(char *buf, Int_t len)
    // request created by THTTPMessage and returns the buffer.
    // Returns kTRUE in case of error.
 
-   THTTPMessage s3get = THTTPMessage(kGET, fRealName, GetBucket(),
+   Int_t nbuf = 1;
+   Long64_t pos[nbuf];
+   pos[nbuf-1] = fOffset; 
+
+   Int_t lens[nbuf];
+   lens[nbuf-1] = len;
+
+   THTTPMessage gsget = THTTPMessage(kGET, fRealName, GetBucket(),
                                      GetUrl().GetHost(), GetAuthPrefix(),
                                      GetAccessId(), GetAccessKey(),
-                                     fOffset, fOffset+len-1);
-   TString msg = s3get.GetRequest();
+                                     0, pos, lens, nbuf);
+   TString msg = gsget.GetRequest();
 
    Int_t n = GetFromWeb10(buf, len, msg);
    if (n == -1)
@@ -249,3 +262,4 @@ Bool_t TGSFile::ReadBuffer10(char *buf, Int_t len)
 
    return kFALSE;
 }
+

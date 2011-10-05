@@ -48,9 +48,8 @@
 ClassImp(THTTPMessage)
 
 //______________________________________________________________________________
-THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
-                           TString mhost, TString maprefix, TString maid,
-                           TString maidkey)
+THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket, TString mhost,
+             TString maprefix, TString maid, TString maidkey)
 {
    // THTTPMessage for HTTP requests without the Range attribute.
 
@@ -62,16 +61,20 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
    fAuthPrefix   = maprefix;
    fAccessId     = maid;
    fAccessIdKey  = maidkey;
-   fHasRange     = false;
+   fHasRange     = kFALSE;
    fInitByte     = 0;
-   fFinalByte    = 0;
+   fOffset       = 0;  
+   fLen          = 0;   
+   fNumBuf       = 0;   
+   fCurrentBuf   = 0;   
+                        
    fSignature    = Sign();
 }                
 
 //______________________________________________________________________________
-THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
-                           TString mhost, TString maprefix, TString maid,
-                           TString maidkey, Int_t ibyte, Int_t fbyte)
+THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket, TString mhost,
+                           TString maprefix, TString maid, TString maidkey, Long64_t offset, 
+                           Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // THTTPMessage for HTTP Get Requests with Range.
 
@@ -84,8 +87,12 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket,
    fAccessId    = maid;
    fAccessIdKey = maidkey;
    fHasRange    = kTRUE;
-   fInitByte    = ibyte;
-   fFinalByte   = fbyte;
+   fInitByte    = pos;
+   fOffset      = offset;
+   fLen         = len;
+   fNumBuf      = nbuf;
+   fCurrentBuf  = 0;
+
    fSignature   = Sign();
 }
 
@@ -103,7 +110,10 @@ THTTPMessage &THTTPMessage::operator=(const THTTPMessage &rhs)
       fDate        = rhs.fDate;
       fHasRange    = rhs.fHasRange;
       fInitByte    = rhs.fInitByte;
-      fFinalByte   = rhs.fFinalByte;
+      fOffset      = rhs.fOffset;
+      fLen         = rhs.fLen;
+      fNumBuf      = rhs.fNumBuf;
+      fCurrentBuf  = rhs.fCurrentBuf;
       fAuthPrefix  = rhs.fAuthPrefix;
       fAccessId    = rhs.fAccessId;
       fAccessIdKey = rhs.fAccessIdKey;
@@ -133,12 +143,12 @@ TString THTTPMessage::Sign()
    sign += "/"+GetBucket()+GetPath();
    char digest[SHA_DIGEST_LENGTH] = {0};
    TString key = GetAccessIdKey();
-	
+
 #if defined(MAC_OS_X_VERSION_10_7)
    CCHmac(kCCHmacAlgSHA1, key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest);
 #else
    unsigned int *sd = NULL;
-   HMAC(EVP_sha1(), key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest, sd);	
+   HMAC(EVP_sha1(), key.Data(), key.Length() , (unsigned char *) sign.Data(), sign.Length(), (unsigned char *) digest, sd);
 #endif
 
    return TBase64::Encode((const char *) digest, SHA_DIGEST_LENGTH);
@@ -195,14 +205,6 @@ TString THTTPMessage::CreateDate() const
 }
 
 //______________________________________________________________________________
-TString THTTPMessage::CreateRange() const
-{
-   TString range;
-   range.Form("Range: bytes=%d-%d", GetInitByte(), GetFinalByte());
-   return range;
-}
-
-//______________________________________________________________________________
 TString THTTPMessage::CreateAuth() const
 {
    if (GetAuthPrefix() == "AWS") {
@@ -214,7 +216,7 @@ TString THTTPMessage::CreateAuth() const
 }
 
 //______________________________________________________________________________
-TString THTTPMessage::GetRequest() const
+TString THTTPMessage::GetRequest()
 {
    // Generates a TString with the HTTP Request.
 
@@ -222,7 +224,25 @@ TString THTTPMessage::GetRequest() const
    msg  = CreateHead()+"\r\n";
    msg += CreateHost()+"\r\n";
    msg += CreateDate()+"\r\n";
-   if(HasRange()) { msg += CreateRange()+"\r\n"; }
+
+   Int_t n = 0;
+   if(HasRange()){
+      msg += "Range: bytes=";
+      for (Int_t i = 0; i < fNumBuf; i++) {
+         if (n) msg += ",";
+         msg += fInitByte[i] + fOffset;
+         msg += "-";
+         msg += fInitByte[i] + fOffset + fLen[i] - 1;
+         fLength += fLen[i];
+         n += fLen[i];
+         fCurrentBuf++;
+         if (msg.Length() > 8000) {
+            break;      
+         }
+      }
+      msg += "\r\n";   
+   }
+
    msg += CreateAuth()+"\r\n";
    msg += "\r\n\r\n";;
    return msg;

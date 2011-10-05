@@ -53,11 +53,12 @@ protected:
       
    Int_t  GetHead();
    Bool_t ReadBuffer10(char *buf, Int_t len);
-  
+
 public:
    TGSFile(const char *url, Option_t *opt="");
    virtual ~TGSFile() { }
 
+   Bool_t  ReadBuffer(char *buf, Int_t len);
    TString GetAuthPrefix() const { return fAuthPrefix; }
    TString GetAccessId() const { return fAccessId; }
    TString GetAccessKey() const { return fAccessKey; }

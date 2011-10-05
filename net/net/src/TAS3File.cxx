@@ -48,7 +48,7 @@ TAS3File::TAS3File(const char *path, Option_t *) : TWebFile(path, "IO")
    Int_t begPath = 6, slash = 0, i = 0;
 
    if (tpath.BeginsWith("as3://") == kFALSE) {
-		Error("TAS3File", "invalid path %s", path);
+      Error("TAS3File", "invalid path %s", path);
       goto zombie;
    }
 
@@ -220,6 +220,12 @@ Int_t TAS3File::GetHead()
 }
 
 //______________________________________________________________________________
+Bool_t TAS3File::ReadBuffer(char *buf, Int_t len)
+{
+   return ReadBuffer10(buf,len);
+}
+
+//______________________________________________________________________________
 Bool_t TAS3File::ReadBuffer10(char *buf, Int_t len)
 {
    // Read specified byte range from Amazon S3.
@@ -227,10 +233,17 @@ Bool_t TAS3File::ReadBuffer10(char *buf, Int_t len)
    // request created by THTTPMessage and returns the buffer.
    // Returns kTRUE in case of error.
 
+   Int_t nbuf = 1;
+   Long64_t pos[nbuf];
+   pos[nbuf-1] = fOffset; 
+
+   Int_t lens[nbuf];
+   lens[nbuf-1] = len;
+ 
    THTTPMessage s3get = THTTPMessage(kGET, fRealName, GetBucket(),
                                      GetUrl().GetHost(), GetAuthPrefix(),
                                      GetAccessId(), GetAccessKey(),
-                                     fOffset, fOffset+len-1);
+                                     0, pos, lens, nbuf);
    TString msg = s3get.GetRequest();
 
    Int_t n = GetFromWeb10(buf, len, msg);
