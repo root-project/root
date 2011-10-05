@@ -122,12 +122,15 @@ void TGSpeedo::Build()
    Int_t i, nexe, offset;
 
    const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
+   if (!counterFont) return;
    fCounterFS = counterFont->GetFontStruct();
 
    const TGFont *textFont = fClient->GetFont("-*-helvetica-bold-r-*-*-8-*-*-*-*-*-*-*");
+   if (!textFont) return;
    fTextFS = textFont->GetFontStruct();
 
    const TGFont *labelFont = fClient->GetFont("-*-helvetica-bold-r-*-*-14-*-*-*-*-*-*-*");
+   if (!labelFont) return;
    FontStruct_t labelFS = labelFont->GetFontStruct();
 
    if (fImage && fImage->IsValid()) {
