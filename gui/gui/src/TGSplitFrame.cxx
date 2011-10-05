@@ -59,7 +59,7 @@ TGSplitTool::TGSplitTool(const TGWindow *p, const TGFrame *f)
    fMap.SetOwner(kTRUE);
    fMap.SetOwnerValue(kFALSE);
    MapSubwindows();
-   Resize(f->GetWidth()/10, f->GetHeight()/10);
+   if (f) Resize(f->GetWidth()/10, f->GetHeight()/10);
    AddInput(kButtonPressMask | kButtonReleaseMask | kPointerMotionMask);
 
    fWindow = f;
