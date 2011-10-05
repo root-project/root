@@ -494,27 +494,27 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
         fFile->GetName());
 
    TFile *f = TFile::Open(fFile->GetName());
-   TIter nextkey(f->GetListOfKeys());
-   TKey *key;
-   TObject *obj;
-   while ((key = (TKey*)nextkey())) {
-      fFilterStatusBar = kTRUE;
-      obj = key->ReadObj();
-      if (!obj->InheritsFrom("TCanvas"))
-         continue;
-      fCanv = (TCanvas*) obj;
-      fCanv->Draw();
+   if (f && !f->IsZombie()) {
+      TIter nextkey(f->GetListOfKeys());
+      TKey *key;
+      TObject *obj;
+      while ((key = (TKey*)nextkey())) {
+         fFilterStatusBar = kTRUE;
+         obj = key->ReadObj();
+         if (!obj->InheritsFrom("TCanvas"))
+            continue;
+         fCanv = (TCanvas*) obj;
+         fCanv->Draw();
+      }
+      TCanvas *canvas;
+      TIter nextc(gROOT->GetListOfCanvases());
+      while ((canvas = (TCanvas*)nextc())) {
+         canvas->SetWindowSize(canvas->GetWindowWidth(),
+                               canvas->GetWindowHeight());
+      }
+      fFilterStatusBar = kFALSE;
+      f->Close();
    }
-   TCanvas *canvas;
-   TIter nextc(gROOT->GetListOfCanvases());
-   while ((canvas = (TCanvas*)nextc())) {
-      canvas->SetWindowSize(canvas->GetWindowWidth(),
-                            canvas->GetWindowHeight());
-   }
-
-   fFilterStatusBar = kFALSE;
-
-   f->Close();
 
    gPad = 0;
    // Starts replaying
@@ -1028,11 +1028,11 @@ void TRecorderInactive::ListCmd(const char *filename)
    }*/
 
    TFile *file = TFile::Open(filename);
+   if (!file) return;
    if (file->IsZombie() || !file->IsOpen()) {
       delete file;
       return;
    }
-
    TTree *t1 = (TTree*)file->Get(kCmdEventTree);
 
    if (!t1) {
@@ -1071,11 +1071,11 @@ void TRecorderInactive::ListGui(const char *filename)
    }*/
 
    TFile *file = TFile::Open(filename);
+   if (!file) return;
    if (file->IsZombie() || !file->IsOpen()) {
       delete file;
       return;
    }
-
    TTree *t1 = (TTree*)file->Get(kGuiEventTree);
 
    if (!t1) {
@@ -1140,8 +1140,11 @@ void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
 
    fCollect = gROOT->GetListOfCanvases();
    TFile *f = TFile::Open(filename, option);
-   fCollect->Write();
-   f->Close();
+   if (f && !f->IsZombie()) {
+      fCollect->Write();
+      f->Close();
+      delete f;
+   }
 }
 
 //______________________________________________________________________________
