@@ -23,7 +23,6 @@ const Double_t kPI = 3.14159265358979323846;
 const Double_t kPI = TMath::Pi();
 #endif
 const Int_t kLatex      = BIT(10);
-const Int_t kPrintingPS = BIT(11); //set in TPad.h
 
 ClassImp(TLatex)
 
