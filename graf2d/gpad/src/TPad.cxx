@@ -532,7 +532,10 @@ void TPad::Clear(Option_t *option)
 
    cd();
 
-   if (TestBit(kClearAfterCR)) getchar();
+   if (TestBit(kClearAfterCR)) {
+      int readch;
+      readch = getchar();
+   }
 
    if (!gPad->IsBatch()) GetPainter()->ClearDrawable();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
