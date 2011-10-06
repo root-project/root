@@ -171,9 +171,9 @@ void TGLAxis::PaintGLAxisBody()
    // Paint horizontal axis body at position (0,0,0)
 
    TColor *col;
-   Float_t red, green, blue;
-   col = gROOT->GetColor(GetLineColor());
-   col->GetRGB(red, green, blue);
+   Float_t red = 1.f, green = 1.f, blue = 1.f;
+   if ((col = gROOT->GetColor(GetLineColor())))
+      col->GetRGB(red, green, blue);
    glColor3d(red, green, blue);
    TGLUtil::LineWidth(GetLineWidth());
    glBegin(GL_LINES);
