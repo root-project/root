@@ -362,18 +362,18 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    // the third column.
    // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
    // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
-   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
    // Note in that case, the instanciation is about 2 times slower.
 
-   Double_t x,y;
+   Double_t x, y;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
 
    ifstream infile(fname.Data());
-   if(!infile.good()){
+   if (!infile.good()) {
       MakeZombie();
-      Error("TGraph", "Cannot open file: %s, TGraph is Zombie",filename);
+      Error("TGraph", "Cannot open file: %s, TGraph is Zombie", filename);
       fNpoints = 0;
       return;
    } else {
@@ -381,10 +381,10 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    }
    if (!CtorAllocate()) return;
    std::string line;
-   Int_t np=0;
+   Int_t np = 0;
 
    // No delimiters specified (standard constructor).
-   if (strcmp(option,"")==0) {
+   if (strcmp(option, "") == 0) {
 
       while (std::getline(infile, line, '\n')) {
          if (2 != sscanf(line.c_str(), format, &x, &y)) {
@@ -395,7 +395,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       }
       Set(np);
 
-   // A delimiter has been specified in "option"
+      // A delimiter has been specified in "option"
    } else {
 
       // Checking format and creating its boolean counterpart
@@ -440,7 +440,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       // Looping
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
-            strlcpy(buffer, line.c_str(),10000) ;  //necessary stage for strtok?
+            strlcpy(buffer, line.c_str(), 10000) ; //necessary stage for strtok?
             token = strtok(buffer, option) ;
             while (token != NULL && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
@@ -949,7 +949,7 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  if Middle button clicked, the line is moved parallel to itself
    //     until the button is released.
-   
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->ExecuteEventHelper(this, event, px, py);
 }
@@ -1949,7 +1949,7 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 void TGraph::Paint(Option_t *option)
 {
    // Draw this graph with its current attributes.
-   
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintHelper(this, option);
 }
@@ -1959,7 +1959,7 @@ void TGraph::Paint(Option_t *option)
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
    // Draw the (x,y) as a graph.
-   
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintGraph(this, npoints, x, y, chopt);
 }
@@ -1969,7 +1969,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
    // Draw the (x,y) as a histogram.
-   
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintGrapHist(this, npoints, x, y, chopt);
 }
@@ -1979,7 +1979,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 void TGraph::PaintStats(TF1 *fit)
 {
    // Draw the stats
-   
+
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->PaintStats(this, fit);
 }
