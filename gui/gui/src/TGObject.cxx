@@ -47,9 +47,11 @@ void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) 
       WindowAttributes_t wattr;
       gVirtualX->GetWindowAttributes(GetId(), wattr);
       TImage* img = TImage::Create();
-      img->FromWindow(GetId(), 0, 0, wattr.fWidth, wattr.fHeight);
-      img->WriteImage(filename, type);
-      delete img;
+      if (img) {
+         img->FromWindow(GetId(), 0, 0, wattr.fWidth, wattr.fHeight);
+         img->WriteImage(filename, type);
+         delete img;
+      }
       return;
    }
 
