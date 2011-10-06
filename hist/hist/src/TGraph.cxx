@@ -787,7 +787,8 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    //  The distance is computed in pixels units.
 
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
-   if (painter) painter->DistancetoPrimitiveHelper(this, px, py);
+   if (painter) return painter->DistancetoPrimitiveHelper(this, px, py);
+   else return 0;
 }
 
 
