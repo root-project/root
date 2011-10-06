@@ -1392,6 +1392,7 @@ void TASImage::Paint(Option_t *option)
    if (tile) {
       delete fScaledImage;
       fScaledImage = (TASImage*)TImage::Create();
+      if (!fScaledImage) return;
       fScaledImage->fImage = tile_asimage(fgVisual, fImage, tile_x, tile_y,
                                           to_w, to_h, tile_tint, ASA_ASImage,
                                           GetImageCompression(), GetImageQuality());
