@@ -785,6 +785,7 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
    //Build the image stretching pixels into a range from 0.0 to 255.0
    //TImage *im = new TImage(width, height);
    TImage *im = TImage::Create();
+   if (!im) return 0;
    TArrayD *layer_pixels = new TArrayD(pixels_per_layer);
 
 
