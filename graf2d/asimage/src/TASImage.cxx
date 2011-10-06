@@ -1136,10 +1136,12 @@ void TASImage::Draw(Option_t *option)
    }
 
    TFrame *frame = gPad->GetFrame();
-   frame->SetBorderMode(0);
-   frame->SetFillColor(gPad->GetFillColor());
-   frame->SetLineColor(gPad->GetFillColor());
-   frame->Draw();
+   if (frame) {
+      frame->SetBorderMode(0);
+      frame->SetFillColor(gPad->GetFillColor());
+      frame->SetLineColor(gPad->GetFillColor());
+      frame->Draw();
+   }
 
    TObject::Draw(option);
 }
