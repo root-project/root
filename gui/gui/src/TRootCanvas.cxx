@@ -957,7 +957,7 @@ again:
                         //   m->Update();
                         TColorWheel *wheel = new TColorWheel();
                         wheel->Draw();
-                        padsav->cd();
+                        if (padsav) padsav->cd();
                      }
                      break;
                   case kViewFonts:
@@ -1464,7 +1464,7 @@ void TRootCanvas::CreateEditor()
    Int_t show = gEnv->GetValue("Canvas.ShowEditor", 0);
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
-   fEditor->SetGlobal(kFALSE);
+   if (fEditor) fEditor->SetGlobal(kFALSE);
    fEditorFrame->SetEditable(kEditDisable);
    fEditorFrame->SetEditable(kFALSE);
 
