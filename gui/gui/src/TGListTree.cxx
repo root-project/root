@@ -95,7 +95,8 @@ UInt_t TGListTreeItem::GetPicWidth() const
 {
    // Return width of item's icon.
 
-   return GetPicture()->GetWidth();
+   const TGPicture *pic = GetPicture();
+   return (pic) ? pic->GetWidth() : 0;
 }
 
 /******************************************************************************/
@@ -587,7 +588,7 @@ Bool_t TGListTree::HandleButton(Event_t *event)
          if (event->fCode == kButton1) {
             Int_t minx, maxx;
             Int_t minxchk = 0, maxxchk = 0;
-            if (item->HasCheckBox()) {
+            if (item->HasCheckBox() && item->GetCheckBoxPicture()) {
                minxchk = (item->fXtext - item->GetCheckBoxPicture()->GetWidth());
                maxxchk = (item->fXtext - 4);
                maxx = maxxchk - Int_t(item->GetPicWidth()) - 8;
@@ -813,7 +814,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
          MouseOver(fBelowMouse, event->fState);
       }
 
-      if (item->HasCheckBox()) {
+      if (item->HasCheckBox() && item->GetCheckBoxPicture()) {
          if ((event->fX < (item->fXtext - 4) &&
              (event->fX > (item->fXtext - (Int_t)item->GetCheckBoxPicture()->GetWidth()))))
          {
@@ -859,15 +860,16 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
                   fDNDData.fData = (void *)strdup(str.Data());
                   fDNDData.fDataLength = str.Length()+1;
                }
-               TString xmpname = item->GetPicture()->GetName();
-               if (xmpname.EndsWith("_t.xpm"))
-                  xmpname.ReplaceAll("_t.xpm", "_s.xpm");
-               if (xmpname.EndsWith("_t.xpm__16x16"))
-                  xmpname.ReplaceAll("_t.xpm__16x16", "_s.xpm");
-               const TGPicture *pic = fClient->GetPicture(xmpname.Data());
-               if (!pic) pic = item->GetPicture();
-               if (pic) SetDragPixmap(pic);
-               //SetDragPixmap(item->GetPicture());
+               if (item->GetPicture()) {
+                  TString xmpname = item->GetPicture()->GetName();
+                  if (xmpname.EndsWith("_t.xpm"))
+                     xmpname.ReplaceAll("_t.xpm", "_s.xpm");
+                  if (xmpname.EndsWith("_t.xpm__16x16"))
+                     xmpname.ReplaceAll("_t.xpm__16x16", "_s.xpm");
+                  const TGPicture *pic = fClient->GetPicture(xmpname.Data());
+                  if (!pic) pic = item->GetPicture();
+                  if (pic) SetDragPixmap(pic);
+               }
                gDNDManager->StartDrag(this, event->fXRoot, event->fYRoot);
             }
          }
@@ -896,7 +898,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
          // must derive from TObject (in principle user can put pointer
          // to anything in user data field). Add check.
          TObject *obj = (TObject *)item->GetUserData();
-         if (obj->InheritsFrom(TObject::Class())) {
+         if (obj && obj->InheritsFrom(TObject::Class())) {
             SetToolTipText(obj->GetTitle(), item->fXtext,
                            item->fY - pos.fY + item->fHeight, 1000);
          }
@@ -1223,13 +1225,14 @@ void TGListTree::LineUp(Bool_t /*select*/)
 {
    // Move content one item-size up.
 
-   Int_t height;
+   Int_t height = 0;
    if (!fCurrent) return;
    
    TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
-   height = pic1->GetHeight() + fVspacing;
+   if (pic1) height = pic1->GetHeight() + fVspacing;
+   else height = fVspacing + 16;
    Int_t findy = (fCurrent->fY - height) + (fMargin - pos.fY);
    TGListTreeItem *next = FindItem(findy);
    if (next && (next != fCurrent)) {
@@ -1255,7 +1258,8 @@ void TGListTree::LineDown(Bool_t /*select*/)
    TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
-   height = pic1->GetHeight() + fVspacing;
+   if (pic1) height = pic1->GetHeight() + fVspacing;
+   else height = fVspacing + 16;
    Int_t findy = (fCurrent->fY + height) + (fMargin - pos.fY);
    TGListTreeItem *next = FindItem(findy);
    if (next && (next != fCurrent)) {
@@ -1489,7 +1493,8 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          ytext = y;
          ypic2 = y + (Int_t)((height - pic2->GetHeight()) >> 1);
       }
-      xpic2 = xpic1 + pic1->GetWidth() + 1;
+      if (pic1) xpic2 = xpic1 + pic1->GetWidth() + 1;
+      else xpic2 = xpic1 + 1;
       xtext += pic2->GetWidth();
    } else {
       ypic1 = y;
@@ -1875,7 +1880,7 @@ Int_t TGListTree::SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
 
       // Compute the height of this line
       height = FontHeight();
-      if (pic->GetHeight() > height)
+      if (pic && pic->GetHeight() > height)
          height = pic->GetHeight();
 
       if ((findy >= y) && (findy <= y + (Int_t)height)) {
