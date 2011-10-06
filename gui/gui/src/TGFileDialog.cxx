@@ -536,7 +536,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if ( fFileInfo->fMultipleSelection == kFALSE ) {
                         TGLVEntry *e2 = (TGLVEntry *) fFc->GetNextSelected(&p);
                         fTbfname->Clear();
-                        fTbfname->AddText(0, e2->GetItemName()->GetString());
+                        if ((e2) && (e2->GetItemName()))
+                           fTbfname->AddText(0, e2->GetItemName()->GetString());
                         fClient->NeedRedraw(fName);
                      }
                      else {
@@ -570,7 +571,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() == 1) {
                      f = (TGFileItem *) fFc->GetNextSelected(&p);
-                     if (R_ISDIR(f->GetType())) {
+                     if (f && R_ISDIR(f->GetType())) {
                         fFc->ChangeDirectory(f->GetItemName()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
@@ -629,8 +630,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   return kTRUE;
                } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
                   FileStat_t buf;
-                  gSystem->GetPathInfo(fTbfname->GetString(), buf);
-                  if (R_ISDIR(buf.fMode)) {
+                  if (!gSystem->GetPathInfo(fTbfname->GetString(), buf) &&
+                      R_ISDIR(buf.fMode)) {
                      fFc->ChangeDirectory(fTbfname->GetString());
                      fTreeLB->Update(fFc->GetDirectory());
                      if (strcmp(gSystem->WorkingDirectory(), fFc->GetDirectory())) {
