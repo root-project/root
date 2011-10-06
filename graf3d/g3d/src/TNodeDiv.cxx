@@ -33,7 +33,7 @@ TNodeDiv::TNodeDiv()
 
 //______________________________________________________________________________
 TNodeDiv::TNodeDiv(const char *name, const char *title, const char *shapename, Int_t ndiv, Int_t axis, Option_t *option)
-         :TNode(name,title,shapename,0,0,0,0,option)
+         :TNode(name, title, shapename, 0, 0, 0, "", option)
 {
    // NodeDiv normal constructor.
    //
@@ -52,7 +52,7 @@ TNodeDiv::TNodeDiv(const char *name, const char *title, const char *shapename, I
 
 //______________________________________________________________________________
 TNodeDiv::TNodeDiv(const char *name, const char *title, TShape *shape, Int_t ndiv, Int_t axis, Option_t *option)
-         :TNode(name,title,shape,0,0,0,0,option)
+         :TNode(name, title, shape, 0, 0, 0, 0, option)
 {
    // NodeDiv normal constructor.
    //
