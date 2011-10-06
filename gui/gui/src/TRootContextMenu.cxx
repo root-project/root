@@ -352,13 +352,15 @@ void TRootContextMenu::CreateMenu(TObject *object)
                if (menuItem->IsToggle()) {
                   TMethod* method =
                         object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),menuItem->GetArgs());
-                  TToggle *t = new TToggle;
-                  t->SetToggledObject(object, method);
-                  t->SetOnValue(1);
-                  fTrash->Add(t);
+                  if (method) {
+                     TToggle *t = new TToggle;
+                     t->SetToggledObject(object, method);
+                     t->SetOnValue(1);
+                     fTrash->Add(t);
 
-                  AddEntry(method->GetName(), toggle++, t);
-                  if (t->GetState()) CheckEntry(toggle-1);
+                     AddEntry(method->GetName(), toggle++, t);
+                     if (t->GetState()) CheckEntry(toggle-1);
+                  }
                } else {
                   const char* menuItemTitle = menuItem->GetTitle();
                   if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();
@@ -637,7 +639,8 @@ void TRootContextMenu::OnlineHelp()
    TString cmd;
    TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
    if (url.EndsWith(".html", TString::kIgnoreCase)) {
-      url.Remove(url.Last('/'));
+      if (url.Last('/') != kNPOS)
+         url.Remove(url.Last('/'));
    }
    if (!url.EndsWith("/")) {
       url += '/';
