@@ -257,6 +257,7 @@ void TColorWheel::PaintCircle(Int_t coffset,Int_t n, Double_t x, Double_t y, Dou
    Rotate(x,y,u,v,ang);
    Int_t colorn = coffset+n;
    TColor *color = gROOT->GetColor(colorn);
+   if (!color) return;
    fArc->SetFillColor(colorn);
    fArc->SetLineColor(14);
    Double_t r = 0.7*fDr;
@@ -286,6 +287,7 @@ void TColorWheel::PaintCircles(Int_t coffset, Double_t angle) const
    if (angle == 240) tangle = -30;
    if (angle == 300) tangle =  30;
    TColor *col = gROOT->GetColor(coffset);
+   if (!col) return;
    fText->SetTextAngle(tangle);
    fText->PaintText(u,v,col->GetName());
 
@@ -320,6 +322,7 @@ void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
    if (angle == 270) tangle = 0;
    fText->SetTextAngle(tangle);
    TColor *color = gROOT->GetColor(coffset);
+   if (!color) return;
    fText->PaintText(u,v,color->GetName());
 
    Double_t x[5],y[5];
