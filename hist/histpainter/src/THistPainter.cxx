@@ -9061,6 +9061,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    // Erase old position and draw a line at current position
    TView *view = gPad->GetView();
+   if (!view) return;
    TH3 *h3 = (TH3*)fH;
    TAxis *xaxis = h3->GetXaxis();
    TAxis *yaxis = h3->GetYaxis();
