@@ -1225,6 +1225,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       if (!bits) {
          img = tile_asimage(fgVisual, im, xsrc, ysrc, wsrc, hsrc,
                             0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
+         if (!img) return;
          bits = (unsigned char *)img->alt.argb32;
       }
 
