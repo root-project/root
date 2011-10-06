@@ -1626,7 +1626,7 @@ void TRootBrowserLite::DisplayDirectory()
       disableUp = (strlen(dirname) == 1) && (*dirname == '/');
 
       // normal file directory
-      if (disableUp && (obj->IsA() == TSystemDirectory::Class())) {
+      if (disableUp && (obj) && (obj->IsA() == TSystemDirectory::Class())) {
          disableUp = strlen(p) == 1;
       }
       btn->SetState(disableUp ? kButtonDisabled : kButtonUp);
@@ -2468,7 +2468,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
                top = top->GetParent();
             }
             TObject *topobj = (TObject *) top->GetUserData();
-            if (topobj->InheritsFrom("TApplicationRemote")) {
+            if (topobj && topobj->InheritsFrom("TApplicationRemote")) {
                // it belongs to a remote session
                if (!gApplication->GetAppRemote()) {
                   // switch to remote session if not already in
@@ -2628,7 +2628,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
          }
       }
 
-      if (obj->IsFolder()) {
+      if (obj && obj->IsFolder()) {
          fIconBox->RemoveAll();
          TGListTreeItem *itm = 0;
 
@@ -2716,7 +2716,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
       }
 
 out:
-      if (obj->IsA() != TSystemFile::Class()) {
+      if (obj && obj->IsA() != TSystemFile::Class()) {
          if (obj->IsFolder()) {
             fIconBox->Refresh();
          }
@@ -3035,7 +3035,7 @@ void TRootBrowserLite::BrowseTextFile(const char *file)
    int sz = fread(buffer, 1, bufferSize, fd);
    fclose(fd);
 
-   if (isBinary(buffer, sz)) {
+   if ((sz > 0) && isBinary(buffer, sz)) {
       if (loaded) {
          HistoryBackward();
       }
