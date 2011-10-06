@@ -7584,6 +7584,7 @@ void THistPainter::PaintSurface(Option_t *)
       icol1 = 201;
       Double_t dcol = 0.5/Double_t(nbcol);
       TColor *colref = gROOT->GetColor(fH->GetFillColor());
+      if (!colref) return;
       Float_t r,g,b,hue,light,satur;
       colref->GetRGB(r,g,b);
       TColor::RGBtoHLS(r,g,b,hue,light,satur);
