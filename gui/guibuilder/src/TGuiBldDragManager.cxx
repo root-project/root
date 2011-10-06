@@ -347,7 +347,7 @@ void TGuiBldMenuDialog::Build()
                strlcpy(val, tdefval, sizeof(val));
             } else if (!strncmp(basictype, "float", 5) ||
                        !strncmp(basictype, "double", 6)) {
-               Double_t ddefval;
+               Double_t ddefval = 0.0;
                m->GetterMethod()->Execute(fObject, "", ddefval);
                snprintf(val, 255, "%g", ddefval);
             } else if (!strncmp(basictype, "char", 4) ||
@@ -355,7 +355,7 @@ void TGuiBldMenuDialog::Build()
                        !strncmp(basictype, "int", 3)  ||
                        !strncmp(basictype, "long", 4) ||
                        !strncmp(basictype, "short", 5)) {
-               Long_t ldefval;
+               Long_t ldefval = 0L;
                m->GetterMethod()->Execute(fObject, "", ldefval);
                snprintf(val, 255, "%li", ldefval);
             }
@@ -5445,13 +5445,15 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
                   TMethod* method2 =
                         object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),
                                                               menuItem->GetArgs());
-                  TToggle *t = new TToggle;
-                  t->SetToggledObject(object, method2);
-                  t->SetOnValue(1);
-                  fPimpl->fFrameMenuTrash->Add(t);
+                  if (method2) {
+                     TToggle *t = new TToggle;
+                     t->SetToggledObject(object, method2);
+                     t->SetOnValue(1);
+                     fPimpl->fFrameMenuTrash->Add(t);
 
-                  menu->AddEntry(method2->GetName(), kToggleMenuAct, t);
-                  if (t->GetState()) menu->CheckEntryByData(t);
+                     menu->AddEntry(method2->GetName(), kToggleMenuAct, t);
+                     if (t->GetState()) menu->CheckEntryByData(t);
+                  }
                } else {
                   const char* menuItemTitle = menuItem->GetTitle();
                   if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();

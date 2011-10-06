@@ -325,8 +325,10 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    if (!frame) {
       fNameFrame->ChangeSelected(0);
       //fTab->SetTab(0);
-      tab->SetEnabled(kFALSE);
-      fClient->NeedRedraw(tab);
+      if (tab) {
+         tab->SetEnabled(kFALSE);
+         fClient->NeedRedraw(tab);
+      }
       return;
    }
 
@@ -485,8 +487,10 @@ void TGuiBldEditor::Reset()
    fSelected = 0;
    fNameFrame->Reset();
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
-   fTab->SetTab(0);
-   tab->SetEnabled(kFALSE);
+   if (tab) {
+      fTab->SetTab(0);
+      tab->SetEnabled(kFALSE);
+   }
 }
 
 //______________________________________________________________________________
