@@ -2473,7 +2473,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    //     7 - ouline above, 8 - ouline below, 9 - full ouline.
    //  fore_file specifies foreground texture of text.
 
-   UInt_t width, height;
+   UInt_t width=0, height=0;
    ARGB32 text_color = ARGB32_Black;
    ASImage *fore_im = 0;
    ASImage *text_im = 0;
@@ -3151,7 +3151,7 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    ASImageBevel bevel;
    bevel.type = 0;
 
-   ARGB32 hi, lo;
+   ARGB32 hi=ARGB32_White, lo=ARGB32_White;
    parse_argb_color(hi_color, &hi);
    parse_argb_color(lo_color, &lo);
 
