@@ -1542,6 +1542,7 @@ void TASImage::Paint(Option_t *option)
 
       ASImageDecoder *imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
                                                    0, 0, image->width, image->height, 0);
+      if (!imdec) return;
       for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
          imdec->decode_image_scanline(imdec);
          for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
