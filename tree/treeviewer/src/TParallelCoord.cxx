@@ -278,8 +278,10 @@ void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
    selector->SetObject(pc);
    TString varexp = "";
    for(Int_t i=0;i<selector->GetDimension();++i) {
-      pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
-      varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+      if (selector->GetVal(i)) {
+         pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
+         varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+      }
    }
    varexp.Remove(TString::kLeading,':');
    if (selector->GetSelect()) varexp.Append(Form("{%s}",selector->GetSelect()->GetTitle()));
@@ -1181,8 +1183,9 @@ void TParallelCoord::SetVertDisplay(Bool_t vert)
    if (vert == TestBit (kVertDisplay)) return;
    SetBit(kVertDisplay,vert);
    if (!gPad) return;
-   UInt_t ui = 0;
    TFrame* frame = gPad->GetFrame();
+   if (!frame) return;
+   UInt_t ui = 0;   
    Double_t horaxisspace = (frame->GetX2() - frame->GetX1())/(fNvar-1);
    Double_t veraxisspace = (frame->GetY2() - frame->GetY1())/(fNvar-1);
    TIter next(fVarList);

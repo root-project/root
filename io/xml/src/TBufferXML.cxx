@@ -1041,9 +1041,9 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
       comp_type = info->GetTypes()[number];
 
       elem = info->GetStreamerElementReal(number, 0);
-   } else
+   } else if (elem) {
       comp_type = elem->GetType();
-
+   }
 
    if (elem==0) {
       Error("SetStreamerElementNumber", "streamer info returns elem = 0");

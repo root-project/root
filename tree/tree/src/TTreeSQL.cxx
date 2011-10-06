@@ -393,6 +393,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
 
    for( int i=0; i < rows; ++i ) {
       TSQLRow * row = rs->Next();
+      if (!row) continue;
       type = row->GetField(1);
       Int_t index = type.First('(');
       if(index>0){

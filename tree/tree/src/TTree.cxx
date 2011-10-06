@@ -5696,7 +5696,8 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
       if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
-
+         if (!newtree) continue;
+         
          // Once the cloning is done, separate the trees,
          // to avoid as many side-effects as possible
          tree->GetListOfClones()->Remove(newtree);

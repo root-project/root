@@ -151,7 +151,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          TClonesArray *clones;
          clones = (TClonesArray*)fParent->GetStart();
 
-         pcl = clones->GetClass();
+         if (clones) pcl = clones->GetClass();
       } else if (pcl->GetCollectionProxy()) {
          // We always skip the collections.
 
@@ -159,6 +159,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          fCollection = pcl->GetCollectionProxy()->Generate();
          pcl = fCollection->GetValueClass();
          if (pcl == 0) {
+            // coverity[dereference] fparent is checked jus a bit earlier and can not be null here 
             Error("Setup","Not finding TClass for collecion for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
             return false;
          }         
@@ -224,7 +225,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          TLeaf *leaf2;
          if (fDataMember.Length()) {
             leaf2 = fBranch->GetLeaf(fDataMember);
-            fWhere = leaf2->GetValuePointer();
+            if (leaf2) fWhere = leaf2->GetValuePointer();
          } else if (!fWhere) {
             leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
             fWhere = leaf2->GetValuePointer();

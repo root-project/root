@@ -217,7 +217,7 @@ TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
 {
    // normal constructor
    
-   if (!info->IsClassTableExist()) 
+   if (info && !info->IsClassTableExist()) 
       fColInfos = new TObjArray;
 }
 

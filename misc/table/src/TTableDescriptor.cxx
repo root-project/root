@@ -405,13 +405,15 @@ Int_t TTableDescriptor::Offset(const Char_t *columnName) const
   // Take in account index if provided
   // Can not handle multidimensional indeces yet.
 
-   Int_t indx = ColumnByName(columnName);
    Int_t offset = -1;
-   if (indx >= 0 ) {
-      offset = Offset(indx);
-      const char *openBracket = 0;
-      if ( (openBracket = strchr(columnName,'['))  )
-         offset += atoi(openBracket+1)*TypeSize(indx);
+   if (columnName) {
+      Int_t indx = ColumnByName(columnName);
+      if (indx >= 0 ) {
+         offset = Offset(indx);
+         const char *openBracket = 0;
+         if ( (openBracket = strchr(columnName,'['))  )
+            offset += atoi(openBracket+1)*TypeSize(indx);
+      }
    }
    return offset;
 }

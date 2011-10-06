@@ -1607,7 +1607,7 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 #endif
    TString dir;
    TString newPath;
-   str << originalPath;
+   if (originalPath) str << originalPath;
 
    while (str.good())
    {

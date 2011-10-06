@@ -49,7 +49,7 @@ TClassRef::TClassRef(TClass *cl) : fClassPtr(cl), fPrevious(0), fNext(0)
    // Add reference to specified class object.
    
    if (fClassPtr) {
-      fClassName = cl->GetName();
+      fClassName = fClassPtr->GetName();
       fClassPtr->AddRef(this);
    }
 }

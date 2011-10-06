@@ -459,8 +459,11 @@ void TParallelCoordEditor::DoActivateSelection(Bool_t on)
 
    if (fAvoidSignal) return;
 
-   fParallel->GetCurrentSelection()->SetActivated(on);
-   Update();
+   TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
+   if (sel) {
+      sel->SetActivated(on);
+      Update();
+   }
 }
 
 
@@ -815,7 +818,8 @@ void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
 
    if (fAvoidSignal) return;
 
-   fParallel->GetCurrentSelection()->SetLineColor(TColor::GetColor(a));
+   TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
+   if (sel) sel->SetLineColor(TColor::GetColor(a));
    fSelectionSelect->GetSelectedEntry()->SetBackgroundColor(a);
    Update();
 }
@@ -828,8 +832,11 @@ void TParallelCoordEditor::DoSelectLineWidth(Int_t wid)
 
    if (fAvoidSignal) return;
 
-   fParallel->GetCurrentSelection()->SetLineWidth(wid);
-   Update();
+   TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
+   if (sel) {
+      sel->SetLineWidth(wid);
+      Update();
+   }
 }
 
 
@@ -860,8 +867,11 @@ void TParallelCoordEditor::DoShowRanges(Bool_t s)
 
    if (fAvoidSignal) return;
 
-   fParallel->GetCurrentSelection()->SetShowRanges(s);
-   Update();
+   TParallelCoordSelect *select = fParallel->GetCurrentSelection();
+   if (select) {
+      select->SetShowRanges(s);
+      Update();
+   }
 }
 
 

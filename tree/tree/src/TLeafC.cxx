@@ -130,6 +130,10 @@ void TLeafC::ReadBasket(TBuffer &b)
    // written to disk when len was == 0.
    Int_t readbasket = GetBranch()->GetReadBasket();
    TBasket *basket = GetBranch()->GetBasket(readbasket);
+   if (!basket) {
+      fValue[0] = '\0';
+      return;
+   }
    Int_t* entryOffset = basket->GetEntryOffset();
    if (entryOffset) {
       Long64_t first = GetBranch()->GetBasketEntry()[readbasket];

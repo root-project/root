@@ -28,10 +28,12 @@ namespace ROOT {
       Int_t  fIndex;
       TList  fListOfTopProxies;
 
+   private:
+      TFriendProxyDescriptor(const TFriendProxyDescriptor &b);
+      TFriendProxyDescriptor& operator=(const TFriendProxyDescriptor &b);
+
    public:
       TFriendProxyDescriptor(const char *treename, const char *aliasname, Int_t index);
-      TFriendProxyDescriptor(const TFriendProxyDescriptor &b) :TNamed(b){;}
-      TFriendProxyDescriptor& operator=(const TFriendProxyDescriptor&) {return *this;}
 
       Int_t  GetIndex() const { return fIndex; }
       TList *GetListOfTopProxies() { return &fListOfTopProxies; }

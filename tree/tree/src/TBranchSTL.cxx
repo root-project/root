@@ -291,6 +291,8 @@ Int_t TBranchSTL::Fill()
          bHelper.fPointers   = elPointers;
          bHelper.fBaseOffset = actClass->GetBaseClassOffset( cl );
 
+         // This copies the value of fPointes into the vector and transfers
+         // its ownership to the vector.  It will be deleted in ~TBranch.
          brIter = fBranchMap.insert(std::make_pair(actClass, bHelper ) ).first;
          elBranch->SetAddress( &((*brIter).second.fPointers) );
       }

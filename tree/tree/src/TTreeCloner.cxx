@@ -76,6 +76,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    fBasketSeek(new Long64_t[fMaxBaskets]),
    fBasketEntry(new Long64_t[fMaxBaskets]),
    fBasketIndex(new UInt_t[fMaxBaskets]),
+   fPidOffset(0),
    fCloneMethod(TTreeCloner::kDefault),
    fToStartEntries(0)
 {

@@ -223,7 +223,7 @@ namespace ROOT {
             TClonesArray *tca;
             tca = (TClonesArray*)GetStart();
 
-            if (tca->GetLast()<(Int_t)i) return 0;
+            if (!tca || tca->GetLast()<(Int_t)i) return 0;
 
             location = (char*)tca->At(i);
 
