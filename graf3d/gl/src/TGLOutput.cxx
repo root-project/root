@@ -202,6 +202,14 @@ void TGLOutput::Capture(TGLViewer & viewer)
    StartEmbeddedPS();
 
    FILE *output = fopen (gVirtualPS->GetName(), "a");
+   if (!output) {
+      //Quite stupid fix, since if fopen fails, CloseEmbeddedPS will also
+      //fail but still I have to do it.
+      Error("TGLOutput::Capture", "can not open file for embedding ps");
+      CloseEmbeddedPS();
+      return;
+   }
+   
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort = GL2PS_BSP_SORT;
    Int_t buffsize = 0, state = GL2PS_OVERFLOW;
