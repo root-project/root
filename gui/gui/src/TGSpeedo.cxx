@@ -61,6 +61,7 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    fMeanMark = kFALSE;
    fPeakVal  = 0.0;
    fMeanVal  = 0.0;
+   fTextFS = fCounterFS = kNone;
    fThreshold[0] = fThreshold[1] = fThreshold[2] = 0.0;
    fThresholdColor[0] = kGreen;
    fThresholdColor[1] = kOrange;
@@ -97,6 +98,7 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    fMeanMark = kFALSE;
    fPeakVal  = 0.0;
    fMeanVal  = 0.0;
+   fTextFS = fCounterFS = kNone;
    fThreshold[0] = fThreshold[1] = fThreshold[2] = 0.0;
    fThresholdColor[0] = kGreen;
    fThresholdColor[1] = kOrange;
