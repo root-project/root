@@ -1100,13 +1100,15 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    // returns an absolute path
 
    TGListTreeItem *parent, *itm = item;
-   char *s = strdup(itm->GetText());
+   TString dirname = strdup(itm->GetText());
 
    while ((parent=itm->GetParent())) {
-      s = gSystem->ConcatFileName(parent->GetText(), s);
+      char *s = gSystem->ConcatFileName(parent->GetText(), dirname);
+      dirname = s;
+      delete [] s;
       itm = parent;
    }
-   TString dirname = gSystem->ExpandPathName(s);
+   dirname = gSystem->ExpandPathName(dirname.Data());
    while (dirname.Contains(".lnk")) {
       Ssiz_t idx = dirname.Index(".lnk") + 4;
       TString resolved = dirname;
@@ -1114,7 +1116,6 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       resolved = gSystem->ExpandPathName(resolved.Data());
       dirname = resolved.Append(dirname.Remove(0, idx));
    }
-   delete [] s;
    return dirname;
 }
 
@@ -1154,8 +1155,7 @@ static Bool_t IsTextFile(const char *candidate)
    FILE *infile;
    FileStat_t buf;
 
-   gSystem->GetPathInfo(candidate, buf);
-   if (!(buf.fMode & kS_IFREG))
+   if (gSystem->GetPathInfo(candidate, buf) || !(buf.fMode & kS_IFREG))
       return kFALSE;
 
    infile = fopen(candidate, "r");
@@ -1190,6 +1190,7 @@ static const TGPicture *MakeLinkPic(const TGPicture *pic)
    TImage *img1, *img2;
    if (pic) {
       img1 = TImage::Create();
+      if (img1 == 0) return pic;
       img1->SetImage(((const TGPicture *)pic)->GetPicture(),
                      ((const TGPicture *)pic)->GetMask());
       img2 = TImage::Open("slink_t.xpm");
@@ -1219,8 +1220,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    char action[512];
    TString act;
    Bool_t is_link = kFALSE;
-   gSystem->GetPathInfo(item->GetText(), sbuf);
-   if (sbuf.fIsLink) {
+   if (!gSystem->GetPathInfo(item->GetText(), sbuf) && sbuf.fIsLink) {
       is_link = kTRUE;
       fullpath = gSystem->ExpandPathName(item->GetText());
    }
@@ -1334,8 +1334,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                if ((fname!="..") && (fname!=".")) { // skip it
                   if (!fListTree->FindChildByName(item, fname)) {
                      itm = fListTree->AddItem(item, fname);
-                     gSystem->GetPathInfo(fname, sbuf);
-                     if (sbuf.fIsLink) {
+                     if (!gSystem->GetPathInfo(fname, sbuf) &&
+                         sbuf.fIsLink) {
                         // change the pictures if it is a symlink 
                         // (shortcut on Windows)
                         const TGPicture *opened = 0, *l_opened = 0;
@@ -1533,10 +1533,13 @@ char *TGFileBrowser::FormatFileInfo(const char *fname, Long64_t size, Long_t mod
    struct tm *newtime;
    time_t loctime = (time_t) modtime;
    newtime = localtime(&loctime);
-   infos += "\n";
-   infos += TString::Format("%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-           newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-           newtime->tm_min);
+   if (newtime) {
+      infos += "\n";
+      infos += TString::Format("%d-%02d-%02d %02d:%02d",
+                               newtime->tm_year + 1900,
+                               newtime->tm_mon+1, newtime->tm_mday, 
+                               newtime->tm_hour, newtime->tm_min);
+   }
    return StrDup(infos.Data());
 }
 
