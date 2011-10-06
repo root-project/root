@@ -786,7 +786,8 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    //  Compute the closest distance of approach from point px,py to this line.
    //  The distance is computed in pixels units.
 
-   return TVirtualGraphPainter::GetPainter()->DistancetoPrimitiveHelper(this, px, py);
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->DistancetoPrimitiveHelper(this, px, py);
 }
 
 
@@ -841,7 +842,8 @@ void TGraph::DrawPanel()
 {
    // Display a panel with all graph drawing options.
 
-   TVirtualGraphPainter::GetPainter()->DrawPanelHelper(this);
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->DrawPanelHelper(this);
 }
 
 
@@ -947,8 +949,9 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  if Middle button clicked, the line is moved parallel to itself
    //     until the button is released.
-
-   TVirtualGraphPainter::GetPainter()->ExecuteEventHelper(this, event, px, py);
+   
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->ExecuteEventHelper(this, event, px, py);
 }
 
 
@@ -1946,8 +1949,9 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
 void TGraph::Paint(Option_t *option)
 {
    // Draw this graph with its current attributes.
-
-   TVirtualGraphPainter::GetPainter()->PaintHelper(this, option);
+   
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->PaintHelper(this, option);
 }
 
 
@@ -1955,8 +1959,9 @@ void TGraph::Paint(Option_t *option)
 void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
    // Draw the (x,y) as a graph.
-
-   TVirtualGraphPainter::GetPainter()->PaintGraph(this, npoints, x, y, chopt);
+   
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->PaintGraph(this, npoints, x, y, chopt);
 }
 
 
@@ -1964,8 +1969,9 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
    // Draw the (x,y) as a histogram.
-
-   TVirtualGraphPainter::GetPainter()->PaintGrapHist(this, npoints, x, y, chopt);
+   
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->PaintGrapHist(this, npoints, x, y, chopt);
 }
 
 
@@ -1973,8 +1979,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 void TGraph::PaintStats(TF1 *fit)
 {
    // Draw the stats
-
-   TVirtualGraphPainter::GetPainter()->PaintStats(this, fit);
+   
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->PaintStats(this, fit);
 }
 
 
