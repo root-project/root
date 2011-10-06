@@ -156,8 +156,10 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
    }
    FILE  *file;
    file=fopen(filename,"wt");
-   agwrite(fGVGraph, file);
-   fclose(file);
+   if (file) {
+      agwrite(fGVGraph, file);
+      fclose(file);
+   }
 }
 
 
@@ -197,7 +199,7 @@ void TGraphStruct::Draw(Option_t *option)
       edge->Draw();
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
          edge = (TGraphEdge*)fEdges->After(edge);
-         edge->Draw();
+         if (edge) edge->Draw();
       }
    }
 }
@@ -232,7 +234,7 @@ Int_t TGraphStruct::Layout()
       node->CreateGVNode(fGVGraph);
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
-         node->CreateGVNode(fGVGraph);
+         if (node) node->CreateGVNode(fGVGraph);
       }
    }
 
@@ -242,7 +244,7 @@ Int_t TGraphStruct::Layout()
       edge->CreateGVEdge(fGVGraph);
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
          edge = (TGraphEdge*)fEdges->After(edge);
-         edge->CreateGVEdge(fGVGraph);
+         if (edge) edge->CreateGVEdge(fGVGraph);
       }
    }
 
@@ -256,7 +258,7 @@ Int_t TGraphStruct::Layout()
       node->Layout();
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
-         node->Layout();
+         if (node) node->Layout();
       }
    }
 
@@ -266,7 +268,7 @@ Int_t TGraphStruct::Layout()
       edge->Layout();
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
          edge = (TGraphEdge*)fEdges->After(edge);
-         edge->Layout();
+         if (edge) edge->Layout();
       }
    }
 
@@ -291,10 +293,12 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       node->SaveAttributes(out);
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
-         out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
-                               node->GetName()<<"\",\""<<
-                               node->GetTitle()<<"\");"<<endl;
-         node->SaveAttributes(out);
+         if (node) {
+            out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
+                                  node->GetName()<<"\",\""<<
+                                  node->GetTitle()<<"\");"<<endl;
+            node->SaveAttributes(out);
+         }
       }
    }
 
@@ -312,12 +316,14 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
          en++;
          edge = (TGraphEdge*)fEdges->After(edge);
-         out<<"   TGraphEdge *"<<"e"<<en<<
-                               " = new TGraphEdge("<<
-                               edge->GetNode1()->GetName()<<","<<
-                               edge->GetNode2()->GetName()<<");"<<endl;
-         out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
-         edge->SaveAttributes(out,Form("e%d",en));
+         if (edge) {
+            out<<"   TGraphEdge *"<<"e"<<en<<
+                                  " = new TGraphEdge("<<
+                                  edge->GetNode1()->GetName()<<","<<
+                                  edge->GetNode2()->GetName()<<");"<<endl;
+            out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
+            edge->SaveAttributes(out,Form("e%d",en));
+         }
       }
    }
 
