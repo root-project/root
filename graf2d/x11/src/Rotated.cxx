@@ -618,6 +618,7 @@ static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable dr
    if(str1==0) return 1;
 
    str3=my_strtok(str1, str2);
+   if (!str3) return 0;
 
    /* loop through each section in the string */
    do {
@@ -843,6 +844,7 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    }
 
    str3=my_strtok(str1, str2);
+   if (!str3) return 0;
 
    XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,
                 &overall);
@@ -917,6 +919,7 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    }
 
    str3=my_strtok(str1, str2);
+   if (!str3) return 0;
 
    /* loop through each section in the string */
    do {
