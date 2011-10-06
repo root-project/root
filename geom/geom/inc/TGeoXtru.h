@@ -30,6 +30,21 @@ class TGeoPolygon;
 
 class TGeoXtru : public TGeoBBox
 {
+public:
+   struct ThreadData_t
+   {
+      Int_t              fSeg;   // !current segment [0,fNvert-1]
+      Int_t              fIz;    // !current z plane [0,fNz-1]
+      Double_t          *fXc;    // ![fNvert] current X positions for polygon vertices
+      Double_t          *fYc;    // ![fNvert] current Y positions for polygon vertices
+      TGeoPolygon       *fPoly;  // !polygon defining section shape
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+   ThreadData_t&         GetThreadData()   const;
+   virtual void          ClearThreadData() const;
+
 protected:
    // data members
    Int_t                 fNvert; // number of vertices of the 2D polygon (at least 3)
@@ -42,22 +57,8 @@ protected:
    Double_t             *fX0;    //[fNz] array of X offsets (for each Z)
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
 
-   struct ThreadData_t
-   {
-      Int_t              fSeg;   // !current segment [0,fNvert-1]
-      Int_t              fIz;    // !current z plane [0,fNz-1]
-      Double_t          *fXc;    // ![fNvert] current X positions for polygon vertices
-      Double_t          *fYc;    // ![fNvert] current Y positions for polygon vertices
-      TGeoPolygon       *fPoly;  // !polygon defining section shape
-
-      ThreadData_t();
-      ~ThreadData_t();
-   };
-
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! size of thread-specific array
-   ThreadData_t&         GetThreadData()   const;
-   void                  ClearThreadData() const;
    TGeoXtru(const TGeoXtru&); 
    TGeoXtru& operator=(const TGeoXtru&);
 

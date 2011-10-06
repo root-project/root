@@ -80,6 +80,9 @@ protected :
    TGeoVolume& operator=(const TGeoVolume&);
 
 public:
+   virtual void  ClearThreadData() const;
+
+public:
    enum EGeoVolumeTypes {
       kVolumeReplicated =  BIT(14),
       kVolumeSelected =    BIT(15),
@@ -295,9 +298,23 @@ public:
 
 class TGeoVolumeAssembly : public TGeoVolume
 {
-private:
-   Int_t           fCurrent;              //! index of current selected node
-   Int_t           fNext;                 //! index of next node to be entered
+public:
+   struct ThreadData_t
+   {
+      Int_t           fCurrent;           //! index of current selected node
+      Int_t           fNext;              //! index of next node to be entered
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+
+   ThreadData_t& GetThreadData()   const;
+   virtual void  ClearThreadData() const;
+
+protected:
+   mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector
+   mutable Int_t                      fThreadSize; //! Thread vector size
+
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);
@@ -309,13 +326,13 @@ public:
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoVolume     *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option="spacedout");
    virtual void    DrawOnly(Option_t *) {;} 
-   virtual Int_t   GetCurrentNodeIndex() const {return fCurrent;}
-   virtual Int_t   GetNextNodeIndex() const {return fNext;}
+   virtual Int_t   GetCurrentNodeIndex() const;
+   virtual Int_t   GetNextNodeIndex() const;
    virtual Bool_t  IsAssembly() const {return kTRUE;}
    virtual Bool_t  IsVisible() const {return kFALSE;}
    static TGeoVolumeAssembly *MakeAssemblyFromVolume(TGeoVolume *vol);
-   void            SetCurrentNodeIndex(Int_t index) {fCurrent = index;}
-   void            SetNextNodeIndex(Int_t index) {fNext = index;}
+   void            SetCurrentNodeIndex(Int_t index);
+   void            SetNextNodeIndex(Int_t index);
 
    ClassDef(TGeoVolumeAssembly, 2)   // an assembly of volumes
 };

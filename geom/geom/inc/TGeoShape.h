@@ -74,6 +74,7 @@ enum EShapeType {
    kGeoHype    = BIT(30),
    kGeoSavePrimitive = BIT(20)
 };
+   virtual void  ClearThreadData() const {}
 
 protected :
 // data members

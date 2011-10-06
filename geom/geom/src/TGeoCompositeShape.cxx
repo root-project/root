@@ -159,6 +159,13 @@
 #include "TGeoCompositeShape.h"
 ClassImp(TGeoCompositeShape)
 
+//______________________________________________________________________________
+void TGeoCompositeShape::ClearThreadData() const
+{
+   // Needed just for cleanup.
+   if (fNode) fNode->ClearThreadData();
+}
+
 //_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)

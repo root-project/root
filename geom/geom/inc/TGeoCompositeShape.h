@@ -48,6 +48,7 @@ public:
    virtual ~TGeoCompositeShape();
    // methods
    virtual Double_t      Capacity() const;
+   virtual void          ClearThreadData() const;
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;

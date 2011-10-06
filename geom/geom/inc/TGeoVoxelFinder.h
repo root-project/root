@@ -30,6 +30,24 @@ enum EVoxelsType {
    kGeoInvalidVoxels = BIT(15),
    kGeoRebuildVoxels = BIT(16)
 };
+   struct ThreadData_t
+   {
+      Int_t          fNcandidates;    //! number of candidates
+      Int_t          fCurrentVoxel;   //! index of current voxel in sorted list
+      Int_t         *fCheckList;      //! list of candidates
+      UChar_t       *fBits1;          //! bits used for list intersection
+
+      Int_t          fSlices[3];      //! slice indices for current voxel
+      Int_t          fInc[3];         //! slice index increment
+      Double_t       fInvdir[3];      //! 1/current director cosines
+      Double_t       fLimits[3];      //! limits on X,Y,Z
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+   ThreadData_t& GetThreadData()   const;
+   void          ClearThreadData() const;
+
 protected:
    TGeoVolume      *fVolume;          // volume to which applies
 
@@ -67,27 +85,9 @@ protected:
    UChar_t          *fIndcY;          //[fNy] array of slices bits on Y
    UChar_t          *fIndcZ;          //[fNz] array of slices bits on Z
 
-   struct ThreadData_t
-   {
-      Int_t          fNcandidates;    //! number of candidates
-      Int_t          fCurrentVoxel;   //! index of current voxel in sorted list
-      Int_t         *fCheckList;      //! list of candidates
-      UChar_t       *fBits1;          //! bits used for list intersection
-
-      Int_t          fSlices[3];      //! slice indices for current voxel
-      Int_t          fInc[3];         //! slice index increment
-      Double_t       fInvdir[3];      //! 1/current director cosines
-      Double_t       fLimits[3];      //! limits on X,Y,Z
-
-      ThreadData_t();
-      ~ThreadData_t();
-   };
-
    mutable std::vector<ThreadData_t*> fThreadData; //!
    mutable Int_t                      fThreadSize; //!
 
-   ThreadData_t& GetThreadData()   const;
-   void          ClearThreadData() const;
    TGeoVoxelFinder(const TGeoVoxelFinder&);
    TGeoVoxelFinder& operator=(const TGeoVoxelFinder&);
    

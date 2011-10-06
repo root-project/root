@@ -38,6 +38,15 @@ enum EGeoBoolType {
    kGeoIntersection,
    kGeoSubtraction
 };
+   struct ThreadData_t
+   {
+      Int_t          fSelected;       // ! selected branch
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+   ThreadData_t&     GetThreadData()   const;
+   void              ClearThreadData() const;
 private:
    TGeoBoolNode(const TGeoBoolNode&); // Not implemented
    TGeoBoolNode& operator=(const TGeoBoolNode&); // Not implemented
@@ -49,19 +58,10 @@ protected:
    TGeoMatrix       *fRightMat;       // transformation that applies to the right branch
    Int_t             fNpoints;        //! number of points on the mesh
    Double_t         *fPoints;         //! array of mesh points
-   struct ThreadData_t
-   {
-      Int_t          fSelected;       // ! selected branch
-
-      ThreadData_t();
-      ~ThreadData_t();
-   };
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! Size for the navigation data array
 // methods
-   ThreadData_t&     GetThreadData()   const;
-   void              ClearThreadData() const;
    Bool_t            MakeBranch(const char *expr, Bool_t left);
 public:
    // constructors
