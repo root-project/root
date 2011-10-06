@@ -367,7 +367,7 @@ void TPaveText::InsertLine()
    // Add a new lineine at the mouse position.
 
    if (!gPad->IsEditable()) return;
-   Double_t ymouse, yobj;
+   Double_t ymouse=0, yobj;
    TObject *obj = GetObject(ymouse, yobj); //get object pointed by the mouse
    Double_t yline = (ymouse-fY1)/(fY2-fY1);
    TLine *newline = AddLine(0,yline,0,yline);
