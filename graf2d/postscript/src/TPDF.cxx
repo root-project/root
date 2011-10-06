@@ -2028,8 +2028,9 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
    // Set the fill patterns (1 to 25) for fill areas
 
    char cpat[10];
-   PrintStr(" /Cs8 cs");
    TColor *col = gROOT->GetColor(color);
+   if (!col) return;
+   PrintStr(" /Cs8 cs");
    Double_t colRed   = col->GetRed();
    Double_t colGreen = col->GetGreen();
    Double_t colBlue  = col->GetBlue();
