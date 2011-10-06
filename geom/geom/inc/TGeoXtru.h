@@ -35,18 +35,29 @@ protected:
    Int_t                 fNvert; // number of vertices of the 2D polygon (at least 3)
    Int_t                 fNz;    // number of z planes (at least two)
    Double_t              fZcurrent; // current Z position
-   TGeoPolygon          *fPoly;  // polygon defining section shape
    Double_t             *fX;     //[fNvert] X positions for polygon vertices
    Double_t             *fY;     //[fNvert] Y positions for polygon vertices
-   Double_t             *fXc;    //[fNvert] current X positions for polygon vertices
-   Double_t             *fYc;    //[fNvert] current Y positions for polygon vertices
    Double_t             *fZ;     //[fNz] array of Z planes positions 
    Double_t             *fScale; //[fNz] array of scale factors (for each Z)
    Double_t             *fX0;    //[fNz] array of X offsets (for each Z)
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
-   Int_t                 fSeg;   // !current segment [0,fNvert-1]
-   Int_t                 fIz;    // !current z plane [0,fNz-1]
 
+   struct ThreadData_t
+   {
+      Int_t              fSeg;   // !current segment [0,fNvert-1]
+      Int_t              fIz;    // !current z plane [0,fNz-1]
+      Double_t          *fXc;    // ![fNvert] current X positions for polygon vertices
+      Double_t          *fYc;    // ![fNvert] current Y positions for polygon vertices
+      TGeoPolygon       *fPoly;  // !polygon defining section shape
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+
+   mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
+   mutable Int_t                      fThreadSize; //! size of thread-specific array
+   ThreadData_t&         GetThreadData()   const;
+   void                  ClearThreadData() const;
    TGeoXtru(const TGeoXtru&); 
    TGeoXtru& operator=(const TGeoXtru&);
 
@@ -56,8 +67,8 @@ protected:
    void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
    Bool_t                IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const;
    Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in);
-   void                  SetIz(Int_t iz) {fIz = iz;}
-   void                  SetSeg(Int_t iseg) {fSeg = iseg;}
+   void                  SetIz(Int_t iz);
+   void                  SetSeg(Int_t iseg);
 
 public:
    // constructors
@@ -105,7 +116,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-   ClassDef(TGeoXtru, 2)         // extruded polygon class 
+   ClassDef(TGeoXtru, 3)         // extruded polygon class 
 };
 
 #endif

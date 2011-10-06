@@ -45,20 +45,97 @@
 // within x3d produces incorrect end-faces
 //_____________________________________________________________________________
 
-#include "Riostream.h"
-
-#include "TGeoManager.h"
-#include "TGeoVolume.h"
-#include "TGeoPolygon.h"
-#include "TVirtualGeoPainter.h"
 #include "TGeoXtru.h"
+
+#include "Riostream.h"
 #include "TVirtualPad.h"
+#include "TThread.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TClass.h"
 #include "TMath.h"
 
+#include "TVirtualGeoPainter.h"
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoPolygon.h"
+
 ClassImp(TGeoXtru)
+
+//______________________________________________________________________________
+TGeoXtru::ThreadData_t::ThreadData_t() :
+   fSeg(0), fIz(0), fXc(0), fYc(0), fPoly(0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TGeoXtru::ThreadData_t::~ThreadData_t()
+{
+   // Destructor.
+
+   delete [] fXc;
+   delete [] fYc;
+   delete fPoly;
+}
+
+//______________________________________________________________________________
+TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
+{
+   Int_t tid = TGeoManager::ThreadId();
+   TThread::Lock();
+   if (tid >= fThreadSize)
+   {
+      fThreadData.resize(tid + 1);
+      fThreadSize = tid + 1;
+   }
+   if (fThreadData[tid] == 0)
+   {
+      fThreadData[tid] = new ThreadData_t;
+      ThreadData_t &td = *fThreadData[tid];
+
+      td.fXc = new Double_t [fNvert];
+      td.fYc = new Double_t [fNvert];
+      memcpy(td.fXc, fX, fNvert*sizeof(Double_t));
+      memcpy(td.fYc, fY, fNvert*sizeof(Double_t));
+      td.fPoly = new TGeoPolygon(fNvert);
+      td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
+      td.fPoly->FinishPolygon();
+      if (tid == 0 && td.fPoly->IsIllegalCheck()) {
+         Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
+      }      
+   }
+   TThread::UnLock();
+   return *fThreadData[tid];
+}
+
+//______________________________________________________________________________
+void TGeoXtru::ClearThreadData() const
+{
+   std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
+   while (i != fThreadData.end())
+   {
+      delete *i;
+      ++i;
+   }
+   fThreadData.clear();
+   fThreadSize = 0;
+}
+
+//______________________________________________________________________________
+void TGeoXtru::SetIz(Int_t iz)
+{
+   // Set current z-plane.
+
+   GetThreadData().fIz = iz;
+}
+//______________________________________________________________________________
+void TGeoXtru::SetSeg(Int_t iseg)
+{
+   // Set current segment.
+
+   GetThreadData().fSeg = iseg;
+}
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru()
@@ -68,17 +145,13 @@ TGeoXtru::TGeoXtru()
    fNvert = 0;
    fNz = 0;
    fZcurrent = 0.;
-   fPoly = 0;
    fX = 0;
    fY = 0;
-   fXc = 0;
-   fYc = 0;
    fZ = 0;
    fScale = 0;
    fX0 = 0;
    fY0 = 0;
-   fSeg = 0;
-   fIz = 0;
+   fThreadSize = 0;
 }   
 
 //_____________________________________________________________________________
@@ -95,17 +168,13 @@ TGeoXtru::TGeoXtru(Int_t nz)
    fNvert = 0;
    fNz = nz;   
    fZcurrent = 0.;
-   fPoly = 0;
    fX = 0;
    fY = 0;
-   fXc = 0;
-   fYc = 0;
    fZ = new Double_t[nz];
    fScale = new Double_t[nz];
    fX0 = new Double_t[nz];
    fY0 = new Double_t[nz];
-   fSeg = 0;
-   fIz = 0;
+   fThreadSize = 0;
 }
 
 //_____________________________________________________________________________
@@ -128,17 +197,13 @@ TGeoXtru::TGeoXtru(Double_t *param)
    fNvert = 0;
    fNz = 0;
    fZcurrent = 0.;
-   fPoly = 0;
    fX = 0;
    fY = 0;
-   fXc = 0;
-   fYc = 0;
    fZ = 0;
    fScale = 0;
    fX0 = 0;
    fY0 = 0;
-   fSeg = 0;
-   fIz = 0;
+   fThreadSize = 0;
    SetDimensions(param);
 }
 
@@ -148,17 +213,13 @@ TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   fNvert(xt.fNvert),
   fNz(xt.fNz),
   fZcurrent(xt.fZcurrent),
-  fPoly(xt.fPoly),
   fX(xt.fX),
   fY(xt.fY),
-  fXc(xt.fXc),
-  fYc(xt.fYc),
   fZ(xt.fZ),
   fScale(xt.fScale),
   fX0(xt.fX0),
   fY0(xt.fY0),
-  fSeg(xt.fSeg),
-  fIz(xt.fIz)
+  fThreadSize(0)
 { 
    //copy constructor
 }
@@ -172,17 +233,13 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
       fNvert=xt.fNvert;
       fNz=xt.fNz;
       fZcurrent=xt.fZcurrent;
-      fPoly=xt.fPoly;
       fX=xt.fX;
       fY=xt.fY;
-      fXc=xt.fXc;
-      fYc=xt.fYc;
       fZ=xt.fZ;
       fScale=xt.fScale;
       fX0=xt.fX0;
       fY0=xt.fY0;
-      fSeg=xt.fSeg;
-      fIz=xt.fIz;
+      ClearThreadData();
    } 
    return *this;
 }
@@ -193,24 +250,24 @@ TGeoXtru::~TGeoXtru()
 // destructor
    if (fX)  {delete[] fX; fX = 0;}
    if (fY)  {delete[] fY; fY = 0;}
-   if (fXc) {delete[] fXc; fXc = 0;}
-   if (fYc) {delete[] fYc; fYc = 0;}
    if (fZ)  {delete[] fZ; fZ = 0;}
    if (fScale) {delete[] fScale; fScale = 0;}
    if (fX0)  {delete[] fX0; fX0 = 0;}
    if (fY0)  {delete[] fY0; fY0 = 0;}
+   ClearThreadData();
 }
 
 //_____________________________________________________________________________   
 Double_t TGeoXtru::Capacity() const
 {
 // Compute capacity [length^3] of this shape.
+   ThreadData_t& td = GetThreadData();
    Int_t iz;
    Double_t capacity = 0;
    Double_t area, dz, sc1, sc2;
    TGeoXtru *xtru = (TGeoXtru*)this;
    xtru->SetCurrentVertices(0.,0.,1.);  
-   area = fPoly->Area();
+   area = td.fPoly->Area();
    for (iz=0; iz<fNz-1; iz++) {
       dz = fZ[iz+1]-fZ[iz];
       if (TGeoShape::IsSameWithinTolerance(dz,0)) continue;
@@ -225,6 +282,7 @@ Double_t TGeoXtru::Capacity() const
 void TGeoXtru::ComputeBBox()
 {
 // compute bounding box of the pcon
+   ThreadData_t& td = GetThreadData();
    if (!fX || !fZ || !fNvert) {
       Error("ComputeBBox", "In shape %s polygon not defined", GetName());
       SetShapeBit(TGeoShape::kGeoBad);
@@ -239,10 +297,10 @@ void TGeoXtru::ComputeBBox()
    for (Int_t i=0; i<fNz; i++) {
       SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
       for (Int_t j=0; j<fNvert; j++) {
-         if (fXc[j]<xmin) xmin=fXc[j];
-         if (fXc[j]>xmax) xmax=fXc[j];
-         if (fYc[j]<ymin) ymin=fYc[j];
-         if (fYc[j]>ymax) ymax=fYc[j];
+         if (td.fXc[j]<xmin) xmin=td.fXc[j];
+         if (td.fXc[j]>xmax) xmax=td.fXc[j];
+         if (td.fYc[j]<ymin) ymin=td.fYc[j];
+         if (td.fYc[j]>ymax) ymax=td.fYc[j];
       }
    }
    fOrigin[0] = 0.5*(xmin+xmax);      
@@ -257,13 +315,14 @@ void TGeoXtru::ComputeBBox()
 void TGeoXtru::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
-   if (fIz<0) {  
+   ThreadData_t& td = GetThreadData();
+   if (td.fIz<0) {  
       memset(norm,0,3*sizeof(Double_t));
       norm[2] = (dir[2]>0)?1:-1;
       return;
    }
    Double_t vert[12];      
-   GetPlaneVertices(fIz, fSeg, vert);
+   GetPlaneVertices(td.fIz, td.fSeg, vert);
    GetPlaneNormal(vert, norm);
    Double_t ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
    if (ndotd<0) {
@@ -277,6 +336,7 @@ void TGeoXtru::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm
 Bool_t TGeoXtru::Contains(Double_t *point) const
 {
 // test if point is inside this shape
+   ThreadData_t& td = GetThreadData();
    // Check Z range
    TGeoXtru *xtru = (TGeoXtru*)this;
    if (point[2]<fZ[0]) return kFALSE;   
@@ -286,20 +346,20 @@ Bool_t TGeoXtru::Contains(Double_t *point) const
    if (TGeoShape::IsSameWithinTolerance(point[2],fZ[iz])) {
       xtru->SetIz(-1);
       xtru->SetCurrentVertices(fX0[iz],fY0[iz], fScale[iz]);
-      if (fPoly->Contains(point)) return kTRUE;
+      if (td.fPoly->Contains(point)) return kTRUE;
       if (iz>1 && TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz-1])) {
          xtru->SetCurrentVertices(fX0[iz-1],fY0[iz-1], fScale[iz-1]);
-         return fPoly->Contains(point);
+         return td.fPoly->Contains(point);
       } else if (iz<fNz-2 && TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
          xtru->SetCurrentVertices(fX0[iz+1],fY0[iz+1], fScale[iz+1]);
-         return fPoly->Contains(point);
+         return td.fPoly->Contains(point);
       }      
    }      
    xtru->SetCurrentZ(point[2], iz);
    if (TMath::Abs(point[2]-fZ[iz])<TGeoShape::Tolerance() ||
        TMath::Abs(fZ[iz+1]-point[2])<TGeoShape::Tolerance())  xtru->SetIz(-1);
-   // Now fXc,fYc represent the vertices of the section at point[2]
-   return fPoly->Contains(point);
+   // Now td.fXc,fYc represent the vertices of the section at point[2]
+   return td.fPoly->Contains(point);
 }
 
 //_____________________________________________________________________________
@@ -313,6 +373,7 @@ Int_t TGeoXtru::DistancetoPrimitive(Int_t px, Int_t py)
 Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
 {
 // Compute distance to a Xtru lateral surface.
+   ThreadData_t& td = GetThreadData();
    Double_t snext;
    Double_t vert[12];
    Double_t norm[3];
@@ -328,7 +389,7 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
       pt[2] = point[2]+snext*dir[2];
       if (dir[2] < 0.) xtru->SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
       else             xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
-      if (!fPoly->Contains(pt)) return TGeoShape::Big();
+      if (!td.fPoly->Contains(pt)) return TGeoShape::Big();
       return snext;
    }      
    GetPlaneVertices(iz, ivert, vert);
@@ -367,6 +428,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 {
 // compute distance from inside point to surface of the polycone
    // locate Z segment
+   ThreadData_t& td = GetThreadData();
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -395,7 +457,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
          }   
       }
    }   
-   Bool_t convex = fPoly->IsConvex();
+   Bool_t convex = td.fPoly->IsConvex();
 //   Double_t stepmax = step;
 //   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = TGeoShape::Big();
@@ -431,7 +493,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
          pt[0] = point[0]+sz*dir[0];
          pt[1] = point[1]+sz*dir[1];
          xtru->SetCurrentVertices(fX0[ipl],fY0[ipl],fScale[ipl]);
-         if (fPoly->Contains(pt)) {
+         if (td.fPoly->Contains(pt)) {
             // ray gets through next polygon - is it the last one?
             if (ipl==0 || ipl==fNz-1) {
                xtru->SetIz(-1);
@@ -443,7 +505,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
             if (!zexit && TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[inext])) {
                xtru->SetCurrentVertices(fX0[inext],fY0[inext],fScale[inext]);
                // if we do not cross the next polygone, we are out
-               if (!fPoly->Contains(pt)) {
+               if (!td.fPoly->Contains(pt)) {
                   xtru->SetIz(-1);
                   if (convex) return sz;
                   zexit = kTRUE;
@@ -478,6 +540,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 {
 // compute distance from outside point to surface of the tube
 //   Warning("DistFromOutside", "not implemented");
+   ThreadData_t& td = GetThreadData();
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -503,7 +566,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (snext>stepmax) return TGeoShape::Big();
       for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
       xtru->SetCurrentVertices(fX0[0],fY0[0],fScale[0]);
-      if (fPoly->Contains(pt)) {
+      if (td.fPoly->Contains(pt)) {
          xtru->SetIz(-1);
          return snext;
       }   
@@ -517,7 +580,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          if (snext>stepmax) return TGeoShape::Big();
          for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
          xtru->SetCurrentVertices(fX0[fNz-1],fY0[fNz-1],fScale[fNz-1]);
-         if (fPoly->Contains(pt)) {
+         if (td.fPoly->Contains(pt)) {
             xtru->SetIz(-1);
             return snext;
          }   
@@ -541,7 +604,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    // not the case - we have to do some work...
    // Start trackink from current iz
    // - first solve particular case dir[2]=0
-   Bool_t convex = fPoly->IsConvex();
+   Bool_t convex = td.fPoly->IsConvex();
    Bool_t hit = kFALSE;
    if (TGeoShape::IsSameWithinTolerance(dir[2],0)) {
       // loop lateral planes to see if we cross something
@@ -608,22 +671,11 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    fX = new Double_t[nvert];
    if (fY) delete [] fY;
    fY = new Double_t[nvert];
-   if (fXc) delete [] fXc;
-   fXc = new Double_t[nvert];
-   if (fYc) delete [] fYc;
-   fYc = new Double_t[nvert];
    memcpy(fX,xv,nvert*sizeof(Double_t));
-   memcpy(fXc,xv,nvert*sizeof(Double_t));
    memcpy(fY,yv,nvert*sizeof(Double_t));
-   memcpy(fYc,yv,nvert*sizeof(Double_t));
    
-   if (fPoly) delete fPoly;
-   fPoly = new TGeoPolygon(nvert);
-   fPoly->SetXY(fXc,fYc); // initialize with current coordinates
-   fPoly->FinishPolygon();
-   if (fPoly->IsIllegalCheck()) {
-      Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-   }   
+   ClearThreadData();
+
    return kTRUE;
 }
 
@@ -689,12 +741,13 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
 {
 // Returns (x,y,z) of 3 vertices of the surface defined by Z sections (iz, iz+1)
 // and polygon vertices (ivert, ivert+1). No range check.
+   ThreadData_t& td = GetThreadData();
    Double_t x,y,z1,z2;
    Int_t iv1 = (ivert+1)%fNvert;
    Int_t icrt = 0;
    z1 = fZ[iz];
    z2 = fZ[iz+1];
-   if (fPoly->IsClockwise()) {
+   if (td.fPoly->IsClockwise()) {
       x = fX[ivert]*fScale[iz]+fX0[iz];
       y = fY[ivert]*fScale[iz]+fY0[iz];
       vert[icrt++] = x;
@@ -868,6 +921,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
 // Compute safety to sector iz, returning also the closest segment index.
+   ThreadData_t& td = GetThreadData();
    Double_t safz = TGeoShape::Big();
    Double_t saf1, saf2;
    Bool_t in1, in2;
@@ -878,12 +932,12 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bo
       safz = TMath::Abs(point[2]-fZ[iz]);
       if (safz>safmin) return TGeoShape::Big();
       SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
-      saf1 = fPoly->Safety(point, iseg);
-      in1 = fPoly->Contains(point);
+      saf1 = td.fPoly->Safety(point, iseg);
+      in1 = td.fPoly->Contains(point);
 //      if (!in1 && saf1>safmin) return TGeoShape::Big(); 
       SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
-      saf2 = fPoly->Safety(point, iseg);
-      in2 = fPoly->Contains(point);
+      saf2 = td.fPoly->Safety(point, iseg);
+      in2 = td.fPoly->Contains(point);
       if ((in1&!in2)|(in2&!in1)) {
          safe = safz; 
       } else {
@@ -1025,9 +1079,10 @@ void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
 void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)      
 {
 // Set current vertex coordinates according X0, Y0 and SCALE.
+   ThreadData_t& td = GetThreadData();
    for (Int_t i=0; i<fNvert; i++) {
-      fXc[i] = scale*fX[i] + x0;
-      fYc[i] = scale*fY[i] + y0;
+      td.fXc[i] = scale*fX[i] + x0;
+      td.fYc[i] = scale*fY[i] + y0;
    }   
 }
 
@@ -1068,22 +1123,23 @@ void TGeoXtru::SetDimensions(Double_t *param)
 void TGeoXtru::SetPoints(Double_t *points) const
 {
 // create polycone mesh points
+   ThreadData_t& td = GetThreadData();
    Int_t i, j;
    Int_t indx = 0;
    TGeoXtru *xtru = (TGeoXtru*)this;
    if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
-         if (fPoly->IsClockwise()) {
+         if (td.fPoly->IsClockwise()) {
             for (j = 0; j < fNvert; j++) {
-               points[indx++] = fXc[j];
-               points[indx++] = fYc[j];
+               points[indx++] = td.fXc[j];
+               points[indx++] = td.fYc[j];
                points[indx++] = fZ[i];
             }
          } else {
             for (j = 0; j < fNvert; j++) {
-               points[indx++] = fXc[fNvert-1-j];
-               points[indx++] = fYc[fNvert-1-j];
+               points[indx++] = td.fXc[fNvert-1-j];
+               points[indx++] = td.fYc[fNvert-1-j];
                points[indx++] = fZ[i];
             }
          }   
@@ -1095,22 +1151,23 @@ void TGeoXtru::SetPoints(Double_t *points) const
 void TGeoXtru::SetPoints(Float_t *points) const
 {
 // create polycone mesh points
+   ThreadData_t& td = GetThreadData();
    Int_t i, j;
    Int_t indx = 0;
    TGeoXtru *xtru = (TGeoXtru*)this;
    if (points) {
       for (i = 0; i < fNz; i++) {
          xtru->SetCurrentVertices(fX0[i], fY0[i], fScale[i]);
-         if (fPoly->IsClockwise()) {
+         if (td.fPoly->IsClockwise()) {
             for (j = 0; j < fNvert; j++) {
-               points[indx++] = fXc[j];
-               points[indx++] = fYc[j];
+               points[indx++] = td.fXc[j];
+               points[indx++] = td.fYc[j];
                points[indx++] = fZ[i];
             }
          } else {
             for (j = 0; j < fNvert; j++) {
-               points[indx++] = fXc[fNvert-1-j];
-               points[indx++] = fYc[fNvert-1-j];
+               points[indx++] = td.fXc[fNvert-1-j];
+               points[indx++] = td.fYc[fNvert-1-j];
                points[indx++] = fZ[i];
             }
          }   
@@ -1148,18 +1205,6 @@ void TGeoXtru::Sizeof3D() const
 ///   Int_t numSegs   = fNvert*(2*fNz-1);
 ///   Int_t numPolys  = fNvert*(fNz-1)+2;
 ///   painter->AddSize3D(numPoints, numSegs, numPolys);
-}
-
-//_____________________________________________________________________________
-void TGeoXtru::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TGeoVolume.
-   if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(TGeoXtru::Class(), this);
-      if (fPoly) fPoly->SetXY(fXc,fYc); // initialize with current coordinates   
-   } else {
-      R__b.WriteClassBuffer(TGeoXtru::Class(), this);
-   }
 }
 
 //_____________________________________________________________________________

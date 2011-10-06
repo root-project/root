@@ -426,6 +426,7 @@ public:
    Double_t              *GetDblBuffer(Int_t length);
    void                   SetAllIndex();
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
+   Bool_t                 IsMultiThread() const {return fMultiThread;}
    static Int_t           ThreadId();
    static void            ClearThreadsMap();
 
