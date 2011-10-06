@@ -193,9 +193,11 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
       case kSortByDate:
          time_t loctimeF1 = (time_t) f1->GetModTime();
+         // coverity[dereference]
          struct tm tmF1 = *localtime(&loctimeF1);
 
          time_t loctimeF2 = (time_t) f2->GetModTime();
+         // coverity[dereference] 
          struct tm tmF2 = *localtime(&loctimeF2);
 
          if ( tmF1.tm_year != tmF2.tm_year )
@@ -361,10 +363,14 @@ void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
    struct tm *newtime;
    time_t loctime = (time_t) fModTime;
    newtime = localtime(&loctime);
-   snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-            newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
-            newtime->tm_min);
-   fSubnames[4] = new TGString(tmp);
+   if (newtime) {
+      snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+               newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
+               newtime->tm_min);
+      fSubnames[4] = new TGString(tmp);
+   }
+   else 
+      fSubnames[4] = new TGString("1901-01-01 00:00");
 
    fSubnames[5] = 0;
 
@@ -628,28 +634,33 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    if (is_link) {
       TImage *img1, *img2;
       if (*pic && *lpic) {
+         TString lnk_name;
          img1 = TImage::Create();
-         img1->SetImage(((const TGPicture *)*pic)->GetPicture(),
-                        ((const TGPicture *)*pic)->GetMask());
-         img2 = TImage::Open("slink_t.xpm");
-         if (img2) img1->Merge(img2);
-         TString lnk_name = ((const TGPicture *)*pic)->GetName();
-         lnk_name.Prepend("lnk_");
-         *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                              img1->GetPixmap(), img1->GetMask());
-         fCleanups->Add(((TObject *)*pic));
-         if (img2) delete img2; delete img1;
+         if (img1) {
+            img1->SetImage(((const TGPicture *)*pic)->GetPicture(),
+                           ((const TGPicture *)*pic)->GetMask());
+            img2 = TImage::Open("slink_t.xpm");
+            if (img2) img1->Merge(img2);
+            lnk_name = ((const TGPicture *)*pic)->GetName();
+            lnk_name.Prepend("lnk_");
+            *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
+                                 img1->GetPixmap(), img1->GetMask());
+            fCleanups->Add(((TObject *)*pic));
+            if (img2) delete img2; delete img1;
+         }
          img1 = TImage::Create();
-         img1->SetImage(((const TGPicture *)*lpic)->GetPicture(),
-                        ((const TGPicture *)*lpic)->GetMask());
-         img2 = TImage::Open("slink_s.xpm");
-         if (img2) img1->Merge(img2);
-         lnk_name = ((const TGPicture *)*lpic)->GetName();
-         lnk_name.Prepend("lnk_");
-         *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                              img1->GetPixmap(), img1->GetMask());
-         fCleanups->Add(((TObject *)*lpic));
-         if (img2) delete img2; delete img1;
+         if (img1) {
+            img1->SetImage(((const TGPicture *)*lpic)->GetPicture(),
+                           ((const TGPicture *)*lpic)->GetMask());
+            img2 = TImage::Open("slink_s.xpm");
+            if (img2) img1->Merge(img2);
+            lnk_name = ((const TGPicture *)*lpic)->GetName();
+            lnk_name.Prepend("lnk_");
+            *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
+                                 img1->GetPixmap(), img1->GetMask());
+            fCleanups->Add(((TObject *)*lpic));
+            if (img2) delete img2; delete img1;
+         }
       }
       else {
          *pic = fSlink_t;
