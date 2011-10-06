@@ -184,13 +184,14 @@ TGMenuBar::~TGMenuBar()
 //______________________________________________________________________________
 void TGMenuBar::Layout()
 {
-   // Clculates whether the >> menu must be shown or not and 
+   // Calculates whether the >> menu must be shown or not and 
    // which menu titles are hidden. 
 
    if (GetDefaultWidth() > GetWidth()) {
       while (!(GetDefaultWidth() < GetWidth() || 
                GetList()->GetSize() <= 1)) {
          TGFrameElement* entry = GetLastOnLeft();
+         if (!entry) break;
          TGMenuTitle* menuTitle = (TGMenuTitle*) entry->fFrame;
          fNeededSpace->AddLast(new TParameter<Int_t>("", menuTitle->GetWidth() + 
                                                          entry->fLayout->GetPadLeft() + 
@@ -212,15 +213,17 @@ void TGMenuBar::Layout()
       while (fit) {
          TGMenuEntry* menu = (TGMenuEntry*) fMenuMore->GetListOfEntries()->Last();
          TGLayoutHints* layout = (TGLayoutHints*) fOutLayouts->Last();
-         ULong_t  hints = layout->GetLayoutHints();
+         ULong_t hints = (layout) ? layout->GetLayoutHints() : 0;
          TGPopupMenu* beforeMenu = 0;
          if (hints & kLHintsRight) {
             TGFrameElement* entry = GetLastOnLeft();
-            TGMenuTitle* beforeMenuTitle = (TGMenuTitle*) entry->fFrame;
-            beforeMenu = beforeMenuTitle->GetMenu();
+            if (entry) {
+               TGMenuTitle* beforeMenuTitle = (TGMenuTitle*) entry->fFrame;
+               beforeMenu = beforeMenuTitle->GetMenu();
+            }
          }
-
-         menu->GetPopup()->Disconnect("PoppedUp()", this, "PopupConnection()");
+         if (menu && menu->GetPopup())
+            menu->GetPopup()->Disconnect("PoppedUp()", this, "PopupConnection()");
          AddPopup( menu->GetName(), menu->GetPopup(), layout, beforeMenu );
          fOutLayouts->Remove( fOutLayouts->Last() );
          fNeededSpace->Remove( fNeededSpace->Last() );
@@ -2152,7 +2155,7 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             hotpos = mentry->fLabel->GetHotPos();
             outext = new char[lentext+2];
             i=0;
-            while (lentext) {
+            while (text && lentext) {
                if (i == hotpos-1) {
                   outext[i] = '&';
                   i++;
@@ -2192,7 +2195,7 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             hotpos = mentry->fLabel->GetHotPos();
             outext = new char[lentext+2];
             i=0;
-            while (lentext) {
+            while (text && lentext) {
                if (i == hotpos-1) {
                   outext[i] = '&';
                   i++;
