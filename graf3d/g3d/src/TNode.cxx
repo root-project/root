@@ -350,7 +350,7 @@ void TNode::Draw(Option_t *option)
       view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
-      view->SetAutoRange(kTRUE);
+      if (view) view->SetAutoRange(kTRUE);
    }
    
    // Create a 3D viewer to draw us
