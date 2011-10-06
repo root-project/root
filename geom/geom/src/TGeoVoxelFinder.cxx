@@ -77,6 +77,7 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData() const
          td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
       }
    }
+   TThread::UnLock();
    return *fThreadData[tid];
 }
 

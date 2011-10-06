@@ -10,20 +10,19 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include "TGeoBoolNode.h"
 
 #include "Riostream.h"
 
-#include "TGeoCompositeShape.h"
-#include "TGeoMatrix.h"
-#include "TGeoManager.h"
-
-#include "TGeoBoolNode.h"
-
+#include "TThread.h"
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
+#include "TGeoCompositeShape.h"
+#include "TGeoMatrix.h"
+#include "TGeoManager.h"
 
 //_____________________________________________________________________________
 //  TGeoBoolNode - base class for Boolean operations between two shapes.
@@ -51,6 +50,58 @@
 ClassImp(TGeoBoolNode)
 
 //______________________________________________________________________________
+TGeoBoolNode::ThreadData_t::ThreadData_t() :
+   fSelected(0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TGeoBoolNode::ThreadData_t::~ThreadData_t()
+{
+   // Destructor.
+}
+
+//______________________________________________________________________________
+TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
+{
+   Int_t tid = TGeoManager::ThreadId();
+   TThread::Lock();
+   if (tid >= fThreadSize)
+   {
+      fThreadData.resize(tid + 1);
+      fThreadSize = tid + 1;
+   }
+   if (fThreadData[tid] == 0)
+   {
+      fThreadData[tid] = new ThreadData_t;
+   }
+   TThread::UnLock();
+   return *fThreadData[tid];
+}
+
+//______________________________________________________________________________
+void TGeoBoolNode::ClearThreadData() const
+{
+   std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
+   while (i != fThreadData.end())
+   {
+      delete *i;
+      ++i;
+   }
+   fThreadData.clear();
+   fThreadSize = 0;
+}
+
+//______________________________________________________________________________
+void TGeoBoolNode::SetSelected(Int_t sel)
+{
+   // Set the selected branch.
+
+   GetThreadData().fSelected = sel;
+}
+
+//______________________________________________________________________________
 TGeoBoolNode::TGeoBoolNode()
 {
 // Default constructor
@@ -58,9 +109,9 @@ TGeoBoolNode::TGeoBoolNode()
    fRight    = 0;
    fLeftMat  = 0;
    fRightMat = 0;
-   fSelected = 0;
    fNpoints  = 0;
    fPoints   = 0;
+   fThreadSize = 0;
 }
 
 //______________________________________________________________________________
@@ -71,9 +122,9 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    fRight    = 0;
    fLeftMat  = 0;
    fRightMat = 0;
-   fSelected = 0;
    fNpoints  = 0;
    fPoints   = 0;
+   fThreadSize = 0;
    if (!MakeBranch(expr1, kTRUE)) {
       return;
    }
@@ -86,12 +137,12 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
 {
 // Constructor providing left and right shapes and matrices (in the Boolean operation).
-   fSelected = 0;
    fLeft = left;
    fRight = right;
    fLeftMat = lmat;
    fNpoints  = 0;
    fPoints   = 0;
+   fThreadSize = 0;
    if (!fLeftMat) fLeftMat = gGeoIdentity;
    else fLeftMat->RegisterYourself();
    fRightMat = rmat;
@@ -113,6 +164,7 @@ TGeoBoolNode::~TGeoBoolNode()
 // Destructor.
 // --- deletion of components handled by TGeoManager class.
    if (fPoints) delete [] fPoints;
+   ClearThreadData();
 }
 
 //______________________________________________________________________________
@@ -388,18 +440,19 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
 void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+   ThreadData_t& td = GetThreadData();
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
    Double_t local[3];
    Double_t ldir[3], lnorm[3];
-   if (fSelected == 1) {
+   if (td.fSelected == 1) {
       fLeftMat->MasterToLocal(point, local);
       fLeftMat->MasterToLocalVect(dir, ldir);
       fLeft->ComputeNormal(local,ldir,lnorm);
       fLeftMat->LocalToMasterVect(lnorm, norm);
       return;
    }
-   if (fSelected == 2) {
+   if (td.fSelected == 2) {
       fRightMat->MasterToLocal(point, local);
       fRightMat->MasterToLocalVect(dir, ldir);
       fRight->ComputeNormal(local,ldir,lnorm);
@@ -744,17 +797,18 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
 void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+   ThreadData_t& td = GetThreadData();
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
    Double_t local[3], ldir[3], lnorm[3];
-   if (fSelected == 1) {
+   if (td.fSelected == 1) {
       fLeftMat->MasterToLocal(point, local);
       fLeftMat->MasterToLocalVect(dir, ldir);
       fLeft->ComputeNormal(local,ldir,lnorm);
       fLeftMat->LocalToMasterVect(lnorm, norm);
       return;
    }
-   if (fSelected == 2) {
+   if (td.fSelected == 2) {
       fRightMat->MasterToLocal(point, local);
       fRightMat->MasterToLocalVect(dir, ldir);
       fRight->ComputeNormal(local,ldir,lnorm);
@@ -1125,17 +1179,18 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
 void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
+   ThreadData_t& td = GetThreadData();
    Double_t local[3], ldir[3], lnorm[3];
    norm[0] = norm[1] = 0.;
    norm[2] = 1.;
-   if (fSelected == 1) {
+   if (td.fSelected == 1) {
       fLeftMat->MasterToLocal(point, local);
       fLeftMat->MasterToLocalVect(dir, ldir);
       fLeft->ComputeNormal(local,ldir,lnorm);
       fLeftMat->LocalToMasterVect(lnorm, norm);
       return;
    }
-   if (fSelected == 2) {
+   if (td.fSelected == 2) {
       fRightMat->MasterToLocal(point, local);
       fRightMat->MasterToLocalVect(dir, ldir);
       fRight->ComputeNormal(local,ldir,lnorm);

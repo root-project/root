@@ -43,14 +43,25 @@ private:
    TGeoBoolNode& operator=(const TGeoBoolNode&); // Not implemented
 
 protected:
-   Int_t             fSelected;       // ! selected branch
    TGeoShape        *fLeft;           // shape on the left branch
    TGeoShape        *fRight;          // shape on the right branch
    TGeoMatrix       *fLeftMat;        // transformation that applies to the left branch
    TGeoMatrix       *fRightMat;       // transformation that applies to the right branch
    Int_t             fNpoints;        //! number of points on the mesh
    Double_t         *fPoints;         //! array of mesh points
+   struct ThreadData_t
+   {
+      Int_t          fSelected;       // ! selected branch
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+
+   mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
+   mutable Int_t                      fThreadSize; //! Size for the navigation data array
 // methods
+   ThreadData_t&     GetThreadData()   const;
+   void              ClearThreadData() const;
    Bool_t            MakeBranch(const char *expr, Bool_t left);
 public:
    // constructors
@@ -81,7 +92,7 @@ public:
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
-   void              SetSelected(Int_t sel) {fSelected = sel;}
+   void              SetSelected(Int_t sel);
    virtual void      Sizeof3D() const;
 
    ClassDef(TGeoBoolNode, 1)              // a boolean node
