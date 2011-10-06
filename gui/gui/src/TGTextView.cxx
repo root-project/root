@@ -406,6 +406,7 @@ Long_t TGTextView::ToObjXCoord(Long_t xCoord, Long_t line)
 
    Long_t viscoord =  xCoord;
    buffer = fText->GetLine(pos, len);
+   if (!buffer) return 0;
    travelBuffer = buffer;
    charBuffer = *travelBuffer++;
    int cw = gVirtualX->TextWidth(fFont, &charBuffer, 1);
@@ -571,6 +572,8 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
          }
          if (pos.fY >= ToObjYCoord(fVisible.fY)) {
             buffer = fText->GetLine(pos, len);
+            if (!buffer) // skip next lines and continue the while() loop
+               continue;
             Int_t i = 0;
             while (buffer[i] != '\0') {
                if (buffer[i] == '\t') {
