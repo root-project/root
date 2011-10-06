@@ -332,15 +332,6 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) c
    }
 }
 
-static const Float_t selColor[] =
-{
-   1,   1,   1,   1,     // base color
-   0,   0,   0,   1,     // ambient
-   0,   0,   0,   1,     // specular
-   0.5, 0,   0,   1,     // emission
-   0                     // shininess
-};
-
 //______________________________________________________________________________
 void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 {
