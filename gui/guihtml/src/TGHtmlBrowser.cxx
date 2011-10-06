@@ -403,10 +403,12 @@ void TGHtmlBrowser::Selected(const char *uri)
          fHtml->Layout();
          fHtml->SetBaseUri(fpath.Data());
          buf = (char *)calloc(4096, sizeof(char));
-         while (fgets(buf, 4096, f)) {
-            fHtml->ParseText(buf);
+         if (buf) {
+            while (fgets(buf, 4096, f)) {
+               fHtml->ParseText(buf);
+            }
+            free(buf);
          }
-         free(buf);
          fclose(f);
          fURL->SetText(surl.Data());
          if (!fComboBox->FindEntry(surl.Data()))

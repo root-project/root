@@ -235,6 +235,7 @@ static TImage *ReadRemoteImage(const char *url)
       return 0;
    Int_t size = 1024*1024;
    buf = (char *)calloc(size, sizeof(char));
+   if (!buf) return 0;
    if (s.RecvRaw(buf, size) == -1) {
       free(buf);
       return 0;
@@ -250,7 +251,7 @@ static TImage *ReadRemoteImage(const char *url)
    fclose(tmp);
    free(buf);
    image = TImage::Open(pathtmp.Data());
-   if (!image->IsValid()) {
+   if (image && !image->IsValid()) {
       delete image;
       image = 0;
    }
