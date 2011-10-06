@@ -497,8 +497,10 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
       gVirtualX->WriteGIF((char*)fileName);
    } else {
       TImage *img = TImage::Create();
-      img->FromPad(pad);
-      img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-      delete img;
+      if (img) {
+         img->FromPad(pad);
+         img->WriteImage(fileName, (TImage::EImageFileTypes)type);
+         delete img;
+      }
    }
 }
