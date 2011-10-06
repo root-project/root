@@ -57,9 +57,11 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    fPath = gSystem->DirName(path);
 
    fImage = TImage::Open(path);
-   fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path),
-                                                fImage->GetPixmap(), fImage->GetMask());
-   TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
+   if (fImage) {
+      fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path),
+                                   fImage->GetPixmap(), fImage->GetMask());
+      TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
+   }
    SetWindowName();
    delete [] path;
 }
