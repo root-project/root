@@ -86,6 +86,8 @@ void TGSlider::CreateDisabledPicture()
    TImage *img = TImage::Create();
    TImage *img2 = TImage::Create();
 
+   if (!img || !img2) return;
+
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(), 
                        fSliderPic->GetHeight());
