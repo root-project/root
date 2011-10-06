@@ -5727,6 +5727,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    TColor *col = gROOT->GetColor(text->GetTextColor());
    if (!col) { // no color, make it black
       col = gROOT->GetColor(1);
+      if (!col) return;
    }
    ARGB32 color = ARGB32_White;
    parse_argb_color(col->AsHexString(), &color);
