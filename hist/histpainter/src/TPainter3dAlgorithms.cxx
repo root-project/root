@@ -4399,11 +4399,11 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    // Define the colors used to draw the function
    Float_t r, g, b, hue, light, satur, light2;
    TColor *colref = gROOT->GetColor(fgCurrentF3->GetFillColor());
-   colref->GetRGB(r, g, b);
+   if (colref) colref->GetRGB(r, g, b);
    TColor::RGBtoHLS(r, g, b, hue, light, satur);
    TColor *acol;
    acol = gROOT->GetColor(kF3FillColor1);
-   acol->SetRGB(r, g, b);
+   if (acol) acol->SetRGB(r, g, b);
    if (light >= 0.5) {
       light2 = .5*light;
    } else {
@@ -4411,11 +4411,11 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    }
    TColor::HLStoRGB(hue, light2, satur, r, g, b);
    acol = gROOT->GetColor(kF3FillColor2);
-   acol->SetRGB(r, g, b);
+   if (acol) acol->SetRGB(r, g, b);
    colref = gROOT->GetColor(fgCurrentF3->GetLineColor());
-   colref->GetRGB(r, g, b);
+   if (colref) colref->GetRGB(r, g, b);
    acol = gROOT->GetColor(kF3LineColor);
-   acol->SetRGB(r, g, b);
+   if (acol) acol->SetRGB(r, g, b);
 
    //       D R A W   F U N C T I O N
    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
