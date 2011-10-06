@@ -1298,12 +1298,12 @@ void TStreamerInfo::BuildOld()
             // case the base class contains a member used as an array dimension in the derived classes.
             Int_t version = base->GetBaseVersion();
             TStreamerInfo* infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
-            if (infobase->GetTypes() == 0) {
+            if (infobase && infobase->GetTypes() == 0) {
                infobase->BuildOld();
             }
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
 
-            if (shouldHaveInfoLoc && baseclass->TestBit(TClass::kIsEmulation) ) {
+            if (infobase && shouldHaveInfoLoc && baseclass->TestBit(TClass::kIsEmulation) ) {
                if ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) > virtualInfoLocAlloc ) {
                   ULong_t *store = fVirtualInfoLoc;
                   virtualInfoLocAlloc = 16 * ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) / 16 + 1);
