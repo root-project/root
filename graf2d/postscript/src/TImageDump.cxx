@@ -142,6 +142,7 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    if (!col) { // no color, set it white
       fFillColor = 10;
       col = gROOT->GetColor(fFillColor);
+      if (!col) return;
    }
 
    TColor *linecol = gROOT->GetColor(fLineColor);
@@ -224,6 +225,7 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
       if (!col) {
          fLineColor = 1;
          col = gROOT->GetColor(fLineColor);
+         if (!col) return;
       }
       fImage->DrawBox(pxl, pyl, pxt, pyt-1, col->AsHexString(),  TVirtualX::kFilled);
       return;
@@ -307,6 +309,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (!col) { // no color
       fMarkerColor = 1;
       col = gROOT->GetColor(fMarkerColor);
+      if (!col) return;
    }
 
    // Draw the marker according to the type
@@ -510,6 +513,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       if (!col) { // no color, make it black
          fFillColor = 1;
          col = gROOT->GetColor(fFillColor);
+         if (!col) return;
       }
       px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
       fImage->PutPixel(px1, py1, col->AsHexString());
@@ -525,6 +529,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       if (!col) { // no color, make it black
          fLineColor = 1;
          col = gROOT->GetColor(fLineColor);
+         if (!col) return;
       }
       if (fLineStyle < 2) {
          fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
