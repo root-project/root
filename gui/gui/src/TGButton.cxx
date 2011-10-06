@@ -499,11 +499,11 @@ void TGTextButton::Init()
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
       if (font) fFontStruct = font->GetFontStruct();
    }
-
-   fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
-                                      fWrapLength, kTextLeft, 0,
-                                      &fTWidth, &fTHeight);
-
+   if (font) {
+      fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
+                                         fWrapLength, kTextLeft, 0,
+                                         &fTWidth, &fTHeight);
+   }
    Resize();
    fWidth = fTWidth;
    fHeight = fTHeight;
@@ -570,10 +570,11 @@ void TGTextButton::Layout()
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
       if (font) fFontStruct = font->GetFontStruct();
    }
-
-   fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
-                                      fWrapLength, kTextLeft, 0,
-                                      &fTWidth, &fTHeight);
+   if (font) {
+      fTLayout = font->ComputeTextLayout(fLabel->GetString(), fLabel->GetLength(),
+                                         fWrapLength, kTextLeft, 0,
+                                         &fTWidth, &fTHeight);
+   }
    fClient->NeedRedraw(this);
 }
 
