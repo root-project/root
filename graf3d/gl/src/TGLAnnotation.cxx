@@ -227,22 +227,22 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    // prepare colors
-   Color_t bgCol, fgCol;
+   Color_t bgCol = fBackColor;
+   Color_t fgCol = fTextColor;
+   
    if (fUseColorSet)
    {
       fgCol = rnrCtx.ColorSet().Markup().GetColorIndex();
 
       TColor* c1 = gROOT->GetColor(rnrCtx.ColorSet().Markup().GetColorIndex());
       TColor* c2 = gROOT->GetColor(rnrCtx.ColorSet().Background().GetColorIndex());
-      Float_t f1 = 0.5, f2 = 0.5;
-      bgCol = TColor::GetColor(c1->GetRed()  *f1  + c2->GetRed()  *f2,
-                               c1->GetGreen()*f1  + c2->GetGreen()*f2,
-                               c1->GetBlue() *f1  + c2->GetBlue() *f2);
-   }
-   else
-   {
-      fgCol = fTextColor;
-      bgCol = fBackColor;
+
+      if (c1 && c2) {
+         Float_t f1 = 0.5, f2 = 0.5;
+         bgCol = TColor::GetColor(c1->GetRed()  *f1  + c2->GetRed()  *f2,
+                                  c1->GetGreen()*f1  + c2->GetGreen()*f2,
+                                  c1->GetBlue() *f1  + c2->GetBlue() *f2);
+      }
    }
 
    // reset matrix
