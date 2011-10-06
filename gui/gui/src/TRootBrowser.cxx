@@ -402,13 +402,16 @@ void TRootBrowser::CloseTabs()
    // Properly close the mainframes embedded in the different tabs
 
    TGFrameElement *el;
+   TGCompositeFrame *container;
    Int_t i;
    Disconnect(fMenuFile, "Activated(Int_t)", this, "HandleMenu(Int_t)");
    Disconnect(fTabRight, "Selected(Int_t)", this, "DoTab(Int_t)");
    if (fPlugins.IsEmpty()) return;
    fActBrowser = 0;
    for (i=0;i<fTabLeft->GetNumberOfTabs();i++) {
-      el = (TGFrameElement *)fTabLeft->GetTabContainer(i)->GetList()->First();
+      container = fTabLeft->GetTabContainer(i);
+      if (!container) continue;
+      el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
@@ -425,12 +428,14 @@ void TRootBrowser::CloseTabs()
                delete el->fLayout;
             }
          }
-         fTabLeft->GetTabContainer(i)->GetList()->Remove(el);
+         container->GetList()->Remove(el);
          delete el;
       }
    }
    for (i=0;i<fTabRight->GetNumberOfTabs();i++) {
-      el = (TGFrameElement *)fTabRight->GetTabContainer(i)->GetList()->First();
+      container = fTabRight->GetTabContainer(i);
+      if (!container) continue;
+      el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
@@ -450,12 +455,14 @@ void TRootBrowser::CloseTabs()
                delete el->fLayout;
             }
          }
-         fTabRight->GetTabContainer(i)->GetList()->Remove(el);
+         container->GetList()->Remove(el);
          delete el;
       }
    }
    for (i=0;i<fTabBottom->GetNumberOfTabs();i++) {
-      el = (TGFrameElement *)fTabBottom->GetTabContainer(i)->GetList()->First();
+      container = fTabBottom->GetTabContainer(i);
+      if (!container) continue;
+      el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
@@ -472,7 +479,7 @@ void TRootBrowser::CloseTabs()
                delete el->fLayout;
             }
          }
-         fTabBottom->GetTabContainer(i)->GetList()->Remove(el);
+         container->GetList()->Remove(el);
          delete el;
       }
    }
@@ -980,7 +987,7 @@ void TRootBrowser::SetTab(Int_t pos, Int_t subpos)
    if (subpos == -1)
       subpos = fCrTab[pos];
 
-   if (tab->SetTab(subpos, kFALSE)) { // Block signal emit
+   if (tab && tab->SetTab(subpos, kFALSE)) { // Block signal emit
       if (pos == kRight)
          SwitchMenus(tab->GetTabContainer(subpos));
       tab->Layout();
@@ -994,6 +1001,7 @@ void TRootBrowser::SetTabTitle(const char *title, Int_t pos, Int_t subpos)
 
    TBrowserPlugin *p = 0;
    TGTab *edit = GetTab(pos);
+   if (!edit) return;
    if (subpos == -1)
       subpos = fCrTab[pos];
 
@@ -1049,6 +1057,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
    // Start embedding external frame in the tab "pos" and tab element "subpos".
 
    fEditTab = GetTab(pos);
+   if (!fEditTab) return;
    fEditPos = pos;
    fEditSubPos = subpos;
 
@@ -1072,7 +1081,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
          fEditFrame = fEditTab->GetTabContainer(subpos);
          fEditTab->SetTab(subpos);
       }
-      fEditFrame->SetEditable();
+      if (fEditFrame) fEditFrame->SetEditable();
    }
 }
 
@@ -1086,7 +1095,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
       if (layout) {
          TGFrameElement *el = (TGFrameElement*) fEditFrame->GetList()->Last();
          // !!!! MT what to do with the old layout? Leak it for now ...
-         el->fLayout = layout;
+         if (el) el->fLayout = layout;
       }
       fEditFrame->Layout();
       if (fEditTab == fTabRight)
@@ -1139,22 +1148,24 @@ void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
             while ((mel = (TGFrameElement *) mnext())) {
                TGMenuTitle *t = (TGMenuTitle *) mel->fFrame;
                TGPopupMenu *popup = menu->GetPopup(t->GetName());
-               RecursiveReparent(popup);
-               if (popup->GetEntry("Close Canvas")) {
-                  TGMenuEntry *exit = popup->GetEntry("Close Canvas");
-                  popup->HideEntry(exit->GetEntryId());
-               }
-               if (popup->GetEntry("Close Viewer")) {
-                  TGMenuEntry *exit = popup->GetEntry("Close Viewer");
-                  popup->HideEntry(exit->GetEntryId());
-               }
-               if (popup->GetEntry("Quit ROOT")) {
-                  TGMenuEntry *exit = popup->GetEntry("Quit ROOT");
-                  popup->HideEntry(exit->GetEntryId());
-               }
-               if (popup->GetEntry("Exit")) {
-                  TGMenuEntry *exit = popup->GetEntry("Exit");
-                  popup->HideEntry(exit->GetEntryId());
+               if (popup) {
+                  RecursiveReparent(popup);
+                  if (popup->GetEntry("Close Canvas")) {
+                     TGMenuEntry *exit = popup->GetEntry("Close Canvas");
+                     popup->HideEntry(exit->GetEntryId());
+                  }
+                  if (popup->GetEntry("Close Viewer")) {
+                     TGMenuEntry *exit = popup->GetEntry("Close Viewer");
+                     popup->HideEntry(exit->GetEntryId());
+                  }
+                  if (popup->GetEntry("Quit ROOT")) {
+                     TGMenuEntry *exit = popup->GetEntry("Quit ROOT");
+                     popup->HideEntry(exit->GetEntryId());
+                  }
+                  if (popup->GetEntry("Exit")) {
+                     TGMenuEntry *exit = popup->GetEntry("Exit");
+                     popup->HideEntry(exit->GetEntryId());
+                  }
                }
             }
             ShowMenu(menu);
