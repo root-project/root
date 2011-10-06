@@ -6126,6 +6126,7 @@ void THistPainter::PaintH3Iso()
 
    Double_t dcol = 0.5/Double_t(nbcol);
    TColor *colref = gROOT->GetColor(fH->GetFillColor());
+   if (!colref) return;
    Float_t r, g, b, hue, light, satur;
    colref->GetRGB(r,g,b);
    TColor::RGBtoHLS(r,g,b,hue,light,satur);
@@ -6133,7 +6134,7 @@ void THistPainter::PaintH3Iso()
    for (Int_t col=0;col<nbcol;col++) {
       acol = gROOT->GetColor(col+icol1);
       TColor::HLStoRGB(hue, .4+col*dcol, satur, r, g, b);
-      acol->SetRGB(r, g, b);
+      if (acol) acol->SetRGB(r, g, b);
    }
 
    fLego->InitMoveScreen(-1.1,1.1);
