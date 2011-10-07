@@ -41,6 +41,7 @@
 #include "RooRealConstant.h"
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
+#include "RooNameReg.h"
 
 
 
@@ -290,8 +291,9 @@ Bool_t RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 
 //_____________________________________________________________________________
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					     const RooArgSet* normSet2, const char* /*rangeName*/) const 
+					     const RooArgSet* normSet2, const char* rangeName) const 
 {
+  //cout << "RooRealSumPdf::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<",analVars,"<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << endl;
   // Advertise that all integrals can be handled internally.
 
   // Handle trivial no-integration scenario
@@ -305,8 +307,9 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,0) ;
+  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,RooNameReg::ptr(rangeName)) ;
   if (cache) {
+    //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << endl;
     return _normIntMgr.lastIndex()+1 ;
   }
   
@@ -317,7 +320,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   _funcIter->Reset() ;
   RooAbsReal *func ;
   while((func=(RooAbsReal*)_funcIter->Next())) {
-    RooAbsReal* funcInt = func->createIntegral(analVars) ;
+    RooAbsReal* funcInt = func->createIntegral(analVars,rangeName) ;
     cache->_funcIntList.addOwned(*funcInt) ;
     if (normSet && normSet->getSize()>0) {
       RooAbsReal* funcNorm = func->createIntegral(*normSet) ;
@@ -326,12 +329,13 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   }
 
   // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
 
   if (normSet) {
     delete normSet ;
   }
 
+  //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << code+1 << endl;
   return code+1 ; 
 }
 
@@ -339,8 +343,9 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 //_____________________________________________________________________________
-Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* /*rangeName*/) const 
+Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* rangeName) const 
 {
+  //cout << "RooRealSumPdf::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << endl;
   // Implement analytical integrations by deferring integration of component
   // functions to integrators of components
 
@@ -350,6 +355,17 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
   // WVE needs adaptation for rangeName feature
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+  if (cache==0) { // revive the (sterilized) cache
+     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
+     std::auto_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
+     std::auto_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
+     std::auto_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
+     RooArgSet dummy;
+     Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
+     assert(code==code2); // must have revived the right (sterilized) slot...
+     cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+     assert(cache!=0);
+  }
 
   TIterator* funcIntIter = cache->_funcIntList.createIterator() ;
   _coefIter->Reset() ;
@@ -364,7 +380,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     func    = (RooAbsReal*)_funcIter->Next() ;
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
+      assert(func);
       if (func->isSelectedComp()) {
+    assert(funcInt);
 	value += funcInt->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal(normSet2) ;
@@ -375,6 +393,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter->Next() ;
     if (func->isSelectedComp()) {
+      assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
     
@@ -389,7 +408,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   delete funcIntIter ;
   
   Double_t normVal(1) ;
-  if (normSet2) {
+  if (normSet2 && normSet2->getSize()>0) {
     normVal = 0 ;
 
     // N funcs, N-1 coefficients 
@@ -400,6 +419,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
       funcNorm = (RooAbsReal*)funcNormIter->Next() ;
       Double_t coefVal = coef->getVal(normSet2) ;
       if (coefVal) {
+    assert(funcNorm);
 	normVal += funcNorm->getVal()*coefVal ;
       }
     }
@@ -407,6 +427,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     // Add last func with correct coefficient
     if (!_haveLastCoef) {
       funcNorm = (RooAbsReal*) funcNormIter->Next() ;
+      assert(funcNorm);
       normVal += funcNorm->getVal()*lastCoef ;
     }
       
