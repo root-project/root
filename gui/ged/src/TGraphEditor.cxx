@@ -301,7 +301,8 @@ void TGraphEditor::DoShape()
       }
    }
 
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   if (gPad && gPad->GetVirtCanvas())
+      gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 
    // set/reset the Marker CheckBox
@@ -326,7 +327,8 @@ void TGraphEditor::DoShape()
    }
 
    SetDrawOption(opt);
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   if (gPad && gPad->GetVirtCanvas())
+      gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
