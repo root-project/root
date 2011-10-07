@@ -307,7 +307,7 @@ void TPieEditor::DoShape()
    }
 
    SetDrawOption(opt);
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   if (gPad && gPad->GetVirtCanvas()) gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
