@@ -1100,7 +1100,7 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    // returns an absolute path
 
    TGListTreeItem *parent, *itm = item;
-   TString dirname = strdup(itm->GetText());
+   TString dirname = itm->GetText();
 
    while ((parent=itm->GetParent())) {
       char *s = gSystem->ConcatFileName(parent->GetText(), dirname);
