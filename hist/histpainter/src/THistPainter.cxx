@@ -6126,7 +6126,12 @@ void THistPainter::PaintH3Iso()
 
    Double_t dcol = 0.5/Double_t(nbcol);
    TColor *colref = gROOT->GetColor(fH->GetFillColor());
-   if (!colref) return;
+   if (!colref) {
+      delete [] x;
+      delete [] y;
+      delete [] z;
+      return;
+   }
    Float_t r, g, b, hue, light, satur;
    colref->GetRGB(r,g,b);
    TColor::RGBtoHLS(r,g,b,hue,light,satur);
