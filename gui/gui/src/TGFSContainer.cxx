@@ -193,11 +193,11 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
       case kSortByDate:
          time_t loctimeF1 = (time_t) f1->GetModTime();
-         // coverity[dereference]
+         // coverity[returned_null]
          struct tm tmF1 = *localtime(&loctimeF1);
 
          time_t loctimeF2 = (time_t) f2->GetModTime();
-         // coverity[dereference] 
+         // coverity[returned_null]
          struct tm tmF2 = *localtime(&loctimeF2);
 
          if ( tmF1.tm_year != tmF2.tm_year )
