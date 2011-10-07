@@ -4397,7 +4397,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    dz  = (rmax[2]-rmin[2]) / nz;
 
    // Define the colors used to draw the function
-   Float_t r, g, b, hue, light, satur, light2;
+   Float_t r=0., g=0., b=0., hue, light, satur, light2;
    TColor *colref = gROOT->GetColor(fgCurrentF3->GetFillColor());
    if (colref) colref->GetRGB(r, g, b);
    TColor::RGBtoHLS(r, g, b, hue, light, satur);
