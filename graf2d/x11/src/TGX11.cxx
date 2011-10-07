@@ -1010,9 +1010,11 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    XPoint *cBox;
    XRotSetMagnification(fTextMagnitude);
    cBox = XRotTextExtents(fDisplay, gTextFont, 0., 0, 0, mess, 0);
-   w    = cBox[2].x;
-   h    = -cBox[2].y;
-   free((char *)cBox);
+   if (cBox) {
+      w    = cBox[2].x;
+      h    = -cBox[2].y;
+      free((char *)cBox);
+   }
 }
 
 //______________________________________________________________________________
