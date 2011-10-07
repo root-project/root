@@ -1057,8 +1057,7 @@ static Bool_t IsTextFile(const char *candidate)
    FILE *infile;
    FileStat_t buf;
 
-   gSystem->GetPathInfo(candidate, buf);
-   if (!(buf.fMode & kS_IFREG))
+   if (gSystem->GetPathInfo(candidate, buf) || !(buf.fMode & kS_IFREG))
       return kFALSE;
 
    infile = fopen(candidate, "r");
