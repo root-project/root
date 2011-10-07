@@ -1568,12 +1568,14 @@ void TASImage::Paint(Option_t *option)
 
          imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
                                       0, 0, grad_im->width, grad_im->height, 0);
-         for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
-            imdec->decode_image_scanline(imdec);
-            for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
-               gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                         imdec->buffer.green[xt],
-                                         imdec->buffer.blue[xt]);
+         if (imdec) {
+            for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
+               imdec->decode_image_scanline(imdec);
+               for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
+                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
+                                            imdec->buffer.green[xt],
+                                            imdec->buffer.blue[xt]);
+            }
          }
          stop_image_decoding(&imdec);
          gVirtualPS->CellArrayEnd();
