@@ -4619,10 +4619,12 @@ void TStyleManager::DoSelectCanvas(TVirtualPad *pad, TObject *obj, Int_t mouseBu
 
    // Update the informations' label about the selected objects.
    TString sPad;
-   if (strlen(fCurPad->GetName())) sPad.Append(fCurPad->GetName());
-                              else sPad.Append("[no name]");
+   if (fCurPad->GetName() && strlen(fCurPad->GetName())) 
+      sPad.Append(fCurPad->GetName());
+   else 
+      sPad.Append("[no name]");
    sPad.Append(" - '");
-   if (strlen(fCurPad->GetTitle())) 
+   if (fCurPad->GetTitle() && strlen(fCurPad->GetTitle())) 
       sPad.Append(fCurPad->GetTitle());
    else 
       sPad.Append("[no title]");
@@ -4891,7 +4893,8 @@ void TStyleManager::ModCanvasBorderMode()
    // Slot called whenever the canvas border mode is modified by the user.
 
    Int_t i = kCanvasBorderModeSunken;
-   while (!fCanvasBorderMode->Find(i)->IsDown()) 
+   TGButton *but = 0;
+   while ((but = fCanvasBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetCanvasBorderMode(i - 1 - kCanvasBorderModeSunken);
    DoEditor();
@@ -5068,7 +5071,8 @@ void TStyleManager::ModPadBorderMode()
    // Slot called whenever the pad border mode is modified by the user.
 
    Int_t i = kPadBorderModeSunken;
-   while (!fPadBorderMode->Find(i)->IsDown()) 
+   TGButton *but = 0;
+   while ((but = fPadBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetPadBorderMode(i - 1 - kPadBorderModeSunken);
    DoEditor();
@@ -5314,7 +5318,8 @@ void TStyleManager::ModFrameBorderMode()
    // Slot called whenever the frame border mode is modified by the user.
 
    Int_t i = kFrameBorderModeSunken;
-   while (!fFrameBorderMode->Find(i)->IsDown()) 
+   TGButton *but = 0;
+   while ((but = fFrameBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetFrameBorderMode(i - 1 - kFrameBorderModeSunken);
    DoEditor();
@@ -6358,7 +6363,8 @@ void TStyleManager::ModColorModelPS()
    // Slot called whenever the PS color model is modified by the user.
 
    Int_t i = kPSPDFColorModelPSRGB;
-   while (!fColorModelPS->Find(i)->IsDown()) i++;
+   TGButton *but = 0;
+   while ((but = fColorModelPS->Find(i)) && !but->IsDown()) i++;
    fCurSelStyle->SetColorModelPS(i - kPSPDFColorModelPSRGB);
    DoEditor();
 }

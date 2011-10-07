@@ -102,7 +102,8 @@ void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
                                        fEcan->GetCanvasWindowId()));
       c = fEcan->GetCanvas();
       gROOT->SetSelectedPad(c);
-      pad->GetCanvas()->DrawClonePad();
+      if (pad->GetCanvas())
+         pad->GetCanvas()->DrawClonePad();
       gROOT->SetSelectedPad(pad);
       fPad = pad;
    }
@@ -124,14 +125,15 @@ void TStylePreview::MapTheWindow()
    
    MapSubwindows();
    TCanvas *c = fPad->GetCanvas();
-   UInt_t w = c->GetWw() + 4; //4 pixels of borders
-   UInt_t h = c->GetWh() + 4; //4 pixels of borders
-   UInt_t x = (UInt_t) c->GetWindowTopX() + 60;
-   UInt_t y = (UInt_t) c->GetWindowTopY() + 100;
+   if (c) {
+      UInt_t w = c->GetWw() + 4; //4 pixels of borders
+      UInt_t h = c->GetWh() + 4; //4 pixels of borders
+      UInt_t x = (UInt_t) c->GetWindowTopX() + 60;
+      UInt_t y = (UInt_t) c->GetWindowTopY() + 100;
 
-   MoveResize(x, y, w, h);
-   SetWMPosition(x, y);
-
+      MoveResize(x, y, w, h);
+      SetWMPosition(x, y);
+   }
    MapWindow();
 }
 
