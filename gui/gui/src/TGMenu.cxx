@@ -222,9 +222,10 @@ void TGMenuBar::Layout()
                beforeMenu = beforeMenuTitle->GetMenu();
             }
          }
-         if (menu && menu->GetPopup())
+         if (menu && menu->GetPopup()) {
             menu->GetPopup()->Disconnect("PoppedUp()", this, "PopupConnection()");
-         AddPopup( menu->GetName(), menu->GetPopup(), layout, beforeMenu );
+            AddPopup( menu->GetName(), menu->GetPopup(), layout, beforeMenu );
+         }
          fOutLayouts->Remove( fOutLayouts->Last() );
          fNeededSpace->Remove( fNeededSpace->Last() );
          fMenuMore->DeleteEntry(menu);
