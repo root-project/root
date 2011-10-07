@@ -2686,7 +2686,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
             DisplayDirectory();
             TObject *kobj = (TObject *)itm->GetUserData();
 
-            if (kobj->IsA() == TKey::Class()) {
+            if (kobj && kobj->IsA() == TKey::Class()) {
                Chdir(fListLevel->GetParent());
                //kobj = gROOT->FindObject(kobj->GetName());
                kobj = gDirectory->FindObjectAny(kobj->GetName());
@@ -2711,7 +2711,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
       if (browsable) {
          if (useLock) fTreeLock = kTRUE;
          Emit("BrowseObj(TObject*)", (Long_t)obj);
-         obj->Browse(fBrowser);
+         if (obj) obj->Browse(fBrowser);
          if (useLock) fTreeLock = kFALSE;
       }
 
