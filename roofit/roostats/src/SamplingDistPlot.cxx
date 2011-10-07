@@ -91,8 +91,11 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    TString options(drawOptions);
    options.ToUpper();
 
-   const Double_t xlow = *(std::min_element(fSamplingDistr.begin(), fSamplingDistr.end()));
-   const Double_t xup = *(std::max_element(fSamplingDistr.begin(), fSamplingDistr.end()));
+   Double_t xmin = *(std::min_element(fSamplingDistr.begin(), fSamplingDistr.end()));
+   Double_t xmax = *(std::max_element(fSamplingDistr.begin(), fSamplingDistr.end()));
+   assert(fBins > 1); 
+   Double_t xlow = xmin - 0.5*(xmax-xmin)/(fBins-1);
+   Double_t xup  = xmax + 0.5*(xmax-xmin)/(fBins-1);
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
 

@@ -167,9 +167,11 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    for (int j=0; j<nEntries; ++j) {
       int i = index[j]; // i is the order index 
       SamplingDistribution * s = fResults->GetExpectedPValueDist(i);
+      if ( !s)  break; 
       const std::vector<double> & values = s->GetSamplingDistribution();
       double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
       TMath::Quantiles(values.size(), 5, x,q,p,false);
+
       g0->SetPoint(j, fResults->GetXValue(i),  q[2]);
       if (g1) { 
          g1->SetPoint(j, fResults->GetXValue(i),  q[2]);

@@ -28,6 +28,7 @@ namespace RooStats {
 class HypoTestPlot: public SamplingDistPlot {
    public:
       /// Constructor
+   HypoTestPlot() : SamplingDistPlot() , fHypoTestResult(0) {}   // needed for IO 
       HypoTestPlot(HypoTestResult& result, Int_t bins=100);
       ~HypoTestPlot(void) {}
 

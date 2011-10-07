@@ -56,6 +56,7 @@ using namespace RooStats;
 HypoTestResult::HypoTestResult(const char* name) : 
    TNamed(name,name),
    fNullPValue(NaN), fAlternatePValue(NaN),
+   fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
    fNullDistr(NULL), fAltDistr(NULL),
    fPValueIsRightTail(kTRUE),
@@ -69,6 +70,7 @@ HypoTestResult::HypoTestResult(const char* name) :
 HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) :
    TNamed(name,name),
    fNullPValue(nullp), fAlternatePValue(altp),
+   fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
    fNullDistr(NULL), fAltDistr(NULL),
    fPValueIsRightTail(kTRUE),
