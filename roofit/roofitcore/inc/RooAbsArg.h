@@ -374,7 +374,7 @@ public:
   RooRefCountList _clientList       ; // list of client objects
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
   RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
-  TList _proxyList        ; // list of proxies
+  TRefArray _proxyList        ; // list of proxies
   std::deque<RooAbsCache*> _cacheList ; // list of caches
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
@@ -466,7 +466,7 @@ public:
 
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
   
-  ClassDef(RooAbsArg,4) // Abstract variable
+  ClassDef(RooAbsArg,5) // Abstract variable
 };
 
 ostream& operator<<(ostream& os, const RooAbsArg &arg);  
