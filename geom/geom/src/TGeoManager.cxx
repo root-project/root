@@ -328,6 +328,56 @@ Int_t  TGeoManager::fgVerboseLevel = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
 TGeoManager::ThreadsMap_t TGeoManager::fgThreadId;
 
+//______________________________________________________________________________
+TGeoManager::ThreadData_t::ThreadData_t() :
+   fIntSize(0), fDblSize(0), fIntBuffer(0), fDblBuffer(0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TGeoManager::ThreadData_t::~ThreadData_t()
+{
+   // Destructor.
+
+   delete [] fIntBuffer;
+   delete [] fDblBuffer;
+}
+
+//______________________________________________________________________________
+TGeoManager::ThreadData_t& TGeoManager::GetThreadData() const
+{
+   Int_t tid = TGeoManager::ThreadId();
+   TThread::Lock();
+   if (tid >= fThreadSize)
+   {
+      fThreadData.resize(tid + 1);
+      fThreadSize = tid + 1;
+   }
+   if (fThreadData[tid] == 0)
+   {
+      fThreadData[tid] = new ThreadData_t;
+   }
+   TThread::UnLock();
+   return *fThreadData[tid];
+}
+
+//______________________________________________________________________________
+void TGeoManager::ClearThreadData() const
+{
+   std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
+   while (i != fThreadData.end())
+   {
+      delete *i;
+      ++i;
+   }
+   fThreadData.clear();
+   fThreadSize = 0;
+   TIter next(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) vol->ClearThreadData();
+}
+
 //_____________________________________________________________________________
 TGeoManager::TGeoManager()
 {
@@ -382,9 +432,6 @@ TGeoManager::TGeoManager()
       fUniqueVolumes = 0;
       fNodeIdArray = 0;
       fClippingShape = 0;
-      fIntSize = fDblSize = 1000;
-      fIntBuffer = 0;
-      fDblBuffer = 0;
       fMatrixTransform = kFALSE;
       fMatrixReflection = kFALSE;
       fGLMatrix = 0;
@@ -398,6 +445,7 @@ TGeoManager::TGeoManager()
       fValuePNEId = 0;
       fMultiThread = kFALSE;
       ClearThreadsMap();
+      fThreadSize = 0;
    } else {
       Init();
       gGeoIdentity = 0;
@@ -478,9 +526,6 @@ void TGeoManager::Init()
    fUniqueVolumes = new TObjArray(256);
    fNodeIdArray = 0;
    fClippingShape = 0;
-   fIntSize = fDblSize = 1000;
-   fIntBuffer = new Int_t[1000];
-   fDblBuffer = new Double_t[1000];
    fMatrixTransform = kFALSE;
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
@@ -494,6 +539,7 @@ void TGeoManager::Init()
    fValuePNEId = 0;
    fMultiThread = kFALSE;
    ClearThreadsMap();
+   fThreadSize = 0;
 }
 
 //_____________________________________________________________________________
@@ -549,11 +595,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fClippingShape(gm.fClippingShape),
   fElementTable(gm.fElementTable),
   fNodeIdArray(gm.fNodeIdArray),
-  fIntSize(gm.fIntSize),
-  fDblSize(gm.fDblSize),
-  fIntBuffer(gm.fIntBuffer),
   fNLevel(gm.fNLevel),
-  fDblBuffer(gm.fDblBuffer),
   fPaintVolume(gm.fPaintVolume),
   fHashVolumes(gm.fHashVolumes),
   fHashGVolumes(gm.fHashGVolumes),
@@ -563,7 +605,8 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fNPNEId(0),
   fKeyPNEId(0),
   fValuePNEId(0),
-  fMultiThread(kFALSE)
+  fMultiThread(kFALSE),
+  fThreadSize(0)
 {
    //copy constructor
    for(Int_t i=0; i<256; i++)
@@ -629,11 +672,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fClippingShape=gm.fClippingShape;
       fElementTable=gm.fElementTable;
       fNodeIdArray=gm.fNodeIdArray;
-      fIntSize=gm.fIntSize;
-      fDblSize=gm.fDblSize;
-      fIntBuffer=gm.fIntBuffer;
       fNLevel=gm.fNLevel;
-      fDblBuffer=gm.fDblBuffer;
       fPaintVolume=gm.fPaintVolume;
       fHashVolumes=gm.fHashVolumes;
       fHashGVolumes=gm.fHashGVolumes;
@@ -645,6 +684,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fValuePNEId = 0;
       fMultiThread = kFALSE;
       ClearThreadsMap();
+      ClearThreadData();
    }
    return *this;
 }
@@ -663,6 +703,7 @@ TGeoManager::~TGeoManager()
 //   TIter next(brlist);
 //   TBrowser *browser = 0;
 //   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
+   ClearThreadData();
    delete TGeoBuilder::Instance(this);
    if (fBits)  delete [] fBits;
    SafeDelete(fNodes);
@@ -682,17 +723,15 @@ TGeoManager::~TGeoManager()
    if (fTracks) {fTracks->Delete(); SafeDelete( fTracks );}
    SafeDelete( fUniqueVolumes );
    if (fPdgNames) {fPdgNames->Delete(); SafeDelete( fPdgNames );}
-//   if (fNavigators) {fNavigators->Delete(); SafeDelete( fNavigators );}
+   ClearNavigators();
    CleanGarbage();
    SafeDelete( fPainter ); 
-   delete [] fDblBuffer;
-   delete [] fIntBuffer;
    SafeDelete( fGLMatrix ); 
    if (fSizePNEId) {
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
-//   ClearThreadsMap();
+   ClearThreadsMap();
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -856,6 +895,17 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
    }
    if (!fMultiThread) fCurrentNavigator = nav;
    return kTRUE;
+}
+//_____________________________________________________________________________
+void TGeoManager::ClearNavigators()
+{
+// Clear all navigators.
+   for (NavigatorsMap_t::const_iterator it = fNavigators.begin();
+        it != fNavigators.end(); it++) {
+      TGeoNavigatorArray *arr = it->second;
+      if (arr) delete arr;
+   }
+   fNavigators.clear();   
 }
 
 //_____________________________________________________________________________
@@ -3549,24 +3599,26 @@ Bool_t TGeoManager::InitArrayPNE() const
 Int_t *TGeoManager::GetIntBuffer(Int_t length)
 {
 // Get a temporary buffer of Int_t*
-   if (length>fIntSize) {
-      delete [] fIntBuffer;
-      fIntBuffer = new Int_t[length];
-      fIntSize = length;
+   ThreadData_t &td = GetThreadData();
+   if (length>td.fIntSize) {
+      delete [] td.fIntBuffer;
+      td.fIntBuffer = new Int_t[length];
+      td.fIntSize = length;
    }
-   return fIntBuffer;
+   return td.fIntBuffer;
 }
 
 //______________________________________________________________________________
 Double_t *TGeoManager::GetDblBuffer(Int_t length)
 {
 // Get a temporary buffer of Double_t*
-   if (length>fDblSize) {
-      delete [] fDblBuffer;
-      fDblBuffer = new Double_t[length];
-      fDblSize = length;
+   ThreadData_t &td = GetThreadData();
+   if (length>td.fDblSize) {
+      delete [] td.fDblBuffer;
+      td.fDblBuffer = new Double_t[length];
+      td.fDblSize = length;
    }
-   return fDblBuffer;
+   return td.fDblBuffer;
 }
 
 //______________________________________________________________________________

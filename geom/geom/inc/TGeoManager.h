@@ -116,11 +116,7 @@ private :
    TGeoElementTable     *fElementTable;     //! table of elements
 
    Int_t                *fNodeIdArray;      //! array of node id's
-   Int_t                 fIntSize;          //! int buffer size
-   Int_t                 fDblSize;          //! dbl buffer size
-   Int_t                *fIntBuffer;        //! transient int buffer
    Int_t                 fNLevel;           // maximum accepted level in geometry
-   Double_t             *fDblBuffer;        //! transient dbl buffer
    TGeoVolume           *fPaintVolume;      //! volume currently painted
    THashList            *fHashVolumes;      //! hash list of volumes providing fast search
    THashList            *fHashGVolumes;     //! hash list of group volumes providing fast search
@@ -147,6 +143,22 @@ public:
    TGeoManager(const char *name, const char *title);
    // destructor
    virtual ~TGeoManager();
+   struct ThreadData_t
+   {
+      Int_t              fIntSize;          //! int buffer size
+      Int_t              fDblSize;          //! dbl buffer size
+      Int_t             *fIntBuffer;        //! transient int buffer
+      Double_t          *fDblBuffer;        //! transient dbl buffer
+
+      ThreadData_t();
+      ~ThreadData_t();
+   };
+
+   mutable std::vector<ThreadData_t*> fThreadData; //! Thread private data
+   mutable Int_t                      fThreadSize; //! Length of thread data
+
+   ThreadData_t&         GetThreadData()   const;
+   void                  ClearThreadData() const;
    //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
    Int_t                  AddOverlap(const TNamed *ovlp);
@@ -410,6 +422,7 @@ public:
    void                   CleanGarbage();
    void                   ClearShape(const TGeoShape *shape);
    void                   ClearTracks() {fTracks->Delete(); fNtracks=0;}
+   void                   ClearNavigators();
    void                   RemoveMaterial(Int_t index);
    void                   ResetUserData();
 

@@ -363,6 +363,7 @@ void TGeoVolume::ClearThreadData() const
 {
    if (fFinder) fFinder->ClearThreadData();
    if (fVoxels) fVoxels->ClearThreadData();
+   if (fShape)  fShape->ClearThreadData();
 }   
 
 //_____________________________________________________________________________
@@ -2554,8 +2555,8 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
 TGeoVolumeAssembly::~TGeoVolumeAssembly()
 {
 // Destructor. The assembly is owner of its "shape".
-   if (fShape) delete fShape;
    ClearThreadData();
+   if (fShape) delete fShape;
 }   
 
 //_____________________________________________________________________________

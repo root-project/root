@@ -2405,6 +2405,7 @@ ClassImp(TGeoNavigatorArray)
 TGeoNavigator *TGeoNavigatorArray::AddNavigator()
 {
 // Add a new navigator to the array.
+   SetOwner(kTRUE);
    TGeoNavigator *nav = new TGeoNavigator(fGeoManager);
    nav->BuildCache(kTRUE, kFALSE);
    Add(nav);
