@@ -1122,7 +1122,8 @@ void TH1Editor::DoHistView()
 {
    // Slot connected to the 'Plot' button group.
 
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   if (gPad && gPad->GetVirtCanvas())
+      gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 
    if (fDim->GetState() == kButtonDown) 
@@ -1130,7 +1131,8 @@ void TH1Editor::DoHistView()
    else 
       DoHistComplex();
 
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   if (gPad && gPad->GetVirtCanvas())
+      gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
@@ -1476,7 +1478,8 @@ void TH1Editor::DoSliderMoved()
    // according to the new Slider range.
 
    if (fAvoidSignal) return;
-   fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+   if (fGedEditor->GetPad()->GetCanvas())
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
    fGedEditor->GetPad()->cd();
    if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {  
       static Int_t px1,py1,px2,py2;
@@ -1489,7 +1492,8 @@ void TH1Editor::DoSliderMoved()
       py1   = fGedEditor->GetPad()->YtoAbsPixel(ymin);
       px2   = fGedEditor->GetPad()->XtoAbsPixel(xright);
       py2   = fGedEditor->GetPad()->YtoAbsPixel(ymax);
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       fGedEditor->GetPad()->SetLineWidth(1);
@@ -1509,8 +1513,11 @@ void TH1Editor::DoSliderMoved()
                 fCoordsCombo->GetSelected() == kCOORDS_CAR) {
       static Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
       TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       p1[0] = p4[0] = p5[0] = p8[0] = 
             fHist->GetXaxis()->GetBinLowEdge((Int_t)((fSlider->GetMinPosition())+0.5));
       p2[0] = p3[0] = p6[0] = p7[0] = 
@@ -1570,14 +1577,16 @@ void TH1Editor::DoSliderPressed()
    // values of the slider movement.
    
    if (fAvoidSignal) return;
-   fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+   if (fGedEditor->GetPad()->GetCanvas())
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
    fGedEditor->GetPad()->cd();
    static Float_t ymin,ymax,xleft,xright;
    Int_t sldmin = (Int_t)((fSlider->GetMinPosition())+0.5);
    Int_t sldmax = (Int_t)((fSlider->GetMaxPosition())+0.5);
    if (fDelaydraw->GetState() == kButtonDown && 
        fDim->GetState()==kButtonDown) {
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       xleft = fHist->GetXaxis()->GetBinLowEdge(sldmin);
@@ -1593,8 +1602,11 @@ void TH1Editor::DoSliderPressed()
               fDim0->GetState() == kButtonDown && 
               fCoordsCombo->GetSelected() == kCOORDS_CAR) {
       TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       fP1old[0] = fP4old[0] = fP5old[0] = fP8old[0] = 
                   fHist->GetXaxis()->GetBinLowEdge(sldmin);
       fP2old[0] = fP3old[0] = fP6old[0] = fP7old[0] = 
@@ -1603,7 +1615,8 @@ void TH1Editor::DoSliderPressed()
       fP5old[1] = fP6old[1] = fP7old[1] = fP8old[1] = rmax[1];
       fP1old[2] = fP2old[2] = fP5old[2] = fP6old[2] = rmin[2]; 
       fP3old[2] = fP4old[2] = fP7old[2] = fP8old[2] = rmax[2];
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2old, fP3old, fP7old, fP6old);
@@ -2379,8 +2392,9 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
 void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4) 
 {
    // Paint a 3D box.
-   
-   fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
+
+   if (fGedEditor->GetPad()->GetCanvas())
+      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE); 
    fGedEditor->GetPad()->SetLineWidth(1);
    fGedEditor->GetPad()->SetLineColor(2);
    fGedEditor->GetPad()->cd();

@@ -1045,7 +1045,7 @@ void TH2Editor::DoHistView()
 {
    // Slot connected to the 'Plot' button group.
 
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   if (gPad && gPad->GetVirtCanvas()) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 
    if (fDim->GetState() == kButtonDown)
@@ -1053,7 +1053,7 @@ void TH2Editor::DoHistView()
    else
       DoHistComplex();
 
-   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   if (gPad && gPad->GetVirtCanvas()) gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
@@ -2310,7 +2310,8 @@ void TH2Editor::DoSliderXMoved()
       py1   = fGedEditor->GetPad()->YtoAbsPixel(ymin);
       px2   = fGedEditor->GetPad()->XtoAbsPixel(xright);
       py2   = fGedEditor->GetPad()->YtoAbsPixel(ymax);
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
@@ -2328,11 +2329,15 @@ void TH2Editor::DoSliderXMoved()
                 fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       p1[0] = p4[0] = p5[0] = p8[0] =
             xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
       p2[0] = p3[0] = p6[0] = p7[0] =
@@ -2388,7 +2393,8 @@ void TH2Editor::DoSliderXPressed()
       // 2D Plot
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       xleft  = xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
@@ -2407,8 +2413,11 @@ void TH2Editor::DoSliderXPressed()
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
       TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       fP1oldx[0] = fP4oldx[0] = fP5oldx[0] = fP8oldx[0] =
                  xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
       fP2oldx[0] = fP3oldx[0] = fP6oldx[0] = fP7oldx[0] =
@@ -2417,7 +2426,8 @@ void TH2Editor::DoSliderXPressed()
       fP5oldx[1] = fP6oldx[1] = fP7oldx[1] = fP8oldx[1] = rmax[1];
       fP1oldx[2] = fP2oldx[2] = fP5oldx[2] = fP6oldx[2] = rmin[2];
       fP3oldx[2] = fP4oldx[2] = fP7oldx[2] = fP8oldx[2] = rmax[2];
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
@@ -2487,7 +2497,8 @@ void TH2Editor::DoSliderYMoved()
       py1  = fGedEditor->GetPad()->YtoAbsPixel(ybottom);
       px2  = fGedEditor->GetPad()->XtoAbsPixel(xmax);
       py2  = fGedEditor->GetPad()->YtoAbsPixel(ytop);
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
@@ -2505,11 +2516,15 @@ void TH2Editor::DoSliderYMoved()
               fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       p1[0] = p2[0] = p3[0] = p4[0] = rmin[0];
       p5[0] = p6[0] = p7[0] = p8[0] = rmax[0];
       p1[1] = p4[1] = p5[1] = p8[1] =
@@ -2565,7 +2580,8 @@ void TH2Editor::DoSliderYPressed()
       // 2D plot:
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       ybottom = yaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
@@ -2583,9 +2599,12 @@ void TH2Editor::DoSliderYPressed()
       // 3D plot
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
-      TView *fView = gPad->GetView();
+      TView *fView = fGedEditor->GetPad()->GetView();
+      if (!fView) return;
       Double_t *rmin = fView->GetRmin();
+      if (!rmin) return;
       Double_t *rmax = fView->GetRmax();
+      if (!rmax) return;
       fP1oldy[0] = fP2oldy[0] = fP3oldy[0] = fP4oldy[0] = rmin[0];
       fP5oldy[0] = fP6oldy[0] = fP7oldy[0] = fP8oldy[0] = rmax[0];
       fP1oldy[1] = fP4oldy[1] = fP5oldy[1] = fP8oldy[1] =
@@ -2594,7 +2613,8 @@ void TH2Editor::DoSliderYPressed()
                  yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
       fP1oldy[2] = fP2oldy[2] = fP5oldy[2] = fP6oldy[2] = rmin[2];
       fP3oldy[2] = fP4oldy[2] = fP7oldy[2] = fP8oldy[2] = rmax[2];
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      if (fGedEditor->GetPad()->GetCanvas())
+         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);
