@@ -3008,7 +3008,7 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
    // The R G B arrays must be deleted by the caller.
 
    ULong_t *orgcolors = 0;
-   Int_t    maxcolors = 0, ncolors;
+   Int_t    maxcolors = 0, ncolors = 0;
 
    // collect different image colors
    int x, y;
