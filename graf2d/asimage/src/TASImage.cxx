@@ -1418,7 +1418,8 @@ void TASImage::Paint(Option_t *option)
 
          if (!fScaledImage) {
             fScaledImage = (TASImage*)TImage::Create();
-
+            if (!fScaledImage) return;
+            
             if (fZoomWidth && fZoomHeight &&
                 ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight))) {
                // zoom and scale image
