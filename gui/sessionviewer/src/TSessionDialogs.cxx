@@ -311,8 +311,10 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
       case kC_CONTAINER:
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMDBLCLICK:
-               if (parm1==kButton1)
-                  OnDoubleClick((TGLVEntry*)fContents->GetLastActive(), parm1);
+               if (parm1==kButton1) {
+                  TGLVEntry *lv_entry = (TGLVEntry *)fContents->GetLastActive();
+                  if (lv_entry) OnDoubleClick(lv_entry, parm1);
+               }
                break;
          }
          break;

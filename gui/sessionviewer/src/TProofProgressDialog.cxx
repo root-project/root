@@ -118,6 +118,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
       if (ib != kNPOS) {
          TString svnr;
          // Strip of also the 'r' in front of the number
+         // coverity[unchecked_value]
          vrs.Tokenize(svnr, from, "|");
          if (svnr.IsDigit()) {
             if (gDebug)
