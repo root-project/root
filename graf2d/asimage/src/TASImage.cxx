@@ -6634,7 +6634,7 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
     // Save a primitive as a C++ statement(s) on output stream "out".
 
-   char *buf;
+   char *buf = 0;
    int sz;
 
    UInt_t w = GetWidth();
