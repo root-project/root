@@ -309,7 +309,7 @@ void TEveTrack::SetPropagator(TEveTrackPropagator* prop)
    if (fPropagator == prop) return;
    if (fPropagator) fPropagator->DecRefCount(this);
    fPropagator = prop;
-   if (fPropagator) prop->IncRefCount(this);
+   if (fPropagator) fPropagator->IncRefCount(this);
 }
 
 //==============================================================================
