@@ -969,7 +969,7 @@ again:
                         TCanvas *m = new TCanvas("markers","Marker Types",600,200);
                         TMarker::DisplayMarkerTypes();
                         m->Update();
-                        padsav->cd();
+                        if (padsav) padsav->cd();
                      }
                      break;
                   case kViewIconify:
