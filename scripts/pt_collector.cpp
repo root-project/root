@@ -296,6 +296,7 @@ bool CheckPerformance(PTData& newdata) {
    for (int i = 0; i < kNumMeasurements; ++i) {
       PTVal* val = newdata.pval[i];
       double var = val->fVar + uncertainty[i];
+      val->fZ = (val->fVal - val->fMean) / var;
       if (val->fVal > val->fMean + zLimits[i] * var) {
          newdata.outlier |= 1 << i;
       }
