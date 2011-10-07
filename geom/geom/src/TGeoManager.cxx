@@ -925,7 +925,7 @@ Int_t TGeoManager::ThreadId()
 // Translates the current thread id to an ordinal number. This can be used to
 // manage data which is pspecific for a given thread.
    Int_t tid = 0;
-   if (!gGeoManager->IsMultiThread()) return 0;
+   if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
    Long_t selfId = TThread::SelfId();
    TGeoManager::ThreadsMapIt_t it = fgThreadId.find(selfId);
    if (it != fgThreadId.end()) return it->second;
