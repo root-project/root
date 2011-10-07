@@ -913,7 +913,8 @@ Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
 TH2F* TEveCaloDataHist::GetHist(Int_t slice) const
 {
    // Get histogram in given slice.
-   
+
+   assert(slice >= 0 && slice < fHStack->GetHists()->GetSize());
    return (TH2F*) fHStack->GetHists()->At(slice);
 }
    

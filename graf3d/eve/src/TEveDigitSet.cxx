@@ -242,7 +242,12 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 {
    // Iterate over the digits and detmine min and max signal values.
 
-   if (fValueIsColor || fPlex.Size() == 0) return;
+   if (fValueIsColor || fPlex.Size() == 0)
+   {
+      min = max = 0;
+      return;
+   }
+
    min = kMaxInt;
    max = kMinInt;
    for (Int_t c=0; c<fPlex.VecSize(); ++c)

@@ -298,10 +298,12 @@ void TEveGeoNode::SaveExtract(const char* file, const char* name, Bool_t leafs_o
    // File is always recreated.
 
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0, leafs_only);
-
-   TFile f(file, "RECREATE");
-   gse->Write(name);
-   f.Close();
+   if (gse)
+   {
+      TFile f(file, "RECREATE");
+      gse->Write(name);
+      f.Close();
+   }
 
    for (std::list<TGeoShape*>::iterator i = fgTemporaryStore.begin(); i != fgTemporaryStore.end(); ++i)
       delete *i;
@@ -314,7 +316,10 @@ void TEveGeoNode::WriteExtract(const char* name, Bool_t leafs_only)
    // Write the shape tree as TEveGeoShapeExtract to current directory.
 
    TEveGeoShapeExtract* gse = DumpShapeTree(this, 0, leafs_only);
-   gse->Write(name);
+   if (gse)
+   {
+      gse->Write(name);
+   }
 }
 
 /******************************************************************************/
