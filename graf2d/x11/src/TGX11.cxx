@@ -2573,7 +2573,7 @@ void TGX11::SetOpacity(Int_t percent)
    // if 100 percent then just make white
 
    ULong_t *orgcolors = 0, *tmpc = 0;
-   Int_t    maxcolors = 0, ncolors, ntmpc = 0;
+   Int_t    maxcolors = 0, ncolors = 0, ntmpc = 0;
 
    // save previous allocated colors, delete at end when not used anymore
    if (gCws->fNewColors) {
