@@ -269,12 +269,15 @@ static XImage *MakeXImage(Display *dpy,int  w, int h)
 
    /* reserve memory for image */
    data=(char *)calloc((unsigned)(((w-1)/8+1)*h), 1);
-   if(data==0) return 0;
+   if( data==0) return 0;
 
    /* create the XImage */
    image=XCreateImage(dpy, DefaultVisual(dpy, DefaultScreen(dpy)), 1, XYBitmap,
                    0, data, w, h, 8, 0);
-   if(image==0) return 0;
+   if (image==0) {
+      free(data);
+      return 0;
+   }
 
    image->byte_order=image->bitmap_bit_order=MSBFirst;
    return image;
@@ -844,7 +847,10 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    }
 
    str3=my_strtok(str1, str2);
-   if (!str3) return 0;
+   if (!str3) {
+      free(item);
+      return 0;
+   }
 
    XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,
                 &overall);
@@ -893,16 +899,15 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    cos_angle=TMath::Cos(angle);
 
    /* text background will be drawn using XFillPolygon */
-   item->fCornersX=
-       (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
+   item->fCornersX = (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
    if(!item->fCornersX) {
       free(item);
       return 0;
    }
 
-   item->fCornersY=
-       (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
+   item->fCornersY = (float *)malloc((unsigned)(4*item->fNl*sizeof(float)));
    if(!item->fCornersY) {
+      free(item->fCornersX);
       free(item);
       return 0;
    }
@@ -913,14 +918,21 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    yp=font->ascent;
 
    str1=my_strdup(text);
-   if(str1==0) {
+   if (str1==0) {
+      free(item->fCornersX);
+      free(item->fCornersY);
       free(item);
       return 0;
    }
 
    str3=my_strtok(str1, str2);
-   if (!str3) return 0;
-
+   if (!str3) {
+      free(item->fCornersX);
+      free(item->fCornersY);
+      free(item);
+      return 0;
+   }
+   
    /* loop through each section in the string */
    do {
       XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,
@@ -964,6 +976,8 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    /* create image to hold horizontal text */
    imageIn=MakeXImage(dpy, item->fColsIn, item->fRowsIn);
    if(imageIn==0) {
+      free(item->fCornersX);
+      free(item->fCornersY);
       free(item);
       return 0;
    }
@@ -1038,32 +1052,34 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    }
 
    /* loop through all relevent bits in rotated image */
-   for(j=0; j<item->fRowsOut; j++) {
+   if (imageIn) {
+      for(j=0; j<item->fRowsOut; j++) {
 
-      /* no point re-calculating these every pass */
-      di=(float)((xl<0)?0:(int)xl)+0.5-(float)item->fColsOut/2;
-      byte_out=(item->fRowsOut-j-1)*byte_w_out;
+         /* no point re-calculating these every pass */
+         di=(float)((xl<0)?0:(int)xl)+0.5-(float)item->fColsOut/2;
+         byte_out=(item->fRowsOut-j-1)*byte_w_out;
 
-      /* loop through meaningful columns */
-      for(i=((xl<0)?0:(int)xl);
-         i<((xr>=item->fColsOut)?item->fColsOut:(int)xr); i++) {
+         /* loop through meaningful columns */
+         for(i=((xl<0)?0:(int)xl);
+            i<((xr>=item->fColsOut)?item->fColsOut:(int)xr); i++) {
 
-         /* rotate coordinates */
-         it=int((float)item->fColsIn/2 + ( di*cos_angle + dj*sin_angle));
-         jt=int((float)item->fRowsIn/2 - (-di*sin_angle + dj*cos_angle));
+            /* rotate coordinates */
+            it=int((float)item->fColsIn/2 + ( di*cos_angle + dj*sin_angle));
+            jt=int((float)item->fRowsIn/2 - (-di*sin_angle + dj*cos_angle));
 
-         /* set pixel if required */
-         if(it>=0 && it<item->fColsIn && jt>=0 && jt<item->fRowsIn)
-            if((imageIn->data[jt*byte_w_in+it/8] & 128>>(it%8))>0)
-               item->fXimage->data[byte_out+i/8]|=128>>i%8;
+            /* set pixel if required */
+            if(it>=0 && it<item->fColsIn && jt>=0 && jt<item->fRowsIn)
+               if((imageIn->data[jt*byte_w_in+it/8] & 128>>(it%8))>0)
+                  item->fXimage->data[byte_out+i/8]|=128>>i%8;
 
-         di+=1;
+            di+=1;
+         }
+         dj+=1;
+         xl+=xinc;
+         xr+=xinc;
       }
-      dj+=1;
-      xl+=xinc;
-      xr+=xinc;
+      XDestroyImage(imageIn);
    }
-   XDestroyImage(imageIn);
 
    if(gRotStyle.fMagnify!=1.) {
       item->fColsIn=old_cols_in;
