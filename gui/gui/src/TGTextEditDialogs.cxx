@@ -353,7 +353,8 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
 
    fLPrintCommand = new TGLabel(fF3, new TGHotString("Print command:"));
    fBPrintCommand = new TGTextBuffer(50);
-   if ((printProg) && (*printProg)) fBPrintCommand->AddText(0, *printProg);
+   if ((printProg) && (*printProg)) 
+      fBPrintCommand->AddText(0, *printProg);
    fPrintCommandEntry = new TGTextEntry(fF3, fBPrintCommand);
    fPrintCommandEntry->Associate(this);
    fPrintCommandEntry->Resize(150, fPrintCommandEntry->GetDefaultHeight());
@@ -362,7 +363,8 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fF3->AddFrame(fPrintCommandEntry, fL6);
 
    fLPrinter = new TGLabel(fF4, new TGHotString("Printer:"));
-   fPrinterEntry = new TGComboBox(fF4, *printerName);
+   if ((printerName) && (*printerName)) 
+      fPrinterEntry = new TGComboBox(fF4, *printerName);
    fBPrinter = fPrinterEntry->GetTextEntry()->GetBuffer();
    fPrinterEntry->Resize(150, fPrinterEntry->GetTextEntry()->GetDefaultHeight());
    fF4->AddFrame(fLPrinter, fL5);
