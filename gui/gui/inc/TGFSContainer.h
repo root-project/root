@@ -126,7 +126,8 @@ public:
       if (fDNDData.fDataLength > 0)
          free(fDNDData.fData);
       fDNDData.fData = calloc(sizeof(unsigned char), data->fDataLength);
-      memcpy(fDNDData.fData, data->fData, data->fDataLength);
+      if (fDNDData.fData)
+         memcpy(fDNDData.fData, data->fData, data->fDataLength);
       fDNDData.fDataLength = data->fDataLength;
       fDNDData.fDataType = data->fDataType;
    }
