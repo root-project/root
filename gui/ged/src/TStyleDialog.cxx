@@ -126,7 +126,8 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
          break;
       case 3: {
          TString newTitle("Imported from canvas ");
-         newTitle += fCurPad->GetCanvas()->GetName();
+         if (fCurPad->GetCanvas())
+            newTitle += fCurPad->GetCanvas()->GetName();
          fTitle = new TGTextEntry(h2, newTitle.Data(), kTitle);
       }
    }
@@ -276,7 +277,8 @@ void TStyleDialog::DoOK()
          TStyle *tmp = gStyle;
          gStyle = tmpStyle;
          gStyle->SetIsReading(kFALSE);
-         fCurPad->GetCanvas()->UseCurrentStyle();
+         if (fCurPad->GetCanvas())
+            fCurPad->GetCanvas()->UseCurrentStyle();
          gStyle->SetIsReading(kTRUE);
          gStyle = tmp;
       }
