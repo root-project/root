@@ -2150,9 +2150,9 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    while (entry != 0) {
       if (entry->GetType() == kMenuEntry) {
          const TGHotString string(*(entry->GetLabel()));
-         font->ComputeTextLayout(string, string.GetLength(),
-                                 fWrapLength, kTextLeft, 0,
-                                 &twidth, &theight);
+         if (font) font->ComputeTextLayout(string, string.GetLength(),
+                                           fWrapLength, kTextLeft, 0,
+                                           &twidth, &theight);
          if(twidth > lwidth) {
             lstring = string;
          }
@@ -2165,14 +2165,15 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    fWidestLabel = lstring;
    fHeighestLabel =  hstring;
 
-   UInt_t dummy = 0;
-   font->ComputeTextLayout(lstring, lstring.GetLength(),
-                           fWrapLength, kTextLeft, 0,
-                           &fTWidth, &dummy);
-   font->ComputeTextLayout(hstring, hstring.GetLength(),
-                           fWrapLength, kTextLeft, 0,
-                           &dummy, &fTHeight);
-
+   if (font) {
+      UInt_t dummy = 0;
+      font->ComputeTextLayout(lstring, lstring.GetLength(),
+                              fWrapLength, kTextLeft, 0,
+                              &fTWidth, &dummy);
+      font->ComputeTextLayout(hstring, hstring.GetLength(),
+                              fWrapLength, kTextLeft, 0,
+                              &dummy, &fTHeight);
+   }
    fTBWidth = fTWidth + 8;
    fHeight = fTHeight + 7;      
    Resize(fTBWidth + fMBWidth, fHeight);
@@ -3124,12 +3125,11 @@ void TGSplitButton::Layout()
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
       if (font) fFontStruct = font->GetFontStruct();
    }
-
-   fTLayout = font->ComputeTextLayout(fLabel->GetString(), 
-                                      fLabel->GetLength(),
-                                      fWrapLength, kTextLeft, 0,
-                                      &dummya, &dummyb);
    if (font) {
+      fTLayout = font->ComputeTextLayout(fLabel->GetString(), 
+                                         fLabel->GetLength(),
+                                         fWrapLength, kTextLeft, 0,
+                                         &dummya, &dummyb);
       UInt_t dummy = 0;
       font->ComputeTextLayout(fWidestLabel.GetString(), fWidestLabel.GetLength(),
                               fWrapLength, kTextLeft, 0,
