@@ -42,7 +42,7 @@
 #include "RooRealIntegral.h"
 #include "RooMsgService.h"
 #include "RooNameReg.h"
-
+#include <memory>
 
 
 ClassImp(RooRealSumPdf)
