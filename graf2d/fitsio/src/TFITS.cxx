@@ -289,7 +289,10 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
          //Read image sizes in each dimension
          param_dimsizes = new long[param_ndims];
          fits_get_img_size(fp, param_ndims, param_dimsizes, &status);
-         if (status) goto ERR;
+         if (status) {
+            delete [] param_dimsizes;
+            goto ERR;
+         }
 
          fSizes = new TArrayI(param_ndims);
          fSizes = new TArrayI(param_ndims);
