@@ -341,7 +341,9 @@ void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
          Rotate(rmin+i*dr+0.5*dr,0.5*dy,x[0],y[0],ang);
          fText->SetTextSize(0.03);
          fText->SetTextAlign(22);
-         if (255*color->GetLight() <110) fText->SetTextColor(0);
+         if (color) {
+            if (255*color->GetLight() <110) fText->SetTextColor(0);
+         }
          Double_t tang = angle-90;
          if (angle > 180) tang -=180;
          fText->SetTextAngle(tang);
