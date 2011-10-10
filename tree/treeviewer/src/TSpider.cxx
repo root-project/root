@@ -193,7 +193,7 @@ TSpider::~TSpider()
       fSuperposed->Delete();
       delete fSuperposed;
    }
-   fCanvas->cd(0);
+   if (fCanvas) fCanvas->cd(0);
 }
 
 
@@ -322,8 +322,10 @@ void TSpider::AddVariable(const char* varexp)
    delete fAveragePoly;
    fAveragePoly = NULL;
 
-   fCanvas->Clear();
-   fCanvas->Divide(fNx,fNy);
+   if (fCanvas) {
+      fCanvas->Clear();
+      fCanvas->Divide(fNx,fNy);
+   }
    Draw("");
 
    if(fAverageSlices){
@@ -406,8 +408,10 @@ void TSpider::DeleteVariable(const char* varexp)
    delete fAveragePoly;
    fAveragePoly = NULL;
 
-   fCanvas->Clear();
-   fCanvas->Divide(fNx,fNy);
+   if (fCanvas) {
+      fCanvas->Clear();
+      fCanvas->Divide(fNx,fNy);
+   }
    Draw("");
    if(fNcols == 2) SetSegmentDisplay(kTRUE);
 
@@ -455,20 +459,20 @@ void TSpider::Draw(Option_t *options)
    gEnv->SetValue("Canvas.ShowEditor",1);
    if(!gPad && !fCanvas){
       fCanvas = new TCanvas("screen","Spider Plot",fNx*256,fNy*256);
-      fCanvas->Divide(fNx,fNy);
+      if (fCanvas) fCanvas->Divide(fNx,fNy);
    } else if(!fCanvas){
       fCanvas = (TCanvas*)gPad;
-      fCanvas->Divide(fNx,fNy);
+      if (fCanvas) fCanvas->Divide(fNx,fNy);
    }
    if(fPolargram) delete fPolargram;
    fPolargram=new TGraphPolargram("fPolargram");
    fPolargram->SetNdivPolar(fNcols);
    fPolargram->SetNdivRadial(0);
-   fCanvas->cd();
+   if (fCanvas) fCanvas->cd();
    SetCurrentEntries();
    AppendPad(options);
    for(ui=0;ui<fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
       if(fSegmentDisplay){
@@ -480,7 +484,7 @@ void TSpider::Draw(Option_t *options)
       }
       AppendPad();
    }
-   fCanvas->Selected(fCanvas,this,1);
+   if (fCanvas) fCanvas->Selected(fCanvas,this,1);
 }
 
 
@@ -949,7 +953,7 @@ void TSpider::Paint(Option_t* options)
    TLatex *txt = new TLatex();
    for(ui=0;ui<fNx*fNy;++ui){
       txt->SetTextAlign(13);
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       if (fCurrentEntries) {
          txt->PaintLatex(-1.2,1.2,0,0.08,Form("#%d",(int)fCurrentEntries[ui]));
       }
@@ -1061,12 +1065,12 @@ void TSpider::SetDisplayAverage(Bool_t disp)
    fAverageSlices = NULL;
 
    for(ui=0;ui<fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       gPad->Clear();
    }
 
    for(ui = 0; ui < fNx*fNy; ++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
       if(fSegmentDisplay){
@@ -1078,8 +1082,10 @@ void TSpider::SetDisplayAverage(Bool_t disp)
       }
       AppendPad();
    }
-   fCanvas->Modified();
-   fCanvas->Update();
+   if (fCanvas) {
+      fCanvas->Modified();
+      fCanvas->Update();
+   }
 }
 
 
@@ -1290,11 +1296,13 @@ void TSpider::SetNx(UInt_t nx)
 
    fTree->SetScanField(fNx*fNy);
    SetCurrentEntries();
-   fCanvas->Clear();
-   fCanvas->Divide(fNx,fNy);
+   if (fCanvas) {
+      fCanvas->Clear();
+      fCanvas->Divide(fNx,fNy);
+   }
 
    for(ui=0; ui < fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
       if(fSegmentDisplay){
@@ -1366,11 +1374,13 @@ void TSpider::SetNy(UInt_t ny)
 
    fTree->SetScanField(fNx*fNy);
    SetCurrentEntries();
-   fCanvas->Clear();
-   fCanvas->Divide(fNx,fNy);
+   if (fCanvas) {
+      fCanvas->Clear();
+      fCanvas->Divide(fNx,fNy);
+   }
 
    for(ui=0; ui < fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
       if(fSegmentDisplay){
@@ -1446,14 +1456,14 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
    fAveragePoly = NULL;
 
    for(ui=0;ui<fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       gPad->Clear();
    }
 
    fSegmentDisplay = seg;
 
    for(ui=0; ui < fNx*fNy;++ui){
-      fCanvas->cd(ui+1);
+      if (fCanvas) fCanvas->cd(ui+1);
       fPolargram->Draw("pn");
       fTree->LoadTree(fCurrentEntries[ui]);
       if(fSegmentDisplay){
@@ -1481,9 +1491,10 @@ void TSpider::SetSegmentDisplay(Bool_t seg)
       fAveragePoly->SetFillColor(fc);
       fAveragePoly->SetFillStyle(fs);
    }
-
-   fCanvas->Modified();
-   fCanvas->Update();
+   if (fCanvas) {
+      fCanvas->Modified();
+      fCanvas->Update();
+   }
 }
 
 
