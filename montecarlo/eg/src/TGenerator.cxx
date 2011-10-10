@@ -341,7 +341,8 @@ void TGenerator::Draw(Option_t *option)
    // Create a default canvas if a canvas does not exist
    if (!gPad) {
       gROOT->MakeDefCanvas();
-      gPad->GetVirtCanvas()->SetFillColor(13);
+      if (gPad->GetVirtCanvas())
+         gPad->GetVirtCanvas()->SetFillColor(13);
    }
 
    static Float_t rbox = 1000;
@@ -361,7 +362,7 @@ void TGenerator::Draw(Option_t *option)
       rbox = rmax[2];
    } else {
       view = TView::CreateView(1,0,0);
-      view->SetRange(-rbox,-rbox,-rbox, rbox,rbox,rbox );
+      if (view) view->SetRange(-rbox,-rbox,-rbox, rbox,rbox,rbox );
    }
    const Int_t kColorProton    = 4;
    const Int_t kColorNeutron   = 5;
