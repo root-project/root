@@ -342,9 +342,11 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) {
          col = gROOT->GetColor(palette[i]);
          fPoints[i] = i*step;
-         fColorRed[i] = UShort_t(col->GetRed()*255)  << 8;
-         fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
-         fColorBlue[i] = UShort_t(col->GetBlue()*255) << 8;
+         if (col) {
+            fColorRed[i]   = UShort_t(col->GetRed()*255)  << 8;
+            fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
+            fColorBlue[i]  = UShort_t(col->GetBlue()*255) << 8;
+         }
          fColorAlpha[i] = 65280;
       }
       return;
@@ -371,9 +373,11 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
       for (i=1;i<ncolors;i++) {
          col = gROOT->GetColor(51+i);
          fPoints[i] = i*step;
-         fColorRed[i] = UShort_t(col->GetRed()*255) << 8;
-         fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
-         fColorBlue[i] = UShort_t(col->GetBlue()*255) << 8;
+         if (col) {
+            fColorRed[i]   = UShort_t(col->GetRed()*255) << 8;
+            fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
+            fColorBlue[i]  = UShort_t(col->GetBlue()*255) << 8;
+         }
          fColorAlpha[i] = 65280;
       }
       return;
