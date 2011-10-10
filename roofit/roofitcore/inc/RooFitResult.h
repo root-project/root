@@ -118,8 +118,9 @@ public:
 
   
   const TMatrixDSym& covarianceMatrix() const ;
-  TMatrixDSym reducedCovarianceMatrix(const RooArgList& params) const ;
   const TMatrixDSym& correlationMatrix() const ;
+  TMatrixDSym reducedCovarianceMatrix(const RooArgList& params) const ;
+  TMatrixDSym conditionalCovarianceMatrix(const RooArgList& params) const ;
 
 
   // Global correlation accessors

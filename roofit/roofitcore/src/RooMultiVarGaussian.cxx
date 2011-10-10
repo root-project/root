@@ -62,11 +62,11 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 //_____________________________________________________________________________
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const RooFitResult& fr) :
+					 const RooArgList& xvec, const RooFitResult& fr, Bool_t reduceToConditional) :
   RooAbsPdf(name,title),
   _x("x","Observables",this,kTRUE,kFALSE),
   _mu("mu","Offset vector",this,kTRUE,kFALSE),
-  _cov(fr.reducedCovarianceMatrix(xvec)),
+  _cov(reduceToConditional ? fr.conditionalCovarianceMatrix(xvec) : fr.reducedCovarianceMatrix(xvec)),
   _covI(_cov),
   _z(4)
 {

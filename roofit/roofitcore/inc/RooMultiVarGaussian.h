@@ -29,7 +29,7 @@ class RooMultiVarGaussian : public RooAbsPdf {
 public:
 
   RooMultiVarGaussian() {} ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooFitResult& fr) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooFitResult& fr, Bool_t reduceToConditional=kTRUE) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& covMatrix) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& covMatrix) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDSym& covMatrix) ;
