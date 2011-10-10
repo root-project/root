@@ -1306,9 +1306,9 @@ Int_t TTreeViewer::Dimension()
    // Compute dimension of the histogram.
 
    fDimension = 0;
-   if (strlen(Ex())) fDimension++;
-   if (strlen(Ey())) fDimension++;
-   if (strlen(Ez())) fDimension++;
+   if (Ex() && strlen(Ex())) fDimension++;
+   if (Ey() && strlen(Ey())) fDimension++;
+   if (Ez() && strlen(Ez())) fDimension++;
    return fDimension;
 }
 
@@ -1332,23 +1332,23 @@ void TTreeViewer::ExecuteDraw()
       if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
       varexp = item->ConvertAliases();
    } else {
-      if (strlen(Ez())) {
+      if (Ez() && strlen(Ez())) {
          dimension++;
          varexp = Ez();
          item = ExpressionItem(2);
          alias[2] = item->GetAlias();
          if (alias[2].BeginsWith("~")) alias[2].Remove(0, 1);
       }
-      if (strlen(Ez()) && (strlen(Ex()) || strlen(Ey()))) varexp += ":";
-      if (strlen(Ey())) {
+      if ((Ez() && strlen(Ez())) && ((Ex() &&strlen(Ex())) || (Ey() && strlen(Ey())))) varexp += ":";
+      if (Ey() && strlen(Ey())) {
          dimension++;
          varexp += Ey();
          item = ExpressionItem(1);
          alias[1] = item->GetAlias();
          if (alias[1].BeginsWith("~")) alias[1].Remove(0, 1);
       }
-      if (strlen(Ey()) && strlen(Ex())) varexp += ":";
-      if (strlen(Ex())) {
+      if (Ey() && strlen(Ey()) && Ex() && strlen(Ex())) varexp += ":";
+      if (Ex () && strlen(Ex())) {
          dimension++;
          varexp += Ex();
          item = ExpressionItem(0);
@@ -1394,7 +1394,7 @@ void TTreeViewer::ExecuteDraw()
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
       fScanMode = kFALSE;
-      if (strlen(ScanList())) varexp = ScanList();
+      if (ScanList() && strlen(ScanList())) varexp = ScanList();
       command = TString::Format("tv__tree->Scan(\"%s\",\"%s\",\"%s\", %lld, %lld);",
               varexp.Data(), cut, gopt, nentries, firstentry);
       if (fBarScan->GetState() == kButtonDown) {
@@ -1494,7 +1494,7 @@ void TTreeViewer::ExecuteSpider()
    TTVLVEntry *item;
    Bool_t previousexp = kFALSE;
    // fill in expressions
-   if (strlen(Ez())) {
+   if (Ez() && strlen(Ez())) {
       previousexp = kTRUE;
       dimension++;
       varexp = Ez();
@@ -1502,8 +1502,8 @@ void TTreeViewer::ExecuteSpider()
       alias[2] = item->GetAlias();
       if (alias[2].BeginsWith("~")) alias[2].Remove(0, 1);
    }
-   if (strlen(Ez()) && (strlen(Ex()) || strlen(Ey()))) varexp += ":";
-   if (strlen(Ey())) {
+   if ((Ez() && strlen(Ez())) && ((Ex() && strlen(Ex())) || (Ey() && strlen(Ey())))) varexp += ":";
+   if (Ey() && strlen(Ey())) {
       previousexp = kTRUE;
       dimension++;
       varexp += Ey();
@@ -1511,8 +1511,8 @@ void TTreeViewer::ExecuteSpider()
       alias[1] = item->GetAlias();
       if (alias[1].BeginsWith("~")) alias[1].Remove(0, 1);
    }
-   if (strlen(Ey()) && strlen(Ex())) varexp += ":";
-   if (strlen(Ex())) {
+   if (Ey() && strlen(Ey()) && Ex() && strlen(Ex())) varexp += ":";
+   if (Ex() && strlen(Ex())) {
       previousexp = kTRUE;
       dimension++;
       varexp += Ex();
@@ -1521,7 +1521,7 @@ void TTreeViewer::ExecuteSpider()
       if (alias[0].BeginsWith("~")) alias[0].Remove(0, 1);
    }
    for(Int_t i=0;i<10;++i){
-      if(strlen(En(i+5))){
+      if(En(i+5) && strlen(En(i+5))){
          ++dimension;
          if(previousexp){
             varexp += ":";
@@ -1729,6 +1729,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    // Handle menu and other commands generated.
 
    TRootHelpDialog *hd;
+   TTVRecord *record;
 
    switch (GET_MSG(msg)) {
       case kC_VSLIDER :
@@ -1769,6 +1770,8 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   if ((ltItem = fLt->GetSelected()) != 0) {
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
+                     if (!itemType) 
+                        break;
                      if (*itemType & kLTTreeType) {
                      // already mapped tree item clicked
                         Int_t index = (Int_t)(*itemType >> 8);
@@ -1852,9 +1855,10 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          }
          break;
       case kC_COMMAND:
-         switch (GET_SUBMSG(msg)){
+         switch (GET_SUBMSG(msg)) {
             case kCM_COMBOBOX:
-               fSession->Show(fSession->GetRecord((Int_t)parm2));
+               if ((record = fSession->GetRecord((Int_t)parm2)))
+                  fSession->Show(record);
             break;
             case kCM_BUTTON:
                switch (parm1) {
@@ -1874,19 +1878,23 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      SendCloseMessage();
                      break;
                   case kBGFirst:
-                     fSession->Show(fSession->First());
+                     if ((record = fSession->First()))
+                        fSession->Show(record);
                      break;
                   case kBGPrevious:
-                     fSession->Show(fSession->Previous());
+                     if ((record = fSession->Previous()))
+                        fSession->Show(record);
                      break;
                   case kBGRecord:
                      fSession->AddRecord();
                      break;
                   case kBGNext:
-                     fSession->Show(fSession->Next());
+                     if ((record = fSession->Next()))
+                        fSession->Show(record);
                      break;
                   case kBGLast:
-                     fSession->Show(fSession->Last());
+                     if ((record = fSession->Last()))
+                        fSession->Show(record);
                      break;
                   default:
                      break;
@@ -2567,6 +2575,7 @@ void TTreeViewer::SetParentTree(TGListTreeItem *item)
 
    if (!item) return;
    ULong_t *itemType = (ULong_t *)item->GetUserData();
+   if (!itemType) return;
    TGListTreeItem *parent = 0;
    Int_t index;
    if (!(*itemType & kLTTreeType)) {
@@ -2818,9 +2827,11 @@ void TTreeViewer::UpdateCombo()
 {
    // Updates combo box to current session entries.
 
+   TTVRecord *record;
    fCombo->RemoveEntries(0, 1000);
    for (Long64_t entry=0; entry<fSession->GetEntries(); entry++) {
-      fCombo->AddEntry(fSession->GetRecord(entry)->GetName(), entry);
+      if ((record = fSession->GetRecord(entry)))
+         fCombo->AddEntry(record->GetName(), entry);
    }
 }
 
