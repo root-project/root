@@ -142,6 +142,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
    fDivMatrix = new TGeoHMatrix();
    fDivMatrix->RegisterYourself();
    fOverlapClusters = new Int_t[fOverlapSize];
+   ResetAll();
 }      
 
 //_____________________________________________________________________________

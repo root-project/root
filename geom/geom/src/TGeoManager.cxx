@@ -324,6 +324,7 @@ TGeoManager *gGeoManager = 0;
 ClassImp(TGeoManager)
 
 Bool_t TGeoManager::fgLock         = kFALSE;
+Bool_t TGeoManager::fgLockNavigators = kFALSE;
 Int_t  TGeoManager::fgVerboseLevel = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
 TGeoManager::ThreadsMap_t TGeoManager::fgThreadId;
@@ -703,6 +704,7 @@ TGeoManager::~TGeoManager()
 //   TIter next(brlist);
 //   TBrowser *browser = 0;
 //   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
+   ClearThreadsMap();
    ClearThreadData();
    delete TGeoBuilder::Instance(this);
    if (fBits)  delete [] fBits;
@@ -731,7 +733,6 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
-   ClearThreadsMap();
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -843,6 +844,10 @@ TGeoNavigator *TGeoManager::AddNavigator()
 {
 // Add a navigator in the list of navigators. If it is the first one make it
 // current navigator.
+   if (fgLockNavigators) {
+      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
+      return 0;
+   }   
    Long_t threadId = (fMultiThread)?TThread::SelfId():999;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
@@ -914,7 +919,7 @@ void TGeoManager::ClearThreadsMap()
 // Clear the current map of threads. This will be filled again by the calling
 // threads via ThreadId calls.
    TThread::Lock();
-   fgThreadId.clear();
+//   if (!fgThreadId.empty()) fgThreadId.clear();
    fgNumThreads = 0;
    TThread::UnLock();
 }
@@ -930,10 +935,10 @@ Int_t TGeoManager::ThreadId()
    TGeoManager::ThreadsMapIt_t it = fgThreadId.find(selfId);
    if (it != fgThreadId.end()) return it->second;
    // Map needs to be updated.
-   TThread::Lock();
+   if (!fgLockNavigators) TThread::Lock();
    fgThreadId[selfId] = fgNumThreads;
    tid = fgNumThreads++;
-   TThread::UnLock();
+   if (!fgLockNavigators) TThread::UnLock();
    return tid;
 }   
    
