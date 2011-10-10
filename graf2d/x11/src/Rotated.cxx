@@ -280,6 +280,7 @@ static XImage *MakeXImage(Display *dpy,int  w, int h)
    }
 
    image->byte_order=image->bitmap_bit_order=MSBFirst;
+   free(data);
    return image;
 }
 
@@ -1011,6 +1012,8 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    /* create image to hold rotated text */
    item->fXimage=MakeXImage(dpy, item->fColsOut, item->fRowsOut);
    if(item->fXimage==0) {
+      free(item->fCornersX);
+      free(item->fCornersY);
       free(item);
       return 0;
    }
