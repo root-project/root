@@ -3372,10 +3372,15 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 
    if (view) {
       tn = view->GetTN();
-      x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
-      x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
-      y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
-      y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
+      if (tn) {
+         x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
+         x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
+         y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
+         y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3] + tn[7];
+      } else {
+         Error("ModifyScreen", "invalid TView in current pad");
+         return;
+      }
    } else {
       Error("ModifyScreen", "no TView in current pad");
       return;
