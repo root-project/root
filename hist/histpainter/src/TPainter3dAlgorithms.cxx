@@ -1575,12 +1575,17 @@ void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
    if (gPad) view = gPad->GetView();
    if (view) {
       tn = view->GetTN();
-      x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3]  + tn[3];
-      x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
-      y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
-      y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
-      z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
-      z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
+      if (tn) {
+         x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3]  + tn[3];
+         x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3]  + tn[3];
+         y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3]  + tn[7];
+         y2 = tn[4]*r2[1] + tn[5]*r2[2] + tn[6]*r2[3]  + tn[7];
+         z1 = tn[8]*r1[1] + tn[9]*r1[2] + tn[10]*r1[3] + tn[11];
+         z2 = tn[8]*r2[1] + tn[9]*r2[2] + tn[10]*r2[3] + tn[11];
+      } else {
+         Error("FindVisibleDraw", "invalid TView in current pad");
+         return;
+      }
    } else {
       Error("FindVisibleDraw", "no TView in current pad");
       return;
