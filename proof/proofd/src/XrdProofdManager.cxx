@@ -295,6 +295,7 @@ int XrdProofdManager::CheckUser(const char *usr,
          return -1;
       }
    } else {
+      // We assign the ui of the effective user
       if (XrdProofdAux::GetUserInfo(geteuid(), ui) != 0) {
          e = "CheckUser: problems getting user info for id: ";
          e += (int)geteuid();

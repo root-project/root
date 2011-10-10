@@ -1858,7 +1858,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       }
       // Set the path w/o asserting the related files
       path = xmsg.Buf();
-      xps->SetAdminPath(path.c_str(), 0);
+      xps->SetAdminPath(path.c_str(), 0, fMgr->ChangeOwn());
       TRACE(FORK, "admin path: "<<path);
 
       xmsg.Reset();
@@ -2018,7 +2018,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       TRACEP(p, XERR, emsg.c_str());
    }
    int pathrc = 0;
-   if (!pathrc && !(pathrc = xps->SetAdminPath(path.c_str(), 1))) {
+   if (!pathrc && !(pathrc = xps->SetAdminPath(path.c_str(), 1, fMgr->ChangeOwn()))) {
       // Communicate the path to child
       if ((pathrc = fpc.Post(0, path.c_str())) != 0) {
          emsg = "failed to communicating path to child";
@@ -2261,7 +2261,7 @@ int XrdProofdProofServMgr::CreateAdminPath(XrdProofdProofServ *xps,
    XPDFORM(path, "%s/%s.%s.", fActiAdminPath.c_str(),
                               p->Client()->User(), p->Client()->Group());
    if (pid > 0) path += pid;
-   if (xps->SetAdminPath(path.c_str(), assert) != 0) {
+   if (xps->SetAdminPath(path.c_str(), assert, fMgr->ChangeOwn()) != 0) {
       XPDFORM(emsg, "failure setting admin path '%s'", path.c_str());
       return -1;
    }
@@ -4894,7 +4894,7 @@ void XrdProofSessionInfo::FillProofServ(XrdProofdProofServ &s, XrdROOTMgr *rmgr)
       }
    }
    s.SetUserEnvs(fUserEnvs.c_str());
-   s.SetAdminPath(fAdminPath.c_str(), 0);
+   s.SetAdminPath(fAdminPath.c_str(), 0, 0);
    s.SetUNIXSockPath(fUnixPath.c_str());
 }
 
