@@ -31,7 +31,6 @@ NETS         := $(filter-out $(MODDIRS)/THTTPMessage.cxx,$(NETS))
 else
 NETNOCRYPTO  :=
 endif
-NETO         := $(call stripsrc,$(NETS:.cxx=.o))
 
 ifeq ($(SSLLIB),)
 NETSSL       :=
@@ -41,6 +40,7 @@ else
 NETSSL       := -DR__SSL
 endif
 
+NETO         := $(call stripsrc,$(NETS:.cxx=.o))
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
 NETLIB       := $(LPATH)/libNet.$(SOEXT)
