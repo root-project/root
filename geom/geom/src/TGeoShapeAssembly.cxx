@@ -184,7 +184,8 @@ Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
    Double_t local[3];
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
-      check_list = voxels->GetCheckList(&point[0], ncheck);
+      Int_t tid = TGeoManager::ThreadId();
+      check_list = voxels->GetCheckList(&point[0], ncheck, tid);
       if (!check_list) return kFALSE;
       for (id=0; id<ncheck; id++) {
          node = fVolume->GetNode(check_list[id]);
@@ -285,8 +286,9 @@ Double_t TGeoShapeAssembly::DistFromOutside(Double_t *point, Double_t *dir, Int_
    // current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
    Int_t *vlist = 0;
-   voxels->SortCrossedVoxels(pt, dir);
-   while ((vlist=voxels->GetNextVoxel(pt, dir, ncheck))) {
+   Int_t tid = TGeoManager::ThreadId();
+   voxels->SortCrossedVoxels(pt, dir, tid);
+   while ((vlist=voxels->GetNextVoxel(pt, dir, ncheck, tid))) {
       for (i=0; i<ncheck; i++) {
          node = fVolume->GetNode(vlist[i]);
          node->MasterToLocal(pt, lpoint);

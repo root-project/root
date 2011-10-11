@@ -425,6 +425,7 @@ public:
    void                   ClearTracks() {fTracks->Delete(); fNtracks=0;}
    void                   ClearNavigators();
    void                   RemoveMaterial(Int_t index);
+   void                   RemoveNavigator(const TGeoNavigator *nav);
    void                   ResetUserData();
 
 

@@ -531,7 +531,7 @@ void TGeoNode::PrintCandidates() const
       return;
    }
    Int_t ncheck = 0;
-   Int_t *check_list = voxels->GetCheckList(&point[0], ncheck);
+   Int_t *check_list = voxels->GetCheckList(&point[0], ncheck, 0);
    voxels->PrintVoxelLimits(&point[0]);
    if (!check_list) {
       printf("no candidates for current point\n");

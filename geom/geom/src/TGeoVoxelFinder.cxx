@@ -56,14 +56,15 @@ TGeoVoxelFinder::ThreadData_t::~ThreadData_t()
 }
 
 //______________________________________________________________________________
-TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData() const
+TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
 {
-   Int_t tid = TGeoManager::ThreadId();
-   TThread::Lock();
+//   Int_t tid = TGeoManager::ThreadId();
    if (tid >= fThreadSize)
    {
+      TThread::Lock();
       fThreadData.resize(tid + 1);
       fThreadSize = tid + 1;
+      TThread::UnLock();
    }
    if (fThreadData[tid] == 0)
    {
@@ -77,7 +78,6 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData() const
          td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
       }
    }
-   TThread::UnLock();
    return *fThreadData[tid];
 }
 
@@ -306,16 +306,16 @@ TGeoVoxelFinder::~TGeoVoxelFinder()
 }
 
 //______________________________________________________________________________
-Int_t TGeoVoxelFinder::GetNcandidates() const
+Int_t TGeoVoxelFinder::GetNcandidates(Int_t tid) const
 {
-   const ThreadData_t& td = GetThreadData();
+   const ThreadData_t& td = GetThreadData(tid);
    return td.fNcandidates;
 }
 
 //______________________________________________________________________________
-Int_t* TGeoVoxelFinder::GetCheckList(Int_t &nelem) const
+Int_t* TGeoVoxelFinder::GetCheckList(Int_t &nelem, Int_t tid) const
 {
-   const ThreadData_t& td = GetThreadData();
+   const ThreadData_t& td = GetThreadData(tid);
    nelem = td.fNcandidates;
    return td.fCheckList;
 }
@@ -364,14 +364,14 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    }
 }
 //_____________________________________________________________________________
-void TGeoVoxelFinder::CreateCheckList()
+void TGeoVoxelFinder::CreateCheckList(Int_t tid)
 {
 // Initializes check list.
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
    }   
-   GetThreadData();
+   GetThreadData(tid);
 }      
 //_____________________________________________________________________________
 void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master) const
@@ -502,10 +502,10 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::GetIndices(Double_t *point)
+Bool_t TGeoVoxelFinder::GetIndices(Double_t *point, Int_t tid)
 {
 // Getindices for current slices on x, y, z
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    td.fSlices[0] = -2; // -2 means 'all daughters in slice'
    td.fSlices[1] = -2;
    td.fSlices[2] = -2;
@@ -600,11 +600,11 @@ Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) cons
 }
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck, Int_t tid)
 {
 // Get extra candidates that are not contained in current check list
 //   UChar_t *bits = gGeoManager->GetBits();
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    td.fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -621,11 +621,11 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t *list, Int_t &ncheck)
 }      
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list, Int_t &ncheck, Int_t tid)
 {
 // Get extra candidates that are contained in array1 but not in current check list
 //   UChar_t *bits = gGeoManager->GetBits();
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    td.fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -642,11 +642,11 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t *list
 }      
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t *list, Int_t &ncheck, Int_t tid)
 {
 // Get extra candidates that are contained in array1 but not in current check list
 //   UChar_t *bits = gGeoManager->GetBits();
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    td.fNcandidates = 0;
    Int_t icand;
    UInt_t bitnumber, loc;
@@ -664,11 +664,11 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*
 
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck, Int_t tid)
 {
 // Returns list of new candidates in next voxel. If NULL, nowhere to
 // go next. 
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -946,9 +946,9 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                }
             }
             if (islices<=1) {
-               IntersectAndStore(ndd[0], slice1);
+               IntersectAndStore(ndd[0], slice1, tid);
             } else {
-               IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
+               IntersectAndStore(ndd[0], slice1, ndd[1], slice2, tid);
             }
             ncheck = td.fNcandidates;
             return td.fCheckList;   
@@ -989,11 +989,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                ndd[0] = ndd[1];
             }
          }
-         if (!islices) return GetValidExtra(new_list, ncheck);
+         if (!islices) return GetValidExtra(new_list, ncheck, tid);
          if (islices==1) {
-            return GetValidExtra(ndd[0], slice1, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, new_list, ncheck,tid);
          } else {
-            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck, tid);
          }
       case 1:
          if (isYlimit) return 0;
@@ -1058,9 +1058,9 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                }
             }
             if (islices<=1) {
-               IntersectAndStore(ndd[0], slice1);
+               IntersectAndStore(ndd[0], slice1, tid);
             } else {
-               IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
+               IntersectAndStore(ndd[0], slice1, ndd[1], slice2, tid);
             }
             ncheck = td.fNcandidates;
             return td.fCheckList;   
@@ -1101,11 +1101,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                ndd[0] = ndd[1];
             }
          }
-         if (!islices) return GetValidExtra(new_list, ncheck);
+         if (!islices) return GetValidExtra(new_list, ncheck, tid);
          if (islices==1) {
-            return GetValidExtra(ndd[0], slice1, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, new_list, ncheck, tid);
          } else {
-            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck, tid);
          }
       case 2:
          if (isZlimit) return 0;
@@ -1170,9 +1170,9 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                }
             }
             if (islices<=1) {
-               IntersectAndStore(ndd[0], slice1);
+               IntersectAndStore(ndd[0], slice1, tid);
             } else {
-               IntersectAndStore(ndd[0], slice1, ndd[1], slice2);
+               IntersectAndStore(ndd[0], slice1, ndd[1], slice2, tid);
             }
             ncheck = td.fNcandidates;
             return td.fCheckList;   
@@ -1213,11 +1213,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
                ndd[0] = ndd[1];
             }
          }
-         if (!islices) return GetValidExtra(new_list, ncheck);
+         if (!islices) return GetValidExtra(new_list, ncheck, tid);
          if (islices==1) {
-            return GetValidExtra(ndd[0], slice1, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, new_list, ncheck, tid);
          } else {
-            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck);
+            return GetValidExtra(ndd[0], slice1, ndd[1], slice2, new_list, ncheck, tid);
          }
       default:
          Error("GetNextCandidates", "Invalid islice=%i inside %s", islice, fVolume->GetName());
@@ -1226,10 +1226,10 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck)
 }
 
 //_____________________________________________________________________________
-void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
+void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir, Int_t tid)
 {
 // get the list in the next voxel crossed by a ray
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
@@ -1249,7 +1249,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
       td.fInc[i] = (dir[i]>0)?1:-1;
       td.fInvdir[i] = 1./dir[i];
    }
-   Bool_t flag = GetIndices(point);
+   Bool_t flag = GetIndices(point, tid);
    TGeoBBox *box = (TGeoBBox*)(fVolume->GetShape());
    const Double_t *box_orig = box->GetOrigin();
    if (td.fInc[0]==0) {
@@ -1344,13 +1344,13 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 //         printf("Slices :(%i,%i,%i) Priority:(%i,%i,%i)\n", td.fSlices[0], td.fSlices[1], td.fSlices[2], fPriority[0], fPriority[1], fPriority[2]);
          return;
       case 1:
-         IntersectAndStore(nd[0], slicex);
+         IntersectAndStore(nd[0], slicex, tid);
          break;
       case 2:
-         IntersectAndStore(nd[0], slicex, nd[1], slicey);
+         IntersectAndStore(nd[0], slicex, nd[1], slicey, tid);
          break;
       default:
-         IntersectAndStore(nd[0], slicex, nd[1], slicey, nd[2], slicez);    
+         IntersectAndStore(nd[0], slicex, nd[1], slicey, nd[2], slicez, tid);
    }      
 //   printf("   bits[0]=%i  END\n", bits[0]);
 //   if (td.fNcandidates) {
@@ -1359,10 +1359,10 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
 //   }   
 }   
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
+Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem, Int_t tid)
 {
 // get the list of daughter indices for which point is inside their bbox
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -1456,10 +1456,10 @@ Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem)
 }
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck, Int_t tid)
 {
 // get the list of candidates in voxel (i,j,k) - no check
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    UChar_t *slice1 = 0;
    UChar_t *slice2 = 0; 
    UChar_t *slice3 = 0;
@@ -1519,11 +1519,11 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
 }     
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck)
+Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck, Int_t tid)
 {
 // get the list of new candidates for the next voxel crossed by current ray
 //   printf("### GetNextVoxel\n");
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
@@ -1539,7 +1539,7 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t 
 //   printf(">>> voxel %i\n", td.fCurrentVoxel);
    // Get slices for next voxel
 //   printf("before - td.fSlices : %i %i %i\n", td.fSlices[0], td.fSlices[1], td.fSlices[2]);
-   return GetNextCandidates(point, ncheck);
+   return GetNextCandidates(point, ncheck, tid);
 } 
 
 //_____________________________________________________________________________
@@ -1571,10 +1571,10 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *r
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
+Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, Int_t tid)
 {
 // return the list of nodes corresponding to one array of bits
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;
@@ -1609,11 +1609,11 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1)
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
+Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1, Int_t tid)
 {
 // make union of older bits with new array
 //   printf("Union - one slice\n");
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;
@@ -1642,11 +1642,11 @@ Bool_t TGeoVoxelFinder::Union(Int_t n1, UChar_t *array1)
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
+Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t tid)
 {
 // make union of older bits with new array
 //   printf("Union - two slices\n");
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;
@@ -1668,12 +1668,12 @@ Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
+Bool_t TGeoVoxelFinder::Union(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3, Int_t tid)
 {
 // make union of older bits with new array
 //   printf("Union - three slices\n");
 //   printf("n1=%i n2=%i n3=%i\n", n1,n2,n3);
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;
@@ -1723,10 +1723,10 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2)
+Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t tid)
 {
 // return the list of nodes corresponding to the intersection of two arrays of bits
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;
@@ -1779,10 +1779,10 @@ Bool_t TGeoVoxelFinder::Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3)
+Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*/, UChar_t *array2, Int_t /*n3*/, UChar_t *array3, Int_t tid)
 {
 // return the list of nodes corresponding to the intersection of three arrays of bits
-   ThreadData_t& td = GetThreadData();
+   ThreadData_t& td = GetThreadData(tid);
    Int_t nd = fVolume->GetNdaughters(); // also number of bits to scan
 //   UChar_t *bits = gGeoManager->GetBits();
    td.fNcandidates = 0;

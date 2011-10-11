@@ -56,6 +56,7 @@ private :
    Double_t              fPoint[3];         //! current point
    Double_t              fDirection[3];     //! current direction
    Double_t              fLastPoint[3];     //! last point for which safety was computed
+   Int_t                 fThreadId;         //! thread id for this navigator
    Int_t                 fLevel;            //! current geometry level;
    Int_t                 fNmany;            //! number of overlapping nodes on current branch
    Int_t                 fNextDaughterIndex; //! next daughter index after FindNextBoundary
@@ -127,6 +128,7 @@ public :
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetLastSafety() const        {return fLastSafety;}
    Double_t               GetStep() const              {return fStep;}
+   Int_t                  GetThreadId() const          {return fThreadId;}
    void                   InspectState() const;
    Bool_t                 IsSafeStep(Double_t proposed, Double_t &newsafety) const;
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);

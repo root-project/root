@@ -1151,6 +1151,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
    TGeoNode *node1, *node2;
    Int_t novlps = 0;
    TGeoHMatrix mat1, mat2;
+   Int_t tid = TGeoManager::ThreadId();
    while (ipoint < npoints) {
    // Shoot randomly in the bounding box.
       pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
@@ -1167,7 +1168,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
       // Check if the point is inside one or more daughters
       in = kFALSE;
       ipoint++;
-      check_list = voxels->GetCheckList(pt, ncheck);
+      check_list = voxels->GetCheckList(pt, ncheck, tid);
       if (!check_list || ncheck<2) continue;
       for (id=0; id<ncheck; id++) {
          id0 = check_list[id];
@@ -2665,12 +2666,12 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
    Double_t local[3];
    Int_t *checklist;
    Int_t ncheck;
-
+   Int_t tid = TGeoManager::ThreadId();
    timer.Start();
    for (Int_t i=0; i<npoints; i++) {
       point = xyz + 3*i;
       if (!shape->Contains(point)) continue;
-      checklist = voxels->GetCheckList(point, ncheck);
+      checklist = voxels->GetCheckList(point, ncheck, tid);
       if (!checklist) continue;
       if (!ncheck) continue;
       for (Int_t id=0; id<ncheck; id++) {

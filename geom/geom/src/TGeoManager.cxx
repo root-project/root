@@ -844,10 +844,11 @@ TGeoNavigator *TGeoManager::AddNavigator()
 {
 // Add a navigator in the list of navigators. If it is the first one make it
 // current navigator.
-   if (fgLockNavigators) {
-      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
-      return 0;
-   }   
+   if (fMultiThread) TThread::Lock();
+//   if (fgLockNavigators) {
+//      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
+//      return 0;
+//   }
    Long_t threadId = (fMultiThread)?TThread::SelfId():999;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
@@ -856,7 +857,9 @@ TGeoNavigator *TGeoManager::AddNavigator()
       array = new TGeoNavigatorArray(this);
       fNavigators.insert(NavigatorsMap_t::value_type(threadId, array));
    }
-   return array->AddNavigator();   
+   TGeoNavigator *nav = array->AddNavigator();
+   if (fMultiThread) TThread::UnLock();
+   return nav;
 }   
 
 //_____________________________________________________________________________
@@ -901,17 +904,40 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
    if (!fMultiThread) fCurrentNavigator = nav;
    return kTRUE;
 }
+
 //_____________________________________________________________________________
 void TGeoManager::ClearNavigators()
 {
 // Clear all navigators.
-   for (NavigatorsMap_t::const_iterator it = fNavigators.begin();
+   if (fMultiThread) TThread::Lock();
+   TGeoNavigatorArray *arr = 0;
+   for (NavigatorsMap_t::iterator it = fNavigators.begin();
         it != fNavigators.end(); it++) {
-      TGeoNavigatorArray *arr = it->second;
+      arr = (*it).second;
       if (arr) delete arr;
    }
    fNavigators.clear();   
+   if (fMultiThread) TThread::UnLock();
 }
+
+//_____________________________________________________________________________
+void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
+{
+// Clear a single navigator.
+   if (fMultiThread) TThread::Lock();
+   for (NavigatorsMap_t::const_iterator it = fNavigators.begin();
+        it != fNavigators.end(); it++) {
+      TGeoNavigatorArray *arr = (*it).second;
+      if (arr) {
+         if ((TGeoNavigator*)arr->Remove((TObject*)nav)) {
+            delete nav;
+            return;
+         }
+      }   
+   }
+   Error("Remove navigator", "Navigator %p not found", nav);
+   if (fMultiThread) TThread::UnLock();
+}      
 
 //_____________________________________________________________________________
 void TGeoManager::ClearThreadsMap()
@@ -935,10 +961,10 @@ Int_t TGeoManager::ThreadId()
    TGeoManager::ThreadsMapIt_t it = fgThreadId.find(selfId);
    if (it != fgThreadId.end()) return it->second;
    // Map needs to be updated.
-   if (!fgLockNavigators) TThread::Lock();
+   TThread::Lock();
    fgThreadId[selfId] = fgNumThreads;
    tid = fgNumThreads++;
-   if (!fgLockNavigators) TThread::UnLock();
+   TThread::UnLock();
    return tid;
 }   
    
@@ -2622,7 +2648,7 @@ void TGeoManager::Voxelize(Option_t *option)
 {
 // Voxelize all non-divided volumes.
    TGeoVolume *vol;
-   TGeoVoxelFinder *vox = 0;
+//   TGeoVoxelFinder *vox = 0;
    if (!fStreamVoxels && fgVerboseLevel>0) Info("Voxelize","Voxelizing...");
 //   Int_t nentries = fVolumes->GetSize();
    TIter next(fVolumes);
@@ -2630,9 +2656,9 @@ void TGeoManager::Voxelize(Option_t *option)
       if (!fIsGeomReading) vol->SortNodes();
       if (!fStreamVoxels) {
          vol->Voxelize(option);
-      } else {
-         vox = vol->GetVoxels();
-         if (vox) vox->CreateCheckList();
+//      } else {
+//         vox = vol->GetVoxels();
+//         if (vox) vox->CreateCheckList(0);
       }
       if (!fIsGeomReading) vol->FindOverlaps();
    }
