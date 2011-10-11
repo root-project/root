@@ -1585,7 +1585,11 @@ TString TTabCom::DeterminePath(const TString & fileName,
       IfDebug(cerr << endl);
       IfDebug(cerr << "    fileName: " << fileName << endl);
       IfDebug(cerr << "    pathBase: " << newBase << endl);
-      IfDebug(cerr << " defaultPath: " << defaultPath << endl);
+      if (defaultPath) {
+         IfDebug(cerr << " defaultPath: " << defaultPath << endl);
+      } else {
+         IfDebug(cerr << " defaultPath: " << endl);
+      }         
       IfDebug(cerr << "extendedPath: " << extendedPath << endl);
       IfDebug(cerr << endl);
 

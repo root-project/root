@@ -1344,7 +1344,7 @@ void TBranchElement::FillLeavesMakeClass(TBuffer& b)
         case TVirtualStreamerInfo::kDouble   /*  8 */: { b.WriteFastArray((Double_t*)  fAddress, n); break; }
         case TVirtualStreamerInfo::kDouble32 /*  9 */: {
            TVirtualStreamerInfo* si = GetInfoImp();
-           // coverity[dereference] structurally si can not be null. 
+           // coverity[returned_null] structurally si->GetElems() can not be null. 
            TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
            Double_t* xx = (Double_t*) fAddress;
            for (Int_t ii = 0; ii < n; ++ii) {
@@ -3578,7 +3578,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       // is being called many times by TTreeFormula!!!
       //--------------------------------------------------------------------
       Int_t i = 0;
-      // coverity[dereference] the fNdata is check enough to prevent the use of null value of At(0)
+      // coverity[returned_null] the fNdata is check enough to prevent the use of null value of At(0)
       if( !fNdata || *(void**)proxy->At( 0 ) != 0 )
          i = fNdata;
 

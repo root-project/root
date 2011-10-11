@@ -1665,7 +1665,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
          if (leafcount) {
             // remove any dimension in title
             char *dim =  (char*)strstr(branchname,"[");
-            dim[0] = 0;
+            if (dim) dim[0] = 0;
          }
       } else {
          if (leafcount) strlcpy(branchname,branch->GetName(),sizeof(branchname));
