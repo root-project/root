@@ -31,12 +31,10 @@
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 
-//const Int_t kMAXLEVELS = 20;
-const Int_t kSonsInvisible = BIT(17);
-
 #if 0
 const Int_t kVectorSize = 3;
 const Int_t kMatrixSize = kVectorSize*kVectorSize;
+const Int_t kMAXLEVELS = 20;
 
 static Double_t gTranslation[kMAXLEVELS][kVectorSize];
 static Double_t gRotMatrix[kMAXLEVELS][kMatrixSize];
