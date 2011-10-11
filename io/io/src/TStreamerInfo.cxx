@@ -75,8 +75,6 @@
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
 
-const Int_t kRegrouped = TStreamerInfo::kOffsetL;
-
 const Int_t kMaxLen = 1024;
 
 ClassImp(TStreamerInfo)
