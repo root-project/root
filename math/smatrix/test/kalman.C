@@ -125,7 +125,7 @@ void kalman_do(const char *machine,int sym, int cut) {
    ts.SetTextSize(0.031);
    tt.SetTextColor(kRed);
    tt.SetTextSize(0.031);
-   char text[10];
+   char text[20];
    ts.SetTextAlign(22);
    for (i=0;i<=nx;i++) {
       line.DrawLine(xmin+i*dx,ymin,xmin+i*dx,ymax);
