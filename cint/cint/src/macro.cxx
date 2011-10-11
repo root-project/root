@@ -22,7 +22,7 @@ static int G__handle_as_typedef(char* oldtype, char* newtype);
 static void G__createmacro(G__FastAllocString &new_name, char* initvalue);
 static int G__createfuncmacro(char* new_name);
 static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro, G__Charlist* callpara, G__Charlist* defpara, FILE* def_fp, fpos_t def_pos, int nobraces, int nosemic);
-static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic);
+static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, const fpos_t &call_pos, char* p, int nobraces, int nosemic);
 static int G__argsubstitute(G__FastAllocString &symbol, G__Charlist* callpara, G__Charlist* defpara);
 static int G__getparameterlist(char* paralist, G__Charlist* charlist);
 
@@ -439,7 +439,7 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
 }
 
 //______________________________________________________________________________
-static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, fpos_t call_pos, char* p, int nobraces, int nosemic)
+static int G__transfuncmacro(const char* item, G__Deffuncmacro* deffuncmacro, G__Callfuncmacro* callfuncmacro, const fpos_t &call_pos, char* p, int nobraces, int nosemic)
 {
    // -- Translate function macro parameter at the first execution of func macro.
    struct G__Charlist call_para;
