@@ -255,7 +255,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // Type of RSA key
    if (fgRSAKey < 0) {
       fgRSAKey  = 0;                // Default key
-#if R__SSL
+#ifdef R__SSL
       // Another choice possible: check user preferences
       if (gEnv->GetValue("RSA.KeyType",0) == 1)
          fgRSAKey = 1;
