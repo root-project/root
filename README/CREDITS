@@ -44,6 +44,10 @@ N: Elias Athanasopoulos
 E: elathan@ics.forth.gr
 D: Ruby interpreter interface
 
+N: Alejandro Alvarez Ayllon 
+E: alejandro.alvarez.ayllon@cern.ch
+D: TSSLSocket class and integration in TWebFile
+
 N: Maarten Ballintijn
 E: maartenb@mit.edu
 D: initial linux port
