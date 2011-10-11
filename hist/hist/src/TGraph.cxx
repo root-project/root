@@ -89,7 +89,7 @@ TGraph::TGraph(Int_t n)
    : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker()
 {
    // Constructor with only the number of points set
-   // the arrsys x and y will be set later
+   // the arrays x and y will be set later
 
    fNpoints = n;
    if (!CtorAllocate()) return;
