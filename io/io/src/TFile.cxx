@@ -1106,6 +1106,9 @@ Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &n
    // Note that the arguments objlen and keylen are returned only
    // if maxbytes >=16
 
+   nbytes = 0;
+   objlen = 0;
+   keylen = 0;
    if (first < fBEGIN) return 0;
    if (first > fEND)   return 0;
    Seek(first);
