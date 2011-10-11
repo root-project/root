@@ -4379,6 +4379,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
       return;
    }
    Double_t *tnorm = view->GetTnorm();
+   if (!tnorm) return;
 
    //       D E F I N E   O R D E R   O F   D R A W I N G
    if (*chopt == 'B' || *chopt == 'b') {
