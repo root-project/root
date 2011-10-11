@@ -77,6 +77,8 @@ public:
    // Getters
    inline kXR_int32 CID() const { return fCID; }
    inline XrdProofdClient *Client() const { return fPClient; }
+   inline const char *GroupIn() const { return fGroupIn.c_str(); }
+   inline const char *UserIn() const { return fUserIn.c_str(); }
    inline int    ConnType() const { return fConnType; }
    inline const char *TraceID() const { return fTraceID.c_str(); }
    inline bool   Internal() { return (fConnType == kXPD_Internal) ? 1 : 0; }
@@ -103,11 +105,13 @@ public:
    inline void   SetClntCapVer(unsigned char c) { fClntCapVer = c; }
    inline void   SetCID(kXR_int32 cid) { fCID = cid; }
    inline void   SetConnType(int ct) { fConnType = ct; }
+   inline void   SetGroupIn(const char *gin) { fGroupIn = gin; }
    inline void   SetTraceID() { if (fLink) XPDFORM(fTraceID, "%s: ", fLink->ID); }
    inline void   SetPid(int pid) { fPid = pid; }
    inline void   SetProofProtocol(short int pp) { fProofProtocol = pp; }
    inline void   SetStatus(char s) { fStatus = s; }
    inline void   SetSuperUser(bool su = 1) { fSuperUser = su; }
+   inline void   SetUserIn(const char *uin) { fUserIn = uin; }
 
    static XrdProofdManager *Mgr() { return fgMgr; }
    static int    EUidAtStartup() { return fgEUidAtStartup; }
@@ -143,6 +147,8 @@ public:
 
    bool                          fSuperUser;       // TRUE for privileged clients (admins)
 
+   XrdOucString                  fUserIn;          // Incoming user name (can be different from the fPClient one) 
+   XrdOucString                  fGroupIn;         // Explicit group request from incoming user
    XrdProofdClient              *fPClient;         // Our reference XrdProofdClient
    XrdOucString                  fAdminPath;       // Admin path for this client
 

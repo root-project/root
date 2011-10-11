@@ -739,7 +739,7 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
 }
 
 //__________________________________________________________________________
-int XrdProofdProofServ::SetAdminPath(const char *a, bool assert)
+int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
 {
    // Set the admin path and make sure the file exists
 
@@ -779,22 +779,25 @@ int XrdProofdProofServ::SetAdminPath(const char *a, bool assert)
          return -1;
       }
    }
-   // Set the ownership of the status file to the user
-   XrdProofUI ui;
-   if (XrdProofdAux::GetUserInfo(fClient.c_str(), ui) != 0) {
-      TRACE(XERR, "unable to get info for user "<<fClient<<"; errno = "<<errno);
-      return -1;
-   }
-   if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
-      TRACE(XERR, "unable to give ownership of the status file "<< fn << " to user; errno = "<<errno);
-      return -1;
-   }
-   // Check
-   if (stat(fn.c_str(), &st) != 0) {
-      TRACE(XERR, "creation/assertion of the status path "<< fn << " failed; errno = "<<errno);
-      return -1;
-   } else {
-      TRACE(ALL, "creation/assertion of the status path "<< fn << " was successful!");
+   
+   if (setown) {
+      // Set the ownership of the status file to the user
+      XrdProofUI ui;
+      if (XrdProofdAux::GetUserInfo(fClient.c_str(), ui) != 0) {
+         TRACE(XERR, "unable to get info for user "<<fClient<<"; errno = "<<errno);
+         return -1;
+      }
+      if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
+         TRACE(XERR, "unable to give ownership of the status file "<< fn << " to user; errno = "<<errno);
+         return -1;
+      }
+      // Check
+      if (stat(fn.c_str(), &st) != 0) {
+         TRACE(XERR, "creation/assertion of the status path "<< fn << " failed; errno = "<<errno);
+         return -1;
+      } else {
+         TRACE(ALL, "creation/assertion of the status path "<< fn << " was successful!");
+      }
    }
 
    // Done

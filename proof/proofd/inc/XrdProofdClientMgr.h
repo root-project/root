@@ -68,6 +68,8 @@ class XrdProofdClientMgr : public XrdProofdConfig {
 
    int                CheckAdminPath(XrdProofdProtocol *p,
                                      XrdOucString &cidpath, XrdOucString &emsg);
+   int                CheckClient(XrdProofdProtocol *p,
+                                    const char *user, XrdOucString &emsg);
    int                CreateAdminPath(XrdProofdProtocol *p,
                                       XrdOucString &path, XrdOucString &e);
    int                RestoreAdminPath(XrdOucString &cpath, XrdOucString &emsg);
