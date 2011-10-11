@@ -427,6 +427,7 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
    fSortIndex     = 0;
    fSearchMethod  = 0;
    fColDimensions = 0;
+   delete [] fIndexArray;
    fIndexArray    = 0;
    fColOffset     = 0;
 
@@ -438,6 +439,7 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
    if (numberRows > 0)  fNumberOfRows = TMath::Min(numberRows,fNumberOfRows);
 
    // Allocate index array
+   delete [] fSortIndex;
    if (fNumberOfRows > 0) fSortIndex = new void*[fNumberOfRows];
 }
 
@@ -445,7 +447,8 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
 TTableSorter::~TTableSorter()
 {
    //to be documented
-   if (fSortIndex) delete [] fSortIndex; fSortIndex = 0; fNumberOfRows=0;
+   delete [] fSortIndex; fSortIndex = 0; fNumberOfRows=0;
+   delete [] fIndexArray;
 }
 
 //_____________________________________________________________________________
