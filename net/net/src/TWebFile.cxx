@@ -21,12 +21,14 @@
 #include "TWebFile.h"
 #include "TROOT.h"
 #include "TSocket.h"
-#include "TSSLSocket.h"
 #include "Bytes.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TBase64.h"
 #include "TVirtualPerfStats.h"
+#ifdef R__SSL
+#include "TSSLSocket.h"
+#endif
 
 #include <errno.h>
 #include <stdlib.h>
@@ -88,12 +90,17 @@ void TWebSocket::ReOpen()
       connurl = fWebFile->fUrl;
 
    for (Int_t i = 0; i < 5; i++) {
-      if (strcmp(connurl.GetProtocol(), "https") == 0)
+      if (strcmp(connurl.GetProtocol(), "https") == 0) {
+#ifdef R__SSL
          fWebFile->fSocket = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
-      else
+#else
+         ::Error("TWebSocket::ReOpen", "library compiled without SSL, https not supported");
+         return;
+#endif
+      } else
          fWebFile->fSocket = new TSocket(connurl.GetHost(), connurl.GetPort());
 
-      if (!fWebFile->fSocket->IsValid()) {
+      if (!fWebFile->fSocket || !fWebFile->fSocket->IsValid()) {
          delete fWebFile->fSocket;
          fWebFile->fSocket = 0;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
@@ -560,9 +567,14 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    else
       connurl = fUrl;
 
-   if (strcmp(connurl.GetProtocol(), "https") == 0)
+   if (strcmp(connurl.GetProtocol(), "https") == 0) {
+#ifdef R__SSL
       s = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
-   else
+#else
+      Error("GetFromWeb", "library compiled without SSL, https not supported");
+      return -1;
+#endif
+   } else
       s = new TSocket(connurl.GetHost(), connurl.GetPort());
      
    if (!s->IsValid()) {
@@ -864,9 +876,14 @@ Int_t TWebFile::GetHead()
 
    TSocket *s = 0;
    for (Int_t i = 0; i < 5; i++) {
-      if (strcmp(connurl.GetProtocol(), "https") == 0)
+      if (strcmp(connurl.GetProtocol(), "https") == 0) {
+#ifdef R__SSL
          s = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
-      else
+#else
+         Error("GetHead", "library compiled without SSL, https not supported");
+         return -1;
+#endif
+      } else
          s = new TSocket(connurl.GetHost(), connurl.GetPort());
 
       if (!s->IsValid()) {
