@@ -837,7 +837,9 @@ void TTreeCache::Print(Option_t *option) const
    //   Number of blocks in current cache..: 210, total size: 6280352
    //
    // if option = "a" the list of blocks in the cache is printed
-   // see also class TTreePerfStats
+   // see also class TTreePerfStats.
+   // if option contains 'cachedbranches', the list of branches being
+   // cached is printed.
    
    TString opt = option;
    opt.ToLower();
@@ -847,7 +849,17 @@ void TTreeCache::Print(Option_t *option) const
    printf("Cache Efficiency ..................: %f\n",GetEfficiency());
    printf("Cache Efficiency Rel...............: %f\n",GetEfficiencyRel());
    printf("Learn entries......................: %d\n",TTreeCache::GetLearnEntries());
-   TFileCacheRead::Print(option);
+   if ( opt.Contains("cachedbranches") ) {
+      opt.ReplaceAll("cachedbranches","");
+      printf("Cached branches....................:\n");
+      const TObjArray *cachedBranches = this->GetCachedBranches();
+      Int_t nbranches = cachedBranches->GetEntriesFast();
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranch* branch = (TBranch*) cachedBranches->UncheckedAt(i);
+         printf("Branch name........................: %s\n",branch->GetName());
+      }
+   }
+   TFileCacheRead::Print(opt);
 }
 
 
