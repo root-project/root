@@ -429,7 +429,6 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       }
 
       // Initializing loop variables
-      Char_t buffer[10000] ;
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
       char * token = NULL ;
       TString token_str = "" ;
@@ -440,8 +439,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       // Looping
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
-            strlcpy(buffer, line.c_str(), 10000) ; //necessary stage for strtok?
-            token = strtok(buffer, option) ;
+            token = strtok(const_cast<char*>(line.c_str()), option) ;
             while (token != NULL && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
