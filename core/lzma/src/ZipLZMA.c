@@ -13,6 +13,8 @@
 #include "lzma.h"
 #include <stdio.h>
 
+static const int kHeaderSize = 9;
+
 void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
    uint64_t out_size;             /* compressed size */
