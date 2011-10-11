@@ -68,6 +68,7 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
    }
    if (fThreadData[tid] == 0)
    {
+      TThread::Lock();
       fThreadData[tid] = new ThreadData_t;
       ThreadData_t &td = *fThreadData[tid];
 
@@ -77,6 +78,7 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
          td.fCheckList = new Int_t  [nd];
          td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
       }
+      TThread::UnLock();
    }
    return *fThreadData[tid];
 }
