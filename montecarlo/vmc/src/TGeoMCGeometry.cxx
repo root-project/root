@@ -364,6 +364,10 @@ Int_t TGeoMCGeometry::Gsvolu(const char *name, const char *shape, Int_t nmed,
    Vname(shape,vshape);
 
    TGeoVolume* vol = GetTGeoManager()->Volume(vname, vshape, nmed, upar, npar);
+   if (!vol) {
+      Fatal("Gsvolu", "Could not create volume %s", name);
+      return -1;
+   }
    return vol->GetNumber();
 }
 
