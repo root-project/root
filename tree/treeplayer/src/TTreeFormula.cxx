@@ -1659,7 +1659,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                TStreamerElement * curelem;
                while ((curelem = (TStreamerElement*)next())) {
                   if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
-                     Int_t clones_offset;
+                     Int_t clones_offset = 0;
                      ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                      TFormLeafInfo* clonesinfo =
                         new TFormLeafInfo(cl, clones_offset, curelem);
@@ -1693,7 +1693,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      }
                   } else if (curelem->GetClassPointer() && curelem->GetClassPointer()->GetCollectionProxy()) {
 
-                     Int_t coll_offset;
+                     Int_t coll_offset = 0;
                      ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),coll_offset);
 
                      TClass *sub_cl =
@@ -3135,7 +3135,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                      leafinfo = new TFormLeafInfoClones(mother_cl, 0, bel_element, kTRUE);
                   }
 
-                  Int_t clones_offset;
+                  Int_t clones_offset = 0;
                   ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                   if (leafinfo)
@@ -4098,7 +4098,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   }
                }
                pos++;
-               Double_t ret;
+               Double_t ret = 0;
                method->Execute(ret);
                tab[pos-1] = ret; // check for the correct conversion!
 
@@ -4380,13 +4380,13 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf* leaf) const
    TMethodCall::EReturnType r = m->ReturnType();
 
    if (r == TMethodCall::kLong) {
-      Long_t l;
+      Long_t l = 0;
       m->Execute(thisobj, l);
       return (Double_t) l;
    }
 
    if (r == TMethodCall::kDouble) {
-      Double_t d;
+      Double_t d = 0.0;
       m->Execute(thisobj, d);
       return d;
    }
@@ -4440,19 +4440,19 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
    TMethodCall::EReturnType r = m->ReturnType();
 
    if (r == TMethodCall::kLong) {
-      Long_t l;
+      Long_t l = 0;
       m->Execute(thisobj, l);
       return 0;
    }
 
    if (r == TMethodCall::kDouble) {
-      Double_t d;
+      Double_t d = 0.0;
       m->Execute(thisobj, d);
       return 0;
    }
 
    if (r == TMethodCall::kOther) {
-      char* c;
+      char* c = 0;
       m->Execute(thisobj, &c);
       return c;
    }

@@ -1070,7 +1070,7 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf)
 
    if (!fCounter) {
       TClass *clonesClass = TClonesArray::Class();
-      Int_t c_offset;
+      Int_t c_offset = 0;
       TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
@@ -1084,7 +1084,7 @@ Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
 
    if (!fCounter) {
       TClass *clonesClass = TClonesArray::Class();
-      Int_t c_offset;
+      Int_t c_offset = 0;
       TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
@@ -2023,7 +2023,7 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
    fResult = 0;
 
    if (r == TMethodCall::kLong) {
-      Long_t l;
+      Long_t l = 0;
       fMethod->Execute(thisobj, l);
       fResult = (Double_t) l;
       // Get rid of temporary return object.
@@ -2031,7 +2031,7 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
       return &fResult;
 
    } else if (r == TMethodCall::kDouble) {
-      Double_t d;
+      Double_t d = 0;
       fMethod->Execute(thisobj, d);
       fResult = (Double_t) d;
       // Get rid of temporary return object.
@@ -2076,12 +2076,12 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
    Double_t result = 0;
 
    if (r == TMethodCall::kLong) {
-      Long_t l;
+      Long_t l = 0;
       fMethod->Execute(thisobj, l);
       result = (Double_t) l;
 
    } else if (r == TMethodCall::kDouble) {
-      Double_t d;
+      Double_t d = 0;
       fMethod->Execute(thisobj, d);
       result = (Double_t) d;
 
@@ -2122,7 +2122,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
    if (element && element->InheritsFrom(TStreamerBasicPointer::Class())) {
       TStreamerBasicPointer * elem = (TStreamerBasicPointer*)element;
 
-      Int_t counterOffset;
+      Int_t counterOffset = 0;
       TStreamerElement* counter = ((TStreamerInfo*)classptr->GetStreamerInfo())->GetStreamerElement(elem->GetCountName(),counterOffset);
       if (!parent) return;
       fCounter2 = parent->DeepCopy();
