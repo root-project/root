@@ -15,8 +15,6 @@
 
 #include "TFileCacheWrite.h"
 
-char scratch[32*1024*1024];
-
 void fastMergeServer(bool cache = false) {
    // This script shows how to make a simple iterative server that
    // can accept connections while handling currently open connections.
@@ -108,8 +106,8 @@ void fastMergeServer(bool cache = false) {
          Info("fastMergeServer","Receive input from client %d for %s",clientId,filename.Data());
          
          delete transient;
-         mess->ReadFastArray(scratch,length);
-         transient = new TMemFile(filename,scratch,length);
+         transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length);
+         mess->SetBufferOffset(mess->Length()+length);
          merger.OutputFile(filename);
          merger.AddAdoptFile(transient);
 

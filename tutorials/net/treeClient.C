@@ -28,6 +28,7 @@ void treeClient(Bool_t evol=kFALSE)
    // Open connection to server
    TSocket *sock = new TSocket("localhost", 9090);
    if (!sock->IsValid()) {
+      Error("treeClient","Could not establish a connection with the server %s:%d.","localhost",9090);
       return;
    }
 
@@ -38,7 +39,9 @@ void treeClient(Bool_t evol=kFALSE)
    
    if (kind != 0 /* kStartConnection */) 
    {
-      Fatal("treeClient","Unexpected server message: kind=%d status=%d\n",kind,status);
+      Error("treeClient","Unexpected server message: kind=%d status=%d\n",kind,status);
+      delete sock;
+      return;
    }
    
    int idx = status;
@@ -81,7 +84,7 @@ void treeClient(Bool_t evol=kFALSE)
          mess.WriteInt(idx);
          mess.WriteTString(file->GetName());
          mess.WriteLong64(file->GetEND());   // 'mess << file->GetEND();' is broken in CINT for Long64_t
-         mess.WriteFastArray(file->GetBuffer(),file->GetEND());
+         file->CopyTo(mess);
          sock->Send(mess);          // send message
          messlen  += mess.Length();
          cmesslen += mess.CompLength();
