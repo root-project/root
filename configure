@@ -3362,6 +3362,10 @@ if test ! "x$enable_fitsio" = "xno"; then
 
     if test "x$cfitsioincdir" = "x" || test "x$cfitsiolib" = "x"; then
         enable_fitsio="no"
+    else
+        case $platform in
+            linux)     cfitsiolib="$cfitsiolib -lpthread"    ;;
+        esac
     fi
 fi
 check_explicit "$enable_fitsio" "$enable_fitsio_explicit" \
@@ -6094,7 +6098,7 @@ esac
 ### echo %%% Explicitlink - explicitly link with all dependent libraries
 #
 case $arch in
-macosx*|freebsd*|openbsd|aix*|win32*)
+macosx*|freebsd*|openbsd|aix*|win32*|linux*)
     enable_explicitlink="yes"
     ;;
 esac
@@ -7090,7 +7094,7 @@ if test ! "x$haveconfig" = "x" ; then
 fi
 result ""
 if test "x$issue_explicitlink_warning" = "xyes"; then
-    result "*** Explicit linking is required ror Ruby support."
+    result "*** Explicit linking is required for Ruby support."
     result "*** If lib/*.so's exist created without explicit linking,"
     result "*** please remove them first using: rm -f lib/*.so."
     result ""

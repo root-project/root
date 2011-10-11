@@ -66,7 +66,8 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient
+PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient \
+                  -lpthread
 # Starting from Jul 2010 XrdNet has been split in two libs:
 #    XrdNet and XrdNetUtil
 # both are needed
