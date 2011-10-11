@@ -56,5 +56,8 @@
 #pragma link C++ class TAS3File+;
 #pragma link C++ class TGSFile+;
 #endif
+#ifdef R__SSL
+#pragma link C++ class TSSLSocket;
+#endif
 
 #endif

@@ -21,6 +21,7 @@
 #include "TWebFile.h"
 #include "TROOT.h"
 #include "TSocket.h"
+#include "TSSLSocket.h"
 #include "Bytes.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -87,7 +88,11 @@ void TWebSocket::ReOpen()
       connurl = fWebFile->fUrl;
 
    for (Int_t i = 0; i < 5; i++) {
-      fWebFile->fSocket = new TSocket(connurl.GetHost(), connurl.GetPort());
+      if (strcmp(connurl.GetProtocol(), "https") == 0)
+         fWebFile->fSocket = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
+      else
+         fWebFile->fSocket = new TSocket(connurl.GetHost(), connurl.GetPort());
+
       if (!fWebFile->fSocket->IsValid()) {
          delete fWebFile->fSocket;
          fWebFile->fSocket = 0;
@@ -542,6 +547,8 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    // Read request from web server. Returns -1 in case of error,
    // 0 in case of success.
 
+   TSocket *s;
+
    if (!len) return 0;
 
    Double_t start = 0;
@@ -553,19 +560,26 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    else
       connurl = fUrl;
 
-   TSocket s(connurl.GetHost(), connurl.GetPort());
-   if (!s.IsValid()) {
+   if (strcmp(connurl.GetProtocol(), "https") == 0)
+      s = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
+   else
+      s = new TSocket(connurl.GetHost(), connurl.GetPort());
+     
+   if (!s->IsValid()) {
       Error("GetFromWeb", "cannot connect to host %s", fUrl.GetHost());
+      delete s;
       return -1;
    }
 
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1) {
+   if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
       Error("GetFromWeb", "error sending command to host %s", fUrl.GetHost());
+      delete s;
       return -1;
    }
 
-   if (s.RecvRaw(buf, len) == -1) {
+   if (s->RecvRaw(buf, len) == -1) {
       Error("GetFromWeb", "error receiving data from host %s", fUrl.GetHost());
+      delete s;
       return -1;
    }
 
@@ -583,6 +597,7 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    if (gPerfStats)
       gPerfStats->FileReadEvent(this, len, start);
 
+   delete s;
    return 0;
 }
 
@@ -849,7 +864,11 @@ Int_t TWebFile::GetHead()
 
    TSocket *s = 0;
    for (Int_t i = 0; i < 5; i++) {
-      s = new TSocket(connurl.GetHost(), connurl.GetPort());
+      if (strcmp(connurl.GetProtocol(), "https") == 0)
+         s = new TSSLSocket(connurl.GetHost(), connurl.GetPort());
+      else
+         s = new TSocket(connurl.GetHost(), connurl.GetPort());
+
       if (!s->IsValid()) {
          delete s;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
