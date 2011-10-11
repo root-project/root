@@ -109,10 +109,11 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
          r2 = 0.5*TMath::Abs(y1-y0);
          el = new TEllipse(xc, yc, r1, r2);
       }
-      gPad->GetCanvas()->FeedbackMode(kFALSE);
+      TCanvas *canvas = gPad->GetCanvas();
+      if (canvas) canvas->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       if (el) el->Draw();
-      gPad->GetCanvas()->Selected((TPad*)gPad, el, event);
+      if (canvas) canvas->Selected((TPad*)gPad, el, event);
       gROOT->SetEditorMode();
       break;
    }
@@ -162,6 +163,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       x1 = gPad->AbsPixeltoX(px);
       y1 = gPad->AbsPixeltoY(py);
       gPad->Modified(kTRUE);
+      TCanvas *canvas = gPad->GetCanvas();
       if (gPad->GetLogx()) {
          x0 = TMath::Power(10,x0);
          x1 = TMath::Power(10,x1);
@@ -173,21 +175,21 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kLine) {
          line = new TLine(x0,y0,x1,y1);
          line->Draw();
-         gPad->GetCanvas()->Selected((TPad*)gPad, line, event);
+         if (canvas) canvas->Selected((TPad*)gPad, line, event);
       }
       if (mode == kArrow) {
          arrow = new TArrow(x0,y0,x1,y1
                             , TArrow::GetDefaultArrowSize()
                             , TArrow::GetDefaultOption());
          arrow->Draw();
-         gPad->GetCanvas()->Selected((TPad*)gPad, arrow, event);
+         if (canvas) canvas->Selected((TPad*)gPad, arrow, event);
       }
       if (mode == kCurlyLine) {
          cline = new TCurlyLine(x0,y0,x1,y1
                                 , TCurlyLine::GetDefaultWaveLength()
                                 , TCurlyLine::GetDefaultAmplitude());
          cline->Draw();
-         gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
+         if (canvas) canvas->Selected((TPad*)gPad, cline, event);
       }
       if (mode == kCurlyArc) {
          //calculate radius in pixels and convert to users x
@@ -199,7 +201,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
                                 , TCurlyArc::GetDefaultWaveLength()
                                 , TCurlyArc::GetDefaultAmplitude());
          cline->Draw();
-         gPad->GetCanvas()->Selected((TPad*)gPad, cline, event);
+         if (canvas) canvas->Selected((TPad*)gPad, cline, event);
       }
       gROOT->SetEditorMode();
       break;
@@ -280,7 +282,8 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
-      gPad->GetCanvas()->Selected((TPad*)gPad, newpad, event);
+      TCanvas *canvas = gPad->GetCanvas();
+      if (canvas) canvas->Selected((TPad*)gPad, newpad, event);
       padsav->cd();
       break;
    }
@@ -372,10 +375,11 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                               (y1-gPad->GetY1())/(gPad->GetY2() -
                               gPad->GetY1()));
       }
-      gPad->GetCanvas()->FeedbackMode(kFALSE);
+      TCanvas *canvas = gPad->GetCanvas();
+      if (canvas) canvas->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
       if (pave) pave->Draw();
-      gPad->GetCanvas()->Selected((TPad*)gPad, pave, event);
+      if (canvas) canvas->Selected((TPad*)gPad, pave, event);
       gROOT->SetEditorMode();
       gPad->Update();
       break;
@@ -397,6 +401,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    static Int_t linedrawn = 0;
    Int_t dp;
    static TGraph *gr = 0;
+   TCanvas *canvas = gPad->GetCanvas();
 
    switch (event) {
 
@@ -405,7 +410,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (npoints == 0) {
          gVirtualX->SetLineColor(-1);
       } else {
-         gPad->GetCanvas()->FeedbackMode(kFALSE);
+         if (canvas) canvas->FeedbackMode(kFALSE);
          gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
       }
       // stop collecting new points if new point is close ( < 5 pixels) of previous point
@@ -444,7 +449,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                          gPad->PadtoY(gPad->AbsPixeltoY(py)));
          npoints = 2;
          gr->Draw("L");
-         gPad->GetCanvas()->Selected((TPad*)gPad, gr, event);
+         if (canvas) canvas->Selected((TPad*)gPad, gr, event);
       } else if (npoints > 1) {
          gr->Set(gr->GetN() + 1);
          gr->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(px)),
@@ -464,7 +469,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Motion:
    case kButton1Up:
       if (npoints < 1) return;
-      gPad->GetCanvas()->FeedbackMode(kTRUE);
+      if (canvas) canvas->FeedbackMode(kTRUE);
       if (linedrawn) {
          gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
       }
@@ -491,6 +496,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    TLatex *newtext;
    TMarker *marker;
    Double_t x, y;
+   TCanvas *canvas = gPad->GetCanvas();
 
    switch (event) {
 
@@ -502,7 +508,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kMarker) {
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
          marker->Draw();
-         gPad->GetCanvas()->Selected((TPad*)gPad, marker, event);
+         if (canvas) canvas->Selected((TPad*)gPad, marker, event);
          gROOT->SetEditorMode();
          break;
       }
@@ -529,7 +535,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       ((TPad *)gPad)->RecordLatex(&copytext);
       newtext->DrawLatex(x, y, atext);
       gPad->Modified(kTRUE);
-      gPad->GetCanvas()->Selected((TPad*)gPad, newtext, event);
+      if (canvas) canvas->Selected((TPad*)gPad, newtext, event);
       gROOT->SetEditorMode();
       gPad->Update();
       break;
