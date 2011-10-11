@@ -96,8 +96,6 @@
 #include "TDatime.h"
 #include "TMath.h"
 
-const Double_t kScaleTime = 1e-20;
-
 ClassImp(TTreePerfStats)
 
 //______________________________________________________________________________
