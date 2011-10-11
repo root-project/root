@@ -438,8 +438,9 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       return kUNSOL_CONTINUE;
    }
 
-   // From now on make sure is for us
-   if (!fConn || !m->MatchStreamid(fConn->fStreamid)) {
+   // From now on make sure is for us (but only if not during setup, i.e. fConn == 0; otherwise
+   // we may miss some important server message)
+   if (fConn && !m->MatchStreamid(fConn->fStreamid)) {
       if (gDebug > 1)
          Info("ProcessUnsolicitedMsg", "%p: IDs do not match: {%d, %d}", this, fConn->fStreamid, m->HeaderSID());
       return kUNSOL_CONTINUE;

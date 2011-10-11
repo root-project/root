@@ -347,8 +347,24 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       }
    }
 
+   // Get user and group names for the entity requiring to login
+   int i, pid;
+   XrdOucString uname, gname, emsg;
+
    // If this is the second call (after authentication) we just need mapping
    if (p->Status() == XPD_NEED_MAP) {
+
+      // Finalize the login, checking the if username is allowed to use the facility.
+      // The username could have been set as part of the authentication process (for
+      // example via a user mapping funtion or a grid-map file), so these checks have
+      // to be done at this level.
+      // (The XrdProofdClient instance is created in here, if everything else goes well)
+      if (CheckClient(p, 0, emsg) != 0) {
+         TRACEP(p, XERR, emsg);
+         response->Send(kXR_InvalidRequest, emsg.c_str());
+         return 0;
+      }
+
       // Acknowledge the client
       response->Send();
       p->SetStatus(XPD_LOGGEDIN);
@@ -416,10 +432,6 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    }
    response->SetTraceID();
 
-   // Get user and group names for the entity requiring to login
-   int i, pid;
-   XrdOucString uname, gname;
-
    // Unmarshall the data: process ID
    pid = (int)ntohl(p->Request()->login.pid);
    p->SetPid(pid);
@@ -457,18 +469,81 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       gname.assign(uname, ig+1);
       uname.erase(ig);
       TRACEP(p, DBG, "requested group: "<<gname);
+      // Save the requested group info in the protocol instance
+      p->SetGroupIn(gname.c_str());
+   }
+
+   // Save the incoming username setting in the protocol instance
+   p->SetUserIn(uname.c_str());
+
+   // Establish IDs for this link
+   p->Link()->setID(uname.c_str(), pid);
+   p->SetTraceID();
+   response->SetTraceID();
+   p->SetClntCapVer(p->Request()->login.capver[0]);
+
+   // Get the security token for this link. We will either get a token, a null
+   // string indicating host-only authentication, or a null indicating no
+   // authentication. We can then optimize of each case.
+   if (needauth && fCIA) {
+      const char *pp = fCIA->getParms(i, p->Link()->Name());
+      if (pp && i ) {
+         response->SendI((kXR_int32)XPROOFD_VERSBIN, (void *)pp, i);
+         p->SetStatus((XPD_NEED_MAP | XPD_NEED_AUTH));
+         return 0;
+      } else {
+         response->SendI((kXR_int32)XPROOFD_VERSBIN);
+         p->SetStatus(XPD_LOGGEDIN);
+         if (pp)
+            p->SetAuthEntity();
+      }
+   } else {
+      // Check the client at theis point; the XrdProofdClient instance is created
+      // in here, if everything else goes well
+      if (CheckClient(p, p->UserIn(), emsg) != 0) {
+         TRACEP(p, XERR, emsg);
+         response->Send(kXR_InvalidRequest, emsg.c_str());
+         return 0;
+      }
+      rc = response->SendI((kXR_int32)XPROOFD_VERSBIN);
+      p->SetStatus(XPD_LOGGEDIN);
+   }
+
+   // Map the client
+   return MapClient(p, 1);
+}
+
+//______________________________________________________________________________
+int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
+                                    const char *user, XrdOucString &emsg)
+{
+   // Perform checks on the client username. In case authentication is required
+   // this is called afetr authentication.
+   // Return 0 on success; on error, return -1 .
+   XPDLOC(CMGR, "ClientMgr::CheckClient")
+
+   if (!p) {
+      emsg = "protocol object undefined!";
+      return -1;
+   }
+   
+   XrdOucString uname(user), gname(p->GroupIn());
+   if (!user) {
+      if (p && p->AuthProt() && strlen(p->AuthProt()->Entity.name) > 0) {
+         uname = p->AuthProt()->Entity.name;
+      } else {
+         emsg = "username not passed and not available in the protocol security entity - failing";
+         return -1;
+      }
    }
 
    // Here we check if the user is allowed to use the system
    // If not, we fail.
-   XrdOucString emsg;
    XrdProofUI ui;
    bool su;
    if (fMgr->CheckUser(uname.c_str(), ui, emsg, su) != 0) {
       XPDFORM(emsg, "username not allowed: %s", uname.c_str());
-      TRACEP(p, XERR, emsg);
-      response->Send(kXR_InvalidRequest, emsg.c_str());
-      return 0;
+      return -1;
    }
    if (su) {
       // Update superuser flag
@@ -485,15 +560,11 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
          g = fMgr->GroupsMgr()->GetGroup(gname.c_str());
          if (!g) {
             XPDFORM(emsg, "group unknown: %s", gname.c_str());
-            TRACEP(p, XERR, emsg);
-            response->Send(kXR_InvalidRequest, emsg.c_str());
-            return 0;
+            return -1;
          } else if (strncmp(g->Name(),"default",7) &&
                    !g->HasMember(uname.c_str())) {
             XPDFORM(emsg, "user %s is not member of group %s", uname.c_str(), gname.c_str());
-            TRACEP(p, XERR, emsg);
-            response->Send(kXR_InvalidRequest, emsg.c_str());
-            return 0;
+            return -1;
          } else {
             if (TRACING(DBG)) {
                TRACEP(p, DBG,"group: "<<gname<<" found");
@@ -520,41 +591,13 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    } else {
       emsg = "unable to instantiate object for client ";
       emsg += uname;
-      TRACEP(p, XERR, emsg.c_str());
-      response->Send(kXR_InvalidRequest, emsg.c_str());
-      return 0;
+      return -1;
    }
    // Save into the protocol instance
    p->SetClient(c);
 
-   // Establish IDs for this link
-   p->Link()->setID(uname.c_str(), pid);
-   p->SetTraceID();
-   response->SetTraceID();
-   p->SetClntCapVer(p->Request()->login.capver[0]);
-
-   // Get the security token for this link. We will either get a token, a null
-   // string indicating host-only authentication, or a null indicating no
-   // authentication. We can then optimize of each case.
-   if (needauth && fCIA) {
-      const char *pp = fCIA->getParms(i, p->Link()->Name());
-      if (pp && i ) {
-         response->SendI((kXR_int32)XPROOFD_VERSBIN, (void *)pp, i);
-         p->SetStatus((XPD_NEED_MAP | XPD_NEED_AUTH));
-         return 0;
-      } else {
-         response->SendI((kXR_int32)XPROOFD_VERSBIN);
-         p->SetStatus(XPD_LOGGEDIN);
-         if (pp)
-            p->SetAuthEntity();
-      }
-   } else {
-      rc = response->SendI((kXR_int32)XPROOFD_VERSBIN);
-      p->SetStatus(XPD_LOGGEDIN);
-   }
-
-   // Map the client
-   return MapClient(p, 1);
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1061,8 +1104,8 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
       p->AuthProt()->Entity.tident = p->Link()->ID;
    }
    // Set the wanted login name
-   char *u = new char[strlen("XrdSecLOGINUSER=")+strlen(p->Client()->User())+2];
-   sprintf(u, "XrdSecLOGINUSER=%s", p->Client()->User());
+   char *u = new char[strlen("XrdSecLOGINUSER=")+strlen(p->UserIn())+2];
+   sprintf(u, "XrdSecLOGINUSER=%s", p->UserIn());
    putenv(u);
 
    // Now try to authenticate the client using the current protocol
@@ -1071,24 +1114,31 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
 
       // Make sure that the user name that we want is allowed
       if (p->AuthProt()->Entity.name && strlen(p->AuthProt()->Entity.name) > 0) {
-         rc  = -1;
-         if (p->Client() && p->Client()->User() && strlen(p->Client()->User()) > 0) {
+         if (p->UserIn() && strlen(p->UserIn()) > 0) {
             XrdOucString usrs(p->AuthProt()->Entity.name);
+            SafeFree(p->AuthProt()->Entity.name);
             XrdOucString usr;
-            int from = 0;
+            int from = 0, rcmtc = -1;
             while ((from = usrs.tokenize(usr, from, ',')) != STR_NPOS) {
-               if ((usr == p->Client()->User())) {
+               // The first one by default, if no match is found
+               if (!(p->AuthProt()->Entity.name))
+                  p->AuthProt()->Entity.name = strdup(usr.c_str());
+               if ((usr == p->UserIn())) {
                   free(p->AuthProt()->Entity.name);
                   p->AuthProt()->Entity.name = strdup(usr.c_str());
-                  rc = 0;
+                  rcmtc = 0;
                   break;
                }
             }
-            if (rc != 0) {
-               namsg = "user ";
-               namsg += p->Client()->User();
-               namsg += " not authorized to connect";
-               TRACEP(p, XERR, namsg.c_str());
+            if (rcmtc != 0) {
+               namsg = "logging as '";
+               namsg += p->AuthProt()->Entity.name;
+               namsg += "' instead of '";
+               namsg += p->UserIn();
+               namsg += "' following admin settings";
+               TRACEP(p, LOGIN, namsg.c_str());
+               namsg.insert("Warning: ", 0);
+               response->Send(kXR_attn, kXPD_srvmsg, 2, (char *) namsg.c_str(), namsg.length());
             }
          } else {
             TRACEP(p, XERR, "user name is empty: protocol error?");
