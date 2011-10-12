@@ -7704,6 +7704,7 @@ void THistPainter::PaintTriangles(Option_t *option)
       }
       Double_t *rmin = viewsame->GetRmin();
       Double_t *rmax = viewsame->GetRmax();
+      if (!rmin || !rmax) return;
       fXbuf[0] = rmin[0];
       fYbuf[0] = rmax[0];
       fXbuf[1] = rmin[1];
