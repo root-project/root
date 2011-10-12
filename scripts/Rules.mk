@@ -106,8 +106,13 @@ ifeq ($(PLATFORM),win32)
    override ROOTTEST_HOME := $(ROOTTEST_HOME2)
    export PATH:=${PATH}:${ROOTTEST_LOC}/scripts
 else
+ifeq ($(PLATFORM),macosx)
+   export ROOTTEST_LOC := $(shell $(ROOTTEST_HOME)/scripts/mac_readlink -f -n $(ROOTTEST_HOME))/
+   export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
+else
    export ROOTTEST_LOC := $(shell readlink -f -n $(ROOTTEST_HOME))/
    export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
+endif
 endif
 
 endif
@@ -233,14 +238,14 @@ $(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
+	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
          false ; \
-     $(TESTTIMEACTION)\
-     fi )
+     $(TESTTIMEACTION) \
+     fi ) 
 
 #     result=$$?; \
 #     len=`echo Test in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \

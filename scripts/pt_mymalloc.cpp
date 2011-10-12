@@ -2,7 +2,11 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#if defined(__APPLE__)
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
