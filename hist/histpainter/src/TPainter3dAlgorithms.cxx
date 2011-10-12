@@ -383,6 +383,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
    // Find the main tick marks positions.
    Double_t *rmin = view->GetRmin();
    Double_t *rmax = view->GetRmax();
+   if (!rmin || !rmax) return;
    if (ndivz > 0) {
       THLimitsFinder::Optimize(rmin[2], rmax[2], ndivz,
                                binLow, binHigh, nbins, binWidth, " ");
