@@ -77,7 +77,7 @@ class XrdProofdManager : public XrdProofdConfig {
    bool              ChangeOwn() const { return fChangeOwn; }
    void              CheckLogFileOwnership();
    bool              CheckMaster(const char *m);
-   int               CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e, bool &su);
+   int               CheckUser(const char *usr, const char *grp, XrdProofUI &ui, XrdOucString &e, bool &su);
    int               CronFrequency() { return fCronFrequency; }
    const char       *Host() const { return fHost.c_str(); }
    const char       *Image() const { return fImage.c_str(); }

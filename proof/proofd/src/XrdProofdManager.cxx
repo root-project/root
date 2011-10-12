@@ -55,6 +55,13 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+// Auxilliary sructure used internally to extract list of allowed/denied user names
+// when running in access control mode
+typedef struct {
+   XrdOucString allowed;
+   XrdOucString denied;
+} xpd_acm_lists_t;
+
 //--------------------------------------------------------------------------
 //
 // XrdProofdManagerCron
@@ -264,7 +271,7 @@ bool XrdProofdManager::CheckMaster(const char *m)
 }
 
 //_____________________________________________________________________________
-int XrdProofdManager::CheckUser(const char *usr,
+int XrdProofdManager::CheckUser(const char *usr, const char *grp,
                                 XrdProofUI &ui, XrdOucString &e, bool &su)
 {
    // Check if the user is allowed to use the system
@@ -280,6 +287,12 @@ int XrdProofdManager::CheckUser(const char *usr,
    // No 'root' logins
    if (strlen(usr) == 4 && !strcmp(usr, "root")) {
       e = "CheckUser: 'root' logins not accepted ";
+      return -1;
+   }
+
+   // Group must be defined
+   if (!grp || strlen(grp) <= 0) {
+      e = "CheckUser: 'grp' string is undefined ";
       return -1;
    }
 
@@ -338,29 +351,57 @@ int XrdProofdManager::CheckUser(const char *usr,
       if (fAllowedGroups.Num() > 0) {
          // Reset the flag
          grpok = 0;
-         // Get full group info
+         bool ugrpok = 0, pgrpok = 0;
+         // Check UNIX group info
          XrdProofGI gi;
          if (XrdProofdAux::GetGroupInfo(ui.fGid, gi) == 0) {
             int *st = fAllowedGroups.Find(gi.fGroup.c_str());
             if (st) {
-               grpok = 1;
+               if (*st == 1) {
+                  ugrpok = 1;
+               } else {
+                  e = "Controlled access: user '";
+                  e += usr;
+                  e = "', UNIX group '";
+                  e += gi.fGroup;
+                  e += "' denied to connect";
+               }
             } else {
-               e = "CheckUser: group '";
-               e += gi.fGroup;
-               e += "' is not allowed to connect";
+               ugrpok = 1;
             }
          }
+         // Check PROOF group info
+         int *st = fAllowedGroups.Find(grp);
+         if (st) {
+            if (*st == 1) {
+               pgrpok = 1;
+            } else {
+               if (e.length() <= 0)
+                  e = "Controlled access: ";
+               e += "; user '";
+               e += usr;
+               e += "', PROOF group '";
+               e += grp;
+               e += "' denied to connect";
+            }
+         } else {
+            pgrpok = 1;
+         }
+         // Both must be true
+         grpok = (ugrpok && pgrpok) ? 1 : 0;
       }
       // Check username
       bool usrok = grpok;
       if (fAllowedUsers.Num() > 0) {
+         // Reset the flag
+         usrok = 0;
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
          if (st) {
             if (*st == 1) {
                usrok = 1;
             } else {
-               e = "CheckUser: user '";
+               e = "Controlled access: user '";
                e += usr;
                e += "' is not allowed to connect";
                usrok = 0;
@@ -528,18 +569,41 @@ static int FillKeyValues(const char *k, int *d, void *s)
 {
    // Add the key value in the string passed via the void argument
 
-   XrdOucString *ls = (XrdOucString *)s;
+   xpd_acm_lists_t *ls = (xpd_acm_lists_t *)s;
 
    if (ls) {
-      if (*d == 1) {
+      XrdOucString &ss = (*d == 1) ? ls->allowed : ls->denied;
+      // If not empty add a separation ','
+      if (ss.length() > 0) ss += ",";
+      // Add the key
+      if (k) ss += k;
+   } else {
+      // Not enough info: stop
+      return 1;
+   }
+
+   // Check next
+   return 0;
+}
+
+//______________________________________________________________________________
+static int RemoveInvalidUsers(const char *k, int *, void *s)
+{
+   // Add the key value in the string passed via the void argument
+
+   XrdOucString *ls = (XrdOucString *)s;
+
+   XrdProofUI ui;
+   if (XrdProofdAux::GetUserInfo(k, ui) != 0) {
+      // Username is unknown to the system: remove it to the list
+      if (ls) {
          // If not empty add a separation ','
          if (ls->length() > 0) *ls += ",";
          // Add the key
          if (k) *ls += k;
       }
-   } else {
-      // Not enough info: stop
-      return 1;
+      // Negative return removes from the table
+      return -1;
    }
 
    // Check next
@@ -755,18 +819,37 @@ int XrdProofdManager::Config(bool rcf)
       while ((from = fSuperUsers.tokenize(usr, from, ',')) != STR_NPOS) {
          fAllowedUsers.Add(usr.c_str(), new int(1));
       }
+      // If not in multiuser mode make sure that the users in the allowed list
+      // are known to the system
+      if (!fMultiUser) {
+         XrdOucString ius;
+         fAllowedUsers.Apply(RemoveInvalidUsers, (void *)&ius);
+         if (ius.length()) {
+            XPDFORM(msg, "running in controlled access mode: users removed because"
+                         " unknown to the system: %s", ius.c_str());
+            TRACE(ALL, msg);
+         }
+      }
       // Extract now the list of allowed users
-      XrdOucString uls;
+      xpd_acm_lists_t uls;
       fAllowedUsers.Apply(FillKeyValues, (void *)&uls);
-      if (uls.length()) {
-         XPDFORM(msg, "running in controlled access mode: users allowed: %s", uls.c_str());
+      if (uls.allowed.length()) {
+         XPDFORM(msg, "running in controlled access mode: users allowed: %s", uls.allowed.c_str());
+         TRACE(ALL, msg);
+      }
+      if (uls.denied.length()) {
+         XPDFORM(msg, "running in controlled access mode: users denied: %s", uls.denied.c_str());
          TRACE(ALL, msg);
       }
       // Extract now the list of allowed groups
-      XrdOucString gls;
+      xpd_acm_lists_t gls;
       fAllowedGroups.Apply(FillKeyValues, (void *)&gls);
-      if (gls.length()) {
-         XPDFORM(msg, "running in controlled access mode: UNIX groups allowed: %s", gls.c_str());
+      if (gls.allowed.length()) {
+         XPDFORM(msg, "running in controlled access mode: UNIX groups allowed: %s", gls.allowed.c_str());
+         TRACE(ALL, msg);
+      }
+      if (gls.denied.length()) {
+         XPDFORM(msg, "running in controlled access mode: UNIX groups denied: %s", gls.denied.c_str());
          TRACE(ALL, msg);
       }
    }
@@ -1319,7 +1402,6 @@ int XrdProofdManager::DoDirectiveAllow(char *val, XrdOucStream *cfg, bool)
 int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'allowedgroups' directive
-   XPDLOC(ALL, "Manager::DoDirectiveAllowedGroups")
 
    if (!val)
       // undefined inputs
@@ -1344,13 +1426,9 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
          st = 0;
          grp.erasefromstart(1);
       }
-      int rc = 0;
-      if ((rc = XrdProofdAux::GetGroupInfo(grp.c_str(), gi)) == 0) {
-         // Group name is known to the system: add it to the list
-         fAllowedGroups.Add(grp.c_str(), new int(st));
-      } else {
-         TRACE(XERR, "problems getting info for group: '" << grp << "' - errno: " << -rc);
-      }
+      // Add it to the list (no check for the group file: we support also
+      // PROOF groups)
+      fAllowedGroups.Add(grp.c_str(), new int(st));
    }
 
    // Done
@@ -1361,7 +1439,6 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
 int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'allowedusers' directive
-   XPDLOC(ALL, "Manager::DoDirectiveAllowedUsers")
 
    if (!val)
       // undefined inputs
@@ -1386,13 +1463,9 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
          st = 0;
          usr.erasefromstart(1);
       }
-      int rc = 0;
-      if ((rc = XrdProofdAux::GetUserInfo(usr.c_str(), ui)) == 0) {
-         // Username is known to the system: add it to the list
-         fAllowedUsers.Add(usr.c_str(), new int(st));
-      } else {
-         TRACE(XERR, "problems getting info for user: '" << usr << "' - errno: " << -rc);
-      }
+      // Add to the list; we will check later on the existence of the
+      // user in the password file, depending on the 'multiuser' settings
+      fAllowedUsers.Add(usr.c_str(), new int(st));
    }
 
    // Done
