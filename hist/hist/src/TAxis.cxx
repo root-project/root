@@ -670,6 +670,7 @@ void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
    fXmin    = xlow;
    fXmax    = xup;
    if (!fParent) SetDefaults();
+   if (fXbins.fN > 0) fXbins.Set(0);
 }
 
 //______________________________________________________________________________
