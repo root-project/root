@@ -6100,6 +6100,7 @@ esac
 case $arch in
 macosx*|freebsd*|openbsd|aix*|win32*|linux*)
     enable_explicitlink="yes"
+    issue_explicitlink_warning="no"
     ;;
 esac
 if test "x$enable_explicitlink" = "xyes" && test ! "x$platform" = "xwin32"; then
