@@ -1270,19 +1270,22 @@ void TProfile3D::SetBinEntries(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TProfile3D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax, Int_t nz, Double_t zmin, Double_t zmax)
 {
-//*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
+//   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
-
-   fXaxis.Set(nx,xmin,xmax);
-   fYaxis.Set(ny,ymin,ymax);
-   fZaxis.Set(ny,zmin,zmax);
-   fNcells = (nx+2)*(ny+2)*(nz+2);
+   TH1::SetBins(nx, xmin, xmax, ny, ymin, ymax, nz, zmin, zmax);
    fBinEntries.Set(fNcells);
-   fSumw2.Set(fNcells);
    if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
-
+//______________________________________________________________________________
+void TProfile3D::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz, const Double_t *zBins)
+{
+   //   -*-*-*-*-*-*-*Redefine  x, y and z axis parameters with variable bin sizes *-*-*-*-*-*-*-*-*
+   //                 ============================================================
+   TH1::SetBins(nx,xBins,ny,yBins,nz,zBins);
+   fBinEntries.Set(fNcells);
+   if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
+}
 //______________________________________________________________________________
 void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
 {
