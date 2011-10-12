@@ -111,7 +111,7 @@ Int_t TParallelCoordRange::DistancetoPrimitive(Int_t px, Int_t py)
    // Compute the distance to the primitive.
    
    if(TestBit(kShowOnPad)){
-      Double_t xx,yy,thisx,thisy;
+      Double_t xx,yy,thisx=0,thisy=0;
       xx = gPad->AbsPixeltoX(px);
       yy = gPad->AbsPixeltoY(py);
       fVar->GetXYfromValue(fMin,thisx,thisy);
@@ -320,7 +320,7 @@ TPoint* TParallelCoordRange::GetBindingLinePoints(Int_t pos,Int_t mindragged)
 {
    // return the points of the line binding the two niddles of the range.
 
-   Double_t txx,tyy,txxo,tyyo;
+   Double_t txx,tyy,txxo,tyyo=0;
    if (fVar->GetVert()){
       txx = fVar->GetX();
       tyy = gPad->AbsPixeltoY(pos);
@@ -358,7 +358,7 @@ TPoint* TParallelCoordRange::GetSliderPoints(Double_t value)
 {
    // return the points to paint the niddle at "value".
 
-   Double_t txx,tyy;
+   Double_t txx=0,tyy=0;
    fVar->GetXYfromValue(value,txx,tyy);
    Int_t tx[5];
    Int_t ty[5];
