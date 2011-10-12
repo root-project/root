@@ -152,7 +152,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    static Int_t mindragged = -1; //-1:nothing dragged, 0:max dragged, 1:mindragged, 2:both dragged;
    Int_t plx1,plx2,ply1,ply2;
    
-   Double_t xx,yy,txxmin,txxmax,tyymin,tyymax;
+   Double_t xx,yy,txxmin=0,txxmax=0,tyymin=0,tyymax=0;
    TFrame *frame = gPad->GetFrame();
    xx = gPad->AbsPixeltoX(px);
    yy = gPad->AbsPixeltoY(py);
