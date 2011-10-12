@@ -155,7 +155,9 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       return;
    }
 
-   TIter next(gPad->GetCanvas()->GetListOfPrimitives());
+   TCanvas *c = gPad->GetCanvas();
+   if (!c) return;
+   TIter next(c->GetListOfPrimitives());
    TObject *obj;
    TGroupButton *button;
    TPad *pad;
