@@ -928,6 +928,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
       // Find the main tick marks positions.
       Double_t *r0 = view->GetRmin();
       Double_t *r1 = view->GetRmax();
+      if (!r0 || !r1) return;
 
       if (ndivz > 0) {
          THLimitsFinder::Optimize(r0[2], r1[2], ndivz,
