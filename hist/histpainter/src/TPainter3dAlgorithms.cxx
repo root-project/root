@@ -2353,8 +2353,10 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
    tn = view->GetTN();
 
    i1 = 1;
-   if (tn[0] < 0) i1 = 2;
-   if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   if (tn) {
+      if (tn[0] < 0) i1 = 2;
+      if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   }
 
    // Allocate v and tt arrays
    Double_t *v, *tt;
@@ -3681,8 +3683,10 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
    tn = view->GetTN();
 
    i1 = 1;
-   if (tn[0] < 0) i1 = 2;
-   if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   if (tn) {
+      if (tn[0] < 0) i1 = 2;
+      if (tn[0]*cosa + tn[1]*sina < 0) i1 = 5 - i1;
+   }
 
    //          D E F I N E   O R D E R   O F   D R A W I N G
    if (*chopt == 'B' || *chopt == 'b') {incrx = -1; incry = -1;}
