@@ -3139,6 +3139,21 @@ if test ! "x$enable_rfio" = "xno" ; then
                         break ;
                     fi
                 done
+                # Explicit linking: which libraries are needed to satisfy symbols
+                # from libshift?
+                # 2.1.8 needs castorClient
+                shiftlibdep="-lcastorrfio -lcastorcommon -lcastorClient"
+                check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
+                if test $link_result -eq 1 ; then
+                    shiftlib="$shiftlib $shiftlibdep"
+                else
+                    # 2.1.9 does not have castorClient
+                    shiftlibdep="-lcastorrfio -lcastorcommon -lcastorclient"
+                    check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
+                    if test $link_result -eq 1 ; then
+                        shiftlib="$shiftlib $shiftlibdep"
+                    fi
+                fi
                 ;;
            solaris)    shiftlib="$shiftlib -lposix4" ;;
            win32)      shiftincdir="$shiftincdir $shiftincdir/../win32"
@@ -3219,12 +3234,27 @@ if test ! "x$enable_castor" = "xno" ; then
         case $platform in
            linux)      castorlib="$castorlib -lnsl"
                 for i in "" -ladns ; do
-                    check_link "$shiftlib $i" "$shiftlibdir" rfio_fchmod
+                    check_link "$castorlib $i" "$castorlibdir" rfio_fchmod
                     if test $link_result -eq 1 ; then
                         castorlib="$castorlib $i" ;
                         break ;
                     fi
                 done
+                # Explicit linking: which libraries are needed to satisfy symbols
+                # from libshift?
+                # 2.1.8 needs castorClient
+                castorlibdep="-lcastorrfio -lcastorcommon -lcastorClient"
+                check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
+                if test $link_result -eq 1 ; then
+                    castorlib="$castorlib $castorlibdep"
+                else
+                    # 2.1.9 does not have castorClient
+                    castorlibdep="-lcastorrfio -lcastorns -lcastorcommon -lcastorclient"
+                    check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
+                    if test $link_result -eq 1 ; then
+                        castorlib="$castorlib $castorlibdep"
+                    fi
+                fi
                 ;;
            solaris)    castorlib="$castorlib -lposix4" ;;
            win32)      castorincdir="$castorincdir $castorincdir/../win32"
