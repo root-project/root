@@ -209,7 +209,9 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    buffer.SetSectionsValid(TBuffer3D::kCore);
 
    // We fill kCore and kRawSizes on first pass and try with viewer
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
+   TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
+   if (!viewer3D) return;
+   Int_t reqSections = viewer3D->AddObject(buffer);
    if (reqSections == TBuffer3D::kNone) {
       return;
    }
@@ -281,7 +283,7 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
       TAttFill::Modify();
    }
 
-   gPad->GetViewer3D()->AddObject(buffer);
+   viewer3D->AddObject(buffer);
 }
 
 
