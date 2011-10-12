@@ -4601,7 +4601,8 @@ void THistPainter::PaintContour(Option_t *option)
       PaintSurface(option);
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
-      gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
+      TView *view = gPad->GetView();
+      if (view) view->SetBit(kCannotRotate); //tested in ExecuteEvent
       PaintAxis();
       return;
    }
