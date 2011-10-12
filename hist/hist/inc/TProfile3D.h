@@ -68,8 +68,6 @@ private:
       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
    void SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
       { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
-   void SetBins(Int_t, const Double_t *, Int_t, const Double_t *, Int_t, const Double_t *)
-      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*, Int_t, const Double_t*"); }
 
 public:
    TProfile3D();
@@ -134,6 +132,8 @@ public:
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, 
                              Int_t nbinsy, Double_t ymin, Double_t ymax, 
                              Int_t nbinsz, Double_t zmin, Double_t zmax);
+   virtual void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
+			    const Double_t *zBins);
    virtual void      SetBuffer(Int_t buffersize, Option_t *opt="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2(); 

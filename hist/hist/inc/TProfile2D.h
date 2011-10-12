@@ -62,8 +62,6 @@ private:
       { MayNotUse("SetBins(Int_t, Double_t, Double_t"); }
    void  SetBins(Int_t, const Double_t*)
       { MayNotUse("SetBins(Int_t, const Double_t*"); }
-   void  SetBins(Int_t, const Double_t*, Int_t, const Double_t*)
-      { MayNotUse("SetBins(Int_t, const Double_t*, Int_t, const Double_t*"); }
    void SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t)
       { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
    void SetBins(Int_t, const Double_t *, Int_t, const Double_t *, Int_t, const Double_t *)
@@ -135,6 +133,7 @@ public:
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
+   virtual void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins);
    virtual void      SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2();
