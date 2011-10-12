@@ -94,6 +94,9 @@ endif
 ifeq ($(ROOTSYS),)
    export ROOTSYS       := $(shell root-config --prefix)
 endif
+ifeq ($(R__EXPLICITLINK),)
+   export R__EXPLICITLINK := $(shell root-config --has-explicitlink)
+endif
 
 ifeq ($(ROOTTEST_LOC),)
 

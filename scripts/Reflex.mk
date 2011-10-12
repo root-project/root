@@ -26,8 +26,8 @@ HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 %_cint.cpp: %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
-ifeq ($(PLATFORM),win32)
-lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOT_LOC)/bin/libReflex.$(DllSuf)
+ifeq ($(R__EXPLICITLINK),yes)
+lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOT_LOC)/lib/libReflex.$(DllSuf)
 else
 lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf)
 endif
