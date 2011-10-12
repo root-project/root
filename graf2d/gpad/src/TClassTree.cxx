@@ -727,9 +727,11 @@ void TClassTree::ScanClasses(Int_t iclass)
          if (ic < 0 || ic == iclass) continue;
          losref = fLinks[ic];
          os = Mark(fCnames[ic]->Data(),los,kUsedByData);
-         os->SetBit(kIsaPointer,dm->IsaPointer());
-         os->SetBit(kIsBasic,dm->IsBasic());
-         os->SetUniqueID(imember);
+         if (os) {
+            os->SetBit(kIsaPointer,dm->IsaPointer());
+            os->SetBit(kIsBasic,dm->IsBasic());
+            os->SetUniqueID(imember);
+         }
          Mark(fCnames[iclass]->Data(),losref,kUsingData);
       }
    }
