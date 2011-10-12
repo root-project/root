@@ -5634,7 +5634,8 @@ void THistPainter::PaintH3(Option_t *option)
 
    // Draw axis
    view->SetOutlineToCube();
-   view->GetOutline()->Paint(option);
+   TSeqCollection *ol = view->GetOutline();
+   if (ol) ol->Paint(option);
    Hoption.System = kCARTESIAN;
    TGaxis *axis = new TGaxis();
    PaintLegoAxis(axis,90);
