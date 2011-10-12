@@ -132,7 +132,7 @@ TGeoNavigator::TGeoNavigator(TGeoManager* geom)
 {
 // Default constructor.
    fThreadId = gGeoManager->ThreadId();
-   printf("Navigator: threadId=%d\n", fThreadId);
+   // printf("Navigator: threadId=%d\n", fThreadId);
    for (Int_t i=0; i<3; i++) {
       fNormal[i] = 0.;
       fCldir[i] = 0.;
