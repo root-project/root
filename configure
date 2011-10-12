@@ -3394,7 +3394,7 @@ if test ! "x$enable_fitsio" = "xno"; then
         enable_fitsio="no"
     else
         case $platform in
-            linux)     cfitsiolib="$cfitsiolib -lpthread"    ;;
+            linux)     cfitsiolib="$cfitsiolib -lpthread -lz"    ;;
         esac
     fi
 fi
