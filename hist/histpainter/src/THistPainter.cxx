@@ -6431,6 +6431,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 
    Double_t *rmin = view->GetRmin();
    Double_t *rmax = view->GetRmax();
+   if (!rmin || !rmax) return;
 
    // Initialize the axis options
    if (x1[0] > x2[0]) strlcpy(chopax, "SDH=+",8);
