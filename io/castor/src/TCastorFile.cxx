@@ -511,8 +511,10 @@ Int_t TCastorFile::SysClose(Int_t fd)
 
    if (!UseCastor2API()) {
       if (fIsCastor && fWrittenTo) {
+#ifndef R__CASTOR2
          // CASTOR file was created or modified
          rfio_HsmIf_reqtoput((char *)fInternalPath.Data());
+#endif
          fWrittenTo = kFALSE;
       }
    }
