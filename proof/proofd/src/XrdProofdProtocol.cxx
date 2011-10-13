@@ -499,6 +499,8 @@ void XrdProofdProtocol::Reset()
    fConnType  = kXPD_ClientMaster;
    fSuperUser = 0;
    fPClient   = 0;
+   fUserIn    = "";
+   fGroupIn   = "";
    fCID       = -1;
    fTraceID   = "";
    fAdminPath = "";

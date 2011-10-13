@@ -333,25 +333,38 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
    // Privileged users are always allowed to connect.
    if (fOperationMode == kXPD_OpModeControlled) {
 
-      // Policy: check first the general switch for groups; a user of a specific group can be
-      // rejected by prefixing a '-'.
-      // If a user is explicitely allowed we give the green light even if her/its group is
-      // disallowed. If fAllowedUsers is empty, we just apply the group rules.
+      // Policy: check first the general directive for groups; a user of a specific group
+      // (both UNIX or PROOF groups) can be rejected by prefixing a '-'.
+      // The group check fails if active (the allowedgroups directive has entries) and at
+      // least of the two groups (UNIX or PROOF) are explicitely denied.
+      // The result of the group check is superseeded by any explicit speicification in the
+      // allowedusers, either positive or negative.
       //
-      // Example:
+      // Examples:
+      //   Consider user 'katy' with UNIX group 'alfa' and PROOF group 'student',
+      //   users 'jack' and 'john' with UNIX group 'alfa' and PROOF group 'postdoc'.
       //
-      // xpd.allowedgroups z2
-      // xpd.allowedusers -jgrosseo,ganis
-      //
-      // accepts connections from all group 'z2' except user 'jgrosseo' and from user 'ganis'
-      // even if not belonging to group 'z2'.
+      //   1.    xpd.allowedgroups alfa
+      //         Users 'katy', 'jack' and 'john' are allowed because part of UNIX group 'alfa' (no 'allowedusers' directive)
+      //   2.    xpd.allowedgroups student
+      //         User 'katy' is allowed because part of PROOF group 'student'; 
+      //         users 'jack' and 'john' are denied because not part of PROOF group 'student' (no 'allowedusers' directive)
+      //   3.    xpd.allowedgroups alfa,-student
+      //         User 'katy' is denied because part of PROOF group 'student' which is explicitely denied;
+      //         users 'jack' and 'john' are allowed becasue part of UNIX group 'alfa' (no 'allowedusers' directive)
+      //   4.    xpd.allowedgroups alfa,-student
+      //         xpd.allowedusers katy,-jack
+      //         User 'katy' is allowed because explicitely allowed by the 'allowedusers' directive;
+      //         user 'jack' is denied because explicitely denied by the 'allowedusers' directive;
+      //         user 'john' is allowed because part of 'alfa' and not explicitely denied by the 'allowedusers' directive
+      //         (the allowedgroups directive is in this case ignored for users 'katy' and 'jack').
 
       bool grpok = 1;
       // Check unix group
       if (fAllowedGroups.Num() > 0) {
          // Reset the flag
          grpok = 0;
-         bool ugrpok = 0, pgrpok = 0;
+         int ugrpok = 0, pgrpok = 0;
          // Check UNIX group info
          XrdProofGI gi;
          if (XrdProofdAux::GetGroupInfo(ui.fGid, gi) == 0) {
@@ -360,14 +373,13 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
                if (*st == 1) {
                   ugrpok = 1;
                } else {
-                  e = "Controlled access: user '";
+                  e = "Controlled access (UNIX group): user '";
                   e += usr;
                   e = "', UNIX group '";
                   e += gi.fGroup;
                   e += "' denied to connect";
+                  ugrpok = -1;
                }
-            } else {
-               ugrpok = 1;
             }
          }
          // Check PROOF group info
@@ -377,24 +389,21 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
                pgrpok = 1;
             } else {
                if (e.length() <= 0)
-                  e = "Controlled access: ";
-               e += "; user '";
+                  e = "Controlled access";
+               e += " (PROOF group): user '";
                e += usr;
                e += "', PROOF group '";
                e += grp;
                e += "' denied to connect";
+               pgrpok = -1;
             }
-         } else {
-            pgrpok = 1;
          }
-         // Both must be true
-         grpok = (ugrpok && pgrpok) ? 1 : 0;
+         // At least one must be explicitly allowed with the other not explicitly denied
+         grpok = ((ugrpok == 1 && pgrpok >= 0) || (ugrpok >= 0 && pgrpok == 1)) ? 1 : 0;
       }
       // Check username
-      bool usrok = grpok;
+      int usrok = 0;
       if (fAllowedUsers.Num() > 0) {
-         // Reset the flag
-         usrok = 0;
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
          if (st) {
@@ -403,18 +412,21 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
             } else {
                e = "Controlled access: user '";
                e += usr;
-               e += "' is not allowed to connect";
-               usrok = 0;
+               e += "', PROOF group '";
+               e += grp;
+               e += "' not allowed to connect";
+               usrok = -1;
             }
          }
       }
       // Super users are always allowed
-      if (!usrok && su) {
+      if (su) {
          usrok = 1;
          e = "";
       }
-      // Return now if disallowed
-      if (!usrok) return -1;
+      // We fail if either the user is explicitely denied or it is not explicitely allowed
+      // and the group is denied
+      if (usrok == -1 || (!grpok && usrok != 1)) return -1;
    }
 
    // OK
