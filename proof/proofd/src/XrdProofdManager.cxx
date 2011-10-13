@@ -404,6 +404,8 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       // Check username
       int usrok = 0;
       if (fAllowedUsers.Num() > 0) {
+         // If we do not have a group specification we need to explicitly allow the user
+         if (fAllowedGroups.Num() <= 0) usrok = -1;
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
          if (st) {
