@@ -41,7 +41,7 @@
 
 ClassImp(TMemFile)
 
-Long64_t TMemFile::fgDefaultBlockSize = 32*1024*1024;
+Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
 
 //______________________________________________________________________________
 TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
