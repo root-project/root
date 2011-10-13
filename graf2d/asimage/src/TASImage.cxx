@@ -2750,7 +2750,7 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
 
    ASColormap cmap;
    int *res;
-   UInt_t r, g, b;
+   UInt_t r=0, g=0, b=0;
 
    dither = dither > 7 ? 7 : dither;
 
@@ -2765,9 +2765,11 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
    for (UInt_t y = 0; y < fImage->height; y++) {
       for (UInt_t x = 0; x < fImage->width; x++) {
          int i = y*fImage->width + x;
-         g = INDEX_SHIFT_GREEN(cmap.entries[res[i]].green);
-         b = INDEX_SHIFT_BLUE(cmap.entries[res[i]].blue);
-         r = INDEX_SHIFT_RED(cmap.entries[res[i]].red);
+         if (res) {
+            g = INDEX_SHIFT_GREEN(cmap.entries[res[i]].green);
+            b = INDEX_SHIFT_BLUE(cmap.entries[res[i]].blue);
+            r = INDEX_SHIFT_RED(cmap.entries[res[i]].red);
+         }
          v = MAKE_INDEXED_COLOR24(r,g,b);
          v = (v>>12)&0x0FFF;
          tmp = Double_t(v)/0x0FFF;
