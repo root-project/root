@@ -564,12 +564,8 @@ TROOT::~TROOT()
 void TROOT::AddClass(TClass *cl)
 {
    // Add a class to the list and map of classes.
+   // This routine is deprecated, use TClass::AddClass directly.
 
-   //if (!cl) return;
-   //GetListOfClasses()->Add(cl);
-   //if (cl->GetTypeInfo()) {
-   //   fIdMap->Add(cl->GetTypeInfo()->name(),cl);
-   //}
    TClass::AddClass(cl);
 }
 
@@ -1267,7 +1263,8 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 }
 
 //______________________________________________________________________________
-static TClass* R__GetClassIfKnown(const char* className) {
+static TClass* R__GetClassIfKnown(const char* className) 
+{
    // Check whether className is a known class, and only autoload
    // if we can. Helper function for TROOT::IgnoreInclude().
 
@@ -1275,7 +1272,7 @@ static TClass* R__GetClassIfKnown(const char* className) {
    const char* libsToLoad = gInterpreter->GetClassSharedLibs(className);
    TClass* cla = 0;
    if (libsToLoad) {
-      // trigger autoload, and only cvreate TClass in this case.
+      // trigger autoload, and only create TClass in this case.
       return TClass::GetClass(className);
    } else if (gROOT->GetListOfClasses()
               && (cla = (TClass*)gROOT->GetListOfClasses()->FindObject(className))) {
@@ -1802,13 +1799,9 @@ void TROOT::RefreshBrowsers()
 //______________________________________________________________________________
 void TROOT::RemoveClass(TClass *oldcl)
 {
-   // Remove a class from the list and map of classes
+   // Remove a class from the list and map of classes.
+   // This routine is deprecated, use TClass::RemoveClass directly.
 
-   //if (!oldcl) return;
-   //GetListOfClasses()->Remove(oldcl);
-   //if (oldcl->GetTypeInfo()) {
-   //   fIdMap->Remove(oldcl->GetTypeInfo()->name());
-   //}
    TClass::RemoveClass(oldcl);
 }
 
