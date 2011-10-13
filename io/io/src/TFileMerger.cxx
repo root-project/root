@@ -716,7 +716,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
             // now write the merged histogram (which is "in" obj) to the target file
             // note that this will just store obj in the current directory level,
             // which is not persistent until the complete directory itself is stored
-            // by "target->Write()" below
+            // by "target->SaveSelf()" below
             target->cd();
             
             oldkeyname = key->GetName();
