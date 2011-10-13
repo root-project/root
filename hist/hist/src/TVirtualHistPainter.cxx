@@ -39,6 +39,9 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
             return 0;
          TVirtualHistPainter::SetPainter(h->GetClass());
          if (!fgPainter) return 0;
+      } else {
+         // fgPainter is still null
+         return 0;
       }
    }
 
