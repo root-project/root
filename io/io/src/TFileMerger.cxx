@@ -406,14 +406,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
    // Gain time, do not add the objects in the list in memory.
    Bool_t addDirStat = kTRUE;
    if (R__TH1_Class) {
-      gROOT->ProcessLineFast("TH1::AddDirectoryStatus()");
+      addDirStat = gROOT->ProcessLineFast("TH1::AddDirectoryStatus()");
       gROOT->ProcessLine("TH1::AddDirectory(kFALSE);");
    }
    
-   TDirectory *first_source = 0;
-   if (!incremental) {
-      first_source = (TDirectory*)sourcelist->First();
-   }
    
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
@@ -427,16 +423,19 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
       info.fOptions.Append(" fast");
    }
 
+   TFile      *current_file;
    TDirectory *current_sourcedir;
    if (incremental) {
+      current_file      = 0;
       current_sourcedir = target;
    } else {
-      current_sourcedir = first_source->GetDirectory(path);
+      current_file      = (TFile*)sourcelist->First();
+      current_sourcedir = current_file->GetDirectory(path);
    }
-   while (first_source || current_sourcedir) {
-      // When current_sourcedir != 0 and firstsource==0 we are going over the target
+   while (current_file || current_sourcedir) {
+      // When current_sourcedir != 0 and current_file == 0 we are going over the target
       // for an incremental merge.
-      if (current_sourcedir && (first_source == 0 || current_sourcedir != target)) {
+      if (current_sourcedir && (current_file == 0 || current_sourcedir != target)) {
 
          // loop over all keys in this directory
          TIter nextkey( current_sourcedir->GetListOfKeys() );
@@ -445,13 +444,19 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
          
          while ( (key = (TKey*)nextkey())) {
             
-            // Keep only the highest cycle number for each key.
+            // Keep only the highest cycle number for each key.  They are stored in the (hash) list
+            // consecutively and in decreasing order of cycles, so we can continue until the name
+            // changes.
             if (oldkeyname == key->GetName()) continue;
             // Read in but do not copy directly the processIds.
             if (strcmp(key->GetClassName(),"TProcessID") == 0) { key->ReadObj(); continue;}
-            // We already seen this object [name] and thus we already processed
-            // the whole list of files for this objects.
-            if (allNames.FindObject(key->GetName())) continue;
+            // If we have already seen this object [name], we already processed
+            // the whole list of files for this objects and we can just skip it
+            // and any related cycles.
+            if (allNames.FindObject(key->GetName())) {
+               oldkeyname = key->GetName();
+               continue;
+            }
             
             TClass *cl = TClass::GetClass(key->GetClassName());
             if (!cl || !cl->InheritsFrom(TObject::Class())) {
@@ -462,6 +467,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
             allNames.Add(new TObjString(key->GetName()));
             
             if (fNoTrees && cl->InheritsFrom(R__TTree_Class)) {
+               // Skip the TTree objects and any related cycles.
+               oldkeyname = key->GetName();
                continue;
             }
             
@@ -484,9 +491,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
             if ( obj->IsA()->InheritsFrom( TDirectory::Class() ) ) {
                // it's a subdirectory
                
-               //DIFFERENCE: hadd used to issue an information message:
-               //    cout << "Found subdirectory " << obj->GetName() << endl;
-               // create a new subdir of same name and title in the target file
                target->cd();
                TDirectory *newdir;
                if (incremental) {
@@ -501,7 +505,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                // newdir is now the starting point of another round of merging
                // newdir still knows its depth within the target file via
                // GetPath(), so we can still figure out where we are in the recursion
-               status = MergeRecursive( newdir, sourcelist);
+               status = MergeRecursive(newdir, sourcelist);
                if (!status) return status;
                
             } else if (obj->IsA()->GetMerge()) {
@@ -510,7 +514,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                Bool_t oneGo = fHistoOneGo && obj->IsA()->InheritsFrom(R__TH1_Class);
                
                // Loop over all source files and merge same-name object
-               TFile *nextsource = first_source ? (TFile*)sourcelist->After( first_source ) : (TFile*)sourcelist->First();
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                if (nextsource == 0) {
                   // There is only one file in the list
                   ROOT::MergeFunc_t func = obj->IsA()->GetMerge();
@@ -568,7 +572,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                listHargs.Form("(TCollection*)0x%lx,(TFileMergeInfo*)0x%lx", (ULong_t)&listH,(ULong_t)&info);
                
                // Loop over all source files and merge same-name object
-               TFile *nextsource = first_source ? (TFile*)sourcelist->After( first_source ) : (TFile*)sourcelist->First();
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                if (nextsource == 0) {
                   // There is only one file in the list
                   Int_t error = 0;
@@ -628,7 +632,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
                
                // Loop over all source files and merge same-name object
-               TFile *nextsource = first_source ? (TFile*)sourcelist->After( first_source ) : (TFile*)sourcelist->First();
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                if (nextsource == 0) {
                   // There is only one file in the list
                   Int_t error = 0;
@@ -685,7 +689,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
                        obj->GetName(), obj->GetTitle());
                
                // Loop over all source files and write similar objects directly to the output file
-               TFile *nextsource = first_source ? (TFile*)sourcelist->After( first_source ) : (TFile*)sourcelist->First();
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                while (nextsource) {
                   // make sure we are at the correct directory level by cd'ing to path
                   TDirectory *ndir = nextsource->GetDirectory(path);
@@ -738,14 +742,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Bool_t
             info.Reset();
          } // while ( ( TKey *key = (TKey*)nextkey() ) )
       }
-      first_source = first_source ? (TDirectory*)sourcelist->After(first_source) : (TFile*)sourcelist->First();
-      if (first_source) {
-         current_sourcedir = first_source->GetDirectory(path);
+      current_file = current_file ? (TFile*)sourcelist->After(current_file) : (TFile*)sourcelist->First();
+      if (current_file) {
+         current_sourcedir = current_file->GetDirectory(path);
       } else {
          current_sourcedir = 0;
       }
    }
-   // save modifications to target file
+   // save modifications to the target directory.
    target->SaveSelf(kTRUE);
    if (R__TH1_Class) {
       gROOT->ProcessLine(TString::Format("TH1::AddDirectory(%d);",addDirStat));
