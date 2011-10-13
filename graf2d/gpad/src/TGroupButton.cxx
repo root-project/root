@@ -208,7 +208,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       //Set button on
       SetBorderMode(-1);
       Modified();
-      gPad->GetCanvas()->Modified();
+      c->Modified();
       gPad->Update();
       break;
    }
