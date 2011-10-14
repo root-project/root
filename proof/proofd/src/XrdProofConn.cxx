@@ -122,7 +122,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
 
    // Initialization
    if (url && !Init(url)) {
-      if (GetServType() != kSTProofd)
+      if (GetServType() != kSTProofd && !(fLastErr == kXR_NotAuthorized))
          TRACE(XERR, "XrdProofConn: severe error occurred while opening a"
                      " connection" << " to server "<<URLTAG);
    }
@@ -235,9 +235,11 @@ void XrdProofConn::Connect(int)
                if (fLastErr == kXR_NotAuthorized || fLastErr == kXR_InvalidRequest) {
                   // Auth error or invalid request: does not make much sense to retry
                   Close("P");
-                  XrdOucString msg = fLastErrMsg;
-                  msg.erase(msg.rfind(":"));
-                  TRACE(XERR, "failure: " << msg);
+                  if (fLastErr == kXR_InvalidRequest) {
+                     XrdOucString msg = fLastErrMsg;
+                     msg.erase(msg.rfind(":"));
+                     TRACE(XERR, "failure: " << msg);
+                  }
                   return;
                } else {
                   TRACE(XERR, "access to server failed (" << fLastErrMsg << ")");
@@ -1120,7 +1122,7 @@ bool XrdProofConn::Login()
       memcpy(&reqhdr, &reqsave, sizeof(XPClientRequest));
 
       XrdClientMessage *xrsp = SendReq(&reqhdr, buf,
-                                       &pltmp, "XrdProofConn::Login");
+                                       &pltmp, "XrdProofConn::Login", 0);
       // If positive answer
       secp = 0;
       char *plref = pltmp;
@@ -1377,6 +1379,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       fLastErr = kXR_NotAuthorized;
       if (fLastErrMsg.length() > 0) fLastErrMsg += ":";
       fLastErrMsg += "unable to get protocol object.";
+      TRACE(XERR, fLastErrMsg.c_str());
    }
 
    // Return the result of the negotiation

@@ -359,8 +359,12 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       // example via a user mapping funtion or a grid-map file), so these checks have
       // to be done at this level.
       // (The XrdProofdClient instance is created in here, if everything else goes well)
-      if (CheckClient(p, 0, emsg) != 0) {
+      int rccc = 0;
+      if ((rccc = CheckClient(p, 0, emsg)) != 0) {
          TRACEP(p, XERR, emsg);
+         XErrorCode rcode = (rccc == -2) ? (XErrorCode) kXR_NotAuthorized
+                                         : (XErrorCode) kXR_InvalidRequest;
+         response->Send(rcode, emsg.c_str());
          response->Send(kXR_InvalidRequest, emsg.c_str());
          return 0;
       }
@@ -500,9 +504,12 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    } else {
       // Check the client at theis point; the XrdProofdClient instance is created
       // in here, if everything else goes well
-      if (CheckClient(p, p->UserIn(), emsg) != 0) {
+      int rccc = 0;
+      if ((rccc = CheckClient(p, p->UserIn(), emsg)) != 0) {
          TRACEP(p, XERR, emsg);
-         response->Send(kXR_InvalidRequest, emsg.c_str());
+         XErrorCode rcode = (rccc == -2) ? (XErrorCode) kXR_NotAuthorized
+                                         : (XErrorCode) kXR_InvalidRequest;
+         response->Send(rcode, emsg.c_str());
          return 0;
       }
       rc = response->SendI((kXR_int32)XPROOFD_VERSBIN);
@@ -537,22 +544,6 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
       }
    }
 
-   // Here we check if the user is allowed to use the system
-   // If not, we fail.
-   XrdProofUI ui;
-   bool su;
-   if (fMgr->CheckUser(uname.c_str(), ui, emsg, su) != 0) {
-      XPDFORM(emsg, "username not allowed: %s", uname.c_str());
-      return -1;
-   }
-   if (su) {
-      // Update superuser flag
-      p->SetSuperUser(su);
-      TRACEP(p, DBG, "request from entity: "<<uname<<":"<<gname<<" (privileged)");
-   } else {
-      TRACEP(p, DBG, "request from entity: "<<uname<<":"<<gname);
-   }
-
    // Check if user belongs to a group
    XrdProofGroup *g = 0;
    if (fMgr->GroupsMgr() && fMgr->GroupsMgr()->Num() > 0) {
@@ -576,7 +567,24 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
          gname = g ? g->Name() : "default";
       }
    }
-   ui.fGroup = gname;
+
+   // Here we check if the user is allowed to use the system
+   // If not, we fail.
+   XrdProofUI ui;
+   bool su;
+   if (fMgr->CheckUser(uname.c_str(), gname.c_str(), ui, emsg, su) != 0) {
+      if (emsg.length() <= 0)
+         XPDFORM(emsg, "Controlled access: user '%s', group '%s' not allowed to connect",
+                       uname.c_str(), gname.c_str());
+      return -2;
+   }
+   if (su) {
+      // Update superuser flag
+      p->SetSuperUser(su);
+      TRACEP(p, DBG, "request from entity: "<<uname<<":"<<gname<<" (privileged)");
+   } else {
+      TRACEP(p, DBG, "request from entity: "<<uname<<":"<<gname);
+   }
 
    // Attach-to / Create the XrdProofdClient instance for this user: if login
    // fails this will be removed at a later stage
@@ -1350,7 +1358,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
       // Is this a potential user?
       XrdProofUI ui;
       bool su;
-      if (fMgr->CheckUser(usr, ui, emsg, su) == 0) {
+      if (fMgr->CheckUser(usr, grp, ui, emsg, su) == 0) {
          // Yes: create an (invalid) instance of XrdProofdClient:
          // It would be validated on the first valid login
          ui.fUser = usr;
