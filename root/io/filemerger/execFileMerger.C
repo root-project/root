@@ -56,9 +56,12 @@ void createInputs(int n = 2)
    }
 }
 
-bool merge(int n = 2) {
+bool merge(int n = 2, int limit = 0) {
    TFileMerger merger(kFALSE,kFALSE); // hadd style
    merger.OutputFile("merged.root");
+   if (limit > 0) {
+      merger.SetMaxOpenedFiles(limit);
+   }
    for(UInt_t i = 0; i < (UInt_t)n; ++i ) {
       if (! merger.AddFile(TString::Format("input%d.root",i))) {
          return false;
@@ -153,7 +156,7 @@ bool check(int n = 2) {
       Error("execFileMerger","tree does not have the expected number of entries: %lld rather than %d",tree->GetEntries(),n*2);
       result = false;            
    } else {
-      if ( tree->GetEntries("data==1") != 2 ) {
+      if ( tree->GetEntries("data==1") != n ) {
          Error("execFileMerger","tree does not have the expected data. We got %lld entries with 'data==1' rather than %d",tree->GetEntries("data==1"),n);
          tree->Scan();
          result = false;
@@ -163,7 +166,12 @@ bool check(int n = 2) {
 }
 
 int execFileMerger(int n = 2) {
-   createInputs(n);
+   createInputs(2*n);
    bool result = merge(n) && check(n);
-   return result ? 0 : 1; // need to return 0 in case of success
+   if (!result) {
+      return 1;
+   }
+   // Now try again but limit the number of files to test the case where we run out of file descriptor
+   result = merge(2 * n, 2) && check( 2 * n);
+   return result ? 0 : 1;
 }
