@@ -568,6 +568,9 @@ Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
    // Merge the THStack in the TList into this stack.
    // Returns the total number of histograms in the result or -1 in case of an error.
    
+   if (li==0 || li->GetEntries()==0) {
+      return fHists->GetEntries();
+   }
    TIter next(li);
    TList histLists;
    while (TObject* o = next()) {
