@@ -131,7 +131,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    // Add file to file merger.
    
    if (fPrintLevel > 0) {
-      Printf("Source file %d: %s",fFileList->GetEntries()+1,url);
+      Printf("Source file %d: %s",fFileList->GetEntries()+fExcessFiles->GetEntries()+1,url);
    }
    
    TFile *newfile = 0;
@@ -354,8 +354,9 @@ Bool_t TFileMerger::Merge(Bool_t)
    
    fOutputFile->SetBit(kMustCleanup);
    Bool_t result = kTRUE;
+   Bool_t incremental = kFALSE;
    while (result && fFileList->GetEntries()>0) {
-      result = MergeRecursive(fOutputFile, fFileList);
+      result = MergeRecursive(fOutputFile, fFileList, incremental);
 
       // Remove local copies if there are any
       TIter next(fFileList);
@@ -372,6 +373,11 @@ Bool_t TFileMerger::Merge(Bool_t)
       }
       fFileList->Clear();
       if (fExcessFiles->GetEntries() > 0) {
+         // We merge the first set of files in the output,
+         // we now need to open the next set and make
+         // sure we accumulate into the output, so we 
+         // switch to incremental merging
+         incremental = kTRUE;
          OpenExcessFiles();         
       }
    }
@@ -762,6 +768,9 @@ Bool_t TFileMerger::OpenExcessFiles()
 {
    // Open up to fMaxOpenedFiles of the excess files.
    
+   if (fPrintLevel > 0) {
+      Printf("Opening the next %d files",TMath::Min(fExcessFiles->GetEntries(),(fMaxOpenedFiles-1)));
+   }   
    Int_t nfiles = 0;
    TIter next(fExcessFiles);
    TObjString *url = 0;
