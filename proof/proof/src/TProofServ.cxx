@@ -2822,6 +2822,8 @@ Int_t TProofServ::SetupCommon()
    gSystem->Umask(022);
 
 #ifdef R__UNIX
+   // Add bindir to PATH
+   TString path(gSystem->Getenv("PATH"));
    TString bindir;
 # ifdef ROOTBINDIR
    bindir = ROOTBINDIR;
@@ -2829,19 +2831,47 @@ Int_t TProofServ::SetupCommon()
    bindir = gSystem->Getenv("ROOTSYS");
    if (!bindir.IsNull()) bindir += "/bin";
 # endif
+   // Augment PATH, if required
+   // ^<compiler>, <compiler>, ^<sysbin>, <sysbin>
+   TString paths = gEnv->GetValue("ProofServ.BinPaths", "");
+   if (paths.Length() > 0) {
+      Int_t icomp = 0;
+      if (paths.Contains("^<compiler>"))
+	 icomp = 1;
+      else if (paths.Contains("<compiler>"))
+	 icomp = -1;
+      if (icomp != 0) {
 # ifdef COMPILER
-   TString compiler = COMPILER;
-   if (compiler.Index("is ") != kNPOS)
-      compiler.Remove(0, compiler.Index("is ") + 3);
-   compiler = gSystem->DirName(compiler);
-   if (!bindir.IsNull()) bindir += ":";
-   bindir += compiler;
+         TString compiler = COMPILER;
+         if (compiler.Index("is ") != kNPOS)
+            compiler.Remove(0, compiler.Index("is ") + 3);
+         compiler = gSystem->DirName(compiler);
+         if (icomp == 1) {
+            if (!bindir.IsNull()) bindir += ":";
+            bindir += compiler;
+         } else if (icomp == -1) {
+            if (!path.IsNull()) path += ":";
+            path += compiler;
+         }
 #endif
+      }
+      Int_t isysb = 0;
+      if (paths.Contains("^<sysbin>"))
+	 isysb = 1;
+      else if (paths.Contains("<sysbin>"))
+	 isysb = -1;
+      if (isysb != 0) {
+         if (isysb == 1) {
+            if (!bindir.IsNull()) bindir += ":";
+            bindir += "/bin:/usr/bin:/usr/local/bin";
+         } else if (isysb == -1) {
+            if (!path.IsNull()) path += ":";
+            path += "/bin:/usr/bin:/usr/local/bin";
+         }
+      }
+   }
+   // Final insert
    if (!bindir.IsNull()) bindir += ":";
-   bindir += "/bin:/usr/bin:/usr/local/bin";
-   // Add bindir to PATH
-   TString path(gSystem->Getenv("PATH"));
-   if (!path.IsNull()) path.Insert(0, ":");
    path.Insert(0, bindir);
    gSystem->Setenv("PATH", path);
 #endif
