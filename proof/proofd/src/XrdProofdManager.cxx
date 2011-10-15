@@ -164,6 +164,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    // Proof admin path
    fAdminPath = pi->AdmPath;
    fAdminPath += "/.xproofd.";
+   
+   // Lib paths for proofserv
+   fBareLibPath = "";
+   fRemoveROOTLibPaths = 0;
+   fLibPathsToRemove.Purge();
 
    // Services
    fSched = pi->Sched;
@@ -867,38 +872,52 @@ int XrdProofdManager::Config(bool rcf)
          TRACE(ALL, msg);
       }
    }
-
+   
    // Bare lib path
    if (getenv(XPD_LIBPATH)) {
-      // Try to remove existing ROOT dirs in the path
-      XrdOucString paths = getenv(XPD_LIBPATH);
-      XrdOucString ldir;
-      int from = 0;
-      while ((from = paths.tokenize(ldir, from, ':')) != STR_NPOS) {
-         bool isROOT = 0;
-         if (ldir.length() > 0) {
-            // Check this dir
-            DIR *dir = opendir(ldir.c_str());
-            if (dir) {
-               // Scan the directory
-               struct dirent *ent = 0;
-               while ((ent = (struct dirent *)readdir(dir))) {
-                  if (!strncmp(ent->d_name, "libCore", 7)) {
-                     isROOT = 1;
-                     break;
+      XrdOucString ctrim;
+      if (fRemoveROOTLibPaths || fLibPathsToRemove.Num() > 0) {
+         // Try to remove existing ROOT dirs in the path
+         XrdOucString paths = getenv(XPD_LIBPATH);
+         XrdOucString ldir;
+         int from = 0;
+         while ((from = paths.tokenize(ldir, from, ':')) != STR_NPOS) {
+            bool remove = 0;
+            if (ldir.length() > 0) {
+               if (fLibPathsToRemove.Num() > 0 && fLibPathsToRemove.Find(ldir.c_str())) {
+                  remove = 1;
+               } else if (fRemoveROOTLibPaths) {
+                  // Check this dir
+                  DIR *dir = opendir(ldir.c_str());
+                  if (dir) {
+                     // Scan the directory
+                     struct dirent *ent = 0;
+                     while ((ent = (struct dirent *)readdir(dir))) {
+                        if (!strncmp(ent->d_name, "libCore", 7)) {
+                           remove = 1;
+                           break;
+                        }
+                     }
+                     // Close the directory
+                     closedir(dir);
                   }
                }
-               // Close the directory
-               closedir(dir);
             }
-            if (!isROOT) {
+            if (!remove) {
                if (fBareLibPath.length() > 0)
                   fBareLibPath += ":";
                fBareLibPath += ldir;
             }
          }
+         ctrim = " (lib paths filter applied)";
+      } else {
+         // Full path
+         ctrim = " (full ";
+         ctrim += XPD_LIBPATH;
+         ctrim += ")";
+         fBareLibPath = getenv(XPD_LIBPATH);
       }
-      TRACE(ALL, "bare lib path for proofserv: " << fBareLibPath);
+      TRACE(ALL, "bare lib path for proofserv" << ctrim <<": " << fBareLibPath);
    }
 
    // Groups
@@ -1125,6 +1144,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("rootd", new XrdProofdDirective("rootd", this, &DoDirectiveClass));
    Register("rootdallow", new XrdProofdDirective("rootdallow", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
+   Register("filterlibpaths", new XrdProofdDirective("filterlibpaths", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
    Register("poolurl", new XrdProofdDirective("poolurl", (void *)&fPoolURL, &DoDirectiveString));
@@ -1244,6 +1264,8 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectiveRootdAllow(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol") {
       return DoDirectivePort(val, cfg, rcf);
+   } else if (d->fName == "filterlibpaths") {
+      return DoDirectiveFilterLibPaths(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: " << d->fName);
    return -1;
@@ -1732,6 +1754,44 @@ int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
          if (h.length() > 0) fRootdAllow.push_back(h);
       }
    } while ((nxt = cfg->GetWord()));
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdManager::DoDirectiveFilterLibPaths(char *val, XrdOucStream *cfg, bool)
+{
+   // Process 'filterlibpaths' directive
+   //  xpd.filterlibpaths 1|0 [path1,path2 path3 path4 ...]
+   XPDLOC(ALL, "Manager::DoDirectiveRemoveLibPaths")
+
+   if (!val)
+      // undefined inputs
+      return -1;
+
+   // Rebuild arguments list
+   fLibPathsToRemove.Purge();
+
+   TRACE(ALL, "val: "<< val);
+
+   // Whether to remove ROOT lib paths before adding the effective one
+   fRemoveROOTLibPaths = (!strcmp(val, "1") || !strcmp(val, "yes")) ? 1 : 0;
+   if (fRemoveROOTLibPaths)
+      TRACE(ALL, "Filtering out ROOT lib paths from "<<XPD_LIBPATH);
+
+   // Parse the rest, if any
+   char *nxt = 0;
+   while ((nxt = cfg->GetWord())) {
+      XrdOucString pps(nxt), p;
+      int from = 0;
+      while ((from = pps.tokenize(p, from, ',')) != -1) {
+         if (p.length() > 0) {
+            fLibPathsToRemove.Add(p.c_str(), 0, 0, Hash_data_is_key);
+            TRACE(ALL, "Filtering out from "<<XPD_LIBPATH<<" lib path '"<<p<<"'");
+         }
+      }
+   }
 
    // Done
    return 0;
