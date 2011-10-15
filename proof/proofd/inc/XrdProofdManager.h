@@ -154,6 +154,10 @@ class XrdProofdManager : public XrdProofdConfig {
    bool              fMultiUser;      // Allow/disallow multi-user mode
    bool              fChangeOwn;      // TRUE is ownership has to be changed
 
+   // Lib paths for proofserv
+   bool              fRemoveROOTLibPaths; // If true the existing ROOT lib paths are removed
+   XrdOucHash<XrdOucString> fLibPathsToRemove;  // Additional paths to be removed
+
    //
    // Lists
    std::list<XrdOucString *> fMastersAllowed; // list of master (domains) allowed
@@ -164,6 +168,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
    int               DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool);
    int               DoDirectiveDataSetSrc(char *, XrdOucStream *, bool);
+   int               DoDirectiveFilterLibPaths(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);
    int               DoDirectiveMaxOldLogs(char *, XrdOucStream *, bool);
    int               DoDirectiveMultiUser(char *, XrdOucStream *, bool);
