@@ -106,6 +106,68 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 }
 
 //______________________________________________________________________________
+TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed(), fDatime((UInt_t)0)
+{
+   // Copy a TKey from its original directory to the new 'motherDir'
+   
+   fMotherDir  = motherDir;
+   
+   fPidOffset  = orig.fPidOffset + pidOffset;
+   fNbytes     = orig.fNbytes;
+   fObjlen     = orig.fObjlen;
+   fClassName  = orig.fClassName;
+   fName       = orig.fName;
+   fTitle      = orig.fTitle;
+   
+   fCycle      = fMotherDir->AppendKey(this);
+   fSeekPdir   = 0;
+   fSeekKey    = 0;
+   fLeft       = 0;
+
+   fVersion    = TKey::Class_Version();   
+   Long64_t filepos = GetFile()->GetEND();
+   if (filepos > TFile::kStartBigFile || fPidOffset) fVersion += 1000;
+
+   fKeylen     = Sizeof();  // fVersion must be set.
+
+   UInt_t bufferDecOffset = 0;
+   UInt_t bufferIncOffset = 0;
+   UInt_t alloc = fNbytes + sizeof(Int_t);  // The extra Int_t is for any free space information.
+   if (fKeylen < orig.fKeylen) {
+      bufferDecOffset = orig.fKeylen - fKeylen;
+      fNbytes -= bufferDecOffset;
+   } else if (fKeylen > orig.fKeylen) {
+      bufferIncOffset = fKeylen - orig.fKeylen;
+      alloc += bufferIncOffset;
+      fNbytes += bufferIncOffset;
+   }
+      
+   fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc);
+   fBuffer     = fBufferRef->Buffer(); 
+   
+   // Steal the data from the old key.
+   
+   TFile* f = orig.GetFile();
+   if (f) {
+      Int_t nsize = orig.fNbytes;
+      f->Seek(orig.fSeekKey);
+      if( f->ReadBuffer(fBuffer+bufferIncOffset,nsize) )
+      {
+         Error("ReadFile", "Failed to read data.");
+         return;
+      }
+      if (gDebug) {
+         cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
+      }
+   }
+   fBuffer += bufferDecOffset; // Reset the buffer to be appropriate for this key.
+   Int_t nout = fNbytes - fKeylen;
+   Create(nout);
+   fBufferRef->SetBufferOffset(bufferDecOffset);
+   Streamer(*fBufferRef);         //write key itself again
+}
+
+//______________________________________________________________________________
 TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
 {
    // Create a TKey object to read keys.

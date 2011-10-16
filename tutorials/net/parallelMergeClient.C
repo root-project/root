@@ -3,11 +3,11 @@
 #include "TSocket.h"
 #include "TH2.h"
 #include "TTree.h"
-#include "TMemFile.h"
+#include "TParallelMergingFile.h"
 #include "TRandom.h"
 #include "TError.h"
 
-void treeClient(Bool_t evol=kFALSE) 
+void parallelMergeClient() 
 {
    // Client program which creates and fills 2 histograms and a TTree. 
    // Every 1000000 fills the histograms and TTree is send to the server which displays the histogram.
@@ -25,31 +25,12 @@ void treeClient(Bool_t evol=kFALSE)
    
    gBenchmark->Start("treeClient");
 
-   // Open connection to server
-   TSocket *sock = new TSocket("localhost", 9090);
-   if (!sock->IsValid()) {
-      Error("treeClient","Could not establish a connection with the server %s:%d.","localhost",9090);
-      return;
-   }
+   TParallelMergingFile *file = (TParallelMergingFile*)TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
+   
+   file->Write();
+   file->UploadAndReset();       // We do this early to get assigned an index.
+   UInt_t idx = file->fServerIdx; // This works on in ACLiC.
 
-   // Wait till we get the start message
-   // server tells us who we are
-   Int_t status, kind;
-   sock->Recv(status, kind);
-   
-   if (kind != 0 /* kStartConnection */) 
-   {
-      Error("treeClient","Unexpected server message: kind=%d status=%d\n",kind,status);
-      delete sock;
-      return;
-   }
-   
-   int idx = status;
-   
-   Float_t messlen  = 0;
-   Float_t cmesslen = 0;
-
-   TMemFile *file = new TMemFile("mergedClient.root","RECREATE");
    TH1 *hpx;
    if (idx == 0) {
       // Create the histogram
@@ -64,9 +45,6 @@ void treeClient(Bool_t evol=kFALSE)
    tree->Branch("px",&px);
    tree->Branch("py",&py);
  
-   TMessage::EnableSchemaEvolutionForAll(evol);
-   TMessage mess(kMESS_OBJECT);
-
    // Fill histogram randomly
    gRandom->SetSeed();
    const int kUPDATE = 1000000;
@@ -80,26 +58,10 @@ void treeClient(Bool_t evol=kFALSE)
       ++i;
       if (i && (i%kUPDATE) == 0) {
          file->Write();
-         mess.Reset(kMESS_ANY);              // re-use TMessage object
-         mess.WriteInt(idx);
-         mess.WriteTString(file->GetName());
-         mess.WriteLong64(file->GetEND());   // 'mess << file->GetEND();' is broken in CINT for Long64_t
-         file->CopyTo(mess);
-         sock->Send(mess);          // send message
-         messlen  += mess.Length();
-         cmesslen += mess.CompLength();
-         
-         file->ResetAfterMerge(0);  // This resets only the TTree objects.
-         hpx->Reset();
       }
    }
-   sock->Send("Finished");          // tell server we are finished
+   file->Write();
+   delete file;
 
-   if (cmesslen > 0)
-      printf("Average compression ratio: %g\n", messlen/cmesslen);
-
-   gBenchmark->Show("hclient");
-
-   // Close the socket
-   sock->Close();
+   gBenchmark->Show("treeClient");
 }

@@ -59,5 +59,6 @@
 #ifdef R__SSL
 #pragma link C++ class TSSLSocket;
 #endif
+#pragma link C++ class TParallelMergingFile+;
 
 #endif

@@ -3369,68 +3369,77 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                return TFile::Open(fh);
       }
 
-      // Resolve the file type; this also adjusts names
-      TString lfname = gEnv->GetValue("Path.Localroot", "");
-      type = GetType(name, option, &lfname);
+      TString urlOptions(urlname.GetOptions());
+      if (urlOptions.BeginsWith("pmerge") || urlOptions.Contains("&pmerge") || urlOptions.Contains(" pmerge")) {
+         type = kMerge;
 
-      if (type == kLocal) {
-
-         // Local files
-         if (lfname.IsNull()) {
-            urlname.SetHost("");
-            urlname.SetProtocol("file");
-            lfname = urlname.GetUrl();
-         }
-         f = new TFile(lfname.Data(), option, ftitle, compress);
-
-      } else if (type == kNet) {
-
-         // Network files
-         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-            if (h->LoadPlugin() == -1)
-               return 0;
-            f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
-         }
-
-      } else if (type == kWeb) {
-
-         // Web files
-         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
-            if (h->LoadPlugin() == -1)
-               return 0;
-            f = (TFile*) h->ExecPlugin(2, name.Data(), option);
-         }
-
-      } else if (type == kFile) {
-
-         // 'file:' protocol
-         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            h->LoadPlugin() == 0) {
-            name.ReplaceAll("file:", "");
-            f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
-         } else
-            f = new TFile(name.Data(), option, ftitle, compress);
-
+         // Pass the full name including the url options:
+         f = (TFile*) gROOT->ProcessLineFast(TString::Format("new TParallelMergingFile(\"%s\",\"%s\",\"%s\",%d)",n.Data(),option,ftitle,compress));
+        
       } else {
-
-         // no recognized specification: try the plugin manager
-         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
-            if (h->LoadPlugin() == -1)
-               return 0;
-            TClass *cl = TClass::GetClass(h->GetClass());
-            if (cl && cl->InheritsFrom("TNetFile"))
+         // Resolve the file type; this also adjusts names
+         TString lfname = gEnv->GetValue("Path.Localroot", "");
+         type = GetType(name, option, &lfname);
+         
+         if (type == kLocal) {
+            
+            // Local files
+            if (lfname.IsNull()) {
+               urlname.SetHost("");
+               urlname.SetProtocol("file");
+               lfname = urlname.GetUrl();
+            }
+            f = new TFile(lfname.Data(), option, ftitle, compress);
+            
+         } else if (type == kNet) {
+            
+            // Network files
+            if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+               if (h->LoadPlugin() == -1)
+                  return 0;
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
-            else
+            }
+            
+         } else if (type == kWeb) {
+            
+            // Web files
+            if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+               if (h->LoadPlugin() == -1)
+                  return 0;
+               f = (TFile*) h->ExecPlugin(2, name.Data(), option);
+            }
+            
+         } else if (type == kFile) {
+            
+            // 'file:' protocol
+            if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+                h->LoadPlugin() == 0) {
+               name.ReplaceAll("file:", "");
                f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+            } else
+               f = new TFile(name.Data(), option, ftitle, compress);
+            
          } else {
-            // Just try to open it locally but via TFile::Open, so that we pick-up the correct
-            // plug-in in the case file name contains information about a special backend (e.g.
-            // "srm://srm.cern.ch//castor/cern.ch/grid/..." should be considered a castor file
-            // /castor/cern.ch/grid/...").
-            f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+            
+            // no recognized specification: try the plugin manager
+            if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
+               if (h->LoadPlugin() == -1)
+                  return 0;
+               TClass *cl = TClass::GetClass(h->GetClass());
+               if (cl && cl->InheritsFrom("TNetFile"))
+                  f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
+               else
+                  f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+            } else {
+               // Just try to open it locally but via TFile::Open, so that we pick-up the correct
+               // plug-in in the case file name contains information about a special backend (e.g.
+               // "srm://srm.cern.ch//castor/cern.ch/grid/..." should be considered a castor file
+               // /castor/cern.ch/grid/...").
+               f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+            }
          }
       }
-
+      
       if (f && f->IsZombie()) {
          delete f;
          f = 0;

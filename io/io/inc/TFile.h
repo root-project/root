@@ -147,7 +147,7 @@ public:
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
    // File type
-   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4};
+   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5};
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress=1);

@@ -387,8 +387,8 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
                   idcur->GetName());
          }
       } else {
-         Error("ResetObjects","In %s, we can not reset %s (not ResetAfterMerge function)",
-               directory->GetName(),idcur->GetName());
+//         Error("ResetObjects","In %s, we can not reset %s (not ResetAfterMerge function)",
+//               directory->GetName(),idcur->GetName());
       }
    }
 }
