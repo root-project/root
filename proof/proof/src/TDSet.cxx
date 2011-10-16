@@ -238,6 +238,7 @@ TFileInfo *TDSetElement::GetFileInfo(const char *type)
                                 fFirst + entries - 1);
    }
    TFileInfo *fi = new TFileInfo(GetName(), 0, 0, 0, meta);
+   if (!fDataSet.IsNull()) fi->SetTitle(fDataSet.Data());
    if (TestBit(TDSetElement::kCorrupted)) fi->SetBit(TFileInfo::kCorrupted);
    return fi;
 }

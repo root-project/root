@@ -37,6 +37,10 @@ private:
    TSQLServer  *fDB;              // SQL database where to write
    TString      fTable;           // SQL table name
 
+   Long64_t     fMaxBulkSize;     // Max packet size for insertions
+
+   Bool_t       fVerbose;         // Verbosity toggle
+
    TSQLMonitoringWriter(const TSQLMonitoringWriter&);            // not implemented
    TSQLMonitoringWriter& operator=(const TSQLMonitoringWriter&); // not implemented
 
@@ -45,6 +49,8 @@ public:
    virtual ~TSQLMonitoringWriter();
 
    Bool_t SendParameters(TList *values, const char * /*identifier*/);
+
+   void Verbose(Bool_t onoff) { fVerbose = onoff; }
 
    ClassDef(TSQLMonitoringWriter, 0)   // Sending monitoring data to a SQL DB
 };

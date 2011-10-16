@@ -44,6 +44,7 @@ public:
       kCollect       = 4096,
       kDataset       = 8192,
       kSubmerger     = 16384,
+      kMonitoring    = 32768,
 
       kAll           = 0xFFFFFFFF
    };

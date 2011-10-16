@@ -2046,11 +2046,6 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          status->Add(emsg);        
       }
       status->SetExitStatus((Int_t) GetExitStatus());
-      TPerfStats::Stop();
-      // Save memory usage on master
-      Long_t vmaxmst, rmaxmst;
-      TPerfStats::GetMemValues(vmaxmst, rmaxmst);
-      status->SetMemValues(vmaxmst, rmaxmst, kTRUE);
 
       PDB(kOutput,1) Info("Finalize","Calling Merge Output");
       // Some objects (e.g. histos in autobin) may not have been merged yet
@@ -2086,6 +2081,12 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             if (!fOutput->FindObject(listOfMissingFiles)) fOutput->Add(listOfMissingFiles);
          }
       }
+
+      TPerfStats::Stop();
+      // Save memory usage on master
+      Long_t vmaxmst, rmaxmst;
+      TPerfStats::GetMemValues(vmaxmst, rmaxmst);
+      status->SetMemValues(vmaxmst, rmaxmst, kTRUE);
 
       SafeDelete(fSelector);
    } else {
