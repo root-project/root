@@ -156,7 +156,7 @@ void TBasket::AdjustSize(Int_t newsize)
       fBuffer = fBufferRef->Buffer();
    } else {
       fBufferRef->Expand(newsize);
-   }      
+   }
    fBranch->GetTree()->IncrementTotalBuffers(newsize-fBufferSize);
    fBufferSize  = newsize;
 }
