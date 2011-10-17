@@ -1,0 +1,23 @@
+
+*** EXECUTE SCRIPT:
+cling exec.h
+cling
+  .L exec.h
+  char* s = "hello"; exec(1, &s)
+
+
+*** ERRORS:
+cling errors.h
+
+
+*** CPP:
+root -l -b -q pp.h
+cling pp.h
+
+
+*** CALL INTO LIB:
+cling
+  .L /usr/lib64/libexpat.so
+  .x xml.h
+
+
