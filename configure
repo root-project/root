@@ -132,7 +132,7 @@ for c in $options $deprecated_options; do
 done
 for c in $options ; do eval ${c}_explicit="" ; done
 
-enable_cling=
+enable_cling=no
 enable_afs=no
 enable_alloc=no
 enable_gdml=no
