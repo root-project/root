@@ -353,14 +353,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    TString path(target->GetPath());
    path.Remove(0, path.Last(':') + 2);
 
-   // Gain time, do not add the objects in the list in memory.
-   Bool_t addDirStat = kTRUE;
-   if (R__TH1_Class) {
-      addDirStat = gROOT->ProcessLineFast("TH1::AddDirectoryStatus()");
-      gROOT->ProcessLine("TH1::AddDirectory(kFALSE);");
-   }
-   
-   
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
    allNames.SetOwner(kTRUE);
@@ -718,9 +710,6 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    }
    // save modifications to the target directory.
    target->SaveSelf(kTRUE);
-   if (R__TH1_Class) {
-      gROOT->ProcessLine(TString::Format("TH1::AddDirectory(%d);",addDirStat));
-   }
    return status;
 }
 
