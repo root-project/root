@@ -3013,11 +3013,12 @@ void TFile::WriteStreamerInfo()
          }
       }
    }
-   if (list.GetSize() == 0) return;
+
+   // Write the StreamerInfo list even if it is empty.
    fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
 
    if (listOfRules.GetEntries()) {
-      // Only the list of rules if we have something to say.
+      // Only add the list of rules if we have something to say.
       list.Add(&listOfRules);
    }
 

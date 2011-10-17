@@ -39,6 +39,7 @@
 
 
 class TSocket;
+class TArrayC;
 
 class TParallelMergingFile : public TMemFile 
 {
@@ -47,6 +48,7 @@ private:
    TUrl     fServerLocation; // Url of the server.
    Int_t    fServerIdx;      // Index of this socket/file on the server.
    Int_t    fServerVersion;  // Protocol version used by the server.
+   TArrayC *fClassSent;      // Record which StreamerInfo we already sent.
    TMessage fMessage;
 
 public:
@@ -57,7 +59,8 @@ public:
            Bool_t UploadAndReset();
    virtual Int_t  Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual Int_t  Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
-   
+   virtual void   WriteStreamerInfo();
+
    ClassDef(TParallelMergingFile,2);  // TFile specialization that will semi-automatically upload its content to a merging server.
 };
 

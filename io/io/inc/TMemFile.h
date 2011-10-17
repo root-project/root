@@ -70,7 +70,7 @@ public:
    virtual Long64_t CopyTo(void *to, Long64_t maxsize) const;
    virtual void     CopyTo(TBuffer &tobuf) const;
    virtual Long64_t GetSize() const;
-   
+
    void ResetAfterMerge(TFileMergeInfo *);
    void ResetErrno() const;
 
