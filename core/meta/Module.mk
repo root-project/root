@@ -29,8 +29,8 @@ METACH       := $(MODDIRI)/TCint.h
 METACDO      := $(METACDS:.cxx=.o)
 METACDH      := $(METACDS:.cxx=.h)
 
-METAH        := $(filter-out $(MODDIRI)/TCint.h,$(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)))
-METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+METAH        := $(filter-out $(MODDIRI)/TCintWithCling.h,$(filter-out $(MODDIRI)/TCint.h,$(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))))
+METAS        := $(filter-out $(MODDIRS)/TCintWithCling.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 ifeq ($(BUILDCLING),yes)
 METAS        := $(filter-out $(MODDIRS)/TCint.cxx,$(METAS))
 endif
