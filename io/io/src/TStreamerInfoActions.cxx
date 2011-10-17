@@ -1225,12 +1225,18 @@ void TStreamerInfo::Compile()
          TClass *bclass = element->GetClassPointer();
          Int_t clversion = ((TStreamerBase*)element)->GetBaseVersion();
          TStreamerInfo *binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(clversion));
-         binfo->SetBit(kCannotOptimize);
-         if (binfo->IsOptimized())
-         {
-            // Optimizing does not work with splitting.
-            binfo->Compile();
-         }      
+         if (binfo) {
+            // binfo might be null in cases where:
+            // a) the class on file inherit from an abstract class
+            // b) the class in memory does no longer inherit from an abstract class
+            // c) the abstract class is still loaded in memory
+            binfo->SetBit(kCannotOptimize);
+            if (binfo->IsOptimized())
+            {
+               // Optimizing does not work with splitting.
+               binfo->Compile();
+            }
+         }
       }
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
