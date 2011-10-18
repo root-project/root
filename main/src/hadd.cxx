@@ -193,6 +193,7 @@ int main( int argc, char **argv )
       exit(1);
    }
 
+   
    for ( int i = ffirst; i < argc; i++ ) {
       if (argv[i] && argv[i][0]=='@') {
          std::ifstream indirect_file(argv[i]+1);
@@ -229,8 +230,14 @@ int main( int argc, char **argv )
    Bool_t status = merger.Merge();
 
    if (status) {
+      if (verbosity == 1) {
+         cout << "Merged " << merger.GetMergeList()->GetEntries() << " input files.\n";
+      }
       return 0;
    } else {
+      if (verbosity == 1) {
+         cout << "Failure during the merge of " << merger.GetMergeList()->GetEntries() << " input files\n";
+      }
       return 1;
    }
 }
