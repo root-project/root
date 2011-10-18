@@ -178,17 +178,18 @@ int main( int argc, char **argv )
       targetname = argv[ffirst-1];
    }
       
-   if (verbosity > 0) {
-      cout << "Target file: " << targetname << endl;
+   if (verbosity > 1) {
+      cout << "hadd Target file: " << targetname << endl;
    }
 
    TFileMerger merger(kFALSE,kFALSE);
+   merger.SetMsgPrefix("hadd");
    merger.SetPrintLevel(verbosity - 1);
    if (maxopenedfiles > 0) {
       merger.SetMaxOpenedFiles(maxopenedfiles);
    }
    if (!merger.OutputFile(targetname,force,newcomp) ) {
-      cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
+      cerr << "hadd error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
       cerr << "Pass \"-f\" argument to force re-creation of output file." << endl;
       exit(1);
    }
@@ -198,7 +199,7 @@ int main( int argc, char **argv )
       if (argv[i] && argv[i][0]=='@') {
          std::ifstream indirect_file(argv[i]+1);
          if( ! indirect_file.is_open() ) {
-            std::cerr<< "Could not open indirect file " << (argv[i]+1) << std::endl;
+            std::cerr<< "hadd could not open indirect file " << (argv[i]+1) << std::endl;
             return 1;
          }
          while( indirect_file ){
@@ -210,9 +211,9 @@ int main( int argc, char **argv )
          }         
       } else if( ! merger.AddFile(argv[i]) ) {
          if ( skip_errors ) {
-            cerr << "Skipping file with error: " << argv[i] << endl;
+            cerr << "hadd skipping file with error: " << argv[i] << endl;
          } else {
-            cerr << "Exiting due to error in " << argv[i] << endl;
+            cerr << "hadd exiting due to error in " << argv[i] << endl;
             return 1;
          }
       }
@@ -222,8 +223,8 @@ int main( int argc, char **argv )
    } else {
       if (merger.HasCompressionChange()) {
          // Don't warn if the user any request re-optimization.
-         cout <<"Sources and Target have different compression levels"<<endl;
-         cout <<"Merging will be slower"<<endl;
+         cout <<"hadd Sources and Target have different compression levels"<<endl;
+         cout <<"hadd merging will be slower"<<endl;
       }
    }
    merger.SetNotrees(noTrees);
@@ -231,12 +232,12 @@ int main( int argc, char **argv )
 
    if (status) {
       if (verbosity == 1) {
-         cout << "Merged " << merger.GetMergeList()->GetEntries() << " input files.\n";
+         cout << "hadd merged " << merger.GetMergeList()->GetEntries() << " input files in " << targetname << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
-         cout << "Failure during the merge of " << merger.GetMergeList()->GetEntries() << " input files\n";
+         cout << "hadd failure during the merge of " << merger.GetMergeList()->GetEntries() << " input files in " << targetname << ".\n";
       }
       return 1;
    }

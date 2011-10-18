@@ -57,6 +57,7 @@ protected:
    Bool_t         fExplicitCompLevel;// True if the user explicitly requested a compressio level change (default kFALSE)
    Bool_t         fCompressionChange;// True if the output and input have different compression level (default kFALSE)
    Int_t          fPrintLevel;       // How much information to print out at run time.
+   TString        fMsgPrefix;        // Prefix to be used when printing informational message (default TFileMerger)
 
    Int_t          fMaxOpenedFiles;  // Maximum number of files opened at the same time by the TFileMerger.
    Bool_t         fLocal;           // Makes local copies of merging files if True (default is kTRUE)
@@ -89,6 +90,8 @@ public:
    TFile      *GetOutputFile() const { return fOutputFile; }
    Int_t       GetMaxOpenedFies() const { return fMaxOpenedFiles; }
    void        SetMaxOpenedFiles(Int_t newmax);
+   const char *GetMsgPrefix() const { return fMsgPrefix; }
+   void        SetMsgPrefix(const char *prefix);
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }

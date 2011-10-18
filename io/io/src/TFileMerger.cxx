@@ -85,7 +85,7 @@ static Int_t R__GetSystemMaxOpenedFiles()
 //______________________________________________________________________________
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
             : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fExplicitCompLevel(kFALSE), fCompressionChange(kFALSE),
-              fPrintLevel(0), fMaxOpenedFiles( R__GetSystemMaxOpenedFiles() ),
+              fPrintLevel(0), fMsgPrefix("TFileMerger"), fMaxOpenedFiles( R__GetSystemMaxOpenedFiles() ),
               fLocal(isLocal), fHistoOneGo(histoOneGo)
 {
    // Create file merger object.
@@ -129,7 +129,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    // Add file to file merger.
    
    if (fPrintLevel > 0) {
-      Printf("Source file %d: %s",fFileList->GetEntries()+fExcessFiles->GetEntries()+1,url);
+      Printf("%s Source file %d: %s",fMsgPrefix.Data(),fFileList->GetEntries()+fExcessFiles->GetEntries()+1,url);
    }
    
    TFile *newfile = 0;
@@ -214,7 +214,7 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
    }
 
    if (fPrintLevel > 0) {
-      Printf("Source file %d: %s",fFileList->GetEntries()+1,source->GetName());
+      Printf("%s Source file %d: %s",fMsgPrefix.Data(),fFileList->GetEntries()+1,source->GetName());
    }
    
    TFile *newfile = 0;
@@ -346,7 +346,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 
    Bool_t status = kTRUE;
    if (fPrintLevel > 0) {
-      Printf("Target path: %s",target->GetPath());
+      Printf("%s Target path: %s",fMsgPrefix.Data(),target->GetPath());
    }
 
    // Get the dir name
@@ -805,7 +805,7 @@ Bool_t TFileMerger::OpenExcessFiles()
    // Open up to fMaxOpenedFiles of the excess files.
    
    if (fPrintLevel > 0) {
-      Printf("Opening the next %d files",TMath::Min(fExcessFiles->GetEntries(),(fMaxOpenedFiles-1)));
+      Printf("%s Opening the next %d files",fMsgPrefix.Data(),TMath::Min(fExcessFiles->GetEntries(),(fMaxOpenedFiles-1)));
    }   
    Int_t nfiles = 0;
    TIter next(fExcessFiles);
@@ -871,4 +871,12 @@ void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
    if (fMaxOpenedFiles < 2) {
       fMaxOpenedFiles = 2;
    }
+}
+
+//______________________________________________________________________________
+void TFileMerger::SetMsgPrefix(const char *prefix)
+{
+   // Set the prefix to be used when printing informational message.
+
+   fMsgPrefix = prefix;
 }
