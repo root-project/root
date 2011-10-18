@@ -1472,35 +1472,29 @@ Long64_t TH3::Merge(TCollection *list)
    if (list->IsEmpty()) return (Int_t) GetEntries();
 
    TList inlist;
-   TH1* hclone = (TH1*)Clone("FirstClone");
-   R__ASSERT(hclone);
-   BufferEmpty(1);         // To remove buffer.
-   Reset();                // BufferEmpty sets limits so we can't use it later.
-   SetEntries(0);
-   inlist.Add(hclone);
    inlist.AddAll(list);
 
    TAxis newXAxis;
    TAxis newYAxis;
    TAxis newZAxis;
    Bool_t initialLimitsFound = kFALSE;
-   Bool_t same = kTRUE;
+   Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
 
    TIter next(&inlist);
-   while (TObject *o = next()) {
-      TH3* h = dynamic_cast<TH3*> (o);
-      if (!h) {
-         Error("Add","Attempt to add object of class: %s to a %s",
-            o->ClassName(),this->ClassName());
-         return -1;
-      }
+   TH3* h = this;
+   do { 
+      // skip empty histograms 
+      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
+
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
       if (hasLimits) {
          h->BufferEmpty();
          if (!initialLimitsFound) {
+            // this is executed the first time an histogram with limits is found
+            // to set some initial values on the new axes
             initialLimitsFound = kTRUE;
             newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                h->GetXaxis()->GetXmax());
@@ -1510,42 +1504,77 @@ Long64_t TH3::Merge(TCollection *list)
                h->GetZaxis()->GetXmax());
          }
          else {
-            if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+            // check first if histograms have same bins 
+            if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) || 
+                !SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) ||
+                !SameLimitsAndNBins(newZAxis, *(h->GetZaxis())) ) { 
+               
+               allSameLimits = kFALSE;
+ 
+               if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
+                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
                   "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                  h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-                  h->GetXaxis()->GetXmax());
-            }
-            if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                  h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-                  h->GetYaxis()->GetXmax());
-            }
-            if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
-                  h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
-                  h->GetZaxis()->GetXmax());
+                        newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                        h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                        h->GetXaxis()->GetXmax());
+                  return -1; 
+               }
+               if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
+                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                        "first: (%d, %f, %f), second: (%d, %f, %f)",
+                        newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                        h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                        h->GetYaxis()->GetXmax());
+                  return -1; 
+               }
+               if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
+                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                        "first: (%d, %f, %f), second: (%d, %f, %f)",
+                        newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
+                        h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                        h->GetZaxis()->GetXmax());
+                  return -1; 
+               }
             }
          }
       }
+   } while ( ( h = dynamic_cast<TH3*> ( next() ) ) != NULL );
+   if (!h && (*next) ) {
+      Error("Merge","Attempt to merge object of class: %s to a %s",
+            (*next)->ClassName(),this->ClassName());
+      return -1;
    }
    next.Reset();
 
-   same = same && SameLimitsAndNBins(newXAxis, *GetXaxis())
-      && SameLimitsAndNBins(newYAxis, *GetYaxis());
-   if (!same && initialLimitsFound)
+   // In the case of histogram with different limits
+   // newX(Y)Axis will now have the new found limits
+   // but one needs first to clone this histogram to perform the merge
+   // The clone is not needed when all histograms have the same limits
+   TH3 * hclone = 0;
+   if (!allSameLimits) { 
+      // We don't want to add the clone to gDirectory,
+      // so remove our kMustCleanup bit temporarily
+      Bool_t mustCleanup = TestBit(kMustCleanup);
+      if (mustCleanup) ResetBit(kMustCleanup);
+      hclone = (TH3*)IsA()->New();
+      hclone->SetDirectory(0);
+      Copy(*hclone);
+      if (mustCleanup) SetBit(kMustCleanup);
+      BufferEmpty(1);         // To remove buffer.
+      Reset();                // BufferEmpty sets limits so we can't use it later.
+      SetEntries(0);
+      inlist.AddFirst(hclone);
+   }
+
+   if (!allSameLimits && initialLimitsFound) {
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-      newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-      newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
+              newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+              newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
+   }
 
    if (!allHaveLimits) {
       // fill this histogram with all the data from buffers of histograms without limits
-      while (TH3* h = dynamic_cast<TH3*> (next())) {
+      while ( (h = dynamic_cast<TH3*> (next())) ) {
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
             // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
@@ -1556,8 +1585,13 @@ Long64_t TH3::Merge(TCollection *list)
             // because FillN doesn't resize histograms.
          }
       }
-      if (!initialLimitsFound)
+      if (!initialLimitsFound) {
+         if (hclone) { 
+            inlist.Remove(hclone);
+            delete hclone; 
+         }
          return (Int_t) GetEntries();  // all histograms have been processed
+      }
       next.Reset();
    }
 
@@ -1573,7 +1607,7 @@ Long64_t TH3::Merge(TCollection *list)
    Bool_t canRebin=TestBit(kCanRebin);
    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
 
-   while (TH1* h=(TH1*)next()) {
+   while ( (h=(TH3*)next()) ) {
       // process only if the histogram has limits; otherwise it was processed before
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
          // import statistics
@@ -1595,7 +1629,7 @@ Long64_t TH3::Merge(TCollection *list)
                   bin = binx +(nx+2)*(biny + (ny+2)*binz);
                   ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
                   cu  = h->GetBinContent(bin);
-                  if ((!same) && (binx == 0 || binx == nx + 1
+                  if ((!allSameLimits) && (binx == 0 || binx == nx + 1
                      || biny == 0 || biny == ny + 1
                      || binz == 0 || binz == nz + 1)) {
                         if (cu != 0) {
@@ -1621,8 +1655,10 @@ Long64_t TH3::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-   inlist.Remove(hclone);
-   delete hclone;
+   if (hclone) { 
+      inlist.Remove(hclone);
+      delete hclone;
+   }
    return (Long64_t)nentries;
 }
 

@@ -159,29 +159,23 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    if (li->IsEmpty()) return (Int_t) p->GetEntries();
 
    TList inlist;
-   TH1* hclone = (TH1*)p->Clone("FirstClone");
-   R__ASSERT(hclone);
-   p->BufferEmpty(1);         // To remove buffer.
-   p->Reset();                // BufferEmpty sets limits so we can't use it later.
-   p->SetEntries(0);
-   inlist.Add(hclone);
    inlist.AddAll(li);
 
    TAxis newXAxis;
    TAxis newYAxis;
    TAxis newZAxis;
    Bool_t initialLimitsFound = kFALSE;
-   Bool_t same = kTRUE;
+   Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
 
    TIter next(&inlist);
-   while (TObject *o = next()) {
-      T* h = dynamic_cast<T*> (o);
-      if (!h) {
-         Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
-               o->ClassName(),p->ClassName());
-         return -1;
-      }
+   T* h = p;
+
+   do {
+
+      // skip empty histograms 
+      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
+
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -199,38 +193,74 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
                      h->GetZaxis()->GetXmax());
          }
          else {
-            if (!p->RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+            // check first if histograms have same bins 
+            if (!p->SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) || 
+                !p->SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) || 
+                !p->SameLimitsAndNBins(newZAxis, *(h->GetZaxis())) ) { 
+
+               allSameLimits = kFALSE;
+               // recompute in this case the optimal limits
+               // The condition to works is that the histogram have same bin with 
+               // and one common bin edge
+               
+               if (!p->RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
+                  Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
                      "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
-                     newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-                     h->GetXaxis()->GetXmax());
-            }
-            if (p->GetDimension() >= 2 && !p->RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
-                     newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-                     h->GetYaxis()->GetXmax());
-            }
-            if (p->GetDimension() >= 3 && !p->RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
-               Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
-                     newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
-                     h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
-                     h->GetZaxis()->GetXmax());
+                        newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                        h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                        h->GetXaxis()->GetXmax());
+                  return -1;
+               }
+               if (p->GetDimension() >= 2 && !p->RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
+                  Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                        "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
+                        newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                        h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                        h->GetYaxis()->GetXmax());
+                  return -1;
+               }
+               if (p->GetDimension() >= 3 && !p->RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
+                  Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
+                        "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
+                        newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
+                        h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                        h->GetZaxis()->GetXmax());
+                  return -1;
+               }
             }
          }
       }
+   }  while ( ( h = dynamic_cast<T*> ( next() ) ) != NULL );
+   if (!h && (*next) ) {
+      Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
+            (*next)->ClassName(),p->ClassName());
+      return -1;
    }
+
    next.Reset();
 
-   same = same && p->SameLimitsAndNBins(newXAxis, *(p->GetXaxis()));
-   if ( p->GetDimension() >= 2 )
-      same = same && p->SameLimitsAndNBins(newYAxis, *(p->GetYaxis()));
-   if ( p->GetDimension() >= 3 )
-      same = same && p->SameLimitsAndNBins(newZAxis, *(p->GetZaxis()));
-   if (!same && initialLimitsFound) {
+   // In the case of histogram with different limits
+   // newX(Y)Axis will now have the new found limits
+   // but one needs first to clone this histogram to perform the merge
+   // The clone is not needed when all histograms have the same limits
+   T * hclone = 0;
+   if (!allSameLimits) { 
+      // We don't want to add the clone to gDirectory,
+      // so remove our kMustCleanup bit temporarily
+      Bool_t mustCleanup = p->TestBit(kMustCleanup);
+      if (mustCleanup) p->ResetBit(kMustCleanup);
+      hclone = (T*)p->IsA()->New();
+      R__ASSERT(hclone);
+      hclone->SetDirectory(0);
+      p->Copy(*hclone);
+      if (mustCleanup) p->SetBit(kMustCleanup);
+      p->BufferEmpty(1);         // To remove buffer.
+      p->Reset();                // BufferEmpty sets limits so we can't use it later.
+      p->SetEntries(0);
+      inlist.AddFirst(hclone);
+   }
+
+   if (!allSameLimits && initialLimitsFound) {
       Int_t b[] = { newXAxis.GetNbins(), newYAxis.GetNbins(), newZAxis.GetNbins() };
       Double_t v[] = { newXAxis.GetXmin(), newXAxis.GetXmax(),
                        newYAxis.GetXmin(), newYAxis.GetXmax(),
@@ -240,7 +270,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
    if (!allHaveLimits) {
       // fill this histogram with all the data from buffers of histograms without limits
-      while (T* h = dynamic_cast<T*> (next())) {
+      while ( (h = dynamic_cast<T*> (next()) ) ) {
          if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
              // no limits
             Int_t nbentries = (Int_t)h->fBuffer[0];
@@ -270,8 +300,13 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
                }
          }
       }
-      if (!initialLimitsFound)
+      if (!initialLimitsFound) {
+         if (hclone) { 
+            inlist.Remove(hclone);
+            delete hclone; 
+         }
          return (Int_t) p->GetEntries();  // all histograms have been processed
+      }
       next.Reset();
    }
 
@@ -283,7 +318,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    Bool_t canRebin=p->TestBit(TH1::kCanRebin);
    p->ResetBit(TH1::kCanRebin); // reset, otherwise setting the under/overflow will rebin
 
-   while ( T* h=static_cast<T*>(next()) ) {
+   while ( (h=static_cast<T*>(next())) ) {
       // process only if the histogram has limits; otherwise it was processed before
 
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
@@ -294,7 +329,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          nentries += h->GetEntries();
 
          for ( Int_t hbin = 0; hbin < h->fN; ++hbin ) {
-            if ((!same) && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
+            if ((!allSameLimits) && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
                if (h->GetW()[hbin] != 0) {
                   Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
                         " different limits and undeflows/overflows are present."
@@ -326,8 +361,10 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    //copy merged stats
    p->PutStats(totstats);
    p->SetEntries(nentries);
-   inlist.Remove(hclone);
-   delete hclone;
+   if (hclone) { 
+      inlist.Remove(hclone);
+      delete hclone;
+   }
    return (Long64_t)nentries;
 }
 

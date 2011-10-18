@@ -5113,7 +5113,7 @@ Long64_t TH1::Merge(TCollection *li)
    }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != NULL );
 
    if (!h && (*next) ) {
-      Error("Add","Attempt to add object of class: %s to a %s",
+      Error("Merge","Attempt to merge object of class: %s to a %s",
             (*next)->ClassName(),this->ClassName());
       return -1;
    }
