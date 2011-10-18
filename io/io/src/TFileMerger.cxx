@@ -643,10 +643,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                }
             } else {
                // Object is of no type that we can merge
-               Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
-                       "Merge(TCollection *) not implemented",
-                       obj->GetName(), obj->GetTitle());
-               
+               Bool_t warned = kFALSE;
+
                // Loop over all source files and write similar objects directly to the output file
                TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                while (nextsource) {
@@ -656,6 +654,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      ndir->cd();
                      TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                      if (key2) {
+                        if (warned) {
+                           Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
+                                   "Merge(TCollection *) not implemented",
+                                   obj->GetName(), obj->GetTitle());
+                           warned = kTRUE;
+                        }
                         TObject *nobj = key2->ReadObj();
                         if (!nobj) {
                            Info("MergeRecursive", "could not read object for key {%s, %s}; skipping file %s",
