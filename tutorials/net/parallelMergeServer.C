@@ -17,11 +17,40 @@
 #include "TSystem.h"
 #include "THashTable.h"
 
+#include "TMath.h"
+#include "TTimeStamp.h"
+
 const int kIncremental = 0;
 const int kReplaceImmediately = 1;
 const int kReplaceWait = 2;
 
 #include "TKey.h"
+static Bool_t R__NeedInitialMerge(TDirectory *dir)
+{
+
+   if (dir==0) return kFALSE;
+   
+   TIter nextkey(dir->GetListOfKeys());
+   TKey *key;
+   while( (key = (TKey*)nextkey()) ) {
+      TClass *cl = TClass::GetClass(key->GetClassName());
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         TDirectory *subdir = (TDirectory *)dir->GetList()->FindObject(key->GetName());
+         if (!subdir) {
+            subdir = (TDirectory *)key->ReadObj();
+         }
+         if (R__NeedInitialMerge(subdir)) {
+            return kTRUE;
+         }
+      } else {
+         if (0 != cl->GetResetAfterMerge()) {
+            return kTRUE;
+         }
+      }
+   }
+   return kFALSE;
+}
+
 static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
 {
    if (dir==0) return;
@@ -89,11 +118,14 @@ static void R__MigrateKey(TDirectory *destination, TDirectory *source)
 
 struct ClientInfo
 {
-   TFile   *fFile;      // This object does *not* own the file, it will be own by the owner of the ClientInfo.
-   TString  fLocalName;
+   TFile      *fFile;      // This object does *not* own the file, it will be own by the owner of the ClientInfo.
+   TString    fLocalName;
+   UInt_t     fContactsCount;
+   TTimeStamp fLastContact;
+   Double_t   fTimeSincePrevContact;
    
-   ClientInfo() : fFile(0),fLocalName() {}
-   ClientInfo(const char *filename, UInt_t clientId) : fFile(0) {
+   ClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
+   ClientInfo(const char *filename, UInt_t clientId) : fFile(0), fContactsCount(0), fTimeSincePrevContact(0) {
       fLocalName.Form("%s-%d-%d",filename,clientId,gSystem->GetPid());
    }
    
@@ -111,6 +143,10 @@ struct ClientInfo
             fFile = file;
          }
       }
+      TTimeStamp now;
+      fTimeSincePrevContact = now.AsDouble() - fLastContact.AsDouble();
+      fLastContact = now;
+      ++fContactsCount;
    }
 };
 
@@ -119,9 +155,10 @@ struct ParallelFileMerger : public TObject
    typedef std::vector<ClientInfo> ClientColl_t;
 
    TString       fFilename;
-   TBits         fClientsContact;  //
-   UInt_t        fNClientsContact; //
+   TBits         fClientsContact;       //
+   UInt_t        fNClientsContact;      //
    ClientColl_t  fClients;
+   TTimeStamp    fLastMerge;
    TFileMerger   fMerger;
    
    ParallelFileMerger(const char *filename, Bool_t writeCache = kFALSE) : fFilename(filename), fNClientsContact(0), fMerger(kFALSE,kTRUE)
@@ -137,6 +174,9 @@ struct ParallelFileMerger : public TObject
    {
       // Destructor.
    
+      for(unsigned int f = 0 ; f < fClients.size(); ++f) {
+         fprintf(stderr,"Client %d reported %u times\n",f,fClients[f].fContactsCount);
+      }
       for( ClientColl_t::iterator iter = fClients.begin();
           iter != fClients.end();
           ++iter) 
@@ -193,7 +233,10 @@ struct ParallelFileMerger : public TObject
             delete file;
          }
       }
+      fLastMerge = TTimeStamp();
+      fNClientsContact = 0;
       fClientsContact.Clear();
+      
       return result;
    }
    
@@ -208,6 +251,31 @@ struct ParallelFileMerger : public TObject
    {
       // Return true, if enough client have reported
       
+      if (fClients.size()==0) {
+         return kFALSE;
+      }
+
+      // Calculate average and rms of the time between the last 2 contacts.
+      Double_t sum = 0;
+      Double_t sum2 = 0;
+      for(unsigned int c = 0 ; c < fClients.size(); ++c) {
+         sum += fClients[c].fTimeSincePrevContact;
+         sum2 += fClients[c].fTimeSincePrevContact*fClients[c].fTimeSincePrevContact;
+      }
+      Double_t avg = sum / fClients.size();
+      Double_t sigma = sum2 ? TMath::Sqrt( sum2 / fClients.size() - avg*avg) : 0;
+      Double_t target = avg + 2*sigma;
+      TTimeStamp now;
+      if ( (now.AsDouble() - fLastMerge.AsDouble()) > target) {
+//         Float_t cut = clientThreshold * fClients.size();
+//         if (!(fClientsContact.CountBits() > cut )) {
+//            for(unsigned int c = 0 ; c < fClients.size(); ++c) {
+//               fprintf(stderr,"%d:%f ",c,fClients[c].fTimeSincePrevContact);
+//            }
+//            fprintf(stderr,"merge:%f avg:%f target:%f\n",(now.AsDouble() - fLastMerge.AsDouble()),avg,target);
+//         }
+         return kTRUE;
+      }
       Float_t cut = clientThreshold * fClients.size();
       return fClientsContact.CountBits() > cut  || fNClientsContact > 2*cut;
    }
@@ -282,12 +350,12 @@ void parallelMergeServer(bool cache = false) {
          if (clientCount > 100) {
             printf("only accept 100 clients connections\n");
             mon->Remove(ss);
-            ss->Close();         
+            ss->Close();
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
-            client->Send(clientCount, kStartConnection);
+            client->Send(++clientCount, kStartConnection);
             client->Send(kProtocolVersion, kProtocol);
-            ++clientCount;
+            // ++clientCount;
             mon->Add(client);
             printf("Accept %d connections\n",clientCount);
          }
@@ -325,7 +393,7 @@ void parallelMergeServer(bool cache = false) {
          TMemFile *transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length,"UPDATE"); // UPDATE because we need to remove the TTree after merging them.
          mess->SetBufferOffset(mess->Length()+length);
  
-         const Float_t clientThreshold = 0.5; // control how often the histogram are merged.  Here as soon as half the clients have reported.
+         const Float_t clientThreshold = 0.75; // control how often the histogram are merged.  Here as soon as half the clients have reported.
 
          ParallelFileMerger *info = (ParallelFileMerger*)mergers.FindObject(filename);
          if (!info) {
@@ -333,7 +401,9 @@ void parallelMergeServer(bool cache = false) {
             mergers.Add(info);
          }
 
-         info->InitialMerge(transient);
+         if (R__NeedInitialMerge(transient)) {
+            info->InitialMerge(transient);
+         }
          info->RegisterClient(clientId,transient);
          if (info->NeedMerge(clientThreshold)) {
             // Enough clients reported.
