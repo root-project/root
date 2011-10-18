@@ -3765,7 +3765,10 @@ Double_t TH1::GetEntries() const
 {
    // return the current number of entries
 
-   if (fBuffer) ((TH1*)this)->BufferEmpty();
+   if (fBuffer) { 
+      Int_t nentries = (Int_t) fBuffer[0];
+      if (nentries > 0) return nentries; 
+   }
 
    return fEntries;
 }
@@ -5040,7 +5043,6 @@ Long64_t TH1::Merge(TCollection *li)
    TH1 * h = this; 
    do  {
       // skip empty histograms
-      // (call GetEntries() to flush eventually the buffer) 
       if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
@@ -5065,6 +5067,7 @@ Long64_t TH1::Merge(TCollection *li)
                         newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
                         h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                         h->GetXaxis()->GetXmax());
+                  return -1;
                }
             }
          }
@@ -5117,7 +5120,6 @@ Long64_t TH1::Merge(TCollection *li)
    // but one needs to clone this histogram to perform the merge
    TH1 * hclone = 0;
    if (!allSameLimits) { 
-
       // We don't want to add the clone to gDirectory,
       // so remove our kMustCleanup bit temporarily
       Bool_t mustCleanup = TestBit(kMustCleanup);
@@ -5145,16 +5147,15 @@ Long64_t TH1::Merge(TCollection *li)
             for (Int_t i = 0; i < nbentries; i++)
                Fill(hist->fBuffer[2*i + 2], hist->fBuffer[2*i + 1]);
             // Entries from buffers have to be filled one by one
-            // because FillN doesn't resize histograms.
+            // because FillN doesn't resize histograms. 
          }
       }
 
       // all histograms have been processed
-
       if (!initialLimitsFound ) { 
-         // case where all histograms do not have limits
-         // in principle I should not have clones - 
-         // because when initialLimitsFound = false then allSameLimits is true
+         // here the case where all histograms don't have limits
+         // In principle I should not have copied in hclone since  
+         // when initialLimitsFound = false then allSameLimits should be  true
          if (hclone) { 
             inlist.Remove(hclone);
             delete hclone; 
