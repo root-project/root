@@ -353,9 +353,9 @@ void parallelMergeServer(bool cache = false) {
             ss->Close();
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
-            client->Send(++clientCount, kStartConnection);
+            client->Send(clientCount, kStartConnection);
             client->Send(kProtocolVersion, kProtocol);
-            // ++clientCount;
+            ++clientCount;
             mon->Add(client);
             printf("Accept %d connections\n",clientCount);
          }
