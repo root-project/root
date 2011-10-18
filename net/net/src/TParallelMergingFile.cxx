@@ -94,9 +94,9 @@ Bool_t TParallelMergingFile::UploadAndReset()
       // Wait till we get the start message
       // server tells us who we are
       Int_t kind;
-      fSocket->Recv(fServerIdx, kind);
+      Int_t n = fSocket->Recv(fServerIdx, kind);
       
-      if (kind != 0 /* kStartConnection */) 
+      if (n < 0 && kind != 0 /* kStartConnection */) 
       {
          Error("UploadAndReset","Unexpected server message: kind=%d idx=%d\n",kind,fServerIdx);
          delete fSocket;
@@ -104,11 +104,11 @@ Bool_t TParallelMergingFile::UploadAndReset()
          return kTRUE;
       }
       fSocket->Recv(fServerVersion, kind);
-      if (kind != 1 /* kProtocol */) 
+      if (n < 0 && kind != 1 /* kProtocol */) 
       {
          Fatal("UploadAndReset","Unexpected server message: kind=%d status=%d\n",kind,fServerVersion);
       } else {
-         Info("UploadAndReset","Connected to fastMergeServer version %d\n",fServerVersion);
+         Info("UploadAndReset","Connected to fastMergeServer version %d with index %d\n",fServerVersion,fServerIdx);
       }
       TMessage::EnableSchemaEvolutionForAll(kTRUE);         
    }
