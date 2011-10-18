@@ -101,6 +101,7 @@ int main( int argc, char **argv )
    Bool_t noTrees = kFALSE;
    Int_t maxopenedfiles = 0;
 
+   int outputPlace = 0;
    int ffirst = 2;
    Int_t newcomp = 1;
    for( int a = 1; a < argc; ++a ) {
@@ -146,19 +147,28 @@ int main( int argc, char **argv )
             cerr << "Error: option " << argv[a] << " is not a supported option.\n";
             ++ffirst;
          }
+      } else if (!outputPlace) {
+         outputPlace = a;
       }
    }
 
    gSystem->Load("libTreePlayer");
 
-   cout << "Target file: " << argv[ffirst-1] << endl;
+   const char *targetname = 0;
+   if (outputPlace) {
+      targetname = argv[outputPlace];
+   } else {
+      targetname = argv[ffirst-1];
+   }
+      
+   cout << "Target file: " << targetname << endl;
 
    TFileMerger merger(kFALSE,kFALSE);
    merger.SetPrintLevel(99);
    if (maxopenedfiles > 0) {
       merger.SetMaxOpenedFiles(maxopenedfiles);
    }
-   if (!merger.OutputFile(argv[ffirst-1],force,newcomp) ) {
+   if (!merger.OutputFile(targetname,force,newcomp) ) {
       cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
       cerr << "Pass \"-f\" argument to force re-creation of output file." << endl;
       exit(1);
