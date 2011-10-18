@@ -198,7 +198,9 @@ namespace cling {
 
     // Allow the interpreter to find itself.
     // OBJ first: if it exists it should be more up to date
+#ifdef CLING_SRCDIR_INCL
     AddIncludePath(CLING_SRCDIR_INCL);
+#endif
     AddIncludePath(CLING_INSTDIR_INCL);
 
     // Warm them up
