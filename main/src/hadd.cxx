@@ -178,10 +178,12 @@ int main( int argc, char **argv )
       targetname = argv[ffirst-1];
    }
       
-   cout << "Target file: " << targetname << endl;
+   if (verbosity > 0) {
+      cout << "Target file: " << targetname << endl;
+   }
 
    TFileMerger merger(kFALSE,kFALSE);
-   merger.SetPrintLevel(verbosity);
+   merger.SetPrintLevel(verbosity - 1);
    if (maxopenedfiles > 0) {
       merger.SetMaxOpenedFiles(maxopenedfiles);
    }
