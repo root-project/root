@@ -388,7 +388,7 @@ void parallelMergeServer(bool cache = false) {
          mess->ReadTString(filename);
          mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
 
-         Info("fastMergeServerHist","Received input from client %d for %s",clientId,filename.Data());
+         // Info("fastMergeServerHist","Received input from client %d for %s",clientId,filename.Data());
          
          TMemFile *transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length,"UPDATE"); // UPDATE because we need to remove the TTree after merging them.
          mess->SetBufferOffset(mess->Length()+length);
