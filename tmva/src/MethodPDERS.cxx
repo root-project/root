@@ -988,7 +988,7 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
    }
 
    // Normalizing by the full volume
-   ret *= ( TMath::Power (2., GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
+   ret *= ( TMath::Power (2., (Double_t) GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
       TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.);
 
    return ret*pdf;
@@ -1023,9 +1023,9 @@ Double_t TMVA::MethodPDERS::NormSinc (Double_t x)
    Double_t ret;
 
    if (GetNvar() % 2)
-      ret = TMath::Power (sinc, GetNvar());
+      ret = TMath::Power (sinc, (Int_t) GetNvar());
    else
-      ret = TMath::Abs (sinc) * TMath::Power (sinc, GetNvar() - 1);
+      ret = TMath::Abs (sinc) * TMath::Power (sinc, (Int_t) GetNvar() - 1);
 
    return ret;
 }
@@ -1043,8 +1043,8 @@ Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x)
    Double_t lanczos = (TMath::Sin(pix) / pix) * (TMath::Sin(pixtimesn) / pixtimesn);
    Double_t ret;
 
-   if (GetNvar() % 2) ret = TMath::Power (lanczos, GetNvar());
-   else               ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
+   if (GetNvar() % 2) ret = TMath::Power (lanczos, (Int_t) GetNvar());
+   else               ret = TMath::Abs (lanczos) * TMath::Power (lanczos, (Int_t) GetNvar() - 1);
 
    return ret;
 }

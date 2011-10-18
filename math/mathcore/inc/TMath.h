@@ -33,6 +33,7 @@
 #include "TError.h"
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 namespace TMath {
 
@@ -159,6 +160,7 @@ namespace TMath {
    inline Double_t Ldexp(Double_t x, Int_t exp);
           Double_t Factorial(Int_t i);
    inline Double_t Power(Double_t x, Double_t y);
+   inline Double_t Power(Double_t x, Int_t y);
    inline Double_t Log(Double_t x);
           Double_t Log2(Double_t x);
    inline Double_t Log10(Double_t x);
@@ -362,14 +364,14 @@ namespace TMath {
 #   ifdef R__SOLARIS_CC50
        extern "C" { int finite(double); }
 #   endif
-#   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
-#      ifndef finite
-#         define finite __finite
-#      endif
-#      ifndef isnan
-#         define isnan  __isnan
-#      endif
-#   endif
+// #   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
+// #      ifndef finite
+// #         define finite __finite
+// #      endif
+// #      ifndef isnan
+// #         define isnan  __isnan
+// #      endif
+// #   endif
 #else
 // don't want to include complete <math.h>
 extern "C" {
@@ -470,6 +472,14 @@ inline Double_t TMath::Ldexp(Double_t x, Int_t exp)
 inline Double_t TMath::Power(Double_t x, Double_t y)
    { return pow(x, y); }
 
+inline Double_t TMath::Power(Double_t x, Int_t y) {
+#ifdef R_ANSISTREAM
+   return std::pow(x, y); 
+#else
+   return pow(x, (Double_t) y); 
+#endif
+}
+
 inline Double_t TMath::Log(Double_t x)
    { return log(x); }
 
@@ -479,7 +489,7 @@ inline Double_t TMath::Log10(Double_t x)
 inline Int_t TMath::Finite(Double_t x)
 #if defined(R__HPUX11)
    { return isfinite(x); }
-#elif defined(R__MACOSX) && defined(__arm__)
+#elif defined(R_ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))
 #ifdef isfinite
    // from math.h
    { return isfinite(x); }
@@ -492,7 +502,7 @@ inline Int_t TMath::Finite(Double_t x)
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
-#if defined(R__MACOSX) && defined(__arm__)
+#if defined(R_ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__) )
 #ifdef isnan
    // from math.h
    { return isnan(x); }
