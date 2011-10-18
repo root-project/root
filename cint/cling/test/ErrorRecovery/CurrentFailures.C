@@ -3,10 +3,7 @@
 
 #include "Overloads.h"
 
-#define BEGIN_NAMESPACE namespace test_namespace {
-#define END_NAMESPACE }
-
-#include "MacroIncluder.h"
+#include "SubsequentDecls.h"
 
 // The issue is that when we don't have semicolon in the end of the input
 // in the case of cling where we have incremental compilation the parser 
