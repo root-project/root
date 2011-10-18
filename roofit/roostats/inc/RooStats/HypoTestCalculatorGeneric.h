@@ -63,6 +63,7 @@ namespace RooStats {
 
       // set the model for the null hypothesis (only B)
       virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = &nullModel; }
+      const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
       // set the model for the alternate hypothesis  (S+B)
       virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = &altModel; }

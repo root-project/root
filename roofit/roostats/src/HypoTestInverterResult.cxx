@@ -22,6 +22,7 @@
 
 #include "RooStats/HybridResult.h"
 #include "RooStats/SamplingDistribution.h"
+#include "RooStats/AsymptoticCalculator.h"
 #include "RooMsgService.h"
 #include "RooGlobalFunc.h"
 
@@ -38,6 +39,10 @@ ClassImp(RooStats::HypoTestInverterResult)
 
 using namespace RooStats;
 using namespace RooFit;
+
+
+// initialize static value 
+double HypoTestInverterResult::fgAsymptoticMaxSigma      = 5; 
 
 
 HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
@@ -556,23 +561,39 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
  
    SamplingDistribution * bDistribution = GetBackgroundTestStatDist(bIndex);
    SamplingDistribution * sbDistribution = GetSignalAndBackgroundTestStatDist(index);
-   if (!bDistribution || !sbDistribution) return 0;
 
    HypoTestResult * result = (HypoTestResult*) fYObjects.At(index);
 
-   // create a new HypoTestResult
-   HypoTestResult tempResult; 
-   tempResult.SetPValueIsRightTail( result->GetPValueIsRightTail() );
-   tempResult.SetBackgroundAsAlt( true);
-   tempResult.SetNullDistribution( sbDistribution );
-   tempResult.SetAltDistribution( bDistribution );
+   if (bDistribution && sbDistribution) { 
 
-   std::vector<double> values(bDistribution->GetSize()); 
-   for (int i = 0; i < bDistribution->GetSize(); ++i) { 
-      tempResult.SetTestStatisticData( bDistribution->GetSamplingDistribution()[i] );
-      values[i] = (fUseCLs) ? tempResult.CLs() : tempResult.CLsplusb();
+      // create a new HypoTestResult
+      HypoTestResult tempResult; 
+      tempResult.SetPValueIsRightTail( result->GetPValueIsRightTail() );
+      tempResult.SetBackgroundAsAlt( true);
+      tempResult.SetNullDistribution( sbDistribution );
+      tempResult.SetAltDistribution( bDistribution );
+      
+      std::vector<double> values(bDistribution->GetSize()); 
+      for (int i = 0; i < bDistribution->GetSize(); ++i) { 
+         tempResult.SetTestStatisticData( bDistribution->GetSamplingDistribution()[i] );
+         values[i] = (fUseCLs) ? tempResult.CLs() : tempResult.CLsplusb();
+      }
+      return new SamplingDistribution("expected values","expected values",values);
+   }  
+   // in case b abs sbDistribution are null assume is coming from the asymptotic calculator 
+   // hard -coded this value (no really needed to be used by user)
+   fgAsymptoticMaxSigma = 5; 
+   const int npoints = 11;
+   const double smax = fgAsymptoticMaxSigma;
+   const double dsig = 2* smax/ (npoints-1) ;
+   std::vector<double> values(npoints);
+   for (int i = 0; i < npoints; ++i) { 
+      double nsig = -smax + dsig*i; 
+      double pval = AsymptoticCalculator::GetExpectedPValues( result->NullPValue(), result->AlternatePValue(), nsig, fUseCLs);
+      values[i] = pval;
    }
-   return new SamplingDistribution("expected values","expected values",values);
+   return new SamplingDistribution("Asymptotic expected values","Asymptotic expected values",values);
+   
 }
 
 
@@ -584,7 +605,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
 
   if (ArraySize()<2) {
      oocoutE(this,Eval) << "HypoTestInverterResult::GetLimitDistribution" 
-                        << " not  enought points -  return a NULL pointer " << std::endl; 
+                        << " not  enought points -  return 0 " << std::endl; 
      return 0; 
   }
 
@@ -660,6 +681,21 @@ double  HypoTestInverterResult::GetExpectedUpperLimit(double nsig ) const {
 double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const {
    // get expected limit (lower/upper) depending on the flag 
 
+   // for asymptotic is a special case (the distribution is generated an step in sigma values)
+   // distringuish asymptotic looking at the hypotest results
+   HypoTestResult * r = dynamic_cast<HypoTestResult *> (fYObjects.First() );
+   if (!r->GetNullDistribution() && !r->GetAltDistribution() ) { 
+      // we are in the asymptotic case 
+      // get the limits obtained at the different sigma values 
+      SamplingDistribution * limitDist = GetLimitDistribution(lower); 
+      if (!limitDist) return 0;
+      const std::vector<double> & values = limitDist->GetSamplingDistribution();
+      if (values.size() <= 1) return 0; 
+      double dsig = 2* fgAsymptoticMaxSigma/ (values.size() -1) ;
+      int  i = TMath::Floor ( (nsig +  fgAsymptoticMaxSigma)/dsig + 0.5);
+      return values[i];
+   }
+
    double p[1];
    double q[1];
    p[0] = ROOT::Math::normal_cdf(nsig,1);
@@ -681,6 +717,10 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const
       for (int j=0; j<nEntries; ++j) {
          int i = index[j]; // i is the order index 
          SamplingDistribution * s = GetExpectedPValueDist(i);
+         if (!s) { 
+            ooccoutE(this,Eval) << "HypoTestInverterResult - cannot compute expected p value distribution - return 0" <<  std::endl;
+            return 0;
+         } 
          const std::vector<double> & values = s->GetSamplingDistribution();
          double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
          TMath::Quantiles(values.size(), 1, x,q,p,false);
@@ -693,9 +733,9 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const
       return GetGraphX(g, target, lower);
 
    }
-   
    // for CLS need to use the limit distribution 
    SamplingDistribution * limitDist = GetLimitDistribution(lower); 
+   if (!limitDist) return 0;
    const std::vector<double> & values = limitDist->GetSamplingDistribution();
    double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
    TMath::Quantiles(values.size(), 1, x,q,p,false);

@@ -32,6 +32,7 @@ namespace RooStats {
    //class HypoTestCalculator;
    class HybridCalculator;
    class FrequentistCalculator;
+   class AsymptoticCalculator;
    class HypoTestCalculatorGeneric;
    class TestStatistic;
 
@@ -39,7 +40,7 @@ class HypoTestInverter : public IntervalCalculator {
 
 public:
 
-   enum ECalculatorType { kUndefined = 0, kHybrid = 1, kFrequentist = 2};
+   enum ECalculatorType { kUndefined = 0, kHybrid = 1, kFrequentist = 2, kAsymptotic = 3};
 
    // default constructor (used only for I/O)
    HypoTestInverter();
@@ -57,6 +58,11 @@ public:
 
    // constructor from frequentist calculator
    HypoTestInverter( FrequentistCalculator & hc,
+                     RooRealVar* scannedVariable, 
+                     double size = 0.05) ;
+
+   // constructor from asymptotic calculator
+   HypoTestInverter( AsymptoticCalculator & hc,
                      RooRealVar* scannedVariable, 
                      double size = 0.05) ;
 

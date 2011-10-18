@@ -164,7 +164,6 @@ private:
  
 protected:
 
-   
    bool fUseCLs; 
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
@@ -175,6 +174,8 @@ protected:
    double fLowerLimitError;
    double fUpperLimitError;
 
+   static double fgAsymptoticMaxSigma;  // max sigma value used to scan asymptotic expected p values 
+
    std::vector<double> fXValues;
 
    TList fYObjects;       // list of HypoTestResult for each point
@@ -184,7 +185,7 @@ protected:
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,3)  // HypoTestInverterResult class      
+   ClassDef(HypoTestInverterResult,4)  // HypoTestInverterResult class      
 };
 }
 

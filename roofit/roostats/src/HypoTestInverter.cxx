@@ -49,6 +49,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 #include "RooStats/ModelConfig.h"
 #include "RooStats/HybridCalculator.h"
 #include "RooStats/FrequentistCalculator.h"
+#include "RooStats/AsymptoticCalculator.h"
 #include "RooStats/SimpleLikelihoodRatioTestStat.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
@@ -204,7 +205,14 @@ HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
       fCalculator0 = freqCalc;
       return;
    }
-   oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Type of hypotest calculator is not supported " << std::endl;    
+   AsymptoticCalculator * asymCalc = dynamic_cast<AsymptoticCalculator*>(&hc);
+   if (asymCalc) { 
+      fCalcType = kAsymptotic;
+      fCalculator0 = asymCalc;
+      return;
+   }
+   oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Type of hypotest calculator is not supported " <<std::endl;    
+   fCalculator0 = &hc;
 }
 
 
@@ -270,6 +278,36 @@ HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
       CheckInputModels(hc,*fScannedVariable);
 }
 
+HypoTestInverter::HypoTestInverter( AsymptoticCalculator& hc,
+                                          RooRealVar* scannedVariable, double size ) :
+   fTotalToysRun(0),
+   fMaxToys(0),
+   fCalculator0(&hc),
+   fScannedVariable(scannedVariable), 
+   fResults(0),
+   fUseCLs(false),
+   fSize(size),
+   fVerbose(0),
+   fCalcType(kAsymptotic), 
+   fNBins(0), fXmin(1), fXmax(1),
+   fNumErr(0)
+{
+   // Constructor from a reference to a AsymptoticCalculator 
+   // The calculator must be created before by using the S+B model for the null and 
+   // the B model for the alt
+   // If no variable to scan are given they are assumed to be the first variable
+   // from the parameter of interests of the null model
+
+   if (!fScannedVariable) { 
+      fScannedVariable = GetVariableToScan(hc);
+   }
+   if (!fScannedVariable) 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - Cannot guess the variable to scan " << std::endl;    
+   else 
+      CheckInputModels(hc,*fScannedVariable);
+
+}
+
 
 //_________________________________________________________________________________________________
 HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, ModelConfig &sbModel,
@@ -294,6 +332,7 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
 
    if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, sbModel, bModel)); 
    if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, sbModel, bModel)); 
+   if(fCalcType==kAsymptotic) fHC = auto_ptr<HypoTestCalculatorGeneric>(new AsymptoticCalculator(data, sbModel, bModel)); 
    fCalculator0 = fHC.get();
    // get scanned variabke
    if (!fScannedVariable) { 
@@ -490,16 +529,20 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
          std::endl;
    }
    
-   fTotalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
+   if (fCalcType == kFrequentist || fCalcType == kHybrid)  {
+      fTotalToysRun += (hcResult->GetAltDistribution()->GetSize() + hcResult->GetNullDistribution()->GetSize());
 
-   // set sampling distribution name
-   TString nullDistName = TString::Format("%s_%s_%4.2f",hcResult->GetNullDistribution()->GetName(),
-                                         fScannedVariable->GetName(), fScannedVariable->getVal() );
-   TString altDistName = TString::Format("%s_%s_%4.2f",hcResult->GetAltDistribution()->GetName(),
-                                        fScannedVariable->GetName(), fScannedVariable->getVal() );
+      // set sampling distribution name
+      TString nullDistName = TString::Format("%s_%s_%4.2f",hcResult->GetNullDistribution()->GetName(),
+                                             fScannedVariable->GetName(), fScannedVariable->getVal() );
+      TString altDistName = TString::Format("%s_%s_%4.2f",hcResult->GetAltDistribution()->GetName(),
+                                            fScannedVariable->GetName(), fScannedVariable->getVal() );
+      
+      hcResult->GetNullDistribution()->SetName(nullDistName);
+      hcResult->GetAltDistribution()->SetName(altDistName);
+   }
 
-   hcResult->GetNullDistribution()->SetName(nullDistName);
-   hcResult->GetAltDistribution()->SetName(altDistName);
+
    
 
    return hcResult;

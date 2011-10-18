@@ -164,13 +164,32 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    p[2] = 0.5;
    p[3] = ROOT::Math::normal_cdf(nsig1);
    p[4] = ROOT::Math::normal_cdf(nsig2);
+
+   bool resultIsAsymptotic = ( !fResults->GetNullTestStatDist(0) && !fResults->GetAltTestStatDist(0) ); 
    for (int j=0; j<nEntries; ++j) {
       int i = index[j]; // i is the order index 
       SamplingDistribution * s = fResults->GetExpectedPValueDist(i);
       if ( !s)  break; 
       const std::vector<double> & values = s->GetSamplingDistribution();
-      double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
-      TMath::Quantiles(values.size(), 5, x,q,p,false);
+      // special case for asymptotic results (cannot use TMath::quantile in that case)
+      if (resultIsAsymptotic) { 
+         double maxSigma = fResults->fgAsymptoticMaxSigma;
+         double dsig = 2* maxSigma/ (values.size() -1) ;         
+         int  i0 = TMath::Floor ( ( -nsig2 +  maxSigma )/dsig + 0.5);
+         int  i1 = TMath::Floor ( (-nsig1 +  maxSigma )/dsig + 0.5);
+         int  i2 = TMath::Floor ( ( maxSigma)/dsig + 0.5);
+         int  i3 = TMath::Floor ( ( nsig1 + maxSigma)/dsig + 0.5);
+         int  i4 = TMath::Floor ( ( nsig2 + maxSigma)/dsig + 0.5);
+         q[0] = values[i0];
+         q[1] = values[i1];
+         q[2] = values[i2];
+         q[3] = values[i3];
+         q[4] = values[i4];
+      }
+      else { 
+         double * x = const_cast<double *>(&values[0]); // need to change TMath::Quantiles
+         TMath::Quantiles(values.size(), 5, x,q,p,false);
+      }
 
       g0->SetPoint(j, fResults->GetXValue(i),  q[2]);
       if (g1) { 

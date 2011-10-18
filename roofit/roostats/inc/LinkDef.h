@@ -56,6 +56,7 @@
 #pragma link C++ class RooStats::HypoTestCalculatorGeneric+;
 #pragma link C++ class RooStats::HybridCalculator+;
 #pragma link C++ class RooStats::FrequentistCalculator+;
+#pragma link C++ class RooStats::AsymptoticCalculator+;
 #pragma link C++ class RooStats::HybridCalculatorOriginal+;
 #pragma link C++ class RooStats::HybridPlot+;
 #pragma link C++ class RooStats::HybridResult+;				 

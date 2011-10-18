@@ -61,17 +61,17 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       {
          // Takes null and alternate parameters from PDF. Can be overridden.
 
-         RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-         RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-         w.import(nullPdf, RooFit::RecycleConflictNodes());
-         w.import(altPdf, RooFit::RecycleConflictNodes());
-         RooMsgService::instance().setGlobalKillBelow(msglevel);
+         fNullPdf = &nullPdf;
+         fAltPdf = &altPdf;
 
-         fNullPdf = w.pdf(nullPdf.GetName());
-         fAltPdf = w.pdf(altPdf.GetName());
+         RooArgSet * allNullVars = fNullPdf->getVariables();
+         fNullParameters = (RooArgSet*) allNullVars->snapshot();
+         delete allNullVars; 
 
-         fNullParameters = (RooArgSet*) fNullPdf->getVariables()->snapshot();
-         fAltParameters = (RooArgSet*) fAltPdf->getVariables()->snapshot();
+         RooArgSet * allAltVars = fAltPdf->getVariables();
+         fAltParameters = (RooArgSet*) allAltVars->snapshot();
+         delete allAltVars;
+
 	 fReuseNll=kFALSE ;
 	 fNllNull=NULL ;
 	 fNllAlt=NULL ;
@@ -87,15 +87,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       {
          // Takes null and alternate parameters from values in nullParameters
          // and altParameters. Can be overridden.
-
-         RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-         RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-         w.import(nullPdf, RooFit::RecycleConflictNodes());
-         w.import(altPdf, RooFit::RecycleConflictNodes());
-         RooMsgService::instance().setGlobalKillBelow(msglevel);
-
-         fNullPdf = w.pdf(nullPdf.GetName());
-         fAltPdf = w.pdf(altPdf.GetName());
+         fNullPdf = &nullPdf;
+         fAltPdf = &altPdf;
 
          fNullParameters = (RooArgSet*) nullParameters.snapshot();
          fAltParameters = (RooArgSet*) altParameters.snapshot();
@@ -208,8 +201,6 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       }
 
    private:
-
-      RooWorkspace w;
 
       RooAbsPdf* fNullPdf;
       RooAbsPdf* fAltPdf;

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef RooStats_RooStatsUtils
-#define RooStats_RooStatsUtils
+#ifndef ROOSTATS_RooStatsUtils
+#define ROOSTATS_RooStatsUtils
 
 #ifndef ROOT_TMath
 #include "TMath.h"
@@ -24,11 +24,14 @@
 #include "RooRealVar.h"
 #include "RooAbsCollection.h"
 #include "TIterator.h"
+#include "RooStats/ModelConfig.h"
+#include "RooProdPdf.h"
 
 #include <iostream>
 using namespace std ;
 
 namespace RooStats {
+
 
   // returns one-sided significance corresponding to a p-value
   inline Double_t PValueToSignificance(Double_t pvalue){
@@ -55,6 +58,22 @@ namespace RooStats {
     set->remove(constSet);
   }
 
+   inline bool SetAllConstant(const RooAbsCollection &coll, bool constant) {
+       // utility function to set all variable constant in a collection
+       // (from G. Petrucciani)
+       bool changed = false;
+       RooLinkedListIter iter = coll.iterator();
+       for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
+          RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+          if (v && (v->isConstant() != constant)) {
+             changed = true;
+             v->setConstant(constant);
+          }
+       }
+       return changed;
+   }
+
+
   // assuming all values in set are RooRealVars, randomize their values
   inline void RandomizeCollection(RooAbsCollection& set,
                                   Bool_t randomizeConstants = kTRUE)
@@ -76,6 +95,14 @@ namespace RooStats {
 
 
   }
+
+   void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints);
+
+   void FactorizePdf(RooStats::ModelConfig &model, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints);
+
+   RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name);
+
+   RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name);
 
 }
 
