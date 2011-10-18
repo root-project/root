@@ -327,6 +327,7 @@ void parallelMergeServer(bool cache = false) {
    mon->Add(ss);
 
    UInt_t clientCount = 0;
+   UInt_t clientIndex = 0;
    
    THashTable mergers;
  
@@ -353,9 +354,10 @@ void parallelMergeServer(bool cache = false) {
             ss->Close();
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
-            client->Send(clientCount, kStartConnection);
+            client->Send(clientIndex, kStartConnection);
             client->Send(kProtocolVersion, kProtocol);
             ++clientCount;
+            ++clientIndex;
             mon->Add(client);
             printf("Accept %d connections\n",clientCount);
          }
