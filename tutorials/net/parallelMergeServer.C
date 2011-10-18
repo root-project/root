@@ -317,7 +317,7 @@ void parallelMergeServer(bool cache = false) {
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);
-   TServerSocket *ss = new TServerSocket(1095, kTRUE);
+   TServerSocket *ss = new TServerSocket(1095, kTRUE, 100);
    if (!ss->IsValid()) {
       return;
    }
