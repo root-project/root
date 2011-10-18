@@ -1,5 +1,5 @@
-Target file: result.root
-Source file 1: cmsJets_0.root
+hadd Target file: result.root
+hadd Source file 1: cmsJets_0.root
 Warning in <TClass::TClass>: no dictionary for class edm::EDProduct is available
 Warning in <TClass::TClass>: no dictionary for class edm::EventAux is available
 Warning in <TClass::TClass>: no dictionary for class CaloCrystal is available
@@ -14,5 +14,5 @@ Warning in <TClass::TClass>: no dictionary for class CommonJetData is available
 Warning in <TClass::TClass>: no dictionary for class Jet is available
 Warning in <TClass::TClass>: no dictionary for class CaloJet is available
 Warning in <TClass::TClass>: no dictionary for class edm::EDCollection<CaloJet> is available
-Source file 2: cmsJets_1.root
-Target path: result.root:/
+hadd Source file 2: cmsJets_1.root
+hadd Target path: result.root:/
