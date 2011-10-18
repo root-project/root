@@ -159,7 +159,7 @@ void TGeoNodeCache::CdNode(Int_t nodeid) {
 // Change current path to point to the node having this id.
 // Node id has to be in range : 0 to fNNodes-1 (no check for performance reasons)
    if (!fNodeIdArray) {
-      printf("WARNING:CdNode() disabled - too many nodes\n");
+      Error("CdNode", "Navigation based on phisical node unuique id disabled.\n   To enable, use: gGeoManager->GetCache()->BuildIdArray()");
       return;
    }
    Int_t *arr = fNodeIdArray;
