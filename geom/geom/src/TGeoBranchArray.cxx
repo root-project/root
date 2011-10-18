@@ -24,6 +24,7 @@
 #include "TGeoBranchArray.h"
 
 #include "TMath.h"
+#include "TThread.h"
 #include "TString.h"
 #include "TGeoMatrix.h"
 #include "TGeoNavigator.h"
@@ -209,6 +210,7 @@ TGeoNode *TGeoBranchArray::GetNode(UShort_t level) const
 void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
 {
 // Init the branch array from current navigator state.
+   TThread::Lock();
    UShort_t level = (UShort_t)nav->GetLevel();
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(nav->GetCurrentMatrix());
@@ -229,6 +231,7 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
       fArray[fLevel-i-1] = index;
       mother = node;
    }   
+   TThread::UnLock();
 }
 
 //______________________________________________________________________________

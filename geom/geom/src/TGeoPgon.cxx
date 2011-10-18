@@ -348,8 +348,8 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       ipl++;
    }
    Double_t stepmax = step;
-   Double_t *sph = gGeoManager->GetDblBuffer(fNedges+2);
-   Int_t *iph = gGeoManager->GetIntBuffer(fNedges+2);
+   Double_t *sph = gGeoManager->GetDblBuffer(fNedges+4);
+   Int_t *iph = gGeoManager->GetIntBuffer(fNedges+4);
    // locate current phi sector [0,fNedges-1]; -1 for dead region
    LocatePhi(point, ipsec);
    if (ipsec<0) {
