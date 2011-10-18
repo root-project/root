@@ -238,6 +238,12 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line)
      return true;
    }
 
+   // Cancel the multiline input that has been requested
+   if (cmd_char == '@') {
+     m_InputValidator->Reset();
+     return true;
+   }
+
    // Enable/Disable DynamicExprTransformer
    if (cmd == "dynamicExtensions") {
      if (param.empty()) {
