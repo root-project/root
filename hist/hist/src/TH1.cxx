@@ -5032,11 +5032,13 @@ Long64_t TH1::Merge(TCollection *li)
 
 
    TAxis newXAxis;
+
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allHaveLabels = kTRUE;  // assume all histo have labels and check later
    Bool_t allHaveLimits = kTRUE;
    Bool_t allSameLimits = kTRUE;
    Bool_t foundLabelHist = kFALSE;
+
 
    TIter next(&inlist);
    // start looping with this histogram 
@@ -5050,17 +5052,20 @@ Long64_t TH1::Merge(TCollection *li)
 
       if (hasLimits) {
          h->BufferEmpty();
+         // this is executed the first time an histogram with limits is found
+         // to set some initial values on the new axis
          if (!initialLimitsFound) {
-            // set the first time bins in the new axis as the first histogram
             initialLimitsFound = kTRUE;
             newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
                h->GetXaxis()->GetXmax());
          }
          else {
-            // check if histograms have same bins 
+            // check first if histograms have same bins 
             if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) ) { 
                allSameLimits = kFALSE;
-               // recompute the limits 
+               // recompute the limits in this case the optimal limits
+               // The condition to works is that the histogram have same bin with 
+               // and one common bin edge
                if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
                   Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
                         "first: (%d, %f, %f), second: (%d, %f, %f)",
@@ -5115,9 +5120,10 @@ Long64_t TH1::Merge(TCollection *li)
 
 
    next.Reset();
-   // case of histogram with different limits
+   // In the case of histogram with different limits
    // newXAxis will now have the new found limits
-   // but one needs to clone this histogram to perform the merge
+   // but one needs first to clone this histogram to perform the merge
+   // The clone is not needed when all histograms have the same limits
    TH1 * hclone = 0;
    if (!allSameLimits) { 
       // We don't want to add the clone to gDirectory,
@@ -5162,6 +5168,7 @@ Long64_t TH1::Merge(TCollection *li)
          }
          return (Int_t) GetEntries();  
       }
+      next.Reset();
    }
 
    //merge bin contents and errors
