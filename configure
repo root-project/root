@@ -5694,19 +5694,21 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 #
 ### echo %%% Cling - LLVM/clang based interpreter prototype
 #
+message "Checking whether to build cling"
 if test ! "x$enable_cling" = "xno"; then
     if test -d cint/cling; then
-        message "Checking whether to build cling"
         enable_cling="yes"
         hascling="define"
         result "yes"
     else
         enable_cling="no"
         hascling="undef"
+        result "no"
     fi
 else
     enable_cling="no"
     hascling="undef"
+    result "no"
 fi
 
 ######################################################################
