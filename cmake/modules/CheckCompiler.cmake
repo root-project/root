@@ -4,7 +4,7 @@
 
 #---Enable FORTRAN (unfortunatelly is not nowt possible in all cases)-------------------------------
 if(NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode)
-  enable_language(Fortran)
+  enable_language(Fortran OPTIONAL)
 endif()
 
 
