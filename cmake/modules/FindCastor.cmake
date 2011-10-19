@@ -31,19 +31,15 @@ if(CASTOR_INCLUDE_DIR)
   string(REGEX REPLACE "BASEVERSION[ ]*[\"][ ]*([^ \"]+)" "\\1" CASTOR_VERSION ${cont})
 endif()
 
-find_library(CASTOR_shift_LIBRARY NAMES shift shiftmd PATHS
-  $ENV{CASTOR_DIR}/lib
-  /cern/pro/lib 
-  /cern/new/lib
-  /cern/old/lib 
-  /opt/shift/lib 
-  /usr/local/shift/lib
-  /usr/lib/shift
-  /usr/local/lib/shift
-  /usr/lib64
-  /usr/lib
-  /usr/local/lib
-)
+set(locations  $ENV{CASTOR_DIR}/lib /cern/pro/lib /cern/new/lib /cern/old/lib 
+              /opt/shift/lib /usr/local/shift/lib
+              /usr/lib/shift /usr/local/lib/shift /usr/lib64 /usr/lib /usr/local/lib)
+
+find_library(CASTOR_shift_LIBRARY NAMES shift shiftmd PATHS ${locations})
+find_library(CASTOR_rfio_LIBRARY NAMES castorrfio PATHS ${locations})
+find_library(CASTOR_common_LIBRARY NAMES castorcommon PATHS ${locations})
+find_library(CASTOR_client_LIBRARY NAMES castorclient castorClient PATHS ${locations})
+find_library(CASTOR_ns_LIBRARY NAMES castorns PATHS ${locations})
 
 if(CASTOR_shift_LIBRARY)
   set(CASTOR_LIBRARIES ${CASTOR_LIBRARIES} ${CASTOR_shift_LIBRARY})
@@ -58,6 +54,10 @@ endif()
 
 mark_as_advanced(
   CASTOR_shift_LIBRARY
+  CASTOR_rfio_LIBRARY
+  CASTOR_common_LIBRARY
+  CASTOR_client_LIBRARY
+  CASTOR_ns_LIBRARY
   CASTOR_INCLUDE_DIR
 )
 

@@ -1,10 +1,11 @@
 set(ROOT_ARCHITECTURE macosx)
 set(ROOT_PLATFORM macosx)
 
-Set(SYSLIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT} -ldl")
-Set(XLIBS "${XPMLIBDIR} ${XPMLIB} ${X11LIBDIR} -lXext -lX11")
-Set(CILIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} -ldl")
-#Set(CRYPTLIBS "-lcrypt")
+set(SYSLIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} ${CMAKE_THREAD_LIBS_INIT} -ldl")
+set(XLIBS "${XPMLIBDIR} ${XPMLIB} ${X11LIBDIR} -lXext -lX11")
+set(CILIBS "-lm ${EXTRA_LDFLAGS} ${FINK_LDFLAGS} -ldl")
+#set(CRYPTLIBS "-lcrypt")
+set(CMAKE_M_LIBS -lm)
 
 #---This is needed to help CMake to locate the X11 headers in the correct place and not under /usr/include
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} /usr/X11R6)

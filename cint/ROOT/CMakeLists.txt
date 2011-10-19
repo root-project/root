@@ -169,7 +169,7 @@ foreach(_name ${CINTINCDLLNAMES})
     add_Library(${_name} SHARED ${OutFileName})
     set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries)
     if(explicitlink)
-      target_link_libraries(${_name} Cint Core)
+      target_link_libraries(${_name} Cint Core ${CMAKE_M_LIBS})
     endif()
     install(TARGETS ${_name} DESTINATION cint/cint/include)
 

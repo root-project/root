@@ -18,7 +18,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   ROOT_GENERATE_ROOTMAP(Reflex LINKDEF LinkDef.h DEPENDENCIES )
   ROOT_MODULE_LIBRARY(ReflexDict G__Reflex.cxx LIBRARIES Reflex Cint Core)
   #---Reflex library---------------------------------------------------------
-  ROOT_LINKER_LIBRARY(Reflex *.cxx LIBRARIES )  
+  ROOT_LINKER_LIBRARY(Reflex *.cxx LIBRARIES ${CMAKE_DL_LIBS})  
   #---genreflex files--------------------------------------------------------
   install(CODE "file(WRITE ${CMAKE_INSTALL_PREFIX}/lib/python/genreflex/gccxmlpath.py \"gccxmlpath = '${GCCXML_EXECUTABLE}'\n\")")
   install(DIRECTORY python/genreflex DESTINATION lib/python FILES_MATCHING PATTERN "*.py" PATTERN ".svn" EXCLUDE)

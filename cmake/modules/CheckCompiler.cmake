@@ -50,5 +50,7 @@ elseif(WIN32)
 endif()
 
 #---Print the final compiler flags--------------------------------------------------------------------
+message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
+message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${ALL_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")

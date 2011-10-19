@@ -106,11 +106,12 @@ ROOT_GENERATE_ROOTMAP(Core LINKDEF ${LibCore_LINKDEF})
 include_directories( ${INCLUDE_DIRECTORIES})
 
 if(WIN32)
-   set(corelinklibs Cint shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
+   set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
 endif()
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES} 
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs})
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
+                    DEPENDENCIES Cint)
  
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
 if(UNIX)

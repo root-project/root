@@ -129,7 +129,7 @@ add_library(Cint_static STATIC ${CINT_SRCS})
 add_dependencies(Cint_static IOSENUM_H)
 
 #---Create the shared Cint library--------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Cint loadfile.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT})
+ROOT_LINKER_LIBRARY(Cint loadfile.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 set_target_properties(Cint PROPERTIES LINK_INTERFACE_LIBRARIES "" )
 
 #---Create the cint cint executable-------------------------------------------------------------------------
@@ -137,7 +137,7 @@ ROOT_EXECUTABLE(cint.exe ${CMAKE_CURRENT_SOURCE_DIR}/main/cppmain.cxx LIBRARIES 
 
 #---Create the temporary cint_tmp executable----------------------------------------------------------------
 ROOT_EXECUTABLE(cint_tmp ${CMAKE_CURRENT_SOURCE_DIR}/main/cppmain.cxx 
-                         ${CMAKE_CURRENT_BINARY_DIR}/loadfile_tmp.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT})
+                         ${CMAKE_CURRENT_BINARY_DIR}/loadfile_tmp.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 
 #---Create the makecint executable--------------------------------------------------------------------------
 ROOT_EXECUTABLE(makecint ${CMAKE_SOURCE_DIR}/cint/tool/makecint.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT})

@@ -18,6 +18,8 @@ include_directories(${CMAKE_SOURCE_DIR}/net/xrootd/src/xrootd/src)
 if(WIN32)
   add_definitions(-DNOGDI)
   set(xrdclient libXrdClient)
+else()
+  set(xrdclient XrdOuc XrdSys XrdClient)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__Netx *.h LINKDEF LinkDef.h)

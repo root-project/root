@@ -6,9 +6,12 @@ file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 if(BuildCling)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/TCint.cxx)
+  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCint.cxx)
   list(REMOVE_ITEM headers TCint.h)
 endif()
+
+list(REMOVE_ITEM headers TCintWithCling.h)
+list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCintWithCling.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__Meta ${headers} LINKDEF LinkDef.h OPTIONS -DG__API)
 set(dictionaries ${CMAKE_CURRENT_BINARY_DIR}/G__Meta.cxx)

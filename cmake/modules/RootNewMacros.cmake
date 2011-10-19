@@ -170,6 +170,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   foreach( d ${incdirs})    
    set(includedirs ${includedirs} -I${d})
   endforeach()
+  #---Get the list of definitions---------------------------
+  get_directory_property(defs COMPILE_DEFINITIONS)
+  foreach( d ${defs})
+   if(NOT d MATCHES "=")   
+     set(definitions ${definitions} -D${d})
+   endif()
+  endforeach()
   #---Get LinkDef.h file------------------------------------
   foreach( f ${ARG_LINKDEF})
     if( IS_ABSOLUTE ${f})
@@ -185,7 +192,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h
                      COMMAND ${rootcint_cmd} -cint -f  ${dictionary}.cxx 
-                                          -c ${ARG_OPTIONS} ${includedirs} ${rheaderfiles} ${_linkdef} 
+                                          -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef} 
                      DEPENDS ${headerfiles} ${_linkdef} rootcint)
 endfunction()
 
@@ -240,7 +247,11 @@ function(ROOT_LINKER_LIBRARY library)
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
-    target_link_libraries(${library} ${ARG_LIBRARIES})
+    if(explicitlink)
+      target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
+    else()
+      target_link_libraries(${library} ${ARG_LIBRARIES})
+    endif()
   endif()
   #----Installation details-------------------------------------------------------
   if(ARG_CMAKENOEXPORT)

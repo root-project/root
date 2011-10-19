@@ -52,7 +52,7 @@ if(WIN32)
 else()
   set(x11_defvalue ON)
   set(memstat_defvalue ON)
-  set(explicitlink_defvalue OFF)
+  set(explicitlink_defvalue ON)
 endif()
 
 ROOT_BUILD_OPTION(afs OFF "AFS support, requires AFS libs and objects")                 
