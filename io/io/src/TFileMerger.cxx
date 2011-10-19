@@ -713,7 +713,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
       }
    }
    // save modifications to the target directory.
-   if (! type&kIncremental) {
+   if (!(type&kIncremental)) {
       // In case of incremental build, we will call Write on the top directory/file, so we do not need
       // to call SaveSelf explicilty.
       target->SaveSelf(kTRUE);
