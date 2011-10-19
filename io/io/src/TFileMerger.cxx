@@ -351,6 +351,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 
    // Get the dir name
    TString path(target->GetPath());
+   // coverity[unchecked_value] 'target' is from a file so GetPath always returns path starting with filename: 
    path.Remove(0, path.Last(':') + 2);
 
    Int_t nguess = sourcelist->GetSize()+1000;
