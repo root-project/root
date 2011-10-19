@@ -769,6 +769,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          // remove the temporary files
          if(fLocal) {
             TString p(file->GetPath());
+            // coverity[unchecked_value] Index is return a value with range or NPos to select the whole name. 
             p = p(0, p.Index(':',0));
             gSystem->Unlink(p);
          }
