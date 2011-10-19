@@ -38,6 +38,7 @@ using namespace RooStats;
 bool plotHypoTestResult = true; 
 bool useProof = true;
 bool optimize = false;
+bool generateBinned = false; 
 bool writeResult = false;
 int nworkers = 4;
 bool rebuild = false;
@@ -142,36 +143,9 @@ void StandardHypoTestInvDemo(const char * fileName =0,
    double upperLimit = r->UpperLimit();
    double ulError = r->UpperLimitEstimatedError();
 
-
    std::cout << "The computed upper limit is: " << upperLimit << " +/- " << ulError << std::endl;
- 
-   const int nEntries = r->ArraySize();
 
-
-   std::string typeName = "Frequentist"; 
-   if (calculatorType ==1 )
-      typeName = "Hybrid";
-   else if (calculatorType ==2 ) { 
-      typeName = "Asymptotic";
-      plotHypoTestResult = false; 
-   }
-   const char * resultName = (w) ? w->GetName() : r->GetName();
-   TString plotTitle = TString::Format("%s CL Scan for workspace %s",typeName.c_str(),resultName);
-   HypoTestInverterPlot *plot = new HypoTestInverterPlot("HTI_Result_Plot",plotTitle,r);
-   plot->Draw("CLb 2CL");  // plot all and Clb
-   
-
-   if (plotHypoTestResult) { 
-      TCanvas * c2 = new TCanvas();
-      if (nEntries > 1) c2->Divide( 2, TMath::Ceil(double(nEntries)/2));
-      for (int i=0; i<nEntries; i++) {
-         if (nEntries > 1) c2->cd(i+1);
-         SamplingDistPlot * pl = plot->MakeTestStatPlot(i);
-         pl->SetLogYaxis(true);
-         pl->Draw();
-      }
-   }
-
+   // compute expected limit
    std::cout << " expected limit (median) " <<  r->GetExpectedUpperLimit(0) << std::endl;
    std::cout << " expected limit (-1 sig) " << r->GetExpectedUpperLimit(-1) << std::endl;
    std::cout << " expected limit (+1 sig) " << r->GetExpectedUpperLimit(1) << std::endl;
@@ -179,7 +153,8 @@ void StandardHypoTestInvDemo(const char * fileName =0,
    std::cout << " expected limit (+2 sig) " << r->GetExpectedUpperLimit(2) << std::endl;
 
 
-   if (w != NULL && writeResult) {
+   // write result in a file 
+   if (r != NULL && writeResult) {
 
       // write to a file the results
       const char *  calcType = (calculatorType == 0) ? "Freq" : (calculatorType == 1) ? "Hybr" : "Asym";
@@ -196,11 +171,38 @@ void StandardHypoTestInvDemo(const char * fileName =0,
       name.Replace(0, name.Last('/')+1, "");
       resultFileName += name;
          
-
       TFile * fileOut = new TFile(resultFileName,"RECREATE");
       r->Write();
       fileOut->Close();                                                                     
    }   
+
+ 
+   // plot the result ( p values vs scan points) 
+   std::string typeName = "Frequentist"; 
+   if (calculatorType ==1 )
+      typeName = "Hybrid";
+   else if (calculatorType ==2 ) { 
+      typeName = "Asymptotic";
+      plotHypoTestResult = false; 
+   }
+   const char * resultName = (w) ? w->GetName() : r->GetName();
+   TString plotTitle = TString::Format("%s CL Scan for workspace %s",typeName.c_str(),resultName);
+   HypoTestInverterPlot *plot = new HypoTestInverterPlot("HTI_Result_Plot",plotTitle,r);
+   plot->Draw("CLb 2CL");  // plot all and Clb
+   
+   const int nEntries = r->ArraySize();
+
+   // plot test statistics distributions for the two hypothesis 
+   if (plotHypoTestResult) { 
+      TCanvas * c2 = new TCanvas();
+      if (nEntries > 1) c2->Divide( 2, TMath::Ceil(double(nEntries)/2));
+      for (int i=0; i<nEntries; i++) {
+         if (nEntries > 1) c2->cd(i+1);
+         SamplingDistPlot * pl = plot->MakeTestStatPlot(i);
+         pl->SetLogYaxis(true);
+         pl->Draw();
+      }
+   }
 
 }
 
@@ -363,6 +365,12 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    if (toymcs) { 
       if (useNumberCounting) toymcs->SetNEventsPerToy(1);
       toymcs->SetTestStatistic(testStat);
+
+      if (data->isWeighted() && !generateBinned) { 
+         Info("StandardHypoTestInvDemo","Data set is weighted, nentries = %d and sum of weights = %8.1f but toy generation is unbinned - it would be faster to set generateBinned to true\n",data->numEntries(), data->sumEntries());
+      }
+      toymcs->SetGenerateBinned(generateBinned);
+
       if (optimize) { 
          // work only of b pdf and s+b pdf are the same
          if (bModel->GetPdf() == sbModel->GetPdf() ) 
