@@ -30,7 +30,7 @@
 //______________________________________________________________________________
 TParallelMergingFile::TParallelMergingFile(const char *filename, Option_t *option /* = "" */,
                                            const char *ftitle /* = "" */, Int_t compress /* = 1 */) : 
-   TMemFile(filename,option,ftitle,compress),fSocket(0),fServerIdx(-1),fClassSent(0),fMessage(kMESS_OBJECT)
+   TMemFile(filename,option,ftitle,compress),fSocket(0),fServerIdx(-1),fServerVersion(0),fClassSent(0),fMessage(kMESS_OBJECT)
 {
    // Constructor.
    // We do no yet open any connection to the server.  This will be done at the
@@ -42,8 +42,6 @@ TParallelMergingFile::TParallelMergingFile(const char *filename, Option_t *optio
       fServerLocation = TUrl(serverurl);
    }
 }
-
-
 
 //______________________________________________________________________________
 TParallelMergingFile::~TParallelMergingFile()
@@ -61,7 +59,9 @@ void TParallelMergingFile::Close(Option_t *option)
 {
    TMemFile::Close(option);
    if (fSocket) {
-      fSocket->Send("Finished");          // tell server we are finished
+      if (0==fSocket->Send("Finished")) {          // tell server we are finished
+         Warning("Close","Failed to send the finishing message to the server %s:%d",fServerLocation.GetHost(),fServerLocation.GetPort());
+      }
       fSocket->Close();
       delete fSocket;
    }
@@ -103,7 +103,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
          fSocket = 0;
          return kTRUE;
       }
-      fSocket->Recv(fServerVersion, kind);
+      n = fSocket->Recv(fServerVersion, kind);
       if (n < 0 && kind != 1 /* kProtocol */) 
       {
          Fatal("UploadAndReset","Unexpected server message: kind=%d status=%d\n",kind,fServerVersion);
