@@ -4,7 +4,7 @@
 # Author: g.p.ciceri <gp.ciceri@acm.org>, 1/06/2001
 
 MODNAME      := pgsql
-MODDIR       := sql/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/sql/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
@@ -14,13 +14,13 @@ PGSQLDIRI    := $(PGSQLDIR)/inc
 
 ##### libPgSQL #####
 PGSQLL       := $(MODDIRI)/LinkDef.h
-PGSQLDS      := $(MODDIRS)/G__PgSQL.cxx
+PGSQLDS      := $(call stripsrc,$(MODDIRS)/G__PgSQL.cxx)
 PGSQLDO      := $(PGSQLDS:.cxx=.o)
 PGSQLDH      := $(PGSQLDS:.cxx=.h)
 
 PGSQLH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PGSQLS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PGSQLO       := $(PGSQLS:.cxx=.o)
+PGSQLO       := $(call stripsrc,$(PGSQLS:.cxx=.o))
 
 PGSQLDEP     := $(PGSQLO:.o=.d) $(PGSQLDO:.o=.d)
 
