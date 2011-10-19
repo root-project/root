@@ -473,7 +473,7 @@ inline Double_t TMath::Power(Double_t x, Double_t y)
    { return pow(x, y); }
 
 inline Double_t TMath::Power(Double_t x, Int_t y) {
-#ifdef R_ANSISTREAM
+#ifdef R__ANSISTREAM
    return std::pow(x, y); 
 #else
    return pow(x, (Double_t) y); 
@@ -489,7 +489,7 @@ inline Double_t TMath::Log10(Double_t x)
 inline Int_t TMath::Finite(Double_t x)
 #if defined(R__HPUX11)
    { return isfinite(x); }
-#elif defined(R_ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))
+#elif defined(R__MACOSX) && defined(__arm__)
 #ifdef isfinite
    // from math.h
    { return isfinite(x); }
@@ -502,7 +502,7 @@ inline Int_t TMath::Finite(Double_t x)
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
-#if defined(R_ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__) )
+#if defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__) )
 #ifdef isnan
    // from math.h
    { return isnan(x); }
