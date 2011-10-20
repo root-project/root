@@ -103,6 +103,9 @@ SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
 endif
+ifeq ($(PLATFORM),ios)
+MODULES      += graf2d/ios
+endif
 ifeq ($(BUILDX11),yes)
 MODULES      += graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 endif
@@ -291,7 +294,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
-                proof/proofbench proof/afdsmgrd
+                proof/proofbench proof/afdsmgrd graf2d/ios
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -1023,7 +1026,7 @@ $(ROOTA) $(PROOFSERVA): $(ROOTALIB) $(MAKESTATIC) $(STATICOBJLIST)
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)" $(STATICOBJLIST)
 
-$(ROOTALIB): $(ALLLIBS) $(MAKESTATICLIB) $(STATICOBJLIST)
+$(ROOTALIB): $(ALLLIBS) $(MAKESTATICLIB) $(STATICOBJLIST) $(IOSO)
 	@$(MAKESTATICLIB) $(STATICOBJLIST)
 
 plugins-ios: $(ROOTEXE)
