@@ -105,7 +105,7 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 #ifdef R__HAS_CLING
-# include "TCling.h"
+# include "TCintWithCling.h"
 #else
 # include "TCint.h"
 #endif
@@ -298,8 +298,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fVersionInt      = 0;  // check in TROOT dtor in case TCint fails
    fClasses         = 0;  // might be checked via TCint ctor
 
+#ifdef R__HAS_CLING
+   fInterpreter     = new TCintWithCling("C/C++", "CINT+cling C/C++ Interpreter");
+#else
    fInterpreter     = new TCint("C/C++", "CINT C/C++ Interpreter");
-
+#endif
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fConfigFeatures  = R__CONFIGUREFEATURES;
    fVersion         = ROOT_RELEASE;
