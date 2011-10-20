@@ -201,7 +201,9 @@ namespace cling {
 #ifdef CLING_SRCDIR_INCL
     AddIncludePath(CLING_SRCDIR_INCL);
 #endif
+#ifdef CLING_INSTDIR_INCL
     AddIncludePath(CLING_INSTDIR_INCL);
+#endif
 
     // Warm them up
     m_IncrParser->Initialize(startupPCH);
