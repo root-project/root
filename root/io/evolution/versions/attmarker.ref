@@ -1,4 +1,4 @@
-Target file: result.root
-Source file 1: hsimple14.root
-Source file 2: hsimple20.root
-Target path: result.root:/
+hadd Target file: result.root
+hadd Source file 1: hsimple14.root
+hadd Source file 2: hsimple20.root
+hadd Target path: result.root:/
