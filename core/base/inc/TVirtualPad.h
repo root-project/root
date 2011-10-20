@@ -248,11 +248,34 @@ public:
 
    virtual Int_t    GetGLDevice() = 0;
    virtual void     SetCopyGLDevice(Bool_t copy) = 0;
+   
+   virtual Bool_t PadInSelectionMode() const;
+   virtual Bool_t PadInHighlightMode() const;
+   
+   virtual void PushTopLevelSelectable(TObject *top);
+   virtual void PushSelectableObject(TObject *obj);
+   virtual void PopTopLevelSelectable();
 
    static TVirtualPad *&Pad();
 
    ClassDef(TVirtualPad,2)  //Abstract base class for Pads and Canvases
 };
+
+//
+//Small scope-guard class to add/remove object's into pad's stack of selectable objects.
+//Does nothing, unless you implement non-standard picking.
+//
+
+class TPickerStackGuard {
+public:
+   TPickerStackGuard(TObject *obj);
+   ~TPickerStackGuard();
+   
+private:
+   TPickerStackGuard(const TPickerStackGuard &rhs);
+   TPickerStackGuard &operator = (const TPickerStackGuard &rhs);
+};
+
 
 #ifndef __CINT__
 #define gPad (TVirtualPad::Pad())

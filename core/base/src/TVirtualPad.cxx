@@ -90,3 +90,58 @@ void TVirtualPad::Streamer(TBuffer &R__b)
    }
 }
 
+//______________________________________________________________________________
+Bool_t TVirtualPad::PadInSelectionMode() const
+{
+   // Should always return false unless you have non-standard picking.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TVirtualPad::PadInHighlightMode() const
+{
+   // Should always return false, unless you can highlight selected object in pad.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TVirtualPad::PushTopLevelSelectable(TObject * /*object*/)
+{
+   // Does nothing, unless you implement your own picking.
+   // When complex object containing sub-objects (which can be picked)
+   // is painted in a pad, this "top-level" object is pushed into 
+   // the selectables stack.
+}
+
+//______________________________________________________________________________
+void TVirtualPad::PushSelectableObject(TObject * /*object*/)
+{
+   // Does nothing, unless you implement your own picking.
+   // "Complete" object, or part of complex object, which
+   // can be picked.
+}
+
+//______________________________________________________________________________
+void TVirtualPad::PopTopLevelSelectable()
+{
+   // Does nothing, unless you implement your own picking.
+   // Remove top level selectable and all its' children.
+}
+
+//______________________________________________________________________________
+TPickerStackGuard::TPickerStackGuard(TObject *obj)
+{
+   // Scope-guards ctor, pushe the object on stack.
+
+   gPad->PushTopLevelSelectable(obj);
+}
+
+//______________________________________________________________________________
+TPickerStackGuard::~TPickerStackGuard()
+{
+   // Guard does out of scope, pop object from stack.
+
+   gPad->PopTopLevelSelectable();
+}
