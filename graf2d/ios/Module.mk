@@ -1,5 +1,5 @@
 # Module.mk for ios module
-# Copyright (c) 2000 Rene Brun and Fons Rademakers
+# Copyright (c) 2011 Rene Brun and Fons Rademakers
 #
 # Author: Timur Pocheptsov, 17/7/2011
 
