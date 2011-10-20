@@ -27,15 +27,28 @@
 class TVirtualArray {
 public:
    TClassRef  fClass;
-   UInt_t     fSize; 
+   UInt_t     fCapacity;
+   UInt_t     fSize;
    char      *fArray; //[fSize] 
 
-   TVirtualArray( TClass *cl, UInt_t size ) : fClass(cl), fSize(size), fArray( (char*)( cl ? cl->NewArray(size) : 0) ) {};
+   TVirtualArray( TClass *cl, UInt_t size ) : fClass(cl), fCapacity(size), fSize(size), fArray( (char*)( cl ? cl->NewArray(size) : 0) ) {};
    ~TVirtualArray() { if (fClass) fClass->DeleteArray( fArray ); }
 
    TClass *GetClass() { return fClass; }
    char *operator[](UInt_t ind) const { return GetObjectAt(ind); }
    char *GetObjectAt(UInt_t ind) const { return fArray+fClass->Size()*ind; }
+   
+   void SetSize(UInt_t size) {
+      // Set the used size of this array to 'size'.   If size is greater than the existing
+      // capacity, reallocate the array BUT no data is preserved.
+      fSize = size; 
+      if (fSize > fCapacity && fClass) { 
+         fClass->DeleteArray( fArray ); 
+         fArray = (char*)fClass->NewArray(fSize);
+         fCapacity = fSize;
+      }
+   }
+         
 
 };
 
