@@ -1243,7 +1243,7 @@ namespace ROOT
          UInt_t step = fDataPoints.size();
          Double_t fSumwTemp = 0;
          Double_t fSumw2Temp = 1e-7;
-         Double_t fEffective = GetEffectiveEntries();
+         Double_t fEffective = this->GetEffectiveEntries();
 
          // sort data points along split axis
          // find data point at which the cumulative effective entries reach half of the total effective entries

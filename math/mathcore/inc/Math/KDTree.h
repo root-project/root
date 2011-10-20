@@ -114,8 +114,8 @@ namespace ROOT
 
         private:
            // node should never be copied or assigned
-           BaseNode(const BaseNode& copy) {}
-           BaseNode& operator=(const BaseNode& rhs) {return *this;}
+           BaseNode(const BaseNode& ) {}
+           BaseNode& operator=(const BaseNode& ) {return *this;}
     
            //links to adjacent nodes
            BaseNode*                 fParent;     //!pointer to parent node
@@ -139,8 +139,8 @@ namespace ROOT
     
         private:
            // node should never be copied
-           HeadNode(const HeadNode& copy) {}
-           HeadNode& operator=(const HeadNode& rhs) {return *this;}
+           HeadNode(const HeadNode& ) {}
+           HeadNode& operator=(const HeadNode& ) {return *this;}
 
            virtual HeadNode*        Clone();
            virtual bool             IsHeadNode() const {return true;}
@@ -167,8 +167,8 @@ namespace ROOT
     
         private:
            // node should never be copied
-           SplitNode(const SplitNode& copy) {}
-           SplitNode& operator=(const SplitNode& rhs) {return *this;}
+           SplitNode(const SplitNode& ) {}
+           SplitNode& operator=(const SplitNode& ) {return *this;}
 
            virtual SplitNode*       Clone();
            virtual const BinNode*   FindNode(const point_type& rPoint) const;
@@ -247,8 +247,8 @@ namespace ROOT
       
         private:
            // node should never be copied
-           TerminalNode(const TerminalNode& copy) {}
-           TerminalNode& operator=(const TerminalNode& rhs) {return *this;}
+           TerminalNode(const TerminalNode& ) {}
+           TerminalNode& operator=(const TerminalNode& ) {return *this;}
     
            // save some typing
            typedef typename std::vector<const point_type* >::iterator         data_it;
