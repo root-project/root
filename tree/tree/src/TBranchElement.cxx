@@ -3843,7 +3843,7 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    if (!info) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1); // Here we have a single object that contains a variable size C-style array.
    // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
 }
@@ -3877,9 +3877,10 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
    if (!info) {
       return;
    }
-   // Since info is not null, fReadActionSequence is not null either.
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
    
+   // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
    fNdata = (Int_t) GetValue(0, 0);
 }
