@@ -210,7 +210,6 @@ ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
 endif
 ifeq ($(BUILDCLING),yes)
-# to be added to the unconditional MODULES list above once cling is in trunk
 MODULES      += cint/cling
 endif
 ifeq ($(BUILDROOFIT),yes)
@@ -315,6 +314,9 @@ BOOTLIBS     := -lCore -lCint -lMathCore
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
+ifeq ($(BUILDCLING),yes)
+BOOTLIBS     += -lCling
+endif
 ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix -lNet -lThread $(BOOTLIBS)
 RINTLIBS     := -lRint
@@ -325,6 +327,9 @@ BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libMathcore.lib
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
+endif
+ifeq ($(BUILDCLING),yes)
+BOOTLIBS     += $(LPATH)/libCling.lib
 endif
 ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
@@ -499,9 +504,9 @@ STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
-                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO) $(CLINGO)
+                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
-                $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO) $(CLINGDO)
+                $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -525,6 +530,9 @@ ifeq ($(EXPLICITLINK),yes)
 MAINLIBS     := $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 MAINLIBS     += $(CINTEXLIB) $(REFLEXLIB)
+endif
+ifeq ($(BUILDCLING),yes)
+MAINLIBS     += $(CLINGLIB)
 endif
 else
 MAINLIBS      =
@@ -765,15 +773,15 @@ endif
 	   touch $@; \
 	fi)
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
+$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CLINGDEP) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
+	   "$(CORELIBEXTRA) $(CLINGLIB) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 else
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(CORELDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
+	   "$(CORELIBEXTRA) $(CLINGLIB) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 endif
 
 $(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)

@@ -1402,6 +1402,7 @@ enable/disable options, prefix with either --enable- or --disable-
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
+  cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
@@ -1506,6 +1507,7 @@ with options, prefix with --with-, enables corresponding support
   krb5-libdir        Kerberos5 support, location of libkrb5
   ldap-incdir        LDAP support, location of ldap.h
   ldap-libdir        LDAP support, location of libldap
+  llvm-config        LLVM/clang for cling, location of llvm-config script
   monalisa-incdir    Monalisa support, location of ApMon.h
   monalisa-libdir    Monalisa support, location of libapmoncpp
   mysql-incdir       MySQL support, location of mysql.h
@@ -1811,6 +1813,7 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
+      --with-llvm-config=*)    llvmconfig=$optarg    ;; # require explicit --enable-cling
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
@@ -5694,21 +5697,34 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 #
 ### echo %%% Cling - LLVM/clang based interpreter prototype
 #
-message "Checking whether to build cling"
+message "Checking whether to integrate experimental cling"
+hascling="undef"
+clingextrares=""
 if test ! "x$enable_cling" = "xno"; then
-    if test -d cint/cling; then
-        enable_cling="yes"
-        hascling="define"
-        result "yes"
-    else
-        enable_cling="no"
-        hascling="undef"
+    # allow LLVMDIR instead of --with--llvmconfig
+    if test "x$llvmconfig" = "x" ; then
+        if test ! "x$LLVMDIR" = "x" ; then
+            llvmconfig="$LLVMDIR/bin"
+        else
+            clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
+        fi
         result "no"
     fi
-else
+    if test ! "x$llvmconfig" = "x"; then
+        if test -d "$llvmconfig"; then
+            llvmconfig=$llvmconfig/llvm-config
+        fi
+        if test -f $llvmconfig && test -x $llvmconfig; then
+            hascling="define"
+        fi
+    fi
+fi
+if test "x$hascling" = "xundef"; then
     enable_cling="no"
-    hascling="undef"
-    result "no"
+    result "no $clingextrares"
+else
+    enable_cling="yes"
+    result "yes"
 fi
 
 ######################################################################
@@ -6505,6 +6521,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
     -e "s|@ldflags@||"                          \
     -e "s|@libdir@|$libdir|"                    \
+    -e "s|@llvmconfig@|$llvmconfig|"            \
     -e "s|@macrodir@|$macrodir|"                \
     -e "s|@mandir@|$mandir|"                    \
     -e "s|@mkliboption@|$mkliboption|"          \

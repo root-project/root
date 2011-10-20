@@ -319,6 +319,7 @@ GSLLIBS        := @gsllibs@
 GSLVERSION     := @gslversion@
 
 BUILDCLING     := @buildcling@
+LLVMCONFIG     := @llvmconfig@
 
 BUILDCINTEX    := @buildcintex@
 

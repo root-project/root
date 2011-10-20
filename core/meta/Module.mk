@@ -18,28 +18,25 @@ METADS       := $(call stripsrc,$(MODDIRS)/G__Meta.cxx)
 METADO       := $(METADS:.cxx=.o)
 METADH       := $(METADS:.cxx=.h)
 
-ifneq ($(BUILDCLING),yes)
-METACL       := $(MODDIRI)/LinkDef_TCint.h
-METACDS      := $(call stripsrc,$(MODDIRS)/G__TCint.cxx)
-else
-METACL       :=
-METACDS      :=
-endif
-METACH       := $(MODDIRI)/TCint.h
-METACDO      := $(METACDS:.cxx=.o)
-METACDH      := $(METACDS:.cxx=.h)
-
-METAH        := $(filter-out $(MODDIRI)/TCintWithCling.h,$(filter-out $(MODDIRI)/TCint.h,$(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))))
-METAS        := $(filter-out $(MODDIRS)/TCintWithCling.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+METAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(BUILDCLING),yes)
-METAS        := $(filter-out $(MODDIRS)/TCint.cxx,$(METAS))
+METADCLINGCXXFLAGS:= -DR__WITH_CLING
+METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
+ifneq ($(CXX:g++=),$(CXX))
+METACLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
+endif
+else
+METAI        := $(filter-out $(MODDIRI)/TCintWithCling.h,$(METAI))
+METAS        := $(filter-out $(MODDIRS)/TCintWithCling.cxx,$(METAS))
+METADCXXCLING:=
 endif
 METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
-METADEP      := $(METAO:.o=.d) $(METADO:.o=.d) $(METACDO:.o=.d)
+METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH) $(METACH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
 
 # include all dependency files
 INCLUDEFILES += $(METADEP)
@@ -53,24 +50,20 @@ include/%.h:    $(METADIRI)/%.h
 $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
+		$(ROOTCINTTMP) -f $@ -c -DG__API $(METADCLINGCXXFLAGS) $(METAH) $(METAL)
 
-$(METACDS):     $(METACH) $(METACL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -DG__API $(METACH) $(METACL)
-
-all-$(MODNAME): $(METAO) $(METADO) $(METACDO)
+all-$(MODNAME): $(METAO) $(METADO)
 
 clean-$(MODNAME):
-		@rm -f $(METAO) $(METADO) $(METACDO)
+		@rm -f $(METAO) $(METADO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(METADEP) $(METADS) $(METADH) $(METACDS) $(METACDH)
+		@rm -f $(METADEP) $(METADS) $(METADH)
 
 distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(METADO): NOOPT = $(OPT)
+$(call stripsrc,$(MODDIRS)/TCintWithCling.o): CXXFLAGS += $(METADCLINGCXXFLAGS)
