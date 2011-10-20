@@ -323,7 +323,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   if (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR) {
+   if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
       TEnv plugins(".plugins-ios");
       fPluginManager->LoadHandlersFromEnv(&plugins);
    }
