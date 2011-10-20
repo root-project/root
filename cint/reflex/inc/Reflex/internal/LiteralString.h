@@ -32,7 +32,7 @@ namespace Reflex {
       LiteralString& operator=(const LiteralString& other);
 
       const char* c_str() const { return fLiteral; }
-      const char** key() const { return (const char**) &fLiteral; }
+      const char** key() const { return const_cast<const char**>(&fLiteral); }
       size_t length() const { return strlen(fLiteral); }
       void erase(size_t i);
 
