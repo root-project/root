@@ -105,9 +105,13 @@ options="                    \
    enable_xrootd             \
 "
 
+ENABLEALL="no"
 DEFAULTENABLE="yes"
 for flag in "$@"; do
     case $flag in
+    --all)
+       ENABLEALL="yes"
+       break ;;
     --gminimal)
        DEFAULTENABLE="no"
        MINIMALENABLE="enable_x11"
@@ -159,6 +163,17 @@ enable_builtin_pcre=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
 enable_afdsmgrd=no
+
+if test "x$ENABLEALL" = "xyes"; then
+    enable_gdml=yes
+    enable_qt=yes
+    enable_qtgsi=yes
+    enable_roofit=yes
+    enable_minuit2=yes
+    enable_ruby=yes
+    enable_table=yes
+    enable_unuran=yes
+fi
 
 # Remove old log file
 rm -f $logfile
@@ -1458,6 +1473,10 @@ minimal set of libraries, can be combined with above --enable-... options
   --minimal          Do not automatically search for support libraries
   --gminimal         Do not automatically search for support libraries, but include X11
 
+maximal set of libraries, enables all optional packages
+
+  --all              Do try to enable all optional support libraries
+
 with options, prefix with --with-, enables corresponding support
 
   afs                AFS support, location of AFS distribution
@@ -1756,6 +1775,7 @@ if test $# -gt 0 ; then
       --no-create)             noact="yes"           ;;
       --nohowto)               nohowto="yes"         ;;
       --fail-on-missing)       fail_on_missing="yes" ;;
+      --all)                   ;;
       --minimal)               ;;
       --gminimal)              ;;
       --host)                  savearch=$arch
@@ -5695,40 +5715,6 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 
 ######################################################################
 #
-### echo %%% Cling - LLVM/clang based interpreter prototype
-#
-message "Checking whether to integrate experimental cling"
-hascling="undef"
-clingextrares=""
-if test ! "x$enable_cling" = "xno"; then
-    # allow LLVMDIR instead of --with--llvmconfig
-    if test "x$llvmconfig" = "x" ; then
-        if test ! "x$LLVMDIR" = "x" ; then
-            llvmconfig="$LLVMDIR/bin"
-        else
-            clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
-        fi
-        result "no"
-    fi
-    if test ! "x$llvmconfig" = "x"; then
-        if test -d "$llvmconfig"; then
-            llvmconfig=$llvmconfig/llvm-config
-        fi
-        if test -f $llvmconfig && test -x $llvmconfig; then
-            hascling="define"
-        fi
-    fi
-fi
-if test "x$hascling" = "xundef"; then
-    enable_cling="no"
-    result "no $clingextrares"
-else
-    enable_cling="yes"
-    result "yes"
-fi
-
-######################################################################
-#
 ### echo %%% Cintex Library - Contributed library
 #
 message "Checking whether to build libCintex"
@@ -5977,13 +5963,47 @@ result "$enable_afdsmgrd$afdsmgrdapmonmsg"
 
 ######################################################################
 #
+### echo %%% Cling - LLVM/clang based interpreter prototype
+#
+message "Checking whether to integrate experimental cling"
+hascling="undef"
+clingextrares=""
+if test ! "x$enable_cling" = "xno"; then
+    # allow LLVMDIR instead of --with--llvmconfig
+    if test "x$llvmconfig" = "x" ; then
+        if test ! "x$LLVMDIR" = "x" ; then
+            llvmconfig="$LLVMDIR/bin"
+        else
+            clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
+        fi
+        result "no"
+    fi
+    if test ! "x$llvmconfig" = "x"; then
+        if test -d "$llvmconfig"; then
+            llvmconfig=$llvmconfig/llvm-config
+        fi
+        if test -f $llvmconfig && test -x $llvmconfig; then
+            hascling="define"
+        fi
+    fi
+fi
+if test "x$hascling" = "xundef"; then
+    enable_cling="no"
+    result "no $clingextrares"
+else
+    enable_cling="yes"
+    result "yes"
+fi
+
+######################################################################
+#
 ### echo %%% What dictionaries to build
 #
 # Can be either CINT (default), reflex, or gccxml.
 # Option will be passed to rootcint(_tmp),
 # and root-config --libs will have -lReflex if needed.
 #
-
+message "Checking what type of dictionaries to build"
 # --with-dicttype overrides env var ROOTDICTTYPE
 if test "x$dicttype" = "x" ; then
     dicttype="$ROOTDICTTYPE"
@@ -6011,10 +6031,7 @@ case "$dicttype" in
 esac
 
 # Print info if dicttype!=cint, or --with-dict overrides $ROOTDICTTYPE
-if test ! "x$dicttype" = "xcint" \
-     -o ! "x$dicttype" = "x$ROOTDICTTYPE"; then
-    result "Generating $dicttype dictionaries."
-fi
+result "$dicttype"
 
 ######################################################################
 #
