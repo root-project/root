@@ -1,0 +1,135 @@
+// @(#)root/mathcore:$Id: IFunction.h 24537 2008-06-25 11:01:23Z moneta $
+// Authors: C. Gumpert    09/2011
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2011 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+//
+// Implementation of template functions for TDataPoint class 
+// 
+
+
+#ifndef ROOT_TDataPoint_ICC
+#define ROOT_TDataPoint_ICC
+
+namespace ROOT
+{
+namespace Math
+{
+
+
+//______________________________________________________________________________
+// Begin_Html
+// <center><h2>TDataPoint - class representing a data point</h2></center>
+//
+// This class can be used for describing data points in a high-dimensional space.
+// The (positive) dimension is specified by the first template parameter. The second
+// template paramter can be used to tweak the precision of the stored coordinates. By
+// default all coordinates are stored with 4 byte float precision. In addition to the
+// coordinates a weight can be assigned to each data point allowing the representation
+// of fields in high dimensions.
+// Basic functionality for accessing/modifying the coordinates/weight are provided
+// as well as a comparison method and the basic euclidian metric.
+// End_Html
+
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+TDataPoint<K,_val_type>::TDataPoint():
+   m_fWeight(1)
+{
+   //standard constructor
+   //
+   //sets the weight to 1 and initialises all coordinates with 0
+   
+   // at least one dimension
+   assert(kDimension > 0);
+   
+   for(UInt_t k = 0; k < K; ++k)
+      m_vCoordinates[k] = 0;
+}
+
+#ifndef __MAKECINT__    
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+template<typename _coord_type>
+TDataPoint<K,_val_type>::TDataPoint(const _coord_type* pData,_val_type fWeight):
+  m_fWeight(fWeight)
+{
+   //constructor initialising the data point from an array
+   //
+   //Input: pData   - arrray with kDimension coordinates
+   //       fWeight - weight (default = 1)
+  
+   // at least one dimension
+   assert(kDimension > 0);
+   // fill coordinates
+   for(unsigned int i = 0; i < kDimension; ++i)
+      m_vCoordinates[i] = pData[i];
+}
+    
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+template<typename _val>
+_val_type TDataPoint<K,_val_type>::Distance(const TDataPoint<K,_val>& rPoint) const
+{
+   //euclidian distance
+   //
+   //returns the euclidian distance to the given data point
+   //
+   //Input: rPoint - data point of same dimensionality
+  
+   _val_type fDist2 = 0;
+   for(unsigned int i = 0; i < kDimension; ++i)
+      fDist2 += pow(GetCoordinate(i) - rPoint.GetCoordinate(i),2);
+
+   return sqrt(fDist2);
+}
+#endif
+
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+inline _val_type TDataPoint<K,_val_type>::GetCoordinate(unsigned int iAxis) const
+{
+   //returns the coordinate at the given axis
+   //
+   //Input: iAxis - axis in the range of [0...kDimension-1]
+  
+   assert(iAxis < kDimension);
+   return m_vCoordinates[iAxis];
+}
+
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+inline void TDataPoint<K,_val_type>::SetCoordinate(unsigned int iAxis,_val_type fValue)
+{
+   //sets the coordinate along one axis
+   //
+   //Input: iAxis  - axis in the range of [0...kDimension-1]
+   //       fValue - new coordinate
+  
+   assert(iAxis < kDimension);
+   m_vCoordinates[iAxis] = fValue;
+}
+
+//______________________________________________________________________________
+template<unsigned int K,typename _val_type>
+inline Bool_t TDataPoint<K,_val_type>::Less(TDataPoint<K,_val_type>& rPoint,unsigned int iAxis) const
+{
+   //compares two points at a given axis
+   //
+   // returns: this_point.at(iAxis) < rPoint.at(iAxis)
+   //
+   //Input: rPoint - second point to compare to (of same dimensionality)
+   //       iAxis  - axis in the range of [0...kDimension-1]
+  
+   assert(iAxis < kDimension);
+   return (m_vCoordinates[iAxis] < rPoint.GetCoordinate(iAxis));
+}
+
+}//namespace Math
+}//namespace ROOT
+
+
+#endif //ROOT_TDataPoint_ICC

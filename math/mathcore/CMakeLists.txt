@@ -14,6 +14,7 @@ set(MATHCORE_HEADERS TRandom.h
   Math/GaussLegendreIntegrator.h Math/RootFinder.h Math/IRootFinderMethod.h Math/RichardsonDerivator.h 
   Math/BrentMethods.h Math/BrentMinimizer1D.h Math/BrentRootFinder.h Math/DistSampler.h 
   Math/DistSamplerOptions.h Math/GoFTest.h Math/SpecFuncMathCore.h Math/DistFuncMathCore.h
+  Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h
 )
 
 

@@ -1,0 +1,102 @@
+// @(#)root/mathcore:$Id: IFunction.h 24537 2008-06-25 11:01:23Z moneta $
+// Authors: C. Gumpert    09/2011
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2011 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+//
+// impelmentation of template functions for TDataPointN class 
+// 
+
+#ifndef TDataPointN_ICC
+#define TDataPointN_ICC
+
+namespace ROOT
+{
+namespace Math
+{
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// template<unsigned int _k,typename val_type> class TDataPointN
+//
+//////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+template<typename _val_type>
+TDataPointN<_val_type>::TDataPointN():
+   m_vCoordinates(0),
+   m_fWeight(1)
+{
+   m_vCoordinates = new _val_type[kDimension];
+   for(UInt_t k = 0; k < kDimension; ++k)
+      m_vCoordinates[k] = 0;
+}
+
+//______________________________________________________________________________
+#ifndef __MAKECINT__
+template<typename _val_type>
+template<typename _coord_type>
+TDataPointN<_val_type>::TDataPointN(const _coord_type* pData,_val_type fWeight):
+   m_vCoordinates(0),
+   m_fWeight(fWeight)
+{
+   // fill coordinates
+   m_vCoordinates = new _val_type[kDimension];
+   for(unsigned int i = 0; i < kDimension; ++i)
+      m_vCoordinates[i] = pData[i];
+}
+#endif
+
+//______________________________________________________________________________
+template<typename _val_type>
+TDataPointN<_val_type>::~TDataPointN()
+{
+   delete [] m_vCoordinates;
+}
+
+//______________________________________________________________________________
+#ifndef __MAKECINT__
+template<typename _val_type>
+template<typename _val>
+_val_type TDataPointN<_val_type>::Distance(const TDataPointN<_val>& rPoint) const
+{
+   _val_type fDist2 = 0;
+   for(unsigned int i = 0; i < kDimension; ++i)
+      fDist2 += pow(GetCoordinate(i) - rPoint.GetCoordinate(i),2);
+   
+   return sqrt(fDist2);
+}
+#endif
+
+//______________________________________________________________________________
+template<typename _val_type>
+inline _val_type TDataPointN<_val_type>::GetCoordinate(unsigned int iAxis) const
+{
+   assert(iAxis < kDimension);
+   return m_vCoordinates[iAxis];
+}
+
+//______________________________________________________________________________
+template<typename _val_type>
+inline void TDataPointN<_val_type>::SetCoordinate(unsigned int iAxis,_val_type fValue)
+{
+   assert(iAxis < kDimension);
+   m_vCoordinates[iAxis] = fValue;
+}
+
+//______________________________________________________________________________
+template<typename _val_type>
+inline bool TDataPointN<_val_type>::Less(TDataPointN<_val_type>& rPoint,unsigned int iAxis) const
+{
+   assert(iAxis < kDimension);
+   return (m_vCoordinates[iAxis] < rPoint.GetCoordinate(iAxis));
+}
+
+}//namespace Math
+}//namespace ROOT
+
+#endif //TDataPointN_ICC

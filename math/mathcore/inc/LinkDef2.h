@@ -128,6 +128,15 @@
 #pragma link C++ class ROOT::Math::GoFTest+;
 #pragma link C++ class vector<vector<double> >+;
 
+#pragma link C++ class ROOT::Math::TDataPoint<1,Float_t>+;
+#pragma link C++ typedef ROOT::Math::TDataPoint1F;
+#pragma link C++ class ROOT::Math::TDataPoint<1,Double_t>+;
+#pragma link C++ typedef ROOT::Math::TDataPoint1F;
+#pragma link C++ typedef ROOT::Math::TDataPoint1D;
+#pragma link C++ class  ROOT::Math::TDataPointN<Double_t>+;
+#pragma link C++ class  ROOT::Math::TDataPointN<Float_t>+;
+#pragma link C++ class ROOT::Math::KDTree<ROOT::Math::TDataPoint1F>+;
+
 #include "LinkDef_Func.h"
 
 #endif

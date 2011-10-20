@@ -38,6 +38,9 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TVirtualFitter.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/TKDTreeBinning.h \
+                $(MODDIRI)/Math/KDTree.h \
+                $(MODDIRI)/Math/TDataPoint.h \
+                $(MODDIRI)/Math/TDataPointN.h \
                 $(MODDIRI)/Math/IParamFunction.h \
                 $(MODDIRI)/Math/IFunction.h \
                 $(MODDIRI)/Math/ParamFunctor.h \
@@ -71,8 +74,9 @@ MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(MATHCOREDH3))
 
 MATHCOREH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MATHCOREH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
-MATHCOREH3   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
-MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3)
+MATHCOREH3   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.icc))
+MATHCOREH4   := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(wildcard $(MODDIRI)/Fit/*.h))
+MATHCOREH    := $(MATHCOREH1) $(MATHCOREH2) $(MATHCOREH3) $(MATHCOREH4)
 
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCOREO    := $(call stripsrc,$(MATHCORES:.cxx=.o))
@@ -84,6 +88,7 @@ MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHCOREH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.icc,include/%.icc,$(MATHCOREH))
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
 
@@ -96,6 +101,12 @@ INCLUDEFILES += $(MATHCOREDEP)
                 test-$(MODNAME)
 
 include/Math/%.h: $(MATHCOREDIRI)/Math/%.h
+		@(if [ ! -d "include/Math" ]; then    \
+		   mkdir -p include/Math;             \
+		fi)
+		cp $< $@
+
+include/Math/%.icc: $(MATHCOREDIRI)/Math/%.icc
 		@(if [ ! -d "include/Math" ]; then    \
 		   mkdir -p include/Math;             \
 		fi)
