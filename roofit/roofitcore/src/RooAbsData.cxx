@@ -40,6 +40,8 @@
 #include "RooMultiCategory.h"
 #include "Roo1DTable.h"
 #include "RooAbsDataStore.h"
+#include "RooVectorDataStore.h"
+#include "RooTreeDataStore.h"
 
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
@@ -58,6 +60,8 @@ ClassImp(RooAbsData)
 ;
 
 static std::map<RooAbsData*,int> _dcc ;
+
+RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Tree ;
 
 
 //_____________________________________________________________________________
@@ -155,8 +159,8 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
 
+  // Convert to vector store if default is vector
   _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
-  
 }
 
 
@@ -165,13 +169,10 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 RooAbsData::~RooAbsData() 
 {
   // Destructor
-  //cout << "deleting dataset " << this << endl ;
 
   if (releaseVars(this)) {
     // will cause content to be deleted subsequently in dtor
-    //cout << "RooAbsData(" << this << ") deleting variables" << endl ;
   } else {
-    //cout << "RooAbsData(" << this << ") NOT deleting variables" << endl ;
     _vars.releaseOwnership() ; 
   }
   
@@ -186,6 +187,21 @@ RooAbsData::~RooAbsData()
   }
 
 }
+
+
+
+//_____________________________________________________________________________
+void RooAbsData::convertToVectorStore() 
+{
+  // Convert tree-based storage to vector-based storage
+  
+  if (dynamic_cast<RooTreeDataStore*>(_dstore)) {
+    RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
+    delete _dstore ;
+    _dstore = newStore ;
+  }
+}
+
 
 
 

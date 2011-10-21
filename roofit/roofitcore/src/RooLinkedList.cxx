@@ -450,9 +450,17 @@ void RooLinkedList::Print(const char* opt) const
 }
 
 
+//_____________________________________________________________________________
 RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const 
 {
   return RooLinkedListIter(this,dir) ;
+}
+
+
+//_____________________________________________________________________________
+RooMinimalLinkedListIter RooLinkedList::minimalIterator() const 
+{ 
+  return RooMinimalLinkedListIter(this) ; 
 }
 
 

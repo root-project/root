@@ -80,6 +80,7 @@ public:
 
   // General & bookkeeping methods
   virtual Bool_t valid() const ;
+  virtual Double_t sumEntries() const ;
   virtual Int_t numEntries() const ;
   virtual void reset() ;
   
@@ -116,6 +117,8 @@ public:
   const RooArgSet& row() { return _varsww ; }
 
  protected:
+
+  friend class RooVectorDataStore ;
 
   RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName=0) ;
   RooRealVar* weightVar(const RooArgSet& allVars, const char* wgtName=0) ;

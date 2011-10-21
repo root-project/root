@@ -19,6 +19,7 @@
 #include "RooAbsArg.h"
 
 class RooArgSet ;
+class RooVectorDataStore ;
 class TH1F ;
 
 class RooAbsString : public RooAbsArg {
@@ -59,6 +60,7 @@ protected:
   virtual void syncCache(const RooArgSet* nset=0) ;
   void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void attachToVStore(RooVectorDataStore&) {}
   virtual void fillTreeBranch(TTree& t) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   Int_t _len ; // Length of _value

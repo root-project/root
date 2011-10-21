@@ -29,6 +29,7 @@
 
 class RooArgSet ;
 class RooErrorVar ;
+class RooVectorDataStore ;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -92,7 +93,10 @@ public:
   inline virtual Bool_t isFundamental() const { return kTRUE; }
 
   // Force to be a leaf-node of any expression tree, even if we have (shape) servers
-  // virtual Bool_t isDerived() const { return kFALSE ; }
+  virtual Bool_t isDerived() const { 
+    // Does value or shape of this arg depend on any other arg?
+    return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
+  }
 
   // Printing interface (human readable)
   virtual void printValue(ostream& os) const ;
@@ -123,6 +127,7 @@ public:
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
   virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void attachToVStore(RooVectorDataStore& vstore) ;
   virtual void fillTreeBranch(TTree& t) ;
 
   Double_t chopAt(Double_t what, Int_t where) const ;

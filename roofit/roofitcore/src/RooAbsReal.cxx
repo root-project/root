@@ -73,6 +73,7 @@
 #include "RooFitResult.h"
 #include "RooMoment.h"
 #include "RooBrentRootFinder.h"
+#include "RooVectorDataStore.h"
 
 #include "Riostream.h"
 
@@ -216,6 +217,9 @@ Double_t RooAbsReal::getVal(const RooArgSet* nset) const
   // cached value, otherwise recalculate on the fly and refill
   // the cache
 
+  // fast-track clean-cache processing
+  if (_operMode==AClean && !_flipAClean) return _value ;
+
   if (nset && nset!=_lastNSet) {
     ((RooAbsReal*) this)->setProxyNormSet(nset) ;    
     _lastNSet = (RooArgSet*) nset ;
@@ -227,22 +231,8 @@ Double_t RooAbsReal::getVal(const RooArgSet* nset) const
 
     clearValueDirty() ; 
     clearShapeDirty() ; 
+  } 
 
-  } else if (_cacheCheck) {
-    
-    // Check if cache contains value that evaluate() gives now
-    Double_t checkValue = traceEval(nset);
-
-    if (checkValue != _value) {
-      // If not, print warning
-      coutW(Eval) << "RooAbsReal::getVal(" << GetName() << ") WARNING: cache contains " << _value 
-		  << " but evaluate() returns " << checkValue << endl ;
-
-      // And update cache (so that we see the difference)
-      _value = checkValue ;
-    }                                                                                                
-    
-  }
 
   return _value ;
 }
@@ -2871,6 +2861,17 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
   }
   setValueDirty() ;
 }
+
+
+
+//_____________________________________________________________________________
+void RooAbsReal::attachToVStore(RooVectorDataStore& vstore) 
+{
+  RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
+  rv->setBuffer(&_value) ;
+//   cout << "RooAbsReal::attachToVStore(" << this << "," << GetName() << ") rv = " << rv << " new buffer = " << &_value << endl ;
+}
+
 
 
 

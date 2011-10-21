@@ -55,6 +55,8 @@
 #include "RooExpensiveObjectCache.h"
 #include "RooAbsDataStore.h"
 #include "RooResolutionModel.h"
+#include "RooVectorDataStore.h"
+#include "RooTreeDataStore.h"
 
 #include <string.h>
 #include <iomanip>
@@ -841,9 +843,10 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 
   _valueDirty = kTRUE ;
 
-  _clientValueIter->Reset() ;
+
+  RMLLI clientValueIter = _clientListValue.minimalIterator() ;
   RooAbsArg* client ;
-  while ((client=(RooAbsArg*)_clientValueIter->Next())) {
+  while ((client=(RooAbsArg*)clientValueIter.NextNV())) {
     client->setValueDirty(source) ;
   }
 
@@ -2220,6 +2223,18 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 
   // Return the head
   return head ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsArg::attachToStore(RooAbsDataStore& store) 
+{
+  if (dynamic_cast<RooTreeDataStore*>(&store)) {
+    attachToTree(((RooTreeDataStore&)store).tree()) ;
+  } else if (dynamic_cast<RooVectorDataStore*>(&store)) {
+    attachToVStore((RooVectorDataStore&)store) ;
+  }
 }
 
 

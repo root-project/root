@@ -198,7 +198,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   }
 
 
-
   // Copy any non-shared parameterized range definitions from pdf observables to dataset observables
   iter9 = realDepSet->createIterator() ;
   while((realDep=(RooAbsRealLValue*)iter9->Next())) {

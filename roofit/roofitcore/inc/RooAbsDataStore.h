@@ -69,6 +69,7 @@ public:
   // General & bookkeeping methods
   virtual Bool_t valid() const = 0 ;
   virtual Int_t numEntries() const = 0 ;
+  virtual Double_t sumEntries() const { return 0 ; } ;
   virtual void reset() = 0 ;
 
 
@@ -103,6 +104,8 @@ public:
   Bool_t hasFilledCache() const { return _cachedVars.getSize()>0 ; }
 
   virtual const TTree* tree() const { return 0 ; }
+
+  virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) = 0 ;
 
  protected:
 

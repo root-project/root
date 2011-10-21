@@ -451,9 +451,11 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
     name.Append("_") ;
     name.Append(pdf->GetName()) ;
     name.Append("_SupNorm") ;
+    cache->_needSupNorm = kFALSE ;
     if (supNSet.getSize()>0) {
       snorm = new RooRealIntegral(name,"Supplemental normalization integral",RooRealConstant::value(1.0),supNSet) ;
       cxcoutD(Caching) << "RooAddPdf " << GetName() << " making supplemental normalization set " << supNSet << " for pdf component " << pdf->GetName() << endl ;
+      cache->_needSupNorm = kTRUE ;
     } else {
       snorm = new RooRealVar(name,"Unit Supplemental normalization integral",1.0) ;
     }
@@ -658,14 +660,19 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
     
     // coef[i] = expectedEvents[i] / SUM(expectedEvents)
     Double_t coefSum(0) ;
-    for (i=0 ; i<_pdfList.getSize() ; i++) {
-      _coefCache[i] = ((RooAbsPdf*)_pdfList.at(i))->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
+    RMLLI it=_pdfList.minimalIterator() ; i=0 ;
+    RooAbsPdf* pdf ;
+    while((pdf=(RooAbsPdf*)it.NextNV())) {      
+      _coefCache[i] = pdf->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
       coefSum += _coefCache[i] ;
+      i++ ;
     }
+
     if (coefSum==0.) {
       coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: total number of expected events is 0" << endl ;
     } else {
-      for (i=0 ; i<_pdfList.getSize() ; i++) {
+      Int_t siz = _pdfList.getSize() ;
+      for (i=0 ; i<siz ; i++) {
 	_coefCache[i] /= coefSum ;
       }			            
     }
@@ -675,14 +682,18 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       
       // coef[i] = coef[i] / SUM(coef)
       Double_t coefSum(0) ;
-      for (i=0 ; i<_coefList.getSize() ; i++) {
-	_coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
+      RMLLI it=_coefList.minimalIterator() ; i=0 ;      
+      RooAbsReal* coef ;
+      while((coef=(RooAbsReal*)it.NextNV())) {
+	_coefCache[i] = coef->getVal(nset) ;
 	coefSum += _coefCache[i] ;
+	i++ ;
       }		
       if (coefSum==0.) {
 	coutW(Eval) << "RooAddPdf::updateCoefCache(" << GetName() << ") WARNING: sum of coefficients is zero 0" << endl ;
       } else {	
-	for (i=0 ; i<_coefList.getSize() ; i++) {
+	Int_t siz = _coefList.getSize() ;
+	for (i=0 ; i<siz ; i++) {
 	  _coefCache[i] /= coefSum ;
 	}			
       }
@@ -690,10 +701,13 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       
       // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
       Double_t lastCoef(1) ;
-      for (i=0 ; i<_coefList.getSize() ; i++) {
-	_coefCache[i] = ((RooAbsPdf*)_coefList.at(i))->getVal(nset) ;
+      RMLLI it=_coefList.minimalIterator() ; i=0 ;      
+      RooAbsReal* coef ;
+      while((coef=(RooAbsReal*)it.NextNV())) {
+	_coefCache[i] = coef->getVal(nset) ;
  	cxcoutD(Caching) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
 	lastCoef -= _coefCache[i] ;
+	i++ ;
       }			
       _coefCache[_coefList.getSize()] = lastCoef ;
       cxcoutD(Caching) << "SYNC: orig coef[" << _coefList.getSize() << "] = " << _coefCache[_coefList.getSize()] << endl ;
@@ -788,26 +802,27 @@ Double_t RooAddPdf::evaluate() const
   updateCoefficients(*cache,nset) ;
   
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
+  //_pdfIter->Reset() ;
+  //_coefIter->Reset() ;
   RooAbsPdf* pdf ;
 
   Double_t snormVal ;
   Double_t value(0) ;
   Int_t i(0) ;
-  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
+  RMLLI pi = _pdfList.minimalIterator() ;
+  while((pdf = (RooAbsPdf*)pi.NextNV())) {
     if (_coefCache[i]!=0.) {
-      snormVal = nset ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
+      snormVal = (cache->_needSupNorm) ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
       // Double_t pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
-// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
+	// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
       }
     }
     i++ ;
   }
-
+  
   return value ;
 }
 

@@ -47,6 +47,7 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "RooTreeDataStore.h"
+#include "RooVectorDataStore.h"
 #include "RooCompositeDataStore.h"
 #include "RooTreeData.h"
 #include "RooSentinel.h"
@@ -352,8 +353,18 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     }
 
     // Create empty datastore 
-    RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
-    _dstore = tstore ;
+    RooTreeDataStore* tstore(0) ;
+    RooVectorDataStore* vstore(0) ;
+
+    if (defaultStorageType==Tree) {
+      tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
+      _dstore = tstore ;
+    } else if (defaultStorageType==Vector) {
+      vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
+      _dstore = vstore ;
+    } else {
+      _dstore = 0 ;
+    }
     
     
     // Make import mapping if index category is specified
@@ -377,7 +388,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       TIterator* iter = intErrorSet->createIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter->Next())) {
-	arg->attachToTree(tstore->tree()) ;
+	arg->attachToStore(*_dstore) ;
       }
       delete iter ;
       delete intErrorSet ;
@@ -388,8 +399,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       TIterator* iter = intAsymErrorSet->createIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter->Next())) {
-	arg->attachToTree(tstore->tree()) ;
-      }
+	arg->attachToStore(*_dstore) ;
+    }
       delete iter ;
       delete intAsymErrorSet ;
     }
@@ -444,19 +455,25 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  icat->setLabel(hiter->first.c_str()) ;
 	  
 	  RooFormulaVar cutVarTmp(cutSpec,cutSpec,hiter->second->_vars) ;
-	  tstore->loadValues(hiter->second->store(),&cutVarTmp,cutRange) ;
+	  _dstore->loadValues(hiter->second->store(),&cutVarTmp,cutRange) ;
 	}
 	
       } else if (impData) {
 
 	// Case 3a --- Import RooDataSet with cutspec
 	RooFormulaVar cutVarTmp(cutSpec,cutSpec,impData->_vars) ;
-	tstore->loadValues(impData->store(),&cutVarTmp,cutRange);
+	_dstore->loadValues(impData->store(),&cutVarTmp,cutRange);
       } else if (impTree) {
 
 	// Case 4a --- Import TTree from memory with cutspec
 	RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
-	tstore->loadValues(impTree,&cutVarTmp,cutRange);      
+	if (tstore) {
+	  tstore->loadValues(impTree,&cutVarTmp,cutRange);      
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,&cutVarTmp,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
       } else if (fname && strlen(fname)) {
 
 	// Case 5a --- Import TTree from file with cutspec
@@ -471,7 +488,13 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
 	}
 	RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
-	tstore->loadValues(t,&cutVarTmp,cutRange);      	
+	if (tstore) {
+	  tstore->loadValues(t,&cutVarTmp,cutRange);      	
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,&cutVarTmp,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
 	f->Close() ;
 
       }
@@ -494,17 +517,23 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	    icat->defineType(hiter->first.c_str()) ;
 	  }
 	  icat->setLabel(hiter->first.c_str()) ;
-	  tstore->loadValues(hiter->second->store(),cutVar,cutRange) ;
+	  _dstore->loadValues(hiter->second->store(),cutVar,cutRange) ;
 	}
 	
 	
       } else if (impData) {
 	// Case 3b --- Import RooDataSet with cutvar
-	tstore->loadValues(impData->store(),cutVar,cutRange);
+	_dstore->loadValues(impData->store(),cutVar,cutRange);
       } else if (impTree) {
 	// Case 4b --- Import TTree from memory with cutvar
-	tstore->loadValues(impTree,cutVar,cutRange);
-      } else if (fname && strlen(fname)) {
+	if (tstore) {
+	  tstore->loadValues(impTree,cutVar,cutRange);
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,cutVar,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
+	} else if (fname && strlen(fname)) {
 	// Case 5b --- Import TTree from file with cutvar
 	TFile *f = TFile::Open(fname) ;
 	if (!f) {
@@ -516,7 +545,14 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
 	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
 	}
-	tstore->loadValues(t,cutVar,cutRange);      	
+	if (tstore) {
+	  tstore->loadValues(t,cutVar,cutRange);      	
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,cutVar,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
+
 	f->Close() ;
       }
       
@@ -537,16 +573,22 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  }
 	  icat->setLabel(hiter->first.c_str()) ;
 	  // Case 2c --- Import multiple RooDataSets as slices
-	  tstore->loadValues(hiter->second->store(),0,cutRange) ;
+	  _dstore->loadValues(hiter->second->store(),0,cutRange) ;
 	}
 	
 	
       } else if (impData) {
 	// Case 3c --- Import RooDataSet
-	tstore->loadValues(impData->store(),0,cutRange);
+	_dstore->loadValues(impData->store(),0,cutRange);
       } else if (impTree) {
 	// Case 4c --- Import TTree from memort
-	tstore->loadValues(impTree,0,cutRange);
+	if (tstore) {
+	  tstore->loadValues(impTree,0,cutRange);
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,0,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
       } else if (fname && strlen(fname)) {
 	// Case 5c --- Import TTree from file
 	TFile *f = TFile::Open(fname) ;
@@ -559,7 +601,13 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
 	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
 	}
-	tstore->loadValues(t,0,cutRange);      	
+	if (tstore) {
+	  tstore->loadValues(t,0,cutRange);      	
+	} else {
+	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+	  tmpstore.loadValues(impTree,0,cutRange) ;
+	  _dstore->append(tmpstore) ;
+	}
 	f->Close() ;
       }
     }
@@ -576,7 +624,9 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
   // Constructor of an empty data set from a RooArgSet defining the dimensions
   // of the data space.
 
-  _dstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
+//   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars,wgtVarName)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars,wgtVarName)) ;
 
   appendToDir(this,kTRUE) ;
   initialize(wgtVarName) ;
@@ -740,7 +790,10 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 {
   // Protected constructor for internal use only
 
-  _dstore = new RooTreeDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName) ;
+  _dstore = (defaultStorageType==Tree) ? 
+    ((RooAbsDataStore*) new RooTreeDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) :
+    ((RooAbsDataStore*) new RooVectorDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) ;
+
   _cachedVars.add(_dstore->cachedVars()) ;
 
   appendToDir(this,kTRUE) ;
@@ -918,6 +971,29 @@ const RooArgSet* RooDataSet::get(Int_t index) const
   return ret ? &_varsNoWgt : 0 ;
 }
 
+
+//_____________________________________________________________________________
+Double_t RooDataSet::sumEntries() const 
+{
+  return store()->sumEntries() ;
+  
+  //---------
+
+  // Shortcut for unweighted unselected datasets
+  if (!isWeighted()) {
+    return numEntries() ;
+  }
+
+  // Otherwise sum the weights in the event
+  Double_t sumw(0) ;
+  Int_t i ;
+  for (i=0 ; i<numEntries() ; i++) {
+    get(i) ;
+    sumw += weight() ;
+  }  
+
+  return sumw ;  
+}
 
 
 //_____________________________________________________________________________

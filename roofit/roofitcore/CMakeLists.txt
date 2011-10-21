@@ -40,7 +40,7 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
              RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h 
              RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
              RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h
-             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h)
+             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h RooVectorDataStore.h)
 
 ROOT_GENERATE_DICTIONARY(G__RooFitCore1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore2 ${headers2} LINKDEF LinkDef2.h)

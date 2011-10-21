@@ -160,9 +160,9 @@ Double_t RooAddition::evaluate() const
 
 //   cout << "RooAddition::eval sum = " ;
 
-  _setIter->Reset() ;
+  RMLLI setIter = _set.minimalIterator() ;
   RooAbsReal* comp ;
-  while((comp=(RooAbsReal*)_setIter->Next())) {
+  while((comp=(RooAbsReal*)setIter.NextNV())) {
     Double_t tmp = comp->getVal(nset) ;
 //     cout << tmp << " " ;
     sum += tmp ;

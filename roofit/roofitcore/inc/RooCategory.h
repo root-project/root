@@ -53,6 +53,11 @@ public:
     return kTRUE; 
   }
 
+  virtual Bool_t isDerived() const { 
+    // Does value or shape of this arg depend on any other arg?
+    return kFALSE ;
+  }
+
   Bool_t defineType(const char* label) ;
   Bool_t defineType(const char* label, Int_t index) ;
   void clearTypes() { RooAbsCategory::clearTypes() ; }

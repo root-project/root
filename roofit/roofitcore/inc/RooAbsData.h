@@ -55,6 +55,9 @@ public:
   RooAbsDataStore* store() { return _dstore ; }
   const RooAbsDataStore* store() const { return _dstore ; }
   const TTree* tree() const ;
+   
+  void convertToVectorStore() ;
+ 
   
   virtual void Draw(Option_t* option = "") ;
 
@@ -80,7 +83,8 @@ public:
   virtual const RooArgSet* get(Int_t index) const ;
 
   virtual Int_t numEntries() const ;
-  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const = 0 ; // DERIVED
+  virtual Double_t sumEntries() const = 0 ;
+  virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
   virtual Bool_t isWeighted() const { 
     // Do events in dataset have weights?
     return kFALSE ; 
@@ -200,6 +204,10 @@ public:
   void addOwnedComponent(const char* idxlabel, RooAbsData& data) ;
   static void claimVars(RooAbsData*) ;
   static Bool_t releaseVars(RooAbsData*) ;
+
+  enum StorageType { Tree, Vector} ;
+  static StorageType defaultStorageType ;
+
 
 protected:
 

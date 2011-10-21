@@ -80,7 +80,8 @@ public:
   virtual const RooArgSet* get(Int_t masterIdx) const ;
   virtual const RooArgSet* get(const RooArgSet& coord) const ;
   virtual Int_t numEntries() const ; 
-  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
+  virtual Double_t sumEntries() const  ;
+  virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const ;
   virtual Bool_t isWeighted() const { 
     // Return true as all histograms have in principle events weight != 1
     return kTRUE ;     

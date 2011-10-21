@@ -20,6 +20,7 @@
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
 class RooLinkedListIter ;
+class RooMinimalLinkedListIter ;
 class TIterator ;
 
 class RooLinkedList : public TObject {
@@ -51,6 +52,8 @@ public:
   Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
   TIterator* MakeIterator(Bool_t dir=kTRUE) const ;
   RooLinkedListIter iterator(Bool_t dir=kTRUE) const ;
+  RooMinimalLinkedListIter minimalIterator() const ; 
+
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;
   TObject* find(const char* name) const ;
@@ -72,6 +75,7 @@ public:
 protected:  
 
   friend class RooLinkedListIter ;
+  friend class RooMinimalLinkedListIter ;
 
   virtual void Add(TObject* arg, Int_t refCount) ;
 

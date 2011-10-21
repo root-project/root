@@ -114,9 +114,9 @@ Double_t RooConstraintSum::evaluate() const
 
   Double_t sum(0);
   RooAbsReal* comp ;
-  _setIter1->Reset() ;
+  RMLLI setIter1 = _set1.minimalIterator() ;
 
-  while((comp=(RooAbsReal*)_setIter1->Next())) {
+  while((comp=(RooAbsReal*)setIter1.NextNV())) {
     sum -= ((RooAbsPdf*)comp)->getLogVal(&_paramSet) ;
   }
   

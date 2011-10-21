@@ -103,6 +103,7 @@ protected:
     virtual ~CacheElem() {} ;
 
     RooArgList _suppNormList ; // Supplemental normalization list
+    Bool_t    _needSupNorm ; // Does the above list contain any non-unit entries?
 
     RooArgList _projList ; // Projection integrals to be multiplied with coefficients
     RooArgList _suppProjList ; // Projection integrals to be multiplied with coefficients for supplemental normalization terms

@@ -328,8 +328,8 @@ Double_t RooProduct::calculate(const RooArgList& partIntList) const
 
   RooAbsReal *term(0);
   Double_t val=1;
-  std::auto_ptr<TIterator> i( partIntList.createIterator() );
-  while((term=(RooAbsReal*)i->Next())) {
+  RMLLI i = partIntList.minimalIterator() ;
+  while((term=(RooAbsReal*)i.NextNV())) {
     double x = term->getVal();
     val*= x;
   }
@@ -364,16 +364,16 @@ Double_t RooProduct::evaluate() const
 
   Double_t prod(1) ;
 
-  _compRIter->Reset() ;
+  RMLLI compRIter = _compRSet.minimalIterator() ;
   RooAbsReal* rcomp ;
   const RooArgSet* nset = _compRSet.nset() ;
-  while((rcomp=(RooAbsReal*)_compRIter->Next())) {
+  while((rcomp=(RooAbsReal*)compRIter.NextNV())) {
     prod *= rcomp->getVal(nset) ;
   }
   
-  _compCIter->Reset() ;
+  RMLLI compCIter = _compCSet.minimalIterator() ;
   RooAbsCategory* ccomp ;
-  while((ccomp=(RooAbsCategory*)_compCIter->Next())) {
+  while((ccomp=(RooAbsCategory*)compCIter.NextNV())) {
     prod *= ccomp->getIndex() ;
   }
   

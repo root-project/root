@@ -239,6 +239,11 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // return value. Since unnormalized calls are typically
   // done in integration calls, there is no performance hit.
 
+  // Fast-track processing of clean-cache objects
+  if (_operMode==AClean && _flipAClean==kFALSE) {
+    return _value ;
+  }
+
   if (!nset) {
     RooArgSet* tmp = _normSet ;
     _normSet = 0 ;
@@ -261,7 +266,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   }
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if ((isValueDirty() || nsetChanged || _norm->isValueDirty()) && operMode()!=AClean) {
+  if (operMode()!=AClean && (isValueDirty() || nsetChanged || _norm->isValueDirty())) {
 
     // Evaluate numerator
     Double_t rawVal = evaluate() ;
@@ -271,9 +276,9 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     Double_t normVal(_norm->getVal()) ;
     
     Double_t normError(kFALSE) ;
-    if (normVal==0.) {
+    if (normVal<=0.) {
       normError=kTRUE ;
-      logEvalError("p.d.f normalization integral is zero") ;  
+      logEvalError("p.d.f normalization integral is zero or negative") ;  
     }
 
     // Raise global error flag if problems occur
@@ -422,7 +427,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   // selfNormalized() function, a unit normalization is always constructed
 
 
-  //cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") nset = " << nset << " = " << (nset?*nset:RooArgSet()) << endl ;
+//   cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") nset = " << nset << " = " << (nset?*nset:RooArgSet()) << endl ;
 
   _normSet = (RooArgSet*) nset ;
 
@@ -434,7 +439,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     _norm = cache->_norm ;
 
 
-//     cout << "returning existing object " << _norm->GetName() << endl ;
+//      cout << "returning existing object " << _norm->GetName() << endl ;
 
     if (nsetChanged && adjustProxies) {
       // Update dataset pointers of proxies
@@ -495,7 +500,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   cache = new CacheElem(*_norm) ;
   _normMgr.setObj(nset,cache) ;
 
-//     cout << "making new object " << _norm->GetName() << endl ;
+//   cout << "making new object " << _norm->GetName() << endl ;
 
   delete depList ;
   return kTRUE ;

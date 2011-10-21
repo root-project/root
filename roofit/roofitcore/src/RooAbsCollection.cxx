@@ -137,6 +137,15 @@ RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const
 }
 
 
+
+//_____________________________________________________________________________
+RooMinimalLinkedListIter RooAbsCollection::minimalIterator() const 
+{ 
+  return RooMinimalLinkedListIter(&_list) ; 
+}
+
+
+
 //_____________________________________________________________________________
 void RooAbsCollection::safeDeleteList() 
 {

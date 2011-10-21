@@ -42,6 +42,7 @@
 #include "Roo1DTable.h"
 #include "RooCategory.h"
 #include "RooMsgService.h"
+#include "RooVectorDataStore.h"
 
 ClassImp(RooAbsCategory) 
 ;
@@ -432,6 +433,17 @@ void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose,
     type->printStream(os,kName|kValue,kSingleLine,indent);
   }
 }
+
+
+
+//_____________________________________________________________________________
+void RooAbsCategory::attachToVStore(RooVectorDataStore& vstore)
+{
+  // Attach the category index and label to as branches to the given vector store
+  RooVectorDataStore::CatVector* cv = vstore.addCategory(this) ;
+  cv->setBuffer(&_value) ;  
+}
+
 
 
 

@@ -27,11 +27,16 @@
 #include <set>
 #include <deque>
 
+#include <iostream>
+using namespace std ;
+#include "TClass.h"
+
 class TTree ;
 class RooArgSet ;
 class RooAbsCollection ;
 class RooTreeData ;
 class RooTreeDataStore ;
+class RooVectorDataStore ;
 class RooAbsData ;
 class RooAbsDataStore ;
 class RooAbsProxy ;
@@ -59,7 +64,9 @@ public:
   // Accessors to client-server relation information 
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
-    return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
+    return kTRUE ;
+    //cout << IsA()->GetName() << "::isDerived(" << GetName() << ") = " << (_serverList.GetSize()>0 || _proxyList.GetSize()>0) << endl ;
+    //return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
   }
   Bool_t isCloneOf(const RooAbsArg& other) const ; 
   Bool_t dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const { 
@@ -308,7 +315,7 @@ public:
     switch(_operMode) {
     case AClean: return flipAClean() ;
     case ADirty: return kTRUE ;
-    case Auto: return (isDerived()?_valueDirty:kFALSE) ;
+    case Auto: return (_valueDirty ? (isDerived()?_valueDirty:kFALSE) : kFALSE) ;
     }
     return kTRUE ; // we should never get here
   }
@@ -428,12 +435,17 @@ public:
   // Hooks for RooTreeData interface
   friend class RooCompositeDataStore ;
   friend class RooTreeDataStore ;
+  friend class RooVectorDataStore ;
   friend class RooTreeData ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) = 0 ;
+
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
+  virtual void attachToVStore(RooVectorDataStore& vstore) = 0 ;
+  void attachToStore(RooAbsDataStore& store) ;
+
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
   TString cleanBranchName() const ;

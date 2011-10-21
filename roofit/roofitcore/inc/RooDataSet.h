@@ -68,7 +68,8 @@ public:
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
-  virtual Double_t sumEntries(const char* cutSpec=0, const char* cutRange=0) const ;
+  virtual Double_t sumEntries() const ;
+  virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const ;
 
   virtual RooPlot* plotOnXY(RooPlot* frame, 
 			    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),

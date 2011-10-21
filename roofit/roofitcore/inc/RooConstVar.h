@@ -36,6 +36,11 @@ public:
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   void writeToStream(ostream& os, Bool_t compact) const ;
 
+  virtual Bool_t isDerived() const { 
+    // Does value or shape of this arg depend on any other arg?
+    return kFALSE ;
+  }
+
 protected:
 
   virtual Double_t evaluate() const { 

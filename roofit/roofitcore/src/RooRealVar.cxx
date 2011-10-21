@@ -42,6 +42,7 @@
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
 #include "RooParamBinning.h"
+#include "RooVectorDataStore.h"
 
 
 ClassImp(RooRealVar)
@@ -157,6 +158,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 RooRealVar::~RooRealVar() 
 {
   // Destructor
+//   cout << "RooRealVar::dtor(" << this << ")" << endl ;
 
   delete _binning ;
   _altNonSharedBinning.Delete() ;
@@ -932,6 +934,39 @@ Double_t RooRealVar::chopAt(Double_t what, Int_t where) const
   Double_t scale= pow(10.0,where);
   Int_t trunc= (Int_t)floor(what/scale + 0.5);
   return (Double_t)trunc*scale;
+}
+
+
+
+//_____________________________________________________________________________
+void RooRealVar::attachToVStore(RooVectorDataStore& vstore) 
+{
+  // Overload RooAbsReal::attachToTree to also attach
+  // branches for errors  and/or asymmetric errors
+  // attribute StoreError and/or StoreAsymError are set
+
+  // Follow usual procedure for value
+
+  if (getAttribute("StoreError") || getAttribute("StoreAsymError")) {
+    
+    RooVectorDataStore::RealFullVector* rfv = vstore.addRealFull(this) ;
+    rfv->setBuffer(&_value) ;
+  
+    // Attach/create additional branch for error
+    if (getAttribute("StoreError")) {
+      rfv->setErrorBuffer(&_error) ;
+    }
+    
+    // Attach/create additional branches for asymmetric error
+    if (getAttribute("StoreAsymError")) {
+      rfv->setAsymErrorBuffer(&_asymErrLo,&_asymErrHi) ;
+    }
+
+  } else {
+
+    RooAbsReal::attachToVStore(vstore) ;
+
+  }
 }
 
 

@@ -1633,12 +1633,28 @@ Int_t RooDataHist::numEntries() const
 
 
 //_____________________________________________________________________________
+Double_t RooDataHist::sumEntries() const 
+{
+  Int_t i ;
+  Double_t n(0) ;
+  for (i=0 ; i<_arrSize ; i++) {
+    if (!_binValid || _binValid[i]) {
+      n+= _wgt[i] ;
+    }
+  }
+  return n ;
+}
+
+
+
+//_____________________________________________________________________________
 Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
 {
   // Return the sum of weights in all entries matching cutSpec (if specified)
   // and in named range cutRange (if specified)
   // Return the
   checkInit() ;
+
   if (cutSpec==0 && cutRange==0) {
     Int_t i ;
     Double_t n(0) ;

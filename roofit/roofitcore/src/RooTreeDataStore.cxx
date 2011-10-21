@@ -494,15 +494,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   if (select) {
     selectClone = (RooFormulaVar*) select->cloneTree() ;
     selectClone->recursiveRedirectServers(*sourceArgSet) ;
-
-    RooArgSet branchList ;
-    selectClone->branchNodeServerList(&branchList) ;
-    TIterator* iter = branchList.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      arg->setOperMode(RooAbsArg::ADirty) ;
-    }
-    delete iter ;
+    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
   }
 
   // Loop over events in source tree   
@@ -569,15 +561,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   if (select) {
     selectClone = (RooFormulaVar*) select->cloneTree() ;
     selectClone->recursiveRedirectServers(*ads->get()) ;
-
-    RooArgSet branchList ;
-    selectClone->branchNodeServerList(&branchList) ;
-    TIterator* iter = branchList.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      arg->setOperMode(RooAbsArg::ADirty) ;
-    }
-    delete iter ;
+    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
   }
 
   // Force RDS internal initialization
@@ -1066,6 +1050,37 @@ void RooTreeDataStore::append(RooAbsDataStore& other)
     fill() ;
   }
 }
+
+
+//_____________________________________________________________________________
+Double_t RooTreeDataStore::sumEntries() const 
+{
+  if (_wgtVar) {
+
+    Double_t sum(0) ;
+    Int_t nevt = numEntries() ;
+    for (int i=0 ; i<nevt ; i++) {  
+      get(i) ;
+      sum += _wgtVar->getVal() ;
+    }    
+    return sum ;
+
+  } else if (_extWgtArray) {
+    
+    Double_t sum(0) ;
+    Int_t nevt = numEntries() ;
+    for (int i=0 ; i<nevt ; i++) {  
+      sum += _extWgtArray[i] ;
+    }    
+    return sum ;
+    
+  } else {
+
+    return numEntries() ;
+
+  }
+}
+
 
 
 

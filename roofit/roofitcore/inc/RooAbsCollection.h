@@ -99,6 +99,7 @@ public:
   }
 
   RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
+  RooMinimalLinkedListIter minimalIterator() const ;
 
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
