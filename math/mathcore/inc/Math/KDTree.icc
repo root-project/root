@@ -530,6 +530,7 @@ namespace ROOT
 
          // should never reach this line
          assert(false);
+         return Parent();  // to fix a warning statement
       }
 
 //______________________________________________________________________________

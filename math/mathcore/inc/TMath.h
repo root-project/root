@@ -505,7 +505,7 @@ inline Int_t TMath::IsNaN(Double_t x)
 #if defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__) )
 #ifdef isnan
    // from math.h
-   { return isnan(x); }
+  { return ::isnan(x); }
 #else
    // from cmath
    { return std::isnan(x); }
