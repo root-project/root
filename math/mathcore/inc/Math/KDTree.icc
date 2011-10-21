@@ -1467,7 +1467,7 @@ namespace ROOT
 
 //______________________________________________________________________________
       template<class _DataPoint>
-      inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator=(const KDTree<_DataPoint>::iterator& rhs)
+      inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator=(const typename KDTree<_DataPoint>::iterator& rhs)
       {
          //assignment operator
       
