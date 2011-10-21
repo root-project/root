@@ -5003,7 +5003,6 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                      // Package found, stop searching
                      fromglobal = kTRUE;
                      packagedir = nm->GetTitle();
-                     status = -1;
                      break;
                   }
                   pdir = "";
@@ -5090,17 +5089,19 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                               // Cleanup
                               SafeDelete(md5local);
                            } else {
-                              Error("HandleCache", "kBuildPackage: failure calculating MD5sum for '%s'", par.Data());
+                              Warning("HandleCache", "kBuildPackage: failure calculating/saving MD5sum for '%s'", par.Data());
                            }
                         }
                         delete [] gunzip;
                      } else {
                         Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
+                        status = -1;
                      }
                   } else {
                      SendAsynMessage(TString::Format("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
                                           " global package: cannot re-build!!! ",
                                           noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
+                     status = -1;
                   }
                }
 
@@ -5174,7 +5175,6 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   pdir.Form("%s/%s", nm->GetTitle(), package.Data());
                   if (!gSystem->AccessPathName(pdir, kReadPermission)) {
                      // Package found, stop searching
-                     status = -1;
                      break;
                   }
                   pdir = "";
