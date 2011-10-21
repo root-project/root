@@ -5091,19 +5091,16 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                               SafeDelete(md5local);
                            } else {
                               Error("HandleCache", "kBuildPackage: failure calculating MD5sum for '%s'", par.Data());
-                              status = -1;
                            }
                         }
                         delete [] gunzip;
                      } else {
                         Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
-                        status = -1;
                      }
                   } else {
                      SendAsynMessage(TString::Format("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
                                           " global package: cannot re-build!!! ",
                                           noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                     status = -1;
                   }
                }
 
