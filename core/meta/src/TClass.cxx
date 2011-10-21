@@ -918,11 +918,15 @@ void TClass::Init(const char *name, Version_t cversion,
 
    if (oldcl && oldcl->TestBit(kLoading)) {
       // Do not recreate a class while it is already being created!
+      
+      // We can no longer reproduce this case, to check whether we are, we use
+      // this code:
+      //    Fatal("Init","A bad replacement for %s was requested\n",name);
       return;
    }
 
    if (oldcl) {
-      gROOT->RemoveClass(oldcl);
+      TClass::RemoveClass(oldcl);
       // move the StreamerInfo immediately so that there are
       // properly updated!
 
@@ -943,7 +947,6 @@ void TClass::Init(const char *name, Version_t cversion,
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
       oldcl->fSchemaRules = 0;
-
    }
 
    SetBit(kLoading);
@@ -1397,9 +1400,10 @@ Bool_t TClass::AddRule( const char *rule )
    }
    ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
       
-   if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict ) ) {
-      ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules.",
-                ruleobj->GetTargetClass(), ruleobj->GetVersion(), ruleobj->GetTargetString() );
+   TString errmsg;
+   if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict, &errmsg ) ) {
+      ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules (%s).",
+                ruleobj->GetTargetClass(), ruleobj->GetVersion(), ruleobj->GetTargetString(), errmsg.Data() );
       delete ruleobj;
       return kFALSE;
    }

@@ -133,6 +133,13 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
             delete rule;
             return kTRUE;
          }
+         if (errmsg) {
+            *errmsg = "The existing rule is:\n   ";
+            r->AsString(*errmsg,"s");
+            *errmsg += "\nand the ignored rule is:\n   ";
+            rule->AsString(*errmsg);
+            *errmsg += ".\n";
+         }
          return kFALSE;
       }
    }
