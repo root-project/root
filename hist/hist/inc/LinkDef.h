@@ -221,6 +221,7 @@
 #pragma link C++ function R__H(Int_t);
 #pragma link C++ function R__H(const char*);
 
+#pragma link C++ class ROOT::THnSparseBrowsable;
 #pragma link C++ class ROOT::Math::WrappedTF1;
 #pragma link C++ class ROOT::Math::WrappedMultiTF1;
 

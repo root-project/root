@@ -35,6 +35,9 @@
 #ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
 #endif
+#ifndef ROOT_THnSparse_Internal
+#include "THnSparse_Internal.h"
+#endif
 
 // needed only for template instantiations of THnSparseT:
 #ifndef ROOT_TArrayF
@@ -61,44 +64,7 @@ class TH2D;
 class TH3D;
 class TF1;
 
-class THnSparseArrayChunk: public TObject {
- private:
 
-   THnSparseArrayChunk(const THnSparseArrayChunk&); // Not implemented
-   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&); // Not implemented
-
- public:
-   THnSparseArrayChunk():
-      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
-      fContent(0), fSumw2(0) {}
-
-   THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
-   virtual ~THnSparseArrayChunk();
-
-   Int_t    fCoordinateAllocationSize; //! size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
-   Int_t    fSingleCoordinateSize; // size of a single bin coordinate
-   Int_t    fCoordinatesSize;      // size of the bin coordinate buffer
-   Char_t  *fCoordinates;          //[fCoordinatesSize] compact bin coordinate buffer
-   TArray  *fContent;              // bin content
-   TArrayD *fSumw2;                // bin errors
-
-   void AddBin(Int_t idx, const Char_t* idxbuf);
-   void AddBinContent(Int_t idx, Double_t v = 1.) {
-      fContent->SetAt(v + fContent->GetAt(idx), idx);
-      if (fSumw2)
-         fSumw2->SetAt(v * v+ fSumw2->GetAt(idx), idx);
-   }
-   void Sumw2();
-   Int_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
-   Bool_t Matches(Int_t idx, const Char_t* idxbuf) const {
-      // Check whether bin at idx batches idxbuf.
-      // If we don't store indexes we trust the caller that it does match,
-      // see comment in THnSparseCompactBinCoord::GetHash().
-      return fSingleCoordinateSize <= 8 ||
-         !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
-
-   ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
-};
 
 class THnSparseCompactBinCoord;
 
@@ -108,6 +74,7 @@ class THnSparse: public TNamed {
    Int_t      fChunkSize;    // number of entries for each chunk
    Long64_t   fFilledBins;   // number of filled bins
    TObjArray  fAxes;         // axes of the histogram
+   TObjArray  fBrowsables;   //! browser-helpers for each axis
    TObjArray  fBinContent;   // array of THnSparseArrayChunk
    TExMap     fBins;         //! filled bins
    TExMap     fBinsContinued;//! filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
@@ -266,6 +233,9 @@ class THnSparse: public TNamed {
       PrintBin(-1, coord, options);
    }
    void PrintBin(Long64_t idx, Option_t* options) const;
+
+   void Browse(TBrowser *b);
+   Bool_t IsFolder() const { return kTRUE; }
 
    //void Draw(Option_t* option = "");
 

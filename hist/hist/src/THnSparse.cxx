@@ -13,6 +13,7 @@
 
 #include "TArrayI.h"
 #include "TAxis.h"
+#include "TBrowser.h"
 #include "TClass.h"
 #include "TCollection.h"
 #include "TDataMember.h"
@@ -24,6 +25,7 @@
 #include "TInterpreter.h"
 #include "TMath.h"
 #include "TRandom.h"
+#include "TVirtualPad.h"
 
 #include "TError.h"
 
@@ -2149,5 +2151,55 @@ void THnSparse::Print(Option_t* options) const
       Printf("  BIN CONTENT:");
       PrintEntries(0, -1, options);
    }
+}
+
+
+//______________________________________________________________________________
+void THnSparse::Browse(TBrowser *b)
+{
+   // Browse a THnSparse: create an entry (ROOT::THnSparseBrowsable) for each
+   // dimension.
+   if (fBrowsables.IsEmpty()) {
+      for (Int_t dim = 0; dim < fNdimensions; ++dim) {
+         fBrowsables[dim] = new ROOT::THnSparseBrowsable(this, dim);
+      }
+      fBrowsables.SetOwner();
+   }
+
+   for (Int_t dim = 0; dim < fNdimensions; ++dim) {
+      b->Add(fBrowsables[dim]);
+   }
+}
+
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+ClassImp(ROOT::THnSparseBrowsable);
+
+//______________________________________________________________________________
+ROOT::THnSparseBrowsable::THnSparseBrowsable(THnSparse* hist, Int_t axis):
+   TNamed(TString::Format("axis %d", axis),
+          TString::Format("Projection on axis %d of sparse histogram", axis)),
+   fHist(hist), fAxis(axis), fProj(0)
+{
+   // Construct a THnSparseBrowsable.
+}
+
+//______________________________________________________________________________
+ROOT::THnSparseBrowsable::~THnSparseBrowsable()
+{
+   // Destruct a THnSparseBrowsable.
+   delete fProj;
+}
+
+//______________________________________________________________________________
+void ROOT::THnSparseBrowsable::Browse(TBrowser* b)
+{
+   // Browse an axis of a THnSparse, i.e. draw its projection.
+   if (!fProj) {
+      fProj = fHist->Projection(fAxis);
+   }
+   fProj->Draw(b ? b->GetDrawOption() : "");
+   gPad->Update();
 }
 
