@@ -20,13 +20,14 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
+#include "XrdProofdXrdVers.h"
+#if ROOTXRDVERS < ROOT_OldXrdOuc
 #  define XPD_LOG_01 OUC_LOG_01
 #else
-#  include "XrdSys/XrdSysError.hh"
 #  define XPD_LOG_01 SYS_LOG_01
 #endif
+
+#include "XpdSysError.h"
 
 #include "Xrd/XrdBuffer.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"

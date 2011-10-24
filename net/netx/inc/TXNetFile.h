@@ -53,8 +53,8 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
+#ifndef ROOT_XrdSysToOuc
+#include "XrdSysToOuc.h"
 #endif
 
 class TFileStager;

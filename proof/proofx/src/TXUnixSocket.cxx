@@ -17,12 +17,8 @@
 // Used for the internal connection between coordinator and proofserv.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+
+#include "XpdSysPthread.h"
 
 #include "TXUnixSocket.h"
 #include "XrdProofPhyConn.h"

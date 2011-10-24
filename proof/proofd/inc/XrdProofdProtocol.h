@@ -34,12 +34,8 @@
 #define XPROOFD_VERSBIN 0x000003EE
 #define XPROOFD_VERSION "0.6"
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+#include "XpdSysPthread.h"
+
 #include "Xrd/XrdLink.hh"
 #include "Xrd/XrdObject.hh"
 #include "Xrd/XrdProtocol.hh"

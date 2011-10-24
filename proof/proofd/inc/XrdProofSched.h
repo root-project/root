@@ -45,9 +45,8 @@
 #include "XrdProofdAux.h"
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#endif
+
+#include "XrdSysToOuc.h"
 
 #include "XrdProofdConfig.h"
 

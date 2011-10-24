@@ -25,17 +25,13 @@
 
 #include "XrdProofdManager.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucPlugin.hh"
-#  include "XrdOuc/XrdOucTimer.hh"
-#else
-#  include "XrdSys/XrdSysPlugin.hh"
-#  include "XrdSys/XrdSysTimer.hh"
-#endif
-#include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
+
+#include "XpdSysPlugin.h"
+#include "XpdSysTimer.h"
+#include "XpdSysDNS.h"
 
 #include "XrdProofdAdmin.h"
 #include "XrdProofdClient.h"
@@ -668,7 +664,7 @@ int XrdProofdManager::Config(bool rcf)
       }
 
       // Local FQDN
-      char *host = XrdNetDNS::getHostName();
+      char *host = XrdSysDNS::getHostName();
       fHost = host ? host : "";
       SafeFree(host);
 

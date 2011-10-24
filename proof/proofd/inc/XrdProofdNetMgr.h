@@ -22,12 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+#include "XpdSysPthread.h"
 
 #if defined(BUILD_BONJOUR)
 #include "XrdOuc/XrdOucBonjour.hh"

@@ -59,11 +59,8 @@
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
 #include <XProtocol/XProtocol.hh>
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+
+#include "XpdSysPthread.h"
 
 ClassImp(TXNetFile);
 

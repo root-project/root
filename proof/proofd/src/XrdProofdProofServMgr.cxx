@@ -20,19 +20,14 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
-#  include "XrdOuc/XrdOucLogger.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#  include "XrdSys/XrdSysLogger.hh"
-#endif
+#include "XpdSysDNS.h"
+#include "XpdSysError.h"
+#include "XpdSysLogger.h"
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdPoll.hh"
 #include "Xrd/XrdScheduler.hh"
 #include "XrdNet/XrdNet.hh"
-#include "XrdNet/XrdNetDNS.hh"
 #include "XrdNet/XrdNetPeer.hh"
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdOuc/XrdOucStream.hh"
@@ -2820,7 +2815,7 @@ int XrdProofdProofServMgr::SetupProtocol(XrdNetPeer &peerpsrv,
 
    // Make sure we have the full host name
    if (peerpsrv.InetName) free(peerpsrv.InetName);
-   peerpsrv.InetName = XrdNetDNS::getHostName("localhost");
+   peerpsrv.InetName = XrdSysDNS::getHostName("localhost");
 
    // Allocate a new network object
    if (!(linkpsrv = XrdLink::Alloc(peerpsrv, lnkopts))) {

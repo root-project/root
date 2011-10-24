@@ -127,6 +127,7 @@ XPROOFDEXE     :=
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+ifeq ($(HASXRDUTILS),no)
 XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
@@ -144,6 +145,16 @@ endif
 ifeq ($(XRDNETUTIL),yes)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
 XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
+endif
+
+else
+XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdUtils
+ifeq ($(PLATFORM),macosx)
+XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.dylib $(XROOTDDIRL)/libXrdClient.dylib  $(XROOTDDIRL)/libXrdUtils.dylib
+else
+XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.$(SOEXT) $(XROOTDDIRL)/libXrdClient.$(SOEXT)  $(XROOTDDIRL)/libXrdUtils.$(SOEXT)
+endif
+
 endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)
 XPROOFDEXELIBS +=  $(DNSSDLIB)
@@ -229,9 +240,9 @@ endif
 
 endif
 
-ifeq ($(PLATFORM),macosx)
-$(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
-endif
+# ifeq ($(PLATFORM),macosx)
+# $(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
+# endif
 ifeq ($(PLATFORM),linux)
 comma := ,
 $(XPDLIB): LDFLAGS := $(subst -Wl$(comma)--no-undefined,,$(LDFLAGS))

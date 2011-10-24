@@ -39,12 +39,13 @@
 #include "XrdClient/XrdClientEnv.hh"
 #include "XProtocol/XProtocol.hh"
 
+#include "XrdProofdXrdVers.h"
 
 ClassImp(TXNetSystem);
 
 Bool_t TXNetSystem::fgInitDone = kFALSE;
 Bool_t TXNetSystem::fgRootdBC = kTRUE;
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
 THashList TXNetSystem::fgAddrFQDN;
 THashList TXNetSystem::fgAdminHash;
 #endif
@@ -75,7 +76,7 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fDirListValid = kFALSE;
    fUrl = url;
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
    fgAddrFQDN.SetOwner();
    fgAdminHash.SetOwner();
 #endif
@@ -108,7 +109,7 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
    TString dummy = url;
    dummy += "/dummy";
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
    XrdClientAdmin *cadm = TXNetSystem::GetClientAdmin(dummy);
 #else
    XrdClientAdmin *cadm = XrdClientAdmin::GetClientAdmin(dummy);
@@ -211,7 +212,7 @@ void TXNetSystem::InitXrdClient()
    // Init vars with default debug level -1, so we do not get warnings
    TXNetFile::SetEnv();
 
-#if defined(OLDXRDLOCATE) && !defined(OLDXRDOUC)
+#if (ROOTXRDVERS < ROOT_OldXrdLocate) && (ROOTXRDVERS >= ROOT_OldXrdOuc)
    // Use optimized connections
    XrdClientAdmin::SetAdminConn();
 #endif
@@ -653,7 +654,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
          // Extract the directory name
          XrdClientLocate_Info li;
          TString edir = TUrl(path).GetFile();
@@ -706,7 +707,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
    return -1;
 }
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
 //_____________________________________________________________________________
 XrdClientAdmin *TXNetSystem::GetClientAdmin(const char *url)
 {

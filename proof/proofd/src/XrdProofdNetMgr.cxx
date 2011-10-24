@@ -22,12 +22,13 @@
 
 #include "XrdProofdNetMgr.h"
 
+#include "XpdSysDNS.h"
+
 #include "Xrd/XrdBuffer.hh"
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
-#include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -77,7 +78,7 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fRequestTO = 30;
    fBonjourEnabled = false;
 #if defined(BUILD_BONJOUR)
-   char *host = XrdNetDNS::getHostName();
+   char *host = XrdSysDNS::getHostName();
    fBonjourName = host ? host : "";
    SafeFree(host);
    fBonjourCores = XrdProofdAux::GetNumCPUs();
@@ -1042,7 +1043,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
       XrdClientUrlInfo uu(host);
       if (uu.Port <= 0) uu.Port = 1093;
       // Fully qualified name
-      char *fqn = XrdNetDNS::getHostName(uu.Host.c_str());
+      char *fqn = XrdSysDNS::getHostName(uu.Host.c_str());
       if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
                   !strcmp(fMgr->Host(), fqn))) {
          if (!checkport || (uu.Port == fMgr->Port()))

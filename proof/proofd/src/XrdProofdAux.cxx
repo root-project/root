@@ -22,14 +22,9 @@
 
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
-#  include "XrdOuc/XrdOucLogger.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#  include "XrdSys/XrdSysLogger.hh"
-#endif
 
+#include "XpdSysError.h"
+#include "XpdSysLogger.h"
 #include "XrdProofdAux.h"
 #include "XrdProofdConfig.h"
 #include "XrdProofdProtocol.h"

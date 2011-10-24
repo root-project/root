@@ -49,12 +49,8 @@
 
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdOuc/XrdOucStream.hh"
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucError.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#endif
+
+#include "XpdSysError.h"
 
 // Tracing
 #include "XrdProofdTrace.h"

@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "XrdProofPhyConn.h"
+#include "XpdSysDNS.h"
 
 #include "XrdVersion.hh"
 #include "XrdClient/XrdClientEnv.hh"
@@ -27,7 +28,6 @@
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientMessage.hh"
-#include "XrdNet/XrdNetDNS.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
 #ifndef WIN32
@@ -91,7 +91,7 @@ bool XrdProofPhyConn::Init(const char *url, int fd)
 
    // Host and Port
    if (!fTcp) {
-      fHost = XrdNetDNS::getHostName(((fUrl.Host.length() > 0) ?
+      fHost = XrdSysDNS::getHostName(((fUrl.Host.length() > 0) ?
                                        fUrl.Host.c_str() : "localhost"));
       fPort = -1;
       fUrl.Host = "";

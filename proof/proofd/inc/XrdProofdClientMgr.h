@@ -23,13 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <list>
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucSemWait.hh"
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+
+#include "XpdSysPthread.h"
 
 #include "XrdProofdConfig.h"
 

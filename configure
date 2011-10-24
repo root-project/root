@@ -155,7 +155,6 @@ enable_table=no
 enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
-enable_xrootd=           # must be set explicitely via --enable-xrootd
 enable_builtin_freetype=no
 enable_builtin_ftgl=no
 enable_builtin_glew=no
@@ -1325,12 +1324,6 @@ PROOFDXINETDIN=${ac_srcdir}/config/proofd.xinetd.in
 PROOFDXINETDOUT=etc/daemons/proofd.xinetd
 PROOFSERVIN=${ac_srcdir}/config/proofserv.in
 PROOFSERVOUT=main/src/proofserv.sh
-XROOTDIN=${ac_srcdir}/config/xrootd.in
-XROOTDOUT=etc/daemons/xrootd.rc.d
-CMSDIN=${ac_srcdir}/config/cmsd.in
-CMSDOUT=etc/daemons/cmsd.rc.d
-OLBDIN=${ac_srcdir}/config/olbd.in
-OLBDOUT=etc/daemons/olbd.rc.d
 ROOTHELPIN=${ac_srcdir}/config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 ROOTSIN=${ac_srcdir}/config/roots.in
@@ -1351,6 +1344,10 @@ GENREFLEXROOTCINTSHIN=${ac_srcdir}/config/genreflex-rootcint.in
 GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
 GENREFLEXROOTCINTBATIN=${ac_srcdir}/config/genreflex-rootcint.bat.in
 GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
+SETXRDSHIN=${ac_srcdir}/config/setxrd.sh
+SETXRDSHOUT=bin/setxrd.sh
+SETXRDCSHIN=${ac_srcdir}/config/setxrd.csh
+SETXRDCSHOUT=bin/setxrd.csh
 
 # unset global command options that can cause havoc
 unset GREP_OPTIONS
@@ -1570,7 +1567,6 @@ with options, prefix with --with-, enables corresponding support
   xrootd             XROOTD support, path to external XROOTD distribution
   xrootd-incdir      XROOTD support, path to external XROOTD header files (XrdVersion.hh, ...)
   xrootd-libdir      XROOTD support, path to external XROOTD libraries
-  xrootd-opts        XROOTD support, additional options to be passed to XROOTD-configure
 
 with compiler options, prefix with --with-, overrides default value
 
@@ -1751,7 +1747,7 @@ trapcmd="rm -f Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
          Makefile-comp.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
-         conftest.c conftest xrootd.tmp olbd.tmp"
+         conftest.c conftest "
 trap "$trapcmd; exit 1" 1 2 3 15
 trap "$trapcmd" 0
 
@@ -1876,7 +1872,6 @@ if test $# -gt 0 ; then
       --with-xft-libdir=*)     xftlibdir=$optarg     ;;
       --with-xext-libdir=*)    xextlibdir=$optarg    ;;
       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
-      --with-xrootd-opts=*)    xrdaddopts=$optarg    ; enable_xrootd="yes"  ;;
       --with-xrootd-incdir=*)  xrdincdir=$optarg     ; enable_xrootd="yes"  ;;
       --with-xrootd-libdir=*)  xrdlibdir=$optarg     ; enable_xrootd="yes"  ;;
       --with-cc=*)             altcc=$optarg         ;;
@@ -1995,9 +1990,6 @@ if test "x$noact" = "xno"; then
     cp -f $PROOFDXINETDIN proofd.xinetd.tmp
     cp -f $PROOFSERVIN proofserv.tmp
     cp -f $ROOTSIN roots.tmp
-    cp -f $XROOTDIN xrootd.tmp
-    cp -f $OLBDIN olbd.tmp
-    cp -f $CMSDIN cmsd.tmp
 fi
 
 ######################################################################
@@ -4278,91 +4270,85 @@ check_explicit "$enable_xml" "$enable_xml_explicit" \
 #
 ### echo %%% Check for xrootd support
 #
-message "Checking whether to build xrootd"
-xrdcomm=""
-vercomm=
-
-# If we are required to use an external XROOTD distribution
-# we just define the pointers
-extraxrdflags="-DUSENEWHDRS"
-
-# Check if we are asked to use an external XROOTD; priority to specific
-# inc and lib settings
-externalxrd="no"
-if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
-   externalxrd="yes"
-   xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
-   if test ! -f "$xrdincdir/XrdVersion.hh" ; then
-      enable_xrootd="no"
-      xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
-      xrdincdir=""
-      xrdlibdir=""
-   fi
-elif test ! "x$xrootddir" = "x"; then
-   externalxrd="yes"
+if test "x$enable_xrootd" = "xyes" ; then
+   message "Checking for xrootd"
+   xrdcomm=""
+   vercomm=""
+   extraxrdflags=""
+   
+   # Localize the version header; priority to specific inc and lib settings,
+   # followed by global dir setting and standard paths
+   externalxrd="no"
    if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
+      externalxrd="yes"
       xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
       if test ! -f "$xrdincdir/XrdVersion.hh" ; then
          enable_xrootd="no"
          xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
          xrdincdir=""
          xrdlibdir=""
+      else
+         xrdcomm="yes, using installation at ($xrdincdir,$xrdlibdir)"
       fi
    elif test ! "x$xrootddir" = "x"; then
+      externalxrd="yes"
       xrdlibdir="$xrootddir/lib"
       xrdcomm="no, using xrootd at $xrootddir"
       if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
          xrdincdir="$xrootddir/include/xrootd"
+         xrdcomm="yes, using installation at $xrootddir"
       elif test -f "$xrootddir/src/XrdVersion.hh" ; then
          xrdincdir="$xrootddir/src"
+         xrdcomm="yes, using installation at $xrootddir"
       else
          enable_xrootd="no"
          xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
          xrdincdir=""
          xrdlibdir=""
       fi
+   else
+      # Standard paths
+      xrdpaths="$XRDSYS /opt/xrootd /usr/local /usr"
+      for stdp in $xrdpaths ; do
+         xrdcomm="yes, using installation at $stdp"
+         if test -f "$stdp/include/xrootd/XrdVersion.hh" && test -d "$stdp/lib" ; then
+            xrdincdir="$stdp/include/xrootd"
+            xrdlibdir="$stdp/lib"
+         elif test -f "$stdp/include/XrdVersion.hh" && test -d "$stdp/lib" ; then
+            xrdincdir="$stdp/include"
+            xrdlibdir="$stdp/lib"
+         fi
+         if test ! "x$xrdincdir" = "x" ; then
+            break
+         fi
+      done
+      if test "x$xrdincdir" = "x" ; then
+         enable_xrootd="no"
+         xrdcomm="no, tried installations at $xrdpaths, but version file missing: disabling"
+         xrdincdir=""
+         xrdlibdir=""
+      fi
    fi
+   echo $xrdcomm
 fi
 
 # Decode version
 xrdver=
 decver=0
-if test ! "x$enable_xrootd" = "xno" ; then
+if test "x$enable_xrootd" = "xyes" ; then
 
-   newver="no"
-   if test "x$externalxrd" = "xyes"; then
-      verh=$xrdincdir/XrdVersion.hh
+   message "Decoding xrootd version"
+
+   verh=$xrdincdir/XrdVersion.hh
+
+   xrdver=`grep XrdVERSION $verh`
+   if test $? -eq 0 ; then
+      set $xrdver
+      xrdver=$3
    else
-      newver="yes"
-      verh=$top_srcdir/net/xrootd/src/xrootd/VERSION_INFO
-      if test ! -f $verh ; then
-         newver="no"
-         verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
-      fi
+      xrdver="unknown"
    fi
-   xrdver="unknown"
-   if test "x$newver" = "xyes" ; then
-      xrdtag=`grep RefNames $verh | grep tag:`
-      if ! test $? -eq 0 ; then
-         xrdver=`grep Date $verh`
-         if test $? -eq 0 ; then
-            set $xrdver
-            xrdver=`echo $2 | sed -e 's|-||g'`
-         fi
-      else
-         xrdver=`grep RefNames $verh`
-         if test $? -eq 0 ; then
-            set $xrdver
-           xrdver=`echo $4 | sed -e 's|,||'`
-         fi
-      fi
-   else
-      xrdver=`grep XrdVERSION $verh`
-      if test $? -eq 0 ; then
-         set $xrdver
-         xrdver=$3
-      fi
-   fi
+
    if test ! "x$xrdver" = "xunknown"; then
       tmpver=`echo $xrdver | sed -e 's|"\(.*\)"|\1|' -e 's|^v||' -e 's|-.*||'`
       if test "x$tmpver" = "xuntagged" ; then
@@ -4391,118 +4377,58 @@ if test ! "x$enable_xrootd" = "xno" ; then
 	 fi
       fi
    fi
+   echo "$xrdver"
 fi
+
 bjrcomm=
-if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
+if test "x$enable_xrootd" = "xyes" ; then
 
-   if test "x$enable_xrootd" = "xyes" ; then
+   extraxrdflags="-DROOTXRDVERS=$decver"
+   vercomm="setting $extraxrdflags"
 
-      # Check version
-      decrefone=20070628
-      decreftwo=20070723
-      decrefthree=20071004
-      decreffour=300000002
-      if [ $decver -gt $decrefone ] ; then
-         if [ $decver -gt $decreffour ] ; then
-            xrdcomm="$xrdcomm"
-            extraxrdflags="$extraxrdflags"
-         elif [ $decver -gt $decrefthree ] ; then
-            vercomm=" (>$decrefthree, <=$decreffour: setting -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DXRCPHYCNOREUSE $extraxrdflags"
-         elif [ $decver -gt $decreftwo ] ; then
-            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DOLDXRDLOCATE -DXRCPHYCNOREUSE $extraxrdflags"
-         else
-            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC -DXRCPHYCNOREUSE)"
-            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE $extraxrdflags"
-         fi
+   #
+   # Check libraries now
+   hasxrdutils="no"
+   libxrdoucbjr=""
+   decrefutils=300010000
+   decrefnetut=20100729
+   if [ $decver -ge $decrefutils ] ; then
+      xrdlibs="libXrdMain libXrdUtils libXrdClient" 
+      hasxrdutils="yes"
+   elif [ $decver -ge $decrefnetut ] ; then
+      xrdlibs="libXrdNet libXrdNetUtil libXrdOuc libXrdSys libXrdClient libXrd" 
+   else
+      xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd" 
+   fi
+   for ll in $xrdlibs ; do 
+      #
+      # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
+      check_library $ll "$enable_shared" "$xrdlibdir" "$xrdlibdir"
+      if test "x$found_lib" = "x" ; then
+         enable_xrootd="no"
+         xrdincdir=""
+         xrdlibdir=""
+         break
       else
-         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN -DXRCPHYCNOREUSE)"
-         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE -DXRCPHYCNOREUSE $extraxrdflags"
+         if test "x$ll" = "xlibXrdUtils" || test "x$ll" = "xlibXrdOuc"; then
+            libxrdoucbjr="$found_lib"
+         fi
+      fi
+   done
+
+   #
+   # Check if bonjour is available for code potentially using it ...
+   if test "x$enable_xrootd" = "xyes"; then
+      if test "x$enable_bonjour" = "xyes"; then
+         check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
+         if test  $found_symbol -eq 0 ; then
+            bjrcomm="Checking for Bonjour/Avahi support in Xrootd ... no, disabling bonjour/avahi in XrdProofd"
+            bonjourcppflags=
+         fi
       fi
    fi
-
-else
-   if test "x$enable_xrootd" = "x" && test "x$DEFAULTENABLE" = "xno"; then
-       enable_xrootd="no"
-       xrdincdir=""
-       xrdlibdir=""
-   else
-       # Xrootd and its client need thread support
-       if test "x$enable_thread" = "xyes"; then
-           # Ok, now check the architecture
-           case $arch in
-           # xrootd does not build on all platforms yet
-           linux*)
-               if test "x$enable_xrootd" = "x"; then
-                   enable_xrootd="yes"
-               fi
-               ;;
-           macos*)
-               if test "x$enable_xrootd" = "x"; then
-                   enable_xrootd="yes"
-               fi
-               ;;
-           solaris*)
-               if test "x$enable_xrootd" = "x"; then
-                   enable_xrootd="yes"
-               fi
-               ;;
-           win32)
-               if test "x$enable_xrootd" = "x"; then
-                   enable_xrootd="yes"
-               fi
-               ;;
-           *)
-               if test "x$enable_xrootd" = "xyes"; then
-                   enable_xrootd="yes"
-                   xrdcomm=", but not officially supported"
-               else
-                   enable_xrootd="no"
-               fi
-               xrdincdir=""
-               xrdlibdir=""
-               ;;
-           esac
-       else
-           if test "x$enable_xrootd" = "xyes"; then
-               enable_xrootd="no"
-               xrdcomm=", needs thread support (make sure pthread lib is found)"
-           else
-               enable_xrootd="no"
-           fi
-           xrdincdir=""
-           xrdlibdir=""
-       fi
-   fi
-
-   xrdcomm="$enable_xrootd$xrdcomm"
 fi
 
-xrdcomm="$xrdcomm"
-result $xrdcomm
-if test "x$enable_xrootd" = "xyes"; then
-    hasxrd=""
-    hasnotxrd="#"
-    message "Checking for xrootd version"
-    result "$xrdver $vercomm"
-    buildxrd="yes"
-    if test "x$externalxrd" = "xyes"; then
-       buildxrd="no"
-       # Check if bonjour is available for code potentially using it ...
-       if test "x$enable_bonjour" = "xyes"; then
-          check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
-          if test  $found_symbol -eq 0 ; then
-             bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
-             bonjourcppflags=
-          fi
-       fi
-    fi
-else
-    buildxrd="no"
-    hasxrd="#"
-    hasnotxrd=""
-fi
 if test ! "x$bjrcomm" = "x"; then
    echo "$bjrcomm"
 fi
@@ -6267,7 +6193,10 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
  core/metautils/src/TClassEdit7.cxx \
  core/metautils/src/RConversionRuleParser7.cxx \
- core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.*
+ core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.* \
+ etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
+ bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
+ bin/xrdsssadmin bin/xrdstagetool bin/xrootd
 
 ######################################################################
 #
@@ -6445,7 +6374,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildglew@|$enable_builtin_glew|"    \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
-    -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@hasxrd@|$enable_xrootd|"             \
     -e "s|@castorincdir@|$castorincdir|"        \
     -e "s|@castorlib@|$castorlib|"              \
@@ -6636,6 +6564,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
     -e "s|@xrdversion@|$decver|"                \
+    -e "s|@hasxrdutils@|$hasxrdutils|"          \
     -e "s|@cfitsioincdir@|$cfitsioincdir|"      \
     -e "s|@cfitsiolib@|$cfitsiolib|"            \
     -e "s|@cfitsiolibdir@|$cfitsiolibdir|"      \
@@ -6964,36 +6893,6 @@ rm -f roots.tmp
 result "done"
 
 #---------------------------------------------------------------------
-# etc/daemons/xrootd.rc.d
-#
-message "Writing $XROOTDOUT"
-sed -e "s|@bindir@|$bindir2|" \
-    < xrootd.tmp > $XROOTDOUT
-chmod a+x $XROOTDOUT
-rm -f xrootd.tmp
-result "done"
-
-#---------------------------------------------------------------------
-# etc/daemons/olbd.rc.d
-#
-message "Writing $OLBDOUT"
-sed -e "s|@bindir@|$bindir2|" \
-    < olbd.tmp > $OLBDOUT
-chmod a+x $OLBDOUT
-rm -f olbd.tmp
-result "done"
-
-#---------------------------------------------------------------------
-# etc/daemons/cmsd.rc.d
-#
-message "Writing $CMSDOUT"
-sed -e "s|@bindir@|$bindir2|" \
-    < cmsd.tmp > $CMSDOUT
-chmod a+x $CMSDOUT
-rm -f cmsd.tmp
-result "done"
-
-#---------------------------------------------------------------------
 # bin/memprobe
 #
 message "Writing $MEMPROBEOUT"
@@ -7052,6 +6951,14 @@ result "done"
 if test "x$platform" = "xwin32"; then
     message "Writing $THISROOTBATOUT"
     cp -f $THISROOTBATIN $THISROOTBATOUT
+    result "done"
+else
+    # bin/setxrd.sh and bin/setxrd.csh
+    message "Writing $SETXRDSHOUT"
+    cp -f $SETXRDSHIN $SETXRDSHOUT
+    result "done"
+    message "Writing $SETXRDCSHOUT"
+    cp -f $SETXRDCSHIN $SETXRDCSHOUT
     result "done"
 fi
 

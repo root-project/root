@@ -1,9 +1,0 @@
-activate_krb5=yes
-acx_krb5_incdir=/usr/kerberos/include
-acx_krb5_libdir=/usr/kerberos/lib
-
-# activate debug since we still don't have complete stable version
-activate_dbg_build=default_yes
-
-# activate pwd authentication
-activate_pwd=yes

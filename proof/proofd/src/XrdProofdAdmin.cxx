@@ -21,11 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#endif
+
+#include "XpdSysError.h"
 
 #include "Xrd/XrdBuffer.hh"
 #include "Xrd/XrdScheduler.hh"

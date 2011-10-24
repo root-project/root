@@ -245,9 +245,6 @@ endif
 ifneq ($(F77),)
 MODULES      += misc/minicern hist/hbook
 endif
-ifeq ($(BUILDXRD),yes)
-MODULES      += net/xrootd
-endif
 ifeq ($(HASXRD),yes)
 MODULES      += net/netx
 ifeq ($(BUILDALIEN),yes)
@@ -286,7 +283,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
-                graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
+                graf2d/qt gui/qtroot gui/qtgsi net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac proof/pq2 \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
@@ -1010,8 +1007,7 @@ maintainer-clean:: distclean
 	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
 	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d \
 	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
-	   etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d \
-	   etc/daemons/cmsd.rc.d macros/html.C \
+	   macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
@@ -1259,13 +1255,10 @@ runtimedirs:
 		--exclude system.rootauthrc \
 		--exclude system.rootdaemonrc \
 		--exclude system.rootrc \
-		--exclude cmsd.rc.d \
-		--exclude olbd.rc.d \
 		--exclude proofd.rc.d \
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude xrootd.rc.d \
 		--exclude svninfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \

@@ -21,19 +21,14 @@
 
 #include "XrdProofdPlatform.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
-#  include "XrdOuc/XrdOucLogger.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#  include "XrdSys/XrdSysLogger.hh"
-#endif
+#include "XpdSysError.h"
+#include "XpdSysLogger.h"
+
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
-#include "XrdNet/XrdNetDNS.hh"
 
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"

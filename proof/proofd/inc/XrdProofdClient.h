@@ -25,12 +25,8 @@
 #include <list>
 #include <vector>
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucPthread.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#endif
+#include "XpdSysPthread.h"
+
 #include "XrdOuc/XrdOucString.hh"
 
 #include "XrdProofdAux.h"

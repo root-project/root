@@ -21,14 +21,10 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
 
-#ifdef OLDXRDOUC
-#  include "XrdOuc/XrdOucError.hh"
-#  include "XrdOuc/XrdOucLogger.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#  include "XrdSys/XrdSysLogger.hh"
-#endif
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysError.h"
+#include "XpdSysLogger.h"
+#include "XpdSysDNS.h"
+
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdOuc/XrdOucString.hh"
@@ -115,7 +111,7 @@ int XrdProofdConfig::ParseFile(bool rcf)
 
    // Local FQDN
    if (fgHost.length() <= 0) {
-      char *host = XrdNetDNS::getHostName();
+      char *host = XrdSysDNS::getHostName();
       fgHost = host ? host : "";
       SafeFree(host);
    }

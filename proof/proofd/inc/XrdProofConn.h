@@ -24,10 +24,9 @@
 
 #define DFLT_CONNECTMAXTRY           10
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
+#ifndef ROOT_XrdSysToOuc
+#include "XrdSysToOuc.h"
 #endif
-
 #ifndef ROOT_XProofProtocol
 #include "XProofProtocol.h"
 #endif

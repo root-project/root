@@ -23,14 +23,8 @@
 // #include <map>
 #include <vector>
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucPthread.hh"
-#  include "XrdOuc/XrdOucSemWait.hh"
-#else
-#  include "XrdSys/XrdSysPthread.hh"
-#  include "XrdSys/XrdSysSemWait.hh"
-#endif
+#include "XpdSysPthread.h"
+#include "XpdSysSemWait.h"
 
 #include "Xrd/XrdLink.hh"
 #include "XrdOuc/XrdOucHash.hh"

@@ -25,12 +25,7 @@
 #include <map>
 #include <stdarg.h>
 
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucSemWait.hh"
-#else
-#  include "XrdSys/XrdSysSemWait.hh"
-#endif
+#include "XpdSysSemWait.h"
 
 #include "Xrd/XrdProtocol.hh"
 #include "XProofProtocol.h"

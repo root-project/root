@@ -46,15 +46,11 @@
 #include <Winsock2.h>
 #endif
 
+
+#include "XpdSysError.h"
+#include "XpdSysLogger.h"
+
 // ---- Tracing utils ----------------------------------------------------------
-#ifdef OLDXRDOUC
-#  include "XrdSysToOuc.h"
-#  include "XrdOuc/XrdOucError.hh"
-#  include "XrdOuc/XrdOucLogger.hh"
-#else
-#  include "XrdSys/XrdSysError.hh"
-#  include "XrdSys/XrdSysLogger.hh"
-#endif
 #include "XrdProofdTrace.h"
 XrdOucTrace *XrdProofdTrace = 0;
 static XrdSysLogger eLogger;
