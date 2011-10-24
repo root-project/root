@@ -12,6 +12,7 @@
 		700B011013F3D40A00F84650 /* PadOptionsController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 700B010E13F3D40A00F84650 /* PadOptionsController.xib */; };
 		700B013013F3FD6700F84650 /* ColorCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 700B012F13F3FD6600F84650 /* ColorCell.m */; };
 		700B013313F4051000F84650 /* PatternCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 700B013213F4051000F84650 /* PatternCell.mm */; };
+		7010C3691455B64100018E6D /* tutorials_app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 7010C3681455B64100018E6D /* tutorials_app_icon.png */; };
 		701EC32513D9762200FE395E /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 701EC32413D9762200FE395E /* SelectionView.mm */; };
 		702C4FCA13F2BE2D00C645D8 /* h2poly.root in Resources */ = {isa = PBXBuildFile; fileRef = 702C4FC913F2BE2D00C645D8 /* h2poly.root */; };
 		7032144C13E68F5E00908306 /* HelpView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7032144B13E68F5E00908306 /* HelpView.xib */; };
@@ -81,6 +82,7 @@
 		700B012F13F3FD6600F84650 /* ColorCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ColorCell.m; path = Tutorials.xcodeproj/ColorCell.m; sourceTree = "<group>"; };
 		700B013113F4051000F84650 /* PatternCell.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PatternCell.h; sourceTree = "<group>"; };
 		700B013213F4051000F84650 /* PatternCell.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PatternCell.mm; sourceTree = "<group>"; };
+		7010C3681455B64100018E6D /* tutorials_app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = tutorials_app_icon.png; path = Pictures/tutorials_app_icon.png; sourceTree = "<group>"; };
 		701EC32313D9762200FE395E /* SelectionView.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = SelectionView.h; sourceTree = "<group>"; };
 		701EC32413D9762200FE395E /* SelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SelectionView.mm; sourceTree = "<group>"; };
 		702C4FC913F2BE2D00C645D8 /* h2poly.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = h2poly.root; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 		707CF10D13F811AD00829823 /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				7010C3681455B64100018E6D /* tutorials_app_icon.png */,
 				70DF818813DDBC1800AD2F4D /* DarkBackground.png */,
 				70DF818913DDBC1800AD2F4D /* LightBackground.png */,
 				70DF816713DDBB0D00AD2F4D /* double_tap_gesture_icon_small.png */,
@@ -383,6 +386,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7010C3691455B64100018E6D /* tutorials_app_icon.png in Resources */,
 				702C4FCA13F2BE2D00C645D8 /* h2poly.root in Resources */,
 				7098E93F13F2BA470032D660 /* h2poly_icon.png in Resources */,
 				70D4848013F057430043110B /* system.plugins-ios in Resources */,
