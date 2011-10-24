@@ -48,7 +48,7 @@ static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* p
 // get the named method and check for python side overload by not accepting the
 // binding's methodproxy
    if ( ! pymethod )
-       pymethod = GetOverriddenPyMethod( pyself, method );
+      pymethod = GetOverriddenPyMethod( pyself, method );
 
    if ( pymethod ) {
       result = PyObject_CallFunctionObjArgs( pymethod, arg1, arg2, arg3, NULL );

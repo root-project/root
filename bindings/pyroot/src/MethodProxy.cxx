@@ -791,8 +791,8 @@ void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
 //____________________________________________________________________________
 void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 {
-    fMethodInfo->fMethods.insert( fMethodInfo->fMethods.end(),
-       meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end() );
+   fMethodInfo->fMethods.insert( fMethodInfo->fMethods.end(),
+      meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end() );
 }
 
 //____________________________________________________________________________

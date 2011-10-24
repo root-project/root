@@ -2147,9 +2147,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name == "TStyle" ) {
-       MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
-       ctor->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
-       Py_DECREF( ctor );
+      MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
+      ctor->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+      Py_DECREF( ctor );
    }
 
    if ( name == "TH1" )       // allow hist *= scalar

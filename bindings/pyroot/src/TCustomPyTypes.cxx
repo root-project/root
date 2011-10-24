@@ -223,7 +223,7 @@ static PyObject* im_call( PyObject* meth, PyObject* args, PyObject* kw )
          return PyMethod_Type.tp_call( meth, args, kw );    // will set proper error msg
 
    } else
-        Py_INCREF( args );
+      Py_INCREF( args );
 
    PyCFunctionObject* func = (PyCFunctionObject*)PyMethod_GET_FUNCTION( meth );
 
