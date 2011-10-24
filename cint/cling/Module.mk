@@ -31,7 +31,7 @@ CLINGDEP  := $(CLINGLIB)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
-CLINGCXXFLAGS := $(shell $(LLVMCONFIG) --cxxflags) \
+CLINGCXXFLAGS := $(shell $(LLVMCONFIG) --cxxflags) -I$(MODDIR)/include \
 	'-DR__LLVMDIR="$(shell cd $(shell $(LLVMCONFIG) --libdir)/..; pwd)"'
 CLINGLLVMLIBS:= -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
@@ -59,10 +59,10 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 etc/cling/%.h: $(MODDIR)/include/cling/%.h
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 etc/cling/%.h: $(call stripsrc,$(MODDIR)/%.o)/include/cling/%.h
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
 $(MODDIR)/%.o: $(MODDIR)/%.cpp
@@ -70,7 +70,7 @@ $(MODDIR)/%.o: $(MODDIR)/%.cpp
 	$(CXX) $(OPT) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
 $(call stripsrc,$(MODDIR)/%.o): $(MODDIR)/%.cpp
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(CLINGCXXFLAGS)  -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
