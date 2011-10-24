@@ -90,7 +90,7 @@ namespace PyROOT {
       virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0, Long_t = 0 );
 
    private:
-      long fBuffer;
+      Long_t fBuffer;
    };
 
    class TConstDoubleRefConverter : public TDoubleConverter { // required for Cintex only
@@ -98,7 +98,7 @@ namespace PyROOT {
       virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0, Long_t = 0 );
 
    private:
-      double fBuffer;
+      Double_t fBuffer;
    };
 
    class TVoidConverter : public TConverter {

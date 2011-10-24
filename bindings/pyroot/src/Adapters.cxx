@@ -132,7 +132,7 @@ Bool_t PyROOT::TMemberAdapter::IsStatic() const
 }
 
 //____________________________________________________________________________
-size_t PyROOT::TMemberAdapter::FunctionParameterSize( bool required ) const
+size_t PyROOT::TMemberAdapter::FunctionParameterSize( Bool_t required ) const
 {
 // get the total number of parameters that the adapted function/method takes
    TFunction* func = (TFunction*)fMember;
@@ -236,7 +236,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 }
 
 //____________________________________________________________________________
-PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name, bool quiet )
+PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name, Bool_t quiet )
 {
 // lookup a scope (class) by name
    Int_t oldEIL = gErrorIgnoreLevel;
@@ -344,7 +344,7 @@ PyROOT::TMemberAdapter PyROOT::TScopeAdapter::DataMemberAt( size_t nth ) const
 }
 
 //____________________________________________________________________________
-PyROOT::TScopeAdapter::operator bool() const
+PyROOT::TScopeAdapter::operator Bool_t() const
 {
 // check the validity of this scope (class)
    if ( fName.empty() )

@@ -204,7 +204,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
       if ( func ) {
          G__value v;
          G__setnull( &v );
-         v.ref = (long)&((PyIntObject*)pyobject)->ob_ival;
+         v.ref = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
          G__letint( &v, 'i', para.fl );
          func->SetArg( v );
       }
@@ -222,7 +222,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    if ( para.fv && buflen && func ) {
       G__value v;
       G__setnull( &v );
-      v.ref = (long)para.fv;
+      v.ref = (Long_t)para.fv;
       G__letint( &v, 'i', para.fl );
       func->SetArg( v );
       return kTRUE;
@@ -968,7 +968,7 @@ Bool_t PyROOT::TVoidPtrPtrConverter::SetArg(
 PyObject* PyROOT::TVoidPtrPtrConverter::FromMemory( void* address )
 {
 // read a void** from address; since this is unknown, long is used (user can cast)
-   return PyLong_FromLong( (long)*((long**)address) );
+   return PyLong_FromLong( (Long_t)*((Long_t**)address) );
 }
 
 //____________________________________________________________________________

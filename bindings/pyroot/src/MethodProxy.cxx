@@ -31,7 +31,7 @@ namespace PyROOT {
 namespace {
 
 // helper to test whether a method is used in a pseudo-function modus
-   bool inline IsPseudoFunc( MethodProxy* pymeth )
+   Bool_t inline IsPseudoFunc( MethodProxy* pymeth )
    {
       return (void*)pymeth == (void*)pymeth->fSelf;
    }

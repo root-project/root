@@ -193,10 +193,10 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       gcl = GetGlobalNamespaceInfo();
 
    G__MethodInfo gmi = gcl->GetMethod(
-      (bool)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
+      (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
       &fOffset, G__ClassInfo::ExactMatch );
 
-   if ( ! gmi.IsValid() && (bool)fMethod == true ) {
+   if ( ! gmi.IsValid() && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
       return kFALSE;
@@ -214,7 +214,7 @@ template< class T, class M >
 Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
-   executor = CreateExecutor( (bool)fMethod == true ?
+   executor = CreateExecutor( (Bool_t)fMethod == true ?
       fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F )
       : fClass.Name( ROOT::Reflex::S | ROOT::Reflex::F ) );
    if ( ! executor )
@@ -387,7 +387,7 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-      if ( ! (bool)arg ) {
+      if ( ! (Bool_t)arg ) {
          priority -= 10000;   // class is gibberish
       } else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() ) {
       // class is known, but no dictionary available, 2 more cases: * and &
@@ -503,7 +503,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::Initialize()
       return kFALSE;
 
 // minimum number of arguments when calling
-   fArgsRequired = (bool)fMethod == true ? fMethod.FunctionParameterSize( true ) : 0;
+   fArgsRequired = (Bool_t)fMethod == true ? fMethod.FunctionParameterSize( true ) : 0;
 
 // init done
    fIsInitialized = kTRUE;

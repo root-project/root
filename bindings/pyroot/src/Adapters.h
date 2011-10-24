@@ -64,7 +64,7 @@ public:
    TMemberAdapter( TMethodArg* ma );
    operator TMethodArg*() const;
 
-   operator bool() const { return fMember != 0; }
+   operator Bool_t() const { return fMember != 0; }
 
 public:
    std::string Name( unsigned int mod = 0 ) const;
@@ -73,7 +73,7 @@ public:
    Bool_t IsPublic() const;
    Bool_t IsStatic() const;
 
-   size_t FunctionParameterSize( bool required = false ) const;
+   size_t FunctionParameterSize( Bool_t required = false ) const;
    TMemberAdapter FunctionParameterAt( size_t nth ) const;
    std::string FunctionParameterNameAt( size_t nth ) const;
    std::string FunctionParameterDefaultAt( size_t nth ) const;
@@ -91,7 +91,7 @@ private:
 class TBaseAdapter {
 public:
    TBaseAdapter( TBaseClass* base ) : fBase( base ) {}
-   operator bool() const { return fBase != 0; }
+   operator Bool_t() const { return fBase != 0; }
 
 public:
    std::string Name() const;
@@ -107,10 +107,10 @@ public:
    TScopeAdapter( const std::string& name );
    TScopeAdapter( const TMemberAdapter& );
    operator TClass*() const { return fClass.GetClass(); }
-   operator bool() const;
+   operator Bool_t() const;
 
 public:
-   static TScopeAdapter ByName( const std::string& name, bool quiet = true );
+   static TScopeAdapter ByName( const std::string& name, Bool_t quiet = true );
 
 public:
    std::string Name( unsigned int mod = 0 ) const;

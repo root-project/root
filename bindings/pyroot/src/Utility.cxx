@@ -517,7 +517,7 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
             PyObject* pyvalue2 = PyROOT_PyUnicode_FromFormat(
                (char*)"%s and given element size (%ld) do not match needed (%d)",
                PyROOT_PyUnicode_AsString( pyvalue ),
-               seqmeths->sq_length ? (long)(buflen / (*(seqmeths->sq_length))( pyobject )) : (long)buflen,
+               seqmeths->sq_length ? (Long_t)(buflen / (*(seqmeths->sq_length))( pyobject )) : (Long_t)buflen,
                size );
             Py_DECREF( pyvalue );
             PyErr_Restore( pytype, pyvalue2, pytrace );

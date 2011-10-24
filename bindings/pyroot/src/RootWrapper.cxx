@@ -489,7 +489,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 // retrieve ROOT class (this verifies name)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
    T klass = T::ByName( lookup );
-   if ( ! (bool)klass || klass.FunctionMemberSize() == 0 ) {
+   if ( ! (Bool_t)klass || klass.FunctionMemberSize() == 0 ) {
    // special action for STL classes to enforce loading dict lib
       LoadDictionaryForSTLType( name, klass.Id() );
 
@@ -497,7 +497,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       klass = T::ByName( lookup );
    }
 
-   if ( ! (bool)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
+   if ( ! (Bool_t)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
    // a "naked" templated class is requested: return callable proxy for instantiations
       PyObject* pytcl = PyObject_GetAttr( gRootModule, PyStrings::gTemplate );
       PyObject* pytemplate = PyObject_CallFunction(
@@ -512,7 +512,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pytemplate;
    }
 
-   if ( ! (bool)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
+   if ( ! (Bool_t)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
    // an unloaded namespace is requested
       PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
 
@@ -524,7 +524,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pyns;
    }
 
-   if ( ! (bool)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
+   if ( ! (Bool_t)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
       if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
@@ -728,7 +728,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
 }
 
 //____________________________________________________________________________
-inline static Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, bool downcast = true ) {
+inline static Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast = true ) {
 // root/meta base class offset fails in the case of virtual inheritance
    Long_t offset = 0;
 

@@ -49,7 +49,7 @@ ClassImp(PyROOT::TPyROOTApplication)
 
 //- constructors/destructor --------------------------------------------------
 PyROOT::TPyROOTApplication::TPyROOTApplication(
-   const char* acn, int* argc, char** argv, bool bLoadLibs ) :
+   const char* acn, int* argc, char** argv, Bool_t bLoadLibs ) :
       TApplication( acn, argc, argv )
 {
 // Create a TApplication derived for use with interactive ROOT from python. A
