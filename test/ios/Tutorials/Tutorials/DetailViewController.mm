@@ -573,13 +573,17 @@
       return;
    } else {
       if (!padController_) {
-         self.padController = [[PadOptionsController alloc] initWithNibName:@"PadOptionsController" bundle : nil];
+         PadOptionsController *padInspector = [[PadOptionsController alloc] initWithNibName:@"PadOptionsController" bundle : nil];
+         self.padController = padInspector;
          self.padController.contentSizeForViewInPopover = CGSizeMake(250.f, 650.f);
+         [padInspector release];
       }
 
       if (!editorPopover_) {
-         self.editorPopover = [[UIPopoverController alloc] initWithContentViewController : padController_];
+         UIPopoverController *editorPopover = [[UIPopoverController alloc] initWithContentViewController : padController_];
+         self.editorPopover = editorPopover;
          self.editorPopover.popoverContentSize = CGSizeMake(250.f, 650.f);
+         [editorPopover release];
       }
 
       [self.editorPopover presentPopoverFromBarButtonItem : sender permittedArrowDirections:UIPopoverArrowDirectionAny animated : YES];
