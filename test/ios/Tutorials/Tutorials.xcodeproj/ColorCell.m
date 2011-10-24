@@ -1,11 +1,3 @@
-//
-//  ColorCell.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 8/11/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "ColorCell.h"

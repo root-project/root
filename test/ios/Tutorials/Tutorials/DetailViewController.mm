@@ -1,11 +1,3 @@
-//
-//  DetailViewController.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 7/7/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <QuartzCore/QuartzCore.h>
 
 #import "PadOptionsController.h"

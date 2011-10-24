@@ -1,11 +1,3 @@
-//
-//  HintView.h
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 7/14/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <UIKit/UIKit.h>
 
 

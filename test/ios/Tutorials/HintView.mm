@@ -1,11 +1,3 @@
-//
-//  HintView.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 7/14/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "HintView.h"

@@ -1,16 +1,7 @@
-//
-//  RootViewController.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 7/7/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <Foundation/NSTimer.h>
 
-#import "RootViewController.h"
-
 #import "DetailViewController.h"
+#import "RootViewController.h"
 
 #import "ExclusionGraphDemo.h"
 #import "PolarGraphDemo.h"
@@ -208,6 +199,9 @@
    [tutorialNames release];
    [tutorialIcons release];
    
+   for (unsigned i = 0; i < nROOTDemos; ++i)
+      delete demos[i];
+
    [super dealloc];
 }
 

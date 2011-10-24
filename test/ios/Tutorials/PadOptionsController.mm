@@ -1,11 +1,3 @@
-//
-//  PadOptionsController.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 8/11/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import "PadOptionsController.h"
 #import "PatternCell.h"
 #import "ColorCell.h"

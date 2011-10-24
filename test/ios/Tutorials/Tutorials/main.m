@@ -1,11 +1,3 @@
-//
-//  main.m
-//  Tutorials
-//
-//  Created by Timur Pocheptsov on 7/7/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
-//
-
 #import <UIKit/UIKit.h>
 
 int main(int argc, char *argv[])
