@@ -92,6 +92,8 @@ TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
 TGraphPolar::~TGraphPolar()
 {
    // TGraphPolar destructor.
+   delete []fXpol;
+   delete []fYpol;
 }
 
 

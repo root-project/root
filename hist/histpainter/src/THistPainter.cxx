@@ -3615,6 +3615,9 @@ void THistPainter::Paint(Option_t *option)
    End_html */
 
    if (fH->GetBuffer()) fH->BufferEmpty(-1);
+   
+   //For iOS: put the histogram on the top of stack of pickable objects.
+   const TPickerStackGuard topPush(fH);
 
    gPad->SetVertical(kTRUE);
 
@@ -3775,7 +3778,12 @@ paintstat:
          if (obj->InheritsFrom(TF1::Class())) break;
          obj = 0;
       }
-      PaintStat(gStyle->GetOptStat(),(TF1*)obj);
+      
+      //Stat is painted twice (first, it will be in canvas' list of primitives),
+      //second, it will be here, this is not required on iOS.
+      //Condition is ALWAYS true on a platform different from iOS.
+      if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode())
+         PaintStat(gStyle->GetOptStat(),(TF1*)obj);
    }
    fH->SetMinimum(minsav);
    gCurrentHist = oldhist;
@@ -3887,6 +3895,11 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    feature is used to make sure that the grid is drawn in the background and
    the axis tick marks in the foreground of the pad.
    End_html */
+   
+   //On iOS, grid should not be picable and can not be highlighted.
+   //Condition is never true on a platform different from iOS.
+   if (drawGridOnly && (gPad->PadInHighlightMode() || gPad->PadInSelectionMode()))
+      return;
 
    if (Hoption.Axis == -1) return;
    if (Hoption.Same && Hoption.Axis <= 0) return;
@@ -3950,199 +3963,219 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 
    // Paint X axis
-   ndivx = fXaxis->GetNdivisions();
-   if (ndivx > 1000) {
-      nx2   = ndivx/100;
-      nx1   = TMath::Max(1, ndivx%100);
-      ndivx = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsWNDC());
-   }
-   axis.SetTextAngle(0);
-   axis.ImportAxisAttributes(fXaxis);
+   
+   //To make X-axis selectable on iOS device.
+   if (gPad->PadInSelectionMode())
+      gPad->PushSelectableObject(fXaxis);
+   
+   
+   //This condition is ALWAYS true, unless it works on iOS (can be false on iOS).
+   if (gPad->PadInSelectionMode() || !gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && gPad->GetSelected() == fXaxis)) {
+      ndivx = fXaxis->GetNdivisions();
+      if (ndivx > 1000) {
+         nx2   = ndivx/100;
+         nx1   = TMath::Max(1, ndivx%100);
+         ndivx = 100*nx2 + Int_t(Float_t(nx1)*gPad->GetAbsWNDC());
+      }
+      axis.SetTextAngle(0);
+      axis.ImportAxisAttributes(fXaxis);
 
-   chopt[0] = 0;
-   // coverity [Calling risky function]
-   strlcat(chopt, "SDH",10);
-   // coverity [Calling risky function]
-   if (ndivx < 0) strlcat(chopt, "N",10);
-   if (gPad->GetGridx()) {
-      gridl = (aymax-aymin)/(gPad->GetY2() - gPad->GetY1());
+      chopt[0] = 0;
       // coverity [Calling risky function]
-      strlcat(chopt, "W",10);
-   }
+      strlcat(chopt, "SDH",10);
+      // coverity [Calling risky function]
+      if (ndivx < 0) strlcat(chopt, "N",10);
+      if (gPad->GetGridx()) {
+         gridl = (aymax-aymin)/(gPad->GetY2() - gPad->GetY1());
+         // coverity [Calling risky function]
+         strlcat(chopt, "W",10);
+      }
 
-   // Define X-Axis limits
-   if (Hoption.Logx) {
-      // coverity [Calling risky function]
-      strlcat(chopt, "G",10);
-      ndiv = TMath::Abs(ndivx);
-      if (useHparam) {
-         umin = TMath::Power(10,Hparam.xmin);
-         umax = TMath::Power(10,Hparam.xmax);
+      // Define X-Axis limits
+      if (Hoption.Logx) {
+         // coverity [Calling risky function]
+         strlcat(chopt, "G",10);
+         ndiv = TMath::Abs(ndivx);
+         if (useHparam) {
+            umin = TMath::Power(10,Hparam.xmin);
+            umax = TMath::Power(10,Hparam.xmax);
+         } else {
+            umin = TMath::Power(10,axmin);
+            umax = TMath::Power(10,axmax);
+         }
       } else {
-         umin = TMath::Power(10,axmin);
-         umax = TMath::Power(10,axmax);
+         ndiv = TMath::Abs(ndivx);
+         if (useHparam) {
+            umin = Hparam.xmin;
+            umax = Hparam.xmax;
+         } else {
+            umin = axmin;
+            umax = axmax;
+         }
       }
-   } else {
-      ndiv = TMath::Abs(ndivx);
-      if (useHparam) {
-         umin = Hparam.xmin;
-         umax = Hparam.xmax;
+
+      // Display axis as time
+      if (fXaxis->GetTimeDisplay()) {
+         // coverity [Calling risky function]
+         strlcat(chopt,"t",10);
+         if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
+            axis.SetTimeFormat(fXaxis->ChooseTimeFormat(Hparam.xmax-Hparam.xmin));
+         }
+      }
+
+      // The main X axis can be on the bottom or on the top of the pad
+      Double_t xAxisYPos1, xAxisYPos2;
+      if (xAxisPos == 1) {
+         // Main X axis top
+         xAxisYPos1 = aymax;
+         xAxisYPos2 = aymin;
       } else {
-         umin = axmin;
-         umax = axmax;
+         // Main X axis bottom
+         xAxisYPos1 = aymin;
+         xAxisYPos2 = aymax;
       }
-   }
 
-   // Display axis as time
-   if (fXaxis->GetTimeDisplay()) {
-      // coverity [Calling risky function]
-      strlcat(chopt,"t",10);
-      if (strlen(fXaxis->GetTimeFormatOnly()) == 0) {
-         axis.SetTimeFormat(fXaxis->ChooseTimeFormat(Hparam.xmax-Hparam.xmin));
-      }
-   }
-
-   // The main X axis can be on the bottom or on the top of the pad
-   Double_t xAxisYPos1, xAxisYPos2;
-   if (xAxisPos == 1) {
-      // Main X axis top
-      xAxisYPos1 = aymax;
-      xAxisYPos2 = aymin;
-   } else {
-      // Main X axis bottom
-      xAxisYPos1 = aymin;
-      xAxisYPos2 = aymax;
-   }
-
-   // Paint the main X axis (always)
-   uminsave = umin;
-   umaxsave = umax;
-   ndivsave = ndiv;
-   axis.SetOption(chopt);
-   if (xAxisPos) {
-      // coverity [Calling risky function]
-      strlcat(chopt, "-",10);
-      gridl = -gridl;
-   }
-   if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
-      axis.SetLabelSize(0.);
-      axis.SetTitle("");
-   }
-   axis.PaintAxis(axmin, xAxisYPos1,
-                  axmax, xAxisYPos1,
-                  umin, umax,  ndiv, chopt, gridl, drawGridOnly);
-
-   // Paint additional X axis (if needed)
-   if (gPad->GetTickx()) {
+      // Paint the main X axis (always)
+      uminsave = umin;
+      umaxsave = umax;
+      ndivsave = ndiv;
+      axis.SetOption(chopt);
       if (xAxisPos) {
-         cw=strstr(chopt,"-");
-         *cw='z';
-      } else {
          // coverity [Calling risky function]
          strlcat(chopt, "-",10);
+         gridl = -gridl;
       }
-      // coverity [Calling risky function]
-      if (gPad->GetTickx() < 2) strlcat(chopt, "U",10);
-      if ((cw=strstr(chopt,"W"))) *cw='z';
-      axis.SetTitle("");
-      axis.PaintAxis(axmin, xAxisYPos2,
-                     axmax, xAxisYPos2,
-                     uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
-   }
+      if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
+         axis.SetLabelSize(0.);
+         axis.SetTitle("");
+      }
+      axis.PaintAxis(axmin, xAxisYPos1,
+                     axmax, xAxisYPos1,
+                     umin, umax,  ndiv, chopt, gridl, drawGridOnly);
+
+      // Paint additional X axis (if needed)
+      // On iOS, this additional X axis is neither pickable, nor highlighted.
+      // Additional checks PadInSelectionMode etc. does not effect non-iOS platform.
+      if (gPad->GetTickx() && !gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
+         if (xAxisPos) {
+            cw=strstr(chopt,"-");
+            *cw='z';
+         } else {
+            // coverity [Calling risky function]
+            strlcat(chopt, "-",10);
+         }
+         // coverity [Calling risky function]
+         if (gPad->GetTickx() < 2) strlcat(chopt, "U",10);
+         if ((cw=strstr(chopt,"W"))) *cw='z';
+         axis.SetTitle("");
+         axis.PaintAxis(axmin, xAxisYPos2,
+                        axmax, xAxisYPos2,
+                        uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
+      }
+   }//End of "if pad in selection mode etc".
 
    // Paint Y axis
-   ndivy = fYaxis->GetNdivisions();
-   axis.ImportAxisAttributes(fYaxis);
+   //On iOS, Y axis must pushed into the stack of selectable objects.
+   if (gPad->PadInSelectionMode())
+      gPad->PushSelectableObject(fYaxis);
 
-   chopt[0] = 0;
-   // coverity [Calling risky function]
-   strlcat(chopt, "SDH",10);
-   // coverity [Calling risky function]
-   if (ndivy < 0) strlcat(chopt, "N",10);
-   if (gPad->GetGridy()) {
-      gridl = (axmax-axmin)/(gPad->GetX2() - gPad->GetX1());
+   //This conditions is ALWAYS true on a platform, different from iOS (on iOS can be true, can be false).
+   if (gPad->PadInSelectionMode() || !gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && gPad->GetSelected() == fYaxis)) {
+      ndivy = fYaxis->GetNdivisions();
+      axis.ImportAxisAttributes(fYaxis);
+
+      chopt[0] = 0;
       // coverity [Calling risky function]
-      strlcat(chopt, "W",10);
-   }
-
-   // Define Y-Axis limits
-   if (Hoption.Logy) {
+      strlcat(chopt, "SDH",10);
       // coverity [Calling risky function]
-      strlcat(chopt, "G",10);
-      ndiv = TMath::Abs(ndivy);
-      if (useHparam) {
-         umin = TMath::Power(10,Hparam.ymin);
-         umax = TMath::Power(10,Hparam.ymax);
-      } else {
-         umin = TMath::Power(10,aymin);
-         umax = TMath::Power(10,aymax);
-      }
-   } else {
-      ndiv = TMath::Abs(ndivy);
-      if (useHparam) {
-         umin = Hparam.ymin;
-         umax = Hparam.ymax;
-      } else {
-         umin = aymin;
-         umax = aymax;
-      }
-   }
-
-   // Display axis as time
-   if (fYaxis->GetTimeDisplay()) {
-      // coverity [Calling risky function]
-      strlcat(chopt,"t",10);
-      if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
-         axis.SetTimeFormat(fYaxis->ChooseTimeFormat(Hparam.ymax-Hparam.ymin));
-      }
-   }
-
-   // The main Y axis can be on the left or on the right of the pad
-   Double_t yAxisXPos1, yAxisXPos2;
-   if (yAxisPos == 1) {
-      // Main Y axis left
-      yAxisXPos1 = axmax;
-      yAxisXPos2 = axmin;
-   } else {
-      // Main Y axis right
-      yAxisXPos1 = axmin;
-      yAxisXPos2 = axmax;
-   }
-
-   // Paint the main Y axis (always)
-   uminsave = umin;
-   umaxsave = umax;
-   ndivsave = ndiv;
-   axis.SetOption(chopt);
-   if (yAxisPos) {
-      // coverity [Calling risky function]
-      strlcat(chopt, "+L",10);
-      gridl = -gridl;
-   }
-   if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
-      axis.SetLabelSize(0.);
-      axis.SetTitle("");
-   }
-   axis.PaintAxis(yAxisXPos1, aymin,
-                  yAxisXPos1, aymax,
-                  umin, umax,  ndiv, chopt, gridl, drawGridOnly);
-
-   // Paint the additional Y axis (if needed)
-   if (gPad->GetTicky()) {
-      if (gPad->GetTicky() < 2) {
+      if (ndivy < 0) strlcat(chopt, "N",10);
+      if (gPad->GetGridy()) {
+         gridl = (axmax-axmin)/(gPad->GetX2() - gPad->GetX1());
          // coverity [Calling risky function]
-         strlcat(chopt, "U",10);
-         axis.SetTickSize(-fYaxis->GetTickLength());
+         strlcat(chopt, "W",10);
+      }
+
+      // Define Y-Axis limits
+      if (Hoption.Logy) {
+         // coverity [Calling risky function]
+         strlcat(chopt, "G",10);
+         ndiv = TMath::Abs(ndivy);
+         if (useHparam) {
+            umin = TMath::Power(10,Hparam.ymin);
+            umax = TMath::Power(10,Hparam.ymax);
+         } else {
+            umin = TMath::Power(10,aymin);
+            umax = TMath::Power(10,aymax);
+         }
       } else {
+         ndiv = TMath::Abs(ndivy);
+         if (useHparam) {
+            umin = Hparam.ymin;
+            umax = Hparam.ymax;
+         } else {
+            umin = aymin;
+            umax = aymax;
+         }
+      }
+
+      // Display axis as time
+      if (fYaxis->GetTimeDisplay()) {
+         // coverity [Calling risky function]
+         strlcat(chopt,"t",10);
+         if (strlen(fYaxis->GetTimeFormatOnly()) == 0) {
+            axis.SetTimeFormat(fYaxis->ChooseTimeFormat(Hparam.ymax-Hparam.ymin));
+         }
+      }
+
+      // The main Y axis can be on the left or on the right of the pad
+      Double_t yAxisXPos1, yAxisXPos2;
+      if (yAxisPos == 1) {
+         // Main Y axis left
+         yAxisXPos1 = axmax;
+         yAxisXPos2 = axmin;
+      } else {
+         // Main Y axis right
+         yAxisXPos1 = axmin;
+         yAxisXPos2 = axmax;
+      }
+
+      // Paint the main Y axis (always)
+      uminsave = umin;
+      umaxsave = umax;
+      ndivsave = ndiv;
+      axis.SetOption(chopt);
+      if (yAxisPos) {
          // coverity [Calling risky function]
          strlcat(chopt, "+L",10);
+         gridl = -gridl;
       }
-      if ((cw=strstr(chopt,"W"))) *cw='z';
-      axis.SetTitle("");
-      axis.PaintAxis(yAxisXPos2, aymin,
-                     yAxisXPos2, aymax,
-                     uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
-   }
+      if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
+         axis.SetLabelSize(0.);
+         axis.SetTitle("");
+      }
+      axis.PaintAxis(yAxisXPos1, aymin,
+                     yAxisXPos1, aymax,
+                     umin, umax,  ndiv, chopt, gridl, drawGridOnly);
+
+      // Paint the additional Y axis (if needed)
+      // Additional checks for pad mode are required on iOS: this "second" axis is
+      // neither pickable, nor highlihted. Additional checks have no effect on non-iOS platform.
+      if (gPad->GetTicky() && !gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
+         if (gPad->GetTicky() < 2) {
+            // coverity [Calling risky function]
+            strlcat(chopt, "U",10);
+            axis.SetTickSize(-fYaxis->GetTickLength());
+         } else {
+            // coverity [Calling risky function]
+            strlcat(chopt, "+L",10);
+         }
+         if ((cw=strstr(chopt,"W"))) *cw='z';
+         axis.SetTitle("");
+         axis.PaintAxis(yAxisXPos2, aymin,
+                        yAxisXPos2, aymax,
+                        uminsave, umaxsave,  ndivsave, chopt, gridl, drawGridOnly);
+      }
+   }//End of "if pad is in selection mode etc."
 
    // Reset the axis if they have been inverted in case of option HBAR
    if (xaxis) {
@@ -4986,6 +5019,13 @@ void THistPainter::PaintErrors(Option_t *)
    <a href="#HP09">Draw 1D histograms error bars.</a>
    End_html */
 
+   // On iOS, we do not highlight histogram, if it's not picked at the moment
+   // (but part of histogram (axis or pavestat) was picked, that's why this code
+   // is called at all. This conditional statement never executes on non-iOS platform.
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
+      return;
+   
+
    const Int_t kBASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
    Double_t delta;
@@ -5420,7 +5460,11 @@ void THistPainter::PaintFrame()
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
    }
-   gPad->PaintPadFrame(Hparam.xmin,Hparam.ymin,Hparam.xmax,Hparam.ymax);
+   
+   //The next statement is always executed on non-iOS platform,
+   //on iOS depends on pad mode.
+   if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode())
+      gPad->PaintPadFrame(Hparam.xmin,Hparam.ymin,Hparam.xmax,Hparam.ymax);
 }
 
 
@@ -5448,7 +5492,13 @@ void THistPainter::PaintFunction(Option_t *)
       } else if (obj->InheritsFrom(TF1::Class())) {
          if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
-         obj->Paint(lnk->GetOption());
+         //Let's make this 'function' selectable on iOS device (for example, it can be TPaveStat).
+         gPad->PushSelectableObject(obj);
+      
+         //The next statement is ALWAYS executed on non-iOS platform, on iOS it depends on pad's mode
+         //and picked object.
+         if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && obj == gPad->GetSelected()))
+            obj->Paint(lnk->GetOption());
       }
       lnk = (TObjOptLink*)lnk->Next();
       padsave->cd();
@@ -5462,6 +5512,11 @@ void THistPainter::PaintHist(Option_t *)
    /* Begin_html
    <a href="#HP01b">Control routine to draw 1D histograms.</a>
    End_html */
+
+   //On iOS: do not highlight hist, if part of it was selected.
+   //Never executes on non-iOS platform.
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
+      return;
 
    static char chopth[17];
 
@@ -7859,7 +7914,11 @@ void THistPainter::PaintTable(Option_t *option)
    }
    if (Hoption.Same != 1) {
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
-         PaintStat2(gStyle->GetOptStat(),fit);
+         if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode()) {
+            //ALWAYS executed on non-iOS platform.
+            //On iOS, depends on mode.
+            PaintStat2(gStyle->GetOptStat(),fit);
+         }
       }
    }
 }
@@ -7874,6 +7933,10 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
     option = "L" draw the bins as line.
     option = "P" draw the bins as markers.
     End_html */
+    
+   //Do not highlight the histogram, if its part was picked.
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
+      return;
 
    TString opt = option;
    opt.ToLower();
@@ -7930,6 +7993,10 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
    /* Begin_html
     <a href="#HP20a">Control function to draw a TH2Poly as a color plot.</a>
     End_html */
+   
+   //Do not highlight the histogram, if its part was picked.
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
+      return;
 
    Int_t ncolors, color, theColor;
    Double_t z, zc;
@@ -8024,6 +8091,10 @@ void THistPainter::PaintTH2PolyScatterPlot(Option_t *)
    /* Begin_html
     <a href="#HP20a">Control function to draw a TH2Poly as a scatter plot.</a>
     End_html */
+
+   //Do not highlight the histogram, if its part was selected.
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
+      return;
 
    Int_t k, loop, marker=0;
    Double_t z, xk,xstep, yk, ystep, xp, yp;

@@ -45,6 +45,11 @@
 #include "TBrowser.h"
 #include "TUrl.h"
 
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+#include "TGIOS.h"
+#endif
+
+
 TApplication *gApplication = 0;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
@@ -223,6 +228,12 @@ void TApplication::InitializeGraphics()
    fgGraphInit = kTRUE;
 
    // Load the graphics related libraries
+
+
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+   gVirtualX = new ROOT::iOS::TGIOS("TGIOS", "VirtualX for iOS");
+#else
+
    LoadGraphicsLibs();
 
    // Try to load TrueType font renderer. Only try to load if not in batch
@@ -283,6 +294,7 @@ void TApplication::InitializeGraphics()
          if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
       }
    }
+#endif  // iOS
 }
 
 //______________________________________________________________________________

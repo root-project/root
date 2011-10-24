@@ -983,6 +983,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    /* Begin_Html
    <a href="#GP01">Control function to draw a graph.</a>
    End_Html */
+   if (theGraph->InheritsFrom("TGraphPolar"))
+      gPad->PushSelectableObject(theGraph);
 
    Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
    Int_t optionBar  , optionR    , optionOne  , optionE;

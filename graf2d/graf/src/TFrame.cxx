@@ -120,10 +120,14 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TFrame::Paint(Option_t *option)
 {
    // Paint this wbox with its current attributes.
+   const TPickerStackGuard stackGuard(this);
 
-   TWbox::Paint(option);
-      
-   gPad->PaintBox(fX1,fY1,fX2,fY2,"s");
+   if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && this == gPad->GetSelected())) {
+      TWbox::Paint(option);
+
+      gPad->PaintBox(fX1,fY1,fX2,fY2,"s");
+   }
+
 }
 
 //______________________________________________________________________________
