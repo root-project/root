@@ -66,4 +66,4 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(METADO): NOOPT = $(OPT)
-$(call stripsrc,$(MODDIRS)/TCintWithCling.o): CXXFLAGS += $(METADCLINGCXXFLAGS)
+$(call stripsrc,$(MODDIRS)/TCintWithCling.o): CXXFLAGS += $(METACLINGCXXFLAGS)
