@@ -28,6 +28,7 @@ INCLUDEFILES += $(CLINGDEP)
 
 CLINGDEP  := $(CLINGLIB)
 
+ifneq ($(LLVMCONFIG),)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
@@ -37,6 +38,7 @@ CLINGLLVMLIBS:= -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic) \
 	$(shell $(LLVMCONFIG) --libs) $(shell $(LLVMCONFIG) --ldflags)
+endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) 
@@ -54,7 +56,7 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(CLINGDEP) $(CLINGLIB)
+		@rm -f $(CLINGDEP) $(CLINGLIB) $(CLINGETC)
 
 distclean::     distclean-$(MODNAME)
 
