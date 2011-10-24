@@ -64,8 +64,11 @@ namespace {
       TBufferFile &fBuffer;
       TVirtualArray *fOnfileObject;
 
-      R__PushCache(TBufferFile &b, TVirtualArray *in) : fBuffer(b), fOnfileObject(in) {
-         if (fOnfileObject) fBuffer.PushDataCache( fOnfileObject );
+      R__PushCache(TBufferFile &b, TVirtualArray *in, UInt_t size) : fBuffer(b), fOnfileObject(in) {
+         if (fOnfileObject) {
+            fOnfileObject->SetSize(size);
+            fBuffer.PushDataCache( fOnfileObject );
+         }
       }
       ~R__PushCache() {
          if (fOnfileObject) fBuffer.PopDataCache();
@@ -3243,8 +3246,6 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // STL container master branch (has only the number of elements).
    Int_t n;
    b >> n;
@@ -3258,9 +3259,9 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       }
    }
    fNdata = n;
-   if (!fObject) {
-      return;
-   }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,n);   
+
    // Note: Proxy-helper needs to "embrace" the entire
    //       streaming of this STL container if the container
    //       is a set/multiset/map/multimap (what we do not
@@ -3336,13 +3337,14 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // STL container sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
-   if (!fNdata || !fObject) {
+   if (!fNdata) {
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+
    TStreamerInfo *info = GetInfoImp();
    if (info == 0) return;
 
@@ -3377,13 +3379,13 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // STL container sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
-   if (!fNdata || !fObject) {
+   if (!fNdata) {
       return;
    }
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   
    TStreamerInfo *info = GetInfoImp();
    if (info == 0) return;
 
@@ -3409,13 +3411,13 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // STL container sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
-   if (!fNdata || !fObject) {
+   if (!fNdata) {
       return;
    }
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   
    TStreamerInfo *info = GetInfoImp();
    if (info == 0) return;
    // Since info is not null, fReadActionSequence is not null either.
@@ -3441,8 +3443,6 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
       // 'dropped' from the current schema) so let's no copy it in a random place.
       return;
    }
-
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    // TClonesArray master branch (has only the number of elements).
    Int_t n;
@@ -3483,8 +3483,6 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // TClonesArray sub-branch (contains the elements).
    fNdata = fBranchCount->GetNdata();
    TClonesArray* clones = (TClonesArray*) fObject;
@@ -3497,6 +3495,10 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    TStreamerInfo *info = GetInfoImp();
    if (info==0) return;
    // Since info is not null, fReadActionSequence is not null either.
+
+   // Note, we could (possibly) save some more, by configuring the action
+   // based on the value of fOnfileObject rather than pushing in on a stack.
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
 
    char **arr = (char **)clones->GetObjectRef(0);
    char **end = arr + fNdata;
@@ -3521,7 +3523,7 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3558,7 +3560,6 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3574,6 +3575,7 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    if (!info) {
       return;
    }
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1); // Here we have a single object that contains a variable size C-style array.
    // Since info is not null, fReadActionSequence is not null either.
    b.ReadSequence(*fReadActionSequence, fObject);
 }
@@ -3593,8 +3595,6 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
-
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -3609,6 +3609,9 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
    if (!info) {
       return;
    }
+
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   
    // Since info is not null, fReadActionSequence is not null either.
    b.ReadSequence(*fReadActionSequence, fObject);
    fNdata = (Int_t) GetValue(0, 0);
@@ -3628,7 +3631,7 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
+   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
    fBranchClass->Streamer(fObject,b);
 }
 
