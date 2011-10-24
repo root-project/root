@@ -180,6 +180,11 @@ pattern = TH3[CSFDI]
 icon = h3_s.xpm h3_t.xpm
 action = ->Draw()
 
+[root/thnsparse]
+pattern = ROOT::THnSparseBrowsable
+icon = h1_s.xpm h1_t.xpm
+action = ->Draw()
+
 [root/tf1]
 pattern = TF1
 icon = f1_s.xpm f1_t.xpm
