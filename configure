@@ -5969,7 +5969,7 @@ message "Checking whether to integrate experimental cling"
 hascling="undef"
 clingextrares=""
 if test ! "x$enable_cling" = "xno"; then
-    # allow LLVMDIR instead of --with--llvmconfig
+    # allow LLVMDIR instead of --with-llvm-config
     if test "x$llvmconfig" = "x" ; then
         if test ! "x$LLVMDIR" = "x" ; then
             llvmconfig="$LLVMDIR/bin"
