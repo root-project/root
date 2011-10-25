@@ -4,11 +4,11 @@
 # Script to install a given version of Xrootd/Scalla
 #
 # Syntax:
-#          ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]
-#                                          [-v <version>|--version=<version>]
-#                                          [-t <tarball>|--tarball=<tarball>]
-#                                           [-b <where-to-build>|--builddir=<where-to-build>]
-#                                           [--xrdopts="<opts-to-xrootd>"]
+#  ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]
+#                           [-v <version>|--version=<version>]
+#                           [-t <tarball>|--tarball=<tarball>]
+#                           [-b <where-to-build>|--builddir=<where-to-build>]
+#                           [--xrdopts="<opts-to-xrootd>"]
 #
 # See printhelp for a description of the options.
 #
@@ -20,29 +20,30 @@ printhelp()
         echo "  Script to install a given version of Xrootd/Scalla"
         echo " "
         echo "  Syntax:"
-        echo "           ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]"
-        echo "                                           [-v <version>|--version=<version>]"
-        echo "                                           [-t <tarball>|--tarball=<tarball>]"
-        echo "                                           [-b <where-to-build>|--builddir=<where-to-build>]"
-        echo "                                           [--xrdopts=\"<opts-to-xrootd>\"]"
+        echo "   ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]"
+        echo "                      [-v <version>|--version=<version>]"
+        echo "                      [-t <tarball>|--tarball=<tarball>]"
+        echo "                      [-b <where-to-build>|--builddir=<where-to-build>]"
+        echo "                      [--xrdopts=\"<opts-to-xrootd>\"]"
         echo " "
         echo "  where"
-        echo "           <installdir>: the directory where the bin, lib, include/xrootd, share and man folders"
-        echo "                         will appear"
-        echo "           -b <where-to-build>, --builddir=<where-to-build>"
-        echo "                         directory where to build; default /tmp/xrootd-<version>"
-        echo "           -d,--debug    build in debug mode (no optimization)"
-        echo "           -h, --help    print this help screen"
-        echo "           -o,--optimized build in optimized mode without any debug symbol"
-        echo "           -t <tarball>, --tarball=<tarball>"
-        echo "                         - full local path to source tarball"
-        echo "           -v <version>, --version=<version>"
-        echo "                         - version in the form x.j.w[-hash-or-tag] ;"
-        echo "                           current default 3.1.0"
-        echo "           --xrdopts=<opts-to-xrootd>"
-        echo "                         additional configuration options to xrootd (see xrootd web site)"
+        echo "   <installdir>: the directory where the bin, lib, include/xrootd,"
+        echo "  share and man directories will appear"
+        echo "   -b <where-to-build>, --builddir=<where-to-build>"
+        echo "      directory where to build; default /tmp/xrootd-<version>"
+        echo "   -d,--debug    build in debug mode (no optimization)"
+        echo "   -h, --help    print this help screen"
+        echo "   -o,--optimized build in optimized mode without any debug symbol"
+        echo "   -t <tarball>, --tarball=<tarball>"
+        echo "      full local path to source tarball"
+        echo "   -v <version>, --version=<version>"
+        echo "      version in the form x.j.w[-hash-or-tag] ;"
+        echo "      current default 3.1.0"
+        echo "   --xrdopts=<opts-to-xrootd>"
+        echo "      additional configuration options to xrootd (see xrootd web site)"
         echo " "
-        echo "  When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve the tarball"
+        echo "  When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve"
+        echo "  the tarball"
 }
 
 DBGOPT="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
