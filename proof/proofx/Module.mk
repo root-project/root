@@ -36,6 +36,7 @@ PROOFXDEP    := $(PROOFXO:.o=.d) $(PROOFXDO:.o=.d)
 PROOFXLIB    := $(LPATH)/libProofx.$(SOEXT)
 PROOFXMAP    := $(PROOFXLIB:.$(SOEXT)=.rootmap)
 
+ifeq ($(HASXRD),yes)
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFXH))
 ALLLIBS      += $(PROOFXLIB)
@@ -43,6 +44,7 @@ ALLMAPS      += $(PROOFXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(PROOFXDEP)
+endif
 
 # When using an external XROOTD distribution XROOTDDIRI and XROOTDDIRL
 # are undefined and have to point to the specified inc and lib dirs.

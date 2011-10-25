@@ -248,7 +248,6 @@ XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
 HASXRD         := @hasxrd@
 XRDINCDIR      := @xrdincdir@
 XRDLIBDIR      := @xrdlibdir@
-XRDADDOPTS     := @xrdaddopts@
 EXTRA_XRDFLAGS := @extraxrdflags@
 XRDVERSION     := @xrdversion@
 HASXRDUTILS    := @hasxrdutils@

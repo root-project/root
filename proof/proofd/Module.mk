@@ -123,7 +123,7 @@ XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
 # Extra include paths and libs
 XPROOFDEXELIBS :=
 XPROOFDEXESYSLIBS :=
-XPROOFDEXE     :=
+XPROOFDEXE     := bin/xproofd
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
@@ -162,7 +162,6 @@ XPROOFDEXELIBS +=  $(DNSSDLIB)
 ifeq ($(PLATFORM),solaris)
 XPROOFDEXESYSLIBS := -lsendfile
 endif
-XPROOFDEXE     := bin/xproofd
 endif
 
 # used in the main Makefile

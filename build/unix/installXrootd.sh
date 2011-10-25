@@ -123,11 +123,11 @@ if test ! "x$short_opts" = "x" ; then
          other_args=$noa
       fi
    done
+fi
 
-   # Fill empty fields with any non-prefixed argument
-   if test ! "x$other_args" = "x" ; then
-      TGTDIR="$other_args"
-   fi
+# Fill empty fields with any non-prefixed argument
+if test ! "x$other_args" = "x" ; then
+   TGTDIR="$other_args"
 fi
 
 XMK=make

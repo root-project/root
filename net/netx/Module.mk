@@ -27,6 +27,7 @@ NETXDEP      := $(NETXO:.o=.d) $(NETXDO:.o=.d)
 NETXLIB      := $(LPATH)/libNetx.$(SOEXT)
 NETXMAP      := $(NETXLIB:.$(SOEXT)=.rootmap)
 
+ifeq ($(HASXRD),yes)
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETXH))
 ALLLIBS      += $(NETXLIB)
@@ -34,6 +35,7 @@ ALLMAPS      += $(NETXMAP)
 
 # include all dependency files
 INCLUDEFILES += $(NETXDEP)
+endif
 
 # When using an external XROOTD distribution XROOTDDIRI and XROOTDDIRL
 # are undefined and have to point to the specified inc and lib dirs.

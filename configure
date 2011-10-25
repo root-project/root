@@ -4271,65 +4271,77 @@ check_explicit "$enable_xml" "$enable_xml_explicit" \
 ### echo %%% Check for xrootd support
 #
 if test "x$enable_xrootd" = "xyes" ; then
-   message "Checking for xrootd"
    xrdcomm=""
    vercomm=""
    extraxrdflags=""
    
    # Localize the version header; priority to specific inc and lib settings,
    # followed by global dir setting and standard paths
-   externalxrd="no"
+   xrdincone=""
+   xrdinctwoa=""
+   xrdinctwob=""
+   xrdinctmp=""
    if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
-      externalxrd="yes"
-      xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
-      if test ! -f "$xrdincdir/XrdVersion.hh" ; then
-         enable_xrootd="no"
-         xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
-         xrdincdir=""
-         xrdlibdir=""
-      else
-         xrdcomm="yes, using installation at ($xrdincdir,$xrdlibdir)"
-      fi
+      xrdincone="$xrdincdir/XrdVersion.hh"
+      xrdlibone="$xrdlibdir"
+      xrdinctmp="$xrdincdir $xrdinctmp"
    elif test ! "x$xrootddir" = "x"; then
-      externalxrd="yes"
-      xrdlibdir="$xrootddir/lib"
-      xrdcomm="no, using xrootd at $xrootddir"
-      if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/include/xrootd"
-         xrdcomm="yes, using installation at $xrootddir"
-      elif test -f "$xrootddir/src/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/src"
-         xrdcomm="yes, using installation at $xrootddir"
-      else
-         enable_xrootd="no"
-         xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
-         xrdincdir=""
-         xrdlibdir=""
-      fi
+      xrdlibtwo="$xrootddir"
+      xrdinctwoa="$xrootddir/include/xrootd/XrdVersion.hh"
+      xrdinctwob="$xrootddir/src/XrdVersion.hh"
+      xrdinctmp="$xrootddir/include/xrootd $xrootddir/src $xrdinctmp"
    else
       # Standard paths
       xrdpaths="$XRDSYS /opt/xrootd /usr/local /usr"
       for stdp in $xrdpaths ; do
-         xrdcomm="yes, using installation at $stdp"
-         if test -f "$stdp/include/xrootd/XrdVersion.hh" && test -d "$stdp/lib" ; then
-            xrdincdir="$stdp/include/xrootd"
-            xrdlibdir="$stdp/lib"
-         elif test -f "$stdp/include/XrdVersion.hh" && test -d "$stdp/lib" ; then
-            xrdincdir="$stdp/include"
-            xrdlibdir="$stdp/lib"
-         fi
-         if test ! "x$xrdincdir" = "x" ; then
-            break
+         if test -d "$stdp/lib" ; then
+            xrdlibthree="$xrdlibthree $stdp/lib"
+            xrdinctmp="$xrdinctmp $stdp/include/xrootd $stdp/include"
          fi
       done
-      if test "x$xrdincdir" = "x" ; then
-         enable_xrootd="no"
-         xrdcomm="no, tried installations at $xrdpaths, but version file missing: disabling"
-         xrdincdir=""
-         xrdlibdir=""
-      fi
    fi
-   echo $xrdcomm
+   # Run the search now
+   check_header "XrdVersion.hh" "" "$xrdinctmp"
+   if test ! "x$found_hdr" = "x" ; then
+      xrdinc="$found_dir/$found_hdr"
+      # Find out which path was the good one
+      if test "x$xrdinc" = "x$xrdincone" ; then 
+         xrdincdir="$found_dir"
+         xrdlibdir="$xrdlibone"
+      elif test "x$xrdinc" = "x$xrdinctwoa" ; then 
+         xrdincdir="$xrdlibtwo/include/xrootd"
+         xrdlibdir="$xrdlibtwo/lib"
+      elif test "x$xrdinc" = "x$xrdinctwob" ; then 
+         xrdincdir="$xrdlibtwo/src"
+         xrdlibdir="$xrdlibtwo/lib"
+      else
+         for ll in $xrdlibthree ; do
+            rdir=`dirname $ll`
+            xinca="$rdir/include/xrootd/XrdVersion.hh"
+            xincb="$rdir/include/XrdVersion.hh"
+            if test "x$xrdinc" = "x$xinca" ; then 
+               xrdincdir="$rdir/include/xrootd"
+               xrdlibdir="$ll"
+            elif test "x$xrdinc" = "x$xincb" ; then 
+               xrdincdir="$rdir/include"
+               xrdlibdir="$ll"
+            fi
+            if test ! "x$xrdincdir" = "x" ; then
+               break
+            fi
+         done
+         # Only here if something inconsistent was found
+         if test "x$xrdincdir" = "x" ; then
+            enable_xrootd="no"
+            xrdincdir=""
+            xrdlibdir=""
+         fi
+      fi
+   else
+      enable_xrootd="no"
+      xrdincdir=""
+      xrdlibdir=""
+   fi
 fi
 
 # Decode version
@@ -4337,7 +4349,7 @@ xrdver=
 decver=0
 if test "x$enable_xrootd" = "xyes" ; then
 
-   message "Decoding xrootd version"
+   message "Checking for xrootd version"
 
    verh=$xrdincdir/XrdVersion.hh
 
@@ -4380,7 +4392,6 @@ if test "x$enable_xrootd" = "xyes" ; then
    echo "$xrdver"
 fi
 
-bjrcomm=
 if test "x$enable_xrootd" = "xyes" ; then
 
    extraxrdflags="-DROOTXRDVERS=$decver"
@@ -4422,16 +4433,12 @@ if test "x$enable_xrootd" = "xyes" ; then
       if test "x$enable_bonjour" = "xyes"; then
          check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
          if test  $found_symbol -eq 0 ; then
-            bjrcomm="Checking for Bonjour/Avahi support in Xrootd ... no, disabling bonjour/avahi in XrdProofd"
             bonjourcppflags=
          fi
       fi
    fi
 fi
 
-if test ! "x$bjrcomm" = "x"; then
-   echo "$bjrcomm"
-fi
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
      "Explicitly required Xrootd dependencies not fulfilled"
 
@@ -4443,11 +4450,6 @@ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
 #
 # If the user has set the flags "--disable-globus", we don't check for
 # Globus at all.
-#
-# By default, always try to build the XRD GSI plug-in; this can be
-# disabled with
-#                  --with-xrootd-opts="--disable-gsi"
-buildxrdgsi="yes"
 #
 glbextracflags=""
 glbpatchcflags=""
@@ -6560,7 +6562,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
-    -e "s|@xrdaddopts@|$xrdaddopts|"            \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
     -e "s|@xrdversion@|$decver|"                \
@@ -6598,7 +6599,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
-    -e "s|@buildxrdgsi@|$buildxrdgsi|"          \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
