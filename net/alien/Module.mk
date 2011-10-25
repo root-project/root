@@ -27,6 +27,14 @@ ALIENDEP     := $(ALIENO:.o=.d) $(ALIENDO:.o=.d)
 ALIENLIB     := $(LPATH)/libRAliEn.$(SOEXT)
 ALIENMAP     := $(ALIENLIB:.$(SOEXT)=.rootmap)
 
+# Include paths
+ALIENINCEXTRA := $(XROOTDDIRI:%=-I%)
+ifneq ($(EXTRA_XRDFLAGS),)
+ALIENINCEXTRA += -Iproof/proofd/inc
+endif
+
+ifeq ($(HASXRD),yes)
+ifeq ($(BUILDALIEN),yes)
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ALIENH))
 ALLLIBS     += $(ALIENLIB)
@@ -34,6 +42,8 @@ ALLMAPS     += $(ALIENMAP)
 
 # include all dependency files
 INCLUDEFILES += $(ALIENDEP)
+endif
+endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -68,4 +78,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ALIENO) $(ALIENDO): CXXFLAGS += $(ALIENINCDIR:%=-I%)
+$(ALIENO) $(ALIENDO): CXXFLAGS += $(ALIENINCEXTRA) $(EXTRA_XRDFLAGS)
