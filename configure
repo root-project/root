@@ -6180,6 +6180,9 @@ fi
 if test -d core/editline ; then
    rm -rf core/editline
 fi
+if test -d net/xrootd ; then
+   rm -rf net/xrootd
+fi
 if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
@@ -6198,7 +6201,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.* \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
- bin/xrdsssadmin bin/xrdstagetool bin/xrootd
+ bin/xrdsssadmin bin/xrdstagetool bin/xrootd lib/libXrd*
 
 ######################################################################
 #
