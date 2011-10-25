@@ -18,6 +18,10 @@
 
 namespace clang {
   class ASTContext;
+  class DeclContext;
+  class FunctionDecl;
+  class NamedDecl;
+  class NamespaceDecl;
 }
 
 namespace cling {
@@ -125,6 +129,11 @@ namespace cling {
     };
     llvm::SmallVector<DGRInfo, 64> DeclsQueue;
     bool m_Queueing;
+
+    bool isOnScopeChains(clang::NamedDecl* D);
+    void RevertVarDecl(clang::VarDecl* VD);
+    void RevertFunctionDecl(clang::FunctionDecl* FD);
+    void RevertNamespaceDecl(clang::NamespaceDecl* NSD);
 
     friend class IncrementalParser;
   };

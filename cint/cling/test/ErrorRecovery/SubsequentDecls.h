@@ -1,10 +1,17 @@
-// We would expect both namespaces to be reverted from the AST, however when
-// clang tries to remove the non-canonical declaration it removes the canonical
-// one instead.
-namespace test {
-  int i;
-}
+// This file contains an error (redefinition of '__my_i') and it gets included
+// so all the contents should be reverted from the AST transparently.
 
-namespace test {
-  int i; // expected-error {{redefinition of 'i'}} expected-note {{previous definition is here}} 
-}
+// Template specializations
+template<> int TemplatedF(int t){return t + 10;}
+
+// Aliases
+typedef struct A AStruct;
+
+
+// Overloads
+int OverloadedF(int i){ return i + 10;};
+double OverloadedF(double d){ return d + 10.11f; };
+
+// Redeclarations
+int __my_i = 0; // expected-note {{previous definition is here}}
+int __my_i = 0; // expected-error {{redefinition of '__my_i'}}

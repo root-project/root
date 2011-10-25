@@ -9,6 +9,8 @@
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DependentDiagnostic.h"
 #include "clang/Serialization/ASTDeserializationListener.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
@@ -362,36 +364,76 @@ namespace cling {
     DeserializationListener->AddListener(I, C->GetASTDeserializationListener());
   }
 
+  // Gives us access to the protected members that we  need.
+  class DeclContextExt : public DeclContext {
+  public:
+    static bool removeIfLast(DeclContext* DC, Decl* D) {
+      if (!D->getNextDeclInContext()) {
+        // Either last (remove!), or invalid (nothing to remove)
+        if (((DeclContextExt*)DC)->LastDecl == D) {
+          // Valid. Thus remove.
+          DC->removeDecl(D);
+          return true;
+        }
+      } 
+      else {
+        DC->removeDecl(D);
+        return true;
+      }
+
+      return false;
+    }
+  };
+
+
   void ChainedConsumer::RecoverFromError() {
-    for (llvm::SmallVector<DGRInfo, 64>::iterator I = DeclsQueue.begin();
-           I != DeclsQueue.end(); ++I) {
+
+    for (llvm::SmallVector<DGRInfo, 64>::reverse_iterator I = DeclsQueue.rbegin();
+         I != DeclsQueue.rend(); ++I) {
       DeclGroupRef& DGR = (*I).D;
 
       for (DeclGroupRef::iterator 
-             Di = DGR.begin(), E = DGR.end(); Di != E; ++Di) {
+             Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
         DeclContext* DC = (*Di)->getDeclContext();
-        // Check if the declaration is template instantiation, which is not in
-        // any DeclContext yet, because it came from 
-        // Sema::PerformPendingInstantiations
-        if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*Di)) {
-          if (!FD->getTemplateInstantiationPattern())
-            DC->removeDecl(FD);
-        }
-        else
-          DC->removeDecl(*Di);
-        Scope* S = m_Sema->getScopeForContext(DC);
-        if (S)
-          S->RemoveDecl(*Di);
 
-        // Pop if the same declaration has come trough other function
+        // Get rid of the declaration. If the declaration has name we should 
+        // heal the lookup tables as well
+        if (NamedDecl* ND = dyn_cast<NamedDecl>(*Di)){
+          // If the ND is DeclContext then empty the DeclContext's contents
+          // if (DeclContext* DCtx = dyn_cast<DeclContext>(ND))
+          //   RevertDeclContext(DCtx);
+
+          // If the decl was removed make sure that we fix the lookup
+          if (DeclContextExt::removeIfLast(DC, ND)) {
+            Scope* S = m_Sema->getScopeForContext(DC);
+            if (S)
+              S->RemoveDecl(ND);
+
+            if (isOnScopeChains(ND))
+                m_Sema->IdResolver.RemoveDecl(ND);
+          }
+
+          if (VarDecl* VD = dyn_cast<VarDecl>(ND))
+            RevertVarDecl(VD);
+          else if (FunctionDecl* FD = dyn_cast<FunctionDecl>(ND))
+            RevertFunctionDecl(FD);
+          else if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(ND))
+            RevertNamespaceDecl(NSD);
+        }
+        // Otherwise just get rid of it
+        else {
+          DeclContextExt::removeIfLast(DC, *Di);
+        }
+
+        // Pop if the same declaration has come through other function
         // For example CXXRecordDecl comes from HandleTopLevelDecl and
         // HandleTagDecl
         // Not terribly efficient but it happens only when there are errors
-        for (llvm::SmallVector<DGRInfo, 64>::iterator J = I + 1;
-               J != DeclsQueue.end(); ++J) {
+        for (llvm::SmallVector<DGRInfo, 64>::reverse_iterator J = I + 1;
+             J != DeclsQueue.rend(); ++J) {
           DeclGroupRef& DGRJ = (*J).D;
           for (DeclGroupRef::iterator 
-                 Dj = DGRJ.begin(), E = DGRJ.end(); Dj != E; ++Dj) {
+                 Dj = DGRJ.end() - 1, E = DGRJ.begin() - 1; Dj != E; --Dj) {
             if ((*Dj) && (*Dj) == *Di)
               // Set the declaration to 0, we don't want to call the dtor 
               // of the DeclGroupRef
@@ -404,6 +446,157 @@ namespace cling {
     DeclsQueue.clear();
 
     m_Sema->getDiagnostics().Reset();
+  }
+
+  // See Sema::PushOnScopeChains
+  bool ChainedConsumer::isOnScopeChains(NamedDecl* D) {
+    
+    // Named decls without name shouldn't be in. Eg: struct {int a};
+    if (!D->getDeclName())
+      return false;
+
+    // Out-of-line definitions shouldn't be pushed into scope in C++.
+    // Out-of-line variable and function definitions shouldn't even in C.
+    if ((isa<VarDecl>(D) || isa<FunctionDecl>(D)) && D->isOutOfLine() && 
+        !D->getDeclContext()->getRedeclContext()->Equals(
+                        D->getLexicalDeclContext()->getRedeclContext()))
+      return false;
+
+    // Template instantiations should also not be pushed into scope.
+    if (isa<FunctionDecl>(D) &&
+        cast<FunctionDecl>(D)->isFunctionTemplateSpecialization())
+      return false;
+
+    IdentifierResolver::iterator 
+      IDRi = m_Sema->IdResolver.begin(D->getDeclName()),
+      IDRiEnd = m_Sema->IdResolver.end();
+    
+    for (; IDRi != IDRiEnd; ++IDRi) {
+      if (D == *IDRi) 
+        return true;
+    }
+
+
+    // Check if the declaration is template instantiation, which is not in
+    // any DeclContext yet, because it came from 
+    // Sema::PerformPendingInstantiations
+    // if (isa<FunctionDecl>(D) && 
+    //     cast<FunctionDecl>(D)->getTemplateInstantiationPattern())
+    //   return false;ye
+
+
+    return false;
+  }
+
+  void ChainedConsumer::RevertVarDecl(VarDecl* VD) {
+    DeclContext* DC = VD->getDeclContext();
+    Scope* S = m_Sema->getScopeForContext(DC);
+
+    // Find other decls that the old one has replaced
+    StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
+    if (!Map) return;      
+    StoredDeclsMap::iterator Pos = Map->find(VD->getDeclName());
+    assert(Pos != Map->end() && "no lookup entry for decl");
+    
+    if (Pos->second.isNull())
+      if (VarDecl* NewVD = VD->getPreviousDeclaration()) {
+        // We need to rewire the list of the redeclarations in order to exclude
+        // the reverted one, because it gets found for example by 
+        // Sema::MergeVarDecl and ends up in the lookup
+        //
+        NewVD->setPreviousDeclaration(NewVD->getPreviousDeclaration());
+        Pos->second.setOnlyValue(NewVD);
+        if (S)
+          S->AddDecl(NewVD);
+        m_Sema->IdResolver.AddDecl(NewVD);
+      }
+  }
+
+  void ChainedConsumer::RevertFunctionDecl(FunctionDecl* FD) {
+    DeclContext* DC = FD->getDeclContext();
+    Scope* S = m_Sema->getScopeForContext(DC);
+
+    // Template instantiation of templated function first creates a canonical
+    // declaration and after the actual template specialization. For example:
+    // template<typename T> T TemplatedF(T t);
+    // template<> int TemplatedF(int i) { return i + 1; } creates:
+    // 1. Canonical decl: int TemplatedF(int i);
+    // 2. int TemplatedF(int i){ return i + 1; }
+    //
+    // The template specialization is attached to the list of specialization of
+    // the templated function.
+    // When TemplatedF is looked up it finds the templated function and the 
+    // lookup is extended by the templated function with its specializations.
+    // In the end we don't need to remove the canonical decl because, it
+    // doesn't end up in the lookup table.
+    //
+    class FunctionTemplateDeclExt : public FunctionTemplateDecl {
+    public:
+      static llvm::FoldingSet<FunctionTemplateSpecializationInfo>& 
+      getSpecializationsExt(FunctionTemplateDecl* FTSI) {
+        return ((FunctionTemplateDeclExt*) FTSI)->getSpecializations();
+      }
+    };
+
+    if (FD->isFunctionTemplateSpecialization()) {
+      // 1. Remove the canonical decl.
+      // TODO: Can the cannonical has another DeclContext and Scope, different
+      // from the specialization's implementation?
+      FunctionDecl* CanFD = FD->getCanonicalDecl();
+      FunctionTemplateDecl* FTD 
+        = FD->getTemplateSpecializationInfo()->getTemplate();
+      llvm::FoldingSet<FunctionTemplateSpecializationInfo> &FS 
+        = FunctionTemplateDeclExt::getSpecializationsExt(FTD);
+      FS.RemoveNode(CanFD->getTemplateSpecializationInfo());
+    }
+
+    // Find other decls that the old one has replaced
+    StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
+    if (!Map) return;      
+    StoredDeclsMap::iterator Pos = Map->find(FD->getDeclName());
+    assert(Pos != Map->end() && "no lookup entry for decl");
+
+    if (Pos->second.isNull()) {
+      // When we have template specialization we have to clean it all
+      if (FD->isFunctionTemplateSpecialization()) {
+        while ((FD = FD->getPreviousDeclaration())) {
+          DC->removeDecl(FD);
+          if (S)
+            S->RemoveDecl(FD);
+
+          if (isOnScopeChains(FD))
+            m_Sema->IdResolver.RemoveDecl(FD);
+        } 
+        return;
+      }
+
+      if (FunctionDecl* NewFD = FD->getPreviousDeclaration()) {
+        Pos->second.setOnlyValue(NewFD);
+        if (S)
+          S->AddDecl(NewFD);
+        m_Sema->IdResolver.AddDecl(NewFD);
+      }
+    }
+  }
+
+  void ChainedConsumer::RevertNamespaceDecl(NamespaceDecl* NSD) {
+    DeclContext* DC = NSD->getDeclContext();
+    Scope* S = m_Sema->getScopeForContext(DC);
+
+    // Find other decls that the old one has replaced
+    StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
+    if (!Map) return;      
+    StoredDeclsMap::iterator Pos = Map->find(NSD->getDeclName());
+    assert(Pos != Map->end() && "no lookup entry for decl");
+    
+    if (Pos->second.isNull())
+      if (NSD != NSD->getOriginalNamespace()) {
+        NamespaceDecl* NewNSD = NSD->getOriginalNamespace();
+        Pos->second.setOnlyValue(NewNSD);
+        if (S)
+          S->AddDecl(NewNSD);
+        m_Sema->IdResolver.AddDecl(NewNSD);
+      }
   }
 
   void ChainedConsumer::DumpQueue() {
