@@ -1,8 +1,8 @@
+#include "IOSPad.h"
 #include "TFrame.h"
 #include "TF2.h"
 
 #include "LegoDemo.h"
-#include "IOSPad.h"
 
 namespace ROOT {
 namespace iOS {

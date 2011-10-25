@@ -1,14 +1,8 @@
-#include <stdexcept>
-#include <iostream>
-
-#include "H2PolyDemo.h"
-
 #include "TRandom.h"
 #include "TH2Poly.h"
 #include "TFile.h"
 #include "TMath.h"
 #include "TKey.h"
-
 
 #include "H2PolyDemo.h"
 
@@ -24,13 +18,14 @@ H2PolyDemo::H2PolyDemo(const char *fileName)
       return;
       
    fPoly.reset(dynamic_cast<TH2Poly *>(inputFile->Get("h2poly")));
-   fPoly->SetDirectory(0);
+   if (fPoly.get())
+      fPoly->SetDirectory(0);
 }
 
 //______________________________________________________________________________
 H2PolyDemo::~H2PolyDemo()
 {
-   //For auto_ptr dtor only.
+   //For auto_ptr's dtor only.
 }
 
 //______________________________________________________________________________

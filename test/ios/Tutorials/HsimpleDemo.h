@@ -3,9 +3,7 @@
 
 #include <memory>
 
-#ifndef ROOT_DemoBase
 #include "DemoBase.h"
-#endif
 
 class TH1F;
 

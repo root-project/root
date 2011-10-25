@@ -26,7 +26,7 @@ public:
    void NextStep(){}
    void StopAnimation(){}
 
-   void AdjustPad(Pad *) {}
+   void AdjustPad(Pad * /*pad*/) {}
 
    void PresentDemo();
    

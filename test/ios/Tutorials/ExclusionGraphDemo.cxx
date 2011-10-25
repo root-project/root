@@ -15,7 +15,6 @@ ExclusionGraphDemo::ExclusionGraphDemo()
 {
    fMultiGraph->SetTitle("Exclusion graphs");
 
-   const Int_t n = 35;
    Double_t x1[kNPoints], x2[kNPoints], x3[kNPoints];
    Double_t y1[kNPoints], y2[kNPoints], y3[kNPoints];
    
@@ -28,18 +27,18 @@ ExclusionGraphDemo::ExclusionGraphDemo()
       y3[i] = 10 * TMath::Sin(x1[i]) - 2;
    }
 
-   std::auto_ptr<TGraph> graph1(new TGraph(n, x1, y1));
+   std::auto_ptr<TGraph> graph1(new TGraph(kNPoints, x1, y1));
    graph1->SetLineColor(2);
    graph1->SetLineWidth(1504);
    graph1->SetFillStyle(3005);
 
-   std::auto_ptr<TGraph> graph2(new TGraph(n, x2, y2));
+   std::auto_ptr<TGraph> graph2(new TGraph(kNPoints, x2, y2));
    graph2->SetLineColor(4);
    graph2->SetLineWidth(-2002);
    graph2->SetFillStyle(3004);
    graph2->SetFillColor(9);
 
-   std::auto_ptr<TGraph> graph3(new TGraph(n, x3, y3));
+   std::auto_ptr<TGraph> graph3(new TGraph(kNPoints, x3, y3));
    graph3->SetLineColor(5);
    graph3->SetLineWidth(-802);
    graph3->SetFillStyle(3002);

@@ -1,12 +1,10 @@
-#include <iostream>
-#include <stdexcept>
-
 #include "TRandom.h"
 #include "TFrame.h"
+#include "IOSPad.h"
 #include "TH1.h"
 
 #include "HsimpleDemo.h"
-#include "IOSPad.h"
+
 
 namespace ROOT {
 namespace iOS {
@@ -16,9 +14,6 @@ namespace Demos {
 HsimpleDemo::HsimpleDemo()
                   : fHist(new TH1F("hpx", "This is the px distribution", 100, -4.f, 4.f))
 {
-   if (!gRandom)
-      throw std::runtime_error("HsimpleDemo::HsimpleDemo: gRandom is 0");
-      
    fHist->SetFillColor(48);
 }
 
@@ -57,6 +52,9 @@ double HsimpleDemo::AnimationTime() const
 //______________________________________________________________________________
 void HsimpleDemo::StartAnimation()
 {
+   if (!gRandom)
+      return;
+
    fHist->Reset();
    gRandom->SetSeed();
 }
@@ -65,6 +63,9 @@ void HsimpleDemo::StartAnimation()
 void HsimpleDemo::NextStep()
 {
    //Fill histograms randomly (2D Rannor is taken from original code sample).
+   if (!gRandom)
+      return;
+   
    Float_t x = 0.f, dummyY = 0.f;
 
    for (UInt_t i = 0; i < 1000; ++i) {

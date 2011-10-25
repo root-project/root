@@ -14,7 +14,7 @@ namespace {
 //______________________________________________________________________________
 Double_t FPlot(Double_t x)
 {
-   return TMath::Cos(2 * x) * TMath::Cos(20 * x);
+   return TMath::Cos(2. * x) * TMath::Cos(20. * x);
 }
 
 }
@@ -22,8 +22,8 @@ Double_t FPlot(Double_t x)
 //______________________________________________________________________________
 PolarGraphDemo::PolarGraphDemo()
 {
-   const Double_t xMin=0;
-   const Double_t xMax=TMath::Pi() * 2;
+   const Double_t xMin = 0;
+   const Double_t xMax = TMath::TwoPi();
    const Double_t xStep = (xMax - xMin) / kNPointsAFL;
 
    Double_t xAFL[kNPointsAFL];
