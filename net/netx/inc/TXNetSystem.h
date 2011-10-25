@@ -37,7 +37,9 @@
 #include "TString.h"
 #endif
 
-#ifndef OLDXRDLOCATE
+#include "XrdProofdXrdVers.h"
+
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
 #ifndef ROOT_THashList
 #include "THashList.h"
 #endif
@@ -53,7 +55,7 @@ class TXNetSystemConnectGuard;
 typedef XrdClientVector<XrdOucString> vecString;
 typedef XrdClientVector<bool>         vecBool;
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
 class TXrdClientAdminWrapper : public TNamed {
 public:
    TXrdClientAdminWrapper(const char *key, XrdClientAdmin *ca) : TNamed(key,""), fXCA(ca) { }
@@ -83,7 +85,7 @@ private:
    void           *GetDirPtr() const { return fDirp; }
    void            InitXrdClient();
 
-#ifndef OLDXRDLOCATE
+#if ROOTXRDVERS >= ROOT_OldXrdLocate
    static THashList fgAddrFQDN;   // Cross-table address<->FQDN
    static THashList fgAdminHash;  // List of existing XrdClientAdmin
    static XrdClientAdmin *GetClientAdmin(const char *url);

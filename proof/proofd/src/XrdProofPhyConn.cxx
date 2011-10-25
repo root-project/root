@@ -195,7 +195,7 @@ int XrdProofPhyConn::TryConnect(int fd)
    const char *ctype[2] = {"UNIX", "TCP"};
 
    // Create physical connection
-#ifdef OLDXRCPHYCONN
+#if ROOTXRDVERS < ROOT_OldPhyConn
    fPhyConn = new XrdClientPhyConnection(this);
 #else
    fPhyConn = new XrdClientPhyConnection(this, 0);
@@ -203,7 +203,7 @@ int XrdProofPhyConn::TryConnect(int fd)
 
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;
-#ifdef XRCPHYCNOREUSE
+#if ROOTXRDVERS < ROOT_PhyConnNoReuse
    if (fd > 0) {
       TRACE(XERR, "Reusing an existing connection (descriptor "<<fd<<
                   ") not supported by the xroot client version (requires xrootd >= 3.0.3)");
