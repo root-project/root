@@ -1,0 +1,10 @@
+#---Define the Standard macros for ROOT--------------------------------------------------------------------
+
+include(RootNewMacros)
+if(NOT DEFINED ROOT_ARCHITECTURE)
+  include(CheckCompiler)
+endif()
+
+if(testing)
+  include(RootCTest)
+endif()

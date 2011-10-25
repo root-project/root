@@ -4,6 +4,10 @@
 
 #---Enable FORTRAN (unfortunatelly is not nowt possible in all cases)-------------------------------
 if(NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode)
+  #--Work-around for CMake issue 0009220
+  if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
+    set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
+  endif()
   enable_language(Fortran OPTIONAL)
 endif()
 

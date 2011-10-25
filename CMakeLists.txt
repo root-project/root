@@ -43,12 +43,6 @@ string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${ver
 string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
 set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
 
-#---Configure and install various files neded later and for clients -----------------------------
-include(RootConfiguration)
-
-#---Add dummy tatget to trigger the build of tests libraries and programs-------------------------
-add_custom_target(check)
-
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (cint)
@@ -67,7 +61,7 @@ add_subdirectory (html)
 add_subdirectory (montecarlo)
 add_subdirectory (geom)
 if(NOT WIN32)
-  add_Subdirectory (rootx)
+  add_subdirectory (rootx)
 endif()
 add_subdirectory (misc)
 add_subdirectory (main)
@@ -81,7 +75,11 @@ if(roofit)
 endif()
 
 include(PostInstalledSoftware)
-install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
+
+#---Configure and install various files neded later and for clients -----------------------------
+include(RootConfiguration)
+
+#install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
 
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
@@ -100,46 +98,12 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY cmake/modules DESTINATION cmake PATTERN ".svn" EXCLUDE)
 endif()
 
-#---Packaging-------------------------------------------------------------------------------------
-include(InstallRequiredSystemLibraries)
-configure_file(cmake/modules/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
-configure_file(README/README README.txt COPYONLY)
-configure_file(LICENSE LICENSE.txt COPYONLY)
-set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/CMakeCPackOptions.cmake)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "ROOT project")
-set(CPACK_PACKAGE_VENDOR "HEPSoft")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.txt")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.txt")
-set(CPACK_PACKAGE_VERSION_MAJOR ${ROOT_MAJOR_VERSION})
-set(CPACK_PACKAGE_VERSION_MINOR ${ROOT_MINOR_VERSION})
-set(CPACK_PACKAGE_VERSION_PATCH ${ROOT_PATCH_VERSION})
-set(CPACK_PACKAGE_RELOCATABLE True)
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "ROOT ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}")
-if(CMAKE_BUILD_TYPE STREQUAL Release)
-  set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${ROOT_VERSION}-${ROOT_ARCHITECTURE}")
-else()
-  set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${ROOT_VERSION}-${ROOT_ARCHITECTURE}-${CMAKE_BUILD_TYPE}")
+#---Configure Testing using CTest----------------------------------------------------------------
+if(testing)
+  include(RootCTest)
+  set(ROOT_DIR ${CMAKE_BINARY_DIR})
+  add_subdirectory(test)
 endif()
-set(CPACK_SOURCE_STRIP_FILES "")
-set(CPACK_PACKAGE_EXECUTABLES "root" "ROOT")
-include(CPack)
 
-#---Define components and installation types--------------------------------------------------
-cpack_add_install_type(full      DISPLAY_NAME "Full Installation")
-cpack_add_install_type(minimal   DISPLAY_NAME "Minimal Installation")
-cpack_add_install_type(developer DISPLAY_NAME "Developer Installation")
-cpack_add_component(applications DISPLAY_NAME "ROOT Applications" 
-                                 DESCRIPTION "ROOT executables such as root.exe"
-								 INSTALL_TYPES full minimal developer)
-cpack_add_component(libraries DISPLAY_NAME "ROOT Libraries" 
-                                 DESCRIPTION "All ROOT libraries and dictionaries"
-								 INSTALL_TYPES full minimal developer)
-cpack_add_component(headers DISPLAY_NAME "C++ Headers" 
-                                 DESCRIPTION "These are needed to do any development"
-								 INSTALL_TYPES full developer)
-cpack_add_component(tests DISPLAY_NAME "ROOT Tests and Tutorials" 
-                                 DESCRIPTION "These are needed to do any test and tutorial"
-								 INSTALL_TYPES full developer)
-								 
-								 
+#---Packaging-------------------------------------------------------------------------------------
+include(RootCPack)

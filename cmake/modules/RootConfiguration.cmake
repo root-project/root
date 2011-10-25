@@ -361,7 +361,45 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.in include/compiled
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp)
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config)
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes)
-ROOT_WRITE_OPTIONS(${CMAKE_BINARY_DIR}/ROOTConfig.cmake)
+
+#---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
+ROOT_SHOW_OPTIONS(ROOT_ENABLED_OPTIONS)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
+               ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
+               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake @ONLY)
+#---To be used from the binary tree--------------------------------------------------------------------------
+get_property(buildtree_include_dirs GLOBAL PROPERTY ROOT_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES buildtree_include_dirs)
+set(ROOT_INCLUDE_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_INCLUDE_DIRS ${buildtree_include_dirs})
+")
+set(ROOT_MODULE_PATH_SETUP "
+# ROOT configured for use CMake modules from source tree
+set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH} ${CMAKE_MODULE_PATH})
+")
+get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
+export(TARGETS ${exported_targets} FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
+               ${CMAKE_BINARY_DIR}/ROOTConfig.cmake @ONLY)
+
+#---To be used from the install tree--------------------------------------------------------------------------
+set(ROOT_INCLUDE_DIR_SETUP "
+# ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_INCLUDE_DIRS \"\${_thisdir}/../include\" ABSOLUTE)
+")
+set(ROOT_MODULE_PATH_SETUP "
+# ROOT configured for use CMake modules from installation tree
+set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH}  \${_thisdir}/modules)
+")
+configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
+               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
+              ${CMAKE_BINARY_DIR}/RootUseFile.cmake
+              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION cmake)
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION cmake)               
+
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
 set(prefix $ROOTSYS)
@@ -406,8 +444,6 @@ install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
               ${CMAKE_BINARY_DIR}/config/Makefile.config
               DESTINATION config)
 
-install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig.cmake
-              DESTINATION cmake/modules)
 
 endfunction()
 RootConfigure()

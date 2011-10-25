@@ -128,7 +128,7 @@ ROOT_BUILD_OPTION(xrootd ON "Build xrootd file server and its client (if support
 option(fail-on-missing "Fail the configure step if a required external package is missing" OFF)
 option(minimal "Do not automatically search for support libraries" OFF)
 option(gminimal "Do not automatically search for support libraries, but include X11" OFF)
-  
+option(testing "Enable testing with CTest" OFF)
 
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree

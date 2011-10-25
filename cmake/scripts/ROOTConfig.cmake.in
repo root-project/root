@@ -1,0 +1,99 @@
+# ROOT CMake Configuration File for External Projects
+# This file is configured by Geant4 for use by an external project
+# As this file is configured by ROOT's CMake system it SHOULD NOT BE EDITED
+# It defines the following variables
+#  ROOT_INCLUDE_DIRS - include directories for Geant4
+#  ROOT_DEFINITIONS  - compile definitions needed to use Geant4
+#  ROOT_LIBRARIES    - libraries to link against
+#  ROOT_USE_FILE     - path to a CMake module which may be included to help
+#                      setup CMake variables and useful Macros 
+#
+# You may supply a version number through find_package which will be checked
+# against the version of this build. Standard CMake logic is used so that
+# the EXACT flag may be passed, and otherwise this build will report itself
+# as compatible with the requested version if:
+#
+#  VERSION_OF_THIS_BUILD >= VERSION_REQUESTED
+#
+#
+# In Geant4, components can be optional subcomponents of an always available
+# library. In that case there will be no Geant4_{COMPONENT}_LIBRARY variable.
+# These non-library components are generally activated by compile definitions, 
+# and in these cases the appropriate definition will be added to the
+# Geant4_DEFINITIONS component
+#
+# If you specify components and use the REQUIRED option to find_package, then
+# the module will issue a FATAL_ERROR if this build of Genat4 does not have 
+# the requested component(s).
+#
+# The list of options available generally corresponds to the optional extras
+# that ROOT can be built are also made available to the dependent project as
+# ROOT_{option}_FOUND
+#
+# ===========================================================================
+
+#----------------------------------------------------------------------------
+# DEBUG : print out the variables passed via find_package arguments
+#
+if(ROOT_CONFIG_DEBUG)
+    message(STATUS "ROOTCFG_DEBUG : ROOT_VERSION         = ${ROOT_VERSION}")
+    message(STATUS "ROOTCFG_DEBUG : ROOT_FIND_VERSION    = ${ROOT_FIND_VERSION}")
+    message(STATUS "ROOTCFG_DEBUG : ROOT_FIND_REQUIRED   = ${ROOT_FIND_REQUIRED}")
+    message(STATUS "ROOTCFG_DEBUG : ROOT_FIND_COMPONENTS = ${ROOT_FIND_COMPONENTS}")
+    foreach(_cpt ${ROOT_FIND_COMPONENTS})
+       message(STATUS "ROOTCFG_DEBUG : ROOT_FIND_REQUIRED_${_cpt} = ${ROOT_FIND_REQUIRED_${_cpt}}")
+    endforeach()
+endif()
+
+#----------------------------------------------------------------------------
+# Locate ourselves, since all other config files should have been installed
+# alongside us...
+#
+get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+#----------------------------------------------------------------------------
+# Configure the path to the Geant4 headers, using a relative path if possible.
+# This is only known at CMake time, so we expand a CMake supplied variable.
+#
+@ROOT_INCLUDE_DIR_SETUP@
+@ROOT_MODULE_PATH_SETUP@
+
+#----------------------------------------------------------------------------
+# Include the file listing all the imported targets and options
+if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
+  include("${_thisdir}/ROOTConfig-targets.cmake")
+endif()
+
+#----------------------------------------------------------------------------
+# Setup components and options
+set(_root_options @ROOT_ENABLED_OPTIONS@)
+
+foreach(_opt ${_root_options})
+  set(ROOT_${_opt}_FOUND TRUE)
+endforeach()
+
+#----------------------------------------------------------------------------
+# Now set them to ROOT_LIBRARIES
+set(ROOT_LIBRARIES Core Cint)
+
+#----------------------------------------------------------------------------
+# Point the user to the UseGeant4.cmake file which they may wish to include
+# to help them with setting up Geant4
+#
+set(ROOT_USE_FILE ${_thisdir}/RootUseFile.cmake)
+
+#----------------------------------------------------------------------------
+# Finally, handle any remaining components.
+# We should have dealt with all available components above, and removed them
+# from the list of FIND_COMPONENTS so any left we either didn't find or don't
+# know about. Emit a warning if REQUIRED isn't set, or FATAL_ERROR otherwise
+#
+list(REMOVE_DUPLICATES ROOT_FIND_COMPONENTS)
+foreach(_remaining ${ROOT_FIND_COMPONENTS})
+    if(ROOT_FIND_REQUIRED)
+        message(FATAL_ERROR "ROOT component ${_remaining} not found")
+    elseif(NOT ROOT_FIND_QUIETLY)
+        message(WARNING " ROOT component ${_remaining} not found")
+    endif()
+    unset(Geant4_FIND_REQUIRED_${_remaining})
+endforeach()
