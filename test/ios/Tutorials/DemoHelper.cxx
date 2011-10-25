@@ -33,7 +33,7 @@ bool CreateTutorials(DemoBase **demos, const char *filePath)
       return false;
    }
 
-   return false;//true;
+   return true;
 }
 
 }
