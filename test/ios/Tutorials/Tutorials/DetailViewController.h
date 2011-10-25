@@ -21,10 +21,6 @@ class Pad;
 @class HintView;
 @class PadView;
 
-class FontManagerWrapper;
-class PainterWrapper;
-class PadWrapper;
-
 enum ETutorialsMode {
    kTAZoom,
    kTASelect
@@ -68,7 +64,6 @@ enum ETutorialsDefaults {
    PictView *doubleTapPic;
    PictView *rotatePic;
    PictView *singleTapPic;
-   //PictView *emptyPic;
    
    //Text for hints.
    NSString *pinchHintText;
@@ -76,20 +71,14 @@ enum ETutorialsDefaults {
    NSString *doubleTapHintText;
    NSString *rotateHintText;
    NSString *singleTapHintText;
-   //NSString *emptyHintText;
    
    //Either zoom or selection.
    ETutorialsMode appMode;
    
    IBOutlet UITabBar *tb;
-//   IBOutlet UIView *editor;
-
-
-
    IBOutlet UIView *help;
    
    PadOptionsController *padController_;
-   
    UIPopoverController *editorPopover_;
    
    BOOL activeAnimation;
@@ -119,7 +108,6 @@ enum ETutorialsDefaults {
 - (void) showEmptyHint;
 - (void) showSingleTapHint;
 
-//- (void) handleDoubleTap : (UITapGestureRecognizer *)tap;
 - (void) handleDoubleTapPad : (UITapGestureRecognizer *)tap;
 - (IBAction) showHelp;
 
