@@ -13,7 +13,6 @@ class Pad;
 
 @interface SlideshowController : UIViewController <UIScrollViewDelegate> {
 @private
-   ROOT::iOS::Pad *pads[2];
    SlideView *padViews[2];//The current and the next in a slide show.
 
    unsigned visiblePad;

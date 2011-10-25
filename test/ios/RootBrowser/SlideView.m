@@ -23,13 +23,11 @@ static const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame andPad : (ROOT::iOS::Pad *)p
+- (id) initWithFrame : (CGRect)frame
 {
    self = [super initWithFrame : frame];
 
    if (self) {
-      pad = p;
-      
       self.layer.shadowOpacity = 0.3f;
       self.layer.shadowColor = [UIColor blackColor].CGColor;
       self.layer.shadowOffset = CGSizeMake(10.f, 10.f);
@@ -39,6 +37,11 @@ static const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
    return self;
 }
 
+- (void) setPad : (ROOT::iOS::Pad *)newPad
+{
+   pad = newPad;
+}
+
 //____________________________________________________________________________________________________
 - (void) drawRect : (CGRect)rect
 {
@@ -46,6 +49,9 @@ static const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    CGContextFillRect(ctx, rect);
+
+   if (!pad)
+      return;
 
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);

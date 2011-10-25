@@ -47,19 +47,11 @@
       nObjects = 2;
 
    for (unsigned i = 0; i < nObjects; ++i) {
-      pads[i] = new ROOT::iOS::Pad(padFrame.size.width, padFrame.size.height);
-      padViews[i] = [[SlideView alloc] initWithFrame : padFrame andPad : pads[i]];
+      padViews[i] = [[SlideView alloc] initWithFrame : padFrame];
       [padParentView addSubview : padViews[i]];
       padViews[i].hidden = YES;
+      [padViews[i] release];
    }
-}
-
-//____________________________________________________________________________________________________
-- (void) drawObject : (TObject *)obj inAPad : (ROOT::iOS::Pad *)pad option : (const char *)opt
-{
-   pad->cd();
-   pad->Clear();
-   obj->Draw(opt);
 }
 
 //____________________________________________________________________________________________________
@@ -67,9 +59,9 @@
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
-   [self view];
-
    if (self) {
+      [self view];
+
       fileContainer = container;
       
       if (fileContainer->GetNumberOfObjects()) {
@@ -78,11 +70,11 @@
          nCurrentObject = 0;
          visiblePad = 0;
 
-         [self drawObject : fileContainer->GetObject(0) inAPad : pads[0] option:fileContainer->GetDrawOption(0)];
+         [padViews[0] setPad : fileContainer->GetPadAttached(0)];
          [padViews[0] setNeedsDisplay];
 
          if (fileContainer->GetNumberOfObjects() > 1) {
-            [self drawObject : fileContainer->GetObject(1) inAPad : pads[1] option:fileContainer->GetDrawOption(1)];
+            [padViews[1] setPad:fileContainer->GetPadAttached(1)];
             [padParentView addSubview : padViews[1]];
          }
 
@@ -94,14 +86,8 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)dealloc
+- (void) dealloc
 {
-   for (unsigned i = 0; i < 2; ++i) {
-      //Delete for null and message to nil means nothing.
-      delete pads[i];
-      [padViews[i] release];
-   }
-
    if (timer)
       [timer invalidate];
 
@@ -147,7 +133,8 @@
 //____________________________________________________________________________________________________
 - (void) viewDidAppear : (BOOL)animated
 {
-   timer = [NSTimer scheduledTimerWithTimeInterval : 2.f target : self selector : @selector(changeViews) userInfo : nil repeats : YES];
+   if (fileContainer->GetNumberOfObjects() > 1)
+      timer = [NSTimer scheduledTimerWithTimeInterval : 2.f target : self selector : @selector(changeViews) userInfo : nil repeats : YES];
 }
 
 
@@ -174,6 +161,7 @@
 }
 
 #pragma mark - Animation.
+
 //____________________________________________________________________________________________________
 - (void) changeViews
 {
@@ -197,7 +185,7 @@
    nCurrentObject + 1 == fileContainer->GetNumberOfObjects() ? nCurrentObject = 0 : ++nCurrentObject;
    visiblePad = viewToShow;
    const unsigned next = nCurrentObject + 1 == fileContainer->GetNumberOfObjects() ? 0 : nCurrentObject + 1;
-   [self drawObject : fileContainer->GetObject(next) inAPad : pads[viewToHide] option : fileContainer->GetDrawOption(next)];
+   [padViews[viewToHide] setPad : fileContainer->GetPadAttached(next)];
    [padViews[viewToHide] setNeedsDisplay];
 }
 
