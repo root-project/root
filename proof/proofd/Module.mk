@@ -239,9 +239,11 @@ endif
 
 endif
 
-# ifeq ($(PLATFORM),macosx)
-# $(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
-# endif
+ifeq ($(PLATFORM),macosx)
+ifeq ($(HASXRDUTILS),no)
+$(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
+endif
+endif
 ifeq ($(PLATFORM),linux)
 comma := ,
 $(XPDLIB): LDFLAGS := $(subst -Wl$(comma)--no-undefined,,$(LDFLAGS))
