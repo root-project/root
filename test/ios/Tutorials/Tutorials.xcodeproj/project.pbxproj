@@ -47,6 +47,7 @@
 		70BA9B5D13C5F89100102BC9 /* DetailView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 70BA9B5B13C5F89100102BC9 /* DetailView.xib */; };
 		70BA9B6013C5F89100102BC9 /* RootViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BA9B5F13C5F89100102BC9 /* RootViewController.mm */; };
 		70C8237C13CF790E00F884FF /* HintView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C8237B13CF790E00F884FF /* HintView.mm */; };
+		70CC7E4A1456A7050036FF4C /* DemoHelper.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70CC7E481456A7050036FF4C /* DemoHelper.cxx */; };
 		70D3FB5213E7F605005BADA3 /* single_tap_icon_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 70D3FB5013E7F605005BADA3 /* single_tap_icon_small.png */; };
 		70D3FB5313E7F605005BADA3 /* single_tap_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70D3FB5113E7F605005BADA3 /* single_tap_icon.png */; };
 		70D4848013F057430043110B /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 70D4847F13F057430043110B /* system.plugins-ios */; };
@@ -129,6 +130,8 @@
 		70BA9B5F13C5F89100102BC9 /* RootViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = RootViewController.mm; path = Tutorials/RootViewController.mm; sourceTree = "<group>"; };
 		70C8237A13CF790E00F884FF /* HintView.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = HintView.h; sourceTree = "<group>"; };
 		70C8237B13CF790E00F884FF /* HintView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HintView.mm; sourceTree = "<group>"; };
+		70CC7E481456A7050036FF4C /* DemoHelper.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DemoHelper.cxx; sourceTree = "<group>"; };
+		70CC7E491456A7050036FF4C /* DemoHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DemoHelper.h; sourceTree = "<group>"; };
 		70D3FB5013E7F605005BADA3 /* single_tap_icon_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = single_tap_icon_small.png; path = Pictures/single_tap_icon_small.png; sourceTree = "<group>"; };
 		70D3FB5113E7F605005BADA3 /* single_tap_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = single_tap_icon.png; path = Pictures/single_tap_icon.png; sourceTree = "<group>"; };
 		70D4847F13F057430043110B /* system.plugins-ios */ = {isa = PBXFileReference; lastKnownFileType = text; name = "system.plugins-ios"; path = "../../../etc/system.plugins-ios"; sourceTree = "<group>"; };
@@ -318,6 +321,8 @@
 		70ED86D913CB75FD00919971 /* Demos (C++ code) */ = {
 			isa = PBXGroup;
 			children = (
+				70CC7E481456A7050036FF4C /* DemoHelper.cxx */,
+				70CC7E491456A7050036FF4C /* DemoHelper.h */,
 				70DF815A13DDBA6400AD2F4D /* DemoBase.cxx */,
 				70B059C413C9927700583EDB /* DemoBase.h */,
 				70DF815B13DDBA6400AD2F4D /* ExclusionGraphDemo.cxx */,
@@ -450,6 +455,7 @@
 				700B010F13F3D40A00F84650 /* PadOptionsController.mm in Sources */,
 				700B013013F3FD6700F84650 /* ColorCell.m in Sources */,
 				700B013313F4051000F84650 /* PatternCell.mm in Sources */,
+				70CC7E4A1456A7050036FF4C /* DemoHelper.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

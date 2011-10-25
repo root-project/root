@@ -488,7 +488,6 @@
 		70E0B5D81414E2B50077E4A8 /* Top level view controllers */ = {
 			isa = PBXGroup;
 			children = (
-				70E0B5DF1414E41B0077E4A8 /* Standalone views */,
 				70E0B5DE1414E3FC0077E4A8 /* Views */,
 				70E0B5DB1414E2FD0077E4A8 /* Classes */,
 				70E0B5DA1414E2F00077E4A8 /* xibs */,
@@ -535,6 +534,10 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
+				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
+				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
+				7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */,
 				7014410D140E18390070459F /* SelectionView.h */,
 				7014410E140E18390070459F /* SelectionView.mm */,
 				70249BDA1403D644006A19E6 /* PadView.mm */,
@@ -549,17 +552,6 @@
 				7044980C1429D13D00E83799 /* PadImageScrollView.mm */,
 			);
 			name = Views;
-			sourceTree = "<group>";
-		};
-		70E0B5DF1414E41B0077E4A8 /* Standalone views */ = {
-			isa = PBXGroup;
-			children = (
-				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
-				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
-				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
-				7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */,
-			);
-			name = "Standalone views";
 			sourceTree = "<group>";
 		};
 		70E0B5E11414E4710077E4A8 /* Views */ = {

@@ -72,6 +72,7 @@
    [_splitViewController release];
    [_rootViewController release];
    [_detailViewController release];
+
    [super dealloc];
 }
 
