@@ -69,6 +69,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 {
 // Assignment.
    if (&other == this) return *this;
+   TThread::Lock();
    fLevel = other.fLevel;
    if (fLevel) fArray = new UShort_t[fLevel];
    if (other.fMatrix) {
@@ -76,6 +77,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
       fMatrix->CopyFrom(other.fMatrix);
    }
    fClient = other.fClient;
+   TThread::UnLock();
    return *this;
 }   
 
@@ -217,6 +219,7 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    if (!level) {
 //      delete [] fArray; fArray = 0;
       fLevel = 0;
+      TThread::UnLock();
       return;
    }
    if (!fArray || level>fLevel) {
