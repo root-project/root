@@ -22,11 +22,15 @@ clang::DiagnosticsEngine& Diags = gCling->getCI()->getDiagnostics();
 clang::DiagnosticConsumer* Client = new clang::VerifyDiagnosticConsumer(Diags);
 Diags.setClient(Client);
 
+.rawInput
+
 class MyClass {
   struct {
     int a;
     error_here; // expected-error {{C++ requires a type specifier for all declarations}}
   };
 };
+
+.rawInput
 
 .q
