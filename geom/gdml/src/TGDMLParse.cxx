@@ -176,7 +176,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* matestr = "material";
    const char* volustr = "volume";
    const char* assestr = "assembly";
-   const char* twtrstr = "twistTrap";
+   const char* twtrstr = "twistedtrap"; //name changed according to schema
    const char* cutTstr = "cutTube";
    const char* bboxstr = "box";
    const char* xtrustr = "xtru";
@@ -385,14 +385,14 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    return node;
 }
 //__________________________________________________________
-const char* TGDMLParse::GetScale(const char* unit)
+TString TGDMLParse::GetScale(const char* unit)
 {
    //Throughout the GDML file, a unit can de specified.   Whether it be
    //angular or linear, values can be used as well as abbreviations such as
    // 'mm' or 'deg'. This function is passed the specified unit and if it is 
    //found, replaces it with the appropriate value.
    
-   const char* retunit = "";
+   TString retunit = "";
    
    if(strcmp(unit, "mm") == 0){
       retunit = "0.1";
@@ -804,7 +804,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    Int_t z2 = (Int_t)Evaluate(z);
    Double_t atom2 = Evaluate(atom);
    
-   TGeoElement* ele = new TGeoElement(NameShort(name), formula, z2 , atom2);
+   TGeoElement* ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
    
    felemap[name.Data()] = ele;
    
@@ -1644,7 +1644,7 @@ XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t nod
    return node;
 }
 
-//____________________________________________________retlunit_______________
+//___________________________________________________________________
 XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {   
    //In the solids section of the GDML file, a box may be declared. 
@@ -3260,7 +3260,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
       else if(tempattr == "alpha2"){
          alpha2 = gdml->GetAttrValue(attr);
       }
-      else if(tempattr == "twist") {
+      else if(tempattr == "phitwist") {
          twist = gdml->GetAttrValue(attr);
       }
       

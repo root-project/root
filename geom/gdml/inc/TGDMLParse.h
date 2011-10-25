@@ -134,7 +134,7 @@ public:
 private:
     
    const char*       ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node) ;
-   const char*       GetScale(const char* unit);
+   TString           GetScale(const char* unit);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
     
