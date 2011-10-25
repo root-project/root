@@ -546,6 +546,7 @@ namespace {
    inline Bool_t CArraySetArg(
       PyObject* pyobject, PyROOT::TParameter& para, G__CallFunc* func, char tc, int size )
    {
+   // general case of loading a C array pointer (void* + type code) as function argument
       int buflen = PyROOT::Utility::GetBuffer( pyobject, tc, size, para.fv );
       if ( ! para.fv || buflen == 0 )
          return kFALSE;
@@ -1213,6 +1214,7 @@ namespace {
    public:
       InitConvFactories_t()
       {
+      // load all converter factories in the global map 'gConvFactories'
          int nf = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
          for ( int i = 0; i < nf; ++i ) {
             gConvFactories[ factories_[ i ].first ] = factories_[ i ].second;

@@ -249,6 +249,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* 
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectRefExecutor::Execute( G__CallFunc* func, void* self )
 {
+// executor binds the result to the left-hand side, overwriting if an old object
    PyObject* result = BindRootObject( (void*)func->ExecInt( self ), fClass );
    if ( ! result || ! fAssignable )
       return result;
@@ -448,6 +449,7 @@ namespace {
    public:
       InitExecFactories_t()
       {
+      // load all executor factories in the global map 'gExecFactories'
          int nf = sizeof( factories_ ) / sizeof( factories_[ 0 ] );
          for ( int i = 0; i < nf; ++i ) {
             gExecFactories[ factories_[ i ].first ] = factories_[ i ].second;

@@ -460,6 +460,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
 template< class T, class M>
 PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
 {
+// get the default value (if any) of argument iarg of this method
    if ( iarg >= (int)fMethod.FunctionParameterSize() )
       return 0;
 

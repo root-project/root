@@ -54,6 +54,7 @@ namespace {
    struct InitPyROOT_NoneType_t {
       InitPyROOT_NoneType_t()
       {
+      // createa PyROOT NoneType (for references that went dodo) from NoneType
          memset( &PyROOT_NoneType, 0, sizeof( PyROOT_NoneType ) );
 
          ((PyObject&)PyROOT_NoneType).ob_type    = &PyType_Type;

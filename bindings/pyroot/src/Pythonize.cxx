@@ -83,6 +83,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
    {
+   // Helper; call method with signature: meth( pyobj ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "O" ), arg1 );
@@ -94,6 +95,7 @@ namespace {
    inline PyObject* CallPyObjMethod(
       PyObject* obj, const char* meth, PyObject* arg1, PyObject* arg2 )
    {
+   // Helper; call method with signature: meth( pyobj, pyobj ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "OO" ), arg1, arg2 );
@@ -104,6 +106,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
    {
+   // Helper; call method with signature: meth( pyobj, int ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "Oi" ), arg1, arg2 );
@@ -115,6 +118,7 @@ namespace {
 //- helpers --------------------------------------------------------------------
    PyObject* PyStyleIndex( PyObject* self, PyObject* index )
    {
+   // Helper; converts python index into straight C index.
       Py_ssize_t idx = PyInt_AsSsize_t( index );
       if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
          return 0;
@@ -138,6 +142,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallSelfIndex( ObjectProxy* self, PyObject* idx, const char* meth )
    {
+   // Helper; call method with signature: meth( pyindex ).
       Py_INCREF( (PyObject*)self );
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
       if ( ! pyindex ) {
@@ -154,6 +159,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* BoolNot( PyObject* value )
    {
+   // Helper; convert generic python object into a boolean value.
       if ( PyObject_IsTrue( value ) == 1 ) {
          Py_INCREF( Py_False );
          Py_DECREF( value );
@@ -1047,6 +1053,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //- TDirectory member templates ----------------------------------------------
    PyObject* TDirectoryGetObject( ObjectProxy* self, PyObject* args )
    {
+   // Pythonization of TDirector::GetObject().
       PyObject* name = 0; ObjectProxy* ptr = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:TDirectory::GetObject" ),
                &PyROOT_PyUnicode_Type, &name, &ObjectProxy_Type, &ptr ) )
