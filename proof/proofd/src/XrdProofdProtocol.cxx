@@ -33,7 +33,7 @@
 
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysDNS.h"
 
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"

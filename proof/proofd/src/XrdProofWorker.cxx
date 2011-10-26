@@ -27,7 +27,7 @@
 #include "XrdProofWorker.h"
 #include "XrdProofdProofServ.h"
 #include "XrdClient/XrdClientUrlInfo.hh"
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysDNS.h"
 #include "XProofProtocol.h"
 
 // Tracing utilities
@@ -99,7 +99,7 @@ void XrdProofWorker::Reset(const char *str)
    // Take the user name, if specified
    fUser = ui.User;
    char *err;
-   char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
+   char *fullHostName = XrdSysDNS::getHostName((char *)ui.Host.c_str(), &err);
    if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
       TRACE(XERR, "DNS could not resolve '" << ui.Host << "'");
       return;

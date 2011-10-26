@@ -32,7 +32,7 @@
 #  include "XrdSys/XrdSysPlugin.hh"
 #  include "XrdSys/XrdSysTimer.hh"
 #endif
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysDNS.h"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -668,7 +668,7 @@ int XrdProofdManager::Config(bool rcf)
       }
 
       // Local FQDN
-      char *host = XrdNetDNS::getHostName();
+      char *host = XrdSysDNS::getHostName();
       fHost = host ? host : "";
       SafeFree(host);
 

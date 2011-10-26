@@ -123,10 +123,12 @@ XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
 # Extra include paths and libs
 XPROOFDEXELIBS :=
 XPROOFDEXESYSLIBS := $(DNSSDLIB)
-XPROOFDEXE     :=
+XPROOFDEXE     := bin/xproofd
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+ifeq ($(HASXRDUTILS),no)
+
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
                   -lXrdClient -lXrdSut $(DNSSDLIB)
 XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
@@ -145,12 +147,23 @@ ifeq ($(XRDNETUTIL),yes)
 XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
 XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
 endif
+
+else
+
+XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdUtils
+ifeq ($(PLATFORM),macosx)
+XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.dylib $(XROOTDDIRL)/libXrdClient.dylib  $(XROOTDDIRL)/libXrdUtils.dylib
+else
+XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.$(SOEXT) $(XROOTDDIRL)/libXrdClient.$(SOEXT)  $(XROOTDDIRL)/libXrdUtils.$(SOEXT)
+endif
+
+endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)
+XPROOFDEXELIBS +=  $(DNSSDLIB)
 
 ifeq ($(PLATFORM),solaris)
 XPROOFDEXESYSLIBS := -lsendfile
 endif
-XPROOFDEXE     := bin/xproofd
 endif
 
 # used in the main Makefile
@@ -181,7 +194,7 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) $(ST
 $(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD) $(RPDCONNO)
 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
 
-$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD) $(RPDCONNO)
+$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(XPROOFDEXELIBS) $(MAINLIBS) $(XRDPROOFXD) $(RPDCONNO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO) $(RPDCONNO)" \
 		   "$(XPDLIBEXTRA)"
@@ -222,6 +235,16 @@ $(XPDO): CXXFLAGS += -Wno-deprecated
 endif
 endif
 
+endif
+
+ifeq ($(PLATFORM),macosx)
+ifeq ($(HASXRDUTILS),no)
+$(XPDLIB): SOFLAGS := -undefined dynamic_lookup $(SOFLAGS)
+endif
+endif
+ifeq ($(PLATFORM),linux)
+comma := ,
+$(XPDLIB): LDFLAGS := $(subst -Wl$(comma)--no-undefined,,$(LDFLAGS))
 endif
 
 $(PROOFEXECVO): $(RPDCONNO) $(RPDPRIVO)

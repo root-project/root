@@ -4321,6 +4321,7 @@ if test ! "x$enable_xrootd" = "xno" ; then
    fi
 fi
 bjrcomm=
+hasxrdutils="no"
 if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
 
    if test "x$enable_xrootd" = "xyes" ; then
@@ -4330,8 +4331,13 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
       decreftwo=20070723
       decrefthree=20071004
       decreffour=300000002
+      decreffive=300010000
       if [ $decver -gt $decrefone ] ; then
-         if [ $decver -gt $decreffour ] ; then
+         if [ $decver -ge $decreffive ] ; then
+            vercomm=" (>=$decreffive: setting -DHAVEXRDSYSDNS)"
+            extraxrdflags="-DHAVEXRDSYSDNS $extraxrdflags"
+            hasxrdutils="yes"
+         elif [ $decver -gt $decreffour ] ; then
             xrdcomm="$xrdcomm"
             extraxrdflags="$extraxrdflags"
          elif [ $decver -gt $decrefthree ] ; then
@@ -6542,6 +6548,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
     -e "s|@xrdversion@|$decver|"                \
+    -e "s|@hasxrdutils@|$hasxrdutils|"          \
     -e "s|@cfitsioincdir@|$cfitsioincdir|"      \
     -e "s|@cfitsiolib@|$cfitsiolib|"            \
     -e "s|@cfitsiolibdir@|$cfitsiolibdir|"      \

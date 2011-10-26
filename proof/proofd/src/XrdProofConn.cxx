@@ -41,7 +41,7 @@
 #include "XrdClient/XrdClientPhyConnection.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysDNS.h"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -342,7 +342,7 @@ int XrdProofConn::TryConnect(int)
 
    // Resolve the DNS information
    char *haddr[10] = {0}, *hname[10] = {0};
-   int naddr = XrdNetDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
+   int naddr = XrdSysDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
 
    int i = 0;
    for (; i < naddr; i++ ) {
@@ -1240,7 +1240,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    // for the authentication.
    struct sockaddr_in netaddr;
    char **hosterrmsg = 0;
-   if (XrdNetDNS::getHostAddr((char *)fUrl.HostAddr.c_str(),
+   if (XrdSysDNS::getHostAddr((char *)fUrl.HostAddr.c_str(),
                                 (struct sockaddr &)netaddr, hosterrmsg) <= 0) {
       TRACE(XERR, "getHostAddr: "<< *hosterrmsg);
       return protocol;

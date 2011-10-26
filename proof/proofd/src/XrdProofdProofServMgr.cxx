@@ -32,7 +32,7 @@
 #include "Xrd/XrdPoll.hh"
 #include "Xrd/XrdScheduler.hh"
 #include "XrdNet/XrdNet.hh"
-#include "XrdNet/XrdNetDNS.hh"
+#include "XpdSysDNS.h"
 #include "XrdNet/XrdNetPeer.hh"
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdOuc/XrdOucStream.hh"
@@ -2820,7 +2820,7 @@ int XrdProofdProofServMgr::SetupProtocol(XrdNetPeer &peerpsrv,
 
    // Make sure we have the full host name
    if (peerpsrv.InetName) free(peerpsrv.InetName);
-   peerpsrv.InetName = XrdNetDNS::getHostName("localhost");
+   peerpsrv.InetName = XrdSysDNS::getHostName("localhost");
 
    // Allocate a new network object
    if (!(linkpsrv = XrdLink::Alloc(peerpsrv, lnkopts))) {
