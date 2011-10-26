@@ -80,7 +80,7 @@ set(ROOT_LIBRARIES Core Cint)
 # Point the user to the UseGeant4.cmake file which they may wish to include
 # to help them with setting up Geant4
 #
-set(ROOT_USE_FILE ${_thisdir}/RootUseFile.cmake)
+set(ROOT_USE_FILE ${_thisdir}/ROOTUseFile.cmake)
 
 #----------------------------------------------------------------------------
 # Finally, handle any remaining components.

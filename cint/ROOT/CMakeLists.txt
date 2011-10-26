@@ -78,8 +78,8 @@ set(CINTDLLCXXFLAGS "${CINT_CXX_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO")
 set(CINTDLLCFLAGS "${CINT_C_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__SYSTYPES")
 
 #set(AdditionalHeaderFiles ${CMAKE_SOURCE_DIR}/cint/cint/inc/cintdictversion.h)
-#---set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/inc -I${HEADER_OUTPUT_PATH})
-set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/lib/dll_stl  -I${CMAKE_SOURCE_DIR}/cint/cint/lib)
+#set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/inc -I${HEADER_OUTPUT_PATH})
+set(IncludeDirs -I${CMAKE_SOURCE_DIR}/cint/cint/lib/dll_stl  -I${CMAKE_SOURCE_DIR}/cint/cint/lib -I${HEADER_OUTPUT_PATH})
 
 foreach(_name ${CINTSTLDLLNAMES}) 
   set(OutFileName ${CMAKE_CURRENT_BINARY_DIR}/G__cpp_${_name}.cxx)

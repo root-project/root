@@ -396,7 +396,7 @@ set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH}  \${_thisdir}/modules)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
-              ${CMAKE_BINARY_DIR}/RootUseFile.cmake
+              ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake
               ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION cmake)
 install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION cmake)               
 
