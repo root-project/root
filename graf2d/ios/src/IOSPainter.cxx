@@ -8,10 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-#include <iostream>
-#include <cstring>
-
 #include <CoreText/CTStringAttributes.h>
 #include <CoreText/CTFont.h>
 #include <CoreText/CTLine.h>
@@ -586,12 +582,6 @@ void Painter::SetTransform(UInt_t w, Double_t xMin, Double_t xMax, UInt_t h, Dou
 //_________________________________________________________________
 void Painter::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
 {
-  /* if (fPainterMode == kPaintThumbnail) {
-      h = 1;
-      w = std::strlen(text);
-      return;
-   }*/
-   
    fFontManager.SelectFont(gVirtualX->GetTextFont(), gVirtualX->GetTextSize());
    fFontManager.GetTextBounds(w, h, text);
 }
