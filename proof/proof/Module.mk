@@ -66,5 +66,15 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
+##### extra rules ######
+ifeq ($(PLATFORM),linux)
+ifeq ($(GCC_VERS_FULL),gcc-4.5.2)
+# ifneq ($(filter -O%,$(OPT)),)
+   $(PROOFDIRS)/TDataSetManager.o: OPT = -O
+   $(PROOFDIRS)/TDSet.o: OPT = -O
+# endif
+endif
+endif
+
 # Optimize dictionary with stl containers.
 $(PROOFDO): NOOPT = $(OPT)
