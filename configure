@@ -3528,10 +3528,6 @@ if test ! "x$enable_pythia6" = "xno" ; then
         pythia6cppflags=-DPYTHIA6_${pythia6uscore}_UNDERSCORE
         pythia6lib=
         pythia6dir=
-        case $platform in
-            macosx) pythia6lib="-undefined dynamic_lookup" ;;
-            linux) 
-        esac
         result "Using custom pythia6 library with $pythia6uscore underscore"
     else
         check_library "libPythia6" "$enable_shared" "$pythia6libdir" \

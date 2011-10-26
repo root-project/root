@@ -27,6 +27,20 @@ PYTHIA6DEP   := $(PYTHIA6O:.o=.d) $(PYTHIA6DO:.o=.d)
 PYTHIA6LIB   := $(LPATH)/libEGPythia6.$(SOEXT)
 PYTHIA6MAP   := $(PYTHIA6LIB:.$(SOEXT)=.rootmap)
 
+PYTHIA6LDF   := $(LDFLAGS)
+ifeq ($(FPYTHIA6LIB),)
+ifeq ($(PLATFORM),linux)
+# Pythia library not provided at config time
+# we have to turn-off the "-Wl,--no-undefined" linker flag
+PYTHIA6LDF   := $(filter-out %no-undefined,$(LDFLAGS))
+endif
+ifeq ($(PLATFORM),macosx)
+# Pythia library not provided at config time
+# we have to add the "-undefined dynamic_lookup" linker flag
+PYTHIA6LDF   += -undefined dynamic_lookup
+endif
+endif
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA6H))
 ALLLIBS     += $(PYTHIA6LIB)
@@ -42,7 +56,7 @@ include/%.h:    $(PYTHIA6DIRI)/%.h
 		cp $< $@
 
 $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(ORDER_) $(MAINLIBS) $(PYTHIA6LIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(PYTHIA6LDF)" \
 		   "$(SOFLAGS)" libEGPythia6.$(SOEXT) $@ \
 		   "$(PYTHIA6O) $(PYTHIA6DO)" \
 		   "$(PYTHIA6LIBEXTRA) $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)"
