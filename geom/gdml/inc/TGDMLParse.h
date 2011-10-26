@@ -31,38 +31,38 @@
 #include <iostream>
 
 /*************************************************************************
- * TGDMLRefl - helper class for the import of GDML to ROOT.              * 
+ * TGDMLRefl - helper class for the import of GDML to ROOT.              *
  *************************************************************************/
 
 class TGDMLRefl : public TObject {
 public:
 
-   TGDMLRefl() {              
+   TGDMLRefl() {
 
-      fNameS = ""; 
+      fNameS = "";
       fSolid = "";
-      fMatrix = 0;  
-   }       
-     
+      fMatrix = 0;
+   }
+
    virtual ~TGDMLRefl() {}
-   
+
    TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix);
-   TGeoMatrix* GetMatrix();  
-   
+   TGeoMatrix* GetMatrix();
+
 private:
-   
+
    const char*     fNameS;      //!reflected solid name
    const char*     fSolid;      //!solid name being reflected
    TGeoMatrix     *fMatrix;     //!matrix of reflected solid
-   
+
    ClassDef(TGDMLRefl, 0)     //helper class used for the storage of reflected solids
 };
-     
+
 /*************************************************************************
- * TGDMLParse - base class for the import of GDML to ROOT.               * 
+ * TGDMLParse - base class for the import of GDML to ROOT.               *
  *************************************************************************/
 
-class TGDMLBaseTGDMMapHelper : public std::map<std::string, const void *>{
+class TGDMLBaseTGDMMapHelper : public std::map<std::string, const void *> {
 };
 
 //map's [] operator returns reference.
@@ -70,7 +70,7 @@ class TGDMLBaseTGDMMapHelper : public std::map<std::string, const void *>{
 //I have this helper class.
 template<typename T>
 
-class TGDMAssignmentHelper{
+class TGDMAssignmentHelper {
 private:
    TGDMLBaseTGDMMapHelper::iterator fPosInMap;
 
@@ -82,7 +82,7 @@ public:
    }
 
    operator T * ()const {
-      return (T*)fPosInMap->second;//const_cast<T*>(static_cast<const T *>(fPosInMap->second));   
+      return (T*)fPosInMap->second;//const_cast<T*>(static_cast<const T *>(fPosInMap->second));
    }
 
    TGDMAssignmentHelper & operator = (const T * ptr) {
@@ -92,17 +92,16 @@ public:
 };
 
 template<class T>
-class TGDMMapHelper : public TGDMLBaseTGDMMapHelper{
+class TGDMMapHelper : public TGDMLBaseTGDMMapHelper {
 public:
-   TGDMAssignmentHelper<T> operator [] (const std::string &key)
-   {
+   TGDMAssignmentHelper<T> operator [](const std::string &key) {
       return TGDMAssignmentHelper<T>(*this, key);
    }
 };
 
 class TGDMLParse : public TObject {
 public:
-  
+
    const char* fWorldName; //top volume of geometry name
    TGeoVolume* fWorld; //top volume of geometry
    int fVolID;   //volume ID, incremented as assigned.
@@ -115,40 +114,40 @@ public:
 
       fVolID = 0;
       fFILENO = 0;
-   }       
-     
+   }
+
    virtual ~TGDMLParse() { //destructor
 
-      for (size_t i=0;i<fformvec.size();i++)
+      for (size_t i = 0; i < fformvec.size(); i++)
          if (fformvec[i] != NULL) delete fformvec[i];
    }
 
-   static TGeoVolume* StartGDML(const char* filename){
+   static TGeoVolume* StartGDML(const char* filename) {
       TGDMLParse* parser = new TGDMLParse;
       TGeoVolume* world = parser->GDMLReadFile(filename);
       return world;
    }
-   
+
    TGeoVolume*       GDMLReadFile(const char* filename = "test.gdml");
-    
+
 private:
-    
+
    const char*       ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node) ;
    TString           GetScale(const char* unit);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
-    
+
    //'define' section
    XMLNodePointer_t  ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
-    
+
    //'materials' section
    XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
    XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes);
    XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int z);
-    
+
    //'solids' section
    XMLNodePointer_t  BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int num);
    XMLNodePointer_t  Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
@@ -162,8 +161,8 @@ private:
    XMLNodePointer_t  Polycone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
-   XMLNodePointer_t  Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr); 
-   XMLNodePointer_t  Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr); 
+   XMLNodePointer_t  Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
@@ -171,7 +170,7 @@ private:
    XMLNodePointer_t  Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr); //not really implemented: just approximation to a TGeoBBox
- 
+
    //'structure' section
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    XMLNodePointer_t  AssProcess(TXMLEngine* gdml, XMLNodePointer_t node);
@@ -179,7 +178,7 @@ private:
 
    //'setup' section
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
-    
+
    typedef TGDMMapHelper<TGeoTranslation> PosMap;
    typedef TGDMMapHelper<TGeoRotation> RotMap;
    typedef TGDMMapHelper<TGeoScale> SclMap;
@@ -188,13 +187,13 @@ private:
    typedef TGDMMapHelper<TGeoMaterial> MatMap;
    typedef TGDMMapHelper<TGeoMedium> MedMap;
    typedef TGDMMapHelper<TGeoMixture> MixMap;
-  
+
    typedef TGDMMapHelper<TGeoShape> SolMap;
    typedef TGDMMapHelper<TGeoVolume> VolMap;
    typedef TGDMMapHelper<TGDMLRefl> ReflSolidMap;
    typedef TGDMMapHelper<const char> FileMap;
    typedef std::map<std::string, std::string> ReflectionsMap;
-   typedef std::map<std::string, std::string> ReflVolMap; 
+   typedef std::map<std::string, std::string> ReflVolMap;
    typedef std::map<std::string, double> FracMap;
    typedef std::vector<TFormula*> FormVec;
 
@@ -216,5 +215,5 @@ private:
 
    ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
 };
-      
+
 #endif
