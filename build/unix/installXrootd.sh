@@ -9,6 +9,7 @@
 #                           [-t <tarball>|--tarball=<tarball>]
 #                           [-b <where-to-build>|--builddir=<where-to-build>]
 #                           [--xrdopts="<opts-to-xrootd>"]
+#                           [--vers-subdir[=<version-root>]]
 #
 # See printhelp for a description of the options.
 #
@@ -27,20 +28,27 @@ printhelp()
         echo "                      [--xrdopts=\"<opts-to-xrootd>\"]"
         echo " "
         echo "  where"
-        echo "   <installdir>: the directory where the bin, lib, include/xrootd,"
-        echo "  share and man directories will appear"
+        echo "   <installdir>: the directory where the bin, lib, include/xrootd, share and"
+        echo "                 man directories will appear"
+        echo "                 (see also --vers-subdir)"
         echo "   -b <where-to-build>, --builddir=<where-to-build>"
-        echo "      directory where to build; default /tmp/xrootd-<version>"
+        echo "                 directory where to build; default /tmp/xrootd-<version>"
         echo "   -d,--debug    build in debug mode (no optimization)"
         echo "   -h, --help    print this help screen"
         echo "   -o,--optimized build in optimized mode without any debug symbol"
         echo "   -t <tarball>, --tarball=<tarball>"
-        echo "      full local path to source tarball"
+        echo "                 full local path to source tarball"
         echo "   -v <version>, --version=<version>"
-        echo "      version in the form x.j.w[-hash-or-tag] ;"
-        echo "      current default 3.1.0"
+        echo "                 version in the form x.j.w[-hash-or-tag] ;"
+        echo "                 current default 3.1.0"
         echo "   --xrdopts=<opts-to-xrootd>"
-        echo "      additional configuration options to xrootd (see xrootd web site)"
+        echo "                 additional configuration options to xrootd"
+        echo "                 (see xrootd web site)"
+        echo "   --vers-subdir[=<version-root>]"
+        echo "                 install in <installdir>/<version-root><version> instead of"
+        echo "                 <installdir> directly; helps separating different versions"
+        echo "                 under the same <root-installdir>; if <version-root> is not"
+        echo "                 specified, 'xrootd-' is used."
         echo " "
         echo "  When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve"
         echo "  the tarball"
@@ -52,6 +60,7 @@ VERS=""
 TARBALL=""
 BUILDDIR=""
 XRDOPTS=""
+VSUBDIR=""
 
 #
 # Parse long options first
@@ -94,6 +103,8 @@ for i in $@ ; do
          optimized)  DBGOPT="-DCMAKE_BUILD_TYPE=Release" ;;
          tarball=*)  TARBALL="$oarg" ;;
          version=*)  VERS="$oarg" ;;
+         vers-subdir) VSUBDIR="xrootd-" ;;
+         vers-subdir=*)  VSUBDIR="$oarg" ;;
          xrdopts=*)  XRDOPTS="$oarg" ;;
       esac
    fi
@@ -140,12 +151,16 @@ if test "x$TGTDIR" =  "x" ; then
    printhelp
    exit
 fi
-echo "Installing in: $TGTDIR"
 
 if test "x$VERS" =  "x" ; then
    VERS="3.1.0"
 fi
 echo "Version: $VERS"
+
+if test ! "x$VSUBDIR" =  "x" ; then
+   TGTDIR="$TGTDIR/$VSUBDIR$VERS"
+fi
+echo "Installing in: $TGTDIR"
 
 retrieve="yes"
 if test ! "x$TARBALL" = "x" && test -f $TARBALL ; then
@@ -177,8 +192,21 @@ if test ! -d $BUILDDIR ; then
       exit 1
    fi
 else
-   # CLeanup build dir
-   rm -fr $BUILDDIR/*
+   # Cleanup build dir
+   rm -fr $BUILDDIR/* 2> /dev/null
+   if [ "$?" != "0" ] ; then
+      echo "Problems cleaning $BUILDDIR : do you have the permissions? Trying with $BUILDDIR-1"
+      BUILDDIR="$BUILDDIR-1"
+      mkdir -p $BUILDDIR
+      if test ! -d $BUILDDIR ; then
+         echo "Could not create build dir '$BUILDDIR': cannot continue"
+         cd $WRKDIR
+         exit "$?"
+      else
+         # Cleanup build dir
+         rm -fr $BUILDDIR/*
+      fi
+   fi
 fi
 echo "Build dir: $BUILDDIR"
 
