@@ -148,7 +148,6 @@ int main( int argc, char **argv )
          }
          ++ffirst;
       } else if ( argv[a][0] == '-' ) {
-      } else if ( argv[a][0] == '-' ) {
          char ft[4];
          for( int j=0; j<=9; ++j ) {
             snprintf(ft,4,"-f%d",j);
