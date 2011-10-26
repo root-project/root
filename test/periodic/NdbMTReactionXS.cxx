@@ -11,8 +11,6 @@ Bool_t
 NdbMTReactionXS::LoadENDF( char *filename )
 {
 	NdbEndfIO	endf(filename,TENDF_READ);
-	Int_t		za;
-	Float_t		awr;
 	Bool_t		error;
 
 	if (!endf.IsOpen()) return kTRUE;
@@ -20,13 +18,13 @@ NdbMTReactionXS::LoadENDF( char *filename )
 	minxs = MAX_REAL;
 	maxxs = -MAX_REAL;
 
-	endf.FindMFMT(3,MT());			// Find total cross section
-	za  = (int)endf.ReadReal(&error);	// ??
-	awr = endf.ReadReal(&error);
+	endf.FindMFMT(3,MT());		// Find total cross section
+	      endf.ReadReal(&error);	// ??
+	      endf.ReadReal(&error);
 	      endf.ReadLine();
 	QM  = endf.ReadReal(&error);
 	QI  = endf.ReadReal(&error);
-	     endf.ReadInt(&error);     // Skip number
+	      endf.ReadInt(&error);     // Skip number
 
 	LR = endf.ReadInt(&error); if (error) return error;
 	NR = endf.ReadInt(&error); if (error) return error;

@@ -43,13 +43,9 @@ void MyDetector::Init()
    Int_t           i;
    Double_t        x;
    TGeoMaterial    *material;
-   TGeoMaterial    *iron;
    TGeoMaterial    *lead;
    TGeoMaterial    *polystyrene;
-   TGeoMaterial    *bgo;
-   TGeoMaterial    *csi;
    TGeoMaterial    *nai;
-   TGeoMaterial    *al;
    TGeoMedium      *scintillator[4];
    TGeoMedium      *discriminator;
    TGeoMedium      *calorimeter;
@@ -78,13 +74,13 @@ void MyDetector::Init()
    trans[4] = new TGeoTranslation(0., 36.0, 0.);
    trans[5] = new TGeoTranslation(0., 60.0, 0.);
 
-   iron = new TGeoMaterial("Iron",55.85f,26,7.87f,1.76f,16.7598f);
+   new TGeoMaterial("Iron",55.85f,26,7.87f,1.76f,16.7598f);
    lead = new TGeoMaterial("Lead",207.2f,82,11.35f,0.56f,17.0925f);
    polystyrene = new TGeoMaterial("Polystyrene",13.01f,7,1.032f,42.4f,79.36f);
-   bgo = new TGeoMaterial("BGO",175.92f,74,7.1f,1.12f,22.11f);
-   csi = new TGeoMaterial("CsI",129.90f,54,4.53f,1.85f,36.8653f);
+   new TGeoMaterial("BGO",175.92f,74,7.1f,1.12f,22.11f);
+   new TGeoMaterial("CsI",129.90f,54,4.53f,1.85f,36.8653f);
    nai = new TGeoMaterial("NaI",117.10f,50,3.67f,2.59f,41.1444f);
-   al = new TGeoMaterial("Al",26.981539f,13,2.7f,8.9f,39.407407f);
+   new TGeoMaterial("Al",26.981539f,13,2.7f,8.9f,39.407407f);
 
    scintillator[0] = new TGeoMedium("SCINT0",1, polystyrene);
    discriminator   = new TGeoMedium("DISCR", 2, lead);

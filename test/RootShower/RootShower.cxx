@@ -1017,7 +1017,7 @@ void RootShower::OnShowerProduce()
 {
    // Initialize and generate one event.
 
-   Int_t i, j, gifindex;
+   Int_t i, j;
    fStatusBar->SetText("",1);
 
    SetWindowName("Root Shower Event Display");
@@ -1034,7 +1034,6 @@ void RootShower::OnShowerProduce()
    fHisto_dEdX->Reset();
    Produce();
    Interrupt(kFALSE);
-   gifindex = 0;
    for (i=0;i<=fEvent->GetTotal();i++) {
       gSystem->ProcessEvents();  // handle GUI events
       if (IsInterrupted()) break;
@@ -1333,12 +1332,10 @@ Bool_t RootShower::HandleKey(Event_t *event)
    // Handle keyboard events.
 
    char   input[10];
-   Int_t  n;
    UInt_t keysym;
 
    if (event->fType == kGKeyPress) {
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
-      n = strlen(input);
 
       switch ((EKeySym)keysym) {   // ignore these keys
          case kKey_Shift:
