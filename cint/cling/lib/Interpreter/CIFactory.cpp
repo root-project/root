@@ -168,6 +168,10 @@ namespace cling {
 
   void CIFactory::SetClingCustomLangOpts(LangOptions& Opts) {
     Opts.EmitAllDecls = 1;
+    Opts.ObjCNonFragileABI2 = 0;
+    Opts.Exceptions = 1;
+    Opts.CXXExceptions = 1;
+    Opts.Deprecated = 1;
   }
 
   void CIFactory::SetClingTargetLangOpts(LangOptions& Opts, 
@@ -177,6 +181,18 @@ namespace cling {
       Opts.MSCVersion = 1300;
       // Should fix http://llvm.org/bugs/show_bug.cgi?id=10528
       Opts.DelayedTemplateParsing = 1;
+    } else {
+      Opts.MicrosoftExt = 0;
+    }
+    if (Target.getTriple().getArch() == llvm::Triple::x86) {
+       Opts.ObjCNonFragileABI = 1;
+    } else {
+       Opts.ObjCNonFragileABI = 0;
+    }
+    if (Target.getTriple().isOSDarwin()) {
+       Opts.NeXTRuntime = 1;
+    } else {
+       Opts.NeXTRuntime = 0;
     }
   }
 } // end namespace
