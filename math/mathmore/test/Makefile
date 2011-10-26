@@ -8,7 +8,7 @@
 
 
 include $(ROOTSYS)/config/Makefile.config
-include $(ROOTSYS)/test/Makefile.arch
+include $(ROOTSYS)/etc/Makefile.arch
 
 #------------------------------------------------------------------------------
 

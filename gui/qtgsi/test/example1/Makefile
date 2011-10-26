@@ -5,7 +5,7 @@
 #############################################################################
 
 include ../../../../config/Makefile.config
-include ../../../../test/Makefile.arch
+include ../../../../etc/Makefile.arch
 
 MAKEDEP = rmkdepend
 
