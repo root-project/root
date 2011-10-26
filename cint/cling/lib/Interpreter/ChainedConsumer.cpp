@@ -58,7 +58,8 @@ namespace cling {
 
   void ChainedDeserializationListener::ReaderInitialized(ASTReader* Reader) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      Listeners[i]->ReaderInitialized(Reader);
+      if (Enabled[i])
+        Listeners[i]->ReaderInitialized(Reader);
   }
   
   void ChainedDeserializationListener::IdentifierRead(serialization::IdentID ID,
