@@ -13,6 +13,7 @@ namespace {
 //= PyROOT template proxy construction/destruction ===========================
    TemplateProxy* tpp_new( PyTypeObject*, PyObject*, PyObject* )
    {
+   // Create a new empty template method proxy.
       TemplateProxy* pytmpl = PyObject_GC_New( TemplateProxy, &TemplateProxy_Type );
       pytmpl->fPyName  = NULL;
       pytmpl->fPyClass = NULL;
@@ -25,6 +26,7 @@ namespace {
 //____________________________________________________________________________
    void tpp_dealloc( TemplateProxy* pytmpl )
    {
+   // Destroy the given template method proxy.
       PyObject_GC_UnTrack( pytmpl );
       PyObject_GC_Del( pytmpl );
    }
@@ -32,6 +34,7 @@ namespace {
 //____________________________________________________________________________
    int tpp_traverse( TemplateProxy* pytmpl, visitproc visit, void* args )
    {
+   // Garbage collector traverse of held python member objects.
       if ( pytmpl->fPyName ) {
          int err = visit( (PyObject*)pytmpl->fPyName, args );
          if ( err )
@@ -56,6 +59,7 @@ namespace {
 //____________________________________________________________________________
    int tpp_clear( TemplateProxy* pytmpl )
    {
+   // Garbage collector clear of held python member objects.
       Py_XDECREF( (PyObject*)pytmpl->fPyName );
       pytmpl->fPyName = NULL;
 

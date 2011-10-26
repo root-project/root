@@ -29,18 +29,21 @@ namespace PyROOT {
    public:
       void Set( void** address, EFlags flags = kNone )
       {
+      // Initialize the proxy with the pointer value 'address.'
          fObject = (void*) address;
          fFlags  = flags | kIsReference;
       }
  
       void Set( void* object, EFlags flags = kNone )
       {
+      // Initialize the proxy with the given 'object.'
          fObject = object;
          fFlags  = flags & ~kIsReference;
       }
 
       void* GetObject() const
       {
+      // Retrieve a pointer to the held C++ object.
          if ( fObject && ( fFlags & kIsReference ) )
             return *(reinterpret_cast< void** >( const_cast< void* >( fObject ) ));
          else
@@ -49,7 +52,7 @@ namespace PyROOT {
 
       TClass* ObjectIsA() const
       {
-      // the following may return null
+      // Retrieve a pointer to the C++ type; may return NULL.
          return ((PyRootClass*)Py_TYPE(this))->fClass.GetClass();
       }
 

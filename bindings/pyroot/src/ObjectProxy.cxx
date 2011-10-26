@@ -17,6 +17,7 @@ R__EXTERN PyObject* gRootModule;
 
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
+// Destroy the held C++ object, if owned; does not deallocate the proxy.
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
       pyobj->ObjectIsA()->Destructor( pyobj->fObject );
    }
@@ -28,9 +29,10 @@ namespace PyROOT {
 
 namespace {
 
-//= PyROOT object proxy nullness checking ====================================
+//= PyROOT object proxy null-ness checking ===================================
    PyObject* op_nonzero( ObjectProxy* self )
    {
+   // Null of the proxy is determined by null-ness of the held C++ object.
       PyObject* result = self->GetObject() ? Py_True : Py_False;
       Py_INCREF( result );
       return result;
@@ -97,6 +99,7 @@ namespace {
 //= PyROOT object proxy construction/destruction =============================
    ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
    {
+   // Create a new object proxy (holder only).
       ObjectProxy* pyobj = (ObjectProxy*)subtype->tp_alloc( subtype, 0 );
       pyobj->fObject = NULL;
       pyobj->fFlags  = 0;
@@ -107,6 +110,7 @@ namespace {
 //____________________________________________________________________________
    void op_dealloc( ObjectProxy* pyobj )
    {
+   // Remove memory held by the object proxy.
       op_dealloc_nofree( pyobj );
       Py_TYPE(pyobj)->tp_free( (PyObject*)pyobj );
    }
@@ -114,6 +118,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* op_richcompare( ObjectProxy* self, ObjectProxy* other, int op )
    {
+   // Rich set of comparison objects; only equals and not-equals are defined.
       if ( op != Py_EQ && op != Py_NE ) {
          Py_INCREF( Py_NotImplemented );
          return Py_NotImplemented;
@@ -142,6 +147,8 @@ namespace {
 //____________________________________________________________________________
    PyObject* op_repr( ObjectProxy* pyobj )
    {
+   // Build a representation string of the object proxy that shows the address
+   // of the C++ object that is held, as well as its type.
       TClass* klass = pyobj->ObjectIsA();
       std::string clName = klass ? klass->GetName() : "<unknown>";
       if ( pyobj->fFlags & ObjectProxy::kIsReference )

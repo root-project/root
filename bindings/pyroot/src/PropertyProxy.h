@@ -79,6 +79,7 @@ namespace PyROOT {
    template< class T >
    inline PropertyProxy* PropertyProxy_New( const T& dmi )
    {
+   // Create an initialize a new property descriptor, given the C++ datum.
       PropertyProxy* pyprop =
          (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
       pyprop->Set( dmi );

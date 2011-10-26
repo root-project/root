@@ -22,6 +22,7 @@ namespace PyROOT {
    public:
       void Set( const std::string& name, PyObject* pyclass )
       {
+      // Initialize the proxy for the given 'pyclass.'
          fPyName  = PyROOT_PyUnicode_FromString( const_cast< char* >( name.c_str() ) );
          Py_XINCREF( pyclass );
          fPyClass = pyclass;
@@ -56,6 +57,7 @@ namespace PyROOT {
 //- creation -----------------------------------------------------------------
    inline TemplateProxy* TemplateProxy_New( const std::string& name, PyObject* pyclass )
    {
+   // Create and initialize a new template method proxy for the class.
       TemplateProxy* pytmpl = (TemplateProxy*)TemplateProxy_Type.tp_new( &TemplateProxy_Type, 0, 0 );
       pytmpl->Set( name, pyclass );
       return pytmpl;

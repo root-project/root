@@ -55,6 +55,8 @@ PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
       return kFALSE
 
 Bool_t PyROOT::CreatePyStrings() {
+// Build cache of commonly used python strings (the cache is python intern, so
+// all strings are shared python-wide, not just in PyROOT).
    PYROOT_INITIALIZE_STRING( gBases, __bases__ );
    PYROOT_INITIALIZE_STRING( gBase, __base__ );
    PYROOT_INITIALIZE_STRING( gClass, __class__ );
@@ -103,6 +105,7 @@ Bool_t PyROOT::CreatePyStrings() {
 
 //____________________________________________________________________________
 PyObject* PyROOT::DestroyPyStrings() {
+// Remove all cached python strings.
    Py_DECREF( PyStrings::gBases ); PyStrings::gBases = 0;
    Py_DECREF( PyStrings::gBase ); PyStrings::gBase = 0;
    Py_DECREF( PyStrings::gClass ); PyStrings::gClass = 0;

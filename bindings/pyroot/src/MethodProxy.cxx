@@ -42,6 +42,7 @@ namespace {
 
       static void Clear( PyError_t& e )
       {
+      // Remove exception information.
          Py_XDECREF( e.fType ); Py_XDECREF( e.fValue ); Py_XDECREF( e.fTrace );
          e.fType = e.fValue = e.fTrace = 0;
       }
@@ -52,6 +53,7 @@ namespace {
 // helper to hash tuple (using tuple hash would cause self-tailing loops)
    inline Long_t HashSignature( PyObject* args )
    {
+   // Build a hash from the types of the given python function arguments.
       ULong_t hash = 0;
 
       Int_t nargs = PyTuple_GET_SIZE( args );

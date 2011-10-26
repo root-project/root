@@ -442,6 +442,7 @@ Int_t PyROOT::TMethodHolder< T, M >::GetMaxArgs()
 template< class T, class M>
 PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
 {
+// Build a string representation of the arguments list.
    if ( iarg >= (int)fMethod.FunctionParameterSize() )
       return 0;
 
@@ -485,6 +486,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
 template< class T, class M>
 PyObject* PyROOT::TMethodHolder< T, M >::GetScope()
 {
+// Get or build the scope of this method.
    return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >(
       fMethod.DeclaringScope().Name( ROOT::Reflex::SCOPED | ROOT::Reflex::FINAL ) );
 }

@@ -68,6 +68,7 @@ namespace {
 //____________________________________________________________________________
    int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
+   // Set the value of the C++ datum held.
       const int errret = -1;
 
    // filter const objects and enums to prevent changing their values
@@ -101,6 +102,7 @@ namespace {
 //= PyROOT property proxy construction/destruction ===========================
    PropertyProxy* pp_new( PyTypeObject* pytype, PyObject*, PyObject* )
    {
+   // Create and initialize a new property descriptor.
       PropertyProxy* pyprop = (PropertyProxy*)pytype->tp_alloc( pytype, 0 );
       pyprop->fConverter = 0;
       new ( &pyprop->fName ) std::string();
@@ -111,6 +113,7 @@ namespace {
 //____________________________________________________________________________
    void pp_dealloc( PropertyProxy* pyprop )
    {
+   // Deallocate memory held by this descriptor.
       using namespace std;
       pyprop->fName.~string();
       delete pyprop->fConverter;
