@@ -129,7 +129,7 @@ static BOOL canScaleMarker(Style_t style)
    if (picker == markerColorPicker) {
       const unsigned colorIndex = ROOT_IOSBrowser::colorIndices[item];
       object->SetMarkerColor(colorIndex);
-      [controller objectWasModifiedUpdateSelection : NO];
+      [controller objectWasModifiedUpdateSelection : YES];
    } else if (picker == markerStylePicker) {
       if (item < nMarkers) {
          EMarkerStyle style = markerStyles[item];
@@ -148,7 +148,7 @@ static BOOL canScaleMarker(Style_t style)
          NSLog(@"check horizontal picker code, got item index %u, must be < %u", item, nMarkers);
       }
 
-      [controller objectWasModifiedUpdateSelection : NO];
+      [controller objectWasModifiedUpdateSelection : YES];
    }
 }
 
@@ -218,7 +218,7 @@ static BOOL canScaleMarker(Style_t style)
 
    object->SetMarkerSize(object->GetMarkerSize() + sizeStep);
    sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];   
-   [controller objectWasModifiedUpdateSelection : NO];
+   [controller objectWasModifiedUpdateSelection : YES];
 }
 
 //____________________________________________________________________________________________________
@@ -229,7 +229,7 @@ static BOOL canScaleMarker(Style_t style)
    
    object->SetMarkerSize(object->GetMarkerSize() - sizeStep);
    sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];   
-   [controller objectWasModifiedUpdateSelection : NO];
+   [controller objectWasModifiedUpdateSelection : YES];
 }
 
 @end
