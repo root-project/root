@@ -37,7 +37,13 @@ CLINGCXXFLAGS := $(shell $(LLVMCONFIG) --cxxflags) -I$(MODDIR)/include \
 CLINGLLVMLIBS:= -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic) \
-	$(shell $(LLVMCONFIG) --libs) $(shell $(LLVMCONFIG) --ldflags)
+	$(patsubst -lLLVM%Disassembler,,\
+	$(patsubst -lLLVM%AsmParser,,\
+	$(filter-out -lLLVMipa,\
+	$(shell $(LLVMCONFIG) --libs linker jit executionengine debuginfo \
+	  archive bitreader all-targets codegen selectiondag asmprinter \
+	  mcparser scalaropts instcombine transformutils analysis target)))) \
+	$(shell $(LLVMCONFIG) --ldflags)
 endif
 
 ##### local rules #####
