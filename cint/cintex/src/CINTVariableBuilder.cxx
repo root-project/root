@@ -193,7 +193,7 @@ namespace ROOT { namespace Cintex {
             << std::endl
             << std::setw(24) << std::left << "Cintex: declareField>"
             << "  Type:" 
-            << std::left << std::setw(24) << ("[" + dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : dmType.Name(SCOPED) + "]")
+            << std::left << std::setw(24) << ("[" + (dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : dmType.Name(SCOPED)) + "]")
             << " DeclBy:" << fClass.Name(SCOPED)
             << std::endl;
       }
