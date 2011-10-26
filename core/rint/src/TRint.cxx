@@ -391,6 +391,9 @@ void TRint::Run(Bool_t retrn)
                }
             }
             if (rootfile) {
+               // special trick to be able to open files using UNC path names
+               if (file->String().BeginsWith("\\\\"))
+                  file->String().Prepend("\\\\");
                file->String().ReplaceAll("\\","/");
                const char *rfile = (const char*)file->String();
                Printf("Attaching file %s as _file%d...", rfile, nfile);
