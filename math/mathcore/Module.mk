@@ -87,8 +87,8 @@ MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 MATHCOREMAP  := $(MATHCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHCOREH))
-ALLHDRS      += $(patsubst $(MODDIRI)/%.icc,include/%.icc,$(MATHCOREH))
+ALLHDRS      += $(patsubst $(MODDIRI)/%.icc,include/%.icc,\
+	$(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHCOREH)))
 ALLLIBS      += $(MATHCORELIB)
 ALLMAPS      += $(MATHCOREMAP)
 
