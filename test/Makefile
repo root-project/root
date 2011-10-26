@@ -6,7 +6,12 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include Makefile.arch
+RC        := root-config
+ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+include $(shell $(RC) --etcdir)/Makefile.arch
+else
+$(error Please make sure $(RC) can be found in path)
+endif
 -include ../MyConfig.mk
 
 #------------------------------------------------------------------------------
@@ -87,7 +92,7 @@ else
 STRESSGUILIBS = -lASImage -lASImageGui -lRecorder -lGuiHtml
 endif
 
-ifeq ($(shell $(ROOTCONFIG) --has-genvector),yes)
+ifeq ($(shell $(RC) --has-genvector),yes)
 STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
@@ -124,7 +129,7 @@ STRESSMATH    = stressMathCore$(ExeSuf)
 
 endif
 
-ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+ifeq ($(shell $(RC) --has-mathmore),yes)
 STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
 STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
 ifeq ($(PLATFORM),win32)
@@ -135,7 +140,7 @@ endif
 STRESSMATHMORE    = stressMathMore$(ExeSuf)
 endif
 
-ifeq ($(shell $(ROOTCONFIG) --has-tmva),yes)
+ifeq ($(shell $(RC) --has-tmva),yes)
 STRESSTMVAO   = stressTMVA.$(ObjSuf)
 STRESSTMVAS   = stressTMVA.$(SrcSuf)
 ifeq ($(PLATFORM),win32)
@@ -182,7 +187,7 @@ STRESSSHAPESO   = stressShapes.$(ObjSuf)
 STRESSSHAPESS   = stressShapes.$(SrcSuf)
 STRESSSHAPES    = stressShapes$(ExeSuf)
 
-ifeq ($(shell $(ROOTCONFIG) --has-roofit),yes)
+ifeq ($(shell $(RC) --has-roofit),yes)
 STRESSROOFITO  = stressRooFit.$(ObjSuf)
 STRESSROOFITS  = stressRooFit.$(SrcSuf)
 STRESSROOFIT   = stressRooFit$(ExeSuf)
@@ -192,8 +197,8 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
-ifeq ($(shell $(ROOTCONFIG) --has-unuran),yes)
-ifeq ($(shell $(ROOTCONFIG) --has-minuit2),yes)
+ifeq ($(shell $(RC) --has-unuran),yes)
+ifeq ($(shell $(RC) --has-minuit2),yes)
 STRESSHISTOFITO    = stressHistoFit.$(ObjSuf)
 STRESSHISTOFITS    = stressHistoFit.$(SrcSuf)
 STRESSHISTOFIT     = stressHistoFit$(ExeSuf)
@@ -573,7 +578,7 @@ $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
 
 $(STRESSROOFITO): stressRooFit_tests.cxx
 
-ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+ifeq ($(shell $(RC) --has-mathmore),yes)
 ifeq ($(PLATFORM),win32)
 EXTRAROOFITLIBS = '$(ROOTSYS)/lib/libMathMore.lib'
 else

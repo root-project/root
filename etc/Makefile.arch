@@ -6,18 +6,17 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-ifeq ($(ROOTSYS),)
-ROOTCONFIG   := ../bin/root-config
-else
-ROOTCONFIG   := root-config
+RC           := root-config
+ifneq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+$(error Please make sure $(RC) can be found)
 endif
 
-ARCH         := $(shell $(ROOTCONFIG) --arch)
-PLATFORM     := $(shell $(ROOTCONFIG) --platform)
-ALTCC        := $(shell $(ROOTCONFIG) --cc)
-ALTCXX       := $(shell $(ROOTCONFIG) --cxx)
-ALTF77       := $(shell $(ROOTCONFIG) --f77)
-ALTLD        := $(shell $(ROOTCONFIG) --ld)
+ARCH         := $(shell $(RC) --arch)
+PLATFORM     := $(shell $(RC) --platform)
+ALTCC        := $(shell $(RC) --cc)
+ALTCXX       := $(shell $(RC) --cxx)
+ALTF77       := $(shell $(RC) --f77)
+ALTLD        := $(shell $(RC) --ld)
 
 #CXX           =
 ObjSuf        = o
@@ -30,7 +29,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 OPT2          = -g
 else
-ifneq ($(findstring debug, $(strip $(shell $(ROOTCONFIG) --config))),)
+ifneq ($(findstring debug, $(strip $(shell $(RC) --config))),)
 OPT           = -g
 OPT2          = -g
 else
@@ -39,12 +38,12 @@ OPT2          = -O2
 endif
 endif
 
-ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
-ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
-ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
-ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
-HASTHREAD    := $(shell $(ROOTCONFIG) --has-thread)
-ROOTDICTTYPE := $(shell $(ROOTCONFIG) --dicttype)
+ROOTCFLAGS   := $(shell $(RC) --cflags)
+ROOTLDFLAGS  := $(shell $(RC) --ldflags)
+ROOTLIBS     := $(shell $(RC) --libs)
+ROOTGLIBS    := $(shell $(RC) --glibs)
+HASTHREAD    := $(shell $(RC) --has-thread)
+ROOTDICTTYPE := $(shell $(RC) --dicttype)
 ROOTCINT     := rootcint
 
 ifeq ($(PLATFORM),macosx)
@@ -428,7 +427,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 CXXOPT        = -Z7
 LDOPT         = -debug
 else
-ifneq ($(findstring debug, $(strip $(shell $(ROOTCONFIG) --config))),)
+ifneq ($(findstring debug, $(strip $(shell $(RC) --config))),)
 CXXOPT        = -Z7
 LDOPT         = -debug
 else
@@ -436,7 +435,7 @@ CXXOPT        = -O2
 LDOPT         = -opt:ref
 endif
 endif
-ROOTINCDIR   := -I$(shell cygpath -m `$(ROOTCONFIG) --incdir`)
+ROOTINCDIR   := -I$(shell cygpath -m `$(RC) --incdir`)
 CXXFLAGS      = $(CXXOPT) -nologo $(ROOTINCDIR) -FIw32pragma.h
 LD            = link
 LDFLAGS       = $(LDOPT) -nologo

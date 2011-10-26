@@ -6,7 +6,12 @@
 #
 # Author: Fons Rademakers, 12/2/2003
 
-include ../Makefile.arch
+RC := root-config
+ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+include $(shell $(RC) --etcdir)/Makefile.arch
+else
+$(error Please make sure $(RC) can be found in path)
+endif
 
 #------------------------------------------------------------------------------
 

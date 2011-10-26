@@ -110,6 +110,10 @@ protected:
    Int_t         ReadBufferViaCache(char *buf, Int_t len);
    Int_t         WriteBufferViaCache(const char *buf, Int_t len);
 
+   // Creating projects
+   Int_t         MakeProjectParMake(const char *packname, const char *filename);
+   Int_t         MakeProjectParProofInf(const char *packname, const char *proofinfdir);
+
    // Interface to basic system I/O routines
    virtual Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    virtual Int_t    SysClose(Int_t fd);
