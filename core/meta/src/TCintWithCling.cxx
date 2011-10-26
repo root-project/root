@@ -26,6 +26,8 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/Frontend/HeaderSearchOptions.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Serialization/ASTReader.h"
+#include "clang/Lex/Preprocessor.h"
 #include "llvm/Support/DynamicLibrary.h"
 
 #include <map>
@@ -127,38 +129,35 @@ TCintWithCling::TCintWithCling(const char *name, const char *title) :
 
    fInterpreter = new cling::Interpreter(1, interpArgs, 0, llvmDir); 
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
-   clang::CompilerInstance * CI = fInterpreter->getCI ();
-
-   clang::LangOptions & langInfo = CI->getLangOpts ();
-   //langInfo.C99         = 1;
-   //langInfo.HexFloats   = 1;
-   langInfo.BCPLComment = 1; // Only for C99/C++.
-   langInfo.Digraphs    = 1; // C94, C99, C++.
-   langInfo.CPlusPlus   = 1;
-   //langInfo.CPlusPlus0x = 1;
-   langInfo.CXXOperatorNames = 1;
-   langInfo.Bool = 1;
-   langInfo.NeXTRuntime = 1;
-   langInfo.NoInline = 1;
-   langInfo.Exceptions = 1;
-   langInfo.GNUMode = 1;
-   langInfo.NoInline = 1;
-   langInfo.GNUInline = 1;
-   langInfo.DollarIdents = 1;
-   langInfo.POSIXThreads = 1;
-
 
    // Add the root include directory and etc/ to list searched by default.
    // Use explicit TCint::AddIncludePath() to avoid vtable: we're in the c'tor!
 #ifndef ROOTINCDIR
    TCintWithCling::AddIncludePath(rootsys + "/include");
+   TString dictDir = rootsys + "/lib";
 #else
    TCintWithCling::AddIncludePath(ROOTINCDIR);
+   TString dictDir = ROOTLIBDIR;
 #endif
 
-   //TString pch_filename = gSystem->Getenv("ROOTSYS");
-   //pch_filename.Append("/include/ROOT.pch");
-   //CI->createPCHExternalASTSource(pch_filename.Data(), true, 0);
+   clang::CompilerInstance * CI = fInterpreter->getCI ();
+   CI->getPreprocessor().getHeaderSearchInfo().configureModules(dictDir.Data(), "NONE");
+   const char* dictEntry = 0;
+   void* dictDirPtr = gSystem->OpenDirectory(dictDir);
+   while ((dictEntry = gSystem->GetDirEntry(dictDirPtr))) {
+      static const char dictExt[] = "_dict.pcm";
+      size_t lenDictEntry = strlen(dictEntry);
+      if (lenDictEntry <= 9 || strcmp(dictEntry + lenDictEntry - 9, dictExt)) {
+         continue;
+      }
+      //TString dictFile = dictDir + "/" + dictEntry;
+      Info("LoadDictionaries", "Loading PCH %s", dictEntry);
+      TString module(dictEntry);
+      module.Remove(module.Length() - 4, 4);
+      fInterpreter->processLine(std::string("__import_module__ ") + module.Data() + ";",
+                                true /*raw*/);
+   }
+   gSystem->FreeDirectory(dictDirPtr);
 
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
@@ -197,6 +196,11 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error)
       }
       ret = TCint::ProcessLine(sLineNoArgs, error);
       sLine[1] = haveX;
+   }
+   static const char *fantomline = "TRint::EndOfLineAction();";
+   if (sLine == fantomline) {
+      // end of line action, CINT-only.
+      return TCint::ProcessLine(sLine, error);
    }
    TString aclicMode;
    TString arguments;
