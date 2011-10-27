@@ -391,6 +391,8 @@ ul#menu li a:hover {
 
 table {
     margin: 10px 0 30px 0;
+    width: 100%; 
+    border-spacing: 0;
 }
 
 table tr th, table tr td { 
