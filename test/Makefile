@@ -10,7 +10,8 @@ RC        := root-config
 ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
 include $(shell $(RC) --etcdir)/Makefile.arch
 else
-$(error Please make sure $(RC) can be found in path)
+ROOTSYS = ..
+include $(ROOTSYS)/etc/Makefile.arch
 endif
 -include ../MyConfig.mk
 

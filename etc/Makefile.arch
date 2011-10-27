@@ -8,7 +8,16 @@
 
 RC           := root-config
 ifneq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
-$(error Please make sure $(RC) can be found)
+ifneq ($(ROOTSYS),)
+RC1          := $(ROOTSYS)/bin/root-config
+ifneq ($(shell which $(RC1) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+$(error Please make sure $(RC1) can be found in path)
+else
+RC           := $(RC1)
+endif
+else
+$(error Please make sure $(RC) can be found in path)
+endif
 endif
 
 ARCH         := $(shell $(RC) --arch)
