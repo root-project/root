@@ -60,7 +60,7 @@ TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
    fParticleList  = 0;
    fPdgMap        = 0;
    fListOfClasses = 0;
-      if (fgInstance) {
+   if (fgInstance) {
       Warning("TDatabasePDG", "object already instantiated");
    } else {
       fgInstance = this;
