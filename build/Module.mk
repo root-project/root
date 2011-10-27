@@ -14,7 +14,6 @@ MODDIR       := $(ROOT_SRCDIR)/$(MODNAME)
 
 RMKDEPDIR    := $(MODDIR)/rmkdepend
 BINDEXPDIR   := $(MODDIR)/win/bindexplib
-DROPDIR      := $(MODDIR)/unix/drop_from_path
 
 ##### rmkdepend #####
 RMKDEPH      := $(wildcard $(RMKDEPDIR)/*.h)
@@ -26,14 +25,6 @@ RMKDEPO      := $(RMKDEPO1) $(RMKDEPO2)
 RMKDEP       := bin/rmkdepend$(EXEEXT)
 RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
 
-##### drop_from_path #####
-ifneq ($(PLATFORM),win32)
-DROPH      := $(wildcard $(DROPDIR)/*.h)
-DROPS      := $(wildcard $(DROPDIR)/*.c)
-DROPO      := $(call stripsrc,$(DROPS:.c=.o))
-DROP       := bin/drop_from_path$(EXEEXT)
-endif
-
 ##### bindexplib #####
 ifeq ($(PLATFORM),win32)
 BINDEXPS     := $(wildcard $(BINDEXPDIR)/*.cxx)
@@ -44,16 +35,11 @@ W32PRAGMA    := $(ROOT_SRCDIR)/build/win/w32pragma.h
 ALLHDRS      += include/w32pragma.h
 endif
 
-POSTBIN      += $(DROP)
-
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 $(RMKDEP):      $(RMKDEPO)
 		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
-
-$(DROP):        $(DROPO)
-		$(LD) $(LDFLAGS) -o $@ $(DROPO)
 
 ifeq ($(PLATFORM),win32)
 include/%.h:    $(ROOT_SRCDIR)/build/win/%.h
@@ -66,16 +52,16 @@ $(BINDEXPO):    $(ORDER_) $(RMKDEP)
 
 all-$(MODNAME): $(RMKDEP) $(BINDEXP)
 else
-all-$(MODNAME): $(RMKDEP) $(DROP)
+all-$(MODNAME): $(RMKDEP)
 endif
 
 clean-$(MODNAME):
-		@rm -f $(RMKDEPO) $(BINDEXPO) $(DROPO)
+		@rm -f $(RMKDEPO) $(BINDEXPO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(RMKDEP) $(BINDEXP) $(DROP)
+		@rm -f $(RMKDEP) $(BINDEXP)
 
 distclean::     distclean-$(MODNAME)
 

@@ -17,29 +17,51 @@ set THIS="`dirname ${ARGS[2]}`"
 setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
 if ($?OLD_ROOTSYS) then
-   if ( ! -e @bindir@/drop_from_path ) then
-      echo "ERROR: the utility drop_from_path has not been build yet. Do:"
-      echo "make bin/drop_from_path"
-      exit 1
-   endif   
-   setenv PATH `@bindir@/drop_from_path -e "$OLD_ROOTSYS/bin"`
+   setenv PATH `echo $PATH | sed -e "s;:$OLD_ROOTSYS/bin:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/bin;;g"   \
+                                 -e "s;$OLD_ROOTSYS/bin:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/bin;;g"`
    if ($?LD_LIBRARY_PATH) then
-      setenv LD_LIBRARY_PATH `@bindir@/drop_from_path -D -e -p "$LD_LIBRARY_PATH" "$OLD_ROOTSYS/lib"`
+      setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | \
+                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib;;g"`
    endif
    if ($?DYLD_LIBRARY_PATH) then
-      setenv DYLD_LIBRARY_PATH `@bindir@/drop_from_path -D -e -p "$DYLD_LIBRARY_PATH" "$OLD_ROOTSYS/lib"`
+      setenv DYLD_LIBRARY_PATH `echo $DYLD_LIBRARY_PATH | \
+                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib;;g"`
    endif
    if ($?SHLIB_PATH) then
-      setenv SHLIB_PATH `@bindir@/drop_from_path -D -e -p "$SHLIB_PATH" "$OLD_ROOTSYS/lib"`
+      setenv SHLIB_PATH `echo $SHLIB_PATH | \
+                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib;;g"`
    endif
    if ($?LIBPATH) then
-      setenv LIBPATH `@bindir@/drop_from_path -D -e -p "$LIBPATH" "$OLD_ROOTSYS/lib"`
+      setenv LIBPATH `echo $LIBPATH | \
+                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib;;g"`
    endif
    if ($?PYTHONPATH) then
-      setenv PYTHONPATH `@bindir@/drop_from_path -D -e -p "$PYTHONPATH" "$OLD_ROOTSYS/lib"`
+      setenv PYTHONPATH `echo $PYTHONPATH | \
+                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/lib;;g"`
    endif
    if ($?MANPATH) then
-      setenv MANPATH `@bindir@/drop_from_path -D -e -p "$MANPATH" "$OLD_ROOTSYS/man"`
+      setenv MANPATH `echo $MANPATH | \
+                             sed -e "s;:$OLD_ROOTSYS/man:;:;g" \
+                                 -e "s;:$OLD_ROOTSYS/man;;g"   \
+                                 -e "s;$OLD_ROOTSYS/man:;;g"   \
+                                 -e "s;$OLD_ROOTSYS/man;;g"`
    endif
 endif
 

@@ -7,6 +7,23 @@
 #
 # Author: Fons Rademakers, 18/8/2006
 
+drop_from_path()
+{
+   # Assert that we got enough arguments
+   if test $# -ne 2 ; then
+      echo "drop_from_path: needs 2 arguments"
+      return 1
+   fi
+
+   path=$1
+   drop=$2
+
+   newpath=`echo $path | sed -e "s;:${drop}:;:;g" \
+                             -e "s;:${drop};;g"   \
+                             -e "s;${drop}:;;g"   \
+                             -e "s;${drop};;g"`
+}
+
 if [ -n "${ROOTSYS}" ] ; then
    OLD_ROOTSYS=${ROOTSYS}
 fi
@@ -25,31 +42,33 @@ else
 fi
 
 if [ -n "${OLD_ROOTSYS}" ] ; then
-   if [ ! -e @bindir@/drop_from_path ]; then
-      echo "ERROR: the utility drop_from_path has not been build yet. Do:"
-      echo "make bin/drop_from_path"
-      return 1
-   fi
    if [ -n "${PATH}" ]; then
-      PATH=`@bindir@/drop_from_path -e "${OLD_ROOTSYS}/bin"`
+      drop_from_path $PATH ${OLD_ROOTSYS}/bin
+      PATH=$newpath
    fi
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      LD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${LD_LIBRARY_PATH}" "${OLD_ROOTSYS}/lib"`
+      drop_from_path $LD_LIBRARY_PATH ${OLD_ROOTSYS}/lib
+      LD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      DYLD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${DYLD_LIBRARY_PATH}" "${OLD_ROOTSYS}/lib"`
+      drop_from_path $DYLD_LIBRARY_PATH ${OLD_ROOTSYS}/lib
+      DYLD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${SHLIB_PATH}" ]; then
-      SHLIB_PATH=`@bindir@/drop_from_path -D -e -p "${SHLIB_PATH}" "${OLD_ROOTSYS}/lib"`
+      drop_from_path $SHLIB_PATH ${OLD_ROOTSYS}/lib
+      SHLIB_PATH=$newpath
    fi
    if [ -n "${LIBPATH}" ]; then
-      LIBPATH=`@bindir@/drop_from_path -D -e -p "${LIBPATH}" "${OLD_ROOTSYS}/lib"`
+      drop_from_path $LIBPATH ${OLD_ROOTSYS}/lib
+      LIBPATH=$newpath
    fi
    if [ -n "${PYTHONPATH}" ]; then
-      PYTHONPATH=`@bindir@/drop_from_path -D -e -p "${PYTHONPATH}" "${OLD_ROOTSYS}/lib"`
+      drop_from_path $PYTHONPATH ${OLD_ROOTSYS}/lib
+      PYTHONPATH=$newpath
    fi
    if [ -n "${MANPATH}" ]; then
-      MANPATH=`@bindir@/drop_from_path -D -e -p "${MANPATH}" "${OLD_ROOTSYS}/man"`
+      drop_from_path $MANPATH ${OLD_ROOTSYS}/man
+      MANPATH=$newpath
    fi
 fi
 
