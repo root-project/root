@@ -53,6 +53,7 @@ protected:
       
    Int_t  GetHead();
    Bool_t ReadBuffer10(char *buf, Int_t len);
+   //Bool_t ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
 
 public:
    TGSFile(const char *url, Option_t *opt="");

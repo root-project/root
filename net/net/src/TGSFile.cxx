@@ -218,6 +218,50 @@ Int_t TGSFile::GetHead()
    return ret;
 }
 
+#if 0
+// Currently not supported on the Google Storage cloud side because
+// the chunked responses are not "standard"
+//______________________________________________________________________________
+Bool_t  TGSFile::ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
+{
+   // Read specified byte range from Google Storage.
+   // This routine connects to the Google Storage server, sends the
+   // request created by THTTPMessage and returns the buffer.
+   // Returns kTRUE in case of error.
+	
+   THTTPMessage gsget = THTTPMessage(kGET, fRealName, GetBucket(),
+                                     GetUrl().GetHost(), GetAuthPrefix(),
+                                     GetAccessId(), GetAccessKey(),
+                                     fOffset, pos, len, nbuf);
+   TString msg = gsget.GetRequest();
+   Int_t size = gsget.GetLength();
+   Int_t curbuf = gsget.GetCurrentBuffer();
+   
+   //printf("Num of buffers %d, current buffer %d size %d\n",nbuf,curbuf,size);
+   
+   Int_t n = GetFromWeb10(buf, size, msg);
+   if (n == -1)
+      return kTRUE;
+   // The -2 error condition typically only happens when
+   // GetHead() failed because not implemented, in the first call to
+   // ReadBuffer() in Init(), it is not checked in ReadBuffers10().
+   if (n == -2) {
+      Error("ReadBuffer10", "%s does not exist", fBasicUrl.Data());
+      MakeZombie();
+      gDirectory = gROOT;
+      return kTRUE;
+   }
+
+   fOffset += size;
+
+   if (nbuf == curbuf) {
+      return kFALSE;         
+   } else {
+      return ReadBuffers10(&buf[size], &pos[curbuf], &len[curbuf], nbuf-curbuf);
+   }   
+}
+#endif
+
 //______________________________________________________________________________
 Bool_t TGSFile::ReadBuffer(char *buf, Int_t len)
 {
