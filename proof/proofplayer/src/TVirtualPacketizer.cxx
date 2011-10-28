@@ -150,8 +150,8 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
 
    // Whether to send estimated values for the progress info
    TString estopt;
-   TProof::GetParameter(input, "PROOF_RateEstimation", estopt);
-   if (estopt.IsNull()) {
+   if (TProof::GetParameter(input, "PROOF_RateEstimation", estopt) != 0 || 
+       estopt.IsNull()) {
       // Parse option from the env
       estopt = gEnv->GetValue("Proof.RateEstimation", "");
    }

@@ -702,7 +702,8 @@ void TDataSetManager::MonitorUsedSpace(TVirtualMonitoringWriter *monitoring)
          list->Add(new TParameter<Long64_t>(user->String().Data(), size2->GetVal()));
       }
 
-      monitoring->SendParameters(list, group->String());
+      if (!monitoring->SendParameters(list, group->String()))
+         Warning("MonitorUsedSpace", "problems sending monitoring parameters");
       delete list;
    }
 }

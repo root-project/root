@@ -5629,8 +5629,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    }
 
    // Get info about the file
-   Long64_t size;
-   Long_t id, flags, modtime;
+   Long64_t size = -1;
+   Long_t id, flags, modtime = 0;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
       Error("SendFile", "cannot stat file %s", file);
       return -1;

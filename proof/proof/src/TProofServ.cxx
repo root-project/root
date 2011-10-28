@@ -1020,7 +1020,7 @@ Int_t TProofServ::CatMotd()
    lastname = TString(GetWorkDir()) + "/.prooflast";
    char *last = gSystem->ExpandPathName(lastname.Data());
    Long64_t size;
-   Long_t id, flags, modtime, lasttime;
+   Long_t id, flags, modtime, lasttime = 0;
    if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
       lasttime = 0;
 
@@ -1065,7 +1065,10 @@ TObject *TProofServ::Get(const char *namecycle)
    // This method is called by TDirectory::Get() in case the object can not
    // be found locally.
 
-   fSocket->Send(namecycle, kPROOF_GETOBJECT);
+   if (fSocket->Send(namecycle, kPROOF_GETOBJECT) < 0) {
+      Error("Get", "problems sending request");
+      return (TObject *)0;
+   }
 
    TObject *idcur = 0;
 
@@ -1535,7 +1538,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kPROOF_STATUS:
          Warning("HandleSocketInput:kPROOF_STATUS",
                "kPROOF_STATUS message is obsolete");
-         fSocket->Send(fProof->GetParallel(), kPROOF_STATUS);
+         if (fSocket->Send(fProof->GetParallel(), kPROOF_STATUS) < 0)
+            Warning("HandleSocketInput:kPROOF_STATUS", "problem sending of request");
          break;
 
       case kPROOF_GETSTATS:
@@ -2100,7 +2104,10 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
          if (++numworkers >= connections)
             fMergingMonitor->Remove(fMergingSocket);
       } else {
-         s->Recv(mess);
+         if (s->Recv(mess) < 0) {
+            Error("AcceptResults", "problems receiving message");
+            continue;
+         }
          PDB(kSubmerger, 2)
             Info("AcceptResults", "message received: %d ", (mess ? mess->What() : 0));
          if (!mess) {
@@ -2459,7 +2466,8 @@ Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
 
    close(fd);
 
-   chmod(file, 0644);
+   if (chmod(file, 0644) != 0)
+      Warning("ReceiveFile", "error setting mode 0644 on file %s", file);
 
    return 0;
 }
@@ -3070,16 +3078,22 @@ Int_t TProofServ::SetupCommon()
       if (!dsms.IsNull()) {
          TString dsm;
          Int_t from  = 0;
-         dsms.Tokenize(dsm, from, ",");
-         // Get plugin manager to load the appropriate TDataSetManager
-         if (gROOT->GetPluginManager()) {
-            // Find the appropriate handler
-            h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", dsm);
-            if (h && h->LoadPlugin() != -1) {
-               // make instance of the dataset manager
-               fDataSetManager =
-                  reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3, fGroup.Data(),
-                                                          fUser.Data(), dsm.Data()));
+         while (dsms.Tokenize(dsm, from, ",")) {
+            if (fDataSetManager && !fDataSetManager->TestBit(TObject::kInvalidObject)) {
+               Warning("SetupCommon", "a valid dataset manager already initialized");
+               Warning("SetupCommon", "support for multiple managers not yet available");
+               break;
+            }
+            // Get plugin manager to load the appropriate TDataSetManager
+            if (gROOT->GetPluginManager()) {
+               // Find the appropriate handler
+               h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", dsm);
+               if (h && h->LoadPlugin() != -1) {
+                  // make instance of the dataset manager
+                  fDataSetManager =
+                     reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3, fGroup.Data(),
+                                                            fUser.Data(), dsm.Data()));
+               }
             }
          }
          // Check the result of the dataset manager initialization
@@ -4816,7 +4830,10 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
             Info("HandleCheckFile",
                  "package %s already on node", filenam.Data());
          if (IsMaster())
-            fProof->UploadPackage(fPackageDir + "/" + filenam);
+            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
+               Info("HandleCheckFile",
+                    "problems with uploading package %s", filenam.Data());
+               
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
@@ -4843,7 +4860,9 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
             Info("HandleCheckFile",
                  "package %s already on node", filenam.Data());
          if (IsMaster())
-            fProof->UploadPackage(fPackageDir + "/" + filenam);
+            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
+               Info("HandleCheckFile",
+                    "problems with uploading package %s", filenam.Data());
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);

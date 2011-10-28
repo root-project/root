@@ -324,7 +324,7 @@ int main(int argc, char **argv)
    }
    catch (std::exception& exc) {
       Printf("Standard exception caught: we abort whatever it is ...");
-      throw;
+      throw exc;
    }
    catch (const char *str) {
       Printf("Exception thrown: %s", str);

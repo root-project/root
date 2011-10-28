@@ -1636,7 +1636,7 @@ void TProofDrawGraph::Terminate(void)
       }
       if (!hist->TestBit(kCanDelete)) {
          for (int i = 0; i < fGraph->GetN(); i++) {
-            Double_t x, y;
+            Double_t x = 0, y = 0;
             fGraph->GetPoint(i, x, y);
             hist->Fill(x, y, 1);
          }
@@ -1780,7 +1780,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
             fPolyMarker3D->GetPoint(0, rmax[0], rmax[1], rmax[2]);
          }
          for (int i = 1; i < fPolyMarker3D->Size(); i++) {
-            Double_t v[3];
+            Double_t v[3] = {0};
             fPolyMarker3D->GetPoint(i, v[0], v[1], v[2]);
             for (int ii = 0; ii < 3; ii++) {
                if (v[ii] < rmin[ii]) rmin[ii] = v[ii];
@@ -1827,7 +1827,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
       gPad->Update();
       if (!hist->TestBit(kCanDelete)) {
          for (int i = 0; i < fPolyMarker3D->Size(); i++) {
-            Float_t x, y, z;
+            Double_t x = 0, y = 0, z = 0;
             fPolyMarker3D->GetPoint(i, x, y, z);
             hist->Fill(x, y, z, 1);
          }

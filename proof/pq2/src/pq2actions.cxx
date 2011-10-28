@@ -588,7 +588,8 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
       // Name
       TString cname(ds);
       if (cname.BeginsWith("/")) cname.Remove(0,1);
-      if (cname.EndsWith("/")) cname.Remove(cname.Last('/'));
+      Ssiz_t ilst = kNPOS;
+      if (cname.EndsWith("/") && (ilst = cname.Last('/')) != kNPOS) cname.Remove(ilst);
       cname.ReplaceAll("/", "-");
       cname.ReplaceAll("*", "-star-");
       distinfo.SetName(cname);
@@ -1003,7 +1004,8 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
             u.SetOptions("");
             TString php(u.GetUrl());
             php.Remove(php.Index(u.GetFile()));
-            if (php.EndsWith("/")) php.Remove(php.Last('/'));
+            Ssiz_t ilst = kNPOS;
+            if (php.EndsWith("/") && ((ilst = php.Last('/')) != kNPOS)) php.Remove(ilst);
             if (fout) {
                fprintf(fout,"%s %s %s\n", u.GetFile(), php.Data(), fcd->GetName());
             } else {

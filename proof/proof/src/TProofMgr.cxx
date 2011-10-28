@@ -649,16 +649,27 @@ Int_t TProofMgr::Ping(const char *url)
       return -1;
    }
    // Send the first bytes
+   int writeCount = -1;
    clnt_HS_t initHS;
    memset(&initHS, 0, sizeof(initHS));
    initHS.third  = (int)host2net((int)1);
    int len = sizeof(initHS);
-   s.SendRaw(&initHS, len);
+   if ((writeCount = s.SendRaw(&initHS, len)) != len) {
+      if (gDebug > 0)
+         ::Info("TProofMgr::Ping", "1st: wrong number of bytes sent: %d (expected: %d)",
+                                   writeCount, len);
+      return 1;
+   }
    // These 8 bytes are need by 'proofd' and discarded by XPD
    int dum[2];
    dum[0] = (int)host2net((int)4);
    dum[1] = (int)host2net((int)2012);
-   s.SendRaw(&dum[0], sizeof(dum));
+   if ((writeCount = s.SendRaw(&dum[0], sizeof(dum))) !=  sizeof(dum)) {
+      if (gDebug > 0)
+         ::Info("TProofMgr::Ping", "2nd: wrong number of bytes sent: %d (expected: %d)",
+                                   writeCount, (int) sizeof(dum));
+      return 1;
+   }
    // Read first server response
    int type;
    len = sizeof(type);

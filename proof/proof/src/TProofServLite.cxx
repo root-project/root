@@ -526,11 +526,12 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
       while ((e = gSystem->GetDirEntry(dirp))) {
          ent.Form("%s/%s", sdir.Data(), e);
          FileStat_t st;
-         gSystem->GetPathInfo(ent.Data(), st);
-         if (st.fIsLink && ent.Contains(sord)) {
-            PDB(kGlobal, 1)
-               Info("SetupOnFork","unlinking: %s", ent.Data());
-            gSystem->Unlink(ent);
+         if (gSystem->GetPathInfo(ent.Data(), st) == 0) {
+            if (st.fIsLink && ent.Contains(sord)) {
+               PDB(kGlobal, 1)
+                  Info("SetupOnFork","unlinking: %s", ent.Data());
+               gSystem->Unlink(ent);
+            }
          }
       }
       gSystem->FreeDirectory(dirp);
