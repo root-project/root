@@ -241,6 +241,10 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       // Prepare the dataset for this run. possibly a subsample of
       // the total one
       TFileCollection *fc = GetDataSet(dsname, nactive, nx);
+      if (!fc) {
+         Error("Run", "could not retrieve dataset '%s'", dsname.Data());
+         continue;
+      }
       fc->Print("F");
       TString dsn = TString::Format("%s_%d_%d", dsbasename.Data(), nactive, (Int_t)nx);
       fProof->RegisterDataSet(dsn, fc, "OT");
@@ -277,7 +281,8 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 
          //save perfstats
          TString perfstats_name = "PROOF_PerfStats";
-         TTree* t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
+         TTree *t = 0;
+         if (l) t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
          if (t) {
             TTree* tnew=(TTree*)t->Clone("tnew");
 
@@ -302,7 +307,10 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                curdir->cd();
             }
          } else {
-            Warning("Run", "%s: tree not found", perfstats_name.Data());
+            if (l)
+               Warning("Run", "%s: tree not found", perfstats_name.Data());
+            else
+               Error("Run", "PROOF output list is empty!");
          }
 
          // Performance measures from TQueryResult

@@ -328,7 +328,8 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          TList *l = fProof->GetOutputList();
 
          // Save perfstats
-         TTree *t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
+         TTree *t = 0;
+         if (l) t = dynamic_cast<TTree*>(l->FindObject(perfstats_name.Data()));
          if (t) {
 
             //FillPerfStatPerfPlots(t, profile_perfstat_event, nactive);
@@ -354,45 +355,52 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
             }
             
          } else {
-            Error("RunBenchmark", "tree %s not found", perfstats_name.Data());
+            if (l)
+               Warning("Run", "%s: tree not found", perfstats_name.Data());
+            else
+               Error("Run", "PROOF output list is empty!");
          }
 
          // Performance measures from TQueryResult
 
          TQueryResult *queryresult = fProof->GetQueryResult();
-         TDatime qr_start = queryresult->GetStartTime();
-         TDatime qr_end = queryresult->GetEndTime();
-         Float_t qr_proc = queryresult->GetProcTime();
+         if (queryresult) {
+            TDatime qr_start = queryresult->GetStartTime();
+            TDatime qr_end = queryresult->GetEndTime();
+            Float_t qr_proc = queryresult->GetProcTime();
 
-         Long64_t qr_entries = queryresult->GetEntries();
+            Long64_t qr_entries = queryresult->GetEntries();
 
-         // Calculate event rate
-         Double_t qr_eventrate = qr_entries / Double_t(qr_proc);
+            // Calculate event rate
+            Double_t qr_eventrate = qr_entries / Double_t(qr_proc);
 
-         // Fill and draw
-         fProfile_queryresult_event->Fill(nactive, qr_eventrate);
-         fCanvas->cd(npad);
-         fProfile_queryresult_event->Draw();
-         gPad->Update();
-         // The normalised histo
-         Double_t nert = nx ? qr_eventrate/nactive/nnodes : qr_eventrate/nactive;
-         fNorm_queryresult_event->Fill(nactive, nert);
-         // Use the first bin to set the Y range for the histo
-         Double_t y1 = fNorm_queryresult_event->GetBinContent(1);
-         Double_t e1 = fNorm_queryresult_event->GetBinError(1);
-         Double_t dy = 5 * e1;
-         if (dy / y1 < 0.2) dy = y1 * 0.2;
-         if (dy > y1) dy = y1*.999999;
-         if (ymi < 0.) ymi = y1 - dy;
-         if (fNorm_queryresult_event->GetBinContent(nactive) < ymi)
-            ymi = fNorm_queryresult_event->GetBinContent(nactive) / 2.;
-         if (ymx < 0.) ymx = y1 + dy;
-         if (fNorm_queryresult_event->GetBinContent(nactive) > ymx)
-            ymx = fNorm_queryresult_event->GetBinContent(nactive) * 1.5;
-         fNorm_queryresult_event->SetMaximum(ymx);
-         fNorm_queryresult_event->SetMinimum(ymi);
-         fCanvas->cd(npad+1);
-         fNorm_queryresult_event->Draw();
+            // Fill and draw
+            fProfile_queryresult_event->Fill(nactive, qr_eventrate);
+            fCanvas->cd(npad);
+            fProfile_queryresult_event->Draw();
+            gPad->Update();
+            // The normalised histo
+            Double_t nert = nx ? qr_eventrate/nactive/nnodes : qr_eventrate/nactive;
+            fNorm_queryresult_event->Fill(nactive, nert);
+            // Use the first bin to set the Y range for the histo
+            Double_t y1 = fNorm_queryresult_event->GetBinContent(1);
+            Double_t e1 = fNorm_queryresult_event->GetBinError(1);
+            Double_t dy = 5 * e1;
+            if (dy / y1 < 0.2) dy = y1 * 0.2;
+            if (dy > y1) dy = y1*.999999;
+            if (ymi < 0.) ymi = y1 - dy;
+            if (fNorm_queryresult_event->GetBinContent(nactive) < ymi)
+               ymi = fNorm_queryresult_event->GetBinContent(nactive) / 2.;
+            if (ymx < 0.) ymx = y1 + dy;
+            if (fNorm_queryresult_event->GetBinContent(nactive) > ymx)
+               ymx = fNorm_queryresult_event->GetBinContent(nactive) * 1.5;
+            fNorm_queryresult_event->SetMaximum(ymx);
+            fNorm_queryresult_event->SetMinimum(ymi);
+            fCanvas->cd(npad+1);
+            fNorm_queryresult_event->Draw();
+         } else {
+            Warning("Run", "TQueryResult not found!");
+         }
          gPad->Update();
 
       } // for iterations

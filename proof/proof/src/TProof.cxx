@@ -4608,16 +4608,18 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
       if (ienl != kNPOS) {
          // Get entrylist name or path
          enl = name(ienl, name.Length());
+         el = 0;
+         TObject *oel = 0;
          // If not in the input list ...
-         el = (GetInputList()) ? dynamic_cast<TEntryList *>(GetInputList()->FindObject(enl)) : 0;
+         TList *inpl = GetInputList();
+         if (inpl && (oel = inpl->FindObject(enl))) el = dynamic_cast<TEntryList *>(oel);
          // ... check the heap
-         if (!el && gDirectory) {
-            if ((el = dynamic_cast<TEntryList *>(gDirectory->FindObject(enl)))) {
+         if (!el && gDirectory && (oel = gDirectory->FindObject(enl))) {
+            if ((el = dynamic_cast<TEntryList *>(oel))) {
                // Add to the input list (input data not available on master where
                // this info will be processed)
-               if (fProtocol >= 28) {
-                  if (!(GetInputList()->FindObject(el->GetName()))) AddInput(el);
-               }
+               if (fProtocol >= 28)
+                  if (!(inpl->FindObject(el->GetName()))) AddInput(el);
             }
          }
          // If not in the heap, check a file, if any
@@ -4634,7 +4636,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
                               // Add to the input list (input data not available on master where
                               // this info will be processed)
                               if (fProtocol >= 28) {
-                                 if (!(GetInputList()->FindObject(el->GetName()))) {
+                                 if (!(inpl->FindObject(el->GetName()))) {
                                     el = (TEntryList *) el->Clone();
                                     AddInput(el);
                                  }
@@ -6024,6 +6026,11 @@ void TProof::ClearData(UInt_t what, const char *dsname)
          // Fill the host info
          TString host, file;
          // Take info from the current url
+         if (!(fi->GetFirstUrl())) {
+            Error("ClearData", "GetFirstUrl() returns NULL for '%s' - skipping",
+                               fi->GetName());
+            continue;
+         }
          TUrl uf(*(fi->GetFirstUrl()));
          file = uf.GetFile();
          host = uf.GetHost();

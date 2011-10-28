@@ -1840,8 +1840,12 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Enter");
 
             TVirtualProofPlayer *p = TVirtualProofPlayer::Create("slave", 0, fSocket);
-            p->HandleGetTreeHeader(mess);
-            delete p;
+            if (p) {
+               p->HandleGetTreeHeader(mess);
+               delete p;
+            } else {
+               Error("HandleSocketInput:kPROOF_GETTREEHEADER", "could not create TProofPlayer instance!");
+            }
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Done");
          } else {

@@ -631,34 +631,43 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       fProof->DeleteParameters("PROOF_ProcessNotAssigned");
    
    // Cleanup
-   fProof->GetInputList()->Remove(filesmap);
+   if (fProof->GetInputList()) fProof->GetInputList()->Remove(filesmap);
    filesmap->SetOwner(kTRUE);
    delete filesmap;
 
    // The dataset to be registered in the end with proper port
    TFileCollection *fc = new TFileCollection("dum", "dum");
 
-   fProof->GetOutputList()->Print();
-   TIter nxout(fProof->GetOutputList());
-   while ((obj = nxout())) {
-      TList *fli = dynamic_cast<TList *>(obj);
-      if (fli && TString(fli->GetName()).BeginsWith("PROOF_FilesGenerated_")) {
-         TIter nxfg(fli);
-         TFileInfo *fi = 0;
-         while ((fi = (TFileInfo *) nxfg()))
-            fc->Add(fi);
-         fli->SetOwner(kFALSE);
+   if (fProof->GetOutputList()) {
+      fProof->GetOutputList()->Print();
+      TIter nxout(fProof->GetOutputList());
+      while ((obj = nxout())) {
+         TList *fli = dynamic_cast<TList *>(obj);
+         if (fli && TString(fli->GetName()).BeginsWith("PROOF_FilesGenerated_")) {
+            TIter nxfg(fli);
+            TFileInfo *fi = 0;
+            while ((fi = (TFileInfo *) nxfg()))
+               fc->Add(fi);
+            fli->SetOwner(kFALSE);
+         }
       }
+      // Register the new dataset, overwriting any existing dataset wth the same name
+      // trusting the existing information
+      fc->Update();
+      if (fc->GetNFiles() > 0) {
+         if (!(fProof->RegisterDataSet(fDataSet, fc, "OT")))
+            Warning("MakeDataSet", "problems registering '%s'", dset);
+      } else {
+         Warning("MakeDataSet", "dataset '%s' is empty!", dset);
+      }
+   } else {
+      Warning("MakeDataSet", "PROOF output list is empty!");
    }
-   // Register the new dataset, overwriting any existing dataset wth the same name
-   // trusting the existing information
-   if (!(fProof->RegisterDataSet(fDataSet, fc, "OT")))
-      Warning("MakeDataSet", "problems registering '%s'", dset);
 
    SafeDelete(fc);
 
    // Get updated information
-   fc=fProof->GetDataSet(fDataSet);
+   fc = fProof->GetDataSet(fDataSet);
    fc->Print("F");
    
    SafeDelete(fc);

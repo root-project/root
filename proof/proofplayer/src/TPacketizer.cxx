@@ -717,12 +717,16 @@ void TPacketizer::Reset()
    TObject *key;
    while ((key = slaves.Next()) != 0) {
       TSlaveStat *slstat = (TSlaveStat*) fSlaveStats->GetValue(key);
-      fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
-      if (fn != 0 ) {
-         slstat->SetFileNode(fn);
-         fn->IncMySlaveCnt();
+      if (slstat) {
+         fn = (TFileNode*) fFileNodes->FindObject(slstat->GetName());
+         if (fn != 0 ) {
+            slstat->SetFileNode(fn);
+            fn->IncMySlaveCnt();
+         }
+         slstat->fCurFile = 0;
+      } else {
+         Warning("Reset", "TSlaveStat associated to key '%s' is NULL", key->GetName());
       }
-      slstat->fCurFile = 0;
    }
 }
 
@@ -777,6 +781,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
          // find a file
 
          TSlaveStat *slstat = (TSlaveStat*)fSlaveStats->GetValue(s);
+         if (!slstat) {
+            Error("ValidateFiles", "TSlaveStat associated to slave '%s' is NULL", s->GetName());
+            continue;
+         }
          TFileNode *node = 0;
          TFileStat *file = 0;
 
