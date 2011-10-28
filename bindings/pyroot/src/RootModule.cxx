@@ -134,6 +134,9 @@ namespace {
 //____________________________________________________________________________
    PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
    {
+   // Modify the given dictionary to install the lookup function that also
+   // tries the ROOT namespace before failing. Called on a module's dictionary,
+   // this allows for lazy lookups.
       PyDictObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
@@ -147,6 +150,8 @@ namespace {
 //____________________________________________________________________________
    PyObject* MakeRootTemplateClass( PyObject*, PyObject* args )
    {
+   // Create a binding for a templated class instantiation.
+
    // args is class name + template arguments; build full instantiation
       Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
       if ( nArgs < 2 ) {
@@ -173,7 +178,7 @@ namespace {
 //____________________________________________________________________________
    void* GetObjectProxyAddress( PyObject*, PyObject* args )
    {
-   // helper to get the address (address-of-address) of various object proxy types
+   // Helper to get the address (address-of-address) of various object proxy types.
       ObjectProxy* pyobj = 0;
       PyObject* pyname = 0;
       if ( PyArg_ParseTuple( args, const_cast< char* >( "O|O!" ), &pyobj,
@@ -217,7 +222,7 @@ namespace {
 
    PyObject* AddressOf( PyObject* dummy, PyObject* args )
    {
-   // return object proxy address as an indexable buffer
+   // Return object proxy address as an indexable buffer.
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
          return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)addr, 1 );
@@ -227,7 +232,7 @@ namespace {
 
    PyObject* AsCObject( PyObject* dummy, PyObject* args )
    {
-   // return object proxy as an opaque CObject
+   // Return object proxy as an opaque CObject.
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
          return PyROOT_PyCapsule_New( (void*)(*(long*)addr), NULL, NULL );
@@ -238,7 +243,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* BindObject_( void* addr, PyObject* pyname )
    {
-   // helper to catch common code between MakeNullPointer and BindObject
+   // Helper to factorize the common code between MakeNullPointer and BindObject.
 
       if ( ! PyROOT_PyUnicode_Check( pyname ) ) {     // name given as string
          PyObject* nattr = PyObject_GetAttr( pyname, PyStrings::gName );
@@ -265,7 +270,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* BindObject( PyObject*, PyObject* args )
    {
-   // from a long representing an address or a PyCapsule/CObject, bind to a class
+   // From a long representing an address or a PyCapsule/CObject, bind to a class.
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 2 ) {
          PyErr_Format( PyExc_TypeError,
@@ -295,8 +300,8 @@ namespace {
 //____________________________________________________________________________
    PyObject* MakeNullPointer( PyObject*, PyObject* args )
    {
-   // create an object of the given type point to NULL (historic note: this
-   // function is older than BindObject(), which can be used instead)
+   // Create an object of the given type point to NULL (historic note: this
+   // function is older than BindObject(), which can be used instead).
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 0 && argc != 1 ) {
          PyErr_Format( PyExc_TypeError,
@@ -352,6 +357,8 @@ namespace {
 //____________________________________________________________________________
    PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
    {
+   // Set the global memory policy, which affects object ownership when objects
+   // are passed as function arguments.
       PyObject* policy = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
          return 0;
@@ -369,6 +376,8 @@ namespace {
 //____________________________________________________________________________
    PyObject* SetSignalPolicy( PyObject*, PyObject* args )
    {
+   // Set the global signal policy, which determines whether a jmp address
+   // should be saved to return to after a C++ segfault.
       PyObject* policy = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
          return 0;
@@ -386,6 +395,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* SetOwnership( PyObject*, PyObject* args )
    {
+   // Set the ownership (True is python-owns) for the given object.
       ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
                 &ObjectProxy_Type, (void*)&pyobj, &PyInt_Type, &pykeep ) )
