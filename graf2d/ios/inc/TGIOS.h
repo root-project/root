@@ -52,6 +52,8 @@ public:
    void SetTextSize(Float_t textsize);
    
    void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   
+   using TVirtualX::SetTextFont;
 private:
    TGIOS(const TGIOS &rhs);
    TGIOS &operator = (const TGIOS &rhs);
