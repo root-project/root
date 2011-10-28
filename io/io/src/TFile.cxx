@@ -2366,7 +2366,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                Warning("MakeProject", "problems unlinking '%s'", path.Data());
          }
       }
-      // Make sure that the releavnt dirs exists: this is mandatory, so we fail if unsuccessful
+      // Make sure that the relevant dirs exists: this is mandatory, so we fail if unsuccessful
       path.Form("%s/%s/PROOF-INF", pardir.Data(), parname.Data());
       if (gSystem->mkdir(path, kTRUE)) {
          Error("MakeProject", "problems creating '%s'", path.Data());
