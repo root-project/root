@@ -2259,6 +2259,11 @@ if test ! "x$enable_x11" = "xno" ; then
         result "See http://root.cern.ch/drupal/content/build-prerequisites"
         exit 1
     fi
+    if test ! "x$x11libdir" = "x$found_dir" ; then
+        result "`basename $0`: libXft not in same directory as libX11"
+        result "For consistency they should be in the same directory"
+        exit 1
+    fi
 
     check_library "libXext" "$enable_shared" "$xextlibdir" \
         ${finkdir:+$finkdir/lib} \
@@ -2269,6 +2274,11 @@ if test ! "x$enable_x11" = "xno" ; then
     if test "x$found_lib" = "x" ; then
         result "`basename $0`: libXext MUST be installed"
         result "See http://root.cern.ch/drupal/content/build-prerequisites"
+        exit 1
+    fi
+    if test ! "x$x11libdir" = "x$found_dir" ; then
+        result "`basename $0`: libXext not in same directory as libX11"
+        result "For consistency they should be in the same directory"
         exit 1
     fi
 fi
