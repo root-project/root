@@ -886,3 +886,4 @@ void TFileMerger::SetMsgPrefix(const char *prefix)
 
    fMsgPrefix = prefix;
 }
+
