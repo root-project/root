@@ -5113,7 +5113,7 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
 {
    // Creates a UDP socket connection
    // Is called via the TSocket constructor. Returns -1 in case of error.
-#if 0
+
    short  sport;
    struct servent *sp;
    
@@ -5134,8 +5134,8 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
    
    // Create socket
    int sock;
-   if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-      ::SysError("TUnixSystem::UnixUdpConnect", "socket (%s:%d)",
+   if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+      ::SysError("TWinNTSystem::WinNTUdpConnect", "socket (%s:%d)",
                  hostname, port);
       return -1;
    }
@@ -5144,16 +5144,13 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
       if (GetErrno() == EINTR)
          ResetErrno();
       else {
-         ::SysError("TUnixSystem::UnixUdpConnect", "connect (%s:%d)",
+         ::SysError("TWinNTSystem::WinNTUdpConnect", "connect (%s:%d)",
                     hostname, port);
          close(sock);
          return -1;
       }
    }
    return sock;
-#endif
-   ::Error("TWinNTSystem::WinNTUdpConnect", "not yet implemented");
-   return -1;
 }
 
 //______________________________________________________________________________
@@ -5260,12 +5257,60 @@ int TWinNTSystem::AnnounceUdpService(int port, int backlog)
 {
    // Announce UDP service.
 
-#if 0
-   // implement equivalen of UnixUdpService().
-   return UnixUdpService(port, backlog);
-#endif
-   ::Error("TWinNTSystem::AnnounceUdpService", "not yet implemented");
-   return -1;
+   // Open a socket, bind to it and start listening for UDP connections
+   // on the port. If reuse is true reuse the address, backlog specifies
+   // how many sockets can be waiting to be accepted. If port is 0 a port
+   // scan will be done to find a free port. This option is mutual exlusive
+   // with the reuse option.
+
+   const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
+   short  sport, tryport = kSOCKET_MINPORT;
+   struct servent *sp;
+
+   if ((sp = getservbyport(htons(port), kProtocolName)))
+      sport = sp->s_port;
+   else
+      sport = htons(port);
+
+   // Create udp socket
+   int sock;
+   if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+      ::SysError("TUnixSystem::UnixUdpService", "socket");
+      return -1;
+   }
+
+   struct sockaddr_in inserver;
+   memset(&inserver, 0, sizeof(inserver));
+   inserver.sin_family = AF_INET;
+   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_port = sport;
+
+   // Bind socket
+   if (port > 0) {
+      if (bind(sock, (struct sockaddr*) &inserver, sizeof(inserver))) {
+         ::SysError("TWinNTSystem::AnnounceUdpService", "bind");
+         return -2;
+      }
+   } else {
+      int bret;
+      do {
+         inserver.sin_port = htons(tryport++);
+         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+      } while (bret == SOCKET_ERROR && WSAGetLastError() == WSAEADDRINUSE &&
+               tryport < kSOCKET_MAXPORT);
+      if (bret < 0) {
+         ::SysError("TWinNTSystem::AnnounceUdpService", "bind (port scan)");
+         return -2;
+      }
+   }
+
+   // Start accepting connections
+   if (listen(sock, backlog)) {
+      ::SysError("TWinNTSystem::AnnounceUdpService", "listen");
+      return -3;
+   }
+
+   return sock;
 }
 
 //______________________________________________________________________________

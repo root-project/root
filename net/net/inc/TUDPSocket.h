@@ -20,7 +20,7 @@
 // This class implements udp client sockets. A socket is an endpoint    //
 // for communication between two machines.                              //
 // The actual work is done via the TSystem class (either TUnixSystem,   //
-// or TWinNTSystem). Currently there is no support for TWinNTSystem.    //
+// or TWinNTSystem).                                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
