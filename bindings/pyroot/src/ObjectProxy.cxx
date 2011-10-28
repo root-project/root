@@ -124,7 +124,7 @@ namespace {
          return Py_NotImplemented;
       }
 
-      bool bIsEq = false;
+      Bool_t bIsEq = false;
 
    // special case for None to compare True to a null-pointer
       if ( (PyObject*)other == Py_None && ! self->fObject )

@@ -235,7 +235,7 @@ namespace {
    // Return object proxy as an opaque CObject.
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
-         return PyROOT_PyCapsule_New( (void*)(*(long*)addr), NULL, NULL );
+         return PyROOT_PyCapsule_New( (void*)(*(Long_t*)addr), NULL, NULL );
 
       return 0;
    }

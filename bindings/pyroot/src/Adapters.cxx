@@ -352,7 +352,7 @@ PyROOT::TScopeAdapter::operator Bool_t() const
 
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   bool b = G__TypeInfo( Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() ).IsValid();
+   Bool_t b = G__TypeInfo( Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() ).IsValid();
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
