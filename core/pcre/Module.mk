@@ -4,6 +4,7 @@
 # Author: Fons Rademakers, 28/11/2005
 
 MODNAME      := pcre
+PCREVERS     := pcre-7.8
 
 ifneq ($(BUILTINPCRE), yes)
 
@@ -17,13 +18,13 @@ PCREDEP      :=
 distclean-$(MODNAME):
 		@rm -f $(LPATH)/libpcre.lib $(LPATH)/libpcre.a
 distclean::     distclean-$(MODNAME)
+		@rm -rf core/pcre/src/$(PCREVERS)
 
 else
 
 MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
-PCREVERS     := pcre-7.8
 PCREDIR      := $(call stripsrc,$(MODDIR))
 PCREDIRS     := $(call stripsrc,$(MODDIRS))
 PCREDIRI     := $(PCREDIRS)/$(PCREVERS)

@@ -187,9 +187,7 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(LZMADEP)
 		@rm -rf $(call stripsrc,$(LZMADIRS)/$(LZMAVERS))
-ifeq ($(BUILTINLZMA),yes)
-		@rm -f $(LZMALIB)
-endif
+		@rm -f $(LPATH)/liblzma.*
 ifeq ($(PLATFORM),win32)
 		@rm -f $(LZMADLL)
 endif
