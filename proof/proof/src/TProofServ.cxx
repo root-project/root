@@ -2530,7 +2530,10 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    }
 
    if (left > 0) {
-      fSocket->Send(left, kPROOF_LOGFILE);
+      if (fSocket->Send(left, kPROOF_LOGFILE) < 0) {
+         SysError("SendLogFile", "error sending kPROOF_LOGFILE");
+         return;
+      }
 
       const Int_t kMAXBUF = 32768;  //16384  //65536;
       char buf[kMAXBUF];
@@ -2571,7 +2574,10 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    else
       mess << status << (Int_t) 1;
 
-   fSocket->Send(mess);
+   if (fSocket->Send(mess) < 0) {
+      SysError("SendLogFile", "error sending kPROOF_LOGDONE");
+      return;
+   }
 
    PDB(kGlobal, 1) Info("SendLogFile", "kPROOF_LOGDONE sent");
 }
@@ -5041,8 +5047,13 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          }
 
          if (IsMaster() && !fromglobal) {
-            // make sure package is available on all slaves, even new ones
-            fProof->UploadPackage(pdir + ".par");
+            // Make sure package is available on all slaves, even new ones
+            if (fProof->UploadPackage(pdir + ".par") != 0) {
+               Warning("HandleCache",
+                       "kBuildPackage: problems forwarding package %s to workers", package.Data());
+               SendAsynMessage(TString::Format("%s: kBuildPackage: problems forwarding package %s to workers ...",
+                                       noth.Data(), package.Data()));
+            }
          }
          fPackageLock->Lock();
 

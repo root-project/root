@@ -544,47 +544,52 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
       if (s && s->IsValid()) {
          // Receive ordinal
          TMessage *msg = 0;
-         s->Recv(msg);
-         if (msg) {
-            TString ord;
-            *msg >> ord;
-            // Find who is calling back
-            if ((wrk = (TSlave *) started.FindObject(ord))) {
-               // Remove it from the started list
-               started.Remove(wrk);
+         if (s->Recv(msg) < 0) {
+            Warning("SetupWorkers", "problems receiving message from accepted socket!");
+         } else {
+            if (msg) {
+               TString ord;
+               *msg >> ord;
+               // Find who is calling back
+               if ((wrk = (TSlave *) started.FindObject(ord))) {
+                  // Remove it from the started list
+                  started.Remove(wrk);
 
-               // Assign tis socket the selected worker
-               wrk->SetSocket(s);
-               // Remove socket from global TROOT socket list. Only the TProof object,
-               // representing all worker sockets, will be added to this list. This will
-               // ensure the correct termination of all proof servers in case the
-               // root session terminates.
-               {  R__LOCKGUARD2(gROOTMutex);
-                  gROOT->GetListOfSockets()->Remove(s);
-               }
-               if (wrk->IsValid()) {
-                  // Set the input handler
-                  wrk->SetInputHandler(new TProofInputHandler(this, wrk->GetSocket()));
-                  // Set fParallel to 1 for workers since they do not
-                  // report their fParallel with a LOG_DONE message
-                  wrk->fParallel = 1;
-                  // Finalize setup of the server
-                  wrk->SetupServ(TSlave::kSlave, 0);
-               }
+                  // Assign tis socket the selected worker
+                  wrk->SetSocket(s);
+                  // Remove socket from global TROOT socket list. Only the TProof object,
+                  // representing all worker sockets, will be added to this list. This will
+                  // ensure the correct termination of all proof servers in case the
+                  // root session terminates.
+                  {  R__LOCKGUARD2(gROOTMutex);
+                     gROOT->GetListOfSockets()->Remove(s);
+                  }
+                  if (wrk->IsValid()) {
+                     // Set the input handler
+                     wrk->SetInputHandler(new TProofInputHandler(this, wrk->GetSocket()));
+                     // Set fParallel to 1 for workers since they do not
+                     // report their fParallel with a LOG_DONE message
+                     wrk->fParallel = 1;
+                     // Finalize setup of the server
+                     wrk->SetupServ(TSlave::kSlave, 0);
+                  }
 
-               // Monitor good workers
-               if (wrk->IsValid()) {
-                  fSlaves->Add(wrk);
-                  if (opt == 1) fActiveSlaves->Add(wrk);
-                  fAllMonitor->Add(wrk->GetSocket());
-                  // Record also in the list for termination
-                  if (startedWorkers) startedWorkers->Add(wrk);
-                  // Notify startup operations
-                  NotifyStartUp("Setting up worker servers", ++nWrksDone, nWrksTot);
-               } else {
-                  // Flag as bad
-                  fBadSlaves->Add(wrk);
+                  // Monitor good workers
+                  if (wrk->IsValid()) {
+                     fSlaves->Add(wrk);
+                     if (opt == 1) fActiveSlaves->Add(wrk);
+                     fAllMonitor->Add(wrk->GetSocket());
+                     // Record also in the list for termination
+                     if (startedWorkers) startedWorkers->Add(wrk);
+                     // Notify startup operations
+                     NotifyStartUp("Setting up worker servers", ++nWrksDone, nWrksTot);
+                  } else {
+                     // Flag as bad
+                     fBadSlaves->Add(wrk);
+                  }
                }
+            } else {
+               Warning("SetupWorkers", "received empty message from accepted socket!");
             }
          }
       }
@@ -1967,7 +1972,9 @@ void TProofLite::SendInputDataFile()
          if (!gSystem->AccessPathName(dst))
             gSystem->Unlink(dst);
          // Copy the file
-         gSystem->CopyFile(dataFile, dst);
+         if (gSystem->CopyFile(dataFile, dst) != 0)
+            Warning("SendInputDataFile", "problems copying '%s' to '%s'",
+                                         dataFile.Data(), dst.Data());
       }
 
       // Set the name in the input list so that the workers can find it

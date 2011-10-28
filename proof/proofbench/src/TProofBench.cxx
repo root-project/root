@@ -114,7 +114,6 @@ Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
    return rc;
 }
 
-
 //______________________________________________________________________________
 Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
 {
@@ -145,6 +144,15 @@ Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
                                " again or with another file", outfile);
    }
    return rc;
+}
+
+//______________________________________________________________________________
+void TProofBench::CloseOutFile()
+{
+   // Close output file
+
+   if (SetOutFile(0) != 0)
+      Warning("CloseOutFile", "problems closing '%s'", fOutFileName.Data());
 }
 
 //______________________________________________________________________________

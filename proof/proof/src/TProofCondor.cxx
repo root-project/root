@@ -267,8 +267,9 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
       // Notify end of startup operations
       nSlavesDone++;
       TMessage m(kPROOF_SERVERSTARTED);
+      Bool_t wrkvalid = sl->IsValid() ? kTRUE : kFALSE;
       m << TString("Setting up worker servers") << nSlavesTotal
-         << nSlavesDone << sl->IsValid();
+         << nSlavesDone << wrkvalid;
       gProofServ->GetSocket()->Send(m);
    }
 

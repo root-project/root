@@ -580,8 +580,9 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fConfigParams->Add(new TParameter<Int_t>("PROOF_PacketAsAFraction", fPacketAsAFraction));
 
    Double_t baseLocalPreference = 1.2;
-   TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference);
    fBaseLocalPreference = (Float_t)baseLocalPreference;
+   if (TProof::GetParameter(input, "PROOF_BaseLocalPreference", baseLocalPreference) == 0)
+      fBaseLocalPreference = (Float_t)baseLocalPreference;
 
    fFileNodes = new TList;
    fFileNodes->SetOwner();

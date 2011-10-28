@@ -604,12 +604,13 @@ TProof::~TProof()
       TIter nextpackage(fEnabledPackagesOnClient);
       while (TObjString *package = dynamic_cast<TObjString*>(nextpackage())) {
          FileStat_t stat;
-         gSystem->GetPathInfo(package->String(), stat);
-         // check if symlink, if so unlink
-         // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
-         // existing file or to a directory, but if fIsLink is true the symlink exists
-         if (stat.fIsLink)
-            gSystem->Unlink(package->String());
+         if (gSystem->GetPathInfo(package->String(), stat) == 0) {
+            // check if symlink, if so unlink
+            // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
+            // existing file or to a directory, but if fIsLink is true the symlink exists
+            if (stat.fIsLink)
+               gSystem->Unlink(package->String());
+         }
       }
    }
 
@@ -1281,8 +1282,8 @@ Int_t TProof::AddWorkers(TList *workerList)
       while ((os = (TObjString *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
-         UploadPackage(os->GetName());
-         EnablePackage(os->GetName(), (TList *)0, kTRUE);
+         if (UploadPackage(os->GetName()) >= 0)
+            EnablePackage(os->GetName(), (TList *)0, kTRUE);
       }
    }
 

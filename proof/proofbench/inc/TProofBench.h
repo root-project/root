@@ -86,7 +86,7 @@ public:
    Int_t ReleaseCache(const char *dset);
    Int_t RemoveDataSet(const char *dset);
                     
-   void  CloseOutFile() { SetOutFile(0); }
+   void  CloseOutFile();
    Int_t OpenOutFile(Bool_t wrt = kFALSE, Bool_t verbose = kTRUE);
    Int_t SetOutFile(const char *outfile, Bool_t verbose = kTRUE);
    const char *GetOutFileName() const { return fOutFileName; }
