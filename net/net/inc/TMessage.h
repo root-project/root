@@ -39,7 +39,7 @@ class TMessage : public TBufferFile {
 
 friend class TAuthenticate;
 friend class TSocket;
-friend class TUdpSocket;
+friend class TUDPSocket;
 friend class TPSocket;
 friend class TXSocket;
 

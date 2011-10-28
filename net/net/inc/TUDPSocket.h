@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TUdpSocket
-#define ROOT_TUdpSocket
+#ifndef ROOT_TUDPSocket
+#define ROOT_TUDPSocket
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TUdpSocket                                                           //
+// TUDPSocket                                                           //
 //                                                                      //
 // This class implements udp client sockets. A socket is an endpoint    //
 // for communication between two machines.                              //
@@ -52,7 +52,7 @@
 #include "TSocket.h"
 #endif
 
-class TUdpSocket : public TNamed {
+class TUDPSocket : public TNamed {
 
 friend class TServerSocket;
 
@@ -85,7 +85,7 @@ protected:
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
    static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
-   TUdpSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
+   TUDPSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(0),
                   fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
                   fServType(kSOCKD), fSocket(-1), fUrl(),
                   fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
@@ -97,21 +97,21 @@ protected:
    Bool_t       RecvProcessIDs(TMessage *mess);
 
 private:
-   TUdpSocket&   operator=(const TUdpSocket &);  // not implemented
+   TUDPSocket&   operator=(const TUDPSocket &);  // not implemented
    Option_t     *GetOption() const { return TObject::GetOption(); }
 
 public:
-   TUdpSocket(TInetAddress address, const char *service);
-   TUdpSocket(TInetAddress address, Int_t port);
-   TUdpSocket(const char *host, const char *service);
-   TUdpSocket(const char *host, Int_t port);
-   TUdpSocket(const char *sockpath);
+   TUDPSocket(TInetAddress address, const char *service);
+   TUDPSocket(TInetAddress address, Int_t port);
+   TUDPSocket(const char *host, const char *service);
+   TUDPSocket(const char *host, Int_t port);
+   TUDPSocket(const char *sockpath);
    
-   TUdpSocket(Int_t descriptor);
-   TUdpSocket(Int_t descriptor, const char *sockpath);
-   TUdpSocket(const TUdpSocket &s);
+   TUDPSocket(Int_t descriptor);
+   TUDPSocket(Int_t descriptor, const char *sockpath);
+   TUDPSocket(const TUDPSocket &s);
    
-   virtual ~TUdpSocket() { Close(); }
+   virtual ~TUDPSocket() { Close(); }
 
    virtual void          Close(Option_t *opt="");
    virtual Int_t         GetDescriptor() const { return fSocket; }
@@ -166,23 +166,23 @@ public:
 
    static void           NetError(const char *where, Int_t error);
    
-   ClassDef(TUdpSocket,0)  //This class implements UDP client sockets
+   ClassDef(TUDPSocket,0)  //This class implements UDP client sockets
 };
 
 //______________________________________________________________________________
-inline Int_t TUdpSocket::GetCompressionAlgorithm() const
+inline Int_t TUDPSocket::GetCompressionAlgorithm() const
 {
    return (fCompress < 0) ? -1 : fCompress / 100;
 }
 
 //______________________________________________________________________________
-inline Int_t TUdpSocket::GetCompressionLevel() const
+inline Int_t TUDPSocket::GetCompressionLevel() const
 {
    return (fCompress < 0) ? -1 : fCompress % 100;
 }
 
 //______________________________________________________________________________
-inline Int_t TUdpSocket::GetCompressionSettings() const
+inline Int_t TUDPSocket::GetCompressionSettings() const
 {
    return (fCompress < 0) ? -1 : fCompress;
 }

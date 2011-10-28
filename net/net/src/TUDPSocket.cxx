@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TUdpSocket                                                           //
+// TUDPSocket                                                           //
 //                                                                      //
 // This class implements UDP client sockets. A socket is an endpoint    //
 // for communication between two machines.                              //
@@ -26,7 +26,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TMessage.h"
-#include "TUdpSocket.h"
+#include "TUDPSocket.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TString.h"
@@ -36,14 +36,14 @@
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
 
-ULong64_t TUdpSocket::fgBytesSent = 0;
-ULong64_t TUdpSocket::fgBytesRecv = 0;
+ULong64_t TUDPSocket::fgBytesSent = 0;
+ULong64_t TUDPSocket::fgBytesRecv = 0;
 
 
-ClassImp(TUdpSocket)
+ClassImp(TUDPSocket)
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(TInetAddress addr, const char *service)
+TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
          : TNamed(addr.GetHostName(), service)
 {
    // Create a socket. Connect to the named service at address addr.
@@ -73,7 +73,7 @@ TUdpSocket::TUdpSocket(TInetAddress addr, const char *service)
    fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -90,7 +90,7 @@ TUdpSocket::TUdpSocket(TInetAddress addr, const char *service)
 
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(TInetAddress addr, Int_t port)
+TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
          : TNamed(addr.GetHostName(), "")
 {
    // Create a socket. Connect to the specified port # at address addr.
@@ -121,7 +121,7 @@ TUdpSocket::TUdpSocket(TInetAddress addr, Int_t port)
    fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      -1, "upd");
@@ -134,7 +134,7 @@ TUdpSocket::TUdpSocket(TInetAddress addr, Int_t port)
 }
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(const char *host, const char *service)
+TUDPSocket::TUDPSocket(const char *host, const char *service)
          : TNamed(host, service)
 {
    // Create a socket. Connect to named service on the remote host.
@@ -165,7 +165,7 @@ TUdpSocket::TUdpSocket(const char *host, const char *service)
    fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), -1, "upd");
@@ -178,7 +178,7 @@ TUdpSocket::TUdpSocket(const char *host, const char *service)
 }
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(const char *url, Int_t port)
+TUDPSocket::TUDPSocket(const char *url, Int_t port)
          : TNamed(TUrl(url).GetHost(), "")
 {
    // Create a socket; see CreateAuthSocket for the form of url.
@@ -215,7 +215,7 @@ TUdpSocket::TUdpSocket(const char *url, Int_t port)
    fCompress = 0;
    fUUIDs = 0;
    fLastUsageMtx = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), -1, "udp");
    if (fSocket == -1) {
@@ -227,7 +227,7 @@ TUdpSocket::TUdpSocket(const char *url, Int_t port)
 }
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(const char *sockpath) : TNamed(sockpath, "")
+TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
 {
    // Create a socket in the Unix domain on 'sockpath'.
    // Returns when connection has been accepted by the server. Use IsValid()
@@ -252,7 +252,7 @@ TUdpSocket::TUdpSocket(const char *sockpath) : TNamed(sockpath, "")
    fCompress  = 0;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1, "udp");
    if (fSocket > 0) {
@@ -262,7 +262,7 @@ TUdpSocket::TUdpSocket(const char *sockpath) : TNamed(sockpath, "")
 }
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(Int_t desc) : TNamed("", "")
+TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
 {
    // Create a socket. The socket will adopt previously opened TCP socket with
    // descriptor desc.
@@ -279,7 +279,7 @@ TUdpSocket::TUdpSocket(Int_t desc) : TNamed("", "")
    fCompress       = 0;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    if (desc >= 0) {
       fSocket  = desc;
@@ -291,7 +291,7 @@ TUdpSocket::TUdpSocket(Int_t desc) : TNamed("", "")
 }
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
+TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 {
    // Create a socket. The socket will adopt previously opened Unix socket with
    // descriptor desc. The sockpath arg is for info purposes only. Use
@@ -314,7 +314,7 @@ TUdpSocket::TUdpSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
    fCompress  = 0;
    fUUIDs = 0;
    fLastUsageMtx  = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    if (desc >= 0) {
       fSocket  = desc;
@@ -326,9 +326,9 @@ TUdpSocket::TUdpSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 
 
 //______________________________________________________________________________
-TUdpSocket::TUdpSocket(const TUdpSocket &s) : TNamed(s)
+TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
 {
-   // TUdpSocket copy ctor.
+   // TUDPSocket copy ctor.
 
    fSocket         = s.fSocket;
    fService        = s.fService;
@@ -342,7 +342,7 @@ TUdpSocket::TUdpSocket(const TUdpSocket &s) : TNamed(s)
    fServType       = s.fServType;
    fUUIDs          = 0;
    fLastUsageMtx   = 0;
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
 
    if (fSocket != -1) {
       R__LOCKGUARD2(gROOTMutex);
@@ -351,7 +351,7 @@ TUdpSocket::TUdpSocket(const TUdpSocket &s) : TNamed(s)
 }
 
 //______________________________________________________________________________
-void TUdpSocket::Close(Option_t *option)
+void TUDPSocket::Close(Option_t *option)
 {
    // Close the socket. If option is "force", calls shutdown(id,2) to
    // shut down the connection. This will close the connection also
@@ -372,7 +372,7 @@ void TUdpSocket::Close(Option_t *option)
 }
 
 //______________________________________________________________________________
-TInetAddress TUdpSocket::GetLocalInetAddress()
+TInetAddress TUDPSocket::GetLocalInetAddress()
 {
    // Return internet address of local host to which the socket is bound.
    // In case of error TInetAddress::IsValid() returns kFALSE.
@@ -386,7 +386,7 @@ TInetAddress TUdpSocket::GetLocalInetAddress()
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::GetLocalPort()
+Int_t TUDPSocket::GetLocalPort()
 {
    // Return the local port # to which the socket is bound.
    // In case of error return -1.
@@ -400,7 +400,7 @@ Int_t TUdpSocket::GetLocalPort()
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Select(Int_t interest, Long_t timeout)
+Int_t TUDPSocket::Select(Int_t interest, Long_t timeout)
 {
    // Waits for this socket to change status. If interest=kRead,
    // the socket will be watched to see if characters become available for
@@ -423,7 +423,7 @@ Int_t TUdpSocket::Select(Int_t interest, Long_t timeout)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Send(Int_t kind)
+Int_t TUDPSocket::Send(Int_t kind)
 {
    // Send a single message opcode. Use kind (opcode) to set the
    // TMessage "what" field. Returns the number of bytes that were sent
@@ -441,7 +441,7 @@ Int_t TUdpSocket::Send(Int_t kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Send(Int_t status, Int_t kind)
+Int_t TUDPSocket::Send(Int_t status, Int_t kind)
 {
    // Send a status and a single message opcode. Use kind (opcode) to set the
    // TMessage "what" field. Returns the number of bytes that were sent
@@ -460,7 +460,7 @@ Int_t TUdpSocket::Send(Int_t status, Int_t kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Send(const char *str, Int_t kind)
+Int_t TUDPSocket::Send(const char *str, Int_t kind)
 {
    // Send a character string buffer. Use kind to set the TMessage "what" field.
    // Returns the number of bytes in the string str that were sent and -1 in
@@ -479,7 +479,7 @@ Int_t TUdpSocket::Send(const char *str, Int_t kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Send(const TMessage &mess)
+Int_t TUDPSocket::Send(const TMessage &mess)
 {
    // Send a TMessage object. Returns the number of bytes in the TMessage
    // that were sent and -1 in case of error. In case the TMessage::What
@@ -520,12 +520,12 @@ Int_t TUdpSocket::Send(const TMessage &mess)
       mlen = mess.CompLength();
    }
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    Int_t nsent;
    if ((nsent = gSystem->SendRaw(fSocket, mbuf, mlen, 0)) <= 0) {
       if (nsent == -5) {
          // Connection reset by peer or broken
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
       return nsent;
@@ -537,13 +537,13 @@ Int_t TUdpSocket::Send(const TMessage &mess)
    // If acknowledgement is desired, wait for it
    if (mess.What() & kMESS_ACK) {
       TSystem::ResetErrno();
-      ResetBit(TUdpSocket::kBrokenConn);
+      ResetBit(TUDPSocket::kBrokenConn);
       char buf[2];
       Int_t n = 0;
       if ((n = gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0)) < 0) {
          if (n == -5) {
             // Connection reset by peer or broken
-            SetBit(TUdpSocket::kBrokenConn);
+            SetBit(TUDPSocket::kBrokenConn);
             Close();
          } else
             n = -1;
@@ -563,7 +563,7 @@ Int_t TUdpSocket::Send(const TMessage &mess)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::SendObject(const TObject *obj, Int_t kind)
+Int_t TUDPSocket::SendObject(const TObject *obj, Int_t kind)
 {
    // Send an object. Returns the number of bytes sent and -1 in case of error.
    // In case the "kind" has been or'ed with kMESS_ACK, the call will only
@@ -583,7 +583,7 @@ Int_t TUdpSocket::SendObject(const TObject *obj, Int_t kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
+Int_t TUDPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Using option kOob one can send
    // OOB data. Returns the number of bytes sent or -1 in case of error.
@@ -594,12 +594,12 @@ Int_t TUdpSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt
 
    if (fSocket == -1) return -1;
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    Int_t nsent;
    if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0) {
       if (nsent == -5) {
          // Connection reset or broken: close
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
       return nsent;
@@ -614,7 +614,7 @@ Int_t TUdpSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt
 }
 
 //______________________________________________________________________________
-void TUdpSocket::SendStreamerInfos(const TMessage &mess)
+void TUDPSocket::SendStreamerInfos(const TMessage &mess)
 {
    // Check if TStreamerInfo must be sent. The list of TStreamerInfo of classes
    // in the object in the message is in the fInfos list of the message.
@@ -649,7 +649,7 @@ void TUdpSocket::SendStreamerInfos(const TMessage &mess)
 }
 
 //______________________________________________________________________________
-void TUdpSocket::SendProcessIDs(const TMessage &mess)
+void TUDPSocket::SendProcessIDs(const TMessage &mess)
 {
    // Check if TProcessIDs must be sent. The list of TProcessIDs
    // in the object in the message is found by looking in the TMessage bits.
@@ -690,7 +690,7 @@ void TUdpSocket::SendProcessIDs(const TMessage &mess)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Recv(char *str, Int_t max)
+Int_t TUDPSocket::Recv(char *str, Int_t max)
 {
    // Receive a character string message of maximum max length. The expected
    // message must be of type kMESS_STRING. Returns length of received string
@@ -700,10 +700,10 @@ Int_t TUdpSocket::Recv(char *str, Int_t max)
 
    Int_t n, kind;
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    if ((n = Recv(str, max, kind)) <= 0) {
       if (n == -5) {
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          n = -1;
       }
       return n;
@@ -719,7 +719,7 @@ Int_t TUdpSocket::Recv(char *str, Int_t max)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Recv(char *str, Int_t max, Int_t &kind)
+Int_t TUDPSocket::Recv(char *str, Int_t max, Int_t &kind)
 {
    // Receive a character string message of maximum max length. Returns in
    // kind the message type. Returns length of received string+4 (can be 0 if
@@ -729,10 +729,10 @@ Int_t TUdpSocket::Recv(char *str, Int_t max, Int_t &kind)
    Int_t     n;
    TMessage *mess;
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    if ((n = Recv(mess)) <= 0) {
       if (n == -5) {
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          n = -1;
       }
       return n;
@@ -752,7 +752,7 @@ Int_t TUdpSocket::Recv(char *str, Int_t max, Int_t &kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Recv(Int_t &status, Int_t &kind)
+Int_t TUDPSocket::Recv(Int_t &status, Int_t &kind)
 {
    // Receives a status and a message type. Returns length of received
    // integers, 2*sizeof(Int_t) (can be 0 if other side of connection
@@ -762,10 +762,10 @@ Int_t TUdpSocket::Recv(Int_t &status, Int_t &kind)
    Int_t     n;
    TMessage *mess;
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    if ((n = Recv(mess)) <= 0) {
       if (n == -5) {
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          n = -1;
       }
       return n;
@@ -780,7 +780,7 @@ Int_t TUdpSocket::Recv(Int_t &status, Int_t &kind)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::Recv(TMessage *&mess)
+Int_t TUDPSocket::Recv(TMessage *&mess)
 {
    // Receive a TMessage object. The user must delete the TMessage object.
    // Returns length of message in bytes (can be 0 if other side of connection
@@ -796,13 +796,13 @@ Int_t TUdpSocket::Recv(TMessage *&mess)
    }
 
 oncemore:
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    Int_t  n;
    UInt_t len;
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
       mess = 0;
@@ -810,12 +810,12 @@ oncemore:
    }
    len = net2host(len);  //from network to host byte order
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
       delete [] buf;
@@ -837,13 +837,13 @@ oncemore:
       goto oncemore;
 
    if (mess->What() & kMESS_ACK) {
-      ResetBit(TUdpSocket::kBrokenConn);
+      ResetBit(TUDPSocket::kBrokenConn);
       char ok[2] = { 'o', 'k' };
       Int_t n2 = 0;
       if ((n2 = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
          if (n2 == -5) {
             // Connection reset or broken
-            SetBit(TUdpSocket::kBrokenConn);
+            SetBit(TUDPSocket::kBrokenConn);
             Close();
          }
          delete mess;
@@ -862,7 +862,7 @@ oncemore:
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
+Int_t TUDPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Receive a raw buffer of specified length bytes. Using option kPeek
    // one can peek at incoming data. Returns number of received bytes.
@@ -876,12 +876,12 @@ Int_t TUdpSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    if (fSocket == -1) return -1;
    if (length == 0) return 0;
 
-   ResetBit(TUdpSocket::kBrokenConn);
+   ResetBit(TUDPSocket::kBrokenConn);
    Int_t n;
    if ((n = gSystem->RecvRaw(fSocket, buffer, length, (int) opt)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TUdpSocket::kBrokenConn);
+         SetBit(TUDPSocket::kBrokenConn);
          Close();
       }
       return n;
@@ -896,7 +896,7 @@ Int_t TUdpSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 }
 
 //______________________________________________________________________________
-Bool_t TUdpSocket::RecvStreamerInfos(TMessage *mess)
+Bool_t TUDPSocket::RecvStreamerInfos(TMessage *mess)
 {
    // Receive a message containing streamer infos. In case the message contains
    // streamer infos they are imported, the message will be deleted and the
@@ -943,7 +943,7 @@ Bool_t TUdpSocket::RecvStreamerInfos(TMessage *mess)
 }
 
 //______________________________________________________________________________
-Bool_t TUdpSocket::RecvProcessIDs(TMessage *mess)
+Bool_t TUDPSocket::RecvProcessIDs(TMessage *mess)
 {
    // Receive a message containing process ids. In case the message contains
    // process ids they are imported, the message will be deleted and the
@@ -983,7 +983,7 @@ Bool_t TUdpSocket::RecvProcessIDs(TMessage *mess)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::SetOption(ESockOptions opt, Int_t val)
+Int_t TUDPSocket::SetOption(ESockOptions opt, Int_t val)
 {
    // Set socket options.
 
@@ -993,7 +993,7 @@ Int_t TUdpSocket::SetOption(ESockOptions opt, Int_t val)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::GetOption(ESockOptions opt, Int_t &val)
+Int_t TUDPSocket::GetOption(ESockOptions opt, Int_t &val)
 {
    // Get socket options. Returns -1 in case of error.
 
@@ -1003,7 +1003,7 @@ Int_t TUdpSocket::GetOption(ESockOptions opt, Int_t &val)
 }
 
 //______________________________________________________________________________
-Int_t TUdpSocket::GetErrorCode() const
+Int_t TUDPSocket::GetErrorCode() const
 {
    // Returns error code. Meaning depends on context where it is called.
    // If no error condition returns 0 else a value < 0.
@@ -1016,7 +1016,7 @@ Int_t TUdpSocket::GetErrorCode() const
 }
 
 //______________________________________________________________________________
-void TUdpSocket::SetCompressionAlgorithm(Int_t algorithm)
+void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
    // See comments for function SetCompressionSettings
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
@@ -1030,7 +1030,7 @@ void TUdpSocket::SetCompressionAlgorithm(Int_t algorithm)
 }
 
 //______________________________________________________________________________
-void TUdpSocket::SetCompressionLevel(Int_t level)
+void TUDPSocket::SetCompressionLevel(Int_t level)
 {
    // See comments for function SetCompressionSettings
    if (level < 0) level = 0;
@@ -1046,7 +1046,7 @@ void TUdpSocket::SetCompressionLevel(Int_t level)
 }
 
 //______________________________________________________________________________
-void TUdpSocket::SetCompressionSettings(Int_t settings)
+void TUDPSocket::SetCompressionSettings(Int_t settings)
 {
    // Used to specify the compression level and algorithm:
    //  settings = 100 * algorithm + level
@@ -1075,7 +1075,7 @@ void TUdpSocket::SetCompressionSettings(Int_t settings)
 }
 
 //______________________________________________________________________________
-void TUdpSocket::NetError(const char *where, Int_t err)
+void TUDPSocket::NetError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
@@ -1087,7 +1087,7 @@ void TUdpSocket::NetError(const char *where, Int_t err)
 }
 
 //______________________________________________________________________________
-ULong64_t TUdpSocket::GetSocketBytesSent()
+ULong64_t TUDPSocket::GetSocketBytesSent()
 {
    // Get total number of bytes sent via all sockets.
 
@@ -1095,7 +1095,7 @@ ULong64_t TUdpSocket::GetSocketBytesSent()
 }
 
 //______________________________________________________________________________
-ULong64_t TUdpSocket::GetSocketBytesRecv()
+ULong64_t TUDPSocket::GetSocketBytesRecv()
 {
    // Get total number of bytes received via all sockets.
 

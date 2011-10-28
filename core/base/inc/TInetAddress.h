@@ -44,7 +44,7 @@ friend class TUnixSystem;
 friend class TWinNTSystem;
 friend class TUUID;
 friend class TSocket;
-friend class TUdpSocket;
+friend class TUDPSocket;
 friend class TServerSocket;
 friend class TXSocket;   // special for BaBar
 

@@ -1,4 +1,4 @@
-#include "TUdpSocket.h"
+#include "TUDPSocket.h"
 #include "TString.h"
 
 //
@@ -48,9 +48,10 @@
 //    return 1;
 // }
 
-int testTUdpSocket(){	
-	printf("testTSocket: Creating TUdpSocket\n");
-	TUdpSocket * fSocket = new TUdpSocket("localhost", 1500);
+int testTUDPSocket()
+{	
+	printf("testTSocket: Creating TUDPSocket\n");
+	TUDPSocket * fSocket = new TUDPSocket("localhost", 1500);
 	
 	if(!fSocket || !fSocket->IsValid()){
 		Error("testTSocket","cannot connect to localhost");

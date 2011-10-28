@@ -3,7 +3,7 @@
 /* udpserver.c */
 
 /* Converted to echo client/server with select() (timeout option).
-   See testTUdpSocket.C */
+   See testTUDPSocket.C */
 /* Compile with: gcc udpserver.c -o udpserver 
 /* 3/30/05 John Schultz */
 
