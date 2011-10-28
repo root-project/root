@@ -485,8 +485,9 @@ public:
    virtual TInetAddress    GetSockName(int sock);
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
-   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1);
+   virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1, const char *protocol = "tcp");
    virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
+   virtual int             AnnounceUdpService(int port, int backlog);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AnnounceUnixService(const char *sockpath, int backlog);
    virtual int             AcceptConnection(int sock);

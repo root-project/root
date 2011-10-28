@@ -51,6 +51,7 @@
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;
+#pragma link C++ class TUdpSocket;
 #ifndef R__NO_CRYPTO
 #pragma link C++ class THTTPMessage+;
 #pragma link C++ class TAS3File+;

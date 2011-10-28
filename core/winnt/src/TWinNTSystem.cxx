@@ -4993,7 +4993,7 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
 
 //______________________________________________________________________________
 int TWinNTSystem::ConnectService(const char *servername, int port,
-                                 int tcpwindowsize)
+                                 int tcpwindowsize, const char *protocol)
 {
    // Connect to service servicename on server servername.
 
@@ -5006,6 +5006,10 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
    else if (!gSystem->AccessPathName(servername) || servername[0] == '/' ||
             (servername[1] == ':' && servername[2] == '/')) {
       return WinNTUnixConnect(servername);
+   }
+   
+   if (!strcmp(protocol, "udp")){
+      return WinNTUdpConnect(servername, port);
    }
 
    if ((sp = ::getservbyport(::htons(port), kProtocolName))) {
@@ -5104,9 +5108,57 @@ int TWinNTSystem::WinNTUnixConnect(const char *sockpath)
    return WinNTUnixConnect(port);
 }
 
+//______________________________________________________________________________
+int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
+{
+   // Creates a UDP socket connection
+   // Is called via the TSocket constructor. Returns -1 in case of error.
+#if 0
+   short  sport;
+   struct servent *sp;
+   
+   if ((sp = getservbyport(htons(port), kProtocolName)))
+      sport = sp->s_port;
+   else
+      sport = htons(port);
+   
+   TInetAddress addr = gSystem->GetHostByName(hostname);
+   if (!addr.IsValid()) return -1;
+   UInt_t adr = htonl(addr.GetAddress());
+   
+   struct sockaddr_in server;
+   memset(&server, 0, sizeof(server));
+   memcpy(&server.sin_addr, &adr, sizeof(adr));
+   server.sin_family = addr.GetFamily();
+   server.sin_port   = sport;
+   
+   // Create socket
+   int sock;
+   if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+      ::SysError("TUnixSystem::UnixUdpConnect", "socket (%s:%d)",
+                 hostname, port);
+      return -1;
+   }
+   
+   while (connect(sock, (struct sockaddr*) &server, sizeof(server)) == -1) {
+      if (GetErrno() == EINTR)
+         ResetErrno();
+      else {
+         ::SysError("TUnixSystem::UnixUdpConnect", "connect (%s:%d)",
+                    hostname, port);
+         close(sock);
+         return -1;
+      }
+   }
+   return sock;
+#endif
+   ::Error("TWinNTSystem::WinNTUdpConnect", "not yet implemented");
+   return -1;
+}
 
 //______________________________________________________________________________
-int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
+int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize,
+                                 const char *protocol)
 {
    // Open a connection to a service on a server. Returns -1 in case
    // connection cannot be opened.
@@ -5115,7 +5167,7 @@ int TWinNTSystem::OpenConnection(const char *server, int port, int tcpwindowsize
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   return ConnectService(server, port, tcpwindowsize);
+   return ConnectService(server, port, tcpwindowsize, protocol);
 }
 
 //______________________________________________________________________________
@@ -5201,6 +5253,19 @@ int TWinNTSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
       return -3;
    }
    return (int)sock;
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::AnnounceUdpService(int port, int backlog)
+{
+   // Announce UDP service.
+
+#if 0
+   // implement equivalen of UnixUdpService().
+   return UnixUdpService(port, backlog);
+#endif
+   ::Error("TWinNTSystem::AnnounceUdpService", "not yet implemented");
+   return -1;
 }
 
 //______________________________________________________________________________

@@ -2208,7 +2208,7 @@ char *TSystem::GetServiceByPort(int)
 }
 
 //______________________________________________________________________________
-int TSystem::OpenConnection(const char*, int, int)
+int TSystem::OpenConnection(const char*, int, int, const char*)
 {
    // Open a connection to another host.
 
@@ -2222,6 +2222,15 @@ int TSystem::AnnounceTcpService(int, Bool_t, int, int)
    // Announce TCP/IP service.
 
    AbstractMethod("AnnounceTcpService");
+   return -1;
+}
+
+//______________________________________________________________________________
+int TSystem::AnnounceUdpService(int, int)
+{
+   // Announce UDP service.
+
+   AbstractMethod("AnnounceUdpService");
    return -1;
 }
 
