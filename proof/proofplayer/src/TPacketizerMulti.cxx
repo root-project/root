@@ -147,6 +147,7 @@ TPacketizerMulti::~TPacketizerMulti()
       fAssignedPack->SetOwner(kFALSE);
       SafeDelete(fAssignedPack);
    }
+   SafeDelete(fPacketizersIter);
 }
 
 //______________________________________________________________________________

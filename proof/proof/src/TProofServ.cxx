@@ -4527,7 +4527,7 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
          if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
             pqr = (TProofQueryResult *) f->Get(k->GetName());
             // For backward compatibility
-            if (fProtocol < 13) {
+            if (pqr && fProtocol < 13) {
                TDSet *d = 0;
                TObject *o = 0;
                TIter nxi(pqr->GetInputList());
@@ -6092,7 +6092,7 @@ void TProofServ::DeletePlayer()
 Int_t TProofServ::GetPriority()
 {
    // Get the processing priority for the group the user belongs too. This
-   // prioroty is a number (0 - 100) determined by a scheduler (third
+   // priority is a number (0 - 100) determined by a scheduler (third
    // party process) based on some basic priority the group has, e.g.
    // we might want to give users in a specific group (e.g. promptana)
    // a higher priority than users in other groups, and on the analysis
@@ -6131,11 +6131,15 @@ Int_t TProofServ::GetPriority()
 
       if (!res) {
          Error("GetPriority", "query into proofpriority failed");
-         printf("%s\n", sql.Data());
+         Printf("%s", sql.Data());
       } else {
          TSQLRow *row = res->Next();   // first row is header
-         priority = atoi(row->GetField(0));
-         delete row;
+         if (row) {
+            priority = atoi(row->GetField(0));
+            delete row;
+         } else {
+            Error("GetPriority", "first row is header is NULL");
+         }
       }
       delete res;
    }
@@ -6595,56 +6599,71 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                        merger_id, connections);
 
                TVirtualProofPlayer *mergerPlayer =  TVirtualProofPlayer::Create("remote",fProof,0);
-               PDB(kSubmerger, 2) Info("HandleSubmerger",
-                                       "kBeMerger: mergerPlayer created (%p) ", mergerPlayer);
 
-               // This may be used internally
-               mergerPlayer->SetBit(TVirtualProofPlayer::kIsSubmerger);
+               if (mergerPlayer) {
+                  PDB(kSubmerger, 2) Info("HandleSubmerger",
+                                          "kBeMerger: mergerPlayer created (%p) ", mergerPlayer);
 
-               // Accept results from assigned workers
-               if (AcceptResults(connections, mergerPlayer)) {
-                  PDB(kSubmerger, 2)
-                     Info("HandleSubmerger", "kBeMerger: all outputs from workers accepted");
+                  // This may be used internally
+                  mergerPlayer->SetBit(TVirtualProofPlayer::kIsSubmerger);
 
-                  PDB(kSubmerger, 2)
-                     Info("","adding own output to the list on %s", fOrdinal.Data());
+                  // Accept results from assigned workers
+                  if (AcceptResults(connections, mergerPlayer)) {
+                     PDB(kSubmerger, 2)
+                        Info("HandleSubmerger", "kBeMerger: all outputs from workers accepted");
 
-                  // Add own results to the output list.
-                  // On workers the player does not own the output list, which is owned
-                  // by the selector and deleted in there
-                  // On workers the player does not own the output list, which is owned
-                  // by the selector and deleted in there
-                  TIter nxo(fPlayer->GetOutputList());
-                  TObject * o = 0;
-                  while ((o = nxo())) {
-                     if ((mergerPlayer->AddOutputObject(o) != 1)) {
-                        // Remove the object if it has not been merged: it is owned
-                        // now by the merger player (in its output list)
-                        PDB(kSubmerger, 2) Info("HandleSocketInput", "removing merged object (%p)", o);
-                        fPlayer->GetOutputList()->Remove(o);
+                     PDB(kSubmerger, 2)
+                        Info("","adding own output to the list on %s", fOrdinal.Data());
+
+                     // Add own results to the output list.
+                     // On workers the player does not own the output list, which is owned
+                     // by the selector and deleted in there
+                     // On workers the player does not own the output list, which is owned
+                     // by the selector and deleted in there
+                     TIter nxo(fPlayer->GetOutputList());
+                     TObject * o = 0;
+                     while ((o = nxo())) {
+                        if ((mergerPlayer->AddOutputObject(o) != 1)) {
+                           // Remove the object if it has not been merged: it is owned
+                           // now by the merger player (in its output list)
+                           PDB(kSubmerger, 2) Info("HandleSocketInput", "removing merged object (%p)", o);
+                           fPlayer->GetOutputList()->Remove(o);
+                        }
                      }
+                     PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: own outputs added");
+                     PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
+
+                     // Delayed merging if neccessary
+                     mergerPlayer->MergeOutput();
+                  
+                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
+
+                     PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
+                     PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());
+                     // Send merged results to master
+                     if (SendResults(fSocket, mergerPlayer->GetOutputList()) != 0)
+                        Warning("HandleSubmerger","kBeMerger: problems sending output list");
+                     if (mergerPlayer->GetOutputList())
+                        mergerPlayer->GetOutputList()->SetOwner(kTRUE);
+
+                     PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: results sent to master");
+                     // Signal the master that we are idle
+                     fSocket->Send(kPROOF_SETIDLE);
+                     SetIdle(kTRUE);
+                     SendLogFile();
+                  } else {
+                     // Results from all assigned workers not accepted
+                     TMessage answ(kPROOF_SUBMERGER);
+                     answ << Int_t(TProof::kMergerDown);
+                     answ << merger_id;
+                     fSocket->Send(answ);
+                     deleteplayer = kFALSE;
                   }
-                  PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: own outputs added");
-                  PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
-
-                  // Delayed merging if neccessary
-                  mergerPlayer->MergeOutput();
-                 
-                  PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
-
-                  PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
-                  PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());
-                  // Send merged results to master
-                  if (SendResults(fSocket, mergerPlayer->GetOutputList()) != 0)
-                     Warning("HandleSubmerger","kBeMerger: problems sending output list");
-                  mergerPlayer->GetOutputList()->SetOwner(kTRUE);
-
-                  PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: results sent to master");
-                  // Signal the master that we are idle
-                  fSocket->Send(kPROOF_SETIDLE);
-                  SetIdle(kTRUE);
-                  SendLogFile();
+                  // Reset
+                  SafeDelete(mergerPlayer);
+                  
                } else {
+                  Warning("HandleSubmerger","kBeMerger: problems craeting the merger player!");
                   // Results from all assigned workers not accepted
                   TMessage answ(kPROOF_SUBMERGER);
                   answ << Int_t(TProof::kMergerDown);
@@ -6652,8 +6671,6 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   fSocket->Send(answ);
                   deleteplayer = kFALSE;
                }
-               // Reset
-               SafeDelete(mergerPlayer);
             } else {
                Error("HandleSubmerger","kSendOutput: received not on worker");
             }

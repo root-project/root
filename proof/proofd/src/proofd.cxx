@@ -528,7 +528,8 @@ void ProofdExec()
       int lab = 0;
       if ((lab = RpdProofGetAuthSetup(&authbuff)) > 0) {
          // Save it in an environment variable
-         char *rootproofauthsetup = new char[20+strlen(authbuff)];
+         char *rootproofauthsetup = new char[20 + strlen(authbuff)];
+         memset(rootproofauthsetup, 0, 20 + strlen(authbuff)); 
          snprintf(rootproofauthsetup, 20 + strlen(authbuff), "ROOTPROOFAUTHSETUP=%s", authbuff);
          putenv(rootproofauthsetup);
       } else if (lab < 0) {
@@ -608,18 +609,21 @@ void ProofdExec()
    // Set environments vars for proofserv
    // Config dir
    char *rootconf = new char[13+gConfDir.length()];
-   snprintf(rootconf, 13+gConfDir.length(), "ROOTCONFDIR=%s", gConfDir.c_str());
+   memset(rootconf, 0, 13 + gConfDir.length());
+   snprintf(rootconf, 13 + gConfDir.length(), "ROOTCONFDIR=%s", gConfDir.c_str());
    putenv(rootconf);
    if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", rootconf);
    // Temp dir
    char *roottmp = new char[12+gTmpDir.length()];
+   memset(roottmp, 0, 12 + gTmpDir.length());
    snprintf(roottmp, 12+gTmpDir.length(), "ROOTTMPDIR=%s", gTmpDir.c_str());
    putenv(roottmp);
    if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", roottmp);
    // User, host, rpid
    char *rootentity = new char[gUser.length()+gOpenHost.length()+33];
+   memset(rootentity, 0, gUser.length()+gOpenHost.length()+33);
    snprintf(rootentity, gUser.length()+gOpenHost.length()+33,
            "ROOTENTITY=%s:%d@%s", gUser.c_str(), gRemPid, gOpenHost.c_str());
    putenv(rootentity);
@@ -627,12 +631,14 @@ void ProofdExec()
       ErrorInfo("ProofdExec: setting: %s", rootentity);
    // Open socket
    char *rootopensock = new char[33];
+   memset(rootopensock, 0, 33);
    snprintf(rootopensock, 33, "ROOTOPENSOCK=%d", sockFd);
    putenv(rootopensock);
    if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", rootopensock);
    // ReadHomeAuthrc option
    char *roothomeauthrc = new char[20];
+   memset(roothomeauthrc, 0, 20);
    snprintf(roothomeauthrc, 20, "ROOTHOMEAUTHRC=%s", gReadHomeAuthrc.c_str());
    putenv(roothomeauthrc);
    if (gDebug > 0)
@@ -641,6 +647,7 @@ void ProofdExec()
 #ifdef R__GLBS
    // ID of shm with exported credentials
    char *shmidcred = new char[25];
+   memset(shmidcred, 0, 25);
    snprintf(shmidcred, 25, "ROOTSHMIDCRED=%d", RpdGetShmIdCred());
    putenv(shmidcred);
    if (gDebug > 0)
@@ -655,6 +662,7 @@ void ProofdExec()
 
 #ifndef ROOTPREFIX
    char *rootsys = new char[9+gConfDir.length()];
+   memset(rootsys, 0, 9 + gConfDir.length());
    snprintf(rootsys, 9+gConfDir.length(), "ROOTSYS=%s", gConfDir.c_str());
    putenv(rootsys);
    if (gDebug > 0)
@@ -665,37 +673,45 @@ void ProofdExec()
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
    if ((oldpath = getenv("SHLIB_PATH")) && strlen(oldpath) > 0) {
       ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      memset(ldpath, 0, 32+gConfDir.length()+strlen(oldpath));
       snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
                       "SHLIB_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
+      memset(ldpath, 0, 32+gConfDir.length());
       snprintf(ldpath, 32+gConfDir.length(), "SHLIB_PATH=%s/lib", gConfDir.c_str());
    }
 #   elif defined(_AIX)
    if ((oldpath = getenv("LIBPATH")) && strlen(oldpath) > 0) {
       ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      memset(ldpath, 0, 32+gConfDir.length()+strlen(oldpath));
       snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
                        "LIBPATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
+      memset(ldpath, 0, 32+gConfDir.length());
       snprintf(ldpath, 32+gConfDir.length(), "LIBPATH=%s/lib", gConfDir.c_str());
    }
 #   elif defined(__APPLE__)
    if ((oldpath = getenv("DYLD_LIBRARY_PATH")) && strlen(oldpath) > 0) {
       ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      memset(ldpath, 0, 32+gConfDir.length()+strlen(oldpath));
       snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
                       "DYLD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
+      memset(ldpath, 0, 32+gConfDir.length());
       snprintf(ldpath, 32+gConfDir.length(), "DYLD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   else
    if ((oldpath = getenv("LD_LIBRARY_PATH")) && strlen(oldpath) > 0) {
       ldpath = new char[32+gConfDir.length()+strlen(oldpath)];
+      memset(ldpath, 0, 32+gConfDir.length()+strlen(oldpath));
       snprintf(ldpath, 32+gConfDir.length()+strlen(oldpath),
                       "LD_LIBRARY_PATH=%s/lib:%s", gConfDir.c_str(), oldpath);
    } else {
       ldpath = new char[32+gConfDir.length()];
+      memset(ldpath, 0, 32+gConfDir.length());
       snprintf(ldpath, 32+gConfDir.length(), "LD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   endif
@@ -712,6 +728,7 @@ void ProofdExec()
       if (gDebug > 0)
          ErrorInfo("ProofdExec: setting ROOTAUTHRC to %s",gAuthrc.c_str());
       authrc = new char[15+gAuthrc.length()];
+      memset(authrc, 0, 15 + gAuthrc.length());
       snprintf(authrc, 15+gAuthrc.length(), "ROOTAUTHRC=%s", gAuthrc.c_str());
       putenv(authrc);
       if (gDebug > 0)
@@ -720,6 +737,7 @@ void ProofdExec()
 
    // For backward compatibility
    char *keyfile = new char[15+strlen(RpdGetKeyRoot())];
+   memset(keyfile, 0, 15+strlen(RpdGetKeyRoot()));
    snprintf(keyfile, 15+strlen(RpdGetKeyRoot()), "ROOTKEYFILE=%s",RpdGetKeyRoot());
    putenv(keyfile);
    if (gDebug > 2)

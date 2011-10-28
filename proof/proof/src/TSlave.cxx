@@ -464,8 +464,9 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
       if (proof->IsProofd())
          tryxpd = kFALSE;
    } else {
-      if (gApplication &&
-         (gApplication->Argc() < 3 || strncmp(gApplication->Argv(2),"xpd",3)))
+      if (gApplication && (gApplication->Argc() < 3 ||
+                          (gApplication->Argc() > 2 &&
+                           strncmp(gApplication->Argv(2),"xpd",3))))
          tryxpd = kFALSE;
    }
 
