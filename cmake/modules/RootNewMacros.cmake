@@ -45,7 +45,6 @@ else()
 endif()
 
 #---Modify the behaviour for local and non-local builds--------------------------------------------
-message("here")
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   set(rootcint_cmd rootcint_tmp)

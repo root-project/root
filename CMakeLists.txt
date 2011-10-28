@@ -101,7 +101,6 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 if(testing)
   include(RootCTest)
-  set(ROOT_DIR ${CMAKE_BINARY_DIR})
   add_subdirectory(test)
 endif()
 

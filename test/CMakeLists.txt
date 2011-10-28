@@ -71,15 +71,15 @@ ROOT_ADD_TEST(test-bench COMMAND bench)
 
 #--stress------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stress stress.cxx LIBRARIES Event Core Hist RIO Tree Gpad Postscript)
-ROOT_ADD_TEST(test-stress COMMAND stress FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stress COMMAND stress -b FAILREGEX "FAILED")
 
 #--stressShapes------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressShapes stressShapes.cxx LIBRARIES  Geom Tree GenVector Gpad)
-ROOT_ADD_TEST(test-stressshapes COMMAND stressShapes FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressshapes COMMAND stressShapes -b FAILREGEX "FAILED")
 
 #--stressGeometry------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGeometry stressGeometry.cxx LIBRARIES Geom Tree GenVector Gpad)
-ROOT_ADD_TEST(test-stressgeometry COMMAND stressGeometry FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressgeometry COMMAND stressGeometry -b FAILREGEX "FAILED")
 
 #--stressLinear------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressLinear stressLinear.cxx LIBRARIES Matrix Hist RIO)
@@ -89,7 +89,7 @@ ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED")
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
 configure_file(stressGraphics.ref stressGraphics.ref @COPY_ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat @COPY_ONLY)
-ROOT_ADD_TEST(test-stressgraphics COMMAND stressGraphics FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressgraphics COMMAND stressGraphics -b FAILREGEX "FAILED")
 
 #--stressHistogram------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
@@ -97,11 +97,12 @@ ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED")
 
 #--stressGUI---------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
-ROOT_ADD_TEST(test-stressgui COMMAND stressGUI FAILREGEX "FAILED")
+#configure_file(stressGUI.ref stressGUI.ref @COPY_ONLY)
+ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -b -ref FAILREGEX "FAILED")
 
 #--stressSpectrum----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
-ROOT_ADD_TEST(test-stressspectrum COMMAND stressSpectrum FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressspectrum COMMAND stressSpectrum -b FAILREGEX "FAILED")
 
 #--stressVector------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressVector stressVector.cxx LIBRARIES Physics GenVector)
@@ -144,7 +145,7 @@ endif()
 
 #--stressEntryList----------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressEntryList stressEntryList.cxx LIBRARIES MathCore Tree Hist)
-ROOT_ADD_TEST(test-stressentrylist COMMAND stressEntryList FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressentrylist COMMAND stressEntryList -b FAILREGEX "FAILED")
 
 #--stressIterators----------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressIterators stressIterators.cxx LIBRARIES Core)
@@ -152,7 +153,10 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 
 #--stressInterpreter----------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
-ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter FAILREGEX "FAILED")
+configure_file(stressInterpreter.cxx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/stressInterpreter.cxx @COPY_ONLY)
+ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter 
+              FAILREGEX "FAILED|Error"
+              ENVIRONMENT ${ld_library_path}=${ROOTSYS}/lib)
 
 #--stressHepix----------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
