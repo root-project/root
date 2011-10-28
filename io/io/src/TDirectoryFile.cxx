@@ -1309,9 +1309,15 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
    // See TObject::Write().
 
    if (!fFile) { Error("Read","No file open"); return 0; }
-   TKey *key = (TKey*)fKeys->FindObject(keyname);
-   if (!key)   { Error("Read","Key not found"); return 0; }
-   return key->Read(obj);
+   TKey *key = 0;
+   TIter nextkey(GetListOfKeys());
+   while ((key = (TKey *) nextkey())) {
+      if (strcmp(keyname,key->GetName()) == 0) {
+         return key->Read(obj);
+      }
+   }
+   Error("Read","Key not found"); 
+   return 0;
 }
 
 //______________________________________________________________________________
