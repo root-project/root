@@ -109,7 +109,7 @@ export PATH
 
 upload_sync() {
     if [ "x$UPLOAD_SYNC" != "x" ] ; then
-       eval $UPLOAD_SYNC
+       eval $UPLOAD_SYNC > uploadsync.log 2>&1 
     fi
 }
 
@@ -135,7 +135,7 @@ EOF
 
 upload_log() {    
     target_name=$2$1.$host$configname
-    scp $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
+    scp -q $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
     scp_result=$?
     if test $scp_result != 0; then 
         cat scp.log 
@@ -149,14 +149,14 @@ upload_datafile() {
     fi
     if test -e $1 ; then
        target_name=$host$configname.`basename $1`
-       scp $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
+       scp -q $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
        scp_result=$?
        if test $scp_result != 0; then 
           cat scp.log
        else
           if test "x$untar" = "xyes" ; then 
              untar_name=$host$configname.data
-             ssh $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name ; tar xfz ../$target_name" 
+             ssh -q $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name ; tar xfz ../$target_name" > untar.log 2>&1  
           fi
        fi
     fi
