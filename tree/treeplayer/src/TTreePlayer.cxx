@@ -1051,7 +1051,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate class member functions prototypes
    if (opt.Contains("selector")) {
       fprintf(fp,"\n");
-      fprintf(fp,"   %s(TTree * /*tree*/ =0) { }\n",classname) ;
+      fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0) { }\n",classname) ;
       fprintf(fp,"   virtual ~%s() { }\n",classname);
       fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
       fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
@@ -1090,7 +1090,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate code for class constructor
    fprintf(fp,"#ifdef %s_cxx\n",classname);
    if (!opt.Contains("selector")) {
-      fprintf(fp,"%s::%s(TTree *tree)\n",classname,classname);
+      fprintf(fp,"%s::%s(TTree *tree) : fChain(0) \n",classname,classname);
       fprintf(fp,"{\n");
       fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
       fprintf(fp,"// used to generate this class and read the Tree.\n");
