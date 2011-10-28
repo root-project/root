@@ -90,8 +90,7 @@ STRESSFILES := \
 	$(wildcard $(ROOT_LOC)/test/*.h) \
 	$(wildcard $(ROOT_LOC)/test/*.ref) \
 	$(wildcard $(ROOT_LOC)/test/*.root))) \
-$(ROOT_LOC)/test/Makefile.arch \
-$(ROOT_LOC)/test/Makefile
+	$(ROOT_LOC)/test/Makefile
 
 	STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
 STRESSFILESCOPIEDTAG := test/.COPIEDTAG
@@ -155,6 +154,10 @@ $(STRESSEXE): test/%: $(STRESSFILESCOPIEDTAG)
 $(STRESSFILESHERE): test/%: $(ROOT_LOC)/test/%
 	$(CMDECHO) test -d test || mkdir -p test
 	$(CMDECHO) cp -f $< $@
+
+#test/Makefile.arch: $(ROOT_LOC)/etc/Makefile.arch
+#	$(CMDECHO) test -d test || mkdir -p test
+#	$(CMDECHO) cp -f $< $@
 
 test/libEvent.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
