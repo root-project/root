@@ -756,24 +756,33 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    // See if we can add any #include about the user data.
    Int_t l;
    fprintf(fp,"\n// Header file for the classes stored in the TTree if any.\n");
+   TList listOfHeaders;
+   listOfHeaders.SetOwner();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       TBranch *branch = leaf->GetBranch();
       TClass *cl = TClass::GetClass(branch->GetClassName());
-      if (cl && cl->IsLoaded()) {
+      if (cl && cl->IsLoaded() && !listOfHeaders.FindObject(cl->GetName())) {
          const char *declfile = cl->GetDeclFileName();
          if (declfile && declfile[0]) {
             static const char *precstl = "prec_stl/";
             static const unsigned int precstl_len = strlen(precstl);
+            static const char *rootinclude = "include/";
+            static const unsigned int rootinclude_len = strlen(rootinclude);
             if (strncmp(declfile,precstl,precstl_len) == 0) {
-               fprintf(fp,"#include <%s>\n",declfile+precstl_len);              
+               fprintf(fp,"#include <%s>\n",declfile+precstl_len);
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+precstl_len));
+            } else if (strncmp(declfile,rootinclude,rootinclude_len) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);              
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
             } else {
                fprintf(fp,"#include \"%s\"\n",declfile);
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile));
             }
          }
       }
    }
-   
+
    // First loop on all leaves to generate dimension declarations
    Int_t len, lenb;
    char blen[1024];
@@ -805,6 +814,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       chain->LoadTree(0);
    }
 
+   fprintf(fp,"\n// Fixed size dimensions of array or collections stored in the TTree if any.\n");   
    leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
@@ -823,7 +833,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          blen[lenb-1] = 0;
          len = leaflen[l];
          if (len <= 0) len = 1;
-         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
+         fprintf(fp,"const Int_t kMax%s = %d;\n",blen,len);
       }
    }
    delete [] leaflen;
