@@ -270,7 +270,7 @@ result=$?
 upload_log gmake.log test_
 if test $result != 0; then
    teststatus=$failure
-   error_handling $result "ROOT's test gmake failed!  See log file at $ROOTSYS/gmake.log"
+   error_handling $result "ROOT's test gmake failed!  See log file at $ROOTSYS/test/gmake.log"
 fi
 teststatus=$success
 
