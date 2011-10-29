@@ -63,17 +63,18 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket, TSt
    fAccessIdKey  = maidkey;
    fHasRange     = kFALSE;
    fInitByte     = 0;
-   fOffset       = 0;  
-   fLen          = 0;   
-   fNumBuf       = 0;   
-   fCurrentBuf   = 0;   
-                        
+   fOffset       = 0;
+   fLen          = 0;
+   fNumBuf       = 0;
+   fCurrentBuf   = 0;
+   fLength       = 0;
+
    fSignature    = Sign();
-}                
+}
 
 //______________________________________________________________________________
 THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket, TString mhost,
-                           TString maprefix, TString maid, TString maidkey, Long64_t offset, 
+                           TString maprefix, TString maid, TString maidkey, Long64_t offset,
                            Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // THTTPMessage for HTTP Get Requests with Range.
@@ -92,6 +93,7 @@ THTTPMessage::THTTPMessage(EHTTP_Verb mverb, TString mpath, TString mbucket, TSt
    fLen         = len;
    fNumBuf      = nbuf;
    fCurrentBuf  = 0;
+   fLength      = 0;
 
    fSignature   = Sign();
 }
@@ -118,6 +120,7 @@ THTTPMessage &THTTPMessage::operator=(const THTTPMessage &rhs)
       fAccessId    = rhs.fAccessId;
       fAccessIdKey = rhs.fAccessIdKey;
       fSignature   = rhs.fSignature;
+      fLength      = rhs.fLength;
    }
    return *this;
 }
@@ -237,10 +240,10 @@ TString THTTPMessage::GetRequest()
          n += fLen[i];
          fCurrentBuf++;
          if (msg.Length() > 8000) {
-            break;      
+            break;
          }
       }
-      msg += "\r\n";   
+      msg += "\r\n";
    }
 
    msg += CreateAuth()+"\r\n";

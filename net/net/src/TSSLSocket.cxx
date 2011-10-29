@@ -166,13 +166,13 @@ void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
    // Set up the static configuration variables.
 
    if (cafile)
-      strncpy(fgSSLCAFile, cafile, FILENAME_MAX);
+      strlcpy(fgSSLCAFile, cafile, FILENAME_MAX);
    if (capath)
-      strncpy(fgSSLCAPath, capath, FILENAME_MAX);
+      strlcpy(fgSSLCAPath, capath, FILENAME_MAX);
    if (ucert)
-      strncpy(fgSSLUCert,  ucert,  FILENAME_MAX);
+      strlcpy(fgSSLUCert,  ucert,  FILENAME_MAX);
    if (ukey)
-      strncpy(fgSSLUKey,   ukey,   FILENAME_MAX);
+      strlcpy(fgSSLUKey,   ukey,   FILENAME_MAX);
 }
 
 //______________________________________________________________________________

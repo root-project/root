@@ -3296,11 +3296,6 @@ int RpdSRPUser(const char *sstr)
 #else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
 #endif
-   if (!ts) {
-      NetSend(kErrNoUser, kROOTD_ERR);
-      ErrorInfo("RpdSRPUser: user %s not found SRP password file", gUser);
-      return auth;
-   }
 
    if (tcnf)
       t_closeconf(tcnf);
@@ -3310,6 +3305,12 @@ int RpdSRPUser(const char *sstr)
       fclose(fp2);
    if (fp1)
       fclose(fp1);
+
+   if (!ts) {
+      NetSend(kErrNoUser, kROOTD_ERR);
+      ErrorInfo("RpdSRPUser: user %s not found SRP password file", gUser);
+      return auth;
+   }
 
    char hexbuf[MAXHEXPARAMLEN];
 

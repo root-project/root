@@ -282,6 +282,7 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    if (rc <= 0) {
       SysError("BlockRead","reading data (%d), %s",
                rc, error_message(rc));
+      delete [] enc.data;
       return -1;
    }
 
