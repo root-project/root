@@ -45,6 +45,7 @@ public:
    virtual ~TNtuple();
 
    virtual void      Browse(TBrowser *b);
+   virtual TTree    *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual Int_t     Fill(const Float_t *x);
            Int_t     Fill(Int_t x0) { return Fill((Float_t)x0); }
            Int_t     Fill(Double_t x0) { return Fill((Float_t)x0); }

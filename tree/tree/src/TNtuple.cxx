@@ -105,6 +105,26 @@ TNtuple::~TNtuple()
 }
 
 //______________________________________________________________________________
+TTree* TNtuple::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" */)
+{
+   // Create a clone of this tree and copy nentries.
+   //
+   // By default copy all entries.
+   // Note that only active branches are copied.
+   // The compression level of the cloned tree is set to the destination file's
+   // compression level.
+   //
+   // See TTree::CloneTree for more details.
+
+   TNtuple *newtuple = dynamic_cast<TNtuple*> (TTree::CloneTree(nentries,option) );
+   if (newtuple) {
+      // To deal with the cases of some of the branches where dropped.
+      newtuple->fNvar = newtuple->fBranches.GetEntries();
+   }
+   return newtuple;
+}
+
+//______________________________________________________________________________
 void TNtuple::ResetBranchAddress(TBranch *branch)
 {
    // Reset the branch addresses to the internal fArgs array. Use this
