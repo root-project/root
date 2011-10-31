@@ -498,6 +498,12 @@ ROOTMAP       = etc/system.rootmap
 
 STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
                   $(FREETYPELDFLAGS) $(FREETYPELIB)
+ifneq ($(SSLLIB),)
+STATICEXTRALIBS += $(SSLLIB)
+endif
+ifeq ($(XFTLIB),yes)
+STATICEXTRALIBS += -lXft
+endif
 
 ##### libCore #####
 
