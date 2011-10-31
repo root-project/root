@@ -155,8 +155,8 @@ namespace cling {
     // CI->getCodeGenOpts().DebugInfo = 1; // want debug info
     // CI->getCodeGenOpts().EmitDeclMetadata = 1; // For unloading, for later
     CI->getCodeGenOpts().OptimizationLevel = 0; // see pure SSA, that comes out
-    assert((CI->getCodeGenOpts().VerifyModule == 1) 
-           && "When asserts are on, let's also assert the module");
+    // When asserts are on, TURN ON not compare the VerifyModule
+    assert(CI->getCodeGenOpts().VerifyModule = 1);
     return CI;
   }
 
