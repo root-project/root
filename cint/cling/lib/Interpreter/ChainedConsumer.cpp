@@ -396,6 +396,7 @@ namespace cling {
       for (DeclGroupRef::iterator 
              Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
         DeclContext* DC = (*Di)->getDeclContext();
+        assert(DC == (*Di)->getLexicalDeclContext() && "Cannot handle that yet");
 
         // Get rid of the declaration. If the declaration has name we should 
         // heal the lookup tables as well
@@ -505,7 +506,8 @@ namespace cling {
         // the reverted one, because it gets found for example by 
         // Sema::MergeVarDecl and ends up in the lookup
         //
-        NewVD->setPreviousDeclaration(NewVD->getPreviousDeclaration());
+        VarDecl* PrevVD = NewVD->getPreviousDeclaration();
+        NewVD->setPreviousDeclaration(PrevVD);
         Pos->second.setOnlyValue(NewVD);
         if (S)
           S->AddDecl(NewVD);
@@ -572,6 +574,12 @@ namespace cling {
       }
 
       if (FunctionDecl* NewFD = FD->getPreviousDeclaration()) {
+        // We need to rewire the list of the redeclarations in order to exclude
+        // the reverted one, because it gets found for example by 
+        // Sema::MergeVarDecl and ends up in the lookup
+        //
+        FunctionDecl* PrevDecl = NewFD->getPreviousDeclaration();
+        NewFD->setPreviousDeclaration(PrevDecl);
         Pos->second.setOnlyValue(NewFD);
         if (S)
           S->AddDecl(NewFD);
