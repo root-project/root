@@ -5139,43 +5139,49 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
 
    TString s;
    FILE *f = fopen("/proc/cpuinfo", "r");
-   while (s.Gets(f)) {
-      if (s.BeginsWith("model name")) {
-         TPRegexp("^.+: *(.*$)").Substitute(s, "$1");
-         sysinfo->fModel = s;
+   if (f) {
+      while (s.Gets(f)) {
+         if (s.BeginsWith("model name")) {
+            TPRegexp("^.+: *(.*$)").Substitute(s, "$1");
+            sysinfo->fModel = s;
+         }
+         if (s.BeginsWith("cpu MHz")) {
+            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+            sysinfo->fCpuSpeed = s.Atoi();
+         }
+         if (s.BeginsWith("cache size")) {
+            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+            sysinfo->fL2Cache = s.Atoi();
+         }
+         if (s.BeginsWith("processor")) {
+            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+            sysinfo->fCpus = s.Atoi();
+            sysinfo->fCpus++;
+         }
       }
-      if (s.BeginsWith("cpu MHz")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         sysinfo->fCpuSpeed = s.Atoi();
-      }
-      if (s.BeginsWith("cache size")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         sysinfo->fL2Cache = s.Atoi();
-      }
-      if (s.BeginsWith("processor")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         sysinfo->fCpus = s.Atoi();
-         sysinfo->fCpus++;
-      }
+      fclose(f);
    }
-   fclose(f);
 
    f = fopen("/proc/meminfo", "r");
-   while (s.Gets(f)) {
-      if (s.BeginsWith("MemTotal")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         sysinfo->fPhysRam = (s.Atoi() / 1024);
-         break;
+   if (f) {
+      while (s.Gets(f)) {
+         if (s.BeginsWith("MemTotal")) {
+            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+            sysinfo->fPhysRam = (s.Atoi() / 1024);
+            break;
+         }
       }
+      fclose(f);
    }
-   fclose(f);
 
    f = gSystem->OpenPipe("uname -s -p", "r");
-   s.Gets(f);
-   Ssiz_t from = 0;
-   s.Tokenize(sysinfo->fOS, from);
-   s.Tokenize(sysinfo->fCpuType, from);
-   gSystem->ClosePipe(f);
+   if (f) {
+      s.Gets(f);
+      Ssiz_t from = 0;
+      s.Tokenize(sysinfo->fOS, from);
+      s.Tokenize(sysinfo->fCpuType, from);
+      gSystem->ClosePipe(f);
+   }
 }
 
 //______________________________________________________________________________
@@ -5187,6 +5193,7 @@ static void ReadLinuxCpu(long *ticks)
 
    TString s;
    FILE *f = fopen("/proc/stat", "r");
+   if (!f) return;
    s.Gets(f);
    // user, user nice, sys, idle
    sscanf(s.Data(), "%*s %ld %ld %ld %ld", &ticks[0], &ticks[3], &ticks[1], &ticks[2]);
@@ -5239,6 +5246,7 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
 
    TString s;
    FILE *f = fopen("/proc/meminfo", "r");
+   if (!f) return;
    while (s.Gets(f)) {
       if (s.BeginsWith("MemTotal")) {
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");

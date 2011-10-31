@@ -455,7 +455,8 @@ TMapIter::TMapIter(const TMapIter &iter) : TIterator(iter)
    fCursor    = 0;
    if (iter.fCursor) {
       fCursor = (THashTableIter *)iter.fCursor->GetCollection()->MakeIterator();
-      fCursor->operator=(*iter.fCursor);
+      if (fCursor)
+         fCursor->operator=(*iter.fCursor);
    }
 }
 
@@ -470,7 +471,8 @@ TIterator &TMapIter::operator=(const TIterator &rhs)
       fDirection = rhs1.fDirection;
       if (rhs1.fCursor) {
          fCursor = (THashTableIter *)rhs1.fCursor->GetCollection()->MakeIterator();
-         fCursor->operator=(*rhs1.fCursor);
+         if (fCursor)
+            fCursor->operator=(*rhs1.fCursor);
       }
    }
    return *this;
@@ -486,7 +488,8 @@ TMapIter &TMapIter::operator=(const TMapIter &rhs)
       fDirection = rhs.fDirection;
       if (rhs.fCursor) {
          fCursor = (THashTableIter *)rhs.fCursor->GetCollection()->MakeIterator();
-         fCursor->operator=(*rhs.fCursor);
+         if (fCursor)
+            fCursor->operator=(*rhs.fCursor);
       }
    }
    return *this;

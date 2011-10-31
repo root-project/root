@@ -366,7 +366,8 @@ THashTableIter::THashTableIter(const THashTableIter &iter) : TIterator(iter)
    fListCursor = 0;
    if (iter.fListCursor) {
       fListCursor = (TListIter *)iter.fListCursor->GetCollection()->MakeIterator();
-      fListCursor->operator=(*iter.fListCursor);
+      if (fListCursor)
+         fListCursor->operator=(*iter.fListCursor);
    }
 }
 
@@ -382,7 +383,8 @@ TIterator &THashTableIter::operator=(const TIterator &rhs)
       fCursor    = rhs1.fCursor;
       if (rhs1.fListCursor) {
          fListCursor = (TListIter *)rhs1.fListCursor->GetCollection()->MakeIterator();
-         fListCursor->operator=(*rhs1.fListCursor);
+         if (fListCursor)
+            fListCursor->operator=(*rhs1.fListCursor);
       }
    }
    return *this;
@@ -399,7 +401,8 @@ THashTableIter &THashTableIter::operator=(const THashTableIter &rhs)
       fCursor    = rhs.fCursor;
       if (rhs.fListCursor) {
          fListCursor = (TListIter *)rhs.fListCursor->GetCollection()->MakeIterator();
-         fListCursor->operator=(*rhs.fListCursor);
+         if (fListCursor)
+            fListCursor->operator=(*rhs.fListCursor);
       }
    }
    return *this;
