@@ -184,7 +184,7 @@ namespace cling {
 
   ChainedConsumer::ChainedConsumer()
     :  Consumers(), Enabled(), MutationListener(0), DeserializationListener(0),
-       m_InTransaction(false), m_Context(0), m_Queueing(true) {
+       m_InTransaction(false), m_Context(0), m_Sema(0), m_Queueing(true) {
 
     // Collect the mutation listeners and deserialization listeners of all
     // children, and create a multiplex listener each if so.

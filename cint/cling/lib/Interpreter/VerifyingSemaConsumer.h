@@ -16,7 +16,7 @@ namespace cling {
 
   class VerifyingSemaConsumer : public clang::SemaConsumer {
   public:
-    VerifyingSemaConsumer() {}
+    VerifyingSemaConsumer(): m_Context(0), m_Sema(0), m_Observers() {}
     virtual ~VerifyingSemaConsumer();
 
     void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }

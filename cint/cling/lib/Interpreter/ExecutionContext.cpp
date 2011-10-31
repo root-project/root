@@ -28,7 +28,7 @@ namespace {
     llvm::ExecutionEngine *m_engine; 
     
   public:
-    JITtedFunctionCollector() { }
+    JITtedFunctionCollector(): m_vec_functions(), m_engine(0) { }
     virtual ~JITtedFunctionCollector() { }
     
     virtual void NotifyFunctionEmitted(const llvm::Function&, void *, size_t,
