@@ -261,7 +261,7 @@ namespace cling {
         clang::DeclarationName N = F->getDeclName();
         if (N.isIdentifier()) {
           clang::IdentifierInfo* II = N.getAsIdentifierInfo();
-          if (II->getName().find("__cling_Un1Qu3") == 0) {
+          if (II && (II->getName().find("__cling_Un1Qu3") == 0)) {
             RunFunction(II->getName());
           }
         }
@@ -571,6 +571,7 @@ namespace cling {
     // get the Type
     FunctionDecl* TopLevelFD 
       = dyn_cast<FunctionDecl>(DGRs.front().getSingleDecl());
+    assert(TopLevelFD && "No Decls Parsed?");
     CurContext = TheSema.CurContext;
     TheSema.CurContext = TopLevelFD;
     ASTContext& Context(getCI()->getASTContext());

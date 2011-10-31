@@ -74,7 +74,7 @@ namespace cling {
                                           CI->getCodeGenOpts(), 
                                   /*Owned by codegen*/ * new llvm::LLVMContext()
                                           );
-
+    assert(CG && "No CodeGen?!");
     addConsumer(ChainedConsumer::kCodeGenerator, CG);
     m_Consumer->Initialize(CI->getASTContext());
     m_Consumer->InitializeSema(CI->getSema());

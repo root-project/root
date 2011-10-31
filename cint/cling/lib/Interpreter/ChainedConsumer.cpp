@@ -536,8 +536,9 @@ namespace cling {
     class FunctionTemplateDeclExt : public FunctionTemplateDecl {
     public:
       static llvm::FoldingSet<FunctionTemplateSpecializationInfo>& 
-      getSpecializationsExt(FunctionTemplateDecl* FTSI) {
-        return ((FunctionTemplateDeclExt*) FTSI)->getSpecializations();
+      getSpecializationsExt(FunctionTemplateDecl* FTD) {
+        assert(FTD && "Cannot be null!");
+        return ((FunctionTemplateDeclExt*) FTD)->getSpecializations();
       }
     };
 
