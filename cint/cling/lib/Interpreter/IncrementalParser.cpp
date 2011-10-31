@@ -21,7 +21,6 @@
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Lex/Preprocessor.h"
-#include "clang/Lex/Pragma.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Serialization/ASTWriter.h"
 
@@ -38,7 +37,6 @@ using namespace clang;
 
 namespace cling {
   IncrementalParser::IncrementalParser(Interpreter* interp, 
-                                       PragmaNamespace* Pragma, 
                                        int argc, const char* const *argv,
                                        const char* llvmdir):
     m_Interpreter(interp),
@@ -49,8 +47,8 @@ namespace cling {
     m_UsingStartupPCH(false)
   {
     CompilerInstance* CI 
-      = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
-                            Pragma, argc, argv, llvmdir);
+      = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"), 
+                            argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
 

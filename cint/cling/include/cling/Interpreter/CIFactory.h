@@ -17,7 +17,6 @@ namespace llvm {
 }
 
 namespace clang {
-  class PragmaNamespace;
 }
 
 namespace cling {
@@ -30,7 +29,6 @@ namespace cling {
                                              const char* llvmdir);
 
     static clang::CompilerInstance* createCI(llvm::MemoryBuffer* buffer, 
-                                             clang::PragmaNamespace* Pragma, 
                                              int argc,
                                              const char* const *argv,
                                              const char* llvmdir);

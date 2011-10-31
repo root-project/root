@@ -29,7 +29,6 @@ namespace clang {
   class DeclContext;
   class Expr;
   class NamedDecl;
-  class PragmaNamespace;
 }
 
 namespace cling {
@@ -159,7 +158,6 @@ namespace cling {
     
     clang::CompilerInstance* getCI() const;
 
-    clang::PragmaNamespace& getPragmaHandler() const { return *m_PragmaHandler; }
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
     
     llvm::raw_ostream& getValuePrinterStream() const { return *m_ValuePrintStream; }
@@ -174,7 +172,6 @@ namespace cling {
     InvocationOptions m_Opts; // Interpreter options
     llvm::OwningPtr<ExecutionContext> m_ExecutionContext;
     llvm::OwningPtr<IncrementalParser> m_IncrParser; // incremental AST and its parser
-    clang::PragmaNamespace* m_PragmaHandler; // pragma cling ..., owned by Preprocessor
     unsigned long long m_UniqueCounter; // number of generated call wrappers
     bool m_PrintAST; // whether to print the AST to be processed
     bool m_ValuePrinterEnabled; // whether the value printer is loaded

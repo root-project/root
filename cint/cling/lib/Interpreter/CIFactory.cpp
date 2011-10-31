@@ -12,7 +12,6 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
-#include "clang/Lex/Pragma.h"
 #include "clang/Lex/Preprocessor.h"
 
 #include "llvm/LLVMContext.h"
@@ -35,20 +34,15 @@ namespace cling {
                                         int argc,
                                         const char* const *argv,
                                         const char* llvmdir) {
-    return createCI(llvm::MemoryBuffer::getMemBuffer(code), 0, argc, argv, llvmdir);
+    return createCI(llvm::MemoryBuffer::getMemBuffer(code),argc, argv, llvmdir);
   }
 
   
   CompilerInstance* CIFactory::createCI(llvm::MemoryBuffer* buffer, 
-                                        PragmaNamespace* Pragma, 
                                         int argc, 
                                         const char* const *argv,
                                         const char* llvmdir){
     // main's argv[0] is skipped!
-
-    if (!Pragma) {
-      Pragma = new PragmaNamespace("cling");
-    }
 
     // Create an instance builder, passing the llvmdir and arguments.
     //
@@ -139,7 +133,6 @@ namespace cling {
     // Set up the preprocessor
     CI->createPreprocessor();
     Preprocessor& PP = CI->getPreprocessor();
-    PP.AddPragmaHandler(Pragma);
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
                                            PP.getLangOptions());
     /*NoBuiltins = */ //true);

@@ -31,7 +31,6 @@ namespace clang {
   class FunctionDecl;
   class Parser;
   class PCHGenerator;
-  class PragmaNamespace;
   class Sema;
   class SourceLocation;
 }
@@ -50,8 +49,8 @@ namespace cling {
       kSuccessWithWarnings,
       kFailed
     };
-    IncrementalParser(Interpreter* interp, clang::PragmaNamespace* Pragma,
-                      int argc, const char* const *argv, const char* llvmdir);
+    IncrementalParser(Interpreter* interp, int argc, const char* const *argv,
+                      const char* llvmdir);
     ~IncrementalParser();
     void Initialize(const char* startupPCH);
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
