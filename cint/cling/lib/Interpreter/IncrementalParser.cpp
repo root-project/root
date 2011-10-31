@@ -17,6 +17,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclGroup.h"
+#include "clang/Basic/FileManager.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Lex/Preprocessor.h"
@@ -28,9 +29,10 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_os_ostream.h"
 
+#include <ctime>
+#include <iostream>
 #include <stdio.h>
 #include <sstream>
-#include <iostream>
 
 using namespace clang;
 
@@ -46,23 +48,14 @@ namespace cling {
     m_LastTopLevelDecl(0),
     m_UsingStartupPCH(false)
   {
-    //m_CIFactory.reset(new CIFactory(0, 0, llvmdir));
-    m_MemoryBuffer.push_back(llvm::MemoryBuffer::getMemBuffer("", "CLING") );
-    CompilerInstance* CI = CIFactory::createCI(m_MemoryBuffer[0], Pragma,
-                                               argc, argv, llvmdir);
+    CompilerInstance* CI 
+      = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
+                            Pragma, argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
 
-    m_MBFileID = CI->getSourceManager().getMainFileID();
-    //CI->getSourceManager().getBuffer(m_MBFileID, SourceLocation()); // do we need it?
+    CreateSLocOffsetGenerator();
 
-
-    if (CI->getSourceManager().getMainFileID().isInvalid()) {
-      fprintf(stderr, "Interpreter::compileString: Failed to create main "
-              "file id!\n");
-      return;
-    }
-    
     m_Consumer = dyn_cast<ChainedConsumer>(&CI->getASTConsumer());
     assert(m_Consumer && "Expected ChainedConsumer!");
     // Add consumers to the ChainedConsumer, which owns them
@@ -92,7 +85,47 @@ namespace cling {
     CI->getPreprocessor().EnterMainSourceFile();
     m_Parser->Initialize();
   }
-  
+
+  // Each input line is contained in separate memory buffer. The SourceManager
+  // assigns sort-of invalid FileID for each buffer, i.e there is no FileEntry
+  // for the MemoryBuffer's FileID. That in turn is problem because invalid
+  // SourceLocations are given to the diagnostics. Thus the diagnostics cannot
+  // order the overloads, for example
+  //
+  // Our work-around is creating a virtual file, which doesn't exist on the disk
+  // with enormous size (no allocation is done). That file has valid FileEntry 
+  // and so on... We use it for generating valid SourceLocations with valid
+  // offsets so that it doesn't cause any troubles to the diagnostics.
+  //
+  // +---------------------+
+  // | Main memory buffer  |
+  // +---------------------+
+  // |  Virtual file SLoc  |
+  // |    address space    |<-----------------+
+  // |         ...         |<------------+    |
+  // |         ...         |             |    |
+  // |         ...         |<----+       |    |
+  // |         ...         |     |       |    |
+  // +~~~~~~~~~~~~~~~~~~~~~+     |       |    |
+  // |     input_line_1    | ....+.......+..--+
+  // +---------------------+     |       |   
+  // |     input_line_2    | ....+.....--+
+  // +---------------------+     |
+  // |          ...        |     |
+  // +---------------------+     |
+  // |     input_line_N    | ..--+  
+  // +---------------------+
+  //
+  void IncrementalParser::CreateSLocOffsetGenerator() {
+    SourceManager& SM = getCI()->getSourceManager();
+    FileManager& FM = SM.getFileManager();
+    const FileEntry* FE 
+      = FM.getVirtualFile("Interactrive/InputLineIncluder", 1U << 15U, time(0));
+    m_VirtualFileID = SM.createFileID(FE, SourceLocation(), SrcMgr::C_User);
+
+    assert(!m_VirtualFileID.isInvalid() && "No VirtualFileID created?");
+  }
+
   IncrementalParser::~IncrementalParser() {
      GetCodeGenerator()->ReleaseModule();
   }
@@ -244,12 +277,21 @@ namespace cling {
 
     if (input.size()) {
       std::ostringstream source_name;
-      source_name << "input_line_" << (m_MemoryBuffer.size()+1);
+      source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
       m_MemoryBuffer.push_back(llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str()));
-      llvm::MemoryBuffer *currentBuffer = m_MemoryBuffer.back();
-      FileID FID = m_CI->getSourceManager().createFileIDForMemBuffer(currentBuffer);
+      SourceManager& SM = getCI()->getSourceManager();
+
+      // Create SourceLocation, which will allow clang to order the overload
+      // candidates for example
+      SourceLocation NewLoc = SM.getLocForStartOfFile(m_VirtualFileID);
+      NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffer.size() + 1);
       
-      PP.EnterSourceFile(FID, 0, SourceLocation());     
+      // Create FileID for the current buffer
+      FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffer.back(),
+                                               /*LoadedID*/0,
+                                               /*LoadedOffset*/0, NewLoc);
+      
+      PP.EnterSourceFile(FID, 0, NewLoc);
       
       Token &tok = const_cast<Token&>(m_Parser->getCurToken());
       tok.setKind(tok::semi);

@@ -78,6 +78,7 @@ namespace cling {
     bool usingStartupPCH() const { return m_UsingStartupPCH; }
     void writeStartupPCH();
   private:
+    void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
     void loadStartupPCH(const char* filename);
@@ -87,7 +88,7 @@ namespace cling {
     llvm::OwningPtr<clang::Parser> m_Parser; // parser (incremental)
     bool m_DynamicLookupEnabled; // enable/disable dynamic scope
     std::vector<llvm::MemoryBuffer*> m_MemoryBuffer; // One buffer for each command line, owner by the source file manager
-    clang::FileID m_MBFileID; // file ID of the memory buffer
+    clang::FileID m_VirtualFileID; // file ID of the memory buffer
     ChainedConsumer* m_Consumer; // CI owns it
     clang::Decl* m_FirstTopLevelDecl; // first top level decl
     clang::Decl* m_LastTopLevelDecl; // last top level decl after most recent call to parse()
