@@ -137,17 +137,21 @@ const char *TLDAPServer::GetNamingContexts()
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("namingContexts"));
+   const char *namingcontexts = 0;
 
    TLDAPResult *result = Search("", LDAP_SCOPE_BASE, 0, attrs, 0);
 
-   TLDAPEntry *entry = result->GetNext();
+   if (result) {
+      TLDAPEntry *entry = result->GetNext();
 
-   TLDAPAttribute *attribute = entry->GetAttribute();
+      TLDAPAttribute *attribute = entry->GetAttribute();
 
-   const char *namingcontexts = attribute->GetValue();
+      if (attribute)
+         namingcontexts = attribute->GetValue();
 
-   delete entry;
-   delete result;
+      delete entry;
+      delete result;
+   }
    delete attrs;
 
    return namingcontexts;
@@ -163,17 +167,20 @@ const char *TLDAPServer::GetSubschemaSubentry()
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("subschemaSubentry"));
+   const char *subschema = 0;
 
    TLDAPResult *result = Search("", LDAP_SCOPE_BASE, 0, attrs, 0);
 
-   TLDAPEntry *entry = result->GetNext();
+   if (result) {
+      TLDAPEntry *entry = result->GetNext();
 
-   TLDAPAttribute *attribute = entry->GetAttribute();
+      TLDAPAttribute *attribute = entry->GetAttribute();
+      if (attribute)
+         subschema = attribute->GetValue();
 
-   const char *subschema = attribute->GetValue();
-
-   delete entry;
-   delete result;
+      delete entry;
+      delete result;
+   }
    delete attrs;
 
    return subschema;

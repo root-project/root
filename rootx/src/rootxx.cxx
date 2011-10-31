@@ -132,7 +132,9 @@ static Pixmap GetRootLogo()
    // Get logo from xpm file.
 
    Pixmap logo = 0;
-   int depth = PlanesOfScreen(XDefaultScreenOfDisplay(gDisplay));
+   Screen *xscreen = XDefaultScreenOfDisplay(gDisplay);
+   if (!xscreen) return logo;
+   int depth = PlanesOfScreen(xscreen);
 
    XWindowAttributes win_attr;
    XGetWindowAttributes(gDisplay, gLogoWindow, &win_attr);
@@ -364,6 +366,11 @@ void PopupLogo(bool about)
                 &bw, &depth);
 
    Screen *xscreen = XDefaultScreenOfDisplay(gDisplay);
+   if (!xscreen) {
+      XCloseDisplay(gDisplay);
+      gDisplay = 0;
+      return;
+   }
    x = (WidthOfScreen(xscreen) - gWidth) / 2;
    y = (HeightOfScreen(xscreen) - gHeight) / 2;
 
