@@ -14,7 +14,8 @@
 namespace cling {
   class InvocationOptions {
   public:
-    InvocationOptions(): NoLogo(false) {}
+    InvocationOptions():
+      NoLogo(false), ShowVersion(false), Verbose(false), Help(false) {}
     bool NoLogo;
     bool ShowVersion;
     bool Verbose;
