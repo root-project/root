@@ -203,9 +203,9 @@ Getlinem(EGetLineMode mode, const char* prompt) {
       if (prompt) {
          TextInputHolder::get().SetPrompt(prompt);
       }
+      // Trigger attach:
+      TextInputHolder::get().Redraw();
       if (mode == kInit) {
-         // Trigger attach:
-         TextInputHolder::get().Redraw();
          return 0;
       }
       TextInputHolder::get().SetBlockingUntilEOL();
