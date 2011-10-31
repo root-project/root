@@ -1696,6 +1696,7 @@ TGeoGtra::TGeoGtra()
 {
 // Default ctor
    fTwistAngle = 0;
+
 }
 
 //_____________________________________________________________________________
@@ -1705,48 +1706,30 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
          :TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
 // Constructor. 
-   fTheta = theta;
-   fPhi = phi;
-   fH1 = h1;
-   fH2 = h2;
-   fBl1 = bl1;
-   fBl2 = bl2;
-   fTl1 = tl1;
-   fTl2 = tl2;
-   fAlpha1 = alpha1;
-   fAlpha2 = alpha2;
-   Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
-   al1 = alpha1*TMath::DegToRad();
-   al2 = alpha2*TMath::DegToRad();
-   th = theta*TMath::DegToRad();
-   ph = phi*TMath::DegToRad();
-   dx = 2*dz*TMath::Sin(th)*TMath::Cos(ph);
-   dy = 2*dz*TMath::Sin(th)*TMath::Sin(ph);
-   fDz = dz;
-   dx1 = 2*h1*TMath::Tan(al1);
-   dx2 = 2*h2*TMath::Tan(al2);
-
    fTwistAngle = twist;
+   Double_t x,y;
+   Double_t th = theta*TMath::DegToRad();
+   Double_t ph = phi*TMath::DegToRad();
+   // Coordinates of the center of the bottom face
+   Double_t xc = -dz*TMath::Sin(th)*TMath::Cos(ph);
+   Double_t yc = -dz*TMath::Sin(th)*TMath::Sin(ph);
 
    Int_t i;
-   for (i=0; i<8; i++) {
-      fXY[i][0] = 0.0;
-      fXY[i][1] = 0.0;
-   }   
 
-   fXY[0][0] = -bl1;                fXY[0][1] = -h1;
-   fXY[1][0] = -tl1+dx1;            fXY[1][1] = h1;
-   fXY[2][0] = tl1+dx1;             fXY[2][1] = h1;
-   fXY[3][0] = bl1;                 fXY[3][1] = -h1;
-   fXY[4][0] = -bl2+dx;             fXY[4][1] = -h2+dy;
-   fXY[5][0] = -tl2+dx+dx2;         fXY[5][1] = h2+dy;
-   fXY[6][0] = tl2+dx+dx2;          fXY[6][1] = h2+dy;
-   fXY[7][0] = bl2+dx;              fXY[7][1] = -h2+dy;
+   for (i=0; i<4; i++) {
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(-0.5*twist*TMath::DegToRad()) + y*TMath::Sin(-0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(-0.5*twist*TMath::DegToRad()) + y*TMath::Cos(-0.5*twist*TMath::DegToRad()) + yc;      
+   }
+   // Coordinates of the center of the top face
+   xc = -xc;
+   yc = -yc;
    for (i=4; i<8; i++) {
-      x = fXY[i][0];
-      y = fXY[i][1];
-      fXY[i][0] = x*TMath::Cos(twist*TMath::DegToRad()) + y*TMath::Sin(twist*TMath::DegToRad());
-      fXY[i][1] = -x*TMath::Sin(twist*TMath::DegToRad()) + y*TMath::Cos(twist*TMath::DegToRad());      
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(0.5*twist*TMath::DegToRad()) + y*TMath::Sin(0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(0.5*twist*TMath::DegToRad()) + y*TMath::Cos(0.5*twist*TMath::DegToRad()) + yc;
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
@@ -1761,49 +1744,30 @@ TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, 
          :TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
 // Constructor providing the name of the shape. 
-   SetName(name);
-   fTheta = theta;
-   fPhi = phi;
-   fH1 = h1;
-   fH2 = h2;
-   fBl1 = bl1;
-   fBl2 = bl2;
-   fTl1 = tl1;
-   fTl2 = tl2;
-   fAlpha1 = alpha1;
-   fAlpha2 = alpha2;
-   Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
-   al1 = alpha1*TMath::DegToRad();
-   al2 = alpha2*TMath::DegToRad();
-   th = theta*TMath::DegToRad();
-   ph = phi*TMath::DegToRad();
-   dx = 2*dz*TMath::Sin(th)*TMath::Cos(ph);
-   dy = 2*dz*TMath::Sin(th)*TMath::Sin(ph);
-   fDz = dz;
-   dx1 = 2*h1*TMath::Tan(al1);
-   dx2 = 2*h2*TMath::Tan(al2);
-
    fTwistAngle = twist;
+   Double_t x,y;
+   Double_t th = theta*TMath::DegToRad();
+   Double_t ph = phi*TMath::DegToRad();
+   // Coordinates of the center of the bottom face
+   Double_t xc = -dz*TMath::Sin(th)*TMath::Cos(ph);
+   Double_t yc = -dz*TMath::Sin(th)*TMath::Sin(ph);
 
    Int_t i;
-   for (i=0; i<8; i++) {
-      fXY[i][0] = 0.0;
-      fXY[i][1] = 0.0;
-   }   
 
-   fXY[0][0] = -bl1;                fXY[0][1] = -h1;
-   fXY[1][0] = -tl1+dx1;            fXY[1][1] = h1;
-   fXY[2][0] = tl1+dx1;             fXY[2][1] = h1;
-   fXY[3][0] = bl1;                 fXY[3][1] = -h1;
-   fXY[4][0] = -bl2+dx;             fXY[4][1] = -h2+dy;
-   fXY[5][0] = -tl2+dx+dx2;         fXY[5][1] = h2+dy;
-   fXY[6][0] = tl2+dx+dx2;          fXY[6][1] = h2+dy;
-   fXY[7][0] = bl2+dx;              fXY[7][1] = -h2+dy;
+   for (i=0; i<4; i++) {
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(-0.5*twist*TMath::DegToRad()) + y*TMath::Sin(-0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(-0.5*twist*TMath::DegToRad()) + y*TMath::Cos(-0.5*twist*TMath::DegToRad()) + yc;      
+   }
+   // Coordinates of the center of the top face
+   xc = -xc;
+   yc = -yc;
    for (i=4; i<8; i++) {
-      x = fXY[i][0];
-      y = fXY[i][1];
-      fXY[i][0] = x*TMath::Cos(twist*TMath::DegToRad()) + y*TMath::Sin(twist*TMath::DegToRad());
-      fXY[i][1] = -x*TMath::Sin(twist*TMath::DegToRad()) + y*TMath::Cos(twist*TMath::DegToRad());      
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(0.5*twist*TMath::DegToRad()) + y*TMath::Sin(0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(0.5*twist*TMath::DegToRad()) + y*TMath::Cos(0.5*twist*TMath::DegToRad()) + yc;
    }
    ComputeTwist();
    if ((dz<0) || (h1<0) || (bl1<0) || (tl1<0) || 
@@ -1930,46 +1894,32 @@ void TGeoGtra::SetDimensions(Double_t *param)
 // param[9] = tl2
 // param[10] = alpha2
 // param[11] = twist
-   fDz      = param[0];
-   fTheta = param[1];
-   fPhi   = param[2];
-   fH1 = param[3];
-   fH2 = param[7];
-   fBl1 = param[4];
-   fBl2 = param[8];
-   fTl1 = param[5];
-   fTl2 = param[9];
-   fAlpha1 = param[6];
-   fAlpha2 = param[10];
+   TGeoTrap::SetDimensions(param);
    fTwistAngle = param[11];
-   Double_t x, y, dx, dy, dx1, dx2, th, ph, al1, al2;
-   al1 = fAlpha1*TMath::DegToRad();
-   al2 = fAlpha2*TMath::DegToRad();
-   th = fTheta*TMath::DegToRad();
-   ph = fPhi*TMath::DegToRad();
-   dx = 2*fDz*TMath::Sin(th)*TMath::Cos(ph);
-   dy = 2*fDz*TMath::Sin(th)*TMath::Sin(ph);
-   dx1 = 2*fH1*TMath::Tan(al1);
-   dx2 = 2*fH2*TMath::Tan(al2);
-   Int_t i;
-   for (i=0; i<8; i++) {
-      fXY[i][0] = 0.0;
-      fXY[i][1] = 0.0;
-   }   
+   Double_t x,y;
+   Double_t twist = fTwistAngle;
+   Double_t th = fTheta*TMath::DegToRad();
+   Double_t ph = fPhi*TMath::DegToRad();
+   // Coordinates of the center of the bottom face
+   Double_t xc = -fDz*TMath::Sin(th)*TMath::Cos(ph);
+   Double_t yc = -fDz*TMath::Sin(th)*TMath::Sin(ph);
 
-   fXY[0][0] = -fBl1;                fXY[0][1] = -fH1;
-   fXY[1][0] = -fTl1+dx1;            fXY[1][1] = fH1;
-   fXY[2][0] = fTl1+dx1;             fXY[2][1] = fH1;
-   fXY[3][0] = fBl1;                 fXY[3][1] = -fH1;
-   fXY[4][0] = -fBl2+dx;             fXY[4][1] = -fH2+dy;
-   fXY[5][0] = -fTl2+dx+dx2;         fXY[5][1] = fH2+dy;
-   fXY[6][0] = fTl2+dx+dx2;          fXY[6][1] = fH2+dy;
-   fXY[7][0] = fBl2+dx;              fXY[7][1] = -fH2+dy;
+   Int_t i;
+
+   for (i=0; i<4; i++) {
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(-0.5*twist*TMath::DegToRad()) + y*TMath::Sin(-0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(-0.5*twist*TMath::DegToRad()) + y*TMath::Cos(-0.5*twist*TMath::DegToRad()) + yc;      
+   }
+   // Coordinates of the center of the top face
+   xc = -xc;
+   yc = -yc;
    for (i=4; i<8; i++) {
-      x = fXY[i][0];
-      y = fXY[i][1];
-      fXY[i][0] = x*TMath::Cos(fTwistAngle*TMath::DegToRad()) + y*TMath::Sin(fTwistAngle*TMath::DegToRad());
-      fXY[i][1] = -x*TMath::Sin(fTwistAngle*TMath::DegToRad()) + y*TMath::Cos(fTwistAngle*TMath::DegToRad());      
+      x = fXY[i][0] - xc;
+      y = fXY[i][1] - yc;
+      fXY[i][0] = x*TMath::Cos(0.5*twist*TMath::DegToRad()) + y*TMath::Sin(0.5*twist*TMath::DegToRad()) + xc;
+      fXY[i][1] = -x*TMath::Sin(0.5*twist*TMath::DegToRad()) + y*TMath::Cos(0.5*twist*TMath::DegToRad()) + yc;
    }
    ComputeTwist();
    if ((fDz<0) || (fH1<0) || (fBl1<0) || (fTl1<0) || 
