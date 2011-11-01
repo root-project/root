@@ -6421,7 +6421,8 @@ public:
   // ---------------------------------------------------
 
   // Perform toy study with internal constraint on f
-  RooMCStudy mcs(sumc,x,Constrain(f),Silence(),Binned(),FitOptions(PrintLevel(-1))) ;
+  //RooMCStudy mcs(sumc,x,Constrain(f),Silence(),Binned(),FitOptions(PrintLevel(-1))) ;
+  RooMCStudy mcs(sumc,x,Constrain(f),Binned()) ;
 
   // Run 50 toys of 2000 events.  
   // Before each toy is generated, a value for the f is sampled from the constraint pdf and 

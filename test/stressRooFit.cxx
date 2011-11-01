@@ -588,7 +588,9 @@ Bool_t RooFitTestUnit::runTest()
   gRandom->SetSeed(12345) ;
   RooRandom::randomGenerator()->SetSeed(12345) ;
 
+  RooTrace::callgrind_zero() ;
   if (!testCode()) return kFALSE ;
+  RooTrace::callgrind_dump() ;
 
   if (_verb<2) { 
     clearSilentMode() ;
@@ -609,10 +611,14 @@ Bool_t RooFitTestUnit::runTest()
 #include "stressRooFit_tests.cxx"
 
 //______________________________________________________________________________
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump)
+Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doVectorStore)
 {
   // Save memory directory location
   gMemDir = gDirectory ;
+
+  if (doVectorStore) {
+    RooAbsData::defaultStorageType=RooAbsData::Vector ;
+  }
 
   TFile* fref = 0 ;
   if (!dryRun) {
@@ -790,11 +796,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 
 int main(int argc,const char *argv[]) 
 {
-  Bool_t doWrite = kFALSE ;
-  Int_t doVerbose = 0 ;
-  Int_t oneTest   = -1 ;
-  Int_t dryRun    = kFALSE ;
-  Bool_t doDump   = kFALSE ;
+  Bool_t doWrite     = kFALSE ;
+  Int_t doVerbose    = 0 ;
+  Int_t oneTest      = -1 ;
+  Int_t dryRun       = kFALSE ;
+  Bool_t doDump      = kFALSE ;
+  Bool_t doVectorStore = kFALSE ;
 
   string refFileName = "http://root.cern.ch/files/stressRooFit_v530_ref.root" ;
 
@@ -815,6 +822,11 @@ int main(int argc,const char *argv[])
     if (arg=="-mc") {
       cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << endl ;
       dryRun=kTRUE ;
+    }
+
+    if (arg=="-vs") {
+      cout << "stressRooFit: setting vector-based storage for datasets" << endl ;
+      doVectorStore=kTRUE ;
     }
 
     if (arg=="-v") {
@@ -851,6 +863,7 @@ int main(int argc,const char *argv[])
       cout << "       -n N      : Only run test with sequential number N instead of full suite of tests" << endl ;
       cout << "       -c        : dump file stressRooFit_DEBUG.root to which results of both current result and reference for each failed test are written" << endl ;
       cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl ;
+      cout << "       -vs       : Use vector-based storage for all datasets (default is tree-based storage)" << endl ;
       cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl ;
       cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
       cout << " " << endl ;
@@ -879,7 +892,7 @@ int main(int argc,const char *argv[])
   RooMath::cacheCERF(kFALSE) ;
 
   gBenchmark = new TBenchmark();
-  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump);  
+  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doVectorStore);  
   return 0;
 }
 
