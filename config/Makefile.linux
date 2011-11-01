@@ -33,7 +33,7 @@ COMPILER      = gnu
 
 # Linker:
 LD            = g++
-LDFLAGS       = -m32 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined
+LDFLAGS       = -m32 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined -Wl,--as-needed
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
