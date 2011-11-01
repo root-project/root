@@ -38,6 +38,7 @@ using namespace RooStats;
 bool plotHypoTestResult = true; 
 bool useProof = true;
 bool optimize = false;
+bool useVectorStore = false;
 bool generateBinned = false; 
 bool writeResult = false;
 int nworkers = 4;
@@ -46,6 +47,7 @@ int nToyToRebuild = 100;
 double nToysRatio = 2; // ratio Ntoys S+b/ntoysB
 double maxPOI = -1;
 const char * massValue = 0;
+TString  minimizerType;
 
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
@@ -227,6 +229,11 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    else 
       std::cout << "Using data set " << dataName << std::endl;
 
+   if (useVectorStore) { 
+      RooAbsData::defaultStorageType = RooAbsData::Vector;
+      data->convertToVectorStore() ;
+   }
+
    
    // get models from WS
    // get the modelConfig out of the file
@@ -294,12 +301,14 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
 
    // fit the data first (need to use constraint )
    Info( "StandardHypoTestInvDemo"," Doing a first fit to the observed data ");
+   if (minimizerType.IsNull()) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    RooArgSet constrainParams;
    if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
    RooStats::RemoveConstantParameters(&constrainParams);
    TStopwatch tw; 
    tw.Start(); 
-   RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),Minimizer("Minuit2","Migrad"), Strategy(0), PrintLevel(1), Constrain(constrainParams), Save(true) );
+   RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
+                                                    Minimizer(minimizerType,"Migrad"), Strategy(0), PrintLevel(1), Constrain(constrainParams), Save(true) );
    if (fitres->status() != 0) { 
       Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
       fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer("Minuit2","Migrad"), Strategy(1), PrintLevel(1), Constrain(constrainParams), Save(true) );
@@ -333,7 +342,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(1);
-   profll.SetMinimizer("Minuit2");
+   profll.SetMinimizer(minimizerType);
    if (optimize) { 
       profll.SetReuseNLL(true);
       slrts.setReuseNLL(true);
