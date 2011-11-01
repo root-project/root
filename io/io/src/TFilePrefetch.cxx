@@ -36,13 +36,14 @@ TFilePrefetch::TFilePrefetch(TFile* file)
 
    fConsumer = 0;
    fFile = file;
-   fPendingBlocks = new TList();
-   fReadBlocks = new TList();
-   fMutexReadList = new TMutex();
+   fPendingBlocks    = new TList();
+   fReadBlocks       = new TList();
+   fMutexReadList    = new TMutex();
    fMutexPendingList = new TMutex();
-   fNewBlockAdded = new TCondition(0);
-   fReadBlockAdded = new TCondition(0);
-   fSem = new TSemaphore(0);
+   fMutexSynch       = new TMutex();
+   fNewBlockAdded    = new TCondition(0);
+   fReadBlockAdded   = new TCondition(0);
+   fSem              = new TSemaphore(0);
 }
 
 //____________________________________________________________________________________________
@@ -51,7 +52,9 @@ TFilePrefetch::~TFilePrefetch()
    // Destructor.
 
    //killing consumer thread
-   fSem->Post();
+   fMutexSynch->Lock();     //wait fo thread to finish work
+   fMutexSynch->UnLock();
+   fSem->Post();            //send terminate signal
    fNewBlockAdded->Signal();
    fConsumer->Join();
   
@@ -60,6 +63,7 @@ TFilePrefetch::~TFilePrefetch()
    SafeDelete(fReadBlocks);
    SafeDelete(fMutexReadList);
    SafeDelete(fMutexPendingList);
+   SafeDelete(fMutexSynch);
    SafeDelete(fNewBlockAdded);
    SafeDelete(fReadBlockAdded);
    SafeDelete(fSem);
@@ -78,6 +82,10 @@ void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
    }
    else{
      fFile->ReadBuffers(block->GetBuffer(), block->GetPos(), block->GetLen(), block->GetNoElem());
+     if (fFile->GetArchive()){
+        for (Int_t i = 0; i < block->GetNoElem(); i++)
+           block->SetPos(i, block->GetPos(i) - fFile->GetArchiveOffset());
+     }
      inCache =kFALSE;
    }
    delete[] path;
@@ -276,6 +284,16 @@ TThread* TFilePrefetch::GetThread() const
    return fConsumer;
 }
 
+
+//____________________________________________________________________________________________
+void TFilePrefetch::SetFile(TFile *file) 
+{
+   // Change the file
+  
+   fFile = file;
+}
+
+
 //____________________________________________________________________________________________
 Int_t TFilePrefetch::ThreadStart()
 {
@@ -293,12 +311,17 @@ TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
    // Execution loop of the consumer thread.
 
    TFilePrefetch* tmp = (TFilePrefetch*) arg;
+   tmp->fMutexSynch->Lock();
 
    while(tmp->fSem->TryWait() !=0){
       tmp->ReadListOfBlocks();
       if (tmp->fSem->TryWait() == 0) break;
+      tmp->fMutexSynch->UnLock();
       tmp->fNewBlockAdded->Wait();
+      tmp->fMutexSynch->Lock();
    }
+   
+   tmp->fMutexSynch->UnLock();
 
    return (TThread::VoidRtnFunc_t) 1;
 }

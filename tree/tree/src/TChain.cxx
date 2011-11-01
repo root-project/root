@@ -54,6 +54,7 @@
 #include "TEntryList.h"
 #include "TEntryListFromFile.h"
 #include "TFileStager.h"
+#include "TFilePrefetch.h"
 
 const Long64_t theBigNumber = Long64_t(1234567890)<<28;
 
@@ -171,7 +172,7 @@ TChain::~TChain()
 {
    // -- Destructor.
    gROOT->GetListOfCleanups()->Remove(this);
-
+   
    SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
@@ -179,6 +180,13 @@ TChain::~TChain()
    fFiles->Delete();
    delete fFiles;
    fFiles = 0;
+
+   //first delete cache if exists
+   if (fFile && fFile->GetCacheRead()) {
+      delete fFile->GetCacheRead();
+      fFile->SetCacheRead(0);
+   }
+
    delete fFile;
    fFile = 0;
    // Note: We do *not* own the tree.
@@ -1389,7 +1397,14 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
          tpf = (TTreeCache*) fFile->GetCacheRead();
-         if (tpf) tpf->ResetCache();
+         if (tpf) {
+           tpf->ResetCache();
+           if (tpf->IsEnablePrefetching()){
+              //wait for thread to finish current work
+              tpf->GetPrefetchObj()->GetMutexSynch()->Lock();
+              tpf->GetPrefetchObj()->GetMutexSynch()->UnLock();
+           }
+         }
          fFile->SetCacheRead(0);
          if (fCanDeleteRefs) {
             fFile->Close("R");

@@ -172,6 +172,7 @@ TFileCacheRead::~TFileCacheRead()
 {
    // Destructor.
 
+   SafeDelete(fPrefetch);
    delete [] fSeek;
    delete [] fSeekIndex;
    delete [] fSeekSort;
@@ -189,7 +190,6 @@ TFileCacheRead::~TFileCacheRead()
    delete [] fBSeekSortLen;
    delete [] fBSeekPos;
    delete [] fBLen;
-   SafeDelete(fPrefetch);
 }
 
 //_____________________________________________________________________________
@@ -531,6 +531,11 @@ void TFileCacheRead::SetFile(TFile *file)
    }
 
    Prefetch(0,0);
+   
+   if (fPrefetch) {
+      SecondPrefetch(0, 0);
+      fPrefetch->SetFile(file);
+   }
 }
 
 //_____________________________________________________________________________

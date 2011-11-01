@@ -75,6 +75,7 @@ private:
    TThread    *fConsumer;          // consumer thread
    TMutex     *fMutexPendingList;  // mutex for the pending list
    TMutex     *fMutexReadList;     // mutex for the list of read blocks
+   TMutex     *fMutexSynch;        // mutex for synchronisation between working and main thread
    TCondition *fNewBlockAdded;     // condition used to signal the addition of a new pending block
    TCondition *fReadBlockAdded;    // condition usd to signal the addition of a new red block
    TSemaphore *fSem;               // semaphore used to kill the consumer thread
@@ -110,6 +111,9 @@ public:
    Int_t     SumHex(const char*);
    Bool_t    BinarySearchReadList(TFPBlock*, Long64_t, Int_t, Int_t*);
    Long64_t  GetWaitTime();
+
+   void      SetFile(TFile*);
+   TMutex*   GetMutexSynch() const { return fMutexSynch; };
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };

@@ -494,7 +494,6 @@ TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 TFile::~TFile()
 {
    // File destructor.
-
    Close();
 
    SafeDelete(fProcessIDs);
