@@ -618,6 +618,10 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
             fVal[ii]=f1->EvalPar(x)/e;
          } else {
             TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
+            if (!f){
+               Error("AddToDesign","Function %s has no linear parts - maybe missing a ++ in the formula expression",fInputFunction->GetName());
+               return;
+            }
             fVal[ii]=f->EvalPar(x)/e;
          }
       }
