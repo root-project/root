@@ -4417,6 +4417,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    else
       xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd" 
    fi
+   tmpxrdlibdir=""
    for ll in $xrdlibs ; do 
       #
       # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
@@ -4427,6 +4428,7 @@ if test "x$enable_xrootd" = "xyes" ; then
          xrdlibdir=""
          break
       else
+         tmpxrdlibdir="$found_dir"
          if test "x$ll" = "xlibXrdUtils" || test "x$ll" = "xlibXrdOuc"; then
             libxrdoucbjr="$found_lib"
          fi
@@ -4436,6 +4438,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    #
    # Check if bonjour is available for code potentially using it ...
    if test "x$enable_xrootd" = "xyes"; then
+      xrdlibdir=`echo $tmpxrdlibdir | sed -e 's/^-L//'`
       if test "x$enable_bonjour" = "xyes"; then
          check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
          if test  $found_symbol -eq 0 ; then

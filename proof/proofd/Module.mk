@@ -148,12 +148,9 @@ XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
 endif
 
 else
+
 XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdUtils
-ifeq ($(PLATFORM),macosx)
-XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.dylib $(XROOTDDIRL)/libXrdClient.dylib  $(XROOTDDIRL)/libXrdUtils.dylib
-else
-XPROOFDEXELIBS := $(XROOTDDIRL)/libXrdMain.$(SOEXT) $(XROOTDDIRL)/libXrdClient.$(SOEXT)  $(XROOTDDIRL)/libXrdUtils.$(SOEXT)
-endif
+XPROOFDEXELIBS := -L$(XROOTDDIRL) -lXrdMain -lXrdClient -lXrdUtils
 
 endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)
@@ -191,11 +188,11 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) \
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) \
 		   $(SYSLIBS)
 
-$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD) $(RPDCONNO)
+$(XPROOFDEXE):  $(XPDO) $(XRDPROOFXD) $(RPDCONNO)
 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPROOFDEXELIBS) \
 		   $(SYSLIBS) $(XPROOFDEXESYSLIBS)
 
-$(XPDLIB):      $(XPDO) $(XPDH) $(XPROOFDEXELIBS) $(ORDER_) $(MAINLIBS) \
+$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) \
                 $(XRDPROOFXD) $(RPDCONNO)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO) $(RPDCONNO)" \
