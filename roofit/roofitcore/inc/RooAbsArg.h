@@ -518,7 +518,7 @@ public:
   Bool_t _deleteWatch ; //! Delete watch flag 
   static Bool_t flipAClean() ;
 
-  inline static Bool_t inhibitDirty() { return _inhibitDirty ; }
+  static Bool_t inhibitDirty() ;
   
   // Value and Shape dirty state bits
   void setValueDirty(const RooAbsArg* source) const ; 

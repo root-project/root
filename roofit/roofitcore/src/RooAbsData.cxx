@@ -61,7 +61,7 @@ ClassImp(RooAbsData)
 
 static std::map<RooAbsData*,int> _dcc ;
 
-RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Tree ;
+RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 
 
 //_____________________________________________________________________________

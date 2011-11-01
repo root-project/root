@@ -611,13 +611,13 @@ Bool_t RooFitTestUnit::runTest()
 #include "stressRooFit_tests.cxx"
 
 //______________________________________________________________________________
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doVectorStore)
+Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
   // Save memory directory location
   gMemDir = gDirectory ;
 
-  if (doVectorStore) {
-    RooAbsData::defaultStorageType=RooAbsData::Vector ;
+  if (doTreeStore) {
+    RooAbsData::defaultStorageType=RooAbsData::Tree ;
   }
 
   TFile* fref = 0 ;
@@ -801,7 +801,7 @@ int main(int argc,const char *argv[])
   Int_t oneTest      = -1 ;
   Int_t dryRun       = kFALSE ;
   Bool_t doDump      = kFALSE ;
-  Bool_t doVectorStore = kFALSE ;
+  Bool_t doTreeStore = kFALSE ;
 
   string refFileName = "http://root.cern.ch/files/stressRooFit_v530_ref.root" ;
 
@@ -824,9 +824,9 @@ int main(int argc,const char *argv[])
       dryRun=kTRUE ;
     }
 
-    if (arg=="-vs") {
-      cout << "stressRooFit: setting vector-based storage for datasets" << endl ;
-      doVectorStore=kTRUE ;
+    if (arg=="-ts") {
+      cout << "stressRooFit: setting tree-based storage for datasets" << endl ;
+      doTreeStore=kTRUE ;
     }
 
     if (arg=="-v") {
@@ -892,7 +892,7 @@ int main(int argc,const char *argv[])
   RooMath::cacheCERF(kFALSE) ;
 
   gBenchmark = new TBenchmark();
-  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doVectorStore);  
+  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
   return 0;
 }
 

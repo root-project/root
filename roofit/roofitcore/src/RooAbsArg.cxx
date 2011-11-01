@@ -77,6 +77,8 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Bool_t RooAbsArg::_flipAClean(kFALSE) ;
 
+Bool_t RooAbsArg::inhibitDirty() { return _inhibitDirty ; }
+
 //_____________________________________________________________________________
 RooAbsArg::RooAbsArg() :
   TNamed(),
