@@ -41,7 +41,7 @@ void sample_volume(Int_t ivol)
 {
    const Double_t vshape[16] = {40000.0, 36028.3, 39978.70, 48001.3, 28481.2,
       8726.2, 42345.4, 9808.2, 12566.8, 64655.6, 37730.4, 23579.7,
-      25559.5, 18418.3, 49960.2, 47771.1};
+      25559.5, 18418.3, 49960.2, 47707.9};
    gRandom = new TRandom3();
    TGeoVolume *vol = (TGeoVolume*)gGeoManager->GetListOfVolumes()->At(ivol);
    TGeoShape *shape = vol->GetShape();
@@ -77,10 +77,10 @@ void length()
 {
    const Double_t rms[16] = {6.284, 10.79, 9.545, 14.15, 11.45,
       5.871, 7.673, 5.935, 7.61, 5.334, 6.581, 4.954,
-      7.718, 3.238, 19.09, 14.77};
+      7.718, 3.238, 19.09, 14.85};
    const Double_t mean[16] = {19.34, 22.53, 18.87, 21.95, 23.29,
       16.73, 15.09, 9.516, 12.68, 8.852, 9.518, 7.432,
-      8.881, 6.489, 28.29, 26.05}; 
+      8.881, 6.489, 28.29, 22.74}; 
    TObjArray *vlist = gGeoManager->GetListOfVolumes();
    TGeoVolume *volume;
    Int_t nvolumes = vlist->GetEntriesFast();
