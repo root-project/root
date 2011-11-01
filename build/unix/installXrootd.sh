@@ -10,6 +10,7 @@
 #                           [-b <where-to-build>|--builddir=<where-to-build>]
 #                           [--xrdopts="<opts-to-xrootd>"]
 #                           [--vers-subdir[=<version-root>]]
+#                           [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]
 #
 # See printhelp for a description of the options.
 #
@@ -26,6 +27,7 @@ printhelp()
         echo "                      [-t <tarball>|--tarball=<tarball>]"
         echo "                      [-b <where-to-build>|--builddir=<where-to-build>]"
         echo "                      [--xrdopts=\"<opts-to-xrootd>\"]"
+        echo "                      [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]"
         echo " "
         echo "  where"
         echo "   <installdir>: the directory where the bin, lib, include/xrootd, share and"
@@ -49,6 +51,9 @@ printhelp()
         echo "                 <installdir> directly; helps separating different versions"
         echo "                 under the same <root-installdir>; if <version-root> is not"
         echo "                 specified, 'xrootd-' is used."
+        echo "   -j <jobs>, --jobs=<jobs>"
+        echo "                 number of build jobs to run simultaneously when bulding;"
+        echo "                 default is <number-of-cores> + 1 ."
         echo " "
         echo "  When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve"
         echo "  the tarball"
@@ -61,6 +66,7 @@ TARBALL=""
 BUILDDIR=""
 XRDOPTS=""
 VSUBDIR=""
+MAKEMJ=""
 
 #
 # Parse long options first
@@ -100,6 +106,7 @@ for i in $@ ; do
          builddir=*) BUILDDIR="$oarg" ;;
          debug)      DBGOPT="-DCMAKE_BUILD_TYPE=Debug" ;;
          help)       printhelp ; exit ;;
+         jobs)       MAKEMJ="-j$OPTARG" ;;
          optimized)  DBGOPT="-DCMAKE_BUILD_TYPE=Release" ;;
          tarball=*)  TARBALL="$oarg" ;;
          version=*)  VERS="$oarg" ;;
@@ -111,11 +118,12 @@ for i in $@ ; do
 done
 
 if test ! "x$short_opts" = "x" ; then
-   while getopts b:t:v:dho i $short_opts ; do
+   while getopts b:j:t:v:dho i $short_opts ; do
       case $i in
       b) BUILDDIR="$OPTARG" ;;
       d) DBGOPT="-DCMAKE_BUILD_TYPE=Debug" ;;
       h) printhelp ; exit ;;
+      j) MAKEMJ="-j$OPTARG" ;;
       o) DBGOPT="-DCMAKE_BUILD_TYPE=Release" ;;
       t) TARBALL="$OPTARG" ;;
       v) VERS="$OPTARG" ;;
@@ -150,6 +158,8 @@ if test "x$TGTDIR" =  "x" ; then
    echo " Install dir undefined!"
    printhelp
    exit
+elif test "x$TGTDIR" =  "x." ; then
+   TGTDIR=`pwd`
 fi
 
 if test "x$VERS" =  "x" ; then
@@ -286,10 +296,18 @@ if test -f CMakeLists.txt ; then
    # Configure
    $XCMK -DCMAKE_INSTALL_PREFIX=$TGTDIR $DBGOPT $XRDOPTS ..
 
+   # Get the '-j' setting if not specified
+   if test "x$MAKEMJ" = "x" ; then
+      MJ=`grep -c bogomips /proc/cpuinfo 2> /dev/null`
+      [ "$?" != 0 ] && MJ=`sysctl hw.ncpu | cut -b10 2> /dev/null`
+      let MJ++
+      MAKEMJ="-j$MJ"
+   fi
+
    # Build
-   $XMK
+   $XMK $MAKEMJ
    if [ "$?" != "0" ] ; then
-      echo "Problems running $XMK ..."
+      echo "Problems running $XMK  $MAKEMJ ..."
       cd $WRKDIR
       exit "$?"
    fi
