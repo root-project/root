@@ -29,7 +29,7 @@
 #include "Xrd/XrdScheduler.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
-#include "XrdSys/XrdSysLogger.hh"
+#include "XpdSysLogger.h"
 
 // Tracing
 #include "XrdProofdTrace.h"
