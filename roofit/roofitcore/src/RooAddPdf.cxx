@@ -660,9 +660,9 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
     
     // coef[i] = expectedEvents[i] / SUM(expectedEvents)
     Double_t coefSum(0) ;
-    RMLLI it=_pdfList.minimalIterator() ; i=0 ;
+    RooFIter it=_pdfList.fwdIterator() ; i=0 ;
     RooAbsPdf* pdf ;
-    while((pdf=(RooAbsPdf*)it.NextNV())) {      
+    while((pdf=(RooAbsPdf*)it.next())) {      
       _coefCache[i] = pdf->expectedEvents(_refCoefNorm.getSize()>0?&_refCoefNorm:nset) ;
       coefSum += _coefCache[i] ;
       i++ ;
@@ -682,9 +682,9 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       
       // coef[i] = coef[i] / SUM(coef)
       Double_t coefSum(0) ;
-      RMLLI it=_coefList.minimalIterator() ; i=0 ;      
+      RooFIter it=_coefList.fwdIterator() ; i=0 ;      
       RooAbsReal* coef ;
-      while((coef=(RooAbsReal*)it.NextNV())) {
+      while((coef=(RooAbsReal*)it.next())) {
 	_coefCache[i] = coef->getVal(nset) ;
 	coefSum += _coefCache[i] ;
 	i++ ;
@@ -701,10 +701,11 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
       
       // coef[i] = coef[i] ; coef[n] = 1-SUM(coef[0...n-1])
       Double_t lastCoef(1) ;
-      RMLLI it=_coefList.minimalIterator() ; i=0 ;      
+      RooFIter it=_coefList.fwdIterator() ; i=0 ;      
       RooAbsReal* coef ;
-      while((coef=(RooAbsReal*)it.NextNV())) {
+      while((coef=(RooAbsReal*)it.next())) {
 	_coefCache[i] = coef->getVal(nset) ;
+//  	cout << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
  	cxcoutD(Caching) << "SYNC: orig coef[" << i << "] = " << _coefCache[i] << endl ;
 	lastCoef -= _coefCache[i] ;
 	i++ ;
@@ -755,13 +756,12 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
 
     Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;  
     
-    cxcoutD(Caching) << "ALEX:    RooAddPdf::updateCoef(" << GetName() << ") with nset = " << (nset?*nset:RooArgSet()) << "for pdf component #" << i << " = " << _pdfList.at(i)->GetName() << endl
-	 << "ALEX:   pp = " << pp->GetName() << " = " << pp->getVal() << endl 
-	 << "ALEX:   sn = " << sn->GetName() << " = " << sn->getVal() <<  endl 
-	 << "ALEX:   r1 = " << r1->GetName() << " = " << r1->getVal() <<  endl 
-	 << "ALEX:   r2 = " << r2->GetName() << " = " << r2->getVal() <<  endl 
-	 << "ALEX: proj = (" << pp->getVal() << "/" << sn->getVal() << ")*(" << r2->getVal() << "/" << r1->getVal() << ") = " << proj << endl ;
-    
+//     cxcoutD(Caching) << "ALEX:    RooAddPdf::updateCoef(" << GetName() << ") with nset = " << (nset?*nset:RooArgSet()) << "for pdf component #" << i << " = " << _pdfList.at(i)->GetName() << endl
+// 	 << "ALEX:   pp = " << pp->GetName() << " = " << pp->getVal() << endl 
+// 	 << "ALEX:   sn = " << sn->GetName() << " = " << sn->getVal() <<  endl 
+// 	 << "ALEX:   r1 = " << r1->GetName() << " = " << r1->getVal() <<  endl 
+// 	 << "ALEX:   r2 = " << r2->GetName() << " = " << r2->getVal() <<  endl 
+// 	 << "ALEX: proj = (" << pp->getVal() << "/" << sn->getVal() << ")*(" << r2->getVal() << "/" << r1->getVal() << ") = " << proj << endl ;
     
     RooAbsPdf::globalSelectComp(_tmp) ;
 
@@ -771,8 +771,8 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
 
   for (i=0 ; i<_pdfList.getSize() ; i++) {
     _coefCache[i] /= coefSum ;
-//    _coefCache[i] *= rfrac ;
-//       cout << "POST-SYNC coef[" << i << "] = " << _coefCache[i] << endl ;
+    //    _coefCache[i] *= rfrac ;
+//     cout << "POST-SYNC coef[" << i << "] = " << _coefCache[i] << endl ;
      cxcoutD(Caching) << " ALEX:   POST-SYNC coef[" << i << "] = " << _coefCache[i]  
  	 << " ( _coefCache[i]/coefSum = " << _coefCache[i]*coefSum << "/" << coefSum << " ) "<< endl ;
   }
@@ -809,15 +809,15 @@ Double_t RooAddPdf::evaluate() const
   Double_t snormVal ;
   Double_t value(0) ;
   Int_t i(0) ;
-  RMLLI pi = _pdfList.minimalIterator() ;
-  while((pdf = (RooAbsPdf*)pi.NextNV())) {
+  RooFIter pi = _pdfList.fwdIterator() ;
+  while((pdf = (RooAbsPdf*)pi.next())) {
     if (_coefCache[i]!=0.) {
       snormVal = (cache->_needSupNorm) ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
       // Double_t pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
-	// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
+//  	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
       }
     }
     i++ ;

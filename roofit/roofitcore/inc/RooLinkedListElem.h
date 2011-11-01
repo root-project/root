@@ -54,7 +54,7 @@ protected:
   friend class RooHashTable ;
   friend class RooLinkedList ;
   friend class RooLinkedListIter ;
-  friend class RooMinimalLinkedListIter ;
+  friend class RooFIter ;
   RooLinkedListElem* _prev ; // Link to previous element in list
   RooLinkedListElem* _next ; // Link to next element in list
   TObject*   _arg ;          // Link to contents

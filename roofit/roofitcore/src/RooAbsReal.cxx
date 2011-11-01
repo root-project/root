@@ -218,21 +218,19 @@ Double_t RooAbsReal::getVal(const RooArgSet* nset) const
   // the cache
 
   // fast-track clean-cache processing
-  if (_operMode==AClean && !_flipAClean) return _value ;
+  if (_operMode==AClean && !_flipAClean) {
+    return _value ;
+  }
 
   if (nset && nset!=_lastNSet) {
     ((RooAbsReal*) this)->setProxyNormSet(nset) ;    
     _lastNSet = (RooArgSet*) nset ;
   }
 
-  if (isValueDirty() || isShapeDirty()) {
-
+  if (isValueDirtyAndClear()) {
     _value = traceEval(nset) ;
-
-    clearValueDirty() ; 
-    clearShapeDirty() ; 
+    //     clearValueDirty() ; 
   } 
-
 
   return _value ;
 }
@@ -2836,7 +2834,7 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 
 //_____________________________________________________________________________
-void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
+void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty) 
 {
   // Copy the cached value of another RooAbsArg to our cache.
   // Warning: This function copies the cached values of source,
@@ -2859,7 +2857,9 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
       _value = other->_uintValue ;
     } 
   }
-  setValueDirty() ;
+  if (setValDirty) {
+    setValueDirty() ;
+  }
 }
 
 

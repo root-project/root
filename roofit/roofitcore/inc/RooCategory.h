@@ -36,10 +36,15 @@ public:
     return _value.getVal() ; 
     // Return index value
   }
+  
   virtual const char* getLabel() const { 
-    return _value.GetName() ; 
-    // Return state name
+    const char* ret = _value.GetName() ;
+    if (ret==0) {
+      _value.SetName(lookupType(_value.getVal())->GetName()) ;    
+    }
+    return _value.GetName() ;
   }
+
   virtual Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) ;
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
   
@@ -76,7 +81,7 @@ public:
   }
  
 protected:
-
+  
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   static RooCategorySharedProperties _nullProp ; // Null property
   RooCategorySharedProperties* _sharedProp ; //! Shared properties associated with this instance

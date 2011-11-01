@@ -82,9 +82,10 @@ Double_t RooBernstein::evaluate() const
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
 
   Double_t temp=0, tempx=0;
+  RooFIter iter = _coefList.fwdIterator() ;
   for (int i=0; i<=degree; ++i){
     tempx = (_x-xmin)/(xmax-xmin); // rescale to [0,1]
-    temp += ((RooAbsReal&) _coefList[i]).getVal() *
+    temp += ((RooAbsReal*)iter.next())->getVal() *
       TMath::Binomial(degree, i) * pow(tempx,i) * pow(1-tempx,degree-i);
   }
   return temp;
@@ -113,6 +114,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
 
+  RooFIter iter = _coefList.fwdIterator() ;
   Double_t temp=0;
   for (int i=0; i<=degree; ++i){
     // for each of the i Bernstein basis polynomials
@@ -122,7 +124,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     for (int j=i; j<=degree; ++j){ // power basis≈ß
       temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) / (j+1);
     }
-    temp *= ((RooAbsReal&) _coefList[i]).getVal(); // include coeff
+    temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
   }
 

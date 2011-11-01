@@ -211,15 +211,15 @@ Double_t RooRealSumPdf::evaluate() const
   Double_t value(0) ;
 
   // Do running sum of coef/func pairs, calculate lastCoef.
-  RMLLI funcIter = _funcList.minimalIterator() ;
-  RMLLI coefIter = _coefList.minimalIterator() ;
+  RooFIter funcIter = _funcList.fwdIterator() ;
+  RooFIter coefIter = _coefList.fwdIterator() ;
   RooAbsReal* coef ;
   RooAbsReal* func ;
       
   // N funcs, N-1 coefficients 
   Double_t lastCoef(1) ;
-  while((coef=(RooAbsReal*)coefIter.NextNV())) {
-    func = (RooAbsReal*)funcIter.NextNV() ;
+  while((coef=(RooAbsReal*)coefIter.next())) {
+    func = (RooAbsReal*)funcIter.next() ;
     Double_t coefVal = coef->getVal() ;
     if (coefVal) {
       cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->getVal() << endl ;
@@ -232,7 +232,7 @@ Double_t RooRealSumPdf::evaluate() const
   
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
-    func = (RooAbsReal*) funcIter.NextNV() ;
+    func = (RooAbsReal*) funcIter.next() ;
     if (func->isSelectedComp()) {
       value += func->getVal()*lastCoef ;
     }
@@ -367,17 +367,17 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
      assert(cache!=0);
   }
 
-  RMLLI funcIntIter = cache->_funcIntList.minimalIterator() ;
-  RMLLI coefIter = _coefList.minimalIterator() ;
-  RMLLI funcIter = _funcList.minimalIterator() ;
+  RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
+  RooFIter coefIter = _coefList.fwdIterator() ;
+  RooFIter funcIter = _funcList.fwdIterator() ;
   RooAbsReal *coef(0), *funcInt(0), *func(0) ;
   Double_t value(0) ;
 
   // N funcs, N-1 coefficients 
   Double_t lastCoef(1) ;
-  while((coef=(RooAbsReal*)coefIter.NextNV())) {
-    funcInt = (RooAbsReal*)funcIntIter.NextNV() ;
-    func    = (RooAbsReal*)funcIter.NextNV() ;
+  while((coef=(RooAbsReal*)coefIter.next())) {
+    funcInt = (RooAbsReal*)funcIntIter.next() ;
+    func    = (RooAbsReal*)funcIter.next() ;
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
@@ -391,7 +391,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
-    funcInt = (RooAbsReal*) funcIntIter.NextNV() ;
+    funcInt = (RooAbsReal*) funcIntIter.next() ;
     if (func->isSelectedComp()) {
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
@@ -411,10 +411,10 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
     // N funcs, N-1 coefficients 
     RooAbsReal* funcNorm ;
-    RMLLI funcNormIter = cache->_funcNormList.minimalIterator() ;
-    RMLLI coefIter2 = _coefList.minimalIterator() ;
-    while((coef=(RooAbsReal*)coefIter2.NextNV())) {
-      funcNorm = (RooAbsReal*)funcNormIter.NextNV() ;
+    RooFIter funcNormIter = cache->_funcNormList.fwdIterator() ;
+    RooFIter coefIter2 = _coefList.fwdIterator() ;
+    while((coef=(RooAbsReal*)coefIter2.next())) {
+      funcNorm = (RooAbsReal*)funcNormIter.next() ;
       Double_t coefVal = coef->getVal(normSet2) ;
       if (coefVal) {
 	assert(funcNorm);
@@ -424,7 +424,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     
     // Add last func with correct coefficient
     if (!_haveLastCoef) {
-      funcNorm = (RooAbsReal*) funcNormIter.NextNV() ;
+      funcNorm = (RooAbsReal*) funcNormIter.next() ;
       assert(funcNorm);
       normVal += funcNorm->getVal()*lastCoef ;
     }      

@@ -122,6 +122,11 @@ const char* RooAbsCategory::getLabel() const
     clearShapeDirty() ;
   }
 
+  const char* ret = _value.GetName() ;
+  // If label is not set, do it now on the fly
+  if (ret==0) {
+    _value.SetName(lookupType(_value.getVal())->GetName()) ;    
+  }
   return _value.GetName() ;
 }
 
@@ -579,7 +584,7 @@ void RooAbsCategory::syncCache(const RooArgSet*)
 
 
 //_____________________________________________________________________________
-void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
+void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty) 
 {
   // Copy the cached value from given source and raise dirty flag.
   // It is the callers responsability to ensure that the sources
@@ -617,7 +622,9 @@ void RooAbsCategory::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
     } 
   }
 
-  setValueDirty() ;
+  if (setValDirty) {
+    setValueDirty() ;
+  }
 }
 
 

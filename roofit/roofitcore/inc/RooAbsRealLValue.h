@@ -142,7 +142,7 @@ protected:
     return setVal(value) ; 
   }
   Bool_t fitRangeOKForPlotting() const ;
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
 
   ClassDef(RooAbsRealLValue,1) // Abstract modifiable real-valued object
 };

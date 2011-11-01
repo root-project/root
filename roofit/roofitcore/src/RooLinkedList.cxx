@@ -458,9 +458,9 @@ RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const
 
 
 //_____________________________________________________________________________
-RooMinimalLinkedListIter RooLinkedList::minimalIterator() const 
+RooFIter RooLinkedList::fwdIterator() const 
 { 
-  return RooMinimalLinkedListIter(this) ; 
+  return RooFIter(this) ; 
 }
 
 

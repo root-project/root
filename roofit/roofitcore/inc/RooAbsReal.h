@@ -359,7 +359,7 @@ protected:
   friend class RooRealIntegral ;
   friend class RooVectorDataStore ;
   virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void attachToVStore(RooVectorDataStore& vstore) ;
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;

@@ -40,6 +40,7 @@
 #include "RooRealVar.h"
 
 #include "RooGaussKronrodIntegrator1D.h"
+#include "RooAbsDataStore.h"
 #include "RooRealBinding.h"
 #include "RooNumIntFactory.h"
 
@@ -200,13 +201,16 @@ void RooXYChi2Var::initialize()
 {
   // Common constructor initialization
 
-  TIterator* iter = _dataClone->get()->createIterator() ;
+  TIterator* iter = _funcObsSet->createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     RooRealVar* var = dynamic_cast<RooRealVar*>(arg) ;
     if (var) {
       _rrvArgs.add(*var) ;
     }
+  }
+  if (_yvar) {
+    _rrvArgs.add(*_yvar) ;
   }
   delete iter ;
   _rrvIter = _rrvArgs.createIterator() ;
@@ -263,6 +267,7 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
 
   RooRealVar* var ;
   Double_t ret(0) ;
+
   _rrvIter->Reset() ;
   while((var=(RooRealVar*)_rrvIter->Next())) {
 
@@ -284,6 +289,8 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
       
       // Calculate slope
       Double_t slope = (fxmax-fxmin)/(2*xerr/100.) ;
+      
+//       cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << endl ;
       
       // Asymmetric X error, decide which one to use
       if ((ydata>cxval && fxmax>fxmin) || (ydata<=cxval && fxmax<=fxmin)) {
@@ -310,6 +317,11 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
       
       // Calculate slope
       Double_t slope = (fxmax-fxmin)/(2*xerr/100.) ;
+
+//       cout << var << " " ;
+//       var->Print() ;
+
+//       cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << endl ;
             
       // Symmetric X error
       ret += pow(xerr*slope,2) ;
@@ -381,6 +393,10 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
       continue ;
     }
 
+//     cout << "xydata = " << endl ;
+//     xydata->get()->Print("v") ;
+    //xydata->store()->dump() ;
+
     // Get function value
     Double_t yfunc = fy() ;
 
@@ -404,6 +420,8 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
 
     // Add contributions due to error in x coordinates    
     Double_t eIntX2 = _integrate ? 0 : xErrorContribution(ydata) ;
+
+//     cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << endl ;
 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {

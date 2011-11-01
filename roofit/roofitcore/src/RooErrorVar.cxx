@@ -310,3 +310,6 @@ void RooErrorVar::syncCache(const RooArgSet*)
 
   _value = evaluate() ; 
 }
+
+
+

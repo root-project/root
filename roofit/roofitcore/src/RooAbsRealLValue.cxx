@@ -96,22 +96,26 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   Double_t clippedValue(value);
   Bool_t isInRange(kTRUE) ;
 
+  const RooAbsBinning& binning = getBinning(rangeName) ;
+  Double_t min = binning.lowBound() ;
+  Double_t max = binning.highBound() ;
+
   // test this value against our upper fit limit
-  if(hasMax() && value > (getMax(rangeName)+1e-6)) {
+  if(!RooNumber::isInfinite(max) && value > (max+1e-6)) {
     if (clippedValPtr) {
 //       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
 // 			    << " rounded down to max limit " << getMax(rangeName) << endl ;
     }
-    clippedValue = getMax(rangeName);
+    clippedValue = max;
     isInRange = kFALSE ;
   }
   // test this value against our lower fit limit
-  if(hasMin() && value < getMin(rangeName)-1e-6) {
+  if(!RooNumber::isInfinite(min) && value < min-1e-6) {
     if (clippedValPtr) {
 //       coutW(InputArguments) << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
 // 			    << " rounded up to min limit " << getMin(rangeName) << endl;
     }
-    clippedValue = getMin(rangeName);
+    clippedValue = min ;
     isInRange = kFALSE ;
   } 
 
@@ -369,11 +373,11 @@ RooPlot *RooAbsRealLValue::frame() const
 
 
 //_____________________________________________________________________________
-void RooAbsRealLValue::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
+void RooAbsRealLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty) 
 {
   // Copy cache of another RooAbsArg to our cache
 
-  RooAbsReal::copyCache(source) ;
+  RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
   setVal(_value) ; // force back-propagation
 }
 
@@ -409,10 +413,13 @@ void RooAbsRealLValue::randomize(const char* rangeName)
 {
   // Set a new value sampled from a uniform distribution over the fit range.
   // Prints a warning and does nothing if the fit range is not finite.
-  
-  if(hasMin(rangeName) && hasMax(rangeName)) {
-    Double_t range= getMax(rangeName)-getMin(rangeName);
-    setVal(getMin(rangeName) + RooRandom::uniform()*range);
+ 
+  RooAbsBinning& binning = getBinning(rangeName) ;
+  Double_t min = binning.lowBound() ;
+  Double_t max = binning.highBound() ;    
+ 
+  if(!RooNumber::isInfinite(min) && !RooNumber::isInfinite(max)) {
+    setValFast(min + RooRandom::uniform()*(max-min));
   }
   else {
     coutE(Generation) << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;

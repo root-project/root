@@ -205,7 +205,7 @@ void RooAbsString::syncCache(const RooArgSet*)
 
 
 //_____________________________________________________________________________
-void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
+void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty) 
 {
   // Copy cache of another RooAbsArg to our cache
   //
@@ -216,7 +216,9 @@ void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/)
   assert(other!=0) ;
 
   strlcpy(_value,other->_value,_len) ;
-  setValueDirty() ;
+  if (setValDirty) {
+    setValueDirty() ;
+  }
 }
 
 

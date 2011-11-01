@@ -95,7 +95,13 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
   RooAbsCategoryLValue* cat ;
   while((cat=(RooAbsCategoryLValue*)cIter->Next())) {
     _catPtrList[_curIter] = cat ;
-    _iterList[_curIter++] = cat->typeIterator() ;
+    _iterList[_curIter] = cat->typeIterator() ;
+    _iterList[_curIter]->Next() ;
+//     _curTypeList[_curIter] = *first ;
+//     _curTypeList[_curIter].SetName(first->GetName()) ;
+//     cout << "init: _curTypeList[" << _curIter << "] set to " << first->GetName() << endl ;
+//     _iterList[_curIter]->Reset() ;    
+    _curIter++ ;
   }
   delete cIter ;
 
@@ -169,8 +175,8 @@ TObject* RooMultiCatIter::Next()
 
     // Increment current iterator
     _curTypeList[_curIter] = *next ;
-    //_catPtrList[_curIter]->setIndex(next->getVal()) ;
-
+    _curTypeList[_curIter].SetName(next->GetName()) ;
+    
     // If higher order increment was successful, reset master iterator
     if (_curIter>0) _curIter=0 ;
 
@@ -181,7 +187,10 @@ TObject* RooMultiCatIter::Next()
     // Reset current iterator
     _iterList[_curIter]->Reset() ;
     next = (RooCatType*) _iterList[_curIter]->Next() ;
-    if (next) _curTypeList[_curIter] = *next ; 
+    if (next) {
+      _curTypeList[_curIter] = *next ; 
+      _curTypeList[_curIter].SetName(next->GetName()) ;
+    }
     //if (next) _catPtrList[_curIter]->setIndex(next->getVal()) ;
 
     // Increment next iterator 
@@ -205,6 +214,7 @@ void RooMultiCatIter::Reset()
     if (first) {
       if (_curIter==0) cIter->Reset() ;
       _curTypeList[_curIter] = *first ;
+      _curTypeList[_curIter].SetName(first->GetName()) ;
     }
   }
   _curIter=0 ;

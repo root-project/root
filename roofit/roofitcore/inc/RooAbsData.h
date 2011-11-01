@@ -57,6 +57,9 @@ public:
   const TTree* tree() const ;
    
   void convertToVectorStore() ;
+
+  void attachBuffers(const RooArgSet& extObs) ;
+  void resetBuffers() ;
  
   
   virtual void Draw(Option_t* option = "") ;

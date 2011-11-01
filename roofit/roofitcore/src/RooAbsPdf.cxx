@@ -244,20 +244,21 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     return _value ;
   }
 
+  // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!nset) {
     RooArgSet* tmp = _normSet ;
     _normSet = 0 ;
     Double_t val = evaluate() ;
     _normSet = tmp ;
     Bool_t error = traceEvalPdf(val) ;
-    cxcoutD(Tracing) << IsA()->GetName() << "::getVal(" << GetName() 
-		     << "): value = " << val << " (unnormalized)" << endl ;
+
     if (error) {
       raiseEvalError() ;
       return 0 ;
     }
     return val ;
   }
+
 
   // Process change in last data set used
   Bool_t nsetChanged(kFALSE) ;
@@ -275,30 +276,21 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     // Evaluate denominator
     Double_t normVal(_norm->getVal()) ;
     
-    Double_t normError(kFALSE) ;
     if (normVal<=0.) {
-      normError=kTRUE ;
+      error=kTRUE ;
       logEvalError("p.d.f normalization integral is zero or negative") ;  
     }
 
     // Raise global error flag if problems occur
-    if (normError||error) raiseEvalError() ;
+    if (error) {
+      raiseEvalError() ;
+      _value = 0 ;
+    } else {
+      _value = rawVal / normVal ;
+    }
 
-    _value = normError ? 0 : (rawVal / normVal) ;
-
-    cxcoutD(Tracing) << "RooAbsPdf::getVal(" << GetName() << ") new value with norm " << _norm->GetName() << " = " << rawVal << "/" << normVal << " = " << _value << endl ;
-
-    clearValueDirty() ; //setValueDirty(kFALSE) ;
-    clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
+    clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;
   } 
-
-  if (_traceCount>0) {
-    cxcoutD(Tracing) << "[" << _traceCount << "] " ;
-    Int_t tmp = _traceCount ;
-    _traceCount = 0 ;
-    printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
-    _traceCount = tmp-1  ;
-  }
 
   return _value ;
 }
@@ -335,14 +327,16 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
   // maximum.
 
   // check for a math error or negative value
-  Bool_t error= isnan(value) || (value < 0);
+  Bool_t error(kFALSE) ;
   if (isnan(value)) {
     logEvalError(Form("p.d.f value is Not-a-Number (%f), forcing value to zero",value)) ;
+    error=kTRUE ;
   }
   if (value<0) {
     logEvalError(Form("p.d.f value is less than zero (%f), forcing value to zero",value)) ;
+    error=kTRUE ;
   }
-
+  
   // do nothing if we are no longer tracing evaluations and there was no error
   if(!error) return error ;
 
@@ -667,6 +661,8 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
     cxcoutD(Tracing) << fName << "::extendedTerm: expected " << expected << " events, got "
 		     << observed << " events. extendedTerm = " << extra << endl;
   }
+
+//   cout << "RooAbsPdf::extendedTerm(" << GetName() << ") nExp = " << expected << " nObs = " << observed << endl ;
   return extra;
 }
 
@@ -1706,10 +1702,11 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
   Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
-
-
-  return generate(*spec._genContext,spec._whatVars,spec._protoData,
-		  nEvt,kFALSE,spec._randProto,spec._resampleProto) ;
+  
+  
+  RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,kFALSE,spec._randProto,spec._resampleProto,spec._init) ;
+  spec._init = kTRUE ;
+  return ret ;
 }
 
 
@@ -1748,7 +1745,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 
 //_____________________________________________________________________________
 RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
-				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto) const 
+				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit) const 
 {
   // Internal method  
   if (nEvents==0 && (prototype==0 || prototype->numEntries()==0)) {
@@ -1771,7 +1768,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
   }
 
   if(context.isValid()) {
-    generated= context.generate(nEvents);
+    generated= context.generate(nEvents,skipInit);
   }
   else {
     coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << endl;
@@ -3083,9 +3080,9 @@ RooAbsPdf::GenSpec::~GenSpec()
 
 //_____________________________________________________________________________
 RooAbsPdf::GenSpec::GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, 
-			    Bool_t extended, Bool_t randProto, Bool_t resampleProto, TString dsetName) :
+			    Bool_t extended, Bool_t randProto, Bool_t resampleProto, TString dsetName, Bool_t init) :
   _genContext(context), _whatVars(whatVars), _protoData(protoData), _nGen(nGen), _extended(extended), 
-  _randProto(randProto), _resampleProto(resampleProto), _dsetName(dsetName) 
+  _randProto(randProto), _resampleProto(resampleProto), _dsetName(dsetName), _init(init)
 {
 }
 

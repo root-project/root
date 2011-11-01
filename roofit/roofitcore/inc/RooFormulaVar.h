@@ -55,8 +55,6 @@ public:
   // Debugging
   void dumpFormula() { formula().dump() ; }
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
-
   virtual Double_t defaultErrorLevel() const ;
 
 protected:

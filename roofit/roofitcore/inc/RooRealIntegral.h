@@ -41,6 +41,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
   virtual ~RooRealIntegral();
 
+  virtual Double_t getVal(const RooArgSet* set=0) const ;
+
   Bool_t isValid() const { return _valid; }
 
   void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;

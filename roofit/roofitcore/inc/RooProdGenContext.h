@@ -60,8 +60,7 @@ protected:
   Bool_t _ccdRefresh ;
   Double_t * _ccdTable ;
   const RooProdPdf *_pdf ;       //  Original PDF
-  TList _gcList ;                //  List of component generator contexts
-  TIterator* _gcIter ;           //! Iterator over gcList
+  std::list<RooAbsGenContext*>  _gcList ; //  List of component generator contexts
   RooArgSet _ownedMultiProds ;   //  Owned auxilary multi-term product PDFs
 
   ClassDef(RooProdGenContext,0) // Context for efficient generation of a a dataset from a RooProdPdf

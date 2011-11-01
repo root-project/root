@@ -132,14 +132,14 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName)
 
 
 //_____________________________________________________________________________
-void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/) 
+void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty) 
 {
   // Copy the cached value from given source and raise dirty flag.
   // It is the callers responsability to ensure that the sources
   // cache is clean(valid) before this function is called, e.g. by
   // calling syncCache() on the source.
 
-  RooAbsCategory::copyCache(source) ;
+  RooAbsCategory::copyCache(source,valueOnly,setValDirty) ;
   if (isValid(_value)) {
     setIndex(_value.getVal()) ; // force back-propagation
   }
@@ -203,8 +203,8 @@ Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const
   // Get index of plot bin for current value this category.
 
   //Synchronize _value
-  getIndex() ; 
-
+  getLabel() ; 
+  
   // Lookup ordinal index number 
   return _types.IndexOf(_types.FindObject(_value.GetName())) ;
 }

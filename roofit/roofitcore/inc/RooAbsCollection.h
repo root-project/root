@@ -43,7 +43,7 @@ public:
   RooAbsCollection(const RooAbsCollection& other, const char *name="");
   RooAbsCollection& operator=(const RooAbsCollection& other);
   RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
-  RooAbsCollection& assignFast(const RooAbsCollection& other) ;
+  void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
 
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
@@ -99,7 +99,7 @@ public:
   }
 
   RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
-  RooMinimalLinkedListIter minimalIterator() const ;
+  RooFIter fwdIterator() const ;
 
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
@@ -163,6 +163,7 @@ protected:
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
+  Bool_t _allRRV ; // All contents are RRV
 
   void safeDeleteList() ;
 
@@ -171,7 +172,7 @@ protected:
 
 private:
 
-  ClassDef(RooAbsCollection,1) // Collection of RooAbsArg objects
+  ClassDef(RooAbsCollection,2) // Collection of RooAbsArg objects
 };
 
 #endif

@@ -798,6 +798,33 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
 
 
 
+//_____________________________________________________________________________
+Double_t RooRealIntegral::getVal(const RooArgSet* nset) const
+{
+  // Return value of object. If the cache is clean, return the
+  // cached value, otherwise recalculate on the fly and refill
+  // the cache
+
+  // fast-track clean-cache processing
+  if (_operMode==AClean && !_flipAClean) {
+    return _value ;
+  }
+
+  if (nset && nset!=_lastNSet) {
+    ((RooAbsReal*) this)->setProxyNormSet(nset) ;    
+    _lastNSet = (RooArgSet*) nset ;
+  }
+
+  if (isValueOrShapeDirtyAndClear()) {
+    _value = traceEval(nset) ;
+  } 
+
+  return _value ;
+}
+
+
+
+
 
 //_____________________________________________________________________________
 Double_t RooRealIntegral::evaluate() const 

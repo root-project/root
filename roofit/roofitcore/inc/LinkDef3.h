@@ -108,6 +108,10 @@
 #pragma link C++ class RooTreeData+ ;
 #pragma link C++ class RooRangeBoolean+ ;
 #pragma link C++ class RooVectorDataStore+ ;
+#pragma link C++ class RooVectorDataStore::RealVector+ ;
+#pragma link C++ class RooVectorDataStore::RealFullVector+ ;
+#pragma link C++ class RooVectorDataStore::CatVector+ ;
+#pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
 #ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooMinimizerFcn+ ;

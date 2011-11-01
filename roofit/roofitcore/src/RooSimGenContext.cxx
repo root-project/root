@@ -47,7 +47,7 @@ ClassImp(RooSimGenContext)
 //_____________________________________________________________________________
 RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model)
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(0)
 {
   // Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
   // context creates a dedicated context for each component p.d.f.s and delegates
@@ -127,7 +127,8 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
     // Name the context after the associated state and add to list
     cx->SetName(proxy->name()) ;
-    _gcList.Add(cx) ;
+    _gcList.push_back(cx) ;
+    _gcIndex.push_back(idxCat->lookupType(proxy->name())->getVal()) ;
 
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&allPdfVars)) ;
@@ -160,8 +161,11 @@ RooSimGenContext::~RooSimGenContext()
 
   delete[] _fracThresh ;
   delete _idxCatSet ;
-  _gcList.Delete() ;
+  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    delete (*iter) ;
+  }
   delete _proxyIter ;
+  if (_protoData) delete _protoData ;
 }
 
 
@@ -176,12 +180,9 @@ void RooSimGenContext::attach(const RooArgSet& args)
   }
 
   // Forward initGenerator call to all components
-  RooAbsGenContext* gc ;
-  TIterator* iter = _gcList.MakeIterator() ;
-  while((gc=(RooAbsGenContext*)iter->Next())){
-    gc->attach(args) ;
+  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->attach(args) ;
   }
-  delete iter;
   
 }
 
@@ -202,12 +203,9 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   updateFractions() ;
 
   // Forward initGenerator call to all components
-  RooAbsGenContext* gc ;
-  TIterator* iter = _gcList.MakeIterator() ;
-  while((gc=(RooAbsGenContext*)iter->Next())){
-    gc->initGenerator(theEvent) ;
+  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->initGenerator(theEvent) ;
   }
-  delete iter;
 
 }
 
@@ -223,23 +221,30 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
     return new RooDataSet(name,title,obs) ;
   }
 
-  map<string,RooAbsData*> dmap ;
-  RooCatType* state ;
-  TIterator* iter = _idxCat->typeIterator() ;
-  while((state=(RooCatType*)iter->Next())) {
-    RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
-    RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
-    std::string sliceName = Form("%s_slice_%s",name,state->GetName()) ;
-    std::string sliceTitle = Form("%s (index slice %s)",title,state->GetName()) ;
-    RooDataSet* dset = new RooDataSet(sliceName.c_str(),sliceTitle.c_str(),*sliceObs) ;
-    dmap[state->GetName()] = dset ;
-    delete sliceObs ;
+  if (!_protoData) {
+    map<string,RooAbsData*> dmap ;
+    RooCatType* state ;
+    TIterator* iter = _idxCat->typeIterator() ;
+    while((state=(RooCatType*)iter->Next())) {
+      RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
+      RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
+      std::string sliceName = Form("%s_slice_%s",name,state->GetName()) ;
+      std::string sliceTitle = Form("%s (index slice %s)",title,state->GetName()) ;
+      RooDataSet* dset = new RooDataSet(sliceName.c_str(),sliceTitle.c_str(),*sliceObs) ;
+      dmap[state->GetName()] = dset ;
+      delete sliceObs ;
+    }
+    delete iter ;
+    _protoData = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;    
+    
+//     RooDataSet* tmp = _protoData ;
+//     _protoData = 0 ;
+//     return tmp ;
   }
-  delete iter ;
 
-  RooDataSet* ret = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
+  RooDataSet* emptyClone =  new RooDataSet(*_protoData,name) ;
 
-  return ret ;
+  return emptyClone ;
 }
 
 
@@ -256,12 +261,15 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   if (_haveIdxProto) {
 
     // Lookup pdf from selected prototype index state
-    const char* label = _idxCat->getLabel() ;
-    RooAbsGenContext* cx = (RooAbsGenContext*)_gcList.FindObject(label) ;
+    Int_t gidx(0), cidx =_idxCat->getIndex() ;
+    for (Int_t i=0 ; i<(Int_t)_gcIndex.size() ; i++) {
+      if (_gcIndex[i]==cidx) { gidx = i ; break ; }
+    }
+    RooAbsGenContext* cx = _gcList[gidx] ;
     if (cx) {      
       cx->generateEvent(theEvent,remaining) ;
     } else {
-      oocoutW(_pdf,Generation) << "RooSimGenContext::generateEvent: WARNING, no PDF to generate event of type " << label << endl ;
+      oocoutW(_pdf,Generation) << "RooSimGenContext::generateEvent: WARNING, no PDF to generate event of type " << cidx << endl ;
     }    
 
   
@@ -272,9 +280,9 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     Int_t i=0 ;
     for (i=0 ; i<_numPdf ; i++) {
       if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
-	RooAbsGenContext* gen= ((RooAbsGenContext*)_gcList.At(i)) ;
+	RooAbsGenContext* gen=_gcList[i] ;	  
 	gen->generateEvent(theEvent,remaining) ;
-	_idxCat->setLabel(gen->GetName()) ;
+	_idxCat->setIndexFast(_gcIndex[i]) ;
 	return ;
       }
     }
@@ -322,12 +330,9 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 
   RooAbsGenContext::setProtoDataOrder(lut) ;
 
-  TIterator* iter = _gcList.MakeIterator() ;
-  RooAbsGenContext* gc ;
-  while((gc=(RooAbsGenContext*)iter->Next())) {
-    gc->setProtoDataOrder(lut) ;
+  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->setProtoDataOrder(lut) ;
   }
-  delete iter ;
 }
 
 
@@ -345,10 +350,7 @@ void RooSimGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose
   TString indent2(indent) ;
   indent2.Append("    ") ;
 
-  TIterator* iter = _gcList.MakeIterator() ;
-  RooAbsGenContext* gc ;
-  while((gc=(RooAbsGenContext*)iter->Next())) {
-    gc->printMultiline(os,content,verbose,indent2);
+  for (vector<RooAbsGenContext*>::const_iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->printMultiline(os,content,verbose,indent2);
   }
-  delete iter ;
 }

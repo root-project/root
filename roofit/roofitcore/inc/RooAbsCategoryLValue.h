@@ -71,8 +71,11 @@ public:
 
 protected:
 
+  friend class RooSimGenContext ;
+  virtual void setIndexFast(Int_t index) { _value._value = index ; _value._label[0]=0 ; }
+
   Bool_t setOrdinal(UInt_t index, const char* rangeName);
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
 
   ClassDef(RooAbsCategoryLValue,1) // Abstract modifiable index variable 
 };

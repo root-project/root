@@ -61,6 +61,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
+  _pdf->setOperMode(RooAbsArg::ADirty,kTRUE) ;
 
   // Fix normalization set of this RooAddPdf
   if (prototype) 
@@ -78,11 +79,14 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 
   while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
-    _gcList.Add(cx) ;
+    _gcList.push_back(cx) ;
   }  
 
   ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
+
+  _mcache = 0 ;
+  _pcache = 0 ;
 }
 
 
@@ -114,11 +118,14 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
 
   while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
-    _gcList.Add(cx) ;
+    _gcList.push_back(cx) ;
   }  
 
   ((RooAddModel*)_pdf)->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
+
+  _mcache = 0 ;
+  _pcache = 0 ;
 }
 
 
@@ -129,7 +136,9 @@ RooAddGenContext::~RooAddGenContext()
   // Destructor. Delete all owned subgenerator contexts
 
   delete[] _coefThresh ;
-  _gcList.Delete() ;
+  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    delete *iter ;
+  }
   delete _vars ;
   delete _pdfSet ;
 }
@@ -144,12 +153,9 @@ void RooAddGenContext::attach(const RooArgSet& args)
   _pdf->recursiveRedirectServers(args) ;
 
   // Forward initGenerator call to all components
-  TIterator* iter = _gcList.MakeIterator() ;
-  RooAbsGenContext* gc ;
-  while((gc=(RooAbsGenContext*)iter->Next())){
-    gc->attach(args) ;
+  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->attach(args) ;
   }
-  delete iter ;
 }
 
 
@@ -163,13 +169,18 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 
   _pdf->recursiveRedirectServers(theEvent) ;
 
-  // Forward initGenerator call to all components
-  TIterator* iter = _gcList.MakeIterator() ;
-  RooAbsGenContext* gc ;
-  while((gc=(RooAbsGenContext*)iter->Next())){
-    gc->initGenerator(theEvent) ;
+  if (_isModel) {    
+    RooAddModel* amod = (RooAddModel*) _pdf ;
+    _mcache = amod->getProjCache(_vars) ;
+  } else {
+    RooAddPdf* apdf = (RooAddPdf*) _pdf ;
+    _pcache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
   }
-  delete iter ;
+  
+  // Forward initGenerator call to all components
+  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->initGenerator(theEvent) ;
+  }
 }
 
 
@@ -185,7 +196,7 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   Int_t i=0 ;
   for (i=0 ; i<_nComp ; i++) {
     if (rand>_coefThresh[i] && rand<_coefThresh[i+1]) {
-      ((RooAbsGenContext*)_gcList.At(i))->generateEvent(theEvent,remaining) ;
+      _gcList[i]->generateEvent(theEvent,remaining) ;
       return ;
     }
   }
@@ -201,9 +212,7 @@ void RooAddGenContext::updateThresholds()
   if (_isModel) {
     
     RooAddModel* amod = (RooAddModel*) _pdf ;
-
-    RooAddModel::CacheElem* cache = amod->getProjCache(_vars) ;
-    amod->updateCoefficients(*cache,_vars) ;
+    amod->updateCoefficients(*_mcache,_vars) ;
 
     _coefThresh[0] = 0. ;
     Int_t i ;
@@ -213,12 +222,11 @@ void RooAddGenContext::updateThresholds()
     }
 
   } else {
+
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-
-    //cout << "Now calling getProjCache()" << endl ;
-    RooAddPdf::CacheElem* cache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
-    apdf->updateCoefficients(*cache,_vars) ;
-
+    
+    apdf->updateCoefficients(*_pcache,_vars) ;
+    
     _coefThresh[0] = 0. ;
     Int_t i ;
     for (i=0 ; i<_nComp ; i++) {
@@ -238,9 +246,8 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
   // Forward the setProtoDataOrder call to the component generator contexts
 
   RooAbsGenContext::setProtoDataOrder(lut) ;
-  Int_t i ;
-  for (i=0 ; i<_nComp ; i++) {
-    ((RooAbsGenContext*)_gcList.At(i))->setProtoDataOrder(lut) ;
+  for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->setProtoDataOrder(lut) ;
   }
 }
 
@@ -259,7 +266,7 @@ void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose
   os << indent << "List of component generators" << endl ;
   TString indent2(indent) ;
   indent2.Append("    ") ;
-  for (Int_t i=0 ; i<_nComp ; i++) {
-    ((RooAbsGenContext*)_gcList.At(i))->printMultiline(os,content,verbose,indent2) ;
+  for (vector<RooAbsGenContext*>::const_iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
+    (*iter)->printMultiline(os,content,verbose,indent2) ;
   }
 }

@@ -658,7 +658,6 @@ void RooRealVar::printValue(ostream& os) const
     os << " +/- (" << getAsymErrorLo() << "," << getAsymErrorHi() << ")" ;
   }
 
-
 }
 
 
@@ -695,6 +694,9 @@ void RooRealVar::printExtras(ostream& os) const
   // Add comment with unit, if unit exists
   if (!_unit.IsNull())
     os << "// [" << getUnit() << "]" ;
+
+//   cout << " _value = " << &_value << " _error = " << &_error ;
+
   
 }
 
@@ -946,19 +948,19 @@ void RooRealVar::attachToVStore(RooVectorDataStore& vstore)
   // attribute StoreError and/or StoreAsymError are set
 
   // Follow usual procedure for value
-
-  if (getAttribute("StoreError") || getAttribute("StoreAsymError")) {
+ 
+  if (getAttribute("StoreError") || getAttribute("StoreAsymError") || vstore.isFullReal(this) ) {
     
     RooVectorDataStore::RealFullVector* rfv = vstore.addRealFull(this) ;
     rfv->setBuffer(&_value) ;
   
     // Attach/create additional branch for error
-    if (getAttribute("StoreError")) {
+    if (getAttribute("StoreError") || vstore.hasError(this) ) {
       rfv->setErrorBuffer(&_error) ;
     }
     
     // Attach/create additional branches for asymmetric error
-    if (getAttribute("StoreAsymError")) {
+    if (getAttribute("StoreAsymError") || vstore.hasAsymError(this)) {
       rfv->setAsymErrorBuffer(&_asymErrLo,&_asymErrHi) ;
     }
 
@@ -980,6 +982,8 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 
   // Follow usual procedure for value
   RooAbsReal::attachToTree(t,bufSize) ;
+//   cout << "RooRealVar::attachToTree(" << this << ") name = " << GetName() 
+//        << " StoreError = " << (getAttribute("StoreError")?"T":"F") << endl ;
 
   // Attach/create additional branch for error
   if (getAttribute("StoreError")) {
@@ -1061,14 +1065,14 @@ void RooRealVar::fillTreeBranch(TTree& t)
 
 
 //_____________________________________________________________________________
-void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly) 
+void RooRealVar::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty) 
 {
   // Copy the cached value of another RooAbsArg to our cache
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
 
   // Follow usual procedure for valueklog
-  RooAbsReal::copyCache(source) ;
+  RooAbsReal::copyCache(source,valueOnly,setValDirty) ;
 
   if (valueOnly) return ;
 

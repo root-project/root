@@ -24,6 +24,7 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
+class RooVectorDataStore ;
 
 class RooErrorVar : public RooAbsRealLValue {
 public:

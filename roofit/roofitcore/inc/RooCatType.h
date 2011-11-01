@@ -44,20 +44,27 @@ public:
 
   virtual const Text_t* GetName() const { 
     // Return state name
-    return _label ; 
+    return _label[0] ? _label : 0 ;
   }
   virtual void SetName(const Text_t* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
     // Assignment operator from other RooCatType
     if (&other==this) return *this ;
-    SetName(other.GetName()) ; 
+    //SetName(other.GetName()) ; 
+    _label[0] = 0 ;
     _value = other._value ; 
     return *this ; } 
 
+  inline void assignFast(const RooCatType& other) { 
+    // Fast assignment operator from other RooCatType
+    _label[0] = 0 ;
+    _value = other._value ; 
+  } 
+
   inline Bool_t operator==(const RooCatType& other) {
     // Equality operator with other RooCatType
-    return ( _value==other._value && !strcmp(_label,other._label)) ;
+    return (_value==other._value) ;
   }
 
   inline Bool_t operator==(Int_t index) { 
@@ -66,7 +73,7 @@ public:
   }
 
   Bool_t operator==(const char* label) { 
-    // Return true if state name matchins string
+    // Return true if state name matchins string    
     return !strcmp(_label,label) ; 
   }
 
@@ -90,6 +97,8 @@ public:
   }
 
 protected:
+
+  friend class RooAbsCategoryLValue ;
   friend class RooAbsCategory ;
   Int_t _value ;     // Index value
   char _label[256] ; // State name

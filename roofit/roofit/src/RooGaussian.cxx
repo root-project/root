@@ -62,8 +62,9 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 Double_t RooGaussian::evaluate() const
 {
   Double_t arg= x - mean;  
-  Double_t ret =exp(-0.5*arg*arg/(sigma*sigma)) ;
-  //cout << "gauss x = " << x << " mean = " << mean << " sigma = " << sigma << endl ;
+  Double_t sig = sigma ;
+  Double_t ret =exp(-0.5*arg*arg/(sig*sig)) ;
+//   cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
   return ret ;
 }
 
@@ -90,9 +91,9 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   Double_t ret = 0;
   if(code==1){  
     ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
-    //cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+//     cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
   } else if(code==2) {
-    ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-mean)/xscale)-RooMath::erf((mean.min(rangeName)-mean)/xscale));
+    ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-x)/xscale)-RooMath::erf((mean.min(rangeName)-x)/xscale));
   } else{
     cout << "Error in RooGaussian::analyticalIntegral" << endl;
   }
@@ -140,5 +141,4 @@ void RooGaussian::generateEvent(Int_t code)
 
   return;
 }
-
 

@@ -19,6 +19,7 @@
 #include "TObject.h"
 #include "Riosfwd.h"
 #include "RooAbsProxy.h"
+#include "RooLinkedListIter.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 

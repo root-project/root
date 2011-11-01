@@ -44,6 +44,7 @@
 #include "RooCategory.h"
 #include "RooCmdConfig.h"
 #include "RooTreeDataStore.h"
+#include "RooVectorDataStore.h"
 #include "TTree.h"
 #include "RooTreeData.h"
 
@@ -98,11 +99,12 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // data hist as function of the threshold category instead of the real variable.
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ;
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
   
   initialize(binningName) ;
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
   appendToDir(this,kTRUE) ;
 }
@@ -134,9 +136,11 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // all missing dimensions will be projected.
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ;
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
+
   initialize() ;
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
   add(data,(const RooFormulaVar*)0,wgt) ;
   appendToDir(this,kTRUE) ;
@@ -159,11 +163,12 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   // The ranges and number of bins are taken from the input histogram and must be the same in all histograms
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ; 
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
   
   importTH1Set(vars, indexCat, histMap, wgt, kTRUE) ;
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 }
 
 
@@ -183,11 +188,12 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   // The ranges and number of bins are taken from the input histogram and must be the same in all histograms
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ; 
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
   
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 }
 
 
@@ -202,7 +208,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   // values are set accordingly on the arguments in 'vars'
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ; 
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
 
   // Check consistency in number of dimensions
   if (vars.getSize() != hist->GetDimension()) {
@@ -213,7 +220,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
   importTH1(vars,*const_cast<TH1*>(hist),wgt, kTRUE) ;
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 }
 
 
@@ -258,7 +265,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   //                              
 
   // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars) ; 
+  _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
+                                         ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooDataHist::ctor(%s)",GetName())) ;
@@ -345,7 +353,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
   }
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
 }
 
@@ -801,7 +809,7 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
     // Refill array pointers in data store when reading
     // from Streamer
     if (fillTree==kFALSE) {
-      ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;      
+      _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;      
     }
     
     for (i=0 ; i<_arrSize ; i++) {
@@ -882,7 +890,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
     _lvbins.push_back(binning ? binning->clone() : 0) ;    
   }
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
  appendToDir(this,kTRUE) ;
 }
@@ -909,7 +917,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
   
   initialize(0,kFALSE) ;
 
-  ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
   // Copy weight array etc
   Int_t i ;

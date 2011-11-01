@@ -18,7 +18,6 @@
 
 #include "Rtypes.h"
 #include "TIterator.h"
-#include "RooAbsArg.h"
 #include "RooLinkedList.h"
 
 #if ROOT_VERSION_CODE <= 332546
@@ -27,28 +26,25 @@
 #endif
 #endif
 
-class RooMinimalLinkedListIter
+class RooFIter
 {
   public:
-    RooMinimalLinkedListIter() : _ptr (0) {}
-      RooMinimalLinkedListIter(const RooLinkedList* list) : 
-        _ptr (list->_first)
-       {
-       }
-
-  inline TObject *NextNV() { 
-      // Return next element in collection
-      if (!_ptr) return 0 ;
-      TObject* arg = _ptr->_arg ;      
-      _ptr = _ptr->_next;
-      return arg ;
-    }
+  inline RooFIter() : _ptr (0) {}
+  inline RooFIter(const RooLinkedList* list) : _ptr (list->_first) {}
+    
+  inline RooAbsArg *next() { 
+    // Return next element in collection
+    if (!_ptr) return 0 ;
+    TObject* arg = _ptr->_arg ;      
+    _ptr = _ptr->_next;
+    return (RooAbsArg*) arg ;
+  }
     
  private:
     const RooLinkedListElem* _ptr ;  //! Next link element
 };
 
-typedef RooMinimalLinkedListIter RMLLI ;
+
 
 class RooLinkedListIter : public TIterator {
 public:

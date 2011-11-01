@@ -64,10 +64,10 @@ public:
   class GenSpec {
   public:
     virtual ~GenSpec() ;
-    GenSpec() { _genContext = 0 ; _protoData = 0 ; }
+    GenSpec() { _genContext = 0 ; _protoData = 0 ; _init = kFALSE ; }
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, Bool_t extended, 
-	    Bool_t randProto, Bool_t resampleProto, TString dsetName) ;
+	    Bool_t randProto, Bool_t resampleProto, TString dsetName, Bool_t init=kFALSE) ;
     GenSpec(const GenSpec& other) ;
 
     friend class RooAbsPdf ;
@@ -79,6 +79,7 @@ public:
     Bool_t _randProto ;
     Bool_t _resampleProto ;
     TString _dsetName ;    
+    Bool_t _init ;
     ClassDef(GenSpec,0) // Generation specification
   } ;
 
@@ -256,7 +257,7 @@ public:
 protected:
 
   RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
-		       Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto) const ;
+		       Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit=kFALSE) const ;
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants=kFALSE,

@@ -53,6 +53,7 @@
 #include "RooMsgService.h"
 #include "RooCategory.h"
 #include "RooSuperCategory.h"
+#include "RooDataHist.h"
 #include "RooArgSet.h"
 
 using namespace std ;
@@ -1090,6 +1091,33 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
   return data ;
 }
 
+
+
+//_____________________________________________________________________________
+RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
+                                           const RooArgSet* nset,
+                                           Double_t scaleFactor,
+                                           Bool_t correctForBinVolume,
+                                           Bool_t showProgress) const
+{
+  if (RooAbsReal::fillDataHist (hist, nset, scaleFactor,
+                                correctForBinVolume, showProgress) == 0)
+    return 0;
+
+  Double_t sum = 0;
+  for (int i=0 ; i<hist->numEntries() ; i++) {
+    hist->get(i) ;
+    sum += hist->weight();
+  }
+  if (sum != 0) {
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+      hist->set (hist->weight() / sum);
+    }
+  }
+
+  return hist;
+}
 
 
 

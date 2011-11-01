@@ -23,6 +23,7 @@
 #include "RooPrintable.h"
 #include "RooRefCountList.h"
 #include "RooAbsCache.h"
+#include "RooLinkedListIter.h"
 #include <map>
 #include <set>
 #include <deque>
@@ -97,6 +98,11 @@ public:
     // Return iterator over all server RooAbsArgs
     return _serverList.MakeIterator() ; 
   }
+
+  inline RooFIter valueClientMIterator() const { return _clientListValue.fwdIterator() ; }
+  inline RooFIter shapeClientMIterator() const { return _clientListShape.fwdIterator() ; }
+  inline RooFIter serverMIterator() const { return _serverList.fwdIterator() ; }
+
 
   inline RooAbsArg* findServer(const char *name) const { 
     // Return server of this arg with given name. Returns null if not found
@@ -257,7 +263,6 @@ public:
 
   //Debug hooks
   static void verboseDirty(Bool_t flag) ;
-  static void copyList(TList& dest, const TList& source) ;
   void printDirty(Bool_t depth=kTRUE) const ;
 
   static void setDirtyInhibit(Bool_t flag) ;
@@ -309,15 +314,61 @@ public:
     // Return true is shape has been invalidated by server value change
     return isDerived()?_shapeDirty:kFALSE ; 
   } 
+
   inline Bool_t isValueDirty() const { 
     // Returns true of value has been invalidated by server value change
     if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
-    case AClean: return flipAClean() ;
-    case ADirty: return kTRUE ;
-    case Auto: return (_valueDirty ? (isDerived()?_valueDirty:kFALSE) : kFALSE) ;
+    case AClean: 
+      return flipAClean() ;
+    case ADirty: 
+      return kTRUE ;
+    case Auto: 
+      if (_valueDirty) return isDerived() ;
+      return kFALSE ;
     }
     return kTRUE ; // we should never get here
+  }
+
+  inline Bool_t isValueDirtyAndClear() const { 
+    // Returns true of value has been invalidated by server value change
+    if (inhibitDirty()) return kTRUE ;
+    switch(_operMode) {
+    case AClean: 
+      return flipAClean() ;
+    case ADirty: 
+      return kTRUE ;
+    case Auto: 
+      if (_valueDirty) {
+	_valueDirty = kFALSE ;
+	return isDerived();
+      }
+      return kFALSE ;
+    }
+    return kTRUE ; // But we should never get here
+  }
+
+
+  inline Bool_t isValueOrShapeDirtyAndClear() const { 
+    // Returns true of value has been invalidated by server value change
+
+    if (inhibitDirty()) return kTRUE ;
+    switch(_operMode) {
+    case AClean: 
+      return flipAClean() ;
+    case ADirty: 
+      return kTRUE ;
+    case Auto: 
+      if (_valueDirty || _shapeDirty) {
+	_shapeDirty = kFALSE ;
+	_valueDirty = kFALSE ;
+	return isDerived();
+      }
+      _shapeDirty = kFALSE ;
+      _valueDirty = kFALSE ;
+      return kFALSE ;
+    }
+    return kTRUE ; // But we should never get here
   }
 
   // Cache management
@@ -358,8 +409,14 @@ public:
 
   // Dirty state modifiers
  public:
-  inline void setValueDirty() const { setValueDirty(0) ; }
+  inline void setValueDirty() const {   if (_operMode==Auto && !_inhibitDirty) setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
+
+  inline void clearValueAndShapeDirty() const {
+    _valueDirty=kFALSE ;  
+    _shapeDirty=kFALSE ; 
+  }
+
   inline void clearValueDirty() const { 
     _valueDirty=kFALSE ; 
   }
@@ -440,7 +497,7 @@ public:
   friend class RooDataSet ;
   friend class RooRealMPFE ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) = 0 ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) = 0 ;
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void attachToVStore(RooVectorDataStore& vstore) = 0 ;
@@ -461,7 +518,7 @@ public:
   Bool_t _deleteWatch ; //! Delete watch flag 
   static Bool_t flipAClean() ;
 
-  static Bool_t inhibitDirty() ;
+  inline static Bool_t inhibitDirty() { return _inhibitDirty ; }
   
   // Value and Shape dirty state bits
   void setValueDirty(const RooAbsArg* source) const ; 

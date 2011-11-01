@@ -135,6 +135,12 @@ void RooUniform::generateEvent(Int_t code)
 {
   // Implement internal generator
 
+  // Fast-track handling of one-observable case
+  if (code==1) {
+    ((RooAbsRealLValue*)x.at(0))->randomize() ;
+    return ;
+  }
+
   for (int i=0 ; i<32 ; i++) {
     if (code&(1<<i)) {
       RooAbsRealLValue* var = (RooAbsRealLValue*)x.at(i) ;

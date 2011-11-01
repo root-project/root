@@ -37,6 +37,7 @@ public:
   RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
 
   // Empty ctor
+  virtual RooAbsDataStore* clone(const char* newname=0) const { return new RooCompositeDataStore(*this,newname) ; }
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const { return new RooCompositeDataStore(*this,vars,newname) ; }
 
   RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname=0) ;
@@ -73,7 +74,11 @@ public:
   virtual Bool_t valid() const ;
   virtual Int_t numEntries() const ;
   virtual void reset() ;
-  
+
+  // Buffer redirection routines used in inside RooAbsOptTestStatistics
+  virtual void attachBuffers(const RooArgSet& extObs) ; 
+  virtual void resetBuffers() ;
+   
   // Constant term  optimizer interface
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
   virtual const RooAbsArg* cacheOwner() { return 0 ; }
@@ -86,7 +91,7 @@ public:
 
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
-  std::map<std::string,RooAbsDataStore*> _dataMap ;
+  std::map<Int_t,RooAbsDataStore*> _dataMap ;
   RooCategory* _indexCat ;
   mutable RooAbsDataStore* _curStore ; //! Datastore associated with current event
   mutable Int_t _curIndex ; //! Index associated with current event

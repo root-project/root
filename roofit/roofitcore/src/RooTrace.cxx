@@ -30,6 +30,7 @@
 #include "RooTrace.h"
 #include "RooAbsArg.h"
 #include "Riostream.h"
+#include "RooMsgService.h"
 
 #include <iomanip>
 
@@ -150,4 +151,30 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked)
     }
   }
   if (sinceMarked) os << nMarked << " marked objects suppressed" << endl ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooTrace::callgrind_zero() 
+{
+  // Utility function to trigger zeroing of callgrind counters.
+  //
+  // Note that this function does _not_ do anything, other than optionally printing this message
+  // To trigger callgrind zero counter action, run callgrind with 
+  // argument '--zero-before=RooTrace::callgrind_zero()' (include single quotes in cmdline)
+  
+  oocoutP((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
+}
+
+//_____________________________________________________________________________
+void RooTrace::callgrind_dump() 
+{
+  // Utility function to trigger dumping of callgrind counters.
+  //
+  // Note that this function does _not_ do anything, other than optionally printing this message
+  // To trigger callgrind dumping action, run callgrind with 
+  // argument '--dump-before=RooTrace::callgrind_dump()' (include single quotes in cmdline)
+
+  oocoutP((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }

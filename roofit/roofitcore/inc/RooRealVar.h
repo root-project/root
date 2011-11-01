@@ -115,17 +115,21 @@ public:
 
   void deleteSharedProperties() ;
 
+  void copyCacheFast(const RooRealVar& other, Bool_t setValDirty=kTRUE) { _value = other._value ; if (setValDirty) setValueDirty() ; }
+
   protected:
 
   static Bool_t _printScientific ;
   static Int_t  _printSigDigits ;
 
   virtual void setVal(Double_t value, const char* rangeName) ;
+
+  friend class RooAbsRealLValue ;
   virtual void setValFast(Double_t value) { _value = value ; setValueDirty() ; }
 
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE) ;
+  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
   virtual void attachToVStore(RooVectorDataStore& vstore) ;
   virtual void fillTreeBranch(TTree& t) ;

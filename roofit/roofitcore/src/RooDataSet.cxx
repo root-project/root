@@ -292,6 +292,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   const char* tname = pc.getString("tname") ;
   Int_t ownLinked = pc.getInt("ownLinked") ;
 
+
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
 
@@ -1120,7 +1121,7 @@ void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError)
   //
 
   checkInit() ;
-  _varsNoWgt.assignFast(data);
+  _varsNoWgt.assignFast(data,_dstore->dirtyProp());
   if (_wgtVar) {
     _wgtVar->setVal(wgt) ;
     if (wgtError!=0.) {

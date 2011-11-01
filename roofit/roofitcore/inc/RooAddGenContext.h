@@ -18,6 +18,9 @@
 
 #include "RooAbsGenContext.h"
 #include "RooArgSet.h"
+#include <vector>
+#include "RooAddPdf.h"
+#include "RooAddModel.h"
 
 class RooAddPdf;
 class RooAddModel;
@@ -52,10 +55,12 @@ protected:
   const RooArgSet* _vars ;       
   RooArgSet* _pdfSet ;           //  Set owned all nodes of internal clone of p.d.f
   RooAbsPdf *_pdf ;              //  Pointer to cloned p.d.f
-  TList _gcList ;                //  List of component generator contexts
+  std::vector<RooAbsGenContext*> _gcList ;  //  List of component generator contexts
   Int_t  _nComp ;                //  Number of PDF components
   Double_t* _coefThresh ;        //[_nComp] Array of coefficient thresholds 
   Bool_t _isModel ;              // Are we generating from a RooAddPdf or a RooAddModel
+  RooAddModel::CacheElem* _mcache ; //! RooAddModel cache element
+  RooAddPdf::CacheElem* _pcache ; //! RooAddPdf cache element
 
   ClassDef(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };

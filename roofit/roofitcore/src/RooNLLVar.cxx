@@ -150,6 +150,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
+//   cout << "RooNLLVar::evaluatePartition(" << GetName() << ")" << endl ;
+
   Double_t sumWeight(0) ;
   for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
@@ -157,7 +159,9 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     //Double_t wgt = _dataClone->weight(i) ;
     //if (wgt==0) continue ;
 
-    _dataClone->get(i);
+    _dataClone->get(i) ;
+    //_dataClone->get(i)->Print("v") ;
+    
 
     if (!_dataClone->valid()) {
       continue ;
@@ -201,7 +205,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     result += sumWeight*log(1.0*_simCount) ;
   }
   
-  //cout << "RooNLLVar(first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << endl ;
+//   cout << "RooNLLVar(first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << endl ;
 
   return result ;
 }

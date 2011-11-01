@@ -35,6 +35,7 @@ public:
   RooAbsDataStore(const char* name, const char* title, const RooArgSet& vars) ; 
   RooAbsDataStore(const RooAbsDataStore& other, const char* newname=0) ; 
   RooAbsDataStore(const RooAbsDataStore& other, const RooArgSet& vars, const char* newname=0) ; 
+  virtual RooAbsDataStore* clone(const char* newname=0) const = 0 ;
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const = 0 ;
   virtual ~RooAbsDataStore() ;
 
@@ -72,6 +73,11 @@ public:
   virtual Double_t sumEntries() const { return 0 ; } ;
   virtual void reset() = 0 ;
 
+  // Buffer redirection routines used in inside RooAbsOptTestStatistics
+  virtual void attachBuffers(const RooArgSet& extObs) = 0 ; 
+  virtual void resetBuffers() = 0 ;
+
+  virtual void setExternalWeightArray(Double_t* /*arrayWgt*/, Double_t* /*arrayWgtErrLo*/, Double_t* /*arrayWgtErrHi*/, Double_t* /*arraySumW2*/) {} ;
 
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {
@@ -98,12 +104,14 @@ public:
   virtual void resetCache() = 0 ;
 
   virtual void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
+  Bool_t dirtyProp() const { return _doDirtyProp ; }
 
   virtual void checkInit() const {} ;
   
   Bool_t hasFilledCache() const { return _cachedVars.getSize()>0 ; }
 
   virtual const TTree* tree() const { return 0 ; }
+  virtual void dump() {} 
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) = 0 ;
 

@@ -512,18 +512,19 @@ Double_t RooProdPdf::getVal(const RooArgSet* set) const
 Double_t RooProdPdf::evaluate() const 
 {
   // Calculate current value of object
-
+  
   Int_t code ;
-  RooArgList *plist(0) ;
-  RooLinkedList *nlist(0) ;
-  getPartIntList(_curNormSet,0,plist,nlist,code) ;
-
-  // preceding call to getPartIntList guarantees non-null return
-  // coverity[NULL_RETURNS]
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
-  Double_t ret =  calculate(*cache) ;
+  
+  // If cache doesn't have our configuration, recalculate here
+  if (!cache) {
+    RooArgList *plist(0) ;
+    RooLinkedList *nlist(0) ;
+    getPartIntList(_curNormSet,0,plist,nlist,code) ;
+    cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
+  }
 
-  return ret ;
+  return calculate(*cache) ;
 }
 
 
@@ -587,20 +588,20 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
     Int_t n = cache._partList.getSize() ;
     
     Int_t i ;
-    RMLLI plIter = cache._partList.minimalIterator() ;
-    RMLLI nlIter = cache._normList.minimalIterator() ;
+    RooFIter plIter = cache._partList.fwdIterator() ;
+    RooFIter nlIter = cache._normList.fwdIterator() ;
 
     for (i=0 ; i<n ; i++) {
-      partInt = (RooAbsReal*) plIter.NextNV() ; //((RooAbsReal*)cache._partList.at(i)) ;
-      normSet = (RooArgSet*) nlIter.NextNV() ; // ((RooArgSet*)cache._normList.At(i)) ;    
+      partInt = (RooAbsReal*) plIter.next() ; //((RooAbsReal*)cache._partList.at(i)) ;
+      normSet = (RooArgSet*) nlIter.next() ; // ((RooArgSet*)cache._normList.At(i)) ;    
       Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
       //cout << "partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
-      if (dynamic_cast<RooAbsPdf*>(partInt)) {
-	cxcoutD(Eval) << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet())  
-		      << " = " << partInt->getVal() << " / " << ((RooAbsPdf*)partInt)->getNorm(normSet) << " = " << piVal << endl ;
-      } else {
-	//cout << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet()) << " = " << piVal << endl ;
-      }
+//       if (dynamic_cast<RooAbsPdf*>(partInt)) {
+// 	cxcoutD(Eval) << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet())  
+// 		      << " = " << partInt->getVal() << " / " << ((RooAbsPdf*)partInt)->getNorm(normSet) << " = " << piVal << endl ;
+//       } else {
+// 	//cout << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet()) << " = " << piVal << endl ;
+//       }
       value *= piVal ;
       if (value<_cutOff) {
 	break ;

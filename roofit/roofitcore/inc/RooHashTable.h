@@ -45,6 +45,7 @@ public:
   RooSetPair* findSetPair(const RooArgSet* set1, const RooArgSet* set2) const ;  
   Bool_t replace(const TObject* oldArg, const TObject* newArg, const TObject* oldHashArg=0) ;
   Int_t size() const { return _size ; }
+  Int_t entries() const { return _entries ; }
   Double_t avgCollisions() const ;
 
 protected:  

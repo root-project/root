@@ -155,6 +155,7 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const
       _vars[index]->setVal(xvector[index],RooNameReg::instance().constStr(_rangeName));
     }
   }
+
 }  
 
 

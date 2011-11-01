@@ -2293,6 +2293,23 @@ Bool_t RooAbsData::allClientsCached(RooAbsArg* var, const RooArgSet& cacheList)
 
 
 //_____________________________________________________________________________
+void RooAbsData::attachBuffers(const RooArgSet& extObs) 
+{ 
+  _dstore->attachBuffers(extObs) ; 
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsData::resetBuffers() 
+{ 
+  _dstore->resetBuffers() ; 
+}
+ 
+
+
+
+//_____________________________________________________________________________
 Bool_t RooAbsData::canSplitFast() const 
 {
   

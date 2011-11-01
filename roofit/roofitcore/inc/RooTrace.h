@@ -34,6 +34,9 @@ public:
   static void dump() ;
   static void dump(ostream& os, Bool_t sinceMarked=kFALSE) ;
   static void mark() ;
+  
+  static void callgrind_zero() ;
+  static void callgrind_dump() ;
 
 protected:
 

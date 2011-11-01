@@ -536,6 +536,8 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 	  _genContext->setProtoDataOrder(newOrder) ;
 	  delete[] newOrder ;
 	}
+
+	cout << "RooMCStudy: now generating " << nEvt << " events" << endl ;
 	
 	// Actual generation of events
 	if (nEvt>0) {
@@ -817,7 +819,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   // fit status. RooFitResults objects can be retrieved
   // later via fitResult().
   //  
-  
+
   // Reset all fit parameters to their initial values  
   resetFitParams() ;
 
@@ -837,6 +839,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
     RooArgSet tmp(*_fitParams) ;
     tmp.add(*_nllVar) ;
     tmp.add(*_ngenVar) ;
+
     _fitParData->add(tmp) ;
   }
   

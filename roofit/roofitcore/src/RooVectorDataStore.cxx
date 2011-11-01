@@ -101,8 +101,31 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
     arg->attachToVStore(*this) ;
   }
   delete iter ;
+  
+  setAllBuffersNative() ;
+  
 }
 
+
+
+//_____________________________________________________________________________
+void RooVectorDataStore::setAllBuffersNative()
+{
+  vector<RealVector*>::const_iterator oiter = _realStoreList.begin() ;
+  for (; oiter!=_realStoreList.end() ; ++oiter) {
+    (*oiter)->setNativeBuffer() ;
+  }
+
+  vector<RealFullVector*>::const_iterator fiter = _realfStoreList.begin() ;
+  for (; fiter!=_realfStoreList.end() ; ++fiter) {
+    (*fiter)->setNativeBuffer() ;
+  }
+  
+  vector<CatVector*>::const_iterator citer = _catStoreList.begin() ;
+  for (; citer!=_catStoreList.end() ; ++citer) {
+    (*citer)->setNativeBuffer() ;
+ }
+}
 
 
 
@@ -181,6 +204,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
     _nCat++ ;
  }
 
+  setAllBuffersNative() ;
+  
   _firstReal = _realStoreList.size()>0 ? &_realStoreList.front() : 0 ;
   _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
   _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
@@ -217,6 +242,8 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   }
   delete iter ;
 
+  setAllBuffersNative() ;
+  
   // now copy contents of tree storage here
   for (Int_t i=0 ; i<other.numEntries() ; i++) {
     other.get(i) ;
@@ -284,6 +311,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
     }
   }
 
+  setAllBuffersNative() ;
+
   _firstReal = _realStoreList.size()>0 ? &_realStoreList.front() : 0 ;
   _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
   _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
@@ -326,6 +355,8 @@ RooVectorDataStore::RooVectorDataStore(const char *name, const char *title, RooA
     arg->attachToVStore(*this) ;
   }
   delete iter ;
+
+  setAllBuffersNative() ;
 
   // Deep clone cutVar and attach clone to this dataset
   RooFormulaVar* cloneVar = 0;
@@ -472,6 +503,76 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
 
   if (_cache) {
     _cache->get(index) ;
+  }
+
+  return &_vars;
+}
+
+
+
+//_____________________________________________________________________________
+const RooArgSet* RooVectorDataStore::getNative(Int_t index) const 
+{
+  // Load the n-th data point (n='index') in memory
+  // and return a pointer to the internal RooArgSet
+  // holding its coordinates.
+
+  if (index>=_nEntries) return 0 ;
+    
+  for (Int_t i=0 ; i<_nReal ; i++) {
+    (*(_firstReal+i))->getNative(index) ;
+  }
+
+  if (_nRealF>0) {
+    for (Int_t i=0 ; i<_nRealF ; i++) {
+      (*(_firstRealF+i))->getNative(index) ;
+    }
+  }
+
+  if (_nCat>0) {
+    for (Int_t i=0 ; i<_nCat ; i++) {
+      (*(_firstCat+i))->getNative(index) ;
+    }
+  }
+
+  if (_doDirtyProp) {
+    // Raise all dirty flags 
+    _iterator->Reset() ;
+    RooAbsArg* var = 0;
+    while ((var=(RooAbsArg*)_iterator->Next())) {
+      var->setValueDirty() ; // This triggers recalculation of all clients
+    }     
+  }
+  
+  // Update current weight cache
+  if (_extWgtArray) {
+
+    // If external array is specified use that  
+    _curWgt = _extWgtArray[index] ;
+    _curWgtErrLo = _extWgtErrLoArray[index] ;
+    _curWgtErrHi = _extWgtErrHiArray[index] ;
+    _curWgtErr   = sqrt(_extSumW2Array[index]) ;
+
+  } else if (_wgtVar) {
+
+    // Otherwise look for weight variable
+    _curWgt = _wgtVar->getVal() ;
+    _curWgtErrLo = _wgtVar->getAsymErrorLo() ;
+    _curWgtErrHi = _wgtVar->getAsymErrorHi() ;
+    _curWgtErr   = _wgtVar->hasAsymError() ? ((_wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo())/2)  : _wgtVar->getError() ;
+
+  } else {
+
+    // Otherwise return 1 
+    _curWgt=1.0 ;
+    _curWgtErrLo = 0 ;
+    _curWgtErrHi = 0 ;
+    _curWgtErr = 0 ;
+    
+  }
+
+  if (_cache) {
+    _cache->getNative(index) ;
   }
 
   return &_vars;
@@ -721,10 +822,11 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, Bool_t /*adjustRange
   } 
 
   for (int i=0 ; i<numEntries() ; i++) {
-    get(i) ;
+    getNative(i) ;
 
     newVarClone->syncCache(&_vars) ;
     valHolder->copyCache(newVarClone) ;
+
     if (rv) rv->write(i) ;
     if (cv) cv->write(i) ;
   }
@@ -799,7 +901,7 @@ RooArgSet* RooVectorDataStore::addColumns(const RooArgList& varList)
 
   // Fill values of of placeholder
   for (int i=0 ; i<numEntries() ; i++) {
-    get(i) ;
+    getNative(i) ;
 
     cIter->Reset() ;
     hIter->Reset() ;
@@ -807,6 +909,7 @@ RooArgSet* RooVectorDataStore::addColumns(const RooArgList& varList)
       holder = (RooAbsArg*)hIter->Next() ;
 
       cloneArg->syncCache(&_vars) ;
+
       holder->copyCache(cloneArg) ;
 
       if (dynamic_cast<RooAbsReal*>(holder)) {
@@ -954,7 +1057,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   // Fill values of of placeholder
   for (int i=0 ; i<numEntries() ; i++) {
-    get(i) ;
+    getNative(i) ;
 
     cIter->Reset() ;
     while((cloneArg=(RooAbsArg*)cIter->Next())) {
@@ -1047,6 +1150,76 @@ void RooVectorDataStore::setArgStatus(const RooArgSet& /*set*/, Bool_t /*active*
 
   return ;
 }
+
+
+
+
+//_____________________________________________________________________________
+void RooVectorDataStore::attachBuffers(const RooArgSet& extObs) 
+{
+  RooFIter iter = _varsww.fwdIterator() ;
+  RooAbsArg* arg ;
+  while((arg=iter.next())) {
+    RooAbsArg* extArg = extObs.find(arg->GetName()) ;
+    if (extArg) {
+      extArg->attachToVStore(*this) ;
+    }
+  }
+}
+
+
+
+//_____________________________________________________________________________
+void RooVectorDataStore::resetBuffers() 
+{ 
+  RooFIter iter = _varsww.fwdIterator() ;
+  RooAbsArg* arg ;
+  while((arg=iter.next())) {
+    arg->attachToVStore(*this) ;
+  }
+}  
+
+
+
+//_____________________________________________________________________________
+void RooVectorDataStore::dump()
+{
+  cout << "RooVectorDataStor::dump()" << endl ;
+  
+  cout << "_varsww = " << endl ; _varsww.Print("v") ;
+  cout << "realVector list is" << endl ;
+  std::vector<RealVector*>::iterator iter = _realStoreList.begin() ;
+  for (; iter!=_realStoreList.end() ; ++iter) {
+    cout << "RealVector " << *iter << " _real = " << (*iter)->_real << " = " << (*iter)->_real->GetName() << " bufptr = " << (*iter)->_buf  << endl ;
+    cout << " values : " ;
+    Int_t imax = (*iter)->_vec.size()>10 ? 10 : (*iter)->_vec.size() ;
+    for (Int_t i=0 ; i<imax ; i++) {
+      cout << (*iter)->_vec[i] << " " ;
+    }
+    cout << endl ;
+  }    
+  std::vector<RealFullVector*>::iterator iter2 = _realfStoreList.begin() ;
+  for (; iter2!=_realfStoreList.end() ; ++iter2) {
+    cout << "RealFullVector " << *iter2 << " _real = " << (*iter2)->_real << " = " << (*iter2)->_real->GetName() 
+	 << " bufptr = " << (*iter2)->_buf  << " errbufptr = " << (*iter2)->_bufE << endl ;
+
+    cout << " values : " ;
+    Int_t imax = (*iter2)->_vec.size()>10 ? 10 : (*iter2)->_vec.size() ;
+    for (Int_t i=0 ; i<imax ; i++) {
+      cout << (*iter2)->_vec[i] << " " ;
+    }
+    cout << endl ;
+    if ((*iter2)->_vecE) {
+      cout << " errors : " ;
+      for (Int_t i=0 ; i<imax ; i++) {
+	cout << (*(*iter2)->_vecE)[i] << " " ;
+      }
+      cout << endl ;
+
+    }    
+  }
+}
+
 
 
 
