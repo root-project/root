@@ -233,6 +233,7 @@ namespace HistFactory{
     else if (classname.find("TH2")==0) { histndim=2; }
     else if (classname.find("TH3")==0) { histndim=3; }
     R__ASSERT( histndim==fObsNameVec.size() );
+    //    cout <<"In LinInterpWithConstriants and histndim = " << histndim <<endl;
 
     // create roorealvar observables
     RooArgList observables;
@@ -269,11 +270,11 @@ namespace HistFactory{
         temp = (RooRealVar*) proto->factory(("alpha_"+sourceName.at(j)+range).c_str());
 
         // now add a constraint term for these parameters
-        string command=("Gaussian::alpha_"+sourceName.at(j)+"Constraint(alpha_"+sourceName.at(j)+",nom_"+sourceName.at(j)+"[0.,-10,10],1.)");
+        string command=("Gaussian::alpha_"+sourceName.at(j)+"Constraint(alpha_"+sourceName.at(j)+",nom_alpha_"+sourceName.at(j)+"[0.,-10,10],1.)");
         cout << command << endl;
         constraintTermNames.push_back(  proto->factory( command.c_str() )->GetName() );
 	proto->var(("nom_alpha_"+sourceName.at(j)).c_str())->setConstant();
-	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_"+sourceName.at(j)).c_str()));
+	const_cast<RooArgSet*>(proto->set("globalObservables"))->add(*proto->var(("nom_alpha_"+sourceName.at(j)).c_str()));
       } 
       params.add(* temp );
     }
@@ -299,6 +300,7 @@ namespace HistFactory{
     PiecewiseInterpolation interp(prefix.c_str(),"",*nominalFunc,lowSet,highSet,params);
     interp.setPositiveDefinite();
     interp.setAllInterpCodes(0); // MB : change default to 1? = piece-wise log interpolation from pice-wise linear (=0)
+    // KC: interpo codes 1 etc. don't have proper analytic integral.
     
     //    cout << "check: " << interp.getVal() << endl;
     proto->import(interp); // individual params have already been imported in first loop of this function

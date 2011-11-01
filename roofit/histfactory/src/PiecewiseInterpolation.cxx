@@ -240,6 +240,18 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   if (_forceNumInt) return 0 ;
 
 
+  // KC: check if interCode=0 for all 
+  RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
+  int i=0;
+  while( paramIterExtra.next() ) {
+    if(_interpCode.at(i)!=0){
+      // can't factorize integral
+      cout <<"can't factorize integral"<<endl;
+      return 0;
+    }
+    ++i;
+  }
+
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
   //  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
@@ -271,7 +283,8 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   RooFIter highIter(_highSet.fwdIterator()) ;
   RooFIter paramIter(_paramSet.fwdIterator()) ;
 
-  int i=0;
+  //  int i=0;
+  i=0;
   while(paramIter.next() ) {
     func = (RooAbsReal*)lowIter.next() ;
     funcInt = func->createIntegral(analVars) ;
@@ -320,6 +333,19 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   i = 0;
   RooFIter paramIter(_paramSet.fwdIterator()) ;
 
+  // KC: old interp code with new iterator
+  while( (param=(RooAbsReal*)paramIter.next()) ) {
+    low = (RooAbsReal*)lowIntIter.next() ;
+    high = (RooAbsReal*)highIntIter.next() ;
+    
+    if(param->getVal()>0) {
+      value += param->getVal()*(high->getVal() - nominal );
+    } else {
+      value += param->getVal()*(nominal - low->getVal());
+    }
+    ++i;
+  }
+
   /* // MB : old bit of interpolation code
   while( (param=(RooAbsReal*)_paramIter->Next()) ) {
     low = (RooAbsReal*)lowIntIter->Next() ;
@@ -334,6 +360,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   }
   */
 
+  /* KC: the code below is wrong.  Can't pull out a constant change to a non-linear shape deformation.
   while( (param=(RooAbsReal*)paramIter.next()) ) {
     low = (RooAbsReal*)lowIntIter.next() ;
     high = (RooAbsReal*)highIntIter.next() ;
@@ -381,6 +408,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
     }
     ++i;
   }
+  */
 
   return value;
 }
