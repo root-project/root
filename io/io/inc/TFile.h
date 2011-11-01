@@ -163,6 +163,7 @@ public:
    virtual void        FillBuffer(char *&buffer);
    virtual void        Flush();
    TArchiveFile       *GetArchive() const { return fArchive; }
+   Long64_t            GetArchiveOffset() const { return fArchiveOffset; }
    Int_t               GetBestBuffer() const;
    virtual Int_t       GetBytesToPrefetch() const;
    TFileCacheRead     *GetCacheRead() const;

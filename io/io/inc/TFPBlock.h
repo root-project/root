@@ -51,6 +51,7 @@ public:
    char     *GetBuffer() const;
 
    void SetBuffer(char*);
+   void SetPos(Int_t, Long64_t);
    void ReallocBlock(Long64_t*, Int_t*, Int_t);
 
    ClassDef(TFPBlock, 0);  // File prefetch block

@@ -307,7 +307,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
 //______________________________________________________________________________
 TTreeCache::~TTreeCache()
 {
-   // destructor. (in general called by the TFile destructor
+   // destructor. (in general called by the TFile destructor)
 
    delete fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
@@ -818,7 +818,11 @@ void TTreeCache::ResetCache()
 {
    // This will simply clear the cache
    TFileCacheRead::Prefetch(0,0);
-
+   
+   if (fEnablePrefetching) {
+      fFirstTime = kTRUE;
+      TFileCacheRead::SecondPrefetch(0, 0);
+   }
 }
 
 //_____________________________________________________________________________

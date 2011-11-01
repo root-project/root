@@ -114,6 +114,16 @@ char* TFPBlock::GetBuffer() const
    return fBuffer;
 }
 
+
+//__________________________________________________________________
+void TFPBlock::SetPos(Int_t idx, Long64_t value)
+{
+   // Set pos value for index idx.
+
+   fPos[idx] = value;
+}
+
+
 //__________________________________________________________________
 void TFPBlock::SetBuffer(char* buf)
 {
