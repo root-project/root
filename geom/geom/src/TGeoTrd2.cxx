@@ -142,7 +142,7 @@ void TGeoTrd2::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    safe = safemin = TMath::Abs(fDz-TMath::Abs(point[2]));
    norm[0] = norm[1] = 0;
    norm[2] = (dir[2]>=0)?1:-1;
-   if (safe<1E-6) return;
+   if (safe<TGeoShape::Tolerance()) return;
    // check X facettes
    Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
    if (distx>=0) {
@@ -157,7 +157,7 @@ void TGeoTrd2::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
             norm[0]=-norm[0];
             norm[2]=-norm[2];
          }   
-         if (safe<1E-6) return;
+         if (safe<TGeoShape::Tolerance()) return;
       }
    }
    
@@ -171,7 +171,7 @@ void TGeoTrd2::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       if (safe<safemin) {
          norm[0] = 0;
          norm[1] = (point[1]>0)?calf:(-calf);
-         norm[2] = calf*fx;
+         norm[2] = calf*fy;
          Double_t dot = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
          if (dot<0) {
             norm[1]=-norm[1];
