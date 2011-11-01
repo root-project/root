@@ -322,9 +322,9 @@ int main(int argc, char **argv)
          Printf("Unknown action code: %d - Protocol error?", iact);
       }
    }
-   catch (std::exception& exc) {
-      Printf("Standard exception caught: we abort whatever it is ...");
-      throw exc;
+   catch (std::exception& exp) {
+      Printf("Standard exception caught: '%s' - We exit whatever it is ...", exp.what());
+      gSystem->Exit(rc);
    }
    catch (const char *str) {
       Printf("Exception thrown: %s", str);

@@ -97,7 +97,8 @@ extern "C" {
       if (create) {
          new TCanvas(name, "FeedBack", 800,30,700,500);
       } else {
-         TCanvas *c = (TCanvas *) gROOT->GetListOfCanvases()->FindObject(name);
+         TCanvas *c = (gROOT->GetListOfCanvases()) ?
+            (TCanvas *) gROOT->GetListOfCanvases()->FindObject(name) : 0;
          if (c) delete c;
       }
       // Done
@@ -153,7 +154,8 @@ Bool_t TProofDraw::Notify()
 
    PDB(kDraw,1) Info("Notify","Enter");
    if (fStatus == 0) {
-      if (!(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"))))
+      if (!fOutput || (fOutput &&
+         !(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status")))))
          return kFALSE;
    }
    if (!fStatus->IsOk()) return kFALSE;
@@ -169,11 +171,16 @@ void TProofDraw::Begin(TTree *tree)
 
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   if (fTreeDrawArgsParser.GetObjectName() == "")
-      fTreeDrawArgsParser.SetObjectName("htemp");
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
+
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      if (fTreeDrawArgsParser.GetObjectName() == "")
+         fTreeDrawArgsParser.SetObjectName("htemp");
+   }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -501,26 +508,31 @@ void TProofDrawHist::Begin(TTree *tree)
 
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   if (fTreeDrawArgsParser.GetObjectName() == "")
-      fTreeDrawArgsParser.SetObjectName("htemp");
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   switch (fTreeDrawArgsParser.GetDimension()) {
-      case 1:
-         Begin1D(tree);
-         break;
-      case 2:
-         Begin2D(tree);
-         break;
-      case 3:
-         Begin3D(tree);
-         break;
-      default:
-         Error("Begin", "Wrong dimension");
-         break;
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      if (fTreeDrawArgsParser.GetObjectName() == "")
+         fTreeDrawArgsParser.SetObjectName("htemp");
+
+      switch (fTreeDrawArgsParser.GetDimension()) {
+         case 1:
+            Begin1D(tree);
+            break;
+         case 2:
+            Begin2D(tree);
+            break;
+         case 3:
+            Begin3D(tree);
+            break;
+         default:
+            Error("Begin", "Wrong dimension");
+            break;
+      }
    }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -673,26 +685,31 @@ void TProofDrawHist::DefVar()
 
    PDB(kDraw,1) Info("DefVar","Enter");
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   if (fTreeDrawArgsParser.GetObjectName() == "")
-      fTreeDrawArgsParser.SetObjectName("htemp");
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   switch (fTreeDrawArgsParser.GetDimension()) {
-      case 1:
-         DefVar1D();
-         break;
-      case 2:
-         DefVar2D();
-         break;
-      case 3:
-         DefVar3D();
-         break;
-      default:
-         Error("DefVar", "Wrong dimension");
-         break;
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      if (fTreeDrawArgsParser.GetObjectName() == "")
+         fTreeDrawArgsParser.SetObjectName("htemp");
+
+      switch (fTreeDrawArgsParser.GetDimension()) {
+         case 1:
+            DefVar1D();
+            break;
+         case 2:
+            DefVar2D();
+            break;
+         case 3:
+            DefVar3D();
+            break;
+         default:
+            Error("DefVar", "Wrong dimension");
+            break;
+      }
    }
    PDB(kDraw,1) Info("DefVar","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("DefVar","varexp: %s", fInitialExp.Data());
@@ -732,74 +749,79 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fHistogram);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   fDimension = fTreeDrawArgsParser.GetDimension();
-   TString exp = fTreeDrawArgsParser.GetExp();
-   const char *objname = fTreeDrawArgsParser.GetObjectName();
-   if (objname && strlen(objname) > 0 && strcmp(objname, "htemp")) {
-      TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
-      if (hist) {
-         fHistogram = (TH1 *) hist->Clone();
-         PDB(kDraw,1) Info("SlaveBegin","original histogram found");
-      } else {
-         PDB(kDraw,1) Info("SlaveBegin", "original object '%s' not found"
-                                         " or it is not a histogram", objname);
+      SafeDelete(fHistogram);
+
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      fDimension = fTreeDrawArgsParser.GetDimension();
+      TString exp = fTreeDrawArgsParser.GetExp();
+      const char *objname = fTreeDrawArgsParser.GetObjectName();
+      if (objname && strlen(objname) > 0 && strcmp(objname, "htemp")) {
+         TH1 *hist = dynamic_cast<TH1*> (fInput->FindObject(objname));
+         if (hist) {
+            fHistogram = (TH1 *) hist->Clone();
+            PDB(kDraw,1) Info("SlaveBegin","original histogram found");
+         } else {
+            PDB(kDraw,1) Info("SlaveBegin", "original object '%s' not found"
+                                          " or it is not a histogram", objname);
+         }
       }
+
+      // Create the histogram if not found in the input list
+      if (!fHistogram) {
+         Int_t countx = 100; double minx = 0, maxx = 0;
+         Int_t county = 100; double miny = 0, maxy = 0;
+         Int_t countz = 100; double minz = 0, maxz = 0;
+         if (fTreeDrawArgsParser.GetNoParameters() != 0) {
+            countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
+            county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, county);
+            countz = (Int_t) fTreeDrawArgsParser.GetIfSpecified(6, countz);
+            minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
+            maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
+            miny =  fTreeDrawArgsParser.GetIfSpecified(4, miny);
+            maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxy);
+            minz =  fTreeDrawArgsParser.GetIfSpecified(7, minz);
+            maxz =  fTreeDrawArgsParser.GetIfSpecified(8, maxz);
+         }
+         if (fTreeDrawArgsParser.GetNoParameters() != 3*fDimension)
+            Error("SlaveBegin", "Impossible - Wrong number of parameters");
+
+         if (fDimension == 1)
+            fHistogram = new TH1F(fTreeDrawArgsParser.GetObjectName(),
+                                 fTreeDrawArgsParser.GetObjectTitle(),
+                                 countx, minx, maxx);
+         else if (fDimension == 2){
+            fHistogram = new TH2F(fTreeDrawArgsParser.GetObjectName(),
+                                 fTreeDrawArgsParser.GetObjectTitle(),
+                                 countx, minx, maxx,
+                                 county, miny, maxy);
+         }
+         else if (fDimension == 3) {
+            fHistogram = new TH3F(fTreeDrawArgsParser.GetObjectName(),
+                                 fTreeDrawArgsParser.GetObjectTitle(),
+                                 countx, minx, maxx,
+                                 county, miny, maxy,
+                                 countz, minz, maxz);
+         } else {
+            Info("Begin", "Wrong dimension");
+            return;        // FIXME: end the session
+         }
+         if (minx >= maxx)
+            fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
+         if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
+            if (strstr(opt->GetTitle(), "rebin"))
+               fHistogram->SetBit(TH1::kCanRebin);
+         }
+      }
+      fHistogram->SetDirectory(0);   // take ownership
+      fOutput->Add(fHistogram);      // release ownership
    }
-
-   // Create the histogram if not found in the input list
-   if (!fHistogram) {
-      Int_t countx = 100; double minx = 0, maxx = 0;
-      Int_t county = 100; double miny = 0, maxy = 0;
-      Int_t countz = 100; double minz = 0, maxz = 0;
-      if (fTreeDrawArgsParser.GetNoParameters() != 0) {
-         countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
-         county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, county);
-         countz = (Int_t) fTreeDrawArgsParser.GetIfSpecified(6, countz);
-         minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
-         maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
-         miny =  fTreeDrawArgsParser.GetIfSpecified(4, miny);
-         maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxy);
-         minz =  fTreeDrawArgsParser.GetIfSpecified(7, minz);
-         maxz =  fTreeDrawArgsParser.GetIfSpecified(8, maxz);
-      }
-      if (fTreeDrawArgsParser.GetNoParameters() != 3*fDimension)
-         Error("SlaveBegin", "Impossible - Wrong number of parameters");
-
-      if (fDimension == 1)
-         fHistogram = new TH1F(fTreeDrawArgsParser.GetObjectName(),
-                              fTreeDrawArgsParser.GetObjectTitle(),
-                              countx, minx, maxx);
-      else if (fDimension == 2){
-         fHistogram = new TH2F(fTreeDrawArgsParser.GetObjectName(),
-                              fTreeDrawArgsParser.GetObjectTitle(),
-                              countx, minx, maxx,
-                              county, miny, maxy);
-      }
-      else if (fDimension == 3) {
-         fHistogram = new TH3F(fTreeDrawArgsParser.GetObjectName(),
-                              fTreeDrawArgsParser.GetObjectTitle(),
-                              countx, minx, maxx,
-                              county, miny, maxy,
-                              countz, minz, maxz);
-      } else {
-         Info("Begin", "Wrong dimension");
-         return;        // FIXME: end the session
-      }
-      if (minx >= maxx)
-         fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
-      if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
-         if (strstr(opt->GetTitle(), "rebin"))
-            fHistogram->SetBit(TH1::kCanRebin);
-      }
-   }
-   fHistogram->SetDirectory(0);   // take ownership
-   fOutput->Add(fHistogram);      // release ownership
 
    fTree = 0;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
@@ -899,18 +921,23 @@ void TProofDrawEventList::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   SafeDelete(fEventLists);
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   fDimension = 0;
-   fTree = 0;
-   fEventLists = new TList();
-   fEventLists->SetName("PROOF_EventListsList");
-   fOutput->Add(fEventLists);
+      SafeDelete(fEventLists);
+
+      fDimension = 0;
+      fTree = 0;
+      fEventLists = new TList();
+      fEventLists->SetName("PROOF_EventListsList");
+      fOutput->Add(fEventLists);
+   }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -996,17 +1023,22 @@ void TProofDrawEntryList::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   SafeDelete(fElist);
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   fDimension = 0;
-   fTree = 0;
-   fElist = new TEntryList("PROOF_EntryList", "PROOF_EntryList");
-   fOutput->Add(fElist);
+      SafeDelete(fElist);
+
+      fDimension = 0;
+      fTree = 0;
+      fElist = new TEntryList("PROOF_EntryList", "PROOF_EntryList");
+      fOutput->Add(fElist);
+   }
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1094,10 +1126,15 @@ void TProofDrawProfile::DefVar()
    if (fTreeDrawArgsParser.GetDimension() < 0) {
 
       // Init parser
-      fSelection = fInput->FindObject("selection")->GetTitle();
-      fInitialExp = fInput->FindObject("varexp")->GetTitle();
+      TObject *os = fInput->FindObject("selection");
+      TObject *ov = fInput->FindObject("varexp");
 
-      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      if (os && ov) {
+         fSelection = ov->GetTitle();
+         fInitialExp = ov->GetTitle();
+
+         fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      }
    }
 
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
@@ -1138,24 +1175,29 @@ void TProofDrawProfile::Begin(TTree *tree)
 
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   TObject *orig = fTreeDrawArgsParser.GetOriginal();
-   TH1* pold;
-   if ((pold = dynamic_cast<TProfile*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
-      TProfile* pnew = (TProfile*) pold->Clone();
-      pnew->Reset();
-      fInput->Add(pnew);
-   } else {
-      delete orig;
-      DefVar();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+
+      R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
+
+      TObject *orig = fTreeDrawArgsParser.GetOriginal();
+      TH1* pold;
+      if ((pold = dynamic_cast<TProfile*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
+         TProfile* pnew = (TProfile*) pold->Clone();
+         pnew->Reset();
+         fInput->Add(pnew);
+      } else {
+         delete orig;
+         DefVar();
+      }
    }
-
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
    fTree = 0;
@@ -1172,55 +1214,61 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
 
-   SafeDelete(fProfile);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
+
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+
+      SafeDelete(fProfile);
 
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   fDimension = 2;
-   TString exp = fTreeDrawArgsParser.GetExp();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      fDimension = 2;
+      TString exp = fTreeDrawArgsParser.GetExp();
 
-   if (fTreeDrawArgsParser.GetOriginal()) {
-      fProfile = dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal());
-      if (fProfile) {
-         fOutput->Add(fProfile);
-         PDB(kDraw,1) Info("SlaveBegin","Original profile histogram found");
-         return;
+      if (fTreeDrawArgsParser.GetOriginal()) {
+         fProfile = dynamic_cast<TProfile*> (fTreeDrawArgsParser.GetOriginal());
+         if (fProfile) {
+            fOutput->Add(fProfile);
+            PDB(kDraw,1) Info("SlaveBegin","Original profile histogram found");
+            return;
+         }
+         else
+            Error("SlaveBegin","Original object found but it is not a histogram");
       }
-      else
-         Error("SlaveBegin","Original object found but it is not a histogram");
-   }
-   Int_t countx = 100; double minx = 0, maxx = 0;
-   if (fTreeDrawArgsParser.GetNoParameters() != 0) {
-      countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
-   }
-   if (fTreeDrawArgsParser.GetNoParameters() != 3)
-      Error("SlaveBegin", "Impossible - Wrong number of parameters");
-   TString constructorOptions = "";
-   if (fOption.Contains("profs"))
-      constructorOptions = "s";
-   else if (fOption.Contains("profi"))
-      constructorOptions = "i";
-   else if (fOption.Contains("profg"))
-      constructorOptions = "g";
+      Int_t countx = 100; double minx = 0, maxx = 0;
+      if (fTreeDrawArgsParser.GetNoParameters() != 0) {
+         countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
+         minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
+         maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
+      }
+      if (fTreeDrawArgsParser.GetNoParameters() != 3)
+         Error("SlaveBegin", "Impossible - Wrong number of parameters");
+      TString constructorOptions = "";
+      if (fOption.Contains("profs"))
+         constructorOptions = "s";
+      else if (fOption.Contains("profi"))
+         constructorOptions = "i";
+      else if (fOption.Contains("profg"))
+         constructorOptions = "g";
 
-   fProfile = new TProfile(fTreeDrawArgsParser.GetObjectName(),
-                           fTreeDrawArgsParser.GetObjectTitle(),
-                           countx, minx, maxx,
-                           constructorOptions);
-   if (minx >= maxx)
-      fProfile->SetBuffer(TH1::GetDefaultBufferSize());
+      fProfile = new TProfile(fTreeDrawArgsParser.GetObjectName(),
+                              fTreeDrawArgsParser.GetObjectTitle(),
+                              countx, minx, maxx,
+                              constructorOptions);
+      if (minx >= maxx)
+         fProfile->SetBuffer(TH1::GetDefaultBufferSize());
 
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
-      if (strstr(opt->GetTitle(), "rebin"))
-         fProfile->SetBit(TH1::kCanRebin);
+      if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
+         if (strstr(opt->GetTitle(), "rebin"))
+            fProfile->SetBit(TH1::kCanRebin);
+      }
+      fProfile->SetDirectory(0);   // take ownership
+      fOutput->Add(fProfile);      // release ownership
    }
-   fProfile->SetDirectory(0);   // take ownership
-   fOutput->Add(fProfile);      // release ownership
    fTree = 0;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1309,10 +1357,15 @@ void TProofDrawProfile2D::DefVar()
    if (fTreeDrawArgsParser.GetDimension() < 0) {
 
       // Init parser
-      fSelection = fInput->FindObject("selection")->GetTitle();
-      fInitialExp = fInput->FindObject("varexp")->GetTitle();
+      TObject *os = fInput->FindObject("selection");
+      TObject *ov = fInput->FindObject("varexp");
 
-      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      if (os && ov) {
+         fSelection = os->GetTitle();
+         fInitialExp = ov->GetTitle();
+
+         fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      }
    }
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
@@ -1364,24 +1417,28 @@ void TProofDrawProfile2D::Begin(TTree *tree)
 
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   TObject *orig = fTreeDrawArgsParser.GetOriginal();
-   TProfile2D *pold;
-   if ((pold = dynamic_cast<TProfile2D*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
-      TProfile2D* pnew = (TProfile2D*) pold->Clone();
-      pnew->Reset();
-      fInput->Add(pnew);
-   } else {
-      delete orig;
-      DefVar();
+      R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
+
+      TObject *orig = fTreeDrawArgsParser.GetOriginal();
+      TProfile2D *pold;
+      if ((pold = dynamic_cast<TProfile2D*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
+         TProfile2D* pnew = (TProfile2D*) pold->Clone();
+         pnew->Reset();
+         fInput->Add(pnew);
+      } else {
+         delete orig;
+         DefVar();
+      }
    }
-
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1396,59 +1453,64 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fProfile);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
 
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   fDimension = 2;
-   TString exp = fTreeDrawArgsParser.GetExp();
+      SafeDelete(fProfile);
 
-   if (fTreeDrawArgsParser.GetOriginal()) {
-      fProfile = dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal());
-      if (fProfile) {
-         fOutput->Add(fProfile);
-         PDB(kDraw,1) Info("SlaveBegin","Original profile histogram found");
-         return;
-      } else
-         Error("SlaveBegin","Original object found but it is not a histogram");
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      fDimension = 2;
+      TString exp = fTreeDrawArgsParser.GetExp();
+
+      if (fTreeDrawArgsParser.GetOriginal()) {
+         fProfile = dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal());
+         if (fProfile) {
+            fOutput->Add(fProfile);
+            PDB(kDraw,1) Info("SlaveBegin","Original profile histogram found");
+            return;
+         } else
+            Error("SlaveBegin","Original object found but it is not a histogram");
+      }
+      Int_t countx = 40; double minx = 0, maxx = 0;
+      Int_t county = 40; double miny = 0, maxy = 0;
+      if (fTreeDrawArgsParser.GetNoParameters() != 0) {
+         countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
+         minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
+         maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
+         county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, countx);
+         miny =  fTreeDrawArgsParser.GetIfSpecified(4, minx);
+         maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxx);
+      }
+      if (fTreeDrawArgsParser.GetNoParameters() != 6)
+         Error("SlaveBegin", "Impossible - Wrong number of parameters");
+
+      TString constructorOptions = "";
+      if (fOption.Contains("profs"))
+         constructorOptions = "s";
+      else if (fOption.Contains("profi"))
+         constructorOptions = "i";
+      else if (fOption.Contains("profg"))
+         constructorOptions = "g";
+
+      fProfile = new TProfile2D(fTreeDrawArgsParser.GetObjectName(),
+                              fTreeDrawArgsParser.GetObjectTitle(),
+                              countx, minx, maxx,
+                              county, miny, maxy,
+                              constructorOptions);
+      if (minx >= maxx)
+         fProfile->SetBuffer(TH1::GetDefaultBufferSize());
+
+      if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
+         if (strstr(opt->GetTitle(), "rebin"))
+            fProfile->SetBit(TH1::kCanRebin);
+      }
+      fProfile->SetDirectory(0);   // take ownership
+      fOutput->Add(fProfile);      // release ownership
    }
-   Int_t countx = 40; double minx = 0, maxx = 0;
-   Int_t county = 40; double miny = 0, maxy = 0;
-   if (fTreeDrawArgsParser.GetNoParameters() != 0) {
-      countx = (Int_t) fTreeDrawArgsParser.GetIfSpecified(0, countx);
-      minx =  fTreeDrawArgsParser.GetIfSpecified(1, minx);
-      maxx =  fTreeDrawArgsParser.GetIfSpecified(2, maxx);
-      county = (Int_t) fTreeDrawArgsParser.GetIfSpecified(3, countx);
-      miny =  fTreeDrawArgsParser.GetIfSpecified(4, minx);
-      maxy =  fTreeDrawArgsParser.GetIfSpecified(5, maxx);
-   }
-   if (fTreeDrawArgsParser.GetNoParameters() != 6)
-      Error("SlaveBegin", "Impossible - Wrong number of parameters");
-
-   TString constructorOptions = "";
-   if (fOption.Contains("profs"))
-      constructorOptions = "s";
-   else if (fOption.Contains("profi"))
-      constructorOptions = "i";
-   else if (fOption.Contains("profg"))
-      constructorOptions = "g";
-
-   fProfile = new TProfile2D(fTreeDrawArgsParser.GetObjectName(),
-                             fTreeDrawArgsParser.GetObjectTitle(),
-                             countx, minx, maxx,
-                             county, miny, maxy,
-                             constructorOptions);
-   if (minx >= maxx)
-      fProfile->SetBuffer(TH1::GetDefaultBufferSize());
-
-   if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
-      if (strstr(opt->GetTitle(), "rebin"))
-         fProfile->SetBit(TH1::kCanRebin);
-   }
-   fProfile->SetDirectory(0);   // take ownership
-   fOutput->Add(fProfile);      // release ownership
    fTree = 0;
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1536,17 +1598,21 @@ void TProofDrawGraph::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fGraph);
-   fDimension = 2;
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   fGraph = new TGraph();
-   fGraph->SetName("PROOF_GRAPH");
-   fOutput->Add(fGraph);                         // release ownership
+      SafeDelete(fGraph);
+      fDimension = 2;
 
+      fGraph = new TGraph();
+      fGraph->SetName("PROOF_GRAPH");
+      fOutput->Add(fGraph);                         // release ownership
+   }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1675,17 +1741,21 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fPolyMarker3D);
-   fDimension = 3;
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
-   fPolyMarker3D = new TPolyMarker3D();
-   fOutput->Add(fPolyMarker3D);      // release ownership
+      SafeDelete(fPolyMarker3D);
+      fDimension = 3;
 
+      fPolyMarker3D = new TPolyMarker3D();
+      fOutput->Add(fPolyMarker3D);      // release ownership
+   }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1848,19 +1918,23 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fPoints);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
-   fDimension = 3;
+      SafeDelete(fPoints);
 
-   fPoints = new TProofVectorContainer<Point3D_t>(new std::vector<Point3D_t>);
-   fPoints->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fPoints);      // release ownership (? FIXME)
+      fDimension = 3;
 
+      fPoints = new TProofVectorContainer<Point3D_t>(new std::vector<Point3D_t>);
+      fPoints->SetName("PROOF_SCATTERPLOT");
+      fOutput->Add(fPoints);      // release ownership (? FIXME)
+   }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
@@ -1999,19 +2073,23 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    // Get the weight
    TProofDraw::FillWeight();
 
-   fSelection = fInput->FindObject("selection")->GetTitle();
-   fInitialExp = fInput->FindObject("varexp")->GetTitle();
-   fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
-   R__ASSERT(fTreeDrawArgsParser.GetDimension() == 4);
+   TObject *os = fInput->FindObject("selection");
+   TObject *ov = fInput->FindObject("varexp");
 
-   SafeDelete(fPoints);
+   if (os && ov) {
+      fSelection = os->GetTitle();
+      fInitialExp = ov->GetTitle();
+      fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
+      R__ASSERT(fTreeDrawArgsParser.GetDimension() == 4);
 
-   fDimension = 4;
+      SafeDelete(fPoints);
 
-   fPoints = new TProofVectorContainer<Point4D_t>(new std::vector<Point4D_t>);
-   fPoints->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fPoints);      // release ownership (? FIXME)
+      fDimension = 4;
 
+      fPoints = new TProofVectorContainer<Point4D_t>(new std::vector<Point4D_t>);
+      fPoints->SetName("PROOF_SCATTERPLOT");
+      fOutput->Add(fPoints);      // release ownership (? FIXME)
+   }
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
