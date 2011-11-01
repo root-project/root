@@ -34,7 +34,7 @@
 ClassImp(TBonjourResolver)
 
 //______________________________________________________________________________
-TBonjourResolver::TBonjourResolver() : fDNSRef(0), fBonjourSocketHandler(0)
+TBonjourResolver::TBonjourResolver() : fDNSRef(0), fBonjourSocketHandler(0), fPort(0)
 {
    // Default ctor.
 }

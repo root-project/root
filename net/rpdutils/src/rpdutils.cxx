@@ -3207,7 +3207,7 @@ int RpdSRPUser(const char *sstr)
       int lenU, ofs, opt;
       char dumm[20];
       sscanf(sstr, "%d %d %d %d %127s %19s", &gRemPid, &ofs, &opt, &lenU, user, dumm);
-      lenU = (lenU > kMAXUSERLEN) ? kMAXUSERLEN-1 : lenU;
+      lenU = (lenU > kMAXUSERLEN-1) ? kMAXUSERLEN-1 : lenU;
       user[lenU] = '\0';
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #ifdef R__SSL
