@@ -172,6 +172,8 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    // list have to contain a histogram and a tree. In case the list contains
    // collections, the objects in the input lists must also be collections with
    // the same structure and number of objects.
+   // The objects inside the collection do not have a Merge function (like TObjString)
+   // rather than being merged all the instances are appended to the output.
    //
    // Example
    // =========
@@ -197,35 +199,41 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    TObject *object;
    TObject *objtomerge;
    TObject *collcrt;
-   TSeqCollection *templist;
+   TSeqCollection *templist = 0;
    TMethodCall callEnv;
    Int_t indobj = 0;
+   TSeqCollection *notmergeable = 0;
+   Bool_t mergeable = kTRUE;
    while ((object = nextobject())) {   // loop objects in this collection
-      // If current object is not mergeable just skip it
+      mergeable = kTRUE;
+      // If current object has not dictionary just add it
       if (!object->IsA()) {
-         indobj++;  // current object non-mergeable, go to next object
-         continue;
+         mergeable = kFALSE;
+      } else {
+         // If current object is not mergeable just add it
+         callEnv.InitWithPrototype(object->IsA(), "Merge", "TCollection*");
+         if (!callEnv.IsValid()) mergeable = kFALSE;
       }
-      callEnv.InitWithPrototype(object->IsA(), "Merge", "TCollection*");
-      if (!callEnv.IsValid()) {
-         indobj++;  // no Merge() interface, go to next object
-         continue;
+      if (mergeable) {
+         // Current object mergeable - get corresponding objects in input lists
+         templist = (TSeqCollection*)IsA()->New();
+      } else {
+         templist = 0;
       }
-      // Current object mergeable - get corresponding objects in input lists
-      templist = (TSeqCollection*)IsA()->New();
       nextlist.Reset();
       Int_t indcoll = 0;
       while ((collcrt = nextlist())) {      // loop input lists
          if (!collcrt->InheritsFrom(TSeqCollection::Class())) {
             Error("Merge", "some objects in the input list are not collections - merging aborted");
-            delete templist;
+            SafeDelete(templist);
             return 0;
          }
          // The next object to be merged with is a collection
          // the iterator skips the 'holes' the collections, we also need to do so.
          objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
          if (!objtomerge) {
-            Warning("Merge", "Object of type %s (position %d in list) not found in list %d. Continuing...", object->ClassName(), indobj, indcoll);
+            Warning("Merge", "object of type %s (position %d in list) not found in list %d. Continuing...",
+                             object->ClassName(), indobj, indcoll);
             continue;
          }
 /*
@@ -239,19 +247,39 @@ Long64_t TSeqCollection::Merge(TCollection *list)
 */
          if (object->IsA() != objtomerge->IsA()) {
             Error("Merge", "object of type %s at index %d not matching object of type %s in input list",
-                  object->ClassName(), indobj, objtomerge->ClassName());
-            delete templist;
+                           object->ClassName(), indobj, objtomerge->ClassName());
+            SafeDelete(templist);
             return 0;
          }
          // Add object at index indobj in the temporary list
-         templist->Add(objtomerge);
-         nmerged++;
+         if (mergeable) {
+            templist->Add(objtomerge);
+            nmerged++;
+         } else {
+            // Just add it to the dedicated temp list for later addition to the current list
+	    if (!notmergeable) notmergeable = (TSeqCollection*)IsA()->New();
+            if (notmergeable)
+               notmergeable->Add(objtomerge);
+            else
+               Warning("Merge", "temp list for non mergeable objects not created!");
+         }
       }
       // Merge current object with objects in the temporary list
-      callEnv.SetParam((Long_t) templist);
-      callEnv.Execute(object);
-      delete templist;
+      if (mergeable) {
+         callEnv.SetParam((Long_t) templist);
+         callEnv.Execute(object);
+         SafeDelete(templist);
+      }
       indobj++;
    }
+
+   // Add the non-mergeable objects, if any
+   if (notmergeable && notmergeable->GetSize() > 0) {
+      TIter nxnm(notmergeable);
+      TObject *onm = 0;
+      while ((onm = nxnm())) { Add(onm); }
+      SafeDelete(notmergeable);
+   }
+
    return nmerged;
 }
