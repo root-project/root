@@ -42,6 +42,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
    {
+   // Find a match within the ROOT module for something with name 'pyname'.
       const char* cname = 0;
       if ( pyname && PyROOT_PyUnicode_CheckExact( pyname ) )
          cname = PyROOT_PyUnicode_AsString( pyname );
@@ -490,6 +491,7 @@ extern "C" PyObject* PyInit_libPyROOT()
 extern "C" void initlibPyROOT()
 #endif
 {
+// Initialization of extension module libPyROOT.
    using namespace PyROOT;
 
 // load commonly used python strings

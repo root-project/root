@@ -85,8 +85,8 @@ inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
 template< class T, class M >
 inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
 {
-// helper code to prevent some duplication; this is called from CallSafe() as well
-// as directly from TMethodHolder::Execute in fast mode
+// Helper code to prevent some duplication; this is called from CallSafe() as well
+// as directly from TMethodHolder::Execute in fast mode.
 
    PyObject* result = 0;
 
@@ -109,8 +109,8 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
 template< class T, class M >
 inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
 {
-// helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
-// block that saves the stack for restoration in case of an otherwise fatal signal
+// Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
+// block that saves the stack for restoration in case of an otherwise fatal signal.
 
    PyObject* result = 0;
 

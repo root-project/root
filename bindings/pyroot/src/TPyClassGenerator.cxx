@@ -24,6 +24,7 @@ namespace {
    //_________________________________________________________________________
    int PyCtorCallback( G__value* res, G__CONST char*, struct G__param*, int )
    {
+   // CINT-installable constructor callback.
       int tagnum = G__value_get_tagnum( res );
       PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( tagnum );
       if ( ! pyclass )
@@ -45,6 +46,7 @@ namespace {
    //_________________________________________________________________________
    int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int )
    {
+   // CINT-installable member function callback.
       PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
       if ( ! pyfunc )
          return 0;
@@ -130,13 +132,16 @@ namespace {
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 {
+// Just forward.
    return GetClass( name, load, kFALSE );
 }
 
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silent )
 {
-   // called if all other class generators failed, attempt to build from python class
+// Class generator to make python classes available to CINT.
+   
+// called if all other class generators failed, attempt to build from python class
    if ( PyROOT::gDictLookupActive == kTRUE )
       return 0;                              // call originated from python
 
@@ -237,12 +242,13 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 //____________________________________________________________________________
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load, Bool_t silent )
 {
+// Just forward; based on type name only.
    return GetClass( typeinfo.name(), load, silent );
 }
 
 //____________________________________________________________________________
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
 {
-// just forward, based on name only
+// Just forward; based on type name only
    return GetClass( typeinfo.name(), load );
 }

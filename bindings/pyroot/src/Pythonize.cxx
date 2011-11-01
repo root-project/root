@@ -63,6 +63,7 @@ namespace {
 
 //____________________________________________________________________________
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
+   // Scan the name of the class and determine whether it is a template instantiation.
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
 
@@ -74,6 +75,7 @@ namespace {
 // to prevent compiler warnings about const char* -> char*
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth )
    {
+   // Helper; call method with signature: obj->meth().
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod( obj, const_cast< char* >( meth ), const_cast< char* >( "" ) );
       Py_DECREF( obj );
@@ -83,7 +85,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
    {
-   // Helper; call method with signature: meth( pyobj ).
+   // Helper; call method with signature: obj->meth( arg1 ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "O" ), arg1 );
@@ -95,7 +97,7 @@ namespace {
    inline PyObject* CallPyObjMethod(
       PyObject* obj, const char* meth, PyObject* arg1, PyObject* arg2 )
    {
-   // Helper; call method with signature: meth( pyobj, pyobj ).
+   // Helper; call method with signature: obj->meth( arg1, arg2 ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "OO" ), arg1, arg2 );
@@ -106,7 +108,7 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
    {
-   // Helper; call method with signature: meth( pyobj, int ).
+   // Helper; call method with signature: obj->meth( arg1, int ).
       Py_INCREF( obj );
       PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "Oi" ), arg1, arg2 );
@@ -998,6 +1000,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //____________________________________________________________________________
    PyObject* TObjStringLength( PyObject* self )
    {
+   // Implementation of python __len__ for TObjString.
       PyObject* data = CallPyObjMethod( self, "GetName" );
       Py_ssize_t size = PySequence_Size( data );
       Py_DECREF( data );
@@ -1008,6 +1011,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //- TIter behavior -------------------------------------------------------------
    PyObject* TIterIter( PyObject* self )
    {
+   // Implementation of python __iter__ (iterator protocol) for TIter.
       Py_INCREF( self );
       return self;
    }
@@ -1015,6 +1019,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 //____________________________________________________________________________
    PyObject* TIterNext( PyObject* self )
    {
+   // Implementation of python __next__ (iterator protocol) for TIter.
       PyObject* next = CallPyObjMethod( self, "Next" );
 
       if ( ! next )
@@ -1924,6 +1929,8 @@ namespace {
 //- public functions -----------------------------------------------------------
 Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 {
+// Add pre-defined pythonizations (for STL and ROOT) to classes based on their
+// signature and/or class name.
    if ( pyclass == 0 )
       return kFALSE;
 

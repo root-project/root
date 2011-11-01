@@ -68,6 +68,7 @@ ClassImp(TPySelector)
 //- private helpers ----------------------------------------------------------
 void TPySelector::SetupPySelf()
 {
+// Install the python side identity of the TPySelector.
    if ( fPySelf && fPySelf != Py_None )
       return;                      // already created ...
 

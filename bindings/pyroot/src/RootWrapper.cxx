@@ -63,6 +63,7 @@ namespace {
 // helper for creating new ROOT python types
    PyObject* CreateNewROOTPythonClass( const std::string& name, PyObject* pybases )
    {
+   // Create a new python shadow class with the required hierarchy and meta-classes.
       Py_XINCREF( pybases );
       if ( ! pybases ) {
          pybases = PyTuple_New( 1 );
@@ -101,6 +102,7 @@ namespace {
 // helper to split between CINT and Reflex
    Long_t GetDataMemberAddress( TClass* klass, TDataMember* mb )
    {
+   // Get the address of a data member (CINT-style).
       Long_t offset = 0;
       G__DataMemberInfo dmi = ((G__ClassInfo*)klass->GetClassInfo())->GetDataMember( mb->GetName(), &offset );
       return dmi.Offset();
@@ -109,6 +111,7 @@ namespace {
 #ifdef PYROOT_USE_REFLEX
    Long_t GetDataMemberAddress( const ROOT::Reflex::Scope&, const ROOT::Reflex::Member& mb )
    {
+   // Get the address of a data member (Reflex-style).
       return (Long_t)mb.Offset();
    }
 #endif
@@ -121,6 +124,8 @@ namespace {
 
    inline void AddToGlobalScope( const char* label, TObject* obj, TClass* klass )
    {
+   // Bind the given object with the given class in the global scope with the
+   // given label for its reference.
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
    }
@@ -129,6 +134,7 @@ namespace {
    struct InitSTLTypes_t {
       InitSTLTypes_t()
       {
+      // Initialize the sets of known STL (container) types.
          std::string nss = "std::";
 
          const char* stlTypes[] = { "complex", "exception",
@@ -383,6 +389,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 template< class T, class B, class M >
 PyObject* PyROOT::BuildRootClassBases( const T& klass )
 {
+// Build a tuple of python shadow classes of all the bases of the given 'klass'.
    size_t nbases = klass.BaseSize();
 
 // collect bases while removing duplicates
@@ -432,6 +439,7 @@ template PyObject* PyROOT::BuildRootClassBases< \
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 {
+// Build a python shadow class for the given ROOT class.
    std::string cname = PyROOT_PyUnicode_AsString( PyTuple_GetItem( args, 0 ) );
 
    if ( PyErr_Occurred() )
@@ -443,6 +451,8 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
 {
+// Build a python shadow class for the given ROOT class.
+
 // locate class by full name, if possible to prevent parsing scopes/templates anew
    PyClassMap_t::iterator pci = gPyClasses.find( (void*)klass );
    if ( pci != gPyClasses.end() ) {
