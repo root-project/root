@@ -36,7 +36,7 @@ ClassImp(TBasketSQL)
 namespace std {} using namespace std;
 
 //_________________________________________________________________________
-TBasketSQL::TBasketSQL() : TBasket()
+TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
 {
    // Default constructor.
 

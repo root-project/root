@@ -106,6 +106,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
    TBufferFile(mode),
    TXMLSetup(*file),
+   fXML(0),
    fStack(),
    fVersionBuf(-111),
    fObjMap(0),

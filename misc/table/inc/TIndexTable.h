@@ -52,7 +52,7 @@ public:
       Bool_t operator!=(const iterator &t) const { return !operator==(t); }
    };
    TIndexTable(const TTable *table);
-   TIndexTable(const TIndexTable &indx): TTable(indx){}
+   TIndexTable(const TIndexTable &indx): TTable(indx),fRefTable(indx.fRefTable) {}
    int  *GetTable(Int_t i=0);
    Bool_t  IsValid() const;
    void    push_back(Long_t next);

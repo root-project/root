@@ -35,53 +35,48 @@
 #include "TObjArray.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TError.h"
 
 ClassImp(TEntryListFromFile)
 
-TEntryListFromFile::TEntryListFromFile():TEntryList()
+TEntryListFromFile::TEntryListFromFile(): TEntryList(), 
+   fListFileName(""), fListName(""), fNFiles(0), fListOffset(0), fFile(0), fFileNames(0)
 {
-// default c-tor
-
-   fListFileName ="";
-   fNFiles = 0;
-   fFile = 0;
+   // default constructor.
+   
 }
 
 //______________________________________________________________________________
-TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles):TEntryList()
+TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles) : TEntryList(), 
+   fListFileName(filename), fListName(listname), fNFiles(nfiles), fListOffset(0), fFile(0), fFileNames(0)
 {
-// File naming convention:
-// - by default, filename_elist.root is used, where filename is the
-//   name of the chain element
-// - xxx$xxx.root - $ sign is replaced by the name of the chain element
-// The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
-// function.
-// If the list name is not specified, the first object of class TEntryList
-// in the file is taken.  
-// nfiles is the total number of files to process
-
-   fListFileName = filename;
-   fListName = listname;
-   fNFiles = nfiles;
+   // File naming convention:
+   // - by default, filename_elist.root is used, where filename is the
+   //   name of the chain element
+   // - xxx$xxx.root - $ sign is replaced by the name of the chain element
+   // The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
+   // function.
+   // If the list name is not specified, the first object of class TEntryList
+   // in the file is taken.  
+   // nfiles is the total number of files to process
+   
    fListOffset = new Long64_t[fNFiles+1];
    fListOffset[0]=0;
    for (Int_t i=1; i<fNFiles+1; i++){
       fListOffset[i]=kBigNumber;
    }
    fN = kBigNumber;
-   fFile = 0;
 }
 
 //______________________________________________________________________________
 TEntryListFromFile::~TEntryListFromFile()
 {
-// d-tor
-
+   // d-tor
+   
    delete [] fListOffset;
    fListOffset = 0;
    delete fFile;
    fFile = 0;
-
 }
 
 //______________________________________________________________________________
@@ -91,12 +86,12 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
    //See also Next() for a faster alternative
    
    if (index<0) return -1;
-
+   
    if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=kBigNumber){
       Error("GetEntry", "Index value is too large\n");
       return -1;
    }
-
+   
    if (index==fLastIndexQueried+1)
       return Next();
    
@@ -109,7 +104,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
       Error("GetEntry", "All lists are empty\n");
       return -1;
    }
-
+   
    if (index < fListOffset[fTreeNumber]) {
       //this entry is in one of previously opened lists
       itree=0;
@@ -154,7 +149,7 @@ Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 {
    //return the entry corresponding to the index parameter and the
    //number of the tree, where this entry is
-
+   
    Long64_t result = GetEntry(index);
    treenum = fTreeNumber;
    return result;
@@ -165,7 +160,7 @@ Long64_t TEntryListFromFile::GetEntries()
 {
    //Returns the total number of entries in the list.
    //If some lists have not been loaded, loads them.
-
+   
    if (fN==kBigNumber){
       for (Int_t i=0; i<fNFiles; i++){
          if (fListOffset[i+1]==kBigNumber){
@@ -183,7 +178,7 @@ Long64_t TEntryListFromFile::Next()
 {
    //Returns the next entry in the list.
    //Faster than GetEntry()   
-
+   
    Int_t itree =0;
    while (!fCurrent && itree<fNFiles){
       LoadList(itree);
@@ -193,7 +188,7 @@ Long64_t TEntryListFromFile::Next()
       Error("Next", "All lists are empty\n");
       return -1;
    }
-
+   
    Long64_t retentry = fCurrent->Next();
    if (retentry<0){
       if (fLastIndexQueried == fListOffset[fTreeNumber+1]-1){
@@ -218,7 +213,7 @@ Long64_t TEntryListFromFile::Next()
       }
       
    }
-
+   
    fLastIndexQueried++;
    fLastIndexReturned = retentry;
    return retentry;
@@ -230,7 +225,7 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 {
    //Loads the list #listnumber
    //This is the only function that can modify fCurrent and fFile data members
-
+   
    //first close the current list
    if (fCurrent){
       if (fFile) {
@@ -239,6 +234,8 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
          fCurrent = 0;
       }
    }
+   
+   R__ASSERT(fFileNames);
    
    //find the right name
    //get the name of the corresponding chain element (with the treenumber=listnumber)
@@ -258,17 +255,17 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
       //printf("filename: %s\n", filename.Data());
       fFile = TFile::Open(filename.Data());
    }
-
+   
    if (!fFile || fFile->IsZombie()){
       if (fFile) {
          delete fFile;
          fFile = 0;
       }
       fCurrent = 0;
-      fListOffset[listnumber+1]=fListOffset[listnumber];
+      fListOffset[listnumber+1] = fListOffset[listnumber];
       return -1;
    }
-
+   
    if (!strcmp(fListName.Data(), "")){
       TKey *key;
       TIter nextkey(fFile->GetListOfKeys());
@@ -281,7 +278,7 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
    } else {
       fCurrent = (TEntryList*)fFile->Get(fListName.Data());
    }
-
+   
    if (!fCurrent){
       Error("LoadList", "List %s not found in the file\n", fListName.Data());
       fCurrent = 0;
@@ -305,39 +302,43 @@ void TEntryListFromFile::Print(const Option_t* option) const
    printf("total number of files: %d\n", fNFiles);
    TFile *f;
    TEntryList *el=0;
-   for (Int_t listnumber=0; listnumber<fNFiles; listnumber++){
-      TNamed *nametitle = (TNamed*)fFileNames->At(listnumber);
-      TString filename_short = nametitle->GetTitle();
-      if (filename_short.Contains(".root")){
-         filename_short.Remove(filename_short.Length()-5, 5);
-      }
-      if (!strcmp(fListFileName.Data(), "")){
-      //no name supplied, use the one of the chain file
-         filename_short.Append("_elist.root");
-         //printf("filename: %s\n", filename_short.Data());
-         f = TFile::Open(filename_short.Data());
-      } else {
-         TString filename = fListFileName;
-         filename.ReplaceAll("$", filename_short);
-         //printf("filename: %s\n", filename.Data());
-         f = TFile::Open(filename.Data());
-      }
-      if (f && !f->IsZombie()){
-         if (!strcmp(fListName.Data(), "")){
-            TKey *key;
-            TIter nextkey(f->GetListOfKeys());
-            while ((key=(TKey*)nextkey())){
-               if (strcmp("TEntryList", key->GetClassName())==0){
-                  //found an object of class TEntryList
-                  el = (TEntryList*)key->ReadObj();
-               }
-            }
-         } else {
-            el = (TEntryList*)f->Get(fListName.Data());
+   if (fFileNames==0) {
+      Error("Print","fFileNames was not set properly.");
+   } else {
+      for (Int_t listnumber=0; listnumber<fNFiles; listnumber++){
+         TNamed *nametitle = (TNamed*)fFileNames->At(listnumber);
+         TString filename_short = nametitle->GetTitle();
+         if (filename_short.Contains(".root")){
+            filename_short.Remove(filename_short.Length()-5, 5);
          }
-         if (el) 
-            el->Print(option);
+         if (!strcmp(fListFileName.Data(), "")){
+            //no name supplied, use the one of the chain file
+            filename_short.Append("_elist.root");
+            //printf("filename: %s\n", filename_short.Data());
+            f = TFile::Open(filename_short.Data());
+         } else {
+            TString filename = fListFileName;
+            filename.ReplaceAll("$", filename_short);
+            //printf("filename: %s\n", filename.Data());
+            f = TFile::Open(filename.Data());
+         }
+         if (f && !f->IsZombie()){
+            if (!strcmp(fListName.Data(), "")){
+               TKey *key;
+               TIter nextkey(f->GetListOfKeys());
+               while ((key=(TKey*)nextkey())){
+                  if (strcmp("TEntryList", key->GetClassName())==0){
+                     //found an object of class TEntryList
+                     el = (TEntryList*)key->ReadObj();
+                  }
+               }
+            } else {
+               el = (TEntryList*)f->Get(fListName.Data());
+            }
+            if (el) 
+               el->Print(option);
+         }
       }
    }
-
+   
 }

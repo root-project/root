@@ -57,7 +57,7 @@ TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
 
 //______________________________________________________________________________
 TSelectorEntries::TSelectorEntries(const char *selection) : 
-   fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
+   fChain(0), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
 { 
    // Constructor.
 
