@@ -2745,7 +2745,12 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    // Add the new tree to the list of clones so that
    // we can later inform it of changes to branch addresses.
    thistree->AddClone(newtree);
-
+   if (thistree != this) {
+      // In case this object is a TChain, add the clone
+      // also to the TChain's list of clones.
+      AddClone(newtree);
+   }
+   
    newtree->Reset();
 
    TDirectory* ndir = newtree->GetDirectory();
