@@ -114,8 +114,10 @@ void TSelectorDraw::Begin(TTree *tree)
    fDimension = 0;
    fAction = 0;
 
-   const char *varexp0   = fInput->FindObject("varexp")->GetTitle();
-   const char *selection = fInput->FindObject("selection")->GetTitle();
+   TObject *obj = fInput->FindObject("varexp");
+   const char *varexp0   = obj ? obj->GetTitle() : "";
+   obj = fInput->FindObject("selection");
+   const char *selection = obj ? obj->GetTitle() : "";
    const char *option    = GetOption();
 
    TString  opt;

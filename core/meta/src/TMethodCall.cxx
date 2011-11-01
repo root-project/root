@@ -30,6 +30,7 @@
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TVirtualMutex.h"
+#include "TError.h"
 
 ClassImp(TMethodCall)
 
@@ -146,8 +147,9 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
       UInt_t nested = 0;
       for(int i=strlen(function); i>=0; --i) {
          switch(function[i]) {
-            case '<': --nested; break;
-            case '>': ++nested; break;
+            case '<': ++nested; break;
+            case '>': if (nested==0) { Error("TMethodCall R__FindScope","%s is not well formed function name",function); return 0; }
+                      --nested; break;
             case ':':
                if (nested==0) {
                   if (i>2 && function[i-1]==':') {

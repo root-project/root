@@ -4066,7 +4066,7 @@ Int_t TTree::Fill()
             if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
             if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
-      } else if (fNClusterRange && (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush) {
+      } else if (fNClusterRange && fAutoFlush && (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
             //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
             AutoSave("flushbaskets");
@@ -4077,7 +4077,7 @@ Int_t TTree::Fill()
             if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;         
-      } else if (fNClusterRange == 0 && fEntries > 1 && fEntries%fAutoFlush == 0) {
+      } else if (fNClusterRange == 0 && fEntries > 1 && fAutoFlush && fEntries%fAutoFlush == 0) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
             //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
             AutoSave("flushbaskets");
@@ -5900,6 +5900,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
             branch->SetCompressionSettings(0);
          }
       }
+      // coverity[divide_by_zero] newMemsize can not be zero as there is at least one leaf
       memFactor = Double_t(maxMemory)/Double_t(newMemsize);
       if (memFactor > 100) memFactor = 100;
       Double_t bmin_new = bmin*memFactor;

@@ -229,7 +229,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
                   ++nest;
                   break;
                case '>':
-                  --nest;
+                  if (nest) --nest;
                   break;
                case ',':
                   if (nest == 1) {
@@ -364,6 +364,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
             if (nest == 1) last = i + 1;
             break;
          case '>':
+            if (nest == 0) return; // The name is not well formed, give up.
             --nest; /* intentional fall throught to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
@@ -443,6 +444,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             if (nest == 1) last = i + 1;
             break;
          case '>':
+            if (nest==0) return ninc; // the name is not well formed, give up.
             --nest; /* intentional fall throught to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {

@@ -975,7 +975,8 @@ namespace {
       for (UInt_t i = oldlen, done = false, nest = 0; (i>0) && !done ; --i) {
          switch (oldClass->GetName()[i-1]) {
             case '>' : ++nest; break;
-            case '<' : --nest; break;
+            case '<' : if (nest==0) return kFALSE; // the name is not well formed, give up. 
+                       --nest; break;
             case ':' : if (nest == 0) oldname= &(oldClass->GetName()[i]); done = kTRUE; break;
          }
       }
@@ -2600,6 +2601,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                isTemplate = kTRUE;
                break;
             case '>':
+               if (nest == 0) { cur = len; continue; } // the name is not well formed, give up.
                --nest;
                break;
             case ':': {
@@ -2996,15 +2998,18 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 
    TString sourcename; sourcename.Form( "%s/%sProjectSource.cxx", dirname, gSystem->BaseName(dirname) );
    FILE *sfp = fopen( sourcename.Data(), "a" );
-   GenerateDeclaration(fp, sfp, subClasses);
-   
+   if (sfp) {
+      GenerateDeclaration(fp, sfp, subClasses);
+   } else {
+      Error("GenerateHeaderFile","Could not open %s for appending",sourcename.Data());
+   }
    TMakeProject::GeneratePostDeclaration(fp, this, inclist);
 
    fprintf(fp,"#endif\n");
 
    delete [] inclist;
    fclose(fp);
-   fclose(sfp);
+   if (sfp) fclose(sfp);
    return 1;
 }
 

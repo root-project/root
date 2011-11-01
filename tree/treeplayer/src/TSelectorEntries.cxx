@@ -95,7 +95,8 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
 
    SetStatus(0);
    fSelectedRows   = 0;
-   const char *selection = fInput->FindObject("selection")->GetTitle();
+   TObject *selectObj = fInput->FindObject("selection");
+   const char *selection = selectObj ? selectObj->GetTitle() : "";
 
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fChain);

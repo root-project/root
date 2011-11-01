@@ -286,7 +286,7 @@ Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf
       total += len[j];
    }
 
-   if ( high / total < 10 ) {
+   if ( total && high / total < 10 ) {
 
       char *temp = new char[high];
       Seek(low);

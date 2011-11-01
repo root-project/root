@@ -789,7 +789,7 @@ Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCollection * pList,
          // just use the first one.
          next.Reset();
          pObj = next();
-         s = pObj->GetName();
+         if (pObj) s = pObj->GetName();
          break;
       }
    }

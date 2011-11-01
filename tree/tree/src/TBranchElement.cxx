@@ -2854,6 +2854,7 @@ void TBranchElement::InitializeOffsets()
                // -- My parent's parent is not a top-level branch.
                // Remove the base class name suffix from the parent name.
                // Note: The pattern is the name of the base class.
+               // coverity[forward_null] branchElem is non zero here since fType==1 and thus fID > -1
                TString pattern(branchElem->GetName());
                if (pattern.Length() <= parentName.Length()) {
                   if (!strcmp(parentName.Data() + (parentName.Length() - pattern.Length()), pattern.Data())) {

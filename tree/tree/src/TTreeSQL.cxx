@@ -257,6 +257,7 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
 
    if (fServer==0) return kFALSE;
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
+   if (!tables) return kFALSE;
    TSQLRow * row = 0;
    while( (row = tables->Next()) ) {
       if(table.CompareTo(row->GetField(0),TString::kIgnoreCase)==0){
@@ -680,7 +681,7 @@ Long64_t  TTreeSQL::GetEntries() const
    if (fServer==0) return GetEntriesFast();
    if (!CheckTable(fTable.Data())) return 0;
 
-   TTreeSQL* thisvar = (TTreeSQL*)this;
+   TTreeSQL* thisvar = const_cast<TTreeSQL*>(this);
 
    // What if the user already started to call GetEntry
    // What about the initial value of fEntries is it really 0?
@@ -691,10 +692,15 @@ Long64_t  TTreeSQL::GetEntries() const
    if (count==0) {
       thisvar->fEntries = 0;
    } else {
-      TString val = count->Next()->GetField(0);
-      Long_t ret;
-      sscanf(val.Data(), "%ld",&(ret) );
-      thisvar->fEntries = ret;
+      TSQLRow * row = count->Next();
+      if (row) {
+         TString val = row->GetField(0);
+         Long_t ret;
+         sscanf(val.Data(), "%ld",&(ret) );
+         thisvar->fEntries = ret;
+      } else {
+         thisvar->fEntries = 0;
+      }
    }
    return fEntries;
 }

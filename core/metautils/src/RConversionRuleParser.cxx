@@ -47,7 +47,8 @@ namespace ROOT
                break;
             }
             case '<': ++level; break;
-            case '>': --level; break;
+            case '>': if (level==0) { return std::string::npos; }
+                      --level; break;
             default: {
                // nothing to do
             }
