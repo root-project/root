@@ -175,11 +175,11 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
       if (resultIsAsymptotic) { 
          double maxSigma = fResults->fgAsymptoticMaxSigma;
          double dsig = 2* maxSigma/ (values.size() -1) ;         
-         int  i0 = TMath::Floor ( ( -nsig2 +  maxSigma )/dsig + 0.5);
-         int  i1 = TMath::Floor ( (-nsig1 +  maxSigma )/dsig + 0.5);
-         int  i2 = TMath::Floor ( ( maxSigma)/dsig + 0.5);
-         int  i3 = TMath::Floor ( ( nsig1 + maxSigma)/dsig + 0.5);
-         int  i4 = TMath::Floor ( ( nsig2 + maxSigma)/dsig + 0.5);
+         int  i0 = (int) TMath::Floor ( ( -nsig2 +  maxSigma )/dsig + 0.5);
+         int  i1 = (int) TMath::Floor ( (-nsig1 +  maxSigma )/dsig + 0.5);
+         int  i2 = (int) TMath::Floor ( ( maxSigma)/dsig + 0.5);
+         int  i3 = (int) TMath::Floor ( ( nsig1 + maxSigma)/dsig + 0.5);
+         int  i4 = (int) TMath::Floor ( ( nsig2 + maxSigma)/dsig + 0.5);
          q[0] = values[i0];
          q[1] = values[i1];
          q[2] = values[i2];

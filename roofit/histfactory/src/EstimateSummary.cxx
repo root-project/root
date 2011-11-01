@@ -46,7 +46,7 @@ namespace RooStats {
       cout << "  Number of overall systematics = " << overallSyst.size() << endl;
     }
 
-    void EstimateSummary::AddSyst(const  string &sname, TH1F* low, TH1F* high){
+    void EstimateSummary::AddSyst(const  string &sname, TH1* low, TH1* high){
       systSourceForHist.push_back(sname);
       lowHists.push_back(low);
       highHists.push_back(high);

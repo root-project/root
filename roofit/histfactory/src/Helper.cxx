@@ -68,8 +68,8 @@ namespace HistFactory{
   void saveInputs(TFile* outFile, string channel, vector<EstimateSummary> summaries){
     vector<EstimateSummary>::iterator it = summaries.begin();
     vector<EstimateSummary>::iterator end = summaries.end();
-    vector<TH1F*>::iterator histIt;
-    vector<TH1F*>::iterator histEnd;
+    vector<TH1*>::iterator histIt;
+    vector<TH1*>::iterator histEnd;
     outFile->mkdir(channel.c_str());
 
     for(; it!=end; ++it){
@@ -101,7 +101,7 @@ namespace HistFactory{
   }
 
 
-  TH1F * GetHisto( TFile * inFile, const string name ){
+  TH1 * GetHisto( TFile * inFile, const string name ){
 
   if(!inFile || name.empty()){
     cerr << "Not all necessary info are set to access the input file. Check your config" << endl;
@@ -112,7 +112,7 @@ namespace HistFactory{
   #ifdef DEBUG
     cout << "Retrieving " << name ;
   #endif
-    TH1F * ptr = (TH1F *) (inFile->Get( name.c_str() )->Clone());  
+    TH1 * ptr = (TH1 *) (inFile->Get( name.c_str() )->Clone());  
   #ifdef DEBUG
     cout << " found at " << ptr << " with integral " << ptr->Integral() << " and mean " << ptr->GetMean() << endl;
   #endif

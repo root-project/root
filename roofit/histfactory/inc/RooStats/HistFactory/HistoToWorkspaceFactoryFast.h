@@ -24,7 +24,7 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 #include <TObject.h>
-#include <TH1F.h>
+#include <TH1.h>
 #include <TDirectory.h>
 
 #include "RooStats/HistFactory/EstimateSummary.h"
@@ -59,12 +59,13 @@ namespace HistFactory{
 
       void Customize(RooWorkspace* proto, const char* pdfNameChar, map<string,string> renameMap);
 
-      void EditSyst(RooWorkspace* proto, const char* pdfNameChar, map<string,double> gammaSyst, map<string,double> uniformSyst, map<string,double> logNormSyst);
+      void EditSyst(RooWorkspace* proto, const char* pdfNameChar, 
+		    map<string,double> gammaSyst, map<string,double> uniformSyst, map<string,double> logNormSyst, map<string,double> noSyst);
 
       void FormatFrameForLikelihood(RooPlot* frame, string XTitle=string("#sigma / #sigma_{SM}"), string YTitle=string("-log likelihood"));
 
 
-      void LinInterpWithConstraint(RooWorkspace* proto, TH1F* nominal, vector<TH1F*> lowHist, vector<TH1F*> highHist,
+      void LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, vector<TH1*> lowHist, vector<TH1*> highHist,
                  vector<string> sourceName, string prefix, string productPrefix, string systTerm,
                  int lowBin, int highBin, vector<string>& likelihoodTermNames);
 
@@ -79,10 +80,14 @@ namespace HistFactory{
       TDirectory* Mkdir( TDirectory * file, string name );
 
       void PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params, string filename);
-      void ProcessExpectedHisto(TH1F* hist,RooWorkspace* proto, string prefix, string productPrefix, string systTerm, double low, double high, int lowBin, int highBin);
+      void ProcessExpectedHisto(TH1* hist,RooWorkspace* proto, string prefix, string productPrefix, string systTerm, double low, double high, int lowBin, int highBin);
       void SetObsToExpected(RooWorkspace* proto, string obsPrefix, string expPrefix, int lowBin, int highBin);
       void FitModel(RooWorkspace *, string, string, string, bool=false  );
       std::string FilePrefixStr(std::string);
+
+      inline void SetObsNameVec(const std::vector<std::string>& obsNameVec) { fObsNameVec = obsNameVec; }
+      inline void SetObsName(const std::string& obsName) { fObsNameVec.clear(); fObsNameVec.push_back(obsName); fObsName = obsName; }
+      inline void AddObsName(const std::string& obsName) { fObsNameVec.push_back(obsName); }
 
       string fFileNamePrefix;
       string fRowTitle;
@@ -92,7 +97,13 @@ namespace HistFactory{
       std::stringstream fResultsPrefixStr;
       TFile * fOut_f;
       FILE * pFile;
-      string fObsName;
+
+  private:
+
+      void GuessObsNameVec(TH1* hist);
+
+      std::vector<std::string> fObsNameVec;
+      std::string fObsName;
 
       ClassDef(RooStats::HistFactory::HistoToWorkspaceFactoryFast,2)
   };

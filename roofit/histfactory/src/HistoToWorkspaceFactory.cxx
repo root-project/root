@@ -55,7 +55,7 @@ END_HTML
 #include "TH3F.h"
 #include "TFile.h"
 #include "TCanvas.h"
-#include "TH1F.h"
+#include "TH1.h"
 #include "TLine.h"
 #include "TTree.h"
 #include "TMarker.h"
@@ -132,7 +132,7 @@ namespace HistFactory{
     return ss.str();
   }
 
-  void HistoToWorkspaceFactory::ProcessExpectedHisto(TH1F* hist,RooWorkspace* proto, string prefix, string productPrefix, string systTerm, double low, double high, int lowBin, int highBin){
+  void HistoToWorkspaceFactory::ProcessExpectedHisto(TH1* hist,RooWorkspace* proto, string prefix, string productPrefix, string systTerm, double low, double high, int lowBin, int highBin){
     if(hist)
       cout << "processing hist " << hist->GetName() << endl;
     else
@@ -194,7 +194,7 @@ namespace HistFactory{
   }
 
 
-  void HistoToWorkspaceFactory::LinInterpWithConstraint(RooWorkspace* proto, TH1F* nominal, vector<TH1F*> lowHist, vector<TH1F*> highHist, 
+  void HistoToWorkspaceFactory::LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, vector<TH1*> lowHist, vector<TH1*> highHist, 
              vector<string> sourceName, string prefix, string productPrefix, string systTerm, 
              int lowBin, int highBin, vector<string>& likelihoodTermNames){
     // these are the nominal predictions: eg. the mean of some space of variations
@@ -762,7 +762,7 @@ namespace HistFactory{
 
       overallSystName=AddNormFactor(proto, channel, overallSystName, *it, doRatio); 
       // get histogram
-      TH1F* nominal = it->nominal;
+      TH1* nominal = it->nominal;
       if(it->lowHists.size() == 0){
         cout << it->name+"_"+it->channel+" has no variation histograms " <<endl;
         string expPrefix=it->name+"_"+it->channel+"_expN";

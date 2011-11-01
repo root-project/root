@@ -692,7 +692,7 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const
       const std::vector<double> & values = limitDist->GetSamplingDistribution();
       if (values.size() <= 1) return 0; 
       double dsig = 2* fgAsymptoticMaxSigma/ (values.size() -1) ;
-      int  i = TMath::Floor ( (nsig +  fgAsymptoticMaxSigma)/dsig + 0.5);
+      int  i = (int) TMath::Floor ( (nsig +  fgAsymptoticMaxSigma)/dsig + 0.5);
       return values[i];
    }
 

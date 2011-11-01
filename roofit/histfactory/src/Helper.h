@@ -24,7 +24,7 @@ namespace RooStats{
 namespace HistFactory{
   vector<EstimateSummary>*  loadSavedInputs(TFile* outFile, string channel );
   void saveInputs(TFile* outFile, string channel, vector<EstimateSummary> summaries);
-  TH1F * GetHisto( TFile * inFile, const string name );
+  TH1 * GetHisto( TFile * inFile, const string name );
   TH1 * GetHisto( const string file, const string path, const string obj );
   bool AddSummaries( vector<EstimateSummary> & summary, vector<vector<EstimateSummary> > &master);
   vector<pair<string, string> > get_comb(vector<string> names);

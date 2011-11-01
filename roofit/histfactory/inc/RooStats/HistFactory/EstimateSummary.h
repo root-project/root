@@ -12,7 +12,7 @@
 #ifndef ROOSTATS_ESTIMATESUMMARY_h
 #define ROOSTATS_ESTIMATESUMMARY_h
 
-#include "TH1F.h"
+#include "TH1.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -33,7 +33,7 @@ struct  EstimateSummary : public TObject {
    };
    
    typedef std::vector<std::string> vecstring;
-   typedef std::vector<TH1F*> vechist;
+   typedef std::vector<TH1*> vechist;
    typedef std::pair<double, double> pairdouble;
    typedef std::map<std::string, std::pair<double, double> > mappair;
       
@@ -41,7 +41,7 @@ struct  EstimateSummary : public TObject {
    EstimateSummary();
    virtual ~EstimateSummary();
    void Print(const char *opt = 0) const ;
-   void AddSyst( const std::string & sname, TH1F* low, TH1F* high);
+   void AddSyst( const std::string & sname, TH1* low, TH1* high);
    bool operator==(const EstimateSummary &other) const ;
    bool CompareHisto( const TH1 * one, const TH1 * two) const ;
    
@@ -50,10 +50,10 @@ struct  EstimateSummary : public TObject {
    std::string name; 
    std::string channel; 
    std::string normName;
-   TH1F* nominal;  // x pb per jet bin.  all histograms need index of binning to be consistent
+   TH1* nominal;  // x pb per jet bin.  all histograms need index of binning to be consistent
    std::vector<std::string> systSourceForHist;
-   std::vector<TH1F*> lowHists; // x pb per jet bin for - variations over list of systematics
-   std::vector<TH1F*> highHists; // x pb per jet bin for + variations over list of systematics
+   std::vector<TH1*> lowHists; // x pb per jet bin for - variations over list of systematics
+   std::vector<TH1*> highHists; // x pb per jet bin for + variations over list of systematics
    std::map<std::string, std::pair<double, double> > overallSyst; // "acceptance"->(0.8,1.2)
    std::pair<double, double> dummyForRoot;
    std::vector<NormFactor> normFactor;
