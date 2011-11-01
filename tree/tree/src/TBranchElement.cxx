@@ -2530,6 +2530,8 @@ void* TBranchElement::GetValuePointer() const
       return 0;
    } else if (fType == 41) {
       return 0;
+   } else if (prID < 0) {
+      return object;
    } else {
       //return GetInfoImp()->GetValue(object,fID,j,-1);
       if (!GetInfoImp() || !object) return 0;
