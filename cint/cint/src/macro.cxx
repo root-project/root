@@ -732,6 +732,8 @@ G__value G__execfuncmacro(const char* item, int* done)
    fpos_t call_pos;
    if (G__ifile.fp) {
       fgetpos(G__ifile.fp, &call_pos);
+   } else {
+      memset(&call_pos,0,sizeof(fpos_t));
    }
    //
    //  Search for translated macro function.
