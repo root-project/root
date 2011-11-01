@@ -15,13 +15,13 @@ drop_from_path()
       return 1
    fi
 
-   path=$1
+   p=$1
    drop=$2
 
-   newpath=`echo $path | sed -e "s;:${drop}:;:;g" \
-                             -e "s;:${drop};;g"   \
-                             -e "s;${drop}:;;g"   \
-                             -e "s;${drop};;g"`
+   newpath=`echo $p | sed -e "s;:${drop}:;:;g" \
+                          -e "s;:${drop};;g"   \
+                          -e "s;${drop}:;;g"   \
+                          -e "s;${drop};;g"`
 }
 
 if [ -n "${ROOTSYS}" ] ; then
