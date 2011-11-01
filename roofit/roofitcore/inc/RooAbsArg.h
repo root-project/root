@@ -409,7 +409,7 @@ public:
 
   // Dirty state modifiers
  public:
-  inline void setValueDirty() const {   if (_operMode==Auto && !_inhibitDirty) setValueDirty(0) ; }
+  inline void setValueDirty() const {   if (_operMode==Auto && !inhibitDirty()) setValueDirty(0) ; }
   inline void setShapeDirty() const { setShapeDirty(0) ; } 
 
   inline void clearValueAndShapeDirty() const {

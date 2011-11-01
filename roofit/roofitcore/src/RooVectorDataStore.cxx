@@ -41,6 +41,7 @@
 using namespace std ;
 
 ClassImp(RooVectorDataStore)
+ClassImp(RooVectorDataStore::RealVector)
 ;
 
 
@@ -1219,6 +1220,78 @@ void RooVectorDataStore::dump()
     }    
   }
 }
+
+
+//______________________________________________________________________________
+void RooVectorDataStore::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooVectorDataStore.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooVectorDataStore::Class(),this);
+
+      _firstReal = &_realStoreList.front() ;
+      _firstRealF = &_realfStoreList.front() ;
+      _firstCat = &_catStoreList.front() ;
+
+      for (vector<RealVector*>::iterator iter1 = _realStoreList.begin() ; iter1!=_realStoreList.end() ; ++iter1) {
+	RooAbsArg* arg = _varsww.find((*iter1)->_real->GetName()) ;
+	arg->attachToVStore(*this) ;
+      }
+      for (vector<RealFullVector*>::iterator iter2 = _realfStoreList.begin() ; iter2!=_realfStoreList.end() ; ++iter2) {
+	RooAbsArg* arg = _varsww.find((*iter2)->_real->GetName()) ;
+	arg->attachToVStore(*this) ;
+      }
+      for (vector<CatVector*>::iterator iter3 = _catStoreList.begin() ; iter3!=_catStoreList.end() ; ++iter3) {
+	RooAbsArg* arg = _varsww.find((*iter3)->_cat->GetName()) ;
+	arg->attachToVStore(*this) ;
+      }
+
+   } else {
+      R__b.WriteClassBuffer(RooVectorDataStore::Class(),this);
+   }
+}
+
+
+
+//______________________________________________________________________________
+void RooVectorDataStore::RealVector::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooVectorDataStore::RealVector.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooVectorDataStore::RealVector::Class(),this);
+      _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
+   } else {
+      R__b.WriteClassBuffer(RooVectorDataStore::RealVector::Class(),this);
+   }
+}
+
+//______________________________________________________________________________
+void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooVectorDataStore::RealFullVector.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
+   } else {
+      R__b.WriteClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
+   }
+}
+
+//______________________________________________________________________________
+void RooVectorDataStore::CatVector::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooVectorDataStore::CatVector.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooVectorDataStore::CatVector::Class(),this);
+      _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
+   } else {
+      R__b.WriteClassBuffer(RooVectorDataStore::CatVector::Class(),this);
+   }
+}
+
 
 
 

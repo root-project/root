@@ -48,6 +48,8 @@ public:
   // Write current row
   virtual Int_t fill() ;
 
+  virtual Double_t sumEntries() const ;
+
   // Retrieve a row
   using RooAbsDataStore::get ;
   virtual const RooArgSet* get(Int_t index) const ;

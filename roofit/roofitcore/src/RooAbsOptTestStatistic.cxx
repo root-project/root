@@ -65,11 +65,18 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
   // Default Constructor
 
   // Initialize all non-persisted data members
-  _normSet = 0 ;
+
   _funcObsSet = 0 ;
-  _dataClone = 0 ;
+  _funcCloneSet = 0 ;
   _funcClone = 0 ;
+
+  _normSet = 0 ;
+  _dataClone = 0 ;
   _projDeps = 0 ;
+
+  _origFunc = 0 ;
+  _origData = 0 ;
+
   _ownData = kTRUE ;
   _sealed = kFALSE ;
 }
@@ -101,10 +108,14 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   // Don't do a thing in master mode
 
   if (operMode()!=Slave) {
+    _funcObsSet = 0 ;
+    _funcCloneSet = 0 ;
+    _funcClone = 0 ;
     _normSet = 0 ;
     _dataClone = 0 ;
-    _funcClone = 0 ;
-    _projDeps = 0 ;
+    _projDeps = 0 ;    
+    _origFunc = 0 ;
+    _origData = 0 ;
     _ownData = kFALSE ;
     _sealed = kFALSE ;
     return ;
@@ -120,9 +131,16 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
   // Copy constructor
 
   // Don't do a thing in master mode
-  if (operMode()!=Slave) {
-    _projDeps = 0 ;
+  if (operMode()!=Slave) {    
+
+    _funcObsSet = 0 ;
+    _funcCloneSet = 0 ;
+    _funcClone = 0 ;
     _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
+    _dataClone = 0 ;
+    _projDeps = 0 ;    
+    _origFunc = 0 ;
+    _origData = 0 ;
     _ownData = kFALSE ;
     return ;
   }
@@ -151,6 +169,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Clone FUNC
   _funcClone = (RooAbsReal*) real.cloneTree() ;
+  _funcCloneSet = 0 ;
 
   // Attach FUNC to data set  
   _funcObsSet = _funcClone->getObservables(indata) ;

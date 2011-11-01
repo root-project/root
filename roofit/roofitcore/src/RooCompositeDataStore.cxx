@@ -42,7 +42,7 @@ ClassImp(RooCompositeDataStore)
 
 
 //_____________________________________________________________________________
-RooCompositeDataStore::RooCompositeDataStore() : _curStore(0), _curIndex(0)
+RooCompositeDataStore::RooCompositeDataStore() : _curStore(0), _curIndex(0), _indexCat(0)
 {
 }
 
@@ -120,6 +120,21 @@ Int_t RooCompositeDataStore::fill()
   RooAbsDataStore* subset = _dataMap[_indexCat->getIndex()] ;
   const_cast<RooArgSet*>((subset->get()))->assignValueOnly(_vars) ;
   return subset->fill() ;
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooCompositeDataStore::sumEntries() const 
+{
+  // Forward fill request to appropriate subset
+  Double_t sum(0) ;
+
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    sum+= iter->second->sumEntries() ;
+  }
+  return sum ;
 }
  
 

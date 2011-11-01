@@ -31,8 +31,6 @@ class TTree ;
 class RooFormulaVar ;
 class RooArgSet ;
 
-
-
 class RooVectorDataStore : public RooAbsDataStore {
 public:
 
@@ -138,7 +136,7 @@ public:
       _vec.reserve(initialCapacity) ; 
     }
 
-    ~RealVector() {
+    virtual ~RealVector() {
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=0) : 
@@ -201,10 +199,11 @@ public:
   private:
     friend class RooVectorDataStore ;
     RooAbsReal* _real ;
-    Double_t* _buf ; 
-    Double_t* _nativeBuf ;
+    Double_t* _buf ; //!
+    Double_t* _nativeBuf ; //!
     std::vector<Double_t> _vec ;
-    Double_t* _vec0 ;
+    Double_t* _vec0 ; //!
+    ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;
   
 
@@ -223,7 +222,7 @@ public:
       _vecE(0), _vecEL(0), _vecEH(0) { 
     }
 
-    ~RealFullVector() {
+    virtual ~RealFullVector() {
       if (_vecE) delete _vecE ;
       if (_vecEL) delete _vecEL ;
       if (_vecEH) delete _vecEH ;
@@ -329,9 +328,14 @@ public:
 
   private:
     friend class RooVectorDataStore ;
-    Double_t *_bufE, *_bufEL, *_bufEH ;
-    Double_t *_nativeBufE, *_nativeBufEL, *_nativeBufEH ;
+    Double_t *_bufE ; //!
+    Double_t *_bufEL ; //!
+    Double_t *_bufEH ; //!
+    Double_t *_nativeBufE ; //!
+    Double_t *_nativeBufEL ; //! 
+    Double_t *_nativeBufEH ; //!
     std::vector<Double_t> *_vecE, *_vecEL, *_vecEH ;
+    ClassDef(RealFullVector,1) // STL-vector-based Data Storage class
   } ;
   
 
@@ -349,7 +353,7 @@ public:
       _vec.reserve(initialCapacity) ;
     }
 
-    ~CatVector() {
+    virtual ~CatVector() {
     }
 
     CatVector(const CatVector& other, RooAbsCategory* cat=0) : 
@@ -408,10 +412,11 @@ public:
   private:
     friend class RooVectorDataStore ;
     RooAbsCategory* _cat ;
-    RooCatType* _buf ; 
-    RooCatType* _nativeBuf ; 
+    RooCatType* _buf ;  //!
+    RooCatType* _nativeBuf ;  //!
     std::vector<RooCatType> _vec ;
-    RooCatType* _vec0 ;
+    RooCatType* _vec0 ; //!
+    ClassDef(CatVector,1) // STL-vector-based Data Storage class
   } ;
   
 
@@ -448,7 +453,7 @@ public:
   }
 
   RealVector* addReal(RooAbsReal* real) {
-    
+
     RealVector* rv(0) ;
     
     // First try a match by name
@@ -468,6 +473,7 @@ public:
 	return (*iter2) ;
       }
     }    
+
 
     // If nothing found this will make an entry
     _realStoreList.push_back(new RealVector(real)) ;
