@@ -2843,30 +2843,32 @@ const char *TUnixSystem::GetLinkedLibraries()
    const char *cSOEXT=".so";
 #endif
    FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
-   TString ldd;
-   while (ldd.Gets(p)) {
-      TString delim(" \t");
-      TObjArray *tok = ldd.Tokenize(delim);
-
-      // expected format:
-      //    libCore.so => /home/rdm/root/lib/libCore.so (0x40017000)
-      TObjString *solibName = (TObjString*)tok->At(2);
-      if (!solibName) {
-         // case where there is only one name of the list:
-         //    /usr/platform/SUNW,UltraAX-i2/lib/libc_psr.so.1
-         solibName = (TObjString*)tok->At(0);
-      }
-      if (solibName) {
-         TString solib = solibName->String();
-         if (solib.EndsWith(cSOEXT)) {
-            if (!linkedLibs.IsNull())
-               linkedLibs += " ";
-            linkedLibs += solib;
+   if (p) {
+      TString ldd;
+      while (ldd.Gets(p)) {
+         TString delim(" \t");
+         TObjArray *tok = ldd.Tokenize(delim);
+         
+         // expected format:
+         //    libCore.so => /home/rdm/root/lib/libCore.so (0x40017000)
+         TObjString *solibName = (TObjString*)tok->At(2);
+         if (!solibName) {
+            // case where there is only one name of the list:
+            //    /usr/platform/SUNW,UltraAX-i2/lib/libc_psr.so.1
+            solibName = (TObjString*)tok->At(0);
          }
+         if (solibName) {
+            TString solib = solibName->String();
+            if (solib.EndsWith(cSOEXT)) {
+               if (!linkedLibs.IsNull())
+                  linkedLibs += " ";
+               linkedLibs += solib;
+            }
+         }
+         delete tok;
       }
-      delete tok;
+      ClosePipe(p);
    }
-   ClosePipe(p);
 #endif
 
    delete [] exe;

@@ -143,13 +143,12 @@ const char *TLDAPServer::GetNamingContexts()
 
    if (result) {
       TLDAPEntry *entry = result->GetNext();
-
-      TLDAPAttribute *attribute = entry->GetAttribute();
-
-      if (attribute)
-         namingcontexts = attribute->GetValue();
-
-      delete entry;
+      if (entry) {
+         TLDAPAttribute *attribute = entry->GetAttribute();
+         if (attribute)
+            namingcontexts = attribute->GetValue();
+         delete entry;
+      }
       delete result;
    }
    delete attrs;
@@ -173,12 +172,12 @@ const char *TLDAPServer::GetSubschemaSubentry()
 
    if (result) {
       TLDAPEntry *entry = result->GetNext();
-
-      TLDAPAttribute *attribute = entry->GetAttribute();
-      if (attribute)
-         subschema = attribute->GetValue();
-
-      delete entry;
+      if (entry) {
+         TLDAPAttribute *attribute = entry->GetAttribute();
+         if (attribute)
+            subschema = attribute->GetValue();
+         delete entry;
+      }
       delete result;
    }
    delete attrs;

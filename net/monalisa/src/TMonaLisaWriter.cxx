@@ -936,15 +936,14 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
 
       // This could be an info about an already closed file
       if (mi->fKillme) {
-         std::map<UInt_t, MonitoredTFileInfo *>::iterator tmpiter = iter;
-
          iter->second = 0;
       }
 
       iter++;
-      if (iter != fMonInfoRepo->end()) mi = iter->second;
-      else mi = 0;
-      
+      if (iter != fMonInfoRepo->end())
+         mi = iter->second;
+      else 
+         mi = 0;
    }
 
    for (iter = fMonInfoRepo->begin(); iter != fMonInfoRepo->end(); iter++)

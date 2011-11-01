@@ -688,28 +688,30 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
       fn.Form("P%03d_%s.C", idx, h->fClass.Data());
       const char *fd = gSystem->ConcatFileName(sdd, fn);
       FILE *f = fopen(fd, "w");
-      fprintf(f, "void P%03d_%s()\n{\n", idx, h->fClass.Data());
-      fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
-              h->fBase.Data(), h->fRegexp.Data(), h->fClass.Data());
-      fprintf(f, "      \"%s\", \"%s\");\n", h->fPlugin.Data(), h->fCtor.Data());
-
-      // check for different regexps cases for the same base + class and
-      // put them all in the same macro
-      TObjLink *lnk2 = lnk->Next();
-      while (lnk2) {
-         TPluginHandler *h2 = (TPluginHandler *) lnk2->GetObject();
-         if (h->fBase != h2->fBase || h->fClass != h2->fClass)
-            break;
-
+      if (f) {
+         fprintf(f, "void P%03d_%s()\n{\n", idx, h->fClass.Data());
          fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
-                 h2->fBase.Data(), h2->fRegexp.Data(), h2->fClass.Data());
-         fprintf(f, "      \"%s\", \"%s\");\n", h2->fPlugin.Data(), h2->fCtor.Data());
-
-         lnk  = lnk2;
-         lnk2 = lnk2->Next();
+                 h->fBase.Data(), h->fRegexp.Data(), h->fClass.Data());
+         fprintf(f, "      \"%s\", \"%s\");\n", h->fPlugin.Data(), h->fCtor.Data());
+         
+         // check for different regexps cases for the same base + class and
+         // put them all in the same macro
+         TObjLink *lnk2 = lnk->Next();
+         while (lnk2) {
+            TPluginHandler *h2 = (TPluginHandler *) lnk2->GetObject();
+            if (h->fBase != h2->fBase || h->fClass != h2->fClass)
+               break;
+            
+            fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
+                    h2->fBase.Data(), h2->fRegexp.Data(), h2->fClass.Data());
+            fprintf(f, "      \"%s\", \"%s\");\n", h2->fPlugin.Data(), h2->fCtor.Data());
+            
+            lnk  = lnk2;
+            lnk2 = lnk2->Next();
+         }
+         fprintf(f, "}\n");
+         fclose(f);
       }
-      fprintf(f, "}\n");
-      fclose(f);
       delete [] fd;
       lnk = lnk->Next();
    }
