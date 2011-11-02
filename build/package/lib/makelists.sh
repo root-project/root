@@ -87,6 +87,7 @@ for d in $l ; do
 	    	        # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" 
 	cint/reflex)	set_lib_names    core  "" libroot-core-dev
 	    	        extra="REFLEXLIB=${prefix}/lib/root/libReflex.so" ;;   
+	cint/cling)     continue ;; 
 	cint/*)	        set_lib_names    core  "" root-system-bin	;;
 	geom/geom)	set_lib_names	 $base ""	;;
 	geom/*) 	set_plugin_names $base $sub	;;
@@ -154,8 +155,8 @@ for d in $l ; do
     esac 
 
     # 
-    # Update package list for based on the Module.mk in thie currenly
-    # investiaged directory 
+    # Update package list based on the Module.mk in the currenly
+    # investigated directory 
     #
     # echo "Making list for $d (dev=$dev lib=$lib bin=$bin extra=$extra)"
     # echo "Making list for $d"
