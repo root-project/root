@@ -51,6 +51,7 @@ END_HTML
 #include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "Math/MinimizerOptions.h"
+#include "TStopwatch.h"
 
 namespace RooStats {
 
@@ -105,7 +106,12 @@ namespace RooStats {
 	 cout << "problem with data" << endl;
 	 return 0 ;
        }
+
+       //data.Print("V");
        
+       TStopwatch tsw; 
+       tsw.Start();
+
        RooRealVar* firstPOI = (RooRealVar*) paramsOfInterest.first();
        double initial_mu_value  = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
@@ -204,9 +210,18 @@ namespace RooStats {
        // other order
        // get the numerator
        RooArgSet* snap =  (RooArgSet*)paramsOfInterest.snapshot();
+
+       tsw.Stop(); 
+       double createTime = tsw.CpuTime();
+       tsw.Start();
+
        // get the denominator
        int statusD;
        double uncondML = GetMinNLL(statusD);
+
+       tsw.Stop();
+       double fitTime1 = tsw.CpuTime();
+       tsw.Start();
 
        // get best fit value for one-sided interval 
        double fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
@@ -250,9 +265,17 @@ namespace RooStats {
 //           }
        }
 
-       ooccoutD((TObject*)0,Eval) << "ProfileLikelihoodTestStat:Evaluate - mu hat = " << fit_favored_mu 
-                                          <<  " uncond ML = " << uncondML << " cond ML = " << ret+uncondML 
-                                          << " pll =  " << ret << std::endl;
+       tsw.Stop();
+       double fitTime2 = tsw.CpuTime();
+       //std::cout 
+       ooccoutD((TObject*)0,Eval) 
+          << "ProfileLikelihoodTestStat:Evaluate - mu hat = " << fit_favored_mu 
+          <<  " uncond ML = " << uncondML << " cond ML = " << ret+uncondML 
+          << " pll =  " << ret 
+          << " time (create/fit1/2) " << createTime << " , " << fitTime1 << " , " << fitTime2  
+          << std::endl;
+
+
 
        // need to restore the values ?
        *attachedSet = *origAttachedSet;
