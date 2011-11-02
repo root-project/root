@@ -67,6 +67,7 @@ TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
    fDialog  = 0;
    fTrash = new TList;
 
+   AddInput(kButtonPressMask | kButtonReleaseMask);
    gROOT->GetListOfCleanups()->Add(this);
    // Context menu handles its own messages
    Associate(this);
