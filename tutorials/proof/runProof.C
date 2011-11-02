@@ -145,6 +145,11 @@
 //
 //      root[] runProof("friends")
 //
+//      The trees are by default created in separate files; to create
+//      them in the same file use option 'samefile', e.g.
+//
+//      root[] runProof("friends(samefile)")
+//
 //   9. "simplefile"
 //
 //      Selector: ProofSimpleFile.h.C
@@ -939,6 +944,16 @@ void runProof(const char *what = "simple",
       // and its friend) which are then processed as 'friends' to create the final plots.
       // Selector used: ProofFriends, ProofAux
 
+      // Find out whether to use the same file or separate files
+      Bool_t sameFile = kFALSE;
+      while (args.Tokenize(tok, from, " ")) {
+         // Number of histos
+         if (tok == "samefile") {
+            sameFile = kTRUE;
+            break;
+         }
+      }
+
       // File generation: we use TPacketizerFile in here to create two files per node
       TList *wrks = proof->GetListOfSlaveInfos();
       if (!wrks) {
@@ -964,7 +979,12 @@ void runProof(const char *what = "simple",
 
       // Generate the files
       proof->AddInput(files);
-      proof->SetParameter("ProofAux_Action", "GenerateTrees");
+      if (sameFile) {
+         Printf("runProof: friend tree stored in the same file as the main tree");
+         proof->SetParameter("ProofAux_Action", "GenerateTreesSameFile");
+      } else {
+         proof->SetParameter("ProofAux_Action", "GenerateTrees");
+      }
       // Default 1000 events
       nevt = (nevt < 0) ? 10000 : nevt;
       proof->SetParameter("ProofAux_NEvents", (Long64_t)nevt);
@@ -977,8 +997,8 @@ void runProof(const char *what = "simple",
       proof->DeleteParameters("PROOF_Packetizer");
 
       // Print the lists and create the TDSet objects
-      TDSet *dset = new TDSet("Tmain");
-      TDSet *dsetf = new TDSet("Tfrnd");
+      TDSet *dset = new TDSet("Tmain", "Tmain");
+      TDSet *dsetf = new TDSet("Tfrnd", "Tfrnd");
       if (proof->GetOutputList()) {
          TIter nxo(proof->GetOutputList());
          TObject *o = 0;

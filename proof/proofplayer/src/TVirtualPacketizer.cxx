@@ -261,6 +261,9 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
       TIter nxf(friends);
       TDSetElement *fe = 0;
       while ((fe = (TDSetElement *) nxf())) {
+         PDB(kLoop,2)
+            Info("CreateNewPacket", "friend: file '%s', obj:'%s'",
+                                     fe->GetFileName(), fe->GetObjName());
          TDSetElement *xfe = new TDSetElement(fe->GetFileName(), fe->GetObjName(),
                                               fe->GetDirectory(), first, num);
          // The alias, if any, is in the element name options ('friend_alias=<alias>|')
