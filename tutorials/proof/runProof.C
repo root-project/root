@@ -281,7 +281,7 @@ const char *pythia8dir = 0;
 const char *pythia8data = 0;
 
 void runProof(const char *what = "simple",
-              const char *url = "proof://localhost:11093",
+              const char *url = "proof://localhost:40000",
               Int_t nwrks = -1)
 {
 #ifdef __CINT__
@@ -347,6 +347,8 @@ void runProof(const char *what = "simple",
                          pythia8dir, pythia8data);
       TProof::AddEnvVar("PROOF_INITCMD", env.Data());
    }
+
+   Printf("tutorial dir:\t%s", tutdir.Data());
 
    // Get the PROOF Session
    TProof *proof = getProof(url, nwrks, tutdir.Data(), "ask");
@@ -951,9 +953,9 @@ void runProof(const char *what = "simple",
       TSlaveInfo *wi = 0;
       while ((wi = (TSlaveInfo *) nxwi())) {
          fntree.Form("tree_%s.root", wi->GetOrdinal());
-         TList *wrklist = (TList *) files->GetValue(wi->GetName());
+         THashList *wrklist = (THashList *) files->GetValue(wi->GetName());
          if (!wrklist) {
-            wrklist = new TList;
+            wrklist = new THashList;
             wrklist->SetName(wi->GetName());
             files->Add(new TObjString(wi->GetName()), wrklist);
          }

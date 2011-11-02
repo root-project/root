@@ -101,6 +101,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    Bool_t ext = (strcmp(uu.GetHost(), uref.GetHost()) ||
                  (uu.GetPort() != uref.GetPort())) ? kTRUE : kFALSE;
    if (ext && url && strlen(url) > 0) {
+      Printf("getProof: trying to open a session on the external cluster at '%s'", url);
       if (!strcmp(url, "lite://")) {
          if (dir && strlen(dir) > 0) gEnv->SetValue("Proof.Sandbox", dir);
          if (nwrks > 0) uu.SetOptions(Form("workers=%d", nwrks));
