@@ -2,11 +2,19 @@
 <!-- The top level combination spec -->
 <!-- OutputFilePrefix: Prefix to the output root file to be created (inspection histograms) -->
 <!-- Mode: Type of the analysis -->
-<!ELEMENT Combination (Input+,Measurement*)>
+<!ELEMENT Combination (Function*,Input+,Measurement*)>
 <!ATTLIST Combination
         OutputFilePrefix         CDATA            #REQUIRED
         Mode               CDATA            #REQUIRED
 > 
+
+<!-- Input files detailing the channels. One channel per file -->
+<!ELEMENT Function  EMPTY>
+<!ATTLIST Function 
+	  Name                 CDATA         #REQUIRED
+	  Expression           CDATA         #REQUIRED
+	  Dependents           CDATA         #REQUIRED
+>
 
 <!-- Input files detailing the channels. One channel per file -->
 <!ELEMENT Input (#PCDATA) >
