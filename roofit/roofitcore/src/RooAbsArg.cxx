@@ -988,7 +988,9 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
     // WVE: Need to make exception here too for newServer != this
-    Bool_t ret2 = getProxy(i)->changePointer(*newSet2,nameChange) ;
+    RooAbsProxy* p = getProxy(i) ;
+    if (!p) continue ;
+    Bool_t ret2 = p->changePointer(*newSet2,nameChange) ;
     allReplaced &= ret2 ;
   }
 
@@ -1242,6 +1244,8 @@ void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
   // to all the registered proxies.
 
   for (int i=0 ; i<numProxies() ; i++) {
+    RooAbsProxy* p = getProxy(i) ;
+    if (!p) continue ;
     getProxy(i)->changeNormSet(nset) ;
   }
 }
@@ -1316,6 +1320,7 @@ void RooAbsArg::printArgs(ostream& os) const
   os << "[ " ;
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
+    if (p==0) continue ;
     if (!TString(p->name()).BeginsWith("!")) {
       p->print(os) ;
       os << " " ;
@@ -1385,7 +1390,7 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
   os << indent << "  Proxies: " << endl ;
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* proxy=getProxy(i) ;
-
+    if (!proxy) continue ;
     if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
       os << indent << "    " << proxy->name() << " -> " ;
       RooAbsArg* parg = ((RooArgProxy*)proxy)->absArg() ;

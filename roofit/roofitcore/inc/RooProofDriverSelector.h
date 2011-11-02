@@ -25,7 +25,7 @@ public :
    // List of branches
    TBranch        *b_i;   //!
 
-   RooProofDriverSelector(TTree * /*tree*/ =0) { }
+   RooProofDriverSelector(TTree * /*tree*/ =0) { b_i = 0 ; _pkg = 0 ; fChain = 0 ; }
    virtual ~RooProofDriverSelector() { }
    virtual Int_t   Version() const { return 2; }
    virtual void    SlaveBegin(TTree *tree);

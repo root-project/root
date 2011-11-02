@@ -3394,14 +3394,15 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
     ostringstream oss ;
     Bool_t first(kTRUE) ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
-      //RooAbsProxy* p = getProxy(i) ;
+      RooAbsProxy* p = getProxy(i) ;
+      if (!p) continue ;
       //if (p->name()[0]=='!') continue ;
       if (first) {
 	first=kFALSE ;
       } else {
 	oss << ", " ;
       }
-      getProxy(i)->print(oss,kTRUE) ;
+      p->print(oss,kTRUE) ;
     }
     ee.setServerValues(oss.str().c_str()) ;
   }
