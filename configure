@@ -5821,6 +5821,11 @@ if test ! "x$enable_clarens" = "xno" ; then
         clarensincdir=""
         clarenslibs=""
     fi
+    if test "x$cryptolib" = "x" ; then
+        # depends also on libcrypto
+        clarensincdir=""
+        clarenslibs=""
+    fi
     if test "x$clarensincdir" = "x" || test "x$clarenslibs" = "x"; then
         enable_clarens="no"
     fi
