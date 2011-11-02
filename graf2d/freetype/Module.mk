@@ -32,7 +32,8 @@ FREETYPEDIRI := $(FREETYPEDIRS)/$(FREETYPEVERS)/include
 FREETYPELIBS := $(MODDIRS)/$(FREETYPEVERS).tar.gz
 FREETYPELDFLAGS :=
 ifeq ($(PLATFORM),win32)
-FREETYPELIB  := $(LPATH)/libfreetype.lib
+FREETYPELIBB := $(LPATH)/libfreetype.lib
+FREETYPELIB  := $(FREETYPELIBB)
 ifeq (yes,$(WINRTDEBUG))
 FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/freetype2312MT_D.lib)
 FTNMCFG      := "freetype - Win32 Debug Multithreaded"
@@ -42,16 +43,16 @@ FTNMCFG      := "freetype - Win32 Release Multithreaded"
 endif
 else
 FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a)
-FREETYPELIB  := $(LPATH)/libfreetype.a
-FREETYPELDFLAGS := -lz
+FREETYPELIBB := $(LPATH)/libfreetype.a
+FREETYPELIB  := $(FREETYPELIBB) -lz
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
-FREETYPEDEP  := $(FREETYPELIB)
+FREETYPEDEP  := $(FREETYPELIBB)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-$(FREETYPELIB): $(FREETYPELIBA)
+$(FREETYPELIBB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),aix5)
 		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/.libs/*.o
 else
@@ -161,7 +162,7 @@ else
 		$(MAKE))
 endif
 
-all-$(MODNAME): $(FREETYPELIB)
+all-$(MODNAME): $(FREETYPELIBB)
 
 clean-$(MODNAME):
 ifeq ($(PLATFORM),win32)
@@ -184,7 +185,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(FREETYPELIBS) $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz
 endif
-		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/freetype-*
+		@rm -rf $(FREETYPELIBB) $(FREETYPEDIRS)/freetype-*
 ifeq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@mv $(FREETYPEDIRS)/-$(FREETYPEVERS).tar.gz $(FREETYPELIBS)
 endif
