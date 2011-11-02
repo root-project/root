@@ -1141,6 +1141,7 @@ void RooAbsArg::unRegisterProxy(RooArgProxy& proxy)
   // upon their destruction.
 
   _proxyList.Remove(&proxy) ;
+  _proxyList.Compress() ;
 }
 
 
@@ -1173,6 +1174,7 @@ void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)
   // upon their destruction.
 
   _proxyList.Remove(&proxy) ;
+  _proxyList.Compress() ;
 }
 
 
@@ -1205,6 +1207,7 @@ void RooAbsArg::unRegisterProxy(RooListProxy& proxy)
   // upon their destruction.
 
   _proxyList.Remove(&proxy) ;
+  _proxyList.Compress() ;
 }
 
 
