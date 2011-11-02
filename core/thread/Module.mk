@@ -22,7 +22,8 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TMutex.h $(MODDIRI)/TMutexImp.h \
                 $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
-                $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h
+                $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
+                $(MODDIRI)/TThreadPool.h
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
