@@ -5,8 +5,8 @@ void SetAliEnSettings()
    // Routine to load settings from an AliEn environment file.
 
    ifstream fileIn;
-   fileIn.open(Form("/tmp/gclient_env_%d",gSystem->GetUid()));
-   if (gDebug>0) {printf("P010_TAlien.C: parsing /tmp/gclient_env_$UID\n");}
+   fileIn.open(Form("%s/gclient_env_%d", gSystem->TempDirectory(), gSystem->GetUid()));
+   if (gDebug>0) {printf("P010_TAlien.C: parsing %s/gclient_env_$UID\n", gSystem->TempDirectory());}
    TString lineS,tmp;
    char line[4096];
 
