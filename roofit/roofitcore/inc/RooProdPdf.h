@@ -89,6 +89,8 @@ public:
 
 
   Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+
+  RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
   
 protected:
 

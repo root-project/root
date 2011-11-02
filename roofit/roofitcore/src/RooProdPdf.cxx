@@ -2249,6 +2249,32 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
 
 
 //_____________________________________________________________________________
+RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) const
+{
+  // Return all parameter constraint p.d.f.s on parameters listed in constrainedParams
+  // The observables set is required to distinguish unambiguously p.d.f in terms 
+  // of observables and parameters, which are not constraints, and p.d.fs in terms
+  // of parameters only, which can serve as constraints p.d.f.s
+
+  RooFIter iter = _pdfList.fwdIterator() ;
+  RooAbsArg* arg ;
+  RooArgSet* connectedPars  = new RooArgSet("connectedPars") ;
+  while((arg=iter.next())) {
+    // Check if term is relevant
+    if (arg->dependsOn(observables)) {
+      RooArgSet* tmp = arg->getParameters(observables) ;
+      connectedPars->add(*tmp) ;
+      delete tmp ;
+    } else {
+    }
+  }
+  return connectedPars ;
+}
+
+
+
+
+//_____________________________________________________________________________
 void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, Bool_t stripDisconnected) const 
 {
   if (!stripDisconnected) return ;

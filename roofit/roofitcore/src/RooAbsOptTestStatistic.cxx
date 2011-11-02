@@ -54,6 +54,7 @@
 #include "RooAbsDataStore.h"
 #include "RooCategory.h"
 #include "RooDataSet.h"
+#include "RooProdPdf.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -180,8 +181,26 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;
   _funcClone->recursiveRedirectServers(*origParams) ;
 
-  // Add parameters as servers
-  _paramSet.add(*origParams) ;
+
+  // If PDF is a RooProdPdf (with possible constraint terms)
+  // analyze pdf for actual parameters (i.e those in unconnected constraint terms should be
+  // ignored as here so that the test statistic will not be recalculated if those
+  // are changed
+  RooProdPdf* pdfWithCons = dynamic_cast<RooProdPdf*>(_funcClone) ;
+  if (pdfWithCons) {
+    
+    RooArgSet* connPars = pdfWithCons->getConnectedParameters(*indata.get()) ;
+    // Add connected parameters as servers
+    _paramSet.removeAll() ;
+    _paramSet.add(*connPars) ;
+    delete connPars ;
+
+  } else {
+    // Add parameters as servers
+    _paramSet.add(*origParams) ;
+  }
+
+
   delete origParams ;
 
   // Store normalization set  
