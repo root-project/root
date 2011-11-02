@@ -124,6 +124,8 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       oocoutI(this,Eval) << "HypoTestInverterResult::Add - merging also the expected p-values from pseudo-data" << std::endl;
 
 
+   // case current result is empty
+   // just make a simple copy of the other result
    if (nThis == 0) {
       fXValues = otherResult.fXValues;
       for (int i = 0; i < nOther; ++i) 
@@ -131,15 +133,16 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       for (int i = 0; i <  fExpPValues.GetSize() ; ++i)
          fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
    }
-   // now to common merge combining point with same value and adding extra ones 
-   for (int i = 0; i < nOther; ++i) {
-      double otherVal = otherResult.fXValues[i];
-      HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
-      if (otherHTR == 0) continue;
-      bool sameXFound = false;
-      for (int j = 0; j < nThis; ++j) {
-         double thisVal = fXValues[j];
-         
+   // now do teh real mergemerge combining point with same value or adding extra ones 
+   else { 
+      for (int i = 0; i < nOther; ++i) {
+         double otherVal = otherResult.fXValues[i];
+         HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
+         if (otherHTR == 0) continue;
+         bool sameXFound = false;
+         for (int j = 0; j < nThis; ++j) {
+            double thisVal = fXValues[j];
+            
             // if same value merge the result 
             if ( (std::abs(otherVal) < 1  && TMath::AreEqualAbs(otherVal, thisVal,1.E-12) ) || 
                  (std::abs(otherVal) >= 1 && TMath::AreEqualRel(otherVal, thisVal,1.E-12) ) ) {
@@ -156,17 +159,18 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
                }
                break;
             }
+         }
+         if (!sameXFound) { 
+            // add the new result 
+            fYObjects.Add(otherHTR->Clone() );
+            fXValues.push_back( otherVal);
+         }
+         // add in any case also when same x found
+         if (addExpPValues)  
+            fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
+         
+         
       }
-      if (!sameXFound) { 
-         // add the new result 
-         fYObjects.Add(otherHTR->Clone() );
-         fXValues.push_back( otherVal);
-      }
-      // add in any case also when same x found
-      if (addExpPValues)  
-         fExpPValues.Add( otherResult.fExpPValues.At(i)->Clone() );
-
-
    }
    
    if (ArraySize() > nThis) 
@@ -179,6 +183,22 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       
    return true;
 }
+
+bool HypoTestInverterResult::Add (Double_t x, const HypoTestResult & res) 
+{
+   // Add a single point result (an HypoTestResult)
+   int i= FindIndex(x);
+   if (i<0) {
+      fXValues.push_back(x);
+      fYObjects.Add(res.Clone());
+   } else {
+      HypoTestResult* r= GetResult(i);
+      if (!r) return false;
+      r->Append(&res);
+   }
+   return true;
+}
+
 
  
 double HypoTestInverterResult::GetXValue( int index ) const
@@ -296,7 +316,7 @@ int HypoTestInverterResult::FindIndex(double xvalue) const
    // If no points is found return -1
    // Note that a tolerance is used of 10^-12 to find the closest point
   const double tol = 1.E-12;
-  for (int i=1; i<ArraySize(); i++) {
+  for (int i=0; i<ArraySize(); i++) {
      double xpoint = fXValues[i];
      if ( (std::abs(xvalue) > 1 && TMath::AreEqualRel( xvalue, xpoint, tol) ) ||
           (std::abs(xvalue) < 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )

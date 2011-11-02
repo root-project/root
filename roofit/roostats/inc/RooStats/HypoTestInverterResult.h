@@ -43,6 +43,8 @@ public:
    // merge with the content of another HypoTestInverterResult object
    bool Add( const HypoTestInverterResult& otherResult );
 
+   //add the result of a single point (an HypoTestRsult) 
+   bool Add( Double_t x, const HypoTestResult & result ); 
 
    // function to return the value of the parameter of interest for the i^th entry in the results
    double GetXValue( int index ) const ;
