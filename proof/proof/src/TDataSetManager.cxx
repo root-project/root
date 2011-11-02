@@ -892,12 +892,12 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
    if (path.Tokenize(group, from, "/")) {
       if (path.Tokenize(user, from, "/")) {
          if (!path.Tokenize(name, from, "/"))
-            Warning("ParseUri", "problems parsing out the name");
+            if (gDebug > 0) Info("ParseUri", "'name' missing");
       } else {
-         Warning("ParseUri", "problems parsing out the user");
+         if (gDebug > 0) Info("ParseUri", "'user' missing");
       }
    } else {
-      Warning("ParseUri", "problems parsing out the group");
+      if (gDebug > 1) Info("ParseUri", "'group' missing");
    }
 
    // The fragment may contain the subdir and the object name in the form '[subdir/]objname'
