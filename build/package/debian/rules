@@ -381,8 +381,9 @@ build-indep-stamp:  configure-stamp
 	touch build-indep-stamp
 
 clean:	$(TEMPLATES:%.in=%)
-	tar -xvzf math/unuran/src/unuran*
+	tar -xvzf math/unuran/src/unuran*.tar.gz
 	#if change, correct unurar version
+	rm -rf ./math/unuran/src/unuran-1.8.0-root
 	mv unuran-1.8.0-root ./math/unuran/src/.
 	dh_testdir
 	dh_testroot
