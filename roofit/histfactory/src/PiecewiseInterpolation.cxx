@@ -244,7 +244,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
   int i=0;
   while( paramIterExtra.next() ) {
-    if(_interpCode.at(i)!=0){
+    if(!_interpCode.empty() && _interpCode.at(i)!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
       return 0;
