@@ -288,7 +288,7 @@ public:
    Double_t          PixeltoX(Int_t px);
    Double_t          PixeltoY(Int_t py);
    virtual void      PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
-   virtual void      Pop();
+   virtual void      Pop();  // *MENU*
    virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
