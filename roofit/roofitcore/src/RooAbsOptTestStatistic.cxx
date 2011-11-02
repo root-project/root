@@ -121,6 +121,9 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     return ;
   }
 
+  _origFunc = 0 ; //other._origFunc ;
+  _origData = 0 ; // other._origData ;
+
   initSlave(real,indata,projDeps,rangeName,addCoefRangeName) ;
 }
 
@@ -145,11 +148,11 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     return ;
   }
   
-  _origFunc = other._origFunc ;
-  _origData = other._origData ;
+  _origFunc = 0 ; //other._origFunc ;
+  _origData = 0 ; // other._origData ;
   _projDeps = 0 ;
   
-  initSlave(*other._origFunc,*other._origData,other._projDeps?*other._projDeps:RooArgSet(),other._rangeName.c_str(),other._addCoefRangeName.c_str()) ;
+  initSlave(*other._funcClone,*other._dataClone,other._projDeps?*other._projDeps:RooArgSet(),other._rangeName.c_str(),other._addCoefRangeName.c_str()) ;
 }
 
 
@@ -362,8 +365,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // *** PART 4 *** Finalization and activation of optimization          *
   // *********************************************************************
 
-  _origFunc = _func ;
-  _origData = _data ;
+  //_origFunc = _func ;
+  //_origData = _data ;
 
   // Redirect pointers of base class to clone 
   _func = _funcClone ;
@@ -698,3 +701,5 @@ const RooAbsData& RooAbsOptTestStatistic::data() const
   }
   return *_dataClone ; 
 }
+
+

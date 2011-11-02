@@ -574,6 +574,9 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   Bool_t allValid ;
 
   Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
+  if (isTDS) {
+    ((RooTreeDataStore*)(ads))->resetBuffers() ;
+  }
   for(Int_t i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
@@ -609,6 +612,9 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
     fill() ;
    }
   delete destIter ;
+  if (isTDS) {
+    ((RooTreeDataStore*)(ads))->restoreAlternateBuffers() ;
+  }
   
   delete selectClone ;
   SetTitle(ads->GetTitle());
