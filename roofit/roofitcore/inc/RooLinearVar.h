@@ -30,6 +30,7 @@ class RooArgSet ;
 class RooLinearVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
+  RooLinearVar() {} ;
   RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, const RooAbsReal& slope, const RooAbsReal& offset, const char *unit= "") ;
   RooLinearVar(const RooLinearVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooLinearVar(*this,newname); }
