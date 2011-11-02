@@ -98,14 +98,14 @@ Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) co
       static Double_t root2 = sqrt(2.) ;
       static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
       
-      Double_t coefL(0.0), coefR(0.0);
-      if (TMath::Abs(sigmaL) > 1e-30) {
-	coefL = -0.5/(sigmaL*sigmaL);
-      }
+//       Double_t coefL(0.0), coefR(0.0);
+//       if (TMath::Abs(sigmaL) > 1e-30) {
+// 	coefL = -0.5/(sigmaL*sigmaL);
+//       }
 
-      if (TMath::Abs(sigmaR) > 1e-30) {
-	coefR = -0.5/(sigmaR*sigmaR);
-      }
+//       if (TMath::Abs(sigmaR) > 1e-30) {
+// 	coefR = -0.5/(sigmaR*sigmaR);
+//       }
 
       Double_t xscaleL = root2*sigmaL;
       Double_t xscaleR = root2*sigmaR;

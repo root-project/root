@@ -2708,9 +2708,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   // calculate the box's size, adjusting for constant parameters
   TIterator* pIter = params.createIterator() ;
 
-  Int_t nPar= params.getSize();
   Double_t ymin(ymax), dy(0.06);
-  Int_t index(nPar);
   RooRealVar *var = 0;
   while((var=(RooRealVar*)pIter->Next())) {
     if(showConstants || !var->isConstant()) ymin-= dy;
@@ -2729,7 +2727,6 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t show
   box->SetFillStyle(1001);
   box->SetFillColor(0);
   //char buffer[512];
-  index= nPar;
   pIter->Reset() ;
   while((var=(RooRealVar*)pIter->Next())) {
     if(var->isConstant() && !showConstants) continue;

@@ -694,13 +694,10 @@ void RooFitResult::fillCorrMatrix()
 
   // WVE: This code directly manipulates minuit internal workspace, 
   //      if TMinuit code changes this may need updating
-  Int_t ndex, i, j, m, n, ncoef, nparm, /*id,*/ it, ix ;
+  Int_t ndex, i, j, m, n, ncoef, it /* nparm,id,ix */ ;
   Int_t ndi, ndj /*, iso, isw2, isw5*/;
   ncoef = (gMinuit->fNpagwd - 19) / 6;
-  nparm = TMath::Min(gMinuit->fNpar,ncoef);
-  Double_t tmp[1000] ;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
-    ix  = gMinuit->fNexofi[i-1];
     ndi = i*(i + 1) / 2;
     for (j = 1; j <= gMinuit->fNpar; ++j) {
       m    = TMath::Max(i,j);
@@ -708,9 +705,7 @@ void RooFitResult::fillCorrMatrix()
       ndex = m*(m-1) / 2 + n;
       ndj  = j*(j + 1) / 2;
       gMinuit->fMATUvline[j-1] = gMinuit->fVhmat[ndex-1] / TMath::Sqrt(TMath::Abs(gMinuit->fVhmat[ndi-1]*gMinuit->fVhmat[ndj-1]));
-      tmp[j-1] = gMinuit->fVhmat[ndex-1] ;
     }
-    nparm = TMath::Min(gMinuit->fNpar,ncoef);
 
     (*_GC)(i-1) = gMinuit->fGlobcc[i-1] ;
 

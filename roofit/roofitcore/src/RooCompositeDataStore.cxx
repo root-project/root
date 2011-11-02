@@ -42,7 +42,7 @@ ClassImp(RooCompositeDataStore)
 
 
 //_____________________________________________________________________________
-RooCompositeDataStore::RooCompositeDataStore() : _curStore(0), _curIndex(0), _indexCat(0)
+RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0)
 {
 }
 
