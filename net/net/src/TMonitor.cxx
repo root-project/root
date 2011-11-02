@@ -110,10 +110,11 @@ TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
 
    R__ASSERT(gSystem);
 
-   fActive   = new TList;
-   fDeActive = new TList;
-   fMainLoop = mainloop;
+   fActive    = new TList;
+   fDeActive  = new TList;
+   fMainLoop  = mainloop;
    fInterrupt = kFALSE;
+   fReady     = 0;
 }
 
 //______________________________________________________________________________

@@ -36,16 +36,19 @@ TToggleGroup::TToggleGroup()
 TToggleGroup::TToggleGroup(const TToggleGroup& rhs) : TNamed(rhs),fToggles(0)
 {
    // Copy constructor
+   
    fToggles = (TOrdCollection*)rhs.fToggles->Clone();
 }
 
 //______________________________________________________________________________
 TToggleGroup &TToggleGroup::operator=(const TToggleGroup &rhs)
 {
-   // Assignment operastor.
+   // Assignment operator.
    
-   delete fToggles;
-   fToggles = (TOrdCollection*)rhs.fToggles->Clone();
+   if (this != &rhs) {
+      delete fToggles;
+      fToggles = (TOrdCollection*)rhs.fToggles->Clone();
+   }
    return *this;
 }
 
