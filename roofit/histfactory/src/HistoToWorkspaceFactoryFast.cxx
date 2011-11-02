@@ -820,6 +820,9 @@ namespace HistFactory{
     t.Start();
     string channel=summary[0].channel;
 
+
+
+
     /// MB: reset observable names for each new channel.
     fObsNameVec.clear();
 
@@ -846,6 +849,15 @@ namespace HistFactory{
     RooWorkspace* proto = new RooWorkspace(summary[0].channel.c_str(),(summary[0].channel+" workspace").c_str());
     ModelConfig * proto_config = new ModelConfig("ModelConfig", proto);
     proto_config->SetWorkspace(*proto);
+
+    // preprocess functions
+    vector<string>::iterator funcIter = fPreprocessFunctions.begin();
+    for(;funcIter!= fPreprocessFunctions.end(); ++funcIter){
+      cout <<"will preprocess this line: " << *funcIter <<endl;
+      proto->factory(funcIter->c_str());
+      proto->Print();
+    }
+
 
     RooArgSet likelihoodTerms("likelihoodTerms"), constraintTerms("constraintTerms");
     vector<string> likelihoodTermNames, constraintTermNames, totSystTermNames,syst_x_expectedPrefixNames, normalizationNames;

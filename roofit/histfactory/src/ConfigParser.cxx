@@ -25,6 +25,26 @@ END_HTML
 using namespace RooStats;
 using namespace HistFactory;
 
+std::string HistFactory::ParseFunctionConfig( TXMLNode* functionNode ){
+  std::string name, expression, dependents;
+  TListIter attribIt = functionNode->GetAttributes();
+  TXMLAttr* curAttr = 0;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+    if( curAttr->GetName() == TString( "Name" ) ) {
+      name = curAttr->GetValue() ;
+    }
+    if( curAttr->GetName() == TString( "Expression" ) ) {
+      expression = curAttr->GetValue() ;
+    }
+    if( curAttr->GetName() == TString( "Dependents" ) ) {
+      dependents = curAttr->GetValue() ;
+    }    
+  }
+  std::string ret = "expr::"+name+"('"+expression+"',{"+dependents+"})";
+  //  cout << "will pre-process this line " << ret <<endl;
+  return ret;
+}
+
 void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary, Double_t lumi ){
 
   TString lumiStr;

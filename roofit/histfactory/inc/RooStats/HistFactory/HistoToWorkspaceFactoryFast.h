@@ -40,6 +40,8 @@ namespace HistFactory{
       HistoToWorkspaceFactoryFast();
       virtual ~HistoToWorkspaceFactoryFast();
 
+      void SetFunctionsToPreprocess(vector<string> lines){ fPreprocessFunctions = lines;}
+
       void AddEfficiencyTerms(RooWorkspace* proto, string prefix, string interpName,
             map<string,pair<double,double> > systMap,
             vector<string>& likelihoodTermNames, vector<string>& totSystTermNames);
@@ -104,8 +106,9 @@ namespace HistFactory{
 
       std::vector<std::string> fObsNameVec;
       std::string fObsName;
+      vector<string> fPreprocessFunctions;
 
-      ClassDef(RooStats::HistFactory::HistoToWorkspaceFactoryFast,2)
+      ClassDef(RooStats::HistFactory::HistoToWorkspaceFactoryFast,3)
   };
 
 }

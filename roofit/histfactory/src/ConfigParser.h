@@ -27,5 +27,6 @@ namespace RooStats{
      typedef pair<double,double> UncertPair;
      void ReadXmlConfig( string, vector<RooStats::HistFactory::EstimateSummary>& , Double_t );
      void AddSystematic( RooStats::HistFactory::EstimateSummary &, TXMLNode*, string, string,string);
+     std::string ParseFunctionConfig( TXMLNode* functionNode );
    }
 }
