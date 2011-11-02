@@ -14,6 +14,7 @@
 #include "TCanvas.h"
 #include "TLine.h"
 #include "TStopwatch.h"
+#include "TROOT.h"
 
 #include "RooStats/HybridCalculator.h"
 #include "RooStats/FrequentistCalculator.h"
@@ -57,7 +58,7 @@ HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName,
 
 
 
-void StandardHypoTestInvDemo(const char * fileName =0,
+void StandardHypoTestInvDemo(const char * infile =0,
                              const char * wsName = "combined",
                              const char * modelSBName = "ModelConfig",
                              const char * modelBName = "",
@@ -110,12 +111,43 @@ void StandardHypoTestInvDemo(const char * fileName =0,
 
 
    */
-
-   if (fileName==0) { 
+   
+   TString fileName(infile);
+   if (fileName.IsNull()) { 
       fileName = "results/example_combined_GaussExample_model.root";
-      std::cout << "Use standard file generated with HistFactory :" << fileName << std::endl;
+      std::cout << "Use standard file generated with HistFactory : " << fileName << std::endl;
    }
-   TFile * file = new TFile(fileName); 
+
+   // open file and check if input file exists
+   TFile * file = TFile::Open(fileName); 
+
+  // if input file was specified but not found, quit
+  if(!file && !TString(infile).IsNull()){
+     cout <<"file " << fileName << " not found" << endl;
+     return;
+  } 
+
+  // if default file not found, try to create it
+  if(!file ){
+    // Normally this would be run on the command line
+    cout <<"will run standard hist2workspace example"<<endl;
+    gROOT->ProcessLine(".! prepareHistFactory .");
+    gROOT->ProcessLine(".! hist2workspace config/example.xml");
+    cout <<"\n\n---------------------"<<endl;
+    cout <<"Done creating example input"<<endl;
+    cout <<"---------------------\n\n"<<endl;
+
+    // now try to access the file again
+    file = TFile::Open(fileName);
+
+  }
+
+  if(!file){
+    // if it is still not there, then we can't continue
+    cout << "Not able to run hist2workspace to create example input" <<endl;
+    return;
+  }
+
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0; 
@@ -197,7 +229,11 @@ void StandardHypoTestInvDemo(const char * fileName =0,
    // plot test statistics distributions for the two hypothesis 
    if (plotHypoTestResult) { 
       TCanvas * c2 = new TCanvas();
-      if (nEntries > 1) c2->Divide( 2, TMath::Ceil(double(nEntries)/2));
+      if (nEntries > 1) { 
+         int ny = TMath::CeilNint( sqrt(nEntries) );
+         int nx = TMath::CeilNint(double(nEntries)/ny);
+         c2->Divide( nx,ny);
+      }
       for (int i=0; i<nEntries; i++) {
          if (nEntries > 1) c2->cd(i+1);
          SamplingDistPlot * pl = plot->MakeTestStatPlot(i);

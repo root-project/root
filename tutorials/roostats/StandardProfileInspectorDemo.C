@@ -110,12 +110,28 @@ void StandardProfileInspectorDemo(const char* infile = "",
   ProfileInspector p;
   TList* list = p.GetListOfProfilePlots(*data,mc);
   
-   // now make plots
+  // now make plots
   TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
   c1->Divide(list->GetSize());
   for(int i=0; i<list->GetSize(); ++i){
     c1->cd(i+1);
     list->At(i)->Draw("al");
   }
+
+  // now make plots
+  TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
+  if(list->GetSize()>4){
+    double n = list->GetSize();
+    int nx = (int)sqrt(n) ;
+    int ny = TMath::CeilNint(n/nx);
+    nx = TMath::CeilNint( sqrt(n) );
+    c1->Divide(ny,nx);
+  } else
+    c1->Divide(list->GetSize());
+  for(int i=0; i<list->GetSize(); ++i){
+    c1->cd(i+1);
+    list->At(i)->Draw("al");
+  }
+  
   
 }

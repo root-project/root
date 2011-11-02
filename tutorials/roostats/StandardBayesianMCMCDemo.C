@@ -4,6 +4,7 @@
 
 Author: Kyle Cranmer
 date: Dec. 2010
+updated: July 2011 for 1-sided upper limit and SequentialProposalFunction
 
 This is a standard demo that can be used with any ROOT file 
 prepared in the standard way.  You specify:
@@ -26,6 +27,8 @@ for simple problems, but it scales to much more complicated cases.
 
 #include "TFile.h"
 #include "TROOT.h"
+#include "TCanvas.h"
+#include "TMath.h"
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
 
@@ -33,6 +36,11 @@ for simple problems, but it scales to much more complicated cases.
 #include "RooStats/MCMCCalculator.h"
 #include "RooStats/MCMCInterval.h"
 #include "RooStats/MCMCIntervalPlot.h"
+#include "RooStats/SequentialProposal.h"
+#include "RooStats/ProposalHelper.h"
+#include "RooStats/ProposalHelper.h"
+#include "RooFitResult.h"
+
 
 using namespace RooFit;
 using namespace RooStats;
@@ -104,6 +112,22 @@ void StandardBayesianMCMCDemo(const char* infile = "",
     return;
   }
 
+  // Want an efficient proposal function
+  // default is uniform.
+
+  /*
+  // this one is based on the covariance matrix of fit
+  RooFitResult* fit = mc->GetPdf()->fitTo(*data,Save());
+  ProposalHelper ph;
+  ph.SetVariables((RooArgSet&)fit->floatParsFinal());
+  ph.SetCovMatrix(fit->covarianceMatrix());
+  ph.SetUpdateProposalParameters(kTRUE); // auto-create mean vars and add mappings
+  ph.SetCacheSize(100);
+  ProposalFunction* pf = ph.GetProposalFunction();
+  */
+  
+  // this proposal function seems fairly robust
+  SequentialProposal sp(0.1);
   /////////////////////////////////////////////
   // create and use the MCMCCalculator
   // to find and plot the 95% credible interval
@@ -111,20 +135,44 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   // in the model config
   MCMCCalculator mcmc(*data,*mc);
   mcmc.SetConfidenceLevel(0.95); // 95% interval
+  //  mcmc.SetProposalFunction(*pf);
+  mcmc.SetProposalFunction(sp);
   mcmc.SetNumIters(1000000);         // Metropolis-Hastings algorithm iterations
-  mcmc.SetNumBurnInSteps(500);       // first N steps to be ignored as burn-in
+  mcmc.SetNumBurnInSteps(50);       // first N steps to be ignored as burn-in
 
   // default is the shortest interval.  here use central
-  mcmc.SetLeftSideTailFraction(0.5); // for central interval
+  mcmc.SetLeftSideTailFraction(0); // for one-sided Bayesian interval
+
+  RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
+  firstPOI->setMax(10.);
 
   MCMCInterval* interval = mcmc.GetInterval();
 
   // make a plot
+  //TCanvas* c1 = 
+  new TCanvas("IntervalPlot");
   MCMCIntervalPlot plot(*interval);
   plot.Draw();
+
+  TCanvas* c2 = new TCanvas("extraPlots");
+  const RooArgSet* list = mc->GetNuisanceParameters();
+  if(list->getSize()>1){
+    double n = list->getSize();
+    int ny = TMath::CeilNint( sqrt(n) );
+    int nx = TMath::CeilNint(double(n)/ny);
+    c2->Divide( nx,ny);
+  }
+
+  // draw a scatter plot of chain results for poi vs each nuisance parameters
+  TIterator* it = mc->GetNuisanceParameters()->createIterator();
+  RooRealVar* nuis = NULL;
+  int iPad=1; // iPad, that's funny
+  while( (nuis = (RooRealVar*) it->Next() )){
+    c2->cd(iPad++);
+    plot.DrawChainScatter(*firstPOI,*nuis);
+  }
   
   // print out the iterval on the first Parameter of Interest
-  RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
     interval->LowerLimit(*firstPOI) << ", "<<
     interval->UpperLimit(*firstPOI) <<"] "<<endl;
