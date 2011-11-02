@@ -8,7 +8,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
 
 set(gdklib   ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/gdk-1.3.lib)
 set(glib     ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/glib-1.3.lib)
-set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll)
+set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/gdk-1.3.dll)
 set(gdkliba  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.lib)
 set(gdkdlla  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.dll)
 if(winrtdebug)
@@ -20,8 +20,8 @@ endif()
 add_custom_command( OUTPUT ${gdkliba}
                     COMMAND cmake -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
 					COMMAND cmake -E copy_if_different gdk/lib/glib-1.3.lib ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-					COMMAND cmake -E copy_if_different gdk/dll/glib-1.3.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-					COMMAND cmake -E copy_if_different gdk/dll/iconv-1.3.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+					COMMAND cmake -E copy_if_different gdk/dll/glib-1.3.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
+					COMMAND cmake -E copy_if_different gdk/dll/iconv-1.3.dll ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
 					COMMAND echo "*** Building ${gdkliba}"
 		            COMMAND cmake -E chdir gdk/src/gdk/win32 
 					        nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
@@ -47,9 +47,9 @@ if(builtin_freetype)
   add_dependencies(Win32gdk FREETYPE)
 endif()
 					
-install(FILES  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll 
-               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glib-1.3.dll
-			   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll
+install(FILES  ${gdkdlla}
+               gdk/dll/glib-1.3.dll
+               gdk/dll/iconv-1.3.dll
                DESTINATION bin)
 
 ROOT_INSTALL_HEADERS()

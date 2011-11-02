@@ -20,8 +20,14 @@ set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
 set(CMAKE_C_FLAGS_RELEASE          "-O2")
 set(CMAKE_C_FLAGS_DEBUG            "-Z7")
 
-set(CMAKE_CXX_FLAGS "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h -MD -GR -EHsc- -W3 -wd4244 -D_WIN32")
-set(CMAKE_C_FLAGS   "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h -MD -EHsc- -W3 -D_WIN32")
+if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+  set(CMAKE_CXX_FLAGS "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h -MD -GR -EHsc- -W3 -wd4244 -D_WIN32")
+  set(CMAKE_C_FLAGS   "-nologo -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h -FIsehmap.h -MD -EHsc- -W3 -D_WIN32")
+  install(FILES ${CMAKE_SOURCE_DIR}/build/win/w32pragma.h  DESTINATION include COMPONENT headers)
+else()
+  set(CMAKE_CXX_FLAGS "-nologo -FIw32pragma.h -FIsehmap.h -MD -GR -EHsc- -W3 -wd4244 -D_WIN32")
+  set(CMAKE_C_FLAGS   "-nologo -FIw32pragma.h -FIsehmap.h -MD -EHsc- -W3 -D_WIN32")
+endif()
 
 #---Set Linker flags----------------------------------------------------------------------
 #set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})

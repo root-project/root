@@ -98,7 +98,7 @@ ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED")
 #--stressGUI---------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
 #configure_file(stressGUI.ref stressGUI.ref @COPY_ONLY)
-ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -b -ref FAILREGEX "FAILED")
+ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED")
 
 #--stressSpectrum----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
@@ -153,7 +153,7 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 
 #--stressInterpreter----------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
-configure_file(stressInterpreter.cxx ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/stressInterpreter.cxx @COPY_ONLY)
+configure_file(stressInterpreter.cxx stressInterpreter.cxx @COPY_ONLY)
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter 
               FAILREGEX "FAILED|Error"
               ENVIRONMENT ${ld_library_path}=${ROOTSYS}/lib)
