@@ -156,8 +156,8 @@ public:
          DbgLog("Main thread. Try to push a task");
 
          TLockGuard lock(&fMutex);
-         task_t *task = new task_t(task, param);
-         fTasks.push(task);
+         task_t *t = new task_t(task, param);
+         fTasks.push(t);
          ++fTasksCount;
 
          DbgLog("Main thread. the task is pushed");
