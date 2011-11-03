@@ -3404,6 +3404,12 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    if (sfile.Contains(".gdml")) {
       //Save geometry as a gdml file
       if (fgVerboseLevel>0) Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
+	  //C++ version
+      TString cmd ;
+	  cmd = TString::Format("TGDMLWrite::WriteGDMLfile(gGeoManager,\"%s\",\"%s\")", filename, option);
+	  gROOT->ProcessLineFast(cmd);
+	  //
+	  /*
       gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
 
       gROOT->ProcessLine("TPython::Exec(\"import writer\")");
@@ -3414,7 +3420,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
 
       // instanciate writer
-      TString cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
+      cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
       gROOT->ProcessLine(cmd);
       gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
 
@@ -3434,6 +3440,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       // write file
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
       if (fgVerboseLevel>0) printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
+      */
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {

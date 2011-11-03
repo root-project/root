@@ -18,5 +18,6 @@
 //#pragma link C++ class GDMLEngine;
 #pragma link C++ class TGDMLParse;
 #pragma link C++ class TGDMLRefl;
+#pragma link C++ class TGDMLWrite;
 
 #endif

@@ -723,8 +723,8 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          }
          child = gdml->GetNext(child);
       } // loop on childs
-      // Create TGeoElement
-      TGeoElement *ele = new TGeoElement(NameShort(name), "", ncompo);
+      // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
+      TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
       for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
          if (fisomap.find(f->first) != fisomap.end()) {
             ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
@@ -853,9 +853,17 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       //CHECK FOR CONSTANTS
       tempconst = gdml->GetAttr(node, "Z");
 
-      mat = new TGeoMaterial(NameShort(name), a, Evaluate(tempconst), d);
+      Double_t valZ = Evaluate(tempconst);
+      TString tmpname = name;
+      //deal with special case - Z of vacuum is always 0
+      tmpname.ToLower();
+      if ( tmpname == "vacuum") {
+    	  valZ = 0;
+      }
+      mat = new TGeoMaterial(NameShort(name), a, valZ, d);
       mixflag = 0;
-      TGeoElement* mat_ele = new TGeoElement(NameShort(name), "", atoi(tempconst), a);
+      //Note: Object(name, title) corresponds to Element(formula, name)
+      TGeoElement* mat_ele = new TGeoElement(NameShort(name), NameShort(name), atoi(tempconst), a);
       felemap[name.Data()] = mat_ele;
    }
 
@@ -3064,10 +3072,11 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
          phi = gdml->GetAttrValue(attr);
       } else if (tempattr == "theta") {
          theta = gdml->GetAttrValue(attr);
-      } else if (tempattr == "alpha1")   {
+      } else if (tempattr == "alph") { //gdml schema knows only alph attribute
          alpha1 = gdml->GetAttrValue(attr);
-      } else if (tempattr == "alpha2") {
-         alpha2 = gdml->GetAttrValue(attr);
+         alpha2 = alpha1;
+         //} else if (tempattr == "alpha2") {
+         //   alpha2 = gdml->GetAttrValue(attr);
       } else if (tempattr == "phitwist") {
          twist = gdml->GetAttrValue(attr);
       }

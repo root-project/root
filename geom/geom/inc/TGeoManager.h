@@ -448,7 +448,7 @@ public:
    static void            ClearThreadsMap();
 
    //--- I/O
-   virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="v");
+   virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="vg");
    static  void           LockGeometry();
    static  void           UnlockGeometry();
    static  Int_t          GetVerboseLevel();
