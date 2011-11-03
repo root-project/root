@@ -451,7 +451,7 @@ LDFLAGS       = $(LDOPT) -nologo
 SOFLAGS       = -DLL
 
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
-ifneq (,$(findstring $(VC_MAJOR),14 15 16))
+ifneq (,$(findstring $(VC_MAJOR),14 15))
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@\;1; rm -f $@.manifest
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@\;2; rm -f $@.manifest
 else
