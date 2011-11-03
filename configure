@@ -397,7 +397,7 @@ check_libcompat() {
 #_____________________________________________________________________
 check_lib64() {
     # This function will try to find out if a library [$1] contains 64 bit
-    # or 32 bit code. Currently works only for linux.
+    # or 32 bit code. Currently works only for linux and solaris.
     # The result of the check is stored in is_lib64, 1 if true,
     # 0 otherwise, which should be immediately copied, since the variable
     # will be overwritten at next invocation of this function.
@@ -411,22 +411,41 @@ check_lib64() {
         return 1
     fi
 
+    filearg=
+    case $platform in
+        linux)   filearg="-L" ;;
+        solaris) ;;
+        *)       return 1;;
+    esac
+
     # Save arguments in logical names
     chklib64=$1
     logmsg "Checking if $chklib64 is a 64-bit library"
     if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
         # we have an archive .a file
-        logmsg " objdump -a $chklib64 | grep 'x86-64'"
-        if objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1 ; then
-            ret=1
+        if [ "x$platform" = "xlinux" ]; then
+            logmsg " objdump -a $chklib64 | grep 'x86-64'"
+            if objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+        fi
+        if [ "x$platform" = "xsolaris" ]; then
+            chklib64file=`ar t $chklib64 | awk '{if (NR == 2) print $1}'`
+            logmsg " ar x $chklib64 $chklib64file"
+            ar x $chklib64 $chklib64file
+            logmsg " file $filearg $chklib64file | grep '64-bit'"
+            if file $filearg $chklib64file | grep '64-bit' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+            rm -f $chklib64file
         fi
     else
-        if file -L $chklib64 | grep 'ASCII' > /dev/null 2>& 1 ; then
+        if file $filearg $chklib64 | grep 'ASCII' > /dev/null 2>& 1 ; then
             check_link $chklib64
             ret=$link_result
         else
-            logmsg " file -L $chklib64 | grep '64-bit'"
-            if file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1 ; then
+            logmsg " file $filearg $chklib64 | grep '64-bit'"
+            if file $filearg $chklib64 | grep '64-bit' > /dev/null 2>& 1 ; then
                 ret=1
             fi
         fi
@@ -516,7 +535,7 @@ check_library() {
             i="$i32"
         fi
         # look first in the lib64 directories
-        if test "x$checklib64" = "xyes" ; then
+        if test "x$checklinux64" = "xyes" ; then
             i64=`echo $i | sed -e 's|lib$|lib64|' -e 's|lib/|lib64/|'`
             i="$i64 $i"
         fi
@@ -535,10 +554,10 @@ check_library() {
             i64=`echo $i | sed 's|\(lib\)|\1/hpux64|'`
             i="$i64"
         fi
-        # look only in the amd64 directories
+        # look first in the amd64 directories
         if test "x$checksolaris64" = "xyes" ; then
             i64=`echo $i | sed 's|\(lib\)|\1/amd64|'`
-            i="$i64"
+            i="$i64 $i"
         fi
         logmsg " Checking in directories $i for $libs"
         for l in $i ; do
@@ -887,7 +906,7 @@ check_symbol() {
         usrlib="/usr/lib32 $usrlib"
     fi
     # look first in the lib64 directories
-    if test "x$checklib64" = "xyes" ; then
+    if test "x$checklinux64" = "xyes" ; then
         usrlib="/usr/lib64 $usrlib"
     fi
     # look first in the DEB_HOST_MULTIARCH directories
@@ -902,9 +921,9 @@ check_symbol() {
     if test "x$checkhpux64" = "xyes" ; then
         usrlib="/usr/lib/hpux64"
     fi
-    # look only in the amd64 directories
-    if test "x$checkamd64" = "xyes" ; then
-        usrlib="/usr/lib/amd64"
+    # look first in the amd64 directories
+    if test "x$checksolaris64" = "xyes" ; then
+        usrlib="/usr/lib/amd64 $usrlib"
     fi
 
     for d in "$symboldir" $usrlib ; do
@@ -1658,13 +1677,15 @@ linuxppc64*|sgicc64)
    checkonlylib64="yes" ;;
 linuxx8664*)
    logmsg "Will check 64bit libraries"
+   checklinux64="yes"
    checklib64="yes" ;;
 hpuxia64acc)
    logmsg "Will check HP/UX 64bit libraries"
    checkhpux64="yes" ;;
 solaris64CC5)
    logmsg "Will check Solaris 64bit libraries"
-   checksolaris64="yes" ;;
+   checksolaris64="yes"
+   checklib64="yes" ;;
 macosx*)
    logmsg "Will check for compatible libraries"
    checklibcompat="yes" ;;
