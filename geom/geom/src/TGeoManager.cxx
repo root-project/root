@@ -3406,7 +3406,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       if (fgVerboseLevel>0) Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
 	  //C++ version
       TString cmd ;
-	  cmd = TString::Format("TGDMLWrite::WriteGDMLfile(gGeoManager,\"%s\",\"%s\")", filename, option);
+	  cmd = TString::Format("TGDMLWrite::StartGDMLWriting(gGeoManager,\"%s\",\"%s\")", filename, option);
 	  gROOT->ProcessLineFast(cmd);
 	  //
 	  /*

@@ -317,14 +317,12 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
    TGeoNode *geoNode;
-   NameList llist;
    Int_t nCnt = 0;
    //loop through all nodes
    while ((geoNode = (TGeoNode *) next())) {
       //get volume of current node and if not processed then process it
       TGeoVolume * subvol = geoNode->GetVolume();
       if (subvol->TestAttBit(fgkProcBitVol) == kFALSE) {
-         llist[TString::Format("%i", nCnt)] = kTRUE;
          subvol->SetAttBit(fgkProcBitVol);
          ExtractVolumes(subvol);
       }

@@ -96,6 +96,11 @@ class TGDMLWrite : public TObject {
 public:
    TGDMLWrite();
    virtual ~TGDMLWrite();
+   //static function!!
+   static void StartGDMLWriting(TGeoManager * geomanager, const char* filename, TString option) {
+      TGDMLWrite *writer = new TGDMLWrite;
+      writer->WriteGDMLfile(geomanager, filename, option);
+   }
    //wrapper of all main methods for extraction
    void WriteGDMLfile(TGeoManager * geomanager, const char* filename = "test.gdml", TString option = "");
    enum ENamingType {
