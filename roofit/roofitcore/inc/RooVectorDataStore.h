@@ -124,6 +124,8 @@ public:
 
   const RooArgSet& row() { return _varsww ; }
 
+   class RealFullVector;
+
   class RealVector {
   public:
     RealVector(UInt_t initialCapacity=100) : 
@@ -201,6 +203,7 @@ public:
 
   private:
     friend class RooVectorDataStore ;
+      friend class RooVectorDataStore::RealFullVector;
     RooAbsReal* _real ;
     Double_t* _buf ; //!
     Double_t* _nativeBuf ; //!
