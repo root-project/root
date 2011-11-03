@@ -282,7 +282,7 @@ void processMeasurement(string outputFileNamePrefix, vector<string> xml_input, T
       "combine" : will do the individual cross-section measurements plus combination	
   ***/
   
-  if ( mode.find("comb")!=string::npos) { 
+  if ( true || mode.find("comb")!=string::npos) { // KC: always do comb. need to clean up code
 
     RooWorkspace* ws=factory.MakeCombinedModel(ch_names,chs);
     // Gamma/Uniform Constraints:
@@ -316,10 +316,14 @@ void processMeasurement(string outputFileNamePrefix, vector<string> xml_input, T
     // TO DO:
     // Totally factorize the statistical test in "fit Model" to a different area
     if(!exportOnly){
-      if(ws->data("obsData")){
-	factory.FitModel(ws, "combined", "simPdf", "obsData", false);
-      } else {
-	factory.FitModel(ws, "combined", "simPdf", "asimovData", false);
+      if(!poi){
+	cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+      } else{
+	if(ws->data("obsData")){
+	  factory.FitModel(ws, "combined", "simPdf", "obsData", false);
+	} else {
+	  factory.FitModel(ws, "combined", "simPdf", "asimovData", false);
+	}
       }
     }
   } // end combination of channels
@@ -357,9 +361,11 @@ void processMeasurementXML(TXMLNode* node,
       lumiRelError=atof(curAttr->GetValue());
     }
     if( curAttr->GetName() == TString( "BinLow" ) ) {
+      cout <<"\n WARNING: In -standard_form ignore BinLow and BinHigh, just use all bins"<<endl;
       lowBin=atoi(curAttr->GetValue());
     }
     if( curAttr->GetName() == TString( "BinHigh" ) ) {
+      cout <<"\n WARNING: In -standard_form ignore BinLow and BinHigh, just use all bins"<<endl;
       highBin=atoi(curAttr->GetValue());
     }
     if( curAttr->GetName() == TString( "Name" ) ) {
@@ -367,6 +373,7 @@ void processMeasurementXML(TXMLNode* node,
       outputFileName=outputFileNamePrefix+"_"+rowTitle+".root";
     }
     if( curAttr->GetName() == TString( "Mode" ) ) {
+      cout <<"\n INFO: Mode attribute is deprecated, will ignore\n"<<endl;
       mode=curAttr->GetValue();
     }
     if( curAttr->GetName() == TString( "ExportOnly" ) ) {

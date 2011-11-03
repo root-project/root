@@ -213,6 +213,7 @@ void topDriver(string input ){
             outputFileName=outputFileNamePrefix+"_"+rowTitle+".root";
           }
           if( curAttr->GetName() == TString( "Mode" ) ) {
+	    cout <<"\n INFO: Mode attribute is deprecated, will ignore\n"<<endl;
             mode=curAttr->GetValue();
           }
           if( curAttr->GetName() == TString( "ExportOnly" ) ) {
@@ -222,6 +223,11 @@ void topDriver(string input ){
 	      exportOnly = false;
           }
         }
+	if(highBin==0){
+	  cout <<"\nERROR: In -number_counting_form must specify BinLow and BinHigh\n"<<endl;
+	  return;
+	}
+
         lumiError=nominalLumi*lumiRelError;
 
         TXMLNode* mnode = node->GetChildren();
@@ -316,8 +322,10 @@ void topDriver(string input ){
           cout << "Setting Parameter of Interest as :" << POI << endl;
           RooRealVar* poi = (RooRealVar*) ws->var(POI.c_str());
           RooArgSet * params= new RooArgSet;
-          params->add(*poi);
-          proto_config->SetParameters(*params);
+	  if(poi){
+	    params->add(*poi);
+	  }
+          proto_config->SetParametersOfInterest(*params);
 
 
           // Gamma/Uniform Constraints:
@@ -329,12 +337,19 @@ void topDriver(string input ){
 
 	  // fill out ModelConfig and export
           RooAbsData* expData = ws->data("expData");
-	  proto_config->GuessObsAndNuisance(*expData);
+	  if(poi){
+	    proto_config->GuessObsAndNuisance(*expData);
+	  }
 	  ws->writeToFile((outputFileNamePrefix+"_"+ch_name+"_"+rowTitle+"_model.root").c_str());
 
 	  // do fit unless exportOnly requested
-	  if(!exportOnly)
-	    factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
+	  if(!exportOnly){
+	    if(!poi){
+	      cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+	    } else{
+	      factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
+	    }
+	  }
           fprintf(factory.pFile, " & " );
         }
 
@@ -347,7 +362,7 @@ void topDriver(string input ){
 
 
           
-        if(mode.find("comb")!=string::npos){ 
+        if(true || mode.find("comb")!=string::npos){ //KC: deprecating Mode="Comb"
           RooWorkspace* ws=factory.MakeCombinedModel(ch_names,chs);
           // Gamma/Uniform Constraints:
           // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf
@@ -362,8 +377,10 @@ void topDriver(string input ){
           //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
           RooArgSet * params= new RooArgSet;
           cout << poi << endl;
-          params->add(*poi);
-          combined_config->SetParameters(*params);
+	  if(poi){
+	    params->add(*poi);
+	  }
+          combined_config->SetParametersOfInterest(*params);
           ws->Print();
 
           // Set new PDF if there are gamma/uniform constraint terms
@@ -377,8 +394,14 @@ void topDriver(string input ){
 
 	  // TO DO:
           // Totally factorize the statistical test in "fit Model" to a different area
-	  if(!exportOnly)
-	    factory.FitModel(ws, "combined", "simPdf", "simData", false);
+	  if(!exportOnly){
+	    if(!poi){
+	      cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+	    } else{
+	      factory.FitModel(ws, "combined", "simPdf", "simData", false);
+	    }
+	  }
+	
         }
 
 
