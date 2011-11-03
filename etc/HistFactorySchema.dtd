@@ -32,9 +32,9 @@
         Name              CDATA            #REQUIRED
         Lumi              CDATA            #REQUIRED
         LumiRelErr        CDATA            #REQUIRED
-        BinLow            CDATA            #REQUIRED
-        BinHigh           CDATA            #REQUIRED
-        Mode              CDATA            #REQUIRED
+        BinLow            CDATA            #IMPLIED
+        BinHigh           CDATA            #IMPLIED
+        Mode              CDATA            #IMPLIED
         ExportOnly        CDATA            #IMPLIED
 >
 
@@ -124,7 +124,7 @@ For this element there is no sublemenents so the setting will only have local ef
         Val               CDATA            #REQUIRED
         High              CDATA            #REQUIRED
         Low               CDATA            #REQUIRED
-        Const             CDATA            #REQUIRED
+        Const             CDATA            #IMPLIED
 > 
 
 
