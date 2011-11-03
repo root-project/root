@@ -654,6 +654,13 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     cloneData = kTRUE ;
   }
 
+  // Delete previous dataset now, if it was owned
+  if (_ownData) {
+    delete _dataClone ;
+    _dataClone = 0 ;
+  }
+
+
   if (cloneData) {
     // Cloning input dataset
     if (_rangeName.size()==0) {
@@ -664,7 +671,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     _ownData = kTRUE ;
 
   } else {
- 
+
     // Taking input dataset
     _dataClone = &indata ;
     _ownData = kFALSE ;

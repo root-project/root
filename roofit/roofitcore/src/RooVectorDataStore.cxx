@@ -1018,13 +1018,17 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   // internal cache of 'newVar' will be loaded with the
   // precalculated value and it's dirty flag will be cleared.
 
+  if (_cache) {
+    delete _cache ;
+    _cache = 0 ;
+  }
 
   TIterator* vIter = newVarSet.createIterator() ;
   RooAbsArg* var ;
   
   checkInit() ;
   
-  TList cloneSetList ;
+  list<RooArgSet*> vlist ;
   RooArgSet cloneSet ;
 
   while((var=(RooAbsArg*)vIter->Next())) {
@@ -1034,9 +1038,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
     newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
 
-    cloneSetList.Add(newVarCloneList) ;
+    vlist.push_back(newVarCloneList) ;
     cloneSet.add(*newVarClone) ;
-
   }
   delete vIter ;
 
@@ -1071,7 +1074,9 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   RooAbsArg::setDirtyInhibit(kFALSE) ;
 
-  cloneSetList.Delete() ;    
+  for (list<RooArgSet*>::iterator iter = vlist.begin() ; iter!=vlist.end() ; ++iter) {
+    delete *iter ;
+  }
   
   // Now need to attach branch buffers of original function objects 
   it = newVarSet.createIterator() ;
