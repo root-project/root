@@ -331,6 +331,7 @@ $(MAKECINTO): CXXFLAGS := $(CINTCXXFLAGS)
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.cxx): $(CINTDIRS)/loadfile.cxx
 	$(MAKEDIR)
 	cp -f $< $@
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): OPT := $(filter-out -Wshadow,$(OPT))
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
