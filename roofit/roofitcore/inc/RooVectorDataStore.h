@@ -140,7 +140,7 @@ public:
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=0) : 
-      _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _vec(other._vec)  {
+      _vec(other._vec), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf) {
       _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
     }
 
