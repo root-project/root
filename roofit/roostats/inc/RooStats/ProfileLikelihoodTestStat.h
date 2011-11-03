@@ -67,9 +67,9 @@ namespace RooStats {
         fLastData = 0;
 	fOneSided = false;
         fReuseNll = false;
-	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
-	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
@@ -80,9 +80,9 @@ namespace RooStats {
        fLastData = 0;
        fOneSided = false;
        fReuseNll = false;
-       fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-       fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
-       fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+       fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+       fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+       fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
      virtual ~ProfileLikelihoodTestStat() {
        //       delete fRand;

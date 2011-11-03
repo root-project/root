@@ -51,9 +51,9 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
      //      fPdf = pdf;
      //      fParameter = parameter;
 
-	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
-	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
    }
    //__________________________________
@@ -63,9 +63,9 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
       // constructor
       //      fPdf = pdf;
       //      fParameter = parameter;
-	fMinimizer=ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=ROOT::Math::MinimizerOptions::DefaultStrategy();
-	fPrintLevel=ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
    }
 

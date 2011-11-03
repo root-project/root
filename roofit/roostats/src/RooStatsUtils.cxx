@@ -25,6 +25,7 @@ NamespaceImp(RooStats)
 #include "RooSimultaneous.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
+#include <typeinfo>
 
 // this file is only for the documentation of RooStats namespace
 

@@ -33,6 +33,7 @@
 #include "RooPoisson.h"
 #include "RooUniform.h"
 #include <cmath>
+#include <typeinfo>
 
 #include "TStopwatch.h"
 

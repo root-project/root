@@ -68,12 +68,12 @@ private:
 // more details on how to use TThreadPool.                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-template <class _T, class _P>
+template <class aTask, class aParam>
 class TThreadPoolTaskImp {
 public:
-   bool run(_P &_param) {
-      _T *pThis = reinterpret_cast<_T *>(this);
-      return pThis->runTask(_param);
+   bool run(aParam &param) {
+      aTask *pThis = reinterpret_cast<aTask *>(this);
+      return pThis->runTask(param);
    }
 };
 
@@ -85,15 +85,15 @@ public:
 // type-safe way.                                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-template <class _T, class _P>
+template <class aTask, class aParam>
 class TThreadPoolTask {
 public:
-   typedef TThreadPoolTaskImp<_T, _P> task_t;
+   typedef TThreadPoolTaskImp<aTask, aParam> task_t;
 
 public:
-   TThreadPoolTask(task_t &_task, _P &_param):
-      fTask(_task),
-      fTaskParam(_param) {
+   TThreadPoolTask(task_t &task, aParam &param):
+      fTask(task),
+      fTaskParam(param) {
    }
    bool run() {
       return fTask.run(fTaskParam);
@@ -101,7 +101,7 @@ public:
 
 private:
    task_t &fTask;
-   _P fTaskParam;
+   aParam fTaskParam;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -114,21 +114,21 @@ private:
 // more details on how to use TThreadPool.                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-template <class _T, class _P>
+template <class aTask, class aParam>
 class TThreadPool : public TNonCopyable {
     
-   typedef TThreadPoolTask<_T, _P> task_t;
-   typedef std::queue<task_t*>     taskqueue_t;
-   typedef std::vector<TThread*>   threads_array_t;
+   typedef TThreadPoolTask<aTask, aParam> task_t;
+   typedef std::queue<task_t*>            taskqueue_t;
+   typedef std::vector<TThread*>          threads_array_t;
 
 public:
-   TThreadPool(size_t _threadsCount, bool _needDbg = false):
+   TThreadPool(size_t threadsCount, bool needDbg = false):
       fStopped(false),
-      fSilent(!_needDbg) {
+      fSilent(!needDbg) {
       fThreadNeeded = new TCondition(&fMutex);
       fThreadAvailable = new TCondition(&fMutex);
 
-      for (size_t i = 0; i < _threadsCount; ++i) {
+      for (size_t i = 0; i < threadsCount; ++i) {
          TThread *pThread = new TThread(&TThreadPool::Executor, this);
          fThreads.push_back(pThread);
          pThread->Run();
@@ -151,12 +151,12 @@ public:
       delete fThreadAvailable;
    }
 
-   void PushTask(typename TThreadPoolTask<_T, _P>::task_t &_task, _P _param) {
+   void PushTask(typename TThreadPoolTask<aTask, aParam>::task_t &task, aParam param) {
       {
          DbgLog("Main thread. Try to push a task");
 
          TLockGuard lock(&fMutex);
-         task_t *task = new task_t(_task, _param);
+         task_t *task = new task_t(task, param);
          fTasks.push(task);
          ++fTasksCount;
 
@@ -202,8 +202,8 @@ public:
    }
 
 private:
-   static void* Executor(void *_arg) {
-      TThreadPool *pThis = reinterpret_cast<TThreadPool*>(_arg);
+   static void* Executor(void *arg) {
+      TThreadPool *pThis = reinterpret_cast<TThreadPool*>(arg);
 
       while (!pThis->fStopped) {
          task_t *task(NULL);
@@ -260,8 +260,8 @@ private:
       return NULL;
    }
 
-   static void *JoinHelper(void *_arg) {
-      TThreadPool *pThis = reinterpret_cast<TThreadPool*>(_arg);
+   static void *JoinHelper(void *arg) {
+      TThreadPool *pThis = reinterpret_cast<TThreadPool*>(arg);
       threads_array_t::const_iterator iter = pThis->fThreads.begin();
       threads_array_t::const_iterator iter_end = pThis->fThreads.end();
       for (; iter != iter_end; ++iter)
@@ -270,16 +270,16 @@ private:
       return NULL;
    }
 
-   static bool IsThreadActive(TThread *_pThread) {
+   static bool IsThreadActive(TThread *pThread) {
       // so far we consider only kRunningState as activity
-      return (_pThread->GetState() == TThread::kRunningState);
+      return (pThread->GetState() == TThread::kRunningState);
    }
 
-   void DbgLog(const std::string &_msg) {
+   void DbgLog(const std::string &msg) {
       if (fSilent)
          return;
       TLockGuard lock(&fDbgOutputMutex);
-      std::cout << "[" << TThread::SelfId() << "] " << _msg << std::endl;
+      std::cout << "[" << TThread::SelfId() << "] " << msg << std::endl;
    }
 
 private:

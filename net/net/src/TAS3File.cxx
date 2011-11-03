@@ -233,7 +233,7 @@ Bool_t TAS3File::ReadBuffer10(char *buf, Int_t len)
    // request created by THTTPMessage and returns the buffer.
    // Returns kTRUE in case of error.
 
-   Int_t nbuf = 1;
+   const Int_t nbuf = 1;
    Long64_t pos[nbuf];
    pos[nbuf-1] = fOffset; 
 

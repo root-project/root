@@ -118,7 +118,7 @@ public:
     if (_cache) {
       _cache->setDirtyProp(flag) ;
     }
-}
+  }
 
   //virtual void checkInit() const;
 
@@ -196,12 +196,14 @@ public:
       _vec0 = &_vec.front() ;
     }
 
+  protected:
+    std::vector<Double_t> _vec ;
+
   private:
     friend class RooVectorDataStore ;
     RooAbsReal* _real ;
     Double_t* _buf ; //!
     Double_t* _nativeBuf ; //!
-    std::vector<Double_t> _vec ;
     Double_t* _vec0 ; //!
     ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;

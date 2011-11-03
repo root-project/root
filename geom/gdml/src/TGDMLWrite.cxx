@@ -1379,7 +1379,7 @@ TGDMLWrite::Xyz TGDMLWrite::GetXYZangles(const Double_t * rotationMatrix)
 {
    TGDMLWrite::Xyz lxyz;
    Double_t a, b, c;
-   Double_t rad = 180 / acos(-1);
+   Double_t rad = 180.0 / TMath::ACos(-1.0);
    const Double_t *r = rotationMatrix;
    Double_t cosb = sqrt(r[0] * r[0] + r[1] * r[1]);
    if (cosb > 0.00001) {
