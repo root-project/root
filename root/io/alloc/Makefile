@@ -69,7 +69,8 @@ customConstructor.$(ObjSuf): customConstructor.C
 customConstructor.$(DllSuf): customConstructor.$(ObjSuf) customConstructorDict.$(ObjSuf)
 	$(BuildFromObjs)
 
-customConstructor.log: customConstructor.$(DllSuf)
+customConstructor.log: runcustomConstructor.C customConstructor.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q $< 2>&1 | sed -e 's/P13OTHER_ROOT_IO/class OTHER_ROOT_IO */' > $@  || handleError.sh --result=$$? --log=$@ --test=$<
 
 customConstructor: customConstructor.log
 	$(TestDiff)
