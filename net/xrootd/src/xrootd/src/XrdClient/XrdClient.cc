@@ -764,8 +764,7 @@ kXR_int64 XrdClient::ReadV(char *buf, kXR_int64 *offsets, int *lens, int nbuf)
             fCounters.ReadVSubRequests++;
             fCounters.ReadVSubChunks++;
             fCounters.ReadVBytes += reqvect[startitem].len;
-            res = Read(buf, reqvect[startitem].offset, reqvect[startitem].len);
-            
+            res = Read(buf+bytesread, reqvect[startitem].offset, reqvect[startitem].len);
          } else {
             // Asynchronous, res stays the same
             fCounters.ReadVAsyncSubRequests++;
