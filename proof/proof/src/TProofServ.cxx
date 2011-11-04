@@ -3916,6 +3916,26 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       }
       // Make also sure the input list objects are deleted
       fPlayer->GetInputList()->SetOwner(0);
+      
+      // Remove possible inputs from a file and the file, if any
+      TList *added = dynamic_cast<TList *>(input->FindObject("PROOF_InputObjsFromFile"));
+      if (added) {
+         if (added->GetSize() > 0) {
+            // The file must be the last one
+            TFile *f = dynamic_cast<TFile *>(added->Last());
+            if (f) {
+               added->Remove(f);
+               TIter nxo(added);
+               while ((o = nxo())) { input->Remove(o); }
+               input->Remove(added);
+               added->SetOwner(kFALSE);
+               added->Clear();
+               f->Close();
+               delete f;
+            }
+         }
+         SafeDelete(added);
+      }
       input->SetOwner();
       SafeDelete(input);
 
