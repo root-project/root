@@ -728,7 +728,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
               " --> first %lld, elenum %lld (cur %lld)", eFirst, eNum, cur);
 
       if (!e->GetEntryList()) {
-         // this element is before the start of the global range, skip it
+         // This element is before the start of the global range, skip it
          if (cur + eNum < first) {
             cur += eNum;
             PDB(kPacketizer,2)
@@ -736,7 +736,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
             continue;
          }
 
-         // this element is after the end of the global range, skip it
+         // This element is after the end of the global range, skip it
          if (num != -1 && (first+num <= cur)) {
             cur += eNum;
             PDB(kPacketizer,2)
@@ -744,31 +744,38 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
             continue; // break ??
          }
 
-         if (cur <= first) {
-            // If this element contains the start of the global range
-            // adjust its start and number of entries
-            e->SetFirst( eFirst + (first - cur) );
-            e->SetNum( e->GetNum() - (first - cur) );
-            PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive", " --> adjust start %lld and end %lld",
-                    eFirst + (first - cur), first + num - cur);
-            cur += eNum;
-            eNum = e->GetNum();
+         Bool_t inRange = kFALSE;
+         if (cur <= first || (num != -1 && (first+num <= cur+eNum))) {
 
-         } else  if (num != -1 && (first+num <= cur+eNum)) {
-            // If this element contains the end of the global range
-            // adjust its number of entries
-            e->SetNum( first + num - cur );
-            PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive", " --> adjust end %lld", first + num - cur);
-            cur += eNum;
-            eNum = e->GetNum();
+            if (cur <= first) {
+               // If this element contains the start of the global range
+               // adjust its start and number of entries
+               e->SetFirst( eFirst + (first - cur) );
+               e->SetNum( e->GetNum() - (first - cur) );
+               PDB(kPacketizer,2)
+                  Info("TPacketizerAdaptive", " --> adjust start %lld and end %lld",
+                       eFirst + (first - cur), first + num - cur);
+               inRange = kTRUE;
+            }
+            if (num != -1 && (first+num <= cur+eNum)) {
+               // If this element contains the end of the global range
+               // adjust its number of entries
+               e->SetNum( first + num - e->GetFirst() - cur );
+               PDB(kPacketizer,2)
+                  Info("TPacketizerAdaptive", " --> adjust end %lld", first + num - cur);
+               inRange = kTRUE;
+            }
 
          } else {
             // Increment the counter ...
             PDB(kPacketizer,2)
                Info("TPacketizerAdaptive", " --> increment 'cur' by %lld", eNum);
             cur += eNum;
+         }
+         // Re-adjust eNum and cur, if needed
+         if (inRange) {
+            cur += eNum;
+            eNum = e->GetNum();
          }
 
       } else {
