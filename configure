@@ -655,7 +655,7 @@ check_library() {
             fi
             found_raw_dir=${found_dir}
             if test ! "x$shared" = "xstaticonly" ; then
-              found_dir=-L${found_dir}
+                found_dir=-L${found_dir}
             fi
             # Avoid inclusion of /usr/lib, which is always included anyway
             if test "x$found_dir" = "x-L/usr/lib"   || \
@@ -665,6 +665,17 @@ check_library() {
             fi
             if test "x$debmultiarch" != "x" ; then
                 if test "x$found_dir" = "x-L/usr/lib/$debmultiarch" ; then
+                    found_dir=""
+                fi
+            fi
+            if test "x$checksolaris64" = "xyes" ; then
+                if test "x$found_dir" = "x-L/usr/lib/amd64" || \
+                   test "x$found_dir" = "x-L/usr/lib/64" ; then
+                    found_dir=""
+                fi
+            fi
+            if test "x$checkhpux64" = "xyes" ; then
+                if test "x$found_dir" = "x-L/usr/lib/hpux64" ; then
                     found_dir=""
                 fi
             fi
