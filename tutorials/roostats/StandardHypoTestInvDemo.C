@@ -21,6 +21,7 @@
 #include "RooStats/AsymptoticCalculator.h"
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/HypoTestPlot.h"
+#include "RooStats/RooStatsUtils.h"
 
 #include "RooStats/NumEventsTestStat.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
@@ -36,19 +37,23 @@ using namespace RooFit;
 using namespace RooStats;
 
 
-bool plotHypoTestResult = true; 
-bool useProof = true;
-bool optimize = false;
-bool useVectorStore = false;
-bool generateBinned = false; 
-bool writeResult = false;
-int nworkers = 4;
-bool rebuild = false;
-int nToyToRebuild = 100;
-double nToysRatio = 2; // ratio Ntoys S+b/ntoysB
-double maxPOI = -1;
-const char * massValue = 0;
-TString  minimizerType;
+bool plotHypoTestResult = true;          // plot test statistic result at each point
+bool writeResult = false;                // write HypoTestInverterResult in a file 
+bool optimize = true;                    // optmize evaluation of test statistic 
+bool useVectorStore = true;              // convert data to use new roofit data store 
+bool generateBinned = false;             // generate binned data sets 
+double nToysRatio = 2;                   // ratio Ntoys S+b/ntoysB
+double maxPOI = -1;                      // max value used of POI (in case of auto scan) 
+bool useProof = true;                    // use Proof Light when using toys (for freq or hybrid)
+int nworkers = 4;                        // number of worker for Proof
+bool rebuild = false;                    // re-do extra toys for computing expected limits and rebuild test stat
+                                         // distributions (N.B this requires much more CPU (factor is equivalent to nToyToRebuild)
+int nToyToRebuild = 100;                 // number of toys used to rebuild 
+
+const char * massValue = 0;              // extra string to tag output file of result 
+TString  minimizerType = "Minuit2";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
+int   printLevel = 0;                    // print level for debugging PL test statistics and calculators   
+
 
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
@@ -149,6 +154,7 @@ void StandardHypoTestInvDemo(const char * infile =0,
   }
 
 
+
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0; 
    std::cout << w << "\t" << fileName << std::endl;
@@ -212,13 +218,14 @@ void StandardHypoTestInvDemo(const char * infile =0,
 
  
    // plot the result ( p values vs scan points) 
-   std::string typeName = "Frequentist"; 
-   if (calculatorType ==1 )
-      typeName = "Hybrid";
-   else if (calculatorType ==2 ) { 
+   std::string typeName = "Frequentist";
+   if (calculatorType == 1 )
+      typeName = "Hybrid";   
+   else if (calculatorType == 2 ) { 
       typeName = "Asymptotic";
       plotHypoTestResult = false; 
    }
+      
    const char * resultName = (w) ? w->GetName() : r->GetName();
    TString plotTitle = TString::Format("%s CL Scan for workspace %s",typeName.c_str(),resultName);
    HypoTestInverterPlot *plot = new HypoTestInverterPlot("HTI_Result_Plot",plotTitle,r);
@@ -289,8 +296,8 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
       Error("StandardHypoTestDemo","Model %s has no poi ",modelSBName);
       return 0;
    }
-   if (!sbModel->GetParametersOfInterest()) {
-      Error("StandardHypoTestInvDemo","Model %s has no poi ",modelSBName);
+   if (!sbModel->GetObservables()) {
+      Error("StandardHypoTestInvDemo","Model %s has no observables ",modelSBName);
       return 0;
    }
    if (!sbModel->GetSnapshot() ) { 
@@ -344,10 +351,10 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    TStopwatch tw; 
    tw.Start(); 
    RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                                    Minimizer(minimizerType,"Migrad"), Strategy(0), PrintLevel(1), Constrain(constrainParams), Save(true) );
+                                                    Minimizer(minimizerType,"Migrad"), Strategy(0), PrintLevel(printLevel+1), Constrain(constrainParams), Save(true) );
    if (fitres->status() != 0) { 
       Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-      fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer("Minuit2","Migrad"), Strategy(1), PrintLevel(1), Constrain(constrainParams), Save(true) );
+      fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer("Minuit2","Migrad"), Strategy(1), PrintLevel(printLevel+1), Constrain(constrainParams), Save(true) );
    }
    if (fitres->status() != 0) 
       Warning("StandardHypoTestInvDemo"," Fit still failed - continue anyway.....");
@@ -383,28 +390,34 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
       profll.SetReuseNLL(true);
       slrts.setReuseNLL(true);
       profll.SetStrategy(0);
+      profll.SetPrintLevel(printLevel);
    }
 
    if (maxPOI > 0) poi->setMax(maxPOI);  // increase limit
 
    MaxLikelihoodEstimateTestStat maxll(*sbModel->GetPdf(),*poi); 
 
-
-   TestStatistic * testStat = &slrts;
-   if (testStatType == 1) testStat = &ropl;
-   if (testStatType == 2 || testStatType == 3) testStat = &profll;
-   if (testStatType == 4) testStat = &maxll;
-
-   
+   // create the HypoTest calculator class 
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
    else if (type == 2) hc = new AsymptoticCalculator(*data, *bModel, *sbModel);
    else {
-      std::cerr << "invalid - type = " << type << " supported values are only :\n\t\t\t" 
-                << " 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) " << std::endl;  
+      Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
    }
+
+   // set the test statistic 
+   TestStatistic * testStat = 0;
+   if (testStatType == 0) testStat = &slrts;
+   if (testStatType == 1) testStat = &ropl;
+   if (testStatType == 2 || testStatType == 3) testStat = &profll;
+   if (testStatType == 4) testStat = &maxll;
+   if (testStat == 0) { 
+      Error("StandardHypoTestInvDemo","Invalid - test statistic type = %d supported values are only :\n\t\t\t 0 (SLR) , 1 (Tevatron) , 2 (PLR), 3 (PLR1), 4(MLE)",testStatType);
+      return 0;
+   }
+   
 
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
    if (toymcs) { 
@@ -431,7 +444,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
 
       hhc->SetToys(ntoys,ntoys/nToysRatio); // can use less ntoys for b hypothesis 
 
-      // remove global observables from ModelConfig
+      // remove global observables from ModelConfig (this is probably not needed anymore in 5.32)
       bModel->SetGlobalObservables(RooArgSet() );
       sbModel->SetGlobalObservables(RooArgSet() );
 
@@ -442,13 +455,26 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
          if (nuisPriorName) nuisPdf = w->pdf(nuisPriorName);
          // use prior defined first in bModel (then in SbModel)
          if (!nuisPdf)  { 
-            Info("StandardHypoTestInvDemo","No nuisance pdf given for the HybridCalculator - try to use the prior pdf from the model");
-            nuisPdf = (bModel->GetPriorPdf() ) ?  bModel->GetPriorPdf() : sbModel->GetPriorPdf();
+            Info("StandardHypoTestInvDemo","No nuisance pdf given for the HybridCalculator - try to deduce  pdf from the model");
+            if (bModel->GetPdf() && bModel->GetObservables() ) 
+               nuisPdf = RooStats::MakeNuisancePdf(*bModel,"nuisancePdf_bmodel");
+            else 
+               nuisPdf = RooStats::MakeNuisancePdf(*sbModel,"nuisancePdf_sbmodel");
+         }   
+         if (!nuisPdf ) {
+            if (bModel->GetPriorPdf())  { 
+               nuisPdf = bModel->GetPriorPdf();
+               Info("StandardHypoTestInvDemo","No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",nuisPdf->GetName());            
+            }
+            else { 
+               Error("StandardHypoTestInvDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
+               return 0;
+            }
          }
-         if (!nuisPdf) { 
-            Error("StandardHypoTestInvDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified");
-            return 0;
-         }
+         assert(nuisPdf);
+         Info("StandardHypoTestInvDemo","Using as nuisance Pdf ... " );
+         nuisPdf->Print();
+
          const RooArgSet * nuisParams = (bModel->GetNuisanceParameters() ) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
          RooArgSet * np = nuisPdf->getObservables(*nuisParams);
          if (np->getSize() == 0) { 
@@ -465,6 +491,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    else if (type == 2) { 
       ((AsymptoticCalculator*) hc)->SetOneSided(true); 
       ((AsymptoticCalculator*) hc)->SetQTilde(true); 
+      ((AsymptoticCalculator*) hc)->SetPrintLevel(printLevel+1); 
    }
    else if (type != 2) 
       ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/nToysRatio); 
