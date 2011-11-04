@@ -51,7 +51,7 @@ bool rebuild = false;                    // re-do extra toys for computing expec
 int nToyToRebuild = 100;                 // number of toys used to rebuild 
 
 const char * massValue = 0;              // extra string to tag output file of result 
-TString  minimizerType = "Minuit2";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
+TString  minimizerType;                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators   
 
 
