@@ -60,11 +60,13 @@ endif
 ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
+ifneq ($(XROOTDDIRL),)
+NETXLIBEXTRA += -L$(XROOTDDIRL)
+endif
 ifeq ($(HASXRDUTILS),no)
-NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys \
-                -lXrdClient -lpthread
+NETXLIBEXTRA += -lXrdOuc -lXrdSys -lXrdClient -lpthread
 else
-NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdUtils -lXrdClient
+NETXLIBEXTRA += -lXrdUtils -lXrdClient
 endif
 endif
 

@@ -1257,14 +1257,16 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
 
    // We need to load the protocol getter the first time we are here
    if (!fgSecGetProtocol) {
-      static XrdSysError err(0, "XrdProofConn_");
+      static XrdSysLogger log;
+      static XrdSysError err(&log, "XrdProofConn_");
       // Initialize the security library plugin, if needed
+      XrdOucString libsec;
       if (!fgSecPlugin) { 
 #if ROOTXRDVERS >= ROOT_XrdUtils
-         XrdOucString libsec("libXrdSec");
+         libsec = "libXrdSec";
          libsec += LT_MODULE_EXT;
 #else
-         XrdOucString libsec("libXrdSec.so");
+         libsec = "libXrdSec.so";
 #endif
          fgSecPlugin = new XrdSysPlugin(&err, libsec.c_str());
       }

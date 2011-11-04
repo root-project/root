@@ -11237,6 +11237,9 @@ Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
       return -1;
    }
 
+   // List of added objects (for proper cleaning ...)
+   TList *added = new TList;
+   added->SetName("PROOF_InputObjsFromFile");
    // Read the input data into the input list
    TFile *f = TFile::Open(fname.Data());
    if (f) {
@@ -11249,10 +11252,20 @@ Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
       TKey *k = 0;
       while ((k = (TKey *)nxk())) {
          TObject *o = f->Get(k->GetName());
-         if (o) input->Add(o);
+         if (o) {
+            input->Add(o);
+            added->Add(o);
+         }
       }
-      f->Close();
-      delete f;
+      // Add the file as last one
+      if (added->GetSize() > 0) {
+         added->Add(f);
+         input->Add(added);
+      } else {
+         // Cleanup the file now
+         f->Close();
+         delete f;
+      }
    } else {
       emsg.Form("could not open %s", fname.Data());
       return -1;
