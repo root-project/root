@@ -2093,10 +2093,10 @@ fi
 # Check for GNU make >= 3.80
 #
 message "Checking for GNU Make version >= 3.80"
-gnumake="make"
+gnumake="make --no-print-directory"
 gnu=`$gnumake -v 2>&1 | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
 if test ! "x$gnu" = "xGNU" ; then
-    gnumake="gmake"
+    gnumake="gmake --no-print-directory"
     gnu=`$gnumake -v 2>&1 | awk 'BEGIN { FS=" "} { if (NR==1) print $1 }'`
     if test ! "x$gnu" = "xGNU" ; then
         gnumake=""
@@ -7112,6 +7112,8 @@ fi
 if test "x$nohowto" = "xyes" ; then
     exit 0
 fi
+
+gnumake=`echo $gnumake | sed 's,--no-print-directory,,'`
 
 result ""
 result "To build ROOT type:"
