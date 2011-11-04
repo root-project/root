@@ -127,12 +127,19 @@ XPROOFDEXE     := bin/xproofd
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+
+ifneq ($(XROOTDDIRL),)
+XPDLIBEXTRA    := -L$(XROOTDDIRL)
+XPROOFDEXELIBS := -L$(XROOTDDIRL)
+endif
+
 ifeq ($(HASXRDUTILS),no)
-XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
+
+XPDLIBEXTRA    += -lXrdClient -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
-XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
-                  $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
+XPROOFDEXELIBS += -lXrd -lXrdClient -lXrdNet -lXrdOuc \
+                  -lXrdSys -lXrdSut
+
 # Starting from Jul 2010 XrdNet has been split in two libs:
 #    XrdNet and XrdNetUtil
 # both are needed
@@ -143,14 +150,14 @@ XRDNETUTIL     := $(shell if test $(XRDVERSION) -gt 20100729; then \
                           fi)
 endif
 ifeq ($(XRDNETUTIL),yes)
-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
-XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
+XPDLIBEXTRA    += -lXrdNetUtil
+XPROOFDEXELIBS += -lXrdNetUtil
 endif
 
 else
 
-XPDLIBEXTRA    := -L$(XROOTDDIRL) -lXrdClient -lXrdUtils
-XPROOFDEXELIBS := -L$(XROOTDDIRL) -lXrdMain -lXrdClient -lXrdUtils
+XPDLIBEXTRA    += -lXrdClient -lXrdUtils
+XPROOFDEXELIBS += -lXrdMain -lXrdClient -lXrdUtils
 
 endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)
