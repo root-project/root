@@ -20,8 +20,6 @@ void Rolke()
 //
 //////////////////////////////////////////////////////
 
-   gSystem->Load("libPhysics.so");
-   gSystem->Load("libTRolke.so");
 
    /* variables used throughout the example */
    Double_t bm;
