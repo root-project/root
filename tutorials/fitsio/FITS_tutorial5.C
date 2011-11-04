@@ -16,8 +16,8 @@ void FITS_tutorial5()
    printf("WARNING: when coding, row and column indices start from 0\n");
    
    if (!gROOT->IsBatch()) {
-      printf("Press ENTER to start..."); getchar();
-      printf("\n");
+      //printf("Press ENTER to start..."); getchar();
+      //printf("\n");
    }
     
    //Open the table
@@ -43,7 +43,7 @@ void FITS_tutorial5()
    
    printf("\nBONUS EXAMPLE: we're gonna dump all rows using\n");
    printf("the function GetTabRealVectorCells()\n");
-   printf("Press ENTER to continue..."); getchar();
+   //printf("Press ENTER to continue..."); getchar();
    
    TObjArray *vectorCollection = hdu->GetTabRealVectorCells("mag");
    
