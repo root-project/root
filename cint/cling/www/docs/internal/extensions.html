@@ -2,13 +2,14 @@
 <html>
 
 <head>
-  <title>Cling Website</title>
+  <title>Cling Documentation - Extensions</title>
   <meta name="description" content="Official website of Cling" />
-  <meta name="keywords" content="cling, documents, tutorials, howtos" />
+  <meta name="keywords" content="cling, documents, tutorials, howtos, extensions" />
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <meta http-equiv="robots" content="noindex,nofollow" />
-  <link rel="stylesheet" type="text/css" href="style/style.css" />
-  <link rel="stylesheet" type="text/css" href="style/menu.css" />
+  <link rel="stylesheet" type="text/css" href="../../style/style.css" />
+  <link rel="stylesheet" type="text/css" href="../../style/menu.css" />
+
 </head>
 
 <body>
@@ -24,10 +25,10 @@
       <div id="mainmenubar">
         <ul id="mainmenu">
           <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
-          <li><a class="tab_link" href="index.html">Home</a></li>
-          <li><a class="tab_link" href="download.html">Download</a></li>
-          <li><a class="tab_link" href="news.html">News</a></li>
-          <li class="selected root"><a class="tab_link" href="docs.html">Docs</a>
+          <li><a class="tab_link" href="../../index.html">Home</a></li>
+          <li><a class="tab_link" href="../../download.html">Download</a></li>
+          <li><a class="tab_link" href="../../news.html">News</a></li>
+          <li class="selected root"><a class="tab_link" href="../../docs.html">Docs</a>
             <div id="secondarymenu">
               <div id="secondarymenu_content">
                 <div class="secondarymenu_header">Documentation</div>
@@ -35,8 +36,8 @@
                 <div class="column">
                   <div class="column_header">Developer</div>
                   <ul>
-                    <li><a class="secm_link" href="docs/internal/doxygen.html">Doxygen</a></li>
-                    <li><a class="secm_link" href="docs/internal/extensions.html">Extensions</a></li>
+                    <li><a class="secm_link" href="doxygen.html">Doxygen</a></li>
+                    <li><a class="secm_link" href="extensions.html">Extensions</a></li>
                     <li><a class="secm_link" href="#">Error Recovery</a></li>
                     <li><a class="secm_link" href="#">Late Binding</a></li>
                   </ul>
@@ -45,14 +46,14 @@
                   <div class="column_header">End User</div>
                   <ul>
                     <li><a class="secm_link" href="#">User Manual</a></li>
-                    <li><a class="secm_link" href="#">Status of ObjectiveC[++]</a></li>
+                    <li><a class="secm_link" href="#">Status of ObjC[++] Support</a></li>
                   </ul>
                 </div>
                 
               </div>
             </div>
           </li>
-          <li><a class="tab_link" href="contact.html">Get Involved</a></li>
+          <li><a class="tab_link" href="../../contact.html">Get Involved</a></li>
         </ul>
       </div>
     </div>
@@ -75,23 +76,19 @@
       </div>
       <div id="main">
         <!-- insert the page content here -->
-        <h1>Documents</h1>
-
-        <table>
-          <tr><th>Talk</th><th>Event</th></tr>
-          <tr>
-            <td><a href="docs/talks/CreatingCling.pdf" target="_blank">Creating cling, an interactive interpreter interface for clang</a> <br /> <i>Axel Naumann, Philippe Canal, Paul Russo, Vassil Vassilev</i></td>
-            <td><a href="http://www.llvm.org/devmtg/2010-11/" target="_blank">LLVM Dev Meeting 2010, San Jose, USA</a></td>
-          </tr>
-          <tr>
-            <td><a href="docs/talks/ImplementingDynamicScopesInCling.pdf" target="_blank">Implementing Dynamic Scopes in Cling</a> <br /> <i>Vassil Vassilev</i></td>
-            <td><a href="http://www.llvm.org/devmtg/2011-09-16/" target="_blank">LLVM Euro Dev Meeting 2011, London, UK</a></td>
-          </tr>
-          <tr>
-            <td><a href="docs/talks/ClingTheLLVM-basedInterpreter.pdf" target="_blank">Cling - The LLVM-based Interpreter</a> <br /> <i>Vassil Vassilev</i></td>
-            <td><a href="http://indico.cern.ch/conferenceDisplay.py?confId=159088" target="_blank">PH/SFT Group Meeting, CERN, CH</a></td>
-          </tr>
-        </table>
+        <h1>Extensions</h1>
+        <p>
+          Cling has several additional features. The main reason for their implementation is to improve the interactivity of the prompt. We call them language extensions. 
+        </p>
+          <ul>For instance, language extensions are:
+            <li><b>Execution of statements and expressions on the fly</b> - From user's point of view it would make much sense if functions could be called by typing the function name at the prompt. This is true for other handy operations like creation of objects. However, the operations that do it are classified as statements and expressions, entered on the global scope. Statements and expressions on the global scope are not allowed by the C/C++/ObjC/ObjC++ grammar. Cling's prompt allows entering statements and expression on the global scope as transforming them into proper language constructs. </li>
+            <li><b>Easy print out of the execution results</b> - The way of signaling that the user wants to see the result of the entered and executed code is done by omitting the semicolon in the end. The standard doesn't allow statements (except those that change the control flow - such as if, for, while) without semicolon (;) in the end. However, this appears to be really simple and useful language extension that improves the user-cling interplay. Imagine if you had to write printf every time that you want to see the result of a function call. </li>
+          </ul>
+          <div class="see_also">
+            See Also:
+          </div>
+          <div class="see_also_item"><a href="#">Statements and expression on the global scope in details</a></div>
+          <div class="see_also_item"><a href="#">Easy printing of execution results in details</a></div>
       </div>
     </div>
     <div id="footer">
@@ -104,7 +101,7 @@
         <a href="http://clang.llvm.org" target="_blank">Clang</a> | 
         <a href="http://www.html5webtemplates.co.uk" target="_blank">Web Design</a>
       </div>
-      <div id="modified"><i>Page was modified on <b>$Date$</b> in $Rev$ by <b>$Author$</b></i></div>
+      <div id="modified"><i>Page was modified on <b>$Date$</b> in $Rev: 41615 $ by <b>$Author: vvassilev $</b></i></div>
     </div>
   </div>
 </body>

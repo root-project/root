@@ -60,13 +60,23 @@ hr {
     border-top: 1px dashed #D9D5CF;
 }
 
-.info {
+.info, .see_also {
     background-color: #FFFFAA;
     font-size: 120%;
     font-variant: small-caps;
     padding-bottom: 1em;
     padding-top: 1em;
     text-align: center;
+}
+
+.see_also {
+    background-color: transparent;
+    font-weight: bold;
+    text-align: left;
+}
+
+.see_also_item {
+    padding-left: 2em;
 }
 
 .clear {
@@ -136,17 +146,16 @@ ol li {
 }
 
 #header {
-    background: #3A332D;
-    height: 170px;
-    margin-bottom: 30px;
+    background: #3A332D; /*url(menu_bg.jpg)  no-repeat right 0;*/
+    height: 180px;
 }
 
 #logo { 
     min-width: 860px;
-    max-width: 1200px;
+    max-width: 1024px;
     position: relative;
-    height: 139px;
-    background: #3A332D url(logo.png) no-repeat;
+    height: 140px;
+    background: url(logo.png) no-repeat transparent;
     margin: auto;
     padding: 0 0 0 4em;
 }
@@ -181,60 +190,28 @@ ol li {
     color: #A8AA94;
 }
 
-#menubar {
+#mainmenubar {
     min-width: 860px;
-    max-width: 1200px;
+    max-width: 1024px;
+    height: 40px;
     margin: auto;
     padding: 0 0 0 4em;
 }
 
-ul#menu {
-    float: right;
-    margin: 0;
-}
-
-ul#menu li {
-    float: left;
-    padding: 0 0 0 6px;
-    list-style: none;
-    margin: 0 2px 0 0;
-    background: #635B53 url(tab.png) no-repeat 0 0;
-}
-
-ul#menu li a{
-    font: normal 100% 'trebuchet ms', sans-serif;
-    display: block; 
-    float: left; 
-    height: 20px;
-    padding: 6px 28px 5px 22px;
-    text-align: center;
-    color: #FFF;
-    text-decoration: none;
-    background: #635B53 url(tab.png) no-repeat 100% 0;
-} 
-
-ul#menu li.tab_selected a {
-    height: 20px;
-    padding: 6px 28px 5px 22px;
-}
-
-ul#menu li.selected {
-    margin: 0 2px 0 0;
-    background: #635B53 url(tab_selected.png) no-repeat 0 0;
-}
-
-ul#menu li.selected a, ul#menu li.selected a:hover { 
-    background: #635B53 url(tab_selected.png) no-repeat 100% 0;
-    color: #111;
-}
-
-ul#menu li a:hover {
-    color: #ECEF01;
+#breadcrumb {
+    min-width: 860px;
+    max-width: 1024px;
+    margin: 0 auto;
+    min-height: 3em;
+    line-height: 3em;
+    text-align: right;
+    vertical-align: middle;
+    padding: 0 0em 0em 4em;
 }
 
 #content {
     min-width: 860px;
-    max-width: 1200px;
+    max-width: 1024px;
     overflow: hidden;
     padding: 0 1em 3em 3em;
     margin: 0 auto;
@@ -248,7 +225,7 @@ ul#menu li a:hover {
     width: 20%;
     padding: 15px;
     margin-top: 1em;
-    background-color: #EFF4F6;
+    background-color: #EDEFF4; /*D8DFEA*/
     -moz-border-radius: 20px; border-radius: 20px;
 }
 .sidebar ul {
@@ -287,8 +264,8 @@ ul#menu li a:hover {
 #main ul li {
     list-style-type: none;
     background: url(bullet.png) no-repeat;
-    margin: 0 0 6px 0; 
-    padding: 0 0 4px 25px;
+    margin: 0.5em 0 0 0; 
+    padding: 0 0 0 25px;
     line-height: 1.5em;
 }
 

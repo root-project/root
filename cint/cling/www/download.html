@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 
 <head>
@@ -7,6 +7,7 @@
   <meta name="keywords" content="download cling, svn, make, build" />
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <link rel="stylesheet" type="text/css" href="style/style.css" />
+  <link rel="stylesheet" type="text/css" href="style/menu.css" />
 </head>
 
 <body>
@@ -19,17 +20,42 @@
           <h2>Interactive Compiler Interface</h2>
         </div>
       </div>
-      <div id="menubar">
-        <ul id="menu">
+      <div id="mainmenubar">
+        <ul id="mainmenu">
           <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
-          <li><a href="index.html">Home</a></li>
-          <li class="selected"><a href="download.html">Download</a></li>
-          <li><a href="news.html">News</a></li>
-          <li><a href="docs.html">Docs</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
+          <li><a class="tab_link" href="index.html">Home</a></li>
+          <li class="selected"><a class="tab_link" href="download.html">Download</a></li>
+          <li><a class="tab_link" href="news.html">News</a></li>
+          <li class="root"><a class="tab_link" href="docs.html">Docs</a>
+            <div id="secondarymenu">
+              <div id="secondarymenu_content">
+                <div class="secondarymenu_header">Documentation</div>
+                <br class="clear" />
+                <div class="column">
+                  <div class="column_header">Developer</div>
+                  <ul>
+                    <li><a class="secm_link" href="docs/internal/doxygen.html">Doxygen</a></li>
+                    <li><a class="secm_link" href="docs/internal/extensions.html">Extensions</a></li>
+                    <li><a class="secm_link" href="#">Error Recovery</a></li>
+                    <li><a class="secm_link" href="#">Late Binding</a></li>
+                  </ul>
+                </div>
+                <div class="column">
+                  <div class="column_header">End User</div>
+                  <ul>
+                    <li><a class="secm_link" href="#">User Manual</a></li>
+                    <li><a class="secm_link" href="#">Status of ObjectiveC[++]</a></li>
+                  </ul>
+                </div>
+                
+              </div>
+            </div>
+          </li>
+          <li><a class="tab_link" href="contact.html">Get Involved</a></li>
         </ul>
       </div>
     </div>
+    <div id="breadcrumb"></div>
     <div id="content">
       <div class="sidebar">
         <!-- insert your sidebar items here -->
