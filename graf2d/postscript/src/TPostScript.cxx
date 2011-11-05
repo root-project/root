@@ -1699,6 +1699,8 @@ void TPostScript::Initialize()
       PrintFast(8," iy sub ");
       WriteInteger(npy);
       PrintStr(" mul t} def@");
+   } else {
+      PrintStr("@");
    }
 
    PrintStr("%%EndProlog@");
