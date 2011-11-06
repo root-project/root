@@ -257,7 +257,8 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             nmerged++;
          } else {
             // Just add it to the dedicated temp list for later addition to the current list
-	    if (!notmergeable) notmergeable = (TSeqCollection*)IsA()->New();
+            if (!notmergeable && IsA())
+               notmergeable = (TSeqCollection*)IsA()->New();
             if (notmergeable)
                notmergeable->Add(objtomerge);
             else
