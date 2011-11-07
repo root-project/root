@@ -2,26 +2,10 @@
 
 #import "ObjectInspectorComponent.h"
 
-@class InspectorWithNavigation;
-@class AxisTicksInspector;
-@class ROOTObjectController;
-
-class TObject;
-
-@interface AxisInspector : UIViewController <ObjectInspectorComponent> {
+@interface AxisInspector : UIViewController <ObjectInspectorComponent, UITabBarDelegate> {
 @private
-   IBOutlet UITabBar *tabBar;
-
-   AxisTicksInspector *ticksInspector;
-
-   InspectorWithNavigation *titleInspector;
-   InspectorWithNavigation *labelInspector;
-
-   ROOTObjectController *controller;
-   TObject *object;
+   __weak IBOutlet UITabBar *tabBar;
 }
-
-@property (nonatomic, retain) UITabBar *tabBar;
 
 + (CGRect) inspectorFrame;
 
@@ -30,8 +14,6 @@ class TObject;
 - (NSString *) getComponentName;
 - (void) resetInspector;
 
-- (IBAction) showTicksInspector;
-- (IBAction) showAxisTitleInspector;
-- (IBAction) showAxisLabelsInspector;
+
 
 @end

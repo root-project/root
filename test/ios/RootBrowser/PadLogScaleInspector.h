@@ -2,23 +2,12 @@
 
 #import "ObjectInspectorComponent.h"
 
-@class ROOTObjectController;
-class TVirtualPad;
-class TObject;
-
 @interface PadLogScaleInspector : UIViewController <ObjectInspectorComponent> {
 @private
-   IBOutlet UISwitch *logX;
-   IBOutlet UISwitch *logY;
-   IBOutlet UISwitch *logZ;
-   
-   ROOTObjectController *controller;
-   TVirtualPad *object;
+   __weak IBOutlet UISwitch *logX;
+   __weak IBOutlet UISwitch *logY;
+   __weak IBOutlet UISwitch *logZ;
 }
-
-@property (nonatomic, retain) UISwitch *logX;
-@property (nonatomic, retain) UISwitch *logY;
-@property (nonatomic, retain) UISwitch *logZ;
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
 - (void) setROOTObject : (TObject *)o;

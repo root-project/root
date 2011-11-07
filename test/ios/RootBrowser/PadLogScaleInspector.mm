@@ -5,34 +5,17 @@
 #import "TVirtualPad.h"
 #import "TObject.h"
 
-
-@implementation PadLogScaleInspector
-
-@synthesize logX;
-@synthesize logY;
-@synthesize logZ;
+@implementation PadLogScaleInspector {
+   __weak ROOTObjectController *controller;
+   TVirtualPad *object;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-    
    [self view];
-    
-   if (self) {
-   }
-
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   self.logX = nil;
-   self.logY = nil;
-   self.logZ = nil;
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

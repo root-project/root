@@ -2,13 +2,25 @@
 #import "H1BinsInspector.h"
 #import "H1Inspector.h"
 
-@implementation H1Inspector
-
+//It's mm file, C++ constants have internal linkage.
 const CGFloat totalHeight = 399.f;
 const CGFloat tabBarHeight = 49.f;
 const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
-@synthesize tabBar;
+@interface H1Inspector () {
+   H1ErrorsInspector *errorInspector;
+   H1BinsInspector *binsInspector;
+   
+   TObject *object;
+   __weak ROOTObjectController *controller;
+}
+
+- (void) showBinsInspector;
+- (void) showErrorInspector;
+
+@end
+
+@implementation H1Inspector 
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -32,13 +44,6 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
    }
    
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   [errorInspector release];
-   self.tabBar = nil;
 }
 
 //____________________________________________________________________________________________________

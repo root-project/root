@@ -1,7 +1,5 @@
 #import <UIKit/UIKit.h>
 
-@class PadImageView;
-
 namespace ROOT {
 namespace iOS {
 
@@ -10,17 +8,9 @@ class Pad;
 }
 }
 
-class TObject;
+@interface PadImageScrollView : UIScrollView <UIScrollViewDelegate>
 
-@interface PadImageScrollView : UIScrollView <UIScrollViewDelegate> {
-@private
-   UIImage *padImage;
-   ROOT::iOS::Pad *pad;
-   
-   PadImageView *nestedView;
-}
-
-@property (assign) UIImage *padImage;
+@property (nonatomic, retain) UIImage *padImage;
 
 + (CGRect) defaultImageFrame;
 

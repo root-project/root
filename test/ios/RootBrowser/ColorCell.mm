@@ -2,12 +2,8 @@
 
 #import "ColorCell.h"
 
-@implementation ColorCell
-
-//____________________________________________________________________________________________________
-+ (CGFloat) cellAlpha 
-{
-   return 0.8f;
+@implementation ColorCell {
+   double rgb[3];
 }
 
 //____________________________________________________________________________________________________
@@ -32,12 +28,6 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)dealloc
-{
-   [super dealloc];
-}
-
-//____________________________________________________________________________________________________
 - (void) setRGB : (const double *) newRgb
 {
    rgb[0] = newRgb[0];
@@ -54,7 +44,7 @@
       return;
    }
 
-   CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], [ColorCell cellAlpha]);
+   CGContextSetRGBFillColor(ctx, CGFloat(rgb[0]), CGFloat(rgb[1]), CGFloat(rgb[2]), 1.f);
    
    const CGRect colorCellRect = CGRectMake(10.f, 10.f, rect.size.width - 20.f, rect.size.height - 20.f);
    CGContextFillRect(ctx, colorCellRect);

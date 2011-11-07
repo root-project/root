@@ -3,29 +3,12 @@
 #import "ObjectInspectorComponent.h"
 #import "HorizontalPickerDelegate.h"
 
-@class HorizontalPickerView;
-
-class TAttMarker;
-
 @interface MarkerInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate> {
-@private   
-   HorizontalPickerView *markerStylePicker;
-   HorizontalPickerView *markerColorPicker;
-
-   NSMutableArray *styleCells;
-   NSMutableArray *colorCells;
-   
-   IBOutlet UIButton *plusBtn;
-   IBOutlet UIButton *minusBtn;
-   IBOutlet UILabel *sizeLabel;
-   
-   ROOTObjectController *controller;
-   TAttMarker *object;
+@private
+   __weak IBOutlet UIButton *plusBtn;
+   __weak IBOutlet UIButton *minusBtn;
+   __weak IBOutlet UILabel *sizeLabel;
 }
-
-@property (nonatomic, retain) UIButton *plusBtn;
-@property (nonatomic, retain) UIButton *minusBtn;
-@property (nonatomic, retain) UILabel *sizeLabel;
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
 - (void) setROOTObject : (TObject *)o;

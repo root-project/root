@@ -5,14 +5,11 @@
 #import "ColorCell.h"
 #import "Constants.h"
 
+//C++ (ROOT) imports.
 #import "TAttMarker.h"
 #import "TObject.h"
 
-@implementation MarkerInspector
-
-@synthesize plusBtn;
-@synthesize minusBtn;
-@synthesize sizeLabel;
+namespace {
 
 const CGRect cellRect = CGRectMake(0.f, 0.f, 50.f, 50.f);
 
@@ -30,11 +27,24 @@ EMarkerStyle markerStyles[] = {kDot, kPlus, kStar, kCircle, kMultiply,
 const unsigned nMarkers = sizeof markerStyles / sizeof markerStyles[0];
 
 //____________________________________________________________________________________________________
-static BOOL canScaleMarker(Style_t style)
+BOOL canScaleMarker(Style_t style)
 {
    if (style == kDot || style == kFullDotSmall || style == kFullDotMedium)
       return NO;
    return YES;
+}
+
+}
+
+@implementation MarkerInspector {
+   HorizontalPickerView *markerStylePicker;
+   HorizontalPickerView *markerColorPicker;
+
+   NSMutableArray *styleCells;
+   NSMutableArray *colorCells;
+   
+   __weak ROOTObjectController *controller;
+   TAttMarker *object;
 }
 
 //____________________________________________________________________________________________________
@@ -51,13 +61,11 @@ static BOOL canScaleMarker(Style_t style)
       for (unsigned i = 0; i < nMarkers; ++i) {
          MarkerStyleCell *newCell = [[MarkerStyleCell alloc] initWithFrame : cellRect andMarkerStyle : markerStyles[i]];
          [styleCells addObject : newCell];
-         [newCell release];
       }
       
       markerStylePicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 15.f, 220.f, 70.f)];
       [markerStylePicker addItems : styleCells];
       [self.view addSubview : markerStylePicker];
-      [markerStylePicker release];
       markerStylePicker.pickerDelegate = self;
       
       colorCells = [[NSMutableArray alloc] init];
@@ -65,30 +73,15 @@ static BOOL canScaleMarker(Style_t style)
          ColorCell *newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
-         [newCell release];
       }
       
       markerColorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 110.f, 220.f, 70.f)];
       [markerColorPicker addItems : colorCells];
       [self.view addSubview : markerColorPicker];
-      [markerColorPicker release];
       markerColorPicker.pickerDelegate = self;
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc 
-{
-   self.plusBtn = nil;
-   self.minusBtn = nil;
-   self.sizeLabel = nil;
-   
-   [styleCells release];
-   [colorCells release];
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

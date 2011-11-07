@@ -2,13 +2,25 @@
 #import "PadLogScaleInspector.h"
 #import "PadInspector.h"
 
-static const CGFloat totalHeight = 250.f;
-static const CGFloat tabBarHeight = 49.f;
-static const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
+//It's mm file == C++, consts have internal linkage.
+const CGFloat totalHeight = 250.f;
+const CGFloat tabBarHeight = 49.f;
+const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
+
+@interface PadInspector () {
+   PadTicksGridInspector *gridInspector;
+   PadLogScaleInspector *logScaleInspector;
+   
+   __weak ROOTObjectController *controller;
+   TObject *object;
+}
+
+- (void) showTicksAndGridInspector;
+- (void) showLogScaleInspector;
+
+@end
 
 @implementation PadInspector
-
-@synthesize tabBar;
 
 //____________________________________________________________________________________________________
 + (CGRect) inspectorFrame
@@ -40,16 +52,6 @@ static const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, 
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   [gridInspector release];
-   [logScaleInspector release];
-   self.tabBar = nil;
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -114,14 +116,14 @@ static const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, 
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) showTicksAndGridInspector
+- (void) showTicksAndGridInspector
 {
    logScaleInspector.view.hidden = YES;
    gridInspector.view.hidden = NO;
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) showLogScaleInspector
+- (void) showLogScaleInspector
 {
    logScaleInspector.view.hidden = NO;
    gridInspector.view.hidden = YES;

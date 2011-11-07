@@ -6,9 +6,11 @@
 //C++ (ROOT) imports.
 #import "IOSPad.h"
 
-static const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
+const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 
-@implementation SlideView
+@implementation SlideView {
+   ROOT::iOS::Pad *pad;
+}
 
 //____________________________________________________________________________________________________
 + (CGSize) slideSize

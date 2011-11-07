@@ -1,15 +1,13 @@
+#import "ROOTObjectController.h"
 #import "H1ErrorsInspector.h"
 
-#import "ROOTObjectController.h"
-
+//C++ (ROOT) imports.
 #import "TH1.h"
 
-@implementation H1ErrorsInspector
+namespace {
 
 const CGFloat defaultCellW = 180.f;
 const CGFloat defaultCellH = 44.f;
-
-@synthesize errorTypePicker;
 
 enum H1ErrorType {
    kNoError,
@@ -24,6 +22,14 @@ enum H1ErrorType {
 NSString *errorTypesStrings[] = {@"No error", @"Simple", @"Edges", @"Rectangles", @"Fill", @"Contour"};
 ROOT::iOS::EHistogramErrorOption histErrorTypes[] = {ROOT::iOS::hetNoError, ROOT::iOS::hetE, ROOT::iOS::hetE1, ROOT::iOS::hetE2, ROOT::iOS::hetE3, ROOT::iOS::hetE4};
 
+}
+
+@implementation H1ErrorsInspector {
+   __weak ROOTObjectController *controller;
+
+   TH1 *object;
+}
+
 //____________________________________________________________________________________________________
 - (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
@@ -34,12 +40,6 @@ ROOT::iOS::EHistogramErrorOption histErrorTypes[] = {ROOT::iOS::hetNoError, ROOT
    }
 
    return self;
-}
-
-- (void) dealloc 
-{
-   self.errorTypePicker = nil;
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -104,7 +104,7 @@ ROOT::iOS::EHistogramErrorOption histErrorTypes[] = {ROOT::iOS::hetNoError, ROOT
 //____________________________________________________________________________________________________
 - (UIView *)pickerView : (UIPickerView *)pickerView viewForRow : (NSInteger)row forComponent : (NSInteger)component reusingView : (UIView *)view
 {
-   UILabel *label = [[[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)] autorelease];
+   UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = errorTypesStrings[row];
    label.font = [UIFont fontWithName : @"TimesNewRomanPS-BoldMT" size : 14.f];
    label.textAlignment = UITextAlignmentCenter;

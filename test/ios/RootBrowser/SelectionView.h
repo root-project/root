@@ -8,17 +8,7 @@ class Pad;
 }
 }
 
-@interface SelectionView : UIView {
-   ROOT::iOS::Pad *pad;
-   
-   BOOL panActive;
-   CGPoint panStart;
-   CGPoint currentPanPoint;
-   BOOL verticalDirection;
-   
-   CGPoint hitPoint;
-   CGPoint offset;
-}
+@interface SelectionView : UIView
 
 @property (nonatomic, assign) BOOL panActive;
 @property (nonatomic, assign) CGPoint panStart;

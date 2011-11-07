@@ -12,7 +12,11 @@ static const CGFloat defaultImageH = 700.f;
 static const CGFloat maxZoom = 2.f;
 static const CGFloat minZoom = 1.f;
 
-@implementation PadImageScrollView
+@implementation PadImageScrollView {
+   ROOT::iOS::Pad *pad;
+   
+   PadImageView *nestedView;
+}
 
 @synthesize padImage;
 
@@ -38,7 +42,6 @@ static const CGFloat minZoom = 1.f;
    nestedView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
    
    [self addSubview : nestedView];
-   [nestedView release];
 }
 
 //____________________________________________________________________________________________________
@@ -66,17 +69,9 @@ static const CGFloat minZoom = 1.f;
       UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleDoubleTap:)];
       doubleTap.numberOfTapsRequired = 2;
       [self addGestureRecognizer : doubleTap];
-      [doubleTap release];
    }
     
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc 
-{
-   [padImage release];
-   [super dealloc];
 }
 
 #pragma mark - Child view's management
@@ -90,7 +85,7 @@ static const CGFloat minZoom = 1.f;
 
 #pragma mark - Image/pad/geometry management.
 //____________________________________________________________________________________________________
-- (UIImage *) initPadImage : (CGSize) imageSize
+- (UIImage *) createPadImage : (CGSize) imageSize
 {
    UIGraphicsBeginImageContext(imageSize);
    CGContextRef ctx = UIGraphicsGetCurrentContext();
@@ -116,8 +111,7 @@ static const CGFloat minZoom = 1.f;
    pad->Paint();
 
    //Ready.
-   UIImage *image = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
-   [image retain];
+   UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
    UIGraphicsEndImageContext();
        
    return image;
@@ -128,8 +122,7 @@ static const CGFloat minZoom = 1.f;
 {
    pad = p;
    //Generate new image.
-   [padImage release];
-   padImage = [self initPadImage : [PadImageScrollView defaultImageFrame].size];
+   padImage = [self createPadImage : [PadImageScrollView defaultImageFrame].size];
    
    pad->SetViewWH(defaultImageW, defaultImageH);
 
@@ -148,9 +141,7 @@ static const CGFloat minZoom = 1.f;
 - (void) setPad : (ROOT::iOS::Pad *)p andImage : (UIImage *)image
 {
    pad = p;
-   
-   [padImage release];
-   padImage = [image retain];
+   padImage = image;
    
    if (nestedView && nestedView.zoomed) {
       [self clearScroll];
@@ -228,17 +219,14 @@ static const CGFloat minZoom = 1.f;
 
    nestedView = [[PadImageView alloc] initWithFrame : newFrame];
 
-   UIImage *image = [self initPadImage : newFrame.size];
+   UIImage *image = [self createPadImage : newFrame.size];
    nestedView.padImage = image;
-   [image release];
    [scroll addSubview : nestedView];
 
    scroll.contentSize = newFrame.size;
    scroll.contentOffset = offset;
 
    nestedView.zoomed = YES;
-
-   [nestedView release];
 }
 
 //____________________________________________________________________________________________________

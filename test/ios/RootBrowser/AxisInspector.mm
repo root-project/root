@@ -1,13 +1,27 @@
 #import "InspectorWithNavigation.h"
 #import "AxisLabelsInspector.h"
 #import "AxisTitleInspector.h"
-#import "AxisColorInspector.h"
 #import "AxisTicksInspector.h"
 #import "AxisInspector.h"
 
-@implementation AxisInspector
+@interface AxisInspector () {
+   AxisTicksInspector *ticksInspector;
 
-@synthesize tabBar;
+   InspectorWithNavigation *titleInspector;
+   InspectorWithNavigation *labelInspector;
+
+   __weak ROOTObjectController *controller;
+   TObject *object;
+}
+
+- (void) showTicksInspector;
+- (void) showAxisTitleInspector;
+- (void) showAxisLabelsInspector;
+
+@end
+
+
+@implementation AxisInspector
 
 //____________________________________________________________________________________________________
 + (CGRect) inspectorFrame
@@ -29,7 +43,6 @@
       //
       AxisTitleInspector *titleInspectorCompositor = [[AxisTitleInspector alloc] initWithNibName : @"AxisTitleInspector" bundle : nil];
       titleInspector = [[InspectorWithNavigation alloc] initWithRootViewController : titleInspectorCompositor];
-      [titleInspectorCompositor release];
       titleInspector.view.frame = [AxisTitleInspector inspectorFrame];
       [self.view addSubview : titleInspector.view];
       titleInspector.view.hidden = YES;
@@ -37,7 +50,6 @@
       
       AxisLabelsInspector *labelInspectorCompositor = [[AxisLabelsInspector alloc] initWithNibName : @"AxisLabelsInspector" bundle : nil];
       labelInspector = [[InspectorWithNavigation alloc] initWithRootViewController : labelInspectorCompositor];
-      [labelInspectorCompositor release];
       labelInspector.view.frame = [AxisLabelsInspector inspectorFrame];
       [self.view addSubview : labelInspector.view];
       labelInspector.view.hidden = YES;
@@ -46,18 +58,6 @@
    }
     
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   self.tabBar = nil;
-
-   [ticksInspector release];
-   [titleInspector release];
-   [labelInspector release];
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -128,7 +128,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) showTicksInspector
+- (void) showTicksInspector
 {
    ticksInspector.view.hidden = NO;
    titleInspector.view.hidden = YES;
@@ -136,7 +136,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) showAxisTitleInspector
+- (void) showAxisTitleInspector
 {
    ticksInspector.view.hidden = YES;
    titleInspector.view.hidden = NO;
@@ -144,7 +144,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) showAxisLabelsInspector
+- (void) showAxisLabelsInspector
 {
    ticksInspector.view.hidden = YES;
    titleInspector.view.hidden = YES;

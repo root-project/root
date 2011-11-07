@@ -1,9 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@interface LineStyleCell : UIView {
-@private
-   unsigned lineStyle;
-}
+@interface LineStyleCell : UIView
 
 - (id) initWithFrame : (CGRect)frame lineStyle : (unsigned) style;
 

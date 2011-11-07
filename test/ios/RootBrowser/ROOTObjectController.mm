@@ -18,15 +18,44 @@
 #import "IOSPad.h"
 //#import "TFile.h"
 
+namespace {
+//Ugly Obj-C, implementation block is not a scope, so either static or unnamed namespace :(
+
 //This constant is used to check, if pad was
 //scaled to possible maximum or still can be zoomed in.
-static const CGFloat scaledToMaxEpsilon = 5.f;
-static const CGFloat maximumZoom = 2.f;
+const CGFloat scaledToMaxEpsilon = 5.f;
+const CGFloat maximumZoom = 2.f;
 
-@implementation ROOTObjectController
+enum Mode {
+   ocmNavigation,
+   ocmEdit
+};
 
-@synthesize navigationScrollView;
-@synthesize padScrollView;
+}
+
+@implementation ROOTObjectController {
+   Mode mode;
+
+   __weak EditorView *editorView;
+   ObjectInspector *objectInspector;
+   
+   PadView *editablePadView;
+
+   ROOT::iOS::FileContainer *fileContainer;
+
+   TObject *selectedObject;
+   
+   BOOL zoomed;
+   
+   PadImageScrollView *navScrolls[3];
+
+   unsigned currentObject;
+   unsigned nextObject;
+   unsigned previousObject;
+   
+   UIBarButtonItem *editBtn;   
+}
+
 
 #pragma mark - Special methods to manage drawing options.
 
@@ -71,20 +100,15 @@ static const CGFloat maximumZoom = 2.f;
    
    UIBarButtonItem *saveBtn = [[UIBarButtonItem alloc] initWithTitle:@"Save and send" style : UIBarButtonItemStyleBordered target : self action : @selector(sendEmail)];
    [buttons addObject : saveBtn];
-   [saveBtn release];
    
    editBtn = [[UIBarButtonItem alloc] initWithTitle:@"Edit" style : UIBarButtonItemStyleBordered target:self action:@selector(toggleEditor)];
    [buttons addObject : editBtn];
-   [editBtn release];
    
    [toolbar setItems : buttons animated : NO];
-   [buttons release];
    
    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView : toolbar];
    rightItem.style = UIBarButtonItemStylePlain;
    self.navigationItem.rightBarButtonItem = rightItem;
-   [rightItem release];
-   [toolbar release];
 }
 
 //____________________________________________________________________________________________________
@@ -97,8 +121,8 @@ static const CGFloat maximumZoom = 2.f;
 //____________________________________________________________________________________________________
 - (void) resetEditorButton
 {
-   editBtn.style = mode == ROOT_IOSObjectController::ocmEdit ? UIBarButtonItemStyleDone : UIBarButtonItemStyleBordered;
-   editBtn.title = mode == ROOT_IOSObjectController::ocmEdit ? @"Done" : @"Edit";
+   editBtn.style = mode == ocmEdit ? UIBarButtonItemStyleDone : UIBarButtonItemStyleBordered;
+   editBtn.title = mode == ocmEdit ? @"Done" : @"Edit";
 }
 
 #pragma mark - Initialization code, called from initWithNibname
@@ -153,7 +177,6 @@ static const CGFloat maximumZoom = 2.f;
    fileContainer->GetPadAttached(currentObject)->SetViewWH(padRect.size.width, padRect.size.height);      
    editablePadView = [[PadView alloc] initWithFrame : padRect controller : self forPad : fileContainer->GetPadAttached(currentObject)];
    [padScrollView addSubview : editablePadView];
-   [editablePadView release];
 }
 
 #pragma mark - Geometry code.
@@ -236,8 +259,8 @@ static const CGFloat maximumZoom = 2.f;
    }
    
    self.view.frame = mainFrame;
-   self.padScrollView.frame = scrollFrame;
-   self.navigationScrollView.frame = scrollFrame;
+   padScrollView.frame = scrollFrame;
+   navigationScrollView.frame = scrollFrame;
    
    scrollFrame.origin = CGPointZero;
    for (unsigned i = 0; i < 3; ++i) {
@@ -272,7 +295,7 @@ static const CGFloat maximumZoom = 2.f;
    if (self) {
       [self view];//force view loading.
       
-      mode = ROOT_IOSObjectController::ocmNavigation;
+      mode = ocmNavigation;
 
       [self loadObjectInspector];
       [self setupScrollForEditablePadView];
@@ -281,16 +304,6 @@ static const CGFloat maximumZoom = 2.f;
    }
    
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   self.padScrollView = nil;
-   self.navigationScrollView = nil;
-   [objectInspector release];
- 
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -379,8 +392,6 @@ static const CGFloat maximumZoom = 2.f;
 //____________________________________________________________________________________________________
 - (void) toggleEditor
 {
-   using namespace ROOT_IOSObjectController;
-   
    mode = mode == ocmEdit ? ocmNavigation : ocmEdit;
    [self resetEditorButton];
 
@@ -395,7 +406,11 @@ static const CGFloat maximumZoom = 2.f;
       [editablePadView setNeedsDisplay];
 
       [self setupObjectInspector];
-
+      
+      //Check this.
+      [objectInspector resetInspector];
+      //
+      
       editorView.hidden = NO;      
       navigationScrollView.hidden = YES;
       padScrollView.hidden = NO;
@@ -433,7 +448,7 @@ static const CGFloat maximumZoom = 2.f;
    //This method is called after initWithNibName was called, so it's the second step
    //of controller's construction. The default mode is ocmNavigation, so setup navigation
    //views/pad etc.
-   mode = ROOT_IOSObjectController::ocmNavigation;
+   mode = ocmNavigation;
 
    
    fileContainer = container;
@@ -452,7 +467,6 @@ static const CGFloat maximumZoom = 2.f;
    }
 
    [navigationScrollView addSubview : navScrolls[0]];
-   [navScrolls[0] release];
 
    if (fileContainer->GetNumberOfObjects() > 1) {
       //The [1] contains the current object.
@@ -460,14 +474,12 @@ static const CGFloat maximumZoom = 2.f;
       navScrolls[1] = [[PadImageScrollView alloc] initWithFrame : scrollFrame];
       [navScrolls[1] setPad : fileContainer->GetPadAttached(currentObject)];
       [navigationScrollView addSubview : navScrolls[1]];
-      [navScrolls[1] release];
       
       //The [2] contains the next object (can be the same as previous).
       scrollFrame.origin.x = scrollFrame.size.width * 2;
       navScrolls[2] = [[PadImageScrollView alloc] initWithFrame : scrollFrame];
       [navScrolls[2] setPad : fileContainer->GetPadAttached(nextObject)];
       [navigationScrollView addSubview : navScrolls[2]];
-      [navScrolls[2] release];
       
       navigationScrollView.contentSize = CGSizeMake(scrollFrame.size.width * 3, scrollFrame.size.height);
       //Visible rect is always middle scroll-view ([1]).
@@ -610,12 +622,6 @@ static const CGFloat maximumZoom = 2.f;
    if (needUpdate)
       fileContainer->GetPadAttached(currentObject)->InvalidateSelection(kTRUE);//invalidate selection buffer only. the selected object is the same.
       
-   //
-//   fileContainer->GetObject(currentObject)->Draw([[self getDrawOption] cStringUsingEncoding : NSASCIIStringEncoding]);
-//   pad->SetPaintOption(fileContainer->GetObject(currentObject), [[self getDrawOption] cStringUsingEncoding : NSASCIIStringEncoding]);
-//   fileContainer->GetObject(currentObject)->SetDrawOption([[self getDrawOption] cStringUsingEncoding : NSASCIIStringEncoding]);
-   //
-
    [editablePadView setNeedsDisplay];
 }
 
@@ -628,19 +634,11 @@ static const CGFloat maximumZoom = 2.f;
    [self adjustPrevNextIndices];
    //Current is becoming prev, next is becoming current, load new next.
    UIImage *prevImage = navScrolls[1].padImage;
-   [prevImage retain];
    UIImage *currentImage = navScrolls[2].padImage;
-   [currentImage retain];
       
-   //[navScrolls[0] setObject : fileContainer->GetObject(previousObject) drawOption : fileContainer->GetDrawOption(previousObject) andImage : prevImage];
    [navScrolls[0] setPad : fileContainer->GetPadAttached(previousObject) andImage : prevImage];
-   //[navScrolls[1] setObject : fileContainer->GetObject(currentObject) drawOption : fileContainer->GetDrawOption(currentObject) andImage : currentImage];
    [navScrolls[1] setPad : fileContainer->GetPadAttached(currentObject) andImage : currentImage];
-//   [navScrolls[2] setObject : fileContainer->GetObject(nextObject) drawOption : fileContainer->GetDrawOption(nextObject)];
    [navScrolls[2] setPad : fileContainer->GetPadAttached(nextObject)];
-
-   [prevImage release];
-   [currentImage release];
    
    [navigationScrollView scrollRectToVisible : navScrolls[1].frame animated : NO];   
    
@@ -654,19 +652,11 @@ static const CGFloat maximumZoom = 2.f;
    [self adjustPrevNextIndices];
    //Current is becoming next, prev - current, prev must be loaded.
    UIImage *nextImage = navScrolls[1].padImage;
-   [nextImage retain];
    UIImage *currImage = navScrolls[0].padImage;
-   [currImage retain];
    
-//   [navScrolls[1] setObject : fileContainer->GetObject(currentObject) drawOption : fileContainer->GetDrawOption(currentObject) andImage : currImage];
    [navScrolls[1] setPad : fileContainer->GetPadAttached(currentObject) andImage : currImage];
-//   [navScrolls[2] setObject : fileContainer->GetObject(nextObject) drawOption : fileContainer->GetDrawOption(nextObject) andImage : nextImage];
    [navScrolls[2] setPad : fileContainer->GetPadAttached(nextObject) andImage : nextImage];
-//   [navScrolls[0] setObject : fileContainer->GetObject(previousObject) drawOption : fileContainer->GetDrawOption(previousObject)];
    [navScrolls[0] setPad : fileContainer->GetPadAttached(previousObject)];
-
-   [nextImage release];
-   [currImage release];
    
    [navigationScrollView scrollRectToVisible : navScrolls[1].frame animated : NO];
    self.navigationItem.title = [NSString stringWithFormat : @"%s", fileContainer->GetObject(currentObject)->GetName()];
@@ -710,13 +700,6 @@ static const CGFloat maximumZoom = 2.f;
    CGContextFillRect(ctx, pageRect);
 
    ROOT::iOS::Pad *padToSave = fileContainer->GetPadAttached(currentObject);//mode == ROOT_IOSObjectController::ocmEdit ? pad : navPad;
-//   padToSave->cd();
-   
-//   if (mode == ROOT_IOSObjectController::ocmNavigation) {
-//      padToSave->Clear();
-//      fileContainer->GetObject(currentObject)->Draw(fileContainer->GetDrawOption(currentObject));
-//      fileContainer->GetObject(currentObject)->Draw([[self getDrawOption] cStringUsingEncoding : NSASCIIStringEncoding]);
-//   }
    
    padToSave->cd();
    padToSave->SetContext(ctx);
@@ -763,7 +746,6 @@ static const CGFloat maximumZoom = 2.f;
    }
 
    [self presentModalViewController : mailComposer animated : YES];
-   [mailComposer release];
 }
 
 //___________________________________________________________

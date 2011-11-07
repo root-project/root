@@ -8,9 +8,7 @@ class Pad;
 }
 }
 
-@interface SlideView : UIView {
-   ROOT::iOS::Pad *pad;
-}
+@interface SlideView : UIView
 
 + (CGSize) slideSize;
 + (CGRect) slideFrame;

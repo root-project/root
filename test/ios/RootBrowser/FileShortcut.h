@@ -9,30 +9,14 @@ class FileContainer;
 }
 }
 
-class TObject;
-
-@interface FileShortcut : UIView {
-@private
-   UIViewController *controller;
-
-   NSString *fileName;
-   NSString *filePath;
-
-   UIImage *filePictogram;
-   UIImage *backgroundImage;
-   
-   ROOT::iOS::FileContainer *fileContainer;
-}
+@interface FileShortcut : UIView
 
 @property (nonatomic, retain) NSString *fileName;
-@property (nonatomic, retain) NSString *filePath;
-@property (nonatomic, retain) NSString *errorMessage;
 
 + (CGFloat) iconWidth;
 + (CGFloat) iconHeight;
 
-- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)c filePath : (NSString *) path;
-
+- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)controller fileContainer : (ROOT::iOS::FileContainer *)container;
 - (ROOT::iOS::FileContainer *) getFileContainer;
 
 @end

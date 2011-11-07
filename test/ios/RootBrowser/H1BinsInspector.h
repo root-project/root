@@ -1,28 +1,12 @@
 #import "ObjectInspectorComponent.h"
 
-@class RangeSlider;
-
-class TH1;
-
 @interface H1BinsInspector : UIViewController <ObjectInspectorComponent> {
 @private
-   RangeSlider *axisRangeSlider;
-      
-   IBOutlet UITextField *titleField;
-
-   IBOutlet UILabel *minLabel;
-   IBOutlet UILabel *maxLabel;
-   
-   IBOutlet UISwitch *showMarkers;
-   
-   ROOTObjectController *controller;
-   TH1 *object;
+   __weak IBOutlet UITextField *titleField;
+   __weak IBOutlet UILabel *minLabel;
+   __weak IBOutlet UILabel *maxLabel;
+   __weak IBOutlet UISwitch *showMarkers;
 }
-
-@property (nonatomic, retain) UISwitch *showMarkers;
-@property (nonatomic, retain) UITextField *titleField;
-@property (nonatomic, retain) UILabel *minLabel;
-@property (nonatomic, retain) UILabel *maxLabel;
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
 - (void) setROOTObject : (TObject *)o;

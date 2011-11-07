@@ -1,15 +1,13 @@
-#import "ROOTObjectController.h"
 #import "PadTicksGridInspector.h"
+#import "ROOTObjectController.h"
 
 #import "TVirtualPad.h"
 #import "TObject.h"
 
-@implementation PadTicksGridInspector
-
-@synthesize gridX;
-@synthesize gridY;
-@synthesize ticksX;
-@synthesize ticksY;
+@implementation PadTicksGridInspector {
+   __weak ROOTObjectController *controller;
+   TVirtualPad *object;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
@@ -22,17 +20,6 @@
    }
    
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   self.gridX = nil;
-   self.gridY = nil;
-   self.ticksX = nil;
-   self.ticksY = nil;
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

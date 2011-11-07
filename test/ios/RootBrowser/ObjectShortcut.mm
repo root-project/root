@@ -8,7 +8,12 @@
 #import "IOSFileContainer.h"
 #import "TObject.h"
 
-@implementation ObjectShortcut
+@implementation ObjectShortcut  {
+   __weak FileContentController *controller;
+
+   unsigned objectIndex;
+   NSString *objectName;
+}
 
 @synthesize icon;
 @synthesize objectIndex;
@@ -43,7 +48,7 @@
 {
    self = [super initWithFrame:frame];
 
-   if (self) {
+   if (self) {   
       //ROOT's staff.
       controller = c;
       objectIndex = objIndex;
@@ -66,7 +71,6 @@
       //Tap gesture to select an object.
       UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
       [self addGestureRecognizer : tap];
-      [tap release];
    }
 
    return self;
@@ -81,14 +85,6 @@
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [ObjectShortcut iconHeight], [ObjectShortcut iconWidth], [ObjectShortcut textHeight]);
    [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : UILineBreakModeWordWrap alignment : UITextAlignmentCenter];
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   self.icon = nil;
-   self.objectName = nil;
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

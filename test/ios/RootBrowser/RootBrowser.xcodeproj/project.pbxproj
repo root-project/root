@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		7014410F140E18390070459F /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* SelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
-		70144123140E3F320070459F /* LineWidthCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 70144122140E3F320070459F /* LineWidthCell.m */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
 		702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702357D914345C0A00A95000 /* H1ErrorsInspector.mm */; };
 		702357DC14345C0A00A95000 /* H1ErrorsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702357DA14345C0A00A95000 /* H1ErrorsInspector.xib */; };
@@ -39,7 +38,6 @@
 		7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadImageScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
 		705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* ScrollViewWithPadView.mm */; };
-		705F1A68142347CA003045D9 /* SlideView.m in Sources */ = {isa = PBXBuildFile; fileRef = 705F1A67142347CA003045D9 /* SlideView.m */; };
 		706241D01435F86700202121 /* RangeSlider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706241CE1435F86700202121 /* RangeSlider.mm */; };
 		706241D51435F94500202121 /* bar-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D11435F94500202121 /* bar-background.png */; };
 		706241D61435F94500202121 /* bar-highlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D21435F94500202121 /* bar-highlight.png */; };
@@ -67,8 +65,6 @@
 		7068FF2B141A2F6A003560A1 /* text_cell_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF2A141A2F6A003560A1 /* text_cell_bkn.png */; };
 		7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */; };
 		7068FF32141A3944003560A1 /* AxisLabelsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */; };
-		7073A26B14174E74001A0FE2 /* AxisColorInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A26914174E74001A0FE2 /* AxisColorInspector.mm */; };
-		7073A26C14174E74001A0FE2 /* AxisColorInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */; };
 		7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */; };
 		7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */; };
 		7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A27C14177A03001A0FE2 /* AxisInspector.mm */; };
@@ -118,6 +114,8 @@
 		709594A613FE97AF00B9E8B6 /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 709594A413FE97AF00B9E8B6 /* system.plugins-ios */; };
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
+		70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67A1468162600514DC0 /* LineWidthCell.mm */; };
+		70C1D67D1468166100514DC0 /* SlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67C1468166100514DC0 /* SlideView.mm */; };
 		70E0B62114150F630077E4A8 /* back_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B62014150F630077E4A8 /* back_btn.png */; };
 		70E0B624141510880077E4A8 /* forward_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B623141510880077E4A8 /* forward_btn.png */; };
 		70E16B091455CBC00050C281 /* app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E16B081455CBC00050C281 /* app_icon.png */; };
@@ -129,7 +127,6 @@
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
 		7014411F140E3F1D0070459F /* LineStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineStyleCell.mm; sourceTree = "<group>"; };
 		70144121140E3F320070459F /* LineWidthCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineWidthCell.h; sourceTree = "<group>"; };
-		70144122140E3F320070459F /* LineWidthCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LineWidthCell.m; sourceTree = "<group>"; };
 		70144128140E553C0070459F /* line_cell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = line_cell.png; sourceTree = "<group>"; };
 		702357D814345C0A00A95000 /* H1ErrorsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H1ErrorsInspector.h; sourceTree = "<group>"; };
 		702357D914345C0A00A95000 /* H1ErrorsInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = H1ErrorsInspector.mm; sourceTree = "<group>"; };
@@ -175,7 +172,6 @@
 		705A503414066421004C1C8B /* ScrollViewWithPadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPadView.h; sourceTree = "<group>"; };
 		705A503514066421004C1C8B /* ScrollViewWithPadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPadView.mm; sourceTree = "<group>"; };
 		705F1A66142347CA003045D9 /* SlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideView.h; sourceTree = "<group>"; };
-		705F1A67142347CA003045D9 /* SlideView.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = SlideView.m; sourceTree = "<group>"; };
 		706241CE1435F86700202121 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
 		706241CF1435F86700202121 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
 		706241D11435F94500202121 /* bar-background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bar-background.png"; sourceTree = "<group>"; };
@@ -211,9 +207,6 @@
 		7068FF2E141A3943003560A1 /* AxisLabelsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisLabelsInspector.h; sourceTree = "<group>"; };
 		7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisLabelsInspector.mm; sourceTree = "<group>"; };
 		7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisLabelsInspector.xib; sourceTree = "<group>"; };
-		7073A26814174E74001A0FE2 /* AxisColorInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisColorInspector.h; sourceTree = "<group>"; };
-		7073A26914174E74001A0FE2 /* AxisColorInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisColorInspector.mm; sourceTree = "<group>"; };
-		7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisColorInspector.xib; sourceTree = "<group>"; };
 		7073A272141757BB001A0FE2 /* AxisTicksInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisTicksInspector.h; sourceTree = "<group>"; };
 		7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = AxisTicksInspector.mm; sourceTree = "<group>"; };
 		7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisTicksInspector.xib; sourceTree = "<group>"; };
@@ -283,6 +276,8 @@
 		709CD0961402768B005B2AF4 /* Shortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shortcuts.h; sourceTree = "<group>"; };
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
 		70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
+		70C1D67A1468162600514DC0 /* LineWidthCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineWidthCell.mm; sourceTree = "<group>"; };
+		70C1D67C1468166100514DC0 /* SlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideView.mm; sourceTree = "<group>"; };
 		70E0B62014150F630077E4A8 /* back_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back_btn.png; sourceTree = "<group>"; };
 		70E0B623141510880077E4A8 /* forward_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = forward_btn.png; sourceTree = "<group>"; };
 		70E16B081455CBC00050C281 /* app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = app_icon.png; sourceTree = "<group>"; };
@@ -438,8 +433,6 @@
 				70681C1C1416474000F8338A /* FilledAreaInspector.mm */,
 				70681C201416586D00F8338A /* ObjectInspector.h */,
 				70681C211416586D00F8338A /* ObjectInspector.mm */,
-				7073A26814174E74001A0FE2 /* AxisColorInspector.h */,
-				7073A26914174E74001A0FE2 /* AxisColorInspector.mm */,
 				7073A272141757BB001A0FE2 /* AxisTicksInspector.h */,
 				7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */,
 				7073A27B14177A03001A0FE2 /* AxisInspector.h */,
@@ -473,7 +466,6 @@
 				70681C1114163A2300F8338A /* PadTicksGridInspector.xib */,
 				7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */,
 				7073A27D14177A03001A0FE2 /* AxisInspector.xib */,
-				7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */,
 				7073A2861417AA10001A0FE2 /* AxisTitleInspector.xib */,
 				7068FF23141A0EAF003560A1 /* AxisFontInspector.xib */,
 				7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */,
@@ -545,7 +537,7 @@
 				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
 				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,
 				705F1A66142347CA003045D9 /* SlideView.h */,
-				705F1A67142347CA003045D9 /* SlideView.m */,
+				70C1D67C1468166100514DC0 /* SlideView.mm */,
 				704498071429D0A000E83799 /* PadImageView.h */,
 				704498081429D0A000E83799 /* PadImageView.mm */,
 				7044980B1429D13D00E83799 /* PadImageScrollView.h */,
@@ -564,7 +556,7 @@
 				7077906B13FE96C200C0FFA1 /* EditorView.mm */,
 				7077906C13FE96C200C0FFA1 /* EditorView.h */,
 				70144121140E3F320070459F /* LineWidthCell.h */,
-				70144122140E3F320070459F /* LineWidthCell.m */,
+				70C1D67A1468162600514DC0 /* LineWidthCell.mm */,
 				7014411E140E3F1D0070459F /* LineStyleCell.h */,
 				7014411F140E3F1D0070459F /* LineStyleCell.mm */,
 				7077906F13FE96C200C0FFA1 /* EditorPlateView.mm */,
@@ -737,7 +729,6 @@
 				70681C1314163A2300F8338A /* PadTicksGridInspector.xib in Resources */,
 				70681C1A14163F0C00F8338A /* PadLogScaleInspector.xib in Resources */,
 				70681C1F1416474000F8338A /* FilledAreaInspector.xib in Resources */,
-				7073A26C14174E74001A0FE2 /* AxisColorInspector.xib in Resources */,
 				7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */,
 				7073A27F14177A03001A0FE2 /* AxisInspector.xib in Resources */,
 				7073A2881417AA10001A0FE2 /* AxisTitleInspector.xib in Resources */,
@@ -776,7 +767,6 @@
 				70252F7C140CDD8D00F3660F /* Constants.mm in Sources */,
 				7014410F140E18390070459F /* SelectionView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
-				70144123140E3F320070459F /* LineWidthCell.m in Sources */,
 				702DDD1B1415FEA1009FC6F3 /* LineInspector.mm in Sources */,
 				702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */,
 				70681C0D1416365900F8338A /* PadInspector.mm in Sources */,
@@ -784,13 +774,11 @@
 				70681C1914163F0C00F8338A /* PadLogScaleInspector.mm in Sources */,
 				70681C1E1416474000F8338A /* FilledAreaInspector.mm in Sources */,
 				70681C221416586D00F8338A /* ObjectInspector.mm in Sources */,
-				7073A26B14174E74001A0FE2 /* AxisColorInspector.mm in Sources */,
 				7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */,
 				7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */,
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,
 				7068FF24141A0EAF003560A1 /* AxisFontInspector.mm in Sources */,
 				7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */,
-				705F1A68142347CA003045D9 /* SlideView.m in Sources */,
 				704498091429D0A000E83799 /* PadImageView.mm in Sources */,
 				7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */,
 				702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */,
@@ -801,6 +789,8 @@
 				7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */,
 				702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */,
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
+				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
+				70C1D67D1468166100514DC0 /* SlideView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -830,6 +820,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -838,7 +830,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = ../../../hist/hist/src/G__Hist.o;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
@@ -849,12 +841,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = ../../../hist/hist/src/G__Hist.o;
 				SDKROOT = iphoneos;
@@ -866,12 +860,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "root_browser/RootBrowser-Prefix.pch";
 				HEADER_SEARCH_PATHS = ../../../include;
 				INFOPLIST_FILE = "root_browser/root_browser-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = ../../../lib;
 				OTHER_LDFLAGS = (
 					../../../hist/hist/src/G__Hist.o,
@@ -889,11 +886,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "root_browser/RootBrowser-Prefix.pch";
 				HEADER_SEARCH_PATHS = ../../../include;
 				INFOPLIST_FILE = "root_browser/root_browser-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = ../../../lib;
 				OTHER_LDFLAGS = (
 					../../../hist/hist/src/G__Hist.o,

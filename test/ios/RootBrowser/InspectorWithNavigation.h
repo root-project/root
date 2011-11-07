@@ -2,10 +2,6 @@
 
 #import "ObjectInspectorComponent.h"
 
-@class ROOTObjectController;
-
-class TObject;
-
 @interface InspectorWithNavigation : UINavigationController <ObjectInspectorComponent>
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
