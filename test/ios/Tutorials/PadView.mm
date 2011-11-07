@@ -11,6 +11,21 @@
 //C++ code (ROOT's ios module)
 #import "IOSPad.h"
 
+@interface PadView () {
+   ROOT::iOS::Pad *pad;
+
+   float scaleFactor;
+   SelectionView *selectionView;
+   
+   BOOL processPan;
+   BOOL processTap;
+}
+
+- (void) handlePanGesture : (UIPanGestureRecognizer *)panGesture;
+- (void) handleTapGesture : (UITapGestureRecognizer *)tapGesture;
+
+@end
+
 @implementation PadView
 
 //_________________________________________________________________
@@ -26,12 +41,6 @@
    }
 
    return self;
-}
-
-//_________________________________________________________________
-- (void) dealloc
-{
-   [super dealloc];
 }
 
 //_________________________________________________________________

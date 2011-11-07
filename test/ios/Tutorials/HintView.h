@@ -1,18 +1,7 @@
 #import <UIKit/UIKit.h>
 
+//View which contains hint's pictogram and textual description.
 
-@interface HintView : UIView {
-   UIImage *iconImage;
-   NSString *hintText;
-}
-
-- (id) initWithFrame:(CGRect)frame;
-- (void) dealloc;
-
-- (void) setHintIcon: (NSString*) iconName hintText:(NSString*)text;
-- (void) drawRect:(CGRect)rect;
-- (void) handleTap : (UITapGestureRecognizer *)tap;
-
-@property (nonatomic, retain) UIImage * iconImage;
-
+@interface HintView : UIView 
+- (void) setHintIcon : (NSString*) iconName hintText : (NSString*)text;
 @end

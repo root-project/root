@@ -4,26 +4,21 @@
 
 #import "PatternCell.h"
 
-@implementation PatternCell
+@implementation PatternCell {
+   unsigned patternIndex;
+   BOOL solid;
+}
 
 //______________________________________________________________________________
 - (id)initWithFrame:(CGRect)frame andPattern : (unsigned) index
 {
-   self = [super initWithFrame:frame];
-    
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       // Initialization code
       patternIndex = index;
       solid = NO;
    }
 
-    return self;
-}
-
-//______________________________________________________________________________
-- (void)dealloc
-{
-   [super dealloc];
+   return self;
 }
 
 //______________________________________________________________________________

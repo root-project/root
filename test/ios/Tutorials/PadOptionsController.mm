@@ -1,13 +1,13 @@
 #import "PadOptionsController.h"
 #import "PatternCell.h"
 #import "ColorCell.h"
+#import "PadView.h"
 
 //C++ code (ROOT)
 #import "IOSFillPatterns.h"
 #import "IOSPad.h"
 
-static const double predefinedFillColors[16][3] = 
-{
+const double predefinedFillColors[16][3] = {
 {1., 1., 1.},
 {0., 0., 0.},
 {251 / 255., 0., 24 / 255.},
@@ -28,82 +28,51 @@ static const double predefinedFillColors[16][3] =
 
 
 //Color indices in a standard ROOT's color selection control:
-static const unsigned colorIndices[16] = {0, 1, 2, 3,
-                                          4, 5, 6, 7,
-                                          8, 9, 30, 38,
-                                          41, 42, 50, 51};
+const unsigned colorIndices[16] = {
+0, 1, 2, 3,
+4, 5, 6, 7,
+8, 9, 30, 38,
+41, 42, 50, 51};
 
-@implementation PadOptionsController
 
-@synthesize tickX = tickX_;
-@synthesize tickY = tickY_;
-@synthesize gridX = gridX_;
-@synthesize gridY = gridY_;
-@synthesize logX = logX_;
-@synthesize logY = logY_;
-@synthesize logZ = logZ_;
-@synthesize colorPicker = colorPicker_;
-@synthesize patternPicker = patternPicker_;
-@synthesize colors = colors_;
-@synthesize patterns = patterns_;
+@implementation PadOptionsController {
+   NSMutableArray *colors_;
+   NSMutableArray *patterns_;
+   
+   ROOT::iOS::Pad *pad;
+   PadView *padView;
+}
 
 //_________________________________________________________________
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
-   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
+
    if (self) {
-      // Custom initialization
-      
       //Color views.
       colors_ = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < 16; ++i) {
-         ColorCell * newCell = [[ColorCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f)];
+         ColorCell *newCell = [[ColorCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f)];
          [newCell setRGB : predefinedFillColors[i]];
          [colors_ addObject : newCell];
-         [newCell release];
       }
       
       //Patterns.
       patterns_ = [[NSMutableArray alloc] init];
-      
       //The first pattern - solid fill.
       PatternCell *solidFill = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : 0];
       [solidFill setAsSolid];
       [patterns_ addObject : solidFill];
-      [solidFill release];
       
       for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
          PatternCell *newCell = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : i];
          [patterns_ addObject : newCell];
-         [newCell release];
       }
-      
+
       //Pattern views.
    }
    
    return self;
-}
-
-//_________________________________________________________________
-- (void)dealloc
-{
-   self.tickX = nil;
-   self.tickY = nil;
-   
-   self.gridX = nil;
-   self.gridY = nil;
-   
-   self.logX = nil;
-   self.logY = nil;
-   self.logZ = nil;
-   
-   self.colorPicker = nil;
-   self.patternPicker = nil;
-   
-   [colors_ release];
-   [patterns_ release];
-   
-   [super dealloc];
 }
 
 //_________________________________________________________________

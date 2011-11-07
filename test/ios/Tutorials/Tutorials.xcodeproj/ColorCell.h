@@ -4,14 +4,8 @@
 //This is a small and simple custom view, used inside color picker (UIPickerView).
 //
 
-@interface ColorCell : UIView {
-   float rgb[3];
-}
-
-- (id) initWithFrame : (CGRect) frame;
-- (void) dealloc;
+@interface ColorCell : UIView
 
 - (void) setRGB : (const double *) rgb;
-- (void) drawRect : (CGRect) rect;
 
 @end

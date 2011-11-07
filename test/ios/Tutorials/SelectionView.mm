@@ -1,27 +1,28 @@
 #import "SelectionView.h"
+#import "PadView.h"
 
 //C++ (ROOT)
 #import "IOSPad.h"
 
+@implementation SelectionView {
+   BOOL showRotation;
+   int ev;
+   int px;
+   int py;
+   ROOT::iOS::Pad *pad;
 
-@implementation SelectionView
+   PadView *view;
+}
 
 //______________________________________________________________________________
 - (id)initWithFrame:(CGRect)frame
 {
-    self = [super initWithFrame : frame];
-    if (self) {
-        // Initialization code
-        self.opaque = NO;
-    }
+   if (self = [super initWithFrame : frame]) {
+      // Initialization code
+      self.opaque = NO;
+   }
 
-    return self;
-}
-
-//______________________________________________________________________________
-- (void)dealloc
-{
-    [super dealloc];
+   return self;
 }
 
 //______________________________________________________________________________

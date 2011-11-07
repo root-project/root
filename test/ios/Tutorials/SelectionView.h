@@ -3,23 +3,12 @@
 namespace ROOT {
 namespace iOS {
 
-class Painter;
 class Pad;
 
 }
 }
 
-@class PadView;
-
-@interface SelectionView : UIView {
-   BOOL showRotation;
-   int ev;
-   int px;
-   int py;
-   ROOT::iOS::Pad *pad;
-
-   PadView *view;
-}
+@interface SelectionView : UIView
 
 - (void) setShowRotation : (BOOL) show;
 - (void) setEvent : (int) ev atX : (int) x andY : (int) y;

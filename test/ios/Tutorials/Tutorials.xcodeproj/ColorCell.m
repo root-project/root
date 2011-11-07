@@ -2,18 +2,19 @@
 
 #import "ColorCell.h"
 
-
-@implementation ColorCell
+@implementation ColorCell {
+   double rgb[3];
+}
 
 //______________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame
+- (id) initWithFrame : (CGRect)frame
 {
-    self = [super initWithFrame:frame];
-    if (self) {
-        // Initialization code
-        self.backgroundColor = [UIColor clearColor];
-    }
-    return self;
+   if (self = [super initWithFrame : frame]) {
+      // Initialization code
+      self.backgroundColor = [UIColor clearColor];
+   }
+
+   return self;
 }
 
 //______________________________________________________________________________
@@ -28,13 +29,8 @@
 - (void)drawRect:(CGRect)rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
-   CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], 0.8);
+   CGContextSetRGBFillColor(ctx, (CGFloat)rgb[0], (CGFloat)rgb[1], (CGFloat)rgb[2], 1.f);
    CGContextFillRect(ctx, rect);
-}
-
-- (void)dealloc
-{
-   [super dealloc];
 }
 
 @end

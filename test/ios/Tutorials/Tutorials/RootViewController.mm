@@ -1,13 +1,25 @@
 #import <stdlib.h>
 
-#import <Foundation/NSTimer.h>
-
 #import "DetailViewController.h"
 #import "RootViewController.h"
 
 #import "DemoHelper.h"
+#import "DemoBase.h"
 
-@implementation RootViewController
+namespace  {
+
+enum {
+   nROOTDemos = 6
+};
+
+}
+
+@implementation RootViewController {
+   NSMutableArray *tutorialNames;
+   NSMutableArray *tutorialIcons;
+   
+   ROOT::iOS::Demos::DemoBase *demos[nROOTDemos];
+}
 
 @synthesize detailViewController;
 
@@ -100,14 +112,14 @@
    
    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier : CellIdentifier];
    if (cell == nil)
-      cell = [[[UITableViewCell alloc] initWithStyle : UITableViewCellStyleDefault reuseIdentifier : CellIdentifier] autorelease];
+      cell = [[UITableViewCell alloc] initWithStyle : UITableViewCellStyleDefault reuseIdentifier : CellIdentifier];
 
    // Configure the cell.
    const BOOL useDarkBackground = indexPath.row % 2;
    NSString *backgroundImagePath = [[NSBundle mainBundle] pathForResource : useDarkBackground ? @"DarkBackground" : @"LightBackground" ofType : @"png"];
 
    UIImage *backgroundImage = [[UIImage imageWithContentsOfFile : backgroundImagePath] stretchableImageWithLeftCapWidth : 0.f topCapHeight : 1.f];   
-   cell.backgroundView = [[[UIImageView alloc] initWithImage : backgroundImage] autorelease];
+   cell.backgroundView = [[UIImageView alloc] initWithImage : backgroundImage];
    cell.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
    cell.backgroundView.frame = cell.bounds;
   
@@ -120,8 +132,7 @@
 //_________________________________________________________________
 - (void) tableView : (UITableView *)tableView didSelectRowAtIndexPath : (NSIndexPath *)indexPath
 {
-   // Navigation logic may go here -- for example, create and push another view controller.
-   self.detailViewController.detailItem = 0;//This will call setDetailItem and "dissolve" popover.
+   [self.detailViewController dismissPopover];
    [self.detailViewController setActiveDemo : demos[indexPath.row]];
 }
 
@@ -143,14 +154,8 @@
 //_________________________________________________________________
 - (void) dealloc
 {
-   self.detailViewController = nil;
-   [tutorialNames release];
-   [tutorialIcons release];
-   
    for (unsigned i = 0; i < nROOTDemos; ++i)
       delete demos[i];
-
-   [super dealloc];
 }
 
 //_________________________________________________________________

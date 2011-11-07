@@ -3,17 +3,16 @@
 
 #import "TApplication.h"
 
-@implementation TutorialsAppDelegate
+@implementation TutorialsAppDelegate {
+   TApplication *rootApp;
+}
 
+@synthesize window;
+@synthesize splitViewController;
+@synthesize rootViewController;
+@synthesize detailViewController;
 
-@synthesize window=_window;
-
-@synthesize splitViewController=_splitViewController;
-
-@synthesize rootViewController=_rootViewController;
-
-@synthesize detailViewController=_detailViewController;
-
+//_________________________________________________________________
 - (BOOL) application : (UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
    // Override point for customization after application launch.
@@ -22,9 +21,11 @@
 
    self.window.rootViewController = self.splitViewController;
    [self.window makeKeyAndVisible];
+
    return YES;
 }
 
+//_________________________________________________________________
 - (void)applicationWillResignActive:(UIApplication *)application
 {
    /*
@@ -33,6 +34,7 @@
     */
 }
 
+//_________________________________________________________________
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
    /*
@@ -41,6 +43,7 @@
     */
 }
 
+//_________________________________________________________________
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
    /*
@@ -48,6 +51,7 @@
     */
 }
 
+//_________________________________________________________________
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
    /*
@@ -55,6 +59,7 @@
     */
 }
 
+//_________________________________________________________________
 - (void)applicationWillTerminate:(UIApplication *)application
 {
    /*
@@ -64,16 +69,10 @@
     */
 }
 
+//_________________________________________________________________
 - (void)dealloc
 {
    delete rootApp;
-
-   [_window release];
-   [_splitViewController release];
-   [_rootViewController release];
-   [_detailViewController release];
-
-   [super dealloc];
 }
 
 @end

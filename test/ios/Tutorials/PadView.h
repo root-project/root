@@ -5,6 +5,8 @@
 //  Delegates all graphics to C++ code.
 ///////////////////////////////////////////////////////////
 
+@class SelectionView;
+
 namespace ROOT {
 namespace iOS {
 
@@ -13,31 +15,12 @@ class Pad;
 }
 }
 
-@class SelectionView;
-@class PictHintView;
-@class PictView;
-
-@interface PadView : UIView {
-   ROOT::iOS::Pad *pad;
-
-   float scaleFactor;
-   SelectionView *selectionView;
-   
-   BOOL processPan;
-   BOOL processTap;
-}
+@interface PadView : UIView 
 
 - (id) initWithFrame : (CGRect)frame forPad : (ROOT::iOS::Pad*)pad;
-- (void) dealloc;
 
-- (void) drawRect:(CGRect)rect;
 - (void) clearPad;
-
-- (void) handlePanGesture : (UIPanGestureRecognizer *)panGesture;
-- (void) handleTapGesture : (UITapGestureRecognizer *)tapGesture;
-
 - (void) setSelectionView : (SelectionView *) sv;
-
 - (void) setProcessPan : (BOOL)p;
 - (void) setProcessTap : (BOOL)t;
 
