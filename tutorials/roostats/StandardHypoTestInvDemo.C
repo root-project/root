@@ -55,6 +55,8 @@ TString  minimizerType;                  // minimizer type (default is what is i
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators   
 
 
+
+
 // internal routine to run the inverter
 HypoTestInverterResult * RunInverter(RooWorkspace * w, const char * modelSBName, const char * modelBName, const char * dataName,
                                      int type,  int testStatType, int npoints, double poimin, double poimax, int ntoys, 
@@ -107,15 +109,21 @@ void StandardHypoTestInvDemo(const char * infile =0,
                      It is needed only when using the HybridCalculator (type=1)
                      If not given by default the prior pdf from ModelConfig is used. 
 
-    extra options are available as global paramters of the macro. They are: 
+    extra options are available as global paramwters of the macro. They major ones are: 
 
-    plotHypoTestResult   plot result of tests at each point (TS distributions) 
-    useProof = true;
-    writeResult = true;
-    nworkers = 4;
-
+    plotHypoTestResult   plot result of tests at each point (TS distributions) (defauly is true)
+    useProof             use Proof   (default is true) 
+    writeResult          write result of scan (default is true)
+    rebuild              rebuild scan for expected limits (require extra toys) (default is false)
+    generateBinned       generate binned data sets for toys (default is false) - be careful not to activate with 
+                         a too large (>=3) number of observables 
+    nToyRatio            ratio of S+B/B toys (default is 2)
+    
 
    */
+
+
+
    
    TString fileName(infile);
    if (fileName.IsNull()) { 
@@ -435,6 +443,10 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
             toymcs->SetUseMultiGen(true);
       }
 
+      if (generateBinned &&  sbModel->GetObservables()->getSize() > 2) { 
+         Warning("StandardHypoTestInvDemo","generate binned is activated but the number of ovservable is %d. Too much memory could be needed for allocating all the bins",sbModel->GetObservables()->getSize() );
+      }
+
    }
 
 
@@ -516,7 +528,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
 
    
    if (npoints > 0) {
-      if (poimin >= poimax) { 
+      if (poimin > poimax) { 
          // if no min/max given scan between MLE and +4 sigma 
          poimin = int(poihat);
          poimax = int(poihat +  4 * poi->getError());
@@ -545,13 +557,16 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
          std::cout << "expected up limit " << limDist->InverseCDF(0.5) << " +/- " 
                    << limDist->InverseCDF(0.16) << "  " 
                    << limDist->InverseCDF(0.84) << "\n"; 
+
+         //update r to a new updated result object containing the rebuilt expected p-values distributions
+         // (it will not recompute the expected limit)
+         if (r) delete r;  // need to delete previous object since GetInterval will return a cloned copy
+         r = calc.GetInterval();
+
       }
       else 
          std::cout << "ERROR : failed to re-build distributions " << std::endl; 
    }
-
-   //update r to a new re-freshed copied
-   r = calc.GetInterval();
 
    return r; 
 }
