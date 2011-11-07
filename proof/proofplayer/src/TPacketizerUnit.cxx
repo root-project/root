@@ -106,6 +106,7 @@ TPacketizerUnit::TSlaveStat::~TSlaveStat()
 {
    // Destructor
 
+   fCircNtp->SetDirectory(0);
    SafeDelete(fCircNtp);
 }
 
