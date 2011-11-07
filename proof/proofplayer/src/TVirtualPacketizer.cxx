@@ -167,6 +167,7 @@ TVirtualPacketizer::~TVirtualPacketizer()
 {
    // Destructor.
 
+   fCircProg->SetDirectory(0);
    SafeDelete(fCircProg);
    SafeDelete(fProgress);
    SafeDelete(fFailedPackets);
