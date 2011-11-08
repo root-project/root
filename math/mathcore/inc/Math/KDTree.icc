@@ -1220,7 +1220,8 @@ namespace ROOT
          pNew->UpdateBoundaries();  
 
          // change splitting axis
-         fSplitAxis = ++fSplitAxis % Dimension();
+         ++fSplitAxis;
+         fSplitAxis = fSplitAxis % Dimension();
       }
 
 //______________________________________________________________________________
