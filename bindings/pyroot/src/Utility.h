@@ -27,12 +27,12 @@ namespace PyROOT {
 
 // general place holder for function parameters
    union TParameter {
-      Long_t      fl;
-      ULong_t    ful;
-      Long64_t   fll;
-      ULong64_t full;
-      Double_t    fd;
-      void*       fv;
+      Long_t     fLong;
+      ULong_t    fULong;
+      Long64_t   fLongLong;
+      ULong64_t  fULongLong;
+      Double_t   fDouble;
+      void*      fVoidp;
    };
 
 // additional converter functions
