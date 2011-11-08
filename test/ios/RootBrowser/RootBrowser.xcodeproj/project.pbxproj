@@ -114,6 +114,7 @@
 		709594A613FE97AF00B9E8B6 /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 709594A413FE97AF00B9E8B6 /* system.plugins-ios */; };
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
+		70AC541E146966E7009A0942 /* ThumbnailView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70AC541C146966E7009A0942 /* ThumbnailView.mm */; };
 		70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67A1468162600514DC0 /* LineWidthCell.mm */; };
 		70C1D67D1468166100514DC0 /* SlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67C1468166100514DC0 /* SlideView.mm */; };
 		70E0B62114150F630077E4A8 /* back_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B62014150F630077E4A8 /* back_btn.png */; };
@@ -275,6 +276,8 @@
 		709CD05214025148005B2AF4 /* demos.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = demos.root; sourceTree = "<group>"; };
 		709CD0961402768B005B2AF4 /* Shortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shortcuts.h; sourceTree = "<group>"; };
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
+		70AC541C146966E7009A0942 /* ThumbnailView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ThumbnailView.mm; sourceTree = "<group>"; };
+		70AC541D146966E7009A0942 /* ThumbnailView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ThumbnailView.h; sourceTree = "<group>"; };
 		70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
 		70C1D67A1468162600514DC0 /* LineWidthCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineWidthCell.mm; sourceTree = "<group>"; };
 		70C1D67C1468166100514DC0 /* SlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideView.mm; sourceTree = "<group>"; };
@@ -526,6 +529,8 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				70AC541C146966E7009A0942 /* ThumbnailView.mm */,
+				70AC541D146966E7009A0942 /* ThumbnailView.h */,
 				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
 				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
 				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
@@ -791,6 +796,7 @@
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
 				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
 				70C1D67D1468166100514DC0 /* SlideView.mm in Sources */,
+				70AC541E146966E7009A0942 /* ThumbnailView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
