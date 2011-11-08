@@ -7,7 +7,6 @@ VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 ifeq ($(ARCH),)
    ARCH       := $(shell root-config --arch)
 endif
-PLATFORM      = $(ARCH)
 LIBDIRTOP := $(VERSION).libs
 LIBDIR := $(LIBDIRTOP)/
 FILEDIR := $(VERSION)
