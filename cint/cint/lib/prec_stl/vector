@@ -466,7 +466,7 @@ class vector {
   friend bool operator> (const vector& x, const vector& y);
   friend bool operator>=(const vector& x, const vector& y);
   friend bool operator<=(const vector& x, const vector& y);
-#else if defined(G__VISUAL)
+#elif defined(G__VISUAL)
   friend bool operator==(const vector& x, const vector& y);
 #endif
   // specialized algorithms:
