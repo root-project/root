@@ -276,7 +276,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
 {
    XMLNodePointer_t volumeN, childN;
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
-   TGeoPatternFinder *pattFinder;
+   TGeoPatternFinder *pattFinder = 0;
    Bool_t isPattern = kFALSE;
 
    //create the name for volume/assebmly
