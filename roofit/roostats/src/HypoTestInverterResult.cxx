@@ -622,51 +622,81 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
    // get the limit distribution (lower/upper depending on the flag)
    // by interpolating  the expected p values for each point
 
+   
+   if (ArraySize()<2) {
+      oocoutE(this,Eval) << "HypoTestInverterResult::GetLimitDistribution" 
+                         << " not  enought points -  return 0 " << std::endl; 
+      return 0; 
+   }
+   
+   ooccoutD(this,Eval) << "HypoTestInverterResult - computing  limit distribution...." << std::endl;
 
-  if (ArraySize()<2) {
-     oocoutE(this,Eval) << "HypoTestInverterResult::GetLimitDistribution" 
-                        << " not  enought points -  return 0 " << std::endl; 
-     return 0; 
-  }
-
-  ooccoutD(this,Eval) << "HypoTestInverterResult - computing  limit distribution...." << std::endl;
-
+      
+   // find optimal size by looking at the PValue distribution obtained
+   int npoints = ArraySize();
+   std::vector<SamplingDistribution*> distVec( npoints );
+   double sum = 0;
+   for (unsigned int i = 0; i < distVec.size(); ++i) {
+      distVec[i] =  GetExpectedPValueDist(i);
+      // sort the distributions
+      // hack (by calling InverseCDF(0) will sort the sampling distribution
+      distVec[i]->InverseCDF(0);
+      sum += distVec[i]->GetSize();     
+   }
+   int  size =  int( sum/ npoints);
+  
+   if (size < 10) { 
+      ooccoutW(this,InputArguments) << "HypoTestInverterResult - set a minimum size of 10 for limit distribution" <<   std::endl;
+      size = 10;
+   }
 
 
   double target = 1-fConfidenceLevel;
-  std::vector<SamplingDistribution*> distVec(ArraySize() );
-  for (unsigned int i = 0; i < distVec.size(); ++i) {
-     distVec[i] =  GetExpectedPValueDist(i);
-     // sort the distribution
-     // hack (by calling InverseCDF(0) will sort the sampling distribution
-     distVec[i]->InverseCDF(0);
+
+  // vector with the quantiles of the p-values for each scanned poi point
+  std::vector< std::vector<double>  > quantVec(npoints );
+  for (int i = 0; i <  npoints; ++i) {
+
+     // make quantiles from the sampling distributions of the expected p values 
+     std::vector<double> pvalues = distVec[i]->GetSamplingDistribution();
+     delete distVec[i];  distVec[i] = 0;
+     std::sort(pvalues.begin(), pvalues.end());
+     // find the quantiles of the distribution 
+     double p[1]; 
+     double q[1];
+
+     quantVec[i] = std::vector<double>(size);
+     for (int ibin = 0; ibin < size; ++ibin) { 
+        // exclude for a bug in TMath::Quantiles last item 
+        p[0] = std::min( (ibin+1) * 1./double(size), 1.0);
+        // use the type 1 which give the point value
+        TMath::Quantiles(pvalues.size(), 1, &pvalues[0], q, p, true, 0, 1 );
+        (quantVec[i])[ibin] = q[0]; 
+     } 
+  
   }
 
   // sort the values in x 
-  std::vector<unsigned int> index(ArraySize() );
+  std::vector<unsigned int> index( npoints );
   TMath::SortItr(fXValues.begin(), fXValues.end(), index.begin(), false); 
 
   // SamplingDistribution * dist0 = distVec[index[0]];
   // SamplingDistribution * dist1 = distVec[index[1]];
 
-  int n = distVec[0]->GetSize();
-  std::vector<double> limits(n);
-  // loop on the p values and find the limit for each expcted one 
-  for (int j = 0; j < n; ++j ) {
+  
+  std::vector<double> limits(size);
+  // loop on the p values and find the limit for each expected point in the quantiles vector  
+  for (int j = 0; j < size; ++j ) {
 
      TGraph g(ArraySize() );
-     int npoints = ArraySize();
      for (int k = 0; k < npoints ; ++k) { 
-        g.SetPoint(k, GetXValue(index[k]), distVec[index[k]]->GetSamplingDistribution()[j] );
+        g.SetPoint(k, GetXValue(index[k]), (quantVec[index[k]])[j] );
      }
 
      limits[j] = GetGraphX(g, target, lower);
 
   }
 
-  for (unsigned int i = 0; i < distVec.size(); ++i) {
-     delete distVec[i];
-  }
 
   if (lower) 
      return new SamplingDistribution("Expected lower Limit","Expected lower limits",limits);
@@ -676,33 +706,49 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
 }
 
 
-double  HypoTestInverterResult::GetExpectedLowerLimit(double nsig ) const {
+double  HypoTestInverterResult::GetExpectedLowerLimit(double nsig, const char * opt ) const {
    // Get the expected lower limit  
    // nsig is used to specify which expected value of the UpperLimitDistribution
    // For example 
    // nsig = 0 (default value) returns the expected value 
    // nsig = -1 returns the lower band value at -1 sigma 
    // nsig + 1 return the upper value
-   return GetExpectedLimit(nsig, true);
+   // opt = "" (default) : compute limit by interpolating all the p values, find the corresponding limit distribution
+   //                         and then find the quantiles in the limit distribution 
+   // ioption = "P" is the method used for plotting. One Finds the corresponding nsig quantile in the p values and then
+   // interpolates them
+   
+   return GetExpectedLimit(nsig, true, opt);
 } 
 
-double  HypoTestInverterResult::GetExpectedUpperLimit(double nsig ) const {
+double  HypoTestInverterResult::GetExpectedUpperLimit(double nsig, const char * opt ) const {
    // Get the expected upper limit  
    // nsig is used to specify which expected value of the UpperLimitDistribution
    // For example 
    // nsig = 0 (default value) returns the expected value 
    // nsig = -1 returns the lower band value at -1 sigma 
    // nsig + 1 return the upper value
-   return GetExpectedLimit(nsig, false);
+   // opt is an option specifying the type of method used for computing the upper limit
+   // opt = "" (default) : compute limit by interpolating all the p values, find the corresponding limit distribution
+   //                         and then find the quantiles in the limit distribution 
+   // ioption = "P" is the method used for plotting. One Finds the corresponding nsig quantile in the p values and then
+   // interpolates them
+   //              
+   
+   return GetExpectedLimit(nsig, false, opt);
 } 
 
 
    
-double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const {
+double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const char * opt ) const {
    // get expected limit (lower/upper) depending on the flag 
-
    // for asymptotic is a special case (the distribution is generated an step in sigma values)
    // distringuish asymptotic looking at the hypotest results
+   // if option = "P" get expected limit using directly quantiles of p value distribution 
+   // else (default) find expected limit by obtaining first a full limit distributions
+   // The last one is in general more correct
+
+
    HypoTestResult * r = dynamic_cast<HypoTestResult *> (fYObjects.First() );
    if (!r->GetNullDistribution() && !r->GetAltDistribution() ) { 
       // we are in the asymptotic case 
@@ -725,7 +771,9 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const
    // In the case of CLs (since it is not a real p-value anymore but a ratio) 
    // then it is needed to get first all limit distribution values and then the quantiles 
 
-   if (!fUseCLs) { 
+   TString option(opt);
+   option.ToUpper();
+   if (option.Contains("P")) {
 
       const int nEntries = ArraySize();
       TGraph  g(nEntries);   
@@ -753,7 +801,7 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower ) const
       return GetGraphX(g, target, lower);
 
    }
-   // for CLS need to use the limit distribution 
+   // here need to use the limit distribution 
    SamplingDistribution * limitDist = GetLimitDistribution(lower); 
    if (!limitDist) return 0;
    const std::vector<double> & values = limitDist->GetSamplingDistribution();

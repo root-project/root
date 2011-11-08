@@ -128,18 +128,19 @@ public:
    }
 
    // get expected lower limit distributions
-   // implemented using interpolation
-   SamplingDistribution* GetLowerLimitDistribution( ) const { return GetLimitDistribution(true); }
+   // implemented using interpolation 
+   //  The size for the sampling distribution is given (by default is given by the average number of toy/point)
+   SamplingDistribution* GetLowerLimitDistribution() const { return GetLimitDistribution(true); }
 
    // get expected upper limit distributions
    // implemented using interpolation
-   SamplingDistribution* GetUpperLimitDistribution( ) const { return GetLimitDistribution(false); }
+   SamplingDistribution* GetUpperLimitDistribution() const { return GetLimitDistribution(false); }
 
    // get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
-   double GetExpectedLowerLimit(double nsig = 0) const ; 
+   double GetExpectedLowerLimit(double nsig = 0, const char * opt = "" ) const ; 
 
    // get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
-   double GetExpectedUpperLimit(double nsig = 0) const ; 
+   double GetExpectedUpperLimit(double nsig = 0, const char * opt = "") const ; 
 
 
    double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0);
@@ -159,7 +160,7 @@ private:
 
    SamplingDistribution* GetLimitDistribution(bool lower ) const;
 
-   double GetExpectedLimit(double nsig, bool lower ) const ; 
+   double GetExpectedLimit(double nsig, bool lower, const char * opt = "" ) const ; 
 
    double GetGraphX(const TGraph & g, double y0, bool lowSearch = false, double xmin=1, double xmax=0) const;
 
