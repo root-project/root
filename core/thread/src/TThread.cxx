@@ -50,8 +50,8 @@ static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 
 static TMutex  *gMainInternalMutex = 0;
 
-static void ThreadInternalLock() { gMainInternalMutex->Lock(); }
-static void ThreadInternalUnLock() { gMainInternalMutex->UnLock(); }
+static void ThreadInternalLock() { gMainInternalMutex ? gMainInternalMutex->Lock() : 0; }
+static void ThreadInternalUnLock() { gMainInternalMutex ? gMainInternalMutex->UnLock() : 0; }
 
 
 //------------------------------------------------------------------------------
