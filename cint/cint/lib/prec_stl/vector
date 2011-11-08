@@ -460,13 +460,14 @@ class vector {
   void clear() ;
 
 #if (G__GNUC>=3) || defined(G__KCC)
-  // doesn't work on VC++ 5.0
   friend bool operator==(const vector& x, const vector& y);
   friend bool operator< (const vector& x, const vector& y);
   friend bool operator!=(const vector& x, const vector& y);
   friend bool operator> (const vector& x, const vector& y);
   friend bool operator>=(const vector& x, const vector& y);
   friend bool operator<=(const vector& x, const vector& y);
+#else if defined(G__VISUAL)
+  friend bool operator==(const vector& x, const vector& y);
 #endif
   // specialized algorithms:
 #if !defined(G__GNUC) || defined(G__KCC)
