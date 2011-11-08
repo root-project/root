@@ -122,8 +122,6 @@ void StandardHypoTestInvDemo(const char * infile =0,
 
    */
 
-
-
    
    TString fileName(infile);
    if (fileName.IsNull()) { 
@@ -353,6 +351,10 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
    // fit the data first (need to use constraint )
    Info( "StandardHypoTestInvDemo"," Doing a first fit to the observed data ");
    if (minimizerType.IsNull()) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   else 
+      ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType);
+   Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
+        ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
    RooArgSet constrainParams;
    if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
    RooStats::RemoveConstantParameters(&constrainParams);
@@ -362,7 +364,7 @@ HypoTestInverterResult *  RunInverter(RooWorkspace * w, const char * modelSBName
                                                     Minimizer(minimizerType,"Migrad"), Strategy(0), PrintLevel(printLevel+1), Constrain(constrainParams), Save(true) );
    if (fitres->status() != 0) { 
       Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-      fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer("Minuit2","Migrad"), Strategy(1), PrintLevel(printLevel+1), Constrain(constrainParams), Save(true) );
+      fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType,"Migrad"), Strategy(1), PrintLevel(printLevel+1), Constrain(constrainParams), Save(true) );
    }
    if (fitres->status() != 0) 
       Warning("StandardHypoTestInvDemo"," Fit still failed - continue anyway.....");
