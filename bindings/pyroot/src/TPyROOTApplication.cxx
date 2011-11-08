@@ -98,7 +98,8 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
    // retrieve arg list from python, translate to raw C, pass on
       PyObject* argl = PySys_GetObject( const_cast< char* >( "argv" ) );
 
-      int argc = argl ? PyList_Size( argl ) : 1;
+      int argc = 1;
+      if ( argl && 0 < PyList_Size( argl ) ) argc = (int)PyList_GET_SIZE( argl );
       char** argv = new char*[ argc ];
       for ( int i = 1; i < argc; ++i ) {
          char* argi = PyROOT_PyUnicode_AsString( PyList_GET_ITEM( argl, i ) );
