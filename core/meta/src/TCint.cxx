@@ -666,12 +666,13 @@ void TCint::RecursiveRemove(TObject *obj)
    // CINT objects are always on the heap.
 
    R__LOCKGUARD(gCINTMutex);
+   std::set<TObject*>* setOfSpecials = (std::set<TObject*>*)fgSetOfSpecials;
 
-   if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
-      std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
-      if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
+   if (obj->IsOnHeap() && fgSetOfSpecials && !setOfSpecials->empty()) {
+      std::set<TObject*>::iterator iSpecial = setOfSpecials->find(obj);
+      if (iSpecial != setOfSpecials->end()) {
          DeleteGlobal(obj);
-         ((std::set<TObject*>*)fgSetOfSpecials)->erase(iSpecial);
+         setOfSpecials->erase(iSpecial);
       }
    }
 }
