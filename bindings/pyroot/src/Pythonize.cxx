@@ -1609,8 +1609,6 @@ namespace {
 
 //____________________________________________________________________________
    class TF1InitWithPyFunc : public TPretendInterpreted {
-      typedef std::pair< PyObject*, int > pairPyObjInt_t;
-
    public:
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
 

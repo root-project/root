@@ -77,7 +77,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
 //_____________________________________________________________________________
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type, low, high )        \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )       \
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )     \
 {                                                                             \
 /* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
@@ -138,7 +138,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 
 //- converters for built-ins --------------------------------------------------
 Bool_t PyROOT::TLongConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ long, set arg for call
 #if PY_VERSION_HEX >= 0x02070000
@@ -158,7 +158,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 
 //____________________________________________________________________________
 Bool_t PyROOT::TLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ long&, set arg for call
    if ( ! TCustomInt_CheckExact( pyobject ) ) {
@@ -182,7 +182,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ const long&, set arg for call using buffer
    para.fLong = fBuffer = PyLong_AsLong( pyobject );
@@ -195,7 +195,7 @@ Bool_t PyROOT::TConstLongRefConverter::SetArg(
 
 //____________________________________________________________________________
 Bool_t PyROOT::TIntRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ (pseudo)int&, set arg for call
    if ( TCustomInt_CheckExact( pyobject ) ) {
@@ -236,7 +236,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( IntRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TBoolConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
    para.fLong = PyLong_AsLong( pyobject );
@@ -263,7 +263,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Int,    Int_t,    Long_t, PyInt_FromLong,  PyI
 
 //____________________________________________________________________________
 Bool_t PyROOT::TULongConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ unsigned long, set arg for call
    para.fULong = PyLongOrInt_AsULong( pyobject );
@@ -315,7 +315,7 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ double, set arg for call
    para.fDouble = PyFloat_AsDouble( pyobject );
@@ -331,7 +331,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ double&, set arg for call
    if ( TCustomFloat_CheckExact( pyobject ) ) {
@@ -357,7 +357,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstDoubleRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ const double&, set arg for call using buffer
    para.fDouble = fBuffer = PyFloat_AsDouble( pyobject );
@@ -369,7 +369,7 @@ Bool_t PyROOT::TConstDoubleRefConverter::SetArg(
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter&, G__CallFunc*, Long_t )
+Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter_t&, G__CallFunc*, Long_t )
 {
 // can't happen (unless a type is mapped wrongly), but implemented for completeness
    PyErr_SetString( PyExc_SystemError, "void/unknown arguments can\'t be set" );
@@ -377,7 +377,7 @@ Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter&, G__CallFunc*, Lon
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, TParameter&, G__CallFunc*, Long_t )
+Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, TParameter_t&, G__CallFunc*, Long_t )
 {
 // C++ macro's are not acceptable function args (but their values could be)
    PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
@@ -414,7 +414,7 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TLongLongConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ long long, set arg for call
 
@@ -451,7 +451,7 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TULongLongConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ unsigned long long, set arg for call
    para.fULongLong = PyLongOrInt_AsULong64( pyobject );
@@ -480,7 +480,7 @@ Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TCStringConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // construct a new string and copy it in new memory
    const char* s = PyROOT_PyUnicode_AsStringChecked( pyobject );
@@ -544,7 +544,7 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 namespace {
 
    inline Bool_t CArraySetArg(
-      PyObject* pyobject, PyROOT::TParameter& para, G__CallFunc* func, char tc, int size )
+      PyObject* pyobject, PyROOT::TParameter_t& para, G__CallFunc* func, char tc, int size )
    {
    // general case of loading a C array pointer (void* + type code) as function argument
       int buflen = PyROOT::Utility::GetBuffer( pyobject, tc, size, para.fVoidp );
@@ -560,7 +560,7 @@ namespace {
 
 //____________________________________________________________________________
 Bool_t PyROOT::TNonConstCStringConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // attempt base class first (i.e. passing a string), but if that fails, try a buffer
    if ( this->TCStringConverter::SetArg( pyobject, para, func ) )
@@ -573,7 +573,7 @@ Bool_t PyROOT::TNonConstCStringConverter::SetArg(
 
 //____________________________________________________________________________
 Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // attempt base class first (i.e. passing a string), but if that fails, try a buffer
    if ( this->TCStringConverter::SetArg( pyobject, para, func ) )
@@ -615,7 +615,7 @@ Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, v
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidArrayConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )
 {
 // just convert pointer if it is a ROOT object
    if ( ObjectProxy_Check( pyobject ) ) {
@@ -692,7 +692,7 @@ Bool_t PyROOT::TVoidArrayConverter::ToMemory( PyObject* value, void* address )
 //____________________________________________________________________________
 #define PYROOT_IMPLEMENT_ARRAY_CONVERTER( name, type, code )                 \
 Bool_t PyROOT::T##name##ArrayConverter::SetArg(                              \
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )      \
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )    \
 {                                                                            \
    return CArraySetArg( pyobject, para, func, code, sizeof(type) );          \
 }                                                                            \
@@ -731,7 +731,7 @@ PYROOT_IMPLEMENT_ARRAY_CONVERTER( Double, Double_t, 'd' )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TLongLongArrayConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )
 {
 // convert <pyobject> to C++ long long*, set arg for call
    PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
@@ -750,7 +750,7 @@ PyROOT::T##name##Converter::T##name##Converter() :                            \
       TRootObjectConverter( TClass::GetClass( #strtype ) ) {}                 \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )  \
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )\
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
       fBuffer = PyROOT_PyUnicode_AsString( pyobject );                        \
@@ -794,7 +794,7 @@ PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )
 {
 // convert <pyobject> to C++ instance*, set arg for call
    if ( ! ObjectProxy_Check( pyobject ) ) {
@@ -876,7 +876,7 @@ Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectPtrConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t user )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )
 {
 // convert <pyobject> to C++ instance**, set arg for call
    if ( ! ObjectProxy_Check( pyobject ) )
@@ -926,7 +926,7 @@ Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidPtrRefConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ void*&, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
@@ -941,7 +941,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg(
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidPtrPtrConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // convert <pyobject> to C++ void**, set arg for call
    if ( ObjectProxy_Check( pyobject ) ) {
@@ -974,7 +974,7 @@ PyObject* PyROOT::TVoidPtrPtrConverter::FromMemory( void* address )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TPyObjectConverter::SetArg(
-      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t )
 {
 // by definition: set and declare success
    para.fVoidp = pyobject;

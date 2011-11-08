@@ -26,7 +26,7 @@ namespace PyROOT {
    R__EXTERN Bool_t gDictLookupActive;
 
 // general place holder for function parameters
-   union TParameter {
+   union TParameter_t {
       Long_t     fLong;
       ULong_t    fULong;
       Long64_t   fLongLong;

@@ -101,7 +101,7 @@ namespace PyROOT {
    // call dispatch buffers
       std::vector< TConverter* > fConverters;
 
-      std::vector< TParameter > fParameters;
+      std::vector< TParameter_t > fParameters;
       std::vector< void* >      fParamPtrs;
 
    // cached values
