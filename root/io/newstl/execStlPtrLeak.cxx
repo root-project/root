@@ -87,12 +87,14 @@ void read(TTree *tree) {
 }
 
 Int_t execStlPtrLeak() {
+   fflush(stdout);
    TTree *tree = write();
    read(tree);
    fprintf(stderr,"deleting tree\n");
    delete tree;
    fprintf(stderr,"Final counter %d\n",MyClass::fCounter);
    Bool_t good = (MyClass::fCounter == 0);
+   fflush(stdout);
    if (good) {
       return 0;
    } else {
