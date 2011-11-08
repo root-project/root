@@ -27,13 +27,17 @@ MODDIRI      := $(MODDIR)/inc
 ROOTCINTO    := $(call stripsrc,$(ROOTCINTS:.cxx=.o))
 ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINTTMPO:.o=.d)
 
+##### rootcling #####
+ROOTCLINGO   := $(call stripsrc,$(ROOTCLINGS:.cxx=.o))
+ROOTCLINGDEP := $(ROOTCINTO:.o=.d) $(ROOTCLINGTMPO:.o=.d)
+
 ##### rlibmap #####
 RLIBMAPS     := $(MODDIRS)/rlibmap.cxx
 RLIBMAPO     := $(call stripsrc,$(RLIBMAPS:.cxx=.o))
 RLIBMAPDEP   := $(RLIBMAPO:.o=.d)
 
 # include all dependency files
-INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)
+INCLUDEFILES += $(ROOTCINTDEP) $(ROOTCLINGDEP) $(RLIBMAPDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -49,6 +53,17 @@ $(ROOTCINTTMPEXE): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(SNPRINTFO) \
 		   $(ROOTCINTTMPO) $(METAUTILSO) $(SNPRINTFO) $(STRLCPYO) \
 		   $(CINTTMPO) $(CINTTMPLIBS) $(CILIBS)
 
+$(ROOTCLINGEXE): $(CINTLIB) $(ROOTCLINGO) $(METAUTILSO) $(SNPRINTFO) \
+                $(STRLCPYO) $(IOSENUM)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTCLINGO) $(METAUTILSO) \
+		  $(SNPRINTFO) $(STRLCPYO) $(RPATH) $(CINTLIBS) $(CILIBS)
+
+$(ROOTCLINGTMPEXE): $(CINTTMPO) $(ROOTCLINGTMPO) $(METAUTILSO) $(SNPRINTFO) \
+                   $(STRLCPYO) $(IOSENUM)
+		$(LD) $(LDFLAGS) -o $@ \
+		  $(ROOTCLINGTMPO) $(METAUTILSO) $(SNPRINTFO) $(STRLCPYO) \
+		  $(CINTTMPO) $(CINTTMPLIBS) $(CILIBS)
+
 $(RLIBMAP):     $(RLIBMAPO)
 ifneq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) -o $@ $<
@@ -56,15 +71,16 @@ else
 		$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
 endif
 
-all-$(MODNAME): $(ROOTCINTTMPEXE) $(ROOTCINTEXE) $(RLIBMAP)
+all-$(MODNAME): $(ROOTCINTTMPEXE) $(ROOTCINTEXE) $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) $(RLIBMAP)
 
 clean-$(MODNAME):
-		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO) 
+		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(ROOTCLINGTMPO) $(ROOTCLINGO) $(RLIBMAPO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMPEXE) $(ROOTCINTEXE) \
+		   $(ROOTCLINGDEP) $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) \
 		   $(RLIBMAPDEP) $(RLIBMAP) \
 		   $(call stripsrc,$(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib $(UTILSDIRS)/*_tmp.cxx)
 
@@ -80,5 +96,6 @@ $(call stripsrc,$(UTILSDIRS)/rootcint_tmp.o): $(call stripsrc,$(UTILSDIRS)/rootc
 $(call stripsrc,$(UTILSDIRS)/RStl_tmp.o): $(call stripsrc,$(UTILSDIRS)/RStl_tmp.cxx)
 
 $(ROOTCINTTMPO):  CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
+$(ROOTCLINGTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
 
 endif
