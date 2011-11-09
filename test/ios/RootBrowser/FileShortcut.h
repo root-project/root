@@ -3,9 +3,11 @@
 
 namespace ROOT {
 namespace iOS {
+namespace Browser {
 
 class FileContainer;
 
+}
 }
 }
 
@@ -16,7 +18,7 @@ class FileContainer;
 + (CGFloat) iconWidth;
 + (CGFloat) iconHeight;
 
-- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)controller fileContainer : (ROOT::iOS::FileContainer *)container;
-- (ROOT::iOS::FileContainer *) getFileContainer;
+- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)controller fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
+- (ROOT::iOS::Browser::FileContainer *) getFileContainer;
 
 @end

@@ -4,8 +4,8 @@
 #import "RootFileController.h"
 #import "FileShortcut.h"
 
-//C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+//C++ imports.
+#import "FileUtils.h"
 
 @implementation FileShortcut {
    __weak UIViewController *controller;
@@ -13,7 +13,7 @@
    UIImage *filePictogram;
    UIImage *backgroundImage;
    
-   ROOT::iOS::FileContainer *fileContainer;
+   ROOT::iOS::Browser::FileContainer *fileContainer;
 }
 
 @synthesize fileName;
@@ -37,7 +37,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)viewController fileContainer : (ROOT::iOS::FileContainer *)container;
+- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)viewController fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
 {
    self = [super initWithFrame : frame];
    
@@ -79,7 +79,7 @@
 //____________________________________________________________________________________________________
 - (void)dealloc
 {
-   ROOT::iOS::DeleteFileContainer(fileContainer);
+   ROOT::iOS::Browser::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________
@@ -90,7 +90,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (ROOT::iOS::FileContainer *) getFileContainer
+- (ROOT::iOS::Browser::FileContainer *) getFileContainer
 {
    return fileContainer;
 }

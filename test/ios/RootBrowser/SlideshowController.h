@@ -2,9 +2,11 @@
 
 namespace ROOT {
 namespace iOS {
+namespace Browser {
 
 class FileContainer;
 
+}
 }
 }
 
@@ -14,6 +16,6 @@ class FileContainer;
    __weak IBOutlet UIView *padParentView;
 }
 
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::FileContainer *)container;
+- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
 
 @end

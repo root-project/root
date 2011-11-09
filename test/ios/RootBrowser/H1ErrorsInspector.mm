@@ -1,13 +1,17 @@
 #import "ROOTObjectController.h"
 #import "H1ErrorsInspector.h"
 
-//C++ (ROOT) imports.
+//C++ imports.
 #import "TH1.h"
+
+#import "FileUtils.h"
 
 namespace {
 
 const CGFloat defaultCellW = 180.f;
 const CGFloat defaultCellH = 44.f;
+
+
 
 enum H1ErrorType {
    kNoError,
@@ -20,7 +24,9 @@ enum H1ErrorType {
 };
 
 NSString *errorTypesStrings[] = {@"No error", @"Simple", @"Edges", @"Rectangles", @"Fill", @"Contour"};
-ROOT::iOS::EHistogramErrorOption histErrorTypes[] = {ROOT::iOS::hetNoError, ROOT::iOS::hetE, ROOT::iOS::hetE1, ROOT::iOS::hetE2, ROOT::iOS::hetE3, ROOT::iOS::hetE4};
+
+namespace RIB = ROOT::iOS::Browser;
+RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::hetE1, RIB::hetE2, RIB::hetE3, RIB::hetE4};
 
 }
 

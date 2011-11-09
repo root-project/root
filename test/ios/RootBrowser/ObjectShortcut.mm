@@ -5,7 +5,7 @@
 #import "ObjectShortcut.h"
 
 //C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+#import "FileUtils.h"
 #import "TObject.h"
 
 @implementation ObjectShortcut  {

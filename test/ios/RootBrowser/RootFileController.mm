@@ -5,9 +5,8 @@
 #import "FileShortcut.h"
 #import "Shortcuts.h"
 
-#import "IOSFileContainer.h"
-
-
+//C++ imports.
+#import "FileUtils.h"
 
 @interface RootFileController () {
 @private
@@ -130,7 +129,7 @@
 - (void) addRootFile : (NSString *) fileName
 {
    //Open the file and read its contents.
-   ROOT::iOS::FileContainer *fileContainer = ROOT::iOS::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
+   ROOT::iOS::Browser::FileContainer *fileContainer = ROOT::iOS::Browser::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
 
    if (!fileContainer) {
       UIAlertView *alert = [[UIAlertView alloc] initWithTitle : @"File Open Error:"
@@ -149,7 +148,7 @@
       [scrollView addSubview : newShortcut];   
       [self placeFileShortcuts];
    }  else
-      ROOT::iOS::DeleteFileContainer(fileContainer);
+      ROOT::iOS::Browser::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________

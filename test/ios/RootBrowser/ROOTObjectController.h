@@ -1,7 +1,7 @@
 #import <MessageUI/MessageUI.h>
 #import <UIKit/UIKit.h>
 
-#import "IOSFileContainer.h"
+#import "FileUtils.h"
 
 @class ScrollViewWithPadView;
 
@@ -13,14 +13,14 @@ class TObject;
    __weak IBOutlet UIScrollView *navigationScrollView;
 }
 
-- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::FileContainer *)fileContainer;
+- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::Browser::FileContainer *)fileContainer;
 - (void) handleDoubleTapOnPad : (CGPoint)tapPt;
 - (void) objectWasSelected : (TObject *)object;
 - (void) objectWasModifiedUpdateSelection : (BOOL)needUpdate;
 - (void) setupObjectInspector;
 
-- (ROOT::iOS::EHistogramErrorOption) getErrorOption;
-- (void) setErrorOption : (ROOT::iOS::EHistogramErrorOption) errorOption;
+- (ROOT::iOS::Browser::EHistogramErrorOption) getErrorOption;
+- (void) setErrorOption : (ROOT::iOS::Browser::EHistogramErrorOption) errorOption;
 
 - (BOOL) markerIsOn;
 - (void) setMarker : (BOOL)on;

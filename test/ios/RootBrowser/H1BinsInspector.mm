@@ -2,7 +2,6 @@
 #import "H1BinsInspector.h"
 #import "RangeSlider.h"
 
-#import "IOSFileScanner.h"
 #import "TAxis.h"
 #import "TH1.h"
 

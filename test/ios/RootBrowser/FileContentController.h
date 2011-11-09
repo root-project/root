@@ -2,9 +2,11 @@
 
 namespace ROOT {
 namespace iOS {
+namespace Browser {
 
 class FileContainer;
 
+}
 }
 }
 
@@ -12,13 +14,13 @@ class FileContainer;
 
 @interface FileContentController : UIViewController {
 @private
-   ROOT::iOS::FileContainer *fileContainer;
+   ROOT::iOS::Browser::FileContainer *fileContainer;
    __weak IBOutlet UIScrollView *scrollView;
 }
 
-@property (nonatomic, readonly) ROOT::iOS::FileContainer *fileContainer;
+@property (nonatomic, readonly) ROOT::iOS::Browser::FileContainer *fileContainer;
 
-- (void) activateForFile : (ROOT::iOS::FileContainer *)container;
+- (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;
 - (void) selectObjectFromFile : (ObjectShortcut *)obj;
 
 @end

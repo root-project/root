@@ -5,9 +5,10 @@
 #import "SlideshowController.h"
 #import "SlideView.h"
 
-//C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+//C++ imports.
 #import "IOSPad.h"
+
+#import "FileUtils.h"
 
 @implementation SlideshowController {
    SlideView *padViews[2];//The current and the next in a slide show.
@@ -15,7 +16,7 @@
    unsigned visiblePad;
    unsigned nCurrentObject;
    
-   ROOT::iOS::FileContainer *fileContainer;
+   ROOT::iOS::Browser::FileContainer *fileContainer;
    
    NSTimer *timer;
 }
@@ -59,7 +60,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::FileContainer *)container
+- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::Browser::FileContainer *)container
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 

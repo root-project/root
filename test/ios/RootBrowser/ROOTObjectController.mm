@@ -12,11 +12,12 @@
 #import "Constants.h"
 #import "PadView.h"
 
-//C++ (ROOT) imports.
+//C++ imports.
 #import "TObject.h"
 #import "TClass.h"
 #import "IOSPad.h"
-//#import "TFile.h"
+
+#import "FileUtils.h"
 
 namespace {
 //Ugly Obj-C, implementation block is not a scope, so either static or unnamed namespace :(
@@ -41,7 +42,7 @@ enum Mode {
    
    PadView *editablePadView;
 
-   ROOT::iOS::FileContainer *fileContainer;
+   ROOT::iOS::Browser::FileContainer *fileContainer;
 
    TObject *selectedObject;
    
@@ -60,13 +61,13 @@ enum Mode {
 #pragma mark - Special methods to manage drawing options.
 
 //____________________________________________________________________________________________________
-- (ROOT::iOS::EHistogramErrorOption) getErrorOption
+- (ROOT::iOS::Browser::EHistogramErrorOption) getErrorOption
 {
    return fileContainer->GetErrorDrawOption(currentObject);
 }
 
 //____________________________________________________________________________________________________
-- (void) setErrorOption : (ROOT::iOS::EHistogramErrorOption) errorOption
+- (void) setErrorOption : (ROOT::iOS::Browser::EHistogramErrorOption) errorOption
 {
    fileContainer->SetErrorDrawOption(currentObject, errorOption);
    //Ugly as hell :(( But ROOT holds draw options inside TObjLink in a pad.
@@ -443,7 +444,7 @@ enum Mode {
 }
 
 //____________________________________________________________________________________________________
-- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::FileContainer *)container;
+- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::Browser::FileContainer *)container;
 {
    //This method is called after initWithNibName was called, so it's the second step
    //of controller's construction. The default mode is ocmNavigation, so setup navigation

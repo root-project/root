@@ -7,9 +7,10 @@
 #import "Shortcuts.h"
 
 
-//C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+//C++ imports.
 #import "IOSPad.h"
+
+#import "FileUtils.h"
 
 @implementation FileContentController {
    NSMutableArray *objectShortcuts;
@@ -152,7 +153,7 @@
 //____________________________________________________________________________________________________
 - (void) addObjectsIntoScrollview
 {
-   typedef ROOT::iOS::FileContainer::size_type size_type;
+   typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
 
    [self clearScrollview];
 
@@ -163,7 +164,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) activateForFile : (ROOT::iOS::FileContainer *)container
+- (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container
 {
    fileContainer = container;
    self.navigationItem.title = [NSString stringWithFormat : @"Contents of %s", container->GetFileName()];
