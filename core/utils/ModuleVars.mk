@@ -14,11 +14,11 @@ ROOTCINTTMPEXE := $(UTILSDIRS)/rootcint_tmp$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 
 ifeq ($(BUILDCLING),yes)
-ROOTCLINGS    := $(UTILSDIRS)/rootcint.cxx \
+ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                 $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
-ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcint_tmp$(EXEEXT)
-ROOTCLINGTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
+ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
+ROOTCINTTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
 endif
 
 ##### Dependencies for all dictionaries
@@ -50,12 +50,12 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 
 ##### rootcint #####
 ifeq ($(BUILDCLING),yes)
-ROOTCLINGS    := $(UTILSDIRS)/rootcint.cxx \
+ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                 $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
 ROOTCLINGTMPO := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.o))
 
-ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcint_tmp$(EXEEXT))
-ROOTCLINGEXE  := bin/rootcint$(EXEEXT)
+ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
+ROOTCLINGEXE  := bin/rootcling$(EXEEXT)
 ROOTCLINGTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
 endif
 
