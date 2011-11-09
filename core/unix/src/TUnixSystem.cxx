@@ -2190,6 +2190,17 @@ void TUnixSystem::StackTrace()
    script += GetPid();
    Exec(script);
    return;
+#elif defined(R__SOLARIS)
+   char *cppfilt = Which(Getenv("PATH"), "c++filt", kExecutePermission);
+   TString script = "pstack ";
+   script += GetPid();
+   if (cppfilt) {
+      script += " | ";
+      script += cppfilt;
+      delete [] cppfilt;
+   }
+   Exec(script);
+   return;
 #elif defined(HAVE_U_STACK_TRACE)  // hp-ux
 /*
    // FIXME: deal with inability to duplicate the file handle
@@ -2411,20 +2422,6 @@ void TUnixSystem::StackTrace()
       delete [] addr2line;
    }
    delete [] filter;
-#elif defined(PROG_PSTACK)                            // solaris
-# ifdef PROG_CXXFILT
-#  define CXXFILTER " | " PROG_CXXFILT
-# else
-#  define CXXFILTER
-# endif
-   // 64 should more than plenty for a space and a pid.
-   char buffer[sizeof(PROG_PSTACK) + 64 + 3 + sizeof(PROG_CXXFILT) + 64];
-   sprintf(buffer, "%s %lu%s 1>&%d", PROG_PSTACK, (ULong_t) getpid(),
-           "" CXXFILTER, fd);
-   buffer[sizeof (buffer)-1] = 0;
-   Exec(buffer);
-# undef CXXFILTER
-
 #elif defined(HAVE_EXCPT_H) && defined(HAVE_PDSC_H) && \
                                defined(HAVE_RLD_INTERFACE_H) // tru64
    // Tru64 stack walk.  Uses the exception handling library and the
