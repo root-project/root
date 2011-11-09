@@ -4121,8 +4121,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "ps"  - Postscript file is produced (see special cases below)
    //          "Portrait" - Postscript file is produced (Portrait)
    //         "Landscape" - Postscript file is produced (Landscape)
-   //            "Title:" - The character strin after "Title:" becomes a table
-   //                       of content entry.
+   //            "Title:" - The character string after "Title:" becomes a table
+   //                       of content entry (for PDF files).
    //               "eps" - an Encapsulated Postscript file is produced
    //           "Preview" - an Encapsulated Postscript file with preview is produced.
    //               "pdf" - a PDF file is produced
@@ -4463,8 +4463,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       gVirtualPS->SetName(psname);
       l = (char*)strstr(opt,"Title:");
       if (l) {
-         gVirtualPS->SetTitle(&opt[6]);
-         //Please fix this bug, we may overwrite an input argument
+         gVirtualPS->SetTitle(l+6);
          strcpy(l,"pdf");
       }
       gVirtualPS->Open(psname,pstype);
@@ -4492,9 +4491,10 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
       l = (char*)strstr(opt,"Title:");
       if (l) {
-         gVirtualPS->SetTitle(&opt[6]);
-         //Please fix this bug, we may overwrite an input argument
+         gVirtualPS->SetTitle(l+6);
          strcpy(l,"pdf");
+      } else {
+         gVirtualPS->SetTitle("PDF");
       }
       Info("Print", "Current canvas added to %s file %s", opt, psname.Data());
       if (mustClose) {
