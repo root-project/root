@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70078C2C146AC4C400C19F4D /* FileUtils.cxx */; };
 		7014410F140E18390070459F /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* SelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
@@ -123,6 +124,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		70078C2B146AC4C400C19F4D /* FileUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtils.h; sourceTree = "<group>"; };
+		70078C2C146AC4C400C19F4D /* FileUtils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cxx; sourceTree = "<group>"; };
 		7014410D140E18390070459F /* SelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionView.h; sourceTree = "<group>"; };
 		7014410E140E18390070459F /* SelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SelectionView.mm; sourceTree = "<group>"; };
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
@@ -592,6 +595,8 @@
 		70E0B5E41414E4C80077E4A8 /* Code */ = {
 			isa = PBXGroup;
 			children = (
+				70078C2B146AC4C400C19F4D /* FileUtils.h */,
+				70078C2C146AC4C400C19F4D /* FileUtils.cxx */,
 				70252F7A140CDD8D00F3660F /* Constants.mm */,
 				70252F7B140CDD8D00F3660F /* Constants.h */,
 				709CD0961402768B005B2AF4 /* Shortcuts.h */,
@@ -797,6 +802,7 @@
 				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
 				70C1D67D1468166100514DC0 /* SlideView.mm in Sources */,
 				70AC541E146966E7009A0942 /* ThumbnailView.mm in Sources */,
+				70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
