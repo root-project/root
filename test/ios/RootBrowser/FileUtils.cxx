@@ -1,7 +1,6 @@
 #include <stdexcept>
 #include <cstring>
 #include <memory>
-#include <set>
 
 #include "TMultiGraph.h"
 #include "TGraphPolar.h"
@@ -74,7 +73,8 @@ void RemoveMarkerDrawOption(TString &options)
 }
 
 //__________________________________________________________________________________________________________________________
-TObject *ReadObjectForKey(TFile *inputFile, const TKey *key, TString &option)
+//TObject *ReadObjectForKey(TFile *inputFile, const TKey *key, TString &option)
+TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &option)
 {
    option = "";
 
@@ -111,7 +111,7 @@ void ScanFileForVisibleObjects(TFile *inputFile, const std::set<TString> &visibl
    //Find objects of visible types in a root file.
    const TList *keys = inputFile->GetListOfKeys();
    TIter next(keys);
-   std::vector<TObject *>tmp;
+   std::vector<TObject *> tmp;
    std::vector<TString> opts;
    TString option;
    
@@ -122,14 +122,14 @@ void ScanFileForVisibleObjects(TFile *inputFile, const std::set<TString> &visibl
          //Check, if object, pointed by the key, is supported.
          if (visibleTypes.find(k->GetClassName()) != visibleTypes.end()) {
             newObject.reset(ReadObjectForKey(inputFile, k, option));//can throw std::runtimer_error (me) || std::bad_alloc (ROOT)
-            tmp.push_back(newObject.get());//bad_alloc.
             opts.push_back(option);
+            tmp.push_back(newObject.get());//bad_alloc, must be here, after added option, to avoid double deletion.
             newObject.release();
          }
       }
    } catch (const std::exception &) {
-      for (std::vector<TObject*>::size_type i = 0; i < tmp.size(); ++i)
-         delete tmp[i];
+      for (auto obj : tmp)
+         delete obj;
       throw;
    }
    
@@ -162,21 +162,29 @@ FileContainer::FileContainer(const std::string &fileName)
          fAttachedPads[i] = newPad.release();
       }
    } catch (const std::exception &e) {
-      for (size_type i = 0; i < fAttachedPads.size(); ++i)
-         delete fAttachedPads[i];
-      for (size_type i = 0; i < fFileContents.size(); ++i)
-         delete fFileContents[i];
+      for (auto pad : fAttachedPads)
+         delete pad;
+      for (auto obj : fFileContents)
+         delete obj;
       throw;
    }
 }
 
+/*
+//__________________________________________________________________________________________________________________________
+FileContainer::FileContainer(const std::string &fileName)
+                  : fFileName(fileName)
+{
+}
+*/
+
 //__________________________________________________________________________________________________________________________
 FileContainer::~FileContainer()
 {
-   for (size_type i = 0; i < fFileContents.size(); ++i)
-      delete  fFileContents[i];
-   for (size_type i = 0; i < fAttachedPads.size(); ++i)
-      delete fAttachedPads[i];
+   for (auto fileContainer : fFileContents)
+      delete fileContainer;
+   for (auto pad : fAttachedPads)
+      delete pad;
 }
 
 //__________________________________________________________________________________________________________________________
@@ -270,6 +278,96 @@ FileContainer *CreateFileContainer(const char *fileName)
       FileContainer *newContainer = new FileContainer(fileName);
       return newContainer;
    } catch (const std::exception &) {//Only std exceptions.
+      return 0;
+   }
+}
+
+//__________________________________________________________________________________________________________________________
+void FileContainer::AttachPads()
+{
+   fAttachedPads.assign(fFileContents.size(), 0);
+   for (size_type i = 0; i < fAttachedPads.size(); ++i) {
+      if (FileContainer *nested = dynamic_cast<FileContainer *>(fFileContents[i])) {
+         //Attach pads for a nested container!
+         nested->AttachPads();
+      } else {
+         std::auto_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
+         newPad->cd();
+         fFileContents[i]->Draw(fOptions[i].Data());
+         fAttachedPads[i] = newPad.release();
+      }
+   }
+}
+
+//__________________________________________________________________________________________________________________________
+void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer)
+{
+   const TList *objKeys = dir->GetListOfKeys();
+   if (!objKeys)
+      return;
+   
+   TString option;
+   std::vector<TObject *> tmp;
+   std::vector<TString> opts;
+   TObjLink *link = objKeys->FirstLink();
+   
+   try {
+      while (link) {
+         const TKey *key = static_cast<TKey *>(link->GetObject());
+         const TString className(key->GetClassName());
+      
+         if (className == "TDirectoryFile") {
+            
+            //Recursion - create nested container.
+            std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
+            TDirectoryFile *nestedDir = static_cast<TDirectoryFile *>(dir->Get(key->GetName()));
+            ScanDirectory(nestedDir, visibleTypes, nestedContainer.get());
+            opts.push_back("");//empty option for container.
+            tmp.push_back(nestedContainer.get());
+            nestedContainer.release();
+            
+         } else if (visibleTypes.find(className) != visibleTypes.end()) {
+            std::auto_ptr<TObject> newObject(ReadObjectForKey(dir, key, option));
+            opts.push_back(option);
+            tmp.push_back(newObject.get());//bad_alloc.
+            newObject.release();
+         }
+      
+         link = link->Next();
+      }
+   } catch (const std::exception &) {
+      for (auto obj : tmp)
+         delete obj;
+      throw;
+   }
+   
+   currentContainer->fFileContents.swap(tmp);
+   currentContainer->fOptions.swap(opts);
+}
+
+//__________________________________________________________________________________________________________________________
+FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
+{
+   try {
+      std::set<TString> visibleTypes;
+      FillVisibleTypes(visibleTypes);
+   
+      std::auto_ptr<TFile> inputFile(TFile::Open(fullPath, "read"));
+      if (!inputFile.get())
+         return 0;
+      
+      const std::string fileName(gSystem->BaseName(fullPath));
+      std::auto_ptr<FileContainer> topLevel(new FileContainer(fileName));
+      
+      ScanDirectory(inputFile.get(), visibleTypes, topLevel.get());
+      
+      //
+      //Attach pads.
+      topLevel->AttachPads();
+      //
+      
+      return topLevel.release();
+   } catch (const std::exception &) {
       return 0;
    }
 }

@@ -12,12 +12,16 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <set>
 
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
-class TObject;
+class TDirectoryFile;
 class TFile;
 
 namespace ROOT {
@@ -36,7 +40,11 @@ enum EHistogramErrorOption {
    hetE4
 };
 
-class FileContainer {
+
+//File container inherits from TObject, to make it possible
+//contain nested file containers (for TDirectoryFile, found in files).
+class FileContainer : public TObject {
+   
 public:
    typedef std::vector<TObject *>::size_type size_type;
 
@@ -56,7 +64,13 @@ public:
 
    const char *GetFileName()const;
 
+   static FileContainer *CreateFileContainer(const char *fullPath);
+
 private:
+
+   static void ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer);
+   void AttachPads();
+
    std::string fFileName;
 
    std::auto_ptr<TFile> fFileHandler;
