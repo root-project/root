@@ -1196,12 +1196,11 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
    //                                     American Statistician, 50, 361-365
    // 2) R Project documentation for the function quantile of package {stats}
 
+
    if (type<1 || type>9){
       printf("illegal value of type\n");
       return;
    }
-   Double_t g, npm, np, xj, xjj;
-   Int_t j, intnpm;
    Int_t *ind = 0;
    Bool_t isAllocated = kFALSE;
    if (!isSorted){
@@ -1211,70 +1210,76 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
          isAllocated = kTRUE;
       }
    }
-   npm=0;
-   //Discontinuous functions
-   if (type<4){
-      for (Int_t i=0; i<nprob; i++){
-         npm = n*prob[i];
-         if (npm < 1){
-            if(isSorted)
-               quantiles[i] = x[0];
-            else
-               quantiles[i] = TMath::KOrdStat(n, x, 0, ind);
-         } else {
-            j=TMath::Max(TMath::FloorNint(npm)-1, 0);
-            if (npm - j -1 > 1e-14){
-               if (isSorted)
-                  quantiles[i] = x[j+1];
-               else
-                  quantiles[i] = TMath::KOrdStat(n, x, j+1, ind);
-            } else {
-               if (isSorted) xj = x[j];
-               else xj = TMath::KOrdStat(n, x, j, ind);
-               if (type==1) quantiles[i] = xj;
-               if (type==2) {
-                  if (isSorted) xjj = x[j+1];
-                  else xjj = TMath::KOrdStat(n, x, j+1, ind);
-                  quantiles[i] = 0.5*(xj + xjj);
-               }
-               if (type==3) {
-                  if (!TMath::Even(j-1)){
-                     if (isSorted) xjj = x[j+1];
-                     else xjj = TMath::KOrdStat(n, x, j+1, ind);
-                     quantiles[i] = xjj;
-                  } else
-                     quantiles[i] = xj;
-               }
-            }
-         }
+
+   // re-implemented by L.M (9/11/2011) to fix bug https://savannah.cern.ch/bugs/?87251
+   // following now exactly R implementation (available in library/stats/R/quantile.R )
+   // which follows precisely Hyndman-Fan paper 
+   // (older implementation had a bug for type =3)
+
+   for (Int_t i=0; i<nprob; i++){
+
+      Double_t nppm = 0; 
+      Double_t gamma = 0;
+      Int_t j = 0;
+
+      //Discontinuous functions
+      // type = 1,2, or 3 
+      if (type < 4 ){
+         if (type == 3) 
+            nppm = n*prob[i]-0.5;   // use m = -0.5
+         else 
+            nppm = n*prob[i]; // use m = 0
+
+         j = TMath::FloorNint(nppm);
+         // g in the paper is nppm -j  
+         if (type == 1) 
+            gamma = (nppm > j) ? 1 : 0; 
+         else if (type == 2) 
+            gamma = (nppm > j) ? 1 : 0.5; 
+         else if (type == 3) 
+            // gamma = 0 for g=0 and j even
+            gamma = (nppm == j && TMath::Even(j) ) ? 0 : 1;
+
       }
-   }
-   if (type>3){
-      for (Int_t i=0; i<nprob; i++){
-         np=n*prob[i];
-         if (np<1 && type!=7 && type!=4)
-            quantiles[i] = TMath::KOrdStat(n, x, 0, ind);
-         else {
-            if (type==4) npm = np;
-            if (type==5) npm = np + 0.5;
-            if (type==6) npm = np + prob[i];
-            if (type==7) npm = np - prob[i] +1;
-            if (type==8) npm = np+(1./3.)*(1+prob[i]);
-            if (type==9) npm = np + 0.25*prob[i] + 0.375;
-            intnpm = TMath::FloorNint(npm);
-            j = TMath::Max(intnpm - 1, 0);
-            g = npm - intnpm;
-            if (isSorted){
-               xj = x[j];
-               xjj = x[j+1];
-            } else {
-               xj = TMath::KOrdStat(n, x, j, ind);
-               xjj = TMath::KOrdStat(n, x, j+1, ind);
-            }
-            quantiles[i] = (1-g)*xj + g*xjj;
-         }
+      else { 
+         // for continuous quantiles  type 4 to 9)
+         // define alpha and beta 
+         double a = 0; 
+         double b = 0; 
+         if (type == 4)       { a = 0; b = 1; }
+         else if (type == 5)  { a = 0.5; b = 0.5; }
+         else if (type == 6)  { a = 0.; b = 0.; }
+         else if (type == 7)  { a = 1.; b = 1.; }
+         else if (type == 8)  { a = 1./3.; b = a; }
+         else if (type == 9)  { a = 3./8.; b = a; }
+
+         // be careful with machine precision 
+         double eps  = 4 * TMath::Limits<Double_t>::Epsilon();
+         nppm = a + prob[i] * ( n + 1 -a -b);       // n * p + m 
+         j = TMath::FloorNint(nppm + eps);
+         gamma = nppm - j;
+         if (gamma < eps) gamma = 0; 
       }
+
+      // since index j starts from 1 first is j-1 and second is j 
+      // add protection to keep indices in range [0,n-1]
+      int first  = (j > 0 && j <=n) ? j-1 : ( j <=0 ) ? 0 : n-1;
+      int second = (j > 0 && j < n) ?  j  : ( j <=0 ) ? 0 : n-1;
+
+      Double_t xj, xjj;
+      if (isSorted){
+         xj = x[first];
+         xjj = x[second];
+      } else {
+         xj = TMath::KOrdStat(n, x, first, ind);
+         xjj = TMath::KOrdStat(n, x, second, ind);
+      }
+      quantiles[i] = (1-gamma)*xj + gamma*xjj;
+      // printf("x[j] = %12f  x[j+1] = %12f \n",xj, xjj);         
+
    }
+
+
 
    if (isAllocated)
       delete [] ind;
