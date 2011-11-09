@@ -149,6 +149,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       PrintLogo(lite);
    }
 
+   // Explicitly load libMathCore as CINT will not auto load it when using one
+   // of its globals. Once moved to Cling, which should work correctly, we
+   // can remove this statement.
+   gSystem->Load("libMathCore");
+
    // Load some frequently used includes
    Int_t includes = gEnv->GetValue("Rint.Includes", 1);
    // When the interactive ROOT starts, it can automatically load some frequently
@@ -157,7 +162,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    //   -The initialisation takes more time (noticeable when using gdb or valgrind)
    //   -Memory overhead of about 5 Mbytes (1/3 of the ROOT executable) when including <vector>
    // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
-   //  to disable the loading of these includes at startup.
+   // to disable the loading of these includes at startup.
    // You can set the variable to 1 (default) to load only <iostream>, <string> and <RTypesCint.h>
    // You can set it to 2 to load in addition <vector> and <pair>
    // We strongly recommend setting the variable to 2 if your scripts include <vector>

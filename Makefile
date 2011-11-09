@@ -310,7 +310,7 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-BOOTLIBS     := -lCore -lCint -lMathCore
+BOOTLIBS     := -lCore -lCint
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
@@ -323,8 +323,7 @@ RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
-BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
-                $(LPATH)/libMathcore.lib
+BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
@@ -344,7 +343,7 @@ ROOTA        := bin/roota
 PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(MATHCORELIB)
+BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 endif
@@ -363,7 +362,6 @@ ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__Tree     \
                 -Wl,-u,.G__cpp_setupG__Thread   \
                 -Wl,-u,.G__cpp_setupG__Matrix
-BOOTULIBS    := -Wl,-u,.G__cpp_setupG__MathCore
 else
 ifeq ($(PLATFORM),macosx)
 LDSYMPREFIX  := _
@@ -377,7 +375,6 @@ ROOTULIBS    := -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Net      \
                 -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Tree     \
                 -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Thread   \
                 -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Matrix
-BOOTULIBS    := -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__MathCore
 endif
 endif
 ifeq ($(PLATFORM),win32)
@@ -390,7 +387,6 @@ ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Thread \
                 -include:_G__cpp_setupG__Matrix
-BOOTULIBS    := -include:_G__cpp_setupG__MathCore
 endif
 
 ##### Compiler output option #####

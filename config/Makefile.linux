@@ -36,7 +36,6 @@ LD            = g++
 LDFLAGS       = -m32 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
-FORCELINK     = yes
 
 # System libraries:
 SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
