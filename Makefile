@@ -310,21 +310,20 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-BOOTLIBS     := -lCore -lCint -lMathCore
+BOOTLIBS     := -lCore -lCint
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
 ifeq ($(BUILDCLING),yes)
 BOOTLIBS     += -lCling
 endif
-ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix -lNet -lThread $(BOOTLIBS)
+ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
+                -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
-BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
-                $(LPATH)/libMathcore.lib
+BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
@@ -335,7 +334,8 @@ ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
                 $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
                 $(LPATH)/libMatrix.lib $(LPATH)/libNet.lib \
-                $(LPATH)/libThread.lib $(BOOTLIBS)
+                $(LPATH)/libThread.lib $(LPATH)/libMathCore.lib \
+                $(BOOTLIBS)
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
@@ -344,11 +344,11 @@ ROOTA        := bin/roota
 PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(MATHCORELIB)
+BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 endif
-ROOTLIBSDEP   = $(BOOTLIBSDEP) $(IOLIB) $(NETLIB) $(HISTLIB) \
+ROOTLIBSDEP   = $(BOOTLIBSDEP) $(MATHCORELIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 
 # Force linking of not referenced libraries
@@ -363,7 +363,6 @@ ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__Tree     \
                 -Wl,-u,.G__cpp_setupG__Thread   \
                 -Wl,-u,.G__cpp_setupG__Matrix
-BOOTULIBS    := -Wl,-u,.G__cpp_setupG__MathCore
 else
 ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
                 -Wl,-u,_G__cpp_setupG__IO       \
@@ -374,7 +373,6 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
                 -Wl,-u,_G__cpp_setupG__Tree     \
                 -Wl,-u,_G__cpp_setupG__Thread   \
                 -Wl,-u,_G__cpp_setupG__Matrix
-BOOTULIBS    := -Wl,-u,_G__cpp_setupG__MathCore
 endif
 endif
 ifeq ($(PLATFORM),win32)
@@ -387,7 +385,6 @@ ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Thread \
                 -include:_G__cpp_setupG__Matrix
-BOOTULIBS    := -include:_G__cpp_setupG__MathCore
 endif
 
 ##### Compiler output option #####
