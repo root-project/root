@@ -99,7 +99,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    if (strlen(fUrl.GetOptions()) > 0)
       fName += Form("-%s", fUrl.GetOptions());
    UserGroup_t *pw = gSystem->GetUserInfo(gSystem->GetEffectiveUid());
-   TString user = (pw) ? pw->fUser : "";
+   TString user = (pw) ? (const char*) pw->fUser : "";
    SafeDelete(pw);
    if (strlen(fUrl.GetUser()) > 0 && user != fUrl.GetUser())
       fName.Insert(0,Form("%s@", fUrl.GetUser()));

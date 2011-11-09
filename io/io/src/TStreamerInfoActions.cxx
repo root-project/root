@@ -33,6 +33,13 @@ static const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
 using namespace TStreamerInfoActions;
 
+#ifdef _AIX
+# define INLINE_TEMPLATE_ARGS
+#else
+# define INLINE_TEMPLATE_ARGS inline
+#endif
+
+
 namespace TStreamerInfoActions 
 {
    void TConfiguration::AddToOffset(Int_t delta)
@@ -115,7 +122,7 @@ namespace TStreamerInfoActions
    }
 
    template <typename T> 
-   inline Int_t ReadBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
+   INLINE_TEMPLATE_ARGS Int_t ReadBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       T *x = (T*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
@@ -124,7 +131,7 @@ namespace TStreamerInfoActions
    }
 
    template <typename T> 
-   inline Int_t WriteBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
+   INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       T *x = (T*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
@@ -142,7 +149,7 @@ namespace TStreamerInfoActions
    };
 
    template <typename T>
-   inline Int_t ReadBasicType_WithFactor(TBuffer &buf, void *addr, const TConfiguration *config)
+   INLINE_TEMPLATE_ARGS Int_t ReadBasicType_WithFactor(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       // Stream a Float16 or Double32 where a factor has been specified.
       //a range was specified. We read an integer and convert it back to a double.
@@ -161,7 +168,7 @@ namespace TStreamerInfoActions
    };
 
    template <typename T>
-   inline Int_t ReadBasicType_NoFactor(TBuffer &buf, void *addr, const TConfiguration *config)
+   INLINE_TEMPLATE_ARGS Int_t ReadBasicType_NoFactor(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       // Stream a Float16 or Double32 where a factor has not been specified.
 
@@ -172,7 +179,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t ReadTString(TBuffer &buf, void *addr, const TConfiguration *config) 
+   INLINE_TEMPLATE_ARGS Int_t ReadTString(TBuffer &buf, void *addr, const TConfiguration *config) 
    {
       // Read in a TString object.
 
@@ -182,7 +189,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t ReadTObject(TBuffer &buf, void *addr, const TConfiguration *config) 
+   INLINE_TEMPLATE_ARGS Int_t ReadTObject(TBuffer &buf, void *addr, const TConfiguration *config) 
    {
       // Read in a TObject object part.
 
@@ -192,7 +199,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t ReadTNamed(TBuffer &buf, void *addr, const TConfiguration *config) 
+   INLINE_TEMPLATE_ARGS Int_t ReadTNamed(TBuffer &buf, void *addr, const TConfiguration *config) 
    {
       // Read in a TNamed object part.
       // Since the TNamed streamer is solely delegating back to the StreamerInfo we 
@@ -349,7 +356,7 @@ namespace TStreamerInfoActions
       }
    };
 
-   inline void ReadSTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
+   INLINE_TEMPLATE_ARGS void ReadSTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
 
@@ -411,7 +418,7 @@ namespace TStreamerInfoActions
       }
    }
 
-   inline void ReadArraySTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
+   INLINE_TEMPLATE_ARGS void ReadArraySTLMemberWiseSameClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
 
@@ -485,7 +492,7 @@ namespace TStreamerInfoActions
       }
    }
 
-   inline void ReadSTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
+   INLINE_TEMPLATE_ARGS void ReadSTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
 
@@ -529,7 +536,7 @@ namespace TStreamerInfoActions
       }
    }
 
-   inline void ReadArraySTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
+   INLINE_TEMPLATE_ARGS void ReadArraySTLMemberWiseChangedClass(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers)
    {
       // Collection was saved member-wise
 
@@ -580,18 +587,18 @@ namespace TStreamerInfoActions
    }
 
 
-   inline void ReadSTLObjectWiseFastArray(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
+   INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArray(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
       TConfigSTL *config = (TConfigSTL*)conf;
       // Idea: This needs to be unrolled, it currently calls the TGenCollectionStreamer ....
       buf.ReadFastArray(addr,config->fNewClass,conf->fLength,(TMemberStreamer*)0,config->fOldClass);
    }
-   inline void ReadSTLObjectWiseStreamer(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
+   INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseStreamer(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
       TConfigSTL *config = (TConfigSTL*)conf;
       (*config->fStreamer)(buf,addr,conf->fLength);
    }
-   inline void ReadSTLObjectWiseFastArrayV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
+   INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseFastArrayV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
    {
       // case of old TStreamerInfo
 
@@ -604,7 +611,7 @@ namespace TStreamerInfoActions
       // Idea: This needs to be unrolled, it currently calls the TGenCollectionStreamer ....
       buf.ReadFastArray(addr,config->fNewClass,conf->fLength,(TMemberStreamer*)0,config->fOldClass);
    }
-   inline void ReadSTLObjectWiseStreamerV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
+   INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseStreamerV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
    {
       // case of old TStreamerInfo
 
@@ -619,7 +626,7 @@ namespace TStreamerInfoActions
 
    template <void (*memberwise)(TBuffer&,void *,const TConfiguration*, Version_t), 
              void (*objectwise)(TBuffer&,void *,const TConfiguration*, Version_t, UInt_t)>
-   inline Int_t ReadSTL(TBuffer &buf, void *addr, const TConfiguration *conf)
+   INLINE_TEMPLATE_ARGS Int_t ReadSTL(TBuffer &buf, void *addr, const TConfiguration *conf)
    {
       TConfigSTL *config = (TConfigSTL*)conf;
       UInt_t start, count;
@@ -634,7 +641,7 @@ namespace TStreamerInfoActions
    }
 
    template <typename From, typename To>
-   inline Int_t ConvertBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
+   INLINE_TEMPLATE_ARGS Int_t ConvertBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       // Simple conversion from a 'From' on disk to a 'To' in memory.
       From temp;
@@ -673,7 +680,7 @@ namespace TStreamerInfoActions
    };
 
 
-   inline Int_t UseCache(TBuffer &b, void *addr, const TConfiguration *conf) 
+   INLINE_TEMPLATE_ARGS Int_t UseCache(TBuffer &b, void *addr, const TConfiguration *conf) 
    {
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
       
@@ -695,7 +702,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t UseCacheVectorPtrLoop(TBuffer &b, void *start, const void *end, const TConfiguration *conf) 
+   INLINE_TEMPLATE_ARGS Int_t UseCacheVectorPtrLoop(TBuffer &b, void *start, const void *end, const TConfiguration *conf) 
    {
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
       Int_t bufpos = b.Length();
@@ -721,7 +728,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t UseCacheVectorLoop(TBuffer &b, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *conf) 
+   INLINE_TEMPLATE_ARGS Int_t UseCacheVectorLoop(TBuffer &b, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *conf) 
    {
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
 
@@ -747,7 +754,7 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   inline Int_t UseCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf) 
+   INLINE_TEMPLATE_ARGS Int_t UseCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf) 
    {
       TConfigurationUseCache *config = (TConfigurationUseCache*)conf;
 

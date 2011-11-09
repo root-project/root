@@ -92,7 +92,7 @@ ifeq ($(PLATFORM),aix)
 CINTS2       += $(MODDIRSD)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),aix5)
-CINTS2       += $(MODDIRSD)/libstrm.cxx
+CINTS2       += $(MODDIRSD)/stlport4strm.cxx
 endif
 ifeq ($(PLATFORM),sgi)
 CINTS2       += $(MODDIRSD)/libstrm.cxx

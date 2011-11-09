@@ -75,7 +75,8 @@ template<class T> class valarray {
   // _lib.valarray.unary_ unary operators:
   valarray<T> operator+() const;
   valarray<T> operator-() const;
-#if !defined(G__BORLAND) && !defined(G__KCC) && !(G__GNUC>=3) && !defined(G__SUNPRO_CC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(G__GNUC>=3) && \
+    !defined(G__SUNPRO_CC) && !defined(G__AIX)
   valarray<T> operator~() const;
   valarray<T> operator!() const;
 #endif
@@ -88,7 +89,8 @@ template<class T> class valarray {
   valarray<T>& operator/= (const valarray<T>&);
   valarray<T>& operator+= (const valarray<T>&);
   valarray<T>& operator-= (const valarray<T>&);
-#if !defined(G__BORLAND) && !defined(G__KCC) && !defined(G__GNUC) && !defined(G__SUNPRO_CC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !defined(G__GNUC) && \
+    !defined(G__SUNPRO_CC) && !defined(G__AIX)
   valarray<T>& operator%= (const T&);
   valarray<T>& operator^= (const T&);
   valarray<T>& operator&= (const T&);

@@ -50,7 +50,7 @@ class string {
 #if defined(G__KCC) 
   typedef typename Allocator::pointer		   iterator;
   typedef const iterator const_iterator;
-#elif (defined(G__AIX) && (G__AIX<0))
+#elif defined(G__AIX)
   typedef _Ptrit<value_type, difference_type, pointer,
                   reference, pointer, reference> iterator;
   typedef _Ptrit<value_type, difference_type, const_pointer,

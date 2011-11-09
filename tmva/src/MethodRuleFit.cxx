@@ -713,8 +713,8 @@ void TMVA::MethodRuleFit::GetHelpMessage() const
    //
    // typical length of text line: 
    //         "|--------------------------------------------------------------|"
-   TString col    = gConfig().WriteOptionsReference() ? "" : gTools().Color("bold");
-   TString colres = gConfig().WriteOptionsReference() ? "" : gTools().Color("reset");
+   TString col    = gConfig().WriteOptionsReference() ? TString() : gTools().Color("bold");
+   TString colres = gConfig().WriteOptionsReference() ? TString() : gTools().Color("reset");
    TString brk    = gConfig().WriteOptionsReference() ? "<br>" : "";
 
    Log() << Endl;

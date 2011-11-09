@@ -227,9 +227,6 @@ extern "C" {
 #if defined(R__HPUX) && !defined(R__GNU)
 #   define HAVE_U_STACK_TRACE
 #endif
-#if defined(R__AIX)
-// #   define HAVE_XL_TRBK   // does not work as expected
-#endif
 #if (defined(R__LINUX) || defined(R__HURD)) && !defined(R__WINGCC)
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define HAVE_BACKTRACE_SYMBOLS_FD
@@ -248,10 +245,6 @@ extern "C" {
 #ifdef HAVE_U_STACK_TRACE
    // HP-UX stack walker (http://devresource.hp.com/STK/partner/unwind.pdf)
    extern "C" void U_STACK_TRACE(void);
-#endif
-#ifdef HAVE_XL_TRBK
-   // AIX stack walker (from xlf FORTRAN 90 runtime).
-   extern "C" void xl__trbk(void);
 #endif
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
 #   include <execinfo.h>
@@ -377,21 +370,39 @@ static const char *GetExePath()
 {
    static TString exepath;
    if (exepath == "") {
-#ifdef __APPLE__
+#if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);
-#endif
-#ifdef __linux
-      char linkname[64];      // /proc/<pid>/exe
+#elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__FBSD)
       char buf[kMAXPATHLEN];  // exe path name
-      pid_t pid;
 
-      // get our pid and build the name of the link in /proc
-      pid = getpid();
-      snprintf(linkname,64, "/proc/%i/exe", pid);
-      int ret = readlink(linkname, buf, kMAXPATHLEN);
+      // get the name from the link in /proc
+#if defined(R__LINUX)
+      int ret = readlink("/proc/self/exe", buf, kMAXPATHLEN);
+#elif defined(R__SOLARIS)
+      int ret = readlink("/proc/self/path/a.out", buf, kMAXPATHLEN);
+#elif defined(R__FBSD)
+      int ret = readlink("/proc/curproc/file", buf, kMAXPATHLEN);
+#endif
       if (ret > 0 && ret < kMAXPATHLEN) {
          buf[ret] = 0;
          exepath = buf;
+      }
+#else
+      if (!gApplication)
+         return exepath;
+      TString p = gApplication->Argv(0);
+      if (p.BeginsWith("/"))
+         exepath = p;
+      else if (p.Contains("/")) {
+         exepath = gSystem->WorkingDirectory();
+         exepath += "/";
+         exepath += p;
+      } else {
+         char *exe = gSystem->Which(gSystem->Getenv("PATH"), p, kExecutePermission);
+         if (exe) {
+            exepath = exe;
+            delete [] exe;
+         }
       }
 #endif
    }
@@ -2174,7 +2185,12 @@ void TUnixSystem::StackTrace()
    delete [] gdb;
    return;
 
-#elif defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
+#elif defined(R__AIX)
+   TString script = "procstack ";
+   script += GetPid();
+   Exec(script);
+   return;
+#elif defined(HAVE_U_STACK_TRACE)  // hp-ux
 /*
    // FIXME: deal with inability to duplicate the file handle
    int stderrfd = dup(STDERR_FILENO);
@@ -2189,8 +2205,6 @@ void TUnixSystem::StackTrace()
 */
 # if defined(HAVE_U_STACK_TRACE)                      // hp-ux
    U_STACK_TRACE();
-# elif defined(HAVE_XL_TRBK)                          // aix
-   xl__trbk();
 # endif
 /*
    fflush(stderr);
@@ -2778,12 +2792,8 @@ const char *TUnixSystem::GetLinkedLibraries()
    // Get list of shared libraries loaded at the start of the executable.
    // Returns 0 in case list cannot be obtained or in case of error.
 
-#if !defined(R__MACOSX)
-   if (!gApplication) return 0;
-#endif
-
-   static Bool_t once = kFALSE;
    static TString linkedLibs;
+   static Bool_t once = kFALSE;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -2794,15 +2804,12 @@ const char *TUnixSystem::GetLinkedLibraries()
       return 0;
 
 #if !defined(R__MACOSX)
-   char *exe = Which(Getenv("PATH"), gApplication->Argv(0), kExecutePermission);
-   if (!exe) {
-      once = kTRUE;
+   const char *exe = GetExePath();
+   if (!exe || !*exe)
       return 0;
-   }
 #endif
 
 #if defined(R__MACOSX)
-   char *exe = 0;
    DylibAdded(0, 0);
    linkedLibs = gLinkedDylibs;
 #if 0
@@ -2823,7 +2830,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       ClosePipe(p);
    }
 #endif
-#elif defined(R__LINUX) || defined(R__SOLARIS)
+#elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__AIX)
 #if defined(R__WINGCC )
    const char *cLDD="cygcheck";
    const char *cSOEXT=".dll";
@@ -2840,7 +2847,11 @@ const char *TUnixSystem::GetLinkedLibraries()
    }
 #else
    const char *cLDD="ldd";
+#if defined(R__AIX)
+   const char *cSOEXT=".a";
+#else
    const char *cSOEXT=".so";
+#endif
 #endif
    FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
    if (p) {
@@ -2848,7 +2859,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       while (ldd.Gets(p)) {
          TString delim(" \t");
          TObjArray *tok = ldd.Tokenize(delim);
-         
+
          // expected format:
          //    libCore.so => /home/rdm/root/lib/libCore.so (0x40017000)
          TObjString *solibName = (TObjString*)tok->At(2);
@@ -2870,8 +2881,6 @@ const char *TUnixSystem::GetLinkedLibraries()
       ClosePipe(p);
    }
 #endif
-
-   delete [] exe;
 
    once = kTRUE;
 

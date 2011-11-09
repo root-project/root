@@ -68,3 +68,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(X11DEP) $(X11DS) $(X11DH) $(X11LIB) $(X11MAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+ifeq ($(PLATFORM),aix5)
+$(X11O): CXXFLAGS += -I$(X11DIRI)
+endif

@@ -1603,8 +1603,8 @@ void TMVA::MethodMLP::GetHelpMessage() const
    //
    // typical length of text line:
    //         "|--------------------------------------------------------------|"
-   TString col    = gConfig().WriteOptionsReference() ? "" : gTools().Color("bold");
-   TString colres = gConfig().WriteOptionsReference() ? "" : gTools().Color("reset");
+   TString col    = gConfig().WriteOptionsReference() ? TString() : gTools().Color("bold");
+   TString colres = gConfig().WriteOptionsReference() ? TString() : gTools().Color("reset");
 
    Log() << Endl;
    Log() << col << "--- Short description:" << colres << Endl;

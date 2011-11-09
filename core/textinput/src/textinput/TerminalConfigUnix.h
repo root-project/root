@@ -28,6 +28,10 @@ namespace textinput {
 // Solaris doesn't define sig_t
 typedef SIG_TYP sig_t;
 #endif
+#if defined(_AIX) && !defined(sig_t)
+// AIX doesn't define sig_t
+typedef void (*sig_t)(int);
+#endif
 
 class TerminalConfigUnix {
 public:

@@ -472,7 +472,7 @@ void TProofProgressLog::SaveToFile()
    if (filename.IsNull() || filename == "<session-tag>.log") {
       filename = (fDialog && fDialog->fProof) ? 
                   TString::Format("%s.log", fDialog->fProof->GetName()) :
-                  "proof.log";
+                  TString("proof.log");
    }
 
    TList *selected = new TList;
