@@ -1581,9 +1581,6 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
       }
    }
 
-   // We will save a sorted list
-   dataSet->Sort();
-
    // A temporary list to hold the unique members (i.e. the very set)
    TList *uniqueFileList = new TList();
    TIter nextFile(dataSet->GetList());
