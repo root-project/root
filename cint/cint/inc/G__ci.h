@@ -1498,7 +1498,9 @@ typedef struct {
  **********************************************/
 #if !defined(__GNUC__)
 /* Looks like gcc3.3 doesn't use registers. */
-#define G__VAARG_NOSUPPORT
+/*#define G__VAARG_NOSUPPORT*/
+#define G__VAARG_INC_COPY_N 4
+#define G__VAARG_PASS_BY_REFERENCE 8
 #endif
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8

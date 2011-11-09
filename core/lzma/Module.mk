@@ -70,7 +70,7 @@ include/%.h:    $(LZMADIRI)/%.h
 ifeq ($(BUILTINLZMA),yes)
 $(LZMALIB):     $(LZMALIBA)
 ifeq ($(PLATFORM),aix5)
-		ar rv $@ $(LZMALIBDIRS)/src/liblzma/.libs/*.o
+		ar rv $@ $(LZMALIBDIRS)/src/liblzma/*.o
 else
 		cp $< $@
 		@(if [ $(PLATFORM) = "macosx" ]; then \

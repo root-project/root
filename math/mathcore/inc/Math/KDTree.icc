@@ -1005,9 +1005,11 @@ namespace ROOT
          UpdateBoundaries();
          BinNode::EmptyBin();
       }
-
 //______________________________________________________________________________
       template<class _DataPoint>
+#ifdef _AIX
+      void KDTree<_DataPoint>::TerminalNode::GetBoundaries() const { }
+#else
       const std::vector<typename KDTree<_DataPoint>::TerminalNode::tBoundary>& KDTree<_DataPoint>::TerminalNode::GetBoundaries() const
       {
          //returns the boundaries of this TerminalNode
@@ -1027,7 +1029,7 @@ namespace ROOT
 
          return BinNode::GetBoundaries();
       }
-
+#endif
 //______________________________________________________________________________
       template<class _DataPoint>
       void KDTree<_DataPoint>::TerminalNode::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,

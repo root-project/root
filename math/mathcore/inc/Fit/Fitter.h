@@ -156,7 +156,11 @@ public:
        Pre-requisite on the function: 
    */ 
    template < class Data , class Function> 
+#ifndef _AIX
    bool LikelihoodFit( const Data & data, const Function & func, bool useWeight = false) { 
+#else
+   bool LikelihoodFit( const Data & data, const Function & func, bool useWeight) { 
+#endif
       SetFunction(func);
       return DoLikelihoodFit(data, useWeight);
    }

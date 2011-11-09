@@ -81,7 +81,7 @@ if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    if [ $PLATFORM = "aix5" ]; then
       makeshared="/usr/vacpp/bin/makeC++SharedLib"
    fi
-   if [ $LD = "xlC" ]; then
+   if [ $LD = "xlC" ] || [ $LD = "xlC_r" ]; then
       cmd="$makeshared -o $LIB -p 0 $OBJS $EXTRA $EXPLLNKCORE"
       echo $cmd
       $cmd

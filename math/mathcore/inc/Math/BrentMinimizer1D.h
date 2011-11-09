@@ -74,7 +74,7 @@ namespace Math {
   
  */
 
-   class BrentMinimizer1D: ROOT::Math::IMinimizer1D {
+   class BrentMinimizer1D: private ROOT::Math::IMinimizer1D {
       
    public: 
 

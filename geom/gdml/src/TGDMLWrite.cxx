@@ -206,7 +206,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
    fGdmlE->AddChild(rootNode, CreateSetupN(fTopVolumeName.Data())); //  <setup>...</setup>
    //</gdml>
    Double_t tdiffI = difftime(endT, startT);
-   TString tdiffS = (tdiffI == 0 ? "< 1 s" : TString::Format("%.0lf s", tdiffI));
+   TString tdiffS = (tdiffI == 0 ? TString("< 1 s") : TString::Format("%.0lf s", tdiffI));
    Info("WriteGDMLfile", "Exporting time: %s", tdiffS.Data());
    //=========================
 

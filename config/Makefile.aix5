@@ -36,7 +36,7 @@ LD            = xlC_r
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       =
 SOEXT         = a
-FORCELINK     = yes
+FORCELINK     = no
 
 # System libraries:
 SYSLIBS       = -lm -lld $(OSTHREADLIBDIR) $(OSTHREADLIB) \
@@ -50,3 +50,5 @@ F77FLAGS      = -qextname -qcharlen=32767
 F77LIBS       = -lxlf -lxlf90
 
 # Extras
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR

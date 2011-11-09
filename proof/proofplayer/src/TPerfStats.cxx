@@ -165,7 +165,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       if (fDataSetSize > 0) {
          fDataSet = "";
          TString grus = (gProofServ) ? TString::Format("/%s/%s/", gProofServ->GetGroup(),
-                                                                  gProofServ->GetUser()) : "";
+                                                                  gProofServ->GetUser()) : TString("");
          TString dss = fDSet->GetName(), ds;
          Ssiz_t fd = 0, nq = kNPOS;
          while (dss.Tokenize(ds, fd, "[,| ]")) {

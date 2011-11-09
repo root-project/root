@@ -15,7 +15,7 @@
 using namespace std;
 #endif
 
-#if (__SUNPRO_CC>=1280)
+#if (__SUNPRO_CC>=1280) && !defined(G__AIX)
 #include "suncc5_deque.h"
 #endif
 

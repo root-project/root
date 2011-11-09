@@ -2253,16 +2253,18 @@ if test ! "x$enable_x11" = "xno" ; then
         exit 1
     fi
 
-    check_header "X11/extensions/shape.h" "" \
-        ${finkdir:+$finkdir/include} \
-        /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
-        /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
-        /usr/X11/include /usr/include/X11R5
+    if test ! "x$arch" = "xaix5" ; then
+        check_header "X11/extensions/shape.h" "" \
+            ${finkdir:+$finkdir/include} \
+            /usr/include /usr/X11R6/include /usr/include/X11 \
+            /usr/openwin/include /usr/local/include /usr/local/include/X11 \
+            /usr/local/X11R6/include /usr/X11/include /usr/include/X11R5
 
-    if test "x$found_dir" = "x" ; then
-        result "`basename $0`: X11/extensions/shape.h header MUST be installed"
-        result "See http://root.cern.ch/drupal/content/build-prerequisites"
-        exit 1
+        if test "x$found_dir" = "x" ; then
+            result "`basename $0`: X11/extensions/shape.h header MUST be installed"
+            result "See http://root.cern.ch/drupal/content/build-prerequisites"
+            exit 1
+        fi
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \

@@ -54,7 +54,7 @@ FREETYPEDEP  := $(FREETYPELIBB)
 
 $(FREETYPELIBB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),aix5)
-		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/.libs/*.o
+		ar rv $@ $(FREETYPEDIRS)/$(FREETYPEVERS)/objs/*.o
 else
 		cp $< $@
 		@(if [ $(PLATFORM) = "macosx" ]; then \

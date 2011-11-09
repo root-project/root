@@ -129,7 +129,7 @@ extern void seekdir (DIR*, off_t);
 #else
 extern void seekdir(DIR* dir,long loc);
 #endif
-#if !defined(G__SUN) && !defined(__sun)
+#if !defined(G__SUN) && !defined(__sun) && !defined(_AIX) && !defined(G__AIX)
 extern void rewinddir(DIR *dir);
 #endif
 

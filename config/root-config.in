@@ -5,8 +5,13 @@
 #
 # Author: Fons Rademakers, 06/06/99
 
+readlink=readlink
+if [ `uname` = "AIX" ]; then
+   readlink=echo
+fi
+
 # work around readlink versions not having -f option
-fullpath1=`readlink $0`
+fullpath1=`$readlink $0`
 if [ "$?" -ne "0" ]; then
    fullpath1=$0
 else
@@ -30,7 +35,7 @@ else
    fi
 fi
 # work around readlink versions not having -f option
-fullpath1=`readlink $fullpath`
+fullpath1=`$readlink $fullpath`
 if [ "$?" -ne "0" ]; then
    fullpath1=$fullpath
 fi
@@ -165,21 +170,21 @@ hurddeb)
    auxcflags=
    auxlibs="-lnsl -lm -ldl -rdynamic"
    ;;
-aix | aix5)
+aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   forceevelibs=$rootuevelibs
+   #forcelibs=$rootulibs
+   #forceglibs=$rootuglibs
+   #forceevelibs=$rootuevelibs
    ;;
 aixgcc)
    # IBM AIX with g++
    auxcflags="-fsigned-char"
    auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   forceevelibs=$rootuevelibs
+   #forcelibs=$rootulibs
+   #forceglibs=$rootuglibs
+   #forceevelibs=$rootuevelibs
    ;;
 solaris)
    # Solaris

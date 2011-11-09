@@ -191,6 +191,12 @@ int cfstati_(char *fname, int *info, int *lgname)
       info[9] = (int) buf.st_ctimespec.tv_sec;
       info[10] = (int) buf.st_blksize;
       info[11] = (int) buf.st_blocks;
+#elif defined(_AIX)
+      info[7] = (int) buf.st_atime;
+      info[8] = (int) buf.st_mtime;
+      info[9] = (int) buf.st_ctime;
+      info[10] = (int) buf.st_blksize;
+      info[11] = (int) buf.st_blocks;
 #elif defined(WIN32)
       info[7] = 0;
       info[8] = 0;
