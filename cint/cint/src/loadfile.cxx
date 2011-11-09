@@ -995,7 +995,6 @@ int G__loadfile_tmpfile(FILE *fp)
   int store_asm_noverflow;
   int store_no_exec_compile;
   int store_asm_exec;
-  int store_return;
   long store_struct_offset;
   int hash,temp;
   char hdrprop = G__NONCINTHDR;
@@ -1108,7 +1107,6 @@ int G__loadfile_tmpfile(FILE *fp)
   G__asm_noverflow = 0;
   G__no_exec_compile = 0;
   G__asm_exec = 0;
-  store_return=G__return;
   G__return=G__RETURN_NON;
 
   store_struct_offset = G__store_struct_offset;
@@ -1431,7 +1429,6 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
 int G__loadfile(const char *filenamein)
 {
   FILE *tmpfp;
-  int external_compiler = 0;
   const char* compiler_option = "";
   int store_prerun;
   short i1=0;
@@ -1524,8 +1521,6 @@ int G__loadfile(const char *filenamein)
     }
 
     filename[len]='\0';
-    external_compiler = 1; /* Request external compilation
-                            * if available (in ROOT) */
     if (G__ScriptCompiler!=0) {
       if ( (*G__ScriptCompiler)(filename,compiler_option) )
         return(G__LOADFILE_SUCCESS);
