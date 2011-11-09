@@ -10,7 +10,6 @@ typedef struct A AStruct;
 
 // Overloads
 int OverloadedF(int i){ return i + 10;};
-double OverloadedF(double d){ return d + 10.11f; };
 
 // Redeclarations
 int __my_i = 0; // expected-note {{previous definition is here}}

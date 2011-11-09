@@ -400,28 +400,15 @@ namespace cling {
 
         // Get rid of the declaration. If the declaration has name we should 
         // heal the lookup tables as well
-        if (NamedDecl* ND = dyn_cast<NamedDecl>(*Di)){
-          // If the ND is DeclContext then empty the DeclContext's contents
-          // if (DeclContext* DCtx = dyn_cast<DeclContext>(ND))
-          //   RevertDeclContext(DCtx);
 
-          // If the decl was removed make sure that we fix the lookup
-          if (DeclContextExt::removeIfLast(DC, ND)) {
-            Scope* S = m_Sema->getScopeForContext(DC);
-            if (S)
-              S->RemoveDecl(ND);
-
-            if (isOnScopeChains(ND))
-                m_Sema->IdResolver.RemoveDecl(ND);
-          }
-
-          if (VarDecl* VD = dyn_cast<VarDecl>(ND))
-            RevertVarDecl(VD);
-          else if (FunctionDecl* FD = dyn_cast<FunctionDecl>(ND))
-            RevertFunctionDecl(FD);
-          else if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(ND))
-            RevertNamespaceDecl(NSD);
-        }
+        if (VarDecl* VD = dyn_cast<VarDecl>(*Di))
+          RevertVarDecl(VD);
+        else if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*Di))
+          RevertFunctionDecl(FD);
+        else if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(*Di))
+          RevertNamespaceDecl(NSD);
+        else if (NamedDecl* ND = dyn_cast<NamedDecl>(*Di))
+          RevertNamedDecl(ND);
         // Otherwise just get rid of it
         else {
           DeclContextExt::removeIfLast(DC, *Di);
@@ -490,9 +477,25 @@ namespace cling {
     return false;
   }
 
+  void ChainedConsumer::RevertNamedDecl(NamedDecl* ND) {
+    DeclContext* DC = ND->getDeclContext();
+    
+    // If the decl was removed make sure that we fix the lookup
+    if (DeclContextExt::removeIfLast(DC, ND)) {
+      Scope* S = m_Sema->getScopeForContext(DC);
+      if (S)
+        S->RemoveDecl(ND);
+      
+      if (isOnScopeChains(ND))
+        m_Sema->IdResolver.RemoveDecl(ND);
+    }
+  }
+
   void ChainedConsumer::RevertVarDecl(VarDecl* VD) {
     DeclContext* DC = VD->getDeclContext();
     Scope* S = m_Sema->getScopeForContext(DC);
+
+    RevertNamedDecl(VD);
 
     // Find other decls that the old one has replaced
     StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
@@ -501,17 +504,16 @@ namespace cling {
     assert(Pos != Map->end() && "no lookup entry for decl");
     
     if (Pos->second.isNull())
-      if (VarDecl* NewVD = VD->getPreviousDeclaration()) {
-        // We need to rewire the list of the redeclarations in order to exclude
-        // the reverted one, because it gets found for example by 
-        // Sema::MergeVarDecl and ends up in the lookup
-        //
-        VarDecl* PrevVD = NewVD->getPreviousDeclaration();
-        NewVD->setPreviousDeclaration(PrevVD);
-        Pos->second.setOnlyValue(NewVD);
+      // We need to rewire the list of the redeclarations in order to exclude
+      // the reverted one, because it gets found for example by 
+      // Sema::MergeVarDecl and ends up in the lookup
+      //
+      if (VarDecl* MostRecentVD = RemoveFromRedeclChain(VD)) {
+        
+        Pos->second.setOnlyValue(MostRecentVD);
         if (S)
-          S->AddDecl(NewVD);
-        m_Sema->IdResolver.AddDecl(NewVD);
+          S->AddDecl(MostRecentVD);
+        m_Sema->IdResolver.AddDecl(MostRecentVD);
       }
   }
 
@@ -560,31 +562,45 @@ namespace cling {
     StoredDeclsMap::iterator Pos = Map->find(FD->getDeclName());
     assert(Pos != Map->end() && "no lookup entry for decl");
 
-    if (Pos->second.isNull()) {
-      // When we have template specialization we have to clean it all
-      if (FD->isFunctionTemplateSpecialization()) {
-        while ((FD = FD->getPreviousDeclaration())) {
-          DC->removeDecl(FD);
-          if (S)
-            S->RemoveDecl(FD);
+    if (Pos->second.getAsDecl()) {
+      RevertNamedDecl(FD);
 
-          if (isOnScopeChains(FD))
-            m_Sema->IdResolver.RemoveDecl(FD);
-        } 
-        return;
-      }
+      Pos = Map->find(FD->getDeclName());
+      assert(Pos != Map->end() && "no lookup entry for decl");
 
-      if (FunctionDecl* NewFD = FD->getPreviousDeclaration()) {
+      if (Pos->second.isNull()) {
+        // When we have template specialization we have to clean up
+        if (FD->isFunctionTemplateSpecialization()) {
+          while ((FD = FD->getPreviousDeclaration())) {
+            RevertNamedDecl(FD);
+          } 
+          return;
+        }
+
         // We need to rewire the list of the redeclarations in order to exclude
         // the reverted one, because it gets found for example by 
         // Sema::MergeVarDecl and ends up in the lookup
         //
-        FunctionDecl* PrevDecl = NewFD->getPreviousDeclaration();
-        NewFD->setPreviousDeclaration(PrevDecl);
-        Pos->second.setOnlyValue(NewFD);
-        if (S)
-          S->AddDecl(NewFD);
-        m_Sema->IdResolver.AddDecl(NewFD);
+        if (FunctionDecl* MostRecentFD = RemoveFromRedeclChain(FD)) {
+          Pos->second.setOnlyValue(MostRecentFD);
+          if (S)
+            S->AddDecl(MostRecentFD);
+          m_Sema->IdResolver.AddDecl(MostRecentFD);
+        }
+      }
+    }
+    else if (llvm::SmallVector<NamedDecl*, 4>* Decls 
+             = Pos->second.getAsVector()) {
+      for(llvm::SmallVector<NamedDecl*, 4>::iterator I = Decls->begin();
+          I != Decls->end(); ++I) {
+        if ((*I) == FD) {
+          if (FunctionDecl* MostRecentFD = RemoveFromRedeclChain(FD)) {
+            RevertNamedDecl(*I);
+            Decls->insert(I, MostRecentFD);
+          }
+          else
+            Decls->erase(I);
+        }
       }
     }
   }
@@ -592,6 +608,8 @@ namespace cling {
   void ChainedConsumer::RevertNamespaceDecl(NamespaceDecl* NSD) {
     DeclContext* DC = NSD->getDeclContext();
     Scope* S = m_Sema->getScopeForContext(DC);
+
+    RevertNamedDecl(NSD);
 
     // Find other decls that the old one has replaced
     StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();

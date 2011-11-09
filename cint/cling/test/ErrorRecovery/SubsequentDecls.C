@@ -1,5 +1,7 @@
 // RUN: cat %s | %cling -I%p | FileCheck %s
 
+// Test the removal of decls which are stored in vector of redeclarables 
+
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
@@ -11,9 +13,11 @@ clang::DiagnosticConsumer* Client = new clang::VerifyDiagnosticConsumer(Diags);
 Diags.setClient(Client);
 
 .rawInput 1
-extern int __my_i; 
+extern int __my_i;
 template<typename T> T TemplatedF(T t);
+int OverloadedF(int i);
 float OverloadedF(float f){ return f + 100.111f;}
+double OverloadedF(double d){ return d + 10.11f; };
 namespace test { int y = 0; }
 .rawInput 0
 
