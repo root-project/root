@@ -96,6 +96,6 @@ $(call stripsrc,$(UTILSDIRS)/rootcint_tmp.o): $(call stripsrc,$(UTILSDIRS)/rootc
 $(call stripsrc,$(UTILSDIRS)/RStl_tmp.o): $(call stripsrc,$(UTILSDIRS)/RStl_tmp.cxx)
 
 $(ROOTCINTTMPO):  CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
-$(ROOTCLINGTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
+$(ROOTCLINGTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS) $(ROOTCLINGCXXFLAGS)
 
 endif

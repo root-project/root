@@ -15,7 +15,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
-                $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
+                 $(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
@@ -51,7 +51,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 ##### rootcint #####
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
-                $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
+                 $(filter-out %_tmp.cxx,$(filter-out %rlibmap.cxx,$(filter-out %rootcling.cxx,$(filter-out %rootcint.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))))
 ROOTCLINGTMPO := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.o))
 
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
@@ -68,5 +68,15 @@ endif
 
 ##### rlibmap #####
 RLIBMAP      := bin/rlibmap$(EXEEXT)
+
+ifeq ($(BUILDCLING),yes)
+ROOTCLINGCXXFLAGS:= -DR__WITH_CLING
+ROOTCLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
+ifneq ($(CXX:g++=),$(CXX))
+ROOTCLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
+endif
+else
+ROOTCLINGCXXFLAGS := 
+endif
 
 endif
