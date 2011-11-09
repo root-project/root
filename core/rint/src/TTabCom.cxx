@@ -766,7 +766,7 @@ Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCollection * pList,
 
    TIter next(pList);
    TObject *pObj;
-   const char *s;
+   const char *s = "";
    char ch0;
    Bool_t isGood;
    Bool_t atLeast1GoodString;
