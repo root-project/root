@@ -317,8 +317,8 @@ endif
 ifeq ($(BUILDCLING),yes)
 BOOTLIBS     += -lCling
 endif
-ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad \
-                -lTree -lMatrix -lNet -lThread $(BOOTLIBS)
+ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
+                -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
@@ -334,7 +334,8 @@ ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
                 $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
                 $(LPATH)/libMatrix.lib $(LPATH)/libNet.lib \
-                $(LPATH)/libThread.lib $(BOOTLIBS)
+                $(LPATH)/libThread.lib $(LPATH)/libMathCore.lib \
+                $(BOOTLIBS)
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
