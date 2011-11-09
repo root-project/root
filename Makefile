@@ -365,16 +365,19 @@ ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__Matrix
 BOOTULIBS    := -Wl,-u,.G__cpp_setupG__MathCore
 else
-ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
-                -Wl,-u,_G__cpp_setupG__IO       \
-                -Wl,-u,_G__cpp_setupG__Hist     \
-                -Wl,-u,_G__cpp_setupG__Graf     \
-                -Wl,-u,_G__cpp_setupG__G3D      \
-                -Wl,-u,_G__cpp_setupG__GPad     \
-                -Wl,-u,_G__cpp_setupG__Tree     \
-                -Wl,-u,_G__cpp_setupG__Thread   \
-                -Wl,-u,_G__cpp_setupG__Matrix
-BOOTULIBS    := -Wl,-u,_G__cpp_setupG__MathCore
+ifeq ($(PLATFORM),macosx)
+LDSYMPREFIX  := _
+endif
+ROOTULIBS    := -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Net      \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__IO       \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Hist     \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Graf     \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__G3D      \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__GPad     \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Tree     \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Thread   \
+                -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__Matrix
+BOOTULIBS    := -Wl,-u,$(LDSYMPREFIX)G__cpp_setupG__MathCore
 endif
 endif
 ifeq ($(PLATFORM),win32)
