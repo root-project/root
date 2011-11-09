@@ -2293,7 +2293,8 @@ if test ! "x$enable_x11" = "xno" ; then
         result "See http://root.cern.ch/drupal/content/build-prerequisites"
         exit 1
     fi
-    if test ! "x$x11libdir" = "x$found_dir" ; then
+    if test "x$platform" = "xmacosx" &&
+       test ! "x$x11libdir" = "x$found_dir" ; then
         result "`basename $0`: libXft not in same directory as libX11"
         result "For consistency they should be in the same directory"
         exit 1
@@ -2310,7 +2311,8 @@ if test ! "x$enable_x11" = "xno" ; then
         result "See http://root.cern.ch/drupal/content/build-prerequisites"
         exit 1
     fi
-    if test ! "x$x11libdir" = "x$found_dir" ; then
+    if test "x$platform" = "xmacosx" &&
+       test ! "x$x11libdir" = "x$found_dir" ; then
         result "`basename $0`: libXext not in same directory as libX11"
         result "For consistency they should be in the same directory"
         exit 1
