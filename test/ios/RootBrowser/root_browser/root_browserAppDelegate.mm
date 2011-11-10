@@ -7,6 +7,7 @@
    TApplication *rootApp;
 
    UINavigationController *navigationController;
+   __weak RootFileController *rc;
 }
 
 @synthesize window=_window;
@@ -15,6 +16,7 @@
 - (void) initRootController
 {
    RootFileController *rootController = [[RootFileController alloc] initWithNibName : @"RootFileController" bundle : nil];
+   rc = rootController;
    
    NSString *demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];
    if (demosPath)
@@ -88,6 +90,13 @@
    Save data if appropriate.
    See also applicationDidEnterBackground:.
    */
+}
+
+//____________________________________________________________________________________________________
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+   [rc addRootFile : [url path]];
+   return YES;
 }
 
 //____________________________________________________________________________________________________
