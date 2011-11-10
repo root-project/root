@@ -64,7 +64,11 @@ public:
   // Return value and unit accessors
   inline Double_t getVal(const RooArgSet* set=0) const { 
 /*     if (_fast && !_inhibitDirty) cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << endl ;  */
+#ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(set) ; 
+#else
+    return (_fast && inhibitDirty()) ? _value : getValV(set) ;     
+#endif
   }
   inline  Double_t getVal(const RooArgSet& set) const { return _fast ? _value : getValV(&set) ; }
 
