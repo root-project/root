@@ -38,6 +38,7 @@
 #include "RooHistError.h"
 
 #include <iomanip>
+#include <algorithm>
 using namespace std ;
 
 ClassImp(RooVectorDataStore)
