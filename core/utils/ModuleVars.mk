@@ -70,7 +70,6 @@ endif
 RLIBMAP      := bin/rlibmap$(EXEEXT)
 
 ifeq ($(BUILDCLING),yes)
-ROOTCLINGCXXFLAGS:= -DR__WITH_CLING
 ROOTCLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
 ROOTCLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
