@@ -23,7 +23,7 @@ mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
 mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root-
 find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true
-find tutorials -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -path tutorials/doc -prune -o -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "so_locations" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "pca.C" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "*.so" -exec rm -rf {} \; >/dev/null 2>&1;true
