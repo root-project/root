@@ -17,9 +17,16 @@ if [ "x`bin/root-config --platform`" = "xsolaris" ]; then
 fi
 
 # debug build?
-DEBUG=`grep ROOTBUILD config/Makefile.config | sed 's,^ROOTBUILD.*= \([^[:space:]]*\)$,\1,'`
-if [ "x${DEBUG}" != "x" ]; then
-   DEBUG=".debug"
+DEBUG=
+BUILDOPT=`grep ROOTBUILD config/Makefile.config`
+if [ "x$BUILDOPT" != "x" ]; then
+   if echo $BUILDOPT | grep debug > /dev/null 2>& 1 ; then
+      DEBUG=".debug"
+   fi
+else
+   if echo $ROOTBUILD | grep debug > /dev/null 2>& 1 ; then
+      DEBUG=".debug"
+   fi
 fi
 
 # MSI?
