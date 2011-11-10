@@ -32,7 +32,7 @@ public:
   RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=0) ;
   virtual ~RooAbsCachedPdf() ;
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Bool_t selfNormalized() const { 
     // Declare p.d.f self normalized
     return kTRUE ; 

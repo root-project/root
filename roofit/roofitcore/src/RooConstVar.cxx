@@ -37,7 +37,7 @@ RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) :
   RooAbsReal(name,title), _value(value)
 {  
   // Constructor with value
-
+  //_fast = kTRUE ;
   setAttribute("Constant",kTRUE) ;
 }
 
@@ -47,8 +47,8 @@ RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) :
 RooConstVar::RooConstVar(const RooConstVar& other, const char* name) : 
   RooAbsReal(other, name), _value(other._value)
 {
-
   // Copy constructor
+  //_fast = kTRUE ;
 }
 
 
@@ -62,7 +62,7 @@ RooConstVar::~RooConstVar()
 
 
 //_____________________________________________________________________________
-Double_t RooConstVar::getVal(const RooArgSet*) const 
+Double_t RooConstVar::getValV(const RooArgSet*) const 
 { 
   // Return value
   return _value ; 

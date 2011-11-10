@@ -499,11 +499,11 @@ RooProdPdf::~RooProdPdf()
 
 
 //_____________________________________________________________________________
-Double_t RooProdPdf::getVal(const RooArgSet* set) const 
+Double_t RooProdPdf::getValV(const RooArgSet* set) const 
 {
   // Overload getVal() to intercept normalization set for use in evaluate()
   _curNormSet = (RooArgSet*)set ;
-  return RooAbsPdf::getVal(set) ;
+  return RooAbsPdf::getValV(set) ;
 }
 
 
@@ -514,14 +514,14 @@ Double_t RooProdPdf::evaluate() const
   // Calculate current value of object
   
   Int_t code ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code) ;
   
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
     RooArgList *plist(0) ;
     RooLinkedList *nlist(0) ;
     getPartIntList(_curNormSet,0,plist,nlist,code) ;
-    cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code,0) ;
+    cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code) ;
   }
 
   return calculate(*cache) ;
@@ -829,7 +829,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
 
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&sterileIdx,isetRangeName) ;
   if (cache) {
     code = _cacheMgr.lastIndex() ;
     partList = &cache->_partList ;
@@ -1940,7 +1940,7 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
     // preceding call to getPartIntList guarantees non-null return
     // coverity[NULL_RETURNS]
-    cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&code2,RooNameReg::ptr(rangeName)) ;
+    cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&code2,rangeName) ;
 
 
   } else {

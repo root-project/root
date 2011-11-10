@@ -408,7 +408,7 @@ void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
 void RooAbsCategory::printValue(ostream& os) const
 {
   // Print value (label name)
-  os << getLabel() ;
+  os << getLabel() << "(idx = " << getIndex() << ")" << endl ;
 }
 
 

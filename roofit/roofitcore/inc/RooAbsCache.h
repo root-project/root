@@ -36,7 +36,8 @@ public:
   virtual void optimizeCacheMode(const RooArgSet&, RooArgSet&, RooLinkedList& ) ;
   virtual void findConstantNodes(const RooArgSet&, RooArgSet& , RooLinkedList&) ;
   virtual void printCompactTreeHook(ostream&, const char *) ;
-
+  virtual void wireCache() {} ;
+  
   virtual ~RooAbsCache() ;
    
 protected:

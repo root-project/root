@@ -1130,7 +1130,8 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
   _cacheOwner = owner ;
 
-  TIterator *iter = newVarSet.createIterator() ;
+  RooArgSet* constExprVarSet = (RooArgSet*) newVarSet.selectByAttrib("ConstantExpression",kTRUE) ;
+  TIterator *iter = constExprVarSet->createIterator() ;
   RooAbsArg *arg ;
 
   Bool_t doTreeFill = (_cachedVars.getSize()==0) ;
@@ -1168,6 +1169,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
   //restoreAlternateBuffers() ;
 
   delete iter ;
+  delete constExprVarSet ;
 }
 
 

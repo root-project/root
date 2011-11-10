@@ -34,6 +34,7 @@
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
+#include "RooAbsDataStore.h"
 
 #include "RooRealVar.h"
 
@@ -81,6 +82,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 
   _extended = pc.getInt("extended") ;
   _weightSq = kFALSE ;
+  _first = kTRUE ;
 
 }
 
@@ -92,7 +94,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 		     Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
   RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
-  _weightSq(kFALSE)
+  _weightSq(kFALSE),
+  _first(kTRUE)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.
@@ -107,7 +110,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 		     Int_t nCPU,Bool_t interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
-  _weightSq(kFALSE)
+  _weightSq(kFALSE),
+  _first(kTRUE)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.  
@@ -121,7 +125,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) : 
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended),
-  _weightSq(other._weightSq)
+  _weightSq(other._weightSq),
+  _first(kTRUE)
 {
   // Copy constructor
 }
@@ -152,6 +157,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
 //   cout << "RooNLLVar::evaluatePartition(" << GetName() << ")" << endl ;
 
+  _dataClone->store()->recalculateCache() ;
+
   Double_t sumWeight(0) ;
   for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
@@ -160,7 +167,8 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     //if (wgt==0) continue ;
 
     _dataClone->get(i) ;
-    //_dataClone->get(i)->Print("v") ;
+//     cout << "NLL - now loading event #" << i << endl ;
+//     _funcObsSet->Print("v") ;
     
 
     if (!_dataClone->valid()) {
@@ -206,6 +214,13 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   }
   
 //   cout << "RooNLLVar(first=" << firstEvent << ", last=" << lastEvent << ", step=" << stepSize << ") result = " << result << endl ;
+
+  // At the end of the first full calculation, wire the caches
+  if (_first) {
+    _first = kFALSE ;
+    _funcClone->wireAllCaches() ;
+  }
+      
 
   return result ;
 }

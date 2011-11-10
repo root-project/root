@@ -26,6 +26,7 @@
 #include "RooArgList.h"
 #include "RooAbsCache.h"
 #include "RooAbsCacheElement.h"
+#include "RooNameReg.h"
 #include <vector>
 
 class RooNameSet ;
@@ -49,6 +50,11 @@ public:
   Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=0) {
     // Setter function without integration set 
     return setObj(nset,0,obj,isetRangeName) ;
+  }
+
+  inline T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const char* isetRangeName)  {
+    if (_wired) return *_object ;
+    return getObj(nset,iset,sterileIdx,RooNameReg::ptr(isetRangeName)) ;
   }
 
   T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIndex=0, const TNamed* isetRangeName=0) ;
@@ -85,6 +91,17 @@ public:
   virtual void insertObjectHook(T&) {
     // Interface function to perform post-insert operations on cached object
   } 
+
+  void wireCache() {
+    if (_size==0) {
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << endl ;
+    } else if (_size==1) {
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") now wiring cache" << endl ;
+      _wired=kTRUE ;
+    } else if (_size>1) {
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") cache cannot be wired because it contains more than one element" << endl ; 
+    }
+  }
  
 protected:
 
@@ -94,6 +111,7 @@ protected:
 
   RooNormSetCache* _nsetCache ; //! Normalization/Integration set manager
   T** _object ;                 //! Payload
+  Bool_t _wired ;               //! In wired mode, there is a single payload which is returned always
 
   ClassDef(RooCacheManager,1) // Cache Manager class generic objects
 } ;
@@ -110,6 +128,7 @@ RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
   _maxSize = maxSize ;
   _nsetCache = new RooNormSetCache[maxSize] ;
   _object = new T*[maxSize] ;
+  _wired = kFALSE ;
 }
 
 template<class T>
@@ -125,6 +144,7 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
 
   _nsetCache = new RooNormSetCache[maxSize] ;
   _object = new T*[maxSize] ;
+  _wired = kFALSE ;
   _lastIndex = -1 ;
 
   Int_t i ;
@@ -145,6 +165,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   
   _nsetCache = new RooNormSetCache[_maxSize] ;
   _object = new T*[_maxSize] ;
+  _wired = kFALSE ;
   _lastIndex = -1 ;
 
 //   cout << "RooCacheManager:cctor(" << this << ")" << endl ;
@@ -248,12 +269,16 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
 }
 
 
+
 template<class T>
 T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const TNamed* isetRangeName) 
 {
   // Retrieve payload object indexed on nset,uset amd isetRangeName
   // If sterileIdx is not null, it is set to the index of the sterile
   // slot in cacse such a slot is recycled
+
+  // Fast-track for wired mode
+  if (_wired) return *_object ;
 
   Int_t i ;
   for (i=0 ; i<_size ; i++) {

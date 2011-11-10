@@ -799,16 +799,16 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
 
 
 //_____________________________________________________________________________
-Double_t RooRealIntegral::getVal(const RooArgSet* nset) const
+Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 {
   // Return value of object. If the cache is clean, return the
   // cached value, otherwise recalculate on the fly and refill
   // the cache
 
-  // fast-track clean-cache processing
-  if (_operMode==AClean && !_flipAClean) {
-    return _value ;
-  }
+//   // fast-track clean-cache processing
+//   if (_operMode==AClean) {
+//     return _value ;
+//   }
 
   if (nset && nset!=_lastNSet) {
     ((RooAbsReal*) this)->setProxyNormSet(nset) ;    
@@ -850,7 +850,7 @@ Double_t RooRealIntegral::evaluate() const
 
 	// Find any function dependents that are AClean 
 	// and switch them temporarily to ADirty
-	setACleanADirty(kTRUE) ;
+	setDirtyInhibit(kTRUE) ;
 	
 	// try to initialize our numerical integration engine
 	if(!(_valid= initNumIntegrator())) {
@@ -862,14 +862,18 @@ Double_t RooRealIntegral::evaluate() const
 	// Save current integral dependent values 
 	_saveInt = _intList ;
 	_saveSum = _sumList ;
-	
+
 	// Evaluate sum/integral
+//  	cout << "RooRealIntegral::eval(" << GetName() << " begin executing numeric integration part sumList = " << _sumList << " intList = " << _intList << endl ;
 	retVal = sum() ;
+//  	cout << "RooRealIntegral::eval(" << GetName() << " end executing numeric integration part, result = " << retVal << endl ;
+
+	// This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
+	setDirtyInhibit(kFALSE) ;
 	
 	// Restore integral dependent values
 	_intList=_saveInt ;
 	_sumList=_saveSum ;
-	
 
 	// Cache numeric integrals in >1d expensive object cache
 	if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
@@ -878,7 +882,6 @@ Double_t RooRealIntegral::evaluate() const
 //  	  cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << endl ;
 	}
 	
-	setACleanADirty(kFALSE) ;
       }
       break ;
     }

@@ -65,13 +65,13 @@ protected:
   friend class RooAbsReal ;
 
   virtual Bool_t allowFunctionCache() { return kTRUE ;  }
-  void constOptimizeTestStatistic(ConstOpCode opcode) ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
-  void optimizeConstantTerms(Bool_t) ;
+  void optimizeConstantTerms(Bool_t,Bool_t=kTRUE) ;
 
   RooArgSet*  _normSet ; // Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function

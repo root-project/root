@@ -84,13 +84,13 @@ RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
 
 
 //_____________________________________________________________________________
-Double_t RooProjectedPdf::getVal(const RooArgSet* set) const 
+Double_t RooProjectedPdf::getValV(const RooArgSet* set) const 
 {
-  // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
+  // Special version of getVal() overrides RooAbsReal::getValF() to save value of current normalization set
 
   _curNormSet = (RooArgSet*)set ;
 
-  return RooAbsPdf::getVal(set) ;
+  return RooAbsPdf::getValV(set) ;
 }
 
 

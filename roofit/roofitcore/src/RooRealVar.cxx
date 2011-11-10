@@ -58,6 +58,7 @@ RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0), _sharedProp(0)
 {  
   // Default constructor
+  _fast = kTRUE ;
 }
 
 
@@ -71,6 +72,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   // _instanceList.registerInstance(this) ;
   _binning = new RooUniformBinning(-1,1,100) ;
   _value = value ;
+  _fast = kTRUE ;
   removeRange();
   setConstant(kTRUE) ;
 }  
@@ -85,6 +87,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   // Constructor with range and unit. Initial value is center of range
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
+  _fast = kTRUE ;
 
   if (RooNumber::isInfinite(minValue)) {
     if (RooNumber::isInfinite(maxValue)) {
@@ -118,6 +121,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   // Constructor with value, range and unit
 
   _value = value ;
+  _fast = kTRUE ;
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
   setRange(minValue,maxValue) ;
@@ -136,6 +140,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
   _binning = other._binning->clone() ;
   _binning->insertHook(*this) ;
+  _fast = kTRUE ;
 
   //cout << "RooRealVar::cctor(this = " << this << " name = " << GetName() << ", other = " << &other << ")" << endl ;
   
@@ -170,7 +175,7 @@ RooRealVar::~RooRealVar()
 
 
 //_____________________________________________________________________________
-Double_t RooRealVar::getVal(const RooArgSet*) const 
+Double_t RooRealVar::getValV(const RooArgSet*) const 
 { 
   // Return value of variable
 
@@ -952,7 +957,7 @@ void RooRealVar::attachToVStore(RooVectorDataStore& vstore)
   if (getAttribute("StoreError") || getAttribute("StoreAsymError") || vstore.isFullReal(this) ) {
     
     RooVectorDataStore::RealFullVector* rfv = vstore.addRealFull(this) ;
-    rfv->setBuffer(&_value) ;
+    rfv->setBuffer(this,&_value) ;
   
     // Attach/create additional branch for error
     if (getAttribute("StoreError") || vstore.hasError(this) ) {

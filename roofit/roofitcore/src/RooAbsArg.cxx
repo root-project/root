@@ -51,6 +51,7 @@
 #include "RooTrace.h"
 #include "RooStringVar.h"
 #include "RooRealIntegral.h"
+#include "RooConstVar.h"
 #include "RooMsgService.h"
 #include "RooExpensiveObjectCache.h"
 #include "RooAbsDataStore.h"
@@ -75,7 +76,6 @@ ClassImp(RooAbsArg)
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
-Bool_t RooAbsArg::_flipAClean(kFALSE) ;
 
 Bool_t RooAbsArg::inhibitDirty() { return _inhibitDirty ; }
 
@@ -84,9 +84,11 @@ RooAbsArg::RooAbsArg() :
   TNamed(),
   _deleteWatch(kFALSE),
   _operMode(Auto),
+  _fast(kFALSE),
   _ownedComponents(0),
   _prohibitServerRedirect(kFALSE),
-  _eocache(0)
+  _eocache(0),
+  _namePtr(0)
 {
   // Default constructor
 
@@ -103,9 +105,11 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _valueDirty(kTRUE),
   _shapeDirty(kTRUE),
   _operMode(Auto),
+  _fast(kFALSE),
   _ownedComponents(0),
   _prohibitServerRedirect(kFALSE),
-  _eocache(0)
+  _eocache(0),
+  _namePtr(0)
 {
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -125,9 +129,11 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _stringAttrib(other._stringAttrib),
     _deleteWatch(other._deleteWatch),
     _operMode(Auto),
+    _fast(kFALSE),
     _ownedComponents(0),
     _prohibitServerRedirect(kFALSE),
-    _eocache(other._eocache)
+    _eocache(other._eocache),
+    _namePtr(other._namePtr)
 {
   // Copy constructor transfers all boolean and string properties of the original
   // object. Transient properties and client-server links are not copied
@@ -214,14 +220,6 @@ void RooAbsArg::setDirtyInhibit(Bool_t flag)
   _inhibitDirty = flag ;
 }
 
-
-//_____________________________________________________________________________
-void RooAbsArg::setACleanADirty(Bool_t flag)
-{
-  // This global switch changes the cache mode of all objects marked as 'always clean'
-  // to 'always dirty'. For internal use in RooRealIntegral
-  _flipAClean = flag ;
-}
 
 //_____________________________________________________________________________
 void RooAbsArg::verboseDirty(Bool_t flag)
@@ -733,8 +731,9 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
   if (this==ignoreArg) return kFALSE ;
 
-  // First check if testArg is self
-  if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
+  // First check if testArg is self    
+  //if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;
+  if (testArg.namePtr()==namePtr()) return kTRUE ; 
 
 
   // Next test direct dependence
@@ -1645,19 +1644,24 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   }
   delete paramSet ;
 
-  // If yes, list node eligible for caching, if not test nodes one level down
   if (canOpt) {
+    setAttribute("ConstantExpression") ;
+  }
 
+  // If yes, list node eligible for caching, if not test nodes one level down
+  if (canOpt||getAttribute("CacheAndTrack")) {
+    
     if (!cacheList.find(GetName()) && dependsOnValue(observables) && !observables.find(GetName()) ) {
-
+      
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
 
       cacheList.add(*this,kFALSE) ;
     }
+  }
 
-  } else {
-
+  if (!canOpt) {
+    
     // If not, see if next level down can be cached
     RooFIter sIter = serverMIterator() ;
     RooAbsArg* server ;
@@ -1667,7 +1671,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
       }
     }
   }
-
+  
   // Forward call to all cached contained in current object
   for (Int_t i=0 ;i<numCaches() ; i++) {
     getCache(i)->findConstantNodes(observables,cacheList,processedNodes) ;
@@ -1680,7 +1684,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 
 
 //_____________________________________________________________________________
-void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode)
+void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
   // Interface function signaling a request to perform constant term
   // optimization. This default implementation takes no action other than to
@@ -1689,7 +1693,7 @@ void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode)
   RooFIter sIter = serverMIterator() ;
   RooAbsArg* server ;
   while((server=sIter.next())) {
-    server->constOptimizeTestStatistic(opcode) ;
+    server->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
   }
 }
 
@@ -1705,6 +1709,7 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
   if (mode==_operMode) return ;
 
   _operMode = mode ;
+  _fast = ((mode==AClean) || dynamic_cast<RooRealVar*>(this)!=0 || dynamic_cast<RooConstVar*>(this)!=0 ) ;
   for (Int_t i=0 ;i<numCaches() ; i++) {
     getCache(i)->operModeHook() ;
   }
@@ -1760,7 +1765,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
 
     if (_serverList.GetSize()>0) {
       switch(operMode()) {
-      case Auto:   os << " [Auto] "  ; break ;
+      case Auto:   os << " [Auto," << (isValueDirty()?"Dirty":"Clean") << "] "  ; break ;
       case AClean: os << " [ACLEAN] " ; break ;
       case ADirty: os << " [ADIRTY] " ; break ;
       }
@@ -2218,15 +2223,6 @@ RooExpensiveObjectCache& RooAbsArg::expensiveObjectCache() const
 }
 
 
-
-//_____________________________________________________________________________
-Bool_t RooAbsArg::flipAClean()
-{
-  return _flipAClean ;
-}
-
-
-
 //_____________________________________________________________________________
 const char* RooAbsArg::aggregateCacheUniqueSuffix() const
 {
@@ -2243,4 +2239,38 @@ const char* RooAbsArg::aggregateCacheUniqueSuffix() const
   return Form("%s",suffix.c_str()) ;
 }
 
+
+//_____________________________________________________________________________
+void RooAbsArg::wireAllCaches() 
+{
+  RooArgSet branches ;
+  branchNodeServerList(&branches) ;
+  RooFIter iter = branches.fwdIterator() ;
+  RooAbsArg* arg ;
+  while((arg=iter.next())) {
+//     cout << "wiring caches on node " << arg->GetName() << endl ;
+    for (deque<RooAbsCache*>::iterator iter2 = arg->_cacheList.begin() ; iter2 != arg->_cacheList.end() ; ++iter2) {
+      (*iter2)->wireCache() ;
+    }
+  }
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsArg::SetName(const char* name) 
+{
+  TNamed::SetName(name) ;
+  _namePtr = 0 ;
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooAbsArg::SetNameTitle(const char *name, const char *title)
+{
+  TNamed::SetNameTitle(name,title) ;
+  _namePtr = 0 ;
+}
 

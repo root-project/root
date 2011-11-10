@@ -183,7 +183,7 @@ public:
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
   void setNormValueCaching(Int_t minNumIntDim, Int_t ipOrder=2) ;

@@ -82,7 +82,7 @@ RooAbsCachedPdf::~RooAbsCachedPdf()
 
 
 //_____________________________________________________________________________
-Double_t RooAbsCachedPdf::getVal(const RooArgSet* nset) const 
+Double_t RooAbsCachedPdf::getValV(const RooArgSet* nset) const 
 {
   // Implementation of getVal() overriding default implementation
   // of RooAbsPdf. Return normalized value stored in cache p.d.f
@@ -90,7 +90,7 @@ Double_t RooAbsCachedPdf::getVal(const RooArgSet* nset) const
   // for RooAbsCachedPdf
 
   if (_disableCache) {
-    return RooAbsPdf::getVal(nset) ;
+    return RooAbsPdf::getValV(nset) ;
   }
 
   // Calculate current unnormalized value of object
@@ -154,7 +154,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx,0) ;
+  PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
 
   // Check if we have a cache histogram in the global expensive object cache
   if (cache) {

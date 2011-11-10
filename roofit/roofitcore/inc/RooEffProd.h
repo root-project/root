@@ -30,7 +30,7 @@ public:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                        const RooArgSet* auxProto, Bool_t verbose) const;
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
     // Return kTRUE to force RooRealIntegral to offer all observables for internal integration

@@ -24,7 +24,7 @@ class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooNLLVar() {} ;  
+  RooNLLVar() { _first = kTRUE ; }
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
 	    const RooCmdArg& arg1                , const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
 	    const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
@@ -62,6 +62,7 @@ protected:
   Bool_t _extended ;
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   Bool_t _weightSq ; // Apply weights squared?
+  mutable Bool_t _first ; //!
   
   ClassDef(RooNLLVar,1) // Function representing (extended) -log(L) of p.d.f and dataset
 };

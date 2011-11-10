@@ -55,7 +55,7 @@ protected:
   // This is dubious from a C++ point of view, but it blocks the interactive user
   // from accidentally calling getVal() without explicit cast, which is the whole
   // point of this class
-  virtual Double_t getVal(const RooArgSet* nset=0) const { 
+  virtual Double_t getValV(const RooArgSet* nset=0) const { 
     // Forward call to RooAbsReal
     return RooAbsReal::getVal(nset) ; 
   }

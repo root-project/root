@@ -39,7 +39,7 @@ public:
     // Destructor
   } ;
 
-  virtual Double_t getVal(const RooArgSet* nset=0) const ;
+  virtual Double_t getValV(const RooArgSet* nset=0) const ;
 
   virtual Double_t evaluate() const ;
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;

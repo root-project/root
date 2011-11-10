@@ -77,7 +77,7 @@ RooAbsCachedReal::~RooAbsCachedReal()
 
 
 //_____________________________________________________________________________
-Double_t RooAbsCachedReal::getVal(const RooArgSet* nset) const 
+Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const 
 {
   // Implementation of getVal() overriding default implementation
   // of RooAbsReal. Return value stored in cache p.d.f
@@ -85,7 +85,7 @@ Double_t RooAbsCachedReal::getVal(const RooArgSet* nset) const
   // for RooAbsCachedReal
 
   if (_disableCache) {
-    return RooAbsReal::getVal(nset) ;
+    return RooAbsReal::getValV(nset) ;
   }
 
   // Cannot call cached p.d.f w.o nset
@@ -131,7 +131,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
  
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx,0) ;
+  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE)) {
       coutI(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cache " << cache << " function " 

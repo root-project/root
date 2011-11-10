@@ -49,7 +49,7 @@ class TH3F;
 #include <list>
 #include <string>
 #include <iostream>
-
+using namespace std ;
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -62,12 +62,13 @@ public:
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
-  inline  Double_t getVal(const RooArgSet& set) const { 
-    // Return value with given choice of observables
-    return getVal(&set) ; 
+  inline Double_t getVal(const RooArgSet* set=0) const { 
+/*     if (_fast && !_inhibitDirty) cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << endl ;  */
+    return (_fast && !_inhibitDirty) ? _value : getValV(set) ; 
   }
+  inline  Double_t getVal(const RooArgSet& set) const { return _fast ? _value : getValV(&set) ; }
 
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
 
   Double_t getPropagatedError(const RooFitResult& fr) ;
 
@@ -248,7 +249,7 @@ public:
     char _srvval[1024] ;
   } ;
 
-  enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors } ;
+  enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors, Ignore } ;
   static ErrorLoggingMode evalErrorLoggingMode() ;
   static void setEvalErrorLoggingMode(ErrorLoggingMode m) ;
   void logEvalError(const char* message, const char* serverValueString=0) const ;

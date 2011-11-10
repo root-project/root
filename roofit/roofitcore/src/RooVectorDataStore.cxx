@@ -189,13 +189,13 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
 
   vector<RealVector*>::const_iterator oiter = other._realStoreList.begin() ;
   for (; oiter!=other._realStoreList.end() ; ++oiter) {
-    _realStoreList.push_back(new RealVector(**oiter,(RooAbsReal*)_varsww.find((*oiter)->_real->GetName()))) ;
+    _realStoreList.push_back(new RealVector(**oiter,(RooAbsReal*)_varsww.find((*oiter)->_nativeReal->GetName()))) ;
     _nReal++ ;
   }
 
   vector<RealFullVector*>::const_iterator fiter = other._realfStoreList.begin() ;
   for (; fiter!=other._realfStoreList.end() ; ++fiter) {
-    _realfStoreList.push_back(new RealFullVector(**fiter,(RooAbsReal*)_varsww.find((*fiter)->_real->GetName()))) ;
+    _realfStoreList.push_back(new RealFullVector(**fiter,(RooAbsReal*)_varsww.find((*fiter)->_nativeReal->GetName()))) ;
     _nRealF++ ;
   }
 
@@ -492,15 +492,15 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
     _curWgtErrHi = _wgtVar->getAsymErrorHi() ;
     _curWgtErr   = _wgtVar->hasAsymError() ? ((_wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo())/2)  : _wgtVar->getError() ;
 
-  } else {
+  } // else {
 
-    // Otherwise return 1 
-    _curWgt=1.0 ;
-    _curWgtErrLo = 0 ;
-    _curWgtErrHi = 0 ;
-    _curWgtErr = 0 ;
+//     // Otherwise return 1 
+//     _curWgt=1.0 ;
+//     _curWgtErrLo = 0 ;
+//     _curWgtErrHi = 0 ;
+//     _curWgtErr = 0 ;
     
-  }
+//   }
 
   if (_cache) {
     _cache->get(index) ;
@@ -1007,6 +1007,11 @@ void RooVectorDataStore::reset()
 }
 
 
+struct less_dep : public binary_function<RooAbsArg*, RooAbsArg*, bool> {
+  bool operator()(RooAbsArg* x, RooAbsArg* y) { 
+    return y->dependsOn(*x); 
+  }
+};
 
 //_____________________________________________________________________________
 void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset) 
@@ -1018,12 +1023,43 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   // internal cache of 'newVar' will be loaded with the
   // precalculated value and it's dirty flag will be cleared.
 
+  // Delete previous cache, if any
   if (_cache) {
     delete _cache ;
     _cache = 0 ;
   }
 
-  TIterator* vIter = newVarSet.createIterator() ;
+
+  // Reorder cached elements. First constant nodes, then tracked nodes in order of dependence
+
+  // Step 1 - split in constant and tracked
+  RooFIter itern = newVarSet.fwdIterator() ;
+  RooAbsArg* arg ;
+  RooArgSet orderedArgs ;
+  vector<RooAbsArg*> trackArgs ;
+  while((arg=itern.next())) {
+    if (arg->getAttribute("ConstantExpression")) {
+      orderedArgs.add(*arg) ;
+    } else {
+      trackArgs.push_back(arg) ;
+    }
+  }
+
+  // Step 2 - reorder tracked nodes
+  if (trackArgs.size()>1) {
+    sort(trackArgs.begin(),trackArgs.end(),less_dep()) ;
+  }
+
+  // Step 3 - put back together
+  for (vector<RooAbsArg*>::iterator viter = trackArgs.begin() ; viter!=trackArgs.end() ; ++viter) {
+    orderedArgs.add(**viter) ;
+  }
+  
+  // WVE need to prune tracking entries _below_ constant nodes as the're not needed
+//   cout << "Compound ordered cache parameters = " << endl ;
+//   orderedArgs.Print("v") ;
+
+  TIterator* vIter = orderedArgs.createIterator() ;
   RooAbsArg* var ;
   
   checkInit() ;
@@ -1040,11 +1076,12 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
     vlist.push_back(newVarCloneList) ;
     cloneSet.add(*newVarClone) ;
+
   }
   delete vIter ;
 
   _cacheOwner = (RooAbsArg*) owner ;
-  RooVectorDataStore* newCache = new RooVectorDataStore("cache","cache",newVarSet) ;
+  RooVectorDataStore* newCache = new RooVectorDataStore("cache","cache",orderedArgs) ;
 
   TIterator* cIter = cloneSet.createIterator() ;
   RooAbsArg *cloneArg ;
@@ -1053,7 +1090,6 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   // Now need to attach branch buffers of clones
   TIterator* it = cloneSet.createIterator() ;
-  RooAbsArg* arg ;
   while ((arg=(RooAbsArg*)it->Next())) {
     arg->attachToVStore(*newCache) ;
   }
@@ -1066,6 +1102,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     cIter->Reset() ;
     while((cloneArg=(RooAbsArg*)cIter->Next())) {
       cloneArg->syncCache(nset) ;
+//       cout << "RVDS::cacheArgs writing #" << i << " " ; cloneArg->Print() ;
     }
     newCache->fill() ;
   }
@@ -1076,18 +1113,85 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   for (list<RooArgSet*>::iterator iter = vlist.begin() ; iter!=vlist.end() ; ++iter) {
     delete *iter ;
-  }
+  }  
   
   // Now need to attach branch buffers of original function objects 
-  it = newVarSet.createIterator() ;
+  it = orderedArgs.createIterator() ;
   while ((arg=(RooAbsArg*)it->Next())) {
     arg->attachToVStore(*newCache) ;
+
+    // Activate change tracking mode, if requested
+    if (!arg->getAttribute("ConstantExpression") && dynamic_cast<RooAbsReal*>(arg)) {
+      RealVector* rv = newCache->addReal((RooAbsReal*)arg) ;      
+      RooArgSet* deps = arg->getParameters(_vars) ;
+      rv->setDependents(*deps) ;
+      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << *deps << endl ;
+      delete deps ;
+    }
+    
   }
   delete it ;
 
   _cache = newCache ;
   _cache->setDirtyProp(_doDirtyProp) ;
 }
+
+
+
+
+
+typedef RooVectorDataStore::RealVector* pRealVector ;
+//_____________________________________________________________________________
+void RooVectorDataStore::recalculateCache() 
+{
+  if (!_cache) return ;
+
+  pRealVector tv[1000] ;
+  Int_t ntv(0) ;
+
+  // Check which items need recalculation
+  for (Int_t i=0 ; i<_cache->_nReal ; i++) {
+    if ((*(_cache->_firstReal+i))->needRecalc()) {
+      tv[ntv] = (*(_cache->_firstReal+i)) ;
+      tv[ntv]->_nativeReal->setOperMode(RooAbsArg::ADirty) ;
+      tv[ntv]->_nativeReal->_operMode=RooAbsArg::Auto ;
+//       cout << "recalculate: need to update " << tv[ntv]->_nativeReal->GetName() << endl ;
+      ntv++ ;
+    }    
+  }
+
+  // Refill caches of elements that require recalculation
+//   cout << "recalc error count before update = " << RooAbsReal::numEvalErrors() << endl ;
+  RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
+  Int_t ne = numEntries() ;
+  for (int i=0 ; i<ne ; i++) {
+    get(i) ;    
+    Bool_t zeroWeight = (weight()==0) ;
+    if (zeroWeight) {
+//       cout << "update - slot " << i << " has zero weight, ignoring event errors" << endl ;
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
+    }
+    for (int j=0 ; j<ntv ; j++) {
+      tv[j]->_nativeReal->_valueDirty=kTRUE ;
+      tv[j]->_nativeReal->getValV(&_vars) ;
+//       cout << "updating tracked cache slot " << i << " element " ; tv[j]->_nativeReal->Print() ;
+      tv[j]->write(i) ;
+    }
+    if (zeroWeight) {
+      RooAbsReal::setEvalErrorLoggingMode(origMode) ;
+    }
+  }  
+  
+//   cout << "recalculate: end of updating" << endl ;
+//   cout << "recalc error count after update = " << RooAbsReal::numEvalErrors() << endl ;
+
+  for (int j=0 ; j<ntv ; j++) {
+      tv[j]->_nativeReal->setOperMode(RooAbsArg::AClean) ;
+  }  
+
+}
+
+
 
 
 //_____________________________________________________________________________
@@ -1196,7 +1300,7 @@ void RooVectorDataStore::dump()
   cout << "realVector list is" << endl ;
   std::vector<RealVector*>::iterator iter = _realStoreList.begin() ;
   for (; iter!=_realStoreList.end() ; ++iter) {
-    cout << "RealVector " << *iter << " _real = " << (*iter)->_real << " = " << (*iter)->_real->GetName() << " bufptr = " << (*iter)->_buf  << endl ;
+    cout << "RealVector " << *iter << " _nativeReal = " << (*iter)->_nativeReal << " = " << (*iter)->_nativeReal->GetName() << " bufptr = " << (*iter)->_buf  << endl ;
     cout << " values : " ;
     Int_t imax = (*iter)->_vec.size()>10 ? 10 : (*iter)->_vec.size() ;
     for (Int_t i=0 ; i<imax ; i++) {
@@ -1206,7 +1310,7 @@ void RooVectorDataStore::dump()
   }    
   std::vector<RealFullVector*>::iterator iter2 = _realfStoreList.begin() ;
   for (; iter2!=_realfStoreList.end() ; ++iter2) {
-    cout << "RealFullVector " << *iter2 << " _real = " << (*iter2)->_real << " = " << (*iter2)->_real->GetName() 
+    cout << "RealFullVector " << *iter2 << " _nativeReal = " << (*iter2)->_nativeReal << " = " << (*iter2)->_nativeReal->GetName() 
 	 << " bufptr = " << (*iter2)->_buf  << " errbufptr = " << (*iter2)->_bufE << endl ;
 
     cout << " values : " ;
@@ -1240,11 +1344,11 @@ void RooVectorDataStore::Streamer(TBuffer &R__b)
       _firstCat = &_catStoreList.front() ;
 
       for (vector<RealVector*>::iterator iter1 = _realStoreList.begin() ; iter1!=_realStoreList.end() ; ++iter1) {
-	RooAbsArg* arg = _varsww.find((*iter1)->_real->GetName()) ;
+	RooAbsArg* arg = _varsww.find((*iter1)->_nativeReal->GetName()) ;
 	arg->attachToVStore(*this) ;
       }
       for (vector<RealFullVector*>::iterator iter2 = _realfStoreList.begin() ; iter2!=_realfStoreList.end() ; ++iter2) {
-	RooAbsArg* arg = _varsww.find((*iter2)->_real->GetName()) ;
+	RooAbsArg* arg = _varsww.find((*iter2)->_nativeReal->GetName()) ;
 	arg->attachToVStore(*this) ;
       }
       for (vector<CatVector*>::iterator iter3 = _catStoreList.begin() ; iter3!=_catStoreList.end() ; ++iter3) {

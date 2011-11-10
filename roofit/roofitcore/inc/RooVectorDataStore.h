@@ -24,6 +24,7 @@
 #include "RooCatType.h"
 #include "RooAbsCategory.h"
 #include "RooAbsReal.h"
+#include "RooChangeTracker.h"
 
 class RooAbsArg ;
 class RooArgList ;
@@ -97,6 +98,7 @@ public:
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
   virtual void resetCache() ;
+  virtual void recalculateCache() ;
 
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
 
@@ -127,26 +129,32 @@ public:
   class RealVector {
   public:
     RealVector(UInt_t initialCapacity=100) : 
-      _real(0), _buf(0), _nativeBuf(0), _vec0(0) { 
+      _nativeReal(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0) { 
       _vec.reserve(initialCapacity) ; 
     }
 
     RealVector(RooAbsReal* arg, UInt_t initialCapacity=100) : 
-      _real(arg), _buf(0), _nativeBuf(0), _vec0(0) { 
+      _nativeReal(arg), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0) { 
       _vec.reserve(initialCapacity) ; 
     }
 
     virtual ~RealVector() {
+      if (_tracker) delete _tracker ;
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=0) : 
-      _vec(other._vec), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf) {
+      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _buf(other._buf), _nativeBuf(other._nativeBuf)   {
       _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
+      if (other._tracker) {
+	_tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",other._tracker->parameters()) ;
+      } else {
+	_tracker = 0 ;
+      }
     }
 
     RealVector& operator=(const RealVector& other) {
       if (&other==this) return *this ;
-      _real = other._real ;
+      _nativeReal = other._nativeReal ;
       _buf = other._buf ;
       _nativeBuf = other._nativeBuf ;
       _vec = other._vec ;
@@ -154,25 +162,40 @@ public:
       return *this ;
     }
 
-    void setBufArg(RooAbsReal* arg) { _real = arg ; }
-    const RooAbsReal* bufArg() const { return _real ; }
+    void setBufArg(RooAbsReal* arg) { _nativeReal = arg ; }
+    const RooAbsReal* bufArg() const { return _nativeReal ; }
 
-    void setBuffer(Double_t* newBuf) { 
-/*       cout << "setBuffer(" << _real->GetName() << ") newBuf = " << newBuf << endl ; */
+    void setBuffer(RooAbsReal* real, Double_t* newBuf) { 
+      _real = real ;
       _buf = newBuf ; 
-      if (_nativeBuf==0) _nativeBuf=newBuf ;
+      if (_nativeBuf==0) {
+	_nativeBuf=newBuf ;
+      }
     }
 
     void setNativeBuffer(Double_t* newBuf=0) {       
       _nativeBuf = newBuf ? newBuf : _buf ; 
     }
+
+    void setDependents(const RooArgSet& deps) {
+      if (_tracker) {
+	delete _tracker ;
+      }
+      _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",deps) ;
+    }
     
+    Bool_t needRecalc() {
+      if (!_tracker) return kFALSE ;
+      return _tracker->hasChanged(kTRUE) ;
+    }
+
     void fill() { 
       _vec.push_back(*_buf) ; 
       _vec0 = &_vec.front() ;
     } ;
 
     void write(Int_t i) {
+/*       cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << endl ; */
       _vec[i] = *_buf ;
     }
     
@@ -201,10 +224,12 @@ public:
 
   private:
     friend class RooVectorDataStore ;
+    RooAbsReal* _nativeReal ;
     RooAbsReal* _real ;
     Double_t* _buf ; //!
     Double_t* _nativeBuf ; //!
     Double_t* _vec0 ; //!
+    RooChangeTracker* _tracker ; //
     ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;
   
@@ -262,7 +287,7 @@ public:
     }
     
     void setErrorBuffer(Double_t* newBuf) { 
-/*       cout << "setErrorBuffer(" << _real->GetName() << ") newBuf = " << newBuf << endl ; */
+/*       cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << endl ; */
       _bufE = newBuf ; 
       if (!_vecE) _vecE = new vector<Double_t> ;
       _vecE->reserve(_vec.capacity()) ;
