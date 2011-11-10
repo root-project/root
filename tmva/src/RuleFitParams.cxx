@@ -237,8 +237,8 @@ void TMVA::RuleFitParams::EvaluateAverage( UInt_t ind1, UInt_t ind2,
          ew = fRuleFit->GetTrainingEventWeight(i);
          sumew += ew;
          // first cache rule/lin response
-         Double_t val = fRuleEnsemble->EvalLinEvent(*((*events)[i]));
-         val = fRuleEnsemble->EvalEvent(*((*events)[i]));
+         /* Double_t val = */ fRuleEnsemble->EvalLinEvent(*((*events)[i]));
+         /* val = */ fRuleEnsemble->EvalEvent(*((*events)[i]));
          // loop over linear terms
          for ( UInt_t sel=0; sel<fNLinear; sel++ ) {
             avsel[sel] += ew*fRuleEnsemble->GetEventLinearValNorm(sel);
@@ -551,7 +551,7 @@ void TMVA::RuleFitParams::MakeGDPath()
 
    // parameters set at point with min error
    Double_t              errmin=1e32;  // min error
-   Double_t              riskMin=0;    // risk
+   // Double_t              riskMin=0;    // risk
    Int_t                 indMin=-1;    // index
    std::vector<Double_t> coefsMin;     // rule coefs
    std::vector<Double_t> lincoefsMin;  // linear coefs
@@ -699,7 +699,7 @@ void TMVA::RuleFitParams::MakeGDPath()
          //
          if (fNTErrorRate<=errmin) {
             errmin  = fNTErrorRate;
-            riskMin = fNTRisk;
+            // riskMin = fNTRisk;
             indMin  = iloop;
             fRuleEnsemble->GetCoefficients(coefsMin);
             lincoefsMin = fRuleEnsemble->GetLinCoefficients();
@@ -755,7 +755,7 @@ void TMVA::RuleFitParams::MakeGDPath()
          if (indMin<0) {
             Log() << kWARNING << "BUG TRAP: should not be here - still, this bug is harmless;)" << Endl;
             errmin  = fNTErrorRate;
-            riskMin = fNTRisk;
+            // riskMin = fNTRisk;
             indMin  = iloop;
             fRuleEnsemble->GetCoefficients(coefsMin);
             lincoefsMin = fRuleEnsemble->GetLinCoefficients();
@@ -1047,7 +1047,7 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
    Double_t effs=1.0;
    Double_t prejb=0;
    Double_t peffs=1.0;
-   Double_t drejb;
+   // Double_t drejb;
    Double_t deffs;
    Double_t area=0;
    Int_t    npok=0;
@@ -1065,7 +1065,7 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
          rejb = Double_t(nrbkg)/Double_t(nbkg);
          effs = Double_t(nesig)/Double_t(nsig);
          //
-         drejb = rejb-prejb;
+         // drejb = rejb-prejb;
          deffs = effs-peffs;
          area += 0.5*TMath::Abs(deffs)*(rejb+prejb); // trapezoid
          prejb = rejb;

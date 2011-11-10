@@ -1660,7 +1660,6 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
 
       Int_t nelems_copy = 0;
       rowIndex_new[0] = 0;
-      Bool_t cont = kTRUE;
       const Int_t row_off = rowLwb_old-row_lwb;
       const Int_t col_off = colLwb_old-col_lwb;
       for (Int_t irow = 0; irow < nrows_old; irow++) {
@@ -1676,7 +1675,6 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
                nelems_copy++;
             }
             if (nelems_copy >= nelems_new) {
-               cont = kFALSE;
                break;
             }
          }

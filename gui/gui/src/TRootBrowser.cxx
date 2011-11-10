@@ -572,12 +572,10 @@ Bool_t TRootBrowser::HandleKey(Event_t *event)
    // Handle keyboard events.
 
    char   input[10];
-   Int_t  n;
    UInt_t keysym;
 
    if (event->fType == kGKeyPress) {
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
-      n = strlen(input);
 
       if (!event->fState && (EKeySym)keysym == kKey_F5) {
          Refresh(kTRUE);

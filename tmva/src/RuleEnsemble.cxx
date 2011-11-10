@@ -549,10 +549,10 @@ void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & f
    Double_t sumnendn=0;
    Double_t sumn2=0;
    //
-   UInt_t prevs;
+   // UInt_t prevs;
    UInt_t ntrees = forest.size();
    for ( UInt_t ind=0; ind<ntrees; ind++ ) {
-      prevs = fRules.size();
+      // prevs = fRules.size();
       MakeRulesFromTree( forest[ind] );
       nrules = CalcNRules( forest[ind] );
       nendn = (nrules/2) + 1;
@@ -804,7 +804,7 @@ void TMVA::RuleEnsemble::RuleResponseStats()
    Bool_t sigRule;
    Bool_t sigTag;
    Bool_t bkgTag;
-   Bool_t noTag;
+   // Bool_t noTag;
    Bool_t sigTrue;
    Bool_t tagged;
    // Counters
@@ -850,7 +850,7 @@ void TMVA::RuleEnsemble::RuleResponseStats()
          tagged  = fRules[i]->EvalEvent(*eveData);
          sigTag = (tagged && sigRule);        // it's tagged as a signal
          bkgTag = (tagged && (!sigRule));     // ... as bkg
-         noTag = !(sigTag || bkgTag);         // ... not tagged
+         // noTag = !(sigTag || bkgTag);         // ... not tagged
          sigTrue = (eveData->GetClass() == 0);       // true if event is true signal
          if (tagged) {
             ntag++;

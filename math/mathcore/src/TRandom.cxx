@@ -547,12 +547,9 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
    // Return an array of n random numbers uniformly distributed in ]0,1]
 
    const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
-   const Int_t  kMASK24 = 0x7fffff00;
-   UInt_t jy;
    Int_t i=0;
    while (i<n) {
       fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
-      jy = (fSeed&kMASK24);  // Set lower 8 bits to zero to assure exact float
       if (fSeed) {array[i] = Float_t(kCONS*fSeed); i++;}
    }
 }

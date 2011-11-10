@@ -196,7 +196,7 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // Indicate that there is something to click here.
 
    Int_t kMaxDiff = 20;
-   static Int_t d1, d2, d3, px1, py1, px3, py3, px4, py4;
+   static Int_t d1, d2, d3, px1, py1, px3, py3;
    static Bool_t p1, p2, p3, p4, p5, p6, p7, p8;
    Double_t px2, py2;
    p2 = p3 = p4 = p5 = p6 = p7 = p8 = kFALSE;
@@ -237,8 +237,8 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       case kButton1Down:
          // Record initial coordinates
-         px4 = px;
-         py4 = py;
+         //px4 = px;
+         //py4 = py;
 
       case kButton1Motion:
          if (p1) {

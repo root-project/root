@@ -223,7 +223,6 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
       Long64_t entry = tree->GetReadEntry();
-      Long64_t fEntryCurrentMax = 0;
       
       // If the entry is in the range we previously prefetched, there is 
       // no point in retrying.   Note that this will also return false
@@ -234,7 +233,6 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       // Triggered by the user, not the learning phase
       if (entry == -1)  entry=0;
       
-      fEntryCurrentMax = fEntryCurrent;
       TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
       fEntryCurrent = clusterIter();
       fEntryNext = clusterIter.GetNextEntry();

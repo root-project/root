@@ -137,14 +137,11 @@ void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
 //    // Read the transformation matrices from the xml node
 
 
-   Bool_t newFormat = kFALSE;
-
    void* inpnode = NULL;
 
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
    if(inpnode == NULL)
       Log() << kFATAL << "Unknown weight file format for transformations. (tried to read in 'rearrange' transform)" << Endl;
-   newFormat = kTRUE;
    
    VariableTransformBase::ReadFromXML( inpnode );
    

@@ -423,9 +423,7 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    // Add remote file in list tree.
 
    Bool_t      is_link;
-   Int_t       type, uid, gid;
-   Long_t      modtime;
-   Long64_t    size;
+   Int_t       type;
    TString     filename;
    const TGPicture *spic;
    TGPicture *pic;
@@ -433,10 +431,6 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    FileStat_t sbuf;
 
    type    = 0;
-   size    = 0;
-   uid     = 0;
-   gid     = 0;
-   modtime = 0;
    is_link = kFALSE;
 
    TRemoteObject *robj = (TRemoteObject *)obj;
@@ -444,10 +438,6 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    robj->GetFileStat(&sbuf);
    is_link = sbuf.fIsLink;
    type    = sbuf.fMode;
-   size    = sbuf.fSize;
-   uid     = sbuf.fUid;
-   gid     = sbuf.fGid;
-   modtime = sbuf.fMtime;
    filename = robj->GetName();
    if (R_ISDIR(type) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {

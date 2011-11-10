@@ -1676,7 +1676,6 @@ void TGeoNavigator::SafetyOverlaps()
       Int_t nmany = fNmany;
       Bool_t crtovlp = kFALSE;
       Bool_t nextovlp = kFALSE;
-      TGeoNode *current = fCurrentNode;
       TGeoNode *mother, *mup;
       TGeoHMatrix *matrix;
       while (nmany) {
@@ -1691,7 +1690,6 @@ void TGeoNavigator::SafetyOverlaps()
             matrix->MasterToLocal(fPoint,local);
             safe = mother->GetVolume()->GetShape()->Safety(local,kTRUE);
             if (safe<fSafety) fSafety = safe;
-            current = mother;
             crtovlp = nextovlp;
          }
          up++;
@@ -2096,7 +2094,6 @@ Bool_t TGeoNavigator::GotoSafeLevel()
       Int_t nmany = fNmany;
       Bool_t ovlp = kFALSE;
       Bool_t nextovlp = kFALSE;
-      TGeoNode *current = fCurrentNode;
       TGeoNode *mother, *mup;
       TGeoHMatrix *matrix;
       while (nmany) {
@@ -2117,7 +2114,6 @@ Bool_t TGeoNavigator::GotoSafeLevel()
                return GotoSafeLevel();
             }
          }   
-         current = mother;
          ovlp = nextovlp;
          up++;
       }            

@@ -922,7 +922,6 @@ Bool_t TGListTree::HandleKey(Event_t *event)
    // action.
 
    char   input[10];
-   Int_t  n;
    UInt_t keysym;
    TGListTreeItem *item = 0;
 
@@ -931,7 +930,6 @@ Bool_t TGListTree::HandleKey(Event_t *event)
 
    if (event->fType == kGKeyPress) {
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
-      n = strlen(input);
 
       if (!event->fState && (EKeySym)keysym == kKey_Escape) {
          if (gDNDManager->IsDragging()) gDNDManager->EndDrag();
@@ -1474,7 +1472,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    // Draw list tree item.
 
    Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext, xline, yline, xc;
-   Int_t  xpic2 = 0, ypic2 = 0;
+   Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
    const TGPicture *pic2 = item->GetCheckBoxPicture();
@@ -1488,10 +1486,8 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
       if (pic2->GetHeight() > height) {
          ytext = y + (Int_t)((pic2->GetHeight() - height) >> 1);
          height = pic2->GetHeight();
-         ypic2 = y;
       } else {
          ytext = y;
-         ypic2 = y + (Int_t)((height - pic2->GetHeight()) >> 1);
       }
       if (pic1) xpic2 = xpic1 + pic1->GetWidth() + 1;
       else xpic2 = xpic1 + 1;

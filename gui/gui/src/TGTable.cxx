@@ -723,11 +723,7 @@ void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
    UInt_t oldnrows = GetNTableRows();
    UInt_t oldncolumns = GetNTableColumns();
 
-   UInt_t oldwidth = 0, oldheight = 0;
    Int_t i = 0, j = 0;
-
-   oldwidth = GetCHdrWidth();
-   oldheight = GetRHdrHeight();
 
    TGCompositeFrame *container = (TGCompositeFrame *)fCanvas->GetContainer();
 

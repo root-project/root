@@ -310,12 +310,9 @@ void TPie::DrawGhost()
    MakeSlices();
 
    // XY metric
-   Double_t radX  = fRadius;
-   Double_t radY  = fRadius;
    Double_t radXY = 1.;
    if (fIs3D) {
       radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-      radY  = radXY*radX;
    }
 
    for (Int_t i=0;i<fNvals&&fIs3D==kTRUE;++i) {
@@ -441,12 +438,9 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    const Double_t angstep8 = 7.5*TMath::PiOver4();
 
    // XY metric
-   Double_t radX  = fRadius;
-   Double_t radY  = fRadius;
    Double_t radXY = 1.;
    if (fIs3D==kTRUE) {
       radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-      radY  = radXY*radX;
    }
 
    Int_t dx, dy;

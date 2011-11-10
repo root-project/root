@@ -1001,7 +1001,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    TList *formulaList = new TList();
    TSelectorDraw *selector = (TSelectorDraw*)(((TTreePlayer*)fTree->GetPlayer())->GetSelector());
 
-   Long64_t entry,entryNumber, curentry;
+   Long64_t entry, entryNumber;
    Int_t i,nch;
    Int_t ncols;
    TObjArray *leaves = fTree->GetListOfLeaves();
@@ -1098,7 +1098,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
             xvars[i] = var[i]->EvalInstance(inst);
          }
          
-         curentry = entry-firstentry;
+         // curentry = entry-firstentry;
          //printf("event#%d\n", curentry);
          //for (i=0; i<ncols; i++)
           //  printf("xvars[%d]=%f\n", i, xvars[i]);

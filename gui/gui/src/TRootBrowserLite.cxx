@@ -1437,17 +1437,15 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
          fLt->SetToolTipItem(item, tip.Data());
       } else {
          // special case for remote object
-         Bool_t isRemote = kFALSE;
-         if (obj->InheritsFrom("TRemoteObject"))
-            isRemote = kTRUE;
-         else if (fListLevel) {
+         if (obj->InheritsFrom("TRemoteObject")) {
+            // Nothing to do
+         } else if (fListLevel) {
             // check also if one of its parents is a remote object
             TGListTreeItem *top = fListLevel;
             while (top->GetParent()) {
                TObject *tobj = (TObject *) top->GetUserData();
                if (tobj && (tobj->InheritsFrom("TRemoteObject") ||
                   tobj->InheritsFrom("TApplicationRemote"))) {
-                  isRemote = kTRUE;
                   break;
                }
                top = top->GetParent();

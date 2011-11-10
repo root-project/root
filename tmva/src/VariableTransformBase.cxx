@@ -251,7 +251,7 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
 
    
    ItVarTypeIdx itGet = fGet.begin(), itGetEnd = fGet.end();
-   ItVarTypeIdx itPut = fPut.begin(), itPutEnd = fPut.end();
+   ItVarTypeIdx itPut = fPut.begin(); // , itPutEnd = fPut.end();
    for( ; itGet != itGetEnd; ++itGet ) {
       TString inputTypeString  = "?";
 

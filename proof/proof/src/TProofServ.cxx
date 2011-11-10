@@ -4131,7 +4131,7 @@ void TProofServ::ProcessNext(TString *slb)
    TList *input = 0;
    Long64_t nentries = -1, first = 0;
 
-   TObject *elist = 0;
+   // TObject *elist = 0;
    TProofQueryResult *pq = 0;
 
    // Process
@@ -4162,12 +4162,12 @@ void TProofServ::ProcessNext(TString *slb)
          Error("ProcessNext", "no TDset object: cannot continue");
          return;
       }
-      elist = 0;
-      if ((o = pq->GetInputObject("TEntryList")))
-         elist = o;
-      else if ((o = pq->GetInputObject("TEventList")))
-         elist = o;
-      //
+      // elist = 0;
+      // if ((o = pq->GetInputObject("TEntryList")))
+      //    elist = o;
+      // else if ((o = pq->GetInputObject("TEventList")))
+      //    elist = o;
+
       // Expand selector files
       if (pq->GetSelecImp()) {
          gSystem->Exec(TString::Format("%s %s", kRM, pq->GetSelecImp()->GetName()));

@@ -575,9 +575,11 @@ int TGHtml::Tokenize()
    char *argv[mxARG];   // Pointers to each markup argument.
    int arglen[mxARG];   // Length of each markup argument
    //int rl, ol;
+#ifdef pIsInMeachnism
    int pIsInScript = 0;
    int pIsInNoScript = 0;
    int pIsInNoFrames = 0;
+#endif
    int sawdot = 0;
    int inLi = 0;
 
@@ -648,7 +650,7 @@ int TGHtml::Tokenize()
             n = i;
          }
          else {
-#if 0
+#ifdef pIsInMeachnism
             // If there is a script, execute it now and insert any output
             // to the html stream for parsing as html. (ie. client side scripting)
 
@@ -678,10 +680,10 @@ int TGHtml::Tokenize()
                   memmove(z + n, result, rl);
                }
             }
-#endif
             pIsInScript = 0;
             pIsInNoScript = 0;
             pIsInNoFrames = 0;
+#endif
          }
          //continue;
 
@@ -940,14 +942,20 @@ makeMarkupEntry:
 
             case Html_NOFRAMES:
                if (!fHasFrames) break;
+#ifdef pIsInMeachnism
                pIsInNoFrames = 1;
+#endif
             case Html_NOSCRIPT:
                break;
                // coverity[unreachable]
                if (!fHasScript) break;
+#ifdef pIsInMeachnism
                pIsInNoScript = 1;
+#endif
             case Html_SCRIPT:
+#ifdef pIsInMeachnism
                pIsInScript = 1;
+#endif
                // fallthrough
             case Html_STYLE:
                fPScript = (TGHtmlScript *) pElem;

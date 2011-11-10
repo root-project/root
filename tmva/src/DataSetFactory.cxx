@@ -679,7 +679,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          eventCounts[i].varAvLength[ivar] = 0;
    }
 
-   Bool_t haveArrayVariable = kFALSE;
+   // Bool_t haveArrayVariable = kFALSE;
    Bool_t *varIsArray = new Bool_t[nvars];
 
    // if we work with chains we need to remember the current tree if
@@ -741,7 +741,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                Int_t ndata = fInputFormulas[ivar]->GetNdata();
                classEventCounts.varAvLength[ivar] += ndata;
                if (ndata == 1) continue;
-               haveArrayVariable = kTRUE;
+               // haveArrayVariable = kTRUE;
                varIsArray[ivar] = kTRUE;
                if (sizeOfArrays == 1) {
                   sizeOfArrays = ndata;

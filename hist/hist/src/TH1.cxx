@@ -2061,7 +2061,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       for (i=i_start; i<=i_end; i++) {
          for (j=j_start; j<=j_end; j++) {
             for (k=k_start; k<=k_end; k++) {
-               Int_t x=0, y=0;
+               Int_t x=0;
                bin1 = this->GetBinContent(i,j,k);
                bin2 = h2->GetBinContent(i,j,k);
                err2 = h2->GetBinError(i,j,k);
@@ -2101,7 +2101,6 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   sum1++;
                   bin1++;
                   x++;
-                  y=1;
                   var1 = sum2*bin2 - sum1*err2;
                   var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                }
@@ -2110,14 +2109,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   sum1++;
                   bin1++;
                   x++;
-                  y=1;
                   var1 = sum2*bin2 - sum1*err2;
                   var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                   while (var1*var1+bin1 == 0 || var1+var2 == 0) {
                      sum1++;
                      bin1++;
                      x++;
-                     y=1;
                      var1 = sum2*bin2 - sum1*err2;
                      var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                   }

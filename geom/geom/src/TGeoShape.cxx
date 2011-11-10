@@ -502,7 +502,6 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 {
    // Tranform a set of points (LocalToMaster)
    UInt_t i,j;
-   Double_t dlocal[3];
    Double_t dmaster[3];
    if (fgTransform) {
       for (j = 0; j < NbPnts; j++) {
@@ -519,9 +518,6 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 
    for (j = 0; j < NbPnts; j++) {
       i = 3*j;
-      dlocal[0] = points[3*j];
-      dlocal[1] = points[3*j+1];
-      dlocal[2] = points[3*j+2];
       if (gGeoManager->IsMatrixTransform()) {
          TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
          if (bomb) glmat->LocalToMasterBomb(&points[i], dmaster);

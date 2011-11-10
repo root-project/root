@@ -2082,7 +2082,7 @@ void TGLUtil::BeginAttLine(const TAttLine& aline, Char_t transp,
    TGLUtil::LineWidth(aline.GetLineWidth());
    if (aline.GetLineStyle() > 1)
    {
-      Int_t    fac = 1;
+      // Int_t    fac = 1;
       UShort_t pat = 0xffff;
       switch (aline.GetLineStyle()) {
          case 2:  pat = 0x3333; break;
@@ -2093,7 +2093,7 @@ void TGLUtil::BeginAttLine(const TAttLine& aline, Char_t transp,
          case 7:  pat = 0xf0f0; break;
          case 8:  pat = 0xff11; break;
          case 9:  pat = 0x3fff; break;
-         case 10: pat = 0x08ff; fac = 2; break;
+         case 10: pat = 0x08ff; /* fac = 2; */ break;
       }
 
       glLineStipple(1, pat);

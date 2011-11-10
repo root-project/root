@@ -1377,14 +1377,13 @@ void TGCheckButton::DoRedraw()
 {
    // Draw the check button widget.
 
-   int x, y, y0, cw;
+   int x, y, y0;
 
    TGFrame::DoRedraw();
 
    x = 20;
    y = (fHeight - fTHeight) >> 1;
 
-   cw = 13;
    y0 = !fTHeight ? 0 : y + 1;
    if (fOn && fOff) {
       Int_t smax = TMath::Max(fOn->GetHeight(), fOff->GetHeight());

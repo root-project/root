@@ -500,10 +500,10 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
 
       case INPUT_TYPE_TextArea: {
          pElem->fCnt = ++fNInput;
-         const char *z = pElem->MarkupArg("rows", 0);
+         // const char *z = pElem->MarkupArg("rows", 0);
          //int rows = z ? atoi(z) : 10;
          // coverity[returned_pointer]
-         z = pElem->MarkupArg("cols", 0);
+         // z = pElem->MarkupArg("cols", 0);
          //int cols = z ? atoi(z) : 10;
          TGTextEdit *f = new TGTextEdit(fCanvas, 300, 200, pElem->fCnt);
          TGString str("");

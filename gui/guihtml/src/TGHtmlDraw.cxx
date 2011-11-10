@@ -618,8 +618,6 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
    TGHtmlElement *pElem;
    int go, i, n, x, y;
    SHtmlStyle_t style;
-   int firstSelected;      // First selected character in this block
-   int lastSelected;       // Last selected character in this block
    char zBuf[2000];
 
    // Reset n and z
@@ -628,9 +626,6 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
 
    if (p->fZ) delete[] p->fZ;
    p->fZ = 0;
-
-   firstSelected = 1000000;
-   lastSelected = -1;
 
    // Skip over TGHtmlElements that aren't directly displayed.
 
@@ -861,7 +856,7 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
    // Draw table background
 
    //int  mx, my, sh, sw, sx, sy, hd;
-   int iw, ih, dl, dt, dr, db,  left, top, right, bottom; 
+   int dl, dt, dr, db,  left, top, right, bottom; 
 
    left = l - fVisible.fX;
    top  = t - fVisible.fY;
@@ -875,10 +870,10 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
    bottom = top + h - 1;
    if (dr == 0 && db == 0) { dr = right; db = bottom; }
    if (left > dr || right < dl || top > db || bottom < dt) return;
-   iw = image->GetWidth();
-   ih = image->GetHeight();
 
 #if 0
+   int iw = image->GetWidth();
+   int ih = image->GetHeight();
    if (iw < 4 && ih < 4) return;  // CPU burners we ignore.
    sx = (left + _visibleStart.x) % iw;   // X offset within image to start from
    sw = iw - sx;                         // Width of section of image to draw.
@@ -898,8 +893,8 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
    if (!image->GetPixmap()) return;
    GContext_t gc = GetAnyGC();
    GCValues_t gcv;
-   unsigned int mask = kGCTile | kGCFillStyle |
-                       kGCTileStipXOrigin | kGCTileStipYOrigin;
+   // unsigned int mask = kGCTile | kGCFillStyle |
+   //                     kGCTileStipXOrigin | kGCTileStipYOrigin;
    gcv.fTile      = image->GetPixmap();
    gcv.fFillStyle = kFillTiled;
    gcv.fTsXOrigin = -fVisible.fX - fDirtyLeft;
@@ -908,7 +903,7 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
 
    gVirtualX->FillRectangle(pixmap, gc, left - dl, top - dt, w, h);
 
-   mask = kGCFillStyle;
+   // mask = kGCFillStyle;
    gcv.fFillStyle = kFillSolid;
    gVirtualX->ChangeGC(gc, &gcv);
 #endif

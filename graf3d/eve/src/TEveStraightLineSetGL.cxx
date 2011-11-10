@@ -102,7 +102,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       glDisable(GL_LIGHTING);
       TGLUtil::LineWidth(mL.GetLineWidth());
       if (mL.GetLineStyle() > 1) {
-         Int_t    fac = 1;
+         // Int_t    fac = 1;
          UShort_t pat = 0xffff;
          switch (mL.GetLineStyle()) {
             case 2:  pat = 0x3333; break;
@@ -113,7 +113,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
             case 7:  pat = 0xf0f0; break;
             case 8:  pat = 0xff11; break;
             case 9:  pat = 0x3fff; break;
-            case 10: pat = 0x08ff; fac = 2; break;
+            case 10: pat = 0x08ff; /* fac = 2; */ break;
          }
          glLineStipple(1, pat);
          glEnable(GL_LINE_STIPPLE);

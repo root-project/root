@@ -391,7 +391,7 @@ Bool_t TMVA::MethodDT::MonitorBoost( MethodBoost* booster )
 
 
 //_______________________________________________________________________
-Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
+Double_t TMVA::MethodDT::PruneTree(const Int_t /* methodIndex */ )
 {
    if (fAutomatic && fPruneMethod == DecisionTree::kCostComplexityPruning) { // automatic cost complexity pruning
       CCPruner* pruneTool = new CCPruner(fTree, this->Data() , fSepType);
@@ -403,9 +403,8 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t methodIndex)
       delete pruneTool;
    } 
    else if (fAutomatic &&  fPruneMethod != DecisionTree::kCostComplexityPruning){
-      Int_t bla; 
-      bla = methodIndex; //make the compiler quiet
       /*
+
       Double_t alpha = 0;
       Double_t delta = fDeltaPruneStrength;
       

@@ -264,7 +264,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    Float_t alpha_p = 0.;
 
    Int_t typeFlag=-1;
-   UInt_t ns = 0;
+   // UInt_t ns = 0;
    std::vector<Float_t>* svector = new std::vector<Float_t>(GetNvar());
 
    if (fMaxVars!=0) delete fMaxVars;
@@ -281,7 +281,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    for (UInt_t ievt = 0; ievt < fNsupv; ievt++) {
       TVectorD temp(GetNvar()+4);
       gTools().ReadTVectorDFromXML(supportvectornode,"SupportVector",&temp);
-      ns=(UInt_t)temp[0];
+      // ns=(UInt_t)temp[0];
       typeFlag=(int)temp[1];
       alpha=temp[2];
       alpha_p=temp[3];

@@ -2133,7 +2133,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    // Service function for Legos
 
    Int_t i, j, ixt, iyt;
-   Double_t xval1l, xval2l, yval1l,  yval2l;
+   Double_t yval1l,  yval2l;
    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
    Double_t rinrad = gStyle->GetLegoInnerR();
    Double_t dangle = 10; //Delta angle for Rapidity option
@@ -2161,8 +2161,8 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
       if (ab[5] > 0) ab[5]  = TMath::Log10(ab[5]);
       else           ab[5]  = Hparam.xmin;
    }
-   xval1l = Hparam.xmin;
-   xval2l = Hparam.xmax;
+   // xval1l = Hparam.xmin;
+   // xval2l = Hparam.xmax;
    if (Hoption.Logy) {
       if (ab[4] > 0) ab[4]  = TMath::Log10(ab[4]);
       else           ab[4]  = Hparam.ymin;
@@ -3748,7 +3748,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 
    Double_t rinrad = gStyle->GetLegoInnerR();
    Double_t dangle = 10; //Delta angle for Rapidity option
-   Double_t xval1l, xval2l, yval1l, yval2l;
+   Double_t yval1l, yval2l;
    Double_t xlab1l, xlab2l, ylab1l, ylab2l;
    Int_t i, ixa, iya, icx, ixt, iyt;
 
@@ -3759,8 +3759,8 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
    ixt = ia + Hparam.xfirst - 1;
    iyt = ib + Hparam.yfirst - 1;
 
-   xval1l = Hparam.xmin;
-   xval2l = Hparam.xmax;
+   // xval1l = Hparam.xmin;
+   // xval2l = Hparam.xmax;
    yval1l = Hparam.ymin;
    yval2l = Hparam.ymax;
 

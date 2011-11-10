@@ -3817,7 +3817,7 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    int i1, i2;
    int x, y, xend, yend;
    int xdir, ydir;
-   int wid, q;
+   int q;
    int idx;
    int yy;
 
@@ -3861,8 +3861,6 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       DrawWideLine(x1, y1, x2, y2, color, thick);
       return;
    }
-
-   wid = 1;
 
    if (dy <= dx) {
       UInt_t ddy = dy << 1;
@@ -5846,7 +5844,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    TTGlyph *glyph = TTF::GetGlyphs();
 
    // compute the size and position  that will contain the text
-   Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
+   // Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
    Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
    Int_t h    = TTF::GetBox().yMax + Yoff;
 

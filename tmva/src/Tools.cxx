@@ -1454,10 +1454,10 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
 
       std::vector<Float_t> input;
       std::vector<Char_t> mask; // entries with kTRUE must not be transformed
-      Bool_t hasMaskedEntries = kFALSE;
-      if (transformBase)
-	 hasMaskedEntries = transformBase->GetInput (ev, input, mask);
-      else {
+      // Bool_t hasMaskedEntries = kFALSE;
+      if (transformBase) {
+	 /* hasMaskedEntries = */ transformBase->GetInput (ev, input, mask);
+      } else {
 	 for (ivar=0; ivar<nvars; ++ivar) {
 	    input.push_back (ev->GetValue(ivar));
 	 }

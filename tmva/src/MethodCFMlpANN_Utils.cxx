@@ -172,16 +172,16 @@ void TMVA::MethodCFMlpANN_Utils::Train_nn( Double_t *tin2, Double_t *tout2, Int_
    fVarn2_1.Create( *ntrain + *ntest, *nvar2 );
    fVarn3_1.Create( *ntrain + *ntest, *nvar2 );
 
-   Int_t imax;
+   // Int_t imax;
    char det[20];
 
    Entree_new(nvar2, det, ntrain, ntest, nlayer, nodes, ncycle, (Int_t)20);
    if (fNeur_1.neuron[fParam_1.layerm - 1] == 1) {
-      imax = 2;
+      // imax = 2;
       fParam_1.lclass = 2;
    } 
    else {
-      imax = fNeur_1.neuron[fParam_1.layerm - 1] << 1;
+      // imax = fNeur_1.neuron[fParam_1.layerm - 1] << 1;
       fParam_1.lclass = fNeur_1.neuron[fParam_1.layerm - 1];
    }
    fParam_1.nvar = fNeur_1.neuron[0];
@@ -760,9 +760,9 @@ void TMVA::MethodCFMlpANN_Utils::Cout( Int_t * /*i1*/, Double_t *xxx )
 void TMVA::MethodCFMlpANN_Utils::Inl()
 {
    // [smart comments to be added]
-   Int_t i__1, i__2, i__3;
+   Int_t i__1, i__2;
 
-   Int_t jmin, jmax, k, layer, kk, nq, nr;
+   Int_t jmax, k, layer, kk, nq, nr;
 
    i__1 = fParam_1.nvar;
    i__1 = fParam_1.layerm;
@@ -778,12 +778,12 @@ void TMVA::MethodCFMlpANN_Utils::Inl()
       }
       i__2 = kk;
       for (k = 1; k <= i__2; ++k) {
-         jmin = k * 10 - 9;
+         // jmin = k * 10 - 9;
          jmax = k * 10;
          if (fNeur_1.neuron[layer] < jmax) {
             jmax = fNeur_1.neuron[layer];
          }
-         i__3 = fNeur_1.neuron[layer - 1];
+         // i__3 = fNeur_1.neuron[layer - 1];
       }
    }
 }
@@ -814,17 +814,17 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
    Int_t i__1, i__2;
    
    Double_t xmok[max_nNodes_];
-   Float_t xpaw;
+   // Float_t xpaw;
    Double_t xmko[max_nNodes_];
    Int_t i__, j;
    Int_t ix;
-   Int_t jjj;
-   Float_t vbn[10];
+   // Int_t jjj;
+   // Float_t vbn[10];
    Int_t nko[max_nNodes_], nok[max_nNodes_];
 
-   for (i__ = 1; i__ <= 10; ++i__) {
-      vbn[i__ - 1] = (Float_t)0.;
-   }
+   // for (i__ = 1; i__ <= 10; ++i__) {
+   //    vbn[i__ - 1] = (Float_t)0.;
+   // }
    if (*ilearn == 1) {
       // AH: removed output 
    }
@@ -840,7 +840,7 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
       En_avant(&i__);
       i__2 = fNeur_1.neuron[fParam_1.layerm - 1];
       for (j = 1; j <= i__2; ++j) {
-         xpaw = (Float_t) y_ref(fParam_1.layerm, j);
+         // xpaw = (Float_t) y_ref(fParam_1.layerm, j);
          if (fVarn_1.nclass[i__ - 1] == j) {
             ++nok[j - 1];
             xmok[j - 1] += y_ref(fParam_1.layerm, j);
@@ -848,13 +848,13 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
          else {
             ++nko[j - 1];
             xmko[j - 1] += y_ref(fParam_1.layerm, j);
-            jjj = j + fNeur_1.neuron[fParam_1.layerm - 1];
+            // jjj = j + fNeur_1.neuron[fParam_1.layerm - 1];
          }
-         if (j <= 9) {
-            vbn[j - 1] = xpaw;
-         }
+         // if (j <= 9) {
+         //    vbn[j - 1] = xpaw;
+         // }
       }
-      vbn[9] = (Float_t) fVarn_1.nclass[i__ - 1];
+      // vbn[9] = (Float_t) fVarn_1.nclass[i__ - 1];
    }
    i__1 = fNeur_1.neuron[fParam_1.layerm - 1];
    for (j = 1; j <= i__1; ++j) {
@@ -962,7 +962,9 @@ void TMVA::MethodCFMlpANN_Utils::Lecev2( Int_t *ktest, Double_t *tout2, Double_t
    // [smart comments to be added]
    Int_t i__1, i__2;
 
-   Int_t i__, j, k, l, mocla[max_nNodes_], ikend;
+   Int_t i__, j, l;
+   // Int_t  mocla[max_nNodes_];
+   Int_t ikend;
    Double_t xpg[max_nVar_];
 
    /* NTRAIN: Nb of events used during the learning */
@@ -972,9 +974,9 @@ void TMVA::MethodCFMlpANN_Utils::Lecev2( Int_t *ktest, Double_t *tout2, Double_t
 
    *ktest = 0;
    i__1 = fParam_1.lclass;
-   for (k = 1; k <= i__1; ++k) {
-      mocla[k - 1] = 0;
-   }
+   // for (k = 1; k <= i__1; ++k) {
+   //    mocla[k - 1] = 0;
+   // }
    i__1 = fParam_1.nevt;
    for (i__ = 1; i__ <= i__1; ++i__) {
       DataInterface(tout2, tin2, &fg_999, &fg_0, &fParam_1.nevt, &fParam_1.nvar, 
@@ -1061,23 +1063,23 @@ void TMVA::MethodCFMlpANN_Utils::Arret( const char* mot )
    std::exit(1);
 }
 
-void TMVA::MethodCFMlpANN_Utils::CollectVar( Int_t *nvar, Int_t *class__, Double_t *xpg )
+void TMVA::MethodCFMlpANN_Utils::CollectVar( Int_t * /*nvar*/, Int_t * /*class__*/, Double_t * /*xpg*/ )
 {
-   // [smart comments to be added]
-   Int_t i__1;
+   // // [smart comments to be added]
+   // Int_t i__1;
    
-   Int_t i__;
-   Float_t x[201];
+   // Int_t i__;
+   // Float_t x[201];
 
-   // Parameter adjustments
-   --xpg;
+   // // Parameter adjustments
+   // --xpg;
 
-   for (i__ = 1; i__ <= 201; ++i__) {
-      x[i__ - 1] = 0.0;
-   }
-   x[0] = (Float_t) (*class__);
-   i__1 = *nvar;
-   for (i__ = 1; i__ <= i__1; ++i__) {
-      x[i__] = (Float_t) xpg[i__];
-   }
+   // for (i__ = 1; i__ <= 201; ++i__) {
+   //    x[i__ - 1] = 0.0;
+   // }
+   // x[0] = (Float_t) (*class__);
+   // i__1 = *nvar;
+   // for (i__ = 1; i__ <= i__1; ++i__) {
+   //    x[i__] = (Float_t) xpg[i__];
+   // }
 }

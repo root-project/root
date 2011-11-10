@@ -447,16 +447,12 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
    ielem=0;
    Int_t iline=0;
    Double_t cur_av;
-   Long64_t nev;
-   Long64_t nextevent = Long64_t(10E16);
    while ((ple = (TProofLogElem*)next())){
       const char *role = ple->GetRole();
       if (role[0]!='w') continue;
       TList *lines = ple->GetMacro()->GetListOfLines();
       if (!lines || lines->GetSize() <= 0) continue;
       TIter prev(lines, kIterBackward);
-      nev = 0;
-      nextevent = Long64_t(10E16);
       iline=0;
       cur_av = 0;
       while ((curline = (TObjString*)prev()) && iline<last[ielem]){

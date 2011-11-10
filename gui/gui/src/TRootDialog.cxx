@@ -291,11 +291,9 @@ Bool_t TRootDialog::HandleKey(Event_t* event)
 {
    // The key press event handler in this dialog.
 
-   Int_t  n;
    char   tmp[10];
    UInt_t keysym;
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
-   n = strlen(tmp);
    if ((EKeySym)keysym  == kKey_Tab) {
 
       TGTextEntry *entry;
