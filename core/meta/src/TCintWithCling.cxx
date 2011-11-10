@@ -127,7 +127,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title) :
    }
 #endif
 
-   fInterpreter = new cling::Interpreter(1, interpArgs, 0, llvmDir); 
+   fInterpreter = new cling::Interpreter(1, interpArgs, llvmDir); 
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
    // Add the root include directory and etc/ to list searched by default.
