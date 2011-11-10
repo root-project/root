@@ -9,8 +9,9 @@
    __weak IBOutlet UITextField *fileNameField;
 }
 
-- (void) fileWasSelected : (FileShortcut*) shortcut;
-- (void) addRootFile : (NSString *) fileName;
+- (void) fileWasSelected : (FileShortcut*)shortcut;
+- (void) tryToDelete : (FileShortcut*)shortcut;
+- (void) addRootFile : (NSString *)fileName;
 
 - (IBAction) textFieldDidEndOnExit : (id) sender;
 - (IBAction) textFieldEditingDidEnd : (id) sender;

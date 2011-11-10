@@ -8,9 +8,10 @@
 //C++ imports.
 #import "FileUtils.h"
 
-@interface RootFileController () {
+@interface RootFileController () <UIActionSheetDelegate> {
 @private
    NSMutableArray *fileContainers;
+   __weak FileShortcut *fileToDelete;
 }
 
 - (void) hideFileOpenView;
@@ -160,6 +161,29 @@
    [contentController activateForFile : [shortcut getFileContainer]];
    [self.navigationController pushViewController : contentController animated : YES];
 }
+
+//____________________________________________________________________________________________________
+- (void) tryToDelete : (FileShortcut*)shortcut
+{
+   NSString *message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
+   UIActionSheet *dialog = [[UIActionSheet alloc] initWithTitle : message delegate : self cancelButtonTitle : @"Cancel" destructiveButtonTitle : @"Yes" otherButtonTitles : nil];
+   fileToDelete = shortcut;
+   [dialog showInView : self.view];
+}
+
+#pragma mark - Action sheet delegate, delete the file.
+
+//____________________________________________________________________________________________________
+- (void)actionSheet : (UIActionSheet *)actionSheet didDismissWithButtonIndex : (NSInteger)buttonIndex
+{
+   if (!buttonIndex) {
+      [fileContainers removeObject:fileToDelete];
+      [fileToDelete removeFromSuperview];
+      [self correctFramesForOrientation : self.interfaceOrientation];
+   }
+}
+
+#pragma mark - File open operations.
 
 //____________________________________________________________________________________________________
 - (void) animateFileOpenView

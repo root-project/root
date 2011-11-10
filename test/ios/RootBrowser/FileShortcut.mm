@@ -48,8 +48,10 @@
       self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
       filePictogram = [UIImage imageNamed : @"file_icon.png"];
       backgroundImage = [UIImage imageNamed : @"file_shortcut_background.png"];
-      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
-      [self addGestureRecognizer:tap];
+      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
+      [self addGestureRecognizer : tap];
+      UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget: self action:@selector(handleLongPress:)];
+      [self addGestureRecognizer : longPress];
    
       self.opaque = NO;
    }
@@ -88,6 +90,15 @@
 {
    RootFileController *parentController = (RootFileController *)controller;
    [parentController fileWasSelected : self];
+}
+
+//____________________________________________________________________________________________________
+- (void) handleLongPress : (UILongPressGestureRecognizer *)longPress
+{
+   if (longPress.state == UIGestureRecognizerStateBegan) {
+      RootFileController *parentController = (RootFileController *)controller;
+      [parentController tryToDelete : self];
+   }
 }
 
 //____________________________________________________________________________________________________
