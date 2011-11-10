@@ -43,8 +43,7 @@ namespace cling {
     m_DynamicLookupEnabled(false),
     m_Consumer(0),
     m_FirstTopLevelDecl(0),
-    m_LastTopLevelDecl(0),
-    m_UsingStartupPCH(false)
+    m_LastTopLevelDecl(0)
   {
     CompilerInstance* CI 
       = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"), 
@@ -128,65 +127,20 @@ namespace cling {
      GetCodeGenerator()->ReleaseModule();
   }
   
-  void IncrementalParser::Initialize(const char* startupPCH) {
+  void IncrementalParser::Initialize() {
 
     // Init the consumers    
 
-    loadStartupPCH(startupPCH);
-    if (!m_UsingStartupPCH) {
-      CompileAsIs(""); // Consume initialization.
-      // Set up common declarations which are going to be available
-      // only at runtime
-      // Make sure that the universe won't be included to compile time by using
-      // -D __CLING__ as CompilerInstance's arguments
-      CompileAsIs("#include \"cling/Interpreter/RuntimeUniverse.h\"");
-    }
+    CompileAsIs(""); // Consume initialization.
+    // Set up common declarations which are going to be available
+    // only at runtime
+    // Make sure that the universe won't be included to compile time by using
+    // -D __CLING__ as CompilerInstance's arguments
+    CompileAsIs("#include \"cling/Interpreter/RuntimeUniverse.h\"");
 
     // Attach the dynamic lookup
     // if (isDynamicLookupEnabled())
     //  getTransformer()->Initialize();
-  }
-
-  void IncrementalParser::loadStartupPCH(const char* filename) {
-    if (!filename || !filename[0]) return;
-    bool Preamble = m_CI->getPreprocessorOpts().PrecompiledPreambleBytes.first !=0;
-    llvm::OwningPtr<ExternalASTSource> 
-      EAS(CompilerInstance::createPCHExternalASTSource(filename,
-                                                       /* sysroot */"",
-                                                /* disable PCH validation*/true,
-                                                   /* disable stat cache */false,
-                                                       m_CI->getPreprocessor(),
-                                                       m_CI->getASTContext(),
-                                                 /* deserialization listener */0,
-                                                       Preamble
-                                                       )
-          );
-    if (EAS) {
-       m_CI->getASTContext().setExternalSource(EAS);
-       m_UsingStartupPCH = true;
-    } else {
-      // Valid file name but no (valid) PCH - recreate.
-      // We use createOutputFile here because this is exposed via libclang, and we
-      // must disable the RemoveFileOnSignal behavior.
-      llvm::raw_ostream *OS = m_CI->createOutputFile(filename, /*Binary=*/true,
-                                                     /*RemoveFileOnSignal=*/false,
-                                                     filename);
-      m_StartupPCHGenerator.reset(new PCHGenerator(m_CI->getPreprocessor(),
-                                                   filename,
-                                                   false, /*isModule*/
-                                                   "", /*isysroot*/
-                                                   OS
-                                                   )
-                                  );
-      m_StartupPCHGenerator->InitializeSema(m_CI->getSema());
-      addConsumer(ChainedConsumer::kPCHGenerator, m_StartupPCHGenerator.get());
-    }
-  }
-
-  void IncrementalParser::writeStartupPCH() {
-    if (!m_StartupPCHGenerator) return;
-    m_StartupPCHGenerator->HandleTranslationUnit(m_CI->getASTContext());
-    m_StartupPCHGenerator.reset(); // deletes StartupPCHGenerator
   }
 
   IncrementalParser::EParseResult 

@@ -40,8 +40,6 @@ int main( int argc, char **argv )
 
    clang::CompilerInstance* CI = interpreter.getCI();
   interpreter.AddIncludePath(".");
-
-   interpreter.writeStartupPCH();
   
   for (size_t I = 0, N = interpreter.getOptions().LibsToLoad.size();
        I < N; ++I) {

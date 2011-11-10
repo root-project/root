@@ -30,7 +30,6 @@ namespace clang {
   class FileID;
   class FunctionDecl;
   class Parser;
-  class PCHGenerator;
   class Sema;
   class SourceLocation;
 }
@@ -52,7 +51,7 @@ namespace cling {
     IncrementalParser(Interpreter* interp, int argc, const char* const *argv,
                       const char* llvmdir);
     ~IncrementalParser();
-    void Initialize(const char* startupPCH);
+    void Initialize();
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
     EParseResult CompileLineFromPrompt(llvm::StringRef input);
@@ -74,13 +73,10 @@ namespace cling {
     void addConsumer(ChainedConsumer::EConsumerIndex I, clang::ASTConsumer* consumer);
     clang::CodeGenerator* GetCodeGenerator();
 
-    bool usingStartupPCH() const { return m_UsingStartupPCH; }
-    void writeStartupPCH();
   private:
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
-    void loadStartupPCH(const char* filename);
 
     Interpreter* m_Interpreter; // our interpreter context
     llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.
@@ -91,9 +87,6 @@ namespace cling {
     ChainedConsumer* m_Consumer; // CI owns it
     clang::Decl* m_FirstTopLevelDecl; // first top level decl
     clang::Decl* m_LastTopLevelDecl; // last top level decl after most recent call to parse()
-    bool m_UsingStartupPCH; // Whether the interpreter is using a PCH file to accelerate its startup
-    std::string m_StartupPCHFilename; // Set when writing the PCH
-    llvm::OwningPtr<clang::PCHGenerator> m_StartupPCHGenerator; // Startup PCH generator
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H

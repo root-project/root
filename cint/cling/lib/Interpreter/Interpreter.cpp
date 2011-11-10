@@ -166,8 +166,7 @@ namespace cling {
   //---------------------------------------------------------------------------
   // Constructor
   //---------------------------------------------------------------------------
-   Interpreter::Interpreter(int argc, const char* const *argv,
-                            const char* startupPCH /*= 0*/,
+   Interpreter::Interpreter(int argc, const char* const *argv, 
                             const char* llvmdir /*= 0*/):
   m_UniqueCounter(0),
   m_PrintAST(false),
@@ -204,10 +203,7 @@ namespace cling {
 #endif
 
     // Warm them up
-    m_IncrParser->Initialize(startupPCH);
-    if (m_IncrParser->usingStartupPCH()) {
-      processStartupPCH();
-    }
+    m_IncrParser->Initialize();
 
     if (getCI()->getLangOpts().CPlusPlus) {
        // Set up the gCling variable - even if we use PCH ('this' is different)
@@ -237,35 +233,12 @@ namespace cling {
     return "$Id$";
   }
 
-  void Interpreter::writeStartupPCH() {
-    m_IncrParser->writeStartupPCH();
-  }
-
   void Interpreter::handleFrontendOptions() {
     if (m_Opts.ShowVersion) {
       llvm::outs() << getVersion() << '\n';
     }
     if (m_Opts.Help) {
       m_Opts.PrintHelp();
-    }
-  }
-
-  void Interpreter::processStartupPCH() {
-    clang::TranslationUnitDecl* TU = m_IncrParser->getCI()->getASTContext().getTranslationUnitDecl();
-    for (clang::DeclContext::decl_iterator D = TU->decls_begin(),
-           E = TU->decls_end(); D != E; ++D) {
-      // That's probably overestimating
-      ++m_UniqueCounter;
-      const clang::FunctionDecl* F = dyn_cast<const clang::FunctionDecl>(*D);
-      if (F) {
-        clang::DeclarationName N = F->getDeclName();
-        if (N.isIdentifier()) {
-          clang::IdentifierInfo* II = N.getAsIdentifierInfo();
-          if (II && (II->getName().find("__cling_Un1Qu3") == 0)) {
-            RunFunction(II->getName());
-          }
-        }
-      }
     }
   }
    

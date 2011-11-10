@@ -320,7 +320,7 @@ namespace cling {
     DeclsQueue.clear();
 
     for (size_t i = 0; i < kConsumersCount; ++i)
-      if (IsConsumerEnabled((EConsumerIndex)i) && i != kPCHGenerator)
+      if (IsConsumerEnabled((EConsumerIndex)i))
         Consumers[i]->HandleTranslationUnit(Ctx);
   }
   

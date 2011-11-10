@@ -39,7 +39,6 @@ namespace cling {
       kDeclExtractor,
       kValuePrinterSynthesizer,
       kASTDumper,
-      kPCHGenerator,
       kCodeGenerator,
       kConsumersCount
     };

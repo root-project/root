@@ -124,8 +124,7 @@ namespace cling {
     //---------------------------------------------------------------------
     //! Constructor
     //---------------------------------------------------------------------
-    Interpreter(int argc, const char* const *argv,
-                const char* startupPCH = 0, const char* llvmdir = 0);
+    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0);
     
     //---------------------------------------------------------------------
     //! Destructor
@@ -162,8 +161,6 @@ namespace cling {
     
     llvm::raw_ostream& getValuePrinterStream() const { return *m_ValuePrintStream; }
 
-    void writeStartupPCH();
-
     void runStaticInitializersOnce() const;
 
     int CXAAtExit(void (*func) (void*), void* arg, void* dso);
@@ -192,7 +189,6 @@ namespace cling {
 
   private:
     void handleFrontendOptions();
-    void processStartupPCH();
     CompilationResult handleLine(llvm::StringRef Input,
                                  llvm::StringRef FunctionName);
     void WrapInput(std::string& input, std::string& fname);
