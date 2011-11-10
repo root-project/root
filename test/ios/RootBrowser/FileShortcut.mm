@@ -11,7 +11,6 @@
    __weak UIViewController *controller;
 
    UIImage *filePictogram;
-   UIImage *backgroundImage;
    
    ROOT::iOS::Browser::FileContainer *fileContainer;
 }
@@ -47,7 +46,6 @@
       
       self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
       filePictogram = [UIImage imageNamed : @"file_icon.png"];
-      backgroundImage = [UIImage imageNamed : @"file_shortcut_background.png"];
       UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
       [self addGestureRecognizer : tap];
       UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget: self action:@selector(handleLongPress:)];
@@ -64,8 +62,6 @@
 {
    // Drawing code
    CGContextRef ctx = UIGraphicsGetCurrentContext();
-
-   [backgroundImage drawAtPoint:CGPointZero];
 
    //Draw the pictogram for ROOT's file.
    const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2, 
