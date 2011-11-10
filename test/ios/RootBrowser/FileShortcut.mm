@@ -79,7 +79,8 @@
 //____________________________________________________________________________________________________
 - (void)dealloc
 {
-   ROOT::iOS::Browser::DeleteFileContainer(fileContainer);
+   //Crazy name qualification :(
+   ROOT::iOS::Browser::FileContainer::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________

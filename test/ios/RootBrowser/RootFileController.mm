@@ -129,7 +129,9 @@
 - (void) addRootFile : (NSString *) fileName
 {
    //Open the file and read its contents.
-   ROOT::iOS::Browser::FileContainer *fileContainer = ROOT::iOS::Browser::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
+   using namespace ROOT::iOS::Browser;
+   
+   FileContainer *fileContainer = FileContainer::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
 
    if (!fileContainer) {
       UIAlertView *alert = [[UIAlertView alloc] initWithTitle : @"File Open Error:"
@@ -148,7 +150,7 @@
       [scrollView addSubview : newShortcut];   
       [self placeFileShortcuts];
    }  else
-      ROOT::iOS::Browser::DeleteFileContainer(fileContainer);
+      FileContainer::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________
