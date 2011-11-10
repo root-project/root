@@ -173,7 +173,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = nullPOI;
          double nullNLL = fNllNull->getVal();
 
-         delete fNllNull ; fNllNull = NULL ;
+         if (!reuse) {
+            delete fNllNull ; fNllNull = NULL ;
+         }
          delete attachedSet;
 
 	 created = kFALSE ;
@@ -189,7 +191,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = *fAltParameters;
          double altNLL = fNllAlt->getVal();
 
-         delete fNllAlt ; fNllAlt = NULL ;
+         if (!reuse) { 
+            delete fNllAlt ; fNllAlt = NULL ;
+         }
          delete attachedSet;
 
          RooMsgService::instance().setGlobalKillBelow(msglevel);
