@@ -34,8 +34,12 @@
 #include <stdlib.h>
 
 #ifdef WIN32
-#define EADDRINUSE  10048
-#define EISCONN     10056
+# ifndef EADDRINUSE
+#  define EADDRINUSE  10048
+# endif
+# ifndef EISCONN
+#  define EISCONN     10056
+# endif
 #endif
 
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.1";

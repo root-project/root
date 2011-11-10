@@ -155,7 +155,7 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
       } else {
          TString filename("$ROOTSYS/etc/plugins/TVirtualStreamerInfo");
          gSystem->ExpandPathName(filename);
-         if (gSystem->AccessPathName(filename) > 0) {            
+         if (gSystem->AccessPathName(filename)) {            
             ::Fatal("TVirtualStreamerInfo::Factory",
                     "Cannot find the plugin handlers for TVirtualStreamerInfo! "
                     "$ROOTSYS/etc/plugins/TVirtualStreamerInfo does not exist "
