@@ -111,17 +111,17 @@ INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 $(ROOTEXE):     $(ROOTEXEO) $(BOOTLIBSDEP) $(RINTLIB)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
+		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) \
 		   $(RPATH) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
 
 ifneq ($(PLATFORM),win32)
 $(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(BOOTLIBSDEP) $(RINTLIB)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(BOOTULIBS) \
+		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) \
 		   $(RPATH) $(NEWLIBS) $(BOOTLIBS) $(RINTLIBS) $(SYSLIBS)
 endif
 
 $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
-		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(BOOTULIBS) \
+		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
 $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
@@ -130,7 +130,7 @@ $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@chmod 0755 $@
 
 $(ROOTSEXE):    $(ROOTSEXEO) $(BOOTLIBSDEP)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) $(BOOTULIBS) \
+		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) \
 		   $(RPATH) $(BOOTLIBS) $(SYSLIBS)
 
 $(ROOTSSH):     $(call stripsrc,$(MAINDIRS)/roots.sh)
