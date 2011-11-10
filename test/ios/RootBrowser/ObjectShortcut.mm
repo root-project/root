@@ -61,8 +61,9 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
       self.icon = [UIImage imageNamed : @"directory.png"];
       self.opaque = NO;
       
-      //Tap gesture to select an object.
-      //
+      //Tap gesture to select a directory.
+      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
+      [self addGestureRecognizer : tap];
    }
    
    return self;

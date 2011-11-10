@@ -254,8 +254,8 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
             if (nestedDir.get()) {
                //Recursion - create nested container.
                std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
-            
                ScanDirectory(nestedDir.get(), visibleTypes, nestedContainer.get());
+               nestedContainer->AttachPads();
                dirs.push_back(nestedContainer.get());
                nestedContainer.release();
             }

@@ -206,9 +206,16 @@
 //____________________________________________________________________________________________________
 - (void) selectObjectFromFile : (ObjectShortcut *) shortcut
 {
-   ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName:@"ROOTObjectController" bundle : nil];
-   [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
-   [self.navigationController pushViewController : objectController animated : YES];
+   if (shortcut.isDirectory) {
+      //Create another FileContentController and push it on stack.
+      FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
+      [self.navigationController pushViewController : contentController animated : YES];
+   } else {
+      ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName:@"ROOTObjectController" bundle : nil];
+      [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
+      [self.navigationController pushViewController : objectController animated : YES];
+   }
 }
 
 @end
