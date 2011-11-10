@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70078C2C146AC4C400C19F4D /* FileUtils.cxx */; };
+		700ED6CB146BCDF200526D1C /* directory.png in Resources */ = {isa = PBXBuildFile; fileRef = 700ED6CA146BCDF100526D1C /* directory.png */; };
 		7014410F140E18390070459F /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* SelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
@@ -126,6 +127,7 @@
 /* Begin PBXFileReference section */
 		70078C2B146AC4C400C19F4D /* FileUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtils.h; sourceTree = "<group>"; };
 		70078C2C146AC4C400C19F4D /* FileUtils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cxx; sourceTree = "<group>"; };
+		700ED6CA146BCDF100526D1C /* directory.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = directory.png; sourceTree = "<group>"; };
 		7014410D140E18390070459F /* SelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionView.h; sourceTree = "<group>"; };
 		7014410E140E18390070459F /* SelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SelectionView.mm; sourceTree = "<group>"; };
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
@@ -498,6 +500,7 @@
 			isa = PBXGroup;
 			children = (
 				7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */,
+				700ED6CA146BCDF100526D1C /* directory.png */,
 				7023805D140514C8002A5331 /* file_icon.png */,
 			);
 			name = "Icons and pictures";
@@ -748,6 +751,7 @@
 				702357E21434658900A95000 /* H1Inspector.xib in Resources */,
 				70235804143494F400A95000 /* MarkerInspector.xib in Resources */,
 				702358091434A93C00A95000 /* H1BinsInspector.xib in Resources */,
+				700ED6CB146BCDF200526D1C /* directory.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

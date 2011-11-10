@@ -107,8 +107,7 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
 
 //__________________________________________________________________________________________________________________________
 FileContainer::FileContainer(const std::string &fileName)
-                  : fFileName(fileName),
-                    fNondirObjects(0)
+                  : fFileName(fileName)
 {
 }
 
@@ -116,7 +115,9 @@ FileContainer::FileContainer(const std::string &fileName)
 //__________________________________________________________________________________________________________________________
 FileContainer::~FileContainer()
 {
-   for (auto fileContainer : fFileContents)
+   for (auto dir : fDirectories)
+      delete dir;
+   for (auto fileContainer : fObjects)
       delete fileContainer;
    for (auto pad : fAttachedPads)
       delete pad;
@@ -125,19 +126,13 @@ FileContainer::~FileContainer()
 //__________________________________________________________________________________________________________________________
 auto FileContainer::GetNumberOfObjects()const -> size_type
 {
-   return fFileContents.size();
-}
-
-//__________________________________________________________________________________________________________________________
-auto FileContainer::GetNumberOfNondirObjects()const -> size_type
-{
-   return fNondirObjects;
+   return fObjects.size();
 }
 
 //__________________________________________________________________________________________________________________________
 TObject *FileContainer::GetObject(size_type ind)const
 {
-   return fFileContents[ind];
+   return fObjects[ind];
 }
 
 //__________________________________________________________________________________________________________________________
@@ -207,6 +202,18 @@ bool FileContainer::GetMarkerDrawOption(size_type ind)const
 }
 
 //__________________________________________________________________________________________________________________________
+auto FileContainer::GetNumberOfDirectories()const -> size_type
+{
+   return fDirectories.size();
+}
+
+//__________________________________________________________________________________________________________________________
+FileContainer *FileContainer::GetDirectory(size_type ind)const
+{
+   return fDirectories[ind];
+}
+
+//__________________________________________________________________________________________________________________________
 const char *FileContainer::GetFileName()const
 {
    return fFileName.c_str();
@@ -215,17 +222,12 @@ const char *FileContainer::GetFileName()const
 //__________________________________________________________________________________________________________________________
 void FileContainer::AttachPads()
 {
-   fAttachedPads.assign(fFileContents.size(), 0);
+   fAttachedPads.assign(fObjects.size(), 0);
    for (size_type i = 0; i < fAttachedPads.size(); ++i) {
-      if (FileContainer *nested = dynamic_cast<FileContainer *>(fFileContents[i])) {
-         //Attach pads for a nested container!
-         nested->AttachPads();
-      } else {
-         std::auto_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
-         newPad->cd();
-         fFileContents[i]->Draw(fOptions[i].Data());
-         fAttachedPads[i] = newPad.release();
-      }
+      std::auto_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
+      newPad->cd();
+      fObjects[i]->Draw(fOptions[i].Data());
+      fAttachedPads[i] = newPad.release();
    }
 }
 
@@ -237,7 +239,8 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
       return;
    
    TString option;
-   std::vector<TObject *> tmp;
+   std::vector<TObject *> objs;
+   std::vector<FileContainer *> dirs;
    std::vector<TString> opts;
    TObjLink *link = objKeys->FirstLink();
    
@@ -250,32 +253,31 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
             std::auto_ptr<TDirectoryFile> nestedDir(static_cast<TDirectoryFile *>(dir->Get(key->GetName())));
             if (nestedDir.get()) {
                //Recursion - create nested container.
-               //Who should delete this TDirectoryFile? If it's not deleted by file,
-               //it can be deleted by nested file container.
                std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
             
                ScanDirectory(nestedDir.get(), visibleTypes, nestedContainer.get());
-               opts.push_back("");//empty option for container.
-               tmp.push_back(nestedContainer.get());
+               dirs.push_back(nestedContainer.get());
                nestedContainer.release();
             }
          } else if (visibleTypes.find(className) != visibleTypes.end()) {
             std::auto_ptr<TObject> newObject(ReadObjectForKey(dir, key, option));
             opts.push_back(option);
-            tmp.push_back(newObject.get());//bad_alloc.
+            objs.push_back(newObject.get());//bad_alloc.
             newObject.release();
-            currentContainer->fNondirObjects++;
          }
       
          link = link->Next();
       }
    } catch (const std::exception &) {
-      for (auto obj : tmp)
+      for (auto obj : objs)
          delete obj;
+      for (auto dir : dirs)
+         delete dir;
       throw;
    }
    
-   currentContainer->fFileContents.swap(tmp);
+   currentContainer->fObjects.swap(objs);
+   currentContainer->fDirectories.swap(dirs);
    currentContainer->fOptions.swap(opts);
 }
 

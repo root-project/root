@@ -40,9 +40,7 @@ enum EHistogramErrorOption {
 };
 
 
-//File container inherits from TObject, to make it possible
-//contain nested file containers (for TDirectoryFile, found in files).
-class FileContainer : public TObject {
+class FileContainer {
    //Auto ptr must delete file container in case of exception
    //in CreateFileContainer and so needs an access to private dtor.
    friend class std::auto_ptr<FileContainer>;
@@ -55,16 +53,17 @@ private:
 
 public:
    size_type GetNumberOfObjects()const;
-   size_type GetNumberOfNondirObjects()const;
    TObject *GetObject(size_type ind)const;
    const char *GetDrawOption(size_type ind)const;
    Pad *GetPadAttached(size_type ind)const;
-
    void SetErrorDrawOption(size_type ind, EHistogramErrorOption opt);
    EHistogramErrorOption GetErrorDrawOption(size_type ind)const;
    
    void SetMarkerDrawOption(size_type ind, bool on);
    bool GetMarkerDrawOption(size_type ind)const;
+
+   size_type GetNumberOfDirectories()const;   
+   FileContainer *GetDirectory(size_type ind)const;
 
    const char *GetFileName()const;
 
@@ -81,9 +80,9 @@ private:
    void AttachPads();
 
    std::string fFileName;
-   size_type fNondirObjects;
 
-   std::vector<TObject *> fFileContents;
+   std::vector<FileContainer *>fDirectories;
+   std::vector<TObject *> fObjects;
    std::vector<TString> fOptions;
    
    std::vector<Pad *> fAttachedPads;

@@ -151,15 +151,27 @@
 }
 
 //____________________________________________________________________________________________________
+- (void) addShortcutForFolderAtIndex : (unsigned) index
+{
+   ObjectShortcut *shortcut = [[ObjectShortcut alloc] initWithFrame : [ObjectShortcut defaultRect] controller : self forFolderAtIndex : index];
+   [scrollView addSubview : shortcut];
+   [objectShortcuts addObject : shortcut];
+}
+
+//____________________________________________________________________________________________________
 - (void) addObjectsIntoScrollview
 {
-   typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
+   using namespace ROOT::iOS::Browser;
 
    [self clearScrollview];
 
    objectShortcuts = [[NSMutableArray alloc] init];
 
-   for (size_type i = 0; i < fileContainer->GetNumberOfObjects(); ++i)
+   //Add directories first.
+   for (FileContainer::size_type i = 0; i < fileContainer->GetNumberOfDirectories(); ++i)
+      [self addShortcutForFolderAtIndex : i];
+   //Now add objects.
+   for (FileContainer::size_type i = 0; i < fileContainer->GetNumberOfObjects(); ++i)
       [self addShortcutForObjectAtIndex : i];
 }
 
