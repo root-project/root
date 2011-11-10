@@ -1,0 +1,3 @@
+From Fons, 10/11/11:
+Stock xz-5.0.3.tar.gz except I remove -Wlogical-op from "configure"
+as it produces many warnings in clang which does not support this option.
