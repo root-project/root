@@ -128,18 +128,12 @@ ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 
-ifneq ($(XROOTDDIRL),)
-XPDLIBEXTRA    := -L$(XROOTDDIRL)
-XPROOFDEXELIBS := -L$(XROOTDDIRL)
-endif
-
 ifeq ($(HASXRDUTILS),no)
 
-XPDLIBEXTRA    += -lXrdClient -lXrdNet -lXrdOuc \
+XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
-XPROOFDEXELIBS += -lXrd -lXrdClient -lXrdNet -lXrdOuc \
+XPROOFDEXELIBS := $(XROOTDDIRL) -lXrd -lXrdClient -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
-
 # Starting from Jul 2010 XrdNet has been split in two libs:
 #    XrdNet and XrdNetUtil
 # both are needed
@@ -156,8 +150,8 @@ endif
 
 else
 
-XPDLIBEXTRA    += -lXrdClient -lXrdUtils
-XPROOFDEXELIBS += -lXrdMain -lXrdClient -lXrdUtils
+XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdUtils
+XPROOFDEXELIBS := $(XROOTDDIRL) -lXrdMain -lXrdClient -lXrdUtils
 
 endif
 XPDLIBEXTRA    +=  $(DNSSDLIB)

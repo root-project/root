@@ -4474,7 +4474,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    #
    # Check if bonjour is available for code potentially using it ...
    if test "x$enable_xrootd" = "xyes"; then
-      xrdlibdir=`echo $tmpxrdlibdir | sed -e 's/^-L//'`
+      xrdlibdir="$tmpxrdlibdir"
       if test "x$enable_bonjour" = "xyes"; then
          check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
          if test  $found_symbol -eq 0 ; then
