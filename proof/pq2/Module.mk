@@ -21,9 +21,9 @@ PQ2          := bin/pq2
 
 ##### Libraries needed #######
 PQ2LIBS      := -lProof -lHist -lMatrix -lTree \
-                -lRIO -lNet -lThread $(BOOTLIBS) 
-PQ2LIBSDEP    = $(ORDER_) $(CORELIB) $(CINTLIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
-                $(TREELIB) $(MATRIXLIB) $(MATHCORELIB) $(PROOFLIB) $(THREADLIB)
+                -lRIO -lNet -lThread -lMathCore $(BOOTLIBS) 
+PQ2LIBSDEP    = $(BOOTLIBSDEP) $(IOLIB) $(NETLIB) $(HISTLIB) $(TREELIB) \
+                $(MATRIXLIB) $(MATHCORELIB) $(PROOFLIB) $(THREADLIB)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PQ2H))
