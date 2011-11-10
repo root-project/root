@@ -26,8 +26,6 @@ ALLHDRS      += $(CLINGETC)
 # include all dependency files
 INCLUDEFILES += $(CLINGDEP)
 
-CLINGDEP  := $(CLINGLIB)
-
 ifneq ($(LLVMCONFIG),)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/

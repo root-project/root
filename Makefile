@@ -213,7 +213,8 @@ ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
 endif
 ifeq ($(BUILDCLING),yes)
-MODULES      += cint/cling
+# put cling right behind of CINT; e.g. UTILS need it
+MODULES      := $(subst cint/cint,cint/cint cint/cling,$(MODULES))
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
