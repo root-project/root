@@ -169,6 +169,7 @@
 #include "Shadow.h"
 #include "cintdictversion.h"
 #include "FastAllocString.h"
+#include "cling/Interpreter/Interpreter.h"
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
@@ -4773,6 +4774,10 @@ int main(int argc, char **argv)
    iv = 0;
    il = 0;
 
+   const char* clingArgs[] = {"-I."};
+   cling::Interpreter interp(sizeof(clingArgs) / sizeof(char*), clingArgs,
+                             getenv("LLVMDIR"));
+
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -4822,15 +4827,18 @@ int main(int argc, char **argv)
          }
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
-         StrcpyArgWithEsc(esc_arg, argv[i]);
-         // see comment about <> and "" above
-         fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
-         includedFilesForBundle.push_back(argv[i]);
-         if (!insertedBundle) {
-            argvv[argcc++] = (char*)bundlename.c_str();
-            insertedBundle = true;
+      if (*argv[i] != '-' && *argv[i] != '+') {
+	 StrcpyArgWithEsc(esc_arg, argv[i]);
+	 if (use_preprocessor) {
+            // see comment about <> and "" above
+            fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
+            includedFilesForBundle.push_back(argv[i]);
+            if (!insertedBundle) {
+               argvv[argcc++] = (char*)bundlename.c_str();
+               insertedBundle = true;
+            }
          }
+         interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
