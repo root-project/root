@@ -1,4 +1,5 @@
 // RUN: cat %s | %cling -I%p | FileCheck %s
+// XFAIL: *
 
 // Test the removal of decls from the redeclaration chain, which are marked as
 // redeclarables.
