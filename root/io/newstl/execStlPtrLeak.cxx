@@ -8,14 +8,14 @@ public:
    Int_t fSerial;
    MyClass(TRootIOCtor *) : fSerial(0) {
       ++fCounter;
-      fprintf(stderr,"creating for I/O counter:%d \n",fCounter);
+      fprintf(stdout,"creating for I/O counter:%d \n",fCounter);
    }
    MyClass() : fSerial(++fTotal) {
       ++fCounter;
-      fprintf(stderr,"creating serial:%d counter:%d \n",fSerial,fCounter); 
+      fprintf(stdout,"creating serial:%d counter:%d \n",fSerial,fCounter); 
    };
    ~MyClass() { 
-      fprintf(stderr,"delete serial:%d counter:%d \n",fSerial,fCounter); --fCounter; 
+      fprintf(stdout,"delete serial:%d counter:%d \n",fSerial,fCounter); --fCounter; 
    }
 };
 Int_t MyClass::fCounter = 0;
@@ -29,7 +29,7 @@ Int_t MyClass::fTotal = 0;
 
 TTree *write()
 {
-   fprintf(stderr,"writing tree\n");
+   fprintf(stdout,"writing tree\n");
    TTree *tree = new TTree("T","T");
 
    vector<MyClass*> vec;
@@ -79,7 +79,7 @@ TTree *write()
 }
 
 void read(TTree *tree) {
-   fprintf(stderr,"reading tree\n");
+   fprintf(stdout,"reading tree\n");
    tree->GetEntry(0);
    tree->GetEntry(1);
    tree->GetEntry(0);
@@ -87,12 +87,11 @@ void read(TTree *tree) {
 }
 
 Int_t execStlPtrLeak() {
-   fflush(stdout);
    TTree *tree = write();
    read(tree);
-   fprintf(stderr,"deleting tree\n");
+   fprintf(stdout,"deleting tree\n");
    delete tree;
-   fprintf(stderr,"Final counter %d\n",MyClass::fCounter);
+   fprintf(stdout,"Final counter %d\n",MyClass::fCounter);
    Bool_t good = (MyClass::fCounter == 0);
    fflush(stdout);
    if (good) {
