@@ -49,6 +49,8 @@
 #pragma warning (disable: 4748)
 /* function(): resolved overload was found by argument-dependent lookup */
 #pragma warning (disable: 4675)
+/* decorated name length exceeded, name was truncated */
+#pragma warning (disable: 4503)
 
 /* function is hidden */
 #pragma warning (3: 4266)
