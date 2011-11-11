@@ -1044,10 +1044,10 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
   } else {
 
-    RooFIter iter = _pdfList.fwdIterator() ;
-    RooAbsPdf* pdf ;
     if (_allExtendable) {
 
+      RooFIter iter = _pdfList.fwdIterator() ;
+      RooAbsPdf* pdf ;
       while((pdf=(RooAbsPdf*)iter.next())) {
 	expectedTotal += pdf->expectedEvents(nset) ; 
       }
