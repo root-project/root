@@ -1,7 +1,9 @@
 #ifndef CONSTANTS_INCLUDED
 #define CONSTANTS_INCLUDED
 
-namespace ROOT_IOSBrowser {
+namespace ROOT {
+namespace iOS {
+namespace Browser {
 
 ///////////////////////////////////////////////////////////////////////
 //Pad's geometry: sizes, positioins.
@@ -77,6 +79,8 @@ extern const unsigned colorIndices[nROOTDefaultColors];
 //Constant for TAttFill, never defined in ROOT, I have to define it here.
 extern const unsigned stippleBase;
 
-}
+}//namespace Browser
+}//namespace iOS
+}//namespace ROOT
 
 #endif

@@ -108,7 +108,7 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (CGImageRef) initCGImageForPicking
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
    const CGRect rect = CGRectMake(0.f, 0.f, padW, padH);
    //Create bitmap context.
    UIGraphicsBeginImageContext(rect.size);
@@ -213,7 +213,7 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (CGPoint) scaledPoint : (CGPoint)pt
 {
-   const CGFloat scale = ROOT_IOSBrowser::padW / self.frame.size.width;
+   const CGFloat scale = ROOT::iOS::Browser::padW / self.frame.size.width;
    return CGPointMake(pt.x * scale, pt.y * scale);
 }
 

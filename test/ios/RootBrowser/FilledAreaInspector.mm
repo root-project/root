@@ -29,7 +29,7 @@ const CGFloat defaultCellH = 50.f;
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
    
@@ -94,7 +94,7 @@ const CGFloat defaultCellH = 50.f;
    //If the object color is one of 16 standard colors,
    //I find the correct row in a picker and rotate picker 
    //to this row. If not - it's on zero.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    //I do not check the result of dynamic_cast here. This is done at upper level.
    filledObject = dynamic_cast<TAttFill *>(obj);
@@ -132,7 +132,7 @@ const CGFloat defaultCellH = 50.f;
 //____________________________________________________________________________________________________
 - (void) setNewColor : (NSInteger) cellIndex
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    if (filledObject && parentController) {
       const bool wasHollow = filledObject->GetFillColor() == 0;

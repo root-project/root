@@ -50,7 +50,7 @@ BOOL canScaleMarker(Style_t style)
 //____________________________________________________________________________________________________
 - (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
    
@@ -120,7 +120,7 @@ BOOL canScaleMarker(Style_t style)
 - (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
 {
    if (picker == markerColorPicker) {
-      const unsigned colorIndex = ROOT_IOSBrowser::colorIndices[item];
+      const unsigned colorIndex = ROOT::iOS::Browser::colorIndices[item];
       object->SetMarkerColor(colorIndex);
       [controller objectWasModifiedUpdateSelection : YES];
    } else if (picker == markerStylePicker) {
@@ -156,7 +156,7 @@ BOOL canScaleMarker(Style_t style)
 //____________________________________________________________________________________________________
 - (void) setROOTObject : (TObject *)o
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    object = dynamic_cast<TAttMarker *>(o);
 

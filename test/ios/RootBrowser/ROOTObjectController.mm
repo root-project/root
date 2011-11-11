@@ -167,7 +167,7 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) createEditablePad
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
    
    const CGPoint padCenter = CGPointMake(padScrollView.frame.size.width / 2, padScrollView.frame.size.height / 2);
    const CGRect padRect = CGRectMake(padCenter.x - padW / 2, padCenter.y - padH / 2, padW, padH);
@@ -187,7 +187,7 @@ enum Mode {
 {
    //The most tricky part, since this code can be called
    //for animation.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
    
    CGRect padFrame = CGRectMake(0.f, 0.f, padW, padH);
 
@@ -246,7 +246,7 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    CGRect mainFrame;
    CGRect scrollFrame;
@@ -369,7 +369,7 @@ enum Mode {
 - (void) resetEditablePad
 {
    //Reset the pad sizes, reset the scroll, hide the editor.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
    
    zoomed = NO;
    editablePadView.transform = CGAffineTransformIdentity;
@@ -383,7 +383,7 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) resetSelectionView
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
    
    editablePadView.selectionView.hidden = YES;
    editablePadView.selectionView.transform = CGAffineTransformIdentity;
@@ -511,7 +511,7 @@ enum Mode {
 - (void)scrollViewDidEndZooming:(UIScrollView *)scroll withView:(UIView *)view atScale:(float)scale
 {
    //For ocmEdit mode.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    const CGPoint offset = [scroll contentOffset];
    const CGRect newFrame = editablePadView.frame;
@@ -559,7 +559,7 @@ enum Mode {
 - (void) handleDoubleTapOnPad : (CGPoint) tapPt
 {
    //For ocmEdit mode.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    BOOL scaleToMax = YES;
    

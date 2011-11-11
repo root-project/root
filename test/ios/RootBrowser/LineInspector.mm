@@ -36,7 +36,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
@@ -113,7 +113,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (void) setROOTObject : (TObject *)o
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    object = dynamic_cast<TAttLine *>(o);
    
@@ -166,12 +166,14 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
 {
+   using namespace ROOT::iOS::Browser;
+
    if (picker == lineColorPicker) {
-      if (item < ROOT_IOSBrowser::nROOTDefaultColors) {
-         const unsigned colorIndex = ROOT_IOSBrowser::colorIndices[item];
+      if (item < nROOTDefaultColors) {
+         const unsigned colorIndex = colorIndices[item];
          object->SetLineColor(colorIndex);
       } else
-         NSLog(@"check the code, bad item index from horizontal picker: %u, must be < %u", item, ROOT_IOSBrowser::nROOTDefaultColors);
+         NSLog(@"check the code, bad item index from horizontal picker: %u, must be < %u", item, nROOTDefaultColors);
    } else {
       if (item < 10)
          object->SetLineStyle(item + 1);
