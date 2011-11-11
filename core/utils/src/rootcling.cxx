@@ -3565,8 +3565,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
+#if 0 /* old code */
    const char *prefix = "";
-
+#endif
+   
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
 
    (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
@@ -4532,6 +4534,22 @@ int main(int argc, char **argv)
    std::vector<std::string> path;
    char *argvv[500];
 
+   std::vector<const char*> clingArgs;
+   clingArgs.push_back("-I.");
+   clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
+   std::string interpInclude("-I");
+#ifndef ROOTBUILD
+# ifndef ROOTINCDIR
+   std::string rootsys = getenv("ROOTSYS");
+   interpInclude += rootsys + "/etc";
+# else
+   interpInclude += ROOTETCDIR;
+# endif
+#else
+   interpInclude += "etc";
+#endif
+   clingArgs.push_back(interpInclude.c_str());
+
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
    SetRootSys();
@@ -4569,43 +4587,6 @@ int main(int argc, char **argv)
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
          while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
-            // 09-07-07
-            // We want to separate the generation of the dictionary
-            // source.
-            // We need one that will be the real dictionary and
-            // another one with ShowMembers etc.
-            //
-            // If we see the parameter -S then we want the ShowMembers
-            // part, if not we only want the dict (without ShowMembers)
-            if (!strcmp(argv[ic], "-.")) {
-               ++ic;
-               argvv[argcc++] = (char*)"-.";
-               dicttype = atoi(argv[ic]);
-               argvv[argcc++] = argv[ic];
-               ++ic;
-               continue;
-            }
-
-            // 03-07-07
-            // We need the library path in the dictionary generation
-            // the easiest way is to get it as a parameter
-            if (!strcmp(argv[ic], "-L") ||  !strcmp(argv[ic], "--symbols-file")) {
-               ++ic;
-
-               FILE *fpsym = fopen(argv[ic],"r");
-               if (fpsym) // File exists
-                  fclose(fpsym);
-               else{ // File doesn't exist
-                  Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
-                  return 1;
-               }
-
-               argvv[argcc++] = (char*)"-L";
-               argvv[argcc++] = argv[ic];
-               ++ic;
-               continue;
-            }
-
             if (strcmp("+P", argv[ic]) == 0 ||
                 strcmp("+V", argv[ic]) == 0 ||
                 strcmp("+STUB", argv[ic]) == 0) {
@@ -4614,14 +4595,20 @@ int main(int argc, char **argv)
             }
             if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
                // filter out undesirable options
+               if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
+                   && strcmp("-p", argv[ic])) {
+                  clingArgs.push_back(argv[ic++]);
+               }
                argvv[argcc++] = argv[ic++];
             } else {
                ic++;
             }
          }
 
-         for (i = 0; i < (int)path.size(); i++)
+         for (i = 0; i < (int)path.size(); i++) {
             argvv[argcc++] = (char*)path[i].c_str();
+            clingArgs.push_back(path[i].c_str());
+         }
 
 #ifdef __hpux
          argvv[argcc++] = (char *)"-I/usr/include/X11R5";
@@ -4709,12 +4696,16 @@ int main(int argc, char **argv)
          }
 #ifdef ROOTBUILD
          argvv[argcc++] = (char *)"-DG__NOCINTDLL";
+         clingArgs.push_back(argvv[argcc - 1]);
 #endif
          argvv[argcc++] = (char *)"-DTRUE=1";
+         clingArgs.push_back(argvv[argcc - 1]);
          argvv[argcc++] = (char *)"-DFALSE=0";
+         clingArgs.push_back(argvv[argcc - 1]);
          argvv[argcc++] = (char *)"-Dexternalref=extern";
          argvv[argcc++] = (char *)"-DSYSV";
          argvv[argcc++] = (char *)"-D__MAKECINT__";
+         clingArgs.push_back(argvv[argcc - 1]);
          argvv[argcc++] = (char *)"-V";        // include info on private members
          if (dict_type==kDictTypeReflex) {
             argvv[argcc++] = (char *)"-c-3";
@@ -4737,49 +4728,14 @@ int main(int argc, char **argv)
          Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
          return 1;
       }
-   } else {
-      // 09-07-07
-      // We want to separate the generation of the dictionary
-      // source.
-      // We need one that will be the real dictionary and
-      // another one with ShowMembers etc.
-      //
-      // If we see the parameter -S then we want the ShowMembers
-      // part, if not we only want the dict (without ShowMembers)
-      if (ic < argc && !strcmp(argv[ic], "-.")) {
-         ++ic;
-         argvv[argcc++] = (char*)"-.";
-         dicttype = atoi(argv[ic]);
-         argvv[argcc++] = argv[ic];
-         ++ic;
-      }
-
-      // 03-07-07
-      // We need the library path in the dictionary generation
-      // the easiest way is to get it as a parameter
-      if (ic < argc && (!strcmp(argv[ic], "-L") || !strcmp(argv[ic], "--symbols-file"))) {
-
-         FILE *fpsym = fopen(argv[ic],"r");
-         if (fpsym) // File exists
-            fclose(fpsym);
-         else { // File doesn't exist
-            Error(0, "--symbols-file: %s: No such file\n", argv[ic]);
-            return 1;
-         }
-
-         ++ic;
-         argvv[argcc++] = (char*)"-L";
-         argvv[argcc++] = argv[ic];
-         ++ic;
-      }
    }
    iv = 0;
    il = 0;
-
-   const char* clingArgs[] = {"-I."};
-   cling::Interpreter interp(sizeof(clingArgs) / sizeof(char*), clingArgs,
+   
+   cling::Interpreter interp(clingArgs.size(), &clingArgs[0],
                              getenv("LLVMDIR"));
 
+   std::vector<const char*> pcmArgs(clingArgs);
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -4835,6 +4791,7 @@ int main(int argc, char **argv)
             // see comment about <> and "" above
             fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
             includedFilesForBundle.push_back(argv[i]);
+            pcmArgs.push_back(argv[i]);
             if (!insertedBundle) {
                argvv[argcc++] = (char*)bundlename.c_str();
                insertedBundle = true;
@@ -5521,7 +5478,23 @@ int main(int argc, char **argv)
 
    G__setglobalcomp(-1);  // G__CPPLINK
    CleanupOnExit(0);
-   G__exit(0);
 
+   if (strstr(dictname,"rootcint_") != dictname) {
+      std::string clangInvocation(R__CLANG);
+      std::string pcmFile(dictname);
+      size_t posDotPcmFile = pcmFile.find('.');
+      if (posDotPcmFile != std::string::npos) {
+         // remove extension.
+         pcmFile.erase(posDotPcmFile, pcmFile.length() - posDotPcmFile);
+      }
+      clangInvocation += " -Xclang -emit-module -o";
+      clangInvocation += std::string(dictname) + "_dict.pcm -x c++ -c ";
+      for (size_t i = 0, n = pcmArgs.size(); i < n; ++i) {
+         clangInvocation += std::string(pcmArgs[i]) + " ";
+      }
+      int ret = system(clangInvocation.c_str());
+      if (ret) return ret;
+   }
+   G__exit(0);
    return 0;
 }
