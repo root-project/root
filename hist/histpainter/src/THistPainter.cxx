@@ -3615,7 +3615,7 @@ void THistPainter::Paint(Option_t *option)
    End_html */
 
    if (fH->GetBuffer()) fH->BufferEmpty(-1);
-   
+
    //For iOS: put the histogram on the top of stack of pickable objects.
    const TPickerStackGuard topPush(fH);
 
@@ -3778,7 +3778,7 @@ paintstat:
          if (obj->InheritsFrom(TF1::Class())) break;
          obj = 0;
       }
-      
+
       //Stat is painted twice (first, it will be in canvas' list of primitives),
       //second, it will be here, this is not required on iOS.
       //Condition is ALWAYS true on a platform different from iOS.
@@ -3895,7 +3895,7 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    feature is used to make sure that the grid is drawn in the background and
    the axis tick marks in the foreground of the pad.
    End_html */
-   
+
    //On iOS, grid should not be picable and can not be highlighted.
    //Condition is never true on a platform different from iOS.
    if (drawGridOnly && (gPad->PadInHighlightMode() || gPad->PadInSelectionMode()))
@@ -3963,12 +3963,11 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 
    // Paint X axis
-   
+
    //To make X-axis selectable on iOS device.
    if (gPad->PadInSelectionMode())
       gPad->PushSelectableObject(fXaxis);
-   
-   
+
    //This condition is ALWAYS true, unless it works on iOS (can be false on iOS).
    if (gPad->PadInSelectionMode() || !gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && gPad->GetSelected() == fXaxis)) {
       ndivx = fXaxis->GetNdivisions();
@@ -5022,9 +5021,7 @@ void THistPainter::PaintErrors(Option_t *)
    // On iOS, we do not highlight histogram, if it's not picked at the moment
    // (but part of histogram (axis or pavestat) was picked, that's why this code
    // is called at all. This conditional statement never executes on non-iOS platform.
-   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
-      return;
-   
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH) return;
 
    const Int_t kBASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
@@ -5460,7 +5457,7 @@ void THistPainter::PaintFrame()
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
    }
-   
+
    //The next statement is always executed on non-iOS platform,
    //on iOS depends on pad mode.
    if (!gPad->PadInSelectionMode() && !gPad->PadInHighlightMode())
@@ -5494,7 +5491,7 @@ void THistPainter::PaintFunction(Option_t *)
       } else  {
          //Let's make this 'function' selectable on iOS device (for example, it can be TPaveStat).
          gPad->PushSelectableObject(obj);
-      
+
          //The next statement is ALWAYS executed on non-iOS platform, on iOS it depends on pad's mode
          //and picked object.
          if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && obj == gPad->GetSelected()))
@@ -7933,10 +7930,9 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
     option = "L" draw the bins as line.
     option = "P" draw the bins as markers.
     End_html */
-    
+
    //Do not highlight the histogram, if its part was picked.
-   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
-      return;
+   if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH) return;
 
    TString opt = option;
    opt.ToLower();
@@ -7993,7 +7989,7 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
    /* Begin_html
     <a href="#HP20a">Control function to draw a TH2Poly as a color plot.</a>
     End_html */
-   
+
    //Do not highlight the histogram, if its part was picked.
    if (gPad->PadInHighlightMode() && gPad->GetSelected() != fH)
       return;
@@ -8295,9 +8291,16 @@ void THistPainter::PaintText(Option_t *)
       text.TAttText::Modify();
       Double_t dt = 0.02*(gPad->GetY2()-gPad->GetY1());
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
-         x  = fH->GetXaxis()->GetBinCenter(i);
+         if (Hoption.Bar) {
+            x  = fH->GetXaxis()->GetBinLowEdge(i)+
+                 fH->GetXaxis()->GetBinWidth(i)*
+                 (fH->GetBarOffset()+0.5*fH->GetBarWidth());
+         } else {
+            x  = fH->GetXaxis()->GetBinCenter(i);
+         }
          y  = fH->GetBinContent(i);
          yt = y;
+         if (gStyle->GetHistMinimumZero() && y<0) y = 0;
          if (getentries) yt = hp->GetBinEntries(i);
          snprintf(value,50,format,yt);
          if (Hoption.Logx) {
