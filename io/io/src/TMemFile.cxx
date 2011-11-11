@@ -182,7 +182,7 @@ zombie:
 TMemFile::TMemFile(const TMemFile &orig) :
    TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(), 
          orig.GetCompressionSettings() ), fBlockList(orig.GetEND()),  
-   fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(this->fBlockList)), fBlockOffset(0)
+   fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    // Copying the content of the TMemFile into another TMemFile.
    
