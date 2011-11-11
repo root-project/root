@@ -144,7 +144,7 @@ namespace {
 {
    nActiveEditors = 0;
 
-   if (dynamic_cast<TAttLine *>(object))
+   if (dynamic_cast<TAttLine *>(object) && !dynamic_cast<TAttPad *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttLine];
    
    if (dynamic_cast<TAttFill *>(object))
