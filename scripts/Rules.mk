@@ -764,7 +764,7 @@ exec%.ref:  | exec%.log
 %.ref:
 	$(CMDECHO) touch $@
 
-.PRECIOUS: %.clog %.log 
+.PRECIOUS: %.clog %.log %_cxx.$(DllSuf)
 
 ifneq ($(PLATFORM),macosx)
 
