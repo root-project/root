@@ -191,7 +191,6 @@
    //Do animation.
    // First create a CATransition object to describe the transition
    CATransition *transition = [CATransition animation];
-   // Animate over 3/4 of a second
    transition.duration = 0.15;
    // using the ease in/out timing function
    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];

@@ -95,6 +95,9 @@
 //____________________________________________________________________________________________________
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
 {
+   while ([navigationController.viewControllers count] > 1)
+      [navigationController popViewControllerAnimated : NO];
+
    [rc addRootFile : [url path]];
    return YES;
 }
