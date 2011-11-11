@@ -3202,22 +3202,13 @@ if test ! "x$enable_rfio" = "xno" ; then
                 done
                 # Explicit linking: which libraries are needed to satisfy symbols
                 # from libshift?
-                # 2.1.8:
-                if test "x$platform" = "xmacosx" ; then
-                    shiftlibdep="-lcastorrfio -lcastorclient -lcastorcommon"
-                else
-                    shiftlibdep="-lcastorrfio -lcastorClient -lcastorns"
-                fi
+                # 2.1.9 has new library layout
+                shiftlibdep="-lcastorrfio -lcastorclient -lcastorcommon"
                 check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
                 if test $link_result -eq 1 ; then
                     shiftlib="$shiftlib $shiftlibdep"
                 else
-                    # 2.1.9 has new library layout
-                    shiftlibdep="-lcastorrfio -lcastorclient -lcastorcommon"
-                    check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
-                    if test $link_result -eq 1 ; then
-                        shiftlib="$shiftlib $shiftlibdep"
-                    fi
+                    enable_rfio="no"
                 fi
                 ;;
            solaris)    shiftlib="$shiftlib -lposix4" ;;
@@ -3307,22 +3298,13 @@ if test ! "x$enable_castor" = "xno" ; then
                 done
                 # Explicit linking: which libraries are needed to satisfy symbols
                 # from libshift?
-                # 2.1.8:
-                if test "x$platform" = "xmacosx" ; then
-                   castorlibdep="-lcastorrfio -lcastorclient -lcastorns -lcastorcommon"
-                else
-                   castorlibdep="-lcastorrfio -lcastorClient -lcastorns"
-                fi
+                # 2.1.9 has new library layout
+                castorlibdep="-lcastorrfio -lcastorclient -lcastorns -lcastorcommon"
                 check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
                 if test $link_result -eq 1 ; then
                     castorlib="$castorlib $castorlibdep"
                 else
-                    # 2.1.9 has new library layout
-                    castorlibdep="-lcastorrfio -lcastorclient -lcastorns -lcastorcommon"
-                    check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
-                    if test $link_result -eq 1 ; then
-                        castorlib="$castorlib $castorlibdep"
-                    fi
+                    enable_castor="no"
                 fi
                 ;;
            solaris)    castorlib="$castorlib -lposix4" ;;
