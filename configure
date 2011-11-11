@@ -860,7 +860,7 @@ EOF
         logmsg " Failed code was"
         cat conftest.mk >> $logfile
     fi
-    rm -rf conftest.c conftest.mk conftest
+    rm -rf conftest.c conftest.mk conftest conftest.dSYM
 
     unset linklib
     unset linkdir
@@ -1774,12 +1774,12 @@ fi
 #
 ### echo %%% Some clean up
 #
-trapcmd="rm -f Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
+trapcmd="rm -rf Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
          RConfigOptions.tmp RConfigOptions-out.tmp \
          Makefile-comp.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
-         conftest.c conftest "
+         conftest.c conftest conftest.dSYM"
 trap "$trapcmd; exit 1" 1 2 3 15
 trap "$trapcmd" 0
 
@@ -3192,7 +3192,7 @@ if test ! "x$enable_rfio" = "xno" ; then
         enable_rfio="no"
     else
         case $platform in
-           linux)      shiftlib="$shiftlib -lnsl"
+           linux | macosx)
                 for i in "" -ladns ; do
                     check_link "$shiftlib $i" "$shiftlibdir" rfio_fchmod
                     if test $link_result -eq 1 ; then
@@ -3203,7 +3203,11 @@ if test ! "x$enable_rfio" = "xno" ; then
                 # Explicit linking: which libraries are needed to satisfy symbols
                 # from libshift?
                 # 2.1.8:
-                shiftlibdep="-lcastorrfio -lcastorClient -lcastorns"
+                if test "x$platform" = "xmacosx" ; then
+                    shiftlibdep="-lcastorrfio -lcastorclient -lcastorcommon"
+                else
+                    shiftlibdep="-lcastorrfio -lcastorClient -lcastorns"
+                fi
                 check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
                 if test $link_result -eq 1 ; then
                     shiftlib="$shiftlib $shiftlibdep"
@@ -3293,7 +3297,7 @@ if test ! "x$enable_castor" = "xno" ; then
         enable_castor="no"
     else
         case $platform in
-           linux)      castorlib="$castorlib -lnsl"
+           linux | macosx)
                 for i in "" -ladns ; do
                     check_link "$castorlib $i" "$castorlibdir" rfio_fchmod
                     if test $link_result -eq 1 ; then
@@ -3304,7 +3308,11 @@ if test ! "x$enable_castor" = "xno" ; then
                 # Explicit linking: which libraries are needed to satisfy symbols
                 # from libshift?
                 # 2.1.8:
-                castorlibdep="-lcastorrfio -lcastorClient -lcastorns"
+                if test "x$platform" = "xmacosx" ; then
+                   castorlibdep="-lcastorrfio -lcastorclient -lcastorns -lcastorcommon"
+                else
+                   castorlibdep="-lcastorrfio -lcastorClient -lcastorns"
+                fi
                 check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
                 if test $link_result -eq 1 ; then
                     castorlib="$castorlib $castorlibdep"
