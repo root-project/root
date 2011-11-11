@@ -132,7 +132,7 @@ zombie:
 TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option,
                    const char *ftitle, Int_t compress):
    TFile(path, "WEB", ftitle, compress), fBlockList(size),  
-   fSize(size), fSysOffset(0), fBlockSeek(&(this->fBlockList)), fBlockOffset(0)
+   fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    // Usual Constructor.  See the TFile constructor for details.
 
