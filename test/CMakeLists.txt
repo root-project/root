@@ -12,6 +12,11 @@ include(${ROOT_USE_FILE})
 
 include_directories(${ROOT_INCLUDE_DIRS})
 
+
+if(NOT CMAKE_GENERATOR MATCHES Makefiles)
+  set(cfg $<CONFIGURATION>/)
+endif() 
+
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
@@ -153,10 +158,10 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 
 #--stressInterpreter----------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
-configure_file(stressInterpreter.cxx stressInterpreter.cxx @COPY_ONLY)
-ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter 
-              FAILREGEX "FAILED|Error"
-              ENVIRONMENT ${ld_library_path}=${ROOTSYS}/lib)
+#configure_file(stressInterpreter.cxx ${cfg}stressInterpreter.cxx @COPY_ONLY)
+ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
+              PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx ${cfg}stressInterpreter.cxx
+              FAILREGEX "FAILED|Error")
 
 #--stressHepix----------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
