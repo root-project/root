@@ -154,6 +154,13 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       for (it = unknown.begin(); it != unknown.end(); ++it) {
          TClass* cl = TClass::GetClass(it->c_str());
          if (cl && cl->GetDeclFileName()) {
+            fprintf(stderr,"decl: %s\n",cl->GetDeclFileName());
+#ifdef WIN32
+            TString drive;
+            if (cl->GetDeclFileName()[0] && cl->GetDeclFileName()[1] == ':') {
+               drive.Form("%c:/",cl->GetDeclFileName()[0]);
+            }
+#endif
             TString header(gSystem->BaseName(cl->GetDeclFileName()));
             TString dir(gSystem->DirName(cl->GetDeclFileName()));
             TString dirbase(gSystem->BaseName(dir));
@@ -164,6 +171,11 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
                dir = gSystem->DirName(dir);
                dirbase = dir.Length() ? gSystem->BaseName(dir) : "";
             }
+#ifdef WIN32
+            if (drive.Length()) {
+               gSystem->PrependPathName(drive, header);
+            }
+#endif
             fileContent += TString("#include \"") + header + "\"\n";
          }
       }
