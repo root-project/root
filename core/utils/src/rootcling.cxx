@@ -4735,7 +4735,11 @@ int main(int argc, char **argv)
    cling::Interpreter interp(clingArgs.size(), &clingArgs[0],
                              getenv("LLVMDIR"));
 
-   std::vector<const char*> pcmArgs(clingArgs);
+   std::vector<std::string> pcmArgs;
+   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
+      pcmArgs.push_back(clingArgs[i]);
+   }
+   
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -4791,13 +4795,13 @@ int main(int argc, char **argv)
             // see comment about <> and "" above
             fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
             includedFilesForBundle.push_back(argv[i]);
-            pcmArgs.push_back(argv[i]);
             if (!insertedBundle) {
                argvv[argcc++] = (char*)bundlename.c_str();
                insertedBundle = true;
             }
          }
          interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
+         pcmArgs.push_back(esc_arg);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
@@ -5490,7 +5494,7 @@ int main(int argc, char **argv)
       clangInvocation += " -Xclang -emit-module -o";
       clangInvocation += std::string(dictname) + "_dict.pcm -x c++ -c ";
       for (size_t i = 0, n = pcmArgs.size(); i < n; ++i) {
-         clangInvocation += std::string(pcmArgs[i]) + " ";
+         clangInvocation += pcmArgs[i] + " ";
       }
       int ret = system(clangInvocation.c_str());
       if (ret) return ret;
