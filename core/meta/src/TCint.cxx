@@ -162,6 +162,7 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
                    && dirbase != "prec_stl") {
                gSystem->PrependPathName(dirbase, header);
                dir = gSystem->DirName(dir);
+               dirbase = dir.Length() ? gSystem->BaseName(dir) : "";
             }
             fileContent += TString("#include \"") + header + "\"\n";
          }
