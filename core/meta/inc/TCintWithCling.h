@@ -53,6 +53,7 @@ public:
    void    AddIncludePath(const char *path);
    Long_t  ProcessLine(const char *line, EErrorCode *error = 0);
    void    PrintIntro();
+   void    InspectMembers(TMemberInspector&, void* obj, const char* clname);
 
    ClassDef(TCintWithCling,0)  //Interface to CINT C/C++ interpreter
 };

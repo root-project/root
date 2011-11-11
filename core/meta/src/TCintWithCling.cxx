@@ -242,3 +242,10 @@ void TCintWithCling::AddIncludePath(const char *path)
    fInterpreter->AddIncludePath(path);
    TCint::AddIncludePath(path);
 }
+
+//______________________________________________________________________________
+void TCintWithCling::InspectMembers(TMemberInspector&, void* obj, const char* clname)
+{
+   Printf("Inspecting class %s\n", clname);
+}
+
