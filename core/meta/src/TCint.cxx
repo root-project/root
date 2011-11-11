@@ -154,7 +154,6 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
       for (it = unknown.begin(); it != unknown.end(); ++it) {
          TClass* cl = TClass::GetClass(it->c_str());
          if (cl && cl->GetDeclFileName()) {
-            fprintf(stderr,"decl: %s\n",cl->GetDeclFileName());
 #ifdef WIN32
             TString drive;
             if (cl->GetDeclFileName()[0] && cl->GetDeclFileName()[1] == ':') {
