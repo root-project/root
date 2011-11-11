@@ -284,7 +284,7 @@ void RooRealMPFE::serverLoop()
       Bool_t doTrack ;
       UInt_t tmp1 = read(_pipeToServer[0],&code,sizeof(ConstOpCode)) ;
       UInt_t tmp2 = read(_pipeToServer[0],&doTrack,sizeof(Bool_t)) ;
-      if (tmp1<sizeof(ConstOpCode)) perror("read") ;
+      if ((tmp1+tmp2)<sizeof(ConstOpCode)) perror("read") ;
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
 			       << ") IPC fromClient> ConstOpt " << code << " doTrack = " << (doTrack?"T":"F") << endl ; 
       ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(code,doTrack) ;      
@@ -639,7 +639,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
     Message msg = ConstOpt ;
     UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(msg)) ;
     UInt_t tmp2 = write(_pipeToServer[1],&opcode,sizeof(ConstOpCode)) ;
-    UInt_t tmp3 = write(_pipeToServer[2],&doAlsoTracking,sizeof(Bool_t)) ;
+    UInt_t tmp3 = write(_pipeToServer[1],&doAlsoTracking,sizeof(Bool_t)) ;
     if (tmp1+tmp2+tmp3<sizeof(Message)+sizeof(ConstOpCode)+sizeof(Bool_t)) perror("write") ;
     if (_verboseServer) cout << "RooRealMPFE::constOptimize(" << GetName() 
 			     << ") IPC toServer> ConstOpt " << opcode << endl ;  
