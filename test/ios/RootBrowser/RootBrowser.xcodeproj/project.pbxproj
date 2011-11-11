@@ -24,7 +24,7 @@
 		7023580D1434B48C00A95000 /* h1_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023580C1434B48C00A95000 /* h1_tab.png */; };
 		7023805E140514C8002A5331 /* file_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023805D140514C8002A5331 /* file_icon.png */; };
 		70249BDC1403D644006A19E6 /* PadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70249BDA1403D644006A19E6 /* PadView.mm */; };
-		70252F7C140CDD8D00F3660F /* Constants.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70252F7A140CDD8D00F3660F /* Constants.mm */; };
+		70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70252F7A140CDD8D00F3660F /* Constants.cxx */; };
 		702BB9D714482E2200D3842F /* picker_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D514482E2200D3842F /* picker_arrow.png */; };
 		702BB9D814482E2200D3842F /* picker_frame_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D614482E2200D3842F /* picker_frame_bkn.png */; };
 		702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702BB9DA14482E3C00D3842F /* HorizontalPickerView.mm */; };
@@ -151,7 +151,7 @@
 		7023805D140514C8002A5331 /* file_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = file_icon.png; sourceTree = "<group>"; };
 		70249BDA1403D644006A19E6 /* PadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadView.mm; sourceTree = "<group>"; };
 		70249BDB1403D644006A19E6 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
-		70252F7A140CDD8D00F3660F /* Constants.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Constants.mm; sourceTree = "<group>"; };
+		70252F7A140CDD8D00F3660F /* Constants.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Constants.cxx; sourceTree = "<group>"; };
 		70252F7B140CDD8D00F3660F /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		702BB9D514482E2200D3842F /* picker_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_arrow.png; sourceTree = "<group>"; };
 		702BB9D614482E2200D3842F /* picker_frame_bkn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_frame_bkn.png; sourceTree = "<group>"; };
@@ -600,7 +600,7 @@
 			children = (
 				70078C2B146AC4C400C19F4D /* FileUtils.h */,
 				70078C2C146AC4C400C19F4D /* FileUtils.cxx */,
-				70252F7A140CDD8D00F3660F /* Constants.mm */,
+				70252F7A140CDD8D00F3660F /* Constants.cxx */,
 				70252F7B140CDD8D00F3660F /* Constants.h */,
 				709CD0961402768B005B2AF4 /* Shortcuts.h */,
 				709CD0971402768B005B2AF4 /* Shortcuts.mm */,
@@ -778,7 +778,7 @@
 				709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */,
 				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
 				705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */,
-				70252F7C140CDD8D00F3660F /* Constants.mm in Sources */,
+				70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */,
 				7014410F140E18390070459F /* SelectionView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
 				702DDD1B1415FEA1009FC6F3 /* LineInspector.mm in Sources */,
