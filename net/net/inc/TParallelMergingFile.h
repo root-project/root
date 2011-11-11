@@ -65,3 +65,4 @@ public:
 };
 
 #endif // ROOT_TParallelMergingFile
+

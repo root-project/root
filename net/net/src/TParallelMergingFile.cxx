@@ -202,3 +202,4 @@ void TParallelMergingFile::WriteStreamerInfo()
    
    TMemFile::WriteStreamerInfo();
 }
+
