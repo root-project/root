@@ -13,12 +13,6 @@ using namespace std;
 #define SHOWMEM std::cout << "Mem: " << __PRETTY_FUNCTION__ << std::endl
 #endif
 
-//#if defined(_MSC_VER)
-// MSVC2010 pulls in std::tr1::shared_ptr, CINT pulls in std,
-// which combined creates ambiguities.
-//#define my_shared_ptr not_tr1_shared_ptr
-//#endif
-
 class Base {
  public:
   Base() { SHOW; }
