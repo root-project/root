@@ -11,8 +11,8 @@ void templateMembersCode() {
    Base b;
    Derived d;
    TemplateClass<Derived> td;
-   shared_ptr<Base> spb;
-   shared_ptr<Derived> spd;
+   my_shared_ptr<Base> spb;
+   my_shared_ptr<Derived> spd;
    
    cout << "\nMember Functions........\n";
    // template member function calls
@@ -38,7 +38,7 @@ void templateMembersCode() {
       
    spb = spd;
    
-   shared_ptr<Base> spb1(spd);
+   my_shared_ptr<Base> spb1(spd);
    
 
 }

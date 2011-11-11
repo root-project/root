@@ -1,3 +1,5 @@
+#ifndef ROOTTEST__templateMembersClasses_h
+#define ROOTTEST__templateMembersClasses_h
 #include <iostream>
 #include <TObject.h>
 
@@ -11,11 +13,11 @@ using namespace std;
 #define SHOWMEM std::cout << "Mem: " << __PRETTY_FUNCTION__ << std::endl
 #endif
 
-#ifdef _MSC_VER
+//#if defined(_MSC_VER)
 // MSVC2010 pulls in std::tr1::shared_ptr, CINT pulls in std,
 // which combined creates ambiguities.
-# define shared_ptr not_tr1_shared_ptr
-#endif
+//#define my_shared_ptr not_tr1_shared_ptr
+//#endif
 
 class Base {
  public:
@@ -43,10 +45,10 @@ class TemplateClass {
 };
 
 template <class T>
-class shared_ptr {
+class my_shared_ptr {
  public:
-  shared_ptr() { SHOWMEM; }
-  shared_ptr(const shared_ptr&) { SHOWMEM; } 
+  my_shared_ptr() { SHOWMEM; }
+  my_shared_ptr(const my_shared_ptr&) { SHOWMEM; } 
 
   template <class U>
     void f1(U) { SHOW; }
@@ -61,50 +63,50 @@ class shared_ptr {
     TemplateClass<U> f4(TemplateClass<U>) { SHOW; TemplateClass<U> tn; return tn; }
 
   template <class U>
-    void f5(const shared_ptr<U>&) { SHOW; }
+    void f5(const my_shared_ptr<U>&) { SHOW; }
 
   template <class U>
-    shared_ptr<T> f6(const shared_ptr<U>&) { SHOW; return *this; }
+    my_shared_ptr<T> f6(const my_shared_ptr<U>&) { SHOW; return *this; }
 
   template <class U>
-    shared_ptr<T> f7(const shared_ptr<U>&) { SHOW; return *this; }
+    my_shared_ptr<T> f7(const my_shared_ptr<U>&) { SHOW; return *this; }
 
   // this works
-  typedef shared_ptr<T>& reference;
+  typedef my_shared_ptr<T>& reference;
   template <class U>
-    reference f8(const shared_ptr<U>&)  { SHOW; return *this; }
+    reference f8(const my_shared_ptr<U>&)  { SHOW; return *this; }
 
   // doesn't work.  only difference from f8 is the typedef.
   template <class U>
-    shared_ptr<T>& n1(const shared_ptr<U>&)  { SHOW; return *this; }
+    my_shared_ptr<T>& n1(const my_shared_ptr<U>&)  { SHOW; return *this; }
 
   // doesn't work. 
   template <class U>
-    shared_ptr<T>* n2(const shared_ptr<U>&)  { SHOW; return this; }
+    my_shared_ptr<T>* n2(const my_shared_ptr<U>&)  { SHOW; return this; }
 
   template <class U>
-    shared_ptr<T>* /* const */ n3(const shared_ptr<U>&)  { SHOW; return this; }
+    my_shared_ptr<T>* /* const */ n3(const my_shared_ptr<U>&)  { SHOW; return this; }
 
   template <class U>
-    shared_ptr<T> const*n4(const shared_ptr<U>&)  { SHOW; return this; }
+    my_shared_ptr<T> const*n4(const my_shared_ptr<U>&)  { SHOW; return this; }
 
   // this works
   //  template <class U>
-  //    reference operator=(const shared_ptr<U>&) { SHOW; return *this; } 
+  //    reference operator=(const my_shared_ptr<U>&) { SHOW; return *this; } 
 
   // only works as above, with return value typedeffed
   template <class U>
-      shared_ptr<T>& operator=(const shared_ptr<U>&) { SHOW; return *this; } 
+      my_shared_ptr<T>& operator=(const my_shared_ptr<U>&) { SHOW; return *this; } 
 
   template <class U>
-    shared_ptr<T>(const shared_ptr<U>&) { SHOW; } //rootcint can't find this
+    my_shared_ptr<T>(const my_shared_ptr<U>&) { SHOW; } //rootcint can't find this
 
 /*   template <class U> */
-/*     shared_ptr<T>() { SHOW; } //rootcint can't find this */
+/*     my_shared_ptr<T>() { SHOW; } //rootcint can't find this */
 
-  virtual ~shared_ptr() { SHOWMEM; }
+  virtual ~my_shared_ptr() { SHOWMEM; }
 
-  ClassDef(shared_ptr, 0);
+  ClassDef(my_shared_ptr, 0);
 };
 
-
+#endif
