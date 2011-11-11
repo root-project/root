@@ -264,7 +264,7 @@ Bool_t stressAddAndSubtract(TTree *tree)
 }
   
 
-int runtestTEntryListArray(Int_t nentries=1000, Int_t nfiles=3) {
+int execTEntryListArray(Int_t nentries=1000, Int_t nfiles=3) {
   cout << "***************************************" << endl;
   cout << "*****   Testing TEntryListArray   *****" << endl;
   cout << "***************************************" << endl;
@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
    Int_t nfiles = 3;
    if (argc > 1) nentries = atoi(argv[1]);
    if (argc > 2) nfiles = atoi(argv[2]);
-   runtestTEntryListArray(nentries, nfiles);
+   execTEntryListArray(nentries, nfiles);
    return 0;
 }
 
