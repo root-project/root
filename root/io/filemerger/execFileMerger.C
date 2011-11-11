@@ -58,7 +58,7 @@ void createInputs(int n = 2)
 
 bool merge(int n = 2, int limit = 0) {
    TFileMerger merger(kFALSE,kFALSE); // hadd style
-   merger.OutputFile("merged.root");
+   merger.OutputFile(TString::Format("merged%d.root",n));
    if (limit > 0) {
       merger.SetMaxOpenedFiles(limit);
    }
@@ -71,7 +71,7 @@ bool merge(int n = 2, int limit = 0) {
 }
 
 bool check(int n = 2) {
-   TFile *file = TFile::Open("merged.root");
+   TFile *file = TFile::Open(TString::Format("merged%d.root",n));
 
    bool result = true;
    TH1F *h; file->GetObject("h1",h);
