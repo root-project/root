@@ -282,7 +282,7 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
 {
    // If tool tip delay timer times out show tool tip window.
 
-   Int_t    x = 0, y = 0, px1 = 0, px2 = 0, py1 = 0, py2 = 0;
+   Int_t    x = 0, y = 0, px1 = 0, px2 = 0, py1 = 0;
    Window_t wtarget;
 
    if (fWindow) {
@@ -295,12 +295,12 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
          px1 = fPad->XtoAbsPixel(fBox->GetX1());
          px2 = fPad->XtoAbsPixel(fBox->GetX2());
          py1 = fPad->YtoAbsPixel(fBox->GetY1());
-         py2 = fPad->YtoAbsPixel(fBox->GetY2());
+         // py2 = fPad->YtoAbsPixel(fBox->GetY2());
       } else {
          px1 = fPad->XtoAbsPixel(fPad->GetX1());
          px2 = fPad->XtoAbsPixel(fPad->GetX2());
          py1 = fPad->YtoAbsPixel(fPad->GetY1());
-         py2 = fPad->YtoAbsPixel(fPad->GetY2());
+         // py2 = fPad->YtoAbsPixel(fPad->GetY2());
       }
       gVirtualX->TranslateCoordinates(gVirtualX->GetWindowID(fPad->GetCanvasID()),
                                       GetParent()->GetId(),

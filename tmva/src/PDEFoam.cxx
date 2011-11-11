@@ -555,11 +555,11 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
    // using results of the MC exploration run stored in fHistEdg
 
    Double_t nent   = ceSum[2];
-   Double_t swAll  = ceSum[0];
+   // Double_t swAll  = ceSum[0];
    Double_t sswAll = ceSum[1];
    Double_t ssw    = sqrt(sswAll)/sqrt(nent);
    //
-   Double_t swIn,swOut,sswIn,sswOut,xLo,xUp;
+   Double_t sswIn,sswOut,xLo,xUp;
    kBest =-1;
    xBest =0.5;
    yBest =1.0;
@@ -568,7 +568,7 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
    for(Int_t kProj=0; kProj<fDim; kProj++) {
       if( fMaskDiv[kProj]) {
          // initialize search over bins
-         Double_t sigmIn =0.0; Double_t sigmOut =0.0;
+         // Double_t sigmIn =0.0; Double_t sigmOut =0.0;
          Double_t sswtBest = gHigh;
          Double_t gain =0.0;
          Double_t xMin=0.0; Double_t xMax=0.0;
@@ -580,15 +580,15 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
                asswIn += Sqr(((TH1D *)(*fHistEdg)[kProj])->GetBinError(  jUp));
                xLo=(jLo-1.0)/fNBin;
                xUp=(jUp*1.0)/fNBin;
-               swIn  =        aswIn/nent;
-               swOut = (swAll-aswIn)/nent;
+               // swIn  =        aswIn/nent;
+               // swOut = (swAll-aswIn)/nent;
                sswIn = sqrt(asswIn)       /sqrt(nent*(xUp-xLo))     *(xUp-xLo);
                sswOut= sqrt(sswAll-asswIn)/sqrt(nent*(1.0-xUp+xLo)) *(1.0-xUp+xLo);
                if( (sswIn+sswOut) < sswtBest) {
                   sswtBest = sswIn+sswOut;
                   gain     = ssw-sswtBest;
-                  sigmIn   = sswIn -swIn;  // Debug
-                  sigmOut  = sswOut-swOut; // Debug
+                  // sigmIn   = sswIn -swIn;  // Debug
+                  // sigmOut  = sswOut-swOut; // Debug
                   xMin    = xLo;
                   xMax    = xUp;
                }
@@ -690,7 +690,7 @@ Int_t TMVA::PDEFoam::Divide(PDEFoamCell *cell)
    // and their properties set with help of MC sampling (PDEFoam_Explore)
    // Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
 
-   Double_t xdiv;
+   // Double_t xdiv;
    Int_t   kBest;
 
    if(fLastCe+1 >= fNCells) Log() << kFATAL << "Buffer limit is reached, fLastCe=fnBuf" << Endl;
@@ -698,7 +698,7 @@ Int_t TMVA::PDEFoam::Divide(PDEFoamCell *cell)
    cell->SetStat(0); // reset cell as inactive
    fNoAct++;
 
-   xdiv  = cell->GetXdiv();
+   // xdiv  = cell->GetXdiv();
    kBest = cell->GetBest();
    if( kBest<0 || kBest>=fDim ) Log() << kFATAL << "Wrong kBest" << Endl;
 

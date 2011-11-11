@@ -1583,7 +1583,10 @@ Bool_t TGeoVoxelFinder::IntersectAndStore(Int_t n1, UChar_t *array1, Int_t tid)
    Int_t nbytes = 1+((nd-1)>>3);
    if (!array1) {
       memset(td.fBits1, 0xFF, nbytes*sizeof(UChar_t));
-      while (td.fNcandidates<nd) td.fCheckList[td.fNcandidates++] = td.fNcandidates;
+      while (td.fNcandidates<nd) {
+         td.fCheckList[td.fNcandidates] = td.fNcandidates;
+         ++td.fNcandidates;
+      }
       return kTRUE;
    }
    memcpy(td.fBits1, array1, nbytes*sizeof(UChar_t)); 

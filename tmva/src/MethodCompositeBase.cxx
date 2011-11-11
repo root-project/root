@@ -160,13 +160,13 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       gTools().ReadAttr( ch, "JobName",  jobName );
       gTools().ReadAttr( ch, "Options",  optionString );
 
-      Bool_t rerouteTransformation = kFALSE;
+      // Bool_t rerouteTransformation = kFALSE;
       if (gTools().HasAttr( ch, "UseMainMethodTransformation")) {
          TString rerouteString("");
          gTools().ReadAttr( ch, "UseMainMethodTransformation", rerouteString );
          rerouteString.ToLower();
-         if (rerouteString=="true")
-            rerouteTransformation=kTRUE;
+         // if (rerouteString=="true")
+         //    rerouteTransformation=kTRUE;
       }
 
       //remove trailing "~" to signal that options have to be reused

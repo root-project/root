@@ -188,8 +188,6 @@ void TPieEditor::SetModel(TObject* obj)
 
    TString soption = GetDrawOption();
 
-   bool optionSame(kFALSE);
-
    // For the label orientation there are 3 possibilities:
    //   0: horizontal
    //   1: radial
@@ -200,7 +198,7 @@ void TPieEditor::SetModel(TObject* obj)
    Int_t idx;
    // Paint the TPie in an existing canvas
    if ( (idx=soption.Index("same"))>=0 ) {
-      optionSame = kTRUE;
+      // optionSame = kTRUE;
       soption.Remove(idx,4);
    }
 

@@ -211,14 +211,13 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    }
 
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
-   Double_t xl, xt, yl, yt;
 
    px1 = XtoPixel(x1);   py1 = YtoPixel(y1);
    px2 = XtoPixel(x2);   py2 = YtoPixel(y2);
-   if (px1 < px2) {pxl = px1; pxt = px2; xl = x1; xt = x2; }
-   else           {pxl = px2; pxt = px1; xl = x2; xt = x1;}
-   if (py1 > py2) {pyl = py1; pyt = py2; yl = y1; yt = y2;}
-   else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
+   if (px1 < px2) {pxl = px1; pxt = px2;}
+   else           {pxl = px2; pxt = px1;}
+   if (py1 > py2) {pyl = py1; pyt = py2;}
+   else           {pyl = py2; pyt = py1;}
 
    if (bordersize == 1) {
       col = gROOT->GetColor(fLineColor);

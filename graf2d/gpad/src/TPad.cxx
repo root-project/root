@@ -533,8 +533,9 @@ void TPad::Clear(Option_t *option)
    cd();
 
    if (TestBit(kClearAfterCR)) {
-      int readch;
-      readch = getchar();
+      // Intentional do not use the return value of getchar,
+      // we just want to get it and forget it
+      getchar();
    }
 
    if (!gPad->IsBatch()) GetPainter()->ClearDrawable();

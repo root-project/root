@@ -732,7 +732,9 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
    
    bool fitok = false; 
    fitok = fitter->Fit(*fitdata); 
- 
+   if ( !fitok  && !fitOption.Quiet )
+      Warning("UnBinFit","Abnormal termination of minimization.");
+
    const ROOT::Fit::FitResult & fitResult = fitter->Result(); 
    // one could set directly the fit result in TF1
    int iret = fitResult.Status(); 

@@ -403,10 +403,8 @@ TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
-   Double_t rmin, rmax, dz;
+   Double_t dz;
    Double_t zmin,zmax;
-   rmin = fRmin;
-   rmax = fRmax;
    dz = fDz;
    if (fDz<0) {
       mother->GetAxisRange(3,zmin,zmax);

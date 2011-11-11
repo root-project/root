@@ -657,12 +657,10 @@ Bool_t TGTextEditor::HandleKey(Event_t *event)
    // Keyboard event handler.
 
    char   input[10];
-   Int_t  n;
    UInt_t keysym;
 
    if (event->fType == kGKeyPress) {
       gVirtualX->LookupString(event, input, sizeof(input), keysym);
-      n = strlen(input);
 
       switch ((EKeySym)keysym) {   // ignore these keys
          case kKey_Shift:

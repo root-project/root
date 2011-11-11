@@ -125,9 +125,6 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    std::cout<<"Execute command= "<<command<<std::endl;
 #endif
 
-   int nfcn = GetMaxIterations();  
-   double edmval = GetPrecision(); 
-
    // set also number of parameters in obj function
    DoSetDimension(); 
 
@@ -136,8 +133,6 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 
    // MIGRAD 
    if (scommand.Contains("MIG")) {
-      if (nargs > 0) nfcn = int ( args[0] );
-      if (nargs > 1) edmval = args[1];
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
          return -1; 
@@ -145,16 +140,11 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
 
       fFitter->Config().SetMinimizer(GetDefaultFitter(), "Migrad");
       bool ret = fFitter->FitFCN(*fObjFunc); 
-      return  (ret) ? 0 : -1;
-      
-      
-      
+      return  (ret) ? 0 : -1;      
    } 
+
    //Minimize
    if (scommand.Contains("MINI")) {
-
-      if (nargs > 0) nfcn = int ( args[0] );
-      if (nargs > 1) edmval = args[1];
 
       fFitter->Config().SetMinimizer(GetDefaultFitter(), "Minimize");
       if (!fObjFunc) { 
@@ -167,8 +157,6 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    //Simplex
    if (scommand.Contains("SIM")) {
       
-      if (nargs > 0) nfcn = int ( args[0] );
-      if (nargs > 1) edmval = args[1];
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
          return -1; 
@@ -181,8 +169,6 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    //SCan
    if (scommand.Contains("SCA")) {
       
-      if (nargs > 0) nfcn = int ( args[0] );
-      if (nargs > 1) edmval = args[1];
       if (!fObjFunc) { 
          Error("ExecuteCommand","FCN must set before executing this command"); 
          return -1; 

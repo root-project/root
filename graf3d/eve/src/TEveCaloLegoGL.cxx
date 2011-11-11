@@ -1227,7 +1227,7 @@ void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId
          for (vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i)
          {
             TEveCaloData::CellId_t cell = fM->fCellList[i->fId];
-            std::set<Int_t>::iterator ti = towers.find(cell.fTower);
+            // std::set<Int_t>::iterator ti = towers.find(cell.fTower);
             if (towers.find(cell.fTower) != towers.end())
             {
                cells2DSelected.push_back(*i);

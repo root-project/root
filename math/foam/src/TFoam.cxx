@@ -757,16 +757,16 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
 //________________________________________________________________________________________
 void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
-// Internal subrogram used by Initialize.
-// Determines the best edge-candidate and the position of the division plane
-// for the future cell division, in the case of the optimization of the maximum weight.
-// It exploits results of the cell MC exploration run stored in fHistEdg.
-
+   // Internal subrogram used by Initialize.
+   // Determines the best edge-candidate and the position of the division plane
+   // for the future cell division, in the case of the optimization of the maximum weight.
+   // It exploits results of the cell MC exploration run stored in fHistEdg.
+   
    Int_t    kProj,iBin;
-   Double_t carve,carvTot,carvMax,carvOne,binMax,binTot,primTot,primMax;
+   Double_t carve,carvTot,carvMax,carvOne,binMax,binTot;
    Int_t    jLow,jUp,iLow,iUp;
    Double_t theBin;
-   Int_t    jDivi; // TEST
+   // Int_t    jDivi; // TEST
    Int_t j;
 
    Double_t *bins  = new Double_t[fNBin];      // bins of histogram for single  PROJECTION
@@ -776,80 +776,80 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
    xBest =0.5;
    yBest =1.0;
    carvMax = gVlow;
-   primMax = gVlow;
+   // primMax = gVlow;
    for(kProj=0; kProj<fDim; kProj++)
-      if( fMaskDiv[kProj] ){
-      //if( kProj==1 ){
-      //cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<endl;
-      //((TH1D *)(*fHistEdg)[kProj])->Print("all");
-      binMax = gVlow;
-      for(iBin=0; iBin<fNBin;iBin++){
-         bins[iBin]= ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(iBin+1);
-         binMax = TMath::Max( binMax, bins[iBin]);       // Maximum content/bin
-      }
-      if(binMax < 0 ) {       //case of empty cell
-         delete [] bins;
-         return;
-      }
-      carvTot = 0.0;
-      binTot  = 0.0;
-      for(iBin=0;iBin<fNBin;iBin++){
-         carvTot = carvTot + (binMax-bins[iBin]);     // Total Carve (more stable)
-         binTot  +=bins[iBin];
-      }
-      primTot = binMax*fNBin;
-      //cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<endl;
-      jLow =0;
-      jUp  =fNBin-1;
-      carvOne = gVlow;
-      Double_t yLevel = gVlow;
-      for(iBin=0; iBin<fNBin;iBin++) {
-         theBin = bins[iBin];
-         //-----  walk to the left and find first bin > theBin
-         iLow = iBin;
-         for(j=iBin; j>-1; j-- ) {
-            if(theBin< bins[j]) break;
-            iLow = j;
+      if( fMaskDiv[kProj] ) {
+         //if( kProj==1 ){
+         //cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<endl;
+         //((TH1D *)(*fHistEdg)[kProj])->Print("all");
+         binMax = gVlow;
+         for(iBin=0; iBin<fNBin;iBin++){
+            bins[iBin]= ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(iBin+1);
+            binMax = TMath::Max( binMax, bins[iBin]);       // Maximum content/bin
          }
-         //iLow = iBin;
-         //if(iLow>0)     while( (theBin >= bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
-         //------ walk to the right and find first bin > theBin
-         iUp  = iBin;
-         for(j=iBin; j<fNBin; j++) {
-            if(theBin< bins[j]) break;
-            iUp = j;
+         if(binMax < 0 ) {       //case of empty cell
+            delete [] bins;
+            return;
          }
-         //iUp  = iBin;
-         //if(iUp<fNBin-1) while( (theBin >= bins[iUp+1])&&( iUp<fNBin-1 ) ){iUp++;} // horror!!!
-         //
-         carve = (iUp-iLow+1)*(binMax-theBin);
-         if( carve > carvOne) {
-            carvOne = carve;
-            jLow = iLow;
-            jUp  = iUp;
-            yLevel = theBin;
+         carvTot = 0.0;
+         binTot  = 0.0;
+         for(iBin=0;iBin<fNBin;iBin++){
+            carvTot = carvTot + (binMax-bins[iBin]);     // Total Carve (more stable)
+            binTot  +=bins[iBin];
          }
-      }//iBin
-      if( carvTot > carvMax) {
-         carvMax   = carvTot;
-         primMax   = primTot;
-         //cout <<"Carver:   primMax "<<primMax<<endl;
-         kBest = kProj;    // Best edge
-         xBest = ((Double_t)(jLow))/fNBin;
-         yBest = ((Double_t)(jUp+1))/fNBin;
-         if(jLow == 0 )       xBest = yBest;
-         if(jUp  == fNBin-1) yBest = xBest;
-         // division ratio in units of 1/fNBin, testing
-         jDivi = jLow;
-         if(jLow == 0 )     jDivi=jUp+1;
-      }
-      //======  extra histograms for debug purposes
-      //cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<endl;
-      for(iBin=0;    iBin<fNBin;  iBin++)
-         ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,binMax);
-      for(iBin=jLow; iBin<jUp+1;   iBin++)
-         ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,yLevel);
-   }//kProj
+         // primTot = binMax*fNBin;
+         //cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<endl;
+         jLow =0;
+         jUp  =fNBin-1;
+         carvOne = gVlow;
+         Double_t yLevel = gVlow;
+         for(iBin=0; iBin<fNBin;iBin++) {
+            theBin = bins[iBin];
+            //-----  walk to the left and find first bin > theBin
+            iLow = iBin;
+            for(j=iBin; j>-1; j-- ) {
+               if(theBin< bins[j]) break;
+               iLow = j;
+            }
+            //iLow = iBin;
+            //if(iLow>0)     while( (theBin >= bins[iLow-1])&&(iLow >0) ){iLow--;} // horror!!!
+            //------ walk to the right and find first bin > theBin
+            iUp  = iBin;
+            for(j=iBin; j<fNBin; j++) {
+               if(theBin< bins[j]) break;
+               iUp = j;
+            }
+            //iUp  = iBin;
+            //if(iUp<fNBin-1) while( (theBin >= bins[iUp+1])&&( iUp<fNBin-1 ) ){iUp++;} // horror!!!
+            //
+            carve = (iUp-iLow+1)*(binMax-theBin);
+            if( carve > carvOne) {
+               carvOne = carve;
+               jLow = iLow;
+               jUp  = iUp;
+               yLevel = theBin;
+            }
+         }//iBin
+         if( carvTot > carvMax) {
+            carvMax   = carvTot;
+            //primMax   = primTot;
+            //cout <<"Carver:   primMax "<<primMax<<endl;
+            kBest = kProj;    // Best edge
+            xBest = ((Double_t)(jLow))/fNBin;
+            yBest = ((Double_t)(jUp+1))/fNBin;
+            if(jLow == 0 )       xBest = yBest;
+            if(jUp  == fNBin-1) yBest = xBest;
+            // division ratio in units of 1/fNBin, testing
+            // jDivi = jLow;
+            // if(jLow == 0 )     jDivi=jUp+1;
+         }
+         //======  extra histograms for debug purposes
+         //cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<endl;
+         for(iBin=0;    iBin<fNBin;  iBin++)
+            ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,binMax);
+         for(iBin=jLow; iBin<jUp+1;   iBin++)
+            ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,yLevel);
+      }//kProj
    if( (kBest >= fDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest \n" );
    delete [] bins;
 }          //TFoam::Carver
@@ -942,7 +942,6 @@ Int_t TFoam::Divide(TFoamCell *cell)
 // and their properties set with help of MC sampling (TFoam_Explore)
 // Returns Code RC=-1 of buffer limit is reached,  fLastCe=fnBuf.
 
-   Double_t xdiv;
    Int_t   kBest;
 
    if(fLastCe+1 >= fNCells) Error("Divide", "Buffer limit is reached, fLastCe=fnBuf \n");
@@ -950,7 +949,6 @@ Int_t TFoam::Divide(TFoamCell *cell)
    cell->SetStat(0); // reset cell as inactive
    fNoAct--;
 
-   xdiv  = cell->GetXdiv();
    kBest = cell->GetBest();
    if( kBest<0 || kBest>=fDim ) Error("Divide", "Wrong kBest \n");
 

@@ -718,9 +718,9 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
             Double_t xmn=(fCumulativePDF[ivar][icls])->GetXmin();
             Double_t xmx=(fCumulativePDF[ivar][icls])->GetXmax();
 
-            Int_t idx = 0;
+            // Int_t idx = 0;
             try{
-               idx = fGet.at(ivar).second;
+               // idx = fGet.at(ivar).second;
                Char_t type = fGet.at(ivar).first;
                if( type != 'v' ){
                   Log() << kWARNING << "MakeClass for the Gauss transformation works only for the transformation of variables. The transformation of targets/spectators is not implemented." << Endl;

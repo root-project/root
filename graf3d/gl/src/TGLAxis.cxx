@@ -303,10 +303,10 @@ void TGLAxis::TicksPositions(Option_t *opt)
 {
    // Compute ticks positions.
 
-   Bool_t optionNoopt, optionLog;
+   Bool_t optionNoopt /* , optionLog */;
 
    if (strchr(opt,'N')) optionNoopt = kTRUE;  else optionNoopt = kFALSE;
-   if (strchr(opt,'G')) optionLog   = kTRUE;  else optionLog   = kFALSE;
+   // if (strchr(opt,'G')) optionLog   = kTRUE;  else optionLog   = kFALSE;
 
    // Determine number of tick marks 1, 2 and 3.
    fNDiv3 = fNDiv/10000;

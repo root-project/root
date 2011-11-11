@@ -603,7 +603,8 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          Log() << kFATAL << "Missing comma delimeter(s)" << Endl;
       }
 
-      Int_t ievent = -1, type = -1;
+      // Int_t ievent = -1;
+      Int_t type = -1;
       Double_t weight = -1.0;
       
       kNN::VarVec vvec(nvar, 0.0);
@@ -630,7 +631,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          }
          
          if (vcount == 0) {
-            ievent = std::atoi(vstring.c_str());
+            // ievent = std::atoi(vstring.c_str());
          }
          else if (vcount == 1) {
             type = std::atoi(vstring.c_str());

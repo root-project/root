@@ -707,7 +707,6 @@ Double_t TGeoChecker::TimingPerVolume(TGeoVolume *vol)
    Double_t theta, phi;
    Int_t idaughter;
    fTimer->Start();
-   Double_t dist;
    Bool_t inside;
    for (Int_t i=0; i<1000000; i++) {
       lpt[0] = ox-dx+2*dx*gRandom->Rndm();
@@ -725,12 +724,12 @@ Double_t TGeoChecker::TimingPerVolume(TGeoVolume *vol)
       fGeoManager->SetStep(pstep);
       fGeoManager->ResetState();
       inside = kTRUE;
-      dist = TGeoShape::Big();
+      // dist = TGeoShape::Big();
       if (!vol->IsAssembly()) {
          inside = vol->Contains(lpt);
          if (!inside) {
-            dist = vol->GetShape()->DistFromOutside(lpt,ldir,3,pstep); 
-//            if (dist>=pstep) continue;
+            // dist = vol->GetShape()->DistFromOutside(lpt,ldir,3,pstep); 
+            // if (dist>=pstep) continue;
          } else {   
             vol->GetShape()->DistFromInside(lpt,ldir,3,pstep);
          }   
@@ -2111,7 +2110,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 
    Double_t start[3];
    Double_t dir[3];
-   Int_t istep= 0;
    const Double_t *point = fGeoManager->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
@@ -2162,7 +2160,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          if (inull>5) break;
          normal = fGeoManager->FindNormalFast();
          if (!normal) break;
-         istep = 0;
          vis2 = endnode->IsOnScreen();
          if (ipoint>0) {
          // old visible node had an entry point -> finish segment

@@ -378,7 +378,6 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int iCol1 = 0;                     // Current column number.  1..N
    int iRow = 0;                      // Current row number
    TGHtmlElement *inRow = 0;          // Pointer to <TR>
-   TGHtmlElement *inCol = 0;          // Pointer to <TD>
    int i, j;                          // Loop counters
    int n;                             // Number of columns
    int minW, maxW, requestedW;        // min, max, requested width for a cell
@@ -390,7 +389,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int cellPadding;                   // Value of CELLPADDING parameter
    int tbw;                           // Width of border around whole table
    int cbw;                           // Width of border around one cell
-   int hspace;                        // Value of HSPACE parameter
+   // int hspace;                        // Value of HSPACE parameter
    int separation;                    // Space between columns
    int margin;                        // Space between left margin and 1st col
    int availWidth=0;                  // Part of lineWidth still available
@@ -451,7 +450,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    margin = tbw + cellSpacing + cbw + cellPadding;
 
    z = pStart->MarkupArg("hspace", 0);
-   hspace = z ? atoi(z) : DFLT_HSPACE;
+   // hspace = z ? atoi(z) : DFLT_HSPACE;
 
    // Figure out the maximum space available
    z = pStart->MarkupArg("width", 0);
@@ -485,7 +484,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
          case Html_EndTH:
          case Html_EndTABLE:
             ((TGHtmlRef *)p)->fPOther = pStart;
-            inCol = 0;
+            // inCol = 0;
             break;
 
          case Html_EndTR:
@@ -510,7 +509,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
          case Html_TD:
          case Html_TH: {
             TGHtmlCell *cell = (TGHtmlCell *) p;
-            inCol = p;
+            // inCol = p;
             if (!inRow) {
                // If the <TR> markup is omitted, insert it.
                TGHtmlElement *pNew = new TGHtmlRef(Html_TR, 1, 0, 0);
@@ -1122,7 +1121,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    TGHtmlElement *p;           // For looping thru elements of the table
    TGHtmlElement *fPNext;       // Next element in the loop
    TGHtmlElement *pCaption=0;  // Start of the caption text.  The <caption>
-   TGHtmlElement *pEndCaption; // End of the caption.  The </caption>
+   // TGHtmlElement *pEndCaption; // End of the caption.  The </caption>
    int width;               // Width of the table as drawn
    int cellSpacing;         // Value of cellspacing= parameter to <table>
    int cellPadding;         // Value of cellpadding= parameter to <table>
@@ -1141,7 +1140,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int iCol;                // Current column number
    int colspan;             // Number of columns spanned by current cell
    int vspace;              // Value of the vspace= parameter to <table>
-   int hspace;              // Value of the hspace= parameter to <table>
+   // int hspace;              // Value of the hspace= parameter to <table>
    int rowBottom;           // Bottom edge of content in the current row
    int defaultVAlign;       // Default vertical alignment for the current row
    const char *zAlign;      // Value of the ALIGN= attribute of the <TABLE>
@@ -1151,7 +1150,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int w[N];                // Width of each cell's content
    int ymax[N];             // Bottom edge of cell's content if valign=top
    TGHtmlElement *apElem[N]; // The <td> or <th> for each cell in a row
-   int firstRow[N];         // First row on which a cell appears
+   // int firstRow[N];         // First row on which a cell appears
    int lastRow[N];          // Row to which each cell span's
    int valign[N];           // Vertical alignment for each cell
    TGHtmlLayoutContext savedContext;  // Saved copy of the original pLC
@@ -1225,14 +1224,14 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    vspace = z ? atoi(z) : DFLT_VSPACE;
 
    z = pTable->MarkupArg("hspace", 0);
-   hspace = z ? atoi(z) : DFLT_HSPACE;
+   // hspace = z ? atoi(z) : DFLT_HSPACE;
 
 #ifdef DEBUG
    if (HtmlTraceMask & HtmlTrace_Table4) {
       cellPadding = 5;
       cellSpacing = 2;
       if (vspace < 2) vspace = 2;
-      if (hspace < 2) hspace = 2;
+      // if (hspace < 2) hspace = 2;
    }
 #endif
 
@@ -1304,7 +1303,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
    // Begin rendering rows of the table
    for (i = 1; i <= n; i++) {
-      firstRow[i] = 0;
+      // firstRow[i] = 0;
       lastRow[i] = 0;
       apElem[i] = 0;
    }
@@ -1320,7 +1319,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
          if (p->fType == Html_CAPTION) {
             pCaption = p;
             while (p && p != pEnd1 && p->fType != Html_EndCAPTION) p = p->fPNext;
-            pEndCaption = p;
+            // pEndCaption = p;
          }
 
          TRACE(HtmlTrace_Table3, ("Skipping token %s\n", fHtml->GetTokenName(p)));
@@ -1365,7 +1364,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
                   } else {
                      lastRow[iCol] = iRow + cell->fRowspan - 1;
                   }
-                  firstRow[iCol] = iRow;
+                  // firstRow[iCol] = iRow;
 
                   // Set vertical alignment flag for this cell
                   valign[iCol] = p->GetVerticalAlignment(defaultVAlign);
@@ -1438,7 +1437,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
             while (fPNext && fPNext != pEnd1 && fPNext->fType != Html_EndCAPTION) {
                fPNext = fPNext->fPNext;
             }
-            pEndCaption = fPNext;
+            // pEndCaption = fPNext;
             break;
          }
       }

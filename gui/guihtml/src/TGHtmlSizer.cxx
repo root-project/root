@@ -348,9 +348,9 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                      SetupBackgroundPic(img->GetPicture());
 #else
                      GCValues_t gcv;
-                     unsigned int mask;
+                     // unsigned int mask;
 
-                     mask = kGCTile | kGCFillStyle | kGCGraphicsExposures;
+                     // mask = kGCTile | kGCFillStyle | kGCGraphicsExposures;
                      gcv.fTile = img->GetPixmap();
                      gcv.fFillStyle = kFillTiled;
                      gcv.fGraphicsExposures = kTRUE;
@@ -567,7 +567,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             const char *zUrl;
             const char *zMethod;
             TGString cmd("");
-            int result;
+            // int result;
             char zToken[50];
 
             fFormStart = 0;
@@ -587,7 +587,7 @@ void TGHtml::AddStyle(TGHtmlElement *p)
             cmd.Append(" { ");
             AppendArglist(&cmd, (TGHtmlMarkupElement *) p);
             cmd.Append("} ");
-            result = FormCreate(form, zUrl, cmd.GetString());
+            /* result = */ FormCreate(form, zUrl, cmd.GetString());
             delete[] zUrl;
 
             /*if (result)*/ fFormStart = form;

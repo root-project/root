@@ -1475,7 +1475,6 @@ void TLinearFitter::SetFormula(const char *formula)
 
    Int_t size, special = 0;
    Int_t i;
-   Bool_t isHyper = kFALSE;
    //Int_t len = strlen(formula);
    if (fInputFunction)
       fInputFunction = 0;
@@ -1487,7 +1486,7 @@ void TLinearFitter::SetFormula(const char *formula)
    char *fstring;
    fstring = (char *)strstr(fFormula, "hyp");
    if (fstring!=0){
-      isHyper = kTRUE;
+      // isHyper = kTRUE;
       fstring+=3;
       sscanf(fstring, "%d", &size);
       //+1 for the constant term
