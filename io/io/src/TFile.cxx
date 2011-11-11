@@ -4532,6 +4532,11 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
    TString opt = dURL.GetOptions();
    if (opt != "") opt += "&";
    opt += raw;
+
+   // AliEn files need to know where the source file is
+   if (!strcmp(dURL.GetProtocol(), "alien"))
+      opt += TString::Format("&source=%s", GetName());
+   
    dURL.SetOptions(opt);
 
    char *copybuffer = 0;
