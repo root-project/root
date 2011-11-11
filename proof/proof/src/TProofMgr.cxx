@@ -625,15 +625,14 @@ void TProofMgr::SetTXProofMgrHook(TProofMgr_t pmh)
    fgTXProofMgrHook = pmh;
 }
 
-
 //______________________________________________________________________________
-Int_t TProofMgr::Ping(const char *url)
+Int_t TProofMgr::Ping(const char *url, Bool_t checkxrd)
 {
-   // Non-blocking check for a PROOF service at 'url'
+   // Non-blocking check for a PROOF (or Xrootd, if checkxrd) service at 'url'
    // Return
-   //        0 if a XProofd daemon is listening at 'url'
+   //        0 if a XProofd (or Xrootd, if checkxrd) daemon is listening at 'url'
    //       -1 if nothing is listening on the port (connection cannot be open)
-   //        1 if something is listening but not XProofd
+   //        1 if something is listening but not XProofd (or not Xrootd, if checkxrd)
 
    if (!url || (url && strlen(url) <= 0)) {
       ::Error("TProofMgr::Ping", "empty url - fail");
@@ -641,34 +640,60 @@ Int_t TProofMgr::Ping(const char *url)
    }
 
    TUrl u(url);
-   // Open the connection
+   // Check the port and set the defaults
+   if (!strcmp(u.GetProtocol(), "http") && u.GetPort() == 80) {
+      if (!checkxrd) {
+         u.SetPort(1093);
+      } else {
+         u.SetPort(1094);
+      }
+   }
+   
+   // Open the connection, disabling warnings ...
+   Int_t oldLevel = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kSysError+1;
    TSocket s(u.GetHost(), u.GetPort());
    if (!(s.IsValid())) {
       if (gDebug > 0)
          ::Info("TProofMgr::Ping", "could not open connection to %s:%d", u.GetHost(), u.GetPort());
+      gErrorIgnoreLevel = oldLevel;
       return -1;
    }
    // Send the first bytes
    int writeCount = -1;
    clnt_HS_t initHS;
    memset(&initHS, 0, sizeof(initHS));
-   initHS.third  = (int)host2net((int)1);
    int len = sizeof(initHS);
-   if ((writeCount = s.SendRaw(&initHS, len)) != len) {
-      if (gDebug > 0)
-         ::Info("TProofMgr::Ping", "1st: wrong number of bytes sent: %d (expected: %d)",
-                                   writeCount, len);
-      return 1;
-   }
-   // These 8 bytes are need by 'proofd' and discarded by XPD
-   int dum[2];
-   dum[0] = (int)host2net((int)4);
-   dum[1] = (int)host2net((int)2012);
-   if ((writeCount = s.SendRaw(&dum[0], sizeof(dum))) !=  sizeof(dum)) {
-      if (gDebug > 0)
-         ::Info("TProofMgr::Ping", "2nd: wrong number of bytes sent: %d (expected: %d)",
-                                   writeCount, (int) sizeof(dum));
-      return 1;
+   if (checkxrd) {
+      initHS.fourth = (int)host2net((int)4);
+      initHS.fifth = (int)host2net((int)2012);
+      if ((writeCount = s.SendRaw(&initHS, len)) != len) {
+         if (gDebug > 0)
+            ::Info("TProofMgr::Ping", "1st: wrong number of bytes sent: %d (expected: %d)",
+                                    writeCount, len);
+         gErrorIgnoreLevel = oldLevel;
+         return 1;
+      }
+   } else {
+      initHS.third  = (int)host2net((int)1);
+      if ((writeCount = s.SendRaw(&initHS, len)) != len) {
+         if (gDebug > 0)
+            ::Info("TProofMgr::Ping", "1st: wrong number of bytes sent: %d (expected: %d)",
+                                    writeCount, len);
+         gErrorIgnoreLevel = oldLevel;
+         return 1;
+      }
+      // These 8 bytes are need by 'proofd' and discarded by XPD
+      int dum[2];
+      dum[0] = (int)host2net((int)4);
+      dum[1] = (int)host2net((int)2012);
+      if ((writeCount = s.SendRaw(&dum[0], sizeof(dum))) !=  sizeof(dum)) {
+         if (gDebug > 0)
+            ::Info("TProofMgr::Ping", "2nd: wrong number of bytes sent: %d (expected: %d)",
+                                    writeCount, (int) sizeof(dum));
+         gErrorIgnoreLevel = oldLevel;
+         return 1;
+      }
    }
    // Read first server response
    int type;
@@ -678,6 +703,7 @@ Int_t TProofMgr::Ping(const char *url)
       if (gDebug > 0)
          ::Info("TProofMgr::Ping", "1st: wrong number of bytes read: %d (expected: %d)",
                         readCount, len);
+      gErrorIgnoreLevel = oldLevel;
       return 1;
    }
    // to host byte order
@@ -691,6 +717,7 @@ Int_t TProofMgr::Ping(const char *url)
          if (gDebug > 0)
             ::Info("TProofMgr::Ping", "2nd: wrong number of bytes read: %d (expected: %d)",
                            readCount, len);
+         gErrorIgnoreLevel = oldLevel;
          return 1;
       }
       xbody.protover = net2host(xbody.protover);
@@ -699,13 +726,18 @@ Int_t TProofMgr::Ping(const char *url)
 
    } else if (type == 8) {
       // Standard proofd
-      if (gDebug > 0) ::Info("TProofMgr::Ping", "server is PROOFD");
+      if (gDebug > 0) ::Info("TProofMgr::Ping", "server is old %s", (checkxrd ? "ROOTD" : "PROOFD"));
+      gErrorIgnoreLevel = oldLevel;
       return 1;
    } else {
       // We don't know the server type
       if (gDebug > 0) ::Info("TProofMgr::Ping", "unknown server type: %d", type);
+      gErrorIgnoreLevel = oldLevel;
       return 1;
    }
+   
+   // Restore ignore level
+   gErrorIgnoreLevel = oldLevel;
    // Done
    return 0;
 }
