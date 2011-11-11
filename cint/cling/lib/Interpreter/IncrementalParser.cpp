@@ -226,6 +226,8 @@ namespace cling {
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticConsumer& DClient = m_CI->getDiagnosticClient();
     DClient.BeginSourceFile(m_CI->getLangOpts(), &PP);
+    // Reset the transaction information
+    getLastTransaction().Reset();
 
     if (input.size()) {
       std::ostringstream source_name;
@@ -269,8 +271,11 @@ namespace cling {
         for (DeclGroupRef::iterator i=DGR.begin(); i< DGR.end(); ++i) {
          if (!m_FirstTopLevelDecl) 	 
            m_FirstTopLevelDecl = *i;
+         if (!m_LastTransaction.FirstDecl) 	 
+           m_LastTransaction.FirstDecl = *i;
 
           m_LastTopLevelDecl = *i;
+          m_LastTransaction.LastDecl = *i;
         } 
         m_Consumer->HandleTopLevelDecl(DGR);
       } // ADecl

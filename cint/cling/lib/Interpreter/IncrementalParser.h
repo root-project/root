@@ -43,6 +43,12 @@ namespace cling {
   
   class IncrementalParser {
   public:
+    ///\brief Contains information about the last input
+    struct Transaction {
+      clang::Decl* FirstDecl;
+      clang::Decl* LastDecl;
+      void Reset() { FirstDecl = LastDecl = 0; }
+    };
     enum EParseResult {
       kSuccess,
       kSuccessWithWarnings,
@@ -69,6 +75,7 @@ namespace cling {
     bool isDynamicLookupEnabled() { return m_DynamicLookupEnabled; }
     clang::Decl* getFirstTopLevelDecl() const { return m_FirstTopLevelDecl; }
     clang::Decl* getLastTopLevelDecl() const { return m_LastTopLevelDecl; }
+    Transaction& getLastTransaction() { return m_LastTransaction; }
     
     void addConsumer(ChainedConsumer::EConsumerIndex I, clang::ASTConsumer* consumer);
     clang::CodeGenerator* GetCodeGenerator();
@@ -87,6 +94,7 @@ namespace cling {
     ChainedConsumer* m_Consumer; // CI owns it
     clang::Decl* m_FirstTopLevelDecl; // first top level decl
     clang::Decl* m_LastTopLevelDecl; // last top level decl after most recent call to parse()
+    Transaction m_LastTransaction; // Holds information for the last transaction
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H

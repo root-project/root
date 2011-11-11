@@ -352,7 +352,8 @@ namespace cling {
   
   Interpreter::CompilationResult
   Interpreter::processLine(const std::string& input_line, 
-                           bool rawInput /*= false*/) {
+                           bool rawInput /*= false*/,
+                           Decl** D /*=0*/) {
     //
     //  Transform the input line to implement cint
     //  command line semantics (declarations are global),
@@ -375,6 +376,7 @@ namespace cling {
     Diag.setDiagnosticMapping(DiagnosticIDs::getIdFromName("warn_unused_call"),
                               clang::diag::MAP_IGNORE, SourceLocation());
     CompilationResult Result = handleLine(wrapped, functName);
+    D = &(m_IncrParser->getLastTransaction().FirstDecl);
     return Result;
   }
 

@@ -138,8 +138,25 @@ namespace cling {
     std::string createUniqueName();
     void AddIncludePath(const char *incpath);
     void DumpIncludePath();
+ 
+    ///\brief Compiles input line. 
+    ///
+    /// This is top most interface, which helps running statements and 
+    /// expressions on the global scope. If rawInput mode disabled the
+    /// input will be wrapped into wrapper function. Declaration extraction
+    /// will be enabled and all declarations will be extracted as global.
+    /// After compilation the wrapper will be executed.
+    /// 
+    /// If rawInput enabled no execution or declaration extraction is done
+    ///
+    /// @param[in] input_line - the input to be compiled
+    /// @param[in] rawInput - turns on or off the wrapping of the input
+    /// @param[out] D - returns the first declaration that was parsed from the
+    ///                 input
+    ///
     CompilationResult processLine(const std::string& input_line, 
-                                  bool rawInput = false);
+                                  bool rawInput = false,
+                                  clang::Decl** D = 0);
     
     bool loadFile(const std::string& filename,
                   const std::string* trailcode = 0,
