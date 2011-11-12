@@ -2545,8 +2545,9 @@ static void R__WriteDestructorBody(FILE *file, TIter &next)
          } else if ( element->IsBase() ) {
             ename = "this";
          }
-         TVirtualCollectionProxy *proxy = element->GetClassPointer()->GetCollectionProxy();
-         if (!element->TestBit(TStreamerElement::kDoNotDelete) && element->GetClassPointer() && proxy) {
+         TClass *cle = element->GetClassPointer();
+         TVirtualCollectionProxy *proxy = cle ? element->GetClassPointer()->GetCollectionProxy() : 0;
+         if (!element->TestBit(TStreamerElement::kDoNotDelete) && proxy) {
             Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
             
             if (proxy->HasPointers()) {
