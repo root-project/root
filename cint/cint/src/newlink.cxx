@@ -5129,7 +5129,6 @@ void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)
   int i = ifunc->tagnum;
   int isnonpublicnew;
   int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
-  int virtualdtorflag;
   int dtoraccess=G__PUBLIC;
 
   dtoraccess=G__PUBLIC;
@@ -5154,7 +5153,6 @@ void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)
     /* isvirtualdestructor=0; */
     isassignmentoperator=0;
     isnonpublicnew=G__isnonpublicnew(i);
-    virtualdtorflag=0;
 
     while (ifunc) {
       for (j = 0; j < ifunc->allifunc; ++j) {
@@ -5205,7 +5203,6 @@ void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)
           } else if (ifunc->funcname[j][0] == '~') {
             // We have a destructor.
             dtoraccess = ifunc->access[j];
-            virtualdtorflag = ifunc->isvirtual[j] + (ifunc->ispurevirtual[j] * 2);
             if (G__PUBLIC != ifunc->access[j]) {
               ++isdestructor;
             }
