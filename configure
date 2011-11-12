@@ -1826,6 +1826,9 @@ if test $# -gt 0 ; then
       --with-cern-libdir=*)    echo "WARNING: option $1 is deprecated and ignored"'!' ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
+      --with-cint-maxstruct=*) cintmaxstruct=$optarg ;;
+      --with-cint-maxtypedef=*) cintmaxtypedef=$optarg;;
+      --with-cint-longline=*)  cintlongline=$optarg  ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
@@ -6432,6 +6435,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
+    -e "s|@cintmaxstruct@|$cintmaxstruct|"      \
+    -e "s|@cintmaxtypedef@|$cintmaxtypedef|"    \
+    -e "s|@cintlongline@|$cintlongline|"        \
     -e "s|@clarensincdir@|$clarensincdir|"      \
     -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \

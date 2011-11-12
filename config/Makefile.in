@@ -316,6 +316,10 @@ GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 GSLVERSION     := @gslversion@
 
+CINTMAXSTRUCT  := @cintmaxstruct@
+CINTMAXTYPEDEF := @cintmaxtypedef@
+CINTLONGLINE   := @cintlongline@
+
 BUILDCLING     := @buildcling@
 LLVMCONFIG     := @llvmconfig@
 
