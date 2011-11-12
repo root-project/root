@@ -592,7 +592,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
    // returns the address of the value pointed to by the
    // TFormLeafInfo.
 
-   if (fElement==0) return thisobj;
+   if (fElement==0 || thisobj==0) return thisobj;
 
    switch (fElement->GetNewType()) {
       // basic types
