@@ -11819,7 +11819,7 @@ void G__specify_link(int link_stub)
   *   nostreamer: set G__NOSTREAMER flag
   *   noinputoper: set G__NOINPUTOPERATOR flag
   *   evolution: set G__USEBYTECOUNT flag
-  *   nomap: (irgnored by CINT; prevents entry in ROOT's rootmap file)
+  *   nomap: (ignored by CINT; prevents entry in ROOT's rootmap file)
   *   version(x): sets the version number of the class to x
   *************************************************************************/
   if (!strncmp(buf,"options=", 8) || !strncmp(buf,"option=", 7)) {
@@ -11837,9 +11837,8 @@ void G__specify_link(int link_stub)
 
      for (std::list<std::string>::iterator iOpt = options.begin();
           iOpt != options.end(); ++iOpt)
-        /*if (*iOpt == "nomap") rfNoMap = 1; // ignored
-        else*/
-        if (*iOpt == "nostreamer") rfNoStreamer = 1;
+        if (*iOpt == "nomap") { /* ignored */ }
+        else if (*iOpt == "nostreamer") rfNoStreamer = 1;
         else if (*iOpt == "noinputoper") rfNoInputOper = 1;
         else if (*iOpt == "evolution") rfUseBytecount = 1;
         else if (*iOpt == "stub") rfUseStubs = 1;
