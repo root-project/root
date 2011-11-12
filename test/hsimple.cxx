@@ -48,7 +48,7 @@ int hsimple()
 
   // Fill histograms randomly
   Float_t px, py, pz;
-  for ( Int_t i=0; i<10000; i++) {
+  for ( Int_t i=0; i<25000; i++) {
      gRandom->Rannor(px,py); //px and py will be two gaussian random numbers
      pz = px*px + py*py;
      Float_t random = gRandom->Rndm(1);
