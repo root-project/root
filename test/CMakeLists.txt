@@ -17,6 +17,9 @@ if(NOT CMAKE_GENERATOR MATCHES Makefiles)
   set(cfg $<CONFIGURATION>/)
 endif() 
 
+#---environment-------------------------------------------------------------------------------
+ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
+
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
