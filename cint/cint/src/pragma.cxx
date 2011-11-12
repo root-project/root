@@ -131,7 +131,6 @@ extern int G__rootCcomment; /* used and defined in sizeof.c */
 **************************************************************************/
 static void G__do_not_include()
 {
-  int c;
   G__FastAllocString fnameorig(G__ONELINE);
   char *fname;
   size_t len;
@@ -141,7 +140,7 @@ static void G__do_not_include()
   /* if(!G__IsInMacro()) return; */
 
   /* Get the key string for preprocessed header file group */
-  c=G__fgetstream(fnameorig, 0, ";\n\r");
+  G__fgetstream(fnameorig, 0, ";\n\r");
 
   switch(fnameorig[0]) {
   case '\'':

@@ -277,7 +277,6 @@ static int G__createfuncmacro(char* new_name)
    struct G__Deffuncmacro *deffuncmacro;
    int hash, i;
    G__FastAllocString paralist(G__ONELINE);
-   int c;
    if (G__ifile.filenum > G__gettempfilenum()) {
       G__fprinterr(G__serr, "Limitation: Macro function can not be defined in a command line or a tempfile\n");
       G__genericerror("You need to write it in a source file");
@@ -297,7 +296,7 @@ static int G__createfuncmacro(char* new_name)
    G__hash(new_name, hash, i)
    deffuncmacro->hash = hash;
    /* read parameter list */
-   c = G__fgetstream(paralist, 0, ")");
+   G__fgetstream(paralist, 0, ")");
    G__ASSERT(')' == c);
    G__getparameterlist(paralist, &deffuncmacro->def_para);
    /* store file pointer, line number and position */

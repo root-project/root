@@ -726,6 +726,7 @@ int G__getarrayindex(const char* indexlist)
 #endif /* G__ASM */
 #endif /* G__ASM_IFUNC */
    }
+   (void)c; // set but unused;
    G__ASSERT(']' == c);
 
    G__var_type = store_var_type;

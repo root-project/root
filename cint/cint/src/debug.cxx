@@ -167,6 +167,7 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
    G__value buf = G__null;
 #ifdef G__ASM
    G__ALLOC_ASMENV;
+   (void)store_asm_loopcompile; // "set but not used"
 #endif
 
    G__LockCriticalSection();

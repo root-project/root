@@ -241,7 +241,6 @@ void G__define_type()
    int taglen;
    G__value enumval;
    int store_tagdefining;
-   int typedef2 = 0;
    int itemp;
    int nindex = 0;
    int index[G__MAXVARDIM];
@@ -256,11 +255,9 @@ void G__define_type()
    int env_tagnum;
    int isconst = 0;
    fpos_t pos_p2fcomment;
-   int line_p2fcomment;
    int flag_p2f = 0;
    tagname[0] = '\0';
    fgetpos(G__ifile.fp, &pos_p2fcomment);
-   line_p2fcomment = G__ifile.line_number;
 #ifdef G__ASM
 #ifdef G__ASM_DBG
    if (G__asm_dbg && G__asm_noverflow) {
@@ -581,7 +578,6 @@ void G__define_type()
          tagtype = 0;
          tagname[0] = 0;
       }
-      typedef2 = 1;
    }
 
    if (isorgtypepointer) {

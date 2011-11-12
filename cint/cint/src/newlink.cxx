@@ -5078,17 +5078,6 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
       return;
 
     int paran = ifunc->para_nu[j];
-    // our flag for globalfunctions
-    int globalfunc = 0;
-    // The other important point is that variadic functions take the parameters
-    // in the opposite order
-    if (ifunc->tagnum < 0)
-      globalfunc = 1;
-
-    // if this is a variadic func then pass the parameters
-    // in the same order of methods not the one of globals functions
-    if(ifunc->ansi[j] == 2)
-      globalfunc = 0;
 
     G__if_ary_union_constructor(fp, 0, ifunc);
 
@@ -5097,14 +5086,9 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
 
     int k = 0;
     for (int counter=paran-1; counter>-1; counter--) {
-      int ispointer = 0;
       k = (paran-1) - counter;
 
       G__paramfunc *formal_param = ifunc->param[j][k];
-
-      if(isupper(formal_param->type)) {
-        ispointer = 1;
-      }
 
       if (counter!=paran-1)
         fprintf(fp,",");
@@ -5462,6 +5446,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
       isnonpublicnew=G__isnonpublicnew(i);
 
       ifunc_default = ifunc;
+      (void) ifunc_default; // set but unused
 
 #ifdef G__NOSTUBS
       // 28-01-08
@@ -7141,11 +7126,6 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
         page = des_oper->page;
     }
 #endif
-
-    int isdestdefined = 1;
-    if(!G__struct.memfunc[tagnum]->mangled_name[0])
-      isdestdefined = 0;
-
 
 
 #ifdef G__NOSTUBS
@@ -9167,7 +9147,6 @@ void G__cpplink_memfunc(FILE *fp)
   /* int alltag=0; */
   int virtualdtorflag;
   int dtoraccess=G__PUBLIC;
-  struct G__ifunc_table_internal *ifunc_destructor=0;
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Member function information setup for each class\n");
@@ -9284,8 +9263,6 @@ void G__cpplink_memfunc(FILE *fp)
               if (G__PUBLIC != ifunc->access[j]) {
                 ++isdestructor;
               }
-              else
-                ifunc_destructor = ifunc;
 
               if ((G__PROTECTED == ifunc->access[j]) && G__struct.protectedaccess[i] && !G__precomp_private) {
                 G__fprinterr(G__serr, "Limitation: can not generate dictionary for protected destructor for %s\n", G__fulltagname(i, 1));
@@ -9674,7 +9651,6 @@ void G__cpplink_memfunc(FILE *fp)
             } else if ('~' == ifunc->funcname[j][0]) {
               // destructor
               ++isdestructor;
-              ifunc_destructor = ifunc;
             } else if (!strcmp(ifunc->funcname[j], "operator new")) {
               ++isconstructor;
               ++iscopyconstructor;
@@ -11837,7 +11813,6 @@ void G__specify_link(int link_stub)
   int rfNoStreamer = 0;
   int rfNoInputOper = 0;
   int rfUseBytecount = 0;
-  int rfNoMap = 0;
   int rfUseStubs = 0;
   int rfVersionNumber = -1;
 
@@ -11865,8 +11840,9 @@ void G__specify_link(int link_stub)
 
      for (std::list<std::string>::iterator iOpt = options.begin();
           iOpt != options.end(); ++iOpt)
-        if (*iOpt == "nomap") rfNoMap = 1; // ignored
-        else if (*iOpt == "nostreamer") rfNoStreamer = 1;
+        /*if (*iOpt == "nomap") rfNoMap = 1; // ignored
+        else*/
+        if (*iOpt == "nostreamer") rfNoStreamer = 1;
         else if (*iOpt == "noinputoper") rfNoInputOper = 1;
         else if (*iOpt == "evolution") rfUseBytecount = 1;
         else if (*iOpt == "stub") rfUseStubs = 1;

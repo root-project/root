@@ -1170,9 +1170,9 @@ void Cint::G__ClassInfo::DeleteArray(void* ary, int dtorOnly)
     ////int n = pp[-1];
     ////int element_size = pp[-2];
     char* r = ((char*) ary) + ((n - 1) * element_size) ;
-    int status = 0;
+    ////int status = 0;
     for (int i = n; i > 0; --i) {
-      status = G__calldtor(r, tagnum, 0);
+      /*status =*/ G__calldtor(r, tagnum, 0);
       // ???FIX ME:  What does status mean here?
       // if (!status) break;
       r -= element_size;

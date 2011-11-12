@@ -2127,7 +2127,6 @@ static G__value G__exec_do()
    //  Did the body terminate on a flow of control statment?
    //
    int executed_break = 0;
-   int executed_continue = 0;
    if (result.type == G__block_break.type) {
       // -- The body did a goto, break, or continue.
       //fprintf(stderr, "G__exec_do: Body exited with a break or continue.\n");
@@ -2226,7 +2225,6 @@ static G__value G__exec_do()
       else if (result.obj.i == G__BLOCK_CONTINUE) {
          // -- The body did a continue.
          //fprintf(stderr, "G__exec_do: Recognized a continue on first iteration.\n");
-         executed_continue = 1;
          if (G__asm_noverflow) {
             // -- We are generating bytecode.
             if (isblock) {
@@ -2510,8 +2508,6 @@ static G__value G__exec_do()
          // -- We are going to interpret the body.
          while (cond) {
             // -- Execute the body again.
-            // Reset continue statement flag.
-            executed_continue = 0;
             //
             //  Reset the parse to the beginning of the body.
             //
@@ -2618,7 +2614,6 @@ static G__value G__exec_do()
                else if (result.obj.i == G__BLOCK_CONTINUE) {
                   // -- The body executed a continue.
                   //fprintf(stderr, "G__exec_do: Recognized a continue on second or greater iteration.\n");
-                  executed_continue = 1;
                   if (isblock) {
                      // -- The body is a block.
                      //fprintf(stderr, "G__exec_do: ignoring until next '}' because of a continue on second or greater iteration.\n");
@@ -3027,7 +3022,6 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    //
    //fprintf(stderr, "G__exec_loop: cond: %d\n", cond);
    int executed_break = 0;
-   int executed_continue = 0;
    if (!cond) {
       // -- We are not going to run the body, skip it.
       // Tell the parser we are skipping code.
@@ -3042,7 +3036,6 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    else {
       while (cond) {
          // -- Execute body of loop.
-         executed_continue = 0;
 #ifdef G__ASM
          //
          //  Generate an G__CNDJMP <dst> bytecode instruction.
@@ -3187,7 +3180,6 @@ static G__value G__exec_loop(const char* forinit, char* condition,
                case G__BLOCK_CONTINUE:
                   // -- The body did a continue.
                   //fprintf(stderr, "G__exec_loop: The body did a continue.\n");
-                  executed_continue = 1;
                   // We do not propagate the continue status.
                   result = G__null;
                   if (G__asm_noverflow) {
@@ -3990,7 +3982,7 @@ static void G__externignore()
    // -- Handle extern "...", EXTERN "..."
    int flag = 0;
    G__FastAllocString fname(G__MAXFILENAME);
-   int c = G__fgetstream(fname, 0, "\"");
+   G__fgetstream(fname, 0, "\"");
    int store_iscpp = G__iscpp;
    // FIXME: We should handle "C++" as well!
    if (!strcmp(fname, "C")) {
@@ -4007,7 +3999,7 @@ static void G__externignore()
    //
    //  Skip any whitespace following the double quote.
    //
-   c = G__fgetspace();
+   G__fgetspace();
    fseek(G__ifile.fp, -1, SEEK_CUR);
    if (G__dispsource) {
       G__disp_mask = 1;

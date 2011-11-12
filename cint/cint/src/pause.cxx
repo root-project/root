@@ -1599,6 +1599,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
    short double_quote, single_quote;
 #ifdef G__ASM
    G__ALLOC_ASMENV;
+   (void)store_asm_loopcompile; // set but not used
 #endif
    char store_var_type;
    /* pass to parent otherwise not re-entrant */

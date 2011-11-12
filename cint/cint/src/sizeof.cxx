@@ -1473,16 +1473,16 @@ void G__typeconversion(G__ifunc_table_internal *ifunc,int ifn
                        ,G__param *libp)
 {
   int formal_type,    param_type;
-  int formal_reftype, param_reftype;
-  int formal_tagnum,  param_tagnum;
+  // int formal_reftype, param_reftype;
+  // int formal_tagnum,  param_tagnum;
   int i;
   for(i=0;i<libp->paran && i<ifunc->para_nu[ifn];i++) {
     formal_type = ifunc->param[ifn][i]->type;
     param_type = libp->para[i].type;
-    formal_reftype = ifunc->param[ifn][i]->reftype;
-    param_reftype = libp->para[i].obj.reftype.reftype;
-    formal_tagnum = ifunc->param[ifn][i]->p_tagtable;
-    param_tagnum = libp->para[i].tagnum;
+    // formal_reftype = ifunc->param[ifn][i]->reftype;
+    // param_reftype = libp->para[i].obj.reftype.reftype;
+    // formal_tagnum = ifunc->param[ifn][i]->p_tagtable;
+    // param_tagnum = libp->para[i].tagnum;
     switch(formal_type) {
     case 'd':
     case 'f':

@@ -960,7 +960,6 @@ int G__createtemplateclass(const char *new_name,G__Templatearg *targ
 int G__getobjecttagnum(char *name)
 {
   int result = -1;
-  char *p;
   char *p1;
   char *p2;
   p1 = strrchr(name,'.');
@@ -991,11 +990,9 @@ int G__getobjecttagnum(char *name)
   else {
     if(p1>p2 || !p2) {
       *p1 = 0;
-      p = p1+1;
     }
     else /* if(p2>p1 || !p1) */ {
       *p2 = 0;
-      p = p2+2;
     }
     
     result = G__getobjecttagnum(name);
@@ -1384,7 +1381,6 @@ void G__declare_template()
   struct G__Templatearg *targ;
   int c;
   char *p;
-  int ismemvar=0;
   int isforwarddecl = 0;
   int isfrienddecl = 0;
   int autoload_old = 0;
@@ -1539,7 +1535,6 @@ void G__declare_template()
       return;
     }
 #endif
-    if(';'==c || '='==c) ismemvar=1;
     if('('==c||';'==c
        || '='==c
        ) {
@@ -1571,7 +1566,6 @@ void G__declare_template()
     else if('='==c) {
       /*6'template<class T> A<T> A<T>::v=0;     A<T>::v */
       c = G__fignorestream(";");
-      ismemvar=1;
     }
 #endif
     else { /* if(strncmp(temp,"::",2)==0) { */
@@ -3233,7 +3227,6 @@ int G__matchtemplatefunc(G__Definetemplatefunc *deftmpfunc
   int fparan,paran;
   int ftype,type;
   int ftagnum,tagnum;
-  int ftypenum,typenum;
   int freftype,reftype,ref;
   /* int fparadefault; */
   int fargtmplt;
@@ -3255,7 +3248,6 @@ int G__matchtemplatefunc(G__Definetemplatefunc *deftmpfunc
     /* get template information for simplicity */
     ftype = deftmpfunc->func_para.type[i];
     ftagnum = deftmpfunc->func_para.tagnum[i];
-    ftypenum = deftmpfunc->func_para.typenum[i];
     freftype = deftmpfunc->func_para.reftype[i];
     fargtmplt = deftmpfunc->func_para.argtmplt[i];
     fntarg = deftmpfunc->func_para.ntarg[i];
@@ -3265,7 +3257,6 @@ int G__matchtemplatefunc(G__Definetemplatefunc *deftmpfunc
     /* get parameter information for simplicity */
     type = libp->para[i].type;
     tagnum = libp->para[i].tagnum;
-    typenum = libp->para[i].typenum;
     ref = libp->para[i].ref;
     if(
        'u'==libp->para[i].type ||

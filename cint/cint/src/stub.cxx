@@ -328,7 +328,6 @@ void G__cppstub_memfunc(FILE *fp)
 {
   int i,j;
   struct G__ifunc_table_internal *ifunc;
-  int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Member function Stub\n");
@@ -341,10 +340,6 @@ void G__cppstub_memfunc(FILE *fp)
        -1!=G__struct.line_number[i]&&G__struct.hash[i]&&
        '$'!=G__struct.name[i][0] && 'e'!=G__struct.type[i]) {
       ifunc = G__struct.memfunc[i];
-      isconstructor=0;
-      iscopyconstructor=0;
-      isdestructor=0;
-      isassignmentoperator=0;
 
       /* member function interface */
       fprintf(fp,"\n/* %s */\n",G__fulltagname(i,0));

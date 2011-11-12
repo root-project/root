@@ -1021,8 +1021,6 @@ G__value G__operatorfunction(G__value* presult, const char* item, int* known3,
    int nest = 0;
    int double_quote = 0, single_quote = 0;
    size_t lenitem = strlen(item);
-   size_t base1 = 0;
-   int nindex = 0;
    int itmp;
    fpara.paran = 0;
    fpara.para[0].type = 0;
@@ -1117,10 +1115,10 @@ G__value G__operatorfunction(G__value* presult, const char* item, int* known3,
           *************************************************/
          if ((item[ig15] == ')') && (ig15 < lenitem - 1)) {
             if (('-' == item[ig15+1] && '>' == item[ig15+2]) || '.' == item[ig15+1]) {
-               base1 = ig15 + 1;
+               //base1 = ig15 + 1;
             }
             else if (item[ig15+1] == '[') {
-               nindex = fpara.paran + 1;
+               //nindex = fpara.paran + 1;
             }
             else if (funcname[0] && isalnum(item[ig15+1])) {
                G__fprinterr(G__serr, "Error: %s  Syntax error?", item);
@@ -1183,7 +1181,6 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
    G__value result3;
    G__FastAllocString result7(G__LONGLINE);
    int ig15, ipara;
-   static struct G__param* p2ffpara = (struct G__param*)NULL;
    int hash;
    int funcmatch;
    int i, classhash;
@@ -2032,10 +2029,8 @@ G__value G__getfunction_libp(const char* item, G__FastAllocString& funcname,
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
       if (pfparam) {
-         p2ffpara = libp;
          result3 = G__pointer2func(0, result7, pfparam, known3);
       }
-      p2ffpara = 0;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;

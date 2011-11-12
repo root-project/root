@@ -273,6 +273,7 @@ int G__call_interruptfunc(char *func)
 {
 #ifdef G__ASM
    G__ALLOC_ASMENV;
+   (void)store_asm_loopcompile;
 #endif
    char store_var_type;
 
