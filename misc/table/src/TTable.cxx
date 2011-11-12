@@ -1175,13 +1175,11 @@ Long_t TTable::AppendRows(const void *row, UInt_t nRows)
    // return
    //    - the new table size (# of table rows)
    //    - 0 if the object doesn't own the internal array and can not expand it
-   Long_t size = 0;
    if (!TestBit(kIsNotOwn) && row && nRows ) {
       Int_t indx = GetNRows();
       ReAllocate(nRows);
       // Copy (insert) the extra staff in
       ::memmove(fTable+indx*fSize,row,fSize*nRows);
-      size = GetSize();
    }
    return TestBit(kIsNotOwn) ? 0 : GetSize();
 }
