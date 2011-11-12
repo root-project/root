@@ -50,7 +50,7 @@
 //fitter template functions
 #pragma link C++ function ROOT::Fit::Fitter::Fit(const ROOT::Fit::BinData &, const ROOT::Math::IParametricFunctionMultiDim&);
 #pragma link C++ function ROOT::Fit::Fitter::Fit(const ROOT::Fit::UnBinData &,const ROOT::Math::IParametricFunctionMultiDim &);
-#pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::BinData &,const ROOT::Math::IParametricFunctionMultiDim&);
+//#pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::BinData &,const ROOT::Math::IParametricFunctionMultiDim&);
 //#pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::UnBinData &,const ROOT::Math::IParametricFunctionMultiDim&);
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::BinData &);
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::UnBinData &);
