@@ -17,8 +17,13 @@ namespace clang {
 namespace cling {
 
   class ValuePrinterInfo {
-  public:
+  private:
+    const clang::Expr* m_Expr;
+    const clang::ASTContext* m_Context;
+    unsigned m_Flags;
+    std::string m_TypeName;
 
+  public:
     enum ValuePrinterFlags {
       VPI_Ptr = 1,
       VPI_Const = 2,
@@ -26,11 +31,10 @@ namespace cling {
     };
 
     ValuePrinterInfo(clang::Expr* E, clang::ASTContext* Ctx);
-
-    clang::Expr* m_Expr;
-    clang::ASTContext* m_Context;
-    unsigned m_Flags;
-    std::string m_TypeName;
+    const clang::Expr* getExpr() const { return m_Expr; }
+    const clang::ASTContext* getASTContext() const { return m_Context; }
+    unsigned getFlags() { return m_Flags; }
+    const std::string& getTypeName() const { return m_TypeName; }
   };
 
 } // end namespace cling

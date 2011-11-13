@@ -70,9 +70,9 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
 namespace cling {
   void printValueDefault(llvm::raw_ostream& o, const void* const p,
                          const ValuePrinterInfo& VPI) {
-    clang::Expr* E = VPI.m_Expr;
+    const clang::Expr* E = VPI.getExpr();
     o << "(";
-    o << VPI.m_TypeName;
+    o << VPI.getTypeName();
     if (E->isRValue()) // show the user that the var cannot be changed
       o << " const";
     o << ") ";
