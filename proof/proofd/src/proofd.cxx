@@ -216,8 +216,6 @@ extern "C" {
 #if defined(__sun)
 #if defined(R__SUNGCC3)
 extern "C" int gethostname(char *, unsigned int);
-#else
-extern "C" int gethostname(char *, int);
 #endif
 #endif
 
