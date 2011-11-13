@@ -361,31 +361,10 @@ enum EDictType {
 
 char *StrDup(const char *str);
 
-typedef map<string,bool> Funcmap_t;
-Funcmap_t gFunMap;
-
 vector<string> gIoConstructorTypes;
 void AddConstructorType(const char *arg)
 {
    if (arg) gIoConstructorTypes.push_back(string(arg));
-}
-
-//const char* root_style()  {
-//  static const char* s = ::getenv("MY_ROOT");
-//  return s;
-//}
-
-// static int check = 0;
-//______________________________________________________________________________
-void SetFun (const string &fname)
-{
-   gFunMap[fname] = true;
-}
-
-//______________________________________________________________________________
-bool GetFun(const string &fname)
-{
-   return gFunMap[fname];
 }
 
 //______________________________________________________________________________
@@ -1382,8 +1361,6 @@ bool CheckConstructor(G__MethodInfo &methodinfo, int argRequested)
    return false;
 }
 
-
-
 //______________________________________________________________________________
 bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
 {
@@ -1464,38 +1441,6 @@ bool NeedConstructor(G__ClassInfo& cl)
                    && strncmp(cl.FileName(),"prec_stl",8)!=0 )
                ) && !(cl.Property() & G__BIT_ISABSTRACT));
    return res;
-}
-
-//______________________________________________________________________________
-bool CheckConstructor(G__ClassInfo& cl)
-{
-   // Return false if the constructor configuration is invalid
-
-   bool result = true;
-   if (NeedConstructor(cl)) {
-
-      bool custom = HasCustomOperatorNew(cl);
-      if (custom && cl.IsBase("TObject")) {
-         custom = false;
-      }
-      // if (custom) fprintf(stderr,"%s has custom operator new\n",cl.Name());
-
-      result = !HasDefaultConstructor(cl);
-   }
-
-   // For now we never issue a warning at rootcint time.
-   // There will be a warning at run-time.
-   result = true;
-#if 0
-   if (!result) {
-      //Error(cl.Fullname(), "I/O has been requested but there is no constructor calleable without arguments\n"
-      //      "\tand a custom operator new has been defined.\n"
-      //      "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
-      Warning(cl.Fullname(), "I/O has been requested but is missing an explicit default constructor.\n"
-              "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
-   }
-#endif
-   return result;
 }
 
 //______________________________________________________________________________
@@ -3602,7 +3547,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    char cdim[1024];
    string cvar;
    string clName(G__map_cpp_name((char *)cl.Fullname()));
-   string fun;
    int version = GetClassVersion(cl);
    int clflag = 1;
    if (version == 0 || cl.RootFlag() == 0) clflag = 0;
@@ -3614,7 +3558,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       //  - static members
       //  - the member G__virtualinfo inserted by the CINT RTTI system
 
-      fun = string("R__") + clName + "_" + m.Name(); // sprintf(fun,"R__%s_%s",clName,m.Name());
       if (!(m.Property() & G__BIT_ISSTATIC) &&
           strcmp(m.Name(), "G__virtualinfo")) {
 
@@ -3672,14 +3615,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"*" << m.Name() << "\", &" << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
-                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
                cvar = m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -3688,9 +3625,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
                              << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                                << clName << "_" << m.Name() << ");"  << std::endl;
             } else if (m.Property() & G__BIT_ISREFERENCE) {
                // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
 
@@ -3700,10 +3634,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                                 << prefix << m.Name() << ");" << std::endl;
                   (*dictSrcOut) << "      R__insp.InspectMember(" << GetNonConstMemberName(m,prefix)
                                 << ", \"" << m.Name() << ".\");"  << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                                   << clName << "_" << m.Name() << ");" << std::endl;
                } else {
                   // NOTE: something to be added here!
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << m.Name()
@@ -3726,9 +3656,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                                    << (!strncmp(m.Title(), "!", 1)?"true":"false")
                                    <<  ");" << std::endl;
                   }
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                                   << clName << "_" << m.Name() << ");" << std::endl;
                }
             }
          }
@@ -5115,10 +5042,6 @@ int main(int argc, char **argv)
                   has_input_error |= CheckInputOperator(cl,dicttype);
                }
             }
-         }
-         bool res = CheckConstructor(cl);
-         if (!res) {
-            // has_input_error = true;
          }
          has_input_error |= !CheckClassDef(cl);
       }
