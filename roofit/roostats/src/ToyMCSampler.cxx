@@ -252,6 +252,8 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
    Double_t toysInTails = 0.0;
 
    for (Int_t i = 0; i < fMaxToys; ++i) {
+      // need to check at the beginning for case that zero toys are requested
+      if (toysInTails >= fToysInTails  &&  i+1 > fNToys) break;
 
       // status update
       if ( i% 500 == 0 && i>0 ) {
@@ -297,7 +299,6 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistributionSingleWorker(RooArgSe
          if(weight >= 0.) toysInTails += weight;
          else toysInTails += 1.;
       }
-      if (toysInTails >= fToysInTails  &&  i+1 >= fNToys) break;
    }
 
 

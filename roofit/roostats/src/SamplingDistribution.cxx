@@ -29,6 +29,7 @@ The class supports merging.
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include <limits>
 using namespace std ;
 
 /// ClassImp for building the THtml documentation of the class 
@@ -216,6 +217,11 @@ Double_t SamplingDistribution::IntegralAndError(Double_t & error, Double_t low, 
    // compute also the error on the integral 
 
    int n = fSamplingDist.size();
+   if( n == 0 ) {
+      error = numeric_limits<Double_t>::infinity();
+      return 0.0;
+   }
+
    if (int(fSumW.size()) != n) 
       SortValues();
 
