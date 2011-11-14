@@ -54,14 +54,18 @@ public:
    bool IsInheritable(); //checks if the class selection rule is inheritable
    void SetInheritable(bool inherit); //sets the inheritance rule for the class
 
-   bool HasPlus();
+   bool HasPlus() const;
    void SetPlus(bool pl);
 
-   bool HasMinus();
+   bool HasMinus() const;
    void SetMinus(bool mn);
 
-   bool HasExclamation();
+   bool HasExclamation() const;
    void SetExclamation(bool excl);   
+
+   /* virtual */ bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
+   /* virtual */ bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
+   /* virtual */ bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler.
 };
 
 #endif

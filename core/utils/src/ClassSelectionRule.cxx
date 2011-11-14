@@ -59,7 +59,7 @@ void ClassSelectionRule::SetInheritable(bool inherit)
   fIsInheritable = inherit;
 }
 
-bool ClassSelectionRule::HasPlus()
+bool ClassSelectionRule::HasPlus() const
 {
    return fPlus;
 }
@@ -69,7 +69,7 @@ void ClassSelectionRule::SetPlus(bool pl)
    fPlus = pl;
 }
 
-bool ClassSelectionRule::HasMinus()
+bool ClassSelectionRule::HasMinus() const
 {
    return fMinus;
 }
@@ -79,7 +79,7 @@ void ClassSelectionRule::SetMinus(bool mn)
    fMinus = mn;
 }
 
-bool ClassSelectionRule::HasExclamation()
+bool ClassSelectionRule::HasExclamation() const
 {
    return fExclamation;
 }
@@ -89,4 +89,18 @@ void ClassSelectionRule::SetExclamation(bool excl)
    fExclamation = excl;
 }
 
+bool ClassSelectionRule::RequestStreamerInfo() const
+{
+   return HasPlus();
+}
+
+bool ClassSelectionRule::RequestNoStreamer() const
+{
+   return HasMinus();
+}
+
+bool ClassSelectionRule::RequestNoInputOperator() const
+{
+   return HasExclamation();
+}
 
