@@ -384,8 +384,8 @@ namespace cling {
                               clang::diag::MAP_IGNORE, SourceLocation());
     Diag.setDiagnosticMapping(DiagnosticIDs::getIdFromName("warn_unused_call"),
                               clang::diag::MAP_IGNORE, SourceLocation());
-    CompilationResult Result = handleLine(wrapped, functName);
-    D = &(m_IncrParser->getLastTransaction().FirstDecl);
+    CompilationResult Result = handleLine(wrapped, functName, D);
+
     return Result;
   }
 
@@ -430,7 +430,8 @@ namespace cling {
   
   
   Interpreter::CompilationResult
-  Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName) {
+  Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
+                          Decl** D) {
     // if we are using the preprocessor
     if (input[0] == '#') {
       if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed)
@@ -442,6 +443,10 @@ namespace cling {
     if (m_IncrParser->CompileLineFromPrompt(input) 
         == IncrementalParser::kFailed)
         return Interpreter::kFailure;
+
+    if (D)
+      *D = m_IncrParser->getLastTransaction().FirstDecl;
+
     //
     //  Run it using the JIT.
     //

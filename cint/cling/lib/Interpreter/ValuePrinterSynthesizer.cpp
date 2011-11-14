@@ -170,7 +170,7 @@ namespace cling {
                                                    (uint64_t)E);
     Expr* VoidCArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
                                                    (uint64_t)m_Context);
-    
+
     if (!QT->isPointerType()) {
       while(ImplicitCastExpr* ICE = dyn_cast<ImplicitCastExpr>(E))
         E = ICE->getSubExpr();

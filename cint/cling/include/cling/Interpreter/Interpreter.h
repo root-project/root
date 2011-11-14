@@ -207,7 +207,8 @@ namespace cling {
   private:
     void handleFrontendOptions();
     CompilationResult handleLine(llvm::StringRef Input,
-                                 llvm::StringRef FunctionName);
+                                 llvm::StringRef FunctionName,
+                                 clang::Decl** D);
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     friend class runtime::internal::LifetimeHandler;
