@@ -7,6 +7,7 @@ const char *filename = "reftca.root";
 
 int write() 
 {
+  fprintf(stdout,"Writing %s\n",filename);
   Top* atop = new Top();
   TFile afile(filename, "recreate");
   TTree tree("tree", "tree");
@@ -25,12 +26,14 @@ int write()
   tree.Fill();
   tree.Write();
   afile.Close();
+  fprintf(stdout,"Done writing %s\n",filename);
      
   return 0;
 }
 
 int read()
 {
+   fprintf(stdout,"Reading %s\n",filename);
    TFile *afile = TFile::Open(filename);
    if (afile == 0) {
       printf("Error: Missing the file %s.\n",filename);
@@ -46,6 +49,7 @@ int read()
    const char *works_two = "fObjAArray.fObjAVal";
    const char *does_not_work = "fObjAArray.fObjB.fObjBVal";
 
+   fprintf(stdout,"Scannning the tree\n");
    tree->Scan(works_one);
    tree->Scan(works_two);
    tree->Scan(does_not_work);
