@@ -3565,9 +3565,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
-#if 0 /* old code */
    const char *prefix = "";
-#endif
    
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
 
