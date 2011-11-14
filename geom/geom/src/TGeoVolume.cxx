@@ -2495,6 +2495,7 @@ TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 //______________________________________________________________________________
 void TGeoVolumeAssembly::ClearThreadData() const
 {
+   TThread::Lock();
    TGeoVolume::ClearThreadData();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
@@ -2504,6 +2505,7 @@ void TGeoVolumeAssembly::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
 }
 
 //______________________________________________________________________________

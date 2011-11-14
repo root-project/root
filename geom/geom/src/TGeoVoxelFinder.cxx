@@ -90,6 +90,7 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
 //______________________________________________________________________________
 void TGeoVoxelFinder::ClearThreadData() const
 {
+   TThread::Lock();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -98,6 +99,7 @@ void TGeoVoxelFinder::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
 }
 
 

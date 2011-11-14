@@ -83,6 +83,7 @@ TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
 //______________________________________________________________________________
 void TGeoBoolNode::ClearThreadData() const
 {
+   TThread::Lock();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -91,6 +92,7 @@ void TGeoBoolNode::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
 }
 
 //______________________________________________________________________________

@@ -90,6 +90,7 @@ TGeoPatternFinder::ThreadData_t& TGeoPatternFinder::GetThreadData() const
 //______________________________________________________________________________
 void TGeoPatternFinder::ClearThreadData() const
 {
+   TThread::Lock();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -98,6 +99,7 @@ void TGeoPatternFinder::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
 }
 
 //_____________________________________________________________________________

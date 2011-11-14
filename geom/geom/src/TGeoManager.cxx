@@ -366,6 +366,7 @@ TGeoManager::ThreadData_t& TGeoManager::GetThreadData() const
 //______________________________________________________________________________
 void TGeoManager::ClearThreadData() const
 {
+   TThread::Lock();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -377,6 +378,7 @@ void TGeoManager::ClearThreadData() const
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol=(TGeoVolume*)next())) vol->ClearThreadData();
+   TThread::UnLock();
 }
 
 //_____________________________________________________________________________
