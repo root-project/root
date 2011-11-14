@@ -121,7 +121,10 @@ public:
 
    /** 
        fit a data set using any  generic model  function
+       If data set is binned a least square fit is performed
+       If data set is unbinned a maximum likelihood fit is done
        Pre-requisite on the function: 
+       it must have 
    */ 
    template < class Data , class Function> 
    bool Fit( const Data & data, const Function & func) { 
@@ -130,25 +133,35 @@ public:
    }
 
    /** 
-       fit a binned data set (default method: use chi2)
-       To be implemented option to do likelihood bin fit
+       Fit a binned data set using a least square fit (default method)
    */ 
    bool Fit(const BinData & data) { 
       return DoLeastSquareFit(data); 
    } 
    /** 
-       fit an binned data set using loglikelihood method
+       fit an unbinned data set using loglikelihood method
    */ 
-   bool Fit(const UnBinData & data, bool useWeight = false) { 
-      return DoLikelihoodFit(data, useWeight); 
+   bool Fit(const UnBinData & data, bool extended = false) { 
+      return DoLikelihoodFit(data, extended); 
    } 
 
    /**
-      Likelihood fit 
+      Likelihood fit (unbinned or unbinned) depending on the type of data
+      If Binned default is extended
+      If Unbinned defult is NOT extended (for backward compatibility)
     */
    template <class Data> 
-   bool LikelihoodFit(const Data & data, bool useWeight = false) { 
-      return DoLikelihoodFit(data, useWeight);
+   bool LikelihoodFit(const Data & data ) { 
+      return DoLikelihoodFit(data);
+   }
+
+
+   /**
+      Likelihood fit using extended or not extended method
+    */
+   template <class Data> 
+   bool LikelihoodFit(const Data & data, bool extended ) { 
+      return DoLikelihoodFit(data, extended);
    }
 
    /** 
@@ -156,9 +169,9 @@ public:
        Pre-requisite on the function: 
    */ 
    template < class Data , class Function> 
-   bool LikelihoodFit( const Data & data, const Function & func, bool useWeight) { 
+   bool LikelihoodFit( const Data & data, const Function & func, bool extended) { 
       SetFunction(func);
-      return DoLikelihoodFit(data, useWeight);
+      return DoLikelihoodFit(data, extended);
    }
 
    /**
@@ -266,6 +279,7 @@ public:
     */
    bool EvalFCN(); 
 
+
    /**
       do a linear fit on a set of bin-data
     */
@@ -274,20 +288,20 @@ public:
    /** 
        Set the fitted function (model function) from a parametric function interface
    */ 
-   void  SetFunction(const IModelFunction & func); 
+   void  SetFunction(const IModelFunction & func, bool useGradient = false); 
    /**
       Set the fitted function from a parametric 1D function interface
     */
-   void  SetFunction(const IModel1DFunction & func); 
+   void  SetFunction(const IModel1DFunction & func, bool useGradient = false); 
 
    /** 
        Set the fitted function (model function) from a parametric gradient function interface
    */ 
-   void  SetFunction(const IGradModelFunction & func); 
+   void  SetFunction(const IGradModelFunction & func, bool useGradient = true); 
    /**
       Set the fitted function from 1D gradient parametric function interface
     */
-   void  SetFunction(const IGradModel1DFunction & func); 
+   void  SetFunction(const IGradModel1DFunction & func, bool useGradient = true); 
 
 
    /**
@@ -359,21 +373,24 @@ public:
 
    /**
       apply correction in the error matrix for the weights for likelihood fits
-      This method can be called only after a fit and it assumes now that the 
+      This method can be called only after a fit. The 
       passed function (loglw2) is a log-likelihood function impelemented using the 
       sum of weight squared 
+      When using FitConfig.SetWeightCorrection() this correction is applied 
+      automatically when doing a likelihood fit (binned or unbinned)
    */
    bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2);
 
 
 protected: 
 
+
    /// least square fit 
    bool DoLeastSquareFit(const BinData & data); 
    /// binned likelihood fit
-   bool DoLikelihoodFit(const BinData & data, bool useWeight); 
+   bool DoLikelihoodFit(const BinData & data, bool extended = true); 
    /// un-binned likelihood fit
-   bool DoLikelihoodFit(const UnBinData & data, bool);  //not yet impl 
+   bool DoLikelihoodFit(const UnBinData & data, bool extended = false);  
    /// linear least square fit 
    bool DoLinearFit(const BinData & data);
 
@@ -387,6 +404,11 @@ protected:
    void DoUpdateFitConfig(); 
    // get function calls from the FCN 
    int GetNCallsFromFCN(); 
+
+   // set 1D function
+   void DoSetFunction(const IModel1DFunction & func, bool useGrad); 
+   // set generic N-d function 
+   void DoSetFunction(const IModelFunction & func, bool useGrad); 
 
 private: 
 
@@ -437,6 +459,9 @@ bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * p
    ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar); 
    return SetFCN(wf,par,datasize,chi2fit);
 }
+
+
+
 
 #endif  // endif __CINT__
 

@@ -111,7 +111,15 @@ public:
    void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = 0); 
 
    /*
-     Set the parameter setting from a fit Result
+     Set the parameter settings from a vector of parameter settings
+   */
+   void SetParamsSettings (const std::vector<ROOT::Fit::ParameterSettings>& pars ) { 
+      fSettings = pars;
+   }
+
+
+   /*
+     Set the parameter settings from a fit Result
    */
    void SetFromFitResult (const FitResult & rhs);
 
@@ -171,6 +179,9 @@ public:
    ///Update configuration after a fit using the FitResult
    bool UpdateAfterFit() const { return fUpdateAfterFit; } 
 
+   ///Apply Weight correction for error matrix computation
+   bool UseWeightCorrection() const { return fWeightCorr; }
+
 
    /// return vector of parameter indeces for which the Minos Error will be computed
    const std::vector<unsigned int> & MinosParams() const { return fMinosParams; }
@@ -185,6 +196,9 @@ public:
 
    ///set Minos erros
    void SetMinosErrors(bool on = true) { fMinosErrors = on; } 
+
+   ///apply the weight correction for error matric computation
+   void SetWeightCorrection(bool on = true) { fWeightCorr = on; }
 
    /// set parameter indeces for running Minos
    /// this can be used for running Minos on a subset of parameters - otherwise is run on all of them 
@@ -203,6 +217,8 @@ public:
    */
    static void SetDefaultMinimizer(const char * type, const char * algo = 0); 
 
+ 
+
 
 protected: 
 
@@ -213,7 +229,7 @@ private:
    bool fParabErrors;      // get correct parabolic errors estimate (call Hesse after minimizing)  
    bool fMinosErrors;      // do full error analysis using Minos
    bool fUpdateAfterFit;   // update the configuration after a fit using the result
-
+   bool fWeightCorr;       // apply correction to errors for weights fits 
 
    std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings
    std::vector<unsigned int> fMinosParams;               // vector with the parameter indeces for running Minos
