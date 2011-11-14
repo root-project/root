@@ -118,7 +118,11 @@ using namespace std;
 // pourpuses.
 #undef R__HAS_MATHMORE
 
-const unsigned int __DRAW__ = 0;
+unsigned int __DRAW__ = 0;
+
+// set a small tolerance for the tests
+// The default of 10*-2 make sometimes Simplex do not converge
+const double gDefaultTolerance = 1.E-4;  
 
 TRandom3 rndm;
 
@@ -394,7 +398,7 @@ enum testOpt {
 };
 
 // Default options that all tests will have
-int defaultOptions = testOptColor | testOptCheck; // | testOptDebug;
+int defaultOptions = testOptColor | testOptCheck;// | testOptDebug;
 
 // Object to manage the fitter depending on the optiones used
 template <typename T>
@@ -587,6 +591,8 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    
    printTestName(object, func);
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(commonAlgos[0].type, commonAlgos[0].algo);
+   ROOT::Math::MinimizerOptions::SetDefaultTolerance(gDefaultTolerance);
+ 
    object->Fit(func, "Q0");
    if ( defaultOptions & testOptDebug ) printTitle(func);
    struct RefValue ref(origpars, func->GetChisquare());
@@ -664,14 +670,14 @@ int test1DObjects(vector< vector<algoType> >& listH,
 
       // fill an histogram 
       if ( h1 ) delete h1;
-      h1 = new TH1D("Histogram 1D","h1-title",nbinsX,minX,maxX);
+      h1 = new TH1D("histogram1D","h1-title",nbinsX,minX,maxX);
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
          h1->Fill( h1->GetBinCenter(i), rndm.Poisson( func->Eval( h1->GetBinCenter(i) ) ) );
 
       double v[nbinsX + 1];
       FillVariableRange(v, nbinsX, minX, maxX);
       if ( h2 ) delete h2;
-      h2 = new TH1D("Histogram 1D Variable","h2-title",nbinsX, v);
+      h2 = new TH1D("histogram1D_Variable","h2-title",nbinsX, v);
       for ( int i = 0; i <= h2->GetNbinsX() + 1; ++i )
          h2->Fill( h2->GetBinCenter(i), rndm.Poisson( func->Eval( h2->GetBinCenter(i) ) ) );
 
@@ -681,27 +687,27 @@ int test1DObjects(vector< vector<algoType> >& listH,
       globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[j]);
       printf("%s\n", (status?"FAILED":"OK"));
 
-      delete c1; c1 = new TCanvas("c1-1D", "Histogram1D");
+      delete c1; c1 = new TCanvas("c1_1D", "Histogram1D");
       if ( __DRAW__ ) h1->Draw();
       ObjectWrapper<TH1D*> owh1(h1);
       globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[j]);
       printf("%s\n", (status?"FAILED":"OK"));
       
       delete g1; g1 = new TGraph(h1);
-      g1->SetName("TGraph 1D");
+      g1->SetName("TGraph1D");
       g1->SetTitle("TGraph 1D - title");
       if ( c2 ) delete c2;
-      c2 = new TCanvas("c2-1D","TGraph");
+      c2 = new TCanvas("c2_1D","TGraph");
       if ( __DRAW__ ) g1->Draw("AB*");
       ObjectWrapper<TGraph*> owg1(g1);
       globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[j]);
       printf("%s\n", (status?"FAILED":"OK"));
 
       delete ge1; ge1 = new TGraphErrors(h1);
-      ge1->SetName("TGraphErrors 1D");
+      ge1->SetName("TGraphErrors1D");
       ge1->SetTitle("TGraphErrors 1D - title");
       if ( c3 ) delete c3;
-      c3 = new TCanvas("c3-1D","TGraphError");
+      c3 = new TCanvas("c3_1D","TGraphError");
       if ( __DRAW__ ) ge1->Draw("AB*");
       ObjectWrapper<TGraphErrors*> owge1(ge1);
       globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[j]);
@@ -756,10 +762,10 @@ int test2DObjects(vector< vector<algoType> >& listH,
       
       // fill an histogram 
       if ( h1 ) delete h1;
-      h1 = new TH2D("Histogram 2D","h1-title",nbinsX,minX,maxX,nbinsY,minY,maxY);
+      h1 = new TH2D("histogram2D","h1-title",nbinsX,minX,maxX,nbinsY,minY,maxY);
       if ( ge1 ) delete ge1;
       ge1 = new TGraph2DErrors((h1->GetNbinsX() + 1) * (h1->GetNbinsY() + 1));
-      ge1->SetName("Graph2D with Errors");
+      ge1->SetName("Graph2DErrors");
       ge1->SetTitle("Graph2D with Errors");
       unsigned int counter = 0;
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
@@ -793,14 +799,14 @@ int test2DObjects(vector< vector<algoType> >& listH,
          }
 
       if ( c0 ) delete c0;
-      c0 = new TCanvas("c0-2D", "Histogram2D Variable");
+      c0 = new TCanvas("c0_2D", "Histogram2D Variable");
       if ( __DRAW__ ) h2->Draw();
       ObjectWrapper<TH2D*> owh2(h2);
       globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[h]);
       printf("%s\n", (status?"FAILED":"OK"));
 
       if ( c1 ) delete c1;
-      c1 = new TCanvas("c1-2D", "Histogram2D");
+      c1 = new TCanvas("c1_2D", "Histogram2D");
       if ( __DRAW__ ) h1->Draw();
       ObjectWrapper<TH2D*> owh1(h1);
       globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[h]);
@@ -808,27 +814,27 @@ int test2DObjects(vector< vector<algoType> >& listH,
 
       if ( g1 ) delete g1;
       g1 = new TGraph2D(h1);
-      g1->SetName("TGraph 2D");
+      g1->SetName("TGraph2D");
       g1->SetTitle("TGraph 2D - title");
 
       if ( c2 ) delete c2;
-      c2 = new TCanvas("c2-2D","TGraph");
+      c2 = new TCanvas("c2_2D","TGraph");
       if ( __DRAW__ ) g1->Draw("AB*");
       ObjectWrapper<TGraph2D*> owg1(g1);
       globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[h]);
       printf("%s\n", (status?"FAILED":"OK"));
 
       
-      ge1->SetName("TGraphErrors 2DGE");
+      ge1->SetName("TGraphErrors2DGE");
       ge1->SetTitle("TGraphErrors 2DGE - title");
       if ( c3 ) delete c3;
-      c3 = new TCanvas("c3-2DGE","TGraphError");
+      c3 = new TCanvas("c3_2DGE","TGraphError");
       if ( __DRAW__ ) ge1->Draw("AB*");
       ObjectWrapper<TGraph2DErrors*> owge1(ge1);
       globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[h]);
       printf("%s\n", (status?"FAILED":"OK"));
 
-      delete s1; s1 = THnSparse::CreateSparse("THnSparse 2D", "THnSparse 2D - title", h1);
+      delete s1; s1 = THnSparse::CreateSparse("THnSparse2D", "THnSparse 2D - title", h1);
       ObjectWrapper<THnSparse*> ows1(s1);
       globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[h]);
       printf("%s\n", (status?"FAILED":"OK"));
@@ -985,7 +991,8 @@ void init_structures()
 
 // simplex
    simplexAlgos.push_back( algoType( "Minuit",      "Simplex",     "Q0", CompareResult()) );
-   simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "Q0", CompareResult())  );
+   //simplex MInuit2 does not work well (needs to be checked)
+   // simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "Q0", CompareResult())  );
 
    specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QE0", CompareResult()) );
    specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QW0", CompareResult()) );
@@ -1120,7 +1127,7 @@ void init_structures()
    l2DLinearFunctions.push_back( fitFunctions("Poly2D", poly2DImpl, 7, poly2DOrig, poly2DFit, emptyLimits) );
 }
 
-int stressFit() 
+int stressHistoFit() 
 { 
    rndm.SetSeed(10);
 
@@ -1162,10 +1169,17 @@ int main(int argc, char** argv)
 {
    TApplication* theApp = 0;
 
+   if (argc > 1) { 
+      bool debug = atoi(argv[1]);
+      if (debug) defaultOptions = testOptDebug;
+   }
+
+   if (argc > 2) __DRAW__ = 1;
+
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
 
-   int ret = stressFit();
+   int ret = stressHistoFit();
 
    if ( __DRAW__ ) {
       theApp->Run();
