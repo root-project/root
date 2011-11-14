@@ -5,12 +5,27 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/ValuePrinter.h"
+
+#include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
 
 #include "clang/AST/Expr.h"
 #include "clang/AST/Type.h"
 
 #include "llvm/Support/raw_ostream.h"
+
+// Implements the CValuePrinter interface.
+extern "C" void cling_PrintValue(void* /*clang::Expr**/ E,
+                      void* /*clang::ASTContext**/ C,
+                      const void* value) {
+  clang::Expr* Exp = (clang::Expr*)E;
+  clang::ASTContext* Context = (clang::ASTContext*)C;
+  cling::ValuePrinterInfo VPI(Exp, Context);
+  cling::printValue(llvm::outs(), value, value, VPI);
+
+  cling::flushOStream(llvm::outs());
+}
+
 
 static void StreamChar(llvm::raw_ostream& o, char v) {
   o << '"' << v << "\"\n";

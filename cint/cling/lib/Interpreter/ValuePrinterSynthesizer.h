@@ -28,6 +28,7 @@ public:
     void TransformTopLevelDecl(clang::DeclGroupRef DGR);
 
   private:
+    clang::Expr* SynthesizeCppVP(clang::Expr* E);
     clang::Expr* SynthesizeVP(clang::Expr* E);
     unsigned ClearNullStmts(clang::CompoundStmt* CS);
   };

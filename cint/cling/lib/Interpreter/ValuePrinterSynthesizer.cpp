@@ -43,7 +43,12 @@ namespace cling {
                 bool p, q;
                 p = C->DisableConsumer(ChainedConsumer::kDeclExtractor);
                 q = C->DisableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
-                Expr* Result = SynthesizeVP(To);
+                Expr* Result = 0;
+                if (m_Sema->getLangOptions().CPlusPlus)
+                  Result = SynthesizeCppVP(To);
+                else 
+                  Result = SynthesizeVP(To);
+
                 if (Result)
                   *J = Result;
                 C->RestorePreviousState(ChainedConsumer::kDeclExtractor, p);
@@ -67,7 +72,7 @@ namespace cling {
   // We need to artificially create:
   // cling::valuePrinterInternal::PrintValue((void*) raw_ostream, 
   //                                         (ASTContext)Ctx, (Expr*)E, &i);
-  Expr* ValuePrinterSynthesizer::SynthesizeVP(Expr* E) {
+  Expr* ValuePrinterSynthesizer::SynthesizeCppVP(Expr* E) {
     QualType QT = E->getType();
     // For now we skip void and function pointer types.
     if (!QT.isNull() && (QT->isVoidType() || QT->isFunctionType()))
@@ -137,6 +142,53 @@ namespace cling {
 
     return Result;
   }
+
+  // We need to artificially create:
+  // cling_PrintValue(void* (ASTContext)C, void* (Expr)E, const void* (&i)
+  Expr* ValuePrinterSynthesizer::SynthesizeVP(Expr* E) {
+    QualType QT = E->getType();
+    // For now we skip void and function pointer types.
+    if (!QT.isNull() && (QT->isVoidType() || QT->isFunctionType()))
+      return 0;
+
+    // Find cling_PrintValue
+    SourceLocation NoSLoc = SourceLocation();
+    DeclarationName PVName = &m_Context->Idents.get("cling_PrintValue");
+    LookupResult R(*m_Sema, PVName, NoSLoc, Sema::LookupOrdinaryName,
+                   Sema::ForRedeclaration);
+    
+    Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
+    m_Sema->LookupName(R, S);
+    assert(!R.empty() && "Cannot find PrintValue(...)");
+
+    CXXScopeSpec CSS;
+    Expr* UnresolvedLookup 
+      = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).take();
+    
+
+    Expr* VoidEArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
+                                                   (uint64_t)E);
+    Expr* VoidCArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
+                                                   (uint64_t)m_Context);
+    
+    if (!QT->isPointerType()) {
+      while(ImplicitCastExpr* ICE = dyn_cast<ImplicitCastExpr>(E))
+        E = ICE->getSubExpr();
+      E = m_Sema->BuildUnaryOp(S, NoSLoc, UO_AddrOf, E).take();
+    }
+
+    ASTOwningVector<Expr*> CallArgs(*m_Sema);
+    CallArgs.push_back(VoidEArg);
+    CallArgs.push_back(VoidCArg);
+    CallArgs.push_back(E);
+
+    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc, 
+                                         move_arg(CallArgs), NoSLoc).take();
+    assert(Result && "Cannot create value printer!");
+
+    return Result;
+  }
+
 
   unsigned ValuePrinterSynthesizer::ClearNullStmts(CompoundStmt* CS) {
     llvm::SmallVector<Stmt*, 8> FBody;

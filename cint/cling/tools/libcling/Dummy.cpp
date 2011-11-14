@@ -1,5 +1,6 @@
 // request symbols
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/ValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
 #include "cling/UserInterface/UserInterface.h"
@@ -13,6 +14,7 @@ void libcling__symbol_requester() {
    cling::UserInterface U(I);
    cling::ValuePrinterInfo VPI(0, 0); // asserts, but we don't call.
    printValueDefault(llvm::outs(), 0, VPI);
+   cling_PrintValue(0, 0, 0);
    flushOStream(llvm::outs());
 }
 }

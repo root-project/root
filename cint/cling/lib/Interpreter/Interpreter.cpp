@@ -177,7 +177,7 @@ namespace cling {
     std::vector<unsigned> LeftoverArgsIdx;
     m_Opts = InvocationOptions::CreateFromArgs(argc, argv, LeftoverArgsIdx);
     std::vector<const char*> LeftoverArgs;
-
+    
     // We do C++ by default:
     LeftoverArgs.push_back("-x");
     LeftoverArgs.push_back("c++");
@@ -204,13 +204,16 @@ namespace cling {
 
     // Warm them up
     m_IncrParser->Initialize();
-
+    
     if (getCI()->getLangOpts().CPlusPlus) {
-       // Set up the gCling variable - even if we use PCH ('this' is different)
-       processLine("#include \"cling/Interpreter/ValuePrinter.h\"\n");
-       std::stringstream initializer;
-       initializer << "gCling=(cling::Interpreter*)" << (long)this << ";";
-       processLine(initializer.str());
+      // Set up the gCling variable - even if we use PCH ('this' is different)
+      processLine("#include \"cling/Interpreter/ValuePrinter.h\"\n");
+      std::stringstream initializer;
+      initializer << "gCling=(cling::Interpreter*)" << (long)this << ";";
+      processLine(initializer.str());
+    }
+    else {
+      processLine("#include \"cling/Interpreter/CValuePrinter.h\"\n");
     }
 
     handleFrontendOptions();
