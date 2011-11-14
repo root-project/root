@@ -3,6 +3,8 @@
 #import "FileContentController.h"
 #import "ROOTObjectController.h"
 #import "SlideshowController.h"
+#import "TransparentToolbar.h"
+#import "SearchController.h"
 #import "ObjectShortcut.h"
 #import "Shortcuts.h"
 
@@ -12,34 +14,43 @@
 
 #import "FileUtils.h"
 
+
 @implementation FileContentController {
    NSMutableArray *objectShortcuts;
+   UISearchBar *searchBar;
+   UIPopoverController *searchPopover;
+   SearchController *searchController;
+   UIBarButtonItem *slideShowBtn;
 }
 
 @synthesize fileContainer;
-/*
+
+
 //____________________________________________________________________________________________________
 - (void) initToolbarItems
 {
-   NSLog(@"self is %@", self);
-   UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 180.f, 44.f)];
+   UIToolbar *toolbar = [[TransparentToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 250.f, 44.f)];
    toolbar.barStyle = UIBarStyleBlackTranslucent;
 
-
-   NSMutableArray *buttons = [[NSMutableArray alloc] initWithCapacity : 2];
+   NSMutableArray *items = [[NSMutableArray alloc] initWithCapacity : 2];
    
-   UIBarButtonItem *slideShowBtn = [[UIBarButtonItem alloc] initWithTitle:@"Slide show" style : UIBarButtonItemStyleBordered target : self action : @selector(startSlideshow)];
-   [buttons addObject : slideShowBtn];
+   searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.f, 0.f, 150.f, 44.f)];
+   searchBar.delegate = self;
 
-   UISearchBar *searchBar = [[UISearchBar alloc] init];
-   [buttons addObject : searchBar];
+   UIBarButtonItem *searchItem = [[UIBarButtonItem alloc] initWithCustomView : searchBar];
+   [items addObject : searchItem];
+
+   slideShowBtn = [[UIBarButtonItem alloc] initWithTitle : @"Slide show" style : UIBarButtonItemStyleBordered target : self action : @selector(startSlideshow)];
+   [items addObject : slideShowBtn];
    
-   [toolbar setItems : buttons animated : NO];
+   [toolbar setItems : items animated : NO];
    
    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView : toolbar];
    rightItem.style = UIBarButtonItemStylePlain;
    self.navigationItem.rightBarButtonItem = rightItem;
-}*/
+   
+   
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
@@ -48,9 +59,9 @@
 
    if (self) {
       [self view];
-   //   [self initToolbarItems];
-      objectShortcuts = [[NSMutableArray alloc] init];
-      self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Slide show" style:UIBarButtonItemStyleBordered target:self action:@selector(startSlideshow)];
+      [self initToolbarItems];
+      searchController = [[SearchController alloc] initWithStyle : UITableViewStylePlain];
+      searchController.delegate = self;
    }
 
    return self;
@@ -129,6 +140,16 @@
    //ThumbnailView class.
 
    [self correctFramesForOrientation : interfaceOrientation];
+}
+
+//____________________________________________________________________________________________________
+- (void) didRotateFromInterfaceOrientation : (UIInterfaceOrientation)fromInterfaceOrientation 
+{
+   //Bring back the popover after rotating.
+   if (searchPopover) {
+      [searchPopover presentPopoverFromRect : searchBar.bounds inView : searchBar
+      permittedArrowDirections : UIPopoverArrowDirectionAny animated : NO];
+   }
 }
 
 //____________________________________________________________________________________________________
@@ -211,7 +232,7 @@
 {
    fileContainer = container;
    self.navigationItem.title = [NSString stringWithFormat : @"Contents of %s", container->GetFileName()];
-   self.navigationItem.rightBarButtonItem.enabled = fileContainer->GetNumberOfObjects() > 1 ? YES : NO;
+   slideShowBtn.enabled = fileContainer->GetNumberOfObjects() > 1 ? YES : NO;
    
    //Prepare objects' thymbnails.
    [self addObjectsIntoScrollview];
@@ -243,10 +264,78 @@
       [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
-      ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName:@"ROOTObjectController" bundle : nil];
+      ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
       [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
       [self.navigationController pushViewController : objectController animated : YES];
    }
+}
+
+#pragma mark - Search delegate.
+
+//____________________________________________________________________________________________________
+- (void) searchBarTextDidBeginEditing : (UISearchBar *)aSearchBar
+{
+   typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
+
+   if (const size_type names = fileContainer->ReadNames()) {
+      if (!searchPopover) {         
+         UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController : searchController];
+         searchPopover = [[UIPopoverController alloc] initWithContentViewController : navController];
+         searchPopover.delegate = self;
+         searchPopover.passthroughViews = [NSArray arrayWithObject : searchBar];
+      }
+      
+      NSMutableArray *keys = [[NSMutableArray alloc] init];
+      for (size_type i = 0; i < names; ++i)
+         [keys addObject : [NSString stringWithFormat : @"%s", fileContainer->GetKeyName(i)]];
+      searchController.keys = keys;
+
+      [searchPopover presentPopoverFromRect : [searchBar bounds] inView : searchBar permittedArrowDirections : UIPopoverArrowDirectionAny animated : YES];
+   }
+}
+
+//____________________________________________________________________________________________________
+- (void) searchBarTextDidEndEditing : (UISearchBar *)aSearchBar
+{
+   if (searchPopover) {
+      [searchPopover dismissPopoverAnimated:YES];
+      searchPopover = nil;
+   }  
+
+   [aSearchBar resignFirstResponder];
+}
+
+//____________________________________________________________________________________________________
+- (void) searchBar : (UISearchBar *)searchBar textDidChange : (NSString *)searchText 
+{
+   // When the search string changes, filter the recents list accordingly.
+   [searchController filterResultsUsingString : searchText];
+}
+
+//____________________________________________________________________________________________________
+- (void) searchBarSearchButtonClicked : (UISearchBar *)aSearchBar 
+{
+   //NSLog(@"search clicked");
+   [searchPopover dismissPopoverAnimated : YES];
+   [searchBar resignFirstResponder];
+}
+
+//____________________________________________________________________________________________________
+- (void) popoverControllerDidDismissPopover : (UIPopoverController *)popoverController 
+{
+   //NSLog(@"popover dismiss");
+   [searchBar resignFirstResponder];
+}
+
+#pragma mark - Search delegate.
+
+//____________________________________________________________________________________________________
+- (void) searchesController : (SearchController *)controller didSelectString : (NSString *)searchString
+{
+   //NSLog(@"didSelectString");
+   [searchPopover dismissPopoverAnimated : YES];
+   searchPopover = nil;
+   [searchBar resignFirstResponder];
 }
 
 @end

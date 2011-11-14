@@ -69,7 +69,7 @@ public:
 
    //Names for nested objects and directories.
    size_type ReadNames()const;
-   const std::string &GetName(size_type ind)const;
+   const char *GetKeyName(size_type ind)const;
 
    //Search for object or directory, return number of paths to this
    //entity found. If this FileContainer has such an object in fObjects,
@@ -89,7 +89,7 @@ private:
    
    static void ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer);
 
-
+   bool fTopLevel;
    std::string fFileName;
 
    std::vector<FileContainer *>fDirectories;

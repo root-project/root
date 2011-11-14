@@ -5,6 +5,7 @@
 #import "ScrollViewWithPadView.h"
 #import "ROOTObjectController.h"
 #import "PadImageScrollView.h"
+#import "TransparentToolbar.h"
 #import "ObjectInspector.h"
 #import "ObjectShortcut.h"
 #import "SelectionView.h"
@@ -93,7 +94,7 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) initToolbarItems
 {
-   UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 180.f, 44.f)];
+   UIToolbar *toolbar = [[TransparentToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 180.f, 44.f)];
    toolbar.barStyle = UIBarStyleBlackTranslucent;
 
 
@@ -453,7 +454,7 @@ enum Mode {
 
    
    fileContainer = container;
-   self.navigationItem.title = [NSString stringWithFormat:@"%s", fileContainer->GetObject(index)->GetName()];
+   self.navigationItem.title = [NSString stringWithFormat : @"%s", fileContainer->GetObject(index)->GetName()];
 
    currentObject = index;
    [self adjustPrevNextIndices];

@@ -1,5 +1,7 @@
 #import <UIKit/UIKit.h>
 
+#import "SearchController.h"
+
 namespace ROOT {
 namespace iOS {
 namespace Browser {
@@ -12,7 +14,7 @@ class FileContainer;
 
 @class ObjectShortcut;
 
-@interface FileContentController : UIViewController <UITableViewDataSource> {
+@interface FileContentController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchDelegate> {
 @private
    ROOT::iOS::Browser::FileContainer *fileContainer;
    __weak IBOutlet UIScrollView *scrollView;
@@ -23,5 +25,7 @@ class FileContainer;
 
 - (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;
 - (void) selectObjectFromFile : (ObjectShortcut *)obj;
+
+- (void) searchesController : (SearchController *)controller didSelectString : (NSString *)searchString;
 
 @end

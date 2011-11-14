@@ -107,7 +107,8 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
 
 //__________________________________________________________________________________________________________________________
 FileContainer::FileContainer(const std::string &fileName)
-                  : fFileName(fileName)
+                  : fTopLevel(false),
+                    fFileName(fileName)
 {
 }
 
@@ -223,7 +224,8 @@ const char *FileContainer::GetFileName()const
 auto FileContainer::ReadNames()const -> size_type
 {
    std::vector<std::string> names;
-   names.push_back(GetFileName());
+   if (!fTopLevel)
+      names.push_back(GetFileName());
 
    for (size_type i = 0, e = fDirectories.size(); i < e; ++i) {
       fDirectories[i]->ReadNames();
@@ -239,9 +241,9 @@ auto FileContainer::ReadNames()const -> size_type
 }
 
 //__________________________________________________________________________________________________________________________
-const std::string &FileContainer::GetName(size_type ind)const
+const char *FileContainer::GetKeyName(size_type ind)const
 {
-   return fNames[ind];
+   return fNames[ind].c_str();
 }
 
 //__________________________________________________________________________________________________________________________
@@ -371,8 +373,8 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
       //
       //Attach pads.
       topLevel->AttachPads();
+      topLevel->fTopLevel = true;
       //
-      
       return topLevel.release();
    } catch (const std::exception &) {
       return 0;
