@@ -1054,9 +1054,9 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
     } else {
 
-      RooFIter iter = _coefList.fwdIterator() ;
+      RooFIter citer = _coefList.fwdIterator() ;
       RooAbsReal* coef ;
-      while((coef=(RooAbsReal*)iter.next())) {
+      while((coef=(RooAbsReal*)citer.next())) {
 	Double_t ncomp = coef->getVal(nset) ;
 	expectedTotal += ncomp ;      
       }
