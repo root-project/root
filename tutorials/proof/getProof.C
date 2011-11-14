@@ -47,7 +47,9 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    //
    // The following arguments apply to xrootd responding at 'refloc' only:
    //     'nwrks'    Number of workers to be started. []
-   //     'dir'      Directory to be used for the files and working areas [].
+   //     'dir'      Directory to be used for the files and working areas []. When starting a new
+   //                instance of the daemon this directory is cleaned with 'rm -fr'. If 'dir'
+   //                is null, the default is used: '/tmp/<user>/.getproof'
    //     'opt'      Defines what to do if an existing xrootd uses the same ports; possible
    //                options are: "ask", ask the user; "force", kill the xrootd and start
    //                a new one; if any other string is specified the existing xrootd will be
@@ -147,8 +149,32 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
 
    // Temp dir for tutorial daemons
    TString tutdir = dir;
-   if (tutdir.IsNull() || gSystem->AccessPathName(dir, kWritePermission)) {
-      Printf("getProof: tutorial dir missing or not writable - try temp ");
+   if (!tutdir.IsNull()) {
+      if (gSystem->AccessPathName(tutdir)) {
+         // Directory does not exist: try to make it
+         gSystem->mkdir(tutdir.Data(), kTRUE);
+         if (gSystem->AccessPathName(tutdir, kWritePermission)) {
+            if (gSystem->AccessPathName(tutdir)) {
+               Printf("getProof: unable to create the working area at the requested path: '%s'"
+                      " - cannot continue", tutdir.Data());
+            } else {
+               Printf("getProof: working area at the requested path '%s'"
+                      " created but it is not writable - cannot continue", tutdir.Data());
+            }
+            return p;
+         }
+      } else {
+         // Check if it is writable ...
+         if (gSystem->AccessPathName(dir, kWritePermission)) {
+            // ... fail if not
+            Printf("getProof: working area at the requested path '%s'"
+                      " exists but is not writable - cannot continue", tutdir.Data());
+            return p;
+         }
+      }
+   } else {
+      // Notify
+      Printf("getProof: working area not specified temp ");
       // Force "/tmp/<user>" whenever possible to avoid length problems on MacOsX
       tutdir="/tmp"; 
       if (gSystem->AccessPathName(tutdir, kWritePermission)) tutdir = gSystem->TempDirectory();
@@ -160,14 +186,16 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       }
       us.Form("/%s", ug->fUser.Data());
       if (!tutdir.EndsWith(us.Data())) tutdir += us;
+      // Add our own subdir
+      tutdir += "/.getproof";
       gSystem->mkdir(tutdir.Data(), kTRUE);
       if (gSystem->AccessPathName(tutdir, kWritePermission)) {
-         Printf("getProof: unable to get a writable tutorial directory (tried: %s)"
+         Printf("getProof: unable to get a writable working area (tried: %s)"
                 " - cannot continue", tutdir.Data());
          return p;
       }
    }
-   Printf("getProof: tutorial dir: %s", tutdir.Data());
+   Printf("getProof: working area (tutorial dir): %s", tutdir.Data());
 
    // Dataset dir
    TString datasetdir;
