@@ -43,13 +43,15 @@ namespace cling {
     m_DynamicLookupEnabled(false),
     m_Consumer(0),
     m_FirstTopLevelDecl(0),
-    m_LastTopLevelDecl(0)
+    m_LastTopLevelDecl(0),
+    m_SyntaxOnly(false)
   {
     CompilerInstance* CI 
       = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"), 
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
+    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly);
 
     CreateSLocOffsetGenerator();
 
@@ -68,13 +70,15 @@ namespace cling {
     VPS->Attach(m_Consumer);
     addConsumer(ChainedConsumer::kValuePrinterSynthesizer, VPS);
     addConsumer(ChainedConsumer::kASTDumper, new ASTDumper());
-    CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(), 
-                                          "cling input",
-                                          CI->getCodeGenOpts(), 
+    if (m_SyntaxOnly) {
+      CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(), 
+                                            "cling input",
+                                            CI->getCodeGenOpts(), 
                                   /*Owned by codegen*/ * new llvm::LLVMContext()
-                                          );
-    assert(CG && "No CodeGen?!");
-    addConsumer(ChainedConsumer::kCodeGenerator, CG);
+                                            );
+      assert(CG && "No CodeGen?!");
+      addConsumer(ChainedConsumer::kCodeGenerator, CG);
+    }
     m_Consumer->Initialize(CI->getASTContext());
     m_Consumer->InitializeSema(CI->getSema());
     // Initialize the parser.
@@ -201,7 +205,9 @@ namespace cling {
     DClient.EndSourceFile();
     m_CI->getDiagnostics().Reset();
 
-    m_Interpreter->runStaticInitializersOnce();
+    if (!m_SyntaxOnly) {
+      m_Interpreter->runStaticInitializersOnce();
+    }
 
     return Result;
   }
@@ -320,7 +326,7 @@ namespace cling {
       m_Consumer->EnableConsumer(I);
   }
 
-  CodeGenerator* IncrementalParser::GetCodeGenerator() { 
+  CodeGenerator* IncrementalParser::GetCodeGenerator() const { 
     return 
       (CodeGenerator*)m_Consumer->getConsumer(ChainedConsumer::kCodeGenerator); 
   }

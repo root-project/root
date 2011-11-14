@@ -399,6 +399,10 @@ namespace cling {
     if (getCI()->getDiagnostics().hasErrorOccurred())
       return false;
 
+    if (m_IncrParser->isSyntaxOnly()) {
+      return true;
+    }
+
     std::string mangledNameIfNeeded;
     FunctionDecl* FD = cast_or_null<FunctionDecl>(LookupDecl(fname).
                                                   getSingleDecl()

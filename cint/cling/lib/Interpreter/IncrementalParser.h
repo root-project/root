@@ -65,20 +65,21 @@ namespace cling {
     void Parse(llvm::StringRef input, 
                llvm::SmallVector<clang::DeclGroupRef, 4>& DGRs);
 
-    llvm::MemoryBuffer* getCurBuffer() {
+    llvm::MemoryBuffer* getCurBuffer() const {
       return m_MemoryBuffer.back();
     }
     void enablePrintAST(bool print /*=true*/) {
       m_Consumer->RestorePreviousState(ChainedConsumer::kASTDumper, print);
     }
     void enableDynamicLookup(bool value = true);
-    bool isDynamicLookupEnabled() { return m_DynamicLookupEnabled; }
+    bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
+    bool isSyntaxOnly() const { return m_SyntaxOnly; }
     clang::Decl* getFirstTopLevelDecl() const { return m_FirstTopLevelDecl; }
     clang::Decl* getLastTopLevelDecl() const { return m_LastTopLevelDecl; }
     Transaction& getLastTransaction() { return m_LastTransaction; }
     
     void addConsumer(ChainedConsumer::EConsumerIndex I, clang::ASTConsumer* consumer);
-    clang::CodeGenerator* GetCodeGenerator();
+    clang::CodeGenerator* GetCodeGenerator() const;
 
   private:
     void CreateSLocOffsetGenerator();
@@ -89,6 +90,7 @@ namespace cling {
     llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.
     llvm::OwningPtr<clang::Parser> m_Parser; // parser (incremental)
     bool m_DynamicLookupEnabled; // enable/disable dynamic scope
+    bool m_SyntaxOnly; // whether to run codegen; cannot be flipped during lifetime of *this
     std::vector<llvm::MemoryBuffer*> m_MemoryBuffer; // One buffer for each command line, owner by the source file manager
     clang::FileID m_VirtualFileID; // file ID of the memory buffer
     ChainedConsumer* m_Consumer; // CI owns it
