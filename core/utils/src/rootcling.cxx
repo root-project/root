@@ -3565,6 +3565,9 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
+#ifdef R__SHOWMEMBERS_IN_TCLING
+   (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
+#else
    const char *prefix = "";
    
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
@@ -3776,7 +3779,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       }
    }
-
+#endif // R__SHOWMEMBERS_IN_TCLING
 }
 
 //______________________________________________________________________________
@@ -4786,16 +4789,14 @@ int main(int argc, char **argv)
          }
          return 1;
       }
-      if (*argv[i] != '-' && *argv[i] != '+') {
-	 StrcpyArgWithEsc(esc_arg, argv[i]);
-	 if (use_preprocessor) {
-            // see comment about <> and "" above
-            fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
-            includedFilesForBundle.push_back(argv[i]);
-            if (!insertedBundle) {
-               argvv[argcc++] = (char*)bundlename.c_str();
-               insertedBundle = true;
-            }
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
+         StrcpyArgWithEsc(esc_arg, argv[i]);
+         // see comment about <> and "" above
+         fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
+         includedFilesForBundle.push_back(argv[i]);
+         if (!insertedBundle) {
+            argvv[argcc++] = (char*)bundlename.c_str();
+            insertedBundle = true;
          }
          interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
          pcmArgs.push_back(esc_arg);
@@ -4805,11 +4806,17 @@ int main(int argc, char **argv)
             string argkeep;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             StrcpyArg(argkeep, argv[i]);
-	    int ncha = argkeep.length()+1;
+            int ncha = argkeep.length()+1;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             argvv[argcc++] = (char*)calloc(ncha,1);
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
+            
+            if (*argv[i] != '-' && *argv[i] != '+') {
+               // Looks like a file
+               interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
+               pcmArgs.push_back(esc_arg);
+            }
          }
       }
    }
