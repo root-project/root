@@ -4535,6 +4535,7 @@ int main(int argc, char **argv)
    char *argvv[500];
 
    std::vector<const char*> clingArgs;
+   clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
    std::string interpInclude("-I");
