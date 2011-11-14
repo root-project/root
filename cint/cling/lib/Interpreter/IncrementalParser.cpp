@@ -132,15 +132,6 @@ namespace cling {
     // Init the consumers    
 
     CompileAsIs(""); // Consume initialization.
-    // Set up common declarations which are going to be available
-    // only at runtime
-    // Make sure that the universe won't be included to compile time by using
-    // -D __CLING__ as CompilerInstance's arguments
-    CompileAsIs("#include \"cling/Interpreter/RuntimeUniverse.h\"");
-
-    // Attach the dynamic lookup
-    // if (isDynamicLookupEnabled())
-    //  getTransformer()->Initialize();
   }
 
   IncrementalParser::EParseResult 

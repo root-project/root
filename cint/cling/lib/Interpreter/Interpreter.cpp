@@ -206,7 +206,13 @@ namespace cling {
     m_IncrParser->Initialize();
     
     if (getCI()->getLangOpts().CPlusPlus) {
-      // Set up the gCling variable - even if we use PCH ('this' is different)
+      // Set up common declarations which are going to be available
+      // only at runtime
+      // Make sure that the universe won't be included to compile time by using
+      // -D __CLING__ as CompilerInstance's arguments
+      processLine("#include \"cling/Interpreter/RuntimeUniverse.h\"");
+
+      // Set up the gCling variable
       processLine("#include \"cling/Interpreter/ValuePrinter.h\"\n");
       std::stringstream initializer;
       initializer << "gCling=(cling::Interpreter*)" << (long)this << ";";
