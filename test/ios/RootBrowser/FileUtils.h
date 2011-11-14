@@ -67,6 +67,10 @@ public:
 
    const char *GetFileName()const;
 
+   //Names for nested objects and directories.
+   size_type ReadNames()const;
+   const std::string &GetName(size_type ind)const;
+
    //Search for object or directory, return number of paths to this
    //entity found. If this FileContainer has such an object in fObjects,
    //the path is 'this' pointer.
@@ -95,6 +99,10 @@ private:
    std::vector<Pad *> fAttachedPads;
    
    mutable std::vector<std::vector<const FileContainer *>> fSearchPaths;
+   
+   //Actually, I can use vector of const char *, which will point to
+   //real allocated strings. But just not to care about these strings life-time ...
+   mutable std::vector<std::string> fNames;
    
    FileContainer &operator = (const FileContainer &rhs) = delete;
    FileContainer(const FileContainer &rhs) = delete;

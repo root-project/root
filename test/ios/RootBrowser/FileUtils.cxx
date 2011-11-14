@@ -220,6 +220,31 @@ const char *FileContainer::GetFileName()const
 }
 
 //__________________________________________________________________________________________________________________________
+auto FileContainer::ReadNames()const -> size_type
+{
+   std::vector<std::string> names;
+   names.push_back(GetFileName());
+
+   for (size_type i = 0, e = fDirectories.size(); i < e; ++i) {
+      fDirectories[i]->ReadNames();
+      names.insert(names.end(), fDirectories[i]->fNames.begin(), fDirectories[i]->fNames.end());
+   }
+
+   for (size_type i = 0, e = fObjects.size(); i < e; ++i)
+      names.push_back(fObjects[i]->GetName());
+   
+   fNames.swap(names);
+   
+   return fNames.size();
+}
+
+//__________________________________________________________________________________________________________________________
+const std::string &FileContainer::GetName(size_type ind)const
+{
+   return fNames[ind];
+}
+
+//__________________________________________________________________________________________________________________________
 auto FileContainer::FindObject(const std::string &objectName)const -> size_type
 {
    //It's possible to have objects with a same name in a file, but file->Get(same_name_here)
@@ -287,14 +312,14 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
    TString option;
    std::vector<TObject *> objs;
    std::vector<FileContainer *> dirs;
-   std::vector<TString> opts;
+   std::vector<TString> opts;   
    TObjLink *link = objKeys->FirstLink();
    
    try {
       while (link) {
          const TKey *key = static_cast<TKey *>(link->GetObject());
          const TString className(key->GetClassName());
-      
+            
          if (className == "TDirectoryFile") {
             std::auto_ptr<TDirectoryFile> nestedDir(static_cast<TDirectoryFile *>(dir->Get(key->GetName())));
             if (nestedDir.get()) {
