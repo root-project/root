@@ -3571,8 +3571,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
 
-   (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
-#if 0 /* old code */
    std::string clfullname;
    shadowMaker->GetFullShadowName(cl, clfullname);
    if (outside) {
@@ -3780,7 +3778,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       }
    }
-#endif // 0, i.e. old code
+
 }
 
 //______________________________________________________________________________
