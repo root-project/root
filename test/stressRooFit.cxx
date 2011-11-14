@@ -617,7 +617,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   gMemDir = gDirectory ;
 
   if (doTreeStore) {
-    RooAbsData::defaultStorageType=RooAbsData::Tree ;
+    RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
   }
 
   TFile* fref = 0 ;
