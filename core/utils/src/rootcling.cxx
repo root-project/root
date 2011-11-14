@@ -4534,21 +4534,8 @@ int main(int argc, char **argv)
    char *argvv[500];
 
    std::vector<const char*> clingArgs;
-   clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
-   std::string interpInclude("-I");
-#ifndef ROOTBUILD
-# ifndef ROOTINCDIR
-   std::string rootsys = getenv("ROOTSYS");
-   interpInclude += rootsys + "/etc";
-# else
-   interpInclude += ROOTETCDIR;
-# endif
-#else
-   interpInclude += "etc";
-#endif
-   clingArgs.push_back(interpInclude.c_str());
 
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
@@ -4732,14 +4719,30 @@ int main(int argc, char **argv)
    iv = 0;
    il = 0;
    
+   std::vector<std::string> pcmArgs;
+   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
+      if (strcmp(clingArgs[i], "-c"))
+         pcmArgs.push_back(clingArgs[i]);
+   }
+   
+   // cling-only arguments
+   clingArgs.push_back("-fsyntax-only");
+   std::string interpInclude("-I");
+#ifndef ROOTBUILD
+# ifndef ROOTINCDIR
+   std::string rootsys = getenv("ROOTSYS");
+   interpInclude += rootsys + "/etc";
+# else
+   interpInclude += ROOTETCDIR;
+# endif
+#else
+   interpInclude += "etc";
+#endif
+   clingArgs.push_back(interpInclude.c_str());
+   
    cling::Interpreter interp(clingArgs.size(), &clingArgs[0],
                              getenv("LLVMDIR"));
 
-   std::vector<std::string> pcmArgs;
-   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
-      pcmArgs.push_back(clingArgs[i]);
-   }
-   
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -4799,7 +4802,7 @@ int main(int argc, char **argv)
             insertedBundle = true;
          }
          interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
-         pcmArgs.push_back(esc_arg);
+         pcmArgs.push_back(argv[i]);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
@@ -4815,7 +4818,7 @@ int main(int argc, char **argv)
             if (*argv[i] != '-' && *argv[i] != '+') {
                // Looks like a file
                interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
-               pcmArgs.push_back(esc_arg);
+               pcmArgs.push_back(argv[i]);
             }
          }
       }
@@ -5500,7 +5503,7 @@ int main(int argc, char **argv)
       for (size_t i = 0, n = pcmArgs.size(); i < n; ++i) {
          clangInvocation += pcmArgs[i] + " ";
       }
-      int ret = system(clangInvocation.c_str());
+      int ret = 0; printf("Would like to generate PCM: %s\n",clangInvocation.c_str());
       if (ret) return ret;
    }
    G__exit(0);
