@@ -170,6 +170,9 @@
 #include "cintdictversion.h"
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
+#include <Scanner.h>
+#include "clang/Frontend/CompilerInstance.h"
+
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
@@ -369,6 +372,93 @@ vector<string> gIoConstructorTypes;
 void AddConstructorType(const char *arg)
 {
    if (arg) gIoConstructorTypes.push_back(string(arg));
+}
+
+bool ClassInfo__HasMethod(const clang::RecordDecl *cl, const char* name) 
+{
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   if (!CRD) {
+      return false;
+   }
+   std::string given_name(name);
+   for (
+        clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
+        MEnd = CRD->method_end();
+        M != MEnd;
+        ++M
+        ) {
+      if ((*M)->getNameAsString() == given_name) {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name) 
+{
+   std::string given_name(name);
+   for (
+        clang::DeclContext::decl_iterator M = cl->decls_begin(),
+        MEnd = cl->decls_begin();
+        M != MEnd;
+        ++M
+        ) {
+      if (M->isFunctionOrFunctionTemplate()) {
+         clang::NamedDecl *named = llvm::dyn_cast<clang::NamedDecl>(*M);
+         if (named && named->getNameAsString() == given_name) {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+cling::Interpreter *gInterp = 0;
+
+bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* name)
+{
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   if (!CRD) {
+      return false;
+   }
+   const clang::NamedDecl *base = gInterp->LookupDecl(name, /*, clang::DeclContext *Within=*/ 0).getSingleDecl();
+   if (base) {
+      const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
+      if (baseCRD) return CRD->isDerivedFrom(baseCRD);
+   }
+   return false;
+}
+
+std::string ClassInfo__FileName(const clang::Decl *cl)
+{
+   fprintf(stderr,"ClassInfo__FileName not yet implemented\n");
+   return "";
+}
+
+std::string ClassInfo__LineNumber(const clang::Decl *cl)
+{
+   fprintf(stderr,"ClassInfo__LineNumber not yet implemented\n");
+   return "";
+}
+
+
+
+bool IsStdClass(const clang::CXXRecordDecl *cl)
+{
+   // Return true, if the decl is part of the std namespace.
+   
+   const clang::DeclContext *ctx = cl->getDeclContext();
+   
+   if (ctx->isNamespace())
+   {
+      const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
+      if (!parent) {
+         if (parent->getQualifiedNameAsString()=="std") {
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 //const char* root_style()  {
@@ -915,6 +1005,81 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    return has_input_error;
 }
 
+//______________________________________________________________________________
+bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
+{
+   // Check if the operator>> has been properly declared if the user has
+   // resquested a custom version.
+   
+   bool has_input_error = false;
+   fprintf(stderr,"CheckInputOperator is not implemented yet!!!!!\n");
+#if 0
+   // Need to find out if the operator>> is actually defined for
+   // this class.
+   G__ClassInfo gcl;
+   long offset;
+   
+   int ncha = strlen(cl.Fullname())+13;
+   char *proto = new char[ncha];
+   snprintf(proto,ncha,"TBuffer&,%s*&",cl.Fullname());
+   
+   G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
+   
+   Info(0, "Class %s: Do not generate operator>>()\n",
+        cl.Fullname());
+   G__MethodArgInfo args( methodinfo );
+   args.Next(); args.Next();
+   if (!methodinfo.IsValid() ||
+       !args.IsValid() ||
+       args.Type()==0 ||
+       args.Type()->Tagnum() != cl.Tagnum() ||
+       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
+      
+      if (dicttype==0||dicttype==1){
+         // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+         Error(0,
+               "in this version of ROOT, the option '!' used in a linkdef file\n"
+               "       implies the actual existence of customized operators.\n"
+               "       The following declaration is now required:\n"
+               "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+         
+      }
+      
+      has_input_error = true;
+   } else {
+      // Warning(0, "TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
+   }
+   // fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
+   
+   methodinfo = gcl.GetMethod("operator<<",proto,&offset);
+   args.Init(methodinfo);
+   args.Next(); args.Next();
+   if (!methodinfo.IsValid() ||
+       !args.IsValid() ||
+       args.Type()==0 ||
+       args.Type()->Tagnum() != cl.Tagnum() ||
+       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
+       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
+      
+      if (dicttype==0||dicttype==1){
+         Error(0,
+               "in this version of ROOT, the option '!' used in a linkdef file\n"
+               "       implies the actual existence of customized operator.\n"
+               "       The following declaration is now required:\n"
+               "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
+      }
+      
+      has_input_error = true;
+   } else {
+      //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
+   }
+   
+   delete [] proto;
+#endif
+   return has_input_error;
+}
+
 string FixSTLName(const string& cintName) {
 
    const char *s = cintName.c_str();
@@ -989,43 +1154,48 @@ string FixSTLName(const string& cintName) {
 }
 
 //______________________________________________________________________________
-bool CheckClassDef(G__ClassInfo &cl)
+bool CheckClassDef(const clang::RecordDecl *cl)
 {
    // Return false if the class does not have ClassDef even-though it should.
-
-
+   
+   
    // Detect if the class has a ClassDef
-   bool hasClassDef = cl.HasMethod("Class_Version");
-
+   bool hasClassDef = ClassInfo__HasMethod(cl,"Class_Version");
+   
    /*
-     The following could be use to detect whether one of the
-     class' parent class has a ClassDef
-
-     long offset;
-     const char *proto = "";
-     const char *name = "IsA";
-
-     G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-     bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   */
-
+    The following could be use to detect whether one of the
+    class' parent class has a ClassDef
+    
+    long offset;
+    const char *proto = "";
+    const char *name = "IsA";
+    
+    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+    bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+    */
+   
    // Avoid unadvertently introducing a dependency on libTree.so (when running with
    // the --lib-list-prefix option.
-   int autoloadEnable = G__set_class_autoloading(0);
-   bool inheritsFromTObject = cl.IsBase("TObject");
-   bool inheritsFromTSelector = cl.IsBase("TSelector");
-   bool isAbstract = cl.Property() & G__BIT_ISABSTRACT;
-   G__set_class_autoloading(autoloadEnable);
-
+   //int autoloadEnable = G__set_class_autoloading(0);
+   bool inheritsFromTObject = ClassInfo__IsBase(cl,"TObject");
+   bool inheritsFromTSelector = ClassInfo__IsBase(cl,"TSelector");
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   if (!CRD) {
+      return false;
+   }
+   bool isAbstract = CRD->isAbstract();
+   //G__set_class_autoloading(autoloadEnable);
+   
    bool result = true;
    if (!inheritsFromTSelector && inheritsFromTObject && !isAbstract
        && !hasClassDef) {
-      Error(cl.Name(),"%s inherits from TObject but does not have its own ClassDef\n",cl.Name());
+      Error(cl->getQualifiedNameAsString().c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",cl->getQualifiedNameAsString().c_str());
       // We do want to always output the message (hence the Error level)
       // but still want rootcint to succeed.
+      bool hasClassDef2 = ClassInfo__HasMethod(cl,"Class_Version");
       result = true;
    }
-
+   
    // This check is disabled for now.
    return result;
 }
@@ -1115,6 +1285,44 @@ int GetClassVersion(G__ClassInfo &cl)
    string funcname = GetLong64_Name( cl.Fullname() ) + function;
    int version = (int)G__int(G__calc(funcname.c_str()));
    return version;
+}
+
+//______________________________________________________________________________
+int GetClassVersion(const clang::RecordDecl *cl)
+{
+   // Return the version number of the class or -1
+   // if the function Class_Version does not exist.
+   
+   if (!ClassInfo__HasMethod(cl,"Class_Version")) return -1;
+   
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   if (!CRD) {
+      // Must be an enum or namespace.
+      // FIXME: Make it work for a namespace!
+      return false;
+   }
+   std::string given_name("Class_Version");
+   for (
+        clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
+        MEnd = CRD->method_end();
+        M != MEnd;
+        ++M
+        ) {
+      if ((*M)->getNameAsString() == given_name) {
+         clang::CompoundStmt *func = llvm::dyn_cast<clang::CompoundStmt>(M->getBody());
+         if (func && !func->body_empty()) {
+            clang::ReturnStmt *ret = llvm::dyn_cast<clang::ReturnStmt>(*func->body_begin());
+            if (ret) {
+               clang::IntegerLiteral *val = llvm::dyn_cast<clang::IntegerLiteral>( ret->getRetValue() );
+               if (val) {
+                  return (int)val->getValue().getLimitedValue(~0);
+               }
+            }
+         }
+         return 0;
+      }
+   }
+   return 0;   
 }
 
 //______________________________________________________________________________
@@ -1218,6 +1426,42 @@ bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
 bool NeedConstructor(G__ClassInfo& cl);
 
 //______________________________________________________________________________
+bool HasCustomOperatorNew(const clang::RecordDecl *cl)
+{
+   // return true if we can find a custom operator new
+   
+   return false;
+#if 0
+   // Look for a custom operator new
+   bool custom = false;
+   G__ClassInfo gcl;
+   long offset;
+   const char *name = "operator new";
+   const char *proto = "size_t";
+   
+   // first in the global namespace:
+   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+   
+   // in nesting space:
+   gcl = cl.EnclosingSpace();
+   methodinfo = gcl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+   
+   // in class
+   methodinfo = cl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+   
+   return custom;
+#endif
+}
+
 bool HasCustomOperatorNew(G__ClassInfo& cl)
 {
    // return true if we can find a custom operator new
@@ -1468,35 +1712,23 @@ bool NeedConstructor(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
-bool CheckConstructor(G__ClassInfo& cl)
+bool NeedConstructor(const RScanner::AnnotatedRecordDecl *cl)
 {
-   // Return false if the constructor configuration is invalid
-
-   bool result = true;
-   if (NeedConstructor(cl)) {
-
-      bool custom = HasCustomOperatorNew(cl);
-      if (custom && cl.IsBase("TObject")) {
-         custom = false;
-      }
-      // if (custom) fprintf(stderr,"%s has custom operator new\n",cl.Name());
-
-      result = !HasDefaultConstructor(cl);
+   // We need a constructor if:
+   //   the class is not abstract
+   //   the class is not an stl container
+   //   the class version is greater than 0
+   //   or (the option + has been specified and ShowMembers is missing)
+   
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl->GetRecordDecl());
+   if (!CRD) {
+      return false;
    }
-
-   // For now we never issue a warning at rootcint time.
-   // There will be a warning at run-time.
-   result = true;
-#if 0
-   if (!result) {
-      //Error(cl.Fullname(), "I/O has been requested but there is no constructor calleable without arguments\n"
-      //      "\tand a custom operator new has been defined.\n"
-      //      "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
-      Warning(cl.Fullname(), "I/O has been requested but is missing an explicit default constructor.\n"
-              "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
-   }
-#endif
-   return result;
+   bool res= ((GetClassVersion(CRD)>0
+               || (!ClassInfo__HasMethod(CRD,"ShowMembers") && (cl->RequestStreamerInfo())
+                   && !IsStdClass(CRD) )
+               ) && !CRD->isAbstract());
+   return res;
 }
 
 //______________________________________________________________________________
@@ -2499,6 +2731,14 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
       --enclSpaceNesting;
    }
 }
+//______________________________________________________________________________
+void WriteClassInit(const clang::RecordDecl *cl)
+{
+   // Write the code to initialize the class name and the initialization object.
+
+   fprintf(stderr,"WriteClassInit not yet implemented\n");
+   
+}
 
 //______________________________________________________________________________
 void WriteClassInit(G__ClassInfo &cl)
@@ -2833,6 +3073,128 @@ void WriteClassInit(G__ClassInfo &cl)
    }
 
    (*dictSrcOut) << "} // end of namespace ROOT" << std::endl << std::endl;
+}
+
+//______________________________________________________________________________
+void WriteNamespaceInit(clang::NamespaceDecl *cl)
+{
+   // Write the code to initialize the namespace name and the initialization object.
+   
+   // coverity[fun_call_w_exception] - that's just fine.
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl->getQualifiedNameAsString().c_str() ) );
+   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   
+   int nesting = 0;
+   // We should probably unwind the namespace to properly nest it.
+   if (classname!="ROOT") {
+      string right = classname;
+      int pos = right.find(":");
+      if (pos==0) {
+         right = right.substr(2);
+         pos = right.find(":");
+      }
+      while(pos>=0) {
+         string left = right.substr(0,pos);
+         right = right.substr(pos+2);
+         pos = right.find(":");
+         ++nesting;
+         (*dictSrcOut) << "namespace " << left << " {" << std::endl;
+      }
+      
+      ++nesting;
+      (*dictSrcOut) << "namespace " << right << " {" << std::endl;
+   }
+   
+   (*dictSrcOut) << "   namespace ROOT {" << std::endl;
+   
+#if !defined(R__SGI) && !defined(R__AIX)
+   (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
+#endif
+   
+   if (!Namespace__HasMethod(cl,"Dictionary"))
+      (*dictSrcOut) << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
+   (*dictSrcOut) << std::endl
+   
+   << "      // Function generating the singleton type initializer" << std::endl
+   
+#if !defined(R__SGI) && !defined(R__AIX)
+   << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
+   << "      {" << std::endl
+#else
+   << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
+   << "      {" << std::endl
+#endif
+   
+   << "         static ::ROOT::TGenericClassInfo " << std::endl
+   
+   << "            instance(\"" << classname.c_str() << "\", ";
+   
+   if (Namespace__HasMethod(cl,"Class_Version")) {
+      (*dictSrcOut) << "::" << classname.c_str() << "::Class_Version(), ";
+   } else {
+#if defined(NEED_FUNC_LOOKUP)
+      // Need to find out if the operator>> is actually defined for this class.
+      G__ClassInfo gcl;
+      long offset;
+      const char *versionFunc = "GetClassVersion";
+      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
+      char *funcname= new char[ncha];
+      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
+      ncha = strlen(classname.c_str())+ 10 ;
+      char *proto = new char[ncha];
+      snprintf(proto,ncha,"%s*",classname.c_str());
+      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
+      delete [] funcname;
+      delete [] proto;
+      
+      if (methodinfo.IsValid() &&
+          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+         (*dictSrcOut) << "GetClassVersion< " << classname.c_str() << " >(), ";
+      } else {
+         (*dictSrcOut) << "0 /*version*/, ";
+      }
+#else
+      (*dictSrcOut) << "0 /*version*/, ";
+#endif
+   }
+   
+   std::string filename = ClassInfo__FileName(cl);
+   for (unsigned int i=0; i<filename.length(); i++) {
+      if (filename[i]=='\\') filename[i]='/';
+   }
+   (*dictSrcOut) << "\"" << filename << "\", " << ClassInfo__LineNumber(cl) << "," << std::endl
+   << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+   << "                     ";
+   
+   if (Namespace__HasMethod(cl,"Dictionary")) {
+      (*dictSrcOut) << "&::" << classname.c_str() << "::Dictionary, ";
+   } else {
+      (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
+   }
+   
+   (*dictSrcOut) << 0 << ");" << std::endl
+   
+   << "         return &instance;" << std::endl
+   << "      }" << std::endl
+   << "      // Insure that the inline function is _not_ optimized away by the compiler\n"
+   << "      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_(InitFunctionKeeper))() = &GenerateInitInstance;  " << std::endl
+   << "      // Static variable to force the class initialization" << std::endl
+   // must be one long line otherwise R__UseDummy does not work
+   << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
+   << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
+   
+   if (!Namespace__HasMethod(cl,"Dictionary")) {
+      (*dictSrcOut) <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
+      << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
+      << "         GenerateInitInstance()->GetClass();" << std::endl
+      << "      }" << std::endl << std::endl;
+   }
+   
+   (*dictSrcOut) << "   }" << std::endl;
+   while(nesting--) {
+      (*dictSrcOut) << "}" << std::endl;
+   }
+   (*dictSrcOut) <<  std::endl;
 }
 
 //______________________________________________________________________________
@@ -3565,9 +3927,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
-#ifdef R__SHOWMEMBERS_IN_TCLING
-   (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
-#else
    const char *prefix = "";
    
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
@@ -3779,7 +4138,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       }
    }
-#endif // R__SHOWMEMBERS_IN_TCLING
+
 }
 
 //______________________________________________________________________________
@@ -4720,9 +5079,9 @@ int main(int argc, char **argv)
    il = 0;
    
    std::vector<std::string> pcmArgs;
-   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
+   for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
       if (strcmp(clingArgs[i], "-c"))
-         pcmArgs.push_back(clingArgs[i]);
+         pcmArgs.push_back(clingArgs[parg]);
    }
    
    // cling-only arguments
@@ -4742,7 +5101,8 @@ int main(int argc, char **argv)
    
    cling::Interpreter interp(clingArgs.size(), &clingArgs[0],
                              getenv("LLVMDIR"));
-
+   gInterp = &interp;
+   
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -4794,12 +5154,14 @@ int main(int argc, char **argv)
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
-         // see comment about <> and "" above
-         fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
-         includedFilesForBundle.push_back(argv[i]);
-         if (!insertedBundle) {
-            argvv[argcc++] = (char*)bundlename.c_str();
-            insertedBundle = true;
+         if (use_preprocessor) {
+            // see comment about <> and "" above
+            fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
+            includedFilesForBundle.push_back(argv[i]);
+            if (!insertedBundle) {
+               argvv[argcc++] = (char*)bundlename.c_str();
+               insertedBundle = true;
+            }
          }
          interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
          pcmArgs.push_back(argv[i]);
@@ -5040,66 +5402,39 @@ int main(int argc, char **argv)
       (*dictSrcOut) << std::endl;
    }
 
-   //    if(dicttype==3){
-   //      G__ClassInfo cl;
-   //      cl.Init();
-   //      bool has_input_error = false;
-   //      while (cl.Next()) {
-   //        if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-   //       if (!cl.IsLoaded()) {
-   //         continue;
-   //       }
-   //       if (cl.HasMethod("Streamer")) {
-   //         if ((cl.RootFlag() & G__NOINPUTOPERATOR)) {
-   //           int version = GetClassVersion(cl);
-   //           if (version!=0) {
-   //             // Only Check for input operator is the object is I/O has
-   //             // been requested.
-   //             has_input_error |= CheckInputOperator(cl,dicttype);
-   //           }
-   //         }
-   //         has_input_error |= !CheckClassDef(cl);
-   //       }
-   //        }
-   //      }
+   string linkdefFilename;
+   if (il) {
+      linkdefFilename = argv[il];
+   } else {
+      bool found = Which(argv[il], linkdefFilename);
+      if (!found) {
+         Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
+         CleanupOnExit(1);
+         return 1;
+      }
+   }
+      
+   RScanner scan;
+   clang::CompilerInstance* CI = interp.getCI();
+   scan.Scan(&CI->getASTContext(),CI->getASTContext().getTranslationUnitDecl(),linkdefFilename);
 
-   //      if (has_input_error) {
-   //        // Be a little bit makefile friendly and remove the dictionary in case of error.
-   //        // We could add an option -k to keep the file even in case of error.
-   //        CleanupOnExit(1);
-   //        exit(1);
-   //      }
-   //    }
-
-   G__ClassInfo cl;
-   cl.Init();
    bool has_input_error = false;
-   while (cl.Next()) {
-      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
-         if (!cl.IsLoaded()) {
-            continue;
-         }
-         if (cl.HasMethod("Streamer")) {
-            if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
-               // We do not write out the input operator anymore, it is a template
-#if defined R__CONCRETE_INPUT_OPERATOR
-               WriteInputOperator(cl);
-#endif
-            } else {
-               int version = GetClassVersion(cl);
-               if (version!=0) {
-                  // Only Check for input operator is the object is I/O has
-                  // been requested.
-                  has_input_error |= CheckInputOperator(cl,dicttype);
-               }
+
+   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
+   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
+   for( ; iter != end; ++iter) 
+   {
+      if (ClassInfo__HasMethod(*iter,"Streamer")) {
+         if (iter->RequestNoInputOperator()) {
+            int version = GetClassVersion(*iter);
+            if (version!=0) {
+               // Only Check for input operator is the object is I/O has
+               // been requested.
+               has_input_error |= CheckInputOperator(*iter,dicttype);
             }
          }
-         bool res = CheckConstructor(cl);
-         if (!res) {
-            // has_input_error = true;
-         }
-         has_input_error |= !CheckClassDef(cl);
       }
+      has_input_error |= !CheckClassDef(*iter);
    }
 
    if (has_input_error) {
@@ -5187,23 +5522,30 @@ int main(int argc, char **argv)
       // Loop over all classes and create Streamer() & Showmembers() methods
       //
 
-      G__ClassInfo clLocal;
-      clLocal.Init();
-      while (clLocal.Next()) {
-         if (clLocal.Linkage() == G__CPPLINK && !clLocal.IsLoaded()) {
-            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",clLocal.Name());
+// SELECTION LOOP
+      RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
+      RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
+      for( ; ns_iter != ns_end; ++ns_iter) {
+         WriteNamespaceInit(*ns_iter);         
+      }
+         
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",iter->GetRecordDecl()->getQualifiedNameAsString().c_str());
             continue;
-         }
-         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) {
-            // Write Code for initialization object (except for STL containers)
-            if ( TClassEdit::IsSTLCont(clLocal.Name()) ) {
-               // coverity[fun_call_w_exception] - that's just fine.
-               RStl::inst().GenerateTClassFor( clLocal.Name() );
+         }                       
+         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         if (CRD) {
+            std::string qualname( CRD->getQualifiedNameAsString() );
+            if (IsStdClass(CRD) && TClassEdit::IsSTLCont(qualname.c_str()) ) {
+                  // coverity[fun_call_w_exception] - that's just fine.
+               RStl::inst().GenerateTClassFor( qualname.c_str() );
             } else {
-               WriteClassInit(clLocal);
-            }
-         } else if (((clLocal.Property() & (G__BIT_ISNAMESPACE)) && clLocal.Linkage() == G__CPPLINK)) {
-            WriteNamespaceInit(clLocal);
+               WriteClassInit(*iter);
+            }               
          }
       }
 
@@ -5212,6 +5554,8 @@ int main(int argc, char **argv)
       // first to allow template specialisation to occur before template
       // instantiation (STK)
       //
+// SELECTION LOOP
+      G__ClassInfo clLocal;
       clLocal.Init();
       while (clLocal.Next()) {
          if (!clLocal.IsLoaded()) {
@@ -5234,6 +5578,7 @@ int main(int argc, char **argv)
       vector<string> clProcessed;
       int   ncls = 0;
 
+// LINKDEF SELECTION LOOP
       // Read LinkDef file and process valid entries (STK)
       char line[256];
       while (fgets(line, 256, fpld)) {
@@ -5358,6 +5703,7 @@ int main(int argc, char **argv)
       // "#pragma link C++ defined_in")
       clLocal.Init();
 
+// SELECTION LOOP
       while (clLocal.Next()) {
          int nxt = 0;
          // skip utility class defined in ClassImp
@@ -5477,6 +5823,7 @@ int main(int argc, char **argv)
          outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
          // Add explicit delimiter
          outputfile << "# Now the list of classes\n";
+// SELECTION LOOP
          G__ClassInfo clFile;
          clFile.Init();
          while (clFile.Next()) {
