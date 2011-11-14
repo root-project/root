@@ -82,7 +82,8 @@
 #pragma link C++ class RooExpensiveObjectCache+ ;
 #pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
 #pragma link C++ class std::map<std::string,RooAbsPdf*>+ ;
-#pragma link C++ class std::map<std::string,TH1*>+ ;
+// The nomap options excludes the class from the roomap file
+#pragma link C++ options=nomap class std::map<std::string,TH1*>+ ;
 #pragma link C++ class std::map<std::string,RooAbsDataStore*>+ ;
 #pragma link C++ class std::list<RooAbsData*>+ ;
 #pragma link C++ class std::list<TObject*>+ ;
@@ -125,7 +126,8 @@
 #pragma link C++ class list<RooAbsStudy*>+ ;
 #pragma link C++ class map<string,RooDataSet*>+ ;
 #pragma link C++ class map<string,RooDataHist*>+ ;
-#pragma link C++ class map<string,TH1*>+ ;
+// The nomap options excludes the class from the roomap file
+#pragma link C++ options=nomap class map<string,TH1*>+ ;
 #pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link off class RooNag+ ;
