@@ -64,6 +64,9 @@ public:
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound();           // get fMatchFound
 
+   virtual bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
+   virtual bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
+   virtual bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler. 
 protected:
    bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
    

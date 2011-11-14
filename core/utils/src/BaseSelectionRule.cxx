@@ -113,7 +113,7 @@ bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& 
     * dontCare - we set it to true if the selection rule says kDontCare
     * noName - of this selection rule is not intended for this Decl
     * file - if we have kNo (veto) because the Decl is declared in other source file
-    * isLinkdef - if the selection rules were generating form a linkdef.h file 
+    * isLinkdef - if the selection rules were generating from a linkdef.h file 
     */ 
    
    file = false;
@@ -408,4 +408,19 @@ void BaseSelectionRule::SetMatchFound(bool match)
 bool BaseSelectionRule::GetMatchFound()
 {
    return fMatchFound;
+}
+
+bool BaseSelectionRule::RequestStreamerInfo() const
+{
+   return false;
+}
+
+bool BaseSelectionRule::RequestNoStreamer() const
+{
+   return false;
+}
+
+bool BaseSelectionRule::RequestNoInputOperator() const
+{
+   return false;
 }
