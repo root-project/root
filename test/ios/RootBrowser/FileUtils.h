@@ -58,7 +58,7 @@ public:
    Pad *GetPadAttached(size_type ind)const;
    void SetErrorDrawOption(size_type ind, EHistogramErrorOption opt);
    EHistogramErrorOption GetErrorDrawOption(size_type ind)const;
-   
+      
    void SetMarkerDrawOption(size_type ind, bool on);
    bool GetMarkerDrawOption(size_type ind)const;
 
@@ -67,7 +67,12 @@ public:
 
    const char *GetFileName()const;
 
-   //These are the function to be called from Obj-C++ code.
+   //Search for object or directory, return number of paths to this
+   //entity found. If this FileContainer has such an object in fObjects,
+   //the path is 'this' pointer.
+   size_type FindObject(const std::string &objectName)const;
+   const std::vector<const FileContainer *> &GetPath(size_type pathIndex)const;
+   //These are the functions to be called from Obj-C++ code.
    //Return: non-null pointer in case file was
    //opened and its content read.
 
@@ -76,8 +81,10 @@ public:
 
 private:
 
-   static void ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer);
    void AttachPads();
+   
+   static void ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer);
+
 
    std::string fFileName;
 
@@ -86,6 +93,8 @@ private:
    std::vector<TString> fOptions;
    
    std::vector<Pad *> fAttachedPads;
+   
+   mutable std::vector<std::vector<const FileContainer *>> fSearchPaths;
    
    FileContainer &operator = (const FileContainer &rhs) = delete;
    FileContainer(const FileContainer &rhs) = delete;

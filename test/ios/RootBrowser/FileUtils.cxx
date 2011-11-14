@@ -220,6 +220,52 @@ const char *FileContainer::GetFileName()const
 }
 
 //__________________________________________________________________________________________________________________________
+auto FileContainer::FindObject(const std::string &objectName)const -> size_type
+{
+   //It's possible to have objects with a same name in a file, but file->Get(same_name_here)
+   //obviously returns the same object. So this function assumes that you do not
+   //have to objects with the same name in the same directory.
+   //Implementation is quite strayforward and can be done better,
+   //but I do not think user has very complex file structure to have
+   //a performance problems.
+   const std::vector<const FileContainer *> emptyPath;
+
+   std::vector<std::vector<const FileContainer *>> paths;
+   for (size_type i = 0, e = fObjects.size(); i < e; ++i) {
+      if (fObjects[i]->GetName() == objectName) {
+         paths.push_back(emptyPath);
+         paths.back().push_back(this);
+         break;
+      }
+   }
+   
+   for (size_type i = 0, e = fDirectories.size(); i < e; ++i) {
+      const FileContainer *nested = fDirectories[i];
+      if (nested->FindObject(objectName)) {
+         //Take the result of recursive search,
+         //prepend with 'nested', save into paths.
+         std::vector<std::vector<const FileContainer*>> &nestedPaths = nested->fSearchPaths;
+         for (size_type j = 0, e1 = nestedPaths.size(); j < e1; ++j) {
+            paths.push_back(emptyPath);
+            paths.back().swap(nestedPaths[j]);
+            paths.back().insert(paths.back().begin(), nested);
+         }
+         nestedPaths.clear();
+      }
+   }
+   
+   fSearchPaths.swap(paths);
+   
+   return fSearchPaths.size();
+}
+
+//__________________________________________________________________________________________________________________________
+const std::vector<const FileContainer *> &FileContainer::GetPath(size_type pathIndex)const
+{
+   return fSearchPaths[pathIndex];
+}
+
+//__________________________________________________________________________________________________________________________
 void FileContainer::AttachPads()
 {
    fAttachedPads.assign(fObjects.size(), 0);
