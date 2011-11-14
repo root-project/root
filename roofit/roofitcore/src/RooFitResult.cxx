@@ -694,9 +694,8 @@ void RooFitResult::fillCorrMatrix()
 
   // WVE: This code directly manipulates minuit internal workspace, 
   //      if TMinuit code changes this may need updating
-  Int_t ndex, i, j, m, n, ncoef, it /* nparm,id,ix */ ;
+  Int_t ndex, i, j, m, n, it /* nparm,id,ix */ ;
   Int_t ndi, ndj /*, iso, isw2, isw5*/;
-  ncoef = (gMinuit->fNpagwd - 19) / 6;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ndi = i*(i + 1) / 2;
     for (j = 1; j <= gMinuit->fNpar; ++j) {
