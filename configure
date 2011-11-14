@@ -4329,7 +4329,7 @@ if test "x$enable_xrootd" = "xyes" ; then
       # Standard paths
       xrdpaths="$XRDSYS /opt/xrootd /usr/local /usr"
       for stdp in $xrdpaths ; do
-         if test -d "$stdp/lib" ; then
+         if test -d "$stdp/lib" || test -d "$stdp/lib64" ; then
             xrdlibthree="$xrdlibthree $stdp/lib"
             xrdinctmp="$xrdinctmp $stdp/include/xrootd $stdp/include"
          fi
