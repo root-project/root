@@ -38,7 +38,7 @@ public:
    };
    
 private:
-   std::list<ClassSelectionRule> fClassSelectionRules;       // list of the clss selection rules
+   std::list<ClassSelectionRule> fClassSelectionRules;       // list of the class selection rules
    std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
    std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
    std::list<EnumSelectionRule> fEnumSelectionRules;         // list of the enums selection rules
@@ -78,19 +78,20 @@ public:
    void SetDeep(bool deep);
    bool GetDeep();
    
-   bool IsDeclSelected(clang::Decl* D); // this is the method which is called from clr-scan and returns true if the Decl 
+   BaseSelectionRule *IsDeclSelected(clang::Decl* D); // this is the method which is called from clr-scan and returns true if the Decl 
    // selected, false otherwise
    
-   bool IsClassSelected(clang::Decl* D, const std::string& qual_name); // is the class selected
+   BaseSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name); // is the class selected
+   BaseSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name); // is the class selected
    
    // is the global function, variable, enum selected - the behavior is different for linkdef.h and selection.xml - that's why
    // we have two functions
-   bool IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
-   bool IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
+   BaseSelectionRule *IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
+   BaseSelectionRule *IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
    
    // is member (field, method, enum) selected; the behavior for linkdef.h methods is different   
-   bool IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name);
-   bool IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
+   BaseSelectionRule *IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name);
+   BaseSelectionRule *IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
    
    // returns true if the parent is class or struct
    bool IsParentClass(clang::Decl* D);

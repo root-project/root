@@ -293,7 +293,7 @@ bool SelectionRules::GetDeep()
 }
 
 
-bool SelectionRules::IsDeclSelected(clang::Decl *D)
+BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D)
 {  
    std::string str_name;   // name of the Decl
    std::string kind;       // kind of the Decl
@@ -311,6 +311,10 @@ bool SelectionRules::IsDeclSelected(clang::Decl *D)
       return IsClassSelected(D, qual_name);
    }
    
+   if (kind == "Namespace") { // structs, unions and classes are all CXXRecords
+      return IsNamespaceSelected(D, qual_name);
+   }
+   
    if (kind == "Var" || kind == "Function") {
       if (!IsLinkdefFile())
          return IsVarFunEnumSelected(D, kind, qual_name);
@@ -322,10 +326,11 @@ bool SelectionRules::IsDeclSelected(clang::Decl *D)
       
       // Enum is part of a class
       if (IsParentClass(D)) {
-         if (!IsMemberSelected(D, kind, str_name)) // if the parent class is deselected, we could still select the enum
+         BaseSelectionRule *selector = IsMemberSelected(D, kind, str_name);
+         if (!selector) // if the parent class is deselected, we could still select the enum
             return IsVarFunEnumSelected(D, kind, qual_name);
          else           // if the parent class is selected so are all nested enums
-            return true;
+            return selector;
       }
       
       // Enum is not part of a class
@@ -353,7 +358,7 @@ bool SelectionRules::IsDeclSelected(clang::Decl *D)
       return IsMemberSelected(D, kind, str_name);
    }
    
-   return true;
+   return 0;
 }
 
 bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name)
@@ -555,14 +560,130 @@ bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std
 // which is for the selection.xml file case). If noName is true than we just continue - 
 // this means that the current class selection rule isn't applicable for this class.
 
-bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name)
+BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name)
+{
+   clang::NamespaceDecl* N;
+
+   try {
+      N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
+      if (N==0) {
+         std::cout<<"\n\tCouldn't cast Decl to NamespaceDecl";
+         return 0;
+      }
+   }
+   catch (std::exception& e) {
+      return 0;
+   }
+ 
+   std::string file_name;
+   if (GetHasFileNameRule()){
+      if (!GetDeclSourceFileName(N, file_name)){
+      }
+   }
+   BaseSelectionRule *selector = 0;
+   int fImplNo = 0;
+   BaseSelectionRule *explicit_selector = 0;
+   int fFileNo = 0;
+   bool file;
+   
+   // NOTE: should we separate namespaces from classes in the rules?
+   std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
+   // iterate through all class selection rles
+   for(; it != fClassSelectionRules.end(); ++it) {
+      bool dontC, noName;
+      bool yes;
+      
+      if (IsLinkdefFile()){
+         yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, true);
+      }
+      else {
+         yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, false);
+      }
+      if (yes) {
+         selector = &(*it);
+         if (IsLinkdefFile()){
+            // rootcint prefers explicit rules over pattern rules
+            if (it->HasAttributeWithName("name")) {
+               std::string name_value;
+               it->GetAttributeValue("name", name_value);
+               if (name_value == qual_name) explicit_selector = &(*it);
+            }
+            if (it->HasAttributeWithName("pattern")) {
+               std::string pattern_value;
+               it->GetAttributeValue("pattern", pattern_value);
+               if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+            }
+         }
+      }
+      else if (!noName && !dontC) { // = BaseSelectionRule::kNo (noName = false <=> we have named rule for this class)
+         // dontC = false <=> we are not in the exclusion part (for genreflex)
+         
+         if (!IsLinkdefFile()) {
+            // in genreflex - we could explicitly select classes from other source files
+            if (file) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
+            else {
+               
+#ifdef SELECTION_DEBUG
+               std::cout<<"\tNo returned"<<std::endl;
+#endif
+               
+               return 0; // explicit No returned
+            }
+         }
+         if (it->HasAttributeWithName("pattern")) { //this is for the Linkdef selection
+            std::string pattern_value;
+            it->GetAttributeValue("pattern", pattern_value);
+            if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
+            else 
+               return 0;
+         }
+         else
+            return 0;
+      }
+      else if (dontC && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
+         
+#ifdef SELECTION_DEBUG
+         std::cout<<"Empty dontC returned = No"<<std::endl;
+#endif
+         
+         return 0;
+      }
+   }  
+   if (IsLinkdefFile()) {
+      // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
+      
+#ifdef SELECTION_DEBUG
+      std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
+#endif
+      
+      if (explicit_selector) return explicit_selector;
+      else if (fImplNo > 0) return 0;
+      else return selector;
+   }
+   else {                                 
+      // for genreflex explicit Yes is stronger than implicit file No
+      
+#ifdef SELECTION_DEBUG
+      std::cout<<"\n\tfYes = "<<fYes<<", fFileNo = "<<fFileNo<<std::endl;
+#endif
+      
+      if (selector) 
+         return selector;
+      else 
+         return 0;
+   }     
+   
+}
+
+
+BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name)
 {
    clang::TagDecl* T;
    try {
       T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    }
    catch (std::exception& e) {
-      return false;
+      return 0;
    }
    if (T) {
       if (IsLinkdefFile() || T->isClass() || T->isStruct()) {
@@ -571,10 +692,10 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
             if (!GetDeclSourceFileName(D, file_name)){
             }
          }
-         int fYes = 0;
+         BaseSelectionRule *selector = 0;
          int fImplNo = 0;
-         bool explicit_Yes = false;
-         int fFileNo =0;
+         BaseSelectionRule *explicit_selector = 0;
+         int fFileNo = 0;
          bool file;
          
          std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
@@ -590,18 +711,18 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
                yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, false);
             }
             if (yes) {
-               ++fYes;
+               selector = &(*it);
                if (IsLinkdefFile()){
                   // rootcint prefers explicit rules over pattern rules
                   if (it->HasAttributeWithName("name")) {
                      std::string name_value;
                      it->GetAttributeValue("name", name_value);
-                     if (name_value == qual_name) explicit_Yes = true;
+                     if (name_value == qual_name) explicit_selector = &(*it);
                   }
                   if (it->HasAttributeWithName("pattern")) {
                      std::string pattern_value;
                      it->GetAttributeValue("pattern", pattern_value);
-                     if (pattern_value != "*" && pattern_value != "*::*") explicit_Yes = true;
+                     if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
                   }
                }
             }
@@ -617,7 +738,7 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
                      std::cout<<"\tNo returned"<<std::endl;
 #endif
                      
-                     return false; // explicit No returned
+                     return 0; // explicit No returned
                   }
                }
                if (it->HasAttributeWithName("pattern")) { //this is for the Linkdef selection
@@ -625,10 +746,10 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
                   it->GetAttributeValue("pattern", pattern_value);
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else 
-                     return false;
+                     return 0;
                }
                else
-                  return false;
+                  return 0;
             }
             else if (dontC && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
                
@@ -636,7 +757,7 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
                std::cout<<"Empty dontC returned = No"<<std::endl;
 #endif
                
-               return false;
+               return 0;
             }
          }  
          if (IsLinkdefFile()) {
@@ -646,9 +767,9 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
             std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
 #endif
             
-            if (explicit_Yes) return true;
-            else if (fImplNo > 0) return false;
-            else return true;
+            if (explicit_selector) return explicit_selector;
+            else if (fImplNo > 0) return 0;
+            else return selector;
          }
          else {                                 
             // for genreflex explicit Yes is stronger than implicit file No
@@ -657,25 +778,25 @@ bool SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_nam
             std::cout<<"\n\tfYes = "<<fYes<<", fFileNo = "<<fFileNo<<std::endl;
 #endif
             
-            if (fYes > 0) 
-               return true;
+            if (selector) 
+               return selector;
             else 
-               return false;
+               return 0;
          }         
       }
       else { // Union (for genreflex)
-         return false;
+         return 0;
       }
    }
    else {
       std::cout<<"\n\tCouldn't cast Decl to TagDecl";
-      return false;
+      return 0;
    }
    
 }
 
 
-bool SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
 {
    std::list<VariableSelectionRule>::iterator it;
    std::list<VariableSelectionRule>::iterator it_end;
@@ -708,8 +829,8 @@ bool SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kin
       }
    }
    
-   int fYes = 0;
-   bool d, n;
+   BaseSelectionRule *selector = 0;
+   bool d, noMatch;
    bool selected;
    bool file;
    
@@ -717,24 +838,22 @@ bool SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kin
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (kind == "Var") selected = it->IsSelected(qual_name, "", file_name, d, n, file, false);
-      else selected = it->IsSelected(qual_name, prototype, file_name, d, n, file, false);
+      if (kind == "Var") selected = it->IsSelected(qual_name, "", file_name, d, noMatch, file, false);
+      else selected = it->IsSelected(qual_name, prototype, file_name, d, noMatch, file, false);
       if (selected) {
-         ++fYes;
+         selector = &(*it);
       }
-      else if (!n) {
+      else if (!noMatch) {
+         // The rule did explicitly request to not select this entity.
          return false;
       }
    }
    
-   if (fYes == 0) {
-      return false;
-   }
-   else return true;
+   return selector;
 }
 
 
-bool SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
 {
    std::list<VariableSelectionRule>::iterator it;
    std::list<VariableSelectionRule>::iterator it_end;
@@ -763,8 +882,9 @@ bool SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::stri
    
    bool d, n;
    bool selected;
-   int fYes = 0, fImplNo = 0;
-   bool explicit_Yes = false;
+   BaseSelectionRule *selector = 0;
+   int fImplNo = 0;
+   BaseSelectionRule *explicit_selector = 0;
    bool file;
    
    for(; it != it_end; ++it) {
@@ -777,27 +897,27 @@ bool SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::stri
             if (it->HasAttributeWithName("name")) {
                std::string name_value;
                it->GetAttributeValue("name", name_value);
-               if (name_value == qual_name) explicit_Yes = true;
+               if (name_value == qual_name) explicit_selector = &(*it);
             }
             if (it->HasAttributeWithName("pattern")) {
                std::string pattern_value;
                it->GetAttributeValue("pattern", pattern_value);
-               if (pattern_value != "*" && pattern_value != "*::*") explicit_Yes = true;
+               if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
             }
          }
       }
       else if (!n) {
-         if (!IsLinkdefFile()) return false;
+         if (!IsLinkdefFile()) return 0;
          else {
             if (it->HasAttributeWithName("pattern")) {
                std::string pattern_value;
                it->GetAttributeValue("pattern", pattern_value);
                if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                else 
-                  return false;
+                  return 0;
             }
             else
-               return false;
+               return 0;
          }
       }
    }
@@ -808,15 +928,12 @@ bool SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::stri
       std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
 #endif
       
-      if (explicit_Yes) return true;
-      else if (fImplNo > 0) return false;
-      else return true;
+      if (explicit_selector) return explicit_selector;
+      else if (fImplNo > 0) return 0;
+      else return selector;
    }
    else{
-      if (fYes == 0) {
-         return false;
-      }
-      else return true;
+      return selector;
    }
 }
 
@@ -834,7 +951,7 @@ bool SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::stri
 // of anything better)
 // 
 
-bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
 {
    std::list<FunctionSelectionRule>::iterator it = fFunctionSelectionRules.begin();
    std::list<FunctionSelectionRule>::iterator it_end = fFunctionSelectionRules.end();
@@ -851,7 +968,9 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
    int impl_r_No = 0, impl_rr_No = 0;
    bool d, n;
    bool selected;
-   bool explicit_r = false, implicit_r = false, implicit_rr = false;
+   BaseSelectionRule *explicit_r = 0;
+   BaseSelectionRule *implicit_r = 0;
+   BaseSelectionRule *implicit_rr = 0;
    bool file;
    
    if (kind == "CXXMethod"){
@@ -863,7 +982,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
             // here I should implement my implicit/explicit thing
             // I have included two levels of implicitness - "A::Get_*" is stronger than "*"
             if (it->HasAttributeWithName("name") || it->HasAttributeWithName("proto_name")) {
-               explicit_r = true;
+               explicit_r = &(*it);
                if (selected) ++expl_Yes;
                else {
                   
@@ -871,7 +990,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
                   std::cout<<"\tExplicit rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
                   
-                  return false; // == explicit BaseSelectionRule::kNo
+                  return 0; // == explicit BaseSelectionRule::kNo
                   
                }
             }
@@ -886,7 +1005,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
                std::string par_pat = par_qual_name + "::*";
                
                if (pat_value == par_pat) {
-                  implicit_rr = true;
+                  implicit_rr = &(*it);
                   if (selected) {
                      
 #ifdef SELECTION_DEBUG
@@ -905,7 +1024,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
                   }
                }
                else {
-                  implicit_r = true;
+                  implicit_r = &(*it);
                   if (selected) {
                      
 #ifdef SELECTION_DEBUG
@@ -933,7 +1052,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
       std::cout<<"\tExplicit rule BaseSelectionRule::kYes found"<<std::endl;
 #endif
       
-      return true; // if we have excplicit BaseSelectionRule::kYes
+      return explicit_r; // if we have excplicit BaseSelectionRule::kYes
    }
    else if (implicit_rr) {
       if (impl_rr_No > 0) {
@@ -942,7 +1061,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          std::cout<<"\tImplicit_rr rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
          
-         return false;
+         return 0;
       }
       else {
          
@@ -950,7 +1069,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          std::cout<<"\tImplicit_rr rule BaseSelectionRule::kYes found"<<std::endl;
 #endif
          
-         return true;
+         return implicit_rr;
       }
    }
    else if (implicit_r) {
@@ -960,7 +1079,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          std::cout<<"\tImplicit_r rule BaseSelectionRule::kNo found"<<std::endl;
 #endif
          
-         return false;
+         return 0;
       }
       else {
          
@@ -968,7 +1087,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          std::cout<<"\tImplicit_r rule BaseSelectionRule::kYes found"<<std::endl;
 #endif
          
-         return true;
+         return implicit_r;
       }
    }
    else {
@@ -989,9 +1108,10 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          }
       }
       
-      int fYes = 0, fImplNo = 0;
+      BaseSelectionRule *selector;
+      int fImplNo = 0;
       bool dontC, noName;
-      bool explicit_Yes = false;
+      BaseSelectionRule *explicit_selector = 0;
       
       // the same as with isClass selected
       // I wanted to use GetParentDecl and then to pass i sto isClassSelected because I didn't wanted to repeat 
@@ -1002,17 +1122,17 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, true); // == BaseSelectionRule::kYes
          
          if (yes) {
-            ++fYes;
+            selector = &(*it);
             
             if (it->HasAttributeWithName("name")) {
                std::string name_value;
                it->GetAttributeValue("name", name_value);
-               if (name_value == parent_qual_name) explicit_Yes = true;
+               if (name_value == parent_qual_name) explicit_selector = &(*it);
             }
             if (it->HasAttributeWithName("pattern")) {
                std::string pattern_value;
                it->GetAttributeValue("pattern", pattern_value);
-               if (pattern_value != "*" && pattern_value != "*::*") explicit_Yes = true;
+               if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
             }
          }
          else if (!noName) { // == BaseSelectionRule::kNo
@@ -1022,10 +1142,10 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
                it->GetAttributeValue("pattern", pattern_value);
                if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                else 
-                  return false;
+                  return 0;
             }
             else
-               return false;
+               return 0;
          }
       }
       
@@ -1033,20 +1153,20 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
       std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
 #endif
       
-      if (explicit_Yes) {
+      if (explicit_selector) {
          
 #ifdef SELECTION_DEBUG
          std::cout<<"\tReturning Yes"<<std::endl;
 #endif
          
-         return true;
+         return explicit_selector;
       }
       else if (fImplNo > 0) {
 #ifdef SELECTION_DEBUG
          std::cout<<"\tReturning No"<<std::endl;
 #endif
          
-         return false;
+         return 0;
       }
       else {
          
@@ -1054,7 +1174,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
          std::cout<<"\tReturning Yes"<<std::endl;
 #endif
          
-         return true;
+         return selector;
       }
    }
    
@@ -1062,7 +1182,7 @@ bool SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& 
    
 }
 
-bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name)
+BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name)
 {
    std::string parent_name;
    std::string parent_qual_name;
@@ -1077,9 +1197,10 @@ bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, c
             std::cout<<"\tSource file name: "<<file_name<<std::endl;
       }
       
-      int fYes = 0, fImplNo = 0;
+      BaseSelectionRule *selector = 0;
+      Int_t fImplNo = 0;
       bool dontC, noName;
-      bool explicit_Yes = false;
+      BaseSelectionRule *explicit_selector = false;
       int fFileNo = 0;
       bool file;
       
@@ -1089,17 +1210,17 @@ bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, c
          bool yes;
          yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, false); // == BaseSelectionRule::kYes
          if (yes) {
-            ++fYes;
+            selector = &(*it);
             if (IsLinkdefFile()) {
                if (it->HasAttributeWithName("name")) {
                   std::string name_value;
                   it->GetAttributeValue("name", name_value);
-                  if (name_value == parent_qual_name) explicit_Yes = true;
+                  if (name_value == parent_qual_name) explicit_selector = &(*it);
                }
                if (it->HasAttributeWithName("pattern")) {
                   std::string pattern_value;
                   it->GetAttributeValue("pattern", pattern_value);
-                  if (pattern_value != "*" && pattern_value != "*::*") explicit_Yes = true;
+                  if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
                }
             }
          }
@@ -1174,12 +1295,12 @@ bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, c
          std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
 #endif
          
-         if (explicit_Yes) {
+         if (explicit_selector) {
 #ifdef SELECTION_DEBUG
             std::cout<<"\tReturning Yes"<<std::endl;
 #endif
             
-            return true;
+            return explicit_selector;
          }
          else if (fImplNo > 0) {
             
@@ -1187,7 +1308,7 @@ bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, c
             std::cout<<"\tReturning No"<<std::endl;
 #endif
             
-            return false;
+            return 0;
          }
          else {
             
@@ -1195,21 +1316,16 @@ bool SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, c
             std::cout<<"\tReturning Yes"<<std::endl;
 #endif
             
-            return true;
+            return selector;
          }
       }
       else {
          
-         if (fYes > 0) {
-            return true;
-         }
-         else {
-            return false;
-         }
+         return selector;
       }
    }
    else {
-      return false;
+      return 0;
    }
 }
 
