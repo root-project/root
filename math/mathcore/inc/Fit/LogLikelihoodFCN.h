@@ -65,8 +65,10 @@ public:
    /** 
       Constructor from unbin data set and model function (pdf)
    */ 
-   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func) : 
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false) : 
       BaseObjFunction(func.NPar(), data.Size() ),
+      fIsExtended(extended),
+      fWeight(weight),
       fData(data), 
       fFunc(func), 
       fNEffPoints(0),
@@ -95,7 +97,7 @@ private:
 public: 
 
    /// clone the function (need to return Base for Windows)
-   virtual BaseFunction * Clone() const { return  new LogLikelihoodFCN(fData,fFunc); }
+   virtual BaseFunction * Clone() const { return  new LogLikelihoodFCN(fData,fFunc,fWeight,fIsExtended); }
 
 
    //using BaseObjFunction::operator();
@@ -125,6 +127,13 @@ public:
    /// access to const reference to the model function
    virtual const IModelFunction & ModelFunction() const { return fFunc; }
 
+   // Use sum of the weight squared in evaluating the likelihood 
+   // (this is needed for calculating the errors)
+   void UseSumOfWeightSquare() { 
+      if (fWeight == 0) return; // do nothing if it was not weighted 
+      fWeight = 2;
+   }
+   
 
 protected: 
 
@@ -140,7 +149,7 @@ private:
 #ifdef ROOT_FIT_PARALLEL
       return FitUtilParallel::EvaluateLogL(fFunc, fData, x, fNEffPoints); 
 #else 
-      return FitUtil::EvaluateLogL(fFunc, fData, x, fNEffPoints); 
+      return FitUtil::EvaluateLogL(fFunc, fData, x, fWeight, fIsExtended, fNEffPoints); 
 #endif
    } 
 
@@ -152,6 +161,8 @@ private:
 
  
       //data member
+   bool fIsExtended;  // flag for indicating if likelihood is extended
+   int  fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
    const UnBinData & fData; 
    const IModelFunction & fFunc; 

@@ -65,7 +65,7 @@ namespace FitUtil {
        evaluate the LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
    */ 
-   double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int & nPoints);  
+   double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * x, int iWeight, bool extended, unsigned int & nPoints);  
 
    /** 
        evaluate the LogL gradient given a model function and the data at the point x. 
@@ -76,8 +76,9 @@ namespace FitUtil {
    /** 
        evaluate the Poisson LogL given a model function and the data at the point x. 
        return also nPoints as the effective number of used points in the LogL evaluation
+       By default is extended, pass extedend to false if want to be not extended (MultiNomial)
    */ 
-   double EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * x, int iWeight, unsigned int & nPoints);  
+   double EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, const double * x, int iWeight, bool extended, unsigned int & nPoints);  
 
    /** 
        evaluate the Poisson LogL given a model function and the data at the point x. 

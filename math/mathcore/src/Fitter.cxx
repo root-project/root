@@ -81,8 +81,20 @@ Fitter & Fitter::operator = (const Fitter &rhs)
    return *this; 
 }
 
-void Fitter::SetFunction(const IModelFunction & func) 
+void Fitter::SetFunction(const IModelFunction & func, bool useGradient) 
 {
+
+   fUseGradient = useGradient; 
+   if (fUseGradient) { 
+      const IGradModelFunction * gradFunc = dynamic_cast<const IGradModelFunction*>(&func);
+      if (gradFunc) { 
+         SetFunction(*gradFunc, true);
+         return;
+      }
+      else {
+         MATH_WARN_MSG("Fitter::SetFunction","Requested function does not provide gradient - use it as non-gradient function ");
+      }
+   }
    fUseGradient = false;
  
    //  set the fit model function (clone the given one and keep a copy ) 
@@ -96,8 +108,19 @@ void Fitter::SetFunction(const IModelFunction & func)
 }
 
 
-void Fitter::SetFunction(const IModel1DFunction & func) 
+void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient) 
 { 
+   fUseGradient = useGradient; 
+   if (fUseGradient) { 
+      const IGradModel1DFunction * gradFunc = dynamic_cast<const IGradModel1DFunction*>(&func);
+      if (gradFunc) { 
+         SetFunction(*gradFunc, true);
+         return;
+      }
+      else {
+         MATH_WARN_MSG("Fitter::SetFunction","Requested function does not provide gradient - use it as non-gradient function ");
+      }
+   }
    fUseGradient = false;
    //std::cout << "set a 1d function" << std::endl; 
 
@@ -108,9 +131,9 @@ void Fitter::SetFunction(const IModel1DFunction & func)
    fConfig.CreateParamsSettings(*fFunc); 
 }
 
-void Fitter::SetFunction(const IGradModelFunction & func) 
+void Fitter::SetFunction(const IGradModelFunction & func, bool useGradient) 
 { 
-   fUseGradient = true;
+   fUseGradient = useGradient;
    //std::cout << "set a grad function" << std::endl; 
    //  set the fit model function (clone the given one and keep a copy ) 
    fFunc = dynamic_cast<IGradModelFunction *> ( func.Clone() ); 
@@ -121,16 +144,17 @@ void Fitter::SetFunction(const IGradModelFunction & func)
 }
 
 
-void Fitter::SetFunction(const IGradModel1DFunction & func) 
+void Fitter::SetFunction(const IGradModel1DFunction & func, bool useGradient) 
 { 
    //std::cout << "set a 1d grad function" << std::endl; 
-   fUseGradient = true;
+   fUseGradient = useGradient;
    // function is cloned when creating the adapter
    fFunc = new ROOT::Math::MultiDimParamGradFunctionAdapter(func);
 
    // creates the parameter  settings 
    fConfig.CreateParamsSettings(*fFunc); 
 }
+
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * params, unsigned int dataSize, bool chi2fit) {
    // set the objective function for the fit 
@@ -306,6 +330,8 @@ bool Fitter::DoLeastSquareFit(const BinData & data) {
    } 
    else { 
       // use gradient 
+      if (fConfig.MinimizerOptions().PrintLevel() > 0) 
+         MATH_INFO_MSG("Fitter::DoLeastSquareFit","use gradient from model function");        
       IGradModelFunction * gradFun = dynamic_cast<IGradModelFunction *>(fFunc); 
       if (gradFun != 0) { 
          Chi2FCN<BaseGradFunc> chi2(data,*gradFun); 
@@ -317,9 +343,11 @@ bool Fitter::DoLeastSquareFit(const BinData & data) {
    return false; 
 }
 
-bool Fitter::DoLikelihoodFit(const BinData & data, bool useWeight) { 
-
+bool Fitter::DoLikelihoodFit(const BinData & data, bool extended) { 
    // perform a likelihood fit on a set of binned data 
+   // The fit is extended (Poisson logl_ by default 
+   
+   bool  useWeight = fConfig.UseWeightCorrection();  
 
    // check function
    if (fFunc == 0) { 
@@ -340,7 +368,7 @@ bool Fitter::DoLikelihoodFit(const BinData & data, bool useWeight) {
 
    if (!fUseGradient) { 
       // do minimization without using the gradient
-      PoissonLikelihoodFCN<BaseFunc> logl(data,*fFunc, useWeight); 
+      PoissonLikelihoodFCN<BaseFunc> logl(data,*fFunc, useWeight, extended); 
       fFitType = logl.Type();
       // do minimization
       if (!DoMinimization (logl, &chi2) ) return false; 
@@ -350,14 +378,20 @@ bool Fitter::DoLikelihoodFit(const BinData & data, bool useWeight) {
       }
    } 
    else { 
+      if (fConfig.MinimizerOptions().PrintLevel() > 0) 
+         MATH_INFO_MSG("Fitter::DoLikelihoodFit","use gradient from model function");        
       // check if fFunc provides gradient
       IGradModelFunction * gradFun = dynamic_cast<IGradModelFunction *>(fFunc); 
       if (gradFun == 0) { 
          MATH_ERROR_MSG("Fitter::DoLikelihoodFit","wrong type of function - it does not provide gradient");        
          return false; 
       }
-      // use gradient for minimization 
-      PoissonLikelihoodFCN<BaseGradFunc> logl(data,*gradFun, useWeight); 
+      // use gradient for minimization
+      // not-extended is not impelemented in this case 
+      if (!extended) {  
+         MATH_WARN_MSG("Fitter::DoLikelihoodFit","Not-extended binned fit with gradient not yet supported - do an extended fit");        
+      }
+      PoissonLikelihoodFCN<BaseGradFunc> logl(data,*gradFun, useWeight, true); 
       fFitType = logl.Type();
       // do minimization
       if (!DoMinimization (logl, &chi2) ) return false;
@@ -370,8 +404,10 @@ bool Fitter::DoLikelihoodFit(const BinData & data, bool useWeight) {
 }
 
 
-bool Fitter::DoLikelihoodFit(const UnBinData & data, bool) { 
+bool Fitter::DoLikelihoodFit(const UnBinData & data, bool extended) { 
    // perform a likelihood fit on a set of unbinned data 
+
+   bool useWeight = fConfig.UseWeightCorrection(); 
 
    if (fFunc == 0) { 
       MATH_ERROR_MSG("Fitter::DoLikelihoodFit","model function is not set");
@@ -393,17 +429,33 @@ bool Fitter::DoLikelihoodFit(const UnBinData & data, bool) {
 
    if (!fUseGradient) { 
       // do minimization without using the gradient
-      LogLikelihoodFCN<BaseFunc> logl(data,*fFunc); 
+      LogLikelihoodFCN<BaseFunc> logl(data,*fFunc, useWeight, extended); 
       fFitType = logl.Type();
       return DoMinimization (logl); 
+      if (!DoMinimization (logl) ) return false;
+      if (useWeight) { 
+         logl.UseSumOfWeightSquare();
+         if (!ApplyWeightCorrection(logl) ) return false; 
+      }
+      return true;
    } 
    else { 
       // use gradient : check if fFunc provides gradient
+      if (fConfig.MinimizerOptions().PrintLevel() > 0) 
+         MATH_INFO_MSG("Fitter::DoLikelihoodFit","use gradient from model function");        
       IGradModelFunction * gradFun = dynamic_cast<IGradModelFunction *>(fFunc); 
       if (gradFun != 0) { 
-         LogLikelihoodFCN<BaseGradFunc> logl(data,*gradFun); 
+         if (extended) {  
+            MATH_WARN_MSG("Fitter::DoLikelihoodFit","Extended unbinned fit with gradient not yet supported - do a not-extended fit");        
+         }
+         LogLikelihoodFCN<BaseGradFunc> logl(data,*gradFun,useWeight, extended); 
          fFitType = logl.Type();
-         return DoMinimization (logl); 
+         if (!DoMinimization (logl) ) return false;
+         if (useWeight) { 
+            logl.UseSumOfWeightSquare();
+            if (!ApplyWeightCorrection(logl) ) return false; 
+         }
+         return true;
       }
       MATH_ERROR_MSG("Fitter::DoLikelihoodFit","wrong type of function - it does not provide gradient");
    }      
@@ -595,7 +647,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
 
 #ifdef DEBUG
-      std::cout << "ROOT::Fit::Fitter::DoMinimization : ncalls = " << fResult->fNCalls << " type of objfunc " << fFitType << "  typeid: " << typeid(*fObjFunction).name() << " use gradient " << fUseGradient << std::endl;
+      std::cout << "ROOT::Fit::Fitter::DoMinimization : ncalls = " << fResult->fNCalls << " type of objfunc " << fFitFitResType << "  typeid: " << typeid(*fObjFunction).name() << " use gradient " << fUseGradient << std::endl;
 #endif
 
    if (fConfig.NormalizeErrors() && fFitType == ROOT::Math::FitMethodFunction::kLeastSquare )

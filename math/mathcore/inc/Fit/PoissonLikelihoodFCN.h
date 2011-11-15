@@ -64,12 +64,13 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0) :
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true ) :
       BaseObjFunction(func.NPar(), data.Size() ),
+      fIsExtended(extended),
+      fWeight(weight),
       fData(data),
       fFunc(func),
       fNEffPoints(0),
-      fWeight(weight),
       fGrad ( std::vector<double> ( func.NPar() ) )
    { }
 
@@ -95,7 +96,7 @@ private:
 public:
 
    /// clone the function (need to return Base for Windows)
-   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc,fWeight); }
+   virtual BaseFunction * Clone() const { return new  PoissonLikelihoodFCN(fData,fFunc,fWeight,fIsExtended); }
 
    // effective points used in the fit
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
@@ -147,7 +148,7 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fWeight, fNEffPoints);
+      return FitUtil::EvaluatePoissonLogL(fFunc, fData, x, fWeight, fIsExtended, fNEffPoints);
    }
 
    // for derivatives
@@ -159,13 +160,14 @@ private:
 
       //data member
 
+   bool fIsExtended; // flag to indicate if is extended (when false is a Multinomial lieklihood), default is true
+   int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
    const BinData & fData;
    const IModelFunction & fFunc;
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 
-   int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared 
 
    mutable std::vector<double> fGrad; // for derivatives
 

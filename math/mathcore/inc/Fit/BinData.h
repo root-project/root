@@ -118,7 +118,7 @@ public :
    BinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * ex , const double * ey , const double * ez , const double * eval   );
 
    /**
-      copy constructor  
+      copy constructors  
    */
    BinData(const BinData &);
 

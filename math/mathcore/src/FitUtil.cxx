@@ -121,6 +121,10 @@ namespace ROOT {
                return (*fFunc)( x, fParams);
             }
 
+            double Integral(const double *x1, const double * x2) { 
+               // return unormalized integral
+               return (fIg1Dim) ? fIg1Dim->Integral( *x1, *x2) : fIgNDim->Integral( x1, x2); 
+            }
             double operator()(const double *x1, const double * x2) { 
                // return normalized integral, divided by bin volume (dx1*dx...*dxn) 
                if (fIg1Dim) { 
@@ -339,7 +343,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 
 
    double chi2 = 0;
-   //int nRejected = 0; 
+   nPoints = 0; // count the effective non-zero points
    
    // do not cache parameter values (it is not thread safe)
    //func.SetParameters(p); 
@@ -403,25 +407,25 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 //#undef DEBUG
 
+      if (invError > 0) { 
+         nPoints++;
 
-      double tmp = ( y -fval )* invError;  	  
-      double resval = tmp * tmp;
+         double tmp = ( y -fval )* invError;  	  
+         double resval = tmp * tmp;
+         
 
-
-      // avoid inifinity or nan in chi2 values due to wrong function values 
-      if ( resval < maxResValue )  
-         chi2 += resval; 
-      else {  
-         //nRejected++; 
-         chi2 += maxResValue;
+         // avoid inifinity or nan in chi2 values due to wrong function values 
+         if ( resval < maxResValue )  
+            chi2 += resval; 
+         else {  
+            //nRejected++; 
+            chi2 += maxResValue;
+         }
       }
 
       
    }
-   
-   // reset the number of fitting data points
-   nPoints = n;  // no points are rejected 
-   //if (nRejected != 0)  nPoints = n - nRejected;   
+   nPoints=n;
 
 #ifdef DEBUG
    std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
@@ -839,7 +843,8 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int &nPoints) {  
+double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * p,
+                                   int iWeight,  bool extended, unsigned int &nPoints) {  
    // evaluate the LogLikelihood 
 
    unsigned int n = data.Size();
@@ -852,13 +857,30 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
    double logl = 0;
    //unsigned int nRejected = 0; 
 
+   // this is needed if function must be normalized 
+   bool normalizeFunc = false; 
+   double norm = 1.0;
+   if (normalizeFunc) { 
+      // compute integral of the function 
+      std::vector<double> xmin(data.NDim());
+      std::vector<double> xmax(data.NDim());
+      IntegralEvaluator<> igEval( func, p, true); 
+      data.Range().GetRange(&xmin[0],&xmax[0]);
+      norm = igEval.Integral(&xmin[0],&xmax[0]);
+   }
+
+   // needed to compue effective global weight in case of extended likelihood 
+   double sumW = 0;
+   double sumW2 = 0;
+
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x = data.Coords(i);
       double fval = func ( x, p ); 
+      if (normalizeFunc) fval = fval / norm;
 
 #ifdef DEBUG      
-      std::cout << "x [ " << data.PointSize() << " ] = "; 
-      for (unsigned int j = 0; j < data.PointSize(); ++j)
+      std::cout << "x [ " << data.NDim() << " ] = "; 
+      for (unsigned int j = 0; j < data.NDim(); ++j)
          std::cout << x[j] << "\t"; 
       std::cout << "\tpar = [ " << func.NPar() << " ] =  "; 
       for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
@@ -866,7 +888,60 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       std::cout << "\tfval = " << fval << std::endl; 
 #endif
       // function EvalLog protects against negative or too small values of fval
-      logl += ROOT::Math::Util::EvalLog( fval);       
+      double logval =  ROOT::Math::Util::EvalLog( fval);       
+      if (iWeight > 0) { 
+         double weight = data.Weight(i); 
+         logval *= weight; 
+         if (iWeight ==2) { 
+            logval *= weight; // use square of weights in likelihood
+            if (extended) { 
+               // needed sum of weights and sum of weight square if likelkihood is extended
+               sumW += weight; 
+               sumW2 += weight*weight; 
+            }
+         }
+      }
+      logl += logval;
+   }
+
+   if (extended) { 
+      // add Poisson extended term
+      double extendedTerm = 0; // extended term in likelihood  
+      double nuTot = 0;
+      // nuTot is integral of function in the range
+      // if function has been normalized integral has been already computed 
+      if (!normalizeFunc) {
+         IntegralEvaluator<> igEval( func, p, true); 
+         std::vector<double> xmin(data.NDim());
+         std::vector<double> xmax(data.NDim());
+         data.Range().GetRange(&xmin[0],&xmax[0]);
+         nuTot = igEval.Integral( &xmin[0], &xmax[0]);
+         // force to be last parameter value
+         //nutot = p[func.NDim()-1];
+         if (iWeight != 2)  
+            extendedTerm = - nuTot;  // no need to add in this case n log(nu) since is already computed before
+         else {            
+            // case use weight square in likelihood : compute total effective weight = sw2/sw
+            // ignore for the moment case when sumW is zero 
+            extendedTerm = - (sumW2 / sumW) * nuTot;
+         }
+            
+      }
+      else {
+         nuTot = norm;
+         extendedTerm = - nuTot + double(n) *  ROOT::Math::Util::EvalLog( nuTot); 
+         // in case of weights need to use here sum of weights (to be done)
+      }
+      logl += extendedTerm;
+
+//#define DEBUG
+#ifdef DEBUG
+      // for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
+      //    std::cout << p[ipar] << "\t";
+      // std::cout << std::endl;
+      std::cout << "fit is extended n = " << n << " nutot " << nuTot << " extended LL term = " << << extendedTerm << " logl = " << logl
+                << std::endl;
+#endif
    }
    
    // reset the number of fitting data points
@@ -878,7 +953,6 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
 //          MATH_ERROR_MSG("FitUtil::EvaluateLogL","Error too many points rejected because of bad pdf values");
 
 //    }
-
 #ifdef DEBUG
    std::cout << "Logl = " << logl << " np = " << nPoints << std::endl;
 #endif
@@ -929,7 +1003,6 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    // evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
    // and its gradient
 
-
    double y = 0; 
    const double * x1 = data.GetPoint(i,y);
 
@@ -969,7 +1042,11 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 
    // logPdf for Poisson: ignore constant term depending on N
    fval = std::max(fval, 0.0);  // avoid negative or too small values 
-   double logPdf =   y * ROOT::Math::Util::EvalLog( fval) - fval;  
+   double logPdf =  - fval; 
+   if (y > 0.0) {
+      // include also constants due to saturate model (see Baker-Cousins paper)
+      logPdf += y * ROOT::Math::Util::EvalLog( fval / y) + y;  
+   }
    // need to return the pdf contribution (not the log)
 
    //double pdfval =  std::exp(logPdf);
@@ -1029,16 +1106,22 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData & data, 
-                                    const double * p, int iWeight, unsigned int &   nPoints ) {  
+                                    const double * p, int iWeight, bool extended,  unsigned int &   nPoints ) {  
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
+   // add as well constant term for saturated model to make it like a Chi2/2
+   // by default is etended. If extended is false the fit is not extended and 
+   // the global poisson term is removed (i.e is a binomial fit)
+   // (remember that in this case one needs to have a function with a fixed normalization
+   // like in a non extended binned fit)
    //
    // if use Weight use a weighted dataset 
    // iWeight = 1 ==> logL = Sum( w f(x_i) )
    // case of iWeight==1 is actually identical to weight==0
    // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
-         
+   //
+   // nPoints returns the points where bin content is not zero
          
 
    unsigned int n = data.Size();
@@ -1048,8 +1131,9 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    std::cout << "]  - data size = " << n << std::endl;
 #endif
    
-   double loglike = 0;
-   //int nRejected = 0; 
+   double nloglike = 0;  // negative loglikelihood 
+   nPoints = 0;  // npoints
+
 
    // get fit option and check case of using integral of bins
    const DataOptions & fitOpt = data.Opt();
@@ -1065,6 +1149,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    }
 
    IntegralEvaluator<> igEval( func, p, fitOpt.fIntegral); 
+
+   // double nuTot = 0; // total number of expected events (needed for non-extended fits) 
+   // double yTot = 0;  // sum of bin contents (i.e sum of all the weights)
+   // double wTot = 0; // sum of weights  
+   // double w2Tot = 0; // sum of weight squared  (these are needed for useW2)
+
 
    for (unsigned int i = 0; i < n; ++ i) { 
       const double * x1 = data.Coords(i);
@@ -1097,6 +1187,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       if (useBinVolume) fval *= binVolume;
 
 
+
 #ifdef DEBUG
       int NSAMPLE = 100;
       if (i%NSAMPLE == 0) { 
@@ -1117,35 +1208,58 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       // negative values of fval 
       fval = std::max(fval, 0.0);
 
+      // if (!extended) { 
+      //    nuTot += fval;
+      //    yTot += y; 
+      // }
+
       double tmp = 0; 
       if (useW2) { 
          // apply weight correction . Effective weight is error^2/ y
          // and expected events in bins is fval/weight
          // can apply correction only when y is not zero otherwise weight is undefined
+         // (in case of weighted likelihood I don;t care about the constant term due to 
+         // teh saturated model)
          if (y != 0) { 
             double error = data.Error(i);
-            double weight = (error*error)/y; 
-            tmp =  fval*weight - weight * y * ROOT::Math::Util::EvalLog( fval);
+            double weight = (error*error)/y;  // this is the bin effective weight
+            if (extended) tmp = fval * weight;
+            tmp -= weight * y * ROOT::Math::Util::EvalLog( fval);
          }
       }
       else {
          // standard case no weights or iWeight=1 
-         tmp = fval - y *  ROOT::Math::Util::EvalLog( fval);  
+         // this is needed for Poisson likelihood (which are extened and not for multinomial) 
+         // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
+         // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
+         if (extended) tmp = fval -y ;
+         if (y >  0) { 
+            tmp +=  y *  (ROOT::Math::Util::EvalLog( y) - ROOT::Math::Util::EvalLog(fval));  
+            nPoints++;
+         }
       }
 
-      loglike +=  tmp;  
-      
-   }
-   
-   // reset the number of fitting data points
-   nPoints = n; 
-   //if (nRejected != 0)  nPoints = n - nRejected;
 
+      nloglike +=  tmp;  
+   }
+
+   // if (notExtended) { 
+   //    // not extended : remove from the Likelihood the global Poisson term
+   //    if (!useW2)  
+   //       nloglike -= nuTot - yTot * ROOT::Math::Util::EvalLog( nuTot);
+   //    else {
+   //       // this needs to be checked
+   //       nloglike -= wTot* nuTot - wTot* yTot * ROOT::Math::Util::EvalLog( nuTot);
+   //    }
+         
+   // }
+
+   
 #ifdef DEBUG
    std::cout << "Loglikelihood  = " << loglike << std::endl;
 #endif
    
-   return loglike;  
+   return nloglike;  
 }
 
 void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinData & data, const double * p, double * grad ) { 

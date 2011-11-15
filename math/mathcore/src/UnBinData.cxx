@@ -20,45 +20,48 @@ namespace ROOT {
 
    namespace Fit { 
 
-UnBinData::UnBinData(unsigned int maxpoints, unsigned int dim ) : 
+UnBinData::UnBinData(unsigned int maxpoints, unsigned int dim, bool isWeighted  ) : 
    FitData(),
    fDim(dim),
-   fNPoints(0),
+   fPointSize( (isWeighted) ? dim +1 : dim),
+   fNPoints(0),   
    fDataVector(0), 
    fDataWrapper(0)
 { 
    // constructor with default option and range
-   unsigned int n = dim*maxpoints; 
+   unsigned int n = fPointSize*maxpoints; 
    if ( n > MaxSize() ) 
       MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
    else if (n > 0) 
       fDataVector = new DataVector(n);
 } 
 
-UnBinData::UnBinData (const DataRange & range,  unsigned int maxpoints , unsigned int dim ) : 
+UnBinData::UnBinData (const DataRange & range,  unsigned int maxpoints , unsigned int dim, bool isWeighted  ) : 
    FitData(range), 
    fDim(dim),
+   fPointSize( (isWeighted) ? dim +1 : dim),
    fNPoints(0), 
    fDataVector(0), 
    fDataWrapper(0)
 {
    // constructor from option and default range
-   unsigned int n = dim*maxpoints; 
+   unsigned int n = fPointSize*maxpoints; 
    if ( n > MaxSize() ) 
       MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
    else if (n > 0) 
       fDataVector = new DataVector(n);
 } 
 
-UnBinData::UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints, unsigned int dim ) : 
+UnBinData::UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints, unsigned int dim, bool isWeighted) : 
    FitData( opt, range), 
    fDim(dim),
+   fPointSize( (isWeighted) ? dim +1 : dim),
    fNPoints(0),
    fDataVector(0), 
    fDataWrapper(0)
 {
    // constructor from options and range
-   unsigned int n = dim*maxpoints; 
+   unsigned int n = fPointSize*maxpoints; 
    if ( n > MaxSize() ) 
       MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
    else if (n > 0) 
@@ -68,6 +71,7 @@ UnBinData::UnBinData (const DataOptions & opt, const DataRange & range,  unsigne
 UnBinData::UnBinData(unsigned int n, const double * dataX ) : 
    FitData( ), 
    fDim(1), 
+   fPointSize(1),
    fNPoints(n),
    fDataVector(0)
 { 
@@ -75,9 +79,10 @@ UnBinData::UnBinData(unsigned int n, const double * dataX ) :
    fDataWrapper = new DataWrapper(dataX);
 } 
       
-UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY ) : 
+UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, bool isWeighted ) : 
    FitData( ), 
-   fDim(2), 
+   fDim( (isWeighted) ? 1 : 2), 
+   fPointSize(2),
    fNPoints(n),
    fDataVector(0),
    fDataWrapper(0)
@@ -86,9 +91,10 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY 
    fDataWrapper = new DataWrapper(dataX, dataY, 0, 0, 0, 0);
 } 
 
-UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ ) : 
+UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, bool isWeighted ) : 
    FitData( ), 
-   fDim(3), 
+   fDim( (isWeighted) ? 2 : 3),
+   fPointSize(3),
    fNPoints(n),
    fDataVector(0)
 { 
@@ -99,11 +105,14 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY,
 UnBinData::UnBinData(unsigned int n, const double * dataX, const DataRange & range ) : 
    FitData(range), 
    fDim(1), 
+   fPointSize(1),
    fNPoints(0),
    fDataVector(0),
    fDataWrapper(0)
 { 
    // constructor for 1D array data using a range to select the data
+   // copy the data inside
+   // when n = 0 construct just an empty data set 
    if ( n > MaxSize() ) 
       MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
    else if (n > 0) {
@@ -116,14 +125,16 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const DataRange & ran
    } 
 }
       
-UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const DataRange & range ) : 
+UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const DataRange & range, bool isWeighted ) : 
    FitData(range), 
-   fDim(2), 
+   fDim( (isWeighted) ? 1 : 2 ),
+   fPointSize(2),
    fNPoints(0),
    fDataVector(0),
    fDataWrapper(0)
 { 
    // constructor for 2D array data using a range to select the data
+   // copy the data inside
    if ( n > MaxSize() ) 
       MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n )
    else if (n > 0) {
@@ -139,9 +150,10 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY,
 } 
 
 UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, 
-                     const DataRange & range ) : 
+                     const DataRange & range, bool isWeighted ) : 
    FitData(range ), 
-   fDim(3), 
+   fDim( (isWeighted) ? 2 : 3 ),
+   fPointSize(3),
    fNPoints(0),
    fDataVector(0),
    fDataWrapper(0)
@@ -162,16 +174,18 @@ UnBinData::UnBinData(unsigned int n, const double * dataX, const double * dataY,
    } 
 } 
 
-void UnBinData::Initialize(unsigned int maxpoints, unsigned int dim ) { 
+void UnBinData::Initialize(unsigned int maxpoints, unsigned int dim, bool isWeighted ) { 
    //   preallocate a data set given size and dimension
-   if ( dim != fDim && fDataVector) { 
+   unsigned int pointSize = (isWeighted) ? dim+1 : dim;
+   if ( (dim != fDim || pointSize != fPointSize) && fDataVector) { 
 //       MATH_INFO_MSGVAL("BinData::Initialize"," Reset amd re-initialize with a new fit point size of ",
 //                        dim);
       delete fDataVector; 
       fDataVector = 0; 
    }
    fDim = dim;
-   unsigned int n = fDim*maxpoints; 
+   fPointSize = pointSize;
+   unsigned int n = fPointSize*maxpoints; 
    if ( n > MaxSize() ) { 
       MATH_ERROR_MSGVAL("UnBinData::Initialize","Invalid data size", n );
       return; 
@@ -190,20 +204,20 @@ void UnBinData::Resize(unsigned int npoints) {
       return; 
    }
    if (fDataVector != 0)  { 
-      int nextraPoints = npoints -  fDataVector->Size()/fDim; 
+      int nextraPoints = npoints -  fDataVector->Size()/fPointSize; 
       if  (nextraPoints < 0) {
          // delete extra points
-         (fDataVector->Data()).resize( npoints * fDim);
+         (fDataVector->Data()).resize( npoints * fPointSize);
       }
       else if (nextraPoints > 0) { 
          // add extra points 
-         Initialize(nextraPoints, fDim ); 
+         Initialize(nextraPoints, fDim, IsWeighted()  ); 
       }
       else // nextraPoints == 0
          return; 
    }
-   else // no DataVector create
-      fDataVector = new DataVector( npoints*fDim);      
+   else // no DataVector create it 
+      fDataVector = new DataVector( npoints*fPointSize);      
 }
 
 

@@ -139,7 +139,7 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
 
    /// copy constructor 
 BinData::BinData(const BinData & rhs) : 
-   FitData(), 
+   FitData(rhs.Opt(), rhs.Range()), 
    fDim(rhs.fDim), 
    fPointSize(rhs.fPointSize), 
    fNPoints(rhs.fNPoints), 
@@ -154,7 +154,17 @@ BinData::BinData(const BinData & rhs) :
 }
 
 
+
 BinData & BinData::operator= (const BinData & rhs) { 
+   // assignment operator
+   
+   // copy  options but cannot copy  range since cannot be modified afterwards
+   DataOptions & opt = Opt();
+   opt = rhs.Opt();
+   //t.b.c
+   //DataRange & range = Range(); 
+   //range = rhs.Range();
+   //
    // assignment operator  
    if (&rhs == this) return *this; 
    fDim = rhs.fDim;  
