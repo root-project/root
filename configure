@@ -1492,7 +1492,7 @@ enable/disable options, prefix with either --enable- or --disable-
   winrtdebug         Link against the Windows debug runtime library
   x11                X11 support
   xml                XML parser interface
-  xrootd             Build xrootd file server and its client (if supported)
+  xrootd             Build xrootd-dependent plugins for remote file access and PROOF (if supported)
   xft                Xft support (X11 antialiased fonts)
 
 minimal set of libraries, can be combined with above --enable-... options
@@ -1594,9 +1594,9 @@ with options, prefix with --with-, enables corresponding support
   xpm-libdir         XPM support, path to libXpm
   xft-libdir         Xft support, path to libXft
   xext-libdir        Xext support, path to libXext
-  xrootd             XROOTD support, path to external XROOTD distribution
-  xrootd-incdir      XROOTD support, path to external XROOTD header files (XrdVersion.hh, ...)
-  xrootd-libdir      XROOTD support, path to external XROOTD libraries
+  xrootd             XROOTD support, path to XROOTD distribution
+  xrootd-incdir      XROOTD support, path to XROOTD header files (XrdVersion.hh, ...)
+  xrootd-libdir      XROOTD support, path to XROOTD libraries (libXrdClient, ...)
 
 with compiler options, prefix with --with-, overrides default value
 
