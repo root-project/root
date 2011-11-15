@@ -790,7 +790,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
    // arr's SetOwner() is called, to signal that it is the user's respponsability to
    // delete the histograms, possibly by deleting the arrary.
    //    TObjArray aSlices;
-   //    h2->FitSlicesX(func, 0, -1, "QNR", &aSlices);
+   //    h2->FitSlicesX(func, 0, -1, 0, "QNR", &aSlices);
    // will already delete the histograms once aSlice goes out of scope. aSlices will
    // contain the histogram for the i-th parameter of the fit function at aSlices[i];
    // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
@@ -846,7 +846,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
    // arr's SetOwner() is called, to signal that it is the user's respponsability to
    // delete the histograms, possibly by deleting the arrary.
    //    TObjArray aSlices;
-   //    h2->FitSlicesX(func, 0, -1, "QNR", &aSlices);
+   //    h2->FitSlicesY(func, 0, -1, 0, "QNR", &aSlices);
    // will already delete the histograms once aSlice goes out of scope. aSlices will
    // contain the histogram for the i-th parameter of the fit function at aSlices[i];
    // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
