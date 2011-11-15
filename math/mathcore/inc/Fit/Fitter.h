@@ -122,12 +122,12 @@ public:
    /** 
        fit a data set using any  generic model  function
        If data set is binned a least square fit is performed
-       If data set is unbinned a maximum likelihood fit is done
+       If data set is unbinned a maximum likelihood fit (not extended) is done
        Pre-requisite on the function: 
-       it must have 
+       it must implement the 1D or multidimensional parametric function interface 
    */ 
    template < class Data , class Function> 
-   bool Fit( const Data & data, const Function & func) { 
+   bool Fit( const Data & data, const Function & func ) { 
       SetFunction(func);
       return Fit(data);
    }
@@ -138,6 +138,14 @@ public:
    bool Fit(const BinData & data) { 
       return DoLeastSquareFit(data); 
    } 
+
+   /** 
+       Fit a binned data set using a least square fit 
+   */ 
+   bool LeastSquareFit(const BinData & data) { 
+      return DoLeastSquareFit(data); 
+   } 
+
    /** 
        fit an unbinned data set using loglikelihood method
    */ 
