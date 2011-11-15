@@ -127,7 +127,7 @@ public:
 
    static TProofMgr   *Create(const char *url, Int_t loglevel = -1,
                               const char *alias = 0, Bool_t xpd = kTRUE);
-   static Int_t        Ping(const char *url);
+   static Int_t        Ping(const char *url, Bool_t checkxrd = kFALSE);
 
    ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
 };
