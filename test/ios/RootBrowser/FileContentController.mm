@@ -1,5 +1,6 @@
 #import <stdlib.h>
 
+#import <CoreGraphics/CGGeometry.h>
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileContentController.h"
@@ -17,14 +18,25 @@
 
 #import "FileUtils.h"
 
-
-@implementation FileContentController {
+@interface FileContentController () {
    NSMutableArray *objectShortcuts;
    UISearchBar *searchBar;
    UIPopoverController *searchPopover;
    SearchController *searchController;
    UIBarButtonItem *slideShowBtn;
+   
+   BOOL animateDirAfterLoad;
+   BOOL animateObjAfterLoad;
+   unsigned spotElement;
 }
+
+- (void) highlightDirectory : (unsigned)tag;
+- (void) highlightObject : (unsigned)tag;
+
+@end
+
+
+@implementation FileContentController
 
 @synthesize fileContainer;
 
@@ -119,6 +131,19 @@
 {
    [super viewDidLoad];
    // Do any additional setup after loading the view from its nib.
+}
+
+//____________________________________________________________________________________________________
+- (void) viewDidAppear:(BOOL)animated
+{
+   [super viewDidAppear : animated];
+   if (animateDirAfterLoad) {
+      [self highlightDirectory : spotElement];
+      animateDirAfterLoad = NO;
+   } else if (animateObjAfterLoad) {
+      [self highlightObject : spotElement];
+      animateObjAfterLoad = NO;
+   }
 }
 
 //____________________________________________________________________________________________________
@@ -291,9 +316,9 @@
       NSMutableArray *keys = [[NSMutableArray alloc] init];
       for (size_type i = 0; i < nEntities; ++i) {
          const auto &descriptor = fileContainer->GetElementDescriptor(i);
-         NSString *formatString = descriptor.fIsDir ? @"%s (directory) %d" : @"%s %d";
+         NSString *formatString = descriptor.fIsDir ? @"%s (directory)" : @"%s";
          FileContainerElement *newKey = [[FileContainerElement alloc] init];
-         newKey.elementName = [NSString stringWithFormat : formatString, descriptor.fName.c_str(), i];
+         newKey.elementName = [NSString stringWithFormat : formatString, descriptor.fName.c_str()];
          newKey.elementIndex = i;
          [keys addObject : newKey];
       }
@@ -352,13 +377,89 @@
    
    const auto &descriptor = fileContainer->GetElementDescriptor(key.elementIndex);
    if (descriptor.fOwner == fileContainer) {
-      NSLog(@"Nothing to load, highlihgt object found!");
-      //
+      descriptor.fIsDir ? [self highlightDirectory : descriptor.fIndex] : [self highlightObject : descriptor.fIndex];
    } else {
       //Create another FileContentController and push it on stack.
       FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
       [contentController activateForFile : descriptor.fOwner];
+
+      if (descriptor.fIsDir)
+         contentController->animateDirAfterLoad = YES;
+      else
+         contentController->animateObjAfterLoad = YES;
+      
+      contentController->spotElement = descriptor.fIndex;
+
       [self.navigationController pushViewController : contentController animated : YES];
+   }
+}
+
+#pragma mark - adjust file container to show search result
+
+//____________________________________________________________________________________________________
+- (void) animateShortcut : (ObjectShortcut *) sh
+{
+   //Now, animation!
+   CGAffineTransform originalTransform = sh.transform;
+   CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.4f, 1.4f);
+   [UIView beginAnimations : @"hide_object" context : nil];
+   [UIView setAnimationDuration : 1.5f];
+   [UIView setAnimationCurve : UIViewAnimationCurveLinear];
+   [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
+   sh.transform = newTransform;
+   [UIView commitAnimations];
+
+   [UIView beginAnimations : @"show_object" context : nil];
+   [UIView setAnimationDuration : 1.f];
+   [UIView setAnimationCurve : UIViewAnimationCurveLinear];
+   [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
+   sh.transform = originalTransform;
+   [UIView commitAnimations];
+}
+
+//____________________________________________________________________________________________________
+- (void) highlightDirectory : (unsigned)tag
+{
+   for (ObjectShortcut *sh in objectShortcuts) {
+      if (sh.objectIndex == tag && sh.isDirectory) {
+         const CGRect thumbFrame = sh.frame;
+         const CGRect scrollBounds = scrollView.bounds;
+         if (CGRectGetMaxY(thumbFrame) > CGRectGetMaxY(scrollBounds)) {
+            //We have to scroll view to show object's or directory's shortcut.
+            //Find new Y for bounds.
+            const CGFloat newY = CGRectGetMaxY(thumbFrame) - scrollBounds.size.height;
+            CGRect newBounds = scrollBounds;
+            newBounds.origin.y = newY;
+            [scrollView scrollRectToVisible : newBounds animated : YES];
+         }
+         
+         [self animateShortcut : sh];
+
+         break;
+      }
+   }
+}
+
+//____________________________________________________________________________________________________
+- (void) highlightObject : (unsigned)tag
+{
+   for (ObjectShortcut *sh in objectShortcuts) {
+      if (sh.objectIndex == tag && !sh.isDirectory) {
+         CGRect thumbFrame = sh.frame;
+         const CGRect scrollBounds = scrollView.bounds;
+         if (CGRectGetMaxY(thumbFrame) > CGRectGetMaxY(scrollBounds)) {
+            //We have to scroll view to show object's or directory's shortcut.
+            //Find new Y for bounds.
+            const CGFloat newY = CGRectGetMaxY(thumbFrame) - scrollBounds.size.height;
+            CGRect newBounds = scrollBounds;
+            newBounds.origin.y = newY;
+            [scrollView scrollRectToVisible : newBounds animated : YES];
+         }
+         
+         [self animateShortcut : sh];
+
+         break;
+      }
    }
 }
 
