@@ -188,11 +188,13 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       if (!tutdir.EndsWith(us.Data())) tutdir += us;
       // Add our own subdir
       tutdir += "/.getproof";
-      gSystem->mkdir(tutdir.Data(), kTRUE);
-      if (gSystem->AccessPathName(tutdir, kWritePermission)) {
-         Printf("getProof: unable to get a writable working area (tried: %s)"
-                " - cannot continue", tutdir.Data());
-         return p;
+      if (gSystem->AccessPathName(tutdir)) {
+         gSystem->mkdir(tutdir.Data(), kTRUE);
+         if (gSystem->AccessPathName(tutdir, kWritePermission)) {
+            Printf("getProof: unable to get a writable working area (tried: %s)"
+                  " - cannot continue", tutdir.Data());
+            return p;
+         }
       }
    }
    Printf("getProof: working area (tutorial dir): %s", tutdir.Data());
@@ -262,7 +264,6 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
 
       // Cleanup, if required
       if (restart) {
-
          Printf("getProof: cleaning existing instance ...");
          // Cleaning up existing daemon
          cmd = Form("kill -9 %d", pid);
@@ -282,8 +283,9 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          return p;
       }
 
-      // Remove the tutorial dir
-      cmd = Form("rm -fr %s/*", tutdir.Data());
+      // Cleanup the working area
+      cmd = Form("rm -fr %s/xpdtut %s %s %s %s", tutdir.Data(), workarea.Data(),
+                                                 xpdcf.Data(), xpdpid.Data(), proofsessions.Data());
       gSystem->Exec(cmd);
 
       // Try to start something locally; create the xrootd config file
