@@ -5163,7 +5163,7 @@ int main(int argc, char **argv)
                insertedBundle = true;
             }
          }
-         interp.processLine(std::string("#include \"") + esc_arg + "\"", true /*raw*/);
+         interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
          pcmArgs.push_back(argv[i]);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
