@@ -251,8 +251,12 @@ void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
          fOutputList->Delete();
          SafeDelete(fOutputList);
       }
-      fOutputList = (TList *) (outlist->Clone());
-      fOutputList->SetOwner();
+      if ((fOutputList = (TList *) (outlist->Clone()))) {
+         fOutputList->SetOwner();
+         Info("RecordEnd", "output list cloned successfully!");
+      } else {
+         Warning("RecordEnd", "unable to clone output list!!!");
+      }
    }
 }
 
