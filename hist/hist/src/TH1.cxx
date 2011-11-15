@@ -7347,7 +7347,8 @@ void TH1::SetContent(const Double_t *content)
    //               =====================================================
    Int_t bin;
    Double_t bincontent;
-   for (bin=0; bin<fNcells; bin++) {
+   int nbins = fNcells; // save value because SetBinContent can change fNCells
+   for (bin=0; bin<nbins; bin++) {
       bincontent = *(content + bin);
       SetBinContent(bin, bincontent);
    }
