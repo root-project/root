@@ -368,10 +368,20 @@ char *StrDup(const char *str);
 typedef map<string,bool> Funcmap_t;
 Funcmap_t gFunMap;
 
-vector<string> gIoConstructorTypes;
+class RConstructorType {
+   std::string           fArgTypeName;
+   clang::CXXRecordDecl *fArgType;
+   
+public:
+   RConstructorType(const char *type_of_arg) : fArgTypeName(type_of_arg),fArgType(0) {}
+   
+   const char *GetName() { return fArgTypeName.c_str(); }
+};
+
+vector<RConstructorType> gIoConstructorTypes;
 void AddConstructorType(const char *arg)
 {
-   if (arg) gIoConstructorTypes.push_back(string(arg));
+   if (arg) gIoConstructorTypes.push_back(RConstructorType(arg));
 }
 
 bool ClassInfo__HasMethod(const clang::RecordDecl *cl, const char* name) 
@@ -414,6 +424,69 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 }
 
 cling::Interpreter *gInterp = 0;
+
+
+class FDVisitor : public clang::RecursiveASTVisitor<FDVisitor> {
+private:
+   clang::FunctionDecl* fFD;
+public:
+   clang::FunctionDecl* getFD() const { return fFD; }
+   bool VisitDeclRefExpr(clang::DeclRefExpr* DRE) {
+      fFD = llvm::dyn_cast<clang::FunctionDecl>(DRE->getDecl());
+      return true;
+   }
+   FDVisitor() : fFD(0) {}
+};
+
+
+//______________________________________________________________________________
+const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinfo, 
+                                                const char *method, const char *proto)
+{
+   
+   // First check it exist under some name.
+
+   const clang::NamedDecl *decl = gInterp->LookupDecl(method, (clang::DeclContext*)cinfo).getSingleDecl();
+   if (decl) {
+      // NOTE this is *wrong* we do not check that the routine has the right arguments!!!
+      return llvm::dyn_cast<clang::CXXMethodDecl>(decl);
+#if 0
+      // Build int (ClassInfo::*f)(arglist) = &ClassInfo::method;
+      // Then we will have the resolved overload of clang::FunctionDecl on the lhs.
+      std::string Str("");
+      Str += "void " + gInterp->createUniqueName() + "() {\n";
+      Str += "void (" + cinfo->getNameAsString() + "::*fptr)(" + proto + ") = &" + cinfo->getNameAsString()  + "::" + method + ";;";
+      Str += "\n};;";
+      
+      clang::Decl* D = 0;
+      clang::FunctionDecl* ResultFD = 0;
+      if (gInterp->processLine(Str, /*rawInput*/true, &D)
+          == cling::Interpreter::kSuccess) {
+         if (D) {
+            FDVisitor FDV = FDVisitor();
+            FDV.VisitDecl(D);
+            ResultFD = FDV.getFD();
+         }
+         if (ResultFD) {
+            clang::CXXMethodDecl *method = llvm::dyn_cast<clang::CXXMethodDecl>(ResultFD);
+            return method;
+         }
+      }
+#endif
+   }
+   return 0;
+}
+
+bool R__CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *methodname, const char *proto)
+{
+   // Return true, if the function (defined by the name and prototype) exists and is public
+   
+   const clang::CXXMethodDecl *method = R__GetFuncWithProto(cl,methodname,proto);
+   if (method && method->getAccess() == clang::AS_public) {
+      return true;
+   }
+   return false;
+}
 
 bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* name)
 {
@@ -1012,7 +1085,9 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
    // resquested a custom version.
    
    bool has_input_error = false;
-   fprintf(stderr,"CheckInputOperator is not implemented yet!!!!!\n");
+   
+   G__ClassInfo clinfo(cl->getQualifiedNameAsString().c_str());
+   return CheckInputOperator(clinfo,dicttype);
 #if 0
    // Need to find out if the operator>> is actually defined for
    // this class.
@@ -1192,7 +1267,6 @@ bool CheckClassDef(const clang::RecordDecl *cl)
       Error(cl->getQualifiedNameAsString().c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",cl->getQualifiedNameAsString().c_str());
       // We do want to always output the message (hence the Error level)
       // but still want rootcint to succeed.
-      bool hasClassDef2 = ClassInfo__HasMethod(cl,"Class_Version");
       result = true;
    }
    
@@ -1219,6 +1293,21 @@ bool HasDirectoryAutoAdd(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+bool HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl)
+{
+   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
+   
+   // Detect if the class has a DirectoryAutoAdd
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   const char *proto = "TDirectory*";
+   const char *name = "DirectoryAutoAdd";
+   
+   return R__CheckPublicFuncWithProto(cl,proto,name);
+}
+
+
+//______________________________________________________________________________
 bool HasNewMerge(G__ClassInfo &cl)
 {
    // Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
@@ -1230,10 +1319,24 @@ bool HasNewMerge(G__ClassInfo &cl)
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
    
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    
    return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
+bool HasNewMerge(const clang::CXXRecordDecl *cl)
+{
+   // Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
+   
+   // Detect if the class has a 'new' Merge function.
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   const char *proto = "TCollection*,TFileMergeInfo*";
+   const char *name = "Merge";
+   
+   return R__CheckPublicFuncWithProto(cl,proto,name);
 }
 
 //______________________________________________________________________________
@@ -1253,6 +1356,20 @@ bool HasOldMerge(G__ClassInfo &cl)
    
    return hasMethodWithSignature;
 }
+//______________________________________________________________________________
+bool HasOldMerge(const clang::CXXRecordDecl *cl)
+{
+   // Return true if the class has a method Merge(TCollection*)
+   
+   // Detect if the class has an old fashion Merge function.
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   const char *proto = "TCollection*";
+   const char *name = "Merge";
+   
+   return R__CheckPublicFuncWithProto(cl,proto,name);
+}
+
 
 //______________________________________________________________________________
 bool HasResetAfterMerge(G__ClassInfo &cl)
@@ -1271,6 +1388,21 @@ bool HasResetAfterMerge(G__ClassInfo &cl)
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    
    return hasMethodWithSignature;
+}
+
+//______________________________________________________________________________
+bool HasResetAfterMerge(const clang::CXXRecordDecl *cl)
+{
+   // Return true if the class has a method ResetAfterMerge(TFileMergeInfo *)
+   
+   // Detect if the class has a 'new' Merge function.
+   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
+   
+   // Detect if the class or one of its parent has a DirectoryAutoAdd
+   const char *proto = "TFileMergeInfo*";
+   const char *name = "ResetAfterMerge";
+   
+   return R__CheckPublicFuncWithProto(cl,proto,name);
 }
 
 //______________________________________________________________________________
@@ -1641,7 +1773,7 @@ bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
    if (cl.Property() & G__BIT_ISABSTRACT) return false;
 
    for(unsigned int i=0; i<gIoConstructorTypes.size(); ++i) {
-      string proto( gIoConstructorTypes[i] );
+      string proto( gIoConstructorTypes[i].GetName() );
       int extra = (proto.size()==0) ? 0 : 1;
       if (extra==0) {
          // Looking for default constructor
@@ -1685,6 +1817,84 @@ bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
          proto = "size_t";
          methodinfo = cl.GetMethod(name,proto.c_str(),&offset);
          if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
+            result = false;
+         }
+         if (result) return true;
+      }
+   }
+   return result;
+}
+
+
+bool CheckConstructor(const clang::CXXRecordDecl *cl, const char *arg)
+{
+   if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
+      return true;
+   }
+   
+   for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
+       iter != end;
+       ++iter)
+   {
+      if (iter->getAccess() == clang::AS_public) {
+         // We can reach this constructor.
+         
+         if (arg == 0 || arg[0] == '\0') {
+            // We are looking for a constructor with zero non-default arguments.
+            
+            if (iter->getNumParams() == 0) {
+               return true;
+            }
+            if ( (*iter->param_begin())->hasDefaultArg()) {
+               return true;
+            }
+         } else {
+            
+            if (iter->getNumParams() == 1) {
+               std::string realArg = (*iter->param_begin())->getType().getAsString();
+               // fprintf(stderr,"Checking constructor arg %s against %s\n",realArg.c_str(),arg);
+               if (realArg == arg) {
+                  return true;
+               }
+            }
+         }
+      }
+   }
+   return false;
+}
+                      
+//______________________________________________________________________________
+bool HasDefaultConstructor(const clang::CXXRecordDecl *cl, string *arg)
+{
+   // return true if we can find an constructor calleable without any arguments
+   
+   bool result = false;
+   
+   if (cl->isAbstract()) return false;
+   
+   for(unsigned int i=0; i<gIoConstructorTypes.size(); ++i) {
+      string proto( gIoConstructorTypes[i].GetName() );
+      int extra = (proto.size()==0) ? 0 : 1;
+      if (extra==0) {
+         // Looking for default constructor
+         result = true;
+      } else {
+         proto += " *";
+      }
+      
+      result = CheckConstructor(cl,proto.c_str());
+      if (result && extra && arg) {
+         *arg = "( (";
+         *arg += proto;
+         *arg += ")0 )";
+      }
+      
+      // Check for private operator new
+      if (result) {
+         const char *name = "operator new";
+         proto = "size_t";
+         const clang::CXXMethodDecl *method = R__GetFuncWithProto(cl,name,proto.c_str());
+         if (method && method->getAccess() != clang::AS_public) {
             result = false;
          }
          if (result) return true;
@@ -1738,20 +1948,37 @@ bool NeedDestructor(G__ClassInfo& cl)
    const char *proto = "";
    string name = "~";
    name += cl.TmpltName();
-
+   
    if (cl.Property() & G__BIT_ISNAMESPACE) return false;
-
+   
    G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
-
+   
    // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
    if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
       return false;
    }
    return true;
    /* (GetClassVersion(cl)>0
-      || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-      && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
-   */
+    || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+    && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
+    */
+}
+
+//______________________________________________________________________________
+bool NeedDestructor(const clang::CXXRecordDecl *cl)
+{
+   if (!cl) return false;
+   
+   if (cl->hasUserDeclaredDestructor()) {
+      
+      clang::CXXDestructorDecl *dest = cl->getDestructor();
+      if (dest) {
+         return (dest->getAccess() == clang::AS_public);
+      } else {
+         return true; // no destructor, so let's assume it means default?
+      }
+   }
+   return true;
 }
 
 //______________________________________________________________________________
@@ -1763,6 +1990,19 @@ bool HasCustomStreamerMemberFunction(G__ClassInfo &cl)
    static const char *proto = "TBuffer&";
    G__MethodInfo info(cl.GetMethod("Streamer",proto,&offset));
    return (info.IsValid() && info.MemberOf()->Tagnum() == cl.Tagnum() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
+}
+
+//______________________________________________________________________________
+bool HasCustomStreamerMemberFunction(const RScanner::AnnotatedRecordDecl *cl)
+{
+   // Return true if the class has a custom member function streamer.
+   
+   static const char *proto = "TBuffer&";
+   
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl->GetRecordDecl());
+   const clang::CXXMethodDecl *method = R__GetFuncWithProto(clxx,"Streamer",proto);
+   
+   return (method && method->getDeclContext() == clxx && ( cl->RequestNoStreamer() || !cl->RequestStreamerInfo()));
 }
 
 //______________________________________________________________________________
@@ -2732,11 +2972,351 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    }
 }
 //______________________________________________________________________________
-void WriteClassInit(const clang::RecordDecl *cl)
+void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
 {
    // Write the code to initialize the class name and the initialization object.
 
-   fprintf(stderr,"WriteClassInit not yet implemented\n");
+   const clang::CXXRecordDecl* cl = llvm::dyn_cast<clang::CXXRecordDecl>(cl_input.GetRecordDecl());
+
+   if (cl==0) {
+      return;
+   }
+
+   // We need to to go back to CINT to preserve functionality.
+   G__ClassInfo clinfo( cl->getQualifiedNameAsString().c_str() );
+
+   // coverity[fun_call_w_exception] - that's just fine.
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl->getQualifiedNameAsString().c_str() ) );
+   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   string csymbol = classname;
+   string args;
+   
+   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
+      
+      // Prefix the full class name with '::' except for the STL
+      // containers and std::string.  This is to request the
+      // real class instead of the class in the namespace ROOT::Shadow
+      csymbol.insert(0,"::");
+   }
+   
+   int stl = TClassEdit::IsSTLCont(classname.c_str());
+   bool bset = TClassEdit::IsSTLBitset(classname.c_str());
+   
+   (*dictSrcOut) << "namespace ROOT {" << std::endl
+   << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);"
+   << std::endl;
+   
+   if (!ClassInfo__HasMethod(cl,"Dictionary") || cl->getDescribedClassTemplate())
+      (*dictSrcOut) << "   static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
+   
+   if (HasDefaultConstructor(cl,&args)) {
+      (*dictSrcOut) << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << std::endl;
+      if (args.size()==0 && NeedDestructor(cl))
+         (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str()
+         << "(Long_t size, void *p);" << std::endl;
+   }
+   if (NeedDestructor(cl)) {
+      (*dictSrcOut) << "   static void delete_" << mappedname.c_str() << "(void *p);" << std::endl
+      << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << std::endl
+      << "   static void destruct_" << mappedname.c_str() << "(void *p);" << std::endl;
+   }
+   if (HasDirectoryAutoAdd(cl)) {
+      (*dictSrcOut)<< "   static void directoryAutoAdd_" << mappedname.c_str() << "(void *obj, TDirectory *dir);" << std::endl;
+   }
+   if (HasCustomStreamerMemberFunction(&cl_input)) {
+      (*dictSrcOut)<< "   static void streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj);" << std::endl;
+   }
+   if (HasNewMerge(cl) || HasOldMerge(cl)) {
+      (*dictSrcOut)<< "   static Long64_t merge_" << mappedname.c_str() << "(void *obj, TCollection *coll,TFileMergeInfo *info);" << std::endl;
+   }
+   if (HasResetAfterMerge(cl)) {
+      (*dictSrcOut)<< "   static void reset_" << mappedname.c_str() << "(void *obj, TFileMergeInfo *info);" << std::endl;
+   }
+   
+   //--------------------------------------------------------------------------
+   // Check if we have any schema evolution rules for this class
+   //--------------------------------------------------------------------------
+   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( cl->getQualifiedNameAsString().c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( cl->getQualifiedNameAsString().c_str() );
+   
+   MembersTypeMap_t nameTypeMap;
+   // Note Falling back on CINT for this ....
+   CreateNameTypeMap( clinfo, nameTypeMap );
+   
+   //--------------------------------------------------------------------------
+   // Process the read rules
+   //--------------------------------------------------------------------------
+   if( rulesIt1 != G__ReadRules.end() ) {
+      int i = 0;
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "   // Schema evolution read functions" << std::endl;
+      std::list<SchemaRuleMap_t>::iterator rIt = rulesIt1->second.begin();
+      while( rIt != rulesIt1->second.end() ) {
+         
+         //--------------------------------------------------------------------
+         // Check if the rules refer to valid data members
+         //--------------------------------------------------------------------
+         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+            rIt = rulesIt1->second.erase(rIt);
+            continue;
+         }
+         
+         //---------------------------------------------------------------------
+         // Write the conversion function if necassary
+         //---------------------------------------------------------------------
+         if( rIt->find( "code" ) != rIt->end() ) {
+            WriteReadRuleFunc( *rIt, i++, mappedname, nameTypeMap, *dictSrcOut );
+         }
+         ++rIt;
+      }
+   }
+   
+   //--------------------------------------------------------------------------
+   // Process the read raw rules
+   //--------------------------------------------------------------------------
+   if( rulesIt2 != G__ReadRawRules.end() ) {
+      int i = 0;
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "   // Schema evolution read raw functions" << std::endl;
+      std::list<SchemaRuleMap_t>::iterator rIt = rulesIt2->second.begin();
+      while( rIt != rulesIt2->second.end() ) {
+         
+         //--------------------------------------------------------------------
+         // Check if the rules refer to valid data members
+         //--------------------------------------------------------------------
+         if( !HasValidDataMembers( *rIt, nameTypeMap ) ) {
+            rIt = rulesIt2->second.erase(rIt);
+            continue;
+         }
+         
+         //---------------------------------------------------------------------
+         // Write the conversion function
+         //---------------------------------------------------------------------
+         if( rIt->find( "code" ) == rIt->end() )
+            continue;
+         
+         WriteReadRawRuleFunc( *rIt, i++, mappedname, nameTypeMap, *dictSrcOut );
+         ++rIt;
+      }
+   }
+   
+   (*dictSrcOut) << std::endl << "   // Function generating the singleton type initializer" << std::endl;
+   
+#if 0
+   fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
+   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
+           cl.Fullname(), cl.Fullname() );
+   fprintf(fp, "#else\n");
+   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
+           classname.c_str(), classname.c_str() );
+   fprintf(fp, "#endif\n");
+#endif
+   
+   (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl << "   {" << std::endl;
+   
+   
+
+   // Note this is falling back on CINT :(
+   if (NeedShadowClass(clinfo)) {
+      (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
+      if (G__ShadowMaker::IsStdPair(clinfo)) {
+         // Some compilers don't recognize ::pair even after a 'using namespace std;'
+         // and there is no risk of confusion since it is a template.
+         //fprintf(fp, "      R__ASSERT(sizeof(%s)", classname.c_str() );
+      } else {
+         std::string clfullname;
+         shadowMaker->GetFullShadowName(clinfo, clfullname);
+         (*dictSrcOut) << "      R__ASSERT(sizeof(" << csymbol.c_str() << ")"
+         << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
+      }
+   }
+
+
+   
+   (*dictSrcOut) << "      " << csymbol.c_str() << " *ptr = 0;" << std::endl;
+   
+   //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
+   if (ClassInfo__HasMethod(cl,"IsA") ) {
+      (*dictSrcOut) << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "
+      << csymbol.c_str() << " >(0);" << std::endl;
+   }
+   else {
+      (*dictSrcOut) << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid("
+      << csymbol.c_str() << "),0);" << std::endl;
+   }
+   (*dictSrcOut) << "      static ::ROOT::TGenericClassInfo " << std::endl
+   
+   << "         instance(\"" << classname.c_str() << "\", ";
+   
+   if (ClassInfo__HasMethod(cl,"Class_Version")) {
+      (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
+   } else if (bset) {
+      (*dictSrcOut) << "2, "; // bitset 'version number'
+   } else if (stl) {
+      (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
+   } else if( clinfo.RootFlag() & G__HASVERSION ) {
+      (*dictSrcOut) << clinfo.Version() << ", ";
+   } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
+      
+      // Need to find out if the operator>> is actually defined for this class.
+      G__ClassInfo gcl;
+      long offset;
+      const char *versionFunc = "GetClassVersion";
+      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
+      char *funcname= new char[ncha];
+      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
+      ncha = strlen(classname.c_str())+ 10 ;
+      char *proto = new char[ncha];
+      snprintf(proto,ncha,"%s*",classname.c_str());
+      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
+      delete [] funcname;
+      delete [] proto;
+      
+      if (methodinfo.IsValid() &&
+          //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
+          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+         
+         // GetClassVersion was defined in the header file.
+         //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
+         (*dictSrcOut) << "GetClassVersion< " << classname.c_str() << " >(), ";
+      }
+      //static char temporary[1024];
+      //sprintf(temporary,"GetClassVersion<%s>( (%s *) 0x0 )",classname.c_str(),classname.c_str());
+      //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
+   }
+   
+   char *filename = clinfo.FileName() ? StrDup(clinfo.FileName()) : StrDup("");
+   if (strlen(filename) > 0) {
+      for (unsigned int i=0; i<strlen(filename); i++) {
+         if (filename[i]=='\\') filename[i]='/';
+      }
+   }
+   (*dictSrcOut) << "\"" << filename << "\", " << clinfo.LineNumber() << "," << std::endl
+   << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
+   //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
+   << "                  ";
+   delete [] filename;
+   if (!NeedShadowClass(clinfo)) {
+      if (!ClassInfo__HasMethod(cl,"ShowMembers")) (*dictSrcOut) << "0, ";
+   } else {
+      if (!ClassInfo__HasMethod(cl,"ShowMembers"))
+         (*dictSrcOut) << "&" << mappedname.c_str() << "_ShowMembers, ";
+   }
+   
+   if (ClassInfo__HasMethod(cl,"Dictionary") && !cl->getDescribedClassTemplate()) {
+      (*dictSrcOut) << "&" << csymbol.c_str() << "::Dictionary, ";
+   } else {
+      (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
+   }
+   
+   (*dictSrcOut) << "isa_proxy, " << clinfo.RootFlag() << "," << std::endl
+   << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
+   if (HasDefaultConstructor(cl,&args)) {
+      (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
+      if (args.size()==0 && NeedDestructor(cl))
+         (*dictSrcOut) << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (NeedDestructor(cl)) {
+      (*dictSrcOut) << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << std::endl
+      << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
+      << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasDirectoryAutoAdd(cl)) {
+      (*dictSrcOut) << "      instance.SetDirectoryAutoAdd(&directoryAutoAdd_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasCustomStreamerMemberFunction(&cl_input)) {
+      // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
+      (*dictSrcOut) << "      instance.SetStreamerFunc(&streamer_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasNewMerge(cl) || HasOldMerge(cl)) {
+      (*dictSrcOut) << "      instance.SetMerge(&merge_" << mappedname.c_str() << ");" << std::endl;
+   }
+   if (HasResetAfterMerge(cl)) {
+      (*dictSrcOut) << "      instance.SetResetAfterMerge(&reset_" << mappedname.c_str() << ");" << std::endl;      
+   }
+   if (bset) {
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+      << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
+      
+      // (*dictSrcOut) << "      instance.SetStreamer(::ROOT::std_bitset_helper" << strchr(csymbol.c_str(),'<') << "::Streamer);\n";
+      gNeedCollectionProxy = true;
+   } else if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
+      int idx = classname.find("<");
+      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
+      const char* methodTCP=0;
+      switch(stlType)  {
+         case TClassEdit::kVector:
+         case TClassEdit::kList:
+         case TClassEdit::kDeque:
+            methodTCP="Pushback";
+            break;
+         case TClassEdit::kMap:
+         case TClassEdit::kMultiMap:
+            methodTCP="MapInsert";
+            break;
+         case TClassEdit::kSet:
+         case TClassEdit::kMultiSet:
+            methodTCP="Insert";
+            break;
+      }
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+      << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
+      
+      gNeedCollectionProxy = true;
+   }
+   
+   //---------------------------------------------------------------------------
+   // Pass the schema evolution rules to TGenericClassInfo
+   //---------------------------------------------------------------------------
+   if( (rulesIt1 != G__ReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != G__ReadRawRules.end()  && rulesIt2->second.size()>0) ) {
+      (*dictSrcOut) << std::endl << "      ROOT::TSchemaHelper* rule;" << std::endl;
+   }
+   
+   if( rulesIt1 != G__ReadRules.end() ) {
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "      // the io read rules" << std::endl;
+      (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrules(";
+      (*dictSrcOut) << rulesIt1->second.size() << ");" << std::endl;
+      WriteSchemaList( rulesIt1->second, "readrules", *dictSrcOut );
+      (*dictSrcOut) << "      instance.SetReadRules( readrules );" << std::endl;
+   }
+   
+   if( rulesIt2 != G__ReadRawRules.end() ) {
+      (*dictSrcOut) << std::endl;
+      (*dictSrcOut) << "      // the io read raw rules" << std::endl;
+      (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrawrules(";
+      (*dictSrcOut) << rulesIt2->second.size() << ");" << std::endl;
+      WriteSchemaList( rulesIt2->second, "readrawrules", *dictSrcOut );
+      (*dictSrcOut) << "      instance.SetReadRawRules( readrawrules );" << std::endl;
+   }
+   
+   (*dictSrcOut) << "      return &instance;"  << std::endl
+   << "   }" << std::endl;
+   
+   if (!stl && !bset && !IsTemplateDouble32(clinfo) && !IsTemplateFloat16(clinfo)) {
+      // The GenerateInitInstance for STL are not unique and should not be externally accessible
+      (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
+      << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
+      << std::endl;
+   }
+   
+   (*dictSrcOut) << "   // Static variable to force the class initialization" << std::endl;
+   // must be one long line otherwise R__UseDummy does not work
+   
+   
+   (*dictSrcOut)
+   << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const "
+   << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
+   
+   if (!ClassInfo__HasMethod(cl,"Dictionary") || cl->getDescribedClassTemplate()) {
+      (*dictSrcOut) <<  std::endl << "   // Dictionary for non-ClassDef classes" << std::endl
+      << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl;
+      (*dictSrcOut) << "      ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str();
+      (*dictSrcOut) << "*)0x0)->GetClass();" << std::endl
+      << "   }" << std::endl << std::endl;
+   }
+   
+   (*dictSrcOut) << "} // end of namespace ROOT" << std::endl << std::endl;
    
 }
 
@@ -2859,7 +3439,6 @@ void WriteClassInit(G__ClassInfo &cl)
    }
 
    (*dictSrcOut) << std::endl
-
                  << "   // Function generating the singleton type initializer" << std::endl;
 
 #if 0

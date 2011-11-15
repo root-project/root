@@ -678,7 +678,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
          outputFile<<qual_name<<std::endl;
       
       std::cout<<"\tSelected -> " << qual_name << "\n";
-      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->RequestStreamerInfo(),selected->RequestNoStreamer()));
+      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator()));
 
       ret = true;
    }

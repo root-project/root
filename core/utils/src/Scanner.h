@@ -51,7 +51,9 @@ public:
       bool fRequestNoInputOperator;
       
    public:
-      AnnotatedRecordDecl(clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer) : fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer) {}
+      AnnotatedRecordDecl(clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator) : 
+           fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+           fRequestNoInputOperator(rRequestNoInputOperator) {}
       ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }

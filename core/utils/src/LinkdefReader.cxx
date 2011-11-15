@@ -599,6 +599,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
                csr.SetAttributeValue("pattern", rule_token);
             }
             sr.AddClassSelectionRule(csr);
+            //csr.PrintAttributes(3);
          }
          break;
       case kUnknown:
