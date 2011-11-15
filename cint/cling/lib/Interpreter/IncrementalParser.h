@@ -90,13 +90,13 @@ namespace cling {
     llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.
     llvm::OwningPtr<clang::Parser> m_Parser; // parser (incremental)
     bool m_DynamicLookupEnabled; // enable/disable dynamic scope
-    bool m_SyntaxOnly; // whether to run codegen; cannot be flipped during lifetime of *this
     std::vector<llvm::MemoryBuffer*> m_MemoryBuffer; // One buffer for each command line, owner by the source file manager
     clang::FileID m_VirtualFileID; // file ID of the memory buffer
     ChainedConsumer* m_Consumer; // CI owns it
     clang::Decl* m_FirstTopLevelDecl; // first top level decl
     clang::Decl* m_LastTopLevelDecl; // last top level decl after most recent call to parse()
     Transaction m_LastTransaction; // Holds information for the last transaction
+    bool m_SyntaxOnly; // whether to run codegen; cannot be flipped during lifetime of *this
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H
