@@ -51,7 +51,11 @@ namespace cling {
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
-    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly);
+    // Ugly hack to avoid the default of ProgramAction which is SyntaxOnly
+    // and we can't override it later. This will be fixed once cling is 
+    // supports the latest changes in the clang's driver 
+    // FIXME: REIMPLEMENT
+    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::EmitHTML);
 
     CreateSLocOffsetGenerator();
 
@@ -70,7 +74,7 @@ namespace cling {
     VPS->Attach(m_Consumer);
     addConsumer(ChainedConsumer::kValuePrinterSynthesizer, VPS);
     addConsumer(ChainedConsumer::kASTDumper, new ASTDumper());
-    if (m_SyntaxOnly) {
+    if (!m_SyntaxOnly) {
       CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(), 
                                             "cling input",
                                             CI->getCodeGenOpts(), 
