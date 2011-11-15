@@ -18,7 +18,11 @@ ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                  $(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
+ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
 ROOTCINTTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
+else
+ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
+endif
 endif
 
 ##### Dependencies for all dictionaries
@@ -56,7 +60,11 @@ ROOTCLINGTMPO := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.o))
 
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
 ROOTCLINGEXE  := bin/rootcling$(EXEEXT)
+ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
 ROOTCLINGTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
+else
+ROOTCLINGTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
+endif
 endif
 
 ##### Dependencies for all dictionaries
