@@ -24,6 +24,7 @@
 #include "RooRefCountList.h"
 #include "RooAbsCache.h"
 #include "RooLinkedListIter.h"
+#include "RooNameReg.h"
 #include <map>
 #include <set>
 #include <deque>
@@ -46,6 +47,7 @@ class RooSetProxy ;
 class RooListProxy ;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
+class RooRealProxy ;
 /* class TGraphStruct ; */
 
 class RooAbsArg : public TNamed, public RooPrintable {
@@ -266,7 +268,6 @@ public:
   void printDirty(Bool_t depth=kTRUE) const ;
 
   static void setDirtyInhibit(Bool_t flag) ;
-  static void setACleanADirty(Bool_t flag) ;
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
 
@@ -297,8 +298,8 @@ public:
 
 
   // constant term optimization
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
-
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
@@ -320,7 +321,7 @@ public:
     if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
     case AClean: 
-      return flipAClean() ;
+      return kFALSE ;
     case ADirty: 
       return kTRUE ;
     case Auto: 
@@ -335,7 +336,7 @@ public:
     if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
     case AClean: 
-      return flipAClean() ;
+      return kFALSE ;
     case ADirty: 
       return kTRUE ;
     case Auto: 
@@ -355,7 +356,7 @@ public:
     if (inhibitDirty()) return kTRUE ;
     switch(_operMode) {
     case AClean: 
-      return flipAClean() ;
+      return kFALSE ;
     case ADirty: 
       return kTRUE ;
     case Auto: 
@@ -378,7 +379,7 @@ public:
   RooAbsCache* getCache(Int_t index) const ;
 
   enum OperMode { Auto=0, AClean=1, ADirty=2 } ;
-  inline OperMode operMode() const { return _operMode==AClean ? (flipAClean() ? ADirty : AClean ) : _operMode  ; }
+  inline OperMode operMode() const { return _operMode  ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 
   static UInt_t crc32(const char* data) ;
@@ -426,6 +427,18 @@ public:
   
   const char* aggregateCacheUniqueSuffix() const ;
   virtual const char* cacheUniqueSuffix() const { return 0 ; }
+
+  void wireAllCaches() ;
+
+  inline const TNamed* namePtr() const {
+    if (!_namePtr) {
+      _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+    }
+    return _namePtr ;
+  }
+
+  void SetName(const char* name) ;
+  void SetNameTitle(const char *name, const char *title) ;
 
  protected:
 
@@ -514,9 +527,7 @@ public:
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
-  static Bool_t _flipAClean ; // Static flag controlling flipping status of all AClean nodes to ADirty ;
   Bool_t _deleteWatch ; //! Delete watch flag 
-  static Bool_t flipAClean() ;
 
   static Bool_t inhibitDirty() ;
   
@@ -526,7 +537,9 @@ public:
   mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
 
+  friend class RooRealProxy ;
   mutable OperMode _operMode ; // Dirty state propagation mode
+  mutable Bool_t _fast ; // Allow fast access mode in getVal() and proxies
 
   // Owned components
   RooArgSet* _ownedComponents ; //! Set of owned component
@@ -534,6 +547,8 @@ public:
   mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
+
+  mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
   
   ClassDef(RooAbsArg,5) // Abstract variable
 };

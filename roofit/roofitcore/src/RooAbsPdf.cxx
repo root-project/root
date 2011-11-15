@@ -227,7 +227,7 @@ RooAbsPdf::~RooAbsPdf()
 
 
 //_____________________________________________________________________________
-Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
+Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 {
   // Return current value, normalizated by integrating over
   // the observables in 'nset'. If 'nset' is 0, the unnormalized value. 
@@ -240,9 +240,10 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // done in integration calls, there is no performance hit.
 
   // Fast-track processing of clean-cache objects
-  if (_operMode==AClean && _flipAClean==kFALSE) {
-    return _value ;
-  }
+  //   if (_operMode==AClean) {
+  //     cout << "RooAbsPdf::getValV(" << this << "," << GetName() << ") CLEAN  value = " << _value << endl ;
+  //     return _value ;
+  //   }
 
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!nset) {
@@ -253,7 +254,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     Bool_t error = traceEvalPdf(val) ;
 
     if (error) {
-      raiseEvalError() ;
+//       raiseEvalError() ;
       return 0 ;
     }
     return val ;
@@ -267,7 +268,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   }
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
-  if (operMode()!=AClean && (isValueDirty() || nsetChanged || _norm->isValueDirty())) {
+  if (isValueDirty() || nsetChanged || _norm->isValueDirty()) {
 
     // Evaluate numerator
     Double_t rawVal = evaluate() ;
@@ -283,10 +284,11 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     // Raise global error flag if problems occur
     if (error) {
-      raiseEvalError() ;
+//       raiseEvalError() ;
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
+//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << _value << endl ;
     }
 
     clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;

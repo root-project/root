@@ -55,6 +55,9 @@
 #include "RooCategory.h"
 #include "RooDataSet.h"
 #include "RooProdPdf.h"
+#include "RooAddPdf.h"
+#include "RooProduct.h"
+#include "RooRealSumPdf.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -412,6 +415,9 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
   if (operMode()==Slave) {
     delete _funcClone ;
     delete _funcObsSet ;
+    if (_projDeps) {
+      delete _projDeps ;
+    }
     if (_ownData) {
       delete _dataClone ;
     }
@@ -470,7 +476,7 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 
 
 //_____________________________________________________________________________
-void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode) 
+void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt) 
 {
   // Driver function to propagate constant term optimizations in test statistic.
   // If code Activate is sent, constant term optimization will be executed.
@@ -506,9 +512,9 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
 			  << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
 			  << " on observables and constant parameters and precalculating their values" << endl ;
-    optimizeConstantTerms(kTRUE) ;
+    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
     break ;
-
+    
   case DeActivate:  
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
 			  << ") deactivating optimization of constant terms in test statistic" << endl ;
@@ -520,14 +526,14 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
 			  << ") one ore more parameter were changed from constant to floating or vice versa, "
 			  << "re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
-    optimizeConstantTerms(kTRUE) ;
+    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
     break ;
 
   case ValueChange: 
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
 			  << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
     optimizeConstantTerms(kFALSE) ;
-    optimizeConstantTerms(kTRUE) ;
+    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
     break ;
   }
 
@@ -567,7 +573,7 @@ void RooAbsOptTestStatistic::optimizeCaching()
 
 
 //_____________________________________________________________________________
-void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
+void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t applyTrackingOpt)
 {
   // Driver function to activate global constant term optimization.
   // If activated constant terms are found and cached with the dataset
@@ -577,10 +583,68 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
   // that are exclusively used in constant terms are disabled as
   // they serve no more purpose
 
+  //applyTrackingOpt=kFALSE ;
+
   if(activate) {
     // Trigger create of all object caches now in nodes that have deferred object creation
     // so that cache contents can be processed immediately
     _funcClone->getVal(_normSet) ;
+
+    // Apply tracking optimization here. Default strategy is to track components
+    // of RooAddPdfs and RooRealSumPdfs. If these components are a RooProdPdf
+    // or a RooProduct respectively, track the components of these products instead
+    // of the product term
+    RooArgSet trackNodes ;
+
+    if (applyTrackingOpt) {
+      RooArgSet branches ;
+      _funcClone->branchNodeServerList(&branches) ;
+      RooFIter iter = branches.fwdIterator() ;
+      RooAbsArg* arg ;
+      while((arg=iter.next())) {
+	RooAddPdf* apdf = dynamic_cast<RooAddPdf*>(arg) ;
+	if (apdf) {
+	  RooFIter aiter = apdf->pdfList().fwdIterator() ;
+	  RooAbsArg* aarg ;
+	  while ((aarg=aiter.next())) {
+	    RooProdPdf* prod = dynamic_cast<RooProdPdf*>(aarg) ;
+	    if (prod) {
+	      RooFIter piter = prod->pdfList().fwdIterator() ;
+	      RooAbsArg* parg ;
+	      while ((parg=piter.next())) {
+		parg->setAttribute("CacheAndTrack") ;
+		trackNodes.add(*aarg) ;
+	      }
+	    } else {
+	      aarg->setAttribute("CacheAndTrack") ;
+	      trackNodes.add(*aarg) ;
+	    }
+	  }
+	}
+	RooRealSumPdf* spdf = dynamic_cast<RooRealSumPdf*>(arg) ;
+	if (spdf) {
+	  RooFIter siter = spdf->funcList().fwdIterator() ;
+	  RooAbsArg* sarg ;
+	  while ((sarg=siter.next())) {
+	    RooProduct* prod = dynamic_cast<RooProduct*>(sarg) ;
+	    if (prod) {
+	      RooArgSet comp(prod->components()) ;
+	      RooFIter piter = comp.fwdIterator() ;
+	      RooAbsArg* parg ;
+	      while ((parg=piter.next())) {
+		if (parg->isDerived()) {
+		  parg->setAttribute("CacheAndTrack") ;
+		  trackNodes.add(*parg) ;
+		}
+	      }
+	    } else {
+	      sarg->setAttribute("CacheAndTrack") ;
+	      trackNodes.add(*sarg) ;
+	    }
+	  }
+	}
+      }
+    }
     
     // Find all nodes that depend exclusively on constant parameters
     _cachedNodes.removeAll() ;
@@ -606,7 +670,17 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
     }
     delete cIter ;  
 
-    coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << _cachedNodes << endl ;
+
+    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpression",kTRUE) ;
+    RooArgSet actualTrackNodes(_cachedNodes) ;
+    actualTrackNodes.remove(*constNodes) ;
+    if (constNodes->getSize()>0) {
+      coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+    }
+    if (actualTrackNodes.getSize()>0) {
+      coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+    }
+    delete constNodes ;
     
     // Disable reading of observables that are no longer used
     _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;
@@ -648,11 +722,6 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << endl ;
   //indata.Print("v") ;
 
-  if (!cloneData && _rangeName.size()>0) {
-    coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
-			 << "ignoring request to _not_ clone the input dataset" << endl ; 
-    cloneData = kTRUE ;
-  }
 
   // Delete previous dataset now, if it was owned
   if (_ownData) {
@@ -660,6 +729,11 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     _dataClone = 0 ;
   }
 
+  if (!cloneData && _rangeName.size()>0) {
+    coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
+			 << "ignoring request to _not_ clone the input dataset" << endl ; 
+    cloneData = kTRUE ;
+  }
 
   if (cloneData) {
     // Cloning input dataset
@@ -671,7 +745,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
     _ownData = kTRUE ;
 
   } else {
-
+ 
     // Taking input dataset
     _dataClone = &indata ;
     _ownData = kFALSE ;

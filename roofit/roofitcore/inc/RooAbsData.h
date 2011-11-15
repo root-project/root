@@ -211,6 +211,8 @@ public:
   enum StorageType { Tree, Vector} ;
   static StorageType defaultStorageType ;
 
+  static void setDefaultStorageType(StorageType s) ;
+
 
 protected:
 

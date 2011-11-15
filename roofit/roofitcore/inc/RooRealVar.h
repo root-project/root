@@ -46,7 +46,7 @@ public:
   virtual ~RooRealVar();
   
   // Parameter value and error accessors
-  virtual Double_t getVal(const RooArgSet* nset=0) const ;
+  virtual Double_t getValV(const RooArgSet* nset=0) const ;
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
   inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }

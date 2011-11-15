@@ -330,7 +330,7 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
     if(!theirs) continue;
     theirs->syncCache() ;
     elem->copyCache(theirs) ;
-    elem->setAttribute("Constant",theirs->isConstant()) ;
+   elem->setAttribute("Constant",theirs->isConstant()) ;
   }
   return *this;
 }

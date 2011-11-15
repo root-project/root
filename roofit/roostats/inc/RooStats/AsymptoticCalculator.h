@@ -67,6 +67,7 @@ namespace RooStats {
 
       void SetOneSided(bool on) { fOneSided = on; }
 
+      // set using of qtilde, by default is controlled if RoORealVar is limited or not 
       void SetQTilde(bool on) { fUseQTilde = on; }
 
       static void SetPrintLevel(int level);
@@ -100,7 +101,7 @@ namespace RooStats {
    private: 
 
       bool fOneSided;
-      bool fUseQTilde;
+      mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs; 
       mutable double fNLLAsimov; 

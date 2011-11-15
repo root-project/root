@@ -47,7 +47,7 @@ public:
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
 
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
   virtual Double_t globalNormalization() const { 

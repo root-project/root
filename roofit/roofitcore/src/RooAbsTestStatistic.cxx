@@ -362,7 +362,7 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 
 
 //_____________________________________________________________________________
-void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
+void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
   // Forward constant term optimization management calls to component
   // test statistics
@@ -371,11 +371,11 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode)
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     for (i=0 ; i<_nGof ; i++) {
-      if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode) ;
+      if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
     }
   } else if (_gofOpMode==MPMaster) {
     for (i=0 ; i<_nCPU ; i++) {
-      _mpfeArray[i]->constOptimizeTestStatistic(opcode) ;
+      _mpfeArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
     }
   }
 }

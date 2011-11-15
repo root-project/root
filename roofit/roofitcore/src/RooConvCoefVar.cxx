@@ -63,7 +63,7 @@ RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
 
 
 //_____________________________________________________________________________
-Double_t RooConvCoefVar::getVal(const RooArgSet*) const 
+Double_t RooConvCoefVar::getValV(const RooArgSet*) const 
 { 
   // Return value of chosen coefficient
   return evaluate() ; 

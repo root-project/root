@@ -47,8 +47,8 @@ namespace RooStats {
          fNullImportanceSnapshot(NULL),
          fAltImportanceDensity(NULL),
          fAltImportanceSnapshot(NULL),
-         fNToysNull(0),
-         fNToysAlt(0),
+         fNToysNull(-1),
+         fNToysAlt(-1),
          fNToysNullTail(0),
          fNToysAltTail(0)
       {

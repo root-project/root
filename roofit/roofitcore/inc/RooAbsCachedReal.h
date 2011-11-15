@@ -29,7 +29,7 @@ public:
   RooAbsCachedReal(const RooAbsCachedReal& other, const char* name=0) ;
   virtual ~RooAbsCachedReal() ;
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Bool_t selfNormalized() const { 
     // Declares function self normalized
     return kTRUE ; 

@@ -33,7 +33,7 @@ public:
   virtual ~RooRealMPFE();
 
   void calculate() const ;
-  virtual Double_t getVal(const RooArgSet* nset=0) const ;
+  virtual Double_t getValV(const RooArgSet* nset=0) const ;
   void standby() ;
 
   void setVerbose(Bool_t clientFlag=kTRUE, Bool_t serverFlag=kTRUE) ;
@@ -43,7 +43,7 @@ public:
   // Function evaluation
   virtual Double_t evaluate() const ;
   friend class RooAbsTestStatistic ;
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode) ;
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
 
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;

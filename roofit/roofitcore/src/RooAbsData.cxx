@@ -65,6 +65,13 @@ RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 
 
 //_____________________________________________________________________________
+void RooAbsData::setDefaultStorageType(RooAbsData::StorageType s) 
+{
+  defaultStorageType = s ;
+}
+
+
+//_____________________________________________________________________________
 void RooAbsData::claimVars(RooAbsData* data) 
 {
   _dcc[data]++ ;

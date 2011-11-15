@@ -85,7 +85,7 @@ RooErrorVar::~RooErrorVar()
 
 
 //_____________________________________________________________________________
-Double_t RooErrorVar::getVal(const RooArgSet*) const 
+Double_t RooErrorVar::getValV(const RooArgSet*) const 
 { 
   // Return value, i.e. error on input variable
 

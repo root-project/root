@@ -86,6 +86,10 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    // adds sampling distribution (and normalizes if "NORMALIZE" is given as an option)
 
    fSamplingDistr = samplingDist->GetSamplingDistribution();
+   if( fSamplingDistr.empty() ) {
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      return 0.0;
+   }
    SetSampleWeights(samplingDist);
 
    TString options(drawOptions);
@@ -93,7 +97,7 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
 
    Double_t xmin = *(std::min_element(fSamplingDistr.begin(), fSamplingDistr.end()));
    Double_t xmax = *(std::max_element(fSamplingDistr.begin(), fSamplingDistr.end()));
-   assert(fBins > 1); 
+   assert(fBins > 1);
    Double_t xlow = xmin - 0.5*(xmax-xmin)/(fBins-1);
    Double_t xup  = xmax + 0.5*(xmax-xmin)/(fBins-1);
 
@@ -142,6 +146,10 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
 
 //_______________________________________________________
 Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, Double_t minShaded, Double_t maxShaded, Option_t *drawOptions) {
+   if( samplingDist->GetSamplingDistribution().empty() ) {
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      return 0.0;
+   }
    Double_t scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
@@ -267,11 +275,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    if(fLegend) fRooPlot->addObject(fLegend);
 
    if(bool(gStyle->GetOptLogx()) != fLogXaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)";
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)" << endl;
       gStyle->SetOptLogx(fLogXaxis);
    }
    if(bool(gStyle->GetOptLogy()) != fLogYaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)";
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)" << endl;
       gStyle->SetOptLogy(fLogYaxis);
    }
    fRooPlot->Draw();

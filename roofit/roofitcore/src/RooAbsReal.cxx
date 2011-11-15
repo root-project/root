@@ -211,16 +211,11 @@ TString RooAbsReal::getTitle(Bool_t appendUnit) const
 
 
 //_____________________________________________________________________________
-Double_t RooAbsReal::getVal(const RooArgSet* nset) const
+Double_t RooAbsReal::getValV(const RooArgSet* nset) const
 {
   // Return value of object. If the cache is clean, return the
   // cached value, otherwise recalculate on the fly and refill
   // the cache
-
-  // fast-track clean-cache processing
-  if (_operMode==AClean && !_flipAClean) {
-    return _value ;
-  }
 
   if (nset && nset!=_lastNSet) {
     ((RooAbsReal*) this)->setProxyNormSet(nset) ;    
@@ -231,6 +226,7 @@ Double_t RooAbsReal::getVal(const RooArgSet* nset) const
     _value = traceEval(nset) ;
     //     clearValueDirty() ; 
   } 
+//   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
 
   return _value ;
 }
@@ -261,7 +257,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
     logEvalError("function value is NAN") ;
   }
 
-  cxcoutD(Tracing) << "RooAbsReal::getVal(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
+  cxcoutD(Tracing) << "RooAbsReal::getValF(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
   //Standard tracing code goes here
   if (!isValidReal(value)) {
@@ -2868,8 +2864,7 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t
 void RooAbsReal::attachToVStore(RooVectorDataStore& vstore) 
 {
   RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
-  rv->setBuffer(&_value) ;
-//   cout << "RooAbsReal::attachToVStore(" << this << "," << GetName() << ") rv = " << rv << " new buffer = " << &_value << endl ;
+  rv->setBuffer(this,&_value) ;
 }
 
 
@@ -3321,6 +3316,10 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 {
   // Interface to insert remote error logging messages received by RooRealMPFE into current error loggin stream
 
+  if (_evalErrorMode==Ignore) {
+    return ;
+  }
+
   if (_evalErrorMode==CountErrors) {
     _evalErrorCount++ ;
     return ;
@@ -3371,6 +3370,10 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
   // reported through this method are passed for immediate printing through RooMsgService.
   // A string with server names and values is constructed automatically for error logging
   // purposes, unless a custom string with similar information is passed as argument.
+
+  if (_evalErrorMode==Ignore) {
+    return ;
+  }
 
   if (_evalErrorMode==CountErrors) {
     _evalErrorCount++ ;

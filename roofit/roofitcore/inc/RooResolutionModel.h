@@ -31,7 +31,7 @@ public:
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual ~RooResolutionModel();
 
-  Double_t getVal(const RooArgSet* nset=0) const ;
+  Double_t getValV(const RooArgSet* nset=0) const ;
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
   RooRealVar& convVar() const ;
   const RooRealVar& basisConvVar() const ;

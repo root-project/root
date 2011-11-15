@@ -81,7 +81,7 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
       oocoutI((TObject*)0,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << endl;
 
       // variable number of toys
-      if(fNToysNull) toymcs->SetNToys(fNToysNull);
+      if(fNToysNull >= 0) toymcs->SetNToys(fNToysNull);
 
       // adaptive sampling
       if(fNToysNullTail) {
@@ -144,7 +144,7 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
       oocoutI((TObject*)0,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << endl;
 
       // variable number of toys
-      if(fNToysAlt) toymcs->SetNToys(fNToysAlt);
+      if(fNToysAlt >= 0) toymcs->SetNToys(fNToysAlt);
 
       // adaptive sampling
       if(fNToysAltTail) {
