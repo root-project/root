@@ -78,7 +78,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    const ModelConfig &altModel,
    const ModelConfig &nullModel) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
-      fOneSided(false), fUseQTilde(false), 
+      fOneSided(false), fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
       fAsimovData(0)   
 {
@@ -482,7 +482,25 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // formula for Qtilde (need to distinguish case when qmu > qmuA
    // (see Cowan et al, Eur.Phys.J. C(2011) 71:1554 paper equations 64 and 65
    // (remember qmu_A = mu^2/sigma^2 )
-   if (fUseQTilde && qmu > qmu_A) { 
+   bool useQTilde = false; 
+   // default case (check if poi is limited or not to a zero value)
+   if (fUseQTilde == -1) {
+      // alternate snapshot is value for which background is zero
+      RooRealVar * muAlt = dynamic_cast<RooRealVar*>( GetAlternateModel()->GetSnapshot()->first() );
+      assert(muAlt != 0);
+      if (muTest->getMin() == muAlt->getVal() ) { 
+         fUseQTilde = 1;  
+         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " corresponds to alt snapshot (B=0) - using qtilde asymptotic formulae  " << std::endl;
+      } else {
+         fUseQTilde = 0;  
+         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " is different to alt snapshot (B=0) - using standard q asymptotic formulae  " << std::endl;
+      }         
+   }
+   else 
+      useQTilde = fUseQTilde; 
+
+ 
+   if (useQTilde && qmu > qmu_A) { 
       pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
       palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
    }
