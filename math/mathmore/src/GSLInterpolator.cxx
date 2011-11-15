@@ -39,6 +39,7 @@ namespace Math {
 
 
 GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) : 
+   fResetNErrors(true),
    fAccel(0),
    fSpline(0)
 { 
@@ -106,6 +107,8 @@ bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y
    //  throw std::exception();
    assert (fSpline != 0); 
    assert (fAccel != 0); 
+   // reset counter for error messages
+   fResetNErrors = true; 
    return true;
 }
 
