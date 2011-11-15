@@ -26,8 +26,10 @@ METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGC
 ifneq ($(CXX:g++=),$(CXX))
 METACLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
+METAH        := $(filter-out $(MODDIRI)/TCint.h,$(METAH))
+METAS        := $(filter-out $(MODDIRS)/TCint.cxx,$(METAS))
 else
-METAI        := $(filter-out $(MODDIRI)/TCintWithCling.h,$(METAI))
+METAH        := $(filter-out $(MODDIRI)/TCintWithCling.h,$(METAH))
 METAS        := $(filter-out $(MODDIRS)/TCintWithCling.cxx,$(METAS))
 METADCXXCLING:=
 endif
