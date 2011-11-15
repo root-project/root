@@ -101,9 +101,10 @@ namespace cling {
     private:
       Interpreter* m_Interpreter;
       clang::ASTContext& m_Context;
-      clang::DeclContext* m_CurDeclContext;
+      const clang::DeclContext* m_CurDeclContext;
       clang::NamedDecl* m_Result;
-      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp, clang::DeclContext* Within = 0);
+      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp, 
+                      const clang::DeclContext* Within = 0);
     public:
       NamedDeclResult& LookupDecl(llvm::StringRef);
       operator clang::NamedDecl* () const { return getSingleDecl(); }
@@ -228,7 +229,8 @@ namespace cling {
     ///@param[in] Decl Declaration name.
     ///@param[in] Within Starting declaration context.
     ///
-    NamedDeclResult LookupDecl(llvm::StringRef Decl, clang::DeclContext* Within = 0);
+    NamedDeclResult LookupDecl(llvm::StringRef Decl, 
+                               const clang::DeclContext* Within = 0);
 
     ///\brief Sets callbacks needed for the dynamic lookup.
     void setCallbacks(InterpreterCallbacks* C);

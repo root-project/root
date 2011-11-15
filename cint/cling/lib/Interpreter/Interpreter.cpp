@@ -108,7 +108,7 @@ namespace cling {
 
   Interpreter::NamedDeclResult::NamedDeclResult(llvm::StringRef Decl, 
                                                 Interpreter* interp, 
-                                                DeclContext* Within)
+                                                const DeclContext* Within)
     : m_Interpreter(interp),
       m_Context(m_Interpreter->getCI()->getASTContext()),
       m_CurDeclContext(Within),
@@ -120,7 +120,7 @@ namespace cling {
   Interpreter::NamedDeclResult&
   Interpreter::NamedDeclResult::LookupDecl(llvm::StringRef Decl) {
     DeclarationName Name(&m_Context.Idents.get(Decl));
-    DeclContext::lookup_result Lookup = m_CurDeclContext->lookup(Name);
+    DeclContext::lookup_const_result Lookup = m_CurDeclContext->lookup(Name);
     // FIXME: We need to traverse over each found result in the pair in order to
     // solve possible ambiguities.
     if (Lookup.first != Lookup.second) {
@@ -520,7 +520,7 @@ namespace cling {
   }
 
   Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
-                                                       DeclContext* Within) {
+                                                       const DeclContext* Within) {
     if (!Within)
       Within = getCI()->getASTContext().getTranslationUnitDecl();
     return Interpreter::NamedDeclResult(Decl, this, Within);
