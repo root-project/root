@@ -2,6 +2,9 @@
 
 #import "SearchController.h"
 
+@class FileContainerElement;
+@class ObjectShortcut;
+
 namespace ROOT {
 namespace iOS {
 namespace Browser {
@@ -11,8 +14,6 @@ class FileContainer;
 }
 }
 }
-
-@class ObjectShortcut;
 
 @interface FileContentController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchDelegate> {
 @private
@@ -26,6 +27,6 @@ class FileContainer;
 - (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;
 - (void) selectObjectFromFile : (ObjectShortcut *)obj;
 
-- (void) searchesController : (SearchController *)controller didSelectString : (NSString *)searchString;
+- (void) searchesController : (SearchController *)controller didSelectKey:(FileContainerElement *)key;
 
 @end

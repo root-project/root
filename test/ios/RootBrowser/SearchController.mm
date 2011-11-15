@@ -1,3 +1,4 @@
+#import "FileContainerElement.h"
 #import "SearchController.h"
 
 @implementation SearchController {
@@ -20,7 +21,7 @@
    [super viewDidLoad];
 
    self.title = @"Objects and directories";
-   self.contentSizeForViewInPopover = CGSizeMake(300.f, 280.f);
+   self.contentSizeForViewInPopover = CGSizeMake(600.f, 280.f);
 }
 
 
@@ -52,7 +53,7 @@
    if ([filterString length] == 0) {
       visibleKeys = keys;
    } else {
-      NSPredicate *filterPredicate = [NSPredicate predicateWithFormat : @"self BEGINSWITH[cd] %@", filterString];
+      NSPredicate *filterPredicate = [NSPredicate predicateWithFormat : @"self.elementName BEGINSWITH[cd] %@", filterString];
       visibleKeys = [keys filteredArrayUsingPredicate : filterPredicate];
    }
 
@@ -71,7 +72,9 @@
    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier : @"Cell"];
    if (cell == nil)
       cell = [[UITableViewCell alloc] initWithStyle : UITableViewCellStyleDefault reuseIdentifier : @"Cell"];
-   cell.textLabel.text = [visibleKeys objectAtIndex : indexPath.row];    
+   
+   FileContainerElement *key = (FileContainerElement *)[visibleKeys objectAtIndex : indexPath.row];
+   cell.textLabel.text = key.elementName;
    return cell;
 }
 
@@ -79,7 +82,7 @@
 - (void) tableView : (UITableView *)tableView didSelectRowAtIndexPath : (NSIndexPath *)indexPath
 {
    // Notify the delegate if a row is selected.
-   [delegate searchesController : self didSelectString : [visibleKeys objectAtIndex:indexPath.row]];
+   [delegate searchesController : self didSelectKey : (FileContainerElement *)[visibleKeys objectAtIndex : indexPath.row]];
 }
 
 @end

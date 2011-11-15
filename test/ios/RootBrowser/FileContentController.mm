@@ -1,7 +1,10 @@
+#import <stdlib.h>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileContentController.h"
 #import "ROOTObjectController.h"
+#import "FileContainerElement.h"
 #import "SlideshowController.h"
 #import "TransparentToolbar.h"
 #import "SearchController.h"
@@ -277,7 +280,7 @@
 {
    typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
 
-   if (const size_type names = fileContainer->ReadNames()) {
+   if (auto nEntities = fileContainer->GetNumberOfDescriptors()) {
       if (!searchPopover) {         
          UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController : searchController];
          searchPopover = [[UIPopoverController alloc] initWithContentViewController : navController];
@@ -286,10 +289,16 @@
       }
       
       NSMutableArray *keys = [[NSMutableArray alloc] init];
-      for (size_type i = 0; i < names; ++i)
-         [keys addObject : [NSString stringWithFormat : @"%s", fileContainer->GetKeyName(i)]];
+      for (size_type i = 0; i < nEntities; ++i) {
+         const auto &descriptor = fileContainer->GetElementDescriptor(i);
+         NSString *formatString = descriptor.fIsDir ? @"%s (directory) %d" : @"%s %d";
+         FileContainerElement *newKey = [[FileContainerElement alloc] init];
+         newKey.elementName = [NSString stringWithFormat : formatString, descriptor.fName.c_str(), i];
+         newKey.elementIndex = i;
+         [keys addObject : newKey];
+      }
+      
       searchController.keys = keys;
-
       [searchPopover presentPopoverFromRect : [searchBar bounds] inView : searchBar permittedArrowDirections : UIPopoverArrowDirectionAny animated : YES];
    }
 }
@@ -320,6 +329,8 @@
    [searchBar resignFirstResponder];
 }
 
+#pragma mark - Popover controller delegate.
+
 //____________________________________________________________________________________________________
 - (void) popoverControllerDidDismissPopover : (UIPopoverController *)popoverController 
 {
@@ -330,12 +341,25 @@
 #pragma mark - Search delegate.
 
 //____________________________________________________________________________________________________
-- (void) searchesController : (SearchController *)controller didSelectString : (NSString *)searchString
+- (void) searchesController : (SearchController *)controller didSelectKey : (FileContainerElement *)key
 {
-   //NSLog(@"didSelectString");
+   //NSLog(@"selected %@ with index %d", key.elementName, key.elementIndex);
+   assert(key.elementIndex < fileContainer->GetNumberOfDescriptors());
+
    [searchPopover dismissPopoverAnimated : YES];
    searchPopover = nil;
    [searchBar resignFirstResponder];
+   
+   const auto &descriptor = fileContainer->GetElementDescriptor(key.elementIndex);
+   if (descriptor.fOwner == fileContainer) {
+      NSLog(@"Nothing to load, highlihgt object found!");
+      //
+   } else {
+      //Create another FileContentController and push it on stack.
+      FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      [contentController activateForFile : descriptor.fOwner];
+      [self.navigationController pushViewController : contentController animated : YES];
+   }
 }
 
 @end

@@ -39,13 +39,24 @@ enum EHistogramErrorOption {
    hetE4
 };
 
-
 class FileContainer {
    //Auto ptr must delete file container in case of exception
    //in CreateFileContainer and so needs an access to private dtor.
    friend class std::auto_ptr<FileContainer>;
 public:
    typedef std::vector<TObject *>::size_type size_type;
+
+   struct FileContainerElement {
+      FileContainerElement(const std::string &name, FileContainer *owner, bool isDir, size_type index)
+            : fName(name), fOwner(owner), fIsDir(isDir), fIndex(index)
+      {
+      }
+      std::string fName;
+      FileContainer *fOwner;//Container-owner.
+      bool fIsDir;//If entity is a directory.
+      size_type fIndex;//object or directory index.
+   };
+
 
 private:
    FileContainer(const std::string &fileName);
@@ -67,18 +78,9 @@ public:
 
    const char *GetFileName()const;
 
-   //Names for nested objects and directories.
-   size_type ReadNames()const;
-   const char *GetKeyName(size_type ind)const;
-
-   //Search for object or directory, return number of paths to this
-   //entity found. If this FileContainer has such an object in fObjects,
-   //the path is 'this' pointer.
-   size_type FindObject(const std::string &objectName)const;
-   const std::vector<const FileContainer *> &GetPath(size_type pathIndex)const;
-   //These are the functions to be called from Obj-C++ code.
-   //Return: non-null pointer in case file was
-   //opened and its content read.
+   size_type GetNumberOfDescriptors()const;
+   const FileContainerElement &GetElementDescriptor(size_type index)const;
+   
 
    static FileContainer *CreateFileContainer(const char *fullPath);
    static void DeleteFileContainer(FileContainer *container);
@@ -86,10 +88,10 @@ public:
 private:
 
    void AttachPads();
+   void ReadNames(const std::string &baseName, std::vector<std::string> &names)const;
    
    static void ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer);
 
-   bool fTopLevel;
    std::string fFileName;
 
    std::vector<FileContainer *>fDirectories;
@@ -98,11 +100,7 @@ private:
    
    std::vector<Pad *> fAttachedPads;
    
-   mutable std::vector<std::vector<const FileContainer *>> fSearchPaths;
-   
-   //Actually, I can use vector of const char *, which will point to
-   //real allocated strings. But just not to care about these strings life-time ...
-   mutable std::vector<std::string> fNames;
+   std::vector<FileContainerElement> fContentDescriptors;
    
    FileContainer &operator = (const FileContainer &rhs) = delete;
    FileContainer(const FileContainer &rhs) = delete;

@@ -1,9 +1,10 @@
 #import <UIKit/UIKit.h>
 
+@class FileContainerElement;
 @class SearchController;
 
 @protocol SearchDelegate
-- (void) searchesController : (SearchController *)controller didSelectString : (NSString *)searchString;
+- (void) searchesController : (SearchController *)controller didSelectKey : (FileContainerElement *)key;
 @end
 
 

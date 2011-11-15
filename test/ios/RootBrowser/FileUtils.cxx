@@ -107,8 +107,7 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
 
 //__________________________________________________________________________________________________________________________
 FileContainer::FileContainer(const std::string &fileName)
-                  : fTopLevel(false),
-                    fFileName(fileName)
+                  : fFileName(fileName)
 {
 }
 
@@ -221,80 +220,11 @@ const char *FileContainer::GetFileName()const
 }
 
 //__________________________________________________________________________________________________________________________
-auto FileContainer::ReadNames()const -> size_type
-{
-   std::vector<std::string> names;
-   if (!fTopLevel)
-      names.push_back(GetFileName());
-
-   for (size_type i = 0, e = fDirectories.size(); i < e; ++i) {
-      fDirectories[i]->ReadNames();
-      names.insert(names.end(), fDirectories[i]->fNames.begin(), fDirectories[i]->fNames.end());
-   }
-
-   for (size_type i = 0, e = fObjects.size(); i < e; ++i)
-      names.push_back(fObjects[i]->GetName());
-   
-   fNames.swap(names);
-   
-   return fNames.size();
-}
-
-//__________________________________________________________________________________________________________________________
-const char *FileContainer::GetKeyName(size_type ind)const
-{
-   return fNames[ind].c_str();
-}
-
-//__________________________________________________________________________________________________________________________
-auto FileContainer::FindObject(const std::string &objectName)const -> size_type
-{
-   //It's possible to have objects with a same name in a file, but file->Get(same_name_here)
-   //obviously returns the same object. So this function assumes that you do not
-   //have to objects with the same name in the same directory.
-   //Implementation is quite strayforward and can be done better,
-   //but I do not think user has very complex file structure to have
-   //a performance problems.
-   const std::vector<const FileContainer *> emptyPath;
-
-   std::vector<std::vector<const FileContainer *>> paths;
-   for (size_type i = 0, e = fObjects.size(); i < e; ++i) {
-      if (fObjects[i]->GetName() == objectName) {
-         paths.push_back(emptyPath);
-         paths.back().push_back(this);
-         break;
-      }
-   }
-   
-   for (size_type i = 0, e = fDirectories.size(); i < e; ++i) {
-      const FileContainer *nested = fDirectories[i];
-      if (nested->FindObject(objectName)) {
-         //Take the result of recursive search,
-         //prepend with 'nested', save into paths.
-         std::vector<std::vector<const FileContainer*>> &nestedPaths = nested->fSearchPaths;
-         for (size_type j = 0, e1 = nestedPaths.size(); j < e1; ++j) {
-            paths.push_back(emptyPath);
-            paths.back().swap(nestedPaths[j]);
-            paths.back().insert(paths.back().begin(), nested);
-         }
-         nestedPaths.clear();
-      }
-   }
-   
-   fSearchPaths.swap(paths);
-   
-   return fSearchPaths.size();
-}
-
-//__________________________________________________________________________________________________________________________
-const std::vector<const FileContainer *> &FileContainer::GetPath(size_type pathIndex)const
-{
-   return fSearchPaths[pathIndex];
-}
-
-//__________________________________________________________________________________________________________________________
 void FileContainer::AttachPads()
 {
+   if (!fObjects.size())
+      return;
+
    fAttachedPads.assign(fObjects.size(), 0);
    for (size_type i = 0; i < fAttachedPads.size(); ++i) {
       std::auto_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
@@ -302,6 +232,18 @@ void FileContainer::AttachPads()
       fObjects[i]->Draw(fOptions[i].Data());
       fAttachedPads[i] = newPad.release();
    }
+}
+
+//__________________________________________________________________________________________________________________________
+auto FileContainer::GetNumberOfDescriptors()const -> size_type
+{
+   return fContentDescriptors.size();
+}
+
+//__________________________________________________________________________________________________________________________
+auto FileContainer::GetElementDescriptor(size_type index)const -> const FileContainerElement &
+{
+   return fContentDescriptors[index];
 }
 
 //__________________________________________________________________________________________________________________________
@@ -314,7 +256,9 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
    TString option;
    std::vector<TObject *> objs;
    std::vector<FileContainer *> dirs;
-   std::vector<TString> opts;   
+   std::vector<TString> opts;
+   std::vector<FileContainerElement> descriptors;
+   
    TObjLink *link = objKeys->FirstLink();
    
    try {
@@ -329,12 +273,21 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
                std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
                ScanDirectory(nestedDir.get(), visibleTypes, nestedContainer.get());
                nestedContainer->AttachPads();
+               
+               FileContainerElement newDescriptor(key->GetName(), currentContainer, true, dirs.size());
+               descriptors.push_back(newDescriptor);
+               descriptors.insert(descriptors.end(), nestedContainer->fContentDescriptors.begin(), nestedContainer->fContentDescriptors.end());
+
                dirs.push_back(nestedContainer.get());
                nestedContainer.release();
             }
          } else if (visibleTypes.find(className) != visibleTypes.end()) {
             std::auto_ptr<TObject> newObject(ReadObjectForKey(dir, key, option));
             opts.push_back(option);
+
+            FileContainerElement newDescriptor(key->GetName(), currentContainer, false, objs.size());
+            descriptors.push_back(newDescriptor);
+
             objs.push_back(newObject.get());//bad_alloc.
             newObject.release();
          }
@@ -352,6 +305,7 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
    currentContainer->fObjects.swap(objs);
    currentContainer->fDirectories.swap(dirs);
    currentContainer->fOptions.swap(opts);
+   currentContainer->fContentDescriptors.swap(descriptors);
 }
 
 //__________________________________________________________________________________________________________________________
@@ -373,7 +327,6 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
       //
       //Attach pads.
       topLevel->AttachPads();
-      topLevel->fTopLevel = true;
       //
       return topLevel.release();
    } catch (const std::exception &) {
