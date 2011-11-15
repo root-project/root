@@ -37,7 +37,8 @@
 #elif defined(R__GLIBC) || defined(R__FBSD) || \
      (defined(R__SUNGCC3) && defined(__arch64__)) || \
      defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-     (defined(R__AIX) && defined(_AIX43))
+     (defined(R__AIX) && defined(_AIX43)) || \
+     (defined(R__SOLARIS) && defined(_SOCKLEN_T))
 #   define USE_SOCKLEN_T
 #endif
 
