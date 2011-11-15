@@ -26,8 +26,9 @@ public :
    TNtuple          *fNtp;
    TRandom3         *fRandom;
    Bool_t            fPlotNtuple;
+   TNtuple          *fNtpRndm;   // Ntuple with random numbers
 
-   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fRandom(0), fPlotNtuple(kTRUE) { }
+   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fRandom(0), fPlotNtuple(kTRUE), fNtpRndm(0)  { }
    virtual ~ProofNtuple();
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);

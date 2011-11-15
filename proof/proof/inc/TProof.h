@@ -396,7 +396,14 @@ public:
       kMergerDown     = 4,         //Merger cannot serve
       kStopMerging    = 5,         //Master tells worker to stop merging (and return output)
       kOutputSent     = 6          //Worker reports sending its output to given worker
-  };
+   };
+   
+   enum EProofClearData {
+      kPurge        = 0x1,
+      kUnregistered = 0x2,
+      kDataset      = 0x4,
+      kForceClear   = 0x8
+   };
 
 private:
    enum EUrgent {
@@ -465,12 +472,6 @@ private:
    enum EProofShowQuotaOpt {
       kPerGroup = 0x1,
       kPerUser = 0x2
-   };
-   enum EProofClearData {
-      kPurge        = 0x1,
-      kUnregistered = 0x2,
-      kDataset      = 0x4,
-      kForceClear   = 0x8
    };
 
    Bool_t          fValid;           //is this a valid proof object

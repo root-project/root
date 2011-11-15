@@ -42,6 +42,7 @@ ProofFriends::ProofFriends()
    fZ = 0;
    fR = 0;
    fRZ = 0;
+   fPlot = kTRUE;
 }
 
 void ProofFriends::Begin(TTree * /*tree*/)
@@ -52,6 +53,8 @@ void ProofFriends::Begin(TTree * /*tree*/)
 
    TString option = GetOption();
 
+   TNamed *out = (TNamed *) fInput->FindObject("PROOF_DONT_PLOT");
+   if (out) fPlot = kFALSE;
 }
 
 void ProofFriends::SlaveBegin(TTree * /*tree*/)
@@ -131,6 +134,8 @@ void ProofFriends::Terminate()
    // The Terminate() function is the last function to be called during
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
+
+   if (!fPlot) return;
 
    gStyle->SetOptStat(1110);
    // Create canvas

@@ -117,6 +117,12 @@
 //
 //      root[] runProof("ntuple")
 //
+//      By default the random numbers are generate anew. There is the
+//      possibility use a file of random numbers (to have reproducible results)
+//      by specify the option 'inputrndm', e.g.
+//
+//      root[] runProof("ntuple(inputrndm)")
+//
 //  7. "dataset"
 //
 //      Selector: ProofNtuple.h.C
@@ -191,10 +197,15 @@
 //           all printouts matching TProofDebug::kPacketizer and having level
 //           equal or larger than 2 .
 //
-//   2. nevt=N
+//   2. nevt=N and/or first=F
 //
-//      Set the number of entries to N
+//      Set the number of entries to N, eventually (when it makes sense, i.e. when
+//      processing existing files) starting from F
 //      e.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
+//           runProof("eventproc(first=65000)") runs eventproc processing
+//           starting with event 65000
+//           runProof("eventproc(nevt=100000,first=65000)") runs eventproc processing
+//           100000 events starting with event 65000
 //
 //   3. asyn
 //
@@ -230,6 +241,11 @@
 //      the measured average. This may screw up the progress bar in some cases, which
 //      is the reason why it is not on by default .
 //      e.g. root[] runProof("eventproc(rateest=average)")
+//
+//   9. perftree=perftreefile.root
+//
+//      Generate the perfomance tree and save it to file 'perftreefile.root',
+//      e.g. root[] runProof("eventproc(perftree=perftreefile.root)")
 //
 //   In all cases, to run on a remote PROOF cluster, the master URL must
 //   be passed as second argument; e.g.
@@ -278,6 +294,7 @@
 #include "getProof.C"
 void plotNtuple(TProof *p, const char *ds, const char *ntptitle);
 int getDebugEnum(const char *what);
+void SavePerfTree(TProof *proof, const char *fn);
 
 TDrawFeedback *fb = 0;
 
@@ -439,11 +456,12 @@ void runProof(const char *what = "simple",
    Printf("runProof: %s: ACLiC mode: '%s'", act.Data(), aMode.Data());
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache, aH1Src("http://root.cern.ch/files/h1"),
-           aDebug, aDebugEnum, aRateEst;
+   TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache,
+           aH1Src("http://root.cern.ch/files/h1"),
+           aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root");
    Long64_t suf = 1;
    Int_t aSubMg = -1;
-   Bool_t fillList = kFALSE, useList = kFALSE;
+   Bool_t fillList = kFALSE, useList = kFALSE, makePerfTree = kFALSE;
    while (args.Tokenize(tok, from, " ")) {
       // Debug controllers
       if (tok.BeginsWith("debug=")) {
@@ -467,6 +485,15 @@ void runProof(const char *what = "simple",
          if (!aNevt.IsDigit()) {
             Printf("runProof: %s: error parsing the 'nevt=' option (%s) - ignoring", act.Data(), tok.Data());
             aNevt = "";
+         }
+      }
+      // First event
+      if (tok.BeginsWith("first=")) {
+         aFirst = tok;
+         aFirst.ReplaceAll("first=","");
+         if (!aFirst.IsDigit()) {
+            Printf("runProof: %s: error parsing the 'first=' option (%s) - ignoring", act.Data(), tok.Data());
+            aFirst = "";
          }
       }
       // Sync or async ?
@@ -525,8 +552,18 @@ void runProof(const char *what = "simple",
          if (!(tok.IsNull())) aRateEst = tok;
          Printf("runProof: %s: progress-bar rate estimation option: '%s'", act.Data(), aRateEst.Data());
       }
+      // Create and save the preformance tree?
+      if (tok.BeginsWith("perftree")) {
+         makePerfTree = kTRUE;
+         if (tok.BeginsWith("perftree=")) {
+            tok.ReplaceAll("perftree=","");
+            if (!(tok.IsNull())) aPerfTree = tok;
+         }
+         Printf("runProof: %s: saving performance tree to '%s'", act.Data(), aPerfTree.Data());
+      }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
+   Long64_t first = (aFirst.IsNull()) ? 0 : aFirst.Atoi();
    Long64_t nwrk = (aNwrk.IsNull()) ? -1 : aNwrk.Atoi();
    from = 0;
 
@@ -580,20 +617,33 @@ void runProof(const char *what = "simple",
 
    // Enable submergers, if required
    if (aSubMg >= 0) {
-      gProof->SetParameter("PROOF_UseMergers", aSubMg);
+      proof->SetParameter("PROOF_UseMergers", aSubMg);
       if (aSubMg > 0) {
          Printf("runProof: %s: enabling merging via %d sub-mergers", act.Data(), aSubMg);
       } else {
          Printf("runProof: %s: enabling merging via sub-mergers (optimal number)", act.Data());
       }
    } else {
-      gProof->DeleteParameters("PROOF_UseMergers");
+      proof->DeleteParameters("PROOF_UseMergers");
    }
+   
+   // The performance tree
+   if (makePerfTree) {
+      proof->SetParameter("PROOF_StatsHist", "");
+      proof->SetParameter("PROOF_StatsTrace", "");
+      proof->SetParameter("PROOF_SlaveStatsTrace", "");
+   }
+   proof->GetInputList()->Print();
 
    // Action
    if (act == "simple") {
       // ProofSimple is an example of non-data driven analysis; it
       // creates and fills with random numbers a given number of histos
+
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
 
       // Default 10000 events
       nevt = (nevt < 0) ? 100000 : nevt;
@@ -671,7 +721,7 @@ void runProof(const char *what = "simple",
       sel.Form("%s/tree/h1analysis.C%s", tutorials.Data(), aMode.Data());
       // Run it 
       Printf("\nrunProof: running \"h1\"\n");
-      chain->Process(sel.Data(),opt);
+      chain->Process(sel.Data(),opt,nevt,first);
       // Cleanup the input list
       gProof->ClearInputData("elist");
       gProof->ClearInputData("elist.root");
@@ -685,6 +735,10 @@ void runProof(const char *what = "simple",
       }
 
    } else if (act == "pythia8") {
+
+      if (first > 0)
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
 
       TString path(Form("%s/Index.xml", pythia8data));
       gSystem->ExpandPathName(path);
@@ -723,6 +777,11 @@ void runProof(const char *what = "simple",
 
   } else if (act == "event") {
 
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
+
       TString eventpar = TString::Format("%s/proof/event.par", tutorials.Data());
       if (gSystem->AccessPathName(eventpar.Data())) {
          Printf("runProof: event: par file not found (tried %s)", eventpar.Data());
@@ -747,7 +806,7 @@ void runProof(const char *what = "simple",
       TString eventpar = TString::Format("%s/proof/event.par", tutorials.Data());
       gSystem->ExpandPathName(eventpar);
       if (gSystem->AccessPathName(eventpar.Data())) {
-         Printf("runProof: event: par file not found (tried %s)", eventpar.Data());
+         Printf("runProof: eventproc: par file not found (tried %s)", eventpar.Data());
          return;
       }
 
@@ -755,6 +814,16 @@ void runProof(const char *what = "simple",
       proof->EnablePackage("event");
       Printf("Enabled packages...\n");
       proof->ShowEnabledPackages(); 
+      
+      // Load ProcFileElements (to check processed ranges)
+      TString pfelem = TString::Format("%s/proof/ProcFileElements.C", tutorials.Data());
+      gSystem->ExpandPathName(pfelem);
+      if (gSystem->AccessPathName(pfelem.Data())) {
+         Printf("runProof: eventproc: ProcFileElements.C not found (tried %s)", pfelem.Data());
+         return;
+      }
+      pfelem += aMode;
+      proof->Load(pfelem);
 
       // Extract the number of files to process, data source and
       // other parameters controlling the run ...
@@ -856,16 +925,31 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofEventProc.C%s", tutorials.Data(), aMode.Data());
       // Run it
       Printf("\nrunProof: running \"eventproc\"\n");
-      c->Process(sel.Data(), opt, nevt);
+      c->Process(sel.Data(), opt, nevt, first);
 
    } else if (act == "ntuple") {
 
       // ProofNtuple is an example of non-data driven analysis; it
       // creates and fills a disk resident ntuple with automatic file merging 
 
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
+
       // Set the default number of events, if needed
       nevt = (nevt < 0) ? 1000 : nevt;
       Printf("\nrunProof: running \"ntuple\" with nevt= %lld\n", nevt);
+
+      // Which randoms to use
+      Bool_t usentprndm = kFALSE;
+      while (args.Tokenize(tok, from, " ")) {
+         if (tok == "inputrndm") {
+            usentprndm = kTRUE;
+            break;
+         }
+      }
+      if (usentprndm) Printf("runProof: taking randoms from input ntuple\n");
 
       // Output file
       TString fout = TString::Format("%s/ProofNtuple.root", gSystem->WorkingDirectory());
@@ -895,18 +979,41 @@ void runProof(const char *what = "simple",
       }
       proof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
 
+      // If using the 'NtpRndm' for a fixed values of randoms, send over the file
+      if (usentprndm) {
+         // The file with 'NtpRndm'
+         TString fnr = TString::Format("%s/proof/ntprndm.root", tutorials.Data());
+         // Set as input data
+         proof->SetInputDataFile(fnr);
+         // Set the related parameter
+         proof->SetParameter("PROOF_USE_NTP_RNDM","yes");
+         // Notify
+         Printf("runProof: taking randoms from '%s'", fnr.Data());
+      }
+      
       // The selector string
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
 
       // Run it for nevt times
       proof->Process(sel.Data(), nevt, opt);
 
+      // Reset input variables
+      if (usentprndm) {
+         proof->DeleteParameters("PROOF_USE_NTP_RNDM");
+         proof->SetInputDataFile(0);
+      }
+      
    } else if (act == "dataset") {
 
       // This is an example of analysis creating data files on each node which are
       // automatically registered as dataset; the newly created dataset is used to create
       // the final plots. The data are of the same type as for the 'ntuple' example.
       // Selector used: ProofNtuple
+
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
 
       // Set the default number of events, if needed
       nevt = (nevt < 0) ? 1000000 : nevt;
@@ -943,6 +1050,11 @@ void runProof(const char *what = "simple",
       // This is an example of analysis creating two data files on each node (the main tree
       // and its friend) which are then processed as 'friends' to create the final plots.
       // Selector used: ProofFriends, ProofAux
+
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
 
       // Find out whether to use the same file or separate files
       Bool_t sameFile = kFALSE;
@@ -1034,6 +1146,11 @@ void runProof(const char *what = "simple",
       // via file and objcets saved in different directories; it creates and
       // fills with random numbers two sets of a given number of histos
 
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
+
       // Default 100000 events
       nevt = (nevt < 0) ? 1000000 : nevt;
       // Find out the number of histograms
@@ -1092,6 +1209,15 @@ void runProof(const char *what = "simple",
    } else {
       // Do not know what to run
       Printf("runProof: unknown tutorial: %s", what);
+   }
+
+   // Save the performance tree
+   if (makePerfTree) {
+      SavePerfTree(proof, aPerfTree.Data());
+      // Cleanup parameters
+      gProof->DeleteParameters("PROOF_StatsHist");
+      gProof->DeleteParameters("PROOF_StatsTrace");
+      gProof->DeleteParameters("PROOF_SlaveStatsTrace");
    }
 }
 
@@ -1193,6 +1319,8 @@ int getDebugEnum(const char *what)
          rcmask |= TProofDebug::kDataset;
       } else if (sw == "Submerger") {
          rcmask |= TProofDebug::kSubmerger;
+      } else if (sw == "Monitoring") {
+         rcmask |= TProofDebug::kMonitoring;
       } else if (sw == "All") {
          rcmask |= TProofDebug::kAll;
       } else if (!sw.IsNull()) {
@@ -1202,4 +1330,45 @@ int getDebugEnum(const char *what)
    }
    // Done
    return rcmask;
+}
+
+//______________________________________________________________________________
+void SavePerfTree(TProof *proof, const char *fn)
+{
+   // Save PROOF timing information from TPerfStats to file 'fn' 
+
+   if (!proof) {
+      Printf("PROOF must be run to save output performance information");;
+      return;
+   }
+   if (!proof->GetOutputList() || proof->GetOutputList()->GetSize() <= 0) {
+      Printf("PROOF outputlist undefined or empty");;
+      return;
+   }
+   
+   TFile f(fn, "RECREATE");
+   if (f.IsZombie()) {
+      Printf("ERROR: could not open file '%s' for writing", fn);;
+   } else {
+      f.cd();
+      TIter nxo(proof->GetOutputList());
+      TObject* obj = 0;
+      while ((obj = nxo())) {
+         TString objname(obj->GetName());
+         if (objname.BeginsWith("PROOF_")) {
+            // Must list the objects since other PROOF_ objects exist
+            // besides timing objects
+            if (objname == "PROOF_PerfStats" ||
+                objname == "PROOF_PacketsHist" ||
+                objname == "PROOF_EventsHist" ||
+                objname == "PROOF_NodeHist" ||
+                objname == "PROOF_LatencyHist" ||
+                objname == "PROOF_ProcTimeHist" ||
+                objname == "PROOF_CpuTimeHist")
+               obj->Write();
+         }
+      }
+      f.Close();
+   }
+
 }

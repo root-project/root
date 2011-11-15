@@ -18,6 +18,8 @@
 #include "TH2F.h"
 #include "TParameter.h"
 #include "TRandom.h"
+#include "TNamed.h"
+#include "TROOT.h"
 
 
 void ProofEventProc::Begin(TTree *)
@@ -106,6 +108,9 @@ Bool_t ProofEventProc::Process(Long64_t entry)
    //  Assuming that fChain is the pointer to the TChain being processed,
    //  use fChain->GetTree()->GetEntry(entry).
 
+   if (fEntMin == -1 || entry < fEntMin) fEntMin = entry;
+   if (fEntMax == -1 || entry > fEntMax) fEntMax = entry;
+
    if (fTestAbort == 1) {
       Double_t rr = gRandom->Rndm();
       if (rr > 0.999) {
@@ -145,6 +150,18 @@ void ProofEventProc::SlaveTerminate()
    // have been processed. When running with PROOF SlaveTerminate() is called
    // on each slave server.
 
+   // Save information about previous element, if any
+   if (fProcElem) fProcElem->Add(fEntMin, fEntMax);
+
+   if (!fProcElems) {
+      Warning("SlaveTerminate", "no proc elements list found!");
+      return;
+   }
+      
+   // Add proc elements to the output list
+   TIter nxpe(fProcElems);
+   TObject *o = 0;
+   while ((o = nxpe())) { fOutput->Add(o); };
 }
 
 void ProofEventProc::Terminate()
@@ -153,6 +170,11 @@ void ProofEventProc::Terminate()
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
 
+   // Check ranges
+   CheckRanges();
+
+   if (gROOT->IsBatch()) return;
+   
    TCanvas* canvas = new TCanvas("event","event",800,10,700,780);
    canvas->Divide(2,2);
    TPad *pad1 = (TPad *) canvas->GetPad(1);
@@ -198,4 +220,100 @@ void ProofEventProc::Terminate()
    // Final update
    canvas->cd();
    canvas->Update();
+}
+
+void ProofEventProc::CheckRanges()
+{
+   // Check the processed event ranges when there is enough information
+   // The result is added to the output list
+
+   // Must be something in output
+   if (!fOutput || (fOutput && fOutput->GetSize() <= 0)) return;
+
+   // Create the result object and add it to the list
+   TNamed *nout = new TNamed("Range_Check", "OK");
+   fOutput->Add(nout);
+   
+   // Get info to check from the input list
+   if (!fInput || (fInput && fInput->GetSize() <= 0)) {
+      nout->SetTitle("No input list");
+      return;
+   }
+   TNamed *ffst = dynamic_cast<TNamed *>(fInput->FindObject("Range_First_File"));
+   if (!ffst) {
+      nout->SetTitle("No first file");
+      return;
+   }
+   TNamed *flst = dynamic_cast<TNamed *>(fInput->FindObject("Range_Last_File"));
+   if (!flst) {
+      nout->SetTitle("No last file");
+      return;
+   }
+   TParameter<Int_t> *fnum =
+      dynamic_cast<TParameter<Int_t> *>(fInput->FindObject("Range_Num_Files"));
+   if (!fnum) {
+      nout->SetTitle("No number of files");
+      return;
+   }
+
+   // Check first file
+   TString fn(ffst->GetTitle()), sfst(ffst->GetTitle());
+   Ssiz_t ifst = fn.Index("?fst=");
+   if (ifst == kNPOS) {
+      nout->SetTitle("No first entry information in first file name");
+      return;
+   }
+   fn.Remove(ifst);
+   sfst.Remove(0, ifst + sizeof("?fst=") - 1);
+   if (!sfst.IsDigit()) {
+      nout->SetTitle("Badly formatted first entry information in first file name");
+      return;
+   }
+   Long64_t fst = (Long64_t) sfst.Atoi();
+   ProcFileElements *pfef = dynamic_cast<ProcFileElements *>(fOutput->FindObject(fn));
+   if (!pfef) {
+      nout->SetTitle("ProcFileElements for first file not found in the output list");
+      return;
+   }
+   if (pfef->fFirst != fst) {
+      nout->SetTitle("First entry differs");
+      return;
+   }
+
+   // Check last file
+   fn = flst->GetTitle();
+   TString slst(flst->GetTitle());
+   Ssiz_t ilst = fn.Index("?lst=");
+   if (ilst == kNPOS) {
+      nout->SetTitle("No last entry information in last file name");
+      return;
+   }
+   fn.Remove(ilst);
+   slst.Remove(0, ilst + sizeof("?lst=") - 1);
+   if (!slst.IsDigit()) {
+      nout->SetTitle("Badly formatted last entry information in last file name");
+      return;
+   }
+   Long64_t lst = (Long64_t) slst.Atoi();
+   ProcFileElements *pfel = dynamic_cast<ProcFileElements *>(fOutput->FindObject(fn));
+   if (!pfel) {
+      nout->SetTitle("ProcFileElements for last file not found in the output list");
+      return;
+   }
+   if (pfel->fLast != lst) {
+      nout->SetTitle("Last entry differs");
+      return;
+   }
+
+   // Check Number of files
+   Int_t nproc = 0;
+   TIter nxo(fOutput);
+   TObject *o = 0;
+   while ((o = nxo())) {
+      if (dynamic_cast<ProcFileElements *>(o)) nproc++;
+   }
+   if (fnum->GetVal() != nproc) {
+      nout->SetTitle("Number of processed files differs");
+      return;
+   }
 }

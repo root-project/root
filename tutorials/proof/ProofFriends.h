@@ -18,6 +18,8 @@ class ProofFriends : public TSelector {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
 
+   Bool_t          fPlot;    // Whether to plot the result
+
    // Specific members
    TH2F            *fXY;
    TH1F            *fZ;
