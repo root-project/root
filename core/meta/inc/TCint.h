@@ -207,7 +207,6 @@ public:
    virtual void   ClassInfo_DeleteArray(ClassInfo_t *info, void *arena, bool dtorOnly) const;
    virtual void   ClassInfo_Destruct(ClassInfo_t *info, void *arena) const;
    virtual ClassInfo_t  *ClassInfo_Factory() const;
-   virtual ClassInfo_t  *ClassInfo_Factory(G__value * /* value */) const;
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t *cl) const;
    virtual ClassInfo_t  *ClassInfo_Factory(const char *name) const;
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t *info, const char *method,const char *proto) const;
