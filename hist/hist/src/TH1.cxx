@@ -3932,11 +3932,19 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    if (opt.Contains("Q"))  fitOption.Quiet   = 1;
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
    if (opt.Contains("X"))  fitOption.Chi2    = 1;
-   if (opt.Contains("L"))  fitOption.Like    = 1;
-   //if (opt.Contains("LL")) fitOption.Like    = 2;
    if (opt.Contains("W"))  fitOption.W1      = 1;
    if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-   if (opt.Contains("WL")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
+   // likelihood fit options
+   if (opt.Contains("L")) { 
+      fitOption.Like    = 1;
+      //if (opt.Contains("LL")) fitOption.Like    = 2;
+      if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
+      if (opt.Contains("MULTI")) { 
+         if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial 
+         else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
+         opt.ReplaceAll("MULTI","");
+      }
+   }
    if (opt.Contains("E"))  fitOption.Errors  = 1;
    if (opt.Contains("M"))  fitOption.More    = 1;
    if (opt.Contains("R"))  fitOption.Range   = 1;
