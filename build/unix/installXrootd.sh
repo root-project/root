@@ -1,38 +1,40 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Script to install a given version of Xrootd/Scalla
 #
 # Syntax:
-#  ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]
-#                           [-v <version>|--version=<version>]
-#                           [-t <tarball>|--tarball=<tarball>]
-#                           [-b <where-to-build>|--builddir=<where-to-build>]
-#                           [--xrdopts="<opts-to-xrootd>"]
-#                           [--vers-subdir[=<version-root>]]
-#                           [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]
+#  ./installXrootd.sh [<installdir>] [-h|--help] [-d|--debug] [-o|--optimized]
+#                    [-v <version>|--version=<version>]
+#                    [-t <tarball>|--tarball=<tarball>]
+#                    [-b <where-to-build>|--builddir=<where-to-build>]
+#                    [--xrdopts="<opts-to-xrootd>"]
+#                    [--vers-subdir[=<version-root>]] [--no-vers-subdir]
+#                    [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]
+#                    [-k|--keep]
 #
 # See printhelp for a description of the options.
 #
 
 printhelp()
 {
-
         echo " "
         echo "  Script to install a given version of Xrootd/Scalla"
         echo " "
         echo "  Syntax:"
-        echo "   ./installXrootd.sh <installdir> [-h|--help] [-d|--debug] [-o|--optimized]"
+        echo "   ./installXrootd.sh [<installdir>] [-h|--help] [-d|--debug] [-o|--optimized]"
         echo "                      [-v <version>|--version=<version>]"
         echo "                      [-t <tarball>|--tarball=<tarball>]"
         echo "                      [-b <where-to-build>|--builddir=<where-to-build>]"
         echo "                      [--xrdopts=\"<opts-to-xrootd>\"]"
         echo "                      [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]"
+        echo "                      [--vers-subdir[=<version-root>]] [--no-vers-subdir]"
+        echo "                      [-k|--keep]"
         echo " "
         echo "  where"
         echo "   <installdir>: the directory where the bin, lib, include/xrootd, share and"
-        echo "                 man directories will appear"
-        echo "                 (see also --vers-subdir)"
+        echo "                 man directories will appear (see also --vers-subdir)"
+        echo "                 The default is ."
         echo "   -b <where-to-build>, --builddir=<where-to-build>"
         echo "                 directory where to build; default /tmp/xrootd-<version>"
         echo "   -d,--debug    build in debug mode (no optimization)"
@@ -46,27 +48,41 @@ printhelp()
         echo "   --xrdopts=<opts-to-xrootd>"
         echo "                 additional configuration options to xrootd"
         echo "                 (see xrootd web site)"
+        echo "   --no-vers-subdir install in <installdir> instead of <installdir>/xrootd-<version>"
+        echo "                 (or <installdir>/<version-root><version>, see --vers-subdir"
         echo "   --vers-subdir[=<version-root>]"
         echo "                 install in <installdir>/<version-root><version> instead of"
-        echo "                 <installdir> directly; helps separating different versions"
-        echo "                 under the same <root-installdir>; if <version-root> is not"
-        echo "                 specified, 'xrootd-' is used."
+        echo "                 <installdir>/xrootd-<version> or <installdir>. Has priority"
+        echo "                 over --no-vers-subdir. Default <version-root>=xrootd-."
+        echo "                 This option is on by default."
         echo "   -j <jobs>, --jobs=<jobs>"
         echo "                 number of build jobs to run simultaneously when bulding;"
-        echo "                 default is <number-of-cores> + 1 ."
+        echo "                 default is <number-of-cores> + 1."
+        echo "   -k, --keep"
+        echo "                 keep the build directory"
         echo " "
-        echo "  When relevant, the script uses 'wget' ('curl' on MacOsX) to retrieve"
+        echo "  When relevant, the script uses 'wget' ('curl' on MacOS X) to retrieve"
         echo "  the tarball"
 }
 
+cleanbuilddir()
+{
+   if test ! "x$KEEP" = "xyes"; then
+      if test ! "x$BUILDDIR" = "x" && test -d $BUILDDIR ; then
+         rm -rf $BUILDDIR
+      fi
+   fi
+}
+
 DBGOPT="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
-TGTDIR=""
+TGTDIR="."
 VERS=""
 TARBALL=""
 BUILDDIR=""
 XRDOPTS=""
-VSUBDIR=""
+VSUBDIR="xrootd-"
 MAKEMJ=""
+KEEP=""
 
 #
 # Parse long options first
@@ -107,18 +123,20 @@ for i in $@ ; do
          debug)      DBGOPT="-DCMAKE_BUILD_TYPE=Debug" ;;
          help)       printhelp ; exit ;;
          jobs)       MAKEMJ="-j$OPTARG" ;;
+         no-vers-subdir) VSUBDIR="" ;;
          optimized)  DBGOPT="-DCMAKE_BUILD_TYPE=Release" ;;
          tarball=*)  TARBALL="$oarg" ;;
          version=*)  VERS="$oarg" ;;
          vers-subdir) VSUBDIR="xrootd-" ;;
-         vers-subdir=*)  VSUBDIR="$oarg" ;;
+         vers-subdir=*) VSUBDIR="$oarg" ;;
          xrdopts=*)  XRDOPTS="$oarg" ;;
+         keep)       KEEP="yes" ;;
       esac
    fi
 done
 
 if test ! "x$short_opts" = "x" ; then
-   while getopts b:j:t:v:dho i $short_opts ; do
+   while getopts b:j:t:v:dhok i $short_opts ; do
       case $i in
       b) BUILDDIR="$OPTARG" ;;
       d) DBGOPT="-DCMAKE_BUILD_TYPE=Debug" ;;
@@ -127,6 +145,7 @@ if test ! "x$short_opts" = "x" ; then
       o) DBGOPT="-DCMAKE_BUILD_TYPE=Release" ;;
       t) TARBALL="$OPTARG" ;;
       v) VERS="$OPTARG" ;;
+      k) KEEP="yes" ;;
       \?) printhelp; exit 1 ;;
       esac
       if test ! "x$OPTARG" = "x" ; then
@@ -157,9 +176,14 @@ WRKDIR=$PWD
 if test "x$TGTDIR" =  "x" ; then
    echo " Install dir undefined!"
    printhelp
-   exit
-elif test "x$TGTDIR" =  "x." ; then
-   TGTDIR=`pwd`
+   exit 1
+else
+   tgtd="$TGTDIR"
+   TGTDIR=`(cd $tgtd && pwd)`
+   if [ "$?" -ne "0" ]; then
+      echo "Install dir $tgtd does not exist, please create it first."
+      exit 1
+   fi
 fi
 
 if test "x$VERS" =  "x" ; then
@@ -193,46 +217,20 @@ fi
 
 # Build dir
 if test "x$BUILDDIR" = "x"; then
-   BUILDDIR="/tmp/xrootd-$VERS"
+   BUILDDIR="/tmp/xrootd-$VERS-$RANDOM"
 fi
 if test ! -d $BUILDDIR ; then
    mkdir -p $BUILDDIR
    if test ! -d $BUILDDIR ; then
-      echo "Could not create build dir '$BUILDDIR': cannot continue"
+      echo "Could not create build dir $BUILDDIR, exiting..."
       exit 1
    fi
 else
-   # Cleanup build dir
-   rm -fr $BUILDDIR/* 2> /dev/null
-   if [ "$?" != "0" ] ; then
-      echo "Problems cleaning $BUILDDIR : do you have the permissions? Trying with $BUILDDIR-1"
-      BUILDDIR="$BUILDDIR-1"
-      mkdir -p $BUILDDIR
-      if test ! -d $BUILDDIR ; then
-         echo "Could not create build dir '$BUILDDIR': cannot continue"
-         cd $WRKDIR
-         exit "$?"
-      else
-         # Cleanup build dir
-         rm -fr $BUILDDIR/*
-      fi
-   fi
+   # Builddir already exists, exit
+   echo "Build dir $BUILDDIR already exists, exiting..."
+   exit 1
 fi
 echo "Build dir: $BUILDDIR"
-
-# Check install dir
-if test ! -d $TGTDIR ; then
-   echo "Install dir does not exists: creating ..."
-   mkdir -p $TGTDIR
-   if test ! -d $TGTDIR ; then
-      echo "Could not create install dir '$TGTDIR': make sure that you have the rights to do it;"
-      echo "for example, run"
-      echo "     sudo mkdir -p $TGTDIR"
-      echo "     sudo chown $USER $TGTDIR"
-      echo "before re-running this script"
-      exit 1
-   fi
-fi
 
 cd $BUILDDIR
 
@@ -247,6 +245,7 @@ if test "x$retrieve" = "xyes" ; then
    if test ! -f $TGTBALL ; then
       echo "Tarball retrieval failed!"
       cd $WRKDIR
+      cleanbuilddir
       exit 1
    fi
 fi
@@ -263,6 +262,7 @@ fi
 if test ! -d xrootd-$VERS ; then
    echo "Could not find source sub-directory xrootd-$VERS"
    cd $WRKDIR
+   cleanbuilddir
    exit 1
 fi
 cd xrootd-$VERS
@@ -279,6 +279,8 @@ if test -f CMakeLists.txt ; then
       echo "you can get it from http://cmake.org/cmake/resources/software.html"
       echo "or from the software manager of your system"
       echo " "
+      cd $WRKDIR
+      cleanbuilddir
       exit 1
    fi
 
@@ -286,6 +288,7 @@ if test -f CMakeLists.txt ; then
    if test ! -r VERSION_INFO ; then
       echo "VERSION_INFO file not found: this xrootd version is probably too old and cannot be built by this script"
       cd $WRKDIR
+      cleanbuilddir
       exit 1
    fi
 
@@ -309,6 +312,7 @@ if test -f CMakeLists.txt ; then
    if [ "$?" != "0" ] ; then
       echo "Problems running $XMK  $MAKEMJ ..."
       cd $WRKDIR
+      cleanbuilddir
       exit "$?"
    fi
 
@@ -317,6 +321,7 @@ if test -f CMakeLists.txt ; then
    if [ "$?" != "0" ] ; then
       echo "Problems running $XMK install ..."
       cd $WRKDIR
+      cleanbuilddir
       exit "$?"
    fi
 
@@ -328,6 +333,7 @@ else
    if test ! -r configure.classic ; then
       echo "configure.classic file not found: this xrootd version cannot be built by this script"
       cd $WRKDIR
+      cleanbuilddir
       exit 1
    fi
 
@@ -344,6 +350,7 @@ else
    if [ "$?" != "0" ] ; then
       echo "Problems running configure.classic ..."
       cd $WRKDIR
+      cleanbuilddir
       exit "$?"
    fi
 
@@ -352,6 +359,7 @@ else
    if [ "$?" != "0" ] ; then
       echo "Problems running $XMK ..."
       cd $WRKDIR
+      cleanbuilddir
       exit "$?"
    fi
 
@@ -362,5 +370,6 @@ fi
 
 # Go back where we started
 cd $WRKDIR
+cleanbuilddir
 
 exit
