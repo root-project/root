@@ -113,14 +113,18 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
   pl.SetConfidenceLevel(0.95); // 95% interval
   LikelihoodInterval* interval = pl.GetInterval();
 
-  // make a plot
-  LikelihoodIntervalPlot plot(interval);
-  plot.Draw();
-  
   // print out the iterval on the first Parameter of Interest
   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
     interval->LowerLimit(*firstPOI) << ", "<<
     interval->UpperLimit(*firstPOI) <<"] "<<endl;
+
+  // make a plot
+  
+  cout << "making a plot of the profile likelihood function ....(if it is taking a lot of time use less points or the TF1 drawing option)\n";
+  LikelihoodIntervalPlot plot(interval);
+  plot.SetNPoints(50);  // do not use too many points, it could become very slow for some models
+  plot.Draw("");  // use option TF1 if too slow (plot.Draw("tf1")
+  
 
 }
