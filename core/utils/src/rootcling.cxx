@@ -4593,7 +4593,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
    //#define R__SHOWMEMBERS_IN_TCLING
 #ifdef R__SHOWMEMBERS_IN_TCLING
-   (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
+   (*dictSrcOut) << "      ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
 #else
    string csymbol = cl.Fullname();
    if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
@@ -5783,8 +5783,9 @@ int main(int argc, char **argv)
    clingArgs.push_back(interpInclude.c_str());
    
    std::vector<const char*> clingArgsC;
-   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
-      clingArgsC.push_back(clingArgs[i].c_str());
+   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
+        iclingArgs < nclingArgs; ++iclingArgs) {
+      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
    }
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              getenv("LLVMDIR"));
@@ -6121,6 +6122,7 @@ int main(int argc, char **argv)
 #endif
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
+                 << "#include \"TCintWithCling.h\"" << std::endl
                  << "#include \"TBuffer.h\"" << std::endl
                  << "#include \"TMemberInspector.h\"" << std::endl
                  << "#include \"TError.h\"" << std::endl << std::endl
