@@ -267,6 +267,7 @@ extern "C" {
 #if (defined(R__LINUX) && !defined(R__WINGCC))
 #include <fpu_control.h>
 #include <fenv.h>
+#include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
 
 #if defined(R__MACOSX) && defined(__SSE2__)
@@ -2215,9 +2216,7 @@ void TUnixSystem::StackTrace()
       return;
    }
 */
-# if defined(HAVE_U_STACK_TRACE)                      // hp-ux
    U_STACK_TRACE();
-# endif
 /*
    fflush(stderr);
    dup2(stderrfd, STDERR_FILENO);
@@ -2276,6 +2275,13 @@ void TUnixSystem::StackTrace()
 #endif
    // gdb-backtrace.sh uses gdb to produce a backtrace. See if it is available.
    // If it is, use it. If not proceed as before.
+#if (defined(R__LINUX) && !defined(R__WINGCC))
+   // Declare the process that will be generating the stacktrace
+   // For more see: http://askubuntu.com/questions/41629/after-upgrade-gdb-wont-attach-to-process
+#ifdef PR_SET_PTRACER
+   prctl(PR_SET_PTRACER, getpid(), 0, 0, 0);
+#endif
+#endif
    char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
    if (gdb) {
       // write custom message file
