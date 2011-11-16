@@ -17,11 +17,11 @@ endif
 # Compiler:
 CXX           = xlC_r
 CC            = xlC_r
-CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti=all -qstaticinline \
                 $(EXTRA_CXXFLAGS)
 CFLAGS        = -qchars=signed -qnoro -qnoroconst -qstaticinline \
                 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti -qstaticinline \
+CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti=all -qstaticinline \
                 -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -qstaticinline \
