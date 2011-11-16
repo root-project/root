@@ -4063,8 +4063,8 @@ if test ! "x$enable_ldap" = "xno"; then
     check_header "ldap.h" "$ldapincdir" \
         $LDAP ${LDAP:+$LDAP/include} \
         ${finkdir:+$finkdir/include} \
-        /usr/include /usr/local/include /usr/local/ldap/include \
-        /usr/include/ldap /usr/include/openldap /usr/ldap/include \
+        /usr/include/openldap /usr/include /usr/local/include \
+        /usr/local/ldap/include /usr/include/ldap /usr/ldap/include \
         /usr/local/include/ldap /usr/local/include/openldap \
         /usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/include
     ldapinc=$found_hdr
