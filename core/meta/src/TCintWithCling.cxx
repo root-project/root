@@ -41,6 +41,7 @@
 #include "THashTable.h"
 #include "RConfigure.h"
 #include "compiledata.h"
+#include "TMetaUtils.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -3395,9 +3396,14 @@ void TCintWithCling::AddIncludePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::InspectMembers(TMemberInspector&, void* obj, const char* clname)
+void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
+                                    const char* clname)
 {
    Printf("Inspecting class %s\n", clname);
+   clang::QualType qualClass
+      = ROOT::TMetaUtils::LookupTypeDecl(*fInterpreter, clname);
+   if (qualClass.isNull()) { printf("ERROR: CANNOT FIND %s", clname); }
+   //R_insp.Inspect(
 }
 
 //______________________________________________________________________________
