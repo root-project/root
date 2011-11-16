@@ -5281,6 +5281,16 @@ ClassInfo_t* TCintWithCling::ClassInfo_Factory(const char* name) const
 }
 
 //______________________________________________________________________________
+ClassInfo_t *TCintWithCling::ClassInfo_Factory(G__value *pvalue) const
+{
+   // Interface to CINT function
+
+   Fatal("ClassInfo_Factory(G__value *pvalue)","Can not / should not be implemented ...");
+   return 0;
+   // return new G__ClassInfo(*pvalue);
+}
+
+//______________________________________________________________________________
 int TCintWithCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto) const
 {
    tcling_ClassInfo* tcling_info = (tcling_ClassInfo*) cinfo;
