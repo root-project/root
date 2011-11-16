@@ -1,9 +1,13 @@
-/*
- * TGDMLWrite.cxx
- *
- *  Created on: Sep 15, 2011
- *      Author: apytel
- */
+// @(#)root/gdml:$Id$
+// Author: Anton Pytel 15/9/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -276,7 +280,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
 {
    XMLNodePointer_t volumeN, childN;
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
-   TGeoPatternFinder *pattFinder;
+   TGeoPatternFinder *pattFinder = 0;
    Bool_t isPattern = kFALSE;
 
    //create the name for volume/assebmly
@@ -317,14 +321,12 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
    TGeoNode *geoNode;
-   NameList llist;
    Int_t nCnt = 0;
    //loop through all nodes
    while ((geoNode = (TGeoNode *) next())) {
       //get volume of current node and if not processed then process it
       TGeoVolume * subvol = geoNode->GetVolume();
       if (subvol->TestAttBit(fgkProcBitVol) == kFALSE) {
-         llist[TString::Format("%i", nCnt)] = kTRUE;
          subvol->SetAttBit(fgkProcBitVol);
          ExtractVolumes(subvol);
       }
@@ -392,7 +394,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
       nCnt++;
    }
    //create only one divisionvol node
-   if (isPattern == kTRUE) {
+   if (isPattern && pattFinder) {
       //retrieve attributes of division
       Int_t ndiv, divaxis;
       Double_t offset, width, xlo, xhi;
