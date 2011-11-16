@@ -530,7 +530,9 @@ std::string ClassInfo__LineNumber(const clang::Decl *cl)
 
 class PragmaLinkCollector: public clang::PragmaHandler {
 public:
-   PragmaLinkCollector(clang::StringRef code, size_t argc, const char* argv[])
+   PragmaLinkCollector(clang::StringRef code, size_t argc, const char* argv[]):
+   // This handler only cares about "#pragma link"
+   clang::PragmaHandler("link")
    {
       // Extract all #pragmas
       llvm::MemoryBuffer* memBuf
@@ -551,11 +553,17 @@ public:
       } while (tok.isNot(clang::tok::eof));
    }
 
-   // Unnamed pragma handler: we want all of them.
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
-                      clang::Token &FirstToken) {
-      clang::Token tok;
+                      clang::Token &tok) {
+      // Handle a #pragma found by the Preprocessor.
+
+      // check whether we care about the pragma - we are a named handler,
+      // thus this could actually be transformed into an assert:
+      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (!tok.getIdentifierInfo()) return; // must be "link"
+      if (tok.getIdentifierInfo()->getName() != "link") return;
+      
       do {
          PP.Lex(tok);
          PP.DumpToken(tok, true);
@@ -6175,7 +6183,6 @@ int main(int argc, char **argv)
                                               pragmaArgsC.size(),
                                               &pragmaArgsC[0]);
    }
-                                              
 
    RScanner scan;
    clang::CompilerInstance* CI = interp.getCI();
