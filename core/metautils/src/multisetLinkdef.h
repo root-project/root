@@ -1,4 +1,8 @@
+#ifdef __CINT__
 #include <multiset>
+#else
+#include <set>
+#endif
 #include <string>
 #ifndef __hpux
 using namespace std;

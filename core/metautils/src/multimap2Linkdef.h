@@ -1,4 +1,8 @@
+#ifdef __CINT__
 #include <multimap>
+#else
+#include <map>
+#endif
 #include <string>
 #ifndef __hpux
 using namespace std;
