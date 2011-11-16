@@ -266,7 +266,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          if(rule_token == "globals"){
             std::cout<<"all enums and variables selection rule to be impl."<<std::endl;
             
-            VariableSelectionRule vsr;
+            VariableSelectionRule vsr(fCount++);
             if (linkOn) {
                vsr.SetAttributeValue("pattern","*");
                vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
@@ -285,14 +285,14 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
             //else vsr.SetSelected(BaseSelectionRule::kNo);
             //sr.AddVariableSelectionRule(vsr);
             
-            EnumSelectionRule esr;
+            EnumSelectionRule esr(fCount++);
             if (linkOn) {
                esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
                esr.SetAttributeValue("pattern","*");
                sr.AddEnumSelectionRule(esr);
                
                //EnumSelectionRule esr2; //Problem wih the enums - if I deselect them here
-               EnumSelectionRule esr2;
+               EnumSelectionRule esr2(fCount++);
                esr2.SetSelected(BaseSelectionRule::kNo);
                esr2.SetAttributeValue("pattern","*::*");
                sr.AddEnumSelectionRule(esr2);
@@ -308,7 +308,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          else if (rule_token == "functions") {
             std::cout<<"all functions selection rule to be impl."<<std::endl;
             
-            FunctionSelectionRule fsr;
+            FunctionSelectionRule fsr(fCount++);
             fsr.SetAttributeValue("pattern","*");
             if (linkOn) {
                fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
@@ -324,24 +324,29 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          else if (rule_token == "classes") {
             std::cout<<"all classes selection rule to be impl."<<std::endl;
             
-            ClassSelectionRule csr, csr2;
-            csr.SetAttributeValue("pattern","*");
-            csr2.SetAttributeValue("pattern","*::*");
             
             if (linkOn) {         
-               csr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
-               csr2.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
-               ClassSelectionRule csr3;
+
+               ClassSelectionRule csr3(fCount++);
                csr3.SetSelected(BaseSelectionRule::kNo);
                csr3.SetAttributeValue("pattern","__va_*"); // don't generate for the built-in classes/structs
                sr.AddClassSelectionRule(csr3);
                
+               ClassSelectionRule csr(fCount++), csr2(fCount++);
+               csr.SetAttributeValue("pattern","*");
+               csr2.SetAttributeValue("pattern","*::*");
+               csr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               csr2.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
                
                sr.AddClassSelectionRule(csr);
                sr.AddClassSelectionRule(csr2);
             }
             else {
                if (sr.GetHasFileNameRule()){
+                  ClassSelectionRule csr(fCount++), csr2(fCount++);
+                  csr.SetAttributeValue("pattern","*");
+                  csr2.SetAttributeValue("pattern","*::*");
+
                   csr.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   sr.AddClassSelectionRule(csr);
@@ -406,28 +411,28 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          
          // add selection rules for everything
          
-         VariableSelectionRule vsr;
+         VariableSelectionRule vsr(fCount++);
          vsr.SetAttributeValue("pattern","*");
          vsr.SetAttributeValue("file_name",rule_token);
          if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else vsr.SetSelected(BaseSelectionRule::kNo);
          sr.AddVariableSelectionRule(vsr);
          
-         EnumSelectionRule esr;
+         EnumSelectionRule esr(fCount++);
          esr.SetAttributeValue("pattern","*");
          esr.SetAttributeValue("file_name",rule_token);
          if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else esr.SetSelected(BaseSelectionRule::kNo);
          sr.AddEnumSelectionRule(esr);
          
-         FunctionSelectionRule fsr;
+         FunctionSelectionRule fsr(fCount++);
          fsr.SetAttributeValue("pattern","*");
          fsr.SetAttributeValue("file_name",rule_token);
          if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else fsr.SetSelected(BaseSelectionRule::kNo);
          sr.AddFunctionSelectionRule(fsr);
          
-         ClassSelectionRule csr, csr2;
+         ClassSelectionRule csr(fCount++), csr2(fCount++);
          csr.SetAttributeValue("pattern","*");
          csr2.SetAttributeValue("pattern","*::*");
          csr.SetAttributeValue("file_name",rule_token);
@@ -479,7 +484,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
                return false;
             }
             std::cout<<"function selection rule for "<<rule_token<<" ("<<(name_or_proto?"name":"proto_name")<<") to be impl."<<std::endl;
-            FunctionSelectionRule fsr;
+            FunctionSelectionRule fsr(fCount++);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             if (rule_token.at(rule_token.length()-1) == '*') fsr.SetAttributeValue("pattern", rule_token);
@@ -498,7 +503,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
                return false;
             std::cout<<"function selection rule for "<<rule_token<<" (proto_pattern) to be impl."<<std::endl;
             
-            FunctionSelectionRule fsr;
+            FunctionSelectionRule fsr(fCount++);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             fsr.SetAttributeValue("proto_pattern", rule_token);
@@ -506,7 +511,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          }
          else if (name == kGlobal) {
             std::cout<<"variable selection rule for "<<rule_token<<" to be impl."<<std::endl;
-            VariableSelectionRule vsr;
+            VariableSelectionRule vsr(fCount++);
             if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
             else vsr.SetSelected(BaseSelectionRule::kNo);
             if (IsPatternRule(rule_token)) vsr.SetAttributeValue("pattern", rule_token);
@@ -516,7 +521,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          else if (name == kEnum) {
             std::cout<<"enum selection rule for "<<rule_token<<" to be impl."<<std::endl;
             
-            EnumSelectionRule esr;
+            EnumSelectionRule esr(fCount++);
             if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
             else esr.SetSelected(BaseSelectionRule::kNo);
             if (IsPatternRule(rule_token)) esr.SetAttributeValue("pattern", rule_token);
@@ -526,7 +531,7 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
          else {
             std::cout<<"class selection rule for "<<rule_token<<" to be impl."<<std::endl;
             
-            ClassSelectionRule csr;
+            ClassSelectionRule csr(fCount++);
             
             int len = rule_token.length();
             char last = rule_token.at(len - 1);
@@ -552,12 +557,12 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
                csr.SetSelected(BaseSelectionRule::kYes);
                
                if (rule_token == "*") { // rootcint generates error here, but I decided to implement it
-                  ClassSelectionRule csr2;
+                  ClassSelectionRule csr2(fCount++);
                   csr2.SetSelected(BaseSelectionRule::kYes);
                   csr2.SetAttributeValue("pattern", "*::*");
                   sr.AddClassSelectionRule(csr2);
                   
-                  ClassSelectionRule csr3;
+                  ClassSelectionRule csr3(fCount++);
                   csr3.SetSelected(BaseSelectionRule::kNo);
                   csr3.SetAttributeValue("pattern","__va_*");
                   sr.AddClassSelectionRule(csr3);
@@ -566,25 +571,25 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
             else {
                csr.SetSelected(BaseSelectionRule::kNo);
                if (rule_token == "*") { // rootcint generates error here, but I decided to implement it
-                  ClassSelectionRule csr2;
+                  ClassSelectionRule csr2(fCount++);
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetAttributeValue("pattern", "*::*");
                   sr.AddClassSelectionRule(csr2);
                   
-                  EnumSelectionRule esr; // we need this because of implicit/explicit rules - check my notes on rootcint
+                  EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                   esr.SetSelected(BaseSelectionRule::kNo);
                   esr.SetAttributeValue("pattern", "*::*");
                   sr.AddEnumSelectionRule(esr);
                   
                }
                else {
-                  EnumSelectionRule esr; // we need this because of implicit/explicit rules - check my notes on rootcint
+                  EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                   esr.SetSelected(BaseSelectionRule::kNo);
                   esr.SetAttributeValue("pattern", rule_token+"::*");
                   sr.AddEnumSelectionRule(esr);
                   
                   if (sr.GetHasFileNameRule()) {
-                     FunctionSelectionRule fsr; // we need this because of implicit/explicit rules - check my notes on rootcint
+                     FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                      fsr.SetSelected(BaseSelectionRule::kNo);
                      std::string value = rule_token + "::*";
                      fsr.SetAttributeValue("pattern", value);

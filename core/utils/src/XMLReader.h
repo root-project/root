@@ -35,6 +35,8 @@ public:
    };
    
 private:
+   long fCount;
+
    //SelectionRules& fSelectionRules;
    //std::string fXMLFileName;
    //std::ifstream fXMLInStream;
@@ -79,7 +81,7 @@ private:
    
 public:
    // Constructors
-   XMLReader() {}
+   XMLReader() : fCount(0) {}
    /* XMLReader(const std::string& fileName):
     fXMLFileName(fileName) {}*/
    

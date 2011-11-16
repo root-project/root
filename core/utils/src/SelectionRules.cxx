@@ -264,19 +264,23 @@ void SelectionRules::SetDeep(bool deep)
 {
    fIsDeep = deep;
    if (fIsDeep) {
-      ClassSelectionRule csr;
+      long count = 0;
+      if (!fClassSelectionRules.empty()) {
+         count = fClassSelectionRules.rbegin()->GetIndex() + 1;
+      }
+      ClassSelectionRule csr(count++);
       csr.SetAttributeValue("pattern", "*");
       csr.SetSelected(BaseSelectionRule::kYes);
       AddClassSelectionRule(csr);
       
-      ClassSelectionRule csr2;
+      ClassSelectionRule csr2(count++);
       csr2.SetAttributeValue("pattern", "*::*");
       csr2.SetSelected(BaseSelectionRule::kYes);
       AddClassSelectionRule(csr2);
       
       
       // Should I disable the built-in (automatically generated) structs/classes?
-      ClassSelectionRule csr3;
+      ClassSelectionRule csr3(count++);
       csr3.SetAttributeValue("pattern", "__va_*"); // <built-in> 
       csr3.SetSelected(BaseSelectionRule::kNo);
       AddClassSelectionRule(csr3);

@@ -46,14 +46,15 @@ public:
    class AnnotatedRecordDecl {
    private:
       const clang::RecordDecl* fDecl;
+      long fRuleIndex;
       bool fRequestStreamerInfo;
       bool fRequestNoStreamer;
       bool fRequestNoInputOperator;
       
    public:
-      AnnotatedRecordDecl(clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator) : 
-           fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-           fRequestNoInputOperator(rRequestNoInputOperator) {}
+      AnnotatedRecordDecl(clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator) : 
+            fDecl(decl), fRuleIndex(index), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+            fRequestNoInputOperator(rRequestNoInputOperator) {}
       ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
@@ -62,8 +63,13 @@ public:
       bool RequestNoStreamer() const { return fRequestNoStreamer; }
       const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
 
-      operator const clang::RecordDecl*() const {
+      operator clang::RecordDecl const *() const {
          return fDecl;
+      }
+      
+      bool operator<(const AnnotatedRecordDecl& right) 
+      {
+         return fRuleIndex < right.fRuleIndex;
       }
    };
    typedef std::vector<AnnotatedRecordDecl>   ClassColl_t;

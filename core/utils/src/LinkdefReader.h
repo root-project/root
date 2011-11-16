@@ -27,7 +27,8 @@
 class LinkdefReader 
 {
 private:
-   int fLine; // lines count - for error messages
+   long fLine;  // lines count - for error messages
+   long fCount; // Number of rules created so far.
 
 private:
 
@@ -59,7 +60,7 @@ private:
    static std::map<std::string, ECppNames> fgMapCppNames;
 
 public:
-   LinkdefReader() : fLine(1) {}
+   LinkdefReader() : fLine(1), fCount(0) {}
 
    static void PopulatePragmaMap();
    static void PopulateCppMap();

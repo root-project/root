@@ -35,10 +35,10 @@ private:
    bool fExclamation; // for linkdef.h: true if we had '!' at the end of a class name
    
 public:
-   ClassSelectionRule():
-      BaseSelectionRule(), fIsInheritable(false), fPlus(false), fMinus(false), fExclamation(false) {}
-   ClassSelectionRule(bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
-      BaseSelectionRule(sel, attributeName, attributeValue), fIsInheritable(inherit), fPlus(false), fMinus(false), fExclamation(false) {}
+   ClassSelectionRule(long index):
+      BaseSelectionRule(index), fIsInheritable(false), fPlus(false), fMinus(false), fExclamation(false) {}
+   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
+      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fPlus(false), fMinus(false), fExclamation(false) {}
    
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list

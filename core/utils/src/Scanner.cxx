@@ -685,7 +685,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
          outputFile<<qual_name<<std::endl;
       
       std::cout<<"\tSelected -> " << qual_name << "\n";
-      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator()));
+      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->GetIndex(),selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator()));
 
       ret = true;
    }
@@ -1123,6 +1123,9 @@ void RScanner::Scan(clang::ASTContext* C, clang::Decl* D,
    }
    
    if (outputFile.is_open()) outputFile.close();
+   
+   // And finally resort the results according to the rule ordering.
+   std::sort(fSelectedClasses.begin(),fSelectedClasses.end());
 }
 
 

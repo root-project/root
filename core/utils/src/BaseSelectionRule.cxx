@@ -21,9 +21,9 @@
 #include "BaseSelectionRule.h"
 #include <iostream>
 
-BaseSelectionRule::BaseSelectionRule(BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
+BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
+   : fIndex(index), fIsSelected(sel)
 {
-   fIsSelected = sel;
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
 

@@ -38,6 +38,7 @@ public:
    };
 
 private:
+   long                   fIndex;           // Index indicating the ordering of the rules.
    AttributesMap_t        fAttributes;      // list of the attributes of the selection/exclusion rule
    ESelect                fIsSelected;      // selected/vetoed/don't care
    std::list<std::string> fSubPatterns;     // a list of subpatterns, generated form a pattern/proto_pattern attribute 
@@ -45,9 +46,11 @@ private:
    bool                   fMatchFound;      // this is true if this selection rule has been used at least once
       
 public:
-   BaseSelectionRule() : fIsSelected(kNo),fMatchFound(false) {} 
-   BaseSelectionRule(ESelect sel, const std::string& attributeName, const std::string& attributeValue);
+   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false) {} 
+   BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
+   long    GetIndex() { return fIndex; }
+
    bool    HasAttributeWithName(const std::string& attributeName); // returns true if there is an attribute with the specified name
 
    bool    GetAttributeValue(const std::string& attributeName, std::string& returnValue); // returns the value of the attribute with name attributeName

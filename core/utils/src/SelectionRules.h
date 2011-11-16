@@ -38,10 +38,10 @@ public:
    };
    
 private:
-   std::list<ClassSelectionRule> fClassSelectionRules;       // list of the class selection rules
+   std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
    std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
    std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
-   std::list<EnumSelectionRule> fEnumSelectionRules;         // list of the enums selection rules
+   std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
    
    ESelectionFileTypes fSelectionFileType;
    
@@ -50,7 +50,7 @@ private:
 
 public:
    
-   SelectionRules(){}
+   SelectionRules() {}
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
    bool HasClassSelectionRules();
