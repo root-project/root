@@ -435,9 +435,9 @@ namespace cling {
   
   Interpreter::CompilationResult
   Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
-                          bool isRaw, Decl** D) {
+                          bool rawInput, Decl** D) {
     // if we are using the preprocessor
-    if (isRaw || input[0] == '#') {
+    if (rawInput || input[0] == '#') {
       
       if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
         if (D)
