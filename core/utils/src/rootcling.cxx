@@ -530,12 +530,39 @@ std::string ClassInfo__LineNumber(const clang::Decl *cl)
 
 class PragmaLinkCollector: public clang::PragmaHandler {
 public:
+   PragmaLinkCollector(clang::StringRef code, size_t argc, const char* argv[])
+   {
+      // Extract all #pragmas
+      llvm::MemoryBuffer* memBuf
+         = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
+      
+      clang::CompilerInstance* pragmaCI
+         = cling::CIFactory::createCI(memBuf, argc, argv, getenv("LLVMDIR"));
+      clang::Preprocessor& PP = pragmaCI->getPreprocessor();
+      clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
+      DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
+      PP.AddPragmaHandler(this);
+      // Start parsing the specified input file.
+      PP.EnterMainSourceFile();
+
+      clang::Token tok;
+      do {
+         PP.Lex(tok);
+      } while (tok.isNot(clang::tok::eof));
+   }
+
    // Unnamed pragma handler: we want all of them.
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
                       clang::Token &FirstToken) {
-      printf("Yeah, we have a #pragma!\n");
+      clang::Token tok;
+      do {
+         PP.Lex(tok);
+         PP.DumpToken(tok, true);
+         llvm::errs() << "\n";
+      } while (tok.isNot(clang::tok::eod));
    };
+   
 };
 
 bool IsStdClass(const clang::CXXRecordDecl *cl)
@@ -6137,33 +6164,19 @@ int main(int argc, char **argv)
          return 1;
       }
    }
+   
 
    {
-      // Extract all #pragmas
-      llvm::MemoryBuffer* pragmaSourceBuf
-         = llvm::MemoryBuffer::getMemBuffer(interpPragmaSource, "CINT #pragma extraction");
-
       std::vector<const char*> pragmaArgsC;
       for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
          pragmaArgsC.push_back(clingArgs[i].c_str());
       }
-      clang::CompilerInstance* pragmaCI
-         = cling::CIFactory::createCI(pragmaSourceBuf, clingArgsC.size(), &clingArgsC[0],
-                                      getenv("LLVMDIR"));
-      clang::Preprocessor& PP = pragmaCI->getPreprocessor();
-      clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
-      DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
-      PragmaLinkCollector pragmaLinkCollector;
-      PP.AddPragmaHandler(&pragmaLinkCollector);
-      clang::Token Tok;
-      // Start parsing the specified input file.
-      PP.EnterMainSourceFile();
-      do {
-         PP.Lex(Tok);
-      } while (Tok.isNot(clang::tok::eof));
+      PragmaLinkCollector pragmaLinkCollector(interpPragmaSource,
+                                              pragmaArgsC.size(),
+                                              &pragmaArgsC[0]);
    }
-   
-   
+                                              
+
    RScanner scan;
    clang::CompilerInstance* CI = interp.getCI();
    scan.Scan(&CI->getASTContext(),CI->getASTContext().getTranslationUnitDecl(),linkdefFilename);
