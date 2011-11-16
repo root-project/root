@@ -360,7 +360,7 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::processLine(const std::string& input_line, 
                            bool rawInput /*= false*/,
-                           Decl** D /*=0*/) {
+                           const Decl** D /*=0*/) {
     //
     //  Transform the input line to implement cint
     //  command line semantics (declarations are global),
@@ -433,7 +433,7 @@ namespace cling {
   
   Interpreter::CompilationResult
   Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
-                          bool rawInput, Decl** D) {
+                          bool rawInput, const Decl** D) {
     // if we are using the preprocessor
     if (rawInput || input[0] == '#') {
       

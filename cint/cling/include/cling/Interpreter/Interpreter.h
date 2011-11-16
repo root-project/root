@@ -157,7 +157,7 @@ namespace cling {
     ///
     CompilationResult processLine(const std::string& input_line, 
                                   bool rawInput = false,
-                                  clang::Decl** D = 0);
+                                  const clang::Decl** D = 0);
     
     bool loadFile(const std::string& filename,
                   const std::string* trailcode = 0,
@@ -209,7 +209,7 @@ namespace cling {
     void handleFrontendOptions();
     CompilationResult handleLine(llvm::StringRef Input,
                                  llvm::StringRef FunctionName,
-                                 bool rawInput = false, clang::Decl** D = 0);
+                                 bool rawInput = false, const clang::Decl** D = 0);
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     friend class runtime::internal::LifetimeHandler;
