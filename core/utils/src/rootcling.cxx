@@ -170,8 +170,12 @@
 #include "cintdictversion.h"
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/CIFactory.h"
 #include <Scanner.h>
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/Pragma.h"
+#include "clang/Basic/Diagnostic.h"
 
 
 #ifdef __APPLE__
@@ -524,6 +528,15 @@ std::string ClassInfo__LineNumber(const clang::Decl *cl)
 }
 
 
+class PragmaLinkCollector: public clang::PragmaHandler {
+public:
+   // Unnamed pragma handler: we want all of them.
+   void HandlePragma (clang::Preprocessor &PP,
+                      clang::PragmaIntroducerKind Introducer,
+                      clang::Token &FirstToken) {
+      printf("Yeah, we have a #pragma!\n");
+   };
+};
 
 bool IsStdClass(const clang::CXXRecordDecl *cl)
 {
@@ -5517,7 +5530,9 @@ int main(int argc, char **argv)
    std::vector<std::string> path;
    char *argvv[500];
 
-   std::vector<const char*> clingArgs;
+   std::vector<std::string> clingArgs;
+   clingArgs.push_back("-x");
+   clingArgs.push_back("c++");
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
 
@@ -5705,12 +5720,16 @@ int main(int argc, char **argv)
    
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-      if (strcmp(clingArgs[i], "-c"))
+      if (clingArgs[i] == "-c")
          pcmArgs.push_back(clingArgs[parg]);
    }
    
    // cling-only arguments
-   clingArgs.push_back("-fsyntax-only");
+   // -fsyntax-only is what we want to pass - but it's the default and cling
+   // cannot detect the difference between -fsyntax-only being passed or not.
+   // Will get fixed, hopefully, once we use the clang::Driver interface.
+   //clingArgs.push_back("-fsyntax-only");
+   clingArgs.push_back("-emit-html");
    std::string interpInclude("-I");
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
@@ -5724,10 +5743,88 @@ int main(int argc, char **argv)
 #endif
    clingArgs.push_back(interpInclude.c_str());
    
-   cling::Interpreter interp(clingArgs.size(), &clingArgs[0],
+   std::vector<const char*> clingArgsC;
+   for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
+      clingArgsC.push_back(clingArgs[i].c_str());
+   }
+   cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              getenv("LLVMDIR"));
    gInterp = &interp;
-   
+
+   // flags used only for the pragma parser:
+   clingArgs.push_back("-D__CINT__");
+   char platformDefines[64] = {0};
+#ifdef __KCC
+   snprintf(platformDefines, 64, "-DG__KCC=%ld", (long)__KCC);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __INTEL_COMPILER
+   snprintf(platformDefines, 64, "-DG__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __xlC__
+   snprintf(platformDefines, 64, "-DG__xlC=%ld", (long)__xlC__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __GNUC__
+   snprintf(platformDefines, 64, "-DG__GNUC=%ld", (long)__GNUC__);
+   snprintf(platformDefines, 64, "-DG__GNUC_VER=%ld", (long)__GNUC__*1000 + __GNUC_MINOR__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __GNUC_MINOR__
+   snprintf(platformDefines, 64, "-DG__GNUC_MINOR=%ld", (long)__GNUC_MINOR__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __HP_aCC
+   snprintf(platformDefines, 64, "-DG__HP_aCC=%ld", (long)__HP_aCC);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __sun
+   snprintf(platformDefines, 64, "-DG__sun=%ld", (long)__sun);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __SUNPRO_CC
+   snprintf(platformDefines, 64, "-DG__SUNPRO_CC=%ld", (long)__SUNPRO_CC);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef _STLPORT_VERSION
+   // stlport version, used on e.g. SUN
+   snprintf(platformDefines, 64, "-DG__STLPORT_VERSION=%ld", (long)_STLPORT_VERSION);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __ia64__
+   snprintf(platformDefines, 64, "-DG__ia64=%ld", (long)__ia64__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __x86_64__
+   snprintf(platformDefines, 64, "-DG__x86_64=%ld", (long)__x86_64__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __i386__
+   snprintf(platformDefines, 64, "-DG__i386=%ld", (long)__i386__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef __arm__
+   snprintf(platformDefines, 64, "-DG__arm=%ld", (long)__arm__);
+   clingArgs.push_back(platformDefines);
+#endif
+#ifdef _WIN32
+   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)_WIN32);
+   clingArgs.push_back(platformDefines);
+#else
+# ifdef WIN32
+   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)WIN32);
+   clingArgs.push_back(platformDefines);
+# endif
+#endif
+#ifdef _MSC_VER
+   snprintf(platformDefines, 64, "-DG__MSC_VER=%ld",(long)_MSC_VER);
+   clingArgs.push_back(platformDefines);
+   snprintf(platformDefines, 64, "-DG__VISUAL=%ld",(long)_MSC_VER);
+   clingArgs.push_back(platformDefines);
+#endif
+
+   std::string interpPragmaSource;
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -5789,6 +5886,7 @@ int main(int argc, char **argv)
             }
          }
          interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
+         interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
          pcmArgs.push_back(argv[i]);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
@@ -5805,6 +5903,7 @@ int main(int argc, char **argv)
             if (*argv[i] != '-' && *argv[i] != '+') {
                // Looks like a file
                interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
+               interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
                pcmArgs.push_back(argv[i]);
             }
          }
@@ -6038,7 +6137,33 @@ int main(int argc, char **argv)
          return 1;
       }
    }
-      
+
+   {
+      // Extract all #pragmas
+      llvm::MemoryBuffer* pragmaSourceBuf
+         = llvm::MemoryBuffer::getMemBuffer(interpPragmaSource, "CINT #pragma extraction");
+
+      std::vector<const char*> pragmaArgsC;
+      for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
+         pragmaArgsC.push_back(clingArgs[i].c_str());
+      }
+      clang::CompilerInstance* pragmaCI
+         = cling::CIFactory::createCI(pragmaSourceBuf, clingArgsC.size(), &clingArgsC[0],
+                                      getenv("LLVMDIR"));
+      clang::Preprocessor& PP = pragmaCI->getPreprocessor();
+      clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
+      DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
+      PragmaLinkCollector pragmaLinkCollector;
+      PP.AddPragmaHandler(&pragmaLinkCollector);
+      clang::Token Tok;
+      // Start parsing the specified input file.
+      PP.EnterMainSourceFile();
+      do {
+         PP.Lex(Tok);
+      } while (Tok.isNot(clang::tok::eof));
+   }
+   
+   
    RScanner scan;
    clang::CompilerInstance* CI = interp.getCI();
    scan.Scan(&CI->getASTContext(),CI->getASTContext().getTranslationUnitDecl(),linkdefFilename);
