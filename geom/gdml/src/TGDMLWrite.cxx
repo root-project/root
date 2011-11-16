@@ -1,9 +1,13 @@
-/*
- * TGDMLWrite.cxx
- *
- *  Created on: Sep 15, 2011
- *      Author: apytel
- */
+// @(#)root/gdml:$Id$
+// Author: Anton Pytel 15/9/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -390,7 +394,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
       nCnt++;
    }
    //create only one divisionvol node
-   if (isPattern == kTRUE) {
+   if (isPattern && pattFinder) {
       //retrieve attributes of division
       Int_t ndiv, divaxis;
       Double_t offset, width, xlo, xhi;

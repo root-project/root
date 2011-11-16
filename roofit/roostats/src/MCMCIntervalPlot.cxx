@@ -180,7 +180,7 @@ void MCMCIntervalPlot::DrawPosterior(const Option_t* options)
       DrawPosteriorHist(options);
 }
 
-void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /* options */,
+void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
       const char* title, Bool_t scale)
 {
    if (fPosteriorHist == NULL)

@@ -1,9 +1,13 @@
-/*
- * TGDMLWrite.h
- *
- *  Created on: Sep 15, 2011
- *      Author: apytel
- */
+// @(#)root/gdml:$Id$
+// Author: Anton Pytel 15/9/2011
+ 
+/*************************************************************************
+ * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TGDMLWRITE
 #define ROOT_TGDMLWRITE
