@@ -3232,7 +3232,7 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
    static const char *fantomline = "TRint::EndOfLineAction();";
    if (sLine == fantomline) {
       // end of line action, CINT-only.
-      return TCintWithCling::ProcessLine(sLine, error);
+      return TCintWithCling::ProcessLineCintOnly(sLine, error);
    }
    TString aclicMode;
    TString arguments;
