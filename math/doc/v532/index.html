@@ -2,3 +2,43 @@
 <hr/> 
 <a name="math"></a> 
 <h3>Math Libraries</h3>
+
+<h4>MathCore</h4>
+
+<h4><tt>TMath</tt></h4>
+<ul>
+<li> Add a new function TMath::Power(double, int) impelmented using std::pow(double,int) which is 100% faster than the
+  double version</li>
+</ul>
+
+<h4><tt>KDTree</tt></h4>
+<ul>
+<li>New KDTree class from C. Gumpert. which has different splitting rules using the data population. The splitting can
+  is based on the basket population, but any function of the data can be used. For example, in case of weighted data one can split according to
+  the basket total weight or the effective entries in the basket. In this way the class can support weighted data
+  sets. The splitting of the TKDTree class is instead fixed and based on the basket number of entries.</li>
+<li>The tree can also be frozen to fix the splitting and behaving like a multi-dim histograms with bins with variables
+  hyper-volumes.</li>
+ <li>Auxiliary classes are provided like the node classes or the data point class, which can exists also with a compile timed fixed dimension
+  for better performances. </li>
+</ul>
+
+<h4><tt>Fitter classes</tt></h4>
+<ul>
+  <li>Provide support for weighted likelihood unbinned fits</li>
+  <li>Provide support for extended likelihood unbinned fits</li>
+  <li>Provide support for not-extended binned likelihood fits (i.e. multinomial distribution instead of Poisson for bin
+  contents)</li>
+  <li>In case of binned likelihood fit build a Poisson or (Multinomial) likelihood ratio with the saturated model. So a
+  constant term is subtracted to the likelihood. The formulae described in the Baker and Cousins
+  paper (N.I.M. 221 (1984) 437) are now used. The  obtained negative likelihood ratio value from the fit and multiplied
+  by a factor 2 is now asymptotically distributed as a chi square.</li>
+</ul>
+  
+  
+
+  
+  
+  
+</ul>
+
