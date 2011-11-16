@@ -172,7 +172,7 @@ hurddeb)
    ;;
 aix5)
    # IBM AIX
-   auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
+   auxcflags="-qnoro -qnoroconst -qmaxmem=-1 -qrtti=all"
    auxlibs=
    #forcelibs=$rootulibs
    #forceglibs=$rootuglibs
