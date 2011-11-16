@@ -458,6 +458,15 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       Str += "void (" + cinfo->getNameAsString() + "::*fptr)(" + proto + ") = &" + cinfo->getNameAsString()  + "::" + method + ";;";
       Str += "\n};;";
       
+      std::string uniquename(gInterp->createUniqueName());
+
+      Str = "template<typename CLASS, typename RET> void " + uniquename + "lookup_arg(RET (CLASS::* const arg)(";
+      Str += proto;
+      Str += ") ) { };\n";
+      Str += "void " + uniquename + "_wrapper() {\n";
+      Str += uniquename + "lookup_arg(& " + cinfo->getNameAsString()  + "::" + method + ");\n";
+      Str += ";;};;";
+      
       clang::Decl* D = 0;
       clang::FunctionDecl* ResultFD = 0;
       if (gInterp->processLine(Str, /*rawInput*/true, &D)
@@ -532,6 +541,28 @@ bool IsStdClass(const clang::CXXRecordDecl *cl)
       }
    }
    return false;
+}
+
+std::string R__GetQualifiedName(const clang::NamedDecl *cl)
+{
+   std::string result;
+   cl->getNameForDiagnostic(result,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   return result;
+}
+
+void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl *cl)
+{
+   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+}
+
+void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
+{
+   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),false); // qual_name = N->getQualifiedNameAsString();
+}
+
+inline bool R__IsTemplate(const clang::CXXRecordDecl *cl)
+{
+   return cl->getTemplateSpecializationKind() != clang::TSK_Undeclared;
 }
 
 //const char* root_style()  {
@@ -1086,7 +1117,7 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
    
    bool has_input_error = false;
    
-   G__ClassInfo clinfo(cl->getQualifiedNameAsString().c_str());
+   G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
    return CheckInputOperator(clinfo,dicttype);
 #if 0
    // Need to find out if the operator>> is actually defined for
@@ -1264,7 +1295,7 @@ bool CheckClassDef(const clang::RecordDecl *cl)
    bool result = true;
    if (!inheritsFromTSelector && inheritsFromTObject && !isAbstract
        && !hasClassDef) {
-      Error(cl->getQualifiedNameAsString().c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",cl->getQualifiedNameAsString().c_str());
+      Error(R__GetQualifiedName(cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(cl).c_str());
       // We do want to always output the message (hence the Error level)
       // but still want rootcint to succeed.
       result = true;
@@ -1303,7 +1334,7 @@ bool HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl)
    const char *proto = "TDirectory*";
    const char *name = "DirectoryAutoAdd";
    
-   return R__CheckPublicFuncWithProto(cl,proto,name);
+   return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
 
@@ -1512,7 +1543,7 @@ bool NeedTypedefShadowClass(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
-int NeedTemplateKeyword(G__ClassInfo &cl)
+bool NeedTemplateKeyword(G__ClassInfo &cl)
 {
    if (cl.IsTmplt()) {
       char *templatename = StrDup(cl.Fullname());
@@ -1520,35 +1551,46 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
       if (loc) *loc = 0;
       struct G__Definedtemplateclass *templ = G__defined_templateclass(templatename);
       if (templ) {
-
+         
          int current = cl.Tagnum();
          G__IntList * ilist = templ->instantiatedtagnum;
          while(ilist) {
             if (ilist->i == current) {
                delete [] templatename;
                // This is an automatically instantiated templated class.
-#ifdef __KCC
-               // for now KCC works better without it !
-               return 0;
-#else
-               return 1;
-#endif
+               return true;
             }
             ilist = ilist->next;
          }
-
+         
          delete [] templatename;
          // This is a specialized templated class
-         return 0;
-
+         return false;
+         
       } else {
-
+         
          delete [] templatename;
          // It might be a specialization without us seeing the template definition
-         return 0;
+         return false;
       }
    }
-   return 0;
+   return false;
+}
+
+//______________________________________________________________________________
+bool NeedTemplateKeyword(const clang::CXXRecordDecl *cl)
+{
+   clang::TemplateSpecializationKind kind = cl->getTemplateSpecializationKind();
+   if (kind == clang::TSK_Undeclared ) {
+      // Note a template;
+      return false;
+   } else if (kind == clang::TSK_ExplicitSpecialization) {
+      // This is a specialized templated class
+      return false;
+   } else {
+      // This is an automatically or explicitly instantiated templated class.
+      return true;
+   }  
 }
 
 bool HasCustomOperatorNew(G__ClassInfo& cl);
@@ -2903,24 +2945,28 @@ void WriteInputOperator(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
+void WriteClassFunctions(const clang::CXXRecordDecl *cl)
 {
    // Write the code to set the class name and the initialization object.
 
-   int add_template_keyword = NeedTemplateKeyword(cl);
+   bool add_template_keyword = NeedTemplateKeyword(cl);
 
-   G__ClassInfo ns = cl.EnclosingSpace();
-   string clsname = cl.Fullname();
+   string clsname;
+   R__GetName(clsname,cl);
+   
+   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(cl->getDeclContext());
    string nsname;
-   if (ns.IsValid()) {
-      nsname = ns.Fullname();
-      clsname.erase (0, nsname.size() + 2);
+   if (nsdecl && nsdecl!=cl ) {
+      R__GetQualifiedName(nsname,nsdecl);
    }
+   string fullname;
+   R__GetQualifiedName(fullname,cl);
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
       G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(clinfo);
    }
 
    (*dictSrcOut) << "//_______________________________________"
@@ -2933,27 +2979,27 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
-                 << "   return \"" << cl.Fullname() << "\";"  << std::endl <<"}" << std::endl << std::endl;
+                 << "   return \"" << fullname.c_str() << "\";"  << std::endl <<"}" << std::endl << std::endl;
 
    (*dictSrcOut) << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
                  << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) <<"template <> ";
    (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
                  << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-                 << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << cl.Fullname()
+                 << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
                  << "*)0x0)->GetClass();" << std::endl
                  << "}" << std::endl << std::endl
 
@@ -2962,7 +3008,7 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
    (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-   (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
+   (*dictSrcOut) << fullname.c_str() << "*)0x0)->GetClass();" << std::endl
                  << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
 
@@ -2983,10 +3029,10 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    }
 
    // We need to to go back to CINT to preserve functionality.
-   G__ClassInfo clinfo( cl->getQualifiedNameAsString().c_str() );
+   G__ClassInfo clinfo( R__GetQualifiedName(cl).c_str() );
 
    // coverity[fun_call_w_exception] - that's just fine.
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl->getQualifiedNameAsString().c_str() ) );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( R__GetQualifiedName(cl).c_str() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
    string csymbol = classname;
    string args;
@@ -3006,7 +3052,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);"
    << std::endl;
    
-   if (!ClassInfo__HasMethod(cl,"Dictionary") || cl->getDescribedClassTemplate())
+   if (!ClassInfo__HasMethod(cl,"Dictionary") || R__IsTemplate(cl))
       (*dictSrcOut) << "   static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
    
    if (HasDefaultConstructor(cl,&args)) {
@@ -3036,8 +3082,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
-   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( cl->getQualifiedNameAsString().c_str() );
-   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( cl->getQualifiedNameAsString().c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( R__GetQualifiedName(cl).c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( R__GetQualifiedName(cl).c_str() );
    
    MembersTypeMap_t nameTypeMap;
    // Note Falling back on CINT for this ....
@@ -3203,7 +3249,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
          (*dictSrcOut) << "&" << mappedname.c_str() << "_ShowMembers, ";
    }
    
-   if (ClassInfo__HasMethod(cl,"Dictionary") && !cl->getDescribedClassTemplate()) {
+   if (ClassInfo__HasMethod(cl,"Dictionary") && !R__IsTemplate(cl)) {
       (*dictSrcOut) << "&" << csymbol.c_str() << "::Dictionary, ";
    } else {
       (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
@@ -3308,7 +3354,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const "
    << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
    
-   if (!ClassInfo__HasMethod(cl,"Dictionary") || cl->getDescribedClassTemplate()) {
+   if (!ClassInfo__HasMethod(cl,"Dictionary") || R__IsTemplate(cl)) {
       (*dictSrcOut) <<  std::endl << "   // Dictionary for non-ClassDef classes" << std::endl
       << "   static void " << mappedname.c_str() << "_Dictionary() {" << std::endl;
       (*dictSrcOut) << "      ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str();
@@ -3660,7 +3706,7 @@ void WriteNamespaceInit(clang::NamespaceDecl *cl)
    // Write the code to initialize the namespace name and the initialization object.
    
    // coverity[fun_call_w_exception] - that's just fine.
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl->getQualifiedNameAsString().c_str() ) );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( R__GetQualifiedName(cl).c_str() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
    
    int nesting = 0;
@@ -3981,7 +4027,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
 //______________________________________________________________________________
 void WriteStreamer(G__ClassInfo &cl)
 {
-   int add_template_keyword = NeedTemplateKeyword(cl);
+   bool add_template_keyword = NeedTemplateKeyword(cl);
 
    G__ClassInfo ns = cl.EnclosingSpace();
    string clsname = cl.Fullname();
@@ -4359,7 +4405,7 @@ void WriteAutoStreamer(G__ClassInfo &cl)
 
    // Write Streamer() method suitable for automatic schema evolution.
 
-   int add_template_keyword = NeedTemplateKeyword(cl);
+   bool add_template_keyword = NeedTemplateKeyword(cl);
 
    G__BaseClassInfo base(cl);
    while (base.Next()) {
@@ -4747,7 +4793,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
          nsname = ns.Fullname();
          clsname.erase (0, nsname.size() + 2);
       }
-      int add_template_keyword = NeedTemplateKeyword(cl);
+      bool add_template_keyword = NeedTemplateKeyword(cl);
       int enclSpaceNesting = 0;
       if (!nsname.empty()) {
          G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
@@ -6134,17 +6180,16 @@ int main(int argc, char **argv)
       // instantiation (STK)
       //
 // SELECTION LOOP
-      G__ClassInfo clLocal;
-      clLocal.Init();
-      while (clLocal.Next()) {
-         if (!clLocal.IsLoaded()) {
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
-         }
-         if ((clLocal.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clLocal.Linkage() == G__CPPLINK) {
-            // Write Code for Class_Name() and static variable
-            if (clLocal.HasMethod("Class_Name")) {
-               WriteClassFunctions(clLocal, clLocal.IsTmplt());
-            }
+         }                       
+         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         if (CRD && ClassInfo__HasMethod(*iter,"Class_Name")) {
+            WriteClassFunctions(CRD);
          }
       }
 
@@ -6280,6 +6325,7 @@ int main(int argc, char **argv)
       // Loop over all classes and create Streamer() & ShowMembers() methods
       // for classes not in clProcessed list (exported via
       // "#pragma link C++ defined_in")
+      G__ClassInfo clLocal;
       clLocal.Init();
 
 // SELECTION LOOP
