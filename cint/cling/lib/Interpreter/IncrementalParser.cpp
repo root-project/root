@@ -132,7 +132,9 @@ namespace cling {
   }
 
   IncrementalParser::~IncrementalParser() {
-     GetCodeGenerator()->ReleaseModule();
+     if (GetCodeGenerator()) {
+       GetCodeGenerator()->ReleaseModule();
+     }
   }
   
   void IncrementalParser::Initialize() {
@@ -197,7 +199,9 @@ namespace cling {
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
     // Reset the module builder to clean up global initializers, c'tors, d'tors:
-    GetCodeGenerator()->Initialize(getCI()->getASTContext());
+    if (GetCodeGenerator()) {
+      GetCodeGenerator()->Initialize(getCI()->getASTContext());
+    }
 
     EParseResult Result = Parse(input);
 
