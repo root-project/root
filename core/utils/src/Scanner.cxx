@@ -664,7 +664,14 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    
    DumpDecl(D, "");
-   
+//   std::string qual_name2;
+//   
+//   if (GetDeclQualName(D, qual_name2))
+//      std::cout<<"\tLooking -> " << qual_name2 << "\n";
+//   if (qual_name2 == "TemplateClass") {
+//      std::cout<<D->clang::Decl::getDeclKindName()<<"\n";
+//   }
+  
    selected = sr.IsDeclSelected(D);
    if (selected) {
       
@@ -945,7 +952,7 @@ bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name)
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
    
    if (N) {
-      qual_name = N->getQualifiedNameAsString();
+      N->getNameForDiagnostic(qual_name,D->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
       return true;
    }
    else {

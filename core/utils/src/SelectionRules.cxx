@@ -311,6 +311,14 @@ BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D)
       return IsClassSelected(D, qual_name);
    }
    
+   if (kind == "ClassTemplateSpecialization") { // structs, unions and classes are all CXXRecords
+      return IsClassSelected(D, qual_name);
+   }
+
+   if (kind == "ClassTemplatePartialSpecialization") { // structs, unions and classes are all CXXRecords      fprintf(stderr,"ClassTemplatePartialSpecialization: %s %s\n",llvm::dyn_cast<clang::NamedDecl>(D)->getNameAsString().c_str(),qual_name.c_str());
+      return IsClassSelected(D, qual_name);
+   }
+   
    if (kind == "Namespace") { // structs, unions and classes are all CXXRecords
       return IsNamespaceSelected(D, qual_name);
    }
@@ -373,7 +381,7 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
       else if (N->isCXXClassMember()) { // for constructors, destructors, operator=, etc. methods 
          name =  N->getNameAsString(); // we use this (unefficient) method to Get the name in that case 
       }
-      qual_name = N->getQualifiedNameAsString();
+      N->getNameForDiagnostic(qual_name,N->getASTContext().getPrintingPolicy(),true);
       return true;
    }
    else {
