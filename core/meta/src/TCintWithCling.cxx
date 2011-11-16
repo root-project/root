@@ -522,7 +522,7 @@ tcling_ClassInfo& tcling_ClassInfo::operator=(const tcling_ClassInfo& rhs)
 tcling_ClassInfo::tcling_ClassInfo(const char* name)
    : fClassInfo(0), fDecl(0)//, fIdx(-1)
 {
-   fprintf(stderr, "tcling_ClassInfo(name): looking up class name: %s\n", name);
+   //fprintf(stderr, "tcling_ClassInfo(name): looking up class name: %s\n", name);
    fClassInfo = new G__ClassInfo(name);
 #if 0
    if (!fClassInfo->IsValid()) {
@@ -746,8 +746,8 @@ bool tcling_ClassInfo::HasMethod(const char* name) const
 
 void tcling_ClassInfo::Init(const char* name)
 {
-   fprintf(stderr, "tcling_ClassInfo::Init(name): looking up class: %s\n",
-           name);
+   //fprintf(stderr, "tcling_ClassInfo::Init(name): looking up class: %s\n",
+   //        name);
    fClassInfo = 0;
    fDecl = 0;
    //fIdx = -1;
@@ -789,8 +789,8 @@ void tcling_ClassInfo::Init(const char* name)
 
 void tcling_ClassInfo::Init(int tagnum)
 {
-   fprintf(stderr, "tcling_ClassInfo::Init(tagnum): looking up tagnum: %d\n",
-           tagnum);
+   //fprintf(stderr, "tcling_ClassInfo::Init(tagnum): looking up tagnum: %d\n",
+   //        tagnum);
    fClassInfo = 0;
    fDecl = 0;
    //fIdx = -1;
@@ -3070,9 +3070,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    G__LockCpp();
    // Initialize for ROOT:
    // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-   ProcessLine("#define ROOT_Rtypes 0");
-   ProcessLine("#define ROOT_TError 0");
-   ProcessLine("#define ROOT_TGenericClassInfo 0");
+   ProcessLineCintOnly("#define ROOT_Rtypes 0");
+   ProcessLineCintOnly("#define ROOT_TError 0");
+   ProcessLineCintOnly("#define ROOT_TGenericClassInfo 0");
    TString include;
    // Add the root include directory to list searched by default
 #ifndef ROOTINCDIR
@@ -3086,7 +3086,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // if RtypesCint.h can be found (think of static executable without include/)
    char* whichTypesCint = gSystem->Which(include, "RtypesCint.h");
    if (whichTypesCint) {
-      ProcessLine("#include <RtypesCint.h>");
+      ProcessLineCintOnly("#include <RtypesCint.h>");
       delete[] whichTypesCint;
    }
 }
@@ -3110,7 +3110,101 @@ TCintWithCling::~TCintWithCling()
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error)
+Long_t TCintWithCling::ProcessLineCintOnly(const char* line, EErrorCode* error /*=0*/)
+{
+   // Let CINT process a command line.
+   // If the command is executed and the result of G__process_cmd is 0,
+   // the return value is the int value corresponding to the result of the command
+   // (float and double return values will be truncated).
+
+   Long_t ret = 0;
+   if (gApplication) {
+      if (gApplication->IsCmdThread()) {
+         if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+            gGlobalMutex->Lock();
+            if (!gCINTMutex)
+               gCINTMutex = gGlobalMutex->Factory(kTRUE);
+            gGlobalMutex->UnLock();
+         }
+         R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
+         gROOT->SetLineIsProcessing();
+
+         G__value local_res;
+         G__setnull(&local_res);
+
+         // It checks whether the input line contains the "fantom" method
+         // to synchronize user keyboard input and ROOT prompt line
+         if (strstr(line,fantomline)) {
+            G__free_tempobject();
+            TCintWithCling::UpdateAllCanvases();
+         } else {
+            int local_error = 0;
+
+            int prerun = G__getPrerun();
+            G__setPrerun(0);
+            ret = G__process_cmd(const_cast<char*>(line), fPrompt, &fMore, &local_error, &local_res);
+            G__setPrerun(prerun);
+            if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
+               ResetGlobals();
+               gApplication->Terminate(fExitCode);
+            }
+            if (error)
+               *error = (EErrorCode)local_error;
+         }
+
+         if (ret == 0) {
+            // prevent overflow signal
+            double resd = G__double(local_res);
+            if (resd > LONG_MAX) ret = LONG_MAX;
+            else if (resd < LONG_MIN) ret = LONG_MIN;
+            else ret = G__int_cast(local_res);
+         }
+
+         gROOT->SetLineHasBeenProcessed();
+      } else {
+         ret = ProcessLineCintOnly(line, error);
+      }
+   } else {
+      if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+         gGlobalMutex->Lock();
+         if (!gCINTMutex)
+            gCINTMutex = gGlobalMutex->Factory(kTRUE);
+         gGlobalMutex->UnLock();
+      }
+      R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
+      gROOT->SetLineIsProcessing();
+
+      G__value local_res;
+      G__setnull(&local_res);
+
+      int local_error = 0;
+
+      int prerun = G__getPrerun();
+      G__setPrerun(0);
+      ret = G__process_cmd(const_cast<char*>(line), fPrompt, &fMore, &local_error, &local_res);
+      G__setPrerun(prerun);
+      if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
+         ResetGlobals();
+         exit(fExitCode);
+      }
+      if (error)
+         *error = (EErrorCode)local_error;
+
+      if (ret == 0) {
+         // prevent overflow signal
+         double resd = G__double(local_res);
+         if (resd > LONG_MAX) ret = LONG_MAX;
+         else if (resd < LONG_MIN) ret = LONG_MIN;
+         else ret = G__int_cast(local_res);
+      }
+
+      gROOT->SetLineHasBeenProcessed();
+   }
+   return ret;
+}
+
+//______________________________________________________________________________
+Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
 {
    // Let CINT process a command line.
    // If the command is executed and the result of G__process_cmd is 0,
@@ -3131,8 +3225,8 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error)
       Ssiz_t posOpenParen = sLineNoArgs.Last('(');
       if (posOpenParen != kNPOS && sLineNoArgs.EndsWith(")")) {
          sLineNoArgs.Remove(posOpenParen, sLineNoArgs.Length() - posOpenParen);
-        ret = TCintWithCling::ProcessLine(sLineNoArgs, error);
       }
+      ret = ProcessLineCintOnly(sLineNoArgs, error);
       sLine[1] = haveX;
    }
    static const char *fantomline = "TRint::EndOfLineAction();";
@@ -3179,6 +3273,10 @@ void TCintWithCling::AddIncludePath(const char *path)
 
    fInterpreter->AddIncludePath(path);
    //TCintWithCling::AddIncludePath(path);
+   R__LOCKGUARD(gCINTMutex);
+   char* incpath = gSystem->ExpandPathName(path);
+   G__add_ipath(incpath);
+   delete[] incpath;
 }
 
 //______________________________________________________________________________
@@ -3360,7 +3458,7 @@ Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
    }
 #endif
    R__LOCKGUARD2(gCINTMutex);
-   result = (Long_t) G__int_cast(G__calc((char*)line));
+   result = (Long_t) G__int_cast(G__calc(const_cast<char*>(line)));
    if (error) {
       *error = (EErrorCode)G__lasterror();
    }
@@ -4066,7 +4164,7 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, TMethod* method,
       }
       listpar = complete.Data();
    }
-   Execute(obj, cl, (char*)method->GetName(), (char*)listpar, error);
+   Execute(obj, cl, const_cast<char*>(method->GetName()), const_cast<char*>(listpar), error);
 }
 
 //______________________________________________________________________________
@@ -4155,8 +4253,8 @@ const char* TCintWithCling::TypeName(const char* typeDesc)
    }
    char* s, *template_start;
    if (!strstr(typeDesc, "(*)(")) {
-      s = (char*)strchr(typeDesc, ' ');
-      template_start = (char*)strchr(typeDesc, '<');
+      s = const_cast<char*>(strchr(typeDesc, ' '));
+      template_start = const_cast<char*>(strchr(typeDesc, '<'));
       if (!strcmp(typeDesc, "long long")) {
          strlcpy(t, typeDesc, dlen + 1);
       }
@@ -4318,9 +4416,9 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
                         // know (yet?) which one the user will need!
                         // But what if it's not a namespace but a class?
                         // Does CINT already know it?
-                        const char* baselib = G__get_class_autoloading_table((char*)base.Data());
+                        const char* baselib = G__get_class_autoloading_table(const_cast<char*>(base.Data()));
                         if ((!baselib || !baselib[0]) && !rec->FindObject(base)) {
-                           G__set_class_autoloading_table((char*)base.Data(), (char*)"");
+                           G__set_class_autoloading_table(const_cast<char*>(base.Data()), const_cast<char*>(""));
                         }
                      }
                      ++k;
@@ -4332,7 +4430,7 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
                }
             }
          }
-         G__set_class_autoloading_table((char*)cls.Data(), (char*)lib);
+         G__set_class_autoloading_table(const_cast<char*>(cls.Data()), const_cast<char*>(lib));
          G__security_recover(stderr); // Ignore any error during this setting.
          if (gDebug > 6) {
             const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
@@ -4505,7 +4603,7 @@ Int_t TCintWithCling::UnloadLibraryMap(const char* library)
                Error("UnloadLibraryMap", "entry for <%s,%s> not found in library map table", cls.Data(), lib);
                ret = -1;
             }
-            G__set_class_autoloading_table((char*)cls.Data(), (char*) - 1);
+            G__set_class_autoloading_table(const_cast<char*>(cls.Data()), (char*)(-1));
             G__security_recover(stderr); // Ignore any error during this setting.
          }
          delete tokens;

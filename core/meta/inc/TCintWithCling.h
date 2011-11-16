@@ -358,6 +358,8 @@ private: // Private Utility Functions
    {
    }
 
+   Long_t ProcessLineCintOnly(const char* line, TInterpreter::EErrorCode* error = 0);
+
 public: // ROOT Metadata
 
    ClassDef(TCintWithCling, 0) //Interface to CINT C/C++ interpreter
