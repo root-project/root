@@ -534,25 +534,31 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
             ClassSelectionRule csr(fCount++);
             
             int len = rule_token.length();
-            char last = rule_token.at(len - 1);
             if (len > 2) { // process the +, -, -! endings of the classes
-               if (last == '+') {
-                  csr.SetPlus(true);
-                  rule_token.erase(len - 1);
+               
+               bool ending = false;
+               int where = 1;
+               while (!ending && where < len) {
+                  char last = rule_token.at(len - where);
+                  switch ( last ) {
+                     case ';': break;
+                     case '+': csr.SetPlus(true); break;
+                     case '!': csr.SetExclamation(true); break;
+                     case '-': csr.SetMinus(true); break;
+                     case ' ':
+                     case '\t': break;
+                     default:
+                        ending = true;
+                  }
+                  ++where;
                }
-               else if (last == '-') {
-                  csr.SetMinus(true);
-                  rule_token.erase(len - 1);
+               if ( csr.HasPlus() && csr.HasMinus() ) {
+                  std::cerr << "Warning: " << rule_token << " option + mutual exclusive with -, + prevails\n";
+                  csr.SetMinus(false);
                }
-               else if (last == '!') {
-                  csr.SetExclamation(true);
-                  char second_last = rule_token.at(len - 2);
-                  if (second_last == '-') csr.SetMinus(true);
-                  rule_token.erase(len - 2);
-               }
+               rule_token.erase(len - (where-2));
             }
-            
-            
+
             if (linkOn) {
                csr.SetSelected(BaseSelectionRule::kYes);
                
