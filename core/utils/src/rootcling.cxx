@@ -4591,6 +4591,7 @@ void WritePointersSTL(G__ClassInfo &cl)
 //______________________________________________________________________________
 void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
+   //#define R__SHOWMEMBERS_IN_TCLING
 #ifdef R__SHOWMEMBERS_IN_TCLING
    (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
 #else
@@ -6620,8 +6621,8 @@ int main(int argc, char **argv)
       }
       clangInvocation += " -Xclang -emit-module -o";
       clangInvocation += std::string(dictname) + "_dict.pcm -x c++ -c ";
-      for (size_t i = 0, n = pcmArgs.size(); i < n; ++i) {
-         clangInvocation += pcmArgs[i] + " ";
+      for (size_t iPcmArg = 0, nPcmArg = pcmArgs.size(); iPcmArg < nPcmArg; ++iPcmArg) {
+         clangInvocation += pcmArgs[iPcmArg] + " ";
       }
       int ret = 0; printf("Would like to generate PCM: %s\n",clangInvocation.c_str());
       if (ret) return ret;
