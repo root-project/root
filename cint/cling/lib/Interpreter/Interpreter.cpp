@@ -439,7 +439,7 @@ namespace cling {
       
       if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
         if (D)
-          *D = m_IncrParser->getLastTransaction().FirstDecl;
+          *D = m_IncrParser->getLastTransaction().getFirstDecl();
 
         return Interpreter::kSuccess;
       }
@@ -452,7 +452,7 @@ namespace cling {
         return Interpreter::kFailure;
 
     if (D)
-      *D = m_IncrParser->getLastTransaction().FirstDecl;
+      *D = m_IncrParser->getLastTransaction().getFirstDecl();
 
     //
     //  Run it using the JIT.

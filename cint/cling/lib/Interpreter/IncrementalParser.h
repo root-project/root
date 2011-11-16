@@ -9,6 +9,7 @@
 
 #include "ChainedConsumer.h"
 
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/Basic/SourceLocation.h"
 
@@ -44,10 +45,31 @@ namespace cling {
   class IncrementalParser {
   public:
     ///\brief Contains information about the last input
-    struct Transaction {
-      clang::Decl* FirstDecl;
-      clang::Decl* LastDecl;
-      void Reset() { FirstDecl = LastDecl = 0; }
+    struct Transaction {      
+    private:
+      clang::Decl* m_BeforeFirst;
+      clang::Decl* m_LastDecl;
+      void setBeforeFirstDecl(clang::DeclContext* DC) {
+        class DeclContextExt : public clang::DeclContext {            
+        public:           
+          static clang::Decl* getLastDecl(DeclContext* DC) {
+            return ((DeclContextExt*)DC)->LastDecl;
+          }
+        };
+        m_BeforeFirst = DeclContextExt::getLastDecl(DC);
+      }
+    public:
+      clang::Decl* getFirstDecl() const {
+        return m_BeforeFirst->getNextDeclInContext();
+      }
+      clang::Decl* getLastDeclSlow() const {
+        clang::Decl* Result = getFirstDecl();
+        while (Result->getNextDeclInContext())
+          Result = Result->getNextDeclInContext();
+
+        return Result;
+      }
+      friend class IncrementalParser;
     };
     enum EParseResult {
       kSuccess,
