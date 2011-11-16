@@ -574,16 +574,9 @@ bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std
 
 BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name)
 {
-   clang::NamespaceDecl* N;
-
-   try {
-      N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-      if (N==0) {
-         std::cout<<"\n\tCouldn't cast Decl to NamespaceDecl";
-         return 0;
-      }
-   }
-   catch (std::exception& e) {
+   clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
+   if (N==0) {
+      std::cout<<"\n\tCouldn't cast Decl to NamespaceDecl";
       return 0;
    }
  
@@ -690,13 +683,7 @@ BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std
 
 BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name)
 {
-   clang::TagDecl* T;
-   try {
-      T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-   }
-   catch (std::exception& e) {
-      return 0;
-   }
+   clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (T) {
       if (IsLinkdefFile() || T->isClass() || T->isStruct()) {
          std::string file_name;
