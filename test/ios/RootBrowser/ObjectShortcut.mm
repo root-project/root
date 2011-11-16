@@ -3,6 +3,7 @@
 
 #import "FileContentController.h"
 #import "ObjectShortcut.h"
+#import "SpotView.h"
 
 //C++ (ROOT) imports.
 #import "FileUtils.h"
@@ -21,6 +22,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 @synthesize icon;
 @synthesize objectIndex;
 @synthesize objectName;
+@synthesize spot;
 
 //____________________________________________________________________________________________________
 + (CGFloat) iconWidth
@@ -52,6 +54,12 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
    using namespace ROOT::iOS::Browser;
    
    if (self = [super initWithFrame : frame]) {
+      frame.origin = CGPointZero;
+      frame.size.height = [ObjectShortcut iconHeight];
+      
+      spot = [[SpotView alloc] initWithFrame : frame];
+      [self addSubview : spot];
+
       controller = c;
       objectIndex = index;
       
@@ -76,7 +84,13 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 
    self = [super initWithFrame:frame];
 
-   if (self) {   
+   if (self) {
+      frame.origin = CGPointZero;
+      frame.size.height = [ObjectShortcut iconHeight];
+      
+      spot = [[SpotView alloc] initWithFrame : frame];
+      [self addSubview : spot];
+   
       //ROOT's staff.
       controller = c;
       objectIndex = objIndex;

@@ -11,6 +11,7 @@
 #import "SearchController.h"
 #import "ObjectShortcut.h"
 #import "Shortcuts.h"
+#import "SpotView.h"
 
 
 //C++ imports.
@@ -399,14 +400,15 @@
 //____________________________________________________________________________________________________
 - (void) animateShortcut : (ObjectShortcut *) sh
 {
-   //Now, animation!
    CGAffineTransform originalTransform = sh.transform;
-   CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.4f, 1.4f);
+   CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.2f, 1.2f);
+
    [UIView beginAnimations : @"hide_object" context : nil];
    [UIView setAnimationDuration : 1.5f];
    [UIView setAnimationCurve : UIViewAnimationCurveLinear];
    [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
    sh.transform = newTransform;
+   sh.spot.alpha = 0.8f;
    [UIView commitAnimations];
 
    [UIView beginAnimations : @"show_object" context : nil];
@@ -414,6 +416,7 @@
    [UIView setAnimationCurve : UIViewAnimationCurveLinear];
    [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
    sh.transform = originalTransform;
+   sh.spot.alpha = 0.f;
    [UIView commitAnimations];
 }
 
