@@ -3,6 +3,28 @@
 <a name="hist"></a> 
 <h3>Histogram Libraries</h3>
 
+<h4>TH1</h4>
+<ul>
+  <li>Improve performances of TH1::Merge in case of histograms with same bin limits. Now an copy of the
+  initial histogram is not done. These improvements have been applied also in the TH2, TH3 and TProfile's classes.
+  </li>
+</ul>
+
+<h4>TH2</h4>
+<ul>
+  <li>
+ Add a new option "S" in FitSlice which performs a  sliding merge: merge n consecutive bins along Y accordingly to what value in option Gn is given.
+  </li>
+</ul>
+
+<h4>TProfile2D and TProfile3D</h4>
+<ul>
+  <li>
+Implement SetBins for variable bin sizes
+  </li>
+  <li>Add support for variable bins in TProjectionXY</li>
+</ul>
+
 <h4>TH2Poly</h4>
 <ul>
 <li>The values set by <tt>SetMaximum()</tt> and <tt>SetMinimum()</tt> were not
@@ -25,7 +47,7 @@ approximation are supported) </li>
 <h4>TGraphAsymmErrors</h4>
 <ul>
 <li>add option to <tt>TGraphAsymmErrors::Divide</tt> for interpreting the given
-histograms as ratio of Poisson means<li>
+histograms as ratio of Poisson means</li>
 </ul>
 
 <h4>TMultiGraph</h4>
