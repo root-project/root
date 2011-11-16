@@ -3010,6 +3010,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fInterpreter = new cling::Interpreter(1, interpArgs, llvmDir); 
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
+   // Add the current path to the include path
+   TCintWithCling::AddIncludePath(".");
+
    // Add the root include directory and etc/ to list searched by default.
    // Use explicit TCintWithCling::AddIncludePath() to avoid vtable: we're in the c'tor!
 #ifndef ROOTINCDIR
