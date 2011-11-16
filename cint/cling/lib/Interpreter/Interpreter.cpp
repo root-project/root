@@ -121,9 +121,8 @@ namespace cling {
   Interpreter::NamedDeclResult::LookupDecl(llvm::StringRef Decl) {
     DeclarationName Name(&m_Context.Idents.get(Decl));
     DeclContext::lookup_const_result Lookup = m_CurDeclContext->lookup(Name);
-    // FIXME: We need to traverse over each found result in the pair in order to
-    // solve possible ambiguities.
-    if (Lookup.first != Lookup.second) {
+    // If more than one found return 0. Cannot handle ambiguities.
+    if (Lookup.second - Lookup.first == 1) {
       if (DeclContext* DC = dyn_cast<DeclContext>(*Lookup.first))
         m_CurDeclContext = DC;
       else
@@ -132,8 +131,7 @@ namespace cling {
       m_Result = (*Lookup.first);
     }
     else {
-      // TODO: Find the template instantiations with using a wrapper (getQualType). 
-        m_Result = 0;
+      m_Result = 0;
     }
 
     return *this;
@@ -431,7 +429,7 @@ namespace cling {
     swrappername << "__cling_Un1Qu3" << m_UniqueCounter++;
     return swrappername.str();
   }
-  
+
   
   Interpreter::CompilationResult
   Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
