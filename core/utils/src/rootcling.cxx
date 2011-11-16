@@ -4591,6 +4591,9 @@ void WritePointersSTL(G__ClassInfo &cl)
 //______________________________________________________________________________
 void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
+#ifdef R__SHOWMEMBERS_IN_TCLING
+   (*dictSrcOut) << "      TCintWithCling::InspectMembers(R__Insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
+#else
    string csymbol = cl.Fullname();
    if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
 
@@ -4811,7 +4814,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          }
       }
    }
-
+#endif // R__SHOWMEMBERS_IN_TCLING
 }
 
 //______________________________________________________________________________
