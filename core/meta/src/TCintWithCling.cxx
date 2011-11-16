@@ -2985,51 +2985,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fInterpreter(0)
    , fMetaProcessor(0)
 {
-   // Initialize the CINT interpreter interface.
-   fMore      = 0;
-   fPrompt[0] = 0;
-   fMapfile   = 0;
-   fRootmapFiles = 0;
-   fLockProcessLine = kTRUE;
-   // Disable the autoloader until it is explicitly enabled.
-   G__set_class_autoloading(0);
-   G__RegisterScriptCompiler(&ScriptCompiler);
-   G__set_ignoreinclude(&IgnoreInclude);
-   G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-   G__InitGetSpecialObject(&TCint_FindSpecialObject);
-   // check whether the compiler is available:
-   char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
-   if (path && path[0]) {
-      G__InitGenerateDictionary(&TCint_GenerateDictionary);
-   }
-   delete[] path;
-   ResetAll();
-#ifndef R__WIN32
-   optind = 1;  // make sure getopt() works in the main program
-#endif // R__WIN32
-   // Make sure that ALL macros are seen as C++.
-   G__LockCpp();
-   // Initialize for ROOT:
-   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-   ProcessLine("#define ROOT_Rtypes 0");
-   ProcessLine("#define ROOT_TError 0");
-   ProcessLine("#define ROOT_TGenericClassInfo 0");
-   TString include;
-   // Add the root include directory to list searched by default
-#ifndef ROOTINCDIR
-   include = gSystem->Getenv("ROOTSYS");
-   include.Append("/include");
-#else // ROOTINCDIR
-   include = ROOTINCDIR;
-#endif // ROOTINCDIR
-   TCintWithCling::AddIncludePath(include);
-   // Allow the usage of ClassDef and ClassImp in interpreted macros
-   // if RtypesCint.h can be found (think of static executable without include/)
-   char* whichTypesCint = gSystem->Which(include, "RtypesCint.h");
-   if (whichTypesCint) {
-      ProcessLine("#include <RtypesCint.h>");
-      delete[] whichTypesCint;
-   }
    // Initialize the CINT+cling interpreter interface.
 
    TString interpInclude;
@@ -3088,6 +3043,52 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 
    // to pull in gPluginManager
    fMetaProcessor->process("#include \"TPluginManager.h\"");
+
+   // Initialize the CINT interpreter interface.
+   fMore      = 0;
+   fPrompt[0] = 0;
+   fMapfile   = 0;
+   fRootmapFiles = 0;
+   fLockProcessLine = kTRUE;
+   // Disable the autoloader until it is explicitly enabled.
+   G__set_class_autoloading(0);
+   G__RegisterScriptCompiler(&ScriptCompiler);
+   G__set_ignoreinclude(&IgnoreInclude);
+   G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
+   G__InitGetSpecialObject(&TCint_FindSpecialObject);
+   // check whether the compiler is available:
+   char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
+   if (path && path[0]) {
+      G__InitGenerateDictionary(&TCint_GenerateDictionary);
+   }
+   delete[] path;
+   ResetAll();
+#ifndef R__WIN32
+   optind = 1;  // make sure getopt() works in the main program
+#endif // R__WIN32
+   // Make sure that ALL macros are seen as C++.
+   G__LockCpp();
+   // Initialize for ROOT:
+   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+   ProcessLine("#define ROOT_Rtypes 0");
+   ProcessLine("#define ROOT_TError 0");
+   ProcessLine("#define ROOT_TGenericClassInfo 0");
+   TString include;
+   // Add the root include directory to list searched by default
+#ifndef ROOTINCDIR
+   include = gSystem->Getenv("ROOTSYS");
+   include.Append("/include");
+#else // ROOTINCDIR
+   include = ROOTINCDIR;
+#endif // ROOTINCDIR
+   TCintWithCling::AddIncludePath(include);
+   // Allow the usage of ClassDef and ClassImp in interpreted macros
+   // if RtypesCint.h can be found (think of static executable without include/)
+   char* whichTypesCint = gSystem->Which(include, "RtypesCint.h");
+   if (whichTypesCint) {
+      ProcessLine("#include <RtypesCint.h>");
+      delete[] whichTypesCint;
+   }
 }
 
 //______________________________________________________________________________
@@ -3130,8 +3131,8 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error)
       Ssiz_t posOpenParen = sLineNoArgs.Last('(');
       if (posOpenParen != kNPOS && sLineNoArgs.EndsWith(")")) {
          sLineNoArgs.Remove(posOpenParen, sLineNoArgs.Length() - posOpenParen);
+        ret = TCintWithCling::ProcessLine(sLineNoArgs, error);
       }
-      ret = TCintWithCling::ProcessLine(sLineNoArgs, error);
       sLine[1] = haveX;
    }
    static const char *fantomline = "TRint::EndOfLineAction();";
@@ -3177,7 +3178,7 @@ void TCintWithCling::AddIncludePath(const char *path)
    // time, i.e. "path1:path2" is not supported.
 
    fInterpreter->AddIncludePath(path);
-   TCintWithCling::AddIncludePath(path);
+   //TCintWithCling::AddIncludePath(path);
 }
 
 //______________________________________________________________________________
