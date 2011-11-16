@@ -2,3 +2,62 @@
 <hr/> 
 <a name="roofit"></a> 
 <h3>RooFit Package</h3>
+
+
+<a name="roostats"></a> 
+<h3>RooStats Package</h3>
+
+<h4>AsymptoticCalculator</h4>
+<ul>
+<li>New Class for doing an hypothesis tests using the asymptotic likelihood formulae, described in the paper from
+   G. Cowan, K. Cranmer, E. Gross and O. Vitells, <i>Asymptotic formulae for likelihood- based tests of new physics</i>,
+   Eur. Phys. J., C71 (1), 2011.</li>
+   <li> The class computes the p-value for the null and also for the alternate using the Asimov data set. In this
+   differs form the ProfileLikelihoodCalculator which computes only the p-values for the null hypothesis.
+   <li>The Asimov data set is generated with the utility function <tt>AsymptoticCalculator::MakeAsimovData</tt> and then
+   it is used to evaluate the likelihood. 
+   </li>
+<li>This class implements the HypoTestCalculatorGeneric interface and can be used as an alternative Hypotesis test
+   calculator in the HypoTestInverter class. It can then plugged in the HypoTestInverter for computing asymptotic CLs and CLs+b
+   limits. In this way the limits will be computed by just performing a fit for each test parameter value and without
+   generating any toys.  
+</li>
+<li>The class can be used via the <tt>StandardHypothesisTest.C</tt> tutorial passing a  value of <tt>2</tt> for the
+calculator type. </li>
+</ul>
+
+<h4>RooStats Utils</h4>
+<ul>
+  <li>Add a utility function (from G. Petrucciani), <tt>RooStats::MakeNuisancePdf</tt>, which given a model configuration (or the global  pdf and the
+  observables), factorizes from the model pdf the constraint probability density functions for the nuisance parameters
+  and builds a global nuisance pdf. This function can then be used in the HybridCalculator or in the BayesianCalculator
+  with the option "TOYMC".
+  </li>
+</ul>
+
+<h4>HypotestInverter and HypoTestInverterResult</h4>
+<ul>
+<li> Several improvements and bug fixes in merging results and in computing the observed and expected limits.</li>
+<li> Provide support now for using the AsympoticCalculator</li>
+</ul>
+
+<h4>MCMCCalculator</h4>
+<ul>
+  <li>Add now possibility to store in the chain only the parameter of interested via the method <tt> MCMCCalculator::SetChainParameters</tt>. This saves memory in case of models with a
+  large number of nuisance parameters. </li>
+</ul>
+
+<h4>Test Statistics classes</h4>
+<ul>
+  <li>Make a more robust evaluation of the ProfileLikelihoodTestStat. Use RooMinimizer and give possibility to use
+  different minimizer, via <tt>ProfileLikelihoodTestStat::SetMinimizer</tt>. The print level of minimization can also be
+  controlled via <tt>ProfileLikelihoodTestStat::SetPrintLevel</tt>. Activate also the RooFit cache optimizations when
+  evaluating the NLL </li>
+  <li>Fix a bug in reusing the NLL object in the SimpleLikelihoodCalculator. This makes now the evaluation of this test
+  statistics much faster. </li>
+ </ul>
+
+
+
+
+
