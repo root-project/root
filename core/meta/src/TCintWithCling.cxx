@@ -611,6 +611,8 @@ int tcling_ClassInfo::GetIdx() const
 
 long tcling_ClassInfo::ClassProperty() const
 {
+   return fClassInfo->ClassProperty();
+#if 0
    if (!IsValid()) {
       return 0L;
    }
@@ -657,6 +659,8 @@ long tcling_ClassInfo::ClassProperty() const
       property |= G__CLS_HASVIRTUAL;
    }
    return property;
+#endif // 0
+   //--
 }
 
 void tcling_ClassInfo::Delete(void* arena) const
@@ -717,6 +721,8 @@ bool tcling_ClassInfo::HasDefaultConstructor() const
 
 bool tcling_ClassInfo::HasMethod(const char* name) const
 {
+   return fClassInfo->HasMethod(name);
+#if 0
    if (!IsValid()) {
       return false;
    }
@@ -742,6 +748,8 @@ bool tcling_ClassInfo::HasMethod(const char* name) const
       }
    }
    return false;
+#endif // 0
+   //--
 }
 
 void tcling_ClassInfo::Init(const char* name)
@@ -834,6 +842,8 @@ void tcling_ClassInfo::Init(int tagnum)
 
 bool tcling_ClassInfo::IsBase(const char* name) const
 {
+   return fClassInfo->IsBase(name);
+#if 0
    if (!IsValid()) {
       return false;
    }
@@ -856,6 +866,8 @@ bool tcling_ClassInfo::IsBase(const char* name) const
    const clang::CXXRecordDecl* baseCRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(base.GetDecl());
    return CRD->isDerivedFrom(baseCRD);
+#endif // 0
+   //--
 }
 
 bool tcling_ClassInfo::IsEnum(const char* name)
@@ -875,7 +887,8 @@ bool tcling_ClassInfo::IsLoaded() const
 
 bool tcling_ClassInfo::IsValid() const
 {
-   return IsValidCint() || IsValidClang();
+   return IsValidCint();
+   //return IsValidCint() || IsValidClang();
 }
 
 bool tcling_ClassInfo::IsValidCint() const
@@ -935,6 +948,8 @@ void* tcling_ClassInfo::New(void* arena) const
 
 long tcling_ClassInfo::Property() const
 {
+   return fClassInfo->Property();
+#if 0
    if (!IsValid()) {
       return 0L;
    }
@@ -972,6 +987,8 @@ long tcling_ClassInfo::Property() const
       property |= G__BIT_ISABSTRACT;
    }
    return property;
+#endif // 0
+   //--
 }
 
 int tcling_ClassInfo::RootFlag() const
@@ -981,6 +998,8 @@ int tcling_ClassInfo::RootFlag() const
 
 int tcling_ClassInfo::Size() const
 {
+   return fClassInfo->Size();
+#if 0
    if (!IsValid()) {
       return -1;
    }
@@ -996,6 +1015,8 @@ int tcling_ClassInfo::Size() const
    const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
    int64_t size = Layout.getSize().getQuantity();
    return static_cast<int>(size);
+#endif // 0
+   //--
 }
 
 long tcling_ClassInfo::Tagnum() const
@@ -1011,6 +1032,8 @@ const char* tcling_ClassInfo::FileName() const
 
 const char* tcling_ClassInfo::FullName() const
 {
+   return fClassInfo->Fullname();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1025,10 +1048,14 @@ const char* tcling_ClassInfo::FullName() const
    clang::PrintingPolicy P(fDecl->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, P, true);
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_ClassInfo::Name() const
 {
+   return fClassInfo->Name();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1042,6 +1069,8 @@ const char* tcling_ClassInfo::Name() const
    clang::PrintingPolicy P(fDecl->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, P, false);
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_ClassInfo::Title() const
@@ -1051,6 +1080,8 @@ const char* tcling_ClassInfo::Title() const
 
 const char* tcling_ClassInfo::TmpltName() const
 {
+   return fClassInfo->TmpltName();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1063,6 +1094,8 @@ const char* tcling_ClassInfo::TmpltName() const
    // Note: This does *not* include the template arguments!
    buf = llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameAsString();
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 //______________________________________________________________________________
@@ -1124,7 +1157,12 @@ tcling_BaseClassInfo::tcling_BaseClassInfo(const tcling_BaseClassInfo& rhs)
    fDescend = rhs.fDescend;
    fDecl = rhs.fDecl;
    fIter = rhs.fIter;
-   fClassInfo = new tcling_ClassInfo(*rhs.fClassInfo);
+   if (!rhs.fClassInfo) {
+      fClassInfo = 0;
+   }
+   else {
+      fClassInfo = new tcling_ClassInfo(*rhs.fClassInfo);
+   }
    fIterStack = rhs.fIterStack;
    fOffset = rhs.fOffset;
 }
@@ -1259,6 +1297,8 @@ int tcling_BaseClassInfo::Next()
 
 int tcling_BaseClassInfo::Next(int onlyDirect)
 {
+   return fBaseClassInfo->Next(onlyDirect);
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1300,11 +1340,14 @@ int tcling_BaseClassInfo::Next(int onlyDirect)
       fClassInfo = new tcling_ClassInfo(Base);
       return 1;
    }
+#endif // 0
+   //--
 }
 
 long tcling_BaseClassInfo::Offset() const
 {
-   //return fBaseClassInfo->Offset();
+   return fBaseClassInfo->Offset();
+#if 0
    if (!IsValid()) {
       return -1;
    }
@@ -1329,11 +1372,14 @@ long tcling_BaseClassInfo::Offset() const
    const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
    int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
    return fOffset + static_cast<long>(offset);
+#endif // 0
+   //--
 }
 
 long tcling_BaseClassInfo::Property() const
 {
-   //return fBaseClassInfo->Property();
+   return fBaseClassInfo->Property();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1365,11 +1411,14 @@ long tcling_BaseClassInfo::Property() const
          break;
    }
    return property;
+#endif // 0
+   //--
 }
 
 long tcling_BaseClassInfo::Tagnum() const
 {
-   //return fBaseClassInfo->Tagnum();
+   return fBaseClassInfo->Tagnum();
+#if 0
    if (!IsValid()) {
       return -1;
    }
@@ -1378,11 +1427,14 @@ long tcling_BaseClassInfo::Tagnum() const
    }
    // Note: This *must* return a *cint* tagnum for now.
    return fClassInfo->Tagnum();
+#endif // 0
+   //--
 }
 
 const char* tcling_BaseClassInfo::FullName() const
 {
-   //return fBaseClassInfo->Fullname();
+   return fBaseClassInfo->Fullname();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1390,11 +1442,14 @@ const char* tcling_BaseClassInfo::FullName() const
       return fBaseClassInfo->Fullname();
    }
    return fClassInfo->FullName();
+#endif // 0
+   //--
 }
 
 const char* tcling_BaseClassInfo::Name() const
 {
-   //return fBaseClassInfo->Name();
+   return fBaseClassInfo->Name();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1402,11 +1457,14 @@ const char* tcling_BaseClassInfo::Name() const
       return fBaseClassInfo->Name();
    }
    return fClassInfo->Name();
+#endif // 0
+   //--
 }
 
 const char* tcling_BaseClassInfo::TmpltName() const
 {
-   //return fBaseClassInfo->TmpltName();
+   return fBaseClassInfo->TmpltName();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -1414,10 +1472,14 @@ const char* tcling_BaseClassInfo::TmpltName() const
       return fBaseClassInfo->TmpltName();
    }
    return fClassInfo->TmpltName();
+#endif // 0
+   //--
 }
 
 bool tcling_BaseClassInfo::IsValid() const
 {
+   return fBaseClassInfo->IsValid();
+#if 0
    if (!fDerivedClassInfo->GetDecl()) {
       return fBaseClassInfo->IsValid();
    }
@@ -1432,6 +1494,8 @@ bool tcling_BaseClassInfo::IsValid() const
       return true;
    }
    return false;
+#endif // 0
+   //--
 }
 
 //______________________________________________________________________________
@@ -1482,8 +1546,8 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(tcling_ClassInfo* tcling_class_info
    fDataMemberInfo = new G__DataMemberInfo(*tcling_class_info->GetClassInfo());
    fClassInfo = new G__ClassInfo(*tcling_class_info->GetClassInfo());
    fTClingClassInfo = new tcling_ClassInfo(*tcling_class_info);
-   fIter = llvm::dyn_cast<clang::DeclContext>(tcling_class_info->GetDecl())->
-           decls_begin();
+   //fIter = llvm::dyn_cast<clang::DeclContext>(tcling_class_info->GetDecl())->
+   //        decls_begin();
    // Move to first data member.
    //InternalNextValidMember();
 }
@@ -1538,6 +1602,7 @@ clang::Decl* tcling_DataMemberInfo::GetDecl() const
 int tcling_DataMemberInfo::ArrayDim() const
 {
    return fDataMemberInfo->ArrayDim();
+#if 0
    if (!IsValid()) {
       return -1;
    }
@@ -1581,20 +1646,26 @@ int tcling_DataMemberInfo::ArrayDim() const
       break;
    }
    return cnt;
+#endif // 0
+   //--
 }
 
 bool tcling_DataMemberInfo::IsValid() const
 {
    return fDataMemberInfo->IsValid();
+#if 0
    if (fFirstTime) {
       return false;
    }
    return *fIter;
+#endif // 0
+   //--
 }
 
 int tcling_DataMemberInfo::MaxIndex(int dim) const
 {
    return fDataMemberInfo->MaxIndex(dim);
+#if 0
    if (!IsValid()) {
       return -1;
    }
@@ -1658,6 +1729,8 @@ int tcling_DataMemberInfo::MaxIndex(int dim) const
       break;
    }
    return max;
+#endif // 0
+   //--
 }
 
 void tcling_DataMemberInfo::InternalNextValidMember()
@@ -1702,6 +1775,7 @@ void tcling_DataMemberInfo::InternalNextValidMember()
 bool tcling_DataMemberInfo::Next()
 {
    return fDataMemberInfo->Next();
+#if 0
    if (!fIterStack.size() && !*fIter) {
       // Terminate early if we are already invalid.
       //fprintf(stderr, "Next: early termination!\n");
@@ -1724,11 +1798,14 @@ bool tcling_DataMemberInfo::Next()
    }
    // We are now pointing at the next data member, return that we are valid.
    return true;
+#endif // 0
+   //--
 }
 
 long tcling_DataMemberInfo::Offset() const
 {
    return fDataMemberInfo->Offset();
+#if 0
    if (!IsValid()) {
       return -1L;
    }
@@ -1757,6 +1834,8 @@ long tcling_DataMemberInfo::Offset() const
    // FIXME: We are supposed to return the address of the storage
    //        for the member here, only the interpreter knows that.
    return -1L;
+#endif // 0
+   //--
 }
 
 long tcling_DataMemberInfo::Property() const
@@ -1772,6 +1851,7 @@ long tcling_DataMemberInfo::TypeProperty() const
 int tcling_DataMemberInfo::TypeSize() const
 {
    return fDataMemberInfo->Type()->Size();
+#if 0
    if (!IsValid()) {
       return -1L;
    }
@@ -1793,11 +1873,14 @@ int tcling_DataMemberInfo::TypeSize() const
    }
    clang::ASTContext& Context = fIter->getASTContext();
    return static_cast<int>(Context.getTypeSizeInChars(QT).getQuantity());
+#endif // 0
+   //--
 }
 
 const char* tcling_DataMemberInfo::TypeName() const
 {
    return fDataMemberInfo->Type()->Name();
+#if 0
    static std::string buf;
    if (!IsValid()) {
       return 0;
@@ -1813,11 +1896,14 @@ const char* tcling_DataMemberInfo::TypeName() const
       return 0;
    }
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_DataMemberInfo::TypeTrueName() const
 {
    return fDataMemberInfo->Type()->TrueName();
+#if 0
    static std::string buf;
    if (!IsValid()) {
       return 0;
@@ -1835,11 +1921,14 @@ const char* tcling_DataMemberInfo::TypeTrueName() const
       return 0;
    }
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_DataMemberInfo::Name() const
 {
    return fDataMemberInfo->Name();
+#if 0
    static std::string buf;
    if (!IsValid()) {
       return 0;
@@ -1858,6 +1947,8 @@ const char* tcling_DataMemberInfo::Name() const
    //   }
    //}
    return buf.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_DataMemberInfo::Title() const
@@ -2081,9 +2172,12 @@ tcling_TypedefInfo& tcling_TypedefInfo::operator=(const tcling_TypedefInfo& rhs)
    delete fTypedefInfo;
    fTypedefInfo = new G__TypedefInfo(rhs.fTypedefInfo->Typenum());
    return *this;
+#if 0
    fDecl = rhs.fDecl;
    fIdx = rhs.fIdx;
    return *this;
+#endif // 0
+   //--
 }
 
 G__TypedefInfo* tcling_TypedefInfo::GetTypedefInfo() const
@@ -2170,6 +2264,7 @@ bool tcling_TypedefInfo::IsValidClang() const
 long tcling_TypedefInfo::Property() const
 {
    return fTypedefInfo->Property();
+#if 0
    if (!IsValid()) {
       return 0L;
    }
@@ -2215,11 +2310,14 @@ long tcling_TypedefInfo::Property() const
       property |= G__BIT_ISCONSTANT;
    }
    return property;
+#endif // 0
+   //--
 }
 
 int tcling_TypedefInfo::Size() const
 {
    return fTypedefInfo->Size();
+#if 0
    if (!IsValid()) {
       return 1;
    }
@@ -2234,11 +2332,14 @@ int tcling_TypedefInfo::Size() const
    clang::CharUnits::QuantityType Quantity =
       Context.getTypeSizeInChars(QT).getQuantity();
    return static_cast<int>(Quantity);
+#endif // 0
+   //--
 }
 
 const char* tcling_TypedefInfo::TrueName() const
 {
    return fTypedefInfo->TrueName();
+#if 0
    if (!IsValid()) {
       return "(unknown)";
    }
@@ -2252,11 +2353,14 @@ const char* tcling_TypedefInfo::TrueName() const
       llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    truename = TD->getUnderlyingType().getAsString();
    return truename.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_TypedefInfo::Name() const
 {
    return fTypedefInfo->Name();
+#if 0
    if (!IsValid()) {
       return "(unknown)";
    }
@@ -2270,11 +2374,14 @@ const char* tcling_TypedefInfo::Name() const
    llvm::dyn_cast<clang::NamedDecl>(fDecl)->
    getNameForDiagnostic(fullname, P, true);
    return fullname.c_str();
+#endif // 0
+   //--
 }
 
 const char* tcling_TypedefInfo::Title() const
 {
    return fTypedefInfo->Title();
+#if 0
    if (!IsValid()) {
       return "";
    }
@@ -2283,11 +2390,14 @@ const char* tcling_TypedefInfo::Title() const
    }
    // FIXME: This needs information from the comments in the header file.
    return fTypedefInfo->Title();
+#endif // 0
+   //--
 }
 
 int tcling_TypedefInfo::Next()
 {
    return fTypedefInfo->Next();
+#if 0
    if (!IsValid()) {
       return 0;
    }
@@ -2295,6 +2405,8 @@ int tcling_TypedefInfo::Next()
       return fTypedefInfo->Next();
    }
    return fTypedefInfo->Next();
+#endif // 0
+   //--
 }
 
 //______________________________________________________________________________
