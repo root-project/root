@@ -974,7 +974,7 @@ distclean:: clean
 	-@mv -f include/RConfigOptions.h- include/RConfigOptions.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
-               *.def .def
+               lib/*.so.* *.def .def
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
@@ -983,6 +983,7 @@ endif
 	-@(mv -f tutorials/gallery.root tutorials/gallery.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root- >/dev/null 2>&1;true)
 	-@(mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root- >/dev/null 2>&1;true)
+	-@(mv -f tutorials/proof/ntprndm.root tutorials/proof/ntprndm.root- >/dev/null 2>&1;true)
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -996,6 +997,7 @@ endif
 	-@(mv -f tutorials/gallery.root- tutorials/gallery.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root >/dev/null 2>&1;true)
+	-@(mv -f tutorials/proof/ntprndm.root- tutorials/proof/ntprndm.root >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/*.so*
 	@rm -f $(CINTDIR)/stl/*.dll $(CINTDIR)/stl/*.so*
