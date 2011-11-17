@@ -636,11 +636,11 @@ namespace {
          }
          cursor = cursor->Next();
       };
-      // Now were done, clear the list but do not delete the objecs as 
-      // they have been moved to the list of closed objects and must be 
+      // Now were done, clear the list but do not delete the objecs as
+      // they have been moved to the list of closed objects and must be
       // deleted from there in order to avoid a double delete from a
       // use objects (on the interpreter stack).
-      files->Clear("nodelete");  
+      files->Clear("nodelete");
    }
 }
 
@@ -1266,7 +1266,7 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 }
 
 //______________________________________________________________________________
-static TClass* R__GetClassIfKnown(const char* className) 
+static TClass* R__GetClassIfKnown(const char* className)
 {
    // Check whether className is a known class, and only autoload
    // if we can. Helper function for TROOT::IgnoreInclude().
@@ -1364,9 +1364,12 @@ void TROOT::InitSystem()
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
-      //By default the zipmode is 1 (see Bits.h)
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
-      if (zipmode !=1) R__SetZipMode(zipmode);
+      if (!gEnv->GetValue("Root.ErrorHandlers", 1))
+         gSystem->ResetSignals();
+
+      // by default the zipmode is 1 (see Bits.h)
+      Int_t zipmode = gEnv->GetValue("Root.ZipMode", 1);
+      if (zipmode != 1) R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))

@@ -70,6 +70,7 @@ Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0
+Root.ErrorHandlers:      1
 Root.Stacktrace:         yes
 # Allow for a customized backtrace script.
 #Root.StacktraceScript:   $(ROOTSYS)/etc/gdb-backtrace.sh

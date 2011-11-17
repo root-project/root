@@ -3604,6 +3604,9 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 {
    // Set a signal handler for a signal.
 
+   if (gEnv && !gEnv->GetValue("Root.ErrorHandlers", 1))
+      return;
+
    if (gSignalMap[sig].fHandler != handler) {
       struct sigaction sigact;
 
