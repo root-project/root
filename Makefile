@@ -1137,12 +1137,12 @@ install: all
 	   find $(DESTDIR)$(ETCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
-	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
+	   $(INSTALLDATA) $(ROOT_SRCDIR)/build/misc/root.m4 $(DESTDIR)$(ACLOCALDIR); \
 	   echo "Installing Emacs Lisp library in $(DESTDIR)$(ELISPDIR)"; \
 	   $(INSTALLDIR)                          $(DESTDIR)$(ELISPDIR); \
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
-	   $(INSTALLDATA) geom/gdml/*.py          $(DESTDIR)$(LIBDIR); \
+	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
 	   find $(DESTDIR)$(DATADIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   find $(DESTDIR)$(DATADIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	fi
