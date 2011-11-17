@@ -365,6 +365,7 @@ public:
    virtual void            AddSignalHandler(TSignalHandler *sh);
    virtual TSignalHandler *RemoveSignalHandler(TSignalHandler *sh);
    virtual void            ResetSignal(ESignals sig, Bool_t reset = kTRUE);
+   virtual void            ResetSignals();
    virtual void            IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
    virtual TSeqCollection *GetListOfSignalHandlers() const { return fSignalHandler; }

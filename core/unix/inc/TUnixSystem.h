@@ -65,7 +65,7 @@ protected:
    static int          UnixUnixConnect(const char *path);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
                                       int tcpwindowsize);
-   static int          UnixUdpService(int port, int backlog);                                      
+   static int          UnixUdpService(int port, int backlog);
    static int          UnixUnixService(int port, int backlog);
    static int          UnixUnixService(const char *sockpath, int backlog);
    static int          UnixRecv(int sock, void *buf, int len, int flag);
@@ -105,6 +105,7 @@ public:
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
+   void              ResetSignals();
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              SigAlarmInterruptsSyscalls(Bool_t set);
    void              AddFileHandler(TFileHandler *fh);

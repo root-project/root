@@ -777,6 +777,14 @@ void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
 }
 
 //______________________________________________________________________________
+void TUnixSystem::ResetSignals()
+{
+   // Reset signals handlers to previous behaviour.
+
+   UnixResetSignals();
+}
+
+//______________________________________________________________________________
 void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    // If ignore is true ignore the specified signal, else restore previous
@@ -838,7 +846,7 @@ Int_t TUnixSystem::GetFPEMask()
 #if defined(R__MACOSX) && defined(__SSE2__)
    // OS X uses the SSE unit for all FP math by default, not the x87 FP unit
    Int_t oldmask = ~_MM_GET_EXCEPTION_MASK();
-   
+
    if (oldmask & _MM_MASK_INVALID  )   mask |= kInvalid;
    if (oldmask & _MM_MASK_DIV_ZERO )   mask |= kDivByZero;
    if (oldmask & _MM_MASK_OVERFLOW )   mask |= kOverflow;
@@ -930,7 +938,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    if (mask & kOverflow )   newm |= _MM_MASK_OVERFLOW;
    if (mask & kUnderflow)   newm |= _MM_MASK_UNDERFLOW;
    if (mask & kInexact  )   newm |= _MM_MASK_INEXACT;
-   
+
    _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~newm);
 #endif
 
@@ -2095,7 +2103,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
    if (gInterpreter) {
       gInterpreter->ResetGlobals();
    }
-   
+
    if (mode)
       ::exit(code);
    else
@@ -3150,11 +3158,11 @@ int TUnixSystem::ConnectService(const char *servername, int port,
    } else if (!gSystem->AccessPathName(servername) || servername[0] == '/') {
       return UnixUnixConnect(servername);
    }
-   
+
    if (!strcmp(protocol, "udp")){
       return UnixUdpConnect(servername, port);
    }
-   
+
    return UnixTcpConnect(servername, port, tcpwindowsize);
 }
 

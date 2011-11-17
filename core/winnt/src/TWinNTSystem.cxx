@@ -1425,6 +1425,14 @@ void TWinNTSystem::ResetSignal(ESignals sig, Bool_t reset)
 }
 
 //______________________________________________________________________________
+void TWinNTSystem::ResetSignals()
+{
+   // Reset signals handlers to previous behaviour.
+
+   //FIXME!
+}
+
+//______________________________________________________________________________
 void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    // If ignore is true ignore the specified signal, else restore previous
@@ -3790,7 +3798,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
    if (gROOT) {
       gROOT->CloseFiles();
       if (gROOT->GetListOfBrowsers()) {
-         // GetListOfBrowsers()->Delete() creates problems when a browser is 
+         // GetListOfBrowsers()->Delete() creates problems when a browser is
          // created on the stack, calling CloseWindow() solves the problem
          //gROOT->GetListOfBrowsers()->Delete();
          TBrowser *b;
@@ -3943,7 +3951,7 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
 void TWinNTSystem::AddDynamicPath(const char *dir)
 {
    // Add a new directory to the dynamic path.
-   
+
    if (dir) {
       TString oldpath = DynamicPath(0, kFALSE);
       oldpath.Append(";");
@@ -5007,7 +5015,7 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
             (servername[1] == ':' && servername[2] == '/')) {
       return WinNTUnixConnect(servername);
    }
-   
+
    if (!strcmp(protocol, "udp")){
       return WinNTUdpConnect(servername, port);
    }
@@ -5116,22 +5124,22 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
 
    short  sport;
    struct servent *sp;
-   
+
    if ((sp = getservbyport(htons(port), kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
-   
+
    TInetAddress addr = gSystem->GetHostByName(hostname);
    if (!addr.IsValid()) return -1;
    UInt_t adr = htonl(addr.GetAddress());
-   
+
    struct sockaddr_in server;
    memset(&server, 0, sizeof(server));
    memcpy(&server.sin_addr, &adr, sizeof(adr));
    server.sin_family = addr.GetFamily();
    server.sin_port   = sport;
-   
+
    // Create socket
    int sock;
    if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
@@ -5139,7 +5147,7 @@ int TWinNTSystem::WinNTUdpConnect(const char *hostname, int port)
                  hostname, port);
       return -1;
    }
-   
+
    while (connect(sock, (struct sockaddr*) &server, sizeof(server)) == -1) {
       if (GetErrno() == EINTR)
          ResetErrno();

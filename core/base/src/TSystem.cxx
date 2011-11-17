@@ -419,7 +419,7 @@ Bool_t TSystem::ProcessEvents()
    // interrupt flag.
 
    gROOT->SetInterrupt(kFALSE);
-   
+
    if (!gROOT->TestBit(TObject::kInvalidObject))
       DispatchOneEvent(kTRUE);
 
@@ -579,6 +579,14 @@ void TSystem::ResetSignal(ESignals /*sig*/, Bool_t /*reset*/)
    // to the default handler, else restore previous behaviour.
 
    AbstractMethod("ResetSignal");
+}
+
+//______________________________________________________________________________
+void TSystem::ResetSignals()
+{
+   // Reset signals handlers to previous behaviour.
+
+   AbstractMethod("ResetSignals");
 }
 
 //______________________________________________________________________________
@@ -1060,11 +1068,11 @@ again:
 
    p = 0; e = 0;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
-      p = HomeDirectory(); 
-      e = c + 1; 
+      p = HomeDirectory();
+      e = c + 1;
       if (p) {                         // we have smth to copy
-         strlcpy(x, p, kBufSize); 
-         x += strlen(p); 
+         strlcpy(x, p, kBufSize);
+         x += strlen(p);
          c = e;
       } else {
          ++ier;
@@ -1072,13 +1080,13 @@ again:
       }
    } else if (c[0] == '~' && c[1] != '/') { // ~user case
       n = strcspn(c+1, "/ ");
-      buff[0] = 0; 
+      buff[0] = 0;
       strncat(buff, c+1, n);
-      p = HomeDirectory(buff); 
-      e = c+1+n; 
+      p = HomeDirectory(buff);
+      e = c+1+n;
       if (p) {                          // we have smth to copy
-         strlcpy(x, p, kBufSize); 
-         x += strlen(p); 
+         strlcpy(x, p, kBufSize);
+         x += strlen(p);
          c = e;
       } else {
          ++ier;
@@ -1676,7 +1684,7 @@ void TSystem::ShowOutput(RedirectHandle_t *h)
 void TSystem::AddDynamicPath(const char *)
 {
    // Add a new directory to the dynamic path.
-   
+
    AbstractMethod("AddDynamicPath");
 }
 

@@ -100,7 +100,7 @@ private:
 
    static void       ThreadStub(void *Parameter) {((TWinNTSystem *)Parameter)->TimerThread();}
    void              TimerThread();
-   
+
 protected:
    static int        WinNTUnixConnect(int port);
    static int        WinNTUnixConnect(const char *path);
@@ -138,6 +138,7 @@ public:
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
+   void              ResetSignals();
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
