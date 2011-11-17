@@ -50,8 +50,8 @@ static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
 
 static TMutex  *gMainInternalMutex = 0;
 
-static void ThreadInternalLock() { gMainInternalMutex ? gMainInternalMutex->Lock() : 0; }
-static void ThreadInternalUnLock() { gMainInternalMutex ? gMainInternalMutex->UnLock() : 0; }
+static void ThreadInternalLock() { if (gMainInternalMutex) gMainInternalMutex->Lock(); }
+static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex->UnLock(); }
 
 
 //------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ void TThread::Initialize()
    // Initialize the Thread package. This initializes the TThread and ROOT
    // global mutexes to make parts of ROOT thread safe/aware. This call is
    // implicit in case a TThread is created.
-   
+
    Init();
 }
 
