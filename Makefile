@@ -970,7 +970,7 @@ distclean:: clean
 	-@mv -f include/RConfigOptions.h- include/RConfigOptions.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
-               *.def .def
+               lib/*.so.* *.def .def
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
