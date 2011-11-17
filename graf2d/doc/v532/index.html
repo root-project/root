@@ -70,39 +70,50 @@ column in a <tt>TLegend</tt>.
 
 <h4>iOS module</h4>
 <ul>
-<li>
-New module 'ios' was added into graf2d to make it possible to use ROOT's graphics on iOS devices (iPad, iPhone, iPod touch).
-<br>Among other things, it has the ROOT::iOS::Pad class, which is a version of TPad for iOS (pad with TF2 example below).
-<br>
+<li>New module 'ios' was added into graf2d to make it possible to use ROOT's graphics on iOS devices (iPad, iPhone, iPod touch).<br>
+    Among other things, it has the ROOT::iOS::Pad class, which is a version of TPad for iOS (pad with TF2 example below).<br>
 <center>
 <img alt="TF2 object in a ROOT::iOS::Pad" title="TF2 object in a ROOT::iOS::Pad (painted with a transparency)" src="iospad.gif"/>
-</center>
-<br>
-Two applications, based on this module, were developed for iOS (currently, for iPad only): "Tutorials" and "RootBrowser".
-They can be found in $ROOTSYS/test/ios.
-</li>
-<br>
-<br>
+</center><br>
+    Two applications, based on this module, were developed for iOS (currently, for iPad only): "Tutorials" and "RootBrowser".
+    They can be found in $ROOTSYS/test/ios.
+</li><br><br>
+
 <li>
-<b>"Tutorials" app</b><br><br>
-Small application with several demos, "iOS version" of the $ROOTSYS/tutorlas/demos.C.<br>
-<center>
-<img alt="Tutorials app" title="Tutorials app" src="tutorials.gif"/>
-</center>
-<br>
-<b>"Tutorials" application:</b><br>
-<pre>
-<ul>
-<li>supports portrait and landscape orientation</li>
-<li>has several demos (can be selected by tapping on table's cells)</li>
-<li>supports different gestures (pinch, single and double tap, pan, etc. - active gestures are shown by hint icons)</li>
-<li>has "zoom" mode - pinch or double tap gesture will zoom in/out pad's contents</li>
-<li>has "selection" mode - with single tap user can select different objects inside pad - axes, histograms, pavestats etc.; 3D objects can be rotated.</li>
-<li>has a simple editor to modify pad's parameters : fill color, logarithmic scale, grid, ticks, etc.</li>
-<center>
-<img alt="Editor" title="Pad's editor" src="tut_editor.gif"/>
-</center>
-</ul>
-</pre>
+   <b>"Tutorials" app</b><br><br>
+   Small application with several demos, "iOS version" of the $ROOTSYS/tutorlas/demos.C.<br>
+   <center>
+   <img alt="Tutorials app" title="Tutorials app" src="tutorials.gif"/>
+   </center>
+   <br><b>"Tutorials" application:</b><br>
+   <pre>
+   <ul>
+      <li>supports portrait and landscape orientation</li>
+      <li>has several demos (can be selected by tapping on table's cells)</li>
+      <li>supports different gestures (pinch, single and double tap, pan, etc. - active gestures are shown by hint icons)</li>
+      <li>has "zoom" mode - pinch or double tap gesture will zoom in/out pad's contents</li>
+      <li>has "selection" mode - with single tap user can select different objects inside pad - axes, histograms, pavestats etc.; 3D objects can be rotated.</li>
+      <li>has a simple editor to modify pad's parameters : fill color, logarithmic scale, grid, ticks, etc.</li>
+   </ul>
+   </pre>
+   <center>
+   <img alt="Editor" title="Pad's editor" src="tut_editor.gif"/>
+   </center>
+</li><br><br>
+
+<li>
+   <b>"RootBrowser" app</b><br><br>
+   This application is a simplified version of TBrowser and TCanvas for iOS. User can open ROOT's file (application uses TWebFile) and browse file's contents.<br>
+   RootBrower registeres *.root file extension in a system, so for example, attached root files from a mail client can be opened by RootBrowser.<br><br>
+   Application has several views. In a top level view, user can see opened files, open new files, close files (long press gesture on a file icon):<br><br>
+   <center>
+   <img alt="Top level view" title="Top level view" src="top_level.gif"/>
+   </center>
+   <br><br>
+   Tap gesture on a file's icon will open "File contents" view. This view shows objects and nested directories. For objects small previews are<br>
+   generated. Tapping on a directory's icon will open new view with directory's contents. Simple search is supported (in the current TDirectoryFile).<br><br>
+   <center>
+   <img alt="File contents view" title="File's contents view" src="file_contents.gif"/>
+   </center>
 </li>
 </ul>
