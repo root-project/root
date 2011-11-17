@@ -43,7 +43,9 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   endif()
   
   if (CMAKE_COMPILER_IS_GNUCXX)
-     MESSAGE(STATUS "Found GNU compiler collection")
+     message(STATUS "Found GNU compiler collection")
+     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS}")

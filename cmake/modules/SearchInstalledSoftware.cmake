@@ -174,7 +174,7 @@ if(mathmore)
   if(NOT builtin_gsl)
     find_package(GSL)
     if(NOT GSL_FOUND)
-      message(STATUS "GSL not found. Set enviroment variable GSL_DIR to point to your GSL installation")
+      message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
       message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'") 
       message(STATUS "               For the time being switching OFF 'mathmore' option")
       set(mathmore OFF CACHE BOOL "" FORCE)
@@ -495,8 +495,55 @@ if(shadowpw)
   endif()
 endif()
 
+#---Alien support----------------------------------------------------------------
+if(alien)
+  find_package(Alien)
+  if(NOT ALIEN_FOUND)
+    message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation")
+    message(STATUS "For the time being switching OFF 'alien' option")
+    set(alien OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+#---Monalisa support----------------------------------------------------------------
+if(monalisa)
+  find_package(Monalisa)
+  if(NOT MONALISA_FOUND)
+    message(STATUS "Monalisa not found. Set variable MONALISA_DIR to point to your Monalisa installation")
+    message(STATUS "For the time being switching OFF 'monalisa' option")
+    set(monalisa OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+#---Check for Xrootd support---------------------------------------------------------
+if(xrootd)
+  message(STATUS "Looking for XROOTD")
+  if(NOT builtin_xrootd)
+    find_package(XROOTD)
+    if(NOT XROOTD_FOUND)
+      message(STATUS "XROOTD not found. Set enviroment variable XRDSYS to point to your XROOTD installation")
+      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'") 
+      message(STATUS "                  For the time being switching OFF 'xrootd' option")
+      set(xrootd OFF CACHE BOOL "" FORCE)
+    endif()
+  else()
+    set(xrootd_version 3.1.0)
+    set(xrootd_versionnum 300010000)
+    message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+    ExternalProject_Add(
+      XROOTD
+      URL http://xrootd.slac.stanford.edu/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    )
+    set(XROOTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/xrootd)
+    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib64 -lXrdMain -lXrdUtils -lXrdClient)
+    set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs alien chirp clarens cling dcache gfal glite globus hdfs lzma monalisa pch peac pgsql sapdb srp)
+foreach(opt afs chirp clarens cling dcache gfal glite globus hdfs lzma pch peac pgsql sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

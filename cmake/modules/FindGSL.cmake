@@ -63,6 +63,7 @@ else( WIN32 AND NOT CYGWIN AND NOT MSYS )
       /usr/bin/
       /usr/local/bin
       $ENV{GSL_DIR}/bin
+      ${GSL_DIR}/bin
     )
  
     if( GSL_CONFIG_EXECUTABLE )
