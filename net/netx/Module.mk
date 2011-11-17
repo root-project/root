@@ -53,7 +53,7 @@ endif
 # Xrootd includes
 NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifneq ($(EXTRA_XRDFLAGS),)
-NETXINCEXTRA += -Iproof/proofd/inc
+NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
 endif
 
 # Xrootd client libs
