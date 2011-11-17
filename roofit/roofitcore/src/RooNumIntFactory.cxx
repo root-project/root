@@ -39,6 +39,7 @@
 #include "RooNumber.h"
 
 #include "RooIntegrator1D.h"
+#include "RooBinIntegrator.h"
 #include "RooIntegrator2D.h"
 #include "RooSegmentedIntegrator1D.h"
 #include "RooSegmentedIntegrator2D.h"
@@ -68,6 +69,7 @@ RooNumIntFactory::RooNumIntFactory()
 
   _instance = this ;
 
+  RooBinIntegrator::registerIntegrator(*this) ;
   RooIntegrator1D::registerIntegrator(*this) ;
   RooIntegrator2D::registerIntegrator(*this) ;
   RooSegmentedIntegrator1D::registerIntegrator(*this) ;

@@ -28,6 +28,7 @@
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
+#pragma link C++ class RooBinIntegrator+ ;
 #pragma link C++ class RooIntegrator2D+ ;
 #pragma link C++ class RooIntegratorBinding+ ;
 #pragma link C++ class RooInt+ ;
