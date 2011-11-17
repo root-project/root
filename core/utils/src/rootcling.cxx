@@ -430,6 +430,44 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 cling::Interpreter *gInterp = 0;
 
 
+const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::DeclContext *ctxt = 0) 
+{
+   // First find the left most part, search it and proceed with the search inside it.
+   
+   int paran = 0;
+   int nest = 0;
+   unsigned int len = strlen(name);
+   for(unsigned int i = 0; i < len; ++i) {
+      switch (name[i]) {
+         case '(' : ++paran; break;
+         case ')' : --paran; break;
+         case '<' : if (paran==0) ++nest; break;
+         case '>' : if (paran==0) --nest; break;
+         case ':' : if (paran==0 && nest==0) {
+            // We got the end of the leftpart.
+            std::string leftpart(name);
+            leftpart[i] = '\0';
+            const clang::NamedDecl *scope = gInterp->LookupDecl(leftpart.c_str(), ctxt).getSingleDecl();
+            if (!scope) {
+               return 0;
+            } else {
+               return R__SlowClassSearch(name+i+2,scope->getDeclContext());
+            }
+         }
+      }   
+      if (paran < 0 || nest < 0) {
+         // malformed, we can't find it.
+         return 0;
+      }
+   }
+   const clang::NamedDecl *result = gInterp->LookupDecl(name, ctxt).getSingleDecl();
+   if (result) {
+      return llvm::dyn_cast<clang::CXXRecordDecl>(result);
+   } else {
+      return 0;
+   }
+}
+
 class FDVisitor : public clang::RecursiveASTVisitor<FDVisitor> {
 private:
    clang::FunctionDecl* fFD;
@@ -507,7 +545,7 @@ bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* name)
    if (!CRD) {
       return false;
    }
-   const clang::NamedDecl *base = gInterp->LookupDecl(name, /*, clang::DeclContext *Within=*/ 0).getSingleDecl();
+   const clang::NamedDecl *base = R__SlowClassSearch(name);
    if (base) {
       const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
       if (baseCRD) return CRD->isDerivedFrom(baseCRD);
@@ -3749,7 +3787,7 @@ void WriteClassInit(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void WriteNamespaceInit(clang::NamespaceDecl *cl)
+void WriteNamespaceInit(const clang::NamespaceDecl *cl)
 {
    // Write the code to initialize the namespace name and the initialization object.
    
@@ -4872,40 +4910,41 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 }
 
 //______________________________________________________________________________
-void WriteClassCode(G__ClassInfo &cl, bool force = false)
+void WriteClassCode(const clang::CXXRecordDecl *cl, G__ClassInfo &clinfo, bool force = false)
 {
-   if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && (force || cl.Linkage() == G__CPPLINK) ) {
+   // G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
+   if ((clinfo.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && (force || clinfo.Linkage() == G__CPPLINK) ) {
 
-      if ( TClassEdit::IsSTLCont(cl.Name()) ) {
+      if ( TClassEdit::IsSTLCont(clinfo.Name()) ) {
          // coverity[fun_call_w_exception] - that's just fine.
-         RStl::inst().GenerateTClassFor( cl.Name() );
+         RStl::inst().GenerateTClassFor( clinfo.Name() );
          return;
       }
 
-      if (cl.HasMethod("Streamer")) {
+      if (clinfo.HasMethod("Streamer")) {
          //WriteStreamerBases(cl);
-         if (cl.RootFlag()) WritePointersSTL(cl);
-         if (!(cl.RootFlag() & G__NOSTREAMER)) {
-            if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
-               WriteAutoStreamer(cl);
+         if (clinfo.RootFlag()) WritePointersSTL(clinfo);
+         if (!(clinfo.RootFlag() & G__NOSTREAMER)) {
+            if ((clinfo.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
+               WriteAutoStreamer(clinfo);
             } else {
-               WriteStreamer(cl);
+               WriteStreamer(clinfo);
             }
          } else
-            Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", cl.Fullname());
+            Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", clinfo.Fullname());
       } else {
-         Info(0, "Class %s: Streamer() not declared\n", cl.Fullname());
+         Info(0, "Class %s: Streamer() not declared\n", clinfo.Fullname());
 
-         if (cl.RootFlag() & G__USEBYTECOUNT) WritePointersSTL(cl);
+         if (clinfo.RootFlag() & G__USEBYTECOUNT) WritePointersSTL(clinfo);
       }
-      if (cl.HasMethod("ShowMembers")) {
-         WriteShowMembers(cl);
-         WriteAuxFunctions(cl);
+      if (clinfo.HasMethod("ShowMembers")) {
+         WriteShowMembers(clinfo);
+         WriteAuxFunctions(clinfo);
       } else {
-         if (NeedShadowClass(cl)) {
-            WriteShowMembers(cl, true);
+         if (NeedShadowClass(clinfo)) {
+            WriteShowMembers(clinfo, true);
          }
-         WriteAuxFunctions(cl);
+         WriteAuxFunctions(clinfo);
       }
    }
 }
@@ -6196,6 +6235,8 @@ int main(int argc, char **argv)
 
    bool has_input_error = false;
 
+// SELECTION LOOP
+   // Check for error in the class layout before doing anything else.
    RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
    RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
    for( ; iter != end; ++iter) 
@@ -6310,9 +6351,15 @@ int main(int argc, char **argv)
       for( ; iter != end; ++iter) 
       {
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",iter->GetRecordDecl()->getQualifiedNameAsString().c_str());
+            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
             continue;
-         }                       
+         }
+         if (iter->RequestOnlyTClass()) {
+            fprintf(stderr,"Skipping %s\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
+            // For now delay those for later.
+            continue;
+         }
+         fprintf(stderr,"Seeing %s\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
             std::string qualname( CRD->getQualifiedNameAsString() );
@@ -6338,9 +6385,13 @@ int main(int argc, char **argv)
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }                       
-         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (CRD && ClassInfo__HasMethod(*iter,"Class_Name")) {
-            WriteClassFunctions(CRD);
+         if (iter->RequestOnlyTClass()) {
+            // For now delay those for later.
+            continue;
+         }
+         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         if (cxxdecl && ClassInfo__HasMethod(*iter,"Class_Name")) {
+            WriteClassFunctions(cxxdecl);
          }
       }
 
@@ -6354,150 +6405,48 @@ int main(int argc, char **argv)
       int   ncls = 0;
 
 // LINKDEF SELECTION LOOP
-      // Read LinkDef file and process valid entries (STK)
-      char line[256];
-      while (fgets(line, 256, fpld)) {
-
-         bool skip = true;
-         bool forceLink = false;
-         int len = strlen(line);
-
-         // Check if the line contains a "#pragma link C++ class" specification,
-         // if so, process the class (STK)
-         static const char* linkClassTokens[] = {"pragma", "link", "C++", "class", 0};
-         static const char* createTClassTokens[] = {"pragma", "create", "TClass", 0};
-         static const char* linkNamespaceTokens[] = {"pragma", "link", "C++", "namespace", 0};
-         size_t tokpos = 0;
-         if (ParsePragmaLine(line, linkClassTokens, &tokpos)) {
-            skip = false;
-            forceLink = false;
-         } else if (ParsePragmaLine(line, createTClassTokens, &tokpos)) {
-            skip = false;
-            forceLink = true;
-         } else if (ParsePragmaLine(line, linkNamespaceTokens, &tokpos)) {
-            skip = false;
-            forceLink = false;
-         }
-
-         if (!skip) {
-
-            // Create G__ClassInfo object for this class and process. Be
-            // careful with the hardcoded string of trailing options in case
-            // these change (STK)
-
-            int extraRootflag = 0;
-            if (forceLink && len>2) {
-               char *endreq = line+len-2;
-               bool ending = false;
-               while (!ending) {
-                  switch ( (*endreq) ) {
-                  case ';': break;
-                  case '+': extraRootflag |= G__USEBYTECOUNT; break;
-                  case '!': extraRootflag |= G__NOINPUTOPERATOR; break;
-                  case '-': extraRootflag |= G__NOSTREAMER; break;
-                  case ' ':
-                  case '\t': break;
-                  default:
-                     ending = true;
-                  }
-                  --endreq;
-               }
-               if ( extraRootflag & (G__USEBYTECOUNT | G__NOSTREAMER) ) {
-                  Warning(line,"option + mutual exclusive with -, + prevails\n");
-                  extraRootflag &= ~G__NOSTREAMER;
-               }
-            }
-
-            while (isspace(line[tokpos])) ++tokpos;
-            char* request = strtok(line + tokpos, "-!+;");
-            // just in case remove trailing space and tab
-            while (isspace(*request)) ++request;
-            int reqlen = strlen(request)-1;
-            while (isspace(request[reqlen])) request[reqlen--] = '\0';
-            request = Compress(request); //no space between tmpl arguments allowed
-
-            // In some case, G__ClassInfo will induce template instantiation,
-            // if the a function has a default value, we do not want to execute it.
-            // Setting G__globalcomp to something else then G__NOLINK is the only way
-            // to accomplish this.
-            int store_G__globalcomp = G__setglobalcomp(7); // Intentionally not a valid value.
-
-            G__ClassInfo clRequest(request);
-
-            G__setglobalcomp(store_G__globalcomp);
-
-            string fullname;
-            if (clRequest.IsValid())
-               fullname = clRequest.Fullname();
-            else {
-               fullname = request;
-            }
-            // In order to upgrade the pragma create TClass we would need a new function in
-            // CINT's G__ClassInfo.
-            // if (forceLink && extraRootflag) clRequest.SetRootFlag(extraRootflag);
-            //          fprintf(stderr,"DEBUG: request==%s processed==%s rootflag==%d\n",request,fullname.c_str(),extraRootflag);
-            delete [] request;
-
-            // Avoid requesting the creation of a class infrastructure twice.
-            // This could happen if one of the request link C++ class XXX is actually a typedef.
-            int nxt = 0;
-            for (i = 0; i < ncls; i++) {
-               if ( clProcessed[i] == fullname ) {
-                  nxt++;
-                  break;
-               }
-            }
-            if (nxt) continue;
-
-            clProcessed.push_back( fullname );
-            ncls++;
-
-            if (forceLink) {
-               if ((clRequest.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && clRequest.Linkage() != G__CPPLINK) {
-                  if (NeedShadowClass(clRequest)) {
-                     (*dictSrcOut) << "namespace ROOT {" << std::endl
-                                   << "   namespace Shadow {" << std::endl;
-                     // coverity[fun_call_w_exception] - that's just fine.
-                     shadowMaker->WriteShadowClass(clRequest);
-                     (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
-                                   << "} // Of namespace ROOT" << std::endl << std::endl;
-                  }
-                  if (G__ShadowMaker::IsSTLCont(clRequest.Name()) == 0 ) {
-                     WriteClassInit(clRequest);
-                  }
-               } else if ((clRequest.Property() & (G__BIT_ISNAMESPACE))) {
-                  WriteNamespaceInit(clRequest);
-               }
-            }
-            WriteClassCode(clRequest, forceLink);
-         }
-      }
-
-      // Loop over all classes and create Streamer() & ShowMembers() methods
-      // for classes not in clProcessed list (exported via
-      // "#pragma link C++ defined_in")
-      G__ClassInfo clLocal;
-      clLocal.Init();
-
-// SELECTION LOOP
-      while (clLocal.Next()) {
-         int nxt = 0;
-         // skip utility class defined in ClassImp
-         if (!strncmp(clLocal.Fullname(), "R__Init", 7) ||
-             strstr(clLocal.Fullname(), "::R__Init"))
+      // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+      // STL class which is done via RStl::inst().WriteClassInit(0);
+      // and the ClassInit
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
-         string fullname( clLocal.Fullname() );
-         for (i = 0; i < ncls; i++) {
-            if ( clProcessed[i] == fullname ) {
-               nxt++;
-               break;
-            }
          }
-         if (nxt) continue;
-
-         WriteClassCode(clLocal);
+         if (!iter->RequestOnlyTClass()) {
+            continue;
+         }
+         G__ClassInfo clinfo( R__GetQualifiedName(*iter).c_str() );
+         fprintf(stderr,"Doing create %s %d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
+         if (NeedShadowClass(clinfo)) {
+            (*dictSrcOut) << "namespace ROOT {" << std::endl
+            << "   namespace Shadow {" << std::endl;
+            // coverity[fun_call_w_exception] - that's just fine.
+            shadowMaker->WriteShadowClass(clinfo);
+            (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
+            << "} // Of namespace ROOT" << std::endl << std::endl;
+         }
+         if (G__ShadowMaker::IsSTLCont(clinfo.Name()) == 0 ) {
+            WriteClassInit(*iter);
+         }
       }
-
+      // Loop to write all the ClassCode
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            continue;
+         }
+         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         G__ClassInfo clinfo( R__GetQualifiedName(*iter).c_str() );
+         if (cxxdecl) {
+            WriteClassCode(cxxdecl, clinfo, true);
+         }
+      }
+      
       //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
       // coverity[fun_call_w_exception] - that's just fine.
       RStl::inst().WriteClassInit(0);
