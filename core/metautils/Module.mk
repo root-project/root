@@ -23,7 +23,7 @@ METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
 METAUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
-METAUTILSTCXXFLAGS += -Wno-shadow -Wno-unused-parameter
+METAUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
 endif
 
@@ -67,4 +67,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(METAUTILSO): CXXFLAGS += $(METAUTILSCXXFLAGS)
+$(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)

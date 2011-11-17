@@ -511,7 +511,7 @@ endif
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
-                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
+                $(CLIBO) $(METAUTILSO) $(METAUTILSTO) $(TEXTINPUTO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
                 $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO)
 
