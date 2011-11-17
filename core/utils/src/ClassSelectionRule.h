@@ -33,12 +33,13 @@ private:
    bool fPlus;        // for linkdef.h: true if we had '+' at the end of a class name
    bool fMinus;       // for linkdef.h: true if we had '-' or "-!" at the end of a class name
    bool fExclamation; // for linkdef.h: true if we had '!' at the end of a class name
+   bool fRequestOnlyTClass;  // True if the user want the TClass intiliazer but *not* the interpreter meta data
    
 public:
    ClassSelectionRule(long index):
-      BaseSelectionRule(index), fIsInheritable(false), fPlus(false), fMinus(false), fExclamation(false) {}
+      BaseSelectionRule(index), fIsInheritable(false), fPlus(false), fMinus(false), fExclamation(false), fRequestOnlyTClass(false) {}
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
-      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fPlus(false), fMinus(false), fExclamation(false) {}
+      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fPlus(false), fMinus(false), fExclamation(false), fRequestOnlyTClass(false) {}
    
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
@@ -61,11 +62,14 @@ public:
    void SetMinus(bool mn);
 
    bool HasExclamation() const;
-   void SetExclamation(bool excl);   
+   void SetExclamation(bool excl);
+   
+   void SetRequestOnlyTClass(bool val);
 
-   /* virtual */ bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
+   /* virtual */ bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    /* virtual */ bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
    /* virtual */ bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler.
+   /* virtual */ bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
 };
 
 #endif

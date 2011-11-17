@@ -50,17 +50,19 @@ public:
       bool fRequestStreamerInfo;
       bool fRequestNoStreamer;
       bool fRequestNoInputOperator;
+      bool fRequestOnlyTClass;
       
    public:
-      AnnotatedRecordDecl(clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator) : 
+      AnnotatedRecordDecl(clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
             fDecl(decl), fRuleIndex(index), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-            fRequestNoInputOperator(rRequestNoInputOperator) {}
+            fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
       ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
       bool RequestStreamerInfo() const { return fRequestStreamerInfo; }
       bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
       bool RequestNoStreamer() const { return fRequestNoStreamer; }
+      bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
       const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
 
       operator clang::RecordDecl const *() const {
@@ -73,7 +75,33 @@ public:
       }
    };
    typedef std::vector<AnnotatedRecordDecl>   ClassColl_t;
-   typedef std::vector<clang::NamespaceDecl*> NamespaceColl_t;
+   
+   class AnnotatedNamespaceDecl {
+   private:
+      const clang::NamespaceDecl *fDecl;
+      long fRuleIndex;
+      bool fRequestOnlyTClass;
+      
+   public:
+      AnnotatedNamespaceDecl(clang::NamespaceDecl *decl, long index, bool rRequestOnlyTClass) : 
+            fDecl(decl), fRuleIndex(index), fRequestOnlyTClass(rRequestOnlyTClass)
+            {}
+      AnnotatedNamespaceDecl() {
+         // Nothing to do we do not own the pointer;
+      }
+      bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
+      const clang::NamespaceDecl* GetNamespaceDecl() const { return fDecl; }
+      
+      operator clang::NamespaceDecl const *() const {
+         return fDecl;
+      }
+      
+      bool operator<(const AnnotatedNamespaceDecl& right) 
+      {
+         return fRuleIndex < right.fRuleIndex;
+      }
+   };
+   typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;
    
    // public for now, the list of selected classes.
    ClassColl_t     fSelectedClasses;

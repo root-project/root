@@ -89,9 +89,14 @@ void ClassSelectionRule::SetExclamation(bool excl)
    fExclamation = excl;
 }
 
-bool ClassSelectionRule::RequestStreamerInfo() const
+void ClassSelectionRule::SetRequestOnlyTClass(bool value)
 {
-   return HasPlus();
+   fRequestOnlyTClass = value;
+}
+
+bool ClassSelectionRule::RequestOnlyTClass() const
+{
+   return fRequestOnlyTClass;
 }
 
 bool ClassSelectionRule::RequestNoStreamer() const
@@ -102,5 +107,10 @@ bool ClassSelectionRule::RequestNoStreamer() const
 bool ClassSelectionRule::RequestNoInputOperator() const
 {
    return HasExclamation();
+}
+
+bool ClassSelectionRule::RequestStreamerInfo() const
+{
+   return HasPlus();
 }
 

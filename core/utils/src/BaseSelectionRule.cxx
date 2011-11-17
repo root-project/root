@@ -20,6 +20,7 @@
 
 #include "BaseSelectionRule.h"
 #include <iostream>
+#include <string.h>
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
    : fIndex(index), fIsSelected(sel)
@@ -164,6 +165,18 @@ bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& 
        CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef));
    }
    
+   
+   if (has_file_rule) {
+      // Reject utility class defined in ClassImp
+      // when using a file based rule
+      if (!strncmp(name.c_str(), "R__Init", 7) ||
+          strstr(name.c_str(), "::R__Init")) {
+         noName = false;
+         dontCare = false;
+         file = true;
+         return false;
+      }
+   }
    
    bool otherSourceFile = false;
    // if file_name is passed and we have file_name or file_pattern attribute but the
@@ -410,7 +423,7 @@ bool BaseSelectionRule::GetMatchFound()
    return fMatchFound;
 }
 
-bool BaseSelectionRule::RequestStreamerInfo() const
+bool BaseSelectionRule::RequestOnlyTClass() const
 {
    return false;
 }
@@ -421,6 +434,11 @@ bool BaseSelectionRule::RequestNoStreamer() const
 }
 
 bool BaseSelectionRule::RequestNoInputOperator() const
+{
+   return false;
+}
+
+bool BaseSelectionRule::RequestStreamerInfo() const
 {
    return false;
 }

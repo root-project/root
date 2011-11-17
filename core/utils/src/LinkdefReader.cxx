@@ -27,6 +27,7 @@ std::map<std::string, LinkdefReader::ECppNames> LinkdefReader::fgMapCppNames;
 void LinkdefReader::PopulatePragmaMap(){
    if (!(fgMapPragmaNames.empty())) return; // if the map has already been populated, return, else populate it
    
+   LinkdefReader::fgMapPragmaNames["TClass"] = kClass;
    LinkdefReader::fgMapPragmaNames["class"] = kClass;
    LinkdefReader::fgMapPragmaNames["function"] = kFunction;
    LinkdefReader::fgMapPragmaNames["global"] = kGlobal;
@@ -200,37 +201,48 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
    std::string temp_token;
    std::string rule_token;
    
-   
+   bool request_only_tclass = false;
+
    if(!(GetNextToken(file, link_token, false))) {
       std::cout<<"Warning at line "<<fLine-1<<" - lonely pragma statement"<<std::endl;
       return true;
    }
    
-   if (link_token != "link") {
+   if (link_token == "create") {
+      std::cout<<"Warning at line "<<fLine<<" - first pragma option is create - and is not yet fully supported!"<<std::endl;
+      request_only_tclass = true;
+   } else if (link_token != "link") {
+      
       std::cout<<"Warning at line "<<fLine<<" - first pragma option isn't link - this pragma does nothing here"<<std::endl;
       // I will definitely have something else here - otherwise I will have exited at the first if
       GetNextToken(file, temp_token, true);
       return true;
-   }
+   } else {
    
-   if (!GetNextToken(file, on_off_token, false)) {
-      std::cout<<"Warning at line "<<fLine-1<<" - incomplete pragma statement"<<std::endl;
-      return true;
+      if (!GetNextToken(file, on_off_token, false)) {
+         std::cout<<"Warning at line "<<fLine-1<<" - incomplete pragma statement"<<std::endl;
+         return true;
+      }
+   
    }
    
    bool linkOn = false;
-   if (on_off_token == "off") linkOn = false;
-   else if (on_off_token == "C++") linkOn = true;
-   else {
-      std::cout<<"Error at line "<<fLine<<" - bad #pragma format"<<std::endl;
-      return false;
+   if (request_only_tclass) {
+      linkOn = true;
+   } else {
+      if (on_off_token == "off") linkOn = false;
+      else if (on_off_token == "C++") linkOn = true;
+      else {
+         std::cout<<"Error at line "<<fLine<<" - bad #pragma format"<<std::endl;
+         return false;
+      }
    }
    
    bool haveMoreTokens = GetNextToken(file, name_token, false);
    
-   std::map<std::string, EPragmaNames>::iterator it
-   = LinkdefReader::fgMapPragmaNames.find(name_token);
    EPragmaNames name = kUnknown;
+
+   std::map<std::string, EPragmaNames>::iterator it = LinkdefReader::fgMapPragmaNames.find(name_token);
    if (it != LinkdefReader::fgMapPragmaNames.end()) {
       name = it->second;
    }
@@ -533,6 +545,9 @@ bool LinkdefReader::PragmaParser(std::ifstream& file, SelectionRules& sr)
             
             ClassSelectionRule csr(fCount++);
             
+            if (request_only_tclass) {
+               csr.SetRequestOnlyTClass(true);
+            }
             int len = rule_token.length();
             if (len > 2) { // process the +, -, -! endings of the classes
                

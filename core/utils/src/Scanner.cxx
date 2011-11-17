@@ -615,7 +615,8 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
       return true;
    }
    
-   bool ret = true, selected;
+   bool ret = true;
+   BaseSelectionRule *selected;
    
    DumpDecl(N, "");
    
@@ -632,7 +633,7 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
          outputFile<<qual_name<<std::endl;
       
       std::cout<<"\tSelected -> " << qual_name << "\n";
-      fSelectedNamespaces.push_back(N);
+      fSelectedNamespaces.push_back(AnnotatedNamespaceDecl(N,selected->GetIndex(),selected->RequestOnlyTClass()));
       
       ret = true;
    }
@@ -685,7 +686,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
          outputFile<<qual_name<<std::endl;
       
       std::cout<<"\tSelected -> " << qual_name << "\n";
-      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->GetIndex(),selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator()));
+      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->GetIndex(),selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
 
       ret = true;
    }

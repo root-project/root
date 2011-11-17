@@ -67,9 +67,11 @@ public:
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound();           // get fMatchFound
 
-   virtual bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
+   virtual bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    virtual bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
-   virtual bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler. 
+   virtual bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler.
+   virtual bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
+
 protected:
    bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
    
