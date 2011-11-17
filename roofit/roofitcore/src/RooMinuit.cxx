@@ -789,7 +789,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
 
 //_____________________________________________________________________________
-void RooMinuit::optimizeConst(Bool_t flag)
+void RooMinuit::optimizeConst(Int_t flag)
 {
   // If flag is true, perform constant term optimization on
   // function being minimized.
@@ -798,11 +798,11 @@ void RooMinuit::optimizeConst(Bool_t flag)
 
   if (_optConst && !flag){
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
-    _func->constOptimizeTestStatistic(RooAbsArg::DeActivate) ;
+    _func->constOptimizeTestStatistic(RooAbsArg::DeActivate,flag>1) ;
     _optConst = flag ;
   } else if (!_optConst && flag) {
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: activating const optimization" << endl ;
-    _func->constOptimizeTestStatistic(RooAbsArg::Activate) ;
+    _func->constOptimizeTestStatistic(RooAbsArg::Activate,flag>1) ;
     _optConst = flag ;
   } else if (_optConst && flag) {
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: const optimization already active" << endl ;

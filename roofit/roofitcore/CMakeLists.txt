@@ -16,7 +16,7 @@ set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCat
              RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h RooAddPdf.h RooEfficiency.h RooEffProd.h RooExtendPdf.h )
 set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooFit.h RooFitResult.h RooFormula.h
              RooFormulaVar.h RooGaussKronrodIntegrator1D.h RooGenCategory.h RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h
-             RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h
+             RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
              RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
              RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
              RooMCIntegrator.h RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h

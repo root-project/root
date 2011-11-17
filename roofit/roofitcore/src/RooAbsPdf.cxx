@@ -856,7 +856,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   
   if (optConst) {
-    nll->constOptimizeTestStatistic(RooAbsArg::Activate) ;
+    nll->constOptimizeTestStatistic(RooAbsArg::Activate,optConst>1) ;
   }
 
   if (doStripDisconnected) {
@@ -969,7 +969,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
-  pc.defineInt("optConst","Optimize",0,1) ;
+  pc.defineInt("optConst","Optimize",0,2) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("doSave","Save",0,0) ;
   pc.defineInt("doTimer","Timer",0,0) ;
@@ -1077,7 +1077,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     
     if (optConst) {
       // Activate constant term optimization
-      m.optimizeConst(1) ;
+      m.optimizeConst(optConst) ;
     }
     
     if (fitOpt) {
@@ -1223,7 +1223,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     
     if (optConst) {
       // Activate constant term optimization
-      m.optimizeConst(1) ;
+      m.optimizeConst(optConst) ;
     }
     
     if (fitOpt) {
