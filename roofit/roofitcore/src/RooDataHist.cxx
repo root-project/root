@@ -43,6 +43,7 @@
 #include "RooHistError.h"
 #include "RooCategory.h"
 #include "RooCmdConfig.h"
+#include "RooLinkedListIter.h"
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "TTree.h"
@@ -572,7 +573,7 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
   // that import data from an external TH1
 
   // X
-  RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
+  RooRealVar* xvar = (RooRealVar*) _vars.find(*vars.at(0)) ;
   if (!dynamic_cast<RooRealVar*>(xvar)) {
     coutE(InputArguments) << "RooDataHist::adjustBinning(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
     assert(0) ;
@@ -627,7 +628,7 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
 
 
   // Y
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
+  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(*vars.at(1)) : 0 ) ;
   Int_t ymin(0) ;
   if (yvar) {
     Double_t ylo = ((RooRealVar*)vars.at(1))->getMin() ;
@@ -684,7 +685,7 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
   }
   
   // Z
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : 0 ) ;
+  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(*vars.at(2)) : 0 ) ;
   Int_t zmin(0) ;
   if (zvar) {
     Double_t zlo = ((RooRealVar*)vars.at(2))->getMin() ;
@@ -971,7 +972,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
       coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return 0 ;
     }
-    cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
+    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
     cloneVar->attachDataSet(*this) ;
   }
 
@@ -1098,7 +1099,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
     return 0;
   }
 
-  RooRealVar* dataVar = (RooRealVar*) _vars.find(var->GetName()) ;
+  RooRealVar* dataVar = (RooRealVar*) _vars.find(*var) ;
   if (!dataVar) {
     coutE(InputArguments) << ClassName() << "::" << GetName()
 	 << ":plotOn: dataset doesn't contain plot frame variable" << endl;
@@ -1151,19 +1152,19 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   if (_realVars.getSize()==1) {
 
     // 1-dimensional interpolation
-    _realIter->Reset() ;
-    RooRealVar* real=(RooRealVar*)_realIter->Next() ;
+    RooFIter realIter = _realVars.fwdIterator() ;
+    RooRealVar* real=(RooRealVar*)realIter.next() ;
     const RooAbsBinning* binning = real->getBinningPtr(0) ;
-    wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(real->GetName()))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
-
+    wInt = interpolateDim(*real,binning,((RooAbsReal*)bin.find(*real))->getVal(), intOrder, correctForBinSize, cdfBoundaries) ;
+    
   } else if (_realVars.getSize()==2) {
 
     // 2-dimensional interpolation
-    _realIter->Reset() ;
-    RooRealVar* realX=(RooRealVar*)_realIter->Next() ;
-    RooRealVar* realY=(RooRealVar*)_realIter->Next() ;
-    Double_t xval = ((RooAbsReal*)bin.find(realX->GetName()))->getVal() ;
-    Double_t yval = ((RooAbsReal*)bin.find(realY->GetName()))->getVal() ;
+    RooFIter realIter = _realVars.fwdIterator() ;
+    RooRealVar* realX=(RooRealVar*)realIter.next() ;
+    RooRealVar* realY=(RooRealVar*)realIter.next() ;
+    Double_t xval = ((RooAbsReal*)bin.find(*realX))->getVal() ;
+    Double_t yval = ((RooAbsReal*)bin.find(*realY))->getVal() ;
     
     Int_t ybinC = realY->getBin() ;
     Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->getBinning().binCenter(ybinC))?1:0) ;
@@ -1450,7 +1451,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
       return ;
     }
 
-    cloneVar = (RooFormulaVar*) tmp->find(cutVar->GetName()) ;
+    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
     cloneVar->attachDataSet(dset) ;
   }
 
@@ -1531,7 +1532,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   Int_t i(0) ;
   _iterator->Reset() ;
   while((arg=(RooAbsArg*)_iterator->Next())) {
-    if (sumSet.find(arg->GetName())) {
+    if (sumSet.find(*arg)) {
       mask[i] = kFALSE ;
     } else {
       mask[i] = kTRUE ;
@@ -1598,7 +1599,7 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
   RooAbsArg* v ;
   Int_t i(0) ;
   while((v=(RooAbsArg*)_iterator->Next())) {
-    selDim[i++] = dimSet.find(v->GetName()) ? kTRUE : kFALSE ;
+    selDim[i++] = dimSet.find(*v) ? kTRUE : kFALSE ;
   }
 
   // Recalculate partial bin volume cache
@@ -1784,7 +1785,7 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
   _vars = otherArgs ;
   _curIndex = calcTreeIndex() ;
   
-  RooAbsArg* intArg = _vars.find(sliceArg.GetName()) ;
+  RooAbsArg* intArg = _vars.find(sliceArg) ;
   if (!intArg) {
     coutE(InputArguments) << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << endl ;
     return 0 ;

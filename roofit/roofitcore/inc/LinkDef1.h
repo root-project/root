@@ -3,7 +3,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ class Roo1DTable+ ;
-#pragma link C++ class RooAbsArg+ ;
+#pragma link C++ class RooAbsArg- ;
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
     code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }" 
 #pragma link C++ class RooAbsBinning- ;

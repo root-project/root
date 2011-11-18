@@ -61,6 +61,7 @@ protected:
   Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
 
   Double_t *_x ; //! do not persist
+  std::list<Double_t>* _binb ; //! list of bin boundaries
 
   ClassDef(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };

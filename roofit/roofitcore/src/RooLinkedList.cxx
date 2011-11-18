@@ -43,13 +43,10 @@ ClassImp(RooLinkedList)
 
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _curStoreSize(2), _curStoreUsed(0)
 {
-  // Constructor with hashing threshold. If collection size exceeds threshold
-  // a hash table is added.
-//   if (htsize>0) {
-//     cout << "RooLinkedList::ctor htsize=" << htsize << endl ;
-//   }
+  _curStore = new RooLinkedListElem[_curStoreSize] ;
+  _storeList.push_back(_curStore) ;
 }
 
 
@@ -57,10 +54,14 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
-  TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _name(other._name)
+  TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
+  _curStoreSize(2), _curStoreUsed(0), _name(other._name)
 {
   // Copy constructor
-
+  
+  _curStore = new RooLinkedListElem[other.GetSize()+2] ;
+  _storeList.push_back(_curStore) ;
+  
   if (other._htableName) _htableName = new RooHashTable(other._htableName->size()) ;
   if (other._htableLink) _htableLink = new RooHashTable(other._htableLink->size(),RooHashTable::Pointer) ;
   RooLinkedListElem* elem = other._first ;
@@ -68,6 +69,36 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
     Add(elem->_arg, elem->_refCount) ;
     elem = elem->_next ;
   }
+}
+
+
+
+//_____________________________________________________________________________
+RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem* elem) 
+{
+//   cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << endl ;
+  
+  if (_curStoreUsed==_curStoreSize) {
+    _curStoreSize *= 2 ;
+    _curStore = new RooLinkedListElem[_curStoreSize] ;
+    _storeList.push_back(_curStore) ;
+    _curStoreUsed = 0 ;
+//     cout << "RooLinkedList::createElement(" << this <<") starting new store of size " << _curStoreSize << " at address " << _curStore << endl ;
+  }
+  
+  RooLinkedListElem* ret = _curStore+_curStoreUsed ;
+//   cout << "initializing slot " << _curStoreUsed << " of store " << _curStore << " = " << ret << endl ;
+  ret->init(obj,elem) ;
+  _curStoreUsed++ ;
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+void RooLinkedList::deleteElement(RooLinkedListElem* elem) 
+{  
+  elem->release() ;
+  //delete elem ;
 }
 
 
@@ -148,8 +179,13 @@ RooLinkedList::~RooLinkedList()
     delete _htableLink ;
     _htableLink=0 ;
   }
-
+  
   Clear() ;
+
+  // Delete store
+  for (list<RooLinkedListElem*>::iterator iter=_storeList.begin() ; iter!=_storeList.end() ; ++iter) {
+    delete[] *iter ;
+  }
 }
 
 
@@ -198,10 +234,10 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
 
   if (_last) {
     // Append element at end of list
-    _last = new RooLinkedListElem(arg,_last) ;
+    _last = createElement(arg,_last) ;
   } else {
     // Append first element, set first,last 
-    _last = new RooLinkedListElem(arg) ;
+    _last = createElement(arg) ;
     _first=_last ;
   }
 
@@ -242,7 +278,7 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   
   // Delete and shrink
   _size-- ;
-  delete elem ;	
+  deleteElement(elem) ;	
   return kTRUE ;
 }
 
@@ -326,8 +362,8 @@ void RooLinkedList::Clear(Option_t *)
   RooLinkedListElem* elem = _first;
   while(elem) {
     RooLinkedListElem* next = elem->_next ;
-      delete elem ;
-      elem = next ;
+    deleteElement(elem) ;
+    elem = next ;
   }
   _first = 0 ;
   _last = 0 ;
@@ -358,7 +394,7 @@ void RooLinkedList::Delete(Option_t *)
   while(elem) {
     RooLinkedListElem* next = elem->_next ;
     delete elem->_arg ;
-    delete elem ;
+    deleteElement(elem) ;
     elem = next ;
   }
   _first = 0 ;
@@ -392,6 +428,28 @@ TObject* RooLinkedList::find(const char* name) const
   while(ptr) {
     if (!strcmp(ptr->_arg->GetName(),name)) {
       return ptr->_arg ;
+    }
+    ptr = ptr->_next ;
+  }
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const 
+{
+  // Return pointer to object with given name in collection.
+  // If no such object is found, return null pointer.
+
+  if (_htableName) {
+    return (RooAbsArg*) _htableName->findArg(arg) ;
+  }
+
+  RooLinkedListElem* ptr = _first ;
+  while(ptr) {
+    if (((RooAbsArg*)(ptr->_arg))->namePtr() == arg->namePtr()) {
+      return (RooAbsArg*) ptr->_arg ;
     }
     ptr = ptr->_next ;
   }
@@ -583,4 +641,3 @@ void RooLinkedList::Streamer(TBuffer &R__b)
     R__b << _name ;
   }
 }
-

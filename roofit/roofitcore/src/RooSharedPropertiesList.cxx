@@ -25,6 +25,7 @@
 #include "RooFit.h"
 #include "RooSharedPropertiesList.h"
 #include "RooSharedProperties.h"
+#include "RooLinkedListIter.h"
 #include "TIterator.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
@@ -50,12 +51,11 @@ RooSharedPropertiesList::~RooSharedPropertiesList()
   // Destructor
 
   // Delete all objects in property list
-  TIterator* iter = _propList.MakeIterator() ;
+  RooFIter iter = _propList.fwdIterator() ;
   RooSharedProperties* prop ;
-  while((prop=(RooSharedProperties*)iter->Next())) {
+  while((prop=(RooSharedProperties*)iter.next())) {
     delete prop ;
   }
-  delete iter ;
 } 
 
 
@@ -77,37 +77,45 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
     return 0 ;
   }
 
+
+  // If the reference count is non-zero, it is already in the list, so no need
+  // to look it up anymore
+  if (prop->inSharedList()) {
+    prop->increaseRefCount() ;
+    return prop ;
+  }
+
   // Find property with identical uuid in list
-  TIterator* iter = _propList.MakeIterator() ;
+  RooFIter iter = _propList.fwdIterator() ;
   RooSharedProperties* tmp ;
-  while((tmp=(RooSharedProperties*)iter->Next())) {
-    if (*tmp==*prop && tmp != prop) {
+  while((tmp=(RooSharedProperties*)iter.next())) {
+    if (tmp != prop && *tmp==*prop) {
       // Found another instance of object with identical UUID 
 
       // Delete incoming instance, increase ref count of already stored instance
-//       cout << "RooSharedProperties::reg deleting incoming prop " << prop << " recycling existing prop " << tmp << endl ;
+      // cout << "RooSharedProperties::reg deleting incoming prop " << prop << " recycling existing prop " << tmp << endl ;
 
       // Check if prop is in _propList
       if (_propList.FindObject(prop)) {
-// 	cout << "incoming object to be deleted is in proplist!!" << endl ;
+	// cout << "incoming object to be deleted is in proplist!!" << endl ;
       } else {
-// 	cout << "deleting prop object " << prop << endl ;
+	// cout << "deleting prop object " << prop << endl ;
 	if (canDeleteIncoming) delete prop ;
       }
 
       // delete prop ;
-      _propList.Add(tmp) ;
-
-      delete iter ;
+      //_propList.Add(tmp) ;
+      tmp->increaseRefCount() ;
 
       // Return pointer to already-stored instance
       return tmp ;
     }
   }
-  delete iter ;
 
-
-//   cout << "RooSharedProperties::reg storing incoming prop " << prop << endl ;
+  
+  // cout << "RooSharedProperties::reg storing incoming prop " << prop << endl ;
+  prop->setInSharedList() ;
+  prop->increaseRefCount() ;
   _propList.Add(prop) ;
   return prop ;
 }
@@ -120,13 +128,15 @@ void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop)
   // Decrease reference count of property. If reference count is at zero,
   // delete the propery
 
-  _propList.Remove(prop) ;
+  prop->decreaseRefCount() ;
 
-  // We own object if ref-counted list. If count drops to zero, delete object
-  if (_propList.refCount(prop)==0) {
+  if (prop->refCount()==0) {
+    _propList.Remove(prop) ;
+    
+    // We own object if ref-counted list. If count drops to zero, delete object
     delete prop ;
   }
-
+  
 }
 
 

@@ -31,9 +31,18 @@ public:
 
   virtual void Print(Option_t* opts=0) const ;
 
+  void increaseRefCount() { _refCount++ ; }
+  void decreaseRefCount() { if (_refCount>0) _refCount-- ; }
+  Int_t refCount() const { return _refCount ; }
+
+  void setInSharedList() { _inSharedList = kTRUE ; }
+  Bool_t inSharedList() const { return _inSharedList ; }
+
 protected:
 
   TUUID _uuid ; // Unique object ID
+  Int_t _refCount ; //! Use count 
+  Int_t _inSharedList ; //! Is in shared list
 
   ClassDef(RooSharedProperties,1) // Abstract interface for shared property implementations
 };

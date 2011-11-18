@@ -38,6 +38,7 @@ public:
   RooGenFitStudy(const char* name=0, const char* title=0) ;
   RooGenFitStudy(const RooGenFitStudy& other) ;
   virtual ~RooGenFitStudy() ;
+  virtual RooAbsStudy* clone(const char* newname="") const { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }
 
   void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;

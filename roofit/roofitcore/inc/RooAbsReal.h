@@ -268,6 +268,7 @@ public:
 
   static void clearEvalErrorLog() ;
 
+  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const { return 0 ; }
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const { 
     // Interface for returning an optional hint for initial sampling points when constructing a curve 
     // projected on observable.

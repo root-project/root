@@ -59,7 +59,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 //_____________________________________________________________________________
-RooBinIntegrator::RooBinIntegrator() :  _x(0)
+RooBinIntegrator::RooBinIntegrator() :  _x(0), _binb(0)
 {
   // Default constructor
 }
@@ -67,7 +67,7 @@ RooBinIntegrator::RooBinIntegrator() :  _x(0)
 
 //_____________________________________________________________________________
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) : 
-  RooAbsIntegrator(function)
+  RooAbsIntegrator(function), _binb(0)
 {
   // Construct integrator on given function binding binding
 
@@ -86,21 +86,25 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
 
 //_____________________________________________________________________________
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) : 
-  RooAbsIntegrator(function)
+  RooAbsIntegrator(function), _binb(0)
 {
   // Construct integrator on given function binding binding
-
+  
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
+  _useIntegrandLimits= kTRUE;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
   assert(0 != integrand() && integrand()->isValid());
-
+  
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
-
+  
   _xmin= integrand()->getMinLimit(0);
   _xmax= integrand()->getMaxLimit(0);
-  checkLimits();
+  
+  // Retrieve bin configuration from integrand
+  _binb = integrand()->binBoundaries(0) ;
 
+  checkLimits();
 } 
 
 
@@ -120,6 +124,7 @@ RooBinIntegrator::~RooBinIntegrator()
 {
   // Destructor
   if(_x) delete[] _x;
+  if (_binb) delete _binb ;
 
 }
 
@@ -163,18 +168,24 @@ Bool_t RooBinIntegrator::checkLimits() const
 
 
 //_____________________________________________________________________________
-Double_t RooBinIntegrator::integral(const Double_t *yvec) 
+Double_t RooBinIntegrator::integral(const Double_t *) 
 {
   // Calculate numeric integral at given set of function binding parameters
 
   assert(isValid());
 
-  double sum = 0., thisX = 0.;
-  for(int i=0; i<_numBins; ++i){
-    thisX = _xmin + (i+0.5)*_binWidth;
-    sum+= integrand(xvec(thisX))*_binWidth;
+  double sum = 0. ;
+  list<Double_t>::iterator iter = _binb->begin() ;
+  Double_t xlo = *iter ;
+  iter++ ;
+  for (; iter!=_binb->end() ; ++iter) {
+    Double_t xhi = *iter ;
+    Double_t xcenter = (xhi+xlo)/2 ;
+    Double_t binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
+    sum += binInt ;
+    xlo=xhi ;
   }
-  //  cout <<" sum = " <<sum<<endl;
+  
   return sum;
 
 }

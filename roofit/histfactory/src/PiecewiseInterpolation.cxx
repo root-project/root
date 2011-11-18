@@ -551,6 +551,22 @@ void PiecewiseInterpolation::printAllInterpCodes(){
 }
 
 
+//_____________________________________________________________________________
+std::list<Double_t>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  return _nominal.arg().binBoundaries(obs,xlo,xhi) ;
+}
+
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* PiecewiseInterpolation::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  return _nominal.arg().plotSamplingHint(obs,xlo,xhi) ;  
+}
+
+
+
 /*
 //_____________________________________________________________________________
 void PiecewiseInterpolation::printMetaArgs(ostream& os) const 
