@@ -368,7 +368,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    
    if (pos1 == -1 || (!begin && pos1 != 0)) { // if the first sub-pattern isn't found in test or if it is found but the
       // pattern doesn't start with '*' and the sub-pattern is not at the first position
-      std::cout<<"\tNo match!"<<std::endl;
+      //std::cout<<"\tNo match!"<<std::endl;
       return false;
    }
    
@@ -390,7 +390,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    
    if (patterns_list.size() > 1) {
       if ((int)((*it).length())+pos1 > pos_end) {
-         std::cout<<"\tNo match";
+         // std::cout<<"\tNo match";
          return false; // end is contained in begin -> test = "A::B" sub-patterns = "A::", "::" will return false
       } 
    }
@@ -399,10 +399,10 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    ++it;
    
    for (; it != patterns_list.end(); ++it) {
-      std::cout<<"sub-pattern = "<<*it<<std::endl; 
+      // std::cout<<"sub-pattern = "<<*it<<std::endl; 
       pos2 = test.find(*it);
       if (pos2 <= pos1) {
-         std::cout<<"\tNo match!"<<std::endl;
+         // std::cout<<"\tNo match!"<<std::endl;
          return false;
       }
       pos1 = pos2;
