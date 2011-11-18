@@ -560,13 +560,13 @@ bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* name)
 std::string ClassInfo__FileName(const clang::Decl *cl)
 {
    fprintf(stderr,"ClassInfo__FileName not yet implemented\n");
-   return "";
+   return "\"\"";
 }
 
-std::string ClassInfo__LineNumber(const clang::Decl *cl)
+long ClassInfo__LineNumber(const clang::Decl *cl)
 {
    fprintf(stderr,"ClassInfo__LineNumber not yet implemented\n");
-   return "";
+   return 0;
 }
 
 
