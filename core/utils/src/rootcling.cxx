@@ -5094,7 +5094,7 @@ const char *CopyArg(const char *original)
    // to make it the name we can use in #includes.
 
 #ifdef ROOTBUILD
-   if (R__IsSelectionFile(original) {
+   if (R__IsSelectionFile(original)) {
       return original;
    }
 
