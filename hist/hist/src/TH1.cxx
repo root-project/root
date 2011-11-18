@@ -6469,11 +6469,19 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out <<"   "<<endl;
    out <<"   "<< ClassName() <<" *";
 
-   //histogram pointer has by default the histogram name.
-   //however, in case histogram has no directory, it is safer to add a incremental suffix
+   // Histogram pointer has by default the histogram name.
+   // However, in case the histogram has no directory, it is safer to add a incremental suffix.
+   // If the histogram belongs to a graph or a stack the suffix is not added because
+   // the graph and stack objects are not aware of this new name. Same thing if
+   // the histogram is drawn with the option COLZ because the TPaletteAxis drawn
+   // when this option is selected, does not know this new name either.
+   TString opt = option;
+   opt.ToLower();
    static Int_t hcounter = 0;
    TString histName = GetName();
-   if (!fDirectory && !histName.Contains("Graph") && !histName.Contains("_stack_")) {
+   if (!fDirectory && !histName.Contains("Graph") 
+                   && !histName.Contains("_stack_")
+                   && !opt.Contains("colz")) {
       hcounter++;
       histName += "__";
       histName += hcounter;
