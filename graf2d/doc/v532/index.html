@@ -115,5 +115,31 @@ column in a <tt>TLegend</tt>.
    <center>
    <img alt="File contents view" title="File's contents view" src="file_contents.gif"/>
    </center>
+   <br><br>
+   Tap on a object's preview will open detailed view for this object. Using pinch gesture or double tap, you can zoom in/zoom out pad's contents.<br>
+   If you have several objects in a file or directory, you can navigate through directory contents by using swipe gesture, scrolling your objects.<br><br>
+   <center>
+   <img alt="Detail view" title="Detail view" src="detail_view.gif"/>
+   </center>
+   <br><br>
+   It's possible to modify properties of objects the same way you can do it in TCanvas - RootBrowser has an editor. After you press "Edit" button, you can
+   pick histogram, axis, frame, pavestats, etc. in a pad and modify its properties in the editor (selected object is highlihgted in a pad). <br>At the moment, there are editors for:
+   <pre>
+   <ul>
+   <li>TH1 objects</li>
+   <li>TGraph objects</li>
+   <li>Objects derived from TAttLine (line attributes)</li>
+   <li>Objects derived from TAttFill (filled area attributes)</li>
+   <li>Pad object (fill properties, log scales, ticks, grid)</li>
+   <li>Markers</li>
+   </ul>
+   </pre><br><br>
+   <center>
+   <img alt="Editors" title="Editors" src="editors.gif"/>
+   </center>
+   <br><br>
+   Using pan gesture along the selected axis, you can change the axis range - "zoom".<br>
+   Mofigied object can be saved locally (in application's directory) and send as mail attachment <br>
+   ("Save" functionality will be improved soon).
 </li>
 </ul>
