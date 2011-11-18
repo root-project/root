@@ -6247,8 +6247,7 @@ int main(int argc, char **argv)
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
 
       LinkdefReader ldefr;
-      ldefr.Parse(selectionRules, interpPragmaSource, clingArgs, getenv("LLVMDIR"));
-      if (!ldefr.CPPHandler(file, selectionRules)) {
+      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs, getenv("LLVMDIR"))) {
          Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
       }
       else {

@@ -27,13 +27,15 @@
 #include "llvm/ADT/StringRef.h"
 
 class SelectionRules;
+class PragmaCreateCollector;
+class PragmaLinkCollector;
 
 class LinkdefReader 
 {
 private:
    long fLine;  // lines count - for error messages
    long fCount; // Number of rules created so far.
-
+   SelectionRules *fSelectionRules; // set of rules being filleed.
 private:
 
    enum EPragmaNames { // the processed pragma attributes
@@ -63,25 +65,20 @@ private:
    static std::map<std::string, EPragmaNames> fgMapPragmaNames;
    static std::map<std::string, ECppNames> fgMapCppNames;
 
+   friend class PragmaCreateCollector;
+   friend class PragmaLinkCollector;
+   
 public:
-   LinkdefReader() : fLine(1), fCount(0) {}
+   LinkdefReader();
 
+   bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
+   
+private:
    static void PopulatePragmaMap();
    static void PopulateCppMap();
    
-   bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
+   bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass);
    
-   bool CPPHandler(std::ifstream& file, SelectionRules& sr); // this is the main parsing method
-   void PrintAllTokens(std::ifstream& file); // for debugging purposes
-   
-private:
-   void TrimChars(std::string& out, const std::string& chars); // helper function trims the chars passed as second argument
-   bool StartsWithPound(std::ifstream& file);
-   bool PragmaParser(std::ifstream& file, SelectionRules& sr); // parses every pragma statement
-   bool RemoveComment(std::ifstream& file);                    // rmoves comments from the pragma statements
-   bool GetNextToken(std::ifstream& file, std::string& token, bool str); // gets next token from a pragma statement
-   bool GetFirstToken(std::ifstream& file, std::string& token);   // detects the begining of a statement and returns the first token (#pragma, #if, ...)
-   bool IsLastSemiColon(std::string& str); 
    bool ProcessFunctionPrototype(std::string& proto, bool& name); // transforms the function prototypes to a more unified form
    bool ProcessOperators(std::string& pattern); // transforms the operators statement to the suitable function pattern
 
