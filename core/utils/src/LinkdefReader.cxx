@@ -51,6 +51,7 @@ void LinkdefReader::PopulatePragmaMap(){
    LinkdefReader::fgMapPragmaNames["nestedclasses"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["nestedclasses;"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["operators"] = kOperators;
+   LinkdefReader::fgMapPragmaNames["operator"] = kOperators;
 }
 
 void LinkdefReader::PopulateCppMap(){
