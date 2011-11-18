@@ -33,22 +33,22 @@ void BaseSelectionRule::SetSelected(BaseSelectionRule::ESelect sel)
    fIsSelected = sel;
 }
 
-BaseSelectionRule::ESelect BaseSelectionRule::GetSelected()
+BaseSelectionRule::ESelect BaseSelectionRule::GetSelected() const
 {
    return fIsSelected;
 }
 
-bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName)
+bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName) const
 {
-   AttributesMap_t::iterator iter = fAttributes.find(attributeName);
+   AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
    
    if(iter!=fAttributes.end()) return true;
    else return false;
 }
 
-bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std::string& returnValue)
+bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std::string& returnValue) const
 {
-   AttributesMap_t::iterator iter = fAttributes.find(attributeName);
+   AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
    
    if(iter!=fAttributes.end()) {
       returnValue = iter->second;
@@ -74,12 +74,12 @@ void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, cons
    }
 }
 
-const BaseSelectionRule::AttributesMap_t& BaseSelectionRule::GetAttributes()
+const BaseSelectionRule::AttributesMap_t& BaseSelectionRule::GetAttributes() const
 {
    return fAttributes;
 }
 
-void BaseSelectionRule::PrintAttributes(int level)
+void BaseSelectionRule::PrintAttributes(int level) const
 { 
    std::string tabs;
    for (int i = 0; i < level; ++i) {
@@ -87,7 +87,7 @@ void BaseSelectionRule::PrintAttributes(int level)
    }
    
    if (!fAttributes.empty()) {
-      for (AttributesMap_t::iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
+      for (AttributesMap_t::const_iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
          std::cout<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
       }
    }
@@ -99,7 +99,7 @@ void BaseSelectionRule::PrintAttributes(int level)
 
 
 bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& prototype, 
-                                    const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef)
+                                    const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const
 {
    /* This method returns true
     * only if we have a matching selection rule and it says "Select". Otherwise it returns 
@@ -134,8 +134,8 @@ bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& 
    // do we have matching against the name (or pattern) attribute and if yes - select or veto
    bool has_name_rule = (HasAttributeWithName("name") && 
                          (name_value == name)) ||
-   (HasAttributeWithName("pattern") && 
-    CheckPattern(name, pattern_value, fSubPatterns, isLinkdef));
+                         (HasAttributeWithName("pattern") && 
+                         CheckPattern(name, pattern_value, fSubPatterns, isLinkdef));
    
    std::string proto_name_value;
    GetAttributeValue("proto_name", proto_name_value);
@@ -217,7 +217,7 @@ bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& 
    // prototype or source file name)
    if (has_rule) {
       
-      SetMatchFound(true);
+      const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
       
       noName = false;
       
@@ -339,9 +339,9 @@ bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
  * This method checks if the given test string is matched against the pattern 
  */
 
-bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, std::list<std::string>& patterns_list, bool isLinkdef)
+bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef)
 {
-   std::list<std::string>::iterator it = patterns_list.begin();
+   std::list<std::string>::const_iterator it = patterns_list.begin();
    int pos1 = -1, pos2 = -1, pos_end = -1;
    bool begin = BeginsWithStar(pattern);
    bool end = EndsWithStar(pattern);
@@ -418,7 +418,7 @@ void BaseSelectionRule::SetMatchFound(bool match)
    fMatchFound = match;
 }
 
-bool BaseSelectionRule::GetMatchFound()
+bool BaseSelectionRule::GetMatchFound() const
 {
    return fMatchFound;
 }

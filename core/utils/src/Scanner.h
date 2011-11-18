@@ -30,6 +30,8 @@ namespace clang {
    class RecordDecl;
 }
 
+class SelectionRules;
+
 /* -------------------------------------------------------------------------- */
 
 // Note form Velislava: We are inheriting here from the class RecursiveASTVisitor
@@ -37,7 +39,8 @@ namespace clang {
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
 private:
-   clang::ASTContext* fCtx;
+   const SelectionRules &fSelectionRules;
+   const clang::SourceManager* fSourceManager;
 
 public:
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
@@ -127,51 +130,50 @@ private:
    clang::Decl * fLastDecl;
 
 private:
-   void ShowInfo(const std::string &msg, const std::string &location = "");
-   void ShowWarning(const std::string &msg, const std::string &location = "");
-   void ShowError(const std::string &msg, const std::string &location = "");
+   void ShowInfo(const std::string &msg, const std::string &location = "") const;
+   void ShowWarning(const std::string &msg, const std::string &location = "") const;
+   void ShowError(const std::string &msg, const std::string &location = "") const;
 
-   void ShowTemplateInfo(const std::string &msg, const std::string &location = "");
-   void ShowReflexWarning(const std::string &msg, const std::string &location = "");
+   void ShowTemplateInfo(const std::string &msg, const std::string &location = "") const;
+ 
+   std::string GetSrcLocation(clang::SourceLocation L) const;
+   std::string GetLocation(clang::Decl* D) const;
+   std::string GetName(clang::Decl* D) const;
 
-   std::string GetSrcLocation(clang::SourceLocation L);
-   std::string GetLocation(clang::Decl* D);
-   std::string GetName(clang::Decl* D);
+   void DeclInfo(clang::Decl* D) const;
 
-   void DeclInfo(clang::Decl* D);
-
-   void UnknownDecl(clang::Decl* D, const std::string &txt = "");
-   void UnexpectedDecl(clang::Decl* D,const std::string &txt = "");
-   void UnsupportedDecl(clang::Decl* D,const std::string &txt = "");
-   void UnimportantDecl(clang::Decl* D,const std::string &txt = "");
+   void UnknownDecl(clang::Decl* D, const std::string &txt = "") const;
+   void UnexpectedDecl(clang::Decl* D,const std::string &txt = "") const;
+   void UnsupportedDecl(clang::Decl* D,const std::string &txt = "") const;
+   void UnimportantDecl(clang::Decl* D,const std::string &txt = "") const;
    void UnimplementedDecl(clang::Decl* D,const std::string &txt = "");
 
-   void UnknownType(clang::QualType qual_type);
-   void UnsupportedType(clang::QualType qual_type);
-   void UnimportantType(clang::QualType qual_type);
+   void UnknownType(clang::QualType qual_type) const;
+   void UnsupportedType(clang::QualType qual_type) const;
+   void UnimportantType(clang::QualType qual_type) const;
    void UnimplementedType(clang::QualType qual_type);
    void UnimplementedType (const clang::Type* T);
 
-   std::string GetClassName(clang::RecordDecl* D);
-   std::string GetEnumName(clang::EnumDecl* D);
+   std::string GetClassName(clang::RecordDecl* D) const;
+   std::string GetEnumName(clang::EnumDecl* D) const;
 
-   std::string ExprToStr(clang::Expr* expr);
+   std::string ExprToStr(clang::Expr* expr) const;
 
-   std::string ConvTemplateName(clang::TemplateName& N);
-   std::string ConvTemplateParameterList(clang::TemplateParameterList* list);
-   std::string ConvTemplateParams(clang::TemplateDecl* D);
-   std::string ConvTemplateArguments(const clang::TemplateArgumentList& list);
+   std::string ConvTemplateName(clang::TemplateName& N) const;
+   std::string ConvTemplateParameterList(clang::TemplateParameterList* list) const;
+   std::string ConvTemplateParams(clang::TemplateDecl* D) const;
+   std::string ConvTemplateArguments(const clang::TemplateArgumentList& list) const;
 
-   std::string  FuncParameters(clang::FunctionDecl* D);
-   std::string  FuncParameterList(clang::FunctionDecl* D);
-   unsigned int FuncModifiers(clang::FunctionDecl* D);
+   std::string  FuncParameters(clang::FunctionDecl* D) const;
+   std::string  FuncParameterList(clang::FunctionDecl* D) const;
+   unsigned int FuncModifiers(clang::FunctionDecl* D) const;
 
-   unsigned int VisibilityModifiers(clang::AccessSpecifier access);
-   unsigned int Visibility(clang::Decl* D);
-   unsigned int VarModifiers(clang::VarDecl* D);
+   unsigned int VisibilityModifiers(clang::AccessSpecifier access) const;
+   unsigned int Visibility(clang::Decl* D) const;
+   unsigned int VarModifiers(clang::VarDecl* D) const;
 
 public:
-   RScanner ();
+   RScanner (const SelectionRules &rules);
    virtual ~ RScanner ();
 
 public:
@@ -184,12 +186,12 @@ public:
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl 
    // according to its type is processed by the corresponding Visitor method
 
-   void Scan (clang::ASTContext* C, clang::Decl* D, const std::string& selectionFileName);
-   std::string GetClassName(clang::DeclContext* DC);
-   void DumpDecl(clang::Decl* D, const char* msg);
-   bool GetDeclName(clang::Decl* D, std::string& name);
-   bool GetDeclQualName(clang::Decl* D, std::string& qual_name);
-   bool GetFunctionPrototype(clang::Decl* D, std::string& prototype);
+   void Scan(const clang::ASTContext &C);
+   std::string GetClassName(clang::DeclContext* DC) const;
+   void DumpDecl(clang::Decl* D, const char* msg) const;
+   bool GetDeclName(clang::Decl* D, std::string& name) const;
+   bool GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
+   bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
 };
 
 /* -------------------------------------------------------------------------- */

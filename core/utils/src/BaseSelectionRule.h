@@ -49,23 +49,23 @@ public:
    BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false) {} 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
-   long    GetIndex() { return fIndex; }
+   long    GetIndex() const { return fIndex; }
 
-   bool    HasAttributeWithName(const std::string& attributeName); // returns true if there is an attribute with the specified name
+   bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
 
-   bool    GetAttributeValue(const std::string& attributeName, std::string& returnValue); // returns the value of the attribute with name attributeName
+   bool    GetAttributeValue(const std::string& attributeName, std::string& returnValue) const; // returns the value of the attribute with name attributeName
    void    SetAttributeValue(const std::string& attributeName, const std::string& attributeValue); // sets an attribute with name attribute name and value attributeValue
 
-   ESelect GetSelected();
+   ESelect GetSelected() const;
    void    SetSelected(ESelect sel);
    
-   const AttributesMap_t& GetAttributes(); // returns the list of attributes
-   void  PrintAttributes(int level);       // prints the list of attributes - level is the number of tabs from the beginning of the line
+   const AttributesMap_t& GetAttributes() const; // returns the list of attributes
+   void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
 
-   bool  IsSelected (const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef); // for more detailed description look at the .cxx file
+   bool  IsSelected (const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const; // for more detailed description look at the .cxx file
 
    void  SetMatchFound(bool match); // set fMatchFound
-   bool  GetMatchFound();           // get fMatchFound
+   bool  GetMatchFound() const;           // get fMatchFound
 
    virtual bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    virtual bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
@@ -73,14 +73,14 @@ public:
    virtual bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
 
 protected:
-   bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
+   static bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
    
    // Checks if the test string matches against the pattern (which has produced the list of sub-patterns patterns_list). There is 
    // difference if we are processing linkdef.h or selection.xmlpatterns
-   bool  CheckPattern(const std::string& test, const std::string& pattern, std::list<std::string>& patterns_list, bool isLinkdef);
+   static bool CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef);
    
-   bool  EndsWithStar(const std::string& pattern);   // returns true of a pattern ends with a star
-   void  ProcessPattern(const std::string& pattern, std::list<std::string>& out); // divides a pattern into a list of sub-patterns
+   static bool  EndsWithStar(const std::string& pattern);   // returns true of a pattern ends with a star
+   static void  ProcessPattern(const std::string& pattern, std::list<std::string>& out); // divides a pattern into a list of sub-patterns
 };
 
 #endif

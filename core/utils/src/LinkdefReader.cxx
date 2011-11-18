@@ -17,6 +17,16 @@
 
 #include <iostream>
 #include "LinkdefReader.h"
+#include "SelectionRules.h"
+
+#include "llvm/Support/raw_ostream.h"
+
+#include "clang/Frontend/CompilerInstance.h"
+
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/Pragma.h"
+
+#include "cling/Interpreter/CIFactory.h"
 
 std::map<std::string, LinkdefReader::EPragmaNames> LinkdefReader::fgMapPragmaNames;
 std::map<std::string, LinkdefReader::ECppNames> LinkdefReader::fgMapCppNames;
@@ -1003,4 +1013,91 @@ void LinkdefReader::PrintAllTokens(std::ifstream& file)
    }
 }
 
+class PragmaLinkCollector: public clang::PragmaHandler {
+public:
+   PragmaLinkCollector() :
+      // This handler only cares about "#pragma link"
+      clang::PragmaHandler("link")
+   {
+   }
+   
+   void HandlePragma (clang::Preprocessor &PP,
+                      clang::PragmaIntroducerKind Introducer,
+                      clang::Token &tok) {
+      // Handle a #pragma found by the Preprocessor.
+      
+      // check whether we care about the pragma - we are a named handler,
+      // thus this could actually be transformed into an assert:
+      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (!tok.getIdentifierInfo()) return; // must be "link"
+      if (tok.getIdentifierInfo()->getName() != "link") return;
+      
+      do {
+         PP.Lex(tok);
+         PP.DumpToken(tok, true);
+         llvm::errs() << "\n";
+      } while (tok.isNot(clang::tok::eod));
+   };
+   
+};
 
+class PragmaCreateCollector: public clang::PragmaHandler {
+public:
+   PragmaCreateCollector() :
+      // This handler only cares about "#pragma link"
+      clang::PragmaHandler("create")
+   {
+   }
+   
+   void HandlePragma (clang::Preprocessor &PP,
+                      clang::PragmaIntroducerKind Introducer,
+                      clang::Token &tok) {
+      // Handle a #pragma found by the Preprocessor.
+      
+      // check whether we care about the pragma - we are a named handler,
+      // thus this could actually be transformed into an assert:
+      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
+      if (!tok.getIdentifierInfo()) return; // must be "link"
+      if (tok.getIdentifierInfo()->getName() != "create") return;
+      
+      do {
+         PP.Lex(tok);
+         PP.DumpToken(tok, true);
+         llvm::errs() << "\n";
+      } while (tok.isNot(clang::tok::eod));
+   };
+   
+};
+
+
+// Parse using clang and its pragma handlers callbacks.
+bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir)         
+{
+   std::vector<const char*> parserArgsC;
+   for (size_t i = 0, n = parserArgs.size(); i < n; ++i) {
+      parserArgsC.push_back(parserArgs[i].c_str());
+   }
+   
+   // Extract all #pragmas
+   llvm::MemoryBuffer* memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
+   clang::CompilerInstance* pragmaCI = cling::CIFactory::createCI(memBuf, parserArgsC.size(), &parserArgsC[0], llvmdir);
+   
+   clang::Preprocessor& PP = pragmaCI->getPreprocessor();
+   clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
+   DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
+   
+   PragmaLinkCollector pragmaLinkCollector;   
+   PragmaCreateCollector pragmaCreateCollector;
+   
+   PP.AddPragmaHandler(&pragmaLinkCollector);
+   PP.AddPragmaHandler(&pragmaCreateCollector);
+   
+   // Start parsing the specified input file.
+   PP.EnterMainSourceFile();
+   clang::Token tok;
+   do {
+      PP.Lex(tok);
+   } while (tok.isNot(clang::tok::eof));
+   
+   return true;
+}

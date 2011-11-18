@@ -53,74 +53,74 @@ public:
    SelectionRules() {}
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
-   bool HasClassSelectionRules();
-   const std::list<ClassSelectionRule>& GetClassSelectionRules();
+   bool HasClassSelectionRules() const;
+   const std::list<ClassSelectionRule>& GetClassSelectionRules() const;
    
    void AddFunctionSelectionRule(const FunctionSelectionRule& funcSel);
-   bool HasFunctionSelectionRules();
-   const std::list<FunctionSelectionRule>& GetFunctionSelectionRules();
+   bool HasFunctionSelectionRules() const;
+   const std::list<FunctionSelectionRule>& GetFunctionSelectionRules() const;
    
    void AddVariableSelectionRule(const VariableSelectionRule& varSel);
-   bool HasVariableSelectionRules();
-   const std::list<VariableSelectionRule>& GetVariableSelectionRules();
+   bool HasVariableSelectionRules() const;
+   const std::list<VariableSelectionRule>& GetVariableSelectionRules() const;
    
    void AddEnumSelectionRule(const EnumSelectionRule& enumSel);
-   bool HasEnumSelectionRules();
-   const std::list<EnumSelectionRule>& GetEnumSelectionRules();
+   bool HasEnumSelectionRules() const;
+   const std::list<EnumSelectionRule>& GetEnumSelectionRules() const;
    
-   void PrintSelectionRules(); // print all selection rules
+   void PrintSelectionRules() const; // print all selection rules
    
    void ClearSelectionRules(); // clear all selection rules
    
    void SetHasFileNameRule(bool file_rule);
-   bool GetHasFileNameRule();
+   bool GetHasFileNameRule() const;
    
    void SetDeep(bool deep);
-   bool GetDeep();
+   bool GetDeep() const;
    
-   BaseSelectionRule *IsDeclSelected(clang::Decl* D); // this is the method which is called from clr-scan and returns true if the Decl 
+   const BaseSelectionRule *IsDeclSelected(clang::Decl* D) const; // this is the method which is called from clr-scan and returns true if the Decl 
    // selected, false otherwise
    
-   BaseSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name); // is the class selected
-   BaseSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name); // is the class selected
+   const BaseSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
+   const BaseSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
    
    // is the global function, variable, enum selected - the behavior is different for linkdef.h and selection.xml - that's why
    // we have two functions
-   BaseSelectionRule *IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
-   BaseSelectionRule *IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
+   const BaseSelectionRule *IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const;
+   const BaseSelectionRule *IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const;
    
    // is member (field, method, enum) selected; the behavior for linkdef.h methods is different   
-   BaseSelectionRule *IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name);
-   BaseSelectionRule *IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name);
+   const BaseSelectionRule *IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name) const;
+   const BaseSelectionRule *IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const;
    
    // returns true if the parent is class or struct
-   bool IsParentClass(clang::Decl* D);
+   bool IsParentClass(clang::Decl* D) const;
    
    // the same but returns also the parent name and qualified name
-   bool IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name);
+   bool IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const;
    
    // returns the parent name and qualified name
-   bool GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name);
+   bool GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const;
    
    
    //bool getParent(clang::Decl* D, clang::Decl* parent); - this method would have saved a lot of efforts but it crashes
    // and I didn't understand why
    
    // gets the name and qualified name of the Decl
-   bool GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name);
+   bool GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const;
    
    // gets the name of the source file where the Decl was declared
-   bool GetDeclSourceFileName(clang::Decl* D, std::string& file_name);
+   bool GetDeclSourceFileName(clang::Decl* D, std::string& file_name) const;
    
    // gets the function prototype if the Decl (if it is global function or method)
-   bool GetFunctionPrototype(clang::Decl* D, std::string& prototype);
+   bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
    
-   bool IsSelectionXMLFile();
-   bool IsLinkdefFile();
+   bool IsSelectionXMLFile() const;
+   bool IsLinkdefFile() const;
    void SetSelectionFileType(ESelectionFileTypes fileType);
    
    // returns true if all selection rules are used at least once
-   bool AreAllSelectionRulesUsed();
+   bool AreAllSelectionRulesUsed() const;
 };
 
 #endif

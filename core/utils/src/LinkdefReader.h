@@ -22,7 +22,11 @@
 
 #include <fstream>
 #include <vector>
-#include "SelectionRules.h"
+#include <string>
+#include <map>
+#include "llvm/ADT/StringRef.h"
+
+class SelectionRules;
 
 class LinkdefReader 
 {
@@ -64,6 +68,8 @@ public:
 
    static void PopulatePragmaMap();
    static void PopulateCppMap();
+   
+   bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
    
    bool CPPHandler(std::ifstream& file, SelectionRules& sr); // this is the main parsing method
    void PrintAllTokens(std::ifstream& file); // for debugging purposes

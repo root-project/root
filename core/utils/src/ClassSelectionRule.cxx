@@ -22,13 +22,13 @@ void ClassSelectionRule::AddFieldSelectionRule(VariableSelectionRule field)
   fFieldSelectionRules.push_back(field);
 }
 
-bool ClassSelectionRule::HasFieldSelectionRules()
+bool ClassSelectionRule::HasFieldSelectionRules() const
 {
   return !fFieldSelectionRules.empty();
 }
 
 //const std::list<VariableSelectionRule>& ClassSelectionRule::GetFieldSelectionRules()
-std::list<VariableSelectionRule>& ClassSelectionRule::GetFieldSelectionRules()
+const std::list<VariableSelectionRule>& ClassSelectionRule::GetFieldSelectionRules() const
 {
   return fFieldSelectionRules;
 }
@@ -38,18 +38,18 @@ void ClassSelectionRule::AddMethodSelectionRule(FunctionSelectionRule method)
   fMethodSelectionRules.push_back(method);
 }
 
-bool ClassSelectionRule::HasMethodSelectionRules()
+bool ClassSelectionRule::HasMethodSelectionRules() const
 {
   return !fMethodSelectionRules.empty();
 }
 
 //const std::list<FunctionSelectionRule>& ClassSelectionRule::GetMethodSelectionRules()
-std::list<FunctionSelectionRule>& ClassSelectionRule::GetMethodSelectionRules()
+const std::list<FunctionSelectionRule>& ClassSelectionRule::GetMethodSelectionRules() const
 {
   return fMethodSelectionRules;
 }
 
-bool ClassSelectionRule::IsInheritable()
+bool ClassSelectionRule::IsInheritable() const
 {
   return fIsInheritable;
 }

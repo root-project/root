@@ -171,7 +171,6 @@
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/CIFactory.h"
-#include <Scanner.h>
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
@@ -351,6 +350,11 @@ using namespace TClassEdit;
 
 #include "RStl.h"
 #include "RConversionRuleParser.h"
+#include "XMLReader.h"
+#include "LinkdefReader.h"
+#include "SelectionRules.h"
+#include "Scanner.h"
+
 using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
@@ -566,50 +570,6 @@ std::string ClassInfo__LineNumber(const clang::Decl *cl)
 }
 
 
-class PragmaLinkCollector: public clang::PragmaHandler {
-public:
-   PragmaLinkCollector(clang::StringRef code, size_t argc, const char* argv[]):
-   // This handler only cares about "#pragma link"
-   clang::PragmaHandler("link")
-   {
-      // Extract all #pragmas
-      llvm::MemoryBuffer* memBuf
-         = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
-      
-      clang::CompilerInstance* pragmaCI
-         = cling::CIFactory::createCI(memBuf, argc, argv, getenv("LLVMDIR"));
-      clang::Preprocessor& PP = pragmaCI->getPreprocessor();
-      clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
-      DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
-      PP.AddPragmaHandler(this);
-      // Start parsing the specified input file.
-      PP.EnterMainSourceFile();
-
-      clang::Token tok;
-      do {
-         PP.Lex(tok);
-      } while (tok.isNot(clang::tok::eof));
-   }
-
-   void HandlePragma (clang::Preprocessor &PP,
-                      clang::PragmaIntroducerKind Introducer,
-                      clang::Token &tok) {
-      // Handle a #pragma found by the Preprocessor.
-
-      // check whether we care about the pragma - we are a named handler,
-      // thus this could actually be transformed into an assert:
-      if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
-      if (!tok.getIdentifierInfo()) return; // must be "link"
-      if (tok.getIdentifierInfo()->getName() != "link") return;
-      
-      do {
-         PP.Lex(tok);
-         PP.DumpToken(tok, true);
-         llvm::errs() << "\n";
-      } while (tok.isNot(clang::tok::eod));
-   };
-   
-};
 
 bool IsStdClass(const clang::CXXRecordDecl *cl)
 {
@@ -649,6 +609,39 @@ void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
 inline bool R__IsTemplate(const clang::CXXRecordDecl *cl)
 {
    return cl->getTemplateSpecializationKind() != clang::TSK_Undeclared;
+}
+
+bool R__IsSelectionXml(const char *filename)
+{
+   size_t len = strlen(filename);
+   size_t xmllen = 4; /* strlen(".xml"); */
+   if (strlen(filename) >= xmllen ) {
+      return (0 == strcasecmp( filename + (len - xmllen), ".xml"));
+   } else {
+      return false;
+   }
+}
+
+bool R__IsLinkdefFile(const char *filename)
+{
+   size_t len = strlen(filename);
+   size_t linkdeflen = 9; /* strlen("linkdef.h") */
+   if (len >= 9) {
+      if (0 == strncasecmp( filename + (len - linkdeflen), "linkdef", linkdeflen-2)
+          && 0 == strcmp(filename + (len - 2),".h")
+          ) {
+         return true;
+      } else {
+         return false;
+      }
+   } else {
+      return false;
+   }
+}
+
+bool R__IsSelectionFile(const char *filename)
+{
+   return R__IsLinkdefFile(filename) || R__IsSelectionXml(filename);
 }
 
 //const char* root_style()  {
@@ -5101,8 +5094,7 @@ const char *CopyArg(const char *original)
    // to make it the name we can use in #includes.
 
 #ifdef ROOTBUILD
-   if ((strstr(original,"LinkDef") || strstr(original,"Linkdef") ||
-        strstr(original,"linkdef")) && strstr(original,".h")) {
+   if (R__IsSelectionFile(original) {
       return original;
    }
 
@@ -5239,8 +5231,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                if (!s) continue;
                s++;
                char *s1 = strrchr(s, '"');
-               if (((strstr(s,"LinkDef") || strstr(s,"Linkdef") ||
-                     strstr(s,"linkdef")) && strstr(s,".h")))
+               if (R__IsSelectionFile(s))
                   continue;
                if (s1) {
                   *s1 = 0;
@@ -5308,8 +5299,7 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                if (!s) continue;
                s++;
                char *s1 = strrchr(s, '>');
-               if (((strstr(s,"LinkDef") || strstr(s,"Linkdef") ||
-                     strstr(s,"linkdef")) && strstr(s,".h")))
+               if (R__IsSelectionFile(s))
                   continue;
                if (s1) {
                   *s1 = 0;
@@ -5402,6 +5392,7 @@ int main(int argc, char **argv)
    int icc = 0;
    int use_preprocessor = 0;
    int longheadername = 0;
+   bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
    string dictpathname;
    string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
@@ -5935,8 +5926,7 @@ int main(int argc, char **argv)
          }
          iv = argcc;
       }
-      if ((strstr(argv[i],"LinkDef") || strstr(argv[i],"Linkdef") ||
-           strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
+      if (R__IsSelectionFile(argv[i])) {
          il = i;
          if (i != argc-1) {
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
@@ -6199,8 +6189,7 @@ int main(int argc, char **argv)
    if (ifl && !icc) {
       for (i = ic; i < argc; i++) {
          if (*argv[i] != '-' && *argv[i] != '+' &&
-             !((strstr(argv[i],"LinkDef") || strstr(argv[i],"Linkdef") ||
-                strstr(argv[i],"linkdef")) && strstr(argv[i],".h")))
+             !(R__IsSelectionFile(argv[i])))
             (*dictSrcOut) << "#include \"" << argv[i] << "\"" << std::endl;
       }
       (*dictSrcOut) << std::endl;
@@ -6216,22 +6205,65 @@ int main(int argc, char **argv)
          CleanupOnExit(1);
          return 1;
       }
+   }   
+
+   SelectionRules selectionRules;
+
+   if (requestAllSymbols) {
+      selectionRules.SetDeep(true);
+   } else if (R__IsSelectionXml(linkdefFilename.c_str())) {
+   
+      selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
+
+      std::ifstream file(linkdefFilename.c_str());
+      if(file.is_open()){
+         Info(0,"Selection XML file");
+         
+         XMLReader xmlr;
+         if (!xmlr.Parse(file, selectionRules)) {
+            Error(0,"Parsing XML file %s",linkdefFilename.c_str());
+         }
+         else {
+            Info(0,"XML file successfully parsed");
+         }            
+         file.close();
+      }
+      else {
+         Error(0,"XML file %s couldn't be opened!",linkdefFilename.c_str());
+      }
+
+   } else if (R__IsLinkdefFile(linkdefFilename.c_str())) {
+      
+      std::ifstream file(linkdefFilename.c_str());
+      if(file.is_open()){
+         Info(0,"Linkdef file");
+         
+         file.close();
+      }
+      else {
+         Error(0,"Linkdef file %s couldn't be opened!",linkdefFilename.c_str());
+      }
+      
+      selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
+
+      LinkdefReader ldefr;
+      ldefr.Parse(selectionRules, interpPragmaSource, clingArgs, getenv("LLVMDIR"));
+      if (!ldefr.CPPHandler(file, selectionRules)) {
+         Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
+      }
+      else {
+         Info(0,"Linkdef file successfully parsed");
+      }
+      
+   } else {
+      
+      Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());
+      
    }
    
-
-   {
-      std::vector<const char*> pragmaArgsC;
-      for (size_t i = 0, n = clingArgs.size(); i < n; ++i) {
-         pragmaArgsC.push_back(clingArgs[i].c_str());
-      }
-      PragmaLinkCollector pragmaLinkCollector(interpPragmaSource,
-                                              pragmaArgsC.size(),
-                                              &pragmaArgsC[0]);
-   }
-
-   RScanner scan;
+   RScanner scan(selectionRules);
    clang::CompilerInstance* CI = interp.getCI();
-   scan.Scan(&CI->getASTContext(),CI->getASTContext().getTranslationUnitDecl(),linkdefFilename);
+   scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
 
@@ -6401,8 +6433,6 @@ int main(int argc, char **argv)
       // in case "#pragma link C++ defined_in" is used.
       //const int kMaxClasses = 2000;
       //char *clProcessed[kMaxClasses];
-      vector<string> clProcessed;
-      int   ncls = 0;
 
 // LINKDEF SELECTION LOOP
       // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the

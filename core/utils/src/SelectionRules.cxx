@@ -30,12 +30,12 @@ void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
    fClassSelectionRules.push_back(classSel);
 }
 
-bool SelectionRules::HasClassSelectionRules()
+bool SelectionRules::HasClassSelectionRules() const
 {
    return !fClassSelectionRules.empty();
 }
 
-const std::list<ClassSelectionRule>& SelectionRules::GetClassSelectionRules()
+const std::list<ClassSelectionRule>& SelectionRules::GetClassSelectionRules() const
 {
    return fClassSelectionRules;
 }
@@ -45,12 +45,12 @@ void SelectionRules::AddFunctionSelectionRule(const FunctionSelectionRule& funcS
    fFunctionSelectionRules.push_back(funcSel);
 }
 
-bool SelectionRules::HasFunctionSelectionRules()
+bool SelectionRules::HasFunctionSelectionRules() const
 {
    return !fFunctionSelectionRules.empty();
 }
 
-const std::list<FunctionSelectionRule>& SelectionRules::GetFunctionSelectionRules()
+const std::list<FunctionSelectionRule>& SelectionRules::GetFunctionSelectionRules() const
 {
    return fFunctionSelectionRules;
 }
@@ -60,12 +60,12 @@ void SelectionRules::AddVariableSelectionRule(const VariableSelectionRule& varSe
    fVariableSelectionRules.push_back(varSel);
 }
 
-bool SelectionRules::HasVariableSelectionRules()
+bool SelectionRules::HasVariableSelectionRules() const
 {
    return !fVariableSelectionRules.empty();
 }
 
-const std::list<VariableSelectionRule>& SelectionRules::GetVariableSelectionRules()
+const std::list<VariableSelectionRule>& SelectionRules::GetVariableSelectionRules() const
 {
    return fVariableSelectionRules;
 }
@@ -75,22 +75,22 @@ void SelectionRules::AddEnumSelectionRule(const EnumSelectionRule& enumSel)
    fEnumSelectionRules.push_back(enumSel);
 }
 
-bool SelectionRules::HasEnumSelectionRules()
+bool SelectionRules::HasEnumSelectionRules() const
 {
    return !fEnumSelectionRules.empty();
 }
 
-const std::list<EnumSelectionRule>& SelectionRules::GetEnumSelectionRules()
+const std::list<EnumSelectionRule>& SelectionRules::GetEnumSelectionRules() const
 {
    return fEnumSelectionRules;
 }
 
-void SelectionRules::PrintSelectionRules()
+void SelectionRules::PrintSelectionRules() const
 {
    std::cout<<"Printing Selection Rules:"<<std::endl;
    if (!fClassSelectionRules.empty()) {
       int i = 0;
-      for(std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin(); 
+      for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it, ++i) {
          std::cout<<"\tClass sel rule "<<i<<":"<<std::endl;
          std::cout<<"\t\tSelected: ";
@@ -164,7 +164,7 @@ void SelectionRules::PrintSelectionRules()
    
    if (!fFunctionSelectionRules.empty()) {
       //std::cout<<""<<std::endl;
-      std::list<FunctionSelectionRule>::iterator it2;
+      std::list<FunctionSelectionRule>::const_iterator it2;
       int i = 0;
       
       for (it2 = fFunctionSelectionRules.begin(); it2 != fFunctionSelectionRules.end(); ++it2, ++i) {
@@ -187,7 +187,7 @@ void SelectionRules::PrintSelectionRules()
    }
    
    if (!fVariableSelectionRules.empty()) {
-      std::list<VariableSelectionRule>::iterator it3;
+      std::list<VariableSelectionRule>::const_iterator it3;
       int i = 0;
       
       for (it3 = fVariableSelectionRules.begin(); it3 != fVariableSelectionRules.end(); ++it3, ++i) {
@@ -210,7 +210,7 @@ void SelectionRules::PrintSelectionRules()
    }
    
    if (!fEnumSelectionRules.empty()) {
-      std::list<EnumSelectionRule>::iterator it4;
+      std::list<EnumSelectionRule>::const_iterator it4;
       int i = 0;
       
       for (it4 = fEnumSelectionRules.begin(); it4 != fEnumSelectionRules.end(); ++it4, ++i) {
@@ -254,7 +254,7 @@ void SelectionRules::SetHasFileNameRule(bool file_rule)
    fHasFileNameRule = file_rule;
 }
 
-bool SelectionRules::GetHasFileNameRule()
+bool SelectionRules::GetHasFileNameRule() const
 {
    if (fHasFileNameRule) return true;
    else return false;
@@ -290,21 +290,21 @@ void SelectionRules::SetDeep(bool deep)
    }
 }
 
-bool SelectionRules::GetDeep()
+bool SelectionRules::GetDeep() const
 {
    if (fIsDeep) return true;
    else return false;
 }
 
 
-BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D)
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
 {  
    std::string str_name;   // name of the Decl
    std::string kind;       // kind of the Decl
    std::string qual_name;  // fully qualified name of the Decl
    
    if (!D) {
-      return false;
+      return 0;
    }
    
    kind = D->getDeclKindName();
@@ -338,7 +338,7 @@ BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D)
       
       // Enum is part of a class
       if (IsParentClass(D)) {
-         BaseSelectionRule *selector = IsMemberSelected(D, kind, str_name);
+         const BaseSelectionRule *selector = IsMemberSelected(D, kind, str_name);
          if (!selector) // if the parent class is deselected, we could still select the enum
             return IsVarFunEnumSelected(D, kind, qual_name);
          else           // if the parent class is selected so are all nested enums
@@ -373,7 +373,7 @@ BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D)
    return 0;
 }
 
-bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name)
+bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const
 {
    clang::NamedDecl* N = llvm::dyn_cast<clang::NamedDecl> (D);
    
@@ -393,7 +393,7 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
    }  
 }
 
-bool SelectionRules::GetDeclSourceFileName(clang::Decl* D, std::string& file_name)
+bool SelectionRules::GetDeclSourceFileName(clang::Decl* D, std::string& file_name) const
 {
    clang::SourceLocation SL = D->getLocation();
    clang::ASTContext& ctx = D->getASTContext();
@@ -412,7 +412,7 @@ bool SelectionRules::GetDeclSourceFileName(clang::Decl* D, std::string& file_nam
 
 
 
-bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype) {
+bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype) const {
    if (!D) {
       return false;
    }
@@ -450,7 +450,7 @@ bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype
 }
 
 
-bool SelectionRules::IsParentClass(clang::Decl* D)
+bool SelectionRules::IsParentClass(clang::Decl* D) const
 {
    clang::DeclContext *ctx = D->getDeclContext();
    
@@ -482,7 +482,7 @@ bool SelectionRules::IsParentClass(clang::Decl* D)
 }
 
 
-bool SelectionRules::IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name)
+bool SelectionRules::IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
 {
    clang::DeclContext *ctx = D->getDeclContext();
    
@@ -514,7 +514,7 @@ bool SelectionRules::IsParentClass(clang::Decl* D, std::string& parent_name, std
    }
 }
 
-bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name)
+bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const
 {
    clang::DeclContext *ctx = D->getDeclContext();
    
@@ -572,7 +572,7 @@ bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std
 // which is for the selection.xml file case). If noName is true than we just continue - 
 // this means that the current class selection rule isn't applicable for this class.
 
-BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name)
+const BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const
 {
    clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (N==0) {
@@ -585,14 +585,14 @@ BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std
       if (!GetDeclSourceFileName(N, file_name)){
       }
    }
-   BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
-   BaseSelectionRule *explicit_selector = 0;
+   const BaseSelectionRule *explicit_selector = 0;
    int fFileNo = 0;
    bool file;
    
    // NOTE: should we separate namespaces from classes in the rules?
-   std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
+   std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
    // iterate through all class selection rles
    for(; it != fClassSelectionRules.end(); ++it) {
       bool dontC, noName;
@@ -681,7 +681,7 @@ BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std
 }
 
 
-BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name)
+const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
 {
    clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (T) {
@@ -691,13 +691,13 @@ BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::st
             if (!GetDeclSourceFileName(D, file_name)){
             }
          }
-         BaseSelectionRule *selector = 0;
+         const BaseSelectionRule *selector = 0;
          int fImplNo = 0;
-         BaseSelectionRule *explicit_selector = 0;
+         const BaseSelectionRule *explicit_selector = 0;
          int fFileNo = 0;
          bool file;
          
-         std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
+         std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
          // iterate through all class selection rles
          for(; it != fClassSelectionRules.end(); ++it) {
             bool dontC, noName;
@@ -795,10 +795,10 @@ BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::st
 }
 
 
-BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+const BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
 {
-   std::list<VariableSelectionRule>::iterator it;
-   std::list<VariableSelectionRule>::iterator it_end;
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
    std::string prototype;
    
    if (kind == "Var") {
@@ -828,7 +828,7 @@ BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const st
       }
    }
    
-   BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = 0;
    bool d, noMatch;
    bool selected;
    bool file;
@@ -844,7 +844,7 @@ BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const st
       }
       else if (!noMatch) {
          // The rule did explicitly request to not select this entity.
-         return false;
+         return 0;
       }
    }
    
@@ -852,10 +852,10 @@ BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const st
 }
 
 
-BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
 {
-   std::list<VariableSelectionRule>::iterator it;
-   std::list<VariableSelectionRule>::iterator it_end;
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
    std::string prototype;
    
    if (kind == "Var") {
@@ -881,9 +881,9 @@ BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, c
    
    bool d, n;
    bool selected;
-   BaseSelectionRule *selector = 0;
+   const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
-   BaseSelectionRule *explicit_selector = 0;
+   const BaseSelectionRule *explicit_selector = 0;
    bool file;
    
    for(; it != it_end; ++it) {
@@ -950,10 +950,10 @@ BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, c
 // of anything better)
 // 
 
-BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name)
+const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
 {
-   std::list<FunctionSelectionRule>::iterator it = fFunctionSelectionRules.begin();
-   std::list<FunctionSelectionRule>::iterator it_end = fFunctionSelectionRules.end();
+   std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin();
+   std::list<FunctionSelectionRule>::const_iterator it_end = fFunctionSelectionRules.end();
    std::string prototype;
    
    GetFunctionPrototype(D, prototype);
@@ -967,9 +967,9 @@ BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const
    int impl_r_No = 0, impl_rr_No = 0;
    bool d, n;
    bool selected;
-   BaseSelectionRule *explicit_r = 0;
-   BaseSelectionRule *implicit_r = 0;
-   BaseSelectionRule *implicit_rr = 0;
+   const BaseSelectionRule *explicit_r = 0;
+   const BaseSelectionRule *implicit_r = 0;
+   const BaseSelectionRule *implicit_rr = 0;
    bool file;
    
    if (kind == "CXXMethod"){
@@ -1107,15 +1107,15 @@ BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const
          }
       }
       
-      BaseSelectionRule *selector;
+      const BaseSelectionRule *selector;
       int fImplNo = 0;
       bool dontC, noName;
-      BaseSelectionRule *explicit_selector = 0;
+      const BaseSelectionRule *explicit_selector = 0;
       
       // the same as with isClass selected
       // I wanted to use GetParentDecl and then to pass i sto isClassSelected because I didn't wanted to repeat 
       // code but than GetParentDecl crashes (or returns non-sence Decl) for the built-in structs (__va_*)
-      std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
+      std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
       for(; it != fClassSelectionRules.end(); ++it) {
          bool yes;
          yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, true); // == BaseSelectionRule::kYes
@@ -1177,18 +1177,18 @@ BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const
       }
    }
    
-   return false; 
+   return 0; 
    
 }
 
-BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name)
+const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name) const
 {
    std::string parent_name;
    std::string parent_qual_name;
    
    if (IsParentClass(D))
    {    
-      if (!GetParentName(D, parent_name, parent_qual_name)) return false;
+      if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
       
       std::string file_name;
       if (GetHasFileNameRule()){
@@ -1196,15 +1196,15 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
             std::cout<<"\tSource file name: "<<file_name<<std::endl;
       }
       
-      BaseSelectionRule *selector = 0;
+      const BaseSelectionRule *selector = 0;
       Int_t fImplNo = 0;
       bool dontC, noName;
-      BaseSelectionRule *explicit_selector = false;
+      const BaseSelectionRule *explicit_selector = false;
       int fFileNo = 0;
       bool file;
       
       //DEBUG std::cout<<"\n\tParent is class";
-      std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin();
+      std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
       for(; it != fClassSelectionRules.end(); ++it) {
          bool yes;
          yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, false); // == BaseSelectionRule::kYes
@@ -1232,7 +1232,7 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
                   std::cout<<"\tNo returned"<<std::endl;
 #endif
                   
-                  return false; // in genreflex we can't have that situation
+                  return 0; // in genreflex we can't have that situation
                }
             }
             else {
@@ -1241,10 +1241,10 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
                   it->GetAttributeValue("pattern", pattern_value);
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else 
-                     return false;
+                     return 0;
                }
                else
-                  return false;
+                  return 0;
             }
          }
          else if (dontC ) { // == BaseSelectionRule::kDontCare - we check the method and field selection rules for the class
@@ -1254,7 +1254,7 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
                std::cout<<"\tNo fields and methods"<<std::endl;
 #endif
                
-               return false; // == BaseSelectionRule::kNo
+               return 0; // == BaseSelectionRule::kNo
             }
             else {
                if (kind == "Field" || kind == "CXXMethod" || kind == "CXXConstructor" || kind == "CXXDestructor"){
@@ -1280,7 +1280,7 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
                   mem_it_end = members.end();
                   for (; mem_it != mem_it_end; ++mem_it) {
                      if (!mem_it->IsSelected(str_name, prototype, file_name, dontC, noName, file, false)) {
-                        if (!noName) return false;
+                        if (!noName) return 0;
                      }                        
                   }
                }
@@ -1328,13 +1328,13 @@ BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::s
    }
 }
 
-bool SelectionRules::IsSelectionXMLFile()
+bool SelectionRules::IsSelectionXMLFile() const
 {
    if (fSelectionFileType == kSelectionXMLFile) return true;
    else return false;
 }
 
-bool SelectionRules::IsLinkdefFile()
+bool SelectionRules::IsLinkdefFile() const
 {
    if (fSelectionFileType == kLinkdefFile) return true;
    else return false;
@@ -1346,9 +1346,9 @@ void SelectionRules::SetSelectionFileType(ESelectionFileTypes fileType)
    return;
 }
 
-bool SelectionRules::AreAllSelectionRulesUsed() {
+bool SelectionRules::AreAllSelectionRulesUsed() const {
    if (!fClassSelectionRules.empty()) {
-      for(std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin(); 
+      for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it) {
          if (!it->GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;
@@ -1366,7 +1366,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() {
       }
    }
    if (!fVariableSelectionRules.empty()) {
-      for(std::list<VariableSelectionRule>::iterator it = fVariableSelectionRules.begin(); 
+      for(std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin(); 
           it != fVariableSelectionRules.end(); ++it) {
          if (!it->GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;
@@ -1384,7 +1384,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() {
       }
    }
    if (!fFunctionSelectionRules.empty()) {
-      for(std::list<FunctionSelectionRule>::iterator it = fFunctionSelectionRules.begin(); 
+      for(std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin(); 
           it != fFunctionSelectionRules.end(); ++it) {
          if (!it->GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;
@@ -1403,7 +1403,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() {
       }
    }
    if (!fEnumSelectionRules.empty()) {
-      for(std::list<EnumSelectionRule>::iterator it = fEnumSelectionRules.begin(); 
+      for(std::list<EnumSelectionRule>::const_iterator it = fEnumSelectionRules.begin(); 
           it != fEnumSelectionRules.end(); ++it) {
          if (!it->GetMatchFound() && !GetHasFileNameRule()) {
             std::string name;

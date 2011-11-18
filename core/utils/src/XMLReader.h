@@ -16,12 +16,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#ifndef ROOT__XMLREADER_H__
+#define ROOT__XMLREADER_H__
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <map>
-#include "SelectionRules.h"
+
+class SelectionRules;
 
 class XMLReader {
 public:
@@ -92,3 +96,5 @@ public:
    // main parsing function - should be called over an open input file stream
    bool Parse(std::ifstream &file, SelectionRules& out); 
 };
+
+#endif

@@ -17,6 +17,8 @@
 #include <iostream>
 #include <sstream> // class ostringstream
 
+#include "SelectionRules.h"
+
 /* -------------------------------------------------------------------------- */
 
 //#define DEBUG
@@ -53,14 +55,10 @@ int RScanner::fgAnonymousEnumCounter  = 0;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
-SelectionRules sr;
-std::string outputFileName;
-std::ofstream outputFile;
-
 //______________________________________________________________________________
-RScanner::RScanner ()
+RScanner::RScanner (const SelectionRules &rules) : fSelectionRules(rules)
 {
-   fCtx = NULL;
+   fSourceManager = NULL;
    
    for (int i = 0; i <= fgDeclLast; i ++)
       fDeclTable [i] = false;
@@ -143,7 +141,7 @@ inline std::string Message(const std::string &msg, const std::string &location)
 }
 
 //______________________________________________________________________________
-void RScanner::ShowInfo(const std::string &msg, const std::string &location)
+void RScanner::ShowInfo(const std::string &msg, const std::string &location) const
 {
    const std::string message = Message(msg, location);
 #ifdef DIRECT_OUTPUT
@@ -154,7 +152,7 @@ void RScanner::ShowInfo(const std::string &msg, const std::string &location)
 }
 
 //______________________________________________________________________________
-void RScanner::ShowWarning(const std::string &msg, const std::string &location)
+void RScanner::ShowWarning(const std::string &msg, const std::string &location) const
 {
 #ifdef SHOW_WARNINGS
    const std::string message = Message(msg, location);
@@ -167,7 +165,7 @@ void RScanner::ShowWarning(const std::string &msg, const std::string &location)
 }
 
 //______________________________________________________________________________
-void RScanner::ShowError(const std::string &msg, const std::string &location)
+void RScanner::ShowError(const std::string &msg, const std::string &location) const
 {
    const std::string message = Message(msg, location);
 #ifdef DIRECT_OUTPUT
@@ -178,7 +176,7 @@ void RScanner::ShowError(const std::string &msg, const std::string &location)
 }
 
 //______________________________________________________________________________
-void RScanner::ShowTemplateInfo(const std::string &msg, const std::string &location)
+void RScanner::ShowTemplateInfo(const std::string &msg, const std::string &location) const
 {
 #ifdef SHOW_TEMPLATE_INFO
    std::string loc = location;
@@ -189,28 +187,16 @@ void RScanner::ShowTemplateInfo(const std::string &msg, const std::string &locat
 }
 
 //______________________________________________________________________________
-void RScanner::ShowReflexWarning(const std::string &msg, const std::string &location)
-{
-   std::string loc = location;
-   if (loc == "")
-      loc = GetLocation (fLastDecl);
-   ShowWarning(msg, loc);
-}
-
-/********************************** UNKNOWN ***********************************/
-
-//______________________________________________________________________________
-std::string RScanner::GetSrcLocation(clang::SourceLocation L)
+std::string RScanner::GetSrcLocation(clang::SourceLocation L) const
 {
    std::string location = "";
    llvm::raw_string_ostream stream(location);
-   clang::SourceManager& source_manager = fCtx->getSourceManager();
-   L.print(stream, source_manager);
+   L.print(stream, *fSourceManager);
    return stream.str();
 }
 
 //______________________________________________________________________________
-std::string RScanner::GetLocation(clang::Decl* D)
+std::string RScanner::GetLocation(clang::Decl* D) const
 {
    if (D == NULL)
    {
@@ -220,14 +206,13 @@ std::string RScanner::GetLocation(clang::Decl* D)
    {
       std::string location = "";
       llvm::raw_string_ostream stream(location);
-      clang::SourceManager& source_manager = fCtx->getSourceManager();
-      D->getLocation().print(stream, source_manager);
+      D->getLocation().print(stream, *fSourceManager);
       return stream.str();
    }
 }
 
 //______________________________________________________________________________
-std::string RScanner::GetName(clang::Decl* D)
+std::string RScanner::GetName(clang::Decl* D) const
 {
    std::string name = "";
    // std::string kind = D->getDeclKindName();
@@ -249,7 +234,7 @@ inline std::string AddSpace(const std::string &txt)
 }
 
 //______________________________________________________________________________
-void RScanner::DeclInfo(clang::Decl* D)
+void RScanner::DeclInfo(clang::Decl* D) const
 {
    std::string location = GetLocation(D);
    std::string kind = D->getDeclKindName();
@@ -258,7 +243,7 @@ void RScanner::DeclInfo(clang::Decl* D)
 }
 
 //______________________________________________________________________________
-void RScanner::UnknownDecl(clang::Decl* D, const std::string &txt)
+void RScanner::UnknownDecl(clang::Decl* D, const std::string &txt) const
 {
    // unknown - this kind of declaration was not known to programmer
    std::string location = GetLocation(D);
@@ -268,7 +253,7 @@ void RScanner::UnknownDecl(clang::Decl* D, const std::string &txt)
 }
 
 //______________________________________________________________________________
-void RScanner::UnexpectedDecl(clang::Decl* D, const std::string &txt)
+void RScanner::UnexpectedDecl(clang::Decl* D, const std::string &txt) const
 {
    // unexpected - this kind of declaration is unexpected (in concrete place)
    std::string location = GetLocation(D);
@@ -278,7 +263,7 @@ void RScanner::UnexpectedDecl(clang::Decl* D, const std::string &txt)
 }
 
 //______________________________________________________________________________
-void RScanner::UnsupportedDecl(clang::Decl* D, const std::string &txt)
+void RScanner::UnsupportedDecl(clang::Decl* D, const std::string &txt) const
 {
    // unsupported - this kind of declaration is probably not used (in current version of C++)
    std::string location = GetLocation(D);
@@ -288,7 +273,7 @@ void RScanner::UnsupportedDecl(clang::Decl* D, const std::string &txt)
 }
 
 //______________________________________________________________________________
-void RScanner::UnimportantDecl(clang::Decl* D, const std::string &txt)
+void RScanner::UnimportantDecl(clang::Decl* D, const std::string &txt) const
 {
    // unimportant - this kind of declaration is not stored into reflex
 }
@@ -330,7 +315,7 @@ void RScanner::UnimplementedDecl(clang::Decl* D, const std::string &txt)
 }
 
 //______________________________________________________________________________
-void RScanner::UnknownType(clang::QualType qual_type)
+void RScanner::UnknownType(clang::QualType qual_type) const
 {
    std::string location = GetLocation(fLastDecl);
    std::string kind = qual_type.getTypePtr()->getTypeClassName();
@@ -338,7 +323,7 @@ void RScanner::UnknownType(clang::QualType qual_type)
 }
 
 //______________________________________________________________________________
-void RScanner::UnsupportedType(clang::QualType qual_type)
+void RScanner::UnsupportedType(clang::QualType qual_type) const
 {
    std::string location = GetLocation(fLastDecl);
    std::string kind = qual_type.getTypePtr()->getTypeClassName();
@@ -346,7 +331,7 @@ void RScanner::UnsupportedType(clang::QualType qual_type)
 }
 
 //______________________________________________________________________________
-void RScanner::UnimportantType(clang::QualType qual_type)
+void RScanner::UnimportantType(clang::QualType qual_type) const
 {
    // unimportant - this kind of declaration is not stored into reflex
 }
@@ -400,7 +385,7 @@ void RScanner::UnimplementedType (const clang::Type* T)
 /******************************* CLASS BUILDER ********************************/
 
 //______________________________________________________________________________
-std::string RScanner::GetClassName(clang::RecordDecl* D)
+std::string RScanner::GetClassName(clang::RecordDecl* D) const
 {
    std::string cls_name = D->getQualifiedNameAsString();
    
@@ -426,7 +411,7 @@ std::string RScanner::GetClassName(clang::RecordDecl* D)
 }
 
 //______________________________________________________________________________
-std::string RScanner::GetEnumName(clang::EnumDecl* D)
+std::string RScanner::GetEnumName(clang::EnumDecl* D) const
 {
    std::string enum_name = D->getQualifiedNameAsString();
    
@@ -453,7 +438,7 @@ std::string RScanner::GetEnumName(clang::EnumDecl* D)
 /********************************* EXPRESSION *********************************/
 
 //______________________________________________________________________________
-std::string RScanner::ExprToStr(clang::Expr* expr)
+std::string RScanner::ExprToStr(clang::Expr* expr) const
 {
    clang::LangOptions lang_opts;
    clang::PrintingPolicy print_opts(lang_opts); // !?
@@ -469,7 +454,7 @@ std::string RScanner::ExprToStr(clang::Expr* expr)
 /********************************** TEMPLATE ***********************************/
 
 //______________________________________________________________________________
-std::string RScanner::ConvTemplateName(clang::TemplateName& N)
+std::string RScanner::ConvTemplateName(clang::TemplateName& N) const
 {
    clang::LangOptions lang_opts;
    clang::PrintingPolicy print_opts(lang_opts);  // !?
@@ -484,7 +469,7 @@ std::string RScanner::ConvTemplateName(clang::TemplateName& N)
 
 #ifdef COMPLETE_TEMPLATES
 //______________________________________________________________________________
-std::string RScanner::ConvTemplateParameterList(clang::TemplateParameterList* list)
+std::string RScanner::ConvTemplateParameterList(clang::TemplateParameterList* list) const
 {
    std::string result = "";
    bool any = false;
@@ -563,7 +548,7 @@ std::string RScanner::ConvTemplateArguments(const clang::TemplateArgumentList& l
 /********************************** FUNCTION **********************************/
 
 //______________________________________________________________________________
-std::string RScanner::FuncParameters(clang::FunctionDecl* D)
+std::string RScanner::FuncParameters(clang::FunctionDecl* D) const
 {
    std::string result = "";
    
@@ -589,7 +574,7 @@ std::string RScanner::FuncParameters(clang::FunctionDecl* D)
 }
 
 //______________________________________________________________________________
-std::string RScanner::FuncParameterList(clang::FunctionDecl* D)
+std::string RScanner::FuncParameterList(clang::FunctionDecl* D) const
 {
    std::string result = "";
    
@@ -616,11 +601,11 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    }
    
    bool ret = true;
-   BaseSelectionRule *selected;
+   const BaseSelectionRule *selected;
    
    DumpDecl(N, "");
    
-   selected = sr.IsDeclSelected(N);
+   selected = fSelectionRules.IsDeclSelected(N);
    if (selected) {
       
 #ifdef SELECTION_DEBUG
@@ -628,10 +613,8 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 #endif
       
       std::string qual_name;
-      
-      if (GetDeclQualName(N, qual_name))
-         outputFile<<qual_name<<std::endl;
-      
+      GetDeclQualName(N,qual_name);
+
       std::cout<<"\tSelected -> " << qual_name << "\n";
       fSelectedNamespaces.push_back(AnnotatedNamespaceDecl(N,selected->GetIndex(),selected->RequestOnlyTClass()));
       
@@ -657,7 +640,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
    
    bool ret = true;
-   BaseSelectionRule *selected;
+   const BaseSelectionRule *selected;
    
    // in case it is implicit or a forward declaration, we are not interested.
    if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
@@ -673,7 +656,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 //      std::cout<<D->clang::Decl::getDeclKindName()<<"\n";
 //   }
   
-   selected = sr.IsDeclSelected(D);
+   selected = fSelectionRules.IsDeclSelected(D);
    if (selected) {
       
 #ifdef SELECTION_DEBUG
@@ -681,10 +664,8 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 #endif
       
       std::string qual_name;
-      
-      if (GetDeclQualName(D, qual_name))
-         outputFile<<qual_name<<std::endl;
-      
+      GetDeclQualName(D,qual_name);
+
       std::cout<<"\tSelected -> " << qual_name << "\n";
       fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->GetIndex(),selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
 
@@ -708,16 +689,9 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    
    bool ret = true;
    
-   if(sr.IsDeclSelected(D)) {
+   if(fSelectionRules.IsDeclSelected(D)) {
       
       std::cout<<"\n\tSelected -> true";
-      
-      std::string qual_name;
-      
-      if (GetDeclQualName(D, qual_name))
-         outputFile<<qual_name<<std::endl;
-      
-      std::string full_name = GetEnumName (D);
       
       clang::DeclContext *ctx = D->getDeclContext();
       
@@ -726,9 +700,9 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
          std::cout<<"Could not cast parent context to parent Decl"<<std::endl;
          return false;
       }
-      //if ((sr.isSelectionXMLFile() && ctx->isRecord()) || (sr.isLinkdefFile() && ctx->isRecord() && sr.IsDeclSelected(parent))) {
-      if (ctx->isRecord() && sr.IsDeclSelected(parent)) {
-         //if (ctx->isRecord() && sr.IsDeclSelected(parent)){
+      //if ((fSelectionRules.isSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.isLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
+      if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)) {
+         //if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)){
          
          
          //if (ctx->isRecord()){
@@ -769,17 +743,11 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
    
    bool ret = true;
    
-   if(sr.IsDeclSelected(D)){
+   if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
       std::cout<<"\n\tSelected -> true";
 #endif
-      std::string qual_name;
-      
-      if (GetDeclQualName(D, qual_name))
-         outputFile<<qual_name<<std::endl;
-      
-      std::string var_name;
-      
+      std::string var_name;      
       var_name = D->getQualifiedNameAsString();
       
    }
@@ -798,15 +766,10 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
    
    bool ret = true;
    
-   if(sr.IsDeclSelected(D)){
+   if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
       std::cout<<"\n\tSelected -> true";
 #endif
-      
-      std::string qual_name;
-      
-      if (GetDeclQualName(D, qual_name))
-         outputFile<<qual_name<<std::endl;
       
    }
    else {
@@ -826,21 +789,13 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
    
    bool ret = true;
    
-   if(sr.IsDeclSelected(D)){
+   if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
       std::cout<<"\n\tSelected -> true";
 #endif
       
       std::string qual_name;
       std::string prototype;
-      
-      if (GetDeclQualName(D, qual_name))
-         outputFile<<qual_name;
-      
-      if (GetFunctionPrototype(D, prototype))
-         outputFile<<prototype<<std::endl;
-      else
-         outputFile<<std::endl;
       
       std::string name;
       std::string func_name = D->getQualifiedNameAsString() + FuncParameterList(D);
@@ -857,8 +812,8 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
       std::cout<<"\n\tParams are "<<params;
 #endif
       
-      if ((sr.IsSelectionXMLFile() && ctx->isRecord()) || (sr.IsLinkdefFile() && ctx->isRecord() && sr.IsDeclSelected(parent))) {
-         //if (ctx->isRecord() && sr.IsDeclSelected(parent)){ // Do I need the second part? - Yes - Optimization for Linkdef?
+      if ((fSelectionRules.IsSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.IsLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
+         //if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)){ // Do I need the second part? - Yes - Optimization for Linkdef?
          
          name = D->getNameAsString();
       }
@@ -898,7 +853,8 @@ bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
    
 }
 
-std::string RScanner::GetClassName(clang::DeclContext* DC){
+std::string RScanner::GetClassName(clang::DeclContext* DC) const
+{
    
    clang::NamedDecl* N=dyn_cast<clang::NamedDecl>(DC);
    std::string ret;
@@ -908,7 +864,8 @@ std::string RScanner::GetClassName(clang::DeclContext* DC){
    return ret;
 }
 
-void RScanner::DumpDecl(clang::Decl* D, const char* msg) {
+void RScanner::DumpDecl(clang::Decl* D, const char* msg) const
+{
    std::string name;
    
    if (!D) {
@@ -925,7 +882,7 @@ void RScanner::DumpDecl(clang::Decl* D, const char* msg) {
 }
 
 //______________________________________________________________________________
-bool RScanner::GetDeclName(clang::Decl* D, std::string& name)
+bool RScanner::GetDeclName(clang::Decl* D, std::string& name) const
 {
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
    
@@ -948,7 +905,7 @@ bool RScanner::GetDeclName(clang::Decl* D, std::string& name)
 }
 
 
-bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name)
+bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name) const
 {
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
    
@@ -962,7 +919,7 @@ bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name)
 }
 
 
-bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) {
+bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) const {
    if (!D) {
       return false;
    }
@@ -996,134 +953,29 @@ bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) {
    }
 }
 
-#include <strings.h>
-
-bool R__HasEnding (std::string const &fullString, std::string const &ending)
-{
-   if (fullString.length() >= ending.length()) {
-      fprintf(stderr,"Comparing %s %s to %s\n",fullString.c_str(),&(fullString.c_str()[fullString.length() - ending.length()]),ending.c_str());
-      return (0 == strcasecmp( &(fullString.c_str()[fullString.length() - ending.length()]), ending.c_str() ));
-   } else {
-      return false;
-   }
-}
-
-bool R__HeaderContainsLinkdef(std::string const &fullString)
-{
-   
-   if (fullString.length() >= 9) {
-      if ((strstr(fullString.c_str(),"LinkDef") || strstr(fullString.c_str(),"Linkdef") ||
-           strstr(fullString.c_str(),"linkdef")) && strstr(fullString.c_str(),".h")) {
-         return true;
-      } else {
-         return false;
-      }
-   } else {
-      return false;
-   }
-}
-
 //______________________________________________________________________________
-void RScanner::Scan(clang::ASTContext* C, clang::Decl* D,
-                    const std::string& selectionFileName)
+void RScanner::Scan(const clang::ASTContext &C)
 {
-   fCtx = C;
+   fSourceManager = &C.getSourceManager();
    
 #ifdef SELECTION_DEBUG
    printf("\nDEBUG from Velislava - into the Scan() function!!!\n");
 #endif
-   
-   XMLReader xmlr;
-   LinkdefReader ldefr;
-   bool deep = false;
-   
-   std::string filename(selectionFileName);
-   
+
 #ifdef SELECTION_DEBUG
-   std::cout<<"filename = "<<filename<<std::endl;
+   fSelectionRules.PrintSelectionRules();
 #endif
    
-   //int pos = selectionFileName.find("xml");
-   
-   // This check could (and should) be performed in rootcling.cxx (if --deep - a flag should be set)
-   std::cout<<"Printing pos value "<<filename<<"\n"<<SelectionRules::kSelectionXMLFile<<SelectionRules::kLinkdefFile;
-   if (R__HasEnding(filename,".xml"))
-      sr.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
-   else {
-      //      pos = selectionFileName.find("linkdef.h");
-      if (R__HeaderContainsLinkdef(filename))
-         sr.SetSelectionFileType(SelectionRules::kLinkdefFile);
-      else if (filename == "--deep") {
-         sr.SetDeep(true);
-         deep = true;
-         std::cout<<"Deep set"<<std::endl;
-      }
-      else {
-         std::cout<<"Warning - unknown input parameter"<<std::endl;
-      }
-   }
-   
-   if (!deep) {
-      std::ifstream file(filename.c_str());
-      if(file.is_open()){
-         
-         if (sr.IsSelectionXMLFile()) {
-            std::cout<<"Selection XML file"<<std::endl;
-            
-            outputFileName = "testreflex_dict.out";
-            if (!xmlr.Parse(file, sr)) {
-               std::cout<<"Error parsing XML file"<<std::endl;
-            }
-            else {
-               std::cout<<"XML file successfully parsed"<<std::endl;
-            }
-            
-         }
-         if (sr.IsLinkdefFile()) {
-            std::cout<<"Linkdef file"<<std::endl;
-            
-            outputFileName = "testcint_dict.out";
-            if (!ldefr.CPPHandler(file, sr)) {
-               std::cout<<"Error parsing Linkdef file"<<std::endl;
-            }
-            else {
-               std::cout<<"Linkdef file successfully parsed"<<std::endl;
-            }
-         }
-         
-         file.close();
-      }
-      else {
-         std::cout<<"\tFile couldn't be opened"<<std::endl;
-      }
-   }
-   else {
-      outputFileName = "testreflex_dict.out";
-   }
-   
-#ifdef SELECTION_DEBUG
-   sr.PrintSelectionRules();
-#endif
-   
-   if (sr.GetHasFileNameRule())
+   if (fSelectionRules.GetHasFileNameRule())
       std::cout<<"File name detected"<<std::endl;
    
-   outputFile.open(outputFileName.c_str());
-   
-   if (!outputFile.is_open()) {
-      std::cout<<"Error - can't open output file"<<std::endl;
-   }
-   else {
-      TraverseDecl(D);
+   TraverseDecl(C.getTranslationUnitDecl());
       
-      if (!sr.AreAllSelectionRulesUsed()) {
+   if (!fSelectionRules.AreAllSelectionRulesUsed()) {
 #ifdef SELECTION_DEBUG
-         std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
+      std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
 #endif
-      }
    }
-   
-   if (outputFile.is_open()) outputFile.close();
    
    // And finally resort the results according to the rule ordering.
    std::sort(fSelectedClasses.begin(),fSelectedClasses.end());

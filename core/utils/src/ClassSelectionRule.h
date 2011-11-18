@@ -43,16 +43,16 @@ public:
    
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
-   bool HasFieldSelectionRules();
+   bool HasFieldSelectionRules() const;
    //const std::list<VariableSelectionRule>& getFieldSelectionRules(); //gets the field selections list
-   std::list<VariableSelectionRule>& GetFieldSelectionRules(); //gets the field selections list
+   const std::list<VariableSelectionRule>& GetFieldSelectionRules() const; //gets the field selections list
    
    void AddMethodSelectionRule(FunctionSelectionRule method); //adds entry to the method selections list
-   bool HasMethodSelectionRules();
+   bool HasMethodSelectionRules() const;
    //const std::list<FunctionSelectionRule>& getMethodSelectionRules(); //gets the method selections list
-   std::list<FunctionSelectionRule>& GetMethodSelectionRules(); //gets the method selections list
+   const std::list<FunctionSelectionRule>& GetMethodSelectionRules() const; //gets the method selections list
    
-   bool IsInheritable(); //checks if the class selection rule is inheritable
+   bool IsInheritable() const; //checks if the class selection rule is inheritable
    void SetInheritable(bool inherit); //sets the inheritance rule for the class
 
    bool HasPlus() const;
