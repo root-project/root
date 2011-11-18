@@ -171,10 +171,8 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED")
 
 #--stressProof----------------------------------------------------------------------------------
-if(ROOT_proof_FOUND)
-  ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof)
-  ROOT_ADD_TEST(test-stressproof COMMAND stressProof FAILREGEX "FAILED")  
-endif()
+ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
+ROOT_ADD_TEST(test-stressproof COMMAND stressProof FAILREGEX "FAILED")  
 
 #--testbits----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
