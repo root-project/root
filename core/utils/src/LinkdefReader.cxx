@@ -581,11 +581,12 @@ public:
          Error("Error no arguments after #pragma link C++/off: ", tok);
          return;
       }
-      llvm::StringRef type = tok.getName();
+      llvm::StringRef type = tok.getIdentifierInfo()->getName();
       
       PP.Lex(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
+      end.startToken(); // Initialize token.
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
       {
          end = tok;
@@ -597,11 +598,18 @@ public:
          return;
       }
 
-      llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
-      
-      if (!fOwner.AddRule(type,identifier,linkOn,false))
-      {
-         Error("",tok);
+      if (end.is(clang::tok::unknown)) {
+         if (!fOwner.AddRule(type,"",linkOn,false))
+         {
+            Error("",tok);
+         }
+      } else {
+         llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+         
+         if (!fOwner.AddRule(type,identifier,linkOn,false))
+         {
+            Error("",tok);
+         }
       }
       do {
          PP.Lex(tok);
