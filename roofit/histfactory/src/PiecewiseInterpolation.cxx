@@ -23,7 +23,9 @@
 #include "RooArgSet.h"
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
+#include "RooRealVar.h"
 #include "RooMsgService.h"
+#include "RooNumIntConfig.h"
 
 ClassImp(PiecewiseInterpolation)
 ;
@@ -49,6 +51,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   _highSet("!highSet","high-side variation",this),
   _paramSet("!paramSet","high-side variation",this),
   _positiveDefinite(false)
+
 {
   // Constructor with two set of RooAbsReals. The value of the function will be
   //
@@ -210,12 +213,36 @@ Double_t PiecewiseInterpolation::evaluate() const
   }
 
   if(_positiveDefinite && (sum<0)){
-     sum = 1e-6;
+    sum = 1e-6;
+    sum = 0;
+    //     cout <<"sum < 0 forcing  positive definite"<<endl;
+     //     int code = 1;
+     //     RooArgSet* myset = new RooArgSet();
+     //     cout << "integral = " << analyticalIntegralWN(code, myset) << endl;
+  } else if(sum<0){
+     cout <<"sum < 0, not forcing positive definite"<<endl;
   }
   return sum;
 
 }
 
+
+//_____________________________________________________________________________
+Bool_t PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars) 
+{
+
+  if(allVars.getSize()==1){
+    RooAbsReal* temp = const_cast<PiecewiseInterpolation*>(this);
+    temp->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+    int nbins = ((RooRealVar*) allVars.first())->numBins();
+    temp->specialIntegratorConfig(kTRUE)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
+    return true;
+  }else{
+    cout << "Currently BinIntegrator only knows how to deal with 1-d "<<endl;
+    return false;
+  }
+  return false;
+}
 
 //_____________________________________________________________________________
 Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
@@ -239,6 +266,11 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   if (allVars.getSize()==0) return 0 ;
   if (_forceNumInt) return 0 ;
 
+
+  // Force using numeric integration
+  // use special numeric integrator  
+  return 0;
+  
 
   // KC: check if interCode=0 for all 
   RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
@@ -311,8 +343,79 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   // Implement analytical integrations by doing appropriate weighting from  component integrals
   // functions to integrators of components
 
+  /*
+  cout <<"Enter analytic Integral"<<endl;
+  printDirty(true);
+  //  _nominal.arg().setDirtyInhibit(kTRUE) ;
+  _nominal.arg().setShapeDirty() ;
+  RooAbsReal* temp ;
+  RooFIter lowIter(_lowSet.fwdIterator()) ;
+  while((temp=(RooAbsReal*)lowIter.next())) {
+    //    temp->setDirtyInhibit(kTRUE) ;
+    temp->setShapeDirty() ;
+  }
+  RooFIter highIter(_highSet.fwdIterator()) ;
+  while((temp=(RooAbsReal*)highIter.next())) {
+    //    temp->setDirtyInhibit(kTRUE) ;
+    temp->setShapeDirty() ;
+  }
+  */
+
+  /*
+  RooAbsArg::setDirtyInhibit(kTRUE);
+  printDirty(true);
+  cout <<"done setting dirty inhibit = true"<<endl;
+
+  // old integral, only works for linear and not positive definite
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
 
+  
+ std::auto_ptr<RooArgSet> vars2( getParameters(RooArgSet()) );
+ std::auto_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars2) );            
+ cout <<"iset = "<<endl;
+ iset->Print("v");
+
+  double sum = 0;
+  RooArgSet* vars = getVariables();
+  vars->remove(_paramSet);
+  _paramSet.Print("v");
+  vars->Print("v");
+  if(vars->getSize()==1){
+    RooRealVar* obs = (RooRealVar*) vars->first();
+    for(int i=0; i<obs->numBins(); ++i){
+      obs->setVal( obs->getMin() + (.5+i)*(obs->getMax()-obs->getMin())/obs->numBins());
+      sum+=evaluate()*(obs->getMax()-obs->getMin())/obs->numBins();
+      cout << "obs = " << obs->getVal() << " sum = " << sum << endl;
+    }
+  } else{
+    cout <<"only know how to deal with 1 observable right now"<<endl;
+  }
+  */
+
+  /*
+  _nominal.arg().setDirtyInhibit(kFALSE) ;
+  RooFIter lowIter2(_lowSet.fwdIterator()) ;
+  while((temp=(RooAbsReal*)lowIter2.next())) {
+    temp->setDirtyInhibit(kFALSE) ;
+  }
+  RooFIter highIter2(_highSet.fwdIterator()) ;
+  while((temp=(RooAbsReal*)highIter2.next())) {
+    temp->setDirtyInhibit(kFALSE) ;
+  }
+  */
+  
+  /*
+  RooAbsArg::setDirtyInhibit(kFALSE);
+  printDirty(true);
+  cout <<"done"<<endl;
+  cout << "sum = " <<sum<<endl;
+  //return sum;
+  */  
+
+  // old integral, only works for linear and not positive definite
+  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+
+  // old integral, only works for linear and not positive definite
   RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
   RooFIter lowIntIter = cache->_lowIntList.fwdIterator() ;
   RooFIter highIntIter = cache->_highIntList.fwdIterator() ;
@@ -410,6 +513,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   }
   */
 
+  //  cout << "value = " << value <<endl;
   return value;
 }
 

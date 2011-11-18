@@ -301,6 +301,9 @@ namespace HistFactory{
     interp.setPositiveDefinite();
     interp.setAllInterpCodes(0); // MB : change default to 1? = piece-wise log interpolation from pice-wise linear (=0)
     // KC: interpo codes 1 etc. don't have proper analytic integral.
+    RooArgSet observableSet(observables);
+    interp.setBinIntegrator(observableSet);
+    interp.forceNumInt();
     
     //    cout << "check: " << interp.getVal() << endl;
     proto->import(interp); // individual params have already been imported in first loop of this function

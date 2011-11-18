@@ -44,6 +44,7 @@ public:
   const RooArgList& paramList() const { return _paramSet ; }
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
+  Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
@@ -53,6 +54,7 @@ public:
   void setInterpCode(RooAbsReal& param, int code);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
+
 
 protected:
 
@@ -78,6 +80,7 @@ protected:
   RooListProxy _lowSet ;            // Low-side variation
   RooListProxy _highSet ;            // High-side varaition
   RooListProxy _paramSet ;            // interpolation parameters
+  RooListProxy _normSet ;            // interpolation parameters
   Bool_t _positiveDefinite; // protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
