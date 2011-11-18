@@ -624,6 +624,10 @@ bool R__IsSelectionXml(const char *filename)
 
 bool R__IsLinkdefFile(const char *filename)
 {
+   if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
+        strstr(filename,"linkdef")) && strstr(filename,".h")) {
+      return true;
+   }
    size_t len = strlen(filename);
    size_t linkdeflen = 9; /* strlen("linkdef.h") */
    if (len >= 9) {
