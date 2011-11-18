@@ -2,3 +2,15 @@
 <hr/> 
 <a name="core"></a> 
 <h3>Core Libraries</h3>
+
+<h4>ROOT Error Handlers</h4>
+<p>There is a new rootrc variable which allows to control the
+installation of the ROOT error handlers. By default the handlers
+are activated:</p>
+<pre> 
+   Root.ErrorHandlers:      1
+</pre>
+<p>but setting the value to 0 result in no error handlers being installed
+and the originals remaining in place. This can be useful if ROOT is used in
+conjunction with other frameworks that already installed their own handlers.
+</p>
