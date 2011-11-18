@@ -107,6 +107,10 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     }
     _interpCode.push_back(0); // default code: linear interpolation
   }
+
+  
+  // Choose special integrator by default 
+  specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator") ;
 }
 
 
@@ -563,6 +567,19 @@ std::list<Double_t>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs
 std::list<Double_t>* PiecewiseInterpolation::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
   return _nominal.arg().plotSamplingHint(obs,xlo,xhi) ;  
+}
+
+//______________________________________________________________________________
+void PiecewiseInterpolation::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class PiecewiseInterpolation.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(PiecewiseInterpolation::Class(),this);
+      specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator") ;      
+   } else {
+      R__b.WriteClassBuffer(PiecewiseInterpolation::Class(),this);
+   }
 }
 
 
