@@ -61,12 +61,11 @@
 #if defined(__MACH__) && defined(__i386__)
 #   define R__GLIBC
 #endif
-#if defined(_AIX) || \
-   (defined(XR__SUNGCC3) && !defined(__arch64__))
+#if defined(_AIX) || (defined(XR__SUNGCC3) && !defined(__arch64__))
 #   define SOCKLEN_t size_t
-#elif defined(XR__GLIBC) || \
-   defined(__FreeBSD__) || \
-   (defined(XR__SUNGCC3) && defined(__arch64__)) || defined(__APPLE__)
+#elif defined(XR__GLIBC) || defined(__FreeBSD__) || \
+     (defined(XR__SUNGCC3) && defined(__arch64__)) || defined(__APPLE__) || \
+     (defined(__sun) && defined(_SOCKLEN_T))
 #   ifndef SOCKLEN_t
 #      define SOCKLEN_t socklen_t
 #   endif
