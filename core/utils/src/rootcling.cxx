@@ -347,6 +347,8 @@ using namespace std;
 
 #include "TClassEdit.h"
 using namespace TClassEdit;
+#include "TMetaUtils.h"
+using namespace ROOT;
 
 #include "RStl.h"
 #include "RConversionRuleParser.h"
@@ -491,12 +493,23 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
 {
    
    // First check it exist under some name.
-
-   const clang::NamedDecl *decl = gInterp->LookupDecl(method, (clang::DeclContext*)cinfo).getSingleDecl();
+   const clang::FunctionDecl *decl = gInterp->LookupDecl(method,cinfo).getAs<clang::FunctionDecl>();
+   if (!decl) {
+      for(clang::CXXRecordDecl::base_class_const_iterator iter = cinfo->bases_begin(), end = cinfo->bases_end();
+          iter != end;
+          ++iter)
+      {
+         if (const clang::CXXMethodDecl *res = R__GetFuncWithProto((iter->getType()->getAsCXXRecordDecl ()),method,proto)) {
+            return res;
+         }
+      }
+   }
+#if 1
    if (decl) {
       // NOTE this is *wrong* we do not check that the routine has the right arguments!!!
       return llvm::dyn_cast<clang::CXXMethodDecl>(decl);
-#if 0
+#else
+   if (1) {
       // Build int (ClassInfo::*f)(arglist) = &ClassInfo::method;
       // Then we will have the resolved overload of clang::FunctionDecl on the lhs.
       std::string Str("");
@@ -513,17 +526,17 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       Str += uniquename + "lookup_arg(& " + cinfo->getNameAsString()  + "::" + method + ");\n";
       Str += ";;};;";
       
-      clang::Decl* D = 0;
-      clang::FunctionDecl* ResultFD = 0;
+      const clang::Decl* D = 0;
+      const clang::FunctionDecl* ResultFD = 0;
       if (gInterp->processLine(Str, /*rawInput*/true, &D)
           == cling::Interpreter::kSuccess) {
          if (D) {
             FDVisitor FDV = FDVisitor();
-            FDV.VisitDecl(D);
+            FDV.VisitDecl((clang::Decl*)D);
             ResultFD = FDV.getFD();
          }
          if (ResultFD) {
-            clang::CXXMethodDecl *method = llvm::dyn_cast<clang::CXXMethodDecl>(ResultFD);
+            const clang::CXXMethodDecl *method = llvm::dyn_cast<clang::CXXMethodDecl>(ResultFD);
             return method;
          }
       }
@@ -1450,7 +1463,7 @@ bool HasNewMerge(const clang::CXXRecordDecl *cl)
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
    
-   return R__CheckPublicFuncWithProto(cl,proto,name);
+   return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
 //______________________________________________________________________________
@@ -1481,7 +1494,7 @@ bool HasOldMerge(const clang::CXXRecordDecl *cl)
    const char *proto = "TCollection*";
    const char *name = "Merge";
    
-   return R__CheckPublicFuncWithProto(cl,proto,name);
+   return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
 
@@ -1516,7 +1529,7 @@ bool HasResetAfterMerge(const clang::CXXRecordDecl *cl)
    const char *proto = "TFileMergeInfo*";
    const char *name = "ResetAfterMerge";
    
-   return R__CheckPublicFuncWithProto(cl,proto,name);
+   return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
 //______________________________________________________________________________
@@ -2126,8 +2139,9 @@ bool HasCustomStreamerMemberFunction(const RScanner::AnnotatedRecordDecl *cl)
    
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl->GetRecordDecl());
    const clang::CXXMethodDecl *method = R__GetFuncWithProto(clxx,"Streamer",proto);
+   const clang::DeclContext *clxx_as_context = llvm::dyn_cast<clang::DeclContext>(clxx);
    
-   return (method && method->getDeclContext() == clxx && ( cl->RequestNoStreamer() || !cl->RequestStreamerInfo()));
+   return (method && method->getDeclContext() == clxx_as_context && ( cl->RequestNoStreamer() || !cl->RequestStreamerInfo()));
 }
 
 //______________________________________________________________________________
@@ -3321,9 +3335,9 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       }
    }
    (*dictSrcOut) << "\"" << filename << "\", " << clinfo.LineNumber() << "," << std::endl
-   << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
+                 << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
+                 << "                  ";
    //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
-   << "                  ";
    delete [] filename;
    if (!NeedShadowClass(clinfo)) {
       if (!ClassInfo__HasMethod(cl,"ShowMembers")) (*dictSrcOut) << "0, ";
@@ -3339,7 +3353,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    }
    
    (*dictSrcOut) << "isa_proxy, " << clinfo.RootFlag() << "," << std::endl
-   << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
+                 << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
       if (args.size()==0 && NeedDestructor(cl))
@@ -3347,8 +3361,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    }
    if (NeedDestructor(cl)) {
       (*dictSrcOut) << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << std::endl
-      << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
-      << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
+                    << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << std::endl
+                    << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << std::endl;
    }
    if (HasDirectoryAutoAdd(cl)) {
       (*dictSrcOut) << "      instance.SetDirectoryAutoAdd(&directoryAutoAdd_" << mappedname.c_str() << ");" << std::endl;
@@ -3365,7 +3379,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    }
    if (bset) {
       (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
-      << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
+                    << "Pushback" << "<TStdBitsetHelper< " << classname.c_str() << " > >()));" << std::endl;
       
       // (*dictSrcOut) << "      instance.SetStreamer(::ROOT::std_bitset_helper" << strchr(csymbol.c_str(),'<') << "::Streamer);\n";
       gNeedCollectionProxy = true;
