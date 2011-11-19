@@ -11,11 +11,17 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/Version.h"
+#include "clang/Driver/ArgList.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/Job.h"
+#include "clang/Driver/Tool.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Lex/Preprocessor.h"
 
 #include "llvm/LLVMContext.h"
 #include "llvm/Target/TargetOptions.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -30,20 +36,41 @@ namespace cling {
   {
   }
 
-  CompilerInstance* CIFactory::createCI(llvm::StringRef code,
-                                        int argc,
-                                        const char* const *argv,
-                                        const char* llvmdir) {
-    return createCI(llvm::MemoryBuffer::getMemBuffer(code),argc, argv, llvmdir);
-  }
-
-  
+   /// \brief Retrieves the clang CC1 specific flags out of the compilation's jobs.
+   /// Returns NULL on error.
+   static const clang::driver::ArgStringList
+   *GetCC1Arguments(clang::DiagnosticsEngine *Diagnostics,
+                    clang::driver::Compilation *Compilation) {
+      // We expect to get back exactly one Command job, if we didn't something
+      // failed. Extract that job from the Compilation.
+      const clang::driver::JobList &Jobs = Compilation->getJobs();
+      if (!Jobs.size() || !isa<clang::driver::Command>(*Jobs.begin())) {
+         // diagnose this...
+         return NULL;
+      }
+      
+      // The one job we find should be to invoke clang again.
+      const clang::driver::Command *Cmd = cast<clang::driver::Command>(*Jobs.begin());
+      if (llvm::StringRef(Cmd->getCreator().getName()) != "clang") {
+         // diagnose this...
+         return NULL;
+      }
+      
+      return &Cmd->getArguments();
+   }
+   
+   CompilerInstance* CIFactory::createCI(llvm::StringRef code,
+                                         int argc,
+                                         const char* const *argv,
+                                         const char* llvmdir) {
+      return createCI(llvm::MemoryBuffer::getMemBuffer(code), argc, argv,
+                      llvmdir);
+   }
+   
   CompilerInstance* CIFactory::createCI(llvm::MemoryBuffer* buffer, 
                                         int argc, 
                                         const char* const *argv,
                                         const char* llvmdir){
-    // main's argv[0] is skipped!
-
     // Create an instance builder, passing the llvmdir and arguments.
     //
     //  Initialize the llvm library.
@@ -78,31 +105,62 @@ namespace cling {
                                                            );
     }
 
+     //______________________________________
+     DiagnosticOptions DefaultDiagnosticOptions;
+     DefaultDiagnosticOptions.ShowColors = 1;
+     TextDiagnosticPrinter* DiagnosticPrinter
+     = new TextDiagnosticPrinter(llvm::errs(), DefaultDiagnosticOptions); // LEAKS!
+     DiagnosticsEngine* Diagnostics = new DiagnosticsEngine(
+       llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(
+         new DiagnosticIDs()), DiagnosticPrinter, false); // LEAKS!
 
+     // We do C++ by default; append right after argv[0] name
+     std::vector<const char*> argvCompile(argv, argv + argc);
+     argvCompile.insert(argvCompile.begin() + 1,"-x");
+     argvCompile.insert(argvCompile.begin() + 2, "c++");
+     argvCompile.push_back("-c");
+     argvCompile.push_back("-");
+
+     bool IsProduction = false;
+     assert(IsProduction = true && "set IsProduction if asserts are on.");
+     clang::driver::Driver Driver(argv[0], llvm::sys::getDefaultTargetTriple(),
+                                  "cling.out",
+                                  IsProduction,
+                                  *Diagnostics);
+     //Driver.setWarnMissingInput(false);
+     Driver.setCheckInputsExist(false); // think foo.C(12)
+     llvm::OwningPtr<clang::driver::Compilation>
+       Compilation(Driver.BuildCompilation(
+         llvm::ArrayRef<const char*>(&(argvCompile[0]), argvCompile.size())));
+     const clang::driver::ArgStringList* CC1Args
+       = GetCC1Arguments(Diagnostics, Compilation.get());
+     if (CC1Args == NULL) {
+          return 0;
+     }
+     clang::CompilerInvocation*
+       Invocation = new clang::CompilerInvocation; // LEAKS!
+     clang::CompilerInvocation::CreateFromArgs(*Invocation, CC1Args->data() + 1,
+                                               CC1Args->data() + CC1Args->size(),
+                                               *Diagnostics);
+     Invocation->getFrontendOpts().DisableFree = true;
+     //______________________________________
+     
     // Create and setup a compiler instance.
     CompilerInstance* CI = new CompilerInstance();
+     CI->setInvocation(Invocation);
+
+     CI->createDiagnostics(CC1Args->size(), CC1Args->data() + 1);
     {
       //
       //  Buffer the error messages while we process
       //  the compiler options.
       //
 
-      // Needed when we call CreateFromArgs
-      CI->createDiagnostics(0, 0);
-      CompilerInvocation::CreateFromArgs
-        (CI->getInvocation(), argv, argv + argc, CI->getDiagnostics());
-
-      // Reset the diagnostics options that came from CreateFromArgs
-      DiagnosticOptions& DiagOpts = CI->getDiagnosticOpts();
-      DiagOpts.ShowColors = 1;
-      DiagnosticConsumer* Client = new TextDiagnosticPrinter(llvm::errs(), DiagOpts);
-      CI->createDiagnostics(0, 0, Client);
-
       // Set the language options, which cling needs
       SetClingCustomLangOpts(CI->getLangOpts());
 
       if (CI->getHeaderSearchOpts().UseBuiltinIncludes &&
-          CI->getHeaderSearchOpts().ResourceDir.empty()) {
+          !resource_path.empty()) {
         CI->getHeaderSearchOpts().ResourceDir = resource_path.str();
       }
       CI->getInvocation().getPreprocessorOpts().addMacroDef("__CLING__");
@@ -112,8 +170,8 @@ namespace cling {
         return 0;
       }
     }
-    CI->setTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(),
-                                               CI->getTargetOpts()));
+     CI->setTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(),
+                                               Invocation->getTargetOpts()));
     if (!CI->hasTarget()) {
       delete CI;
       CI = 0;

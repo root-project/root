@@ -55,7 +55,7 @@ namespace cling {
     // and we can't override it later. This will be fixed once cling is 
     // supports the latest changes in the clang's driver 
     // FIXME: REIMPLEMENT
-    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::EmitHTML);
+    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly);
 
     CreateSLocOffsetGenerator();
 

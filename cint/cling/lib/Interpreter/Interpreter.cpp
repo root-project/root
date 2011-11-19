@@ -175,10 +175,6 @@ namespace cling {
     std::vector<unsigned> LeftoverArgsIdx;
     m_Opts = InvocationOptions::CreateFromArgs(argc, argv, LeftoverArgsIdx);
     std::vector<const char*> LeftoverArgs;
-    
-    // We do C++ by default:
-    LeftoverArgs.push_back("-x");
-    LeftoverArgs.push_back("c++");
 
     for (size_t I = 0, N = LeftoverArgsIdx.size(); I < N; ++I) {
       LeftoverArgs.push_back(argv[LeftoverArgsIdx[I]]);

@@ -33,7 +33,7 @@ int main( int argc, char **argv )
    //---------------------------------------------------------------------------
    // Set up the interpreter
    //---------------------------------------------------------------------------
-   cling::Interpreter interpreter(argc - 1, argv + 1);
+   cling::Interpreter interpreter(argc, argv);
    if (interpreter.getOptions().Help) {
       return 0;
    }
