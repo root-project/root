@@ -508,6 +508,7 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
    if (decl) {
       // NOTE this is *wrong* we do not check that the routine has the right arguments!!!
       return llvm::dyn_cast<clang::CXXMethodDecl>(decl);
+   }
 #else
    if (1) {
       // Build int (ClassInfo::*f)(arglist) = &ClassInfo::method;
@@ -540,8 +541,8 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
             return method;
          }
       }
-#endif
    }
+#endif
    return 0;
 }
 
@@ -556,18 +557,42 @@ bool R__CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *met
    return false;
 }
 
-bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* name)
+bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* basename)
 {
    const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    if (!CRD) {
       return false;
    }
-   const clang::NamedDecl *base = R__SlowClassSearch(name);
+   // This would be better but is to verbose for now.
+   // clang::QualType basetype = TMetaUtils::LookupTypeDecl(*gInterp, basename);
+   const clang::NamedDecl *base = R__SlowClassSearch(basename);
    if (base) {
       const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
       if (baseCRD) return CRD->isDerivedFrom(baseCRD);
    }
    return false;
+}
+
+bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base)
+{
+   if (!cl || !base) {
+      return false;
+   }
+   return cl->isDerivedFrom(base);
+}
+
+bool InheritsFromTObject(const clang::RecordDecl *cl)
+{
+   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TObject");
+   
+   return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
+}
+
+bool InheritsFromTSelector(const clang::RecordDecl *cl)
+{
+   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TSelector");
+   
+   return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
 
 std::string ClassInfo__FileName(const clang::Decl *cl)
@@ -1379,17 +1404,15 @@ bool CheckClassDef(const clang::RecordDecl *cl)
    // Avoid unadvertently introducing a dependency on libTree.so (when running with
    // the --lib-list-prefix option.
    //int autoloadEnable = G__set_class_autoloading(0);
-   bool inheritsFromTObject = ClassInfo__IsBase(cl,"TObject");
-   bool inheritsFromTSelector = ClassInfo__IsBase(cl,"TSelector");
-   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
-   if (!CRD) {
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   if (!clxx) {
       return false;
    }
-   bool isAbstract = CRD->isAbstract();
+   bool isAbstract = clxx->isAbstract();
    //G__set_class_autoloading(autoloadEnable);
    
    bool result = true;
-   if (!inheritsFromTSelector && inheritsFromTObject && !isAbstract
+   if (!isAbstract && !InheritsFromTObject(clxx) && !InheritsFromTSelector(clxx)
        && !hasClassDef) {
       Error(R__GetQualifiedName(cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(cl).c_str());
       // We do want to always output the message (hence the Error level)
