@@ -433,6 +433,33 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
    return false;
 }
 
+llvm::StringRef R__GetFileName(const clang::Decl *decl)
+{
+   clang::SourceLocation sourceLocation = decl->getLocation();
+   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   
+   if (sourceLocation.isValid() && sourceLocation.isFileID()) {
+      clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
+      return PLoc.getFilename();
+   }
+   else {
+      return "invalid";
+   }   
+}
+
+long R__GetLineNumber(const clang::Decl *decl)
+{
+   clang::SourceLocation sourceLocation = decl->getLocation();
+   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   
+   if (sourceLocation.isValid() && sourceLocation.isFileID()) {
+      return sourceManager.getLineNumber(sourceManager.getFileID(sourceLocation),sourceManager.getFileOffset(sourceLocation));
+   }
+   else {
+      return -1;
+   }   
+}
+
 cling::Interpreter *gInterp = 0;
 
 
@@ -585,7 +612,8 @@ bool InheritsFromTObject(const clang::RecordDecl *cl)
 {
    static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TObject");
    
-   return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
+   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   return R__IsBase(clxx, TObject_decl);
 }
 
 bool InheritsFromTSelector(const clang::RecordDecl *cl)
@@ -1412,7 +1440,7 @@ bool CheckClassDef(const clang::RecordDecl *cl)
    //G__set_class_autoloading(autoloadEnable);
    
    bool result = true;
-   if (!isAbstract && !InheritsFromTObject(clxx) && !InheritsFromTSelector(clxx)
+   if (!isAbstract && InheritsFromTObject(clxx) && !InheritsFromTSelector(clxx)
        && !hasClassDef) {
       Error(R__GetQualifiedName(cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(cl).c_str());
       // We do want to always output the message (hence the Error level)
