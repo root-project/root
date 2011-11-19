@@ -408,7 +408,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
       pos1 = pos2;
    }
    
-   std::cout<<"\tMatch complete!"<<std::endl;
+   //std::cout<<"\tMatch complete!"<<std::endl;
    return true;
 }
 

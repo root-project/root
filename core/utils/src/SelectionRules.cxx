@@ -875,8 +875,11 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
    
    std::string file_name;
    if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name))
+      if (GetDeclSourceFileName(D, file_name)) {
+#ifdef SELECTION_DEBUG
          std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+      }
    }
    
    bool d, n;
@@ -1103,7 +1106,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       std::string file_name;
       if (GetHasFileNameRule()){
          if (GetDeclSourceFileName(D, file_name)){
-            //std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#ifdef SELECTION_DEBUG            
+            std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
          }
       }
       
@@ -1192,8 +1197,11 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
       
       std::string file_name;
       if (GetHasFileNameRule()){
-         if (GetDeclSourceFileName(D, file_name))
+         if (GetDeclSourceFileName(D, file_name)) {
+#ifdef SELECTION_DEBUG
             std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+         }
       }
       
       const BaseSelectionRule *selector = 0;

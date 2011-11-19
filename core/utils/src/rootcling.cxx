@@ -435,6 +435,29 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 
 llvm::StringRef R__GetFileName(const clang::Decl *decl)
 {
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+   if (clxx) {
+      switch(clxx->getTemplateSpecializationKind()) {
+         case clang::TSK_Undeclared:
+            // We want the default behavior
+            break;
+         case clang::TSK_ExplicitInstantiationDeclaration:
+         case clang::TSK_ExplicitInstantiationDefinition:
+         case clang::TSK_ImplicitInstantiation: {
+            // We want the location of the template declaration:
+            const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+            if (tmplt_specialization) {
+               return R__GetFileName(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
+            }
+            break;
+         }
+         case clang::TSK_ExplicitSpecialization:
+            // We want the default behavior
+            break;
+         default:
+            break;
+      } 
+   }      
    clang::SourceLocation sourceLocation = decl->getLocation();
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
    
@@ -449,6 +472,29 @@ llvm::StringRef R__GetFileName(const clang::Decl *decl)
 
 long R__GetLineNumber(const clang::Decl *decl)
 {
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+   if (clxx) {
+      switch(clxx->getTemplateSpecializationKind()) {
+         case clang::TSK_Undeclared:
+            // We want the default behavior
+            break;
+         case clang::TSK_ExplicitInstantiationDeclaration:
+         case clang::TSK_ExplicitInstantiationDefinition:
+         case clang::TSK_ImplicitInstantiation: {
+            // We want the location of the template declaration:
+            const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+            if (tmplt_specialization) {
+               return R__GetLineNumber(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
+            }
+            break;
+         }
+         case clang::TSK_ExplicitSpecialization:
+            // We want the default behavior
+            break;
+         default:
+            break;
+      } 
+   }      
    clang::SourceLocation sourceLocation = decl->getLocation();
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
    
@@ -623,25 +669,11 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl)
    return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
 
-std::string ClassInfo__FileName(const clang::Decl *cl)
-{
-   fprintf(stderr,"ClassInfo__FileName not yet implemented\n");
-   return "\"\"";
-}
-
-long ClassInfo__LineNumber(const clang::Decl *cl)
-{
-   fprintf(stderr,"ClassInfo__LineNumber not yet implemented\n");
-   return 0;
-}
-
-
-
-bool IsStdClass(const clang::CXXRecordDecl *cl)
+bool IsStdClass(const clang::CXXRecordDecl &cl)
 {
    // Return true, if the decl is part of the std namespace.
    
-   const clang::DeclContext *ctx = cl->getDeclContext();
+   const clang::DeclContext *ctx = cl.getDeclContext();
    
    if (ctx->isNamespace())
    {
@@ -655,6 +687,11 @@ bool IsStdClass(const clang::CXXRecordDecl *cl)
    return false;
 }
 
+void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl *cl)
+{
+   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+}
+
 std::string R__GetQualifiedName(const clang::NamedDecl *cl)
 {
    std::string result;
@@ -662,9 +699,16 @@ std::string R__GetQualifiedName(const clang::NamedDecl *cl)
    return result;
 }
 
-void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl *cl)
+std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base)
 {
-   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   std::string result;
+   R__GetQualifiedName(result,base.getType()->getAsCXXRecordDecl());
+   return result;
+}
+
+std::string R__GetQualifiedName(const RScanner::AnnotatedRecordDecl &annotated)
+{
+   return R__GetQualifiedName(annotated.GetRecordDecl());
 }
 
 void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
@@ -2125,7 +2169,7 @@ bool NeedConstructor(const RScanner::AnnotatedRecordDecl *cl)
    }
    bool res= ((GetClassVersion(CRD)>0
                || (!ClassInfo__HasMethod(CRD,"ShowMembers") && (cl->RequestStreamerInfo())
-                   && !IsStdClass(CRD) )
+                   && !IsStdClass(*CRD) )
                ) && !CRD->isAbstract());
    return res;
 }
@@ -2367,6 +2411,21 @@ int IsSTLContainer(G__BaseClassInfo &m)
    //   if (k) printf(" %s==%d\n",type.c_str(),k);
    return k;
 }
+
+//______________________________________________________________________________
+int IsSTLContainer(const clang::CXXBaseSpecifier &base)
+{
+   // Is this an STL container?
+   
+   if (!IsStdClass(*base.getType()->getAsCXXRecordDecl())) {
+      return kNotSTL;
+   }
+
+   int k = TClassEdit::IsSTLCont(R__GetQualifiedName(base.getType()->getAsCXXRecordDecl()).c_str(),1);
+   //   if (k) printf(" %s==%d\n",type.c_str(),k);
+   return k;
+}
+
 
 //______________________________________________________________________________
 int IsStreamable(G__DataMemberInfo &m)
@@ -3379,17 +3438,16 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
    
-   char *filename = clinfo.FileName() ? StrDup(clinfo.FileName()) : StrDup("");
-   if (strlen(filename) > 0) {
-      for (unsigned int i=0; i<strlen(filename); i++) {
+   std::string filename = R__GetFileName(cl_input);
+   if (filename.length() > 0) {
+      for (unsigned int i=0; i<filename.length(); i++) {
          if (filename[i]=='\\') filename[i]='/';
       }
    }
-   (*dictSrcOut) << "\"" << filename << "\", " << clinfo.LineNumber() << "," << std::endl
+   (*dictSrcOut) << "\"" << filename << "\", " << R__GetLineNumber(cl_input) << "," << std::endl
                  << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
                  << "                  ";
    //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
-   delete [] filename;
    if (!NeedShadowClass(clinfo)) {
       if (!ClassInfo__HasMethod(cl,"ShowMembers")) (*dictSrcOut) << "0, ";
    } else {
@@ -3931,13 +3989,13 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
 #endif
    }
    
-   std::string filename = ClassInfo__FileName(cl);
+   std::string filename = R__GetFileName(cl);
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
-   (*dictSrcOut) << "\"" << filename << "\", " << ClassInfo__LineNumber(cl) << "," << std::endl
-   << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
-   << "                     ";
+   (*dictSrcOut) << "\"" << filename << "\", " << R__GetFileName(cl).str() << "," << std::endl
+                 << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
+                 << "                     ";
    
    if (Namespace__HasMethod(cl,"Dictionary")) {
       (*dictSrcOut) << "&::" << classname.c_str() << "::Dictionary, ";
@@ -3963,128 +4021,6 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
       << "      }" << std::endl << std::endl;
    }
    
-   (*dictSrcOut) << "   }" << std::endl;
-   while(nesting--) {
-      (*dictSrcOut) << "}" << std::endl;
-   }
-   (*dictSrcOut) <<  std::endl;
-}
-
-//______________________________________________________________________________
-void WriteNamespaceInit(G__ClassInfo &cl)
-{
-   // Write the code to initialize the namespace name and the initialization object.
-
-   if (! (cl.Property() & G__BIT_ISNAMESPACE) ) return;
-
-   // coverity[fun_call_w_exception] - that's just fine.
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
-
-   int nesting = 0;
-   // We should probably unwind the namespace to properly nest it.
-   if (classname!="ROOT") {
-      string right = classname;
-      int pos = right.find(":");
-      if (pos==0) {
-         right = right.substr(2);
-         pos = right.find(":");
-      }
-      while(pos>=0) {
-         string left = right.substr(0,pos);
-         right = right.substr(pos+2);
-         pos = right.find(":");
-         ++nesting;
-         (*dictSrcOut) << "namespace " << left << " {" << std::endl;
-      }
-
-      ++nesting;
-      (*dictSrcOut) << "namespace " << right << " {" << std::endl;
-   }
-
-   (*dictSrcOut) << "   namespace ROOT {" << std::endl;
-
-#if !defined(R__SGI) && !defined(R__AIX)
-   (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
-#endif
-
-   if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
-      (*dictSrcOut) << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
-
-   (*dictSrcOut) << std::endl
-
-                 << "      // Function generating the singleton type initializer" << std::endl
-
-#if !defined(R__SGI) && !defined(R__AIX)
-                 << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-                 << "      {" << std::endl
-#else
-                 << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-                 << "      {" << std::endl
-#endif
-
-                 << "         static ::ROOT::TGenericClassInfo " << std::endl
-
-                 << "            instance(\"" << classname.c_str() << "\", ";
-
-   if (cl.HasMethod("Class_Version")) {
-      (*dictSrcOut) << "::" << classname.c_str() << "::Class_Version(), ";
-   } else {
-
-      // Need to find out if the operator>> is actually defined for this class.
-      G__ClassInfo gcl;
-      long offset;
-      const char *versionFunc = "GetClassVersion";
-      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
-      char *funcname= new char[ncha];
-      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
-      ncha = strlen(classname.c_str())+ 10 ;
-      char *proto = new char[ncha];
-      snprintf(proto,ncha,"%s*",classname.c_str());
-      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
-      delete [] funcname;
-      delete [] proto;
-
-      if (methodinfo.IsValid() &&
-          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
-         (*dictSrcOut) << "GetClassVersion< " << classname.c_str() << " >(), ";
-      } else {
-         (*dictSrcOut) << "0 /*version*/, ";
-      }
-   }
-
-   char *filename = (char*)cl.FileName();
-   for (unsigned int i=0; i<strlen(filename); i++) {
-      if (filename[i]=='\\') filename[i]='/';
-   }
-   (*dictSrcOut) << "\"" << filename << "\", " << cl.LineNumber() << "," << std::endl
-                 << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
-                 << "                     ";
-
-   if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {
-      (*dictSrcOut) << "&::" << classname.c_str() << "::Dictionary, ";
-   } else {
-      (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
-   }
-
-   (*dictSrcOut) << cl.RootFlag() << ");" << std::endl
-
-                 << "         return &instance;" << std::endl
-                 << "      }" << std::endl
-                 << "      // Insure that the inline function is _not_ optimized away by the compiler\n"
-                 << "      ::ROOT::TGenericClassInfo *(*_R__UNIQUE_(InitFunctionKeeper))() = &GenerateInitInstance;  " << std::endl
-                 << "      // Static variable to force the class initialization" << std::endl
-      // must be one long line otherwise R__UseDummy does not work
-                 << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
-                 << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
-
-   if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
-      (*dictSrcOut) <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
-                    << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
-                    << "         GenerateInitInstance()->GetClass();" << std::endl
-                    << "      }" << std::endl << std::endl;
-   }
-
    (*dictSrcOut) << "   }" << std::endl;
    while(nesting--) {
       (*dictSrcOut) << "}" << std::endl;
@@ -4623,28 +4559,34 @@ void WriteStreamerBases(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void WritePointersSTL(G__ClassInfo &cl)
+void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
 {
    // Write interface function for STL members
 
    string a;
-   string clName(G__map_cpp_name((char *)cl.Fullname()));
-   int version = GetClassVersion( cl);
+   string clName(G__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).data()));
+   int version = GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
-   if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) return;
+   if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
 
+
+   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (clxx == 0) return;
 
    // We also need to look at the base classes.
-   G__BaseClassInfo base(cl);
-   while (base.Next()) {
-      int k = IsSTLContainer(base);
+   for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
+       iter != end;
+       ++iter)
+   {
+      int k = IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::inst().GenerateTClassFor( base.Name() );
+         RStl::inst().GenerateTClassFor( R__GetQualifiedName(*iter) );
       }
    }
 
+   G__ClassInfo clinfo( R__GetQualifiedName(cl).c_str() );
    // Look at the data members
-   G__DataMemberInfo m(cl);
+   G__DataMemberInfo m(clinfo);
    while (m.Next()) {
 
       if ((m.Property() & G__BIT_ISSTATIC)) continue;
@@ -4972,43 +4914,42 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 }
 
 //______________________________________________________________________________
-void WriteClassCode(const clang::CXXRecordDecl *cl, G__ClassInfo &clinfo, bool force = false)
+void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
 {
-   // G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
-   if ((clinfo.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && (force || clinfo.Linkage() == G__CPPLINK) ) {
+   std::string fullname;
+   R__GetQualifiedName(fullname,cl);
+   if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
+      // coverity[fun_call_w_exception] - that's just fine.
+      RStl::inst().GenerateTClassFor(fullname.c_str());
+      return;
+   }
 
-      if ( TClassEdit::IsSTLCont(clinfo.Name()) ) {
-         // coverity[fun_call_w_exception] - that's just fine.
-         RStl::inst().GenerateTClassFor( clinfo.Name() );
-         return;
-      }
-
-      if (clinfo.HasMethod("Streamer")) {
-         //WriteStreamerBases(cl);
-         if (clinfo.RootFlag()) WritePointersSTL(clinfo);
-         if (!(clinfo.RootFlag() & G__NOSTREAMER)) {
-            if ((clinfo.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
-               WriteAutoStreamer(clinfo);
-            } else {
-               WriteStreamer(clinfo);
-            }
-         } else
-            Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", clinfo.Fullname());
-      } else {
-         Info(0, "Class %s: Streamer() not declared\n", clinfo.Fullname());
-
-         if (clinfo.RootFlag() & G__USEBYTECOUNT) WritePointersSTL(clinfo);
-      }
-      if (clinfo.HasMethod("ShowMembers")) {
-         WriteShowMembers(clinfo);
-         WriteAuxFunctions(clinfo);
-      } else {
-         if (NeedShadowClass(clinfo)) {
-            WriteShowMembers(clinfo, true);
+   G__ClassInfo clinfo(R__GetQualifiedName(cl.GetRecordDecl()).c_str());
+   
+   if (ClassInfo__HasMethod(cl,"Streamer")) {
+      //WriteStreamerBases(cl);
+      if (clinfo.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
+      if (!(cl.RequestNoStreamer())) {
+         if ((cl.RequestStreamerInfo() /*G__AUTOSTREAMER*/)) {
+            WriteAutoStreamer(clinfo);
+         } else {
+            WriteStreamer(clinfo);
          }
-         WriteAuxFunctions(clinfo);
+      } else
+         Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", clinfo.Fullname());
+   } else {
+      Info(0, "Class %s: Streamer() not declared\n", clinfo.Fullname());
+      
+      if (cl.RequestStreamerInfo()) WritePointersSTL(cl);
+   }
+   if (ClassInfo__HasMethod(cl,"ShowMembers")) {
+      WriteShowMembers(clinfo);
+   } else {
+      if (NeedShadowClass(clinfo)) {
+         WriteShowMembers(clinfo, true);
       }
    }
+   WriteAuxFunctions(clinfo);
 }
 
 //______________________________________________________________________________
@@ -6458,7 +6399,7 @@ int main(int argc, char **argv)
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
             std::string qualname( CRD->getQualifiedNameAsString() );
-            if (IsStdClass(CRD) && TClassEdit::IsSTLCont(qualname.c_str()) ) {
+            if (IsStdClass(*CRD) && TClassEdit::IsSTLCont(qualname.c_str()) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
                RStl::inst().GenerateTClassFor( qualname.c_str() );
             } else {
@@ -6533,11 +6474,7 @@ int main(int argc, char **argv)
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }
-         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         G__ClassInfo clinfo( R__GetQualifiedName(*iter).c_str() );
-         if (cxxdecl) {
-            WriteClassCode(cxxdecl, clinfo, true);
-         }
+         WriteClassCode(*iter);
       }
       
       //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
