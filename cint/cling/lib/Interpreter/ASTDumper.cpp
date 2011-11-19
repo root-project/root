@@ -16,10 +16,11 @@ namespace cling {
 
   ASTDumper::~ASTDumper() {}
 
-  void ASTDumper::HandleTopLevelDecl(DeclGroupRef D) {
-      for (DeclGroupRef::iterator I = D.begin(), E = D.end(); I != E; ++I)
-        HandleTopLevelSingleDecl(*I);
-    }
+  bool ASTDumper::HandleTopLevelDecl(DeclGroupRef D) {
+    for (DeclGroupRef::iterator I = D.begin(), E = D.end(); I != E; ++I)
+      HandleTopLevelSingleDecl(*I);
+    return true;
+  }
     
   void ASTDumper::HandleTopLevelSingleDecl(Decl* D) {
     PrintingPolicy Policy = D->getASTContext().getPrintingPolicy();

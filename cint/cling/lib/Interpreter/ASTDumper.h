@@ -22,7 +22,7 @@ namespace cling {
       : Dump(Dump) { }
     virtual ~ASTDumper();
     
-    virtual void HandleTopLevelDecl(clang::DeclGroupRef D);
+    virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
 
   private:
     void HandleTopLevelSingleDecl(clang::Decl* D);

@@ -21,7 +21,7 @@ namespace cling {
 
     void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
     void InitializeSema(clang::Sema& S) { m_Sema = &S; }
-    void HandleTopLevelDecl(clang::DeclGroupRef DGR);
+    bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
     void ForgetSema();
 
 

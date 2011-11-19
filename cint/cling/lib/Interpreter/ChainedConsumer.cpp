@@ -225,13 +225,16 @@ namespace cling {
         Consumers[i]->Initialize(Context);
   }
   
-  void ChainedConsumer::HandleTopLevelDecl(DeclGroupRef D) {
-    if (IsQueueing())
+  bool ChainedConsumer::HandleTopLevelDecl(DeclGroupRef D) {
+    if (IsQueueing()) {
       DeclsQueue.push_back(DGRInfo(D, kTopLevelDecl));
-    else 
-      for (size_t i = 0; i < kConsumersCount; ++i)
+    } else {
+      for (size_t i = 0; i < kConsumersCount; ++i) {
         if (IsConsumerEnabled((EConsumerIndex)i))
           Consumers[i]->HandleTopLevelDecl(D);
+      }
+    }
+    return true;
   }
   
   void ChainedConsumer::HandleInterestingDecl(DeclGroupRef D) {

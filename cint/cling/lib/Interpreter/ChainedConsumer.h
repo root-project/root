@@ -47,7 +47,7 @@ namespace cling {
 
     // ASTConsumer
     virtual void Initialize(clang::ASTContext& Context);
-    virtual void HandleTopLevelDecl(clang::DeclGroupRef D);
+    virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
     virtual void HandleInterestingDecl(clang::DeclGroupRef D);
     virtual void HandleTagDeclDefinition(clang::TagDecl* D);
     virtual void HandleVTable(clang::CXXRecordDecl* RD, bool DefinitionRequired);

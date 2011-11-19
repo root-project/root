@@ -17,7 +17,7 @@ namespace cling {
   // pin the vtable here
   VerifyingSemaConsumer::~VerifyingSemaConsumer() {}
 
-  void VerifyingSemaConsumer::HandleTopLevelDecl(clang::DeclGroupRef DGR) {
+  bool VerifyingSemaConsumer::HandleTopLevelDecl(clang::DeclGroupRef DGR) {
     TransformTopLevelDecl(DGR);
     // Pull all template instantiations in, coming from the consumers.
     m_Sema->PerformPendingInstantiations();
@@ -25,6 +25,7 @@ namespace cling {
     if (m_Sema->getDiagnostics().hasErrorOccurred()) {
       Notify();
     }
+    return true;
   }
 
   void VerifyingSemaConsumer::ForgetSema() {
