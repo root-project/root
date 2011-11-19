@@ -1,4 +1,4 @@
-// RUN: cat %s | %cling -I%p
+// RUN: cat %s | %cling -Xclang -verify -I%p
 // Tests the ChainedConsumer's ability to recover from errors. .x produces 
 // #include \"CannotDotX.h\" \n void wrapper() {CannotDotX();}, which causes
 // a TagDecl to be passed trough the consumers. This TagDecl is caught twice by
@@ -6,15 +6,7 @@
 // If we encounter error the ChainedConsumer shouldn't try to remove the 
 // declaration twice and this test makes sure of that.
 
-#include "clang/Basic/Diagnostic.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/VerifyDiagnosticConsumer.h"
-
 #include "cling/Interpreter/Interpreter.h"
-
-clang::DiagnosticsEngine& Diags = gCling->getCI()->getDiagnostics();
-clang::DiagnosticConsumer* Client = new clang::VerifyDiagnosticConsumer(Diags);
-Diags.setClient(Client);
 
 .x CannotDotX.h() // expected-error {{use of undeclared identifier 'CannotDotX'}} 
 .x CannotDotX.h() // expected-error {{use of undeclared identifier 'CannotDotX'}}

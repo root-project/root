@@ -1,4 +1,5 @@
-// RUN: cat %s | %cling
+// RUN: cat %s | %cling -Xclang -verify
+
 // Actually test clang::DeclContext::removeDecl(). This function in clang is 
 // the main method that is used for the error recovery. This means when there 
 // is an error in cling's input we need to revert all the declarations that came
@@ -12,15 +13,7 @@
 // The current test checks if that codepath in removeDecl still exists because
 // it is important for the stable error recovery in cling
 
-#include "clang/Basic/Diagnostic.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/VerifyDiagnosticConsumer.h"
-
 #include "cling/Interpreter/Interpreter.h"
-
-clang::DiagnosticsEngine& Diags = gCling->getCI()->getDiagnostics();
-clang::DiagnosticConsumer* Client = new clang::VerifyDiagnosticConsumer(Diags);
-Diags.setClient(Client);
 
 .rawInput
 
