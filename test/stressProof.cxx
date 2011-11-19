@@ -181,12 +181,12 @@ static TString gProcFileElem("$ROOTSYS/tutorials/proof/ProcFileElements.C");
 // Special files
 static TString gNtpRndm("$ROOTSYS/tutorials/proof/ntprndm.root");
 
-void stressProof(const char *url = "proof://localhost:40000",
-                 Int_t nwrks = -1, Int_t verbose = 1,
-                 const char *logfile = 0, Bool_t dyn = kFALSE,
-                 Bool_t skipds = kTRUE, const char *tests = 0,
-                 const char *h1src = 0, const char *eventsrc = 0,
-                 Bool_t dryrun = kFALSE);
+int stressProof(const char *url = "proof://localhost:40000",
+                Int_t nwrks = -1, Int_t verbose = 1,
+                const char *logfile = 0, Bool_t dyn = kFALSE,
+                Bool_t skipds = kTRUE, const char *tests = 0,
+                const char *h1src = 0, const char *eventsrc = 0,
+                Bool_t dryrun = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -326,10 +326,10 @@ int main(int argc,const char *argv[])
    if (enablegraphics)
       new TApplication("stressProof", 0, 0);
 
-   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-               tests, h1src, eventsrc, dryrun);
+   int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
+                        tests, h1src, eventsrc, dryrun);
 
-   gSystem->Exit(0);
+   gSystem->Exit(rc);
 }
 #endif
 
@@ -561,9 +561,9 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
-                 Bool_t dyn, Bool_t skipds, const char *tests,
-                 const char *h1src, const char *eventsrc, Bool_t dryrun)
+int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
+                Bool_t dyn, Bool_t skipds, const char *tests,
+                const char *h1src, const char *eventsrc, Bool_t dryrun)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -633,7 +633,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       glogfile = "ProofStress_";
       if (!(flog = gSystem->TempFileName(glogfile, gSystem->TempDirectory()))) {
          printf(" >>> Cannot create a temporary log file on %s - exit\n", gSystem->TempDirectory());
-         return;
+         return 1;
       }
       fclose(flog);
       if (gverbose > 0) {
@@ -836,7 +836,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
                printf("*                                                               **\r");
                printf("*  Test %2d not found among the registered tests - exiting\n", xt);
                printf("******************************************************************\n");
-               return;
+               return 1;
             }
             // Enable the required tests
             Int_t tn = -1;
@@ -894,7 +894,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       nxt.Reset();
       while ((t = (ProofTest *)nxt())) { t->Run(kTRUE); }
       printf("******************************************************************\n");
-      return;
+      return 0;
    }
    
    // Add the ACLiC option to the selector strings
@@ -967,6 +967,9 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          printf("+++ Warning: test daemon probably still running!\n");
       }
    }
+
+   // Done
+   return (failed ? 1 : 0);
 }
 
 //_____________________________________________________________________________
