@@ -110,7 +110,12 @@ namespace cling {
       operator clang::NamedDecl* () const { return getSingleDecl(); }
       clang::NamedDecl* getSingleDecl() const;
       template<class T> T* getAs(){
-        return llvm::dyn_cast<T>(getSingleDecl());
+        clang::NamedDecl *result = getSingleDecl();
+        if (result) {
+           return llvm::dyn_cast<T>(result);
+        } else {
+           return 0;
+        }
       }
       
       friend class Interpreter;
