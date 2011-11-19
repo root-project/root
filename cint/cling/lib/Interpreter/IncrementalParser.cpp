@@ -51,10 +51,6 @@ namespace cling {
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
-    // Ugly hack to avoid the default of ProgramAction which is SyntaxOnly
-    // and we can't override it later. This will be fixed once cling is 
-    // supports the latest changes in the clang's driver 
-    // FIXME: REIMPLEMENT
     m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly);
 
     CreateSLocOffsetGenerator();
