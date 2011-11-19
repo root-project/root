@@ -5669,8 +5669,7 @@ int main(int argc, char **argv)
    char *argvv[500];
 
    std::vector<std::string> clingArgs;
-   clingArgs.push_back("-x");
-   clingArgs.push_back("c++");
+   clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
 
@@ -5858,16 +5857,12 @@ int main(int argc, char **argv)
    
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-      if (clingArgs[i] == "-c")
+      if (clingArgs[i] != "-c")
          pcmArgs.push_back(clingArgs[parg]);
    }
    
    // cling-only arguments
-   // -fsyntax-only is what we want to pass - but it's the default and cling
-   // cannot detect the difference between -fsyntax-only being passed or not.
-   // Will get fixed, hopefully, once we use the clang::Driver interface.
-   //clingArgs.push_back("-fsyntax-only");
-   clingArgs.push_back("-emit-html");
+   clingArgs.push_back("-fsyntax-only");
    std::string interpInclude("-I");
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
