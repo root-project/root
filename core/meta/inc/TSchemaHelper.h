@@ -1,13 +1,28 @@
 // @(#)root/core:$Id$
 // author: Lukasz Janyst <ljanyst@cern.ch>
 
+/*************************************************************************
+ * Copyright (C) 1995-2010, Rene Brun, Fons Rademakers and al.           *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+// This include must be outside of the code guard because
+// Rtypes.h includes TGenericClassInfo.h which includes
+// TSchemaHelper.h (this header file) and really need the
+// definition of ROOT::TSchemaHelper.   So in this case,
+// we need the indirect #include to really do the declaration
+// and the direct #include to be a noop.
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 #ifndef ROOT_TSchemaHelper
 #define ROOT_TSchemaHelper
 
 #include <string>
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
 
 namespace ROOT
 {
