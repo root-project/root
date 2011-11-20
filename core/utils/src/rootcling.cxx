@@ -375,9 +375,6 @@ enum EDictType {
 
 char *StrDup(const char *str);
 
-typedef map<string,bool> Funcmap_t;
-Funcmap_t gFunMap;
-
 class RConstructorType {
    std::string           fArgTypeName;
    clang::CXXRecordDecl *fArgType;
@@ -504,6 +501,29 @@ long R__GetLineNumber(const clang::Decl *decl)
    else {
       return -1;
    }   
+}
+
+const char *R__GetComment(const clang::Decl &decl)
+{
+   clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
+   clang::SourceLocation sourceLocation = decl.getLocation();
+   
+   // Guess where the comment start.   
+   const char *comment = sourceManager.getCharacterData(sourceLocation);
+   // Find the end of declaration:
+   while (comment[0]!=';' && comment[0]!='\n' && comment[0]!='\r') {
+      ++comment;
+   }
+   ++comment;
+   // Now skip the spaces and beginning of comments.
+   while ( (isspace(comment[0]) || comment[0]=='/') && comment[0]!='\n' && comment[0]!='\r') {
+      ++comment;
+   }
+   while (comment[0]!='\n' && comment[0]!='\r') {
+      ++comment;
+   }
+
+   return comment;
 }
 
 cling::Interpreter *gInterp = 0;
@@ -762,19 +782,6 @@ bool R__IsSelectionFile(const char *filename)
 //  static const char* s = ::getenv("MY_ROOT");
 //  return s;
 //}
-
-// static int check = 0;
-//______________________________________________________________________________
-void SetFun (const string &fname)
-{
-   gFunMap[fname] = true;
-}
-
-//______________________________________________________________________________
-bool GetFun(const string &fname)
-{
-   return gFunMap[fname];
-}
 
 //______________________________________________________________________________
 
@@ -2399,6 +2406,22 @@ int IsSTLContainer(G__DataMemberInfo &m)
 }
 
 //______________________________________________________________________________
+int IsSTLContainer(const clang::FieldDecl &m)
+{
+   // Is this an STL container?
+   
+   clang::QualType type = m.getType();
+   std::string type_name = type.getAsString(m.getASTContext().getPrintingPolicy()); // m.Type()->TrueName();
+
+   int k = TClassEdit::IsSTLCont(type_name.c_str(),1);
+   
+   //    if (k) printf(" %s==%d\n",type.c_str(),k);
+   
+   return k;
+}
+
+
+//______________________________________________________________________________
 int IsSTLContainer(G__BaseClassInfo &m)
 {
    // Is this an STL container?
@@ -2426,6 +2449,53 @@ int IsSTLContainer(const clang::CXXBaseSpecifier &base)
    return k;
 }
 
+
+//______________________________________________________________________________
+bool IsStreamableObject(const clang::FieldDecl &m)
+{
+   const char *comment = R__GetComment( m );
+
+   // Transient
+   if (comment[0] == '!') return false;
+
+   clang::QualType type = m.getType();
+
+   if (type->isReferenceType()) {
+      // Reference can not be streamed.
+      return false;
+   }
+   
+   std::string mTypeName = type.getAsString(m.getASTContext().getPrintingPolicy());
+   if (!strcmp(mTypeName.c_str(), "string") || !strcmp(mTypeName.c_str(), "string*")) {
+      return true;
+   }
+   if (!strcmp(mTypeName.c_str(), "std::string") || !strcmp(mTypeName.c_str(), "std::string*")) {
+      return true;
+   }
+   
+   const clang::Type *rawtype = type.getTypePtr();
+
+   if (rawtype->isPointerType()) {
+      //Get to the 'raw' type.
+      clang::QualType pointee;
+      while ( (pointee = rawtype->getPointeeType()) , pointee.getTypePtrOrNull() && pointee.getTypePtr() != rawtype)
+      {
+        rawtype = pointee.getTypePtr();
+      }      
+   }
+   
+   if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
+      // not an ojbect.
+      return false;
+   }
+   
+   if ((ClassInfo__HasMethod(rawtype->getAsCXXRecordDecl(),"Streamer"))) {
+      if (!(ClassInfo__HasMethod(rawtype->getAsCXXRecordDecl(),"Class_Version"))) return true;
+      int version = GetClassVersion(rawtype->getAsCXXRecordDecl());
+      if (version > 0) return true;
+   }
+   return false;
+}
 
 //______________________________________________________________________________
 int IsStreamable(G__DataMemberInfo &m)
@@ -3993,7 +4063,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
-   (*dictSrcOut) << "\"" << filename << "\", " << R__GetFileName(cl).str() << "," << std::endl
+   (*dictSrcOut) << "\"" << filename << "\", " << R__GetLineNumber(cl) << "," << std::endl
                  << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
                  << "                     ";
    
@@ -4584,49 +4654,54 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       }
    }
 
-   G__ClassInfo clinfo( R__GetQualifiedName(cl).c_str() );
-   // Look at the data members
-   G__DataMemberInfo m(clinfo);
-   while (m.Next()) {
-
-      if ((m.Property() & G__BIT_ISSTATIC)) continue;
+   // Loop over the non static data member.
+   for(clang::RecordDecl::field_iterator field_iter = clxx->field_begin(), end = clxx->field_end();
+       field_iter != end;
+       ++field_iter)
+   {
+      const char *comment = R__GetComment( *(*field_iter) );
+      
       int pCounter = 0;
-      if (m.Property() & G__BIT_ISPOINTER) {
-         const char *leftb = strchr(m.Title(),'[');
+      clang::QualType type = field_iter->getType();
+      std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());
+//      type->dump();
+//      fprintf(stderr,"\n");
+      if (type->isPointerType()) {
+         const char *leftb = strchr(comment,'[');
          if (leftb) {
             const char *rightb = strchr(leftb,']');
             if (rightb) {
                pCounter++;
-               a = m.Type()->Name();
+               a = type_name;
+               if (strstr(type_name.c_str(),"**")) pCounter++;
                char *astar = (char*)strchr(a.c_str(),'*');
                if (!astar) {
-                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), m.Name());
+                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), field_iter->getName().data());
                } else {
                   *astar = 0;
                }
-               if (strstr(m.Type()->Name(),"**")) pCounter++;
             }
          }
       }
 
-
       //member is a string
       {
-         const char*shortTypeName = ShortTypeName(m.Type()->Name());
+         const char*shortTypeName = ShortTypeName(type_name.c_str());
          if (!strcmp(shortTypeName, "string")) {
             continue;
          }
       }
-
-      if (!IsStreamable(m)) continue;
-
-      int k = IsSTLContainer(m);
+      
+      if (!IsStreamableObject(*(*field_iter))) continue;
+      
+      int k = IsSTLContainer( *(*field_iter) );
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",m.Type()->TrueName() );
-         RStl::inst().GenerateTClassFor( m.Type()->Name() );
-      }
+         RStl::inst().GenerateTClassFor( type_name );
+      }      
    }
+   
 }
 
 
@@ -4754,14 +4829,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", &"
                              << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISPOINTER) {
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"*" << m.Name() << "\", &" << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
-                                << clName << "_" << m.Name() << ");" << std::endl;
             } else if (m.Property() & G__BIT_ISARRAY) {
                cvar = m.Name();
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -4770,9 +4839,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                }
                (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << cvar << "\", "
                              << prefix << m.Name() << ");" << std::endl;
-               if (clflag && IsStreamable(m) && GetFun(fun))
-                  (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << cvar << "\",R__"
-                                << clName << "_" << m.Name() << ");"  << std::endl;
             } else if (m.Property() & G__BIT_ISREFERENCE) {
                // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
 
@@ -4782,10 +4848,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                                 << prefix << m.Name() << ");" << std::endl;
                   (*dictSrcOut) << "      R__insp.InspectMember(" << GetNonConstMemberName(m,prefix)
                                 << ", \"" << m.Name() << ".\");"  << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     //fprintf(fp, "      R__cl->SetMemberStreamer(strcat(R__parent,\"%s\"),R__%s_%s); R__parent[R__ncp] = 0;\n", m.Name(), clName, m.Name());
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                                   << clName << "_" << m.Name() << ");" << std::endl;
                } else {
                   // NOTE: something to be added here!
                   (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__insp.GetParent(), \"" << m.Name()
@@ -4808,9 +4870,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                                    << (!strncmp(m.Title(), "!", 1)?"true":"false")
                                    <<  ");" << std::endl;
                   }
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                                   << clName << "_" << m.Name() << ");" << std::endl;
                }
             }
          }
