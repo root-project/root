@@ -5769,7 +5769,8 @@ int main(int argc, char **argv)
          argvv[argcc++] = (char *)"-Dexternalref=extern";
          argvv[argcc++] = (char *)"-DSYSV";
          argvv[argcc++] = (char *)"-D__MAKECINT__";
-         clingArgs.push_back(argvv[argcc - 1]);
+         // NO! clang needs to see the truth.
+         // clingArgs.push_back(argvv[argcc - 1]);
          argvv[argcc++] = (char *)"-V";        // include info on private members
          if (dict_type==kDictTypeReflex) {
             argvv[argcc++] = (char *)"-c-3";
@@ -5828,6 +5829,7 @@ int main(int argc, char **argv)
 
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
+   clingArgs.push_back("-D__MAKECINT__");
    char platformDefines[64] = {0};
 #ifdef __KCC
    snprintf(platformDefines, 64, "-DG__KCC=%ld", (long)__KCC);
