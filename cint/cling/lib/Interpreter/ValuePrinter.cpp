@@ -87,7 +87,7 @@ namespace cling {
                          const ValuePrinterInfo& VPI) {
     const clang::Expr* E = VPI.getExpr();
     o << "(";
-    o << VPI.getTypeName();
+    o << E->getType().getAsString();
     if (E->isRValue()) // show the user that the var cannot be changed
       o << " const";
     o << ") ";

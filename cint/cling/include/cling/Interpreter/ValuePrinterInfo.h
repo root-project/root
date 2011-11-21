@@ -7,8 +7,6 @@
 #ifndef CLING_VALUE_PRINTER_INFO_H
 #define CLING_VALUE_PRINTER_INFO_H
 
-#include <string>
-
 namespace clang {
   class ASTContext;
   class Expr;
@@ -21,7 +19,6 @@ namespace cling {
     const clang::Expr* m_Expr;
     const clang::ASTContext* m_Context;
     unsigned m_Flags;
-    std::string m_TypeName;
 
   public:
     enum ValuePrinterFlags {
@@ -34,7 +31,6 @@ namespace cling {
     const clang::Expr* getExpr() const { return m_Expr; }
     const clang::ASTContext* getASTContext() const { return m_Context; }
     unsigned getFlags() { return m_Flags; }
-    const std::string& getTypeName() const { return m_TypeName; }
   };
 
 } // end namespace cling

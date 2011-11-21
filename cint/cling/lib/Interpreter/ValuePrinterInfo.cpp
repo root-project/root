@@ -38,6 +38,5 @@ namespace cling {
           }
       }
     }
-    m_TypeName = QT.getAsString();
   }
 } // end namespace cling
