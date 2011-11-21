@@ -18,6 +18,7 @@
 
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
+#include <vector>
 
 class RooBinIntegrator : public RooAbsIntegrator {
 public:
@@ -39,8 +40,8 @@ public:
   virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
 
   virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
+  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
+  virtual Bool_t canIntegrateND() const { return kTRUE ; }
   virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
 
 protected:
@@ -50,18 +51,18 @@ protected:
 
 
   // Numerical integrator workspace
-  mutable Double_t _xmin;              //! Lower integration bound
-  mutable Double_t _xmax;              //! Upper integration bound
-  mutable Double_t _range;             //! Size of integration range
-  mutable Double_t _binWidth;             //! Size of integration range
-  mutable Int_t _numBins;             //! Size of integration range
-
+  mutable std::vector<Double_t> _xmin;      //! Lower integration bound
+  mutable std::vector<Double_t> _xmax;      //! Upper integration bound
+  std::vector<std::list<Double_t>*> _binb ; //! list of bin boundaries
+  mutable Int_t _numBins;                   //! Size of integration range
+  
   Bool_t _useIntegrandLimits;  // If true limits of function binding are ued
 
   Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
-
+  Double_t* xvec(Double_t& xx, Double_t &yy) { _x[0] = xx ; _x[1] = yy ; return _x ; }
+  Double_t* xvec(Double_t& xx, Double_t &yy, Double_t &zz) { _x[0] = xx ; _x[1] = yy ; _x[2] = zz ; return _x ; }
+  
   Double_t *_x ; //! do not persist
-  std::list<Double_t>* _binb ; //! list of bin boundaries
 
   ClassDef(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };

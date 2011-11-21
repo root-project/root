@@ -1083,8 +1083,9 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     
     hist->SetBinContent(hist->GetBin(xbin,ybin,zbin),result);
     if (setError) {
-      hist->SetBinError(hist->GetBin(xbin,ybin,zbin),result) ;
+      hist->SetBinError(hist->GetBin(xbin,ybin,zbin),sqrt(result)) ;
     }
+
     //cout << "bin " << bin << " -> (" << xbin << "," << ybin << "," << zbin << ") = " << result << endl;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;

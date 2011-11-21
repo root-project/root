@@ -11,7 +11,7 @@
 #pragma link C++ class RooAbsCategoryLValue+ ;
 #pragma link C++ class RooAbsCollection+ ;
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=kFALSE ; }" 
-#pragma link C++ class RooAbsData+ ;
+#pragma link C++ class RooAbsData- ;
 #pragma link C++ class RooAbsFunc+ ;
 #pragma link C++ class RooAbsGenContext+ ;
 #pragma link C++ class RooAbsTestStatistic+ ;

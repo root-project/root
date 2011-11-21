@@ -59,7 +59,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 //_____________________________________________________________________________
-RooBinIntegrator::RooBinIntegrator() :  _x(0), _binb(0)
+RooBinIntegrator::RooBinIntegrator() : _x(0)
 {
   // Default constructor
 }
@@ -67,7 +67,7 @@ RooBinIntegrator::RooBinIntegrator() :  _x(0), _binb(0)
 
 //_____________________________________________________________________________
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) : 
-  RooAbsIntegrator(function), _binb(0)
+  RooAbsIntegrator(function)
 {
   // Construct integrator on given function binding binding
 
@@ -77,8 +77,25 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
 
-  _xmin= integrand()->getMinLimit(0);
-  _xmax= integrand()->getMaxLimit(0);
+  _xmin.resize(_function->getDimension()) ;
+  _xmax.resize(_function->getDimension()) ;
+
+  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
+    _xmin[i]= integrand()->getMinLimit(i);
+    _xmax[i]= integrand()->getMaxLimit(i);
+
+    // Retrieve bin configuration from integrand
+    list<Double_t>* tmp = integrand()->binBoundaries(i) ;
+    if (!tmp) {
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+				     << i << " substituting default binning of " << _numBins << " bins" << endl ;
+      tmp = new list<Double_t> ;
+      for (Int_t j=0 ; j<=_numBins ; j++) {
+	tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
+      }
+    }
+    _binb.push_back(tmp) ;
+  }
   checkLimits();
 
 } 
@@ -97,12 +114,23 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
-  
-  _xmin= integrand()->getMinLimit(0);
-  _xmax= integrand()->getMaxLimit(0);
-  
-  // Retrieve bin configuration from integrand
-  _binb = integrand()->binBoundaries(0) ;
+
+  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
+    _xmin.push_back(integrand()->getMinLimit(i));
+    _xmax.push_back(integrand()->getMaxLimit(i));
+    
+    // Retrieve bin configuration from integrand
+    list<Double_t>* tmp = integrand()->binBoundaries(i) ;
+    if (!tmp) {
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+				     << i << " substituting default binning of " << _numBins << " bins" << endl ;
+      tmp = new list<Double_t> ;
+      for (Int_t j=0 ; j<=_numBins ; j++) {
+	tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
+      }
+    }
+    _binb.push_back(tmp) ;
+  }
 
   checkLimits();
 } 
@@ -124,7 +152,9 @@ RooBinIntegrator::~RooBinIntegrator()
 {
   // Destructor
   if(_x) delete[] _x;
-  if (_binb) delete _binb ;
+  for (vector<list<Double_t>*>::iterator iter = _binb.begin() ; iter!=_binb.end() ; ++iter) {
+    delete (*iter) ;
+  }
 
 }
 
@@ -140,8 +170,8 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
     oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
   }
-  _xmin= *xmin;
-  _xmax= *xmax;
+  _xmin[0]= *xmin;
+  _xmax[0]= *xmax;
   return checkLimits();
 }
 
@@ -154,16 +184,24 @@ Bool_t RooBinIntegrator::checkLimits() const
 
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
-    _xmin= integrand()->getMinLimit(0);
-    _xmax= integrand()->getMaxLimit(0);
+    _xmin.resize(_function->getDimension()) ;
+    _xmax.resize(_function->getDimension()) ;
+    for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
+      _xmin[i]= integrand()->getMinLimit(i);
+      _xmax[i]= integrand()->getMaxLimit(i);
+    }
   }
-  _range= _xmax - _xmin;
-  _binWidth = _range/_numBins;
-  if(_range < 0) {
-    oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
-    return kFALSE;
+  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
+    if (_xmax[i]<=_xmin[i]) {
+      oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
+      return kFALSE;
+    }
+    if (!RooNumber::isInfinite(_xmin[i]) || !RooNumber::isInfinite(_xmax[i])) {
+      return kFALSE ;
+    }
   }
-  return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+  
+  return kTRUE;
 }
 
 
@@ -175,19 +213,83 @@ Double_t RooBinIntegrator::integral(const Double_t *)
   assert(isValid());
 
   double sum = 0. ;
-  list<Double_t>::iterator iter = _binb->begin() ;
-  Double_t xlo = *iter ;
-  iter++ ;
-  for (; iter!=_binb->end() ; ++iter) {
-    Double_t xhi = *iter ;
-    Double_t xcenter = (xhi+xlo)/2 ;
-    Double_t binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
-    sum += binInt ;
-    xlo=xhi ;
-  }
-  
-  return sum;
 
+  if (_function->getDimension()==1) {
+    list<Double_t>::iterator iter = _binb[0]->begin() ;
+    Double_t xlo = *iter ; iter++ ;
+    for (; iter!=_binb[0]->end() ; ++iter) {
+      Double_t xhi = *iter ;
+      Double_t xcenter = (xhi+xlo)/2 ;
+      Double_t binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
+      //cout << "RBI::integral 1D binInt[" << xcenter << "] = " << binInt << endl ;
+      sum += binInt ;
+      xlo=xhi ;
+    }
+  }
+
+  if (_function->getDimension()==2) {
+
+    list<Double_t>::iterator iter1 = _binb[0]->begin() ;
+
+    Double_t x1lo = *iter1 ; iter1++ ;
+    for (; iter1!=_binb[0]->end() ; ++iter1) {
+
+      Double_t x1hi = *iter1 ;
+      Double_t x1center = (x1hi+x1lo)/2 ;
+      
+      list<Double_t>::iterator iter2 = _binb[1]->begin() ;
+      Double_t x2lo = *iter2 ; iter2++ ;
+      for (; iter2!=_binb[1]->end() ; ++iter2) {
+
+	Double_t x2hi = *iter2 ;
+	Double_t x2center = (x2hi+x2lo)/2 ;
+      	
+	Double_t binInt = integrand(xvec(x1center,x2center))*(x1hi-x1lo)*(x2hi-x2lo) ;
+	//cout << "RBI::integral 2D binInt[" << x1center << "," << x2center << "] = " << binInt << " binv = " << (x1hi-x1lo) << "*" << (x2hi-x2lo) << endl ;
+	sum += binInt ;
+	x2lo=x2hi ;
+      }
+      x1lo=x1hi ;
+    }    
+  }
+
+  if (_function->getDimension()==3) {
+
+    list<Double_t>::iterator iter1 = _binb[0]->begin() ;
+
+    Double_t x1lo = *iter1 ; iter1++ ;
+    for (; iter1!=_binb[0]->end() ; ++iter1) {
+
+      Double_t x1hi = *iter1 ;
+      Double_t x1center = (x1hi+x1lo)/2 ;
+      
+      list<Double_t>::iterator iter2 = _binb[1]->begin() ;
+      Double_t x2lo = *iter2 ; iter2++ ;
+      for (; iter2!=_binb[1]->end() ; ++iter2) {
+
+	Double_t x2hi = *iter2 ;
+	Double_t x2center = (x2hi+x2lo)/2 ;
+
+	list<Double_t>::iterator iter3 = _binb[2]->begin() ;
+	Double_t x3lo = *iter3 ; iter3++ ;
+	for (; iter3!=_binb[2]->end() ; ++iter3) {
+
+	  Double_t x3hi = *iter3 ;
+	  Double_t x3center = (x3hi+x3lo)/2 ;
+	  
+	  Double_t binInt = integrand(xvec(x1center,x2center,x3center))*(x1hi-x1lo)*(x2hi-x2lo)*(x3hi-x3lo) ;
+	  //cout << "RBI::integral 3D binInt[" << x1center << "," << x2center << "," << x3center << "] = " << binInt << endl ;
+	  sum += binInt ;
+	  
+	  x3lo=x3hi ;
+	}
+	x2lo=x2hi ;
+      }
+      x1lo=x1hi ;
+    }    
+  }
+
+  return sum;
 }
 
 

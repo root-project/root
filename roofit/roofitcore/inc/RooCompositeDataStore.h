@@ -44,6 +44,7 @@ public:
   RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
   virtual ~RooCompositeDataStore() ;
 
+  virtual void dump() ;
 
   // Write current row
   virtual Int_t fill() ;

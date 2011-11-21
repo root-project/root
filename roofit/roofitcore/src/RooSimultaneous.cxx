@@ -54,6 +54,7 @@
 #include "RooCategory.h"
 #include "RooSuperCategory.h"
 #include "RooDataHist.h"
+#include "RooRandom.h"
 #include "RooArgSet.h"
 
 using namespace std ;
@@ -1051,6 +1052,35 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
 
 
 //_____________________________________________________________________________
+RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
+                                           const RooArgSet* nset,
+                                           Double_t scaleFactor,
+                                           Bool_t correctForBinVolume,
+                                           Bool_t showProgress) const
+{
+  if (RooAbsReal::fillDataHist (hist, nset, scaleFactor,
+                                correctForBinVolume, showProgress) == 0)
+    return 0;
+
+  Double_t sum = 0;
+  for (int i=0 ; i<hist->numEntries() ; i++) {
+    hist->get(i) ;
+    sum += hist->weight();
+  }
+  if (sum != 0) {
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+      hist->set (hist->weight() / sum);
+    }
+  }
+
+  return hist;
+}
+
+
+
+
+//_____________________________________________________________________________
 RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) 
 {
   // Special generator interface for generation of 'global observables' -- for RooStats tools
@@ -1093,31 +1123,110 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 
 
 
+
 //_____________________________________________________________________________
-RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
-                                           const RooArgSet* nset,
-                                           Double_t scaleFactor,
-                                           Bool_t correctForBinVolume,
-                                           Bool_t showProgress) const
+RooAbsData *RooSimultaneous::generateMixed(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const 
 {
-  if (RooAbsReal::fillDataHist (hist, nset, scaleFactor,
-                                correctForBinVolume, showProgress) == 0)
-    return 0;
+  // Special generator interface for mixed binned/unbinned generation
+  //
+  // If index is not in whatVars, forward to selected component
+  //
+  // If index is in whatVars, generate each component individually and then collate a posteriori
+  //
+  // By default each compnent is generated _binned_, unless the component pdf has 
+  // setAttribute("GenerateUnbinned") set in which case it will be generated unbinned.
+  //
+  // Binned data components are stored as unbinned weighted data (i.e. the information specific to binned data
+  // such as the bin volume for a given coordinate) are not available
+  //
+  // whatVars - observables to generate
+  // nEvents - number of events to generate (0 = generate #event according to expectedEvents())
+  // expectedData - if kTRUE an 'Asimov dataset is generated' each bin is sampled at its expectation value
+  // extended - if kTRUE a Poissonian fluctuation is added to nEvents (also functional when nEvents=0)
+  //
+  // Note that this method by necessity treats whatVars somewhat differently than generate(): In plain generate, a call
+  // pdf->generate(RooArgSet(x,y)) on a pdf that only defines x will result in a 2D dataset with uniform distribution in y.
+  // Here, for each component, only the actual observables are generated, e.g. SIM(index[a,b] a=F(x), B=G(y)) will only
+  // generate observable x for state a and only observable y for state b, when (x,y) is passed as whatVars. Components that
+  // have no dependence on any variable in whatVar are skipped alltogether.
 
-  Double_t sum = 0;
-  for (int i=0 ; i<hist->numEntries() ; i++) {
-    hist->get(i) ;
-    sum += hist->weight();
-  }
-  if (sum != 0) {
-    for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-      hist->set (hist->weight() / sum);
+  if (whatVars.contains(_indexCat.arg())) {
+
+    // We can only do this if all components are extended
+    if (extendMode()!=CanBeExtended) {
+      coutE(InputArguments) << "RooSimultaneous::generateMixed(" << GetName() 
+			    << ") ERROR: can only generate distribution of index category when all components are extended pdfs" << endl ;
+      return 0 ;
     }
+
+    // First calculate total number of expected events
+    TIterator* iter = _pdfProxyList.MakeIterator() ;
+    RooRealProxy* proxy ;
+    Double_t nTotExp(0) ;
+    while((proxy=(RooRealProxy*)iter->Next())) {            
+      nTotExp += ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(whatVars) ;
+    }
+    
+    // Now loop over states
+    iter->Reset() ;
+    map<string,RooAbsData*> dataMap ;
+    while((proxy=(RooRealProxy*)iter->Next())) {            
+      RooAbsPdf* compPdf = ((RooAbsPdf*)(proxy->absArg())) ;
+
+      // Calculate number of events to generate for this state
+      Double_t compExp = compPdf->expectedEvents(whatVars) ;
+      Double_t nGenComp = (compExp*nEvents/nTotExp) ;
+
+      // Calculate actual dependents for this state
+      RooArgSet* sliceObs = compPdf->getObservables(whatVars) ;
+      if (sliceObs->getSize()>0) {
+	RooDataSet* hcomp(0) ;
+
+	// If unbinned generation is explicitly requested do that
+	if (compPdf->getAttribute("GenerateUnbinned")) {
+	  if (extended && nEvents==0) {
+	    nGenComp = RooRandom::randomGenerator()->Poisson(compExp) ;
+	  }	    
+	  hcomp = compPdf->generate(*sliceObs,(Int_t)nGenComp) ;
+	} else {
+	  // Otherwise default to binned generation
+	  hcomp = compPdf->generateWeightedUnbinned(*sliceObs,nGenComp,expectedData,kTRUE) ;
+	}
+	dataMap[proxy->GetName()] = hcomp ;
+      }
+      delete sliceObs ;
+    }
+    delete iter ;        
+
+    // Put all datasets together in a composite-store RooDataSet that links and owns the component datasets
+    RooDataSet* hmaster = new RooDataSet("hmaster","hmaster",whatVars,RooFit::Index((RooCategory&)_indexCat.arg()),RooFit::Link(dataMap),RooFit::OwnLinked()) ;    
+    return hmaster ;
+    
+  } else {
+
+    // Single component generation
+    
+    // Forward to current component
+    RooAbsPdf* compPdf = getPdf(_indexCat.arg().getLabel()) ;
+    Bool_t unbinned = compPdf->getAttribute("GenerateUnbinned") ;
+
+    if (!unbinned) {
+      // Binned generation
+      return compPdf->generateBinned(whatVars,nEvents,expectedData,extended) ;
+    }
+
+    // Unbinned generation
+    if (extended) {
+      nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
+    }
+    return compPdf->generate(whatVars,Int_t(nEvents)) ;    
+    
   }
 
-  return hist;
+  return 0 ;
 }
+
+
 
 
 

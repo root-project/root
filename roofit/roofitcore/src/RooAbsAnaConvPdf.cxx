@@ -191,6 +191,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
 
   RooFormulaVar* basisFunc = new RooFormulaVar(basisName,expression,basisArgs) ;
   basisFunc->setAttribute("RooWorkspace::Recycle") ;
+  basisFunc->setAttribute("NOCacheAndTrack") ;
   basisFunc->setOperMode(operMode()) ;
   _basisList.addOwned(*basisFunc) ;
 

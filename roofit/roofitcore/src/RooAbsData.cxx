@@ -1485,12 +1485,21 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
       break;
     }
 
+
     Double_t error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
-    Double_t we = weightError(RooAbsData::SumW2) ;
-
-
+    Double_t we = weightError(RooAbsData::SumW2) ;    
     if (we==0) we = weight() ;
     error2 += TMath::Power(we,2) ;
+    
+
+//     Double_t we = weightError(RooAbsData::SumW2) ;    
+//     Double_t error2(0) ;
+//     if (we==0) {      
+//       we = weight() ; //sqrt(weight()) ;
+//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//     } else {
+//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//     }
     //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
 
@@ -2342,6 +2351,25 @@ RooAbsData* RooAbsData::getSimData(const char* name)
 void RooAbsData::addOwnedComponent(const char* idxlabel, RooAbsData& data) 
 { 
   _ownedComponents[idxlabel]= &data ;
+}
+
+
+//______________________________________________________________________________
+void RooAbsData::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooAbsData.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooAbsData::Class(),this);
+
+      // Convert on the fly to vector storage if that the current working default
+      if (defaultStorageType==RooAbsData::Vector) {
+	convertToVectorStore() ;
+      }
+
+   } else {
+      R__b.WriteClassBuffer(RooAbsData::Class(),this);
+   }
 }
 
 

@@ -2046,7 +2046,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       }
     }
   } 
-  
+
   // Sample p.d.f. distribution
   fillDataHist(hist,&whatVars,1,kTRUE) ;  
 
@@ -2066,7 +2066,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       // Extended mode, set contents to Poisson(pdf*nEvents)
       Double_t w = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
       hist->set(w,sqrt(w)) ;
-
+      
     } else {
 
       // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
@@ -2130,6 +2130,135 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
   }
 
   return hist;
+}
+
+//_____________________________________________________________________________
+RooDataSet *RooAbsPdf::generateWeightedUnbinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const 
+{
+  // Generate a new dataset containing the specified variables with
+  // events sampled from our distribution. Generate the specified
+  // number of events or else try to use expectedEvents() if nEvents <= 0.
+  //
+  // If expectedData is kTRUE (it is kFALSE by default), the returned histogram returns the 'expected'
+  // data sample, i.e. no statistical fluctuations are present.
+  //
+  // Any variables of this PDF that are not in whatVars will use their
+  // current values and be treated as fixed parameters. Returns zero
+  // in case of an error. The caller takes ownership of the returned
+  // dataset.
+
+  // Create empty RooDataHist
+  RooDataHist* hist = new RooDataHist("genData","genData",whatVars) ;
+
+  // Scale to number of events and introduce Poisson fluctuations
+  if (nEvents<=0) {
+    if (!canBeExtended()) {
+      coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
+      delete hist ;
+      return 0 ;
+    } else {
+      // Don't round in expectedData mode
+      if (expectedData) {
+	nEvents = expectedEvents(&whatVars) ;
+      } else {
+	nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+      }
+    }
+  } 
+
+  cout << "RooAbsPdf::generateWeightedUnbinned(" << GetName() << ") nEvents = " << nEvents << endl ;
+  
+  // Sample p.d.f. distribution
+  fillDataHist(hist,&whatVars,1,kTRUE) ;  
+
+  // Output container
+  RooRealVar weight("weight","weight",0,1e9) ;
+  RooArgSet tmp(whatVars) ;
+  tmp.add(weight) ;
+  RooDataSet* wudata = new RooDataSet("wu","wu",tmp,RooFit::WeightVar("weight")) ;
+
+  vector<int> histOut(hist->numEntries()) ;
+  Double_t histMax(-1) ;
+  Int_t histOutSum(0) ;
+  for (int i=0 ; i<hist->numEntries() ; i++) {
+    hist->get(i) ;
+    if (expectedData) {
+
+      // Expected data, multiply p.d.f by nEvents
+      Double_t w=hist->weight()*nEvents ;
+      wudata->add(*hist->get(),w) ;
+
+    } else if (extended) {
+
+      // Extended mode, set contents to Poisson(pdf*nEvents)
+      Double_t w = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
+      wudata->add(*hist->get(),w) ;
+      
+    } else {
+
+      // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
+      // histogram yet.
+      if (hist->weight()>histMax) {
+	histMax = hist->weight() ;
+      }
+      histOut[i] = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
+      histOutSum += histOut[i] ;
+    }
+  }
+
+
+  if (!expectedData && !extended) {
+
+    // Second pass for regular mode - Trim/Extend dataset to exact number of entries
+
+    // Calculate difference between what is generated so far and what is requested
+    Int_t nEvtExtra = abs(Int_t(nEvents)-histOutSum) ;
+    Int_t wgt = (histOutSum>nEvents) ? -1 : 1 ;
+
+    // Perform simple binned accept/reject procedure to get to exact event count
+    while(nEvtExtra>0) {
+
+      Int_t ibinRand = RooRandom::randomGenerator()->Integer(hist->numEntries()) ;
+      hist->get(ibinRand) ;
+      Double_t ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
+
+      if (ranY<hist->weight()) {
+	if (wgt==1) {
+	  histOut[ibinRand]++ ;
+	} else {
+	  // If weight is negative, prior bin content must be at least 1
+	  if (histOut[ibinRand]>0) {
+	    histOut[ibinRand]-- ;
+	  } else {
+	    continue ;
+	  }
+	}
+	nEvtExtra-- ;
+      }
+    }
+
+    // Transfer working array to histogram
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+
+      wudata->add(*hist->get(),histOut[i]) ;      
+    }    
+
+  } else if (expectedData) {
+
+    // Second pass for expectedData mode -- Normalize to exact number of requested events
+    // Minor difference may be present in first round due to difference between 
+    // bin average and bin integral in sampling bins
+    Double_t corr = nEvents/hist->sumEntries() ;
+    for (int i=0 ; i<hist->numEntries() ; i++) {
+      hist->get(i) ;
+      wudata->add(*hist->get(),hist->weight()*corr) ;
+    }
+
+  }
+
+  delete hist ;
+  return wudata ;
 }
 
 

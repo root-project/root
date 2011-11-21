@@ -381,6 +381,43 @@ Double_t RooProduct::evaluate() const
 }
 
 
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  RooFIter iter = _compRSet.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
+    if (binb) {
+      return binb ;
+    }
+  }
+  
+  return 0 ;  
+}
+
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  RooFIter iter = _compRSet.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
+    if (hint) {
+      return hint ;
+    }
+  }
+  
+  return 0 ;
+}
+
+
+
 //_____________________________________________________________________________
 RooProduct::CacheElem::~CacheElem() 
 {

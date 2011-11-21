@@ -410,4 +410,16 @@ void RooCompositeDataStore::resetBuffers()
 }  
 
 
+//_____________________________________________________________________________
+void RooCompositeDataStore::dump()
+{
+  cout << "RooCompositeDataStore::dump()" << endl ;
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    cout << "state number " << iter->first << " has store " << iter->second->IsA()->GetName() << " with variables " << *iter->second->get() ;
+    if (iter->second->isWeighted()) cout << " and is weighted " ;
+    cout << endl ;
+  }
+}
+
 
