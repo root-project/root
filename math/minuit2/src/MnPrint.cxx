@@ -48,7 +48,7 @@ int MnPrint::Level( ) {
    return gPrintLevel;
 }
 
-      void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter) { 
+void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter) { 
    // helper function to print state and message in one single line
    os << msg; 
    if (iter>=0) os << std::setw(3) << iter; 

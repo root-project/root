@@ -57,11 +57,18 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 #ifdef DEBUG
    std::cout << "MnSeedGenerator: operator() - var par = " << n << " mnfcn pointer " << &fcn << std::endl;
 #endif
+
+   int printLevel = MnPrint::Level();
    
    // initial starting values
    MnAlgebraicVector x(n);
    for(unsigned int i = 0; i < n; i++) x(i) = st.IntParameters()[i];
    double fcnmin = fcn(x);
+
+   if (printLevel > 1) { 
+      std::cout << "MnSeedGenerator: for initial parameters FCN = " << fcnmin << std::endl;
+   }
+   
    MinimumParameters pa(x, fcnmin);
    FunctionGradient dgrad = gc(pa);
    MnAlgebraicSymMatrix mat(n);
@@ -77,6 +84,10 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    MinimumError err(mat, dcovar);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
+
+   if (printLevel >1) {
+      MnPrint::PrintState(std::cout, state, "MnSeedGenerator: Initial state:  "); 
+   }
    
    NegativeG2LineSearch ng2ls;
    if(ng2ls.HasNegativeG2(dgrad, prec)) {
@@ -87,6 +98,11 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
       std::cout << dgrad.G2() << std::endl; 
 #endif
       state = ng2ls(fcn, state, gc, prec);
+
+      if (printLevel >1) {
+         MnPrint::PrintState(std::cout, state, "MnSeedGenerator: Negative G2 found - new state:  "); 
+      }
+
    }
 
    
@@ -96,6 +112,11 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
       std::cout << "MnSeedGenerator: calling MnHesse  " << std::endl;
 #endif
       MinimumState tmp = MnHesse(stra)(fcn, state, st.Trafo());
+
+      if (printLevel >1) {
+         MnPrint::PrintState(std::cout, tmp, "MnSeedGenerator: run Hesse - new state:  "); 
+      }
+
       return MinimumSeed(tmp, st.Trafo());
    }
    
