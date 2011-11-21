@@ -1703,7 +1703,7 @@ macosx*)
 ios*)
    logmsg "Will check iOS SDK libraries"
    message "Checking for iOS SDK"
-   iossdk=`$gnumake -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
+   iossdk=`make -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
    result "$iossdk"
    enable_cintex="no"
    enable_reflex="no"
