@@ -462,19 +462,39 @@ void Minuit2Minimizer::PrintResults() {
    }
 }
 
+const double * Minuit2Minimizer::X() const { 
+   // return values at minimum 
+   const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
+   if (paramsObj.size() == 0) return 0;
+   assert(fDim == paramsObj.size());
+   // be careful for multiple calls of this function. I will redo an allocation here
+   // only when size of vectors has changed (e.g. after a new minimization)
+   if (fValues.size() != fDim) fValues.resize(fDim);
+   for (unsigned int i = 0; i < fDim; ++i) { 
+      fValues[i] = paramsObj[i].Value();
+   }
+
+   return  &fValues.front(); 
+}
+
 
 const double * Minuit2Minimizer::Errors() const { 
    // return error at minimum (set to zero for fixed and constant params)
-   fErrors.resize(fState.MinuitParameters().size() );
-   for (unsigned int i = 0; i < fErrors.size(); ++i) { 
-      const MinuitParameter & par = fState.Parameter(i); 
+   const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
+   if (paramsObj.size() == 0) return 0;
+   assert(fDim == paramsObj.size());
+   // be careful for multiple calls of this function. I will redo an allocation here
+   // only when size of vectors has changed (e.g. after a new minimization)
+   if (fErrors.size() != fDim)   fErrors.resize( fDim );
+   for (unsigned int i = 0; i < fDim; ++i) { 
+      const MinuitParameter & par = paramsObj[i]; 
       if (par.IsFixed() || par.IsConst() ) 
          fErrors[i] = 0; 
       else 
          fErrors[i] = par.Error();
    }
 
-   return  (fErrors.size()) ? &fErrors.front() : 0; 
+   return  &fErrors.front(); 
 }
 
 
@@ -529,6 +549,7 @@ bool Minuit2Minimizer::GetHessianMatrix(double * hess) const {
          hess[k] =  fState.Hessian()(l,m); 
       }
    }
+
    return true;
 }
 
