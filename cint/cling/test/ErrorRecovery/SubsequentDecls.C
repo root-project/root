@@ -1,7 +1,6 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p | FileCheck %s
 
 // Test the removal of decls which are stored in vector of redeclarables 
-#include "cling/Interpreter/Interpreter.h"
 
 .rawInput 1
 extern int __my_i;
