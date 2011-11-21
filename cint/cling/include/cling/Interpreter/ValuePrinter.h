@@ -35,7 +35,7 @@ namespace cling {
                     clang::ASTContext* C, const T& value) {
       ValuePrinterInfo VPI(E, C);
       printValue(*o, &value, &value, VPI);
-      // Only because we don't to include llvm::raw_ostream in the header
+      // Only because we don't want to include llvm::raw_ostream in the header
       flushOStream(*o);
     }
 

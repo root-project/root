@@ -46,7 +46,7 @@ static void StreamRef(llvm::raw_ostream& o, const void* v) {
 }
   
 static void StreamPtr(llvm::raw_ostream& o, const void* v) {
-  o << v << "\n";
+  o << *(uint64_t*)v << "\n";
 }
   
 static void StreamObj(llvm::raw_ostream& o, const void* v) {
@@ -76,7 +76,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
     if (PointeeTy->isCharType())
       StreamCharPtr(o, (const char*)p);
     else 
-      StreamPtr(o, (const char*)p);
+      StreamPtr(o, p);
   }
   else
     StreamObj(o, p);
