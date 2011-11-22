@@ -33,6 +33,7 @@
 #include <vector>
 #include <utility>
 #include <memory>
+#include <algorithm>
 
 #include "RooProduct.h"
 #include "RooNameReg.h"

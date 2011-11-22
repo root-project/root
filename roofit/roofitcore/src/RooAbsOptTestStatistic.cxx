@@ -58,6 +58,7 @@
 #include "RooAddPdf.h"
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
+#include "RooTrace.h"
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -83,6 +84,7 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 
   _ownData = kTRUE ;
   _sealed = kFALSE ;
+  _optimized = kFALSE ;
 }
 
 
@@ -93,7 +95,8 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) : 
   RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
   _projDeps(0),
-  _sealed(kFALSE)
+  _sealed(kFALSE), 
+  _optimized(kFALSE)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If 
   // rangeName is not null, only events in the dataset inside the range will be used in the test
@@ -132,7 +135,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 
 //_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name) : 
-  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice)
+  RooAbsTestStatistic(other,name), _sealed(other._sealed), _sealNotice(other._sealNotice), _optimized(kFALSE)
 {
   // Copy constructor
 
@@ -583,9 +586,13 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
   // that are exclusively used in constant terms are disabled as
   // they serve no more purpose
 
-  //applyTrackingOpt=kFALSE ;
 
   if(activate) {
+    
+    if (_optimized) {
+      return ;
+    }
+    
     // Trigger create of all object caches now in nodes that have deferred object creation
     // so that cache contents can be processed immediately
     _funcClone->getVal(_normSet) ;
@@ -685,6 +692,8 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // Disable reading of observables that are no longer used
     _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;
 
+    _optimized = kTRUE ;
+
   } else {
     
     // Delete the cache
@@ -700,19 +709,36 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     _dataClone->setDirtyProp(kFALSE) ;  
 
     _cachedNodes.removeAll() ;
-    
+
+
+    _optimized = kFALSE ;
   }
 }
 
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData) 
+Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData, Bool_t ownNewData) 
 { 
+//   cout << "RAOTS::setDataSlave(" << this << ") START" << endl ;
   // Change dataset that is used to given one. If cloneData is kTRUE, a clone of
   // in the input dataset is made.  If the test statistic was constructed with
   // a range specification on the data, the cloneData argument is ignore and
   // the data is always cloned.
+
+//   static Bool_t first = kTRUE ;
+//   if (first) {
+//     cout << "RAOTS::setDataSlave(" << this << ") activating tracing" << endl ; 
+//     RooTrace::active(kTRUE) ;
+//     RooTrace::mark() ;
+//     first = kFALSE ;
+//   } else {
+//     cout << "RAOTS::setDataSlave(" << this << ") dump and mark" << endl ; 
+//     RooTrace::dump(cout,kTRUE) ;
+//     RooTrace::mark() ;
+//   }
+
+
 
   if (operMode()==SimMaster) {
     //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << endl ;    
@@ -748,7 +774,7 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
  
     // Taking input dataset
     _dataClone = &indata ;
-    _ownData = kFALSE ;
+    _ownData = ownNewData ;
     
   }    
   
@@ -766,6 +792,9 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   setEventCount(indata.numEntries()) ;
 
   setValueDirty() ;
+
+//   cout << "RAOTS::setDataSlave(" << this << ") END" << endl ;
+
   return kTRUE ;
 }
 

@@ -104,7 +104,7 @@ protected:
   Int_t _simCount ;                // Total number of component p.d.f.s in RooSimultaneous (if any)
   Bool_t _verbose ;                // Verbose messaging if true
 
-  virtual Bool_t setDataSlave(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE) { return kTRUE ; }
+  virtual Bool_t setDataSlave(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE, Bool_t /*ownNewDataAnyway*/=kFALSE) { return kTRUE ; }
 
 private:  
 

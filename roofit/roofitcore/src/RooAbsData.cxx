@@ -42,6 +42,8 @@
 #include "RooAbsDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
+#include "RooCompositeDataStore.h"
+#include "RooCategory.h"
 
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
@@ -166,8 +168,30 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _iterator= _vars.createIterator();
   _cacheIter = _cachedVars.createIterator() ;
 
-  // Convert to vector store if default is vector
-  _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+
+  if (other._ownedComponents.size()>0) {
+
+    // copy owned components here
+
+    map<string,RooAbsDataStore*> smap ;
+    for (std::map<std::string,RooAbsData*>::const_iterator itero =other._ownedComponents.begin() ; itero!=other._ownedComponents.end() ; ++itero ) {
+      RooAbsData* dclone = (RooAbsData*) itero->second->Clone() ;
+      _ownedComponents[itero->first] = dclone ;
+      smap[itero->first] = dclone->store() ;
+    }
+
+    if (!dynamic_cast<const RooCompositeDataStore*>(other.store())) {
+      cout << "Huh, have owned components, but store is not composite?" << endl ;
+    }
+    RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
+    _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
+    
+  } else {
+    
+    // Convert to vector store if default is vector
+    _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+  }
+  
 }
 
 
@@ -1573,6 +1597,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
       RooAbsData* subset = emptyClone(state->GetName(),state->GetName(),&subsetVars) ;
       dsetList->Add((RooAbsArg*)subset) ;    
     }
+    delete stateIter ;
   }
 
   
@@ -1612,8 +1637,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   //                                     - Poisson draws asymmetric Poisson confidence intervals. 
   //                                     - SumW2 draws symmetric sum-of-weights error ( sum(w)^2/sum(w^2) )
   //                                     - None draws no error bars
-  // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
-  //                      int nbins)
+  // Binning(int nbins, double xlo, double xhi) -- Use specified binning to draw dataset
   // Binning(const RooAbsBinning&)   -- Use specified binning to draw dataset
   // Binning(const char* name)       -- Use binning with specified name to draw dataset
   // RefreshNorm(Bool_t flag)        -- Force refreshing for PDF normalization information in frame.

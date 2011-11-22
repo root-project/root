@@ -70,6 +70,8 @@ public:
   // Merge column-wise
   RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) ;
 
+  RooCategory* index() { return _indexCat ; }
+
   // Add rows 
   virtual void append(RooAbsDataStore& other) ;
 
@@ -98,6 +100,7 @@ public:
   RooCategory* _indexCat ;
   mutable RooAbsDataStore* _curStore ; //! Datastore associated with current event
   mutable Int_t _curIndex ; //! Index associated with current event
+  Bool_t _ownComps ; //! 
 
   ClassDef(RooCompositeDataStore,1) // Composite Data Storage class
 };

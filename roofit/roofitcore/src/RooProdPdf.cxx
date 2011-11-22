@@ -65,6 +65,7 @@
 
 #include <string.h>
 #include <sstream>
+#include <algorithm>
 
 #ifndef _WIN32
 #include <strings.h>

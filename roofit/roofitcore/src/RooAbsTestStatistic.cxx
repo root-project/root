@@ -538,14 +538,14 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 	_gofArray[i]->setDataSlave(indata,cloneData) ;
       }
     } else {
-      //cout << "NONEMPTY DATASET WITHOUT FAST SPLIT SUPPORT! "<< indata.GetName() << endl ;   
+//       cout << "NONEMPTY DATASET WITHOUT FAST SPLIT SUPPORT! "<< indata.GetName() << endl ;   
       const RooAbsCategoryLValue* indexCat = & ((RooSimultaneous*)_func)->indexCat() ;
       TList* dlist = indata.split(*indexCat,kTRUE) ;
       for (Int_t i=0 ; i<_nGof ; i++) {
 	RooAbsData* compData = (RooAbsData*) dlist->FindObject(_gofArray[i]->GetName()) ;
 	// 	cout << "component data for index " << _gofArray[i]->GetName() << " is " << compData << endl ;
 	if (compData) {
-	  _gofArray[i]->setDataSlave(*compData,kFALSE) ;
+	  _gofArray[i]->setDataSlave(*compData,kFALSE,kTRUE) ;
 	} else {
 	  coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl ;
 	}	
