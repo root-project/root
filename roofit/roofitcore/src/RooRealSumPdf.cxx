@@ -43,7 +43,7 @@
 #include "RooMsgService.h"
 #include "RooNameReg.h"
 #include <memory>
-
+#include <algorithm>
 
 ClassImp(RooRealSumPdf)
 ;
