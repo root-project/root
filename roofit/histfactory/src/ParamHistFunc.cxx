@@ -663,7 +663,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 //_____________________________________________________________________________
-Double_t ParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
+Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code */, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
 {
   // Implement analytical integrations by doing appropriate weighting from  component integrals
   // functions to integrators of components
