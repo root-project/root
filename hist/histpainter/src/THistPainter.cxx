@@ -9045,7 +9045,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    c->SetLogx(padsav->GetLogx());
 
    // Draw slice corresponding to mouse position
-   TH1D *hp = ((TH2*)fH)->ProjectionX("_px", biny1, biny2);
+   TH1D *hp = ((TH2*)fH)->ProjectionX("slice_px", biny1, biny2);
    if (hp) {
       hp->SetFillColor(38);
       if (biny1 == biny2) hp->SetTitle(Form("ProjectionX of biny=%d", biny1));
@@ -9106,7 +9106,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    c->SetLogx(padsav->GetLogy());
 
    // Draw slice corresponding to mouse position
-   TH1D *hp = ((TH2*)fH)->ProjectionY("_py", binx1, binx2);
+   TH1D *hp = ((TH2*)fH)->ProjectionY("slice_py", binx1, binx2);
    if (hp) {
       hp->SetFillColor(38);
       if (binx1 == binx2) hp->SetTitle(Form("ProjectionY of binx=%d", binx1));
