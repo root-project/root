@@ -49,7 +49,9 @@ public:
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
-     
+
+  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;     
 
 protected:
 

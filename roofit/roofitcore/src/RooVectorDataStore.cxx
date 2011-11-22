@@ -617,8 +617,10 @@ Double_t RooVectorDataStore::weightError(RooAbsData::ErrorType etype) const
     // We have a a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
-    } else {
+    } else if (_wgtVar->hasError(kFALSE)) {
       return _wgtVar->getError() ;    
+    } else {
+      return 0 ;
     }
 
   } else {
@@ -1042,7 +1044,14 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     if (arg->getAttribute("ConstantExpression")) {
       orderedArgs.add(*arg) ;
     } else {
-      trackArgs.push_back(arg) ;
+
+      // Explicitly check that arg depends on any of the observables, if this
+      // is not the case, skip it, as inclusion would result in repeated
+      // calculation of a function that has the same value for every event
+      // in the likelihood
+      if (arg->dependsOn(_vars) && !arg->getAttribute("NOCacheAndTrack")) {
+	trackArgs.push_back(arg) ;
+      }
     }
   }
 

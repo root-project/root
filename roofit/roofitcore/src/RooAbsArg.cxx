@@ -95,6 +95,8 @@ RooAbsArg::RooAbsArg() :
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
 
+  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+
   RooTrace::create(this) ;
 }
 
@@ -114,6 +116,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
   // dirty flags set.
+
+  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
@@ -146,8 +150,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   RooAbsArg* server ;
   Bool_t valueProp, shapeProp ;
   while ((server = sIter.next())) {
-    valueProp = server->_clientListValue.FindObject((TObject*)&other)?kTRUE:kFALSE ;
-    shapeProp = server->_clientListShape.FindObject((TObject*)&other)?kTRUE:kFALSE ;
+    valueProp = server->_clientListValue.findArg(&other)?kTRUE:kFALSE ;
+    shapeProp = server->_clientListShape.findArg(&other)?kTRUE:kFALSE ;
     addServer(*server,valueProp,shapeProp) ;
   }
 
@@ -429,14 +433,14 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 {
   // Change dirty flag propagation mask for specified server
 
-  if (!_serverList.FindObject(&server)) {
+  if (!_serverList.findArg(&server)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
 	 << server.GetName() << " not registered" << endl ;
     return ;
   }
 
   // This condition should not happen, but check anyway
-  if (!server._clientList.FindObject(this)) {
+  if (!server._clientList.findArg(this)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
 			 << server.GetName() << " doesn't have us registered as client" << endl ;
     return ;
@@ -505,7 +509,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
     while ((server=sIter.next())) {
 
       // Skip non-value server nodes if requested
-      Bool_t isValueSrv = server->_clientListValue.FindObject((TObject*)arg)?kTRUE:kFALSE ;
+      Bool_t isValueSrv = server->_clientListValue.findArg(arg)?kTRUE:kFALSE ;
       if (valueOnly && !isValueSrv) {
 	continue ;
       }
@@ -737,11 +741,11 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
 
 
   // Next test direct dependence
-  RooAbsArg* server = findServer(testArg.GetName()) ;
+  RooAbsArg* server = findServer(testArg) ;
   if (server!=0) {
 
     // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
-    if ( !valueOnly || server->isValueServer(GetName())) {
+    if ( !valueOnly || server->isValueServer(*this)) {
       return kTRUE ;
     }
   }
@@ -750,7 +754,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg
   RooFIter sIter = serverMIterator() ;
   while ((server=sIter.next())) {
 
-    if ( !valueOnly || server->isValueServer(GetName())) {
+    if ( !valueOnly || server->isValueServer(*this)) {
       if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
 	return kTRUE ;
       }
@@ -938,10 +942,10 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
     origServerList.Add(oldServer) ;
 
     // Retrieve server side link state information
-    if (oldServer->_clientListValue.FindObject(this)) {
+    if (oldServer->_clientListValue.findArg(this)) {
       origServerValue.Add(oldServer) ;
     }
-    if (oldServer->_clientListShape.FindObject(this)) {
+    if (oldServer->_clientListShape.findArg(this)) {
       origServerShape.Add(oldServer) ;
     }
   }
@@ -967,8 +971,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
       continue ;
     }
     
-    propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
-    propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
+    propValue=origServerValue.findArg(oldServer)?kTRUE:kFALSE ;
+    propShape=origServerShape.findArg(oldServer)?kTRUE:kFALSE ;
     // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
     if (newServer != this) {
       replaceServer(*oldServer,*newServer,propValue,propShape) ;
@@ -1024,7 +1028,7 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
   RooAbsArg *newServer = 0;
   if (!nameChange) {
-    newServer = newSet.find(GetName()) ;
+    newServer = newSet.find(*this) ;
   }
   else {
     // Name changing server redirect:
@@ -1070,7 +1074,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
 
   // Cyclic recursion protection
   static RooLinkedList callStack ;
-  if (callStack.FindObject(this)) {
+  if (callStack.findArg(this)) {
     return kFALSE ;
   } else {
     callStack.Add(this) ;
@@ -1367,8 +1371,8 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
   RooAbsArg* client ;
   while ((client=clientIter.next())) {
     os << indent << "    (" << (void*)client  << ","
-       << (_clientListValue.FindObject(client)?"V":"-")
-       << (_clientListShape.FindObject(client)?"S":"-")
+       << (_clientListValue.findArg(client)?"V":"-")
+       << (_clientListShape.findArg(client)?"S":"-")
        << ") " ;
     client->printStream(os,kClassName|kTitle|kName,kSingleLine);
   }
@@ -1379,8 +1383,8 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
   RooAbsArg* server ;
   while ((server=serverIter.next())) {
     os << indent << "    (" << (void*)server << ","
-       << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
-       << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
+       << (server->_clientListValue.findArg(this)?"V":"-")
+       << (server->_clientListShape.findArg(this)?"S":"-")
        << ") " ;
     server->printStream(os,kClassName|kName|kTitle,kSingleLine);
   }
@@ -1562,7 +1566,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
 
 
   // Terminate call if this node was already processed (tree structure may be cyclical)
-  if (processedNodes.FindObject(this)) {
+  if (processedNodes.findArg(this)) {
     return ;
   } else {
     processedNodes.Add(this) ;
@@ -1625,7 +1629,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   }
 
   // Terminate call if this node was already processed (tree structure may be cyclical)
-  if (processedNodes.FindObject(this)) {
+  if (processedNodes.findArg(this)) {
     return kFALSE ;
   } else {
     processedNodes.Add(this) ;
@@ -1651,7 +1655,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   // If yes, list node eligible for caching, if not test nodes one level down
   if (canOpt||getAttribute("CacheAndTrack")) {
     
-    if (!cacheList.find(GetName()) && dependsOnValue(observables) && !observables.find(GetName()) ) {
+    if (!cacheList.find(*this) && dependsOnValue(observables) && !observables.find(*this) ) {
       
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
@@ -2176,7 +2180,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
   RooArgSet* clonedNodes = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
 
   // Find the head node in the cloneSet
-  RooAbsArg* head = clonedNodes->find(GetName()) ;
+  RooAbsArg* head = clonedNodes->find(*this) ;
 
   // Remove the head node from the cloneSet
   // To release it from the set ownership
@@ -2261,7 +2265,7 @@ void RooAbsArg::wireAllCaches()
 void RooAbsArg::SetName(const char* name) 
 {
   TNamed::SetName(name) ;
-  _namePtr = 0 ;
+  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 }
 
 
@@ -2271,6 +2275,19 @@ void RooAbsArg::SetName(const char* name)
 void RooAbsArg::SetNameTitle(const char *name, const char *title)
 {
   TNamed::SetNameTitle(name,title) ;
-  _namePtr = 0 ;
+  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 }
 
+
+//______________________________________________________________________________
+void RooAbsArg::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooAbsArg.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(RooAbsArg::Class(),this);
+      _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;  
+   } else {
+      R__b.WriteClassBuffer(RooAbsArg::Class(),this);
+   }
+}

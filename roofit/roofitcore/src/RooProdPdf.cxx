@@ -2357,6 +2357,24 @@ std::list<Double_t>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_
 
 
 //_____________________________________________________________________________
+std::list<Double_t>* RooProdPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    list<Double_t>* hint = pdf->binBoundaries(obs,xlo,xhi) ;      
+    if (hint) {
+      return hint ;
+    }
+  }
+  
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
 void RooProdPdf::printMetaArgs(ostream& os) const 
 {
   // Customized printing of arguments of a RooProdPdf to more intuitively reflect the contents of the

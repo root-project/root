@@ -487,7 +487,7 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool
 //   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << endl ;
 //   _funcClone->Print("t") ;
 
-  RooAbsTestStatistic::constOptimizeTestStatistic(opcode);
+  RooAbsTestStatistic::constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
   if (operMode()!=Slave) return ;
 
   if (_dataClone->hasFilledCache() && _dataClone->store()->cacheOwner()!=this) {

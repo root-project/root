@@ -19,9 +19,11 @@
 #include "TNamed.h"
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
+#include <list>
 class RooLinkedListIter ;
 class RooFIter ;
 class TIterator ;
+class RooAbsArg ;
 
 class RooLinkedList : public TObject {
 public:
@@ -57,6 +59,7 @@ public:
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;
   TObject* find(const char* name) const ;
+  RooAbsArg* findArg(const RooAbsArg*) const ;
   TObject* FindObject(const char* name) const ; 
   TObject* FindObject(const TObject* obj) const ;
   Int_t IndexOf(const char* name) const ;
@@ -74,6 +77,10 @@ public:
 
 protected:  
 
+  RooLinkedListElem* createElement(TObject* obj, RooLinkedListElem* elem=0) ;
+  void deleteElement(RooLinkedListElem*) ;
+
+
   friend class RooLinkedListIter ;
   friend class RooFIter ;
 
@@ -89,6 +96,11 @@ protected:
   RooLinkedListElem*  _last ;  //! Link to last element of list
   RooHashTable*       _htableName ; //! Hash table by name 
   RooHashTable*       _htableLink ; //! Hash table by link pointer
+
+  Int_t _curStoreSize ; //!
+  Int_t _curStoreUsed ; //!
+  std::list<RooLinkedListElem*> _storeList ; //!
+  RooLinkedListElem* _curStore ; //!
 
   TString             _name ; 
 

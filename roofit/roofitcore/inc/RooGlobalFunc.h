@@ -166,7 +166,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg FitOptions(const char* opts) ;
-RooCmdArg Optimize(Bool_t flag=kTRUE) ;
+RooCmdArg Optimize(Int_t flag=2) ;
 RooCmdArg ProjectedObservables(const RooArgSet& set) ; // obsolete, for backward compatibility
 RooCmdArg ConditionalObservables(const RooArgSet& set) ;
 RooCmdArg Verbose(Bool_t flag=kTRUE) ;

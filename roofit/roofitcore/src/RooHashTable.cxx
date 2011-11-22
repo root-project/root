@@ -174,6 +174,18 @@ TObject* RooHashTable::find(const char* name) const
 
 
 //_____________________________________________________________________________
+RooAbsArg* RooHashTable::findArg(const RooAbsArg* arg) const 
+{
+  if (_hashMethod != Name) assert(0) ;
+  
+  Int_t slot = TMath::Hash(arg->GetName()) % _size ;
+  if (_arr[slot]) return _arr[slot]->findArg(arg) ;
+  return 0;  
+}
+
+
+
+//_____________________________________________________________________________
 TObject* RooHashTable::find(const TObject* hashArg) const 
 {
   // Return object with the given pointer from the table

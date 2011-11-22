@@ -52,7 +52,7 @@ ROOFITCOREH2   := RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h 
                   RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h  \
                   RooGrid.h RooHashTable.h RooHistError.h \
                   RooHist.h RooImproperIntegrator1D.h \
-                  RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h \
+                  RooBinIntegrator.h RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h \
                   RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h \
                   RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h \
                   RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h \

@@ -298,7 +298,7 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
   RooFIter sIter = var.serverMIterator() ;
   RooAbsArg* server ;
   while ((server=sIter.next())) {
-    RooAbsArg* tmp = find(server->GetName()) ;
+    RooAbsArg* tmp = find(*server) ;
     if (!tmp) {
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;      
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
@@ -326,7 +326,7 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
   RooAbsArg *elem, *theirs ;
   RooFIter iter = _list.fwdIterator() ;
   while((elem=iter.next())) {
-    theirs= other.find(elem->GetName());
+    theirs= other.find(*elem);
     if(!theirs) continue;
     theirs->syncCache() ;
     elem->copyCache(theirs) ;
@@ -355,7 +355,7 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
   RooAbsArg *elem, *theirs ;
   RooFIter iter = _list.fwdIterator() ;
   while((elem=iter.next())) {
-    theirs= other.find(elem->GetName());
+    theirs= other.find(*elem);
     if(!theirs) continue;
     theirs->syncCache() ;
     elem->copyCache(theirs) ;
@@ -550,7 +550,7 @@ Bool_t RooAbsCollection::replace(const RooAbsCollection &other)
   while((arg= (const RooAbsArg*)otherArgs.next())) {
 
     // do we have an arg of the same name in our set?
-    RooAbsArg *found= find(arg->GetName());
+    RooAbsArg *found= find(*arg);
     if(found) replace(*found,*arg);
   }
   return kTRUE;
@@ -591,7 +591,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
-    other= find(var2.GetName());
+    other= find(var2);
     if(other != 0 && other != &var1) {
       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
 	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
@@ -737,7 +737,7 @@ RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl
   RooFIter iter= fwdIterator() ;
   RooAbsArg* arg ;
   while ((arg=iter.next())) {
-    if (refColl.find(arg->GetName()))
+    if (refColl.find(*arg))
       sel->add(*arg) ;
   }
 
@@ -799,7 +799,7 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
   RooFIter iter = fwdIterator() ;
   RooAbsArg* arg ;
   while((arg=iter.next())) {
-    if (!otherColl.find(arg->GetName())) {
+    if (!otherColl.find(*arg)) {
       return kFALSE ;
     }
   }
@@ -817,7 +817,7 @@ Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
   RooFIter iter = fwdIterator() ;
   RooAbsArg* arg ;
   while((arg=iter.next())) {
-    if (otherColl.find(arg->GetName())) {
+    if (otherColl.find(*arg)) {
       return kTRUE ;
     }
   }
@@ -834,6 +834,17 @@ RooAbsArg *RooAbsCollection::find(const char *name) const
   // is returned if no object with the given name is found
 
   return (RooAbsArg*) _list.find(name);
+}
+
+
+
+//_____________________________________________________________________________
+RooAbsArg *RooAbsCollection::find(const RooAbsArg& arg) const 
+{
+  // Find object with given name in list. A null pointer 
+  // is returned if no object with the given name is found
+
+  return (RooAbsArg*) _list.findArg(&arg);
 }
 
 

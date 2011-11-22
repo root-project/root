@@ -112,7 +112,7 @@ public:
   }
   inline RooAbsArg* findServer(const RooAbsArg& arg) const { 
     // Return server of this arg with name of given input arg. Returns null if not found
-    return (RooAbsArg*)_serverList.FindObject(&arg); 
+    return (RooAbsArg*)_serverList.findArg(&arg); 
   }
   inline RooAbsArg* findServer(Int_t index) const { 
     // Return i-th server from server list
@@ -120,7 +120,7 @@ public:
   }
   inline Bool_t isValueServer(const RooAbsArg& arg) const { 
     // If true, arg is a value server of self
-    return _clientListValue.FindObject(&arg)?kTRUE:kFALSE ; 
+    return _clientListValue.findArg(&arg)?kTRUE:kFALSE ; 
   }
   inline Bool_t isValueServer(const char* name) const { 
     // If true, we have a server with given name
@@ -128,7 +128,7 @@ public:
   }
   inline Bool_t isShapeServer(const RooAbsArg& arg) const { 
     // If true arg is a shape server of self
-    return _clientListShape.FindObject(&arg)?kTRUE:kFALSE ; 
+    return _clientListShape.findArg(&arg)?kTRUE:kFALSE ; 
   }
   inline Bool_t isShapeServer(const char* name) const { 
     // If true, we have a shape server with given name
@@ -429,11 +429,8 @@ public:
   virtual const char* cacheUniqueSuffix() const { return 0 ; }
 
   void wireAllCaches() ;
-
+  
   inline const TNamed* namePtr() const {
-    if (!_namePtr) {
-      _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
-    }
     return _namePtr ;
   }
 

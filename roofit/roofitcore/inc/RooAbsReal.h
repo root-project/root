@@ -63,11 +63,11 @@ public:
 
   // Return value and unit accessors
   inline Double_t getVal(const RooArgSet* set=0) const { 
-/*     if (_fast && !_inhibitDirty) cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << endl ;  */
+/*    if (_fast && !_inhibitDirty) cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << endl ;  */
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(set) ; 
 #else
-    return (_fast && inhibitDirty()) ? _value : getValV(set) ;     
+    return (_fast && !inhibitDirty()) ? _value : getValV(set) ;     
 #endif
   }
   inline  Double_t getVal(const RooArgSet& set) const { return _fast ? _value : getValV(&set) ; }
@@ -268,6 +268,7 @@ public:
 
   static void clearEvalErrorLog() ;
 
+  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const { return 0 ; }
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const { 
     // Interface for returning an optional hint for initial sampling points when constructing a curve 
     // projected on observable.

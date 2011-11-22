@@ -470,7 +470,7 @@ Bool_t RooArgSet::checkForDup(const RooAbsArg& var, Bool_t silent) const
   // Check if element with var's name is already in set
 
   RooAbsArg *other = 0;
-  if((other= find(var.GetName()))) {
+  if((other= find(var))) {
     if(other != &var) {
       if (!silent)
 	// print a warning if this variable is not the same one we

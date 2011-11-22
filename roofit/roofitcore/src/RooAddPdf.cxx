@@ -1144,6 +1144,8 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
+  Bool_t needClean(kFALSE) ;
+
   // Loop over components pdf
   while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
 
@@ -1166,12 +1168,64 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
 	// Copy merged array without duplicates to new sumHintArrau
 	delete sumHint ;
 	sumHint = newSumHint ;
+	needClean = kTRUE ;
 	
       }
     }
   }
+  if (needClean) {
+    list<Double_t>::iterator new_end = unique(sumHint->begin(),sumHint->end()) ;
+    sumHint->erase(new_end,sumHint->end()) ;
+  }
 
   return sumHint ;
+}
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  // Loop over components for plot sampling hints and merge them if there are multiple
+
+  list<Double_t>* sumBinB = 0 ;
+  Bool_t needClean(kFALSE) ;
+  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  // Loop over components pdf
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+
+    list<Double_t>* pdfBinB = pdf->binBoundaries(obs,xlo,xhi) ;
+
+    // Process hint
+    if (pdfBinB) {
+      if (!sumBinB) {
+
+	// If this is the first hint, then just save it
+	sumBinB = pdfBinB ;
+
+      } else {
+	
+	list<Double_t>* newSumBinB = new list<Double_t>(sumBinB->size()+pdfBinB->size()) ;
+
+	// Merge hints into temporary array
+	merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
+
+	// Copy merged array without duplicates to new sumBinBArrau
+	delete sumBinB ;
+	sumBinB = newSumBinB ;
+	needClean = kTRUE ;	
+      }
+    }
+  }
+
+  // Remove consecutive duplicates
+  if (needClean) {    
+    list<Double_t>::iterator new_end = unique(sumBinB->begin(),sumBinB->end()) ;
+    sumBinB->erase(new_end,sumBinB->end()) ;
+  }
+
+  return sumBinB ;
 }
 
 

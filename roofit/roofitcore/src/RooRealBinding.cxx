@@ -148,11 +148,12 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const
   // as variables with the bound RooAbsReal function
 
   _xvecValid = kTRUE ;
+  const char* range = RooNameReg::instance().constStr(_rangeName) ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (_clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
       _xvecValid = kFALSE ;
     } else {
-      _vars[index]->setVal(xvector[index],RooNameReg::instance().constStr(_rangeName));
+      _vars[index]->setVal(xvector[index],range);
     }
   }
 
@@ -205,4 +206,11 @@ const char* RooRealBinding::getName() const
 std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
   return _func->plotSamplingHint(obs,xlo,xhi) ; 
+}
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooRealBinding::binBoundaries(Int_t index) const
+{
+  return _func->binBoundaries(*_vars[index],getMinLimit(index),getMaxLimit(index));
 }

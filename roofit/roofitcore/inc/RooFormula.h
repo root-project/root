@@ -22,6 +22,7 @@
 #include "RooArgSet.h"
 #include "RooPrintable.h"
 #include "RooLinkedList.h"
+#include <vector>
 
 class RooFormula : public TFormula, public RooPrintable {
 public:
@@ -79,6 +80,7 @@ protected:
   RooArgSet* _nset ;
   mutable Bool_t    _isOK ;     // Is internal state OK?
   RooLinkedList     _origList ; //! Original list of dependents
+  std::vector<Bool_t> _useIsCat;//! Is given slot in _useList a category?
   RooLinkedList _useList ;      //! List of actual dependents 
   mutable RooArgSet _actual;    //! Set of actual dependents
   RooLinkedList _labelList ;    //  List of label names for category objects  

@@ -251,23 +251,27 @@ RooFormula::DefinedValue(Int_t code)
 
   // Return current value for variable indicated by internal reference code
   if (code>=_useList.GetSize()) return 0 ;
-  RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
 
-  const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);  
-  if(0 != absReal) {
-    return absReal->getVal(_nset) ;
-  } else {
-    const RooAbsCategory *absCat= dynamic_cast<const RooAbsCategory*>(arg);
-    if(0 != absCat) {
-      TString& label=((TObjString*)_labelList.At(code))->String() ;
-      if (label.IsNull()) {
-	return absCat->getIndex() ;
-      } else {
-	return absCat->lookupType(label)->getVal() ; // DK: why not call getVal(_nset) here also?
-      }
+  RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
+  if (_useIsCat[code]) {
+
+    // Process as category
+    const RooAbsCategory *absCat = (const RooAbsCategory*)(arg);
+    TString& label=((TObjString*)_labelList.At(code))->String() ;
+    if (label.IsNull()) {
+      return absCat->getIndex() ;
+    } else {
+      return absCat->lookupType(label)->getVal() ; // DK: why not call getVal(_nset) here also?
     }
+
+  } else {
+
+    // Process as real 
+    const RooAbsReal *absReal= (const RooAbsReal*)(arg);  
+    return absReal->getVal(_nset) ;
+    
   }
-  assert(0) ;
+
   return 0 ;
 }
 
@@ -374,6 +378,7 @@ Int_t RooFormula::DefinedVariable(TString &name)
 
   // Register new entry ;
   _useList.Add(arg) ;
+  _useIsCat.push_back(dynamic_cast<RooAbsCategory*>(arg)) ;
   if (!labelName) {
     _labelList.Add(new TObjString("")) ;
   } else {

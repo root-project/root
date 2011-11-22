@@ -408,6 +408,44 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 
 
 
+//______________________________________________________________________________
+std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+{
+  // Return sampling hint for making curves of (projections) of this function
+  // as the recursive division strategy of RooCurve cannot deal efficiently
+  // with the vertical lines that occur in a non-interpolated histogram
+
+  // No hints are required when interpolation is used
+  if (_intOrder>0) {
+    return 0 ;
+  }
+
+  // Check that observable is in dataset, if not no hint is generated
+  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
+  if (!lvarg) {
+    return 0 ;
+  }
+
+  // Retrieve position of all bin boundaries
+  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  Double_t* boundaries = binning->array() ;
+
+  list<Double_t>* hint = new list<Double_t> ;
+
+  // Construct array with pairs of points positioned epsilon to the left and
+  // right of the bin boundaries
+  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
+    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
+      hint->push_back(boundaries[i]) ;
+    }
+  }
+
+  return hint ;
+}
+
+
+
+
 //_____________________________________________________________________________
 Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const 
 {
