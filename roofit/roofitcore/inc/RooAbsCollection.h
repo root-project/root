@@ -172,6 +172,17 @@ protected:
   // Support for snapshot method 
   Bool_t addServerClonesToList(const RooAbsArg& var) ;
 
+  inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
+  inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }
+
+  mutable TNamed* _structureTag ; //! Structure tag
+  mutable TNamed* _typedStructureTag ; //! Typed structure tag
+  
+  inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
+
+  void makeStructureTag() ;
+  void makeTypedStructureTag() ;
+  
 private:
 
   ClassDef(RooAbsCollection,2) // Collection of RooAbsArg objects

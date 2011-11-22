@@ -391,7 +391,8 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 	coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
 	return;
       }
-      theEvent= *subEvent;
+      theEvent.assignValueOnly(*subEvent) ;
+      //theEvent= *subEvent;
       
     }
   }

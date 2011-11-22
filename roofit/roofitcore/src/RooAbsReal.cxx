@@ -257,7 +257,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
     logEvalError("function value is NAN") ;
   }
 
-  cxcoutD(Tracing) << "RooAbsReal::getValF(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
+  //cxcoutD(Tracing) << "RooAbsReal::getValF(" << GetName() << ") operMode = " << _operMode << " recalculated, new value = " << value << endl ;
   
   //Standard tracing code goes here
   if (!isValidReal(value)) {
@@ -266,7 +266,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
   }
 
   //Call optional subclass tracing code
-  traceEvalHook(value) ;
+  //   traceEvalHook(value) ;
 
   return value ;
 }

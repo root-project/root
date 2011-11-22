@@ -58,7 +58,7 @@ public:
 
 protected:
 
-  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) ;
   void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName, 
 		 const char* addCoefRangeName)  ;
 
@@ -86,6 +86,7 @@ protected:
   
   RooAbsReal* _origFunc ; // Original function 
   RooAbsData* _origData ; // Original data 
+  Bool_t      _optimized ; //!
 
   ClassDef(RooAbsOptTestStatistic,4) // Abstract base class for optimized test statistics
 };

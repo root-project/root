@@ -42,7 +42,7 @@ ClassImp(RooCompositeDataStore)
 
 
 //_____________________________________________________________________________
-RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0)
+RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
 }
 
@@ -50,7 +50,7 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
-  RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0)
+  RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
   // Convert map by label to map by index for more efficient internal use
   for (map<string,RooAbsDataStore*>::iterator iter=inputData.begin() ; iter!=inputData.end() ; ++iter) {
@@ -63,20 +63,19 @@ RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname) :
-  RooAbsDataStore(other,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex)
+  RooAbsDataStore(other,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(kTRUE)
 {
   // Convert map by label to map by index for more efficient internal use
   for (map<Int_t,RooAbsDataStore*>::const_iterator iter=other._dataMap.begin() ; iter!=other._dataMap.end() ; ++iter) {
     RooAbsDataStore* clonedata = iter->second->clone() ;
     _dataMap[iter->first] = clonedata ;
-    //addOwnedComponents(*clonedata) ;
   }
 }
 
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname) :
-  RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex)
+  RooAbsDataStore(other,vars,newname), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex), _ownComps(kTRUE)
 {
   // Update index category pointer, if it is contained in input argument vars
   RooCategory* newIdx = (RooCategory*) vars.find(other._indexCat->GetName()) ;
@@ -88,7 +87,6 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
   for (map<Int_t,RooAbsDataStore*>::const_iterator iter=other._dataMap.begin() ; iter!=other._dataMap.end() ; ++iter) {
     RooAbsDataStore* clonedata = iter->second->clone(vars) ;
     _dataMap[iter->first] = clonedata ;
-    //addOwnedComponents(*clonedata) ;
   }  
 }
 
@@ -99,6 +97,12 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
 RooCompositeDataStore::~RooCompositeDataStore()
 {
   // Destructor
+  if (_ownComps) {
+    map<int,RooAbsDataStore*>::const_iterator iter ;
+    for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+      delete iter->second ;
+    }
+  }
 }
 
 

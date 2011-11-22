@@ -348,7 +348,7 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
   // Short cut for 1 element assignment
   if (getSize()==1 && getSize()==other.getSize() && oneSafe) {
     other.first()->syncCache() ;
-    first()->copyCache(other.first()) ;
+    first()->copyCache(other.first(),kTRUE) ;
     return *this ;
   }
 
@@ -358,7 +358,7 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
     theirs= other.find(*elem);
     if(!theirs) continue;
     theirs->syncCache() ;
-    elem->copyCache(theirs) ;
+    elem->copyCache(theirs,kTRUE) ;
   }
   return *this;
 }
@@ -1240,6 +1240,19 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
   }
 
   return selectByRange ;
+}
+
+
+
+//_____________________________________________________________________________
+void RooAbsCollection::makeStructureTag() 
+{
+}
+
+
+//_____________________________________________________________________________
+void RooAbsCollection::makeTypedStructureTag() 
+{
 }
 
 

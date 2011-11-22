@@ -60,7 +60,7 @@ public:
 	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
   
 
-  RooDataSet(RooDataSet const & other, const char* newname=0) ;
+  RooDataSet(RooDataSet const & other, const char* newname=0) ;  
   virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
