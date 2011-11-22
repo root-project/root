@@ -30,6 +30,9 @@
 #include "RooStats/HistFactory/EstimateSummary.h"
 
 
+class ParamHistFunc;
+
+
 namespace RooStats{
 namespace HistFactory{
   class HistoToWorkspaceFactoryFast: public TObject {
@@ -86,6 +89,11 @@ namespace HistFactory{
       void SetObsToExpected(RooWorkspace* proto, string obsPrefix, string expPrefix, int lowBin, int highBin);
       void FitModel(RooWorkspace *, string, string, string, bool=false  );
       std::string FilePrefixStr(std::string);
+    
+    TH1* MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<TH1*,TH1*> > HistVec );
+    TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
+    RooArgList createStatConstraintTerms( RooWorkspace* proto, ParamHistFunc& paramHist, TH1* uncertHist, 
+					  EstimateSummary::statTypes type, Double_t minSigma );
 
       inline void SetObsNameVec(const std::vector<std::string>& obsNameVec) { fObsNameVec = obsNameVec; }
       inline void SetObsName(const std::string& obsName) { fObsNameVec.clear(); fObsNameVec.push_back(obsName); fObsName = obsName; }

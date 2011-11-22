@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: PiecewiseInterpolation.h,v 1.3 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: ParamHistFunc.h,v 1.3 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,50 +13,57 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_PIECEWISEINTERPOLATION
-#define ROO_PIECEWISEINTERPOLATION
+
+#ifndef ROO_PARAMHISTFUNC
+#define ROO_PARAMHISTFUNC
 
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
-
 #include "RooObjCacheManager.h"
 
+// Forward Declarations
 class RooRealVar;
 class RooArgList ;
+class RooWorkspace;
+class RooBinning;
 
-class PiecewiseInterpolation : public RooAbsReal {
+class ParamHistFunc : public RooAbsReal {
 public:
 
-  PiecewiseInterpolation() ;
-  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, Bool_t takeOwnerShip=kFALSE) ;
-  virtual ~PiecewiseInterpolation() ;
+  ParamHistFunc() ;
+  ParamHistFunc(const char *name, const char *title, const RooRealVar& var, const RooArgList& paramSet );
+  ParamHistFunc(const char *name, const char *title, const RooRealVar& var, const RooArgList& paramSet, const TH1* nominal );
+  // Not yet fully implemented:
+  //ParamHistFunc(const char *name, const char *title, const RooRealVar& var, const RooArgList& paramSet, const RooAbsReal& nominal );
+  virtual ~ParamHistFunc() ;
 
-  PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new PiecewiseInterpolation(*this, newname); }
 
-  //  virtual Double_t defaultErrorLevel() const ;
+  ParamHistFunc(const ParamHistFunc& other, const char* name = 0);
+  virtual TObject* clone(const char* newname) const { return new ParamHistFunc(*this, newname); }
 
   //  void printMetaArgs(ostream& os) const ;
 
-  const RooArgList& lowList() const { return _lowSet ; }
-  const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
-  Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
-  void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
+  Int_t getCurrentBin() const ;
+  RooRealVar& getParameter( Int_t ) const ;
+  RooRealVar& getParameter() const ;
 
-  void setInterpCode(RooAbsReal& param, int code);
-  void setAllInterpCodes(int code);
-  void printAllInterpCodes();
+  void setParamConst( Int_t, Bool_t=kTRUE );
+
+  static RooArgList createParamSet(RooWorkspace& w, const std::string&, Int_t);
+  static RooArgList createParamSet(RooWorkspace& w, const std::string&, Int_t, Double_t, Double_t);
+  static RooArgList createParamSet(const std::string&, Int_t, Double_t, Double_t);
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+
 
 protected:
 
@@ -77,19 +84,17 @@ protected:
   } ;
   mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 
-  RooRealProxy _nominal;           // The nominal value
-  RooArgList   _ownedList ;       // List of owned components
-  RooListProxy _lowSet ;            // Low-side variation
-  RooListProxy _highSet ;            // High-side varaition
+  // Turn into a RooListProxy
+  RooRealProxy _dataVar;       // The RooRealVar
   RooListProxy _paramSet ;            // interpolation parameters
-  RooListProxy _normSet ;            // interpolation parameters
-  Bool_t _positiveDefinite; // protect against negative and 0 bins.
+  RooAbsBinning* _binning;  // Holds the binning of the dataVar (at construction time)
+  std::vector< Double_t > _nominalVals; // The nominal vals when gamma = 1.0 ( = 1.0 by default)
+  RooArgList   _ownedList ;       // List of owned components
 
-  std::vector<int> _interpCode;
-
+  Int_t addParamSet( const RooArgList& params );
   Double_t evaluate() const;
 
-  ClassDef(PiecewiseInterpolation,3) // Sum of RooAbsReal objects
+  ClassDef(ParamHistFunc,3) // Sum of RooAbsReal objects
 };
 
 #endif

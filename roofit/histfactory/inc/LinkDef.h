@@ -5,7 +5,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class PiecewiseInterpolation+ ;
+#pragma link C++ class PiecewiseInterpolation- ;
+#pragma link C++ class ParamHistFunc+ ;
 #pragma link C++ class RooStats::HistFactory::LinInterpVar+ ;
 #pragma link C++ class RooStats::HistFactory::FlexibleInterpVar+ ;
 #pragma link C++ class RooStats::HistFactory::EstimateSummary+ ;
