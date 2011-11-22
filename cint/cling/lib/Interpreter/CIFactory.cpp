@@ -109,10 +109,10 @@ namespace cling {
      DiagnosticOptions DefaultDiagnosticOptions;
      DefaultDiagnosticOptions.ShowColors = 1;
      TextDiagnosticPrinter* DiagnosticPrinter
-     = new TextDiagnosticPrinter(llvm::errs(), DefaultDiagnosticOptions); // LEAKS!
+     = new TextDiagnosticPrinter(llvm::errs(), DefaultDiagnosticOptions);
      DiagnosticsEngine* Diagnostics = new DiagnosticsEngine(
        llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(
-         new DiagnosticIDs()), DiagnosticPrinter, false); // LEAKS!
+          new DiagnosticIDs()), DiagnosticPrinter, /*Owns it*/ true); // LEAKS!
 
      // We do C++ by default; append right after argv[0] name
      std::vector<const char*> argvCompile(argv, argv + argc);
