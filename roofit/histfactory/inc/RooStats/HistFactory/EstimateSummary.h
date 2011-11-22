@@ -57,7 +57,19 @@ struct  EstimateSummary : public TObject {
    std::map<std::string, std::pair<double, double> > overallSyst; // "acceptance"->(0.8,1.2)
    std::pair<double, double> dummyForRoot;
    std::vector<NormFactor> normFactor;
-   
+
+
+  enum statTypes{ Gaussian, Poisson, LogNormal };
+
+  bool IncludeStatError; // Flag to implement Statistical errors for this sample
+  statTypes StatConstraintType;  // The type of constraint binwise stat errors
+  Double_t RelErrorThreshold; // The minimum relative uncertainty for a bin to use stat errors
+  TH1* relStatError; // An (optional) externally provided shape for this error
+
+  //  bool doShapeFactor; // A flag to include a ShapeFactor ParamatarizedHistogram
+  std::string shapeFactorName; //
+
+
    ClassDef(RooStats::HistFactory::EstimateSummary,1)
 };
 

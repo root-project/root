@@ -53,6 +53,7 @@ END_HTML
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
+#include "RooStats/HistFactory/ParamHistFunc.h"
 
 #include "TH2F.h"
 #include "TH3F.h"
@@ -304,7 +305,7 @@ namespace HistFactory{
     RooArgSet observableSet(observables);
     interp.setBinIntegrator(observableSet);
     interp.forceNumInt();
-    
+
     //    cout << "check: " << interp.getVal() << endl;
     proto->import(interp); // individual params have already been imported in first loop of this function
     
@@ -431,15 +432,45 @@ namespace HistFactory{
       coeffList+=prepend+"binWidth_"+obsNameVecStr+str.str();
 
       command="prod::L_x_"+syst_x_expectedPrefixNames.at(j)+"("+normByNames.at(j)+","+syst_x_expectedPrefixNames.at(j)+")";
-      proto->factory(command.c_str());
+      RooAbsReal* tempFunc = (RooAbsReal*) proto->factory(command.c_str());
       shapeList+=prepend+"L_x_"+syst_x_expectedPrefixNames.at(j);
       prepend=",";
+
+      
+      // add to num int to product
+      tempFunc->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+      tempFunc->forceNumInt();
+      
+
     }    
 
     proto->defineSet("coefList",coeffList.c_str());
     proto->defineSet("shapeList",shapeList.c_str());
     //    proto->factory(command.c_str());
     RooRealSumPdf tot(totName.c_str(),totName.c_str(),*proto->set("shapeList"),*proto->set("coefList"),kTRUE);
+
+    // for mixed generation in RooSimultaneous
+    //    tot.setAttribute("GenerateBinned"); // that's the default
+    //    tot.setAttribute("GenerateUnbinned"); // we don't want that
+
+    /*
+    // Use binned numeric integration
+    int nbins = 0;
+    if( fObsNameVec.size() == 1 ) {
+      nbins = proto->var(fObsNameVec.at(0).c_str())->numBins();
+
+      tot.specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+      cout <<"num bis for RooRealSumPdf = "<<nbins <<endl;
+      //int nbins = ((RooRealVar*) allVars.first())->numBins();
+      tot.specialIntegratorConfig(kTRUE)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
+      tot.forceNumInt();
+      
+    } else {
+      cout << "Bin Integrator only supports 1-d.  Will be slow." << std::endl;
+    }
+    */
+    
+
     proto->import(tot);
     //    proto->Print();
     
@@ -865,6 +896,13 @@ namespace HistFactory{
     RooArgSet likelihoodTerms("likelihoodTerms"), constraintTerms("constraintTerms");
     vector<string> likelihoodTermNames, constraintTermNames, totSystTermNames,syst_x_expectedPrefixNames, normalizationNames;
 
+    vector< pair<string,string> > statNamePairs;
+    vector< pair<TH1*,TH1*> >     statHistPairs; // <nominal, error>
+    std::string                   statFuncName; // the name of the ParamHistFunc
+    std::string                   statNodeName; // the name of the McStat Node
+    EstimateSummary::statTypes    statConstraintType=EstimateSummary::Gaussian;
+    Double_t                      statRelErrorThreshold=0.0;
+
     string prefix, range;
 
 
@@ -901,35 +939,254 @@ namespace HistFactory{
 
       overallSystName = AddNormFactor(proto, channel, overallSystName, *it, doRatio); 
 
-      // MB : HACK no option to have both non-hist variations and hist variations ?
+
+      // Create the string for the object
+      // that is added to the RooRealSumPdf
+      // for this channel
+      string syst_x_expectedPrefix = "";
+
       // get histogram
       TH1* nominal = it->nominal;
+
+      // MB : HACK no option to have both non-hist variations and hist variations ?
+      // get histogram
       if(it->lowHists.size() == 0){
         cout << it->name+"_"+it->channel+" has no variation histograms " <<endl;
         string expPrefix=it->name+"_"+it->channel;//+"_expN";
-        string syst_x_expectedPrefix=it->name+"_"+it->channel+"_overallSyst_x_Exp";
+        syst_x_expectedPrefix=it->name+"_"+it->channel+"_overallSyst_x_Exp";
         ProcessExpectedHisto(nominal,proto,expPrefix,syst_x_expectedPrefix,overallSystName,atoi(NoHistConst_Low),atoi(NoHistConst_High),fLowBin,fHighBin);
-        syst_x_expectedPrefixNames.push_back(syst_x_expectedPrefix);
+        //syst_x_expectedPrefixNames.push_back(syst_x_expectedPrefix);
       } else if(it->lowHists.size() != it->highHists.size()){
         cout << "problem in "+it->name+"_"+it->channel 
 	     << " number of low & high variation histograms don't match" << endl;
         return 0;
       } else {
         string constraintPrefix = it->name+"_"+it->channel+"_Hist_alpha"; // name of source for variation
-        string syst_x_expectedPrefix = it->name+"_"+it->channel+"_overallSyst_x_HistSyst";
+	syst_x_expectedPrefix = it->name+"_"+it->channel+"_overallSyst_x_HistSyst";
         LinInterpWithConstraint(proto, nominal, it->lowHists, it->highHists, it->systSourceForHist,
               constraintPrefix, syst_x_expectedPrefix, overallSystName, 
 				fLowBin, fHighBin, constraintTermNames /*likelihoodTermNames*/);
-        syst_x_expectedPrefixNames.push_back(syst_x_expectedPrefix);
+        //syst_x_expectedPrefixNames.push_back(syst_x_expectedPrefix);
       }
+      
+      // If we are using StatUncertainties, we multiply this object
+      // by the ParamHistFunc and then pass that to the
+      // RooRealSumPdf by appending it's name to the list
+      if( it->IncludeStatError ) {
+
+	// for now, only works for 1-D
+	if( fObsNameVec.size() != 1 ) {
+	  std::cout << "Cannot include Stat Error.  Hists must be 1-d" << std::endl; 
+	} else {
+	
+	  std::cout << "Sample: "     << it->name    << " to be included in Stat Error " 
+		    << "for channel " << it->channel
+		    << std::endl;
+
+
+	  statConstraintType = it->StatConstraintType;
+	  statRelErrorThreshold = it->RelErrorThreshold;
+
+	  // First, get the uncertainty histogram
+	  // and push it back to our vectors
+	
+	  TH1* statErrorHist = it->relStatError;
+	  string UncertName  = syst_x_expectedPrefix + "_StatAbsolUncert";
+	
+	  if( statErrorHist == NULL ) {
+	    // Make the absolute stat error
+	    std::cout << "Making Statistical Uncertainty Hist for "
+		      << " Channel: " << it->channel
+		      << " Sample: "  << it->name
+		      << std::endl;
+	    statErrorHist = MakeAbsolUncertaintyHist( UncertName, nominal );
+	  } else {
+	    // We assume the (relative) error is provided.
+	    // We must turn it into an absolute error
+	    // using the nominal histogram
+	    std::cout << "Using external histogram for Stat Errors for "
+		      << " Channel: " << it->channel
+		      << " Sample: " << it->name
+		      << std::endl;
+	    std::cout << "Error Histogram: " << statErrorHist->GetName() << std::endl;
+	    statErrorHist->Multiply( nominal );
+	    statErrorHist->SetName( UncertName.c_str() );
+	  }
+	
+	  // Save the nominal and error hists
+	  // for the building of constraint terms
+	  statHistPairs.push_back( pair<TH1*,TH1*>(nominal,statErrorHist) );
+
+	  // Next, try to get the flexible ParamHistFunc/
+	  // or create it if it doesn't yet exist:
+	  statFuncName = "mc_stat_" + it->channel;
+	  ParamHistFunc* paramHist = (ParamHistFunc*) proto->function( statFuncName.c_str() );
+	  if( paramHist == NULL ) {
+
+	    // Get a RooArgSet of the observables:
+	    // Names in the lsit fObsNameVec:
+	    RooArgList observables;
+	    std::vector<std::string>::iterator itr = fObsNameVec.begin();
+	    for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
+	      observables.add( *proto->var(itr->c_str()) );
+	    }
+	  
+	    RooRealVar* var = (RooRealVar*) observables.first();
+	  
+	    // Create the list of terms to
+	    // control the bin heights:
+	    std::string ParamSetPrefix  = "gamma_stat_" + it->channel; 
+	    Double_t gammaMin = 0.0;
+	    Double_t gammaMax = 10.0;
+	    RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto, ParamSetPrefix.c_str(), var->numBins(), gammaMin, gammaMax);
+
+	    ParamHistFunc statUncertFunc(statFuncName.c_str(), statFuncName.c_str(), 
+				       *var, statFactorParams );
+	  
+	    proto->import( statUncertFunc, RecycleConflictNodes() );
+
+	    paramHist = (ParamHistFunc*) proto->function( statFuncName.c_str() );
+
+	  } // END: If Statement: Create ParamHistFunc
+	
+
+	  // Create the node as a product
+	  // of this function and the 
+	  // expected value from MC
+	  statNodeName = it->name+"_"+it->channel+"_overallSyst_x_StatUncert";
+	
+	  RooAbsReal* expFunc = (RooAbsReal*) proto->function( syst_x_expectedPrefix.c_str() );
+	  RooProduct nodeWithMcStat(statNodeName.c_str(), statNodeName.c_str(),
+				    RooArgSet(*paramHist, *expFunc) );
+	
+	  proto->import( nodeWithMcStat, RecycleConflictNodes() );
+	
+	  // Push back the final name of the node 
+	  // to be used in the RooRealSumPdf 
+	  // (node to be created later)
+	  syst_x_expectedPrefix = nodeWithMcStat.GetName();
+
+	}
+      } // END: if DoMcStat
+      
+
+      // Create a ShapeFactor for this channel
+      if( it->shapeFactorName != "" ) {
+
+	// for now, only works for 1-D
+	if( fObsNameVec.size() != 1 ) {
+	  std::cout << "Cannot include ShapeFactor.  Hists must be 1-d" << std::endl; 
+	} else {
+
+
+	  std::cout << "Sample: "     << it->name << " in channel: " << it->channel
+		    << " to be include a ShapeFactor."
+		    << std::endl;
+	  
+	  std::string funcName = it->channel + "_" + it->shapeFactorName + "_shapeFactor";
+	  ParamHistFunc* paramHist = (ParamHistFunc*) proto->function( funcName.c_str() );
+	  if( paramHist == NULL ) {
+
+	    RooArgList observables;
+	    std::vector<std::string>::iterator itr = fObsNameVec.begin();
+	    for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
+	      observables.add( *proto->var(itr->c_str()) );
+	    }
+	  
+	    RooRealVar* var = (RooRealVar*) observables.first();
+
+	    // Create the Parameters
+	    std::string funcParams = "gamma_" + it->shapeFactorName;
+	    RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto, funcParams.c_str(), var->numBins(), 0, 1000);
+
+	    // Create the Function
+	    ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
+					   *var, shapeFactorParams );
+
+	    proto->import( shapeFactorFunc, RecycleConflictNodes() );
+	    paramHist = (ParamHistFunc*) proto->function( funcName.c_str() );
+	  
+	  } // End: Create ShapeFactor ParamHistFunc
+
+	  // Now that we have the right ShapeFactor, 
+	  // we multiply the expected function
+	
+	  std::string shapeFactorNodeName = syst_x_expectedPrefix + "_x_" + funcName;
+
+	  RooAbsReal* expFunc = (RooAbsReal*) proto->function( syst_x_expectedPrefix.c_str() );
+	  RooProduct nodeWithShapeFactor(shapeFactorNodeName.c_str(), shapeFactorNodeName.c_str(),
+					 RooArgSet(*paramHist, *expFunc) );
+	
+	  proto->import( nodeWithShapeFactor, RecycleConflictNodes() );
+
+	  // Push back the final name of the node 
+	  // to be used in the RooRealSumPdf 
+	  // (node to be created later)
+	  syst_x_expectedPrefix = nodeWithShapeFactor.GetName();
+     
+	}
+      } // End: if ShapeFactorName!=""
+
+      // Append the name of the "node"
+      // that is to be summed with the
+      // RooRealSumPdf
+      syst_x_expectedPrefixNames.push_back(syst_x_expectedPrefix);
 
       if(it->normName=="")
         normalizationNames.push_back( "Lumi" );
       else
         normalizationNames.push_back( it->normName);
-    }
+    } // END: Loop over EstimateSummaries
     //    proto->Print();
 
+
+    // If a non-zero number of samples call for
+    // Stat Uncertainties, create the statFactor functions
+
+    if( statHistPairs.size() > 0 ) {
+      
+      // Create the histogram of (binwise)
+      // stat uncertainties:
+      TH1* fracStatError = MakeScaledUncertaintyHist( statNodeName + "_RelErr", statHistPairs ); 
+      
+      // Using this TH1* of fractinal stat errors, 
+      // create a set of constraint terms:
+      ParamHistFunc* chanStatUncertFunc = (ParamHistFunc*) proto->function( statFuncName.c_str() );
+      std::cout << "About to create Constraint Terms from: " 
+		<< chanStatUncertFunc->GetName()
+		<< " params: " << chanStatUncertFunc->paramList()
+		<< std::endl;
+
+      // Get the constraint type and the
+      // rel error threshold from the (last)
+      // EstimateSummary looped over (but all
+      // should be the same)
+      RooArgList statConstraints = createStatConstraintTerms(proto, *chanStatUncertFunc, fracStatError, 
+							     statConstraintType, statRelErrorThreshold);
+      
+      std::cout << "Created Constraint Terms: " << statConstraints << std::endl;
+
+      // Loop over the ArgList,
+      // add their names to the
+      // list of constraint terms
+      RooFIter constrItr = statConstraints.fwdIterator();
+      RooAbsArg* comp = NULL;
+      while((comp = (RooAbsArg*) constrItr.next())) {
+
+	// Check that the component is a RooAbsReal
+	if (!dynamic_cast<RooAbsReal*>(comp)) {
+	  std::cout << " ERROR: constraint term: " << comp->GetName()
+		    << " is not of type RooAbsReal" << std::endl ;
+	  continue;
+	}
+
+	std::string constrName = comp->GetName();
+	constraintTermNames.push_back( constrName );
+      }
+
+    } // END: Loop over stat Hist Pairs
+    
+    
     ///////////////////////////////////
     // for ith bin calculate totN_i =  lumi * sum_j expected_j * syst_j 
     MakeTotalExpected(proto,channel+"_model",channel,"Lumi",fLowBin,fHighBin, 
@@ -984,6 +1241,14 @@ namespace HistFactory{
       observablesStr += *itr;
     }
     proto->defineSet("observablesSet",Form("%s",observablesStr.c_str()));
+
+
+    // Create the ParamHistFunc
+    // after observables have been made
+
+
+
+
 
     cout <<"-----------------------------------------"<<endl;
     cout <<"import model into workspace" << endl;
@@ -1385,7 +1650,305 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     frame->addObject(line90);
     frame->addObject(line95);
 }
+
+
+
+  TH1* HistoToWorkspaceFactoryFast::MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Nominal ) {
+
+    // Take a nominal TH1* and create
+    // a TH1 representing the binwise
+    // errors (taken from the nominal TH1)
+
+    TH1* ErrorHist = (TH1*) Nominal->Clone( Name.c_str() );
+    ErrorHist->Reset();
+    
+    Int_t numBins = Nominal->GetNbinsX();
+    
+
+    // Loop over bins
+    for( Int_t i_bin = 0; i_bin < numBins; ++i_bin) {
+
+      // Ignore Underflow
+      Int_t binNumber = i_bin + 1;
+      Double_t histError = Nominal->GetBinError( binNumber );
+    
+      // Check that histError != NAN
+      if( histError != histError ) {
+	std::cout << "Warning: In histogram " << Nominal->GetName()
+		  << " bin error for bin " << i_bin
+		  << " is NAN.  Not using Error!!!"
+		  << std::endl;
+	throw -1;
+	//histError = sqrt( histContent );
+	histError = 0;
+      }
+    
+      // Check that histError ! < 0
+      if( histError < 0  ) {
+	std::cout << "Warning: In histogram " << Nominal->GetName()
+		  << " bin error for bin " << binNumber
+		  << " is < 0.  Setting Error to 0"
+		  << std::endl;
+	//histError = sqrt( histContent );
+	histError = 0;
+      }
+
+      ErrorHist->SetBinContent( binNumber, histError );
+
+    }
+
+    return ErrorHist;
   
+  }
+  
+  TH1* HistoToWorkspaceFactoryFast::MakeScaledUncertaintyHist( const std::string& Name, std::vector< std::pair<TH1*, TH1*> > HistVec ) {
+
+    // Take a list of < nominal, absolError > TH1* pairs
+    // and construct a single histogram representing the 
+    // total fractional error as:
+
+    // UncertInQuad(bin i) = Sum: absolUncert*absolUncert
+    // Total(bin i)        = Sum: Value
+    //
+    // TotalFracError(bin i) = Sqrt( UncertInQuad(i) ) / TotalBin(i)
+    
+
+    unsigned int numHists = HistVec.size();
+    
+    if( numHists == 0 ) {
+      std::cout << "Warning: Empty Hist Vector, cannot create total uncertainty" << std::endl;
+      return NULL;
+    }
+    
+    TH1* HistTemplate = HistVec.at(0).first;
+    Int_t numBins = HistTemplate->GetNbinsX();
+
+  // Check that all histograms
+  // have the same bins
+  for( unsigned int i = 0; i < HistVec.size(); ++i ) {
+    
+    TH1* nominal = HistVec.at(i).first;
+    TH1* error   = HistVec.at(i).second;
+    
+    if( nominal->GetNbinsX() != numBins ) {
+      std::cout << "Error: Provided hists have unequal bins" << std::endl;
+      return NULL;
+    }
+    if( error->GetNbinsX() != numBins ) {
+      std::cout << "Error: Provided hists have unequal bins" << std::endl;
+      return NULL;
+    }
+  }
+
+  std::vector<double> TotalBinContent( numBins, 0.0);
+  std::vector<double> HistErrorsSqr( numBins, 0.0);
+
+  // Loop over bins
+  for( Int_t i_bins = 0; i_bins < numBins; ++i_bins) {
+    for( unsigned int i_hist = 0; i_hist < numHists; ++i_hist ) {
+
+      TH1* nominal = HistVec.at(i_hist).first;
+      TH1* error   = HistVec.at(i_hist).second;
+    
+      Int_t binNumber = i_bins + 1;
+
+      Double_t histValue  = nominal->GetBinContent( binNumber );
+      Double_t histError  = error->GetBinContent( binNumber );
+      /*
+      std::cout << " Getting Bin content for Stat Uncertainty"
+		<< " Nom name: " << nominal->GetName()
+		<< " Err name: " << error->GetName()
+		<< " HistNumber: " << i_hist << " bin: " << binNumber
+		<< " Value: " << histValue << " Error: " << histError
+		<< std::endl;
+      */
+
+      if( histError != histError ) {
+	std::cout << "Warning: In histogram " << error->GetName()
+		  << " bin error for bin " << binNumber
+		  << " is NAN.  Not using error!!"
+		  << std::endl;
+	throw -1;
+	histError = 0;
+      }
+      
+      TotalBinContent.at(i_bins) += histValue;
+      HistErrorsSqr.at(i_bins)   += histError*histError; // Add in quadrature
+
+    }
+  }
+
+
+  // Creat the output histogram
+  TH1* ErrorHist = (TH1*) HistTemplate->Clone( Name.c_str() );
+  ErrorHist->Reset();
+
+  // Fill the output histogram
+  for( Int_t i = 0; i < numBins; ++i) {
+
+    Int_t binNumber = i + 1;
+
+    Double_t ErrorsSqr = HistErrorsSqr.at(i);
+    Double_t TotalVal  = TotalBinContent.at(i);
+
+    if( TotalVal <= 0 ) {
+      std::cout << "Warning: Sum of histograms for bin: " << binNumber
+		<< " is <= 0.  Setting error to 0"
+		<< std::endl;
+
+      ErrorHist->SetBinContent( binNumber, 0.0 );
+      continue;
+    }
+
+    Double_t RelativeError = sqrt(ErrorsSqr) / TotalVal;
+
+    // If we otherwise get a NAN
+    // it's an error
+    if( RelativeError != RelativeError ) {
+      std::cout << "Error: bin " << i << " error is NAN" << std::endl;
+      std::cout << " HistErrorsSqr: " << ErrorsSqr
+		<< " TotalVal: " << TotalVal
+		<< std::endl;
+      throw -1;
+      return NULL;
+    }
+
+    // 0th entry in vector is
+    // the 1st bin in TH1 
+    // (we ignore underflow)
+
+    ErrorHist->SetBinContent( binNumber, RelativeError );
+    
+    std::cout << "Making Total Uncertainty for bin " << binNumber
+	      << " Error = " << sqrt(ErrorsSqr)
+	      << " Val = " << TotalVal
+	      << " RelativeError = " << RelativeError
+	      << std::endl;
+
+  }
+
+  return ErrorHist;
+
+}
+
+
+RooArgList HistoToWorkspaceFactoryFast::createStatConstraintTerms( RooWorkspace* proto, ParamHistFunc& paramHist, TH1* uncertHist, 
+								   EstimateSummary::statTypes type, Double_t minSigma ) {
+
+
+  // Take a RooArgList of RooAbsReal's and
+  // create N constraint terms (one for
+  // each gamma) whose relative uncertainty
+  // is the value of the ith RooAbsReal
+  //
+  // The integer "type" controls the type
+  // of constraint term:
+  //
+  // type == 0 : NONE
+  // type == 1 : Gaussian
+  // type == 2 : Poisson
+  // type == 3 : LogNormal
+
+  RooArgList ConstraintTerms;
+
+  RooArgList paramSet = paramHist.paramList();
+
+  std::cout << "createStatConstraintTerms: " << paramSet << std::endl;
+
+  //Int_t numUncert = uncertainties.getSize();
+  Int_t numParams = paramSet.getSize();
+  Int_t numBins   = uncertHist->GetNbinsX();
+
+  // Check that there are N elements
+  // in the RooArgList
+  if( numBins != numParams ) {
+    std::cout << "createStatConstraintTerms: bad number of bins" << std::endl;
+    std::cout << "Given histogram with " << numBins << " bins,"
+	      << " but require exactly " << numParams << std::endl;
+    return ConstraintTerms;
+  }
+
+  for( Int_t i = 0; i < paramSet.getSize(); ++i) {
+  
+    RooRealVar& gamma = (RooRealVar&) (paramSet[i]);
+
+    std::cout << "Creating constraint for: " << gamma.GetName() << std::endl;
+
+    // Get the sigma from the hist
+    // (the relative uncertainty)
+    Int_t histBin = i + 1;
+    Double_t sigma = uncertHist->GetBinContent( histBin );
+
+    // If the sigma is <= 0, 
+    // do cont create the term
+    if( sigma <= 0 ){
+      std::cout << "Not creating constraint term for "
+		<< gamma.GetName() 
+		<< " because sigma = " << sigma
+		<< " (sigma<0)" 
+		<< std::endl;
+      gamma.setConstant(kTRUE);
+      continue;
+    }
+
+    // Make sigma
+    std::string sigmaName = string(gamma.GetName()) + "_sigma";
+    RooConstVar constrSigma( sigmaName.c_str(), sigmaName.c_str(), sigma );
+    //proto->import( constrSigma, RecycleConflictNodes() );
+    //proto->import( constrSigma );
+    
+    
+    // Make "observed" value
+    std::string nomName = string("nom_") + gamma.GetName();
+    RooRealVar constrNom(nomName.c_str(), nomName.c_str(), 1.0);
+    constrNom.setConstant( true );
+    //proto->import( constrNom, RecycleConflictNodes() );
+    //proto->import( constrNom );
+    
+  
+  // Make Constraint Term
+  std::string constrName = string(gamma.GetName()) + "_constraint";
+
+  if( type == EstimateSummary::Gaussian ) {
+    
+      // Type 1 : RooGaussian
+      RooGaussian gauss( constrName.c_str(), constrName.c_str(),
+			constrNom, gamma, constrSigma );
+      
+      proto->import( gauss, RecycleConflictNodes() );
+      //proto->import( gauss );
+      
+  } else {
+    std::cout << "Error: Did not recognize Stat Error constraint term type: "
+	      << type << " for : " << paramHist.GetName() << std::endl;
+  }
+  
+  // If the sigma value is less
+    // than a supplied threshold,
+    // set the variable to constant
+    if( sigma < minSigma ) {
+      gamma.setConstant(kTRUE);
+    }
+    
+    ConstraintTerms.add( *proto->pdf(constrName.c_str()) );
+
+    // Add the "observed" value to the 
+    // list of global observables:
+    RooArgSet* globalSet = const_cast<RooArgSet*>(proto->set("globalObservables"));
+    
+    if( ! globalSet->contains(constrNom) ) {
+      globalSet->add( *(proto->var(nomName.c_str())) );	
+    }
+
+    
+  } // end loop over parameters
+
+
+  return ConstraintTerms;
+  
+}
+
+
   TDirectory * HistoToWorkspaceFactoryFast::Makedirs( TDirectory * file, vector<string> names ){
     if(! file) return file;
     string path="";

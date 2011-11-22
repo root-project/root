@@ -29,7 +29,13 @@ namespace RooStats {
 
     EstimateSummary::EstimateSummary(){
       nominal=0; 
+
       normName="Lumi";
+      IncludeStatError = false;
+      StatConstraintType=Gaussian;
+      RelErrorThreshold=0.0;
+      relStatError=NULL; 
+      shapeFactorName="";
     }
     EstimateSummary::~EstimateSummary(){}
 
@@ -69,11 +75,38 @@ namespace RooStats {
         cout << "norm names don't match : " << normName << " vs " << other.normName << endl;
         return false;
       }
+      if(! (shapeFactorName==other.shapeFactorName)){
+        cout << "norm names don't match : " << shapeFactorName << " vs " << other.shapeFactorName << endl;
+        return false;
+      }
       if (nominal && other.nominal)
       if(! CompareHisto( this->nominal,  other.nominal ) ) {
         cout << "nominal histo don't match" << endl;
         return false;
       }
+      if (relStatError && other.relStatError)
+      if(! CompareHisto( this->relStatError,  other.relStatError ) ) {
+        cout << "relStatError histo don't match" << endl;
+        return false;
+      }
+      if(! (IncludeStatError==other.IncludeStatError)){
+        cout << "Include Stat Error bools don't match : " << IncludeStatError << " vs " << other.IncludeStatError << endl;
+        return false;
+      }
+      if(! (shapeFactorName==other.shapeFactorName)){
+        cout << "Shape Factor Names don't match : " << shapeFactorName << " vs " << other.shapeFactorName << endl;
+        return false;
+      }
+      if(! (StatConstraintType==other.StatConstraintType)){
+        cout << "Stat Constraint Types don't match : " << StatConstraintType << " vs " << other.StatConstraintType << endl;
+        return false;
+      }
+      if(! (RelErrorThreshold==other.RelErrorThreshold)){
+        cout << "Relative Stat Error Thresholds don't match : " << RelErrorThreshold << " vs " << other.RelErrorThreshold << endl;
+        return false;
+      }
+
+
       /// compare histo sys
       int counter=0;
       for( vector<string>::const_iterator itr=systSourceForHist.begin(); itr!=systSourceForHist.end(); ++itr){
