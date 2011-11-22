@@ -432,7 +432,8 @@ namespace HistFactory{
       coeffList+=prepend+"binWidth_"+obsNameVecStr+str.str();
 
       command="prod::L_x_"+syst_x_expectedPrefixNames.at(j)+"("+normByNames.at(j)+","+syst_x_expectedPrefixNames.at(j)+")";
-      RooAbsReal* tempFunc = (RooAbsReal*) proto->factory(command.c_str());
+      /*RooAbsReal* tempFunc =(RooAbsReal*) */
+      proto->factory(command.c_str());
       shapeList+=prepend+"L_x_"+syst_x_expectedPrefixNames.at(j);
       prepend=",";
 
