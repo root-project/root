@@ -31,6 +31,7 @@
 #include <math.h>
 #include <memory>
 #include <list>
+#include <algorithm>
 using namespace std ;
 
 #include "RooAddition.h"

@@ -438,8 +438,8 @@ namespace HistFactory{
 
       
       // add to num int to product
-      tempFunc->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
-      tempFunc->forceNumInt();
+      //      tempFunc->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+      //      tempFunc->forceNumInt();
       
 
     }    
@@ -448,6 +448,8 @@ namespace HistFactory{
     proto->defineSet("shapeList",shapeList.c_str());
     //    proto->factory(command.c_str());
     RooRealSumPdf tot(totName.c_str(),totName.c_str(),*proto->set("shapeList"),*proto->set("coefList"),kTRUE);
+    tot.specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+    tot.forceNumInt();
 
     // for mixed generation in RooSimultaneous
     //    tot.setAttribute("GenerateBinned"); // that's the default
@@ -459,7 +461,6 @@ namespace HistFactory{
     if( fObsNameVec.size() == 1 ) {
       nbins = proto->var(fObsNameVec.at(0).c_str())->numBins();
 
-      tot.specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
       cout <<"num bis for RooRealSumPdf = "<<nbins <<endl;
       //int nbins = ((RooRealVar*) allVars.first())->numBins();
       tot.specialIntegratorConfig(kTRUE)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
