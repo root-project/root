@@ -33,7 +33,7 @@ class MnUserParameterState {
 public:
 
    /// default constructor (invalid state)
-   MnUserParameterState() : fValid(false), fCovarianceValid(false), fGCCValid(false), fFVal(0), fEDM(0), fNFcn(0), 
+   MnUserParameterState() : fValid(false), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0), 
                             fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), 
                             fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {} 
 
@@ -54,12 +54,18 @@ public:
 
    ~MnUserParameterState() {}
 
-   MnUserParameterState(const MnUserParameterState& state) : fValid(state.fValid), fCovarianceValid(state.fCovarianceValid), fGCCValid(state.fGCCValid), fFVal(state.fFVal), fEDM(state.fEDM), fNFcn(state.fNFcn), fParameters(state.fParameters), fCovariance(state.fCovariance), fGlobalCC(state.fGlobalCC), fIntParameters(state.fIntParameters), fIntCovariance(state.fIntCovariance) {}
+   MnUserParameterState(const MnUserParameterState& state) : fValid(state.fValid),
+                                                             fCovarianceValid(state.fCovarianceValid), fGCCValid(state.fGCCValid), fCovStatus(state.fCovStatus), 
+                                                             fFVal(state.fFVal), fEDM(state.fEDM), fNFcn(state.fNFcn),
+                                                             fParameters(state.fParameters),
+                                                             fCovariance(state.fCovariance), 
+                                                             fGlobalCC(state.fGlobalCC), fIntParameters(state.fIntParameters), fIntCovariance(state.fIntCovariance) {}
 
    MnUserParameterState& operator=(const MnUserParameterState& state) {
       fValid = state.fValid;
       fCovarianceValid = state.fCovarianceValid;
       fGCCValid = state.fGCCValid;
+      fCovStatus = state.fCovStatus;
       fFVal = state.fFVal;
       fEDM = state.fEDM;
       fNFcn = state.fNFcn;
@@ -82,6 +88,9 @@ public:
    //Minuit internal representation
    const std::vector<double>& IntParameters() const {return fIntParameters;}
    const MnUserCovariance& IntCovariance() const {return fIntCovariance;}
+
+   // covariance matrix status (0 = not valid, 1 approximate, 2, full but made pos def, 3 accurate and not pos def
+   int CovarianceStatus() const { return fCovStatus; } 
 
    //transformation internal <-> external
    const MnUserTransformation& Trafo() const {return fParameters.Trafo();}
@@ -163,7 +172,7 @@ private:
    bool fValid;
    bool fCovarianceValid;
    bool fGCCValid;
-
+   int  fCovStatus; // covariance matrix status   
    double fFVal;
    double fEDM;
    unsigned int fNFcn;

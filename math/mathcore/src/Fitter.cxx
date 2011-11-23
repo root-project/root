@@ -29,7 +29,9 @@
 #include "Math/MultiDimParamFunctionAdapter.h"
 
 // #include "TMatrixDSym.h"
-// #include "TMatrixD.h"
+// for debugging
+//#include "TMatrixD.h"
+// #include <iomanip>
 
 namespace ROOT { 
 
@@ -697,7 +699,7 @@ int Fitter::GetNCallsFromFCN() {
 }
 
 
-bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2) { 
+bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2, bool minimizeW2L) { 
    // apply correction for weight square 
    // Compute Hessian of the loglikelihood function using the sum of the weight squared 
    // This method assumes: 
@@ -726,11 +728,23 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2)
 
    //std::cout << "Running Hesse ..." << std::endl;
 
+   // run eventually before a minimization
+   // ignore its error
+   if (minimizeW2L) fMinimizer->Minimize();
    // run Hesse on the log-likelihood build using sum of weight squared 
    ret = fMinimizer->Hesse();
    if (!ret) { 
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Error running Hesse on weight2 likelihood - cannot compute errors");
       return false;
+   }
+
+   if (fMinimizer->CovMatrixStatus() != 3) { 
+      MATH_WARN_MSG("Fitter::ApplyWeightCorrection","Covariance matrix for weighted likelihood is not accurate, the errors may be not reliable");
+      if (fMinimizer->CovMatrixStatus() == 2)
+         MATH_WARN_MSG("Fitter::ApplyWeightCorrection","Covariance matrix for weighted likelihood was forced to be defined positive");
+      if (fMinimizer->CovMatrixStatus() <= 0)
+         // probably should have failed before 
+         MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Covariance matrix for weighted likelihood is not valid !");
    }
    
    // std::vector<double> c(n*n);
@@ -750,6 +764,15 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2)
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Error retrieving Hesse on weight2 likelihood - cannot compute errors");
       return false;
    }
+
+   // for debug
+   // std::cout << "Hessian W2 matrix " << std::endl;
+   // for (unsigned int i = 0; i < n; ++i) {
+   //    for (unsigned int j = 0; j < n; ++j) {
+   //       std::cout << std::setw(12) << hes[i*n + j] << " , ";
+   //    }
+   //    std::cout << std::endl;
+   // }
 
    // perform product of matvrix cov * hes * cov
    // since we do not want to add matrix dependence do product by hand 

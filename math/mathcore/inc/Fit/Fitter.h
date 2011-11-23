@@ -387,7 +387,7 @@ public:
       When using FitConfig.SetWeightCorrection() this correction is applied 
       automatically when doing a likelihood fit (binned or unbinned)
    */
-   bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2);
+   bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2, bool minimizeW2L=false);
 
 
 protected: 

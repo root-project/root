@@ -23,11 +23,11 @@ namespace ROOT {
 // construct from user parameters (befor minimization)
 //
 MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& err) : 
-   fValid(true), fCovarianceValid(false), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters(par, err)), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance()) 
+   fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters(par, err)), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance()) 
       {}
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters& par) : 
-   fValid(true), fCovarianceValid(false), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
+   fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
    // construct from user parameters (befor minimization)
   
    for(std::vector<MinuitParameter>::const_iterator ipar = MinuitParameters().begin(); ipar != MinuitParameters().end(); ipar++) {
@@ -42,7 +42,9 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters& par) :
 //
 // construct from user parameters + errors (befor minimization)
 //
-MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow) : fValid(true), fCovarianceValid(true), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters()), fCovariance(MnUserCovariance(cov, nrow)), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance(cov, nrow)) {
+MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const std::vector<double>& cov, unsigned int nrow) : 
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+   fParameters(MnUserParameters()), fCovariance(MnUserCovariance(cov, nrow)), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(MnUserCovariance(cov, nrow)) {
    // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix) 
 
    std::vector<double> err; err.reserve(par.size());
@@ -55,8 +57,9 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
 }
 
 MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const MnUserCovariance& cov) : 
-   fValid(true), fCovarianceValid(true), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(MnUserParameters()), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(cov) {
-   //construct from user parameters + errors (befor minimization) using std::vector (params) and MnUserCovariance class
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+   fParameters(MnUserParameters()), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(par), fIntCovariance(cov) {
+   //construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance class
 
    std::vector<double> err; err.reserve(par.size());
    for(unsigned int i = 0; i < par.size(); i++) {
@@ -69,7 +72,8 @@ MnUserParameterState::MnUserParameterState(const std::vector<double>& par, const
 
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const MnUserCovariance& cov) : 
-   fValid(true), fCovarianceValid(true), fGCCValid(false), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(cov) {
+   fValid(true), fCovarianceValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), 
+   fParameters(par), fCovariance(cov), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(cov) {
    //construct from user parameters + errors (befor minimization) using 
    // MnUserParameters and MnUserCovariance objects
 
@@ -91,7 +95,8 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters& par, const Mn
 //
 //
 MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, const MnUserTransformation& trafo) : 
-   fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fFVal(st.Fval()), fEDM(st.Edm()), fNFcn(st.NFcn()), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
+   fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), 
+   fFVal(st.Fval()), fEDM(st.Edm()), fNFcn(st.NFcn()), fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), fGlobalCC(MnGlobalCorrelationCoeff()), fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {
    //
    // construct from internal parameters (after minimization)
    //
@@ -127,6 +132,11 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
    }
    
    fCovarianceValid = st.Error().IsValid();
+
+   fCovStatus = -1; // when not available
+   //if (st.Error().HesseFailed() || st.Error().InvertFailed() ) fCovStatus = -1;
+   // when available 
+   if (st.Error().IsAvailable() ) fCovStatus = 0;
    
    if(fCovarianceValid) {
       fCovariance = trafo.Int2extCovariance(st.Vec(), st.Error().InvHessian());
@@ -136,7 +146,12 @@ MnUserParameterState::MnUserParameterState(const MinimumState& st, double up, co
       fGCCValid = fGlobalCC.IsValid();
       
       assert(fCovariance.Nrow() == VariableParameters());
+
+      fCovStatus = 1;   // when is valid
    }
+   if (st.Error().IsMadePosDef() ) fCovStatus = 2;
+   if (st.Error().IsAccurate() ) fCovStatus = 3;
+
 }
 
 MnUserCovariance MnUserParameterState::Hessian() const { 
