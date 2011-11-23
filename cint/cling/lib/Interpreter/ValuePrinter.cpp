@@ -14,6 +14,8 @@
 
 #include "llvm/Support/raw_ostream.h"
 
+#include <string>
+
 // Implements the CValuePrinter interface.
 extern "C" void cling_PrintValue(void* /*clang::Expr**/ E,
                       void* /*clang::ASTContext**/ C,
@@ -65,13 +67,18 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
     case clang::BuiltinType::Char_U:
     case clang::BuiltinType::UChar:
     case clang::BuiltinType::Char_S:
-    case clang::BuiltinType::SChar: StreamChar(o, *(char*)p); break;
+    case clang::BuiltinType::SChar:  StreamChar(o, *(char*)p); break;
     case clang::BuiltinType::Int:    o << *(int*)p << "\n"; break;
     case clang::BuiltinType::Float:  o << *(float*)p << "\n"; break;
     case clang::BuiltinType::Double: o << *(double*)p << "\n"; break;
     default:
       StreamObj(o, p);
     }
+  } 
+  else if (Ty.getAsString().compare("std::string") == 0) {
+    StreamObj(o, p);
+    o<<"c_str: ";
+    StreamCharPtr(o, ((const char*) (*(const std::string*)p).c_str()));
   } 
   else if (Ty->isReferenceType())
     StreamRef(o, p);
