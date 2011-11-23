@@ -458,6 +458,8 @@ namespace HistFactory{
     //    proto->factory(command.c_str());
     RooRealSumPdf tot(totName.c_str(),totName.c_str(),*proto->set("shapeList"),*proto->set("coefList"),kTRUE);
     tot.specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator")  ;
+    tot.specialIntegratorConfig(kTRUE)->method2D().setLabel("RooBinIntegrator")  ;
+    tot.specialIntegratorConfig(kTRUE)->methodND().setLabel("RooBinIntegrator")  ;
     tot.forceNumInt();
 
     // for mixed generation in RooSimultaneous
@@ -1961,7 +1963,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 
   //Int_t numUncert = uncertainties.getSize();
   Int_t numParams = paramSet.getSize();
-  Int_t numBins   = uncertHist->GetNbinsX();
+  Int_t numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
 
   // Check that there are N elements
   // in the RooArgList
@@ -1972,8 +1974,15 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     return ConstraintTerms;
   }
 
+  Int_t TH1BinNumber = 0;
   for( Int_t i = 0; i < paramSet.getSize(); ++i) {
-  
+    TH1BinNumber++;
+
+    while( uncertHist->IsBinUnderflow(TH1BinNumber) || uncertHist->IsBinOverflow(TH1BinNumber) ){
+      TH1BinNumber++;
+    }
+
+
     RooRealVar& gamma = (RooRealVar&) (paramSet[i]);
 
     std::cout << "Creating constraint for: " << gamma.GetName() 
@@ -1981,8 +1990,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 
     // Get the sigma from the hist
     // (the relative uncertainty)
-    Int_t histBin = i + 1;
-    Double_t sigma = uncertHist->GetBinContent( histBin );
+    Double_t sigma = uncertHist->GetBinContent( TH1BinNumber );
 
     // If the sigma is <= 0, 
     // do cont create the term
