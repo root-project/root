@@ -1,3 +1,4 @@
+//--------------------------------------------------------------------*- C++ -*-
 // CLING - the C++ LLVM-based InterpreterG :)
 // version: $Id$
 // author:  Vassil Vassilev <vasil.georgiev.vasilev@cern.ch>
