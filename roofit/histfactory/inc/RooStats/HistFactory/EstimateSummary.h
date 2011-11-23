@@ -24,14 +24,25 @@ namespace RooStats{
 namespace HistFactory{
 
 struct  EstimateSummary : public TObject {
-      
+
+  enum ConstraintType{ Gaussian, Poisson };            
    
    struct NormFactor{
       std::string name;
       double val, high, low;
       bool constant;
    };
-   
+
+
+   class ShapeSys{
+   public:
+     ShapeSys() : name(""), hist(NULL) {;}
+     std::string name;
+     TH1* hist;
+     ConstraintType constraint;
+   };
+      
+
    typedef std::vector<std::string> vecstring;
    typedef std::vector<TH1*> vechist;
    typedef std::pair<double, double> pairdouble;
@@ -59,16 +70,15 @@ struct  EstimateSummary : public TObject {
    std::vector<NormFactor> normFactor;
 
 
-  enum statTypes{ Gaussian, Poisson, LogNormal };
 
   bool IncludeStatError; // Flag to implement Statistical errors for this sample
-  statTypes StatConstraintType;  // The type of constraint binwise stat errors
+  ConstraintType StatConstraintType;  // The type of constraint binwise stat errors
   Double_t RelErrorThreshold; // The minimum relative uncertainty for a bin to use stat errors
   TH1* relStatError; // An (optional) externally provided shape for this error
 
   //  bool doShapeFactor; // A flag to include a ShapeFactor ParamatarizedHistogram
   std::string shapeFactorName; //
-
+  std::vector<ShapeSys> shapeSysts; //
 
    ClassDef(RooStats::HistFactory::EstimateSummary,1)
 };

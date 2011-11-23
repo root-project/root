@@ -276,6 +276,13 @@ namespace HistFactory{
           varname=itr->name;
         }
 	proto->factory((varname+range.str()).c_str());
+	if(itr->constant){
+	  //	  proto->var(varname.c_str())->setConstant();
+	  //	  cout <<"setting " << varname << " constant"<<endl;
+	  cout <<"WARNING: Const attribute to <NormFactor> tag is deprecated, will ignore."<<
+	    " Instead, add \n\t<ParamSetting Const=\"True\">"<<varname<<"</ParamSetting>\n"<<
+	    " to your top-level XML's <Measurment> entry"<< endl;
+	}
         prodNames+=varname;
       }
       overallNorm_times_sigmaEpsilon = es.name+"_"+channel+"_overallNorm_x_sigma_epsilon";

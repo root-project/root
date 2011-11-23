@@ -93,22 +93,22 @@ For this element there is no sublemenents so the setting will only have local ef
 
 
 <!-- Sample elements are made up of systematic variations -->
-<!ELEMENT Sample (StatError*,HistoSys*,OverallSys*,NormFactor*,ShapeFactor*)>
+<!ELEMENT Sample (StatError | HistoSys | OverallSys | ShapeSys | NormFactor | ShapeFactor)*>
 <!ATTLIST Sample
         Name              CDATA            #REQUIRED
         InputFile         CDATA            #IMPLIED
         HistoName         CDATA            #IMPLIED
         HistoPath         CDATA            #IMPLIED
         NormalizeByTheory      CDATA       #IMPLIED
-        IncludeStatError CDATA       #IMPLIED
-
 > 
 
 <!-- Systematics for which the variation is provided by histograms -->
 <!ELEMENT StatError EMPTY>
 <!ATTLIST StatError
-        HistoName         CDATA            #REQUIRED
-        HistoPath         CDATA            #IMPLIED
+	  Activate          CDATA            #REQUIRED
+          HistoName         CDATA            #IMPLIED
+          InputFile         CDATA            #IMPLIED
+          HistoPath         CDATA            #IMPLIED
 > 
 
 <!ELEMENT HistoSys EMPTY>
@@ -132,9 +132,13 @@ For this element there is no sublemenents so the setting will only have local ef
 > 
 
 <!-- Systematics for which the variation is provided by simple overall scaling -->
-<!ELEMENT ShapeFactor EMPTY>
-<!ATTLIST ShapeFactor
+<!ELEMENT ShapeSys EMPTY>
+<!ATTLIST ShapeSys
           Name              CDATA            #REQUIRED
+          HistoName         CDATA            #REQUIRED
+          HistoPath         CDATA            #IMPLIED
+          InputFile         CDATA            #IMPLIED
+          ConstraintType    CDATA            #IMPLIED
 > 
 
 <!-- Scaling factor, which may be the parameter of interest for cross section measurements-->
@@ -147,4 +151,10 @@ For this element there is no sublemenents so the setting will only have local ef
         Const             CDATA            #IMPLIED
 > 
 
+
+<!-- Systematics for which the variation is provided by simple overall scaling -->
+<!ELEMENT ShapeFactor EMPTY>
+<!ATTLIST ShapeFactor
+          Name              CDATA            #REQUIRED
+> 
 

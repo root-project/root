@@ -119,7 +119,9 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
             histoPathName=curAttr->GetValue();
           }
         }
-        data_channel.nominal = (TH1F*) GetHisto(inputFileName, histoPathName, histoName);
+	cout << "Getting nominal data histogram: " << histoPathName << "/" << histoName << " in file " << inputFileName << endl;
+        //data_channel.nominal = (TH1F*) GetHisto(inputFileName, histoPathName, histoName);
+	data_channel.nominal = GetHisto(inputFileName, histoPathName, histoName);
         summary.push_back(data_channel);
         inputFileName=inputFileName_cache;
         histoName=histoName_cache;
@@ -130,7 +132,7 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
     }
 
     // Setup default values:
-    EstimateSummary::statTypes StatConstraintType = EstimateSummary::Gaussian; //"Gaussian";
+    EstimateSummary::ConstraintType StatConstraintType = EstimateSummary::Gaussian; //"Gaussian";
     Double_t RelErrorThreshold = .05;
     node = rootNode->GetChildren();
     while( node != 0 ) {
@@ -147,7 +149,8 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
 
           if( curAttr->GetName() == TString( "ConstraintType" ) ) {
 	    // Allowable Values:  Gaussian
-	    if( curAttr->GetValue() == TString("Gaussian") ) StatConstraintType = EstimateSummary::Gaussian;
+	    if( curAttr->GetValue()==TString("Gaussian") || curAttr->GetValue()==TString("Gauss")  )    StatConstraintType = EstimateSummary::Gaussian;
+	    else if( curAttr->GetValue()==TString("Poisson") || curAttr->GetValue()==TString("Pois")  ) StatConstraintType = EstimateSummary::Poisson;
 	    else cout << "Invalid Stat Constraint Type: " << curAttr->GetValue() << endl;
           }
 	} // End: Loop Over Attributes
@@ -176,9 +179,11 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
 
 	// For each sample, include a possible
 	// external histogram for the stat error:
+	/*
 	string statErrorName="";
 	string statErrorPath="";
-
+	string statErrorFile="";
+	*/
 	attribIt = node->GetAttributes();
 	curAttr = 0;
 	while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
@@ -200,6 +205,7 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
 	      sample_channel.normName=lumiStr;
 	    }
 	  }
+	  /*
 	  if( curAttr->GetName() == TString( "IncludeStatError" ) ) { 
 	    if((curAttr->GetValue()==TString("True"))){
 	      sample_channel.IncludeStatError = true; // Added McStat
@@ -208,11 +214,14 @@ void HistFactory::ReadXmlConfig( string filen, vector<EstimateSummary> & summary
 	  if( curAttr->GetName() == TString( "ShapeFactorName" ) ) {
 	    sample_channel.shapeFactorName = curAttr->GetValue();
 	  }
-	} // (Casting to TH1F* here...)
-	sample_channel.nominal = (TH1F*) GetHisto(inputFileName, histoPathName, histoName);
+	  */
+	} // (Casting to TH1F* here...
+	cout << "Getting nominal histogram: " << histoPathName << "/" << histoName << " in file " << inputFileName << endl;
+	//sample_channel.nominal = (TH1F*) GetHisto(inputFileName, histoPathName, histoName);
+	sample_channel.nominal = GetHisto(inputFileName, histoPathName, histoName);
 	// Set the rel Error hist later,
 	// if necessary
-	sample_channel.relStatError = NULL;
+	//sample_channel.relStatError = NULL;
 
 	TXMLNode* sys = node->GetChildren();
 	AddSystematic(sample_channel, sys, inputFileName, histoPathName, histoName);
@@ -293,9 +302,12 @@ void HistFactory::AddSystematic( EstimateSummary & sample_channel, TXMLNode* nod
 	  histoNameLow = curAttr->GetValue() ;
 	}
       }
+      //sample_channel.AddSyst(Name, 
+      //		     (TH1F*) GetHisto( inputFileLow, histoPathLow, histoNameLow),
+      //		     (TH1F*) GetHisto( inputFileHigh, histoPathHigh, histoNameHigh));
       sample_channel.AddSyst(Name, 
-			     (TH1F*) GetHisto( inputFileLow, histoPathLow, histoNameLow),
-			     (TH1F*) GetHisto( inputFileHigh, histoPathHigh, histoNameHigh));
+			     GetHisto( inputFileLow, histoPathLow, histoNameLow),
+			     GetHisto( inputFileHigh, histoPathHigh, histoNameHigh));
     }
 
     if( node->GetNodeName() == TString( "OverallSys" ) ){
@@ -317,48 +329,92 @@ void HistFactory::AddSystematic( EstimateSummary & sample_channel, TXMLNode* nod
       sample_channel.overallSyst[Name] = UncertPair(Low, High); 
     }
 
+
     if( node->GetNodeName() == TString( "StatError" ) ){
       TListIter attribIt = node->GetAttributes();
       TXMLAttr* curAttr = 0;
-      string HistName = "";
-      string HistPath = "";
-      // Check to see that McStats is set to true
-      if( !sample_channel.IncludeStatError ) {
-	std::cout << "Error: In channel " << sample_channel.channel
-		  << ", in sample " << sample_channel.name
-		  << ": StatError histogram tag included, but"
-		  << " IncludeStatErrors not set to True"
-		  << std::endl;
-	throw -1;
-      }
+      bool   statErrorActivate = false;
+      string statHistName = "";
+      string statHistPath = "";
+      string statHistFile = inputFileName;
+
       while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+	if( curAttr->GetName() == TString( "Activate" ) ) {
+	  if( curAttr->GetValue() == TString("True") ) statErrorActivate = true;
+	}
+	if( curAttr->GetName() == TString( "InputFile" ) ) {
+	  statHistFile = curAttr->GetValue() ;
+	}
 	if( curAttr->GetName() == TString( "HistoName" ) ) {
-	  HistName = curAttr->GetValue() ;
+	  statHistName = curAttr->GetValue() ;
 	}
 	if( curAttr->GetName() == TString( "HistoPath" ) ) {
-	  HistPath = curAttr->GetValue() ;
+	  statHistPath = curAttr->GetValue() ;
 	}
       }
-      // Get the histogram and set it in the Estimate Summary
-      if( sample_channel.IncludeStatError && HistName != "" ) {
-	sample_channel.relStatError = (TH1*) GetHisto(inputFileName, HistPath, HistName);
-      } else {
-	sample_channel.relStatError = NULL;
+      if( statErrorActivate) {
+	sample_channel.IncludeStatError = true;
+	// Get an external histogram if necessary
+	if( statHistName != "" ) {
+	  cout << "Getting rel StatError histogram: " << statHistPath << "/" << statHistName << " in file " << statHistFile << endl;
+	  sample_channel.relStatError = (TH1*) GetHisto(statHistFile, statHistPath, statHistName);
+	} else {
+	  sample_channel.relStatError = NULL;
+	}
       }
-    }
-
+    } // END: StatError Node
+    
     if( node->GetNodeName() == TString( "ShapeFactor" ) ){
       TListIter attribIt = node->GetAttributes();
       TXMLAttr* curAttr = 0;
-      string Name;
+      string Name="";
       while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
 	if( curAttr->GetName() == TString( "Name" ) ) {
 	  Name = curAttr->GetValue() ;
 	}
       }
-      // Now, set the EstimateSummary accordingly
       sample_channel.shapeFactorName=Name; 
-    }
+    } // END: ShapeFactor Node
+    
+    if( node->GetNodeName() == TString( "ShapeSys" ) ){
+      TListIter attribIt = node->GetAttributes();
+      TXMLAttr* curAttr = 0;
+      string Name="";
+      string HistoName;
+      string HistoPath;
+      string HistoFile = inputFileName;
+      EstimateSummary::ConstraintType ConstraintType = EstimateSummary::Gaussian; //"Gaussian";
+
+      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+	if( curAttr->GetName() == TString( "Name" ) ) {
+	  Name = curAttr->GetValue() ;
+	}
+	if( curAttr->GetName() == TString( "HistoName" ) ) {
+	 HistoName = curAttr->GetValue() ;
+	}
+	if( curAttr->GetName() == TString( "HistoPath" ) ) {
+	  HistoPath = curAttr->GetValue() ;
+	}
+	if( curAttr->GetName() == TString( "HistoFile" ) ) {
+	  HistoFile = curAttr->GetValue() ;
+	}
+	if( curAttr->GetName() == TString( "ConstraintType" ) ) {
+	  if( curAttr->GetValue()==TString("Gaussian")     || curAttr->GetValue()==TString("Gauss") ) ConstraintType = EstimateSummary::Gaussian;
+	  else if( curAttr->GetValue()==TString("Poisson") || curAttr->GetValue()==TString("Pois") )  ConstraintType = EstimateSummary::Poisson;
+	}
+      }
+      // Now, set the EstimateSummary accordingly
+      EstimateSummary::ShapeSys Sys;
+      Sys.name = Name;
+      Sys.hist = NULL;
+      cout << "Getting rel ShapeSys constraint histogram: " << HistoPath << "/" << HistoName << " in file " << HistoFile << endl;
+      Sys.hist = (TH1*) GetHisto(HistoFile, HistoPath, HistoName);
+      if( Sys.hist == NULL ) {
+	cout << "Failed to get histogram: " << HistoPath << "/" <<HistoName << " in file " << HistoFile << endl;
+      }
+      Sys.constraint = ConstraintType;
+      sample_channel.shapeSysts.push_back( Sys );
+    } // END: ShapeFactor Node
 
 
     node=node->GetNextNode();

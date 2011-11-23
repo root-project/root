@@ -84,17 +84,8 @@ namespace RooStats {
         cout << "nominal histo don't match" << endl;
         return false;
       }
-      if (relStatError && other.relStatError)
-      if(! CompareHisto( this->relStatError,  other.relStatError ) ) {
-        cout << "relStatError histo don't match" << endl;
-        return false;
-      }
       if(! (IncludeStatError==other.IncludeStatError)){
         cout << "Include Stat Error bools don't match : " << IncludeStatError << " vs " << other.IncludeStatError << endl;
-        return false;
-      }
-      if(! (shapeFactorName==other.shapeFactorName)){
-        cout << "Shape Factor Names don't match : " << shapeFactorName << " vs " << other.shapeFactorName << endl;
         return false;
       }
       if(! (StatConstraintType==other.StatConstraintType)){
@@ -103,6 +94,15 @@ namespace RooStats {
       }
       if(! (RelErrorThreshold==other.RelErrorThreshold)){
         cout << "Relative Stat Error Thresholds don't match : " << RelErrorThreshold << " vs " << other.RelErrorThreshold << endl;
+        return false;
+      }
+      if (relStatError && other.relStatError)
+      if(! CompareHisto( this->relStatError,  other.relStatError ) ) {
+        cout << "relStatError histo don't match" << endl;
+        return false;
+      }
+      if(! (shapeFactorName==other.shapeFactorName)){
+        cout << "Shape Factor Names don't match : " << shapeFactorName << " vs " << other.shapeFactorName << endl;
         return false;
       }
 
