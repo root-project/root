@@ -56,21 +56,24 @@ static void StreamObj(llvm::raw_ostream& o, const void* v) {
 }
 
 static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualType Ty) {
-  if (Ty->isCharType())
-    StreamChar(o, *(char*)p);
-  else if (const clang::BuiltinType *BT
+  if (const clang::BuiltinType *BT
            = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
     switch (BT->getKind()) {
     case clang::BuiltinType::Bool:
       if (*(bool*)p) o << "true\n";
       else o << "false\n"; break;
+    case clang::BuiltinType::Char_U:
+    case clang::BuiltinType::UChar:
+    case clang::BuiltinType::Char_S:
+    case clang::BuiltinType::SChar: StreamChar(o, *(char*)p); break;
     case clang::BuiltinType::Int:    o << *(int*)p << "\n"; break;
     case clang::BuiltinType::Float:  o << *(float*)p << "\n"; break;
     case clang::BuiltinType::Double: o << *(double*)p << "\n"; break;
     default:
       StreamObj(o, p);
     }
-  } else if (Ty->isReferenceType())
+  } 
+  else if (Ty->isReferenceType())
     StreamRef(o, p);
   else if (Ty->isPointerType()) {
     clang::QualType PointeeTy = Ty->getPointeeType();
