@@ -1,5 +1,5 @@
-// RUN: cat %s | %cling
+// RUN: cat %s | %cling -Xclang -verify
 
-// "anonymous structs and classes must be class members"
-typedef struct {int j;} T;
+struct {int j;}; // expected-error {{anonymous structs and classes must be class members}}
+
 .q

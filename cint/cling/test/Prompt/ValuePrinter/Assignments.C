@@ -1,4 +1,3 @@
-// RUN: cat %s | %cling
 // RUN: cat %s | %cling | FileCheck %s
 
 int a = 12;

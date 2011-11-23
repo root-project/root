@@ -1,4 +1,3 @@
-// RUN: %cling %s\(\"%s\"\) 
 // RUN: %cling %s\(\"%s\"\) | FileCheck %s
 
 #include "cling/Interpreter/Interpreter.h"

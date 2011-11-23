@@ -1,4 +1,3 @@
-// RUN: %cling %s\(42\)
 // RUN: %cling %s\(42\) | FileCheck %s
 extern "C" int printf(const char* fmt, ...);
 void args(int I, const char* S = "ArgString") {

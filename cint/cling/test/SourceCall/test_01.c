@@ -1,6 +1,6 @@
 // RUN: %cling %s
 
-#include <stdio.h>
+extern "C" int printf(const char*,...);
 
 const char* defaultArgV[] = {"A default argument", "", 0};
 

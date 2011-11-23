@@ -1,7 +1,6 @@
-// RUN: cat %s | %cling
 // RUN: cat %s | %cling | FileCheck %s
-
-#include <cstdlib>
+extern "C" int printf(const char*,...);
+extern "C" void exit(int);
 
 int i;
 struct S{int i;} s;

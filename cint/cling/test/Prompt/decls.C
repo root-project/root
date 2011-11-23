@@ -1,4 +1,3 @@
-// RUN: cat %s | %cling -I%p
 // RUN: cat %s | %cling -I%p | FileCheck %s
 #include <cmath>
 
