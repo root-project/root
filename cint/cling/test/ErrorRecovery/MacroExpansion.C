@@ -1,5 +1,4 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p
-#include "cling/Interpreter/Interpreter.h"
 
 #define BEGIN_NAMESPACE namespace test_namespace {
 #define END_NAMESPACE }

@@ -13,8 +13,6 @@
 // The current test checks if that codepath in removeDecl still exists because
 // it is important for the stable error recovery in cling
 
-#include "cling/Interpreter/Interpreter.h"
-
 .rawInput
 
 class MyClass {

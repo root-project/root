@@ -6,8 +6,6 @@
 // If we encounter error the ChainedConsumer shouldn't try to remove the 
 // declaration twice and this test makes sure of that.
 
-#include "cling/Interpreter/Interpreter.h"
-
 .x CannotDotX.h() // expected-error {{use of undeclared identifier 'CannotDotX'}} 
 .x CannotDotX.h() // expected-error {{use of undeclared identifier 'CannotDotX'}}
 

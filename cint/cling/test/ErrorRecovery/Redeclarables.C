@@ -3,8 +3,6 @@
 // Test the removal of decls from the redeclaration chain, which are marked as
 // redeclarables.
 
-#include "cling/Interpreter/Interpreter.h"
-
 extern int my_int;
 .rawInput 1
 int my_funct();
