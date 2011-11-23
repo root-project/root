@@ -353,8 +353,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     RooRealVar* vary = (RooRealVar*) vars.at(1);
     
     // For each bin, create a RooRealVar
-    for( Int_t j = 0; j < vary->numBins(); ++j) {
-      for( Int_t i = 0; i < varx->numBins(); ++i) {
+    for( Int_t i = 0; i < varx->numBins(); ++i) {
+      for( Int_t j = 0; j < vary->numBins(); ++j) {
 
 	std::stringstream VarNameStream;
 	VarNameStream << Prefix << "_bin_" << i << "_" << j;
@@ -385,9 +385,9 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     RooRealVar* varz = (RooRealVar*) vars.at(2);
     
     // For each bin, create a RooRealVar
-    for( Int_t k = 0; k < varz->numBins(); ++k) {
+    for( Int_t i = 0; i < varx->numBins(); ++i) {
       for( Int_t j = 0; j < vary->numBins(); ++j) {
-	for( Int_t i = 0; i < varx->numBins(); ++i) {
+	for( Int_t k = 0; k < varz->numBins(); ++k) {
 
 	  std::stringstream VarNameStream;
 	  VarNameStream << Prefix << "_bin_" << i << "_" << j << "_" << k;
