@@ -15,7 +15,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
-                 $(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))
+                 $(filter-out %RStl.cxx,$(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
 ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
@@ -43,9 +43,9 @@ UTILSDIR     := $(MODDIR)
 UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
-##### rootcint #####
+##### rootcint #####%
 ROOTCINTS    := $(UTILSDIRS)/rootcint.cxx \
-                $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
+                $(filter-out %RClStl.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx)))
 ROOTCINTTMPO := $(call stripsrc,$(ROOTCINTS:.cxx=_tmp.o))
 
 ROOTCINTTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcint_tmp$(EXEEXT))
@@ -55,7 +55,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 ##### rootcint #####
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
-                 $(filter-out %_tmp.cxx,$(filter-out %rlibmap.cxx,$(filter-out %rootcling.cxx,$(filter-out %rootcint.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))))
+                 $(filter-out %RStl.cxx,$(filter-out %_tmp.cxx,$(filter-out %rlibmap.cxx,$(filter-out %rootcling.cxx,$(filter-out %rootcint.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))))))
 ROOTCLINGTMPO := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.o))
 
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
