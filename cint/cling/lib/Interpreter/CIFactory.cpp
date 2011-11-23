@@ -114,10 +114,17 @@ namespace cling {
        llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs>(
           new DiagnosticIDs()), DiagnosticPrinter, /*Owns it*/ true); // LEAKS!
 
-     // We do C++ by default; append right after argv[0] name
      std::vector<const char*> argvCompile(argv, argv + argc);
-     argvCompile.insert(argvCompile.begin() + 1,"-x");
-     argvCompile.insert(argvCompile.begin() + 2, "c++");
+     // We do C++ by default; append right after argv[0] name
+     // Only insert it if there is no other "-x":
+     bool haveMinusX = false;
+     for (const char* const* iarg = argv; !haveMinusX && iarg < argv + argc; ++iarg) {
+        haveMinusX = !strcmp(*iarg, "-x");
+     }
+     if (!haveMinusX) {
+        argvCompile.insert(argvCompile.begin() + 1,"-x");
+        argvCompile.insert(argvCompile.begin() + 2, "c++");
+     }
      argvCompile.push_back("-c");
      argvCompile.push_back("-");
 
