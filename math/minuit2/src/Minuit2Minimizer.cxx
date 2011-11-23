@@ -516,15 +516,21 @@ bool Minuit2Minimizer::GetCovMatrix(double * cov) const {
       if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) {
          for (unsigned int j = 0; j < fDim; ++j) { cov[i*fDim + j] = 0; }          
       } 
-      unsigned int l = fState.IntOfExt(i); 
-      for (unsigned int j = 0; j < fDim; ++j) { 
-         // could probably speed up this loop (if needed)
-         int k = i*fDim + j;
-         if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) cov[k] = 0; 
-         // need to transform from external to internal indices)
-         // for taking care of the removed fixed row/columns in the Minuit2 representation
-         unsigned int m = fState.IntOfExt(j); 
-         cov[k] =  fState.Covariance()(l,m); 
+      else 
+      {
+         unsigned int l = fState.IntOfExt(i); 
+         for (unsigned int j = 0; j < fDim; ++j) { 
+            // could probably speed up this loop (if needed)
+            int k = i*fDim + j;
+            if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) 
+               cov[k] = 0; 
+            else {
+            // need to transform from external to internal indices)
+            // for taking care of the removed fixed row/columns in the Minuit2 representation
+               unsigned int m = fState.IntOfExt(j); 
+               cov[k] =  fState.Covariance()(l,m); 
+            }
+         }
       }
    }
    return true;
@@ -538,15 +544,20 @@ bool Minuit2Minimizer::GetHessianMatrix(double * hess) const {
       if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) {
          for (unsigned int j = 0; j < fDim; ++j) { hess[i*fDim + j] = 0; }          
       } 
-      unsigned int l = fState.IntOfExt(i); 
-      for (unsigned int j = 0; j < fDim; ++j) { 
-         // could probably speed up this loop (if needed)
-         int k = i*fDim + j;
-         if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) hess[k] = 0; 
-         // need to transform from external to internal indices)
-         // for taking care of the removed fixed row/columns in the Minuit2 representation
-         unsigned int m = fState.IntOfExt(j); 
-         hess[k] =  fState.Hessian()(l,m); 
+      else { 
+         unsigned int l = fState.IntOfExt(i); 
+         for (unsigned int j = 0; j < fDim; ++j) { 
+            // could probably speed up this loop (if needed)
+            int k = i*fDim + j;
+            if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) 
+               hess[k] = 0; 
+            else { 
+               // need to transform from external to internal indices)
+               // for taking care of the removed fixed row/columns in the Minuit2 representation
+               unsigned int m = fState.IntOfExt(j); 
+               hess[k] =  fState.Hessian()(l,m); 
+            }
+         }
       }
    }
 
@@ -886,7 +897,8 @@ bool Minuit2Minimizer::Hesse( ) {
 
 int Minuit2Minimizer::CovMatrixStatus() const { 
    // return status of covariance matrix 
-   // 0 - no covariance available 
+   //-1 - not available (inversion failed or Hesse failed) 
+   // 0 - available but not positive defined
    // 1 - covariance only approximate
    // 2 full matrix but forced pos def 
    // 3 full accurate matrix 
@@ -895,11 +907,13 @@ int Minuit2Minimizer::CovMatrixStatus() const {
       // case a function minimum  is available 
       if (fMinimum->HasAccurateCovar() ) return 3; 
       else if (fMinimum->HasMadePosDefCovar() ) return 2; 
-      else if (fMinimum->HasCovariance() ) return 1; 
+      else if (fMinimum->HasValidCovariance() ) return 1; 
+      else if (fMinimum->HasCovariance() ) return 0; 
+      return -1;
    }
    else { 
-      // case fMinimum is not available 
-      if (fState.HasCovariance()) return 1; 
+      // case fMinimum is not available - use state information
+      return fState.CovarianceStatus();
    }
    return 0; 
 }
