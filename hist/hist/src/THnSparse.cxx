@@ -1254,10 +1254,15 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    Double_t preverr = 0.;
    Double_t v = 0.;
 
+   Bool_t haveSkippedBin = false;
+
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       v = GetBinContent(i, coord);
 
-      if (!IsInRange(coord)) continue;
+      if (!IsInRange(coord)) {
+         haveSkippedBin = true;
+         continue;
+      }
 
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = coord[dim[d]];
@@ -1296,13 +1301,26 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    delete [] bins;
    delete [] coord;
 
-   if (wantSparse)
+   if (wantSparse) {
       // need to check also when producing a THnSparse how to reset the number of entries
       sparse->SetEntries(fEntries);
-   else  
-      // need to reset the statistics which will set also the number of entries
-      // according to the bins filled
-      hist->ResetStats(); 
+   } else {
+      if (!haveSkippedBin) {
+         hist->SetEntries(fEntries);
+      } else {
+         // re-compute the entries
+         // in case of error calculation (i.e. when Sumw2() is set)
+         // use the effective entries for the entries
+         // since this  is the only way to estimate them
+         hist->ResetStats();
+         Double_t entries = hist->GetEffectiveEntries();
+         if (!wantErrors) {
+            // to avoid numerical rounding
+            entries = TMath::Floor(entries + 0.5);
+         }
+         hist->SetEntries(entries);
+      }
+   }
 
    if (hadRange) {
       // reset kAxisRange bit:
