@@ -463,7 +463,7 @@ namespace HistFactory{
     tot.forceNumInt();
 
     // for mixed generation in RooSimultaneous
-    //    tot.setAttribute("GenerateBinned"); // that's the default
+    tot.setAttribute("GenerateBinned"); // for use with RooSimultaneous::generate in mixed mode
     //    tot.setAttribute("GenerateUnbinned"); // we don't want that
 
     /*
