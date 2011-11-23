@@ -150,13 +150,40 @@ namespace cling {
                                                CC1Args->data() + CC1Args->size(),
                                                *Diagnostics);
      Invocation->getFrontendOpts().DisableFree = true;
-     //______________________________________
+
+     // Update ResourceDir
+     if (Invocation->getHeaderSearchOpts().UseBuiltinIncludes &&
+         !resource_path.empty()) {
+        // header search opts' entry for resource_path/include isn't
+        // updated by providing a new resource path; update it manually.
+        clang::HeaderSearchOptions& Opts = Invocation->getHeaderSearchOpts();
+        llvm::sys::Path oldResInc(Opts.ResourceDir);
+        oldResInc.appendComponent("include");
+        llvm::sys::Path newResInc(resource_path);
+        newResInc.appendComponent("include");
+        bool foundOldResInc = false;
+        for (unsigned i = 0, e = Opts.UserEntries.size();
+             !foundOldResInc && i != e; ++i) {
+           HeaderSearchOptions::Entry &E = Opts.UserEntries[i];
+           if (!E.IsUserSupplied && !E.IsFramework
+               && E.Group == clang::frontend::System && E.IgnoreSysRoot
+               && E.IsInternal && !E.ImplicitExternC
+               && oldResInc.str() == E.Path) {
+              E.Path = newResInc.str();
+              foundOldResInc = true;
+           }
+        }
+        if (!foundOldResInc) {
+           llvm::report_fatal_error("Cannot update include for resource path (old entry not found)!");
+        }
+        Opts.ResourceDir = resource_path.str();
+     }
      
     // Create and setup a compiler instance.
     CompilerInstance* CI = new CompilerInstance();
-     CI->setInvocation(Invocation);
+    CI->setInvocation(Invocation);
 
-     CI->createDiagnostics(CC1Args->size(), CC1Args->data() + 1);
+    CI->createDiagnostics(CC1Args->size(), CC1Args->data() + 1);
     {
       //
       //  Buffer the error messages while we process
@@ -166,10 +193,6 @@ namespace cling {
       // Set the language options, which cling needs
       SetClingCustomLangOpts(CI->getLangOpts());
 
-      if (CI->getHeaderSearchOpts().UseBuiltinIncludes &&
-          !resource_path.empty()) {
-        CI->getHeaderSearchOpts().ResourceDir = resource_path.str();
-      }
       CI->getInvocation().getPreprocessorOpts().addMacroDef("__CLING__");
       if (CI->getDiagnostics().hasErrorOccurred()) {
         delete CI;
@@ -200,14 +223,12 @@ namespace cling {
     Preprocessor& PP = CI->getPreprocessor();
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
                                            PP.getLangOptions());
-    /*NoBuiltins = */ //true);
-    
+
     // Set up the ASTContext
     ASTContext *Ctx = new ASTContext(CI->getLangOpts(),
                                      PP.getSourceManager(), &CI->getTarget(), PP.getIdentifierTable(),
                                      PP.getSelectorTable(), PP.getBuiltinInfo(), 0);
     CI->setASTContext(Ctx);
-    //CI->getSourceManager().clearIDTables(); //do we really need it?
     
     // Set up the ASTConsumers
     CI->setASTConsumer(new ChainedConsumer());

@@ -1,5 +1,4 @@
-// RUN: cat %s | %cling -Xclang -verify -I%p | FileCheck %s
-// XFAIL: *
+// RUN: cat %s | %cling -I%p
 
 // Tests the ability of cling to host itself. We can have cling instances in
 // cling's runtime. This is important for people, who use cling embedded in
