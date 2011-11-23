@@ -177,19 +177,23 @@ public:
    virtual ~ RScanner ();
 
 public:
-   bool shouldVisitTemplateInstantiations() const {
-      return true;
-   }
-   bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
+   // Configure the vistitor to also visit template instantiation.
+   bool shouldVisitTemplateInstantiations() const { return true; }
+
+   bool VisitEnumDecl(clang::EnumDecl* D); //Visitor for every EnumDecl i.e. enumeration node in the AST
    bool VisitFieldDecl(clang::FieldDecl* D); //Visitor for e field inside a class
    bool VisitFunctionDecl(clang::FunctionDecl* D); //Visitor for every FunctionDecl i.e. function node in the AST
-   bool VisitEnumDecl(clang::EnumDecl* D); //Visitor for every EnumDecl i.e. enumeration node in the AST
    bool VisitNamespaceDecl(clang::NamespaceDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
    bool VisitRecordDecl(clang::RecordDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
+   bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
+   
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl 
    // according to its type is processed by the corresponding Visitor method
 
+   // Main interface of this class.
    void Scan(const clang::ASTContext &C);
+ 
+   // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    std::string GetClassName(clang::DeclContext* DC) const;
    void DumpDecl(clang::Decl* D, const char* msg) const;
    bool GetDeclName(clang::Decl* D, std::string& name) const;
