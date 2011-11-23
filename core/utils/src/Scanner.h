@@ -56,7 +56,7 @@ public:
       bool fRequestOnlyTClass;
       
    public:
-      AnnotatedRecordDecl(clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+      AnnotatedRecordDecl(const clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
             fDecl(decl), fRuleIndex(index), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
             fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
       ~AnnotatedRecordDecl() {
@@ -177,6 +177,9 @@ public:
    virtual ~ RScanner ();
 
 public:
+   bool shouldVisitTemplateInstantiations() const {
+      return true;
+   }
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
    bool VisitFieldDecl(clang::FieldDecl* D); //Visitor for e field inside a class
    bool VisitFunctionDecl(clang::FunctionDecl* D); //Visitor for every FunctionDecl i.e. function node in the AST
