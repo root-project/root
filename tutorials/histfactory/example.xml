@@ -18,25 +18,25 @@
 
   <Input>./config/example_channel.xml</Input>
 
-  <Measurement Name="GaussExample" Lumi="1." LumiRelErr="0.1" BinLow="0" BinHigh="2" Mode="comb" >
+  <Measurement Name="GaussExample" Lumi="1." LumiRelErr="0.1" >
     <POI>SigXsecOverSM</POI>
     <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
     <!-- don't need <ConstraintTerm> default is Gaussian-->
   </Measurement>
 
-  <Measurement Name="GammaExample" Lumi="1." LumiRelErr="0.1" BinLow="0" BinHigh="2" Mode="comb" >
+  <Measurement Name="GammaExample" Lumi="1." LumiRelErr="0.1" >
     <POI>SigXsecOverSM</POI>
     <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
     <ConstraintTerm Type="Gamma" RelativeUncertainty=".3">syst2</ConstraintTerm>
   </Measurement>
 
-  <Measurement Name="LogNormExample" Lumi="1." LumiRelErr="0.1" BinLow="0" BinHigh="2" Mode="comb" >
+  <Measurement Name="LogNormExample" Lumi="1." LumiRelErr="0.1" >
     <POI>SigXsecOverSM</POI>
     <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
     <ConstraintTerm Type="LogNormal" RelativeUncertainty=".3">syst2</ConstraintTerm>
   </Measurement>
 
-  <Measurement Name="ConstExample" Lumi="1." LumiRelErr="0.1" BinLow="0" BinHigh="2" Mode="comb" ExportOnly="True">
+  <Measurement Name="ConstExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
     <POI>SigXsecOverSM</POI>
     <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
   </Measurement>
