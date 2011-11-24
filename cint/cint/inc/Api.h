@@ -21,7 +21,9 @@
 * include header files
 *********************************************************************/
 
+#ifndef G__API
 #define G__API
+#endif
 #include "G__ci.h"
 #ifdef __MAKECINT__
 #pragma link off all classes;
