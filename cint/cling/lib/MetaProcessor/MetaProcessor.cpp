@@ -197,7 +197,7 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line)
       if (param.empty()) {
         // toggle:
         m_Options.RawInput = !m_Options.RawInput;
-        printf("%ssing raw input\n", m_Options.RawInput?"Not u":"U");
+        printf("%ssing raw input\n", m_Options.RawInput?"U":"Not u");
       } else if (param == "1") {
         m_Options.RawInput = true;
       } else if (param == "0") {
