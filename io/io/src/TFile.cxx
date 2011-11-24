@@ -284,7 +284,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    //  this case, the file is scanned sequentially reading all logical blocks
    //  and attempting to rebuild a correct directory (see TFile::Recover).
    //  One can disable the automatic recovery procedure when reading one
-   //  or more files by setting the environment variable "TFile::Recover 0"
+   //  or more files by setting the environment variable "TFile.Recover: 0"
    //  in the system.rootrc file.
    //
 
