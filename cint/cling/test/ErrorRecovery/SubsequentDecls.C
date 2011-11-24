@@ -25,9 +25,4 @@ OverloadedF(__my_i)
 TemplatedF(__my_i)
 // CHECK: (int const) 110
 
-// .rawInput 1
-//   struct Outer { struct Inner { static int i; }; }; struct Outer {};
-// namespace Outer { struct Inner { static int i; }; };
-// .rawInput 0
-// Outer::Inner::i = 12;
 .q
