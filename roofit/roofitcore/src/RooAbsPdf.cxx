@@ -1503,7 +1503,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 					    Bool_t verbose, Bool_t autoBinned, const char* binnedTag) const 
 {
   
-  if (prototype || auxProto && auxProto->getSize()>0) {
+  if (prototype || (auxProto && auxProto->getSize()>0)) {
     return genContext(vars,prototype,auxProto,verbose);
   }
 
