@@ -33,6 +33,10 @@ public:
   // Copy constructor
   RooLinkedList(const RooLinkedList& other) ;
 
+  virtual TObject* Clone(const char* =0) const { 
+    return new RooLinkedList(*this) ;
+  }
+
   // Assignment operator
   RooLinkedList& operator=(const RooLinkedList& other) ;
 
@@ -74,7 +78,6 @@ public:
   const char* GetName() const { return _name.Data() ; }
   void SetName(const char* name) { _name = name ; }
 
-
 protected:  
 
   RooLinkedListElem* createElement(TObject* obj, RooLinkedListElem* elem=0) ;
@@ -99,7 +102,7 @@ protected:
 
   Int_t _curStoreSize ; //!
   Int_t _curStoreUsed ; //!
-  std::list<RooLinkedListElem*> _storeList ; //!
+  std::list<std::pair<Int_t,RooLinkedListElem*> > _storeList ; //!
   RooLinkedListElem* _curStore ; //!
 
   TString             _name ; 

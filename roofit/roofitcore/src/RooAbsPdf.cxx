@@ -127,6 +127,7 @@
 #include "RooRealProxy.h"
 #include "RooRealVar.h"
 #include "RooGenContext.h"
+#include "RooBinnedGenContext.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
 #include "RooNLLVar.h"
@@ -1480,12 +1481,39 @@ void RooAbsPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TStr
 
 
 //_____________________________________________________________________________
+RooAbsGenContext* RooAbsPdf::binnedGenContext(const RooArgSet &vars, Bool_t verbose) const 
+{
+  // Return a binned generator context
+  return new RooBinnedGenContext(*this,vars,0,0,verbose) ;
+}
+
+
+//_____________________________________________________________________________
 RooAbsGenContext* RooAbsPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					const RooArgSet* auxProto, Bool_t verbose) const 
 {
   // Interface function to create a generator context from a p.d.f. This default
   // implementation returns a 'standard' context that works for any p.d.f
   return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
+}
+
+
+//_____________________________________________________________________________
+RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooDataSet* prototype, const RooArgSet* auxProto, 
+					    Bool_t verbose, Bool_t autoBinned, const char* binnedTag) const 
+{
+  
+  if (prototype || auxProto && auxProto->getSize()>0) {
+    return genContext(vars,prototype,auxProto,verbose);
+  }
+
+  RooAbsGenContext *context(0) ;
+  if ( (autoBinned & isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
+    context = binnedGenContext(vars,verbose) ;
+  } else {
+    context= genContext(vars,0,0,verbose);
+  }
+  return context ;
 }
 
 
@@ -1508,6 +1536,16 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, Int_t nEvents, const 
   // Verbose(Bool_t flag)               -- Print informational messages during event generation
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
   //                                       with mu=nevt. For use with extended maximum likelihood fits
+  // AutoBinned(Bool_t flag)            -- Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of RooHistPdfs etc)
+  //                                       NB: Datasets that are generated in binned mode are returned as weighted unbinned datasets
+  //
+  // GenBinned(const char* tag)         -- Use binned generation for all component pdfs that have 'setAttribute(tag)' set
+  // AllBinned()                        -- As above, but for all components. 
+  //
+  //                                       Note that the notion of components is only meaningful for simultaneous pdf
+  //                                       as binned generation is always executed at the top-level node for a regular
+  //                                       pdf, so for those it only mattes that the top-level node is tagged.
+  //
   // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
   //                 Bool_t randOrder)     the order of the events in the dataset will be read in a random order
   //                                       if the requested number of events to be generated does not match the
@@ -1519,6 +1557,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, Int_t nEvents, const 
   // The user can specify a  number of events to generate that will override the default. The result is a
   // copy of the prototype dataset with only variables in whatVars randomized. Variables in whatVars that 
   // are not in the prototype will be added as new columns to the generated dataset.  
+
   return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
 }
 
@@ -1541,6 +1580,18 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Name(const char* name)             -- Name of the output dataset
   // Verbose(Bool_t flag)               -- Print informational messages during event generation
   // NumEvent(int nevt)                 -- Generate specified number of events
+  //
+  // AutoBinned(Bool_t flag)            -- Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of RooHistPdfs etc)
+  //                                       NB: Datasets that are generated in binned mode are returned as weighted unbinned datasets
+  //
+  // GenBinned(const char* tag)         -- Use binned generation for all component pdfs that have 'setAttribute(tag)' set
+  // AllBinned()                        -- As above, but for all components. 
+  //
+  //                                       Note that the notion of components is only meaningful for simultaneous pdf
+  //                                       as binned generation is always executed at the top-level node for a regular
+  //                                       pdf, so for those it only mattes that the top-level node is tagged.
+  //
+  //                                       Binned generation cannot be used when prototype data is supplied
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
   //                                       with mu=nevt. For use with extended maximum likelihood fits
   // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
@@ -1567,8 +1618,12 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("extended","Extended",0,0) ;
   pc.defineInt("nEvents","NumEvents",0,0) ;
-  
-  
+  pc.defineInt("autoBinned","AutoBinned",0,1) ;
+  pc.defineInt("expectedData","ExpectedData",0,0) ;
+  pc.defineDouble("nEventsD","NumEventsD",0,-1.) ;
+  pc.defineString("binnedTag","GenBinned",0,"") ;
+  pc.defineMutex("GenBinned","ProtoData") ;
+    
   // Process and check varargs 
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
   if (!pc.ok(kTRUE)) {
@@ -1578,11 +1633,20 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Decode command line arguments
   RooDataSet* protoData = static_cast<RooDataSet*>(pc.getObject("proto",0)) ;
   const char* dsetName = pc.getString("dsetName") ;
-  Int_t nEvents = pc.getInt("nEvents") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Bool_t randProto = pc.getInt("randProto") ;
   Bool_t resampleProto = pc.getInt("resampleProto") ;
   Bool_t extended = pc.getInt("extended") ;
+  Bool_t autoBinned = pc.getInt("autoBinned") ;
+  const char* binnedTag = pc.getString("binnedTag") ;
+  Int_t nEvents = pc.getInt("nEvents") ;
+  //Bool_t verbose = pc.getInt("verbose") ;
+  Bool_t expectedData = pc.getInt("expectedData") ;
+
+  // Force binned mode for expected data mode
+  if (expectedData) {
+    binnedTag="*" ;
+  }
 
   if (extended) {
     nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0?expectedEvents(&whatVars):nEvents) ;
@@ -1610,7 +1674,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   if (protoData) {
     data = generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
   } else {
-    data = generate(whatVars,nEvents,verbose) ;
+    data = generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData) ;
   }
 
   // Rename dataset to given name if supplied
@@ -1646,6 +1710,18 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
   // Name(const char* name)             -- Name of the output dataset
   // Verbose(Bool_t flag)               -- Print informational messages during event generation
   // NumEvent(int nevt)                 -- Generate specified number of events
+
+  // AutoBinned(Bool_t flag)            -- Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of RooHistPdfs etc)
+  //                                       NB: Datasets that are generated in binned mode are returned as weighted unbinned datasets
+  //
+  //
+  // GenBinned(const char* tag)         -- Use binned generation for all component pdfs that have 'setAttribute(tag)' set
+  // AllBinned()                        -- As above, but for all components. 
+  //
+  //                                       Note that the notion of components is only meaningful for simultaneous pdf
+  //                                       as binned generation is always executed at the top-level node for a regular
+  //                                       pdf, so for those it only mattes that the top-level node is tagged.
+  //
   // Extended()                         -- The actual number of events generated will be sampled from a Poisson distribution
   //                                       with mu=nevt. For use with extended maximum likelihood fits
   // ProtoData(const RooDataSet& data,  -- Use specified dataset as prototype dataset. If randOrder is set to true
@@ -1672,6 +1748,9 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("extended","Extended",0,0) ;
   pc.defineInt("nEvents","NumEvents",0,0) ;
+  pc.defineInt("autoBinned","AutoBinned",0,1) ;
+  pc.defineString("binnedTag","GenBinned",0,"") ;
+  pc.defineMutex("GenBinned","ProtoData") ;
   
   
   // Process and check varargs 
@@ -1688,8 +1767,12 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
   Bool_t randProto = pc.getInt("randProto") ;
   Bool_t resampleProto = pc.getInt("resampleProto") ;
   Bool_t extended = pc.getInt("extended") ;
+  Bool_t autoBinned = pc.getInt("autoBinned") ;
+  const char* binnedTag = pc.getString("binnedTag") ;
 
-  return new GenSpec(genContext(whatVars,protoData,0,verbose),whatVars,protoData,nEvents,extended,randProto,resampleProto,dsetName) ;  
+  RooAbsGenContext* cx = autoGenContext(whatVars,protoData,0,verbose,autoBinned,binnedTag) ;
+  
+  return new GenSpec(cx,whatVars,protoData,nEvents,extended,randProto,resampleProto,dsetName) ;  
 }
 
 
@@ -1703,10 +1786,12 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
   // initialization overhead is only incurred once.
 
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
-  Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
+  //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
+  Int_t nEvt = spec._nGen==0? Int_t(expectedEvents(spec._whatVars)+0.5) : spec._nGen ;
   
   
-  RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,kFALSE,spec._randProto,spec._resampleProto,spec._init) ;
+  RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,kFALSE,spec._randProto,spec._resampleProto,
+			     spec._init,spec._extended) ;
   spec._init = kTRUE ;
   return ret ;
 }
@@ -1716,7 +1801,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
 
 //_____________________________________________________________________________
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose) const 
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData) const 
 {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
@@ -1730,8 +1815,13 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
     return new RooDataSet("emptyData","emptyData",whatVars) ;
   }
 
+  // Request for binned generation
+  RooAbsGenContext *context = autoGenContext(whatVars,0,0,verbose,autoBinned,binnedTag) ;
+  if (expectedData) {
+    context->setExpectedData(kTRUE) ;
+  }
+  
   RooDataSet *generated = 0;
-  RooAbsGenContext *context= genContext(whatVars,0,0,verbose);
   if(0 != context && context->isValid()) {
     generated= context->generate(nEvents);
   }
@@ -1747,13 +1837,13 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 
 //_____________________________________________________________________________
 RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
-				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit) const 
+				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto, 
+				Bool_t skipInit, Bool_t extended) const 
 {
   // Internal method  
   if (nEvents==0 && (prototype==0 || prototype->numEntries()==0)) {
     return new RooDataSet("emptyData","emptyData",whatVars) ;
   }
-
 
   RooDataSet *generated = 0;
 
@@ -1770,7 +1860,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
   }
 
   if(context.isValid()) {
-    generated= context.generate(nEvents,skipInit);
+    generated= context.generate(nEvents,skipInit,extended);
   }
   else {
     coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << endl;
@@ -2130,135 +2220,6 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
   }
 
   return hist;
-}
-
-//_____________________________________________________________________________
-RooDataSet *RooAbsPdf::generateWeightedUnbinned(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const 
-{
-  // Generate a new dataset containing the specified variables with
-  // events sampled from our distribution. Generate the specified
-  // number of events or else try to use expectedEvents() if nEvents <= 0.
-  //
-  // If expectedData is kTRUE (it is kFALSE by default), the returned histogram returns the 'expected'
-  // data sample, i.e. no statistical fluctuations are present.
-  //
-  // Any variables of this PDF that are not in whatVars will use their
-  // current values and be treated as fixed parameters. Returns zero
-  // in case of an error. The caller takes ownership of the returned
-  // dataset.
-
-  // Create empty RooDataHist
-  RooDataHist* hist = new RooDataHist("genData","genData",whatVars) ;
-
-  // Scale to number of events and introduce Poisson fluctuations
-  if (nEvents<=0) {
-    if (!canBeExtended()) {
-      coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
-      delete hist ;
-      return 0 ;
-    } else {
-      // Don't round in expectedData mode
-      if (expectedData) {
-	nEvents = expectedEvents(&whatVars) ;
-      } else {
-	nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
-      }
-    }
-  } 
-
-  cout << "RooAbsPdf::generateWeightedUnbinned(" << GetName() << ") nEvents = " << nEvents << endl ;
-  
-  // Sample p.d.f. distribution
-  fillDataHist(hist,&whatVars,1,kTRUE) ;  
-
-  // Output container
-  RooRealVar weight("weight","weight",0,1e9) ;
-  RooArgSet tmp(whatVars) ;
-  tmp.add(weight) ;
-  RooDataSet* wudata = new RooDataSet("wu","wu",tmp,RooFit::WeightVar("weight")) ;
-
-  vector<int> histOut(hist->numEntries()) ;
-  Double_t histMax(-1) ;
-  Int_t histOutSum(0) ;
-  for (int i=0 ; i<hist->numEntries() ; i++) {
-    hist->get(i) ;
-    if (expectedData) {
-
-      // Expected data, multiply p.d.f by nEvents
-      Double_t w=hist->weight()*nEvents ;
-      wudata->add(*hist->get(),w) ;
-
-    } else if (extended) {
-
-      // Extended mode, set contents to Poisson(pdf*nEvents)
-      Double_t w = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
-      wudata->add(*hist->get(),w) ;
-      
-    } else {
-
-      // Regular mode, fill array of weights with Poisson(pdf*nEvents), but to not fill
-      // histogram yet.
-      if (hist->weight()>histMax) {
-	histMax = hist->weight() ;
-      }
-      histOut[i] = RooRandom::randomGenerator()->Poisson(hist->weight()*nEvents) ;
-      histOutSum += histOut[i] ;
-    }
-  }
-
-
-  if (!expectedData && !extended) {
-
-    // Second pass for regular mode - Trim/Extend dataset to exact number of entries
-
-    // Calculate difference between what is generated so far and what is requested
-    Int_t nEvtExtra = abs(Int_t(nEvents)-histOutSum) ;
-    Int_t wgt = (histOutSum>nEvents) ? -1 : 1 ;
-
-    // Perform simple binned accept/reject procedure to get to exact event count
-    while(nEvtExtra>0) {
-
-      Int_t ibinRand = RooRandom::randomGenerator()->Integer(hist->numEntries()) ;
-      hist->get(ibinRand) ;
-      Double_t ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
-
-      if (ranY<hist->weight()) {
-	if (wgt==1) {
-	  histOut[ibinRand]++ ;
-	} else {
-	  // If weight is negative, prior bin content must be at least 1
-	  if (histOut[ibinRand]>0) {
-	    histOut[ibinRand]-- ;
-	  } else {
-	    continue ;
-	  }
-	}
-	nEvtExtra-- ;
-      }
-    }
-
-    // Transfer working array to histogram
-    for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-
-      wudata->add(*hist->get(),histOut[i]) ;      
-    }    
-
-  } else if (expectedData) {
-
-    // Second pass for expectedData mode -- Normalize to exact number of requested events
-    // Minor difference may be present in first round due to difference between 
-    // bin average and bin integral in sampling bins
-    Double_t corr = nEvents/hist->sumEntries() ;
-    for (int i=0 ; i<hist->numEntries() ; i++) {
-      hist->get(i) ;
-      wudata->add(*hist->get(),hist->weight()*corr) ;
-    }
-
-  }
-
-  delete hist ;
-  return wudata ;
 }
 
 

@@ -28,8 +28,8 @@ public:
   RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=0,
 		   Bool_t _verbose= kFALSE) ;
   virtual ~RooAbsGenContext();
-
-  RooDataSet *generate(Int_t nEvents= 0, Bool_t skipInit=kFALSE);
+  
+  virtual RooDataSet *generate(Int_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
 
   Bool_t isValid() const { 
     // If true generator context is in a valid state
@@ -63,6 +63,8 @@ public:
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
 
+  virtual void setExpectedData(Bool_t) {} ;
+
 protected:
 
   virtual RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
@@ -71,6 +73,7 @@ protected:
   friend class RooProdGenContext ;
   friend class RooAddGenContext ;
   friend class RooSimGenContext ;
+  friend class RooSimSplitGenContext ;
   friend class RooEffGenContext ;
 
   virtual void initGenerator(const RooArgSet &theEvent);

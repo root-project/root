@@ -354,6 +354,24 @@ std::list<Double_t>* RooAddition::binBoundaries(RooAbsRealLValue& obs, Double_t 
 }
 
 
+//_____________________________________________________________________________B
+Bool_t RooAddition::isBinnedDistribution(const RooArgSet& obs) const 
+{
+  // If all components that depend on obs are binned that so is the product
+  
+  RooFIter iter = _set.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
+      return kFALSE ;
+    }
+  }
+  
+  return kTRUE  ;  
+}
+
+
+
 
 //_____________________________________________________________________________
 std::list<Double_t>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const

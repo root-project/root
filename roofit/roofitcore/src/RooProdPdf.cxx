@@ -1997,7 +1997,6 @@ Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const
 
 
 
-
 //_____________________________________________________________________________
 RooAbsGenContext* RooProdPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					 const RooArgSet* auxProto, Bool_t verbose) const 
@@ -2354,6 +2353,27 @@ std::list<Double_t>* RooProdPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_
   
   return 0 ;
 }
+
+
+
+//_____________________________________________________________________________
+Bool_t RooProdPdf::isBinnedDistribution(const RooArgSet& obs) const 
+{
+  // If all components that depend on obs are binned that so is the product
+  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    if (pdf->dependsOn(obs) && !pdf->isBinnedDistribution(obs)) {
+      return kFALSE ;
+    }
+  }
+  
+  return kTRUE  ;  
+}
+
+
+
 
 
 

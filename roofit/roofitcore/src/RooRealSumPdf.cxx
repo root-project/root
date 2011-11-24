@@ -491,6 +491,26 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
 
 
 
+//_____________________________________________________________________________B
+Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const 
+{
+  // If all components that depend on obs are binned that so is the product
+  
+  RooFIter iter = _funcList.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    if (func->dependsOn(obs) && !func->isBinnedDistribution(obs)) {
+      return kFALSE ;
+    }
+  }
+  
+  return kTRUE  ;  
+}
+
+
+
+
+
 //_____________________________________________________________________________
 std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {

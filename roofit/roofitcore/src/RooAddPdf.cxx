@@ -1113,7 +1113,6 @@ RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet 
 {
   // Return specialized context to efficiently generate toy events from RooAddPdfs
   // return RooAbsPdf::genContext(vars,prototype,auxProto,verbose) ; // WVE DEBUG
-
   return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
@@ -1227,6 +1226,25 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 
   return sumBinB ;
 }
+
+
+//_____________________________________________________________________________
+Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const 
+{
+  // If all components that depend on obs are binned that so is the product
+  
+  _pdfIter->Reset() ;
+  RooAbsPdf* pdf ;
+  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+    if (pdf->dependsOn(obs) && !pdf->isBinnedDistribution(obs)) {
+      return kFALSE ;
+    }
+  }
+  
+  return kTRUE  ;  
+}
+
+
 
 
 //_____________________________________________________________________________

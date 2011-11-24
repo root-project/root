@@ -37,6 +37,7 @@
 
 
 
+
 ClassImp(RooLinkedList)
 ;
 
@@ -46,7 +47,7 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
   _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _curStoreSize(2), _curStoreUsed(0)
 {
   _curStore = new RooLinkedListElem[_curStoreSize] ;
-  _storeList.push_back(_curStore) ;
+  _storeList.push_back(pair<Int_t,RooLinkedListElem*>(0,_curStore)) ;
 }
 
 
@@ -59,8 +60,9 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
 {
   // Copy constructor
   
-  _curStore = new RooLinkedListElem[other.GetSize()+2] ;
-  _storeList.push_back(_curStore) ;
+  _curStore = new RooLinkedListElem[other.GetSize()] ;
+  _curStoreSize = other.GetSize() ;
+  _storeList.push_back(pair<Int_t,RooLinkedListElem*>(0,_curStore)) ;
   
   if (other._htableName) _htableName = new RooHashTable(other._htableName->size()) ;
   if (other._htableLink) _htableLink = new RooHashTable(other._htableLink->size(),RooHashTable::Pointer) ;
@@ -69,6 +71,12 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
     Add(elem->_arg, elem->_refCount) ;
     elem = elem->_next ;
   }
+
+  _curStore = new RooLinkedListElem[2] ;
+  _storeList.push_back(pair<Int_t,RooLinkedListElem*>(0,_curStore)) ;
+  _curStoreSize = 2 ; 
+  _curStoreUsed = 0 ;
+  
 }
 
 
@@ -79,16 +87,28 @@ RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem*
 //   cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << endl ;
   
   if (_curStoreUsed==_curStoreSize) {
-    _curStoreSize *= 2 ;
+
+    // Remove empty stores ;
+    Bool_t anyDel(kFALSE) ;
+    for (list<pair<Int_t,RooLinkedListElem*> >::iterator iter = _storeList.begin() ; iter != _storeList.end() ; ++iter) {
+      if (iter->first==0) {	
+	anyDel = kTRUE ;
+	delete[] iter->second ;
+	iter = _storeList.erase(iter) ;
+      }
+    }
+
+    if (!anyDel) {
+      _curStoreSize *= 2 ;
+    }
     _curStore = new RooLinkedListElem[_curStoreSize] ;
-    _storeList.push_back(_curStore) ;
+    _storeList.push_back(pair<Int_t,RooLinkedListElem*>(0,_curStore)) ;
     _curStoreUsed = 0 ;
-//     cout << "RooLinkedList::createElement(" << this <<") starting new store of size " << _curStoreSize << " at address " << _curStore << endl ;
   }
   
   RooLinkedListElem* ret = _curStore+_curStoreUsed ;
 //   cout << "initializing slot " << _curStoreUsed << " of store " << _curStore << " = " << ret << endl ;
-  ret->init(obj,elem) ;
+  ret->init(obj,elem,&(_storeList.back().first)) ;
   _curStoreUsed++ ;
   return ret ;
 }
@@ -183,8 +203,10 @@ RooLinkedList::~RooLinkedList()
   Clear() ;
 
   // Delete store
-  for (list<RooLinkedListElem*>::iterator iter=_storeList.begin() ; iter!=_storeList.end() ; ++iter) {
-    delete[] *iter ;
+  Int_t i=0 ;
+  for (list<pair<Int_t,RooLinkedListElem*> >::iterator iter=_storeList.begin() ; iter!=_storeList.end() ; ++iter) {
+    delete[] iter->second ;
+    i++ ;
   }
 }
 
