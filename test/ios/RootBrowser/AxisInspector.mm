@@ -1,7 +1,6 @@
 #import "InspectorWithNavigation.h"
 #import "AxisLabelsInspector.h"
 #import "AxisTitleInspector.h"
-#import "AxisColorInspector.h"
 #import "AxisTicksInspector.h"
 #import "AxisInspector.h"
 

@@ -67,8 +67,6 @@
 		7068FF2B141A2F6A003560A1 /* text_cell_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF2A141A2F6A003560A1 /* text_cell_bkn.png */; };
 		7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */; };
 		7068FF32141A3944003560A1 /* AxisLabelsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */; };
-		7073A26B14174E74001A0FE2 /* AxisColorInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A26914174E74001A0FE2 /* AxisColorInspector.mm */; };
-		7073A26C14174E74001A0FE2 /* AxisColorInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */; };
 		7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */; };
 		7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */; };
 		7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A27C14177A03001A0FE2 /* AxisInspector.mm */; };
@@ -211,9 +209,6 @@
 		7068FF2E141A3943003560A1 /* AxisLabelsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisLabelsInspector.h; sourceTree = "<group>"; };
 		7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisLabelsInspector.mm; sourceTree = "<group>"; };
 		7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisLabelsInspector.xib; sourceTree = "<group>"; };
-		7073A26814174E74001A0FE2 /* AxisColorInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisColorInspector.h; sourceTree = "<group>"; };
-		7073A26914174E74001A0FE2 /* AxisColorInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisColorInspector.mm; sourceTree = "<group>"; };
-		7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisColorInspector.xib; sourceTree = "<group>"; };
 		7073A272141757BB001A0FE2 /* AxisTicksInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisTicksInspector.h; sourceTree = "<group>"; };
 		7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = AxisTicksInspector.mm; sourceTree = "<group>"; };
 		7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisTicksInspector.xib; sourceTree = "<group>"; };
@@ -438,8 +433,6 @@
 				70681C1C1416474000F8338A /* FilledAreaInspector.mm */,
 				70681C201416586D00F8338A /* ObjectInspector.h */,
 				70681C211416586D00F8338A /* ObjectInspector.mm */,
-				7073A26814174E74001A0FE2 /* AxisColorInspector.h */,
-				7073A26914174E74001A0FE2 /* AxisColorInspector.mm */,
 				7073A272141757BB001A0FE2 /* AxisTicksInspector.h */,
 				7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */,
 				7073A27B14177A03001A0FE2 /* AxisInspector.h */,
@@ -473,7 +466,6 @@
 				70681C1114163A2300F8338A /* PadTicksGridInspector.xib */,
 				7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */,
 				7073A27D14177A03001A0FE2 /* AxisInspector.xib */,
-				7073A26A14174E74001A0FE2 /* AxisColorInspector.xib */,
 				7073A2861417AA10001A0FE2 /* AxisTitleInspector.xib */,
 				7068FF23141A0EAF003560A1 /* AxisFontInspector.xib */,
 				7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */,
@@ -737,7 +729,6 @@
 				70681C1314163A2300F8338A /* PadTicksGridInspector.xib in Resources */,
 				70681C1A14163F0C00F8338A /* PadLogScaleInspector.xib in Resources */,
 				70681C1F1416474000F8338A /* FilledAreaInspector.xib in Resources */,
-				7073A26C14174E74001A0FE2 /* AxisColorInspector.xib in Resources */,
 				7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */,
 				7073A27F14177A03001A0FE2 /* AxisInspector.xib in Resources */,
 				7073A2881417AA10001A0FE2 /* AxisTitleInspector.xib in Resources */,
@@ -784,7 +775,6 @@
 				70681C1914163F0C00F8338A /* PadLogScaleInspector.mm in Sources */,
 				70681C1E1416474000F8338A /* FilledAreaInspector.mm in Sources */,
 				70681C221416586D00F8338A /* ObjectInspector.mm in Sources */,
-				7073A26B14174E74001A0FE2 /* AxisColorInspector.mm in Sources */,
 				7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */,
 				7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */,
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,

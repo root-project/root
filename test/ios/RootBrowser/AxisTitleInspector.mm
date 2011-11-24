@@ -1,6 +1,5 @@
 #import "ROOTObjectController.h"
 #import "AxisTitleInspector.h"
-#import "AxisColorInspector.h"
 #import "AxisFontInspector.h"
 
 //C++ (ROOT) imports.
@@ -148,18 +147,6 @@ static const float tabBarHeight = 49.f;
    
    [self.navigationController pushViewController : fontInspector animated : YES];
    [fontInspector release];
-}
-
-//____________________________________________________________________________________________________
-- (IBAction) showTitleColorInspector
-{
-   AxisColorInspector *colorInspector = [[AxisColorInspector alloc] initWithNibName : @"AxisColorInspector" bundle : nil mode : ROOT_IOSObjectInspector::acimTitleColor];
-
-   [colorInspector setROOTObjectController : controller];
-   [colorInspector setROOTObject : object];
-   
-   [self.navigationController pushViewController : colorInspector animated : YES];
-   [colorInspector release];
 }
 
 //____________________________________________________________________________________________________

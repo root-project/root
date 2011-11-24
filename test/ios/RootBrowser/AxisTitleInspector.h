@@ -44,7 +44,6 @@ class TAxis;
 - (void) setROOTObject : (TObject *)o;
 
 - (IBAction) showTitleFontInspector;
-- (IBAction) showTitleColorInspector;
 
 - (IBAction) textFieldDidEndOnExit : (id) sender;
 - (IBAction) textFieldEditingDidEnd : (id) sender;

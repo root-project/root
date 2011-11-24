@@ -1,6 +1,5 @@
 #import "ROOTObjectController.h"
 #import "AxisLabelsInspector.h"
-#import "AxisColorInspector.h"
 #import "AxisFontInspector.h"
 
 #import "TObject.h"
