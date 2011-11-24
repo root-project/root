@@ -1,43 +1,20 @@
 #import <UIKit/UIKit.h>
 
-@class ScrollViewWithPickers;
+
+//
+//EditorView is a small panel to the right of
+//pad, contains widgets to modify pad's contents.
+//To make it possible to include more staff,
+//every sub-editor (like line attributes editor,
+//or filled area editor) is placed into
+//the collapsing panel.
+//
+
 @class EditorPlateView;
 
-//Hoho! As soon as I use Objective-C++, I can use namespaces! "Yeaaahhh, that's good!" (c) Duke Nukem.
-
-namespace ROOT_IOSObjectInspector {
-
-enum {
-   evMaxComponents = 5,
-   evMaxStates = 1 << evMaxComponents
-};
-
-}
-
-@interface EditorView : UIView {
-@private
-   UILabel *editorTitle;
-
-   ScrollViewWithPickers *scrollView;
-
-   CGFloat plateYs[ROOT_IOSObjectInspector::evMaxStates * ROOT_IOSObjectInspector::evMaxComponents];
-   CGFloat viewYs[ROOT_IOSObjectInspector::evMaxStates * ROOT_IOSObjectInspector::evMaxComponents];
-   
-   UIView *plates[ROOT_IOSObjectInspector::evMaxComponents];
-   UIView *views[ROOT_IOSObjectInspector::evMaxComponents];
-   UIView *containers[ROOT_IOSObjectInspector::evMaxComponents];   
-
-   unsigned nStates;
-   unsigned nEditors;
-   unsigned currentState;
-   
-   int newOpened;
-   
-   BOOL animation;
-}
+@interface EditorView : UIView 
 
 + (CGFloat) editorAlpha;
-
 + (CGFloat) editorWidth;
 + (CGFloat) editorHeight;
 + (CGFloat) scrollWidth;
@@ -48,7 +25,6 @@ enum {
 - (void) addSubEditor : (UIView *)element withName : (NSString *)editorName;
 - (void) correctFrames;
 - (void) plateTapped : (EditorPlateView *) plate;
-
 - (void) setEditorTitle : (const char*)title;
 
 @end

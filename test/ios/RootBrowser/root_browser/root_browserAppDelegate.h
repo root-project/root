@@ -2,14 +2,7 @@
 
 @class RootFileController;
 
-class TApplication;
-
-@interface root_browserAppDelegate : NSObject <UIApplicationDelegate> {
-   TApplication *rootApp;
-
-   RootFileController *rootController;
-   UINavigationController *navigationController;
-}
+@interface root_browserAppDelegate : NSObject <UIApplicationDelegate>
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 

@@ -4,7 +4,9 @@
 #import "LineWidthCell.h"
 
 
-@implementation LineWidthCell
+@implementation LineWidthCell {
+   CGFloat lineWidth;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithFrame:(CGRect)frame width : (CGFloat)w
@@ -41,12 +43,6 @@
    NSString *label = [NSString stringWithFormat:@"(%d)", (int)lineWidth];
    CGContextSetRGBFillColor(ctx, 0.f, 0.f, 1.f, 1.f);
    [label drawInRect:CGRectMake(rect.size.width / 2 - 10.f, rect.size.height / 2 - 15.f, 40.f, 60.f) withFont : [UIFont systemFontOfSize : 10]];
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

@@ -18,35 +18,18 @@ class Pad;
 @class ROOTObjectController;
 @class SelectionView;
 
-@interface PadView : UIView {
-   ROOT::iOS::Pad *pad;
-   
-   ROOTObjectController *controller;
-   
-   CGFloat currentScale;
+@interface PadView : UIView
 
-   BOOL panActive;
-   
-   SelectionView *selectionView;
-   
-   CGPoint tapPt;
-   BOOL processSecondTap;
-}
-
-@property (nonatomic, assign) SelectionView *selectionView;
+@property (nonatomic, retain) SelectionView *selectionView;
 
 - (id) initWithFrame : (CGRect)frame controller : (ROOTObjectController *)c forPad : (ROOT::iOS::Pad*)pad;
-- (void) dealloc;
+
 
 - (void) setPad : (ROOT::iOS::Pad *)newPad;
-- (void) drawRect : (CGRect)rect;
 - (void) clearPad;
 
 - (BOOL) pointOnSelectedObject : (CGPoint) pt;
 - (void) addPanRecognizer;
 - (void) removePanRecognizer;
-
-- (void) handleSingleTap;
-- (void) handleDoubleTap;
 
 @end

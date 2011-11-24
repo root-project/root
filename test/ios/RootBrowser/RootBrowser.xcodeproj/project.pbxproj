@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		7014410F140E18390070459F /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* SelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
-		70144123140E3F320070459F /* LineWidthCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 70144122140E3F320070459F /* LineWidthCell.m */; };
+		70144123140E3F320070459F /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70144122140E3F320070459F /* LineWidthCell.mm */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
 		702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702357D914345C0A00A95000 /* H1ErrorsInspector.mm */; };
 		702357DC14345C0A00A95000 /* H1ErrorsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702357DA14345C0A00A95000 /* H1ErrorsInspector.xib */; };
@@ -23,7 +23,7 @@
 		7023580D1434B48C00A95000 /* h1_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023580C1434B48C00A95000 /* h1_tab.png */; };
 		7023805E140514C8002A5331 /* file_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023805D140514C8002A5331 /* file_icon.png */; };
 		70249BDC1403D644006A19E6 /* PadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70249BDA1403D644006A19E6 /* PadView.mm */; };
-		70252F7C140CDD8D00F3660F /* Constants.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70252F7A140CDD8D00F3660F /* Constants.mm */; };
+		70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70252F7A140CDD8D00F3660F /* Constants.cxx */; };
 		702BB9D714482E2200D3842F /* picker_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D514482E2200D3842F /* picker_arrow.png */; };
 		702BB9D814482E2200D3842F /* picker_frame_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D614482E2200D3842F /* picker_frame_bkn.png */; };
 		702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702BB9DA14482E3C00D3842F /* HorizontalPickerView.mm */; };
@@ -40,7 +40,6 @@
 		7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadImageScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
 		705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* ScrollViewWithPadView.mm */; };
-		705F1A68142347CA003045D9 /* SlideView.m in Sources */ = {isa = PBXBuildFile; fileRef = 705F1A67142347CA003045D9 /* SlideView.m */; };
 		706241D01435F86700202121 /* RangeSlider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706241CE1435F86700202121 /* RangeSlider.mm */; };
 		706241D51435F94500202121 /* bar-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D11435F94500202121 /* bar-background.png */; };
 		706241D61435F94500202121 /* bar-highlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D21435F94500202121 /* bar-highlight.png */; };
@@ -117,6 +116,13 @@
 		709594A613FE97AF00B9E8B6 /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 709594A413FE97AF00B9E8B6 /* system.plugins-ios */; };
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
+		70BC93B0147E80740083CC5C /* FileContainerElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93AF147E80740083CC5C /* FileContainerElement.mm */; };
+		70BC93B3147E80DB0083CC5C /* FileUtils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93B1147E80DB0083CC5C /* FileUtils.cxx */; };
+		70BC93BD147E81F60083CC5C /* SearchController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93B5147E81F60083CC5C /* SearchController.mm */; };
+		70BC93BE147E81F60083CC5C /* SlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93B6147E81F60083CC5C /* SlideView.mm */; };
+		70BC93BF147E81F60083CC5C /* SpotView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93B8147E81F60083CC5C /* SpotView.mm */; };
+		70BC93C0147E81F60083CC5C /* ThumbnailView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93BA147E81F60083CC5C /* ThumbnailView.mm */; };
+		70BC93C1147E81F60083CC5C /* TransparentToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 70BC93BC147E81F60083CC5C /* TransparentToolbar.m */; };
 		70E0B62114150F630077E4A8 /* back_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B62014150F630077E4A8 /* back_btn.png */; };
 		70E0B624141510880077E4A8 /* forward_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B623141510880077E4A8 /* forward_btn.png */; };
 		70E16B091455CBC00050C281 /* app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E16B081455CBC00050C281 /* app_icon.png */; };
@@ -128,7 +134,7 @@
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
 		7014411F140E3F1D0070459F /* LineStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineStyleCell.mm; sourceTree = "<group>"; };
 		70144121140E3F320070459F /* LineWidthCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineWidthCell.h; sourceTree = "<group>"; };
-		70144122140E3F320070459F /* LineWidthCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LineWidthCell.m; sourceTree = "<group>"; };
+		70144122140E3F320070459F /* LineWidthCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineWidthCell.mm; sourceTree = "<group>"; };
 		70144128140E553C0070459F /* line_cell.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = line_cell.png; sourceTree = "<group>"; };
 		702357D814345C0A00A95000 /* H1ErrorsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H1ErrorsInspector.h; sourceTree = "<group>"; };
 		702357D914345C0A00A95000 /* H1ErrorsInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = H1ErrorsInspector.mm; sourceTree = "<group>"; };
@@ -147,7 +153,7 @@
 		7023805D140514C8002A5331 /* file_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = file_icon.png; sourceTree = "<group>"; };
 		70249BDA1403D644006A19E6 /* PadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadView.mm; sourceTree = "<group>"; };
 		70249BDB1403D644006A19E6 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
-		70252F7A140CDD8D00F3660F /* Constants.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Constants.mm; sourceTree = "<group>"; };
+		70252F7A140CDD8D00F3660F /* Constants.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Constants.cxx; sourceTree = "<group>"; };
 		70252F7B140CDD8D00F3660F /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		702BB9D514482E2200D3842F /* picker_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_arrow.png; sourceTree = "<group>"; };
 		702BB9D614482E2200D3842F /* picker_frame_bkn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_frame_bkn.png; sourceTree = "<group>"; };
@@ -175,7 +181,6 @@
 		705A503414066421004C1C8B /* ScrollViewWithPadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPadView.h; sourceTree = "<group>"; };
 		705A503514066421004C1C8B /* ScrollViewWithPadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPadView.mm; sourceTree = "<group>"; };
 		705F1A66142347CA003045D9 /* SlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideView.h; sourceTree = "<group>"; };
-		705F1A67142347CA003045D9 /* SlideView.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = SlideView.m; sourceTree = "<group>"; };
 		706241CE1435F86700202121 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
 		706241CF1435F86700202121 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
 		706241D11435F94500202121 /* bar-background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bar-background.png"; sourceTree = "<group>"; };
@@ -280,6 +285,19 @@
 		709CD0961402768B005B2AF4 /* Shortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shortcuts.h; sourceTree = "<group>"; };
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
 		70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
+		70BC93AE147E80740083CC5C /* FileContainerElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContainerElement.h; sourceTree = "<group>"; };
+		70BC93AF147E80740083CC5C /* FileContainerElement.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContainerElement.mm; sourceTree = "<group>"; };
+		70BC93B1147E80DB0083CC5C /* FileUtils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cxx; sourceTree = "<group>"; };
+		70BC93B2147E80DB0083CC5C /* FileUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtils.h; sourceTree = "<group>"; };
+		70BC93B4147E81F60083CC5C /* SearchController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchController.h; sourceTree = "<group>"; };
+		70BC93B5147E81F60083CC5C /* SearchController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchController.mm; sourceTree = "<group>"; };
+		70BC93B6147E81F60083CC5C /* SlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideView.mm; sourceTree = "<group>"; };
+		70BC93B7147E81F60083CC5C /* SpotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpotView.h; sourceTree = "<group>"; };
+		70BC93B8147E81F60083CC5C /* SpotView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SpotView.mm; sourceTree = "<group>"; };
+		70BC93B9147E81F60083CC5C /* ThumbnailView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ThumbnailView.h; sourceTree = "<group>"; };
+		70BC93BA147E81F60083CC5C /* ThumbnailView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ThumbnailView.mm; sourceTree = "<group>"; };
+		70BC93BB147E81F60083CC5C /* TransparentToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransparentToolbar.h; sourceTree = "<group>"; };
+		70BC93BC147E81F60083CC5C /* TransparentToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransparentToolbar.m; sourceTree = "<group>"; };
 		70E0B62014150F630077E4A8 /* back_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back_btn.png; sourceTree = "<group>"; };
 		70E0B623141510880077E4A8 /* forward_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = forward_btn.png; sourceTree = "<group>"; };
 		70E16B081455CBC00050C281 /* app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = app_icon.png; sourceTree = "<group>"; };
@@ -514,6 +532,10 @@
 		70E0B5DB1414E2FD0077E4A8 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				70BC93B4147E81F60083CC5C /* SearchController.h */,
+				70BC93B5147E81F60083CC5C /* SearchController.mm */,
+				70BC93AE147E80740083CC5C /* FileContainerElement.h */,
+				70BC93AF147E80740083CC5C /* FileContainerElement.mm */,
 				7077905F13FE847600C0FFA1 /* ROOTObjectController.h */,
 				7077906013FE847600C0FFA1 /* ROOTObjectController.mm */,
 				7077903713FE51B400C0FFA1 /* RootFileController.h */,
@@ -529,6 +551,13 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				70BC93B6147E81F60083CC5C /* SlideView.mm */,
+				70BC93B7147E81F60083CC5C /* SpotView.h */,
+				70BC93B8147E81F60083CC5C /* SpotView.mm */,
+				70BC93B9147E81F60083CC5C /* ThumbnailView.h */,
+				70BC93BA147E81F60083CC5C /* ThumbnailView.mm */,
+				70BC93BB147E81F60083CC5C /* TransparentToolbar.h */,
+				70BC93BC147E81F60083CC5C /* TransparentToolbar.m */,
 				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
 				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
 				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
@@ -540,7 +569,6 @@
 				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
 				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,
 				705F1A66142347CA003045D9 /* SlideView.h */,
-				705F1A67142347CA003045D9 /* SlideView.m */,
 				704498071429D0A000E83799 /* PadImageView.h */,
 				704498081429D0A000E83799 /* PadImageView.mm */,
 				7044980B1429D13D00E83799 /* PadImageScrollView.h */,
@@ -559,7 +587,7 @@
 				7077906B13FE96C200C0FFA1 /* EditorView.mm */,
 				7077906C13FE96C200C0FFA1 /* EditorView.h */,
 				70144121140E3F320070459F /* LineWidthCell.h */,
-				70144122140E3F320070459F /* LineWidthCell.m */,
+				70144122140E3F320070459F /* LineWidthCell.mm */,
 				7014411E140E3F1D0070459F /* LineStyleCell.h */,
 				7014411F140E3F1D0070459F /* LineStyleCell.mm */,
 				7077906F13FE96C200C0FFA1 /* EditorPlateView.mm */,
@@ -590,7 +618,9 @@
 		70E0B5E41414E4C80077E4A8 /* Code */ = {
 			isa = PBXGroup;
 			children = (
-				70252F7A140CDD8D00F3660F /* Constants.mm */,
+				70BC93B1147E80DB0083CC5C /* FileUtils.cxx */,
+				70BC93B2147E80DB0083CC5C /* FileUtils.h */,
+				70252F7A140CDD8D00F3660F /* Constants.cxx */,
 				70252F7B140CDD8D00F3660F /* Constants.h */,
 				709CD0961402768B005B2AF4 /* Shortcuts.h */,
 				709CD0971402768B005B2AF4 /* Shortcuts.mm */,
@@ -768,10 +798,10 @@
 				709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */,
 				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
 				705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */,
-				70252F7C140CDD8D00F3660F /* Constants.mm in Sources */,
+				70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */,
 				7014410F140E18390070459F /* SelectionView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
-				70144123140E3F320070459F /* LineWidthCell.m in Sources */,
+				70144123140E3F320070459F /* LineWidthCell.mm in Sources */,
 				702DDD1B1415FEA1009FC6F3 /* LineInspector.mm in Sources */,
 				702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */,
 				70681C0D1416365900F8338A /* PadInspector.mm in Sources */,
@@ -784,7 +814,6 @@
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,
 				7068FF24141A0EAF003560A1 /* AxisFontInspector.mm in Sources */,
 				7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */,
-				705F1A68142347CA003045D9 /* SlideView.m in Sources */,
 				704498091429D0A000E83799 /* PadImageView.mm in Sources */,
 				7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */,
 				702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */,
@@ -795,6 +824,13 @@
 				7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */,
 				702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */,
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
+				70BC93B0147E80740083CC5C /* FileContainerElement.mm in Sources */,
+				70BC93B3147E80DB0083CC5C /* FileUtils.cxx in Sources */,
+				70BC93BD147E81F60083CC5C /* SearchController.mm in Sources */,
+				70BC93BE147E81F60083CC5C /* SlideView.mm in Sources */,
+				70BC93BF147E81F60083CC5C /* SpotView.mm in Sources */,
+				70BC93C0147E81F60083CC5C /* ThumbnailView.mm in Sources */,
+				70BC93C1147E81F60083CC5C /* TransparentToolbar.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -824,6 +860,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -832,7 +870,7 @@
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = ../../../hist/hist/src/G__Hist.o;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
@@ -843,12 +881,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_UNIVERSAL_IPHONE_OS)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = ../../../hist/hist/src/G__Hist.o;
 				SDKROOT = iphoneos;
@@ -860,6 +900,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
@@ -883,6 +925,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "root_browser/RootBrowser-Prefix.pch";

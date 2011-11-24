@@ -5,15 +5,21 @@
 #import "SlideshowController.h"
 #import "SlideView.h"
 
-//C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+//C++ imports.
 #import "IOSPad.h"
 
-@implementation SlideshowController
+#import "FileUtils.h"
 
+@implementation SlideshowController {
+   SlideView *padViews[2];//The current and the next in a slide show.
 
-@synthesize parentView;
-@synthesize padParentView;
+   unsigned visiblePad;
+   unsigned nCurrentObject;
+   
+   ROOT::iOS::Browser::FileContainer *fileContainer;
+   
+   NSTimer *timer;
+}
 
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
@@ -50,12 +56,11 @@
       padViews[i] = [[SlideView alloc] initWithFrame : padFrame];
       [padParentView addSubview : padViews[i]];
       padViews[i].hidden = YES;
-      [padViews[i] release];
    }
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::FileContainer *)container
+- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::Browser::FileContainer *)container
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
@@ -90,11 +95,6 @@
 {
    if (timer)
       [timer invalidate];
-
-   self.parentView = nil;
-   self.padParentView = nil;
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

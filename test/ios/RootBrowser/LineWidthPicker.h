@@ -1,12 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@class LineWidthCell;
-
-@interface LineWidthPicker : UIView {
-@private
-   LineWidthCell *lineWidthView;
-   UIImage *backgroundImage;
-}
+@interface LineWidthPicker : UIView
 
 - (void) setLineWidth : (float)width;
 

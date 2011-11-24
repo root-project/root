@@ -2,13 +2,25 @@
 
 #import "HorizontalPickerView.h"
 
-@implementation HorizontalPickerView
-
+namespace {
+//Obj-C class is not a scope :((( UGLY LANGUAGE!
 const CGFloat pickerWidth = 200.f;
 const CGFloat cellWidth = 50.f;
 const CGFloat cellHeight = 50.f;
 const CGFloat xPad = 1.5 * cellWidth;
 const CGFloat markerPos = 100.f;
+
+}
+
+@implementation HorizontalPickerView {
+   UIScrollView *contentScroll;
+   UIImageView *arrowView;
+   UIImage *frameImage;
+   UIImage *backgroundImage;
+   
+   unsigned selectedItem;
+}
+
 
 @synthesize pickerDelegate;
 
@@ -28,13 +40,9 @@ const CGFloat markerPos = 100.f;
       
       contentScroll.backgroundColor = [UIColor clearColor];
       [self addSubview : contentScroll];
-      [contentScroll release];
       
-      backgroundImage = [UIImage imageNamed:@"picker_bkn.png"];
-      [backgroundImage retain];
-      
-      frameImage = [UIImage imageNamed:@"picker_frame_bkn.png"];
-      [frameImage retain];
+      backgroundImage = [UIImage imageNamed : @"picker_bkn.png"];
+      frameImage = [UIImage imageNamed : @"picker_frame_bkn.png"];
       
       CAGradientLayer *dropshadowLayer = [CAGradientLayer layer];
       dropshadowLayer.startPoint = CGPointMake(0.0f, 0.0f);
@@ -83,20 +91,10 @@ const CGFloat markerPos = 100.f;
       arrowView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"picker_arrow.png"]];
       arrowView.center = CGPointMake(frame.size.width / 2, 60 - arrowView.frame.size.height / 2);
       [self addSubview : arrowView];
-      [arrowView release];
       [self bringSubviewToFront : arrowView];
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   [backgroundImage release];
-   [frameImage release];
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________

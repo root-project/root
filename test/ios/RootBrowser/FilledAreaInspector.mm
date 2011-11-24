@@ -10,16 +10,26 @@
 #import "TAttFill.h"
 #import "TObject.h"
 
-//TODO: check, if in Obj-C++ constants have internal linkage.
-static const CGFloat defaultCellW = 50.f;
-static const CGFloat defaultCellH = 50.f;
+//It's mm file == C++, consts have internal linkage.
+const CGFloat defaultCellW = 50.f;
+const CGFloat defaultCellH = 50.f;
 
-@implementation FilledAreaInspector
+@implementation FilledAreaInspector  {
+   HorizontalPickerView *colorPicker;
+   HorizontalPickerView *patternPicker;
+   
+   NSMutableArray *colorCells;
+   NSMutableArray *patternCells;
+   
+   TAttFill *filledObject;
+   
+   __weak ROOTObjectController *parentController;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
    
@@ -33,44 +43,30 @@ static const CGFloat defaultCellH = 50.f;
          ColorCell * newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
-         [newCell release];
       }
       
       colorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 15.f, 220.f, 70.f)];
       [colorPicker addItems : colorCells];
       [self.view addSubview : colorPicker];
-      [colorPicker release];
       colorPicker.pickerDelegate = self;
 
       patternCells = [[NSMutableArray alloc] init];
       PatternCell *solidFill = [[PatternCell alloc] initWithFrame : cellRect andPattern : 0];
       [solidFill setAsSolid];
       [patternCells addObject : solidFill];
-      [solidFill release];
       
       for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
          PatternCell *newCell = [[PatternCell alloc] initWithFrame : cellRect andPattern : i];
          [patternCells addObject : newCell];
-         [newCell release];
       }
       
       patternPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 90.f, 220.f, 70.f)];
       [patternPicker addItems : patternCells];
       [self.view addSubview : patternPicker];
-      [patternPicker release];
       patternPicker.pickerDelegate = self;
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   [colorCells release];
-   [patternCells release];
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -98,7 +94,7 @@ static const CGFloat defaultCellH = 50.f;
    //If the object color is one of 16 standard colors,
    //I find the correct row in a picker and rotate picker 
    //to this row. If not - it's on zero.
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    //I do not check the result of dynamic_cast here. This is done at upper level.
    filledObject = dynamic_cast<TAttFill *>(obj);
@@ -136,7 +132,7 @@ static const CGFloat defaultCellH = 50.f;
 //____________________________________________________________________________________________________
 - (void) setNewColor : (NSInteger) cellIndex
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    if (filledObject && parentController) {
       const bool wasHollow = filledObject->GetFillColor() == 0;

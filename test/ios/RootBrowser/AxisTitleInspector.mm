@@ -6,29 +6,26 @@
 #import "TObject.h"
 #import "TAxis.h"
 
-static const float minTitleOffset = 0.1f;
-static const float maxTitleOffset = 10.f;
-static const float titleOffsetStep = 0.01f;
+//It's mm file == C++, consts have internal linkage.
+const float minTitleOffset = 0.1f;
+const float maxTitleOffset = 10.f;
+const float titleOffsetStep = 0.01f;
 
-static const float minTitleSize = 0.01f;
-static const float maxTitleSize = 1.f;
-static const float titleSizeStep = 0.01f;
+const float minTitleSize = 0.01f;
+const float maxTitleSize = 1.f;
+const float titleSizeStep = 0.01f;
 
-static const float totalHeight = 400.f;
-static const float tabBarHeight = 49.f;
+const float totalHeight = 400.f;
+const float tabBarHeight = 49.f;
 
-@implementation AxisTitleInspector
+@implementation AxisTitleInspector {
 
-@synthesize titleField;
-@synthesize centered;
-@synthesize rotated;
-@synthesize offsetLabel;
-@synthesize plusOffsetBtn;
-@synthesize minusOffsetBtn;
-@synthesize sizeLabel;
-@synthesize plusSizeBtn;
-@synthesize minusSizeBtn;
+   ROOTObjectController *controller;
+   TAxis *object;
+   float offset;
+   float titleSize;
 
+}
 
 //____________________________________________________________________________________________________
 + (CGRect) inspectorFrame
@@ -46,23 +43,6 @@ static const float tabBarHeight = 49.f;
       [self view];
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   self.titleField = nil;
-   self.centered = nil;
-   self.rotated = nil;
-   self.offsetLabel = nil;
-   self.plusOffsetBtn = nil;
-   self.minusOffsetBtn = nil;
-   
-   self.sizeLabel = nil;
-   self.plusSizeBtn = nil;
-   self.minusSizeBtn = nil;
-
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -132,12 +112,6 @@ static const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) back
-{
-   [self.navigationController popViewControllerAnimated : YES];   
-}
-
-//____________________________________________________________________________________________________
 - (IBAction) showTitleFontInspector
 {
    AxisFontInspector *fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" mode : ROOT_IOSObjectInspector::afimTitleFont];
@@ -146,7 +120,6 @@ static const float tabBarHeight = 49.f;
    [fontInspector setROOTObject : object];
    
    [self.navigationController pushViewController : fontInspector animated : YES];
-   [fontInspector release];
 }
 
 //____________________________________________________________________________________________________

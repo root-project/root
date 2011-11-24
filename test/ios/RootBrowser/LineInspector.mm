@@ -11,20 +11,32 @@
 #import "TObject.h"
 #import "TGraph.h"
 
-@implementation LineInspector
-
-//These constants are from ROOT's TAttLine's editor.
+//It's mm file == C++, consts have internal linkage.
 const int minLineWidth = 1;
 const int maxLineWidth = 15;
+const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 
-@synthesize lineWidthPicker;
+@interface LineInspector () {
+   NSMutableArray *lineStyles;
+   NSMutableArray *lineColors;
 
-static const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
+   HorizontalPickerView *lineColorPicker;
+   HorizontalPickerView *lineStylePicker;
+
+   int lineWidth;
+
+   __weak ROOTObjectController *controller;
+   TAttLine *object;
+}
+
+@end
+
+@implementation LineInspector
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
@@ -35,13 +47,11 @@ static const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
       for (unsigned i = 0; i < 10; ++i) {
          LineStyleCell *newCell = [[LineStyleCell alloc] initWithFrame : cellFrame lineStyle : i + 1];
          [lineStyles addObject : newCell];
-         [newCell release];
       }
       
       lineStylePicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 20.f, 220.f, 70.f)];
       [lineStylePicker addItems : lineStyles];
       [self.view addSubview : lineStylePicker];
-      [lineStylePicker release];
       
       lineStylePicker.pickerDelegate = self;
       
@@ -50,27 +60,16 @@ static const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
          ColorCell *newCell = [[ColorCell alloc] initWithFrame : cellFrame];
          [newCell setRGB : predefinedFillColors[i]];
          [lineColors addObject : newCell];
-         [newCell release];
       }
 
       lineColorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 105, 220.f, 70.f)];
       [lineColorPicker addItems : lineColors];
       [self.view addSubview : lineColorPicker];
-      [lineColorPicker release];
       
       lineColorPicker.pickerDelegate = self;
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   [lineStyles release];
-   [lineColors release];
-   self.lineWidthPicker = nil;
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -114,7 +113,7 @@ static const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (void) setROOTObject : (TObject *)o
 {
-   using namespace ROOT_IOSBrowser;
+   using namespace ROOT::iOS::Browser;
 
    object = dynamic_cast<TAttLine *>(o);
    
@@ -167,12 +166,14 @@ static const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
 {
+   using namespace ROOT::iOS::Browser;
+
    if (picker == lineColorPicker) {
-      if (item < ROOT_IOSBrowser::nROOTDefaultColors) {
-         const unsigned colorIndex = ROOT_IOSBrowser::colorIndices[item];
+      if (item < nROOTDefaultColors) {
+         const unsigned colorIndex = colorIndices[item];
          object->SetLineColor(colorIndex);
       } else
-         NSLog(@"check the code, bad item index from horizontal picker: %u, must be < %u", item, ROOT_IOSBrowser::nROOTDefaultColors);
+         NSLog(@"check the code, bad item index from horizontal picker: %u, must be < %u", item, nROOTDefaultColors);
    } else {
       if (item < 10)
          object->SetLineStyle(item + 1);

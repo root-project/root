@@ -28,23 +28,23 @@
       minimumRange = 4.f;//FIXME
       padding = 20;
 
-      UIImageView *trackBackground = [[[UIImageView alloc] initWithImage : [UIImage imageNamed : @"bar-background.png"]] autorelease];
+      UIImageView *trackBackground = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"bar-background.png"]];
       trackBackground.frame = CGRectMake(0.f, self.frame.size.height / 2 - trackBackground.frame.size.height / 2, self.frame.size.width - padding * 2, trackBackground.frame.size.height);
       trackBackground.center = CGPointMake(self.frame.size.width / 2, self.frame.size.height / 2);
       [self addSubview : trackBackground];
         
-      track = [[[UIImageView alloc] initWithImage : [UIImage imageNamed:@"bar-highlight.png"]] autorelease];
+      track = [[UIImageView alloc] initWithImage : [UIImage imageNamed:@"bar-highlight.png"]];
       track.frame = CGRectMake(0.f, self.frame.size.height / 2 - track.frame.size.height / 2, self.frame.size.width - padding * 2, track.frame.size.height);
       track.center = CGPointMake(self.frame.size.width / 2, self.frame.size.height / 2);
       [self addSubview : track];
         
-      minThumb = [[[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]] autorelease];
+      minThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       minThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height,self.frame.size.height);
       minThumb.contentMode = UIViewContentModeCenter;
 		minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
 		[self addSubview : minThumb];
         
-      maxThumb = [[[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]] autorelease];
+      maxThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       maxThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height, self.frame.size.height);
       maxThumb.contentMode = UIViewContentModeCenter;
 		maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);

@@ -6,33 +6,26 @@
 #import "TObject.h"
 #import "TAxis.h"
 
-static const float tickLengthStep = 0.01f;
-static const float maxTickLength = 1.f;
-static const float minTickLength = -1.f;
 
-static const CGFloat tabBarHeight = 49.f;
-static const CGFloat totalHeight = 400.f;
-static const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
+//It's mm file == C++, consts have internal linkage.
+const float tickLengthStep = 0.01f;
+const float maxTickLength = 1.f;
+const float minTickLength = -1.f;
 
-@implementation AxisTicksInspector
+const CGFloat tabBarHeight = 49.f;
+const CGFloat totalHeight = 400.f;
+const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
-@synthesize tickLengthLabel;
-@synthesize plusLengthBtn;
-@synthesize minusLengthBtn;
+@implementation AxisTicksInspector {
+   float tickLength;
+   unsigned primaryTicks;
+   unsigned secondaryTicks;
+   unsigned tertiaryTicks;
+   
+   __weak ROOTObjectController *controller;
 
-@synthesize plusPrim;
-@synthesize minusPrim;
-@synthesize primLabel;
-
-@synthesize plusSec;
-@synthesize minusSec;
-@synthesize secLabel;
-
-@synthesize plusTer;
-@synthesize minusTer;
-@synthesize terLabel;
-
-@synthesize ticksNegPos;
+   TAxis *object;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -47,33 +40,6 @@ static const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalH
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   //So, reference counting + outlets + interface builder are useless crap
-   //and bullshit. Endless ugliness.
-
-   self.tickLengthLabel = nil;
-   self.plusLengthBtn = nil;
-   self.minusLengthBtn = nil;
-
-   self.plusPrim = nil;
-   self.minusPrim = nil;
-   self.primLabel = nil;
-
-   self.plusSec = nil;
-   self.minusSec = nil;
-   self.secLabel = nil;
-
-   self.plusTer = nil;
-   self.minusTer = nil;
-   self.terLabel = nil;
-
-   self.ticksNegPos = nil;
-   
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -158,12 +124,6 @@ static const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalH
 - (void) setROOTObjectController:(ROOTObjectController *)c
 {
    controller = c;
-}
-
-//____________________________________________________________________________________________________
-- (void) back
-{
-   [self.navigationController popViewControllerAnimated : YES];
 }
 
 //____________________________________________________________________________________________________

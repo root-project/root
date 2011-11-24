@@ -2,24 +2,10 @@
 
 #import "ObjectInspectorComponent.h"
 
-@class ROOTObjectController;
-@class PadTicksGridInspector;
-@class PadLogScaleInspector;
-
-class TObject;
-
-@interface PadInspector : UIViewController <ObjectInspectorComponent> {
+@interface PadInspector : UIViewController <ObjectInspectorComponent, UITabBarDelegate> {
 @private
-   IBOutlet UITabBar *tabBar;
-
-   PadTicksGridInspector *gridInspector;
-   PadLogScaleInspector *logScaleInspector;
-   
-   ROOTObjectController *controller;
-   TObject *object;
+   __weak IBOutlet UITabBar *tabBar;
 }
-
-@property (nonatomic, retain) UITabBar *tabBar;
 
 + (CGRect) inspectorFrame;
 
@@ -27,8 +13,5 @@ class TObject;
 - (void) setROOTObject : (TObject *)o;
 - (NSString *) getComponentName;
 - (void) resetInspector;
-
-- (IBAction) showTicksAndGridInspector;
-- (IBAction) showLogScaleInspector;
 
 @end

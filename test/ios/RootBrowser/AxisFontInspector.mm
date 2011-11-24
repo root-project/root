@@ -5,10 +5,12 @@
 #import "TObject.h"
 #import "TAxis.h"
 
-static const CGFloat defaultCellW = 180.f;
-static const CGFloat defaultCellH = 44.f;
+namespace {
 
-static NSString *fixedFonts[] =  //These are the strings with font names to use with UILabel.
+const CGFloat defaultCellW = 180.f;
+const CGFloat defaultCellH = 44.f;
+
+NSString *fixedFonts[] =  //These are the strings with font names to use with UILabel.
                                      {
                                       @"TimesNewRomanPS-ItalicMT",
                                       @"TimesNewRomanPS-BoldMT",
@@ -25,7 +27,7 @@ static NSString *fixedFonts[] =  //These are the strings with font names to use 
                                       @"TimesNewRomanPSMT"
                                      };
 
-static NSString *fixedFontNames[] = //these are the strings to show in a picker view.
+NSString *fixedFontNames[] = //these are the strings to show in a picker view.
                                      {
                                       @"Times New Roman",
                                       @"Times New Roman",
@@ -42,13 +44,15 @@ static NSString *fixedFontNames[] = //these are the strings to show in a picker 
                                       @"Times New Roman"
                                      };
                                      
-static const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
+const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 
-@implementation AxisFontInspector
+}
 
-@synthesize titleLabel;
-@synthesize fontPicker;
-
+@implementation AxisFontInspector {
+   ROOT_IOSObjectInspector::AxisFontInspectorMode mode;
+   __weak ROOTObjectController *controller;
+   TAxis *object;
+}
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode)m
@@ -69,15 +73,6 @@ static const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   self.titleLabel = nil;
-   self.fontPicker = nil;
-   
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -167,7 +162,7 @@ static const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 //____________________________________________________________________________________________________
 - (UIView *) pickerView : (UIPickerView *)pickerView viewForRow : (NSInteger)row forComponent : (NSInteger)component reusingView : (UIView *)view
 {
-   UILabel *label = [[[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)] autorelease];
+   UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = fixedFontNames[row];
    label.font = [UIFont fontWithName : fixedFonts[row] size : 14.f];
    label.textAlignment = UITextAlignmentCenter;

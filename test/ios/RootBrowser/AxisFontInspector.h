@@ -1,10 +1,5 @@
 #import "ObjectInspectorComponent.h"
 
-@class ROOTObjectController;
-
-class TObject;
-class TAxis;
-
 namespace ROOT_IOSObjectInspector {
 
 enum AxisFontInspectorMode{
@@ -16,18 +11,9 @@ afimLabelFont
 
 @interface AxisFontInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent> {
 @private
-   IBOutlet UILabel *titleLabel;
-   IBOutlet UIPickerView *fontPicker;
-   
-   ROOT_IOSObjectInspector::AxisFontInspectorMode mode;
-   
-   ROOTObjectController *controller;
-   TAxis *object;
+   __weak IBOutlet UILabel *titleLabel;
+   __weak IBOutlet UIPickerView *fontPicker;
 }
-
-@property (nonatomic, retain) UILabel *titleLabel;
-@property (nonatomic, retain) UIPickerView *fontPicker;
-
 
 - (id)initWithNibName : (NSString *)nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode)m;
 

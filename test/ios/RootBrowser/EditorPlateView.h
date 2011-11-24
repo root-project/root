@@ -2,25 +2,12 @@
 
 @class EditorView;
 
-@interface EditorPlateView : UIView {
-@private
-   UIImage *plateImage;
-   NSString *editorName_;
-   UILabel *editorLabel;
-   
-   UIImage *arrowImage;
-   UIImageView *arrowImageView;
-   
-   EditorView *topView;
-}
+@interface EditorPlateView : UIView
 
 @property (nonatomic, retain) NSString *editorName;
-@property (assign) UIImageView *arrowImageView;
+@property (nonatomic, retain) UIImageView *arrowImageView;
 
 + (CGFloat) plateHeight;
-
 - (id) initWithFrame : (CGRect)frame editorName : (NSString *) name topView : (EditorView *) tv;
-
-- (void) handleTap : (UITapGestureRecognizer *) tap;
 
 @end

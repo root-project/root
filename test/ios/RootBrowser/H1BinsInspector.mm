@@ -2,16 +2,14 @@
 #import "H1BinsInspector.h"
 #import "RangeSlider.h"
 
-#import "IOSFileScanner.h"
 #import "TAxis.h"
 #import "TH1.h"
 
-@implementation H1BinsInspector
-
-@synthesize titleField;
-@synthesize minLabel;
-@synthesize maxLabel;
-@synthesize showMarkers;
+@implementation H1BinsInspector {
+   RangeSlider *axisRangeSlider;
+   __weak ROOTObjectController *controller;
+   TH1 *object;
+}
 
 //____________________________________________________________________________________________________
 - (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
@@ -19,21 +17,9 @@
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
    if (self) {
       [self view];
-      
-      //
-           //
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) dealloc
-{
-   self.titleField = nil;
-   self.minLabel = nil;
-   self.maxLabel = nil;
-   self.showMarkers = nil;
 }
 
 //____________________________________________________________________________________________________
@@ -53,7 +39,6 @@
 
    axisRangeSlider = [[RangeSlider alloc] initWithFrame : CGRectMake(0.f, 210.f, 250.f, 60.f)];
    [self.view addSubview : axisRangeSlider];
-   [axisRangeSlider release];
    
    [axisRangeSlider addTarget:self action:@selector(axisRangeChanged) forControlEvents : UIControlEventValueChanged];
 }

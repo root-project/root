@@ -2,10 +2,7 @@
 
 #import "TAttMarker.h"
 
-@interface MarkerStyleCell : UIView {
-@private
-   EMarkerStyle markerStyle;
-}
+@interface MarkerStyleCell : UIView
 
 - (id) initWithFrame : (CGRect)frame andMarkerStyle : (EMarkerStyle)style;
 

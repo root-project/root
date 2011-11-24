@@ -4,14 +4,18 @@
 #import "RootFileController.h"
 #import "FileShortcut.h"
 
-//C++ (ROOT) imports.
-#import "IOSFileContainer.h"
+//C++ imports.
+#import "FileUtils.h"
 
-@implementation FileShortcut
+@implementation FileShortcut {
+   __weak UIViewController *controller;
+
+   UIImage *filePictogram;
+   
+   ROOT::iOS::Browser::FileContainer *fileContainer;
+}
 
 @synthesize fileName;
-@synthesize filePath;
-@synthesize errorMessage;
 
 //____________________________________________________________________________________________________
 + (CGFloat) iconWidth
@@ -32,51 +36,20 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) initFileContainer : (NSString *) path
-{
-   //C++ part. Open the file and read its contents.
-   fileContainer = ROOT::iOS::CreateFileContainer([path cStringUsingEncoding : [NSString defaultCStringEncoding]]);
-}
-
-//____________________________________________________________________________________________________
-- (void) setPathAndName : (NSString *) path
-{
-   self.filePath = path;
-   //extract file name substring.
-   if (fileContainer)
-      self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
-}
-
-//____________________________________________________________________________________________________
-- (void) initImages
-{
-   filePictogram = [UIImage imageNamed : @"file_icon.png"];
-   [filePictogram retain];
-      
-   backgroundImage = [UIImage imageNamed:@"file_shortcut_background.png"];
-   [backgroundImage retain];
-}
-
-//____________________________________________________________________________________________________
-- (void) initGestures 
-{
-   UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap)];
-   [self addGestureRecognizer:tap];
-   [tap release];
-}
-
-//____________________________________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame controller : (UIViewController *)c filePath : (NSString *)path
+- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)viewController fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
 {
    self = [super initWithFrame : frame];
    
    if (self) {
-      controller = c;
-
-      [self initFileContainer : path];      
-      [self setPathAndName : path];
-      [self initImages];
-      [self initGestures];
+      controller = viewController;
+      fileContainer = container;
+      
+      self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
+      filePictogram = [UIImage imageNamed : @"file_icon.png"];
+      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
+      [self addGestureRecognizer : tap];
+      UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget: self action:@selector(handleLongPress:)];
+      [self addGestureRecognizer : longPress];
    
       self.opaque = NO;
    }
@@ -85,12 +58,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect)rect
 {
    // Drawing code
    CGContextRef ctx = UIGraphicsGetCurrentContext();
-
-   [backgroundImage drawAtPoint:CGPointZero];
 
    //Draw the pictogram for ROOT's file.
    const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2, 
@@ -106,14 +77,8 @@
 //____________________________________________________________________________________________________
 - (void)dealloc
 {
-   ROOT::iOS::DeleteFileContainer(fileContainer);
-
-   self.fileName = nil;
-   self.filePath = nil;
-   
-   [filePictogram release];
-   [backgroundImage release];
-   [super dealloc];
+   //Crazy name qualification :(
+   ROOT::iOS::Browser::FileContainer::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________
@@ -124,7 +89,16 @@
 }
 
 //____________________________________________________________________________________________________
-- (ROOT::iOS::FileContainer *) getFileContainer
+- (void) handleLongPress : (UILongPressGestureRecognizer *)longPress
+{
+   if (longPress.state == UIGestureRecognizerStateBegan) {
+      RootFileController *parentController = (RootFileController *)controller;
+      [parentController tryToDelete : self];
+   }
+}
+
+//____________________________________________________________________________________________________
+- (ROOT::iOS::Browser::FileContainer *) getFileContainer
 {
    return fileContainer;
 }

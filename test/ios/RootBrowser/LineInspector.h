@@ -4,32 +4,16 @@
 #import "HorizontalPickerDelegate.h"
 
 
-@class ROOTObjectController;
 @class HorizontalPickerView;
 @class LineWidthPicker;
-
-class TAttLine;
-class TObject;
 
 //Line inspector is a composition of two sub-inspectors: line color and width inspector + 
 //line style inspector.
 
 @interface LineInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate> {
 @private
-   NSMutableArray *lineStyles;
-   NSMutableArray *lineColors;
-
-   HorizontalPickerView *lineColorPicker;
-   HorizontalPickerView *lineStylePicker;
-
-   IBOutlet LineWidthPicker *lineWidthPicker;
-   int lineWidth;
-
-   ROOTObjectController *controller;
-   TAttLine *object;
+   __weak IBOutlet LineWidthPicker *lineWidthPicker;
 }
-
-@property (nonatomic, retain) LineWidthPicker *lineWidthPicker;
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
 - (void) setROOTObject : (TObject *)o;

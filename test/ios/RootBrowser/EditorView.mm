@@ -7,9 +7,37 @@
 #import "EditorView.h"
 
 
-namespace ObjIns = ROOT_IOSObjectInspector;
+//Hoho! As soon as I use Objective-C++, I can use namespaces! "Yeaaahhh, that's good!" (c) Duke Nukem.
 
-@implementation EditorView
+namespace {
+
+enum {
+   evMaxComponents = 5,
+   evMaxStates = 1 << evMaxComponents
+};
+
+}
+
+@implementation EditorView {
+   UILabel *editorTitle;
+
+   ScrollViewWithPickers *scrollView;
+
+   CGFloat plateYs[evMaxStates * evMaxComponents];
+   CGFloat viewYs[evMaxStates * evMaxComponents];
+   
+   UIView *plates[evMaxComponents];
+   UIView *views[evMaxComponents];
+   UIView *containers[evMaxComponents];   
+
+   unsigned nStates;
+   unsigned nEditors;
+   unsigned currentState;
+   
+   int newOpened;
+   
+   BOOL animation;
+}
 
 //____________________________________________________________________________________________________
 + (CGFloat) editorAlpha
@@ -67,7 +95,6 @@ namespace ObjIns = ROOT_IOSObjectInspector;
       editorTitle.textColor = [UIColor blackColor];
       editorTitle.backgroundColor = [UIColor clearColor];
       [self addSubview : editorTitle];
-      [editorTitle release];
       
       const CGRect scrollFrame = CGRectMake(10.f, 45.f, [EditorView scrollWidth], frame.size.height - 55.f);
       scrollView = [[ScrollViewWithPickers alloc] initWithFrame : scrollFrame];
@@ -75,17 +102,10 @@ namespace ObjIns = ROOT_IOSObjectInspector;
       scrollView.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
       scrollView.bounces = NO;
       [self addSubview : scrollView];
-      [scrollView release];
       self.opaque = NO;
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)dealloc
-{
-   [super dealloc];
 }
 
 //____________________________________________________________________________________________________
@@ -197,7 +217,7 @@ namespace ObjIns = ROOT_IOSObjectInspector;
 //____________________________________________________________________________________________________
 - (void) addSubEditor:(UIView *)element withName : (NSString *)name
 {
-   if (nEditors == ROOT_IOSObjectInspector::evMaxComponents) {
+   if (nEditors == evMaxComponents) {
       NSLog(@"Could not add more editors");
       return;
    }
@@ -208,7 +228,6 @@ namespace ObjIns = ROOT_IOSObjectInspector;
    //topView is 'self' - the view, which will be informed, that user tapped on editor's plate.
    plates[nEditors] = [[EditorPlateView alloc] initWithFrame : CGRectMake(0.f, 0.f, [EditorView scrollWidth], [EditorPlateView plateHeight]) editorName : name topView : self];
    [scrollView addSubview : plates[nEditors]];
-   [plates[nEditors] release];
 
    //Create a container view for sub-editor.
    CGRect elementFrame = element.frame;
@@ -225,7 +244,6 @@ namespace ObjIns = ROOT_IOSObjectInspector;
    containers[nEditors].hidden = YES;
    //Add container.
    [scrollView addSubview : containers[nEditors]];
-   [containers[nEditors] release];
 
    //New number of sub-editors and possible editor states.
    ++nEditors;

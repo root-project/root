@@ -1,6 +1,8 @@
 #include "Constants.h"
 
-namespace ROOT_IOSBrowser {
+namespace ROOT {
+namespace iOS {
+namespace Browser {
 
 /////////////Geometric constants for ROOTObjectController.
 //'L' postfix is for landscape, 'P' is for portrait.
@@ -81,4 +83,6 @@ const unsigned colorIndices[nROOTDefaultColors] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 
 const unsigned stippleBase = 3000;
 
-}
+}//namespace Browser
+}//namespace iOS
+}//namespace ROOT
