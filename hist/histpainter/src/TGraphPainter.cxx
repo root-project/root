@@ -3126,6 +3126,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    if ((!thePolargram) || theGraphPolar->GetOptionAxis()) {
       // Draw Polar coord system
       thePolargram = new TGraphPolargram("Polargram",rwrmin,rwrmax,rwtmin,rwtmax);
+      thePolargram->SetBit(kCanDelete);
       theGraphPolar->SetPolargram(thePolargram);
       if (opt.Contains("O")) thePolargram->SetBit(TGraphPolargram::kLabelOrtho);
       else thePolargram->ResetBit(TGraphPolargram::kLabelOrtho);
