@@ -45,6 +45,7 @@
 #include "RooAbsData.h"
 #include "Roo1DTable.h"
 #include "RooSimGenContext.h"
+#include "RooSimSplitGenContext.h"
 #include "RooDataSet.h"
 #include "RooCmdConfig.h"
 #include "RooNameReg.h"
@@ -768,11 +769,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 // 					   stype,projDataTmp,projSet) ;
 
     // Override normalization and projection dataset
-    RooLinkedList cmdList2(cmdList) ;
     RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
     RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
 
     // WVE -- do not adjust normalization for asymmetry plots
+    RooLinkedList cmdList2(cmdList) ;
     if (!cmdList.find("Asymmetry")) {
       cmdList2.Add(&tmp1) ;
     }
@@ -994,6 +995,26 @@ void RooSimultaneous::selectNormalizationRange(const char* normRange2, Bool_t /*
 
 
 //_____________________________________________________________________________
+RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const RooDataSet* prototype, 
+						  const RooArgSet* auxProto, Bool_t verbose, Bool_t autoBinned, const char* binnedTag) const 
+{
+  const char* idxCatName = _indexCat.arg().GetName() ;
+  
+  if (vars.find(idxCatName) && prototype==0 && (auxProto==0 || auxProto->getSize()==0) && (autoBinned || (binnedTag && strlen(binnedTag)))) {    
+
+    // Return special generator config that can also do binned generation for selected states
+    return new RooSimSplitGenContext(*this,vars,verbose,autoBinned,binnedTag) ;
+
+  } else {
+    
+    // Return regular generator config ;
+    return genContext(vars,prototype,auxProto,verbose) ;
+  }     
+}
+
+
+
+//_____________________________________________________________________________
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					      const RooArgSet* auxProto, Bool_t verbose) const 
 {
@@ -1003,8 +1024,10 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
   const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
 
   if (vars.find(idxCatName) || (protoVars && protoVars->find(idxCatName))) {
+
     // Generating index category: return special sim-context
     return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
+
   } else if (_indexCat.arg().isDerived()) {
     // Generating dependents of a derived index category
 
@@ -1027,6 +1050,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
 
     if (allServers) {
       // Use simcontext if we have all servers
+
       return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
     } else if (!allServers && anyServer) {
       // Abort if we have only part of the servers
@@ -1122,109 +1146,6 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 }
 
 
-
-
-//_____________________________________________________________________________
-RooAbsData *RooSimultaneous::generateMixed(const RooArgSet &whatVars, Double_t nEvents, Bool_t expectedData, Bool_t extended) const 
-{
-  // Special generator interface for mixed binned/unbinned generation
-  //
-  // If index is not in whatVars, forward to selected component
-  //
-  // If index is in whatVars, generate each component individually and then collate a posteriori
-  //
-  // By default each compnent is generated _binned_, unless the component pdf has 
-  // setAttribute("GenerateUnbinned") set in which case it will be generated unbinned.
-  //
-  // Binned data components are stored as unbinned weighted data (i.e. the information specific to binned data
-  // such as the bin volume for a given coordinate) are not available
-  //
-  // whatVars - observables to generate
-  // nEvents - number of events to generate (0 = generate #event according to expectedEvents())
-  // expectedData - if kTRUE an 'Asimov dataset is generated' each bin is sampled at its expectation value
-  // extended - if kTRUE a Poissonian fluctuation is added to nEvents (also functional when nEvents=0)
-  //
-  // Note that this method by necessity treats whatVars somewhat differently than generate(): In plain generate, a call
-  // pdf->generate(RooArgSet(x,y)) on a pdf that only defines x will result in a 2D dataset with uniform distribution in y.
-  // Here, for each component, only the actual observables are generated, e.g. SIM(index[a,b] a=F(x), B=G(y)) will only
-  // generate observable x for state a and only observable y for state b, when (x,y) is passed as whatVars. Components that
-  // have no dependence on any variable in whatVar are skipped alltogether.
-
-  if (whatVars.contains(_indexCat.arg())) {
-
-    // We can only do this if all components are extended
-    if (extendMode()!=CanBeExtended) {
-      coutE(InputArguments) << "RooSimultaneous::generateMixed(" << GetName() 
-			    << ") ERROR: can only generate distribution of index category when all components are extended pdfs" << endl ;
-      return 0 ;
-    }
-
-    // First calculate total number of expected events
-    TIterator* iter = _pdfProxyList.MakeIterator() ;
-    RooRealProxy* proxy ;
-    Double_t nTotExp(0) ;
-    while((proxy=(RooRealProxy*)iter->Next())) {            
-      nTotExp += ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(whatVars) ;
-    }
-    
-    // Now loop over states
-    iter->Reset() ;
-    map<string,RooAbsData*> dataMap ;
-    while((proxy=(RooRealProxy*)iter->Next())) {            
-      RooAbsPdf* compPdf = ((RooAbsPdf*)(proxy->absArg())) ;
-
-      // Calculate number of events to generate for this state
-      Double_t compExp = compPdf->expectedEvents(whatVars) ;
-      Double_t nGenComp = (compExp*nEvents/nTotExp) ;
-
-      // Calculate actual dependents for this state
-      RooArgSet* sliceObs = compPdf->getObservables(whatVars) ;
-      if (sliceObs->getSize()>0) {
-	RooDataSet* hcomp(0) ;
-
-	// If unbinned generation is explicitly requested do that
-	if (compPdf->getAttribute("GenerateUnbinned")) {
-	  if (extended && nEvents==0) {
-	    nGenComp = RooRandom::randomGenerator()->Poisson(compExp) ;
-	  }	    
-	  hcomp = compPdf->generate(*sliceObs,(Int_t)nGenComp) ;
-	} else {
-	  // Otherwise default to binned generation
-	  hcomp = compPdf->generateWeightedUnbinned(*sliceObs,nGenComp,expectedData,kTRUE) ;
-	}
-	dataMap[proxy->GetName()] = hcomp ;
-      }
-      delete sliceObs ;
-    }
-    delete iter ;        
-
-    // Put all datasets together in a composite-store RooDataSet that links and owns the component datasets
-    RooDataSet* hmaster = new RooDataSet("hmaster","hmaster",whatVars,RooFit::Index((RooCategory&)_indexCat.arg()),RooFit::Link(dataMap),RooFit::OwnLinked()) ;    
-    return hmaster ;
-    
-  } else {
-
-    // Single component generation
-    
-    // Forward to current component
-    RooAbsPdf* compPdf = getPdf(_indexCat.arg().getLabel()) ;
-    Bool_t unbinned = compPdf->getAttribute("GenerateUnbinned") ;
-
-    if (!unbinned) {
-      // Binned generation
-      return compPdf->generateBinned(whatVars,nEvents,expectedData,extended) ;
-    }
-
-    // Unbinned generation
-    if (extended) {
-      nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
-    }
-    return compPdf->generate(whatVars,Int_t(nEvents)) ;    
-    
-  }
-
-  return 0 ;
-}
 
 
 

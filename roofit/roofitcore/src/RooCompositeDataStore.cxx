@@ -144,23 +144,23 @@ Double_t RooCompositeDataStore::sumEntries() const
 
 
 //_____________________________________________________________________________
-const RooArgSet* RooCompositeDataStore::get(Int_t index) const 
+const RooArgSet* RooCompositeDataStore::get(Int_t idx) const 
 {
-  // Load the n-th data point (n='index') in memory
+  // Load the n-th data point (n='idx') in memory
   // and return a pointer to the internal RooArgSet
   // holding its coordinates.
 
   Int_t offset(0) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    if (index>=(offset+iter->second->numEntries())) {
+    if (idx>=(offset+iter->second->numEntries())) {
       offset += iter->second->numEntries() ;
       continue ;
     }    
-    const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(index-offset)) ;
+    const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(idx-offset)) ;
     _indexCat->setIndex(iter->first) ;
     _curStore = iter->second ;
-    _curIndex = index-offset ;
+    _curIndex = idx-offset ;
     
     return &_vars ;
   }
@@ -182,9 +182,9 @@ Double_t RooCompositeDataStore::weight() const
 
 
 //_____________________________________________________________________________
-Double_t RooCompositeDataStore::weight(Int_t index) const 
+Double_t RooCompositeDataStore::weight(Int_t idx) const 
 {
-  get(index) ;
+  get(idx) ;
   return weight() ;
 }
 

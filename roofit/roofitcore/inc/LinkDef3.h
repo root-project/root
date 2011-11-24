@@ -25,6 +25,7 @@
 #pragma link C++ class RooSharedProperties+ ;
 #pragma link C++ class RooSharedPropertiesList+ ;
 #pragma link C++ class RooSimGenContext+ ;
+#pragma link C++ class RooSimSplitGenContext+ ;
 #pragma link C++ class RooStreamParser+ ;
 #pragma link C++ class RooStringVar+ ;
 #pragma link C++ class RooSuperCategory+ ;
@@ -113,6 +114,7 @@
 #pragma link C++ class RooVectorDataStore::RealFullVector- ;
 #pragma link C++ class RooVectorDataStore::CatVector- ;
 #pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
+#pragma link C++ class pair<int,RooLinkedListElem*>+ ;
 #ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooMinimizerFcn+ ;

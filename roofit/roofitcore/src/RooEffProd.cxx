@@ -101,7 +101,7 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 {
   // Return specialized generator context for RooEffProds that implements generation
   // in a more efficient way than can be done for generic correlated products
-
+  
   assert(pdf()!=0);
   assert(eff()!=0);
   return new RooEffGenContext(*this,*pdf(),*eff(),vars,prototype,auxProto,verbose) ;

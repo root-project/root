@@ -32,7 +32,7 @@
 #include "TClass.h"
 
 #include "RooAbsGenContext.h"
-#include "RooAbsGenContext.h"
+#include "RooRandom.h"
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooMsgService.h"
@@ -135,7 +135,7 @@ RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title,
 
 
 //_____________________________________________________________________________
-RooDataSet *RooAbsGenContext::generate(Int_t nEvents, Bool_t skipInit) 
+RooDataSet *RooAbsGenContext::generate(Int_t nEvents, Bool_t skipInit, Bool_t extendedMode) 
 {
   // Generate the specified number of events with nEvents>0 and
   // and return a dataset containing the generated events. With nEvents<=0,
@@ -171,6 +171,10 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents, Bool_t skipInit)
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
 		      << nEvents << " events" << endl;
+  }
+
+  if (extendedMode) {
+    nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
   }
 
   // check that any prototype dataset still defines the variables we need

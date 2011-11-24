@@ -196,7 +196,7 @@ Bool_t RooBinIntegrator::checkLimits() const
       oocoutE((TObject*)0,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
       return kFALSE;
     }
-    if (!RooNumber::isInfinite(_xmin[i]) || !RooNumber::isInfinite(_xmax[i])) {
+    if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {
       return kFALSE ;
     }
   }

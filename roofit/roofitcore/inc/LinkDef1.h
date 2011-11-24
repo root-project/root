@@ -36,6 +36,7 @@
 #pragma link C++ class RooArgList+ ;
 #pragma link C++ class RooArgProxy+ ;
 #pragma link C++ class RooArgSet+ ;
+#pragma link C++ class RooBinnedGenContext+ ;
 #pragma link C++ class RooBinning- ;
 #pragma link C++ class RooBrentRootFinder+ ;
 #pragma link C++ class RooCategory- ;

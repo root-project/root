@@ -558,7 +558,16 @@ void PiecewiseInterpolation::printAllInterpCodes(){
 //_____________________________________________________________________________
 std::list<Double_t>* PiecewiseInterpolation::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
 {
-  return _nominal.arg().binBoundaries(obs,xlo,xhi) ;
+  // WVE note: assumes nominal and alternates have identical structure, must add explicit check
+  return _nominal.arg().binBoundaries(obs,xlo,xhi) ;  
+}
+
+
+//_____________________________________________________________________________
+Bool_t PiecewiseInterpolation::isBinnedDistribution(const RooArgSet& obs) const 
+{
+  // WVE note: assumes nominal and alternates have identical structure, must add explicit check
+  return _nominal.arg().isBinnedDistribution(obs) ;
 }
 
 

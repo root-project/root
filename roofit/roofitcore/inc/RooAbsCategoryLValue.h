@@ -72,6 +72,7 @@ public:
 protected:
 
   friend class RooSimGenContext ;
+  friend class RooSimSplitGenContext ;
   virtual void setIndexFast(Int_t index) { _value._value = index ; _value._label[0]=0 ; }
 
   Bool_t setOrdinal(UInt_t index, const char* rangeName);
