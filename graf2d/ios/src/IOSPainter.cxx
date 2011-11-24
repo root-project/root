@@ -301,7 +301,7 @@ void Painter::DrawBoxOutline(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 }
 
 //_________________________________________________________________
-void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
+void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TVirtualPadPainter::EBoxMode mode)
 {
    const Double_t x1p = fConverter.XToView(x1);
    const Double_t y1p = fConverter.YToView(y1);
@@ -314,7 +314,7 @@ void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMo
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
       
-   if (mode == kFilled) 
+   if (mode == TVirtualPadPainter::kFilled) 
       PolygonHasStipple() ? FillBoxWithPattern(x1p, y1p, x2p, y2p) : FillBox(x1p, y1p, x2p, y2p);
    else
       DrawBoxOutline(x1p, y1p, x2p, y2p);
@@ -539,7 +539,7 @@ void Painter::DrawText(Double_t x, Double_t y, const CTLineGuard &ctLine)
 }
 
 //_________________________________________________________________
-void Painter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
+void Painter::DrawText(Double_t x, Double_t y, const char *text, TVirtualPadPainter::ETextMode /*mode*/)
 {
    //TODO: mode parameter.
    const Util::CGStateGuard contextGuard(fCtx);
@@ -563,7 +563,7 @@ void Painter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mod
 }
 
 //_________________________________________________________________
-void Painter::DrawTextNDC(Double_t, Double_t, const char *, ETextMode)
+void Painter::DrawTextNDC(Double_t, Double_t, const char *, TVirtualPadPainter::ETextMode)
 {
 }
 
@@ -607,154 +607,6 @@ void Painter::SetLineColorHighlighted() const
 {
    CGContextSetRGBStrokeColor(fCtx, 1.f, 0.f, 0.5f, 0.5f);
 }
-
-
-//The set of functions below is not required by iOS::Painter and iOS::Pad,
-//but they are pure-virtual in a base class, so I have to implement them here.
-
-//_________________________________________________________________
-Color_t Painter::GetLineColor() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Style_t Painter::GetLineStyle() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Width_t Painter::GetLineWidth() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-void Painter::SetLineColor(Color_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetLineStyle(Style_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetLineWidth(Width_t)
-{
-   //Dummy implementation.
-}
-   
-//_________________________________________________________________
-Color_t Painter::GetFillColor() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Style_t Painter::GetFillStyle() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-void Painter::SetFillColor(Color_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetFillStyle(Style_t)
-{
-   //Dummy implementation.
-}
-   
-//_________________________________________________________________
-Short_t Painter::GetTextAlign() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Float_t Painter::GetTextAngle() const
-{
-   //Dummy implementation.
-   return 0.f;
-}
-
-//_________________________________________________________________
-Color_t Painter::GetTextColor() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Font_t Painter::GetTextFont() const
-{
-   //Dummy implementation.
-   return 0;
-}
-
-//_________________________________________________________________
-Float_t Painter::GetTextSize() const
-{
-   //Dummy implementation.
-   return 0.f;
-}
-
-//_________________________________________________________________
-Float_t Painter::GetTextMagnitude() const
-{
-   //Dummy implementation.
-   return 0.f;
-}
-
-//_________________________________________________________________
-void Painter::SetTextAlign(Short_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetTextAngle(Float_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetTextColor(Color_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetTextFont(Font_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetTextSize(Float_t)
-{
-   //Dummy implementation.
-}
-
-//_________________________________________________________________
-void Painter::SetTextSizePixels(Int_t)
-{
-   //Dummy implementation.
-}
-
 
 }//namespace iOS
 }//namespace ROOT
