@@ -3,7 +3,16 @@
 <a name="core"></a> 
 <h3>Core Libraries</h3>
 
-<h4>Global Variable</h4>
+<h4>New Thread Pool class</h4>
+<ul>
+<li>
+A first version of TThreadPool class has been introduced.
+This class implements <a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">a Thread Pool pattern</a>.
+So far it supports only one type of queue - FIFO.
+</li>
+</ul>
+
+<h4>Global Variables</h4>
 <ul>
 <li>The global values gPad, gVirtualX, gInterpreter, gDirectory and gFile
 are now all accessed via a static function of their respective class.  The 
@@ -14,6 +23,7 @@ is zero and they now properly support tab completion.</li>
 <li>See the important note in the I/O section on gDirectory and gFile which 
 are now thread local.</li>
 </ul>
+
 <h4>Dictionaries</h4>
 <ul>
 <li>The new interface <tt>TDictionary::GetDictionary(const char*)</tt> offers a
@@ -26,5 +36,5 @@ TDataType and TClass queries. It does name normalization (removing std etc).
 <ul>
 <li>
 The Modern style has now a transparent background for the histogram title.
-<li>
+</li>
 </ul>
