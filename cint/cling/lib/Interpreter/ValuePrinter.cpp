@@ -9,6 +9,7 @@
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
 
+#include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Type.h"
 
@@ -77,8 +78,25 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
   } 
   else if (Ty.getAsString().compare("std::string") == 0) {
     StreamObj(o, p);
-    o<<"c_str: ";
+    o <<"c_str: ";
     StreamCharPtr(o, ((const char*) (*(const std::string*)p).c_str()));
+  } 
+  else if (Ty->isEnumeralType()) {
+    StreamObj(o, p);
+    int value = *(int*)p;
+    clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
+    bool IsFirst = true;
+    for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
+           E = ED->enumerator_end(); I != E; ++I) {
+      if ((*I)->getInitVal() == value) {
+        if (!IsFirst) {
+          o << " ? ";
+        }
+        o << "(" << (*I)->getQualifiedNameAsString() << ")";
+        IsFirst = false;
+      }
+    }
+    o << " : (int const) " << value << "\n";
   } 
   else if (Ty->isReferenceType())
     StreamRef(o, p);

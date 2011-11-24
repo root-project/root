@@ -13,5 +13,17 @@ E.d // CHECK: (int) 22
 std::string s("xyz") 
 // CHECK: (std::string) @0x{{[0-9A-Fa-f]{8,}.}}
 // CHECK: c_str: "xyz"
+class Outer { 
+public: 
+  struct Inner { 
+    enum E{ 
+      A = 12, 
+      B = 2, 
+      C = 2} ABC; 
+  }; 
+};
+Outer::Inner::C
+// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
+// CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int const) 2
 
 .q
