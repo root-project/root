@@ -35,6 +35,7 @@
 		702DDD1C1415FEA1009FC6F3 /* LineInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702DDD1A1415FEA1009FC6F3 /* LineInspector.xib */; };
 		702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */; };
 		70360B1A142C7AC6001F77E1 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70360B19142C7AC6001F77E1 /* MessageUI.framework */; };
+		703F4170147E7E23000A00FD /* directory.png in Resources */ = {isa = PBXBuildFile; fileRef = 703F416F147E7E23000A00FD /* directory.png */; };
 		704498091429D0A000E83799 /* PadImageView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 704498081429D0A000E83799 /* PadImageView.mm */; };
 		7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadImageScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
@@ -164,6 +165,7 @@
 		702DDD2714161789009FC6F3 /* InspectorWithNavigation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorWithNavigation.h; sourceTree = "<group>"; };
 		702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = InspectorWithNavigation.mm; sourceTree = "<group>"; };
 		70360B19142C7AC6001F77E1 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		703F416F147E7E23000A00FD /* directory.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = directory.png; sourceTree = "<group>"; };
 		704498071429D0A000E83799 /* PadImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadImageView.h; sourceTree = "<group>"; };
 		704498081429D0A000E83799 /* PadImageView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadImageView.mm; sourceTree = "<group>"; };
 		7044980B1429D13D00E83799 /* PadImageScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadImageScrollView.h; sourceTree = "<group>"; };
@@ -493,6 +495,7 @@
 			children = (
 				7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */,
 				7023805D140514C8002A5331 /* file_icon.png */,
+				703F416F147E7E23000A00FD /* directory.png */,
 			);
 			name = "Icons and pictures";
 			sourceTree = "<group>";
@@ -680,6 +683,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				703F4170147E7E23000A00FD /* directory.png in Resources */,
 				70E16B091455CBC00050C281 /* app_icon.png in Resources */,
 				702BB9E414485E4200D3842F /* inc_line_width.png in Resources */,
 				702BB9E21448584E00D3842F /* dec_line_width.png in Resources */,
