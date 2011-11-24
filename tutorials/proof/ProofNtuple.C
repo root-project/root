@@ -242,7 +242,7 @@ void ProofNtuple::Terminate()
    // Do nothing is not requested (dataset creation run)
    if (!fPlotNtuple) return;
 
-   // Get the ntuple form the file
+   // Get the ntuple from the file
    if ((fProofFile =
            dynamic_cast<TProofOutputFile*>(fOutput->FindObject("SimpleNtuple.root")))) {
 
