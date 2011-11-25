@@ -120,6 +120,7 @@ TPDF::TPDF() : TVirtualPS()
    fStartStream     = 0;
    fLineScale       = 0.;
    fObjPosSize      = 0;
+   fObjPos          = 0;
    fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
