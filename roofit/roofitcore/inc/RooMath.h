@@ -59,15 +59,15 @@ public:
   
   static void cleanup() ;
 
+  // Allocate and initialize CERF lookup grid
+  static void initFastCERF(Int_t reBins= 800, Double_t reMin=-4.0, Double_t reMax=4.0, 
+			   Int_t imBins=1000, Double_t imMin=-4.0, Double_t imMax=6.0) ;
+
 private:
 
   static Bool_t loadCache() ;
   static void storeCache() ;
   static const char* cacheFileName() ;
-
-  // Allocate and initialize CERF lookup grid
-  static void initFastCERF(Int_t reBins= 800, Double_t reMin=-4.0, Double_t reMax=4.0, 
-			   Int_t imBins=1000, Double_t imMin=-4.0, Double_t imMax=6.0) ;
 
   // CERF lookup grid
   static pDouble_t* _imCerfArray ; // Lookup table for Im part of complex error function

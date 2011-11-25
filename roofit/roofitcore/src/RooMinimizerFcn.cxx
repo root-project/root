@@ -444,8 +444,8 @@ Bool_t RooMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value
 {
   RooRealVar* par = (RooRealVar*)_floatParamList->at(index);
   if (par->getVal()!=value) {
-    if (_verbose) oocxcoutD(_context,Minimization) << par->GetName() 
-						   << "=" << value << ", ";
+    if (_verbose) cout << par->GetName() << "=" << value << ", " ;
+    
     par->setVal(value);
     return kTRUE;
   }

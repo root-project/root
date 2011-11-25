@@ -272,6 +272,8 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
   profileStop() ;
   _fcn->BackProp(_theFitter->Result());
 
+  saveStatus("MINIMIZE",_status) ;
+
   return _status ;
 }
 
@@ -298,6 +300,8 @@ Int_t RooMinimizer::migrad()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   _fcn->BackProp(_theFitter->Result());
+
+  saveStatus("MIGRAD",_status) ;
 
   return _status ;
 }
@@ -333,6 +337,8 @@ Int_t RooMinimizer::hesse()
     profileStop() ;
     _fcn->BackProp(_theFitter->Result());
 
+    saveStatus("HESSE",_status) ;
+  
   }
 
   return _status ;
@@ -367,6 +373,9 @@ Int_t RooMinimizer::minos()
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
     profileStop() ;
     _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("MINOS",_status) ;
+
   }
 
   return _status ;
@@ -422,6 +431,8 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
     profileStop() ;
     _fcn->BackProp(_theFitter->Result());
 
+    saveStatus("MINOS",_status) ;
+
   }
 
   return _status ;
@@ -451,6 +462,8 @@ Int_t RooMinimizer::seek()
   profileStop() ;
   _fcn->BackProp(_theFitter->Result());
 
+  saveStatus("SEEK",_status) ;
+
   return _status ;
 }
 
@@ -478,6 +491,8 @@ Int_t RooMinimizer::simplex()
   profileStop() ;
   _fcn->BackProp(_theFitter->Result());
 
+  saveStatus("SEEK",_status) ;
+    
   return _status ;
 }
 
@@ -504,6 +519,8 @@ Int_t RooMinimizer::improve()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   _fcn->BackProp(_theFitter->Result());
+
+  saveStatus("IMPROVE",_status) ;
 
   return _status ;
 }
@@ -609,6 +626,8 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
   } else {
     fitRes->setCovarianceMatrix(*_extV) ;
   }
+
+  fitRes->setStatusHistory(_statusHistory) ;
 
   return fitRes ;
 
