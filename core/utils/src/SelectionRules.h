@@ -26,7 +26,9 @@
 #include "VariableSelectionRule.h"
 #include "clang/AST/Decl.h"
 
-
+namespace cling {
+   class Interpreter;
+}
 
 class SelectionRules
 {
@@ -121,6 +123,10 @@ public:
    
    // returns true if all selection rules are used at least once
    bool AreAllSelectionRulesUsed() const;
+   
+   // Go through all the selections rules and lookup the name if any in the AST.
+   // and force the instantiation of template if any are used in the rules.
+   bool SearchNames(cling::Interpreter &interp);
 };
 
 #endif

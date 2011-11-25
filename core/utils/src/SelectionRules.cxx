@@ -24,6 +24,11 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclCXX.h"
+
+#include "cling/Interpreter/Interpreter.h"
+
+const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0);
 
 void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
 {
@@ -310,6 +315,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
    kind = D->getDeclKindName();
    
    GetDeclName(D, str_name, qual_name);
+   // fprintf(stderr,"IsDeclSelected: %s %s\n", str_name.c_str(), qual_name.c_str());
    
    if (kind == "CXXRecord") { // structs, unions and classes are all CXXRecords
       return IsClassSelected(D, qual_name);
@@ -599,10 +605,10 @@ const BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, con
       bool yes;
       
       if (IsLinkdefFile()){
-         yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, true);
+         yes = it->IsSelected(N, qual_name, "", file_name, dontC, noName, file, true);
       }
       else {
-         yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, false);
+         yes = it->IsSelected(N, qual_name, "", file_name, dontC, noName, file, false);
       }
       if (yes) {
          selector = &(*it);
@@ -704,10 +710,10 @@ const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const s
             bool yes;
             
             if (IsLinkdefFile()){
-               yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, true);
+               yes = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, dontC, noName, file, true);
             }
             else {
-               yes = it->IsSelected(qual_name, "", file_name, dontC, noName, file, false);
+               yes = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, dontC, noName, file, false);
             }
             if (yes) {
                selector = &(*it);
@@ -717,6 +723,15 @@ const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const s
                      std::string name_value;
                      it->GetAttributeValue("name", name_value);
                      if (name_value == qual_name) explicit_selector = &(*it);
+                     else {
+                        // Try a real match!
+//                        fprintf(stderr,"TRYING MATCH: %s %s\n",name_value.c_str(),qual_name.c_str());
+                        const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+                        if ( target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
+                           explicit_selector = &(*it);
+                        }
+                     }
+
                   }
                   if (it->HasAttributeWithName("pattern")) {
                      std::string pattern_value;
@@ -837,8 +852,8 @@ const BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, co
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (kind == "Var") selected = it->IsSelected(qual_name, "", file_name, d, noMatch, file, false);
-      else selected = it->IsSelected(qual_name, prototype, file_name, d, noMatch, file, false);
+      if (kind == "Var") selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, noMatch, file, false);
+      else selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, noMatch, file, false);
       if (selected) {
          selector = &(*it);
       }
@@ -890,8 +905,8 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
    bool file;
    
    for(; it != it_end; ++it) {
-      if (kind == "Var") selected = it->IsSelected(qual_name, "", file_name, d, n, file, false);
-      else selected = it->IsSelected(qual_name, prototype, file_name, d, n, file, false);
+      if (kind == "Var") selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, n, file, false);
+      else selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, n, file, false);
       
       if(selected) {
          // explicit rules are with stronger priority in rootcint
@@ -978,7 +993,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
    if (kind == "CXXMethod"){
       // we first chack the explicit rules for the method (in case of constructors and destructors we check the parent)
       for(; it != it_end; ++it) {
-         selected = it->IsSelected(qual_name, prototype, "", d, n, file, false);
+         selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, "", d, n, file, false);
          
          if (selected || !n){
             // here I should implement my implicit/explicit thing
@@ -1123,7 +1138,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
       for(; it != fClassSelectionRules.end(); ++it) {
          bool yes;
-         yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, true); // == BaseSelectionRule::kYes
+         yes = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", file_name, dontC, noName, file, true); // == BaseSelectionRule::kYes
          
          if (yes) {
             selector = &(*it);
@@ -1215,7 +1230,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
       std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
       for(; it != fClassSelectionRules.end(); ++it) {
          bool yes;
-         yes = it->IsSelected(parent_qual_name, "", file_name, dontC, noName, file, false); // == BaseSelectionRule::kYes
+         yes = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", file_name, dontC, noName, file, false); // == BaseSelectionRule::kYes
          if (yes) {
             selector = &(*it);
             if (IsLinkdefFile()) {
@@ -1287,7 +1302,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
                   mem_it = members.begin();
                   mem_it_end = members.end();
                   for (; mem_it != mem_it_end; ++mem_it) {
-                     if (!mem_it->IsSelected(str_name, prototype, file_name, dontC, noName, file, false)) {
+                     if (!mem_it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), str_name, prototype, file_name, dontC, noName, file, false)) {
                         if (!noName) return 0;
                      }                        
                   }
@@ -1364,11 +1379,16 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             if (it->HasAttributeWithName("pattern")) it->GetAttributeValue("pattern", name);
             
             if (IsSelectionXMLFile()){
-               std::cout<<"Warning - unused class rule: "<<name<<std::endl;
+               std::cout<<"Warning - unused class rule: ";
             }
             else {
-               std::cout<<"Error - unused class rule: "<<name<<std::endl;
-               return false;
+               std::cout<<"Error   - unused class rule: ";
+               //return false;
+            }
+            if (name.length() > 0) {
+               std::cout << name << '\n';
+            } else {
+               it->PrintAttributes(29);
             }
          }
       }
@@ -1386,7 +1406,9 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             }
             else {
                std::cout<<"Error - unused variable rule: "<<name<<std::endl;
-               return false;
+            }
+            if (name.length() == 0) {
+               it->PrintAttributes(3);
             }
          }
       }
@@ -1405,7 +1427,9 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             }
             else {
                std::cout<<"Error - unused function rule: "<<name<<std::endl;
-               return false;
+            }
+            if (name.length() == 0) {
+               it->PrintAttributes(3);
             }
          }
       }
@@ -1422,10 +1446,54 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             }
             else {
                std::cout<<"Error - unused enum rule: "<<name<<std::endl;
-               return false;
+            }
+            if (name.length() == 0) {
+               it->PrintAttributes(3);
             }
          }
       }
    }
    return true;
 }
+
+bool SelectionRules::SearchNames(cling::Interpreter &interp)
+{
+   std::cout<<"Searching Names In Selection Rules:"<<std::endl;
+   if (!fClassSelectionRules.empty()) {
+      for(std::list<ClassSelectionRule>::iterator it = fClassSelectionRules.begin(),
+          end = fClassSelectionRules.end();
+          it != end; 
+          ++it) 
+      {
+         if (it->HasAttributeWithName("name")) {
+            std::string name_value;
+            it->GetAttributeValue("name", name_value);
+            const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+            
+            bool needinstantiation = false;
+            if (!target) {
+               needinstantiation = strchr(name_value.c_str(),'<') != 0;
+            } else if (! target->isCompleteDefinition() ) {
+               // In case we got the target via a typedef, let's use it's final name.
+               name_value.clear();
+               target->getNameForDiagnostic(name_value,target->getASTContext().getPrintingPolicy(),true);
+               needinstantiation = true;
+            }
+            if (needinstantiation) {
+               // Force instantiation
+               std::string instantiate("template class ");
+               instantiate += name_value;
+               instantiate += " ;";
+               interp.processLine(instantiate.c_str(),true /* raw */);
+               target = R__SlowRawTypeSearch(name_value.c_str());
+            }
+            if (target) {
+               it->SetCXXRecordDecl(target);
+            }
+         }
+      }
+
+   }
+   return true;
+}
+
