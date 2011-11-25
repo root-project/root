@@ -34,6 +34,9 @@
 #include "TMath.h"
 
 
+using namespace RooFit;
+
+
 ClassImp(RooStats::ToyMCSampler)
 
 namespace RooStats {
@@ -108,10 +111,11 @@ class NuisanceParametersSampler {
             }
 
 
-            fPoints = fPrior->generateBinned(
+            fPoints = fPrior->generate(
                *fParams,
-               RooFit::ExpectedData(),
-               RooFit::NumEvents(1) // for Asimov set, this is only a scale factor
+               AllBinned(),
+               ExpectedData(),
+               NumEvents(1) // for Asimov set, this is only a scale factor
             );
             if(fPoints->numEntries() != fNToys) {
                fNToys = fPoints->numEntries();
@@ -356,7 +360,7 @@ void ToyMCSampler::GenerateGlobalObservables() const {
          while ((tt = (RooCatType*) citer->Next())) {
             RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName());
             RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
-            RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, RooFit::NumEvents(1));
+            RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
             _pdfList.push_back(pdftmp);
             _obsList.push_back(globtmp);
             _gsList.push_back(gs);
@@ -534,13 +538,13 @@ RooAbsData* ToyMCSampler::GenerateToyDataImportanceSampling(RooArgSet& paramPoin
    // get the NLLs of the importance density and the pdf to sample
    if (fImportanceSnapshot)   *allVars = *fImportanceSnapshot;
 
-   RooAbsReal *impNLL = fImportanceDensity->createNLL(*data, RooFit::Extended(kFALSE), RooFit::CloneData(kFALSE));
+   RooAbsReal *impNLL = fImportanceDensity->createNLL(*data, Extended(kFALSE), CloneData(kFALSE));
    double impNLLVal = impNLL->getVal();
    delete impNLL;
 
 
    *allVars = paramPoint;
-   RooAbsReal *pdfNLL = fPdf->createNLL(*data, RooFit::Extended(kFALSE), RooFit::CloneData(kFALSE));
+   RooAbsReal *pdfNLL = fPdf->createNLL(*data, Extended(kFALSE), CloneData(kFALSE));
    double pdfNLLVal = pdfNLL->getVal();
    delete pdfNLL;
 
@@ -578,23 +582,23 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
    if(events == 0) {
       if( pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
          if(fGenerateBinned) {
-            if(protoData) data = pdf.generateBinned(observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true));
-            else          data = pdf.generateBinned(observables, RooFit::Extended());
+            if(protoData) data = pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true));
+            else          data = pdf.generate(observables, AllBinned(), Extended());
          }else{
 	   if(protoData) {
 	     if (fUseMultiGen || fgAlwaysUseMultiGen) {
-	       if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true)) ; }
+	       if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) ; }
 	       data = pdf.generate(*_gs2) ;
 	     } else {
-	       data = pdf.generate      (observables, RooFit::Extended(), RooFit::ProtoData(*protoData, true, true));
+	       data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
 	     }
 	   }
             else  {
 	      if (fUseMultiGen || fgAlwaysUseMultiGen) {
-		if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables,RooFit::Extended()) ; }
+		if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) ) ; }
 		data = pdf.generate(*_gs1) ;
 	      } else {
-		data = pdf.generate      (observables, RooFit::Extended());
+		data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) );
 	      }
 
 	    }
@@ -606,22 +610,22 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
       }
    }else{
       if(fGenerateBinned) {
-         if(protoData) data = pdf.generateBinned(observables, events, RooFit::ProtoData(*protoData, true, true));
-         else          data = pdf.generateBinned(observables, events);
+         if(protoData) data = pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true));
+         else          data = pdf.generate(observables, events, AllBinned());
       }else{
 	if(protoData) {
 	  if (fUseMultiGen || fgAlwaysUseMultiGen) {
-	    if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, RooFit::NumEvents(events), RooFit::ProtoData(*protoData, true, true)); }
+	    if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)); }
 	    data = pdf.generate(*_gs3) ;
 	  } else {
-	    data = pdf.generate      (observables, events, RooFit::ProtoData(*protoData, true, true));
+	    data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
 	  }
 	} else {
 	  if (fUseMultiGen || fgAlwaysUseMultiGen) {	    
-	    if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, RooFit::NumEvents(events)); }
+	    if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)); }
 	    data = pdf.generate(*_gs4) ;
 	  } else {
-	    data = pdf.generate      (observables, events);
+	    data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag));
 	  }
 	}
       }
