@@ -43,7 +43,7 @@ namespace ROOT {
       ~RStl() {};
       
       static std::string DropDefaultArg(const std::string &classname);
-      void GenerateTClassFor(const clang::CXXRecordDecl *stlClass);
+      void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass);
       void Print();
       void WriteClassInit(FILE *file);
       void WriteStreamer(FILE *file, G__ClassInfo &stlcl);

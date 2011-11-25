@@ -48,20 +48,25 @@ public:
 
    class AnnotatedRecordDecl {
    private:
-      const clang::RecordDecl* fDecl;
       long fRuleIndex;
+      const clang::RecordDecl* fDecl;
+      std::string fRequestedName;
       bool fRequestStreamerInfo;
       bool fRequestNoStreamer;
       bool fRequestNoInputOperator;
       bool fRequestOnlyTClass;
       
    public:
-      AnnotatedRecordDecl(const clang::RecordDecl *decl, long index, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
-            fDecl(decl), fRuleIndex(index), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+            fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+            fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
+      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+            fRuleIndex(index), fDecl(decl), fRequestedName(requestName), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
             fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
       ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
+      const char *GetRequestedName() const { return fRequestedName.c_str(); }
       bool RequestStreamerInfo() const { return fRequestStreamerInfo; }
       bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
       bool RequestNoStreamer() const { return fRequestNoStreamer; }
@@ -185,6 +190,7 @@ public:
    bool VisitFunctionDecl(clang::FunctionDecl* D); //Visitor for every FunctionDecl i.e. function node in the AST
    bool VisitNamespaceDecl(clang::NamespaceDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
    bool VisitRecordDecl(clang::RecordDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
+   bool VisitTypedefDecl(clang::TypedefDecl* D); // Visitor for every TypedefDecl i.e. class node in the AST
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
    
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl 

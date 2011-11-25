@@ -614,8 +614,8 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
       
       std::string qual_name;
       GetDeclQualName(N,qual_name);
+      std::cout<<"\tSelected namespace -> " << qual_name << "\n";
 
-      std::cout<<"\tSelected -> " << qual_name << "\n";
       fSelectedNamespaces.push_back(AnnotatedNamespaceDecl(N,selected->GetIndex(),selected->RequestOnlyTClass()));
       
       ret = true;
@@ -648,8 +648,8 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    
    DumpDecl(D, "");
-//   std::string qual_name2;
-//   
+   std::string qual_name2;
+   
 //   if (GetDeclQualName(D, qual_name2))
 //      std::cout<<"\tLooking -> " << qual_name2 << "\n";
 //   if (qual_name2 == "TemplateClass") {
@@ -665,10 +665,19 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       
       std::string qual_name;
       GetDeclQualName(D,qual_name);
-
-      std::cout<<"\tSelected -> " << qual_name << "\n";
-      fSelectedClasses.push_back(AnnotatedRecordDecl(D,selected->GetIndex(),selected->RequestStreamerInfo(),selected->RequestNoStreamer(),selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
-
+      std::cout<<"\tSelected class -> " << qual_name << "\n";
+      
+      if (selected->HasAttributeWithName("name")) {
+         std::string name_value;
+         selected->GetAttributeValue("name", name_value);
+         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,name_value.c_str(),
+                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
+                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
+      } else {
+         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,
+                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
+                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
+      }         
       ret = true;
    }
    else {
@@ -682,6 +691,23 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    return ret;
 }
 
+bool RScanner::VisitTypedefDecl(clang::TypedefDecl* D)
+{
+   // Visitor for every TypedefDecl i.e. class node in the AST
+
+//   std::string qual_name2;
+//   
+//   if (GetDeclQualName(D, qual_name2)) {
+//      std::cerr<<"\tLooking at typedef -> " << qual_name2 << "\n";
+//      std::cerr<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
+//   }
+//   D->dump();
+//   std::cerr <<'\n';
+//   clang::RecordDecl *cl = R__GetUnderlyingRecordDecl(D->getUnderlyingType());
+   
+   return true;
+}
+
 // This method visits an enumeration
 bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 {
@@ -691,8 +717,10 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    
    if(fSelectionRules.IsDeclSelected(D)) {
       
+#ifdef SELECTION_DEBUG
       std::cout<<"\n\tSelected -> true";
-      
+#endif
+
       clang::DeclContext *ctx = D->getDeclContext();
       
       clang::Decl* parent = dyn_cast<clang::Decl> (ctx);
@@ -700,6 +728,11 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
          std::cout<<"Could not cast parent context to parent Decl"<<std::endl;
          return false;
       }
+
+      std::string qual_name;
+      GetDeclQualName(D,qual_name);
+      std::cout<<"\tSelected enum -> " << qual_name << "\n";
+
       //if ((fSelectionRules.isSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.isLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
       if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)) {
          //if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)){
@@ -749,6 +782,8 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
 #endif
       std::string var_name;      
       var_name = D->getQualifiedNameAsString();
+
+      std::cout<<"\tSelected variable -> " << var_name << "\n";
       
    }
    else {
@@ -770,6 +805,10 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 #ifdef SELECTION_DEBUG
       std::cout<<"\n\tSelected -> true";
 #endif
+
+//      std::string qual_name;
+//      GetDeclQualName(D,qual_name);
+//      std::cout<<"\tSelected field -> " << qual_name << "\n";
       
    }
    else {
@@ -821,6 +860,8 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
          name = D->getQualifiedNameAsString();
          
       }
+
+      // std::cout<<"\tSelected function -> " << name << "\n";
    }
    else {
 #ifdef SELECTION_DEBUG

@@ -51,7 +51,7 @@ ROOT::RStl& ROOT::RStl::inst()
 
 }
 
-void ROOT::RStl::GenerateTClassFor(const clang::CXXRecordDecl *stlclass)
+void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass)
 {
    // Force the generation of the TClass for the given class.
 
@@ -76,7 +76,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::CXXRecordDecl *stlclass)
       }
    }
    
-   fList.insert( RScanner::AnnotatedRecordDecl(stlclass,++fgCount,true,false,false,false) );
+   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false) );
    
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
@@ -87,7 +87,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::CXXRecordDecl *stlclass)
          {
             const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
             if (clxx) {
-               GenerateTClassFor( clxx );
+               GenerateTClassFor( "", clxx );
             }
          }
       }
