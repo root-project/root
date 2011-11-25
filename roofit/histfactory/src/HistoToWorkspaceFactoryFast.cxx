@@ -1766,14 +1766,18 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     TH1* ErrorHist = (TH1*) Nominal->Clone( Name.c_str() );
     ErrorHist->Reset();
     
-    Int_t numBins = Nominal->GetNbinsX();
-    
+    Int_t numBins   = Nominal->GetNbinsX()*Nominal->GetNbinsY()*Nominal->GetNbinsZ();
+    Int_t binNumber = 0;
 
     // Loop over bins
     for( Int_t i_bin = 0; i_bin < numBins; ++i_bin) {
 
-      // Ignore Underflow
-      Int_t binNumber = i_bin + 1;
+      binNumber++;
+      // Ignore underflow / overflow
+      while( Nominal->IsBinUnderflow(binNumber) || Nominal->IsBinOverflow(binNumber) ){
+	binNumber++;
+      }
+
       Double_t histError = Nominal->GetBinError( binNumber );
     
       // Check that histError != NAN
@@ -1825,7 +1829,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     }
     
     TH1* HistTemplate = HistVec.at(0).first;
-    Int_t numBins = HistTemplate->GetNbinsX();
+    Int_t numBins = HistTemplate->GetNbinsX()*HistTemplate->GetNbinsY()*HistTemplate->GetNbinsZ();
 
   // Check that all histograms
   // have the same bins
@@ -1834,11 +1838,11 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     TH1* nominal = HistVec.at(i).first;
     TH1* error   = HistVec.at(i).second;
     
-    if( nominal->GetNbinsX() != numBins ) {
+    if( nominal->GetNbinsX()*nominal->GetNbinsY()*nominal->GetNbinsZ() != numBins ) {
       std::cout << "Error: Provided hists have unequal bins" << std::endl;
       return NULL;
     }
-    if( error->GetNbinsX() != numBins ) {
+    if( error->GetNbinsX()*error->GetNbinsY()*error->GetNbinsZ() != numBins ) {
       std::cout << "Error: Provided hists have unequal bins" << std::endl;
       return NULL;
     }
@@ -1847,14 +1851,22 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
   std::vector<double> TotalBinContent( numBins, 0.0);
   std::vector<double> HistErrorsSqr( numBins, 0.0);
 
+  Int_t binNumber = 0;
+
   // Loop over bins
   for( Int_t i_bins = 0; i_bins < numBins; ++i_bins) {
+    
+    binNumber++;
+    while( HistTemplate->IsBinUnderflow(binNumber) || HistTemplate->IsBinOverflow(binNumber) ){
+      binNumber++;
+    }
+    
     for( unsigned int i_hist = 0; i_hist < numHists; ++i_hist ) {
-
+      
       TH1* nominal = HistVec.at(i_hist).first;
       TH1* error   = HistVec.at(i_hist).second;
-    
-      Int_t binNumber = i_bins + 1;
+
+      //Int_t binNumber = i_bins + 1;
 
       Double_t histValue  = nominal->GetBinContent( binNumber );
       Double_t histError  = error->GetBinContent( binNumber );
@@ -1882,6 +1894,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
     }
   }
 
+  binNumber = 0;
 
   // Creat the output histogram
   TH1* ErrorHist = (TH1*) HistTemplate->Clone( Name.c_str() );
@@ -1890,7 +1903,11 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
   // Fill the output histogram
   for( Int_t i = 0; i < numBins; ++i) {
 
-    Int_t binNumber = i + 1;
+    //    Int_t binNumber = i + 1;
+    binNumber++;
+    while( ErrorHist->IsBinUnderflow(binNumber) || ErrorHist->IsBinOverflow(binNumber) ){
+      binNumber++;
+    }
 
     Double_t ErrorsSqr = HistErrorsSqr.at(i);
     Double_t TotalVal  = TotalBinContent.at(i);
@@ -1959,11 +1976,13 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 
   RooArgList paramSet = paramHist.paramList();
 
-  std::cout << "createStatConstraintTerms: " << paramSet << std::endl;
 
-  //Int_t numUncert = uncertainties.getSize();
-  Int_t numParams = paramSet.getSize();
+  // Must get the full size of the TH1
+  // (No direct method to do this...)
   Int_t numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
+  Int_t numParams = paramSet.getSize();
+  //  Int_t numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
+
 
   // Check that there are N elements
   // in the RooArgList
@@ -1976,6 +1995,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 
   Int_t TH1BinNumber = 0;
   for( Int_t i = 0; i < paramSet.getSize(); ++i) {
+
     TH1BinNumber++;
 
     while( uncertHist->IsBinUnderflow(TH1BinNumber) || uncertHist->IsBinOverflow(TH1BinNumber) ){
@@ -1999,6 +2019,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 		<< gamma.GetName() 
 		<< " because sigma = " << sigma
 		<< " (sigma<=0)" 
+		<< " (TH1 bin number = " << TH1BinNumber << ")"
 		<< std::endl;
       gamma.setConstant(kTRUE);
       continue;
