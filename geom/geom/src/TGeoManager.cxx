@@ -3410,39 +3410,6 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       TString cmd ;
 	  cmd = TString::Format("TGDMLWrite::StartGDMLWriting(gGeoManager,\"%s\",\"%s\")", filename, option);
 	  gROOT->ProcessLineFast(cmd);
-	  //
-	  /*
-      gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
-
-      gROOT->ProcessLine("TPython::Exec(\"import writer\")");
-      gROOT->ProcessLine("TPython::Exec(\"import ROOTwriter\")");
-
-      // get TGeoManager and top volume
-      gROOT->ProcessLine("TPython::Exec(\"geomgr = ROOT.gGeoManager\")");
-      gROOT->ProcessLine("TPython::Exec(\"topV = geomgr.GetTopVolume()\")");
-
-      // instanciate writer
-      cmd=TString::Format("TPython::Exec(\"gdmlwriter = writer.writer('%s')\")",filename);
-      gROOT->ProcessLine(cmd);
-      gROOT->ProcessLine("TPython::Exec(\"binding = ROOTwriter.ROOTwriter(gdmlwriter)\")");
-
-      // dump materials
-      gROOT->ProcessLine("TPython::Exec(\"matlist = geomgr.GetListOfMaterials()\")");
-      gROOT->ProcessLine("TPython::Exec(\"binding.dumpMaterials(matlist)\")");
-
-      // dump solids
-      gROOT->ProcessLine("TPython::Exec(\"shapelist = geomgr.GetListOfShapes()\")");
-      gROOT->ProcessLine("TPython::Exec(\"binding.dumpSolids(shapelist)\")");
-
-      // dump geo tree
-      gROOT->ProcessLine("TPython::Exec(\"print 'Info in <TPython::Exec>: Traversing geometry tree'\")");
-      gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.addSetup('default', '1.0', topV.GetName())\")");
-      gROOT->ProcessLine("TPython::Exec(\"binding.examineVol(topV)\")");
-
-      // write file
-      gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
-      if (fgVerboseLevel>0) printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
-      */
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {
