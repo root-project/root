@@ -58,7 +58,9 @@ static void StreamObj(llvm::raw_ostream& o, const void* v) {
   o << "@" << v << "\n";
 }
 
-static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualType Ty) {
+static void StreamValue(llvm::raw_ostream& o, const void* const p, 
+                        const cling::ValuePrinterInfo& VPI) {
+  clang::QualType Ty = VPI.getExpr()->getType();
   if (const clang::BuiltinType *BT
            = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
     switch (BT->getKind()) {
@@ -86,9 +88,11 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
     int value = *(int*)p;
     clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
     bool IsFirst = true;
+    const clang::ASTContext& C = *VPI.getASTContext();
+    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, C.IntTy);
     for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
            E = ED->enumerator_end(); I != E; ++I) {
-      if ((*I)->getInitVal() == value) {
+      if ((*I)->getInitVal() == ValAsAPSInt) {
         if (!IsFirst) {
           o << " ? ";
         }
@@ -120,7 +124,7 @@ namespace cling {
     if (E->isRValue()) // show the user that the var cannot be changed
       o << " const";
     o << ") ";
-    StreamValue(o, p, E->getType());
+    StreamValue(o, p, VPI);
   }
 
   void flushOStream(llvm::raw_ostream& o) {

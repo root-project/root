@@ -13,17 +13,24 @@ E.d // CHECK: (int) 22
 std::string s("xyz") 
 // CHECK: (std::string) @0x{{[0-9A-Fa-f]{8,}.}}
 // CHECK: c_str: "xyz"
+
 class Outer { 
 public: 
   struct Inner { 
     enum E{ 
-      A = 12, 
+      // Note max and min ints are platform dependent since we cannot use 
+      //limits.h
+      A = 2147483647,
       B = 2, 
-      C = 2} ABC; 
+      C = 2,
+      D = -2147483648 
+    } ABC; 
   }; 
 };
 Outer::Inner::C
 // CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
 // CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int) 2
-
+Outer::Inner::D
+// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
+// CHECK: (Outer::Inner::E::D) : (int) -2147483648
 .q
