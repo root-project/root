@@ -138,11 +138,14 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
 
    PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
-
+   
    fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
    fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
    fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
    fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
+   PDB(kMonitoring,1)
+      Info("TPerfStats", "master:%d  hist:%d,trace:%d,rate:%d,wrktrace:%d",
+                         isMaster, fDoHist, fDoTrace, fDoTraceRate, fDoSlaveTrace);
 
    // Check per packet monitoring
    Int_t perpacket = -1;
@@ -193,6 +196,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fTrace->SetDirectory(0);
       fTrace->Bronch("PerfEvents", "TPerfEvent", &fPerfEvent, 64000, 0);
       output->Add(fTrace);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "tree '%s' added to the output list", fTrace->GetName());
    }
 
    if (fDoHist && isMaster) {
@@ -207,6 +212,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fPacketsHist->SetDirectory(0);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fPacketsHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_EventsHist"));
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Worker",
@@ -215,6 +222,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fEventsHist->SetDirectory(0);
       fEventsHist->SetMinimum(0);
       output->Add(fEventsHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fEventsHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_NodeHist"));
       fNodeHist = new TH1D("PROOF_NodeHist", "Slaves per Fileserving Node",
@@ -223,6 +232,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fNodeHist->SetMinimum(0);
       fNodeHist->SetBit(TH1::kCanRebin);
       output->Add(fNodeHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fNodeHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_LatencyHist"));
       fLatencyHist = new TH2D("PROOF_LatencyHist", "GetPacket Latency per Worker",
@@ -232,6 +243,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fLatencyHist->SetMarkerStyle(4);
       fLatencyHist->SetBit(TH1::kCanRebin);
       output->Add(fLatencyHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fLatencyHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_ProcTimeHist"));
       fProcTimeHist = new TH2D("PROOF_ProcTimeHist", "Packet Processing Time per Worker",
@@ -241,6 +254,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fProcTimeHist->SetMarkerStyle(4);
       fProcTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fProcTimeHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fProcTimeHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_CpuTimeHist"));
       fCpuTimeHist = new TH2D("PROOF_CpuTimeHist", "Packet CPU Time per Worker",
@@ -250,6 +265,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       fCpuTimeHist->SetMarkerStyle(4);
       fCpuTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fCpuTimeHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fCpuTimeHist->GetName());
 
       nextslaveinfo.Reset();
       Int_t slavebin=1;
@@ -676,25 +693,14 @@ void TPerfStats::Setup(TList *input)
    // Setup the PROOF input list with requested statistics and tracing options.
 
    const Int_t ntags=3;
-   const Char_t *tags[ntags] = {"StatsHist",
-                                "StatsTrace",
-                                "SlaveStatsTrace"};
+   const char *tags[ntags] = {"StatsHist", "StatsTrace", "SlaveStatsTrace"};
 
+   TString varname, parname;
    for (Int_t i=0; i<ntags; i++) {
-      TString envvar = "Proof.";
-      envvar += tags[i];
-      TString inputname = "PROOF_";
-      inputname += tags[i];
-      TObject* obj = input->FindObject(inputname.Data());
-      if (gEnv->GetValue(envvar.Data(), 0)) {
-         if (!obj)
-            input->Add(new TNamed(inputname.Data(),""));
-      } else {
-         if (obj) {
-            input->Remove(obj);
-            delete obj;
-         }
-      }
+      varname.Form("Proof.%s", tags[i]);
+      parname.Form("PROOF_%s", tags[i]);
+      if (!input->FindObject(parname))
+         if (gEnv->GetValue(varname, 0)) input->Add(new TNamed(parname.Data(),""));
    }
 }
 

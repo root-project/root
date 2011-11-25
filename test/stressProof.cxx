@@ -45,6 +45,8 @@
 // *     skipds  [Bool_t]  if kTRUE the dataset related tests are skipped  * //
 // *                                                                       * //
 // *                                                                       * //
+// * The stressProof function returns 0 on success, 1 on failure.          * //
+// *                                                                       * //
 // * The successful output looks like this:                                * //
 // *                                                                       * //
 // *  ******************************************************************   * //
@@ -154,7 +156,7 @@ static TString gEventSel("$ROOTSYS/tutorials/proof/ProofEvent.C");
 static TString gSimpleSel("$ROOTSYS/tutorials/proof/ProofSimple.C");
 static TString gTestsSel("$ROOTSYS/tutorials/proof/ProofTests.C");
 
-void stressProof(const char *url = "proof://localhost:40000",
+int stressProof(const char *url = "proof://localhost:40000",
                  Int_t nwrks = -1, Int_t verbose = 1,
                  const char *logfile = 0, Bool_t dyn = kFALSE,
                  Bool_t skipds = kTRUE, Int_t test = -1,
@@ -278,9 +280,9 @@ int main(int argc,const char *argv[])
    if (enablegraphics)
       new TApplication("stressProof", 0, 0);
 
-   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest, test, h1src);
+   int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest, test, h1src);
 
-   gSystem->Exit(0);
+   gSystem->Exit(rc);
 }
 #endif
 
@@ -495,7 +497,7 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
+int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
                  Bool_t dyn, Bool_t skipds, Int_t test, const char *h1src)
 {
    printf("******************************************************************\n");
@@ -558,7 +560,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       glogfile = "ProofStress_";
       if (!(flog = gSystem->TempFileName(glogfile, gSystem->TempDirectory()))) {
          printf(" >>> Cannot create a temporary log file on %s - exit\n", gSystem->TempDirectory());
-         return;
+         return 1;
       }
       fclose(flog);
       if (gverbose > 0) {
@@ -668,7 +670,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       if (!treq) {
          printf("* Test %2d not found among the registered tests - exiting        **\n", test);
          printf("******************************************************************\n");
-         return;
+         return 1;
       }
       // Enable the required tests
       Int_t tn = -1;
@@ -771,6 +773,9 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          printf("+++ Warning: test daemon probably still running!\n");
       }
    }
+
+   // Done
+   return (failed ? 1 : 0);
 }
 
 //_____________________________________________________________________________
