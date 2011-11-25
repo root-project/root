@@ -10,10 +10,11 @@
 
 #ifdef __CINT__
 
-#ifndef G__KCC 	 
-// in cint/cint[7]/lib:
+#ifdef __CLING__
+#include <string>
+#else
 #include "dll_stl/str.h" 	 
-#endif 	 
+#endif
 
 #pragma extra_include "vector";
 #pragma extra_include "string";
