@@ -52,6 +52,7 @@ public:
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
+
   Int_t getCurrentBin() const ;
   RooRealVar& getParameter( Int_t ) const ;
   RooRealVar& getParameter() const ;
@@ -64,6 +65,7 @@ public:
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+  virtual Bool_t isBinnedDistribution(const RooArgSet& /*obs*/) const {return kTRUE;}
 
 
 protected:
