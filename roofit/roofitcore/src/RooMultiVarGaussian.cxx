@@ -145,7 +145,7 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 //_____________________________________________________________________________
 RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name) : 
-  RooAbsPdf(other,name), _x("x",this,other._x), _mu("mu",this,other._mu), 
+  RooAbsPdf(other,name), _aicMap(other._aicMap), _x("x",this,other._x), _mu("mu",this,other._mu), 
   _cov(other._cov), _covI(other._covI), _det(other._det), _z(other._z)
 {
 }
@@ -193,15 +193,17 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
   Int_t code(0) ;
 
   Int_t nx = _x.getSize() ;
-  if (nx>31) {
-    // Warn that analytical integration is only provided for the first 31 observables
+  if (nx>127) {
+    // Warn that analytical integration is only provided for the first 127 observables
     coutW(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize() 
-		       << " observables, analytical integration is only implemented for the first 31 observables" << endl ;
-    nx=31 ;
+		       << " observables, analytical integration is only implemented for the first 127 observables" << endl ;
+    nx=127 ;
   }
 
   // Advertise partial analytical integral over all observables for which is wide enough to
   // use asymptotic integral calculation
+  BitBlock bits ;
+  Bool_t anyBits(kFALSE) ;
   syncMuVec() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
     // Check if integration over observable #i is requested
@@ -211,13 +213,30 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
       if (xi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && xi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
 	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() 
 			     << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
-	code |= (1<<i) ;
+	bits.setBit(i) ;
+	anyBits = kTRUE ;
 	analVars.add(*allVars.find(_x.at(i)->GetName())) ;
       } else {
 	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << xi->GetName() << " is <" 
 			     << _z << " sigma, relying on numeric integral" << endl ;	
       }
     }
+  }
+
+  // Full numeric integration over requested observables maps always to code zero
+  if (!anyBits) {
+    return 0 ;
+  }
+  
+  // Map BitBlock into return code
+  for (UInt_t i=0 ; i<_aicMap.size() ; i++) {
+    if (_aicMap[i]==bits) {
+      code = i+1 ;
+    }
+  }
+  if (code==0) {
+    _aicMap.push_back(bits) ;
+    code = _aicMap.size() ;
   }
 
   return code ;
@@ -234,7 +253,7 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
   }
 
   // Handle partial integrals here
-  
+
   // Retrieve |S22|, S22bar from cache
   AnaIntData& aid = anaIntData(code) ;
  
@@ -316,22 +335,36 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
   }
 
   Int_t nx = _x.getSize() ;
-  if (nx>31) {
-    // Warn that analytical integration is only provided for the first 31 observables
+  if (nx>127) {
+    // Warn that analytical integration is only provided for the first 127 observables
     coutW(Integration) << "RooMultiVarGaussian::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize() 
-		       << " observables, partial internal generation is only implemented for the first 31 observables" << endl ;
-    nx=31 ;
+		       << " observables, partial internal generation is only implemented for the first 127 observables" << endl ;
+    nx=127 ;
   }
 
   // Advertise partial generation over all permutations of observables
   Int_t code(0) ;
+  BitBlock bits ;
   for (int i=0 ; i<_x.getSize() ; i++) {    
     RooAbsArg* arg = directVars.find(_x.at(i)->GetName()) ;
     if (arg) {
-      code |= (1<<i) ;
+      bits.setBit(i) ;
+//       code |= (1<<i) ;
       generateVars.add(*arg) ;
     }
   }
+
+  // Map BitBlock into return code
+  for (UInt_t i=0 ; i<_aicMap.size() ; i++) {
+    if (_aicMap[i]==bits) {
+      code = i+1 ;
+    }
+  }
+  if (code==0) {
+    _aicMap.push_back(bits) ;
+    code = _aicMap.size() ;
+  }
+
   
   return code ;
 }
@@ -515,10 +548,16 @@ void RooMultiVarGaussian::decodeCode(Int_t code, vector<int>& map1, vector<int>&
 {
   // Decode analytical integration/generation code into index map of integrated/generated (map2)
   // and non-integrated/generated observables (map1)
+  if (code<0 || code> (Int_t)_aicMap.size()) {
+    cout << "RooMultiVarGaussian::decodeCode(" << GetName() << ") ERROR don't have bit pattern for code " << code << endl ;
+    throw string("RooMultiVarGaussian::decodeCode() ERROR don't have bit pattern for code") ;
+  }
+
+  BitBlock b = _aicMap[code-1] ;  
   map1.clear() ;
   map2.clear() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
-    if (code & (1<<i)) {
+    if (b.getBit(i)) {
       map2.push_back(i) ;
     } else {
       map1.push_back(i) ;
@@ -555,6 +594,31 @@ void RooMultiVarGaussian::blockDecompose(const TMatrixD& input, const vector<int
 }
 
 
+void RooMultiVarGaussian::BitBlock::setBit(Int_t ibit) 
+{
+  if (ibit<32) { b0 |= (1<<ibit) ; return ; }
+  if (ibit<64) { b1 |= (1<<(ibit-32)) ; return ; }
+  if (ibit<96) { b2 |= (1<<(ibit-64)) ; return ; }
+  if (ibit<128) { b3 |= (1<<(ibit-96)) ; return ; }
+}
+
+Bool_t RooMultiVarGaussian::BitBlock::getBit(Int_t ibit) 
+{
+  if (ibit<32) return (b0 & (1<<ibit)) ; 
+  if (ibit<64) return (b1 & (1<<(ibit-32))) ; 
+  if (ibit<96) return (b2 & (1<<(ibit-64))) ; 
+  if (ibit<128) return (b3 & (1<<(ibit-96))) ; 
+  return kFALSE ;
+}
+
+Bool_t RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other) 
+{
+  if (b0 != other.b0) return kFALSE ;
+  if (b1 != other.b1) return kFALSE ;
+  if (b2 != other.b2) return kFALSE ;
+  if (b3 != other.b3) return kFALSE ;
+  return kTRUE ;
+}
 
 
 

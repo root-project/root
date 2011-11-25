@@ -25,6 +25,9 @@
 class RooRealVar;
 class RooFitResult ;
 
+#include <map>
+#include <vector>
+
 class RooMultiVarGaussian : public RooAbsPdf {
 public:
 
@@ -66,16 +69,32 @@ public:
     TMatrixD    S12S22I ;
   } ;
 
+  class BitBlock {
+  public:
+    BitBlock() : b0(0), b1(0), b2(0), b3(0) {} ;
+
+    void setBit(Int_t ibit) ;      
+    Bool_t getBit(Int_t ibit) ;
+    Bool_t operator==(const BitBlock& other) ;
+
+    Int_t b0 ;
+    Int_t b1 ;
+    Int_t b2 ;
+    Int_t b3 ;
+  } ;
+
   static void blockDecompose(const TMatrixD& input, const vector<int>& map1, const vector<int>& map2, TMatrixDSym& S11, TMatrixD& S12, TMatrixD& S21, TMatrixDSym& S22) ;
 
 protected:
-
+  
   void decodeCode(Int_t code, vector<int>& map1, vector<int>& map2) const;
   AnaIntData& anaIntData(Int_t code) const ;
   GenData& genData(Int_t code) const ;
 
-  mutable map<int,AnaIntData> _anaIntCache ; //!
-  mutable map<int,GenData> _genCache ; //!
+  mutable std::map<int,AnaIntData> _anaIntCache ; //!
+  mutable std::map<int,GenData> _genCache ; //!
+
+  mutable std::vector<BitBlock> _aicMap ; //!
 
   RooListProxy _x ;
   RooListProxy _mu ;

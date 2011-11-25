@@ -312,6 +312,9 @@ Int_t RooMinuit::migrad()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  saveStatus("MIGRAD",_status) ;
+
   return _status ;
 }
 
@@ -342,6 +345,9 @@ Int_t RooMinuit::hesse()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  saveStatus("HESSE",_status) ;
+
   return _status ;
 }
 
@@ -372,6 +378,11 @@ Int_t RooMinuit::minos()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  cout << "MINOS: status = " << _status << endl ;
+  
+  saveStatus("MINOS",_status) ;
+
   return _status ;
 }
 
@@ -420,6 +431,9 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   backProp() ;
 
   delete[] arglist ;
+  
+  saveStatus("MINOS",_status) ;
+
   return _status ;
 }
 
@@ -450,6 +464,9 @@ Int_t RooMinuit::seek()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  saveStatus("SEEK",_status) ;
+  
   return _status ;
 }
 
@@ -481,6 +498,9 @@ Int_t RooMinuit::simplex()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  saveStatus("SIMPLEX",_status) ;
+  
   return _status ;
 }
 
@@ -511,6 +531,9 @@ Int_t RooMinuit::improve()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
+
+  saveStatus("IMPROVE",_status) ;
+  
   return _status ;
 }
 
@@ -877,6 +900,8 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   } else {
     fitRes->setCovarianceMatrix(*_extV) ;
   }
+
+  fitRes->setStatusHistory(_statusHistory) ;
 
   return fitRes ;
 }

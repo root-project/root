@@ -184,6 +184,33 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 }
 
 
+
+//_____________________________________________________________________________
+Int_t RooFitResult::statusCodeHistory(UInt_t icycle) 
+{ 
+  if (icycle>=_statusHistory.size()) {
+    coutE(InputArguments) << "RooFitResult::statusCodeHistory(" << GetName() 
+			  << " ERROR request for status history slot " 
+			  << icycle << " exceeds history count of " << _statusHistory.size() << endl ;
+  }
+  return _statusHistory[icycle].second ; 
+}
+
+
+
+//_____________________________________________________________________________
+const char* RooFitResult::statusLabelHistory(UInt_t icycle) 
+{ 
+  if (icycle>=_statusHistory.size()) {
+    coutE(InputArguments) << "RooFitResult::statusLabelHistory(" << GetName() 
+			  << " ERROR request for status history slot " 
+			  << icycle << " exceeds history count of " << _statusHistory.size() << endl ;
+  }
+  return _statusHistory[icycle].first.c_str() ; 
+}
+
+
+
 //_____________________________________________________________________________
 RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *parName2,
 			      const char *options) const 
@@ -472,8 +499,12 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
   case 2  : os << "Full matrix, but forced positive-definite" ; break ;
   case 3  : os << "Full, accurate covariance matrix" ; break ;
   }
-  os << endl 
-     << endl ;
+  os << endl ; 
+  os << indent << "                Status : " ;
+  for (vector<pair<string,int> >::const_iterator iter = _statusHistory.begin() ; iter != _statusHistory.end() ; ++iter) {
+    os << iter->first << "=" << iter->second << " " ;
+  }
+  os << endl << endl ;;
 
   Int_t i ;
   if (verbose) {

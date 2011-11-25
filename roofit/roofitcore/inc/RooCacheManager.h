@@ -265,6 +265,9 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   // Allow optional post-processing of object inserted in cache
   insertObjectHook(*obj) ;
 
+  // Unwire cache in case it was wired
+  _wired = kFALSE ;
+
   return _size-1 ;
 }
 
@@ -278,8 +281,11 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
   // slot in cacse such a slot is recycled
 
   // Fast-track for wired mode
-  if (_wired) return *_object ;
-
+  if (_wired) {
+    if(*_object==0 && sterileIdx) *sterileIdx=0 ;
+    return *_object ;
+  }
+  
   Int_t i ;
   for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].contains(nset,iset,isetRangeName)==kTRUE) {      
@@ -296,6 +302,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
       return _object[i] ;
     }
   }
+
   return 0 ;
 }
 

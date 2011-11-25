@@ -900,11 +900,13 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
   // Options to control flow of fit procedure
   // ----------------------------------------
   //
-  // Minimizer(type,algo)           -- Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinuit
-  //                                   interface, but others can be specified (through RooMinimizer interface)
+  // Minimizer(type,algo)           -- Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer
+  //                                   interface, but others can be specified (through RooMinimizer interface). Select OldMinuit to use
+  //                                   MINUIT through the old RooMinuit interface
   //
   //                                          Type         Algorithm
   //                                          ------       ---------
+  //                                          OldMinuit    migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
   //                                          Minuit       migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
   //                                          Minuit2      migrad, simplex, minimize, scan
   //                                          GSLMultiMin  conjugatefr, conjugatepr, bfgs, bfgs2, steepestdescent
@@ -985,8 +987,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineInt("doSumW2","SumW2Error",0,-1) ;
-  pc.defineString("mintype","Minimizer",0,"") ;
-  pc.defineString("minalg","Minimizer",1,"") ;
+  pc.defineString("mintype","Minimizer",0,"OldMinuit") ;
+  pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineObject("minosSet","Minos",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
@@ -1025,8 +1027,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 #ifdef __ROOFIT_NOROOMINIMIZER
   const char* minType =0 ;
 #else
-  const char* minType = pc.getString("mintype","",kTRUE) ;
-  const char* minAlg = pc.getString("minalg","",kTRUE) ;
+  const char* minType = pc.getString("mintype","OldMinuit") ;
+  const char* minAlg = pc.getString("minalg","minuit") ;
 #endif
 
   // Determine if the dataset has weights  
@@ -1059,8 +1061,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Instantiate MINUIT
 
-  if (minType) {
-
+  if (string(minType)!="OldMinuit") {
+    
 #ifndef __ROOFIT_NOROOMINIMIZER
     RooMinimizer m(*nll) ;
 

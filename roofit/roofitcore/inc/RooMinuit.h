@@ -20,6 +20,9 @@
 #include "TStopwatch.h"
 #include <fstream>
 #include "TMatrixDSymfwd.h"
+#include <vector>
+#include <string>
+#include <map>
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -99,6 +102,8 @@ protected:
   void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
   void clearPdfParamAsymErr(Int_t index) ;
 
+  void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
+
 private:
 
   Int_t       _evalCounter ;
@@ -128,6 +133,8 @@ private:
   TMatrixDSym* _extV ;
 
   static TVirtualFitter *_theFitter ; 
+
+  std::vector<std::pair<std::string,int> > _statusHistory ;
 
   RooMinuit(const RooMinuit&) ;
 	
