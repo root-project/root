@@ -1619,26 +1619,39 @@ Long64_t TH3::Merge(TCollection *list)
          nx = h->GetXaxis()->GetNbins();
          ny = h->GetYaxis()->GetNbins();
          nz = h->GetZaxis()->GetNbins();
-
+         
+         // mantain loop in separate binz, biny and binz to avoid 
+         // callinig FindBin(x,y,z) for every bin
          for (binz = 0; binz <= nz + 1; binz++) {
-            iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
+            if (!allSameLimits)
+               iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
+            else
+               iz = binz;
             for (biny = 0; biny <= ny + 1; biny++) {
-               iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
+               if (!allSameLimits)
+                  iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
+               else 
+                  iy = biny; 
+
                for (binx = 0; binx <= nx + 1; binx++) {
-                  ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                   bin = binx +(nx+2)*(biny + (ny+2)*binz);
-                  ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
                   cu  = h->GetBinContent(bin);
-                  if ((!allSameLimits) && (binx == 0 || binx == nx + 1
-                     || biny == 0 || biny == ny + 1
-                     || binz == 0 || binz == nz + 1)) {
-                        if (cu != 0) {
-                           Error("Merge", "Cannot merge histograms - the histograms have"
+                  if (!allSameLimits) { 
+                     // look at non-empty unerflow/overflows
+                     if (cu != 0 && ( h->IsBinUnderflow(bin) || h->IsBinOverflow(bin) )) {
+                        Error("Merge", "Cannot merge histograms - the histograms have"
                               " different limits and undeflows/overflows are present."
                               " The initial histogram is now broken!");
-                           return -1;
-                        }
+                        return -1;
+                     }
+                     ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                   }
+                  else { 
+                     // case histograms have same limits 
+                     ix = binx; 
+                  }
+                  
+                  ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
                   if (ibin <0) continue;
                   AddBinContent(ibin,cu);
                   if (fSumw2.fN) {
