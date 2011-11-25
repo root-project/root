@@ -21,9 +21,12 @@
 #include "BaseSelectionRule.h"
 #include <iostream>
 #include <string.h>
+#include "clang/AST/DeclCXX.h"
+
+const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0);
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
-   : fIndex(index), fIsSelected(sel)
+   : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
@@ -98,7 +101,7 @@ void BaseSelectionRule::PrintAttributes(int level) const
 
 
 
-bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& prototype, 
+bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, 
                                     const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const
 {
    /* This method returns true
@@ -132,10 +135,37 @@ bool BaseSelectionRule::IsSelected (const std::string& name, const std::string& 
    GetAttributeValue("pattern", pattern_value);
    
    // do we have matching against the name (or pattern) attribute and if yes - select or veto
-   bool has_name_rule = (HasAttributeWithName("name") && 
-                         (name_value == name)) ||
-                         (HasAttributeWithName("pattern") && 
-                         CheckPattern(name, pattern_value, fSubPatterns, isLinkdef));
+   bool has_name_rule = false;
+   
+   if (GetCXXRecordDecl()) {
+      const clang::CXXRecordDecl *target = GetCXXRecordDecl();
+      const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+      if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
+         //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
+         has_name_rule = true;
+      }
+   } else if (HasAttributeWithName("name")) {
+      if (name_value == name) {
+         has_name_rule = true;
+      } else {
+         // Try a real match!
+         
+         const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+         const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+         if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
+//               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
+               has_name_rule = true;
+         }
+//         if (strstr(name.c_str(),"std::vector") && name_value == "vv") {
+////            if (D) D->dump();
+////            if (target) target->dump();
+//            fprintf(stderr,"\n vector<int> %p %p %p\n",decl,D,target);
+//         }
+      }
+   }
+   if (HasAttributeWithName("pattern") && CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
+      has_name_rule = true;
+   }
    
    std::string proto_name_value;
    GetAttributeValue("proto_name", proto_name_value);
@@ -442,3 +472,14 @@ bool BaseSelectionRule::RequestStreamerInfo() const
 {
    return false;
 }
+
+const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
+{
+   return fCXXRecordDecl;
+}
+
+void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl)
+{
+   fCXXRecordDecl = decl;
+}
+

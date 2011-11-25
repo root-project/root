@@ -25,11 +25,15 @@
 #include <map>
 #include <list>
 
+namespace clang {
+   class NamedDecl;
+   class CXXRecordDecl;
+}
 
 class BaseSelectionRule
 {
 public:
-   typedef std::map<std::string, std::string> AttributesMap_t; // The liste of selection rule's attributes (, name, pattern, ...)
+   typedef std::map<std::string, std::string> AttributesMap_t; // The liste of selection rule's attributes (name, pattern, ...)
    
    enum ESelect { // a rule could be selected, vetoed or we don't care about it
       kYes,
@@ -44,9 +48,10 @@ private:
    std::list<std::string> fSubPatterns;     // a list of subpatterns, generated form a pattern/proto_pattern attribute 
    std::list<std::string> fFileSubPatterns; // a list of subpatterns, generated form a file_pattern attribute
    bool                   fMatchFound;      // this is true if this selection rule has been used at least once
+   const clang::CXXRecordDecl  *fCXXRecordDecl;   // Record decl of the entity searched for.
       
 public:
-   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false) {} 
+   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0) {} 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
    long    GetIndex() const { return fIndex; }
@@ -62,10 +67,13 @@ public:
    const AttributesMap_t& GetAttributes() const; // returns the list of attributes
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
 
-   bool  IsSelected (const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const; // for more detailed description look at the .cxx file
+   bool  IsSelected (const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const; // for more detailed description look at the .cxx file
 
    void  SetMatchFound(bool match); // set fMatchFound
-   bool  GetMatchFound() const;           // get fMatchFound
+   bool  GetMatchFound() const;     // get fMatchFound
+   
+   const clang::CXXRecordDecl *GetCXXRecordDecl() const;
+   void SetCXXRecordDecl(const clang::CXXRecordDecl *decl);
 
    virtual bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    virtual bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
