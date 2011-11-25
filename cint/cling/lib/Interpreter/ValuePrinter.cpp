@@ -96,7 +96,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p, clang::QualTy
         IsFirst = false;
       }
     }
-    o << " : (int const) " << value << "\n";
+    o << " : (int) " << value << "\n";
   } 
   else if (Ty->isReferenceType())
     StreamRef(o, p);

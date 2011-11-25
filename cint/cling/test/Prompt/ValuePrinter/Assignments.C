@@ -24,6 +24,6 @@ public:
 };
 Outer::Inner::C
 // CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
-// CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int const) 2
+// CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int) 2
 
 .q
