@@ -329,21 +329,26 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          nentries += h->GetEntries();
 
          for ( Int_t hbin = 0; hbin < h->fN; ++hbin ) {
-            if ((!allSameLimits) && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
-               if (h->GetW()[hbin] != 0) {
+            Int_t pbin = hbin;
+            if (!allSameLimits) {
+               // histogram have different limits:
+               // find global bin number in p given the x,y,z axis bin numbers in h
+               // in case of nont equal axes
+               // we can use FindBin on p axes because kCanRebin bit of p has been reset before 
+               if ( h->GetW()[hbin] != 0 && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
+                  // reject cases where underflow/overflow are there and bin content is not zero
                   Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
                         " different limits and undeflows/overflows are present."
                         " The initial profile is now broken!");
                   return -1;
                }
+               Int_t hbinx, hbiny, hbinz;
+               h->GetBinXYZ(hbin, hbinx, hbiny, hbinz);
+
+               pbin = p->GetBin( p->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
+                                 p->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
+                                 p->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
             }
-            Int_t hbinx, hbiny, hbinz;
-            h->GetBinXYZ(hbin, hbinx, hbiny, hbinz);
-            // find global bin number in p given the x,y,z axis bin numbers in h
-            // we can use FindBin on p axes because kCanRebin bit of p has been rreset before 
-            Int_t pbin = p->GetBin( p->fXaxis.FindBin( h->GetXaxis()->GetBinCenter(hbinx) ),
-                                    p->fYaxis.FindBin( h->GetYaxis()->GetBinCenter(hbiny) ),
-                                    p->fZaxis.FindBin( h->GetZaxis()->GetBinCenter(hbinz) ) );
 
 
             p->fArray[pbin]             += h->GetW()[hbin];

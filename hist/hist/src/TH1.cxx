@@ -2284,6 +2284,10 @@ Double_t *TH1::GetIntegral()
 {
    //  Return a pointer to the array of bins integral.
    //  if the pointer fIntegral is null, TH1::ComputeIntegral is called
+   // The array dimension is the number of bins in the histograms
+   // including underflow and overflow (fNCells)
+   // the last value integral[fNCells] is set to the number of entries of 
+   // the histogram 
 
    if (!fIntegral) ComputeIntegral();
    return fIntegral;
@@ -5210,17 +5214,23 @@ Long64_t TH1::Merge(TCollection *li)
                // they do not make sense also in the case of labels
                if (!allHaveLabels) { 
                   // case of bins without labels 
-                  if (!allSameLimits && ( binx==0 || binx== nx+1)) {
-                     Error("Merge", "Cannot merge histograms - the histograms have"
-                        " different limits and undeflows/overflows are present."
-                        " The initial histogram is now broken!");
-                     return -1;
+                  if (!allSameLimits)  { 
+                     if ( binx==0 || binx== nx+1) {
+                        Error("Merge", "Cannot merge histograms - the histograms have"
+                              " different limits and undeflows/overflows are present."
+                              " The initial histogram is now broken!");
+                        return -1;
+                     }
+                     // NOTE: in the case of one of the histogram  as labels - it is treated as 
+                     // an error and it has been flagged before 
+                     // since calling FindBin(x) for histo with labels does not make sense
+                     // and the result is unpredictable                      
+                     ix = fXaxis.FindBin(hist->GetXaxis()->GetBinCenter(binx));
                   }
-                  // NOTE: in the case of one of the histogram  as labels - it is treated as 
-                  // an error and it has been flagged before 
-                  // since calling FindBin(x) for histo with labels does not make sense
-                  // and the result is unpredictable 
-                  ix = fXaxis.FindBin(hist->GetXaxis()->GetBinCenter(binx));
+                  else {
+                     // histogram have same limits - no need to call FindBin
+                     ix = binx; 
+                  }
                } else {
                   // here only in the case of bins with labels 
                   const char* label=hist->GetXaxis()->GetBinLabel(binx);
