@@ -74,7 +74,7 @@ void AsymptoticCalculator::SetPrintLevel(int level) {
 }
 
 AsymptoticCalculator::AsymptoticCalculator(
-   const RooAbsData &data,
+   RooAbsData &data,
    const ModelConfig &altModel,
    const ModelConfig &nullModel) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
@@ -143,7 +143,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
 
 
-   fAsimovData = MakeAsimovData( poiAlt, fAsimovGlobObs);
+   fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs);
    if (!fAsimovData) return;
 
    // set global observables to their Asimov values 
@@ -194,18 +194,24 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     RooAbsReal* nll = (RooNLLVar*) pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 
+    bool skipFit = false;
 
     // if poi are specified - do a conditional fit 
     RooArgSet paramsSetConstant;
     // support now only one POI 
     if (poiSet && poiSet->getSize() > 0) { 
        RooArgSet* attachedSet = nll->getVariables();
-
-       RooRealVar * poiVar = dynamic_cast<RooRealVar*>( attachedSet->find( (poiSet->first())->GetName() ) );
+       RooRealVar * muTest = (RooRealVar*) (poiSet->first());
+       RooRealVar * poiVar = dynamic_cast<RooRealVar*>( attachedSet->find( muTest->GetName() ) );
        if (poiVar && !poiVar->isConstant() ) {
+          poiVar->setVal(  muTest->getVal() );
           poiVar->setConstant(); 
           paramsSetConstant.add(*poiVar);
        }
+       if (poiSet->getSize() > 1) 
+          std::cout << "Model with more than one POI are not supported - ignore extra parameters, consider only first one" << std::endl;
+
+ 
 
        // This for more than one POI (not yet supported)
        //
@@ -219,59 +225,73 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        //       paramsSetConstant.add(*tmpParA);
        //    }
        // }
-       
+
+       // check if there are non-const parameters so it is worth to do the minimization
+       RooArgSet nllParams(*attachedSet); 
+       RooStats::RemoveConstantParameters(&nllParams);
        delete attachedSet;
+
+       if (nllParams.getSize() == 0) {
+          skipFit = true; 
+       }
     }
 
     TStopwatch tw; 
     tw.Start();
-
-    if (verbose > 0 )
-       std::cout << "Doing NLL minimization....." << std::endl;
-
-    int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-    if (verbose > 1) minimPrintLevel = verbose; 
-    
-    RooMinimizer minim(*nll);
-    minim.setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
-    //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
-    minim.setPrintLevel(minimPrintLevel-1);
-    int status = -1;
-    minim.optimizeConst(true);
-    for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
-       //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
-       TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
-       TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo(); 
-       status = minim.minimize(minimizer, algorithm);       
-       if (status == 0) {  
-          break;
-       } else {
-          if (tries > 1) {
-             printf("    ----> Doing a re-scan first\n");
-             minim.minimize(minimizer,"Scan");
-          }
-          if (tries > 2) {
-             printf("    ----> trying with strategy = 1\n");
-             minim.setStrategy(1);
-          }
-       }
-    }
-
-    RooFitResult * result = 0; 
     double val =  -1;
 
-    if (status == 0) { 
-       result = minim.save();
-       val = result->minNll();
-    }
-    else { 
-       oocoutE((TObject*)0,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
-       val =  TMath::QuietNaN();       
-    }
+    if (skipFit) 
+       val = nll->getVal(); // just evaluate nll in conditional fits with model without nuisance params
+    else {
 
-    minim.optimizeConst(false);
+       if (verbose > 0 )
+          std::cout << "Doing NLL minimization....." << std::endl;
+       
+       int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+       if (verbose > 1) minimPrintLevel = verbose; 
+       
+       RooMinimizer minim(*nll);
+       minim.setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+       //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
+       minim.setPrintLevel(minimPrintLevel-1);
+       int status = -1;
+       minim.optimizeConst(true);
+       for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
+          //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+          TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
+          TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo(); 
+          status = minim.minimize(minimizer, algorithm);       
+          if (status == 0) {  
+             break;
+          } else {
+             if (tries > 1) {
+                printf("    ----> Doing a re-scan first\n");
+                minim.minimize(minimizer,"Scan");
+             }
+             if (tries > 2) {
+                printf("    ----> trying with strategy = 1\n");
+                minim.setStrategy(1);
+             }
+          }
+       }
+       
+       RooFitResult * result = 0; 
 
-    RooMsgService::instance().setGlobalKillBelow(msglevel);
+
+       if (status == 0) { 
+          result = minim.save();
+          val = result->minNll();
+       }
+       else { 
+          oocoutE((TObject*)0,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
+          val =  TMath::QuietNaN();       
+       }
+
+       minim.optimizeConst(false);
+
+       RooMsgService::instance().setGlobalKillBelow(msglevel);
+
+    }
 
     double muTest = 0; 
     if (verbose > 0) { 
@@ -280,8 +300,10 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
           muTest = ( (RooRealVar*) poiSet->first() )->getVal();
           std::cout << " for poi fixed at = " << muTest; 
        }
-       std::cout << "\tfit time : ";  
-       tw.Print();
+       if (!skipFit) {
+          std::cout << "\tfit time : ";  
+          tw.Print();
+       }
        std::cout << std::endl;
     }
 
@@ -809,22 +831,16 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 }
 
 //______________________________________________________________________________
-RooAbsData * AsymptoticCalculator::MakeAsimovData(const RooArgSet & paramValues, RooArgSet & asimovGlobObs)  {
-   // make the Asimov data set
-   // extract from code from Giovanni and AAron
+RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs)  {
+   // static function to the an Asimov data set
+   // given an observed dat set, a model and a snapshot of poi. 
+   // Return the asimov data set + global observables set to values satisfying the constraints
 
-   // inputs: 
-   // RooAbsData &realdata, RooAbsCollection &snapshot, double poiValue, int verbose
-
-   // get the model
 
    int verbose = fgPrintLevel;
 
-   const RooStats::ModelConfig *mc = GetNullModel() ;
-   RooAbsData * realData = const_cast<RooAbsData*> (GetData() ); 
 
-
-   RooArgSet  poi(*mc->GetParametersOfInterest());
+   RooArgSet  poi(*model.GetParametersOfInterest());
    poi = paramValues; 
    //RooRealVar *r = dynamic_cast<RooRealVar *>(poi.first());
    // set poi constant for conditional MLE 
@@ -834,9 +850,9 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const RooArgSet & paramValues,
    while((tmpPar = (RooRealVar*)it.Next())){
       tmpPar->setConstant();
    }
-   if (mc->GetNuisanceParameters()) {
-      RooAbsPdf * pdf = mc->GetPdf();
-      RooArgSet  constrainParams(*mc->GetNuisanceParameters());
+   if (model.GetNuisanceParameters()) {
+      RooAbsPdf * pdf = model.GetPdf();
+      RooArgSet  constrainParams(*model.GetNuisanceParameters());
       RooStats::RemoveConstantParameters(&constrainParams);
       TStopwatch tw2; tw2.Start(); 
       int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
@@ -845,36 +861,36 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const RooArgSet & paramValues,
          minimPrintLevel += 1;
       }
          
-      pdf->fitTo(*realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
+      pdf->fitTo(realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
                  RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false), RooFit::InitialHesse(false),
                  RooFit::Constrain(constrainParams));
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
    } else {
       // Do we have free parameters anyway that need fitting?
       bool hasFloatParams = false;
-      std::auto_ptr<RooArgSet> params(mc->GetPdf()->getParameters(*realData));
+      std::auto_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
       std::auto_ptr<TIterator> iter(params->createIterator());
       for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
          RooRealVar *rrv = dynamic_cast<RooRealVar *>(a);
          if ( rrv != 0 && rrv->isConstant() == false ) { hasFloatParams = true; break; }
       } 
-      if (hasFloatParams) mc->GetPdf()->fitTo(*realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(1));
+      if (hasFloatParams) model.GetPdf()->fitTo(realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(1));
    }
    // after the fit the nuisance parameters will have their best fit value
-   if (mc->GetNuisanceParameters() && verbose > 1) {
+   if (model.GetNuisanceParameters() && verbose > 1) {
       std::cout << "Nuisance parameters after fit for asimov dataset: " << std::endl;
-      mc->GetNuisanceParameters()->Print("V");
+      model.GetNuisanceParameters()->Print("V");
    }
    
    // generate the Asimov data set for the observables 
    // need to distinguish  if Simpdf or normal pdf
  
-   // toymcoptutils::SimPdfGenInfo newToyMC(*mc->GetPdf(), *mc->GetObservables(), false); 
+   // toymcoptutils::SimPdfGenInfo newToyMC(*model.GetPdf(), *model.GetObservables(), false); 
 
    TStopwatch tw; 
    tw.Start();
 
-   RooAbsData * asimov = GenerateAsimovData(*mc->GetPdf() , *mc->GetObservables() );
+   RooAbsData * asimov = GenerateAsimovData(*model.GetPdf() , *model.GetObservables() );
    
    if (verbose>0) {
       std::cout << "Generated Asimov data with time : ";  tw.Print(); 
@@ -886,17 +902,17 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const RooArgSet & paramValues,
    // to do it make a nuisance pdf with all product of constraints and then 
    // assign to each constraint a glob observable value = to the current fitted nuisance parameter value
 
-   if (mc->GetGlobalObservables() && mc->GetGlobalObservables()->getSize() > 0) {
-      RooArgSet gobs(*mc->GetGlobalObservables());
+   if (model.GetGlobalObservables() && model.GetGlobalObservables()->getSize() > 0) {
+      RooArgSet gobs(*model.GetGlobalObservables());
 
       // snapshot data global observables
       RooArgSet snapGlobalObsData;
       Utils::SetAllConstant(gobs, true);
       gobs.snapshot(snapGlobalObsData);
 
-      RooArgSet nuis(*mc->GetNuisanceParameters());
+      RooArgSet nuis(*model.GetNuisanceParameters());
       // part 1: create the nuisance pdf
-      std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(*mc,"TempNuisPdf") );
+      std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
       // unfold the nuisance pdf 
       RooProdPdf *prod = dynamic_cast<RooProdPdf *>(nuispdf.get());
       if (prod == 0) { 
