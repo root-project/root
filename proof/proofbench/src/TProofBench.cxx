@@ -228,7 +228,9 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
       return;
    }
 
-   TDirectory *d = (TDirectory *) fout->Get("RunCPU");
+   TString oo(opt);
+   const char *dirn = (oo.Contains("x:")) ? "RunCPUx" : "RunCPU";
+   TDirectory *d = (TDirectory *) fout->Get(dirn);
    if (!d) {
       ::Error("DrawCPU", "could not find directory 'RunCPU' ...");
       fout->Close();
@@ -401,7 +403,9 @@ void TProofBench::DrawDataSet(const char *outfile, const char *opt, const char *
       ::Error("DrawDataSet", "could not open file '%s' ...", outfile);
       return;
    }
-   TDirectory *d = (TDirectory *) fout->Get("RunDataRead");
+   TString oo(opt);
+   const char *dirn = (oo.Contains("x:")) ? "RunDataReadx" : "RunDataRead";
+   TDirectory *d = (TDirectory *) fout->Get(dirn);
    if (!d) {
       ::Error("DrawDataSet", "could not find directory 'RunDataRead' ...");
       fout->Close();
