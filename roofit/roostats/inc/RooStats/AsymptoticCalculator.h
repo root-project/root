@@ -39,9 +39,9 @@ namespace RooStats {
 
    public:
       AsymptoticCalculator(
-                        const RooAbsData &data,
-                        const ModelConfig &altModel,
-                        const ModelConfig &nullModel
+         RooAbsData &data,  // need to pass non-const since RooAbsPdf::fitTo takes a non-const data set 
+         const ModelConfig &altModel,
+         const ModelConfig &nullModel
          );
       //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
       // {
@@ -55,7 +55,8 @@ namespace RooStats {
       // re-implement HypoTest computation using the asymptotic 
       virtual HypoTestResult *GetHypoTest() const; 
 
-      RooAbsData * MakeAsimovData(const RooArgSet & paramValues, RooArgSet & globObs); 
+      // make the asimov data from the ModelConfig and list of poi - return data set annd snapshoot of global obs 
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & paramValues, RooArgSet & globObs); 
 
       static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
 
