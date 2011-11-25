@@ -194,13 +194,12 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     RooAbsReal* nll = (RooNLLVar*) pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 
-    bool skipFit = false;
+    RooArgSet* attachedSet = nll->getVariables();
 
     // if poi are specified - do a conditional fit 
     RooArgSet paramsSetConstant;
     // support now only one POI 
     if (poiSet && poiSet->getSize() > 0) { 
-       RooArgSet* attachedSet = nll->getVariables();
        RooRealVar * muTest = (RooRealVar*) (poiSet->first());
        RooRealVar * poiVar = dynamic_cast<RooRealVar*>( attachedSet->find( muTest->GetName() ) );
        if (poiVar && !poiVar->isConstant() ) {
@@ -227,18 +226,18 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        // }
 
        // check if there are non-const parameters so it is worth to do the minimization
-       RooArgSet nllParams(*attachedSet); 
-       RooStats::RemoveConstantParameters(&nllParams);
-       delete attachedSet;
 
-       if (nllParams.getSize() == 0) {
-          skipFit = true; 
-       }
     }
 
     TStopwatch tw; 
     tw.Start();
     double val =  -1;
+
+    //check if needed to skip the fit 
+    RooArgSet nllParams(*attachedSet); 
+    RooStats::RemoveConstantParameters(&nllParams);
+    delete attachedSet;
+    bool skipFit = (nllParams.getSize() == 0);
 
     if (skipFit) 
        val = nll->getVal(); // just evaluate nll in conditional fits with model without nuisance params

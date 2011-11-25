@@ -58,7 +58,7 @@ namespace RooStats {
     set->remove(constSet);
   }
 
-   inline bool SetAllConstant(const RooAbsCollection &coll, bool constant) {
+   inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
        // utility function to set all variable constant in a collection
        // (from G. Petrucciani)
        bool changed = false;
