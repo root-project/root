@@ -251,6 +251,7 @@ namespace RooStats {
           // check if there are non-const parameters so it is worth to do the minimization
           RooArgSet allParams(*attachedSet); 
           RooStats::RemoveConstantParameters(&allParams);
+
           
           if (allParams.getSize() == 0 ) {
              condML = fNll->getVal(); 
@@ -282,7 +283,7 @@ namespace RooStats {
 
        // need to restore the values ?
        *attachedSet = *origAttachedSet;
-
+       
        delete attachedSet;
        delete origAttachedSet;
        delete snap;
@@ -319,7 +320,7 @@ namespace RooStats {
         int level = (fPrintLevel == 0) ? -1 : fPrintLevel -2;
 	minim.setPrintLevel(level);
         // this cayses a memory leak
-	minim.optimizeConst(true); 
+	minim.optimizeConst(2); 
 	for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
 	  //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
 	  status = minim.minimize(fMinimizer, "Minimize");
