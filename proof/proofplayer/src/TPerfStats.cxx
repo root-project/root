@@ -717,6 +717,7 @@ void TPerfStats::Start(TList *input, TList *output)
    
    gPerfStats = new TPerfStats(input, output);
    if (gPerfStats && !gPerfStats->TestBit(TObject::kInvalidObject)) {
+      // This measures the time taken by the constructor: not negligeable ...
       gPerfStats->SimpleEvent(TVirtualPerfStats::kStart);
    } else {
       SafeDelete(gPerfStats);
