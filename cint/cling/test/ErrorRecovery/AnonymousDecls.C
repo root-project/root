@@ -13,8 +13,6 @@
 // The current test checks if that codepath in removeDecl still exists because
 // it is important for the stable error recovery in cling
 
-.rawInput
-
 class MyClass {
   struct {
     int a;
@@ -22,6 +20,35 @@ class MyClass {
   };
 };
 
-.rawInput
+struct X {
+  union {
+    float f3;
+    double d2;
+  } named;
+
+  union {
+    int i;
+    float f;
+    
+    union {
+      float f2;
+      mutable double d;
+    };
+  };
+
+  void test_unqual_references();
+
+  struct {
+    int a;
+    float b;
+  };
+
+  void test_unqual_references_const() const;
+
+  mutable union { // expected-error{{anonymous union at class scope must not have a storage specifier}}
+    float c1;
+    double c2;
+  };
+};
 
 .q
