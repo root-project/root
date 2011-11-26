@@ -24,10 +24,9 @@ GDKDLL       := bin/gdk-1.3.dll
 GDKLIB       := $(LPATH)/gdk-1.3.lib
 GDKSRC       := $(wildcard $(GDKDIRS)/*.c) $(wildcard $(GDKDIRS)/win32/*.c)
 
+GDKNMCXXFLAGS:= "$(OPT) $(BLDCXXFLAGS) -I$(shell cygpath -w '$(GLIBDIRI)') -FI$(shell cygpath -w '$(ROOT_SRCDIR)/build/win/w32pragma.h')"
 ifeq (yes,$(WINRTDEBUG))
-GDKNMCXXFLAGS:= "$(OPT) $(BLDCXXFLAGS) -FI$(shell cygpath -w '$(ROOT_SRCDIR)/build/win/w32pragma.h')" DEBUG=1
-else
-GDKNMCXXFLAGS:= "$(OPT) $(BLDCXXFLAGS) -FI$(shell cygpath -w '$(ROOT_SRCDIR)/build/win/w32pragma.h')"
+GDKNMCXXFLAGS += DEBUG=1
 endif
 
 ##### libWin32gdk #####
