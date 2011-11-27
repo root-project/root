@@ -45,7 +45,7 @@ RooNameSet::RooNameSet()
 {
   // Default constructor
 
-  _len = 1024 ;
+  _len = 256 ;
   _nameList = new char[_len] ;
   _nameList[0] = 0 ;
   
@@ -59,7 +59,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet)
 {
   // Construct from RooArgSet
 
-  _len = 1024 ;
+  _len = 256 ;
   _nameList = new char[_len] ;
   _nameList[0] = 0 ;
   refill(argSet) ;
@@ -110,7 +110,7 @@ void RooNameSet::refill(const RooArgSet& argSet)
       if (ptr>=end) {
 	// Extend buffer
 	Int_t offset = ptr-_nameList ;
-	extendBuffer(1024) ;
+	extendBuffer(256) ;
 	ptr = _nameList + offset ;
 	end = _nameList + _len - 2;
       }
@@ -132,8 +132,8 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
 
   RooArgSet* output = new RooArgSet ;
 
-  char buffer[1024] ;
-  strlcpy(buffer,_nameList,1024) ;
+  char *buffer = new char[strlen(_nameList)+1] ;
+  strlcpy(buffer,_nameList,strlen(_nameList)) ;
   char* token = strtok(buffer,":") ;
   
   while(token) {
@@ -141,6 +141,8 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
     if (arg) output->add(*arg) ;
     token = strtok(0,":") ;
   }
+
+  delete[] buffer ;
 
   return output ;
 }
