@@ -1212,6 +1212,7 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
 
 	// Copy merged array without duplicates to new sumBinBArrau
 	delete sumBinB ;
+	delete pdfBinB ;
 	sumBinB = newSumBinB ;
 	needClean = kTRUE ;	
       }
