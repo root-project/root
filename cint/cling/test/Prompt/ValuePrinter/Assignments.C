@@ -1,4 +1,5 @@
 // RUN: cat %s | %cling | FileCheck %s
+// XFAIL: *
 
 int a = 12;
 a // CHECK: (int) 12
@@ -31,5 +32,12 @@ Outer::Inner::C
 // CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int) {{[0-9].*}} 
 Outer::Inner::D
 // CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
-// CHECK: (Outer::Inner::E::D) : (int) -{{[0-9].*}} 
+// CHECK: (Outer::Inner::E::D) : (int) -{{[0-9].*}}
+
+// Put an enum on the global scope
+enum E{ e1 = -12, e2, e3=33, e4, e5 = 33};
+e2
+// CHECK: (E::e2) : (int) -11
+::e1
+// CHECK: (E::e1) : (int) -12
 .q
