@@ -2671,9 +2671,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
    /* Initialized data */
 
    TString comand = command;
-   static TString clower = "abcdefghijklmnopqrstuvwxyz";
-   static TString cupper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-   const char *cname[40] = {
+   static const char *cname[40] = {
       "MINImize  ",
       "SEEk      ",
       "SIMplex   ",
@@ -6952,7 +6950,7 @@ void TMinuit::mnset()
 
    /* Initialized data */
 
-   const char *cname[30] = {
+   static const char *cname[30] = {
       "FCN value ",
       "PARameters",
       "LIMits    ",
