@@ -202,9 +202,10 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
       n = SSL_read(fSSL, buffer, (int)length);
 
    if (n <= 0) {
-      if (SSL_get_error(fSSL, n) == SSL_ERROR_ZERO_RETURN) {
+      if (SSL_get_error(fSSL, n) == SSL_ERROR_ZERO_RETURN || SSL_get_error(fSSL, n) == SSL_ERROR_SYSCALL) {
          // Connection closed, reset or broken
          SetBit(TSocket::kBrokenConn);
+         SSL_set_quiet_shutdown(fSSL, 1); // Socket is gone, sending "close notify" will fail
          Close();
       }
       return n;
