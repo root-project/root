@@ -133,7 +133,7 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   RooArgSet* output = new RooArgSet ;
 
   char *buffer = new char[strlen(_nameList)+1] ;
-  strlcpy(buffer,_nameList,strlen(_nameList)) ;
+  strlcpy(buffer,_nameList,strlen(_nameList)+1) ;
   char* token = strtok(buffer,":") ;
   
   while(token) {

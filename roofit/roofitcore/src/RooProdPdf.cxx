@@ -1936,13 +1936,13 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
     getPartIntList(nset,iset,partIntList,normList,code2,rangeName) ;
 
     delete vars ;
-    delete nset ;
-    delete iset ;
 
     // preceding call to getPartIntList guarantees non-null return
     // coverity[NULL_RETURNS]
     cache = (CacheElem*) _cacheMgr.getObj(nset,iset,&code2,rangeName) ;
 
+    delete nset ;
+    delete iset ;
 
   } else {
 
