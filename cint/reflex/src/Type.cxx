@@ -279,7 +279,7 @@ Reflex::Type::IsEquivalentTo(const Type& typ,
                   Type_Iterator pi2;
 
                   for (pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin();
-                       pi1 != t1.FunctionParameter_End(), pi2 != t2.FunctionParameter_End();
+                       pi1 != t1.FunctionParameter_End() && pi2 != t2.FunctionParameter_End();
                        ++pi1, ++pi2) {
                      if (!pi1->IsEquivalentTo(*pi2, modifiers_mask)) {
                         return false;
@@ -375,7 +375,7 @@ Reflex::Type::IsSignatureEquivalentTo(const Type& typ,
                Type_Iterator pi2;
 
                for (pi1 = t1.FunctionParameter_Begin(), pi2 = t2.FunctionParameter_Begin();
-                    pi1 != t1.FunctionParameter_End(), pi2 != t2.FunctionParameter_End();
+                    pi1 != t1.FunctionParameter_End() && pi2 != t2.FunctionParameter_End();
                     ++pi1, ++pi2) {
                   if (!pi1->IsEquivalentTo(*pi2, modifiers_mask)) {
                      return false;
