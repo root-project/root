@@ -254,7 +254,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;
-       minim.optimizeConst(true);
+       minim.optimizeConst(2);
        for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
           //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
           TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
