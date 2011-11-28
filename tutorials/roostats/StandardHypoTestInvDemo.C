@@ -37,10 +37,12 @@ using namespace RooStats;
 
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
-bool writeResult = false;                // write HypoTestInverterResult in a file 
+bool writeResult = true;                 // write HypoTestInverterResult in a file 
 bool optimize = true;                    // optmize evaluation of test statistic 
 bool useVectorStore = true;              // convert data to use new roofit data store 
 bool generateBinned = false;             // generate binned data sets 
+bool noSystematics = false;              // force all systematics to be off (i.e. set all nuisance parameters as constat
+                                         // to their nominal values)
 double nToysRatio = 2;                   // ratio Ntoys S+b/ntoysB
 double maxPOI = -1;                      // max value used of POI (in case of auto scan) 
 bool useProof = false;                    // use Proof Light when using toys (for freq or hybrid)
@@ -487,6 +489,18 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       sbModel->SetSnapshot( *sbModel->GetParametersOfInterest() );
    }
   
+   // case of no systematics
+   // remove nuisance parameters from model
+   if (noSystematics) { 
+      const RooArgSet * nuisPar = sbModel->GetNuisanceParameters();
+      if (nuisPar && nuisPar->getSize() > 0) { 
+         std::cout << "StandardHypoTestInvDemo" << "  -  Switch off all systematics by setting them constant to their initial values" << std::endl;
+         RooStats::SetAllConstant(*nuisPar);
+      }
+      const RooArgSet * bnuisPar = bModel->GetNuisanceParameters();
+      if (bnuisPar) 
+         RooStats::SetAllConstant(*bnuisPar);
+   }
   
    if (!bModel || bModel == sbModel) {
       Info("StandardHypoTestInvDemo","The background model %s does not exist",modelBName);
@@ -567,16 +581,21 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    RatioOfProfiledLikelihoodsTestStat 
       ropl(*sbModel->GetPdf(), *bModel->GetPdf(), bModel->GetSnapshot());
    ropl.SetSubtractMLE(false);
-  
+   ropl.SetPrintLevel(mPrintLevel);
+   ropl.SetMinimizer(minimizerType.c_str());
   
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(1);
    profll.SetMinimizer(minimizerType.c_str());
+   profll.SetPrintLevel(mPrintLevel);
+
+   profll.SetReuseNLL(mOptimize);
+   slrts.SetReuseNLL(mOptimize);
+   ropl.SetReuseNLL(mOptimize);
+
    if (mOptimize) { 
-      profll.SetReuseNLL(true);
-      slrts.setReuseNLL(true);
       profll.SetStrategy(0);
-      profll.SetPrintLevel(mPrintLevel);
+      ropl.SetStrategy(0);
    }
   
    if (mMaxPoi > 0) poi->setMax(mMaxPoi);  // increase limit
@@ -615,9 +634,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       }
       toymcs->SetGenerateBinned(mGenerateBinned);
     
-      if (mOptimize) { 
-         toymcs->SetUseMultiGen(true);
-      }
+      toymcs->SetUseMultiGen(mOptimize);
     
       if (mGenerateBinned &&  sbModel->GetObservables()->getSize() > 2) { 
          Warning("StandardHypoTestInvDemo","generate binned is activated but the number of ovservable is %d. Too much memory could be needed for allocating all the bins",sbModel->GetObservables()->getSize() );
