@@ -338,6 +338,7 @@ std::list<Double_t>* RooAddition::binBoundaries(RooAbsRealLValue& obs, Double_t 
 	
 	// Copy merged array without duplicates to new sumBinBArrau
 	delete sumBinB ;
+	delete funcBinB ;
 	sumBinB = newSumBinB ;
 	needClean = kTRUE ;	
       }

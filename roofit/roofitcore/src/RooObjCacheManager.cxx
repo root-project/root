@@ -79,6 +79,9 @@ RooObjCacheManager::~RooObjCacheManager()
       delete *iter ;
     }
 
+    if (_optCacheObservables) {
+      delete _optCacheObservables ;
+    }
     _optCacheObservables=0 ;
   }
 }
@@ -139,12 +142,18 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 
   _optCacheModeSeen = kTRUE ;
 
-  _optCacheObservables = (RooArgSet*) obs.snapshot() ;
-  _optCacheObsList.push_back(_optCacheObservables) ;
+  if (_optCacheObservables) {
+    _optCacheObservables->removeAll() ;
+    _optCacheObservables->add(obs) ;
+  } else {
+    _optCacheObservables = (RooArgSet*) new RooArgSet(obs) ;
+  }
+  //_optCacheObsList.push_back(_optCacheObservables) ;
+//   cout << "RooObjCacheManager(" << _owner->GetName() << ") obs = " << obs << " list size is now " << _optCacheObsList.size() << endl ;
 //   if (_optCacheObsList.size()>200) {
 //     cout << "RooObjCacheManager::optimizeCacheMode(" << this << ") list size = " << _optCacheObsList.size() << endl ;
 //   }
-
+  
   for (Int_t i=0 ; i<_size ; i++) {
     if (_object[i]) {
       _object[i]->optimizeCacheMode(obs,optNodes,processedNodes) ;
@@ -168,8 +177,9 @@ void RooObjCacheManager::sterilize()
     for (; iter!=_optCacheObsList.end() ; ++iter) {
       delete *iter ;
     }
-    _optCacheObsList.clear() ;    
-    _optCacheObservables=0 ;
+    //_optCacheObsList.clear() ;    
+    delete _optCacheObservables ;
+    _optCacheObservables = 0 ;
     _optCacheModeSeen = kFALSE ;
   }
   

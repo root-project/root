@@ -474,6 +474,7 @@ std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_
 	
 	// Copy merged array without duplicates to new sumBinBArrau
 	delete sumBinB ;
+	delete funcBinB ;
 	sumBinB = newSumBinB ;
 	needClean = kTRUE ;	
       }

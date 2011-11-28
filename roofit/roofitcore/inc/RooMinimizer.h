@@ -46,7 +46,7 @@ public:
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
   void setEps(Double_t eps) ;
-  void optimizeConst(Bool_t flag) ;
+  void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { _fcn->SetEvalErrorWall(flag); }
 
   RooFitResult* fit(const char* options) ;

@@ -564,7 +564,7 @@ void RooAbsOptTestStatistic::optimizeCaching()
   _funcClone->getVal(_normSet) ;
 
   // Set value caching mode for all nodes that depend on any of the observables to ADirty
-  _funcClone->optimizeCacheMode(*_dataClone->get()) ;
+  _funcClone->optimizeCacheMode(*_funcObsSet) ;
 
   // Disable propagation of dirty state flags for observables
   _dataClone->setDirtyProp(kFALSE) ;  

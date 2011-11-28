@@ -539,7 +539,7 @@ Int_t RooMinimizer::setPrintLevel(Int_t newLevel)
 }
 
 //_____________________________________________________________________________
-void RooMinimizer::optimizeConst(Bool_t flag)
+void RooMinimizer::optimizeConst(Int_t flag)
 {
   // If flag is true, perform constant term optimization on
   // function being minimized.
@@ -552,7 +552,7 @@ void RooMinimizer::optimizeConst(Bool_t flag)
     _optConst = flag ;
   } else if (!_optConst && flag) {
     if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: activating const optimization" << endl ;
-    _func->constOptimizeTestStatistic(RooAbsArg::Activate) ;
+    _func->constOptimizeTestStatistic(RooAbsArg::Activate,flag>1) ;
     _optConst = flag ;
   } else if (_optConst && flag) {
     if (_printLevel>-1) coutI(Minimization) << "RooMinimizer::optimizeConst: const optimization already active" << endl ;
