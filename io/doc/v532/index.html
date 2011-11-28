@@ -13,9 +13,9 @@ The value of gDirectory and gFile are now all accessed via a static function of 
 <h4>TMemFile</h4>
 Introduce <tt>TMemFile</tt> and update <tt>TFileMerger</tt> to support incremental merges.
 <p/>
-Add new tutorials ( <tt>net/treeClient.C</tt> + <tt>net/fastMergeServer.C</tt> )
+Add new tutorials (<tt>net/treeClient.C</tt> + <tt>net/fastMergeServer.C</tt>)
 demonstrating how a <tt>TMemFile</tt> can be used to do parallel merge
-from many client. ( <tt>TMemFile</tt> still needs to be better integrated
+from many clients. (<tt>TMemFile</tt> still needs to be better integrated
 with <tt>TMessage</tt> and <tt>TSocket</tt>).
 <p/>
 The new <tt>TMemFile</tt> class support the <tt>TFile</tt> interface but only store
@@ -72,7 +72,7 @@ the signature/type <tt>ROOT::ResetAfterMergeFunc_t</tt>:
    void (*)(void *thisobj, TFileMergeInfo*);
 </pre>
 <tt>ResetAfterMerge</tt> functions were added to the following classes:
-<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranhcElement</tt>, 
+<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranchElement</tt>, 
 <tt>TBranchClones</tt>, <tt>TBranchObject</tt> and <tt>TBranchRef</tt>.
 </li>
 </ul>
