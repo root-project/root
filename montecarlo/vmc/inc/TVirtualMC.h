@@ -70,24 +70,6 @@ public:
    // ------------------------------------------------
    //
 
-   // Return parameters for material specified by material number imat
-   // Deprecated - replaced with GetMaterial()
-   virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,
-                        Float_t &dens, Float_t &radl, Float_t &absl,
-                        Float_t* ubuf, Int_t& nbuf) = 0;
-
-   //  Return parameters for material specified by material number imat
-   // (in double precision)
-   // Deprecated - replaced with GetMaterial()
-   virtual void  Gfmate(Int_t imat, char *name, Double_t &a, Double_t &z,
-                        Double_t &dens, Double_t &radl, Double_t &absl,
-                        Double_t* ubuf, Int_t& nbuf) = 0;
-
-   // Check the parameters of a tracking medium
-   // Deprecated
-   virtual void  Gckmat(Int_t imed, char* name) = 0;
-
-
    // Define a material
    // kmat   number assigned to the material
    // name   material name
