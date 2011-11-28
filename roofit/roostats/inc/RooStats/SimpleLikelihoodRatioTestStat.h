@@ -105,8 +105,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 	 if (fNllAlt) delete fNllAlt ;
       }
 
-     static void setAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
-     void setReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+     static void SetAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
+     void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
 
       //_________________________________________
       void SetNullParameters(const RooArgSet& nullParameters) {

@@ -33,6 +33,10 @@ END_HTML
 #include "RooStats/TestStatistic.h"
 #endif
 
+#ifndef ROOSTATS_ProfileLikelihoodTestStat
+#include "RooStats/ProfileLikelihoodTestStat.h"
+#endif
+
 namespace RooStats {
 
 class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
@@ -40,8 +44,8 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
   public:
 
    RatioOfProfiledLikelihoodsTestStat() :
-      fNullPdf(NULL),
-      fAltPdf(NULL),
+      fNullProfile(),
+      fAltProfile(),
       fAltPOI(NULL),
       fSubtractMLE(true)
    {
@@ -50,7 +54,9 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
   RatioOfProfiledLikelihoodsTestStat(RooAbsPdf& nullPdf, RooAbsPdf& altPdf, 
 				     const RooArgSet* altPOI=0) :
-    fNullPdf(&nullPdf), fAltPdf(&altPdf), fSubtractMLE(true)
+    fNullProfile(nullPdf), 
+    fAltProfile(altPdf), 
+    fSubtractMLE(true)
       {
 	/*
          Calculates the ratio of profiled likelihoods. 
@@ -115,25 +121,16 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
     
     //__________________________________________
     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) {
-      RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-      
-/*
-      // construct allVars
-      RooArgSet *allVars = fNullPdf->getVariables();
-      RooArgSet *altVars = fAltPdf->getVariables();
-      allVars->add(*altVars);
-      delete altVars;
+       // evaluate the ratio of profile likelihood
+       
 
-      RooArgSet *saveNullPOI = (RooArgSet*)nullParamsOfInterest.snapshot();
-      RooArgSet *saveAll = (RooArgSet*)allVars->snapshot();
-*/
+       int type = (fSubtractMLE) ? 0 : 2; 
 
-      // null
-      double nullNLL = ProfiledLikelihood(data, nullParamsOfInterest, *fNullPdf);
+       // null
+       double nullNLL = fNullProfile.EvaluateProfileLikelihood(type, data, nullParamsOfInterest);
       
       // alt 
-      double altNLL = ProfiledLikelihood(data, *fAltPOI, *fAltPdf);
+       double altNLL = fAltProfile.EvaluateProfileLikelihood(type, data, *fAltPOI);
            
 /*
       // set variables back to where they were
@@ -143,26 +140,48 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       delete allVars;
 */
 
-      RooMsgService::instance().setGlobalKillBelow(msglevel);
       return nullNLL -altNLL;
     }
     
    
-    virtual const TString GetVarName() const { return "log(L(#mu_{1},#hat{#nu}_{1}) / L(#mu_{0},#hat{#nu}_{0}))"; }
+   static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+
+   void SetReuseNLL(Bool_t flag) { 
+      fNullProfile.SetReuseNLL(flag);  
+      fAltProfile.SetReuseNLL(flag);  
+   }
+
+   void SetMinimizer(const char* minimizer){ 
+      fNullProfile.SetMinimizer(minimizer);  
+      fAltProfile.SetMinimizer(minimizer);  
+   }
+   void SetStrategy(Int_t strategy){
+      fNullProfile.SetStrategy(strategy);  
+      fAltProfile.SetStrategy(strategy);  
+   }
+   void SetPrintLevel(Int_t printLevel){
+      fNullProfile.SetPrintLevel(printLevel);  
+      fAltProfile.SetPrintLevel(printLevel);  
+   }
+   
+
+   virtual const TString GetVarName() const { return "log(L(#mu_{1},#hat{#nu}_{1}) / L(#mu_{0},#hat{#nu}_{0}))"; }
     
     //    const bool PValueIsRightTail(void) { return false; } // overwrites default
     
     void SetSubtractMLE(bool subtract){fSubtractMLE = subtract;}
     
   private:
-    RooAbsPdf* fNullPdf;
-    RooAbsPdf* fAltPdf;
+    ProfileLikelihoodTestStat fNullProfile;
+    ProfileLikelihoodTestStat fAltProfile;
     RooArgSet* fAltPOI;
     Bool_t fSubtractMLE;
+   static Bool_t fgAlwaysReuseNll ;
+
     
   protected:
-    ClassDef(RatioOfProfiledLikelihoodsTestStat,2)
-      };
+    ClassDef(RatioOfProfiledLikelihoodsTestStat,3)
+};
 
 }
 
