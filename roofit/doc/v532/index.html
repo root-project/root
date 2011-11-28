@@ -86,7 +86,7 @@
       <li>General performance tuning of RooFit to reduce computational overhead. Extensive profiling of
           CPU times in call graphas and and analysis heap memory use have been performed and many small 
           changes have been made to make the code more efficient and use less memory.
-      <ul>
+      </ul>
 
 <a name="roostats"></a> 
 <h3>RooStats Package</h3>
@@ -137,6 +137,7 @@ calculator type. </li>
   different minimizer, via <tt>ProfileLikelihoodTestStat::SetMinimizer</tt>. The print level of minimization can also be
   controlled via <tt>ProfileLikelihoodTestStat::SetPrintLevel</tt>. Activate also the RooFit cache optimizations when
   evaluating the NLL </li>
+  <li>The same optimizations are applied also to the <tt>RatioOfProfilesLikelihood</tt> test statistic</li>
   <li>Fix a bug in reusing the NLL object in the SimpleLikelihoodCalculator. This makes now the evaluation of this test
   statistics much faster. </li>
  </ul>
