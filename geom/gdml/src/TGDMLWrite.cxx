@@ -25,7 +25,7 @@
 // by gGeoManager->Export("xyz.gdml") method. Export is driven by extenstion  //
 // that is why ".gdml" is important in resulting name.                        //
 //                                                                            //
-// 	 Whenever a new ROOT geometry object is implemented or there is a change  //
+//   Whenever a new ROOT geometry object is implemented or there is a change  //
 // in GDML schema this class is needed to be updated to ensure proper mapping //
 // between ROOT objects and GDML elements.                                    //
 //                                                                            //
@@ -41,10 +41,10 @@
 // TGeoCone               ->           <cone ...>                             //
 // TGeoPara               ->           <para ...>                             //
 // TGeoTrap               ->           <trap ...>   or                        //
-//                        ->           <arb8 ...>                             //
+// -                      ->           <arb8 ...>                             //
 // TGeoGtra               ->           <twistedtrap ...>   or                 //
-//                        ->           <trap ...>          or                 //
-//                        ->           <arb8 ...>                             //
+// -                      ->           <trap ...>          or                 //
+// -                      ->           <arb8 ...>                             //
 // TGeoTrd1               ->           <trd ...>                              //
 // TGeoTrd2               ->           <trd ...>                              //
 // TGeoTubeSeg            ->           <tube ...>                             //
@@ -57,15 +57,15 @@
 // TGeoHype               ->           <hype ...>                             //
 // TGeoXtru               ->           <xtru ...>                             //
 // TGeoCompositeShape     ->           <union ...>            or              //
-//                        ->           <subtraction ...>      or              //
-//                        ->           <intersection ...>     or              //
+// -                      ->           <subtraction ...>      or              //
+// -                      ->           <intersection ...>                     //
 //                                                                            //
 // Special cases of solids:                                                   //
 // TGeoScaledShape        ->           <elcone ...>  if scaled TGeoCone or    //
-//                        ->           element without scale or               //
+// -                      ->           element without scale                  //
 // TGeoCompositeShape     ->           <ellipsoid ...>                        //
-//                                     intersection of:                       //
-//                                     scaled TGeoSphere and TGeoBBox         //
+// -                                   intersection of:                       //
+// -                                   scaled TGeoSphere and TGeoBBox         //
 //                                                                            //
 // === Materials: ===                                                         //
 // TGeoIsotope            ->           <isotope ...>                          //
@@ -75,26 +75,26 @@
 //                                                                            //
 // === Structure ===                                                          //
 // TGeoVolume             ->           <volume ...>   or                      //
-//                        ->           <assembly ...>                         //
+// -                      ->           <assembly ...>                         //
 // TGeoNode               ->           <physvol ...>                          //
 // TGeoPatternFinder      ->           <divisionvol ...>                      //
 //                                                                            //
 // There are options that can be set to change resulting document             //
 // Options:                                                                   //
 // g - is set by default in gGeoManager, this option ensures compatibility    //
-//     with Geant4. It means:                                                 //
-//     -> atomic number of material will be changed if <1 to 1                //
-//     -> if polycone is set badly it will try to export it correctly         //
-//     -> if widht * ndiv + offset is more then width of object being divided //
-//        (in divisions) then it will be rounded so it will not exceed or     //
-//        if kPhi divsion then it will keep range of offset in -360 -> 0      //
+// -   with Geant4. It means:                                                 //
+// -   -> atomic number of material will be changed if <1 to 1                //
+// -   -> if polycone is set badly it will try to export it correctly         //
+// -   -> if widht * ndiv + offset is more then width of object being divided //
+// -      (in divisions) then it will be rounded so it will not exceed or     //
+// -      if kPhi divsion then it will keep range of offset in -360 -> 0      //
 // f - if this option is set then names of volumes and solids will have       //
-//     pointer as a suffix to ensure uniqness of names                        //
+// -   pointer as a suffix to ensure uniqness of names                        //
 // n - if this option is set then names will not have suffix, but uniqness is //
-//     of names is not secured                                                //
-//   - if none of this two options (f,n) is set then default behaviour is so  //
-//     that incremental suffix is added to the names.                         //
-//     (eg. TGeoBBox_0x1, TGeoBBox_0x2 ...)                                   //
+// -   of names is not secured                                                //
+// - - if none of this two options (f,n) is set then default behaviour is so  //
+// -   that incremental suffix is added to the names.                         //
+// -   (eg. TGeoBBox_0x1, TGeoBBox_0x2 ...)                                   //
 //                                                                            //
 // USAGE:                                                                     //
 // gGeoManager->Export("output.gdml");                                        //
@@ -1994,8 +1994,8 @@ void TGDMLWrite::UnsetTemporaryBits(TGeoManager * geoMng)
    TIter next(geoMng->GetListOfVolumes());
    TGeoVolume *vol;
    while ((vol = (TGeoVolume *)next())) {
-      ((TObject *)vol->GetShape())->SetBit(fgkProcBit,kFALSE);
-      vol->SetAttBit(fgkProcBitVol,kFALSE);
+      ((TObject *)vol->GetShape())->SetBit(fgkProcBit, kFALSE);
+      vol->SetAttBit(fgkProcBitVol, kFALSE);
    }
 
 }

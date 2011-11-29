@@ -861,8 +861,8 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       TString tmpname = name;
       //deal with special case - Z of vacuum is always 0
       tmpname.ToLower();
-      if ( tmpname == "vacuum") {
-    	  valZ = 0;
+      if (tmpname == "vacuum") {
+         valZ = 0;
       }
       mat = new TGeoMaterial(NameShort(name), a, valZ, d);
       mixflag = 0;
