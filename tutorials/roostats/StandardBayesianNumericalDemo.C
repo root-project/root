@@ -33,6 +33,7 @@ and performs the integration using ROOT's numeric integration utilities
 #include "RooStats/ModelConfig.h"
 #include "RooStats/BayesianCalculator.h"
 #include "RooStats/SimpleInterval.h"
+#include "RooStats/RooStatsUtils.h"
 #include "RooPlot.h"
 
 using namespace RooFit;
@@ -46,6 +47,7 @@ int nToys = 10000;             // number of toys used for the MC integrations - 
 bool scanPosterior = false;    // flag to compute interval by scanning posterior (it is more robust but maybe less precise) 
 int nScanPoints = 50;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting)
 int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit) 
+double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
 
 void StandardBayesianNumericalDemo(const char* infile = "",
 		      const char* workspaceName = "combined",
@@ -147,16 +149,28 @@ void StandardBayesianNumericalDemo(const char* infile = "",
      bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
   }
 
+  // in case of toyMC make a nnuisance pdf
+  if (integrationType.Contains("TOYMC") ) { 
+    RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
+    cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
+    nuisPdf->Print();
+    bayesianCalc.ForceNuisancePdf(*nuisPdf);
+    scanPosterior = true; // for ToyMC the posterior is scanned anyway so used given points
+  }
+
   // compute interval by scanning the posterior function
   if (scanPosterior)   
      bayesianCalc.SetScanOfPosterior(nScanPoints);
+
+  RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
+  if (maxPOI != -999 &&  maxPOI > poi->getMin())
+    poi->setMax(maxPOI);
 
 
   SimpleInterval* interval = bayesianCalc.GetInterval();
 
   // print out the iterval on the first Parameter of Interest
-  RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
+  cout << "\n95% interval on " << poi->GetName()<<" is : ["<<
     interval->LowerLimit() << ", "<<
     interval->UpperLimit() <<"] "<<endl;
 
