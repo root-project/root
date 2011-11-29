@@ -285,8 +285,12 @@ bool testAdd3()
       h2->Fill(value, c1 / h1->GetBinWidth( h1->FindBin(value) ) );
    }
 
+
    TH1D* h3 = new TH1D("t1D1-h3", "h3=c1*h1", numberOfBins, minRange, maxRange);
    h3->Add(h1, h1, c1, -1);
+
+   // TH1::Add will reset the stats in this case so we need to do for the reference histogram
+   h2->ResetStats();
 
    bool ret = equals("Add1D3", h2, h3, cmpOptStats, 1E-13);
    delete h1;
@@ -404,9 +408,42 @@ bool testAddVarProf2()
    return ret;
 }
 
+bool testAddVar3() 
+{
+   // Tests the first add method to do scale of 1D Histograms with variable bin width
+
+   Double_t v[numberOfBins+1];
+   FillVariableRange(v);
+
+   Double_t c1 = r.Rndm();
+
+   TH1D* h1 = new TH1D("t1D1-h1", "h1-Title", numberOfBins, v);
+   TH1D* h2 = new TH1D("t1D1-h2", "h2=c1*h1+c2*h2", numberOfBins, v);
+
+   h1->Sumw2();h2->Sumw2();
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+      h1->Fill(value,  1.0);
+      h2->Fill(value, c1 / h1->GetBinWidth( h1->FindBin(value) ) );
+   }
+
+   TH1D* h3 = new TH1D("t1D1-h3", "h3=c1*h1", numberOfBins, v);
+   h3->Add(h1, h1, c1, -1);
+
+   // TH1::Add will reset the stats in this case so we need to do for the reference histogram
+   h2->ResetStats();
+
+   bool ret = equals("Add1D3", h2, h3, cmpOptStats, 1E-13);
+   delete h1;
+   delete h2;
+   return ret;
+}
+
+
 bool testAdd2D3()
 {
-   // Tests the first add method to do scalation of 2D Histograms
+   // Tests the first add method to do scale of 2D Histograms
 
    Double_t c1 = r.Rndm();
 
@@ -433,6 +470,9 @@ bool testAdd2D3()
                        numberOfBins, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
    h3->Add(h1, h1, c1, -1);
+
+   // TH1::Add will reset the stats in this case so we need to do for the reference histogram
+   h2->ResetStats();
 
    bool ret = equals("Add1D2", h2, h3, cmpOptStats, 1E-10);
    delete h1;
@@ -476,6 +516,9 @@ bool testAdd3D3()
                        numberOfBins+1, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
    h3->Add(h1, h1, c1, -1);
+
+   // TH1::Add will reset the stats in this case so we need to do for the reference histogram
+   h2->ResetStats();
 
    bool ret = equals("Add2D3", h2, h3, cmpOptStats, 1E-10);
    delete h1;
@@ -8690,6 +8733,7 @@ public:
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
 
+
       // in the following comparison with profiles we need to re-calculate statistics using bin centers 
       // on the reference histograms
       if (centre_deviation != 0) { 
@@ -8705,7 +8749,7 @@ public:
          h1Z->ResetStats(); 
       }
       
-      // Now the histograms comming from the Profiles!
+      // Now the histograms coming from the Profiles!
       options = cmpOptStats;
       status += equals("TH3 -> PBXY", h2XY, (TH2D*) h3->Project3DProfile("yx UF OF")->ProjectionXY("1", "B"), options  );
       status += equals("TH3 -> PBXZ", h2XZ, (TH2D*) h3->Project3DProfile("zx UF OF")->ProjectionXY("2", "B"), options);
@@ -8855,7 +8899,11 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
-      
+
+
+      // do THNsparse after Profile because reference histograms need to have a ResetStats
+      // the statistics coming from a projected THNsparse has been computed using the bin centers 
+
       // TH2 derived from STH3
       options = cmpOptStats;
       status += equals("STH3 -> XY", h2XY, (TH2D*) s3->Projection(1,0), options);
@@ -8876,6 +8924,9 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
+
+      
+      
 
       return status;
    }
@@ -8968,12 +9019,13 @@ int stressHistogram()
 
    // Test 5
    // Add Tests
-   const unsigned int numberOfAdds = 20;
+   const unsigned int numberOfAdds = 21;
    pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1, 
                                                  testAdd2,    testAddProfile2,
                                                  testAdd3,   
                                                  testAddVar1, testAddVarProf1, 
                                                  testAddVar2, testAddVarProf2,
+                                                 testAddVar3,
                                                  testAdd2D3,
                                                  testAdd3D3,
                                                  testAdd2D1,  testAdd2DProfile1,
@@ -9614,9 +9666,24 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
            << endl;  
 
    // Number of Entries
-   // check if is an unweighted histogram compare entries otherwise only effective entries
-   if (h1->GetEntries() == h1->GetEffectiveEntries() ) { 
+   // check if is an unweighted histogram compare entries and  effective entries
+   // otherwise only effective entries since entries do not make sense for an unweighted histogram
+   // to check if is weighted - check if sum of weights == effective entries
+//   if (h1->GetEntries() == h1->GetEffectiveEntries() ) {  
+   double stats1[TH1::kNstat];
+   h1->GetStats(stats1);
+   double stats2[TH1::kNstat];
+   h2->GetStats(stats2);
+   // check first sum of weights
+   differents += (bool) equals( stats1[0], stats2[0], 100*ERRORLIMIT);
+   if ( debug )
+      cout << "Sum Of Weigths: " << stats1[0] << " " << stats2[0]
+           << " | " << fabs( stats1[0] - stats2[0] ) 
+           << " " << differents
+           << endl;  
 
+   if (TMath::AreEqualRel(stats1[0], h1->GetEffectiveEntries() , 1.E-12) ) { 
+      // unweighted histograms - check also number of entries
       differents += (bool) equals( h1->GetEntries(), h2->GetEntries(), 100*ERRORLIMIT);
       if ( debug )
          cout << "Entries: " << h1->GetEntries() << " " << h2->GetEntries() 
@@ -9624,7 +9691,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
               << " " << differents
               << endl;  
    }
-
+   
    // Number of Effective Entries
    differents += (bool) equals( h1->GetEffectiveEntries(), h2->GetEffectiveEntries(), 100*ERRORLIMIT);
    if ( debug )
