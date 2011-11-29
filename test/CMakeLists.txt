@@ -105,8 +105,9 @@ ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED")
 
 #--stressGUI---------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageGui)
+#---Cannot run GUI test in batch mode--------------------
 #configure_file(stressGUI.ref stressGUI.ref @COPY_ONLY)
-ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED")
+#ROOT_ADD_TEST(test-stressgui COMMAND stressGUI -ref FAILREGEX "FAILED")
 
 #--stressSpectrum----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressSpectrum stressSpectrum.cxx LIBRARIES Hist Spectrum Gpad)
@@ -171,8 +172,10 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED")
 
 #--stressProof----------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-ROOT_ADD_TEST(test-stressproof COMMAND stressProof FAILREGEX "FAILED")  
+if(NOT WIN32)
+  ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
+  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// FAILREGEX "FAILED")  
+endif()
 
 #--testbits----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
