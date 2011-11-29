@@ -5,7 +5,7 @@
 <!ELEMENT Combination (Function*,Input+,Measurement*)>
 <!ATTLIST Combination
         OutputFilePrefix         CDATA            #REQUIRED
-        Mode               CDATA            #REQUIRED
+        Mode                     CDATA            #IMPLIED
 > 
 
 <!-- Input files detailing the channels. One channel per file -->

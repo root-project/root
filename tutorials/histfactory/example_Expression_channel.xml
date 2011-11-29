@@ -23,7 +23,8 @@
 
     <Sample Name="signal" HistoPath="" HistoName="signal">
       <OverallSys Name="syst1" High="1.05" Low="0.95"/>
-      <NormFactor Name="SigXsecOverSM" Val="1" Low="0." High="3."  />
+      <NormFactor Name="rootPOI" Val="1" Low="0." High="3."  />
+      <NormFactor Name="rootPOI2" Val="1" Low="0." High="3."  /> <!-- currently can't repeat NormFactor -->
     </Sample>
     <Sample Name="background1" HistoPath="" NormalizeByTheory="True" HistoName="background1">
       <StatError Activate="True" HistoName="background1_statUncert"  />

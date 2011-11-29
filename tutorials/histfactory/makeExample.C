@@ -46,7 +46,7 @@ void makeDataDriven()
 void makeShapeSys2DDataset()
 {
   
-  TFile* file = new TFile("standardShapeSys2D.root", "RECREATE");
+  TFile* file = new TFile("ShapeSys2D.root", "RECREATE");
     
   TH2F* signal = new TH2F("signal", "signal", 2,0,2, 2,0,2);
   signal->SetBinContent(1, 1, 10);
@@ -100,7 +100,7 @@ void makeShapeSys2DDataset()
 void makeShapeSysDataset()
 {
   
-  TFile* file = new TFile("standardShapeSys.root", "RECREATE");
+  TFile* file = new TFile("ShapeSys.root", "RECREATE");
     
   TH1F* signal = new TH1F("signal", "signal", 2,0,2);
   signal->SetBinContent(1, 20);
@@ -142,7 +142,7 @@ void makeShapeSysDataset()
 void makeStatErrorDataSet()
 {
   
-  TFile* file = new TFile("standardStatError.root", "RECREATE");
+  TFile* file = new TFile("StatError.root", "RECREATE");
 
   TH1F* FlatHist = new TH1F("FlatHist","FlatHist", 2,0,2);
   FlatHist->SetBinContent( 1, 1.0 );
@@ -186,7 +186,7 @@ void makeSimpleExample(){
   TH1F* signal = new TH1F("signal","signal histogram (pb)", 2,1,2);
   TH1F* background1 = new TH1F("background1","background 1 histogram (pb)", 2,1,2);
   TH1F* background2 = new TH1F("background2","background 2 histogram (pb)", 2,1,2);
-  TH1F* statUncert = new TH1F("statUncert", "statUncert", 2,0,2);
+  TH1F* statUncert = new TH1F("background1_statUncert", "statUncert", 2,1,2);
 
   // run with 1 pb
   data->SetBinContent(1,122);

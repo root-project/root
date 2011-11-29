@@ -77,6 +77,8 @@ END_HTML
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
 
+#include <algorithm>
+
 #define VERBOSE
 
 #define alpha_Low "-5"
@@ -320,6 +322,7 @@ namespace HistFactory{
     string overallNorm_times_sigmaEpsilon ;
     string prodNames;
     vector<EstimateSummary::NormFactor> norm=es.normFactor;
+    vector<string> normFactorNames, rangeNames;
     if(norm.size()){
       for(vector<EstimateSummary::NormFactor>::iterator itr=norm.begin(); itr!=norm.end(); ++itr){
         cout << "making normFactor: " << itr->name << endl;
@@ -344,9 +347,23 @@ namespace HistFactory{
 	    " to your top-level XML's <Measurment> entry"<< endl;
 	}
         prodNames+=varname;
+        rangeNames.push_back(range.str());
+	normFactorNames.push_back(varname);
       }
       overallNorm_times_sigmaEpsilon = es.name+"_"+channel+"_overallNorm_x_sigma_epsilon";
       proto->factory(("prod::"+overallNorm_times_sigmaEpsilon+"("+prodNames+","+sigmaEpsilon+")").c_str());
+    }
+
+    unsigned int rangeIndex=0;
+    for( vector<string>::iterator nit = normFactorNames.begin(); nit!=normFactorNames.end(); ++nit){
+        if( count (normFactorNames.begin(), normFactorNames.end(), *nit) > 1 ){
+	  cout <<"WARNING: <NormFactor Name =\""<<*nit<<"\"> is duplicated for <Sample Name=\"" 
+	       << es.name <<"\">, but only one factor will be included.  \n Instead, define something like" 
+	    //       << "\n\t<Function Name=\""<<*nit<<"Squared\" Expresion=\""<<*nit<<"\" Var=\""<<*nit<<range<<"\">"
+	       << "\n\t<Function Name=\""<<*nit<<"Squared\" Expresion=\""<<*nit<<"*"<<*nit<<"\" Var=\""<<*nit<<rangeNames.at(rangeIndex)
+	       << "\"> \nin your top-level XML's <Measurment> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
+	}
+	++rangeIndex;
     }
 
     if(!overallNorm_times_sigmaEpsilon.empty())

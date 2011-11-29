@@ -14,9 +14,12 @@
 
 <!DOCTYPE Combination  SYSTEM 'HistFactorySchema.dtd'>
 
-<Combination OutputFilePrefix="./results/example" >
+<Combination OutputFilePrefix="./results/example_Expression" >
 
-  <Input>./config/example_channel.xml</Input>
+  <Function Name="rootPOI" Expression="sqrt(SigXsecOverSM)" Dependents="SigXsecOverSM[0,3]" />
+  <Function Name="rootPOI2" Expression="sqrt(SigXsecOverSM)" Dependents="SigXsecOverSM[0,3]" />
+
+  <Input>./config/examples/example_Expression_channel.xml</Input>
 
   <Measurement Name="GaussExample" Lumi="1." LumiRelErr="0.1" >
     <POI>SigXsecOverSM</POI>
@@ -24,22 +27,6 @@
     <!-- don't need <ConstraintTerm> default is Gaussian with an exponential interpolation for normalization factors (LHC HCG default)-->
   </Measurement>
 
-  <Measurement Name="GammaExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
-    <POI>SigXsecOverSM</POI>
-    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
-    <ConstraintTerm Type="Gamma" RelativeUncertainty=".3">syst2</ConstraintTerm>
-  </Measurement>
-
-  <Measurement Name="LogNormExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
-    <POI>SigXsecOverSM</POI>
-    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
-    <ConstraintTerm Type="LogNormal" RelativeUncertainty=".3">syst2</ConstraintTerm>
-  </Measurement>
-
-  <Measurement Name="ConstExample" Lumi="1." LumiRelErr="0.1" ExportOnly="True">
-    <POI>SigXsecOverSM</POI>
-    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
-  </Measurement>
 
 
 </Combination>
