@@ -125,7 +125,7 @@ foreach(_name ${CINTSTLDLLNAMES})
                                 )                                
                                 
     add_Library(${_name}Dict SHARED ${Dictionary}.cxx )
-    set_Target_properties(${_name}Dict PROPERTIES SUFFIX ${libsuffix} FOLDER Dictionaries)
+    set_Target_properties(${_name}Dict PROPERTIES PREFIX ${libprefix} SUFFIX ${libsuffix} FOLDER Dictionaries)
 	install(TARGETS ${_name}Dict RUNTIME DESTINATION bin
                                  LIBRARY DESTINATION lib
                                  ARCHIVE DESTINATION lib)

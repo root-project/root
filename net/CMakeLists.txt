@@ -14,10 +14,9 @@ if(xrootd)
   if(NOT WIN32)
     add_subdirectory(rpdutils)
   endif()
-endif()
-
-if(alien)
-  add_subdirectory(alien)
+  if(alien)
+    add_subdirectory(alien)
+  endif()
 endif()
 
 if(monalisa)
