@@ -556,7 +556,7 @@ namespace Math {
 
          if (lower) { 
             if (check) {
-               assert(begin+ static_cast<const int>( MatRepSym<T,D1>::kSize) == end);
+               assert(begin+ static_cast< int>( MatRepSym<T,D1>::kSize) == end);
             }
             std::copy(begin, end, lhs.fRep.Array() );
          }
