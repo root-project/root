@@ -996,6 +996,11 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
+//
+//ANOTHER SPECIAL CASE : h1 = h2 and c2 < 0 
+// do a scaling   this = c1 * h1 / (bin Volume)
+//
+
 
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing histogram");
@@ -1035,10 +1040,11 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
 // statistics can be preserved only in case of positive coefficients
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
+// also in case of scaling with the width we cannot preserve the statistics
    Double_t s1[kNstat] = {0};
    Double_t s2[kNstat] = {0};
    Double_t s3[kNstat];
-   Bool_t resetStats = (c1*c2 < 0);
+   Bool_t resetStats = (c1*c2 < 0) || normWidth;
    if (!resetStats) {
       // need to initialize to zero s1 and s2 since 
       // GetStats fills only used elements depending on dimension and type
