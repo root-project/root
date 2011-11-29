@@ -180,95 +180,10 @@ ParamHistFunc::~ParamHistFunc()
 //_____________________________________________________________________________
 Int_t ParamHistFunc::getCurrentBin() const {
 
-  //  Int_t currentIndex = _dataSet.calcTreeIndex();
-
-  //  const RooArgSet* currentBinCenters = _dataSet.get();
-  //  Int_t currentIndex = _dataSet.getIndex( *currentBinCenters ); // calcTreeIndex();
-
-  //cout << "ParamHistFunc::getCurrentBin() - Vars: " << _dataVars << std::endl;
-  Int_t currentIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
+  Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
+  Int_t currentIndex = _binMap[ dataSetIndex ];
 
   return currentIndex;
-
-  /*
-  RooArgSet* currentBinCenters = _dataSet.get();
-
-  Double_t varVal = _dataVar.arg().getVal(); //.getVal();
-  Int_t numBins   = _binning->numBins();
-
-  Double_t low    = _binning->lowBound();
-  Double_t high   = _binning->highBound();
-
-  if( (varVal<low) || (varVal>high) ) {
-    std::cout << "Current value of variable " << _dataVar.arg().GetName()
-	      << ": " << varVal << " is out of range: "
-	      << "[" << low << ", " << high << "]" 
-	      << std::endl;
-    return -1;
-  }
-
-  Double_t length = (high-low > 0) ? high-low : 0;  
-  
-  if( length == 0 ) {
-    std::cout << "Current binning has length of 0" << std::endl;
-    return -1;
-  }
-
-  Int_t currentBin = -1;
-
-  if( _binning->isUniform() ) {
-
-    // If binning is uniform, use
-    // faster method:
-
-    Double_t width = _binning->averageBinWidth();
-
-    if( width == 0 ) {
-      std::cout << "Error: Bins have 0 width" << std::endl;
-      return -1;
-    }
-
-    // First bin  == 0
-    // Second bin == 1
-    // etc
-    currentBin = TMath::Floor( (varVal-low) / width );
-
-
-  } else {
-
-
-    // RooBinning::rawBinNumber method allows for
-    // the value to be in the underflow.  We want
-    // to explicitely not allow that possability
-
-    for(Int_t i = 0; i < numBins; ++i ) {
-
-      Double_t binLow  = _binning->binLow( i );
-      Double_t binHigh = _binning->binHigh( i );
-
-      if( binLow <= varVal ) {
-	if( varVal < binHigh ) {
-	  currentBin = i;
-	}
-      }
-
-    } // end loop over bins
-
-    // Check maximum bound:
-    if( varVal == high ) {
-      currentBin = numBins - 1;
-    }
-  }
-
-  // Ensure the current bin
-  
-  if( (currentBin < 0) || (currentBin >= _binning->numBins()) ) {
-    std::cout << "Error: Bad value for current bin: " << currentBin << std::endl;
-    throw -1;
-  }
-
-  return currentBin;
-  */
 
 }
 
@@ -353,8 +268,12 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     RooRealVar* vary = (RooRealVar*) vars.at(1);
     
     // For each bin, create a RooRealVar
-    for( Int_t i = 0; i < varx->numBins(); ++i) {
-      for( Int_t j = 0; j < vary->numBins(); ++j) {
+    for( Int_t j = 0; j < vary->numBins(); ++j) {
+      for( Int_t i = 0; i < varx->numBins(); ++i) {
+
+	// Ordering is important:
+	// To match TH1, list goes over x bins
+	// first, then y
 
 	std::stringstream VarNameStream;
 	VarNameStream << Prefix << "_bin_" << i << "_" << j;
@@ -385,9 +304,13 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     RooRealVar* varz = (RooRealVar*) vars.at(2);
     
     // For each bin, create a RooRealVar
-    for( Int_t i = 0; i < varx->numBins(); ++i) {
+    for( Int_t k = 0; k < varz->numBins(); ++k) {
       for( Int_t j = 0; j < vary->numBins(); ++j) {
-	for( Int_t k = 0; k < varz->numBins(); ++k) {
+	for( Int_t i = 0; i < varx->numBins(); ++i) {
+	  
+	  // Ordering is important:
+	  // To match TH1, list goes over x bins
+	  // first, then y, then z
 
 	  std::stringstream VarNameStream;
 	  VarNameStream << Prefix << "_bin_" << i << "_" << j << "_" << k;
@@ -615,6 +538,8 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   // If so, add them to the 
   // list of vars
 
+  int numVars = 0;
+
   RooFIter varIter = vars.fwdIterator() ;
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) varIter.next())) {
@@ -626,8 +551,54 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
     }
 
     _dataVars.add( *comp );
+    numVars++;
 
   }
+
+
+  Int_t numBinsX = 1;
+  Int_t numBinsY = 1;
+  Int_t numBinsZ = 1;
+
+  if( numVars == 1 ) {
+    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
+    numBinsX = varX->numBins();
+    numBinsY = 1;
+    numBinsZ = 1;
+  } else  if( numVars == 2 ) {
+    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
+    RooRealVar* varY = (RooRealVar*) _dataVars.at(1);
+    numBinsX = varX->numBins();
+    numBinsY = varY->numBins();
+    numBinsZ = 1;
+  } else  if( numVars == 3 ) {
+    RooRealVar* varX = (RooRealVar*) _dataVars.at(0);
+    RooRealVar* varY = (RooRealVar*) _dataVars.at(1);
+    RooRealVar* varZ = (RooRealVar*) _dataVars.at(2);
+    numBinsX = varX->numBins();
+    numBinsY = varY->numBins();
+    numBinsZ = varZ->numBins();
+  } else {
+    std::cout << "ParamHistFunc() - Only works for 1-3 variables (1d-3d)" << std::endl;
+    throw -1;  
+  }
+
+  // Fill the mapping between
+  // RooDataHist bins and TH1 Bins:
+
+  for( Int_t i = 0; i < numBinsX; ++i ) {
+    for( Int_t j = 0; j < numBinsY; ++j ) {
+      for( Int_t k = 0; k < numBinsZ; ++k ) {
+	
+	Int_t RooDataSetBin = k + j*numBinsZ + i*numBinsY*numBinsZ; 
+	Int_t TH1HistBin    = i + j*numBinsX + k*numBinsX*numBinsY; 
+	  
+	_binMap[RooDataSetBin] = TH1HistBin;
+	
+      }
+    }
+  }
+
   
   return 0;
 
@@ -686,33 +657,6 @@ Double_t ParamHistFunc::evaluate() const
   // Find the bin cooresponding to the current
   // value of the RooRealVar:
 
-  /*
-  if( ! &_dataVar.arg() ) {
-    std::cout << "ERROR: Proxy " << _dataVar.GetName() 
-	      << " is invalid!" << std::endl;
-  }
-
-  Double_t varVal = _dataVar.arg().getVal(); //.getVal();
-
-  Int_t currentBin = getCurrentBin();
-  
-  if( currentBin == -1 ) {
-    std::cout << "Error: Current value of " << _dataVar.arg().GetName()
-	      << " " << varVal << " "
-	      << " is not in range of saved Binning."
-	      << " [" << _binning->lowBound() << ", " << _binning->highBound() << "] "
-	      << " Returning: -1.0" << std::endl;
-
-    return 0.0;
-  }
-
-
-
-  if( currentBin >= _paramSet.getSize() ) {
-    std::cout << "Error: Trying to get out-of-range bin" << std::endl;
-    return 0.0;
-  }
-  */
   Int_t currentBin = getCurrentBin();
 
   RooRealVar* param = (RooRealVar*) &(_paramSet[currentBin]);
@@ -845,36 +789,6 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
     */
 
   }
-
-
-  /*
-  Int_t numBins = _binning->numBins(); 
-  // Deal with chaching / value propagation
-  RooAbsArg::setDirtyInhibit(kTRUE) ;
-
-  for( Int_t i = 0; i < numBins; ++i ) {
-    
-    Double_t binCenter = _binning->binCenter( i );
-    RooRealVar* dataVar = (RooRealVar*) &( _dataVar.arg() );
-    dataVar->setVal( binCenter );
-		
-    Double_t binWidth = _binning->binWidth( i );
-      
-    Double_t funcValue = getVal();
-
-    value += funcValue * binWidth;
-
-    std::cout << "Integrating : "
-	      << " binCenter: "  << binCenter
-	      << " binWidth:  "  << binWidth
-	      << " binValue:  "  << funcValue
-	      << " subTotal:  "  << value
-	      << std::endl;
-
-  }
-
-  RooAbsArg::setDirtyInhibit(kFALSE) ;
-  */
 
   return value;
 

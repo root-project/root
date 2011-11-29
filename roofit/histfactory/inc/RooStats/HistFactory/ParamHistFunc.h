@@ -17,6 +17,7 @@
 #ifndef ROO_PARAMHISTFUNC
 #define ROO_PARAMHISTFUNC
 
+#include <map>
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
@@ -94,6 +95,7 @@ protected:
   //RooAbsBinning* _binning;  // Holds the binning of the dataVar (at construction time)
 
   Int_t _numBins;
+  mutable std::map<Int_t, Int_t> _binMap;
   mutable RooDataHist _dataSet;
 
   // std::vector< Double_t > _nominalVals; // The nominal vals when gamma = 1.0 ( = 1.0 by default)
@@ -104,7 +106,7 @@ protected:
   static Int_t GetNumBins( const RooArgSet& vars );
   Double_t evaluate() const;
 
-  ClassDef(ParamHistFunc,3) // Sum of RooAbsReal objects
+  ClassDef(ParamHistFunc,4) // Sum of RooAbsReal objects
 };
 
 #endif
