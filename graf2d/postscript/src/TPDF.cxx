@@ -586,9 +586,9 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (fMarkerStyle == 1) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
-     msize = 1.5;
+     msize = 1.;
    } else if (fMarkerStyle == 7) {
-     msize = 3.;
+     msize = 1.5;
    } else {
       const Int_t kBASEMARKER = 8;
       Float_t sbase = msize*kBASEMARKER;
