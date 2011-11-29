@@ -1480,11 +1480,11 @@ Int_t PT_CheckDataset(TQueryResult *qr, Long64_t nevt)
    Double_t hmea[3] = { 2.003304, 1.995983 , 3.044178};
    Double_t prec = 10. / TMath::Sqrt(nevt);  // ~10 sigma ... conservative
    for (Int_t i = 0; i < 3; i++) {
-      Long64_t ent = h1s[i]->GetEntries();
+      Double_t ent = h1s[i]->GetEntries();
       if (TMath::Abs(ent - hent[i] * nevt) / ent > prec) { 
          emsg.Form("'%s' histo: wrong number"
                " of entries (%lld: expected %lld)",
-                h1s[i]->GetName(), ent, (Long64_t)(hent[i] *nevt));
+                h1s[i]->GetName(), (Long64_t) ent, (Long64_t)(hent[i] *nevt));
          rch1s = -1;
          break;
       }
@@ -1544,7 +1544,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
    const char *hcls[4] = { "TH2F", "TH1F", "TH1F", "TH2F" };
    Float_t hent[4] = { 1., .227, .0260, .0260};
    TObject *o = 0;
-   Long64_t ent = -1;
+   Double_t ent = -1;
    Double_t prec = 1. / TMath::Sqrt(nevt);
    for (Int_t i = 0; i < 4; i++) {
       if (!(o = out->FindObject(hnam[i]))) {
@@ -1564,7 +1564,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
       }
       if (TMath::Abs(ent - hent[i] * nevt) / (Double_t)ent > prec) {
          emsg.Form("'%s' histo: wrong number of entries (%lld: expected %lld) \n",
-                   o->GetName(), ent, (Long64_t) (hent[i] * nevt));
+                   o->GetName(), (Long64_t) ent, (Long64_t) (hent[i] * nevt));
          rchs = -1;
          break;
       }
