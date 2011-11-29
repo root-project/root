@@ -2760,13 +2760,14 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    // To select a bin range along an axis, use TAxis::SetRange, eg
    //    h3.GetYaxis()->SetRange(23,56);
    //
-   // NOTE 1: The generated histogram is named th3name + _poption
+   // NOTE 1: The generated histogram is named th3name + "_p" + option
    // eg if the TH3* h histogram is named "myhist", then
    // h->Project3D("xy"); produces a TProfile2D histogram named "myhist_pxy".
    // The following sequence
    //    h->Project3DProfile("xy");
    //    h->Project3DProfile("xy2");
    //  will generate two TProfile2D histograms named "myhist_pxy" and "myhist_pxy2"
+   //  So, passing additional characters in the option string one can customize the name.
    //
    //  NOTE 2: If a profile of the same type already exists with compatible axes, 
    //  the profile is reset and filled again with the projected contents of the TH3.
@@ -2816,8 +2817,8 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    TProfile2D *p2 = 0;
    TString name = GetName();
    TString title = GetTitle();
-   name  += "_";   name  += opt;  // opt may include a user defined name
-   title += " ";   title += ptype; title += " projection";   
+   name  += "_p";   name  += opt;  // opt may include a user defined name
+   title += " profile ";   title += ptype; title += " projection";   
 
    // Call the method with the specific projected axes.
    switch (pcase) {
