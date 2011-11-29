@@ -112,14 +112,15 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           //       cout <<" reestablish snapshot"<<endl;
           *attachedSet = *snap;
 
-
+ 
           // set the POI to constant
           RooLinkedListIter it = paramsOfInterest.iterator();
           RooRealVar* tmpPar = NULL, *tmpParA=NULL;
           while((tmpPar = (RooRealVar*)it.Next())){
-             tmpParA =  ((RooRealVar*)attachedSet->find(tmpPar->GetName()));
-             tmpParA->setConstant();
+             tmpParA =  dynamic_cast<RooRealVar*>( attachedSet->find(tmpPar->GetName()));
+             if (tmpParA) tmpParA->setConstant();
           }
+
 
           // check if there are non-const parameters so it is worth to do the minimization
           RooArgSet allParams(*attachedSet); 
@@ -130,14 +131,10 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           if (allParams.getSize() == 0 ) {
              condML = fNll->getVal(); 
           }
-          else { 
+          else {              
              condML = GetMinNLL(statusN);
           }
 
-
-//           if (ret < 0) { 
-//              std::cout << " mu hat = " << fit_favored_mu << " cond ML = " << condML << " uncond ML = " << uncondML << std::endl;
-//           }
        }
 
        tsw.Stop();
