@@ -48,6 +48,7 @@
 // *     dyn     [Bool_t]  if kTRUE run in dynamic startup mode            * //
 // *     skipds  [Bool_t]  if kTRUE the dataset related tests are skipped  * //
 // *                                                                       * //
+// * The stressProof function returns 0 on success, 1 on failure.          * //
 // *                                                                       * //
 // * The successful output looks like this:                                * //
 // *                                                                       * //
@@ -163,6 +164,7 @@ static Int_t geventnf = 10;
 static Long64_t gEventNum = 200000;
 static Long64_t gEventFst = 65000;
 static Long64_t gEventSiz = 100000;
+static TStopwatch gStopwatch;
 
 // The selectors
 static TList gSelectors;
@@ -186,7 +188,7 @@ int stressProof(const char *url = "proof://localhost:40000",
                 const char *logfile = 0, Bool_t dyn = kFALSE,
                 Bool_t skipds = kTRUE, const char *tests = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
-                Bool_t dryrun = kFALSE);
+                Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -201,7 +203,7 @@ int main(int argc,const char *argv[])
       printf(" Usage:\n");
       printf(" \n");
       printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds]\n");
-      printf("                 [-t tests] [-h1 h1src] [-event src] [-g] [master]\n");
+      printf("                 [-t tests] [-h1 h1src] [-event src] [-g] [-cpu] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -227,6 +229,7 @@ int main(int argc,const char *argv[])
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
       printf("   -punzip       use parallel unzipping for data-driven processing.\n");
       printf("   -g            enable graphics; default is to run in text mode.\n");
+      printf("   -cpu          show CPU times used by each successful test; used for calibration.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -237,6 +240,7 @@ int main(int argc,const char *argv[])
    Int_t verbose = 1;
    Bool_t enablegraphics = kFALSE;
    Bool_t dryrun = kFALSE;
+   Bool_t showcpu = kFALSE;
    const char *logfile = 0;
    const char *h1src = 0;
    const char *eventsrc = 0;
@@ -314,6 +318,9 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-dryrun",7)) {
          dryrun = kTRUE;
          i++;
+      } else if (!strncmp(argv[i],"-cpu",4)) {
+         showcpu = kTRUE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -327,7 +334,7 @@ int main(int argc,const char *argv[])
       new TApplication("stressProof", 0, 0);
 
    int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        tests, h1src, eventsrc, dryrun);
+                        tests, h1src, eventsrc, dryrun, showcpu);
 
    gSystem->Exit(rc);
 }
@@ -401,7 +408,21 @@ void AssertParallelUnzip()
 //
 // Auxilliary classes for testing
 //
-typedef Int_t (*ProofTestFun_t)(void *);
+class RunTimes {
+public:
+   Double_t fCpu;
+   Double_t fReal;
+   RunTimes(Double_t c = -1., Double_t r = -1.) : fCpu(c), fReal(r) { }
+   
+   RunTimes &operator=(const RunTimes &rt) { fCpu = rt.fCpu; fReal = rt.fReal; return *this; }
+};
+RunTimes operator-(const RunTimes &rt1, const RunTimes &rt2) {
+   RunTimes rt(rt1.fCpu - rt2.fCpu, rt1.fReal - rt2.fReal);
+   return rt;
+}
+static RunTimes gProofTimesZero(0.,0.);
+
+typedef Int_t (*ProofTestFun_t)(void *, RunTimes &);
 class ProofTest : public TNamed {
 private:
    Int_t           fSeq;  // Sequential number for the test
@@ -412,11 +433,17 @@ private:
    Int_t           fDepFrom; // Index for looping over deps
    Int_t           fSelFrom; // Index for looping over selectors
    Bool_t          fEnabled; // kTRUE if this test is enabled
+   Double_t        fCpuTime; // CPU time used by the test
+   Double_t        fRealTime; // Real time used by the test
+   Double_t        fRefCpu; // Ref CPU time used for PROOF marks
+   Double_t        fProofMarks; // PROOF marks
 
 public:
-   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0, const char *d = "", const char *sel = "")
+   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0,
+             const char *d = "", const char *sel = "", Double_t refcpu = -1.)
            : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a),
-             fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE) { }
+             fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE),
+             fCpuTime(-1.), fRealTime(-1.), fRefCpu(refcpu), fProofMarks(-1.) { }
    virtual ~ProofTest() { }
 
    void   Disable() { fEnabled = kFALSE; }
@@ -427,7 +454,9 @@ public:
    Int_t  NextSel(TString &sel, Bool_t reset = kFALSE);
    Int_t  Num() const { return fSeq; }
 
-   Int_t  Run(Bool_t dryrun = kFALSE);
+   Int_t  Run(Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE);
+   
+   Double_t ProofMarks() const { return fProofMarks; }
 };
 
 //
@@ -484,7 +513,7 @@ Int_t ProofTest::NextSel(TString &sel, Bool_t reset)
 }
 
 //_____________________________________________________________________________
-Int_t ProofTest::Run(Bool_t dryrun)
+Int_t ProofTest::Run(Bool_t dryrun, Bool_t showcpu)
 {
    // Generic stress steering function; returns 0 on success, -1 on error
 
@@ -494,12 +523,24 @@ Int_t ProofTest::Run(Bool_t dryrun)
    Int_t rc = 0;
    if (!dryrun) {
       gSystem->RedirectOutput(glogfile, "a", &gRH);
-      rc = (*fFun)(fArgs);
+      RunTimes tt;
+      gStopwatch.Start();
+      rc = (*fFun)(fArgs, tt);
+      gStopwatch.Stop();
+      fCpuTime = tt.fCpu;
+      fRealTime = tt.fReal;
+      // Proof marks
+      if (fRefCpu > 0)
+         fProofMarks = (fCpuTime > 0) ? 1000 * fRefCpu / fCpuTime : -1;
       gSystem->RedirectOutput(0, 0, &gRH);
       if (rc == 0) {
          Int_t np = totpoints - strlen(GetName()) - strlen(" OK *");
          while (np--) { printf("."); }
-         printf(" OK *\n");
+         if (showcpu) {
+            printf(" OK * (cpu: %f s, marks: %.2f)\n", fCpuTime, fProofMarks);
+         } else {
+            printf(" OK *\n");
+         }
       } else if (rc == 1) {
          Int_t np = totpoints - strlen(GetName()) - strlen(" SKIPPED *");
          while (np--) { printf("."); }
@@ -526,25 +567,46 @@ Int_t ProofTest::Run(Bool_t dryrun)
 }
 
 // Test functions
-Int_t PT_Open(void *);
-Int_t PT_GetLogs(void *);
-Int_t PT_Simple(void *smg = 0);
-Int_t PT_H1Http(void *);
-Int_t PT_H1FileCollection(void *);
-Int_t PT_H1DataSet(void *);
-Int_t PT_H1MultiDataSet(void *);
-Int_t PT_H1MultiDSetEntryList(void *);
-Int_t PT_DataSets(void *);
-Int_t PT_Packages(void *);
-Int_t PT_Event(void *);
-Int_t PT_InputData(void *);
-Int_t PT_H1SimpleAsync(void *arg);
-Int_t PT_AdminFunc(void *arg);
-Int_t PT_PackageArguments(void *);
-Int_t PT_EventRange(void *);
-Int_t PT_POFNtuple(void *);
-Int_t PT_POFDataset(void *);
-Int_t PT_Friends(void *);
+Int_t PT_Open(void *, RunTimes &);
+Int_t PT_GetLogs(void *, RunTimes &);
+//Int_t PT_Simple(void *smg = 0, RunTimes &);
+Int_t PT_Simple(void *, RunTimes &);
+Int_t PT_H1Http(void *, RunTimes &);
+Int_t PT_H1FileCollection(void *, RunTimes &);
+Int_t PT_H1DataSet(void *, RunTimes &);
+Int_t PT_H1MultiDataSet(void *, RunTimes &);
+Int_t PT_H1MultiDSetEntryList(void *, RunTimes &);
+Int_t PT_DataSets(void *, RunTimes &);
+Int_t PT_Packages(void *, RunTimes &);
+Int_t PT_Event(void *, RunTimes &);
+Int_t PT_InputData(void *, RunTimes &);
+Int_t PT_H1SimpleAsync(void *arg, RunTimes &);
+Int_t PT_AdminFunc(void *arg, RunTimes &);
+Int_t PT_PackageArguments(void *, RunTimes &);
+Int_t PT_EventRange(void *, RunTimes &);
+Int_t PT_POFNtuple(void *, RunTimes &);
+Int_t PT_POFDataset(void *, RunTimes &);
+Int_t PT_Friends(void *, RunTimes &);
+
+// Auxilliary functions
+void PT_GetLastProofTimes(RunTimes &tt)
+{
+   // Get in tt the Cpu and Real times used by PROOF since last call
+   // Update the statistics
+   gProof->GetStatistics(kFALSE);
+      // The runtimes
+   RunTimes proofTimesCurrent(gProof->GetCpuTime(), gProof->GetRealTime());
+   tt = proofTimesCurrent - gProofTimesZero;
+   gProofTimesZero = proofTimesCurrent;
+}
+void PT_GetLastTimes(RunTimes &tt)
+{
+   // Get in tt the Cpu and Real times used during the run
+   // The runtimes
+   gStopwatch.Stop();
+   tt.fCpu = gStopwatch.CpuTime();
+   tt.fReal = gStopwatch.RealTime();
+}
 
 // Arguments structures
 typedef struct {            // Open
@@ -563,7 +625,8 @@ static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 //_____________________________________________________________________________
 int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
                 Bool_t dyn, Bool_t skipds, const char *tests,
-                const char *h1src, const char *eventsrc, Bool_t dryrun)
+                const char *h1src, const char *eventsrc,
+                Bool_t dryrun, Bool_t showcpu)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -915,7 +978,7 @@ int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile
    nxt.Reset();
    while ((t = (ProofTest *)nxt()))
       if (t->IsEnabled()) {
-         if (t->Run() < 0) {
+         if (t->Run(kFALSE, showcpu) < 0) {
             failed = kTRUE;
             break;
          }
@@ -943,6 +1006,16 @@ int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile
 
    printf("******************************************************************\n");
    if (gProof) {
+      // Print single PROOF marks
+      if (gverbose > 1) {
+         nxt.Reset();
+         printf(" PROOFMARKS for single tests (-1 if unmeasured): \n");
+         while ((t = (ProofTest *)nxt()))
+            if (t->IsEnabled()) {
+               printf(" %d:\t %.2f \n", t->Num(), t->ProofMarks());
+            }
+      }
+      
       gProof->GetStatistics((verbose > 0));
       // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
       // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
@@ -1508,7 +1581,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
 }
 
 //_____________________________________________________________________________
-Int_t PT_Open(void *args)
+Int_t PT_Open(void *args, RunTimes &tt)
 {
    // Test session opening
 
@@ -1600,13 +1673,16 @@ Int_t PT_Open(void *args)
    gsandbox = gSystem->DirName(gsandbox);
    PutPoint();
 
+   // Fill times
+   PT_GetLastTimes(tt);
+   
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_GetLogs(void *args)
+Int_t PT_GetLogs(void *args, RunTimes &tt)
 {
    // Test log retrieving
 
@@ -1631,13 +1707,16 @@ Int_t PT_GetLogs(void *args)
       return -1;
    }
 
+   // Fill times
+   PT_GetLastTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_Simple(void *submergers)
+Int_t PT_Simple(void *submergers, RunTimes &tt)
 {
    // Test run for the ProofSimple analysis (see tutorials)
 
@@ -1677,13 +1756,16 @@ Int_t PT_Simple(void *submergers)
    // Remove any setting related to submergers
    gProof->DeleteParameters("PROOF_UseMergers");
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckSimple(gProof->GetQueryResult(), nevt, nhist);
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1Http(void *)
+Int_t PT_H1Http(void *, RunTimes &tt)
 {
    // Test run for the H1 analysis as a chain reading the data from HTTP
 
@@ -1732,13 +1814,16 @@ Int_t PT_H1Http(void *)
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1FileCollection(void *arg)
+Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
 {
    // Test run for the H1 analysis as a file collection reading the data from HTTP
 
@@ -1798,13 +1883,16 @@ Int_t PT_H1FileCollection(void *arg)
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1DataSet(void *)
+Int_t PT_H1DataSet(void *, RunTimes &tt)
 {
    // Test run for the H1 analysis as a named dataset reading the data from HTTP
 
@@ -1840,13 +1928,16 @@ Int_t PT_H1DataSet(void *)
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1MultiDataSet(void *)
+Int_t PT_H1MultiDataSet(void *, RunTimes &tt)
 {
    // Test run for the H1 analysis as a named dataset reading the data from HTTP
 
@@ -1882,13 +1973,16 @@ Int_t PT_H1MultiDataSet(void *)
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult());
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1MultiDSetEntryList(void *)
+Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 {
    // Test run using the H1 analysis for the multi-dataset functionality and
    // entry-lists
@@ -1954,13 +2048,16 @@ Int_t PT_H1MultiDSetEntryList(void *)
       }
    }
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult(), 1);
 }
 
 //_____________________________________________________________________________
-Int_t PT_DataSets(void *)
+Int_t PT_DataSets(void *, RunTimes &tt)
 {
    // Test dataset registration, verification, usage, removal.
    // Use H1 analysis files on HTTP as example
@@ -2098,13 +2195,16 @@ Int_t PT_DataSets(void *)
    delete fca;
    delete fcb;
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_Packages(void *)
+Int_t PT_Packages(void *, RunTimes &tt)
 {
    // Test package clearing, uploading, enabling, removal.
    // Use event.par as example.
@@ -2179,13 +2279,16 @@ Int_t PT_Packages(void *)
       return -1;
    }
 
+   // Fill times
+   PT_GetLastTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_Event(void *)
+Int_t PT_Event(void *, RunTimes &tt)
 {
    // Test run for the ProofEvent analysis (see tutorials)
 
@@ -2247,13 +2350,16 @@ Int_t PT_Event(void *)
       return -1;
    }
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_InputData(void *)
+Int_t PT_InputData(void *, RunTimes &tt)
 {
    // Test input data functionality
 
@@ -2364,13 +2470,16 @@ Int_t PT_InputData(void *)
       return -1;
    }
 
+   // Fill times
+   PT_GetLastTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_PackageArguments(void *)
+Int_t PT_PackageArguments(void *, RunTimes &tt)
 {
    // Testing passing arguments to packages
 
@@ -2544,13 +2653,16 @@ Int_t PT_PackageArguments(void *)
       return -1;
    }
 
+   // Fill times
+   PT_GetLastTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_H1SimpleAsync(void *arg)
+Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
 {
    // Test run for the H1 and Simple analysis in asynchronous mode 
 
@@ -2669,13 +2781,16 @@ Int_t PT_H1SimpleAsync(void *arg)
       }
    }
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Done
    PutPoint();
    return 0;
 }
 
 //_____________________________________________________________________________
-Int_t PT_AdminFunc(void *)
+Int_t PT_AdminFunc(void *, RunTimes &tt)
 {
    // Test run for the admin functionality
 
@@ -2848,6 +2963,9 @@ Int_t PT_AdminFunc(void *)
    SafeDelete(testMoreMd5);
    SafeDelete(testMacroMd5);
 
+   // Fill times
+   PT_GetLastTimes(tt);
+
    // Done
    PutPoint();
    return 0;
@@ -2855,7 +2973,7 @@ Int_t PT_AdminFunc(void *)
 }
 
 //_____________________________________________________________________________
-Int_t PT_EventRange(void *arg)
+Int_t PT_EventRange(void *arg, RunTimes &tt)
 {
    // Test processing of sub-samples (entries-from-first) from files with the
    // 'event' structures 
@@ -2983,6 +3101,9 @@ Int_t PT_EventRange(void *arg)
    // Count
    gEventCnt++;
    gEventTime += gTimer.RealTime();
+
+   // The runtimes
+   PT_GetLastProofTimes(tt);
   
    // Check the results
    PutPoint();
@@ -2990,7 +3111,7 @@ Int_t PT_EventRange(void *arg)
 }
 
 //_____________________________________________________________________________
-Int_t PT_POFNtuple(void *submergers)
+Int_t PT_POFNtuple(void *submergers, RunTimes &tt)
 {
    // Test TProofOutputFile technology to create a ntuple, with or without
    // submergers
@@ -3063,13 +3184,16 @@ Int_t PT_POFNtuple(void *submergers)
    gProof->DeleteParameters("PROOF_USE_NTP_RNDM");
    gProof->SetInputDataFile(0);
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckNtuple(gProof->GetQueryResult(), nevt);
 }
 
 //_____________________________________________________________________________
-Int_t PT_POFDataset(void *)
+Int_t PT_POFDataset(void *, RunTimes &tt)
 {
    // Test TProofOutputFile technology to create a dataset
 
@@ -3105,13 +3229,16 @@ Int_t PT_POFDataset(void *)
    gProof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
    gProof->DeleteParameters("SimpleNtuple.root");
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckDataset(gProof->GetQueryResult(), nevt);
 }
 
 //_____________________________________________________________________________
-Int_t PT_Friends(void *sf)
+Int_t PT_Friends(void *sf, RunTimes &tt)
 {
    // Test processing of TTree friends in PROOF
 
@@ -3231,8 +3358,13 @@ Int_t PT_Friends(void *sf)
    // Clear the files created by this run
    gProof->ClearData(TProof::kUnregistered | TProof::kForceClear);
 
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
    // Check the results
    PutPoint();
    return PT_CheckFriends(gProof->GetQueryResult(), nevt * nwrk);
 }
+
+
 
