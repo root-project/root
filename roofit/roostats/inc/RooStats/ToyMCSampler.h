@@ -96,6 +96,9 @@ class ToyMCSampler: public TestStatSampler {
 	_gs3 = NULL ;
 	_gs4 = NULL ;
 
+        //suppress messages for num integration of Roofit
+        RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
+
 	fUseMultiGen = kFALSE ;
       }
       ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
@@ -132,6 +135,9 @@ class ToyMCSampler: public TestStatSampler {
 	_gs2 = NULL ;
 	_gs3 = NULL ;
 	_gs4 = NULL ;
+
+        //suppress messages for num integration of Roofit
+        RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
 
 	fUseMultiGen = kFALSE ;
       }
