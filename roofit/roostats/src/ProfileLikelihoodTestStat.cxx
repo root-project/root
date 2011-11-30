@@ -28,8 +28,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        TStopwatch tsw; 
        tsw.Start();
 
-       RooRealVar* firstPOI = (RooRealVar*) paramsOfInterest.first();
-       double initial_mu_value  = firstPOI->getVal();
+       double initial_mu_value  = 0;
+       RooRealVar* firstPOI = dynamic_cast<RooRealVar*>( paramsOfInterest.first());       
+       if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
 
        RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
@@ -86,7 +87,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           uncondML = GetMinNLL(statusD);
 
           // get best fit value for one-sided interval 
-          fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
+          if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
 
        }
        tsw.Stop();
