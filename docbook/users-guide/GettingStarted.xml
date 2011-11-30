@@ -8,46 +8,39 @@
 <para>Before you can run ROOT you need to set the environment variable <code>ROOTSYS</code> and change your path to include <code>root/bin</code> and library path variables to include <code>root/lib</code>. Please note: the syntax is for <code>bash</code>, if you are running <code>tcsh</code> you will have to use <code>setenv</code> instead of <code>export</code>. </para>
 <para>1. Define the variable $ROOTSYS to the directory where you unpacked the ROOT:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export ROOTSYS=$HOME/root</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export ROOTSYS=$HOME/root</code></emphasis>
 </programlisting>
 
 <para>2. Add ROOTSYS/bin to your PATH: </para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export PATH=$PATH:$ROOTSYS/bin</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export PATH=$PATH:$ROOTSYS/bin</code></emphasis>
 </programlisting>
 
 <para>3. Setting the Library Path</para>
 <para>On HP-UX, before executing the interactive module, you must set the library path:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib</code></emphasis>
 </programlisting>
 
 <para>On AIX, before executing the interactive module, you must set the library path:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ [ -z "$LIBPATH" ] &amp;&amp; export LIBPATH=/lib:/usr/lib</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ [ -z "$LIBPATH" ] &amp;&amp; export LIBPATH=/lib:/usr/lib</code></emphasis>
 <emphasis role="bold"><code>$ export LIBPATH=$LIBPATH:$ROOTSYS/lib </code></emphasis>
 </programlisting>
 
 <para>On Linux, Solaris, Alpha OSF and SGI, before executing the interactive module, you must set the library path:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib</code></emphasis>
 </programlisting>
 
 <para>On Solaris, in case your LD_LIBRARY_PATH is empty, you should set it:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib:/usr/dt/lib</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib:/usr/dt/lib</code></emphasis>
 </programlisting>
 
 <para>If you use the <code>afs</code> version you should set (<emphasis role="bold-italic">vers</emphasis> = version number, <emphasis role="bold-italic">arch</emphasis> = architecture): </para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code>$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/</code></emphasis>
+<programlisting language="c++"><emphasis role="bold"><code>$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/</code></emphasis>
 <emphasis role="italic"><emphasis role="bold"><code>vers</code></emphasis></emphasis>
 <emphasis role="bold"><code>/</code></emphasis>
 <emphasis role="italic"><emphasis role="bold"><code>arch</code></emphasis></emphasis>
@@ -56,8 +49,7 @@
 
 <para>If ROOT was installed in <code>$HOME/myroot</code> directory on a local machine, one can do:</para>
 
-<programlisting language="c++">
-cd $HOME/myroot
+<programlisting language="c++">cd $HOME/myroot
 . bin/thisroot.sh       // or source bin/thisroot.sh
 </programlisting>
 
@@ -68,8 +60,7 @@ other paths depending on the platform and the <code>MANPATH</code>. To run the p
 <sect1>
 <title>Start and Quit a ROOT Session</title>
 
-<programlisting language="c++">
-% <emphasis role="bold"><code>root</code></emphasis>
+<programlisting language="c++">% <emphasis role="bold"><code>root</code></emphasis>
 *******************************************
 *                                         *
 *        W E L C O M E  to  R O O T       *
@@ -93,8 +84,7 @@ root [0]
 (<code>root[0])</code></para>
 <para>It is possible to launch ROOT with some command line options, as shown below:</para>
 
-<programlisting language="c++">
-<code>% </code> <emphasis role="bold"><code>root -/?</code></emphasis>
+<programlisting language="c++"><code>% </code> <emphasis role="bold"><code>root -/?</code></emphasis>
 <code>Usage: root [-l] [-b] [-n] [-q] [file1.C ... fileN.C]</code>
 <code> Options:</code>
 <code>   -b : run in batch mode without graphics</code>
@@ -112,32 +102,27 @@ root [0]
 <para>For example if you would like to run a script <code>myMacro.C</code> in the background, redirect the output into a file <code>myMacro.log</code>,
 and exit after the script execution, use the following syntax:</para>
 
-<programlisting language="c++">
-root -b -q myMacro.C &gt; myMacro.log
+<programlisting language="c++">root -b -q myMacro.C &gt; myMacro.log
 </programlisting>
 
 <para>If you need to pass a parameter to the script use:</para>
 
-<programlisting language="c++">
-root -b -q ’myMacro.C(3)’ &gt; myMacro.log
+<programlisting language="c++">root -b -q ’myMacro.C(3)’ &gt; myMacro.log
 </programlisting>
 
 <para>Be mindful of the quotes, i.e. if you need to pass a string as a parameter, the syntax is:</para>
 
-<programlisting language="c++">
-root -b -q ’myMacro.C("text")’ &gt; myMacro.log
+<programlisting language="c++">root -b -q ’myMacro.C("text")’ &gt; myMacro.log
 </programlisting>
 
 <para>You can build a shared library with ACLiC and then use this shared library on the command line for a quicker execution (i.e. the compiled speed rather than the interpreted speed). See also “CINT the C++ Interpreter”.</para>
 
-<programlisting language="c++">
-root -b -q myMacro.so &gt; myMacro.log
+<programlisting language="c++">root -b -q myMacro.so &gt; myMacro.log
 </programlisting>
 
 <para>ROOT has a powerful C/C++ interpreter giving you access to all available ROOT classes, global variables, and functions via the command line. By typing C++ statements at the prompt, you can create objects, call functions, execute scripts, etc. For example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>1+sqrt(9)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>1+sqrt(9)</code></emphasis>
 (const double)4.00000000000000000e+00
 root[] <emphasis role="bold"><code>for (int i = 0; i&lt;4; i++) cout &lt;&lt; "Hello" &lt;&lt; i &lt;&lt; endl</code></emphasis>
 Hello 0
@@ -149,8 +134,7 @@ root[] <emphasis role="bold"><code>.q</code></emphasis>
 
 <para>To exit the ROOT session, type <code>.q</code>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.q</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.q</code></emphasis>
 </programlisting>
 
 </sect1>
@@ -159,15 +143,13 @@ root[] <emphasis role="bold"><code>.q</code></emphasis>
 <title>Using the GUI</title>
 <para>The basic whiteboard on which an object is drawn in ROOT is called a canvas (defined by the class <emphasis role="bold"><code>TCanvas</code></emphasis>). Every object in the canvas is a graphical object in the sense that you can grab it, resize it, and change some characteristics using the mouse. The canvas area can be divided in several sub areas, so-called pads (the class <emphasis role="bold"><code>TPad</code></emphasis>). A pad is a canvas sub area that can contain other pads or graphical objects. At any one time, just one pad is the so-called active pad. Any object at the moment of drawing will be drawn in the active pad. The obvious question is: what is the relation between a canvas and a pad? In fact, a canvas is a pad that spans through an entire window. This is nothing else than the notion of inheritance. The <emphasis role="bold"><code>TPad</code></emphasis> class is the parent of the <emphasis role="bold"><code>TCanvas</code></emphasis> class. In ROOT, most objects derive from a base class <emphasis role="bold"><code>TObject</code></emphasis>. This class has a virtual method <code>Draw()</code> such as all objects are supposed to be able to be "drawn". If several canvases are defined, there is only one active at a time. One draws an object in the active canvas by using the statement:</para>
 
-<programlisting language="c++">
-object.Draw()
+<programlisting language="c++">object.Draw()
 </programlisting>
 
 <para>This instructs the object "<code>object</code>" to draw itself. If no canvas is opened, a default one (named "<code>c1</code>") is created. In the next example, the first statement defines a function and the second one draws it. A default canvas is created since there was no opened one. You should see the picture as shown in the next figure.</para>
 <para/>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1 f1("func1","sin(x)/x",0,10)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1 f1("func1","sin(x)/x",0,10)</code></emphasis>
 root[] <emphasis role="bold"><code>f1.Draw()</code></emphasis>
 &lt;TCanvas::MakeDefCanvas&gt;: created default TCanvas with name c1
 </programlisting>
@@ -312,8 +294,7 @@ root[] <emphasis role="bold"><code>f1.Draw()</code></emphasis>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/03000025.png" width="14.9pt" depth="14.3pt"/></imageobject></inlinemediaobject><emphasis role="bold"> A Marker</emphasis>: Click with the left button where to place the marker. The marker can be modified by using the method <code>SetMarkerStyle()</code> of <emphasis role="bold"><code>TSystem</code></emphasis>.</para>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/03000026.png" width="14.9pt" depth="14.3pt"/></imageobject></inlinemediaobject><emphasis role="bold"> A Graphical Cut</emphasis>: Click with the left button on each point of a polygon delimiting the selected area. Close the cut by double clicking on the last point. A <emphasis role="bold"><code>TCutG</code></emphasis> object is created. It can be used as a selection for a <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code>. You can get a pointer to this object with: </para>
 
-<programlisting language="c++">
-<code>TCutG cut = (TCutG*)gPad-&gt;GetPrimitive("CUTG")</code>
+<programlisting language="c++"><code>TCutG cut = (TCutG*)gPad-&gt;GetPrimitive("CUTG")</code>
 </programlisting>
 
 <para>Once you are happy with your picture, you can select the <code>Save as canvas.C</code> item in the canvas File menu. This will automatically generate a script with the C++ statements corresponding to the picture. This facility also works if you have other objects not drawn with the graphics editor (histograms for example).</para>
@@ -335,8 +316,7 @@ root[] <emphasis role="bold"><code>f1.Draw()</code></emphasis>
 <para>Object oriented programming introduces objects, which have data members and methods. The next line creates an object named
 <code>f1</code> of the class <emphasis role="bold"><code>TF1</code></emphasis> that is a one-dimensional function. The type of an object is called a class. The object itself is called an instance of a class. When a method builds an object, it is called a constructor. </para>
 
-<programlisting language="c++">
-TF1 f1("func1","sin(x)/x",0,10)
+<programlisting language="c++">TF1 f1("func1","sin(x)/x",0,10)
 </programlisting>
 
 <para>In our constructor the function sin(x)/x is defined for use, and 0 and 10 are the limits. The first parameter, <code>func1</code> is
@@ -344,22 +324,19 @@ the name of the object <code>f1</code>. Most objects in ROOT have a name. ROOT m
 by its given name (in our example <code>func1</code>).</para>
 <para>The syntax to call an object's method, or if one prefers, to make an object to do something is:</para>
 
-<programlisting language="c++">
-object.method_name(parameters)
+<programlisting language="c++">object.method_name(parameters)
 </programlisting>
 
 <para>The dot can be replaced by “<code>-&gt;</code>" if <code>object</code> is a pointer. In compiled code, the dot MUST be replaced by a "<code>-&gt;</code>" if object is a pointer.</para>
 
-<programlisting language="c++">
-object_ptr-&gt;method_name(parameters)
+<programlisting language="c++">object_ptr-&gt;method_name(parameters)
 </programlisting>
 
 <para>So now, we understand the two lines of code that allowed us to draw our function. <code>f1.Draw()</code> stands for “call the method <code>Draw()</code>
 associated with the object <code>f1</code> of the class <emphasis role="bold"><code>TF1</code></emphasis>”. Other methods can be applied to the object <code>f1</code>
 of the class <emphasis role="bold"><code>TF1</code></emphasis>. For example, the evaluating and calculating the derivative and the integral are what one would expect from a function.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>f1.Eval(3)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>f1.Eval(3)</code></emphasis>
 (Double_t)4.70400026866224020e-02
 root[] <emphasis role="bold"><code>f1.Derivative(3)</code></emphasis>
 (Double_t)(-3.45675056671992330e-01)
@@ -371,8 +348,7 @@ root[] <emphasis role="bold"><code>f1.Draw()</code></emphasis>
 <para>By default the method <emphasis role="bold"><code>TF1</code></emphasis><code>::Paint()</code>, that draws the function, computes 100 equidistant
 points to draw it. The number of points can be set to a higher value with:</para>
 
-<programlisting language="c++">
-<code>root[] </code><emphasis role="bold"><code>f1.SetNpx(2000);</code></emphasis>
+<programlisting language="c++"><code>root[] </code><emphasis role="bold"><code>f1.SetNpx(2000);</code></emphasis>
 </programlisting>
 
 <para>Note that while the ROOT framework is an object-oriented framework, this does not prevent the user from calling plain functions. </para>
@@ -397,8 +373,7 @@ points to draw it. The number of points can be set to a higher value with:</para
 <title>Building a Multi-pad Canvas</title>
 <para>Let us now try to build a canvas with several pads. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TCanvas *MyC = new TCanvas("MyC","Test canvas",1)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TCanvas *MyC = new TCanvas("MyC","Test canvas",1)</code></emphasis>
 root[] <emphasis role="bold"><code>MyC-&gt;Divide(2,2)</code></emphasis>
 </programlisting>
 
@@ -408,8 +383,7 @@ creating a pointer to an object. Next, we call the method <code>Divide()</code> 
 (that is <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Divide())</code>, which divides the canvas into four zones and sets up a
 pad in each of them. We set the first pad as the active one and than draw the function<code> f1 </code>there.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyC-&gt;cd(1)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyC-&gt;cd(1)</code></emphasis>
 root[] <emphasis role="bold"><code>f1-&gt;Draw()</code></emphasis>
 </programlisting>
 
@@ -418,15 +392,13 @@ root[] <emphasis role="bold"><code>f1-&gt;Draw()</code></emphasis>
 <listitem><para>Click the middle mouse button on a pad will set this pad as the active one.</para></listitem>
 <listitem><para>Use the method <emphasis role="bold"><code>TCanvas</code></emphasis><code>::cd()</code> with the pad number, as was done in the example above:</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyC-&gt;cd(3)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyC-&gt;cd(3)</code></emphasis>
 </programlisting>
 
 <para>Pads are numbered from left to right and from top to bottom. Each new pad created by <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Divide()</code>
 has a name, which is the name of the canvas followed by _1, _2, etc. To apply the method <code>cd()</code> to the third pad, you would write:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyC_3-&gt;cd()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyC_3-&gt;cd()</code></emphasis>
 </programlisting>
 <itemizedlist>
 <listitem><para>Third pad will be selected since you called <emphasis role="bold"><code>TPad</code></emphasis><code>::cd()</code> for  the object <code>MyC_3</code>. ROOT will find the pad that was named<code> MyC_3 </code>when you typed it on the command line (see ROOT/CINT Extensions to C++). </para></listitem>
@@ -454,8 +426,7 @@ root[] <emphasis role="bold"><code>MyC_3-&gt;cd()</code></emphasis>
 <para> <inlinemediaobject><imageobject><imagedata fileref="pictures/0300002D.png" width="196.15pt" depth="51.5pt"/></imageobject></inlinemediaobject></para>
 <para>Both print parameters can be set via the new Print.Command and Print.Printer rootrc resources as follows:</para>
 
-<programlisting language="c++">
-# Printer settings.
+<programlisting language="c++"># Printer settings.
 WinNT.*.Print.Command:    AcroRd32.exe
 Unix.*.Print.Command:     xprint -P%p %f
 Print.Printer:            32-rb205-hp
@@ -471,22 +442,19 @@ Print.Directory:          .
 <para>We have briefly touched on how to use the command line. There are different types of commands.</para>
 <para>1. CINT commands start with “<code>.</code>”</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.?</code></emphasis>                   <emphasis role="italic"><code>//this command will list all the CINT commands</code></emphasis><emphasis>         </emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.?</code></emphasis>                   <emphasis role="italic"><code>//this command will list all the CINT commands</code></emphasis><emphasis>         </emphasis>
 root[] .<emphasis role="bold"><code>L &lt;filename&gt;</code></emphasis>   <emphasis role="italic"><code>//load [filename]</code></emphasis>
 root[] <emphasis role="bold"><code>.x &lt;filename&gt; </code></emphasis>           <emphasis role="italic"><code>//load and execute [filename]</code></emphasis>
 </programlisting>
 
 <para>2. SHELL commands start with “<code>.!</code>” for example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.! ls</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.! ls</code></emphasis>
 </programlisting>
 
 <para>3. C++ commands follow C++ syntax (almost)</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TBrowser</code></emphasis><emphasis role="bold"><code> *b = new TBrowser()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TBrowser</code></emphasis><emphasis role="bold"><code> *b = new TBrowser()</code></emphasis>
 </programlisting>
 
 <sect2>
@@ -494,8 +462,7 @@ root[] <emphasis role="bold"><code>TBrowser</code></emphasis><emphasis role="bol
 <para>You can use the command line to execute multi-line commands. To begin a multi-line command you must type a single left curly bracket <code>{</code>, and to end it you must type a single right curly
 bracket <code>}</code>. For example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>{</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>{</code></emphasis>
 end with '}'&gt; <emphasis role="bold"><code>Int_t j = 0;</code></emphasis>
 end with '}'&gt; <emphasis role="bold"><code>for (Int_t i = 0; i &lt; 3; i++)</code></emphasis>
 end with '}'&gt; <emphasis role="bold"><code>{</code></emphasis>
@@ -520,8 +487,7 @@ i = 2, j = 3
 <title>Helpful Hints for Command Line Typing</title>
 <para>The interpreter knows all the classes, functions, variables, and user defined types. This enables ROOT to help users to complete the command line. For example, if we do not know anything about the <emphasis role="bold"><code>TLine</code></emphasis> class, the Tab feature helps us to get a list of all classes starting with <emphasis role="bold"><code>TL</code></emphasis>(where <code>&lt;TAB&gt;</code> means type the Tab key).</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>l = new TLi&lt;TAB&gt;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>l = new TLi&lt;TAB&gt;</code></emphasis>
 TList
 TListIter
 TLink
@@ -532,8 +498,7 @@ TLimit
 
 <para>To list the different constructors and parameters for <emphasis role="bold"><code>TLine</code></emphasis> use the <code>&lt;TAB&gt;</code> key as follows: </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>l = new TLine(&lt;TAB&gt;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>l = new TLine(&lt;TAB&gt;</code></emphasis>
 TLine TLine()
 TLine TLine(Double_t x1,Double_t y1,Double_t x2,Double_t y2)
 TLine TLine(const TLine&amp; line)
@@ -572,14 +537,12 @@ TLine TLine(const TLine&amp; line)
 </itemizedlist>
 <para>The class <emphasis role="bold"><code>TRegexp</code></emphasis> can be used to create a regular expression from an input string. If <code>wildcard</code> is true then the input string contains a wildcard expression.</para>
 
-<programlisting language="c++">
-TRegexp(const char *re, Bool_t wildcard)
+<programlisting language="c++">TRegexp(const char *re, Bool_t wildcard)
 </programlisting>
 
 <para>Regular expression and wildcards can be easily used in methods like:    </para>
 
-<programlisting language="c++">
-Ssiz_t Index(const TString&amp; string,Ssiz_t* len,Ssiz_t i) const
+<programlisting language="c++">Ssiz_t Index(const TString&amp; string,Ssiz_t* len,Ssiz_t i) const
 </programlisting>
 
 <para>The method finds the first occurrence of the regular expression in the <code>string</code> and returns its position.</para>
@@ -655,8 +618,7 @@ Ssiz_t Index(const TString&amp; string,Ssiz_t* len,Ssiz_t i) const
 <title>gROOT</title>
 <para>The single instance of <emphasis role="bold"><code>TROOT</code></emphasis> is accessible via the global <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> and holds information relative to the current session. By using the <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> pointer, you get the access to every object created in a ROOT program. The <emphasis role="bold"><code>TROOT</code></emphasis> object has several lists pointing to the main ROOT objects. During a ROOT session, the <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis> keeps a series of collections to manage objects. They can be accessed via <emphasis role="italic"><emphasis role="bold"><code>gROOT</code></emphasis></emphasis><code>::GetListOf…</code>         methods.</para>
 
-<programlisting language="c++">
-<code>gROOT-&gt;GetListOfClasses()</code>
+<programlisting language="c++"><code>gROOT-&gt;GetListOfClasses()</code>
 <code>gROOT-&gt;GetListOfColors()</code>
 <code>gROOT-&gt;GetListOfTypes()</code>
 <code>gROOT-&gt;GetListOfGlobals()</code>
@@ -675,8 +637,7 @@ Ssiz_t Index(const TString&amp; string,Ssiz_t* len,Ssiz_t i) const
 
 <para>These methods return a <emphasis role="bold"><code>TSeqCollection</code></emphasis>, meaning a collection of objects, and they can be used to do list operations such as finding an object, or traversing the list and calling a method for each of the members. See the <emphasis role="bold"><code>TCollection</code></emphasis>         class description for the full set of methods supported for a collection. For example, to find a canvas called <code>c1 </code>you can do<code>:</code></para>
 
-<programlisting language="c++">
-<code>root[]</code><emphasis role="bold"><code>gROOT-&gt;GetListOfCanvases()-&gt;FindObject("c1")</code></emphasis>
+<programlisting language="c++"><code>root[]</code><emphasis role="bold"><code>gROOT-&gt;GetListOfCanvases()-&gt;FindObject("c1")</code></emphasis>
 </programlisting>
 
 <para>This returns a pointer to a <emphasis role="bold"><code>TObject</code></emphasis>, and before you can use it as a canvas you need to cast it to a <emphasis role="bold"><code>TCanvas</code></emphasis><code>*</code>.</para>
@@ -696,8 +657,7 @@ Ssiz_t Index(const TString&amp; string,Ssiz_t* len,Ssiz_t i) const
 <title>gPad</title>
 <para>A graphic object is always drawn on the active pad. It is convenient to access the active pad, no matter what it is. For that, we have <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis> that is always pointing to the active pad. For example, if you want to change the fill color of the active pad to blue, but you do not know its name, you can use <emphasis role="italic"><emphasis role="bold"><code>gPad</code></emphasis></emphasis>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gPad-&gt;SetFillColor(38)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>gPad-&gt;SetFillColor(38)</code></emphasis>
 </programlisting>
 
 <para>To get the list of colors, if you have an open canvas, click in the "View" menu, selecting the "Colors" entry. </para>
@@ -707,8 +667,7 @@ root[] <emphasis role="bold"><code>gPad-&gt;SetFillColor(38)</code></emphasis>
 <title>gRandom</title>
 <para><emphasis role="italic"><emphasis role="bold"><code>gRandom</code></emphasis></emphasis>         is a pointer to the current random number generator. By default, it points to a <emphasis role="bold"><code>TRandom</code></emphasis><emphasis role="bold"><code>3</code></emphasis> object, based on the "Mersenne-Twister" generator. This generator is very fast and has very good random proprieties (a very long period of 10600). Setting the seed to 0 implies that the seed will be uniquely generated using the <emphasis role="bold"><code>T</code></emphasis><emphasis role="bold"><code>UUID</code></emphasis>. Any other value will be used as a constant. The following basic random distributions are provided:         <code>Rndm()</code> or <code>Uniform(min,max)</code>, <code>Gaus(mean,sigma)</code>, <code>Exp(tau)</code>,         <code>BreitWigner(mean,sigma)</code>, <code>Landau(mean,sigma)</code>, <code>Poisson(mean)</code>, <code>Binomial(ntot,prob)</code>. You can customize your ROOT session by replacing the random number generator. You can delete <emphasis role="italic"><emphasis role="bold"><code>gRandom </code></emphasis></emphasis>and recreate it with your own. For example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>delete gRandom;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>delete gRandom;</code></emphasis>
 root[] <emphasis role="bold"><code>gRandom = new TRandom2(0);</code></emphasis> <emphasis role="italic"><code>//seed=0</code></emphasis>
 </programlisting>
 
@@ -731,14 +690,12 @@ root[] <emphasis role="bold"><code>gRandom = new TRandom2(0);</code></emphasis> 
 </itemizedlist>
 <para>If more than one <code>.rootrc</code> files are found in the search paths above, the options are merged, with precedence local, user, global. While in a session, to see current settings, you can do:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gEnv</code></emphasis><emphasis role="bold"><code>-&gt;Print()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>gEnv</code></emphasis><emphasis role="bold"><code>-&gt;Print()</code></emphasis>
 </programlisting>
 
 <para>The <code>rootrc</code> file typically looks like:</para>
 
-<programlisting language="c++">
-# Path used by dynamic loader to find shared libraries
+<programlisting language="c++"># Path used by dynamic loader to find shared libraries
 Unix.*.Root.DynamicPath:  .:~/rootlibs:$(ROOTSYS)/lib
 Unix.*.Root.MacroPath:    .:~/rootmacros:$(ROOTSYS)/macros
 
@@ -764,8 +721,7 @@ variable. You can expand this path to hold your own directories.</para>
 <title>Logon and Logoff Scripts</title>
 <para>The <code>rootlogon.C</code> and <code>rootlogoff.C</code> files are scripts loaded and executed at start-up and shutdown. The <code>rootalias.C</code> file is loaded but not executed. It typically contains small utility functions. For example, the <code>rootalias.C</code> script that comes with the ROOT distributions (located in <code>$ROOTSYS/tutorials)</code> defines the function <code>edit(char *file)</code>. This allows the user to call the editor from the command line. This particular function will start the VI editor if the environment variable <code>EDITOR</code> is not set.</para>
 
-<programlisting language="c++">
-root[0] <emphasis role="bold"><code>edit("c1.C")</code></emphasis>
+<programlisting language="c++">root[0] <emphasis role="bold"><code>edit("c1.C")</code></emphasis>
 </programlisting>
 
 <para>For more details, see <code>$ROOTSYS/tutorials/rootalias.C</code>. </para>
@@ -778,8 +734,7 @@ root[0] <emphasis role="bold"><code>edit("c1.C")</code></emphasis>
 <code>system.rootrc</code> file, by setting the <code>Rint.History </code>option. You can also turn off the command logging in the <code>system.rootrc</code> file with the option: <code>Rint.History: -</code></para>
 <para>The number of history lines to be kept can be set also in .rootrc by:</para>
 
-<programlisting language="c++">
-Rint.HistSize:         500
+<programlisting language="c++">Rint.HistSize:         500
 Rint.HistSave:         400
 </programlisting>
 
@@ -790,15 +745,13 @@ Rint.HistSave:         400
 <title>Tracking Memory Leaks</title>
 <para>You can track memory usage and detect leaks by monitoring the number of objects that are created and deleted (see <emphasis role="bold"><code>TObjectTable</code></emphasis>). To use this facility, edit the file <code>$ROOTSYS/etc/system.rootrc</code> or <code>.rootrc</code> if you have this file and add the two following lines:</para>
 
-<programlisting language="c++">
-<code>Root.MemStat:            1</code>
+<programlisting language="c++"><code>Root.MemStat:            1</code>
 <code>Root.ObjectStat:         1</code>
 </programlisting>
 
 <para>In your code or on the command line you can type the line:</para>
 
-<programlisting language="c++">
-<code>gObjectTable-&gt;Print();</code>
+<programlisting language="c++"><code>gObjectTable-&gt;Print();</code>
 </programlisting>
 
 <para>This line will print the list of all active classes and the number of instances for each class. By comparing consecutive print outs, you can see objects that you forgot to delete. Note that this method cannot show leaks coming from the allocation of non-objects or classes unknown to ROOT.</para>
@@ -821,15 +774,13 @@ you will get the corresponding ROOT commands as tooltips.</para>
 <title>Converting HBOOK/PAW Files</title>
 <para>ROOT has a utility called <code>h2root</code> that you can use to convert your HBOOK/PAW histograms or ntuple files into ROOT files. To use this program, you type the shell script command: </para>
 
-<programlisting language="c++">
-h2root  &lt;hbookfile&gt;  &lt;rootfile&gt;
+<programlisting language="c++">h2root  &lt;hbookfile&gt;  &lt;rootfile&gt;
 </programlisting>
 
 <para>If you do not specify the second parameter, a file name is automatically generated for you. If <code>hbookfile</code> is of the form <code>file.hbook</code>, then the ROOT file will be called <code>file.root</code>. This utility converts HBOOK histograms into ROOT histograms of the class <emphasis role="bold"><code>TH1F</code></emphasis>. HBOOK profile histograms are converted into ROOT profile histograms (see class <emphasis role="bold"><code>TProfile</code></emphasis>). HBOOK row-wise and column-wise ntuples are automatically converted to ROOT Trees. See “Trees”. Some HBOOK column-wise ntuples may not be fully converted if the columns are an array of fixed dimension (e.g. <code>var[6]</code>) or if they are a multi-dimensional array. </para>
 <para>HBOOK integer identifiers are converted into ROOT named objects by prefixing the integer identifier with the letter "<code>h</code>" if the identifier is a positive integer and by <code>"h_"</code> if it is a negative integer identifier. In case of row-wise or column-wise ntuples, each column is converted to a branch of a tree. Note that <code>h2root</code> is able to convert HBOOK files containing several levels of sub-directories. Once you have converted your file, you can look at it and draw histograms or process ntuples using the ROOT command line. An example of session is shown below: </para>
 
-<programlisting language="c++">
-<code>// this connects the file hbookconverted.root</code>
+<programlisting language="c++"><code>// this connects the file hbookconverted.root</code>
 root[] <emphasis role="bold"><code>TFile f("hbookconverted.root"); </code></emphasis>
 
 <emphasis><code>//display histogram named h10 (was HBOOK id 10)</code></emphasis>
