@@ -56,8 +56,7 @@
 <title>Creating Histograms</title>
 <para>Histograms are created with constructors:</para>
 
-<programlisting language="c++">
-TH1F *h1 = new TH1F("h1","h1 title",100,0,4.4);
+<programlisting language="c++">TH1F *h1 = new TH1F("h1","h1 title",100,0,4.4);
 TH2F *h2 = new TH2F("h2","h2 title",40,0,4,30,-3,3);
 </programlisting>
 
@@ -69,8 +68,7 @@ TH2F *h2 = new TH2F("h2","h2 title",40,0,4,30,-3,3);
 </itemizedlist>
 <para>When a histogram is created, a reference to it is automatically added to the list of in-memory objects for the current file or directory. This default behavior can be disabled for an individual histogram or for all histograms by setting a global switch. Here is the syntax to set the directory of the histogram <code>h</code>:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// to set the in-memory directory for the current histogram h</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// to set the in-memory directory for the current histogram h</code></emphasis>
 h-&gt;SetDirectory(0); 
 <emphasis role="italic"><code>// global switch to disable</code></emphasis>
 TH1::AddDirectory(kFALSE);
@@ -85,8 +83,7 @@ histograms in memory associated with this file are automatically deleted. See th
 <para>All histogram types support fixed or variable bin sizes. 2-D histograms may have fixed size bins along X and variable size bins along Y or vice-versa. The functions to fill, manipulate, draw, or access histograms are identical in both cases. </para>
 <para>To create a histogram with variable bin size one can use this constructor:</para>
 
-<programlisting language="c++">
-<code>TH1(const char name,const *title,Int_t nbins,*xbins) </code>
+<programlisting language="c++"><code>TH1(const char name,const *title,Int_t nbins,*xbins) </code>
 </programlisting>
 
 <para>The parameters to this constructor are:</para>
@@ -97,8 +94,7 @@ histograms in memory associated with this file are automatically deleted. See th
 </itemizedlist>
 <para>Each histogram always contains three <emphasis role="bold"><code>TAxis</code></emphasis> objects: <code>fXaxis</code>, <code>fYaxis,</code> and <code>fZaxis</code>. To access the axis parameters first get the axis from the histogram <code>h</code>, and then call the <emphasis role="bold"><code>TAxis</code></emphasis> access methods.</para>
 
-<programlisting language="c++">
-TAxis *xaxis = h-&gt;GetXaxis();
+<programlisting language="c++">TAxis *xaxis = h-&gt;GetXaxis();
 Double_t binCenter = xaxis-&gt;GetBinCenter(bin);
 </programlisting>
 
@@ -113,8 +109,7 @@ Double_t binCenter = xaxis-&gt;GetBinCenter(bin);
 <para>The Last bin (bin# <code>nbins+1)</code> contains the overflow.</para>
 <para>In case of 2-D or 3-D histograms, a "global bin" number is defined. For example, assuming a 3-D histogram <code>h</code>  with <code>binx</code>, <code>biny</code>, <code>binz</code>, the function returns a global/linear bin number.</para>
 
-<programlisting language="c++">
-Int_t bin = h-&gt;GetBin(binx,biny,binz);
+<programlisting language="c++">Int_t bin = h-&gt;GetBin(binx,biny,binz);
 </programlisting>
 
 <para>This global bin is useful to access the bin information independently of the dimension.</para>
@@ -130,8 +125,7 @@ Int_t bin = h-&gt;GetBin(binx,biny,binz);
 <title>Filling Histograms</title>
 <para>A histogram is typically filled with statements like:</para>
 
-<programlisting language="c++">
-h1-&gt;Fill(x);
+<programlisting language="c++">h1-&gt;Fill(x);
 h1-&gt;Fill(x,w);    <emphasis role="italic"><code>//with weight</code></emphasis>
 h2-&gt;Fill(x,y);
 h2-&gt;Fill(x,y,w);
@@ -146,16 +140,14 @@ One can increment a bin number directly by calling <emphasis role="bold"><code>T
 replace the existing content via <emphasis role="bold"><code>TH1</code></emphasis><code>::SetBinContent()</code>, and access the bin content of a
 given bin via <emphasis role="bold"><code>TH1</code></emphasis><code>::GetBinContent()</code> .</para>
 
-<programlisting language="c++">
-Double_t binContent = h-&gt;GetBinContent(bin);
+<programlisting language="c++">Double_t binContent = h-&gt;GetBinContent(bin);
 </programlisting>
 
 <sect2>
 <title>Automatic Re-binning Option</title>
 <para>By default, the number of bins is computed using the range of the axis. You can change this to re-bin automatically by setting the automatic re-binning option:</para>
 
-<programlisting language="c++">
-<code>h-&gt;SetBit(TH1::kCanRebin);</code>
+<programlisting language="c++"><code>h-&gt;SetBit(TH1::kCanRebin);</code>
 </programlisting>
 
 <para>Once this is set, the <code>Fill()</code> method will automatically extend the axis range to accommodate the new value specified in the <code>Fill()</code> argument. The used method is to double the bin size until the new value fits in the range, merging bins two by two. The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code>  method extensively uses this automatic binning option when drawing histograms of variables in <emphasis role="bold"><code>TTree</code></emphasis> with an unknown range. The automatic binning option is supported for 1-D, 2-D and 3-D histograms. During filling, some statistics parameters are incremented to compute the mean value and root mean square with the maximum precision.  In case of histograms of type <emphasis role="bold"><code>TH1C</code></emphasis>, <emphasis role="bold"><code>TH1S</code></emphasis>, <emphasis role="bold"><code>TH2C</code></emphasis>, <emphasis role="bold"><code>TH2S</code></emphasis>, <emphasis role="bold"><code>TH3C</code></emphasis>, <emphasis role="bold"><code>TH3S</code></emphasis> a check is made that the bin contents do not exceed the maximum positive capacity (127 or 65 535). Histograms of all types may have positive or/and negative bin contents.</para>
@@ -166,15 +158,13 @@ Double_t binContent = h-&gt;GetBinContent(bin);
 <title>Random Numbers and Histograms</title>
 <para><emphasis role="bold"><code>TH1</code></emphasis><code>::FillRandom()</code> can be used to randomly fill a histogram using the contents of an existing <emphasis role="bold"><code>TF1</code></emphasis> function or another <emphasis role="bold"><code>TH1</code></emphasis> histogram (for all dimensions). For example, the following two statements create and fill a histogram 10 000 times with a default Gaussian distribution of <code>mean</code> <code>0</code> and <code>sigma</code> <code>1</code>:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h1("h1","Histo from a Gaussian",100,-3,3);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h1("h1","Histo from a Gaussian",100,-3,3);</code></emphasis>
 root[] <emphasis role="bold"><code>h1.FillRandom</code></emphasis><emphasis role="bold"><code>("gaus",10000);</code></emphasis>
 </programlisting>
 
 <para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetRandom()</code> can be used to get a random number distributed according the contents of a histogram. To fill a histogram following the distribution in an existing histogram you can use the second signature of <emphasis role="bold"><code>TH1</code></emphasis><code>::FillRandom()</code>. Next code snipped assumes that <code>h</code> is an existing histogram (<emphasis role="bold"><code>TH1</code></emphasis>).</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h2("h2","Histo</code></emphasis><emphasis role="bold"><code> from existing histo</code></emphasis><emphasis role="bold"><code>",100,-3,3);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TH1F</code></emphasis><emphasis role="bold"><code> h2("h2","Histo</code></emphasis><emphasis role="bold"><code> from existing histo</code></emphasis><emphasis role="bold"><code>",100,-3,3);</code></emphasis>
 root[] <emphasis role="bold"><code>h2.</code></emphasis><emphasis role="bold"><code>FillRandom(</code></emphasis><emphasis role="bold"><code>&amp;</code></emphasis><emphasis role="bold"><code>h</code></emphasis><emphasis role="bold"><code>1</code></emphasis><emphasis role="bold"><code>,1000);</code></emphasis>
 </programlisting>
 
@@ -187,8 +177,7 @@ root[] <emphasis role="bold"><code>h2.</code></emphasis><emphasis role="bold"><c
 </itemizedlist>
 <para>You can see below an example of the <emphasis role="bold"><code>TH1</code></emphasis><code>::GetRandom()</code> method which can be used to get a random number distributed according the contents of a histogram.</para>
 
-<programlisting language="c++">
-<code>void getrandomh() {</code>
+<programlisting language="c++"><code>void getrandomh() {</code>
 <code>   TH1F *source = new TH1F("source","source hist",100,-3,3);</code>
 <code>   source-&gt;FillRandom("gaus",1000);</code>
 <code>   TH1F *final = new TH1F("final","final hist",100,-3,3);</code>
@@ -219,26 +208,22 @@ root[] <emphasis role="bold"><code>h2.</code></emphasis><emphasis role="bold"><c
 </itemizedlist>
 <para>Histograms objects (not pointers) <emphasis role="bold"><code>TH1F</code></emphasis> <code>h1</code> can be multiplied by a constant using: </para>
 
-<programlisting language="c++">
-h1.Scale(const)
+<programlisting language="c++">h1.Scale(const)
 </programlisting>
 
 <para>A new histogram can be created without changing the original one by doing: </para>
 
-<programlisting language="c++">
-TH1F h3 = 8*h1;
+<programlisting language="c++">TH1F h3 = 8*h1;
 </programlisting>
 
 <para>To multiply two histogram objects and put the result in a 3rd one do: </para>
 
-<programlisting language="c++">
-TH1F h3 = h1*h2;
+<programlisting language="c++">TH1F h3 = h1*h2;
 </programlisting>
 
 <para>The same operations can be done with histogram pointers <emphasis role="bold"><code>TH1F</code></emphasis> <code>*h1</code>, <emphasis role="bold"><code>*h2</code></emphasis> following way: </para>
 
-<programlisting language="c++">
-h1-&gt;Scale(const)
+<programlisting language="c++">h1-&gt;Scale(const)
 TH1F h3 = 8*(*h1);
 TH1F h3 = (*h1)*(*h2);
 </programlisting>
@@ -266,8 +251,7 @@ TH1F h3 = (*h1)*(*h2);
 </itemizedlist>
 <para>By default, the <emphasis role="bold"><code>TH1</code></emphasis><code>::Draw</code> clears the pad before drawing the new image of the histogram. You can use the <code>"SAME"</code> option to leave the previous display in tact and superimpose the new histogram. The same histogram can be drawn with different graphics options in different pads. When a displayed histogram is deleted, its image is automatically removed from the pad. To create a copy of the histogram when drawing it, you can use <emphasis role="bold"><code>TH1</code></emphasis><code>::DrawClone()</code>. This will clone the histogram and allow you to change and delete the original one without affecting the clone. You can use <emphasis role="bold"><code>TH1</code></emphasis><code>::DrawNormalized()</code> to draw a normalized copy of a histogram. </para>
 
-<programlisting language="c++">
-TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
+<programlisting language="c++">TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
 </programlisting>
 
 <para>A clone of this histogram is normalized to norm and drawn with option. A pointer to the normalized histogram is returned. The contents of the histogram copy are scaled such that the new sum of weights (excluding under and overflow) is equal to <code>norm</code>.</para>
@@ -278,8 +262,7 @@ TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
 <title>Setting the Style</title>
 <para>Histograms use the current style <emphasis role="italic"><emphasis role="bold"><code>gStyle,</code></emphasis></emphasis> which is the global object of class <emphasis role="bold"><code>TStyle</code></emphasis>. To change the current style for histograms, the <emphasis role="bold"><code>TStyle</code></emphasis> class provides a multitude of methods ranging from setting the fill color to the axis tick marks. Here are a few examples:</para>
 
-<programlisting language="c++">
-<code>void SetHistFillColor(Color_t color = 1)</code>
+<programlisting language="c++"><code>void SetHistFillColor(Color_t color = 1)</code>
 <code>void SetHistFillStyle(Style_t styl = 0)</code>
 <code>void SetHistLineColor(Color_t color = 1)</code>
 <code>void SetHistLineStyle(Style_t styl = 0)</code>
@@ -369,15 +352,13 @@ TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
 </itemizedlist>
 <para>Most options can be concatenated without spaces or commas, for example, if <code>h</code> is a histogram pointer:</para>
 
-<programlisting language="c++">
-h-&gt;Draw("E1SAME");
+<programlisting language="c++">h-&gt;Draw("E1SAME");
 h-&gt;Draw("e1same");
 </programlisting>
 
 <para>The options are not case sensitive. The options <code>BOX</code>, <code>COL</code> and <code>COLZ</code> use the color palette defined in the current style (see <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>). The options <code>CONT</code>, <code>SURF</code>, and <code>LEGO</code> have by default 20 equidistant contour levels, you can change the number of levels with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetContour</code>. You can also set the default drawing option with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetOption</code>. To see the current option use <emphasis role="bold"><code>TH1</code></emphasis><code>::GetOption</code>. For example:</para>
 
-<programlisting language="c++">
-<code>h-&gt;SetOption("lego");</code>
+<programlisting language="c++"><code>h-&gt;SetOption("lego");</code>
 <code>h-&gt;Draw();  </code><emphasis role="italic"><code>// will use the lego option</code></emphasis>
 <code>h-&gt;Draw("scat")        </code><emphasis role="italic"><code>// will use the scatter plot option</code></emphasis>
 </programlisting>
@@ -470,16 +451,14 @@ h-&gt;Draw("e1same");
 <para/>
 <para>The default number of contour levels is 20 equidistant levels. It can be changed with <emphasis role="bold"><code>TH1</code></emphasis><code>::SetContour</code>. When option "<code>LIST</code>" is specified together with option "<code>CONT</code>", all points used for contour drawing, are saved in the <emphasis role="bold"><code>TGraph</code></emphasis> object and are accessible in the following way:</para>
 
-<programlisting language="c++">
-TObjArray *contours = gROOT-&gt;GetListOfSpecials()-&gt;FindObject("contours");
+<programlisting language="c++">TObjArray *contours = gROOT-&gt;GetListOfSpecials()-&gt;FindObject("contours");
 Int_t ncontours = contours-&gt;GetSize();
 TList *list = (TList*)contours-&gt;At(i);
 </programlisting>
 
 <para>Where "<code>i</code>" is a contour number and list contains a list of <emphasis role="bold"><code>TGraph</code></emphasis> objects. For one given contour, more than one disjoint poly-line may be generated. The <emphasis role="bold"><code>TGraph</code></emphasis> numbers per contour are given by <code>list-&gt;GetSize().</code> Here we show how to access the first graph in the list.</para>
 
-<programlisting language="c++">
-TGraph *gr1 = (TGraph*)list-&gt;First();
+<programlisting language="c++">TGraph *gr1 = (TGraph*)list-&gt;First();
 </programlisting>
 <itemizedlist>
 <listitem><para>"<code>AITOFF</code>": Draw a contour via an AITOFF projection</para></listitem>
@@ -521,8 +500,7 @@ TGraph *gr1 = (TGraph*)list-&gt;First();
 </itemizedlist>
 <para>With <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code> the color palette can be changed. We suggest you use palette 1 with the call:</para>
 
-<programlisting language="c++">
-gStyle-&gt;SetPalette(1);
+<programlisting language="c++">gStyle-&gt;SetPalette(1);
 </programlisting>
 
 </sect2>
@@ -531,8 +509,7 @@ gStyle-&gt;SetPalette(1);
 <title>The SURFace Options</title>
 <para>In a surface plot, cell contents are represented as a mesh. The height of the mesh is proportional to the cell content. A surface plot can be represented in several coordinate systems. The default is Cartesian coordinates, and the other possible systems are <code>CYL</code>, <code>POL</code>, <code>SPH</code>, and <code>PSR</code>. The following picture uses <code>SURF1</code>. With <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>         the color palette can be changed. We suggest you use palette 1 with the call:</para>
 
-<programlisting language="c++">
-gStyle-&gt;SetPalette(1);
+<programlisting language="c++">gStyle-&gt;SetPalette(1);
 </programlisting>
 
 <figure><title>Different surface options</title>
@@ -601,15 +578,13 @@ gStyle-&gt;SetPalette(1);
 <title>The Z Option: Display the Color Palette on the Pad</title>
 <para>The "<code>Z</code>" option can be specified with the options: <code>COL</code>, <code>CONT</code>, <code>SURF</code>, and <code>LEGO</code> to display the color palette with an axis indicating the value of the corresponding color on the right side of the picture. If there is not enough space on the right side, you can increase the size of the right margin by calling <emphasis role="bold"><code>TPad</code></emphasis><code>::SetRightMargin()</code>. The attributes used to display the palette axis values are taken from the Z axis of the object. For example, you can set the labels size on the palette axis with:</para>
 
-<programlisting language="c++">
-<code>hist-&gt;GetZaxis()-&gt;SetLabelSize();</code>
+<programlisting language="c++"><code>hist-&gt;GetZaxis()-&gt;SetLabelSize();</code>
 </programlisting>
 
 <sect3>
 <title>Setting the Color Palette</title>
 <para>You can set the color palette with <emphasis role="bold"><code>TStyle</code></emphasis><code>::SetPalette</code>, e.g.</para>
-<programlisting language="c++">
-gStyle-&gt;SetPalette(ncolors,colors);
+<programlisting language="c++">gStyle-&gt;SetPalette(ncolors,colors);
 </programlisting>
 <para>For example, the option <code>COL</code> draws a 2-D histogram with cells represented by a box filled with a color index, which is a function of the cell content. If the cell content is N, the color index used will be the color number in <code>colors[N]</code>. If the maximum cell content is greater than <code>ncolors</code>, all cell contents are scaled to <code>ncolors</code>.
 If <code>ncolors&lt;=0</code>, a default palette of 50 colors is defined. This palette is recommended for pads, labels. It defines:</para>
@@ -629,8 +604,7 @@ If <code>ncolors&lt;=0</code>, a default palette of 50 colors is defined. This p
 The object is automatically created when drawing a 2D histogram when the option "<code>z</code>" is specified. It is added to the histogram list of functions.
 It can be retrieved and its attributes can be changed with: </para>
 
-<programlisting language="c++">
-TPaletteAxis *palette=(TPaletteAxis*)h-&gt;FindObject("palette");
+<programlisting language="c++">TPaletteAxis *palette=(TPaletteAxis*)h-&gt;FindObject("palette");
 </programlisting>
 
 <para>The palette can be interactively moved and resized. The context menu can be used to set the axis attributes. It is possible to select a range on the axis, to set the min/max in z. </para>
@@ -641,8 +615,7 @@ TPaletteAxis *palette=(TPaletteAxis*)h-&gt;FindObject("palette");
 <title>The SPEC Option</title>
 <para>The “SPEC” option offers a large set of options/attributes to visualize 2D histograms thanks to "operators" following the "SPEC" keyword. For example, to draw the 2-D histogram <code>h2</code> using all default attributes except the viewing angles, one can do:</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC a(30,30,0)");
+<programlisting language="c++">h2-&gt;Draw("SPEC a(30,30,0)");
 </programlisting>
 
 <para>The operators' names are case unsensitive (i.e. one can use "a" or "A") and their parameters are seperated by  coma ",". Operators can be put in any order in the option and must be separated by a space " ". No space characters should be put in an operator. All the available operators are described below.</para>
@@ -658,8 +631,7 @@ h2-&gt;Draw("SPEC a(30,30,0)");
 <para>7 = BarsX8 = BarsY9 = Needles10 = Surface11 = Triangles</para>
 <para>These parameters can be set by using the "<code>dm</code>" operator in the option.</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC dm(1,2)");
+<programlisting language="c++">h2-&gt;Draw("SPEC dm(1,2)");
 </programlisting>
 
 <para>The above example draws the histogram using the "Light Display mode group" and  the "Grid Display mode". The following table summarizes all the possible combinations of both groups:</para>
@@ -873,21 +845,18 @@ h2-&gt;Draw("SPEC dm(1,2)");
 <para/>
 <para>The "Pen Attributes" can be changed using <code>pa(color,style,width)</code>. Next example sets line color to 2, line type to 1 and line width to 2. Note that if <code>pa()</code> is not specified, the histogram line attributes are used:</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC dm(1,2) pa(2,1,2)");
+<programlisting language="c++">h2-&gt;Draw("SPEC dm(1,2) pa(2,1,2)");
 </programlisting>
 
 <para>The number of "Nodes" can be changed with <code>n(nodesx,nodesy)</code>. Example:</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC n(40,40)");
+<programlisting language="c++">h2-&gt;Draw("SPEC n(40,40)");
 </programlisting>
 
 <para>Sometimes the displayed region is rather large. When displaying all channels the pictures become very dense and complicated. It is very difficult to understand the overall shape of data. "<code>n(nx,ny)</code>" allows to change the density of displayed channels. Only the channels coinciding with given nodes are displayed.</para>
 <para>The visualization "Angles" can be changed with "<code>a(alpha,beta,view)</code>": "<code>alpha</code>" is the angle between the bottom horizontal screen line and the displayed space on the right side of the picture and "<code>beta</code>" on the left  side, respectively. One can rotate the 3-d space around the vertical axis using the "<code>view</code>" parameter. Allowed values are 0, 90, 180 and 270 degrees.</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
+<programlisting language="c++">h2-&gt;Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
 </programlisting>
 
 <para>The operator         "<code>zs(scale)</code>"         changes the scale of the Z-axis. The possible values are: 0 = Linear (default),  1 = Log, 2 = Sqrt. If <code>gPad-&gt;SetLogz()</code> has been set, the log scale on Z-axis is set automatically, i.e. there is no need for using the <code>zs()</code> operator. Note that the X and Y axis are always linear. </para>
@@ -897,8 +866,7 @@ h2-&gt;Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
 <para>5 = CIE Modulo,   6 = YIQ Smooth,      7 = YIQ Modulo,     8 = HVS Smooth, 9 = HVS Modulo</para>
 <para>This function does not apply on Simple display modes group. Default  value is 0. Example choosing CMY Modulo to paint the 2D histogram:</para>
 
-<programlisting language="c++">
-h2-&gt;Draw("SPEC c1(3) dm(0,1) a(30,30,0)");
+<programlisting language="c++">h2-&gt;Draw("SPEC c1(3) dm(0,1) a(30,30,0)");
 </programlisting>
 
 <para>The operator "<code>lp(x,y,z)</code>" sets the light position. In Light and LightHeight display modes groups the color palette is calculated according to the fictive light source position in 3-d space. Using this function one can change the source's position and thus achieve various graphical effects. This function does not apply for  Simple and Height display modes groups. Default is: <code>lp(1000,1000,100)</code>.</para>
@@ -937,14 +905,12 @@ h2-&gt;Draw("SPEC c1(3) dm(0,1) a(30,30,0)");
 <para>Using a <emphasis role="bold"><code>TCutG</code></emphasis> object, it is possible to draw a 2D histogram sub-range. One must create a graphical cut (mouse or C++) and specify the name of the cut between ‘<code>[</code>‘ and ‘<code>]</code>’ in the Draw option. </para>
 <para>For example, with a <emphasis role="bold"><code>TCutG</code></emphasis> named "<code>cutg</code>", one can call:</para>
 
-<programlisting language="c++">
-myhist-&gt;Draw("surf1 [cutg]");
+<programlisting language="c++">myhist-&gt;Draw("surf1 [cutg]");
 </programlisting>
 
 <para>Or, assuming two graphical cuts with name "<code>cut1</code>" and "<code>cut2</code>", one can do:</para>
 
-<programlisting language="c++">
-h1.Draw("lego");
+<programlisting language="c++">h1.Draw("lego");
 h2.Draw("[cut1,-cut2],surf,same");
 </programlisting>
 
@@ -966,8 +932,7 @@ h2.Draw("[cut1,-cut2],surf,same");
 </para>
 </figure>
 
-<programlisting language="c++">
-void twoscales() {
+<programlisting language="c++">void twoscales() {
 TCanvas *c1 = new TCanvas("c1","different scales hists",600,400);
 <emphasis role="italic"><code>//create, fill and draw h1</code></emphasis>
 gStyle-&gt;SetOptStat(kFALSE);
@@ -1035,16 +1000,14 @@ axis-&gt;Draw();
 <listitem><para><code>k</code>the kurtosis</para></listitem>
 <listitem><para><code>K</code>the kurtosis and the kurtosis error</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-<code>gStyle-&gt;SetOptStat("ne");    </code><emphasis role="italic"><code>// prints the histogram name and number of entries</code></emphasis>
+<programlisting language="c++"><code>gStyle-&gt;SetOptStat("ne");    </code><emphasis role="italic"><code>// prints the histogram name and number of entries</code></emphasis>
 <code>gStyle-&gt;SetOptStat("n");     </code><emphasis role="italic"><code>// prints the histogram name</code></emphasis>
 <code>gStyle-&gt;SetOptStat("nemr");  </code><emphasis role="italic"><code>// the default value </code></emphasis>
 </programlisting>
 
 <para>With the option <code>"same"</code>, the statistic box is not redrawn. With the option <code>"sames"</code>, it is re-drawn. If it hides the previous statistics box, you can change its position with the next lines (where <code>h</code> is the histogram pointer):</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TPaveStats</code></emphasis><emphasis role="bold"><code> *s = (TPaveStats*)h-&gt;GetListOfFunctions()-&gt;FindObject("stats");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TPaveStats</code></emphasis><emphasis role="bold"><code> *s = (TPaveStats*)h-&gt;GetListOfFunctions()-&gt;FindObject("stats");</code></emphasis>
 root[] <emphasis role="bold"><code>s-&gt;SetX1NDC (newx1);</code></emphasis>  <emphasis role="italic"><code>//new x start position</code></emphasis>
 root[] <emphasis role="bold"><code>s-&gt;SetX2NDC (newx2); </code></emphasis><emphasis role="italic"><code>//new x end position</code></emphasis>
 </programlisting>
@@ -1068,8 +1031,7 @@ root[] <emphasis role="bold"><code>s-&gt;SetX2NDC (newx2); </code></emphasis><em
 </itemizedlist>
 <para>Use <emphasis role="bold"><code>TPad</code></emphasis><code>::SetTicks(tx,ty)</code> to set these options. See also the methods of <emphasis role="bold"><code>TAxis</code></emphasis> that set specific axis attributes. If multiple color-filled histograms are drawn on the same pad, the fill area may hide the axis tick marks. One can force the axis redrawing over all the histograms by calling:</para>
 
-<programlisting language="c++">
-gPad-&gt;RedrawAxis();
+<programlisting language="c++">gPad-&gt;RedrawAxis();
 </programlisting>
 
 </sect1>
@@ -1078,34 +1040,29 @@ gPad-&gt;RedrawAxis();
 <title>Giving Titles to the X, Y and Z Axis</title>
 <para>Because the axis title is an attribute of the axis, you have to get the axis first and then call <emphasis role="bold"><code>TAxis</code></emphasis><code>::SetTitle</code>. </para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTitle("X axis title");
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTitle("X axis title");
 h-&gt;GetYaxis()-&gt;SetTitle("Y axis title");
 </programlisting>
 
 <para>The histogram title and the axis titles can be any <emphasis role="bold"><code>TLatex</code></emphasis> string. The titles are part of the persistent histogram. For example if you wanted to write E with a subscript (T) you could use this:</para>
 
-<programlisting language="c++">
-h-&gt;GetXaxis()-&gt;SetTitle("E_{T}");
+<programlisting language="c++">h-&gt;GetXaxis()-&gt;SetTitle("E_{T}");
 </programlisting>
 
 <para>For a complete explanation of the Latex mathematical expressions, see "Graphics and the Graphical User Interface". It is also possible to specify the histogram title and the axis titles at creation time. These titles can be given in the "title" parameter. They must be separated by "<emphasis role="bold">;</emphasis>":</para>
 
-<programlisting language="c++">
-TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
+<programlisting language="c++">TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
 </programlisting>
 
 <para>Any title can be omitted:</para>
 
-<programlisting language="c++">
-TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
+<programlisting language="c++">TH1F* h=new TH1F("h","Histogram title;;Y Axis",100,0,1);
 TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
 </programlisting>
 
 <para>The method <code>SetTitle</code> has the same syntax:</para>
 
-<programlisting language="c++">
-h-&gt;SetTitle("Histogram title;An other X title Axis");
+<programlisting language="c++">h-&gt;SetTitle("Histogram title;An other X title Axis");
 </programlisting>
 
 </sect1>
@@ -1114,8 +1071,7 @@ h-&gt;SetTitle("Histogram title;An other X title Axis");
 <title>Making a Copy of an Histogram</title>
 <para>Like for any other ROOT object derived from <emphasis role="bold"><code>TObject</code></emphasis>, the <code>Clone</code> method can be used. This makes an identical copy of the original histogram including all associated errors and functions:</para>
 
-<programlisting language="c++">
-TH1F *hnew = (TH1F*)h-&gt;Clone(); <emphasis role="italic"><code>// renaming is recommended, because otherwise you </code></emphasis>
+<programlisting language="c++">TH1F *hnew = (TH1F*)h-&gt;Clone(); <emphasis role="italic"><code>// renaming is recommended, because otherwise you </code></emphasis>
 hnew-&gt;SetName("hnew");          <emphasis role="italic"><code>// will have two histograms with the same name</code></emphasis>
 </programlisting>
 
@@ -1125,8 +1081,7 @@ hnew-&gt;SetName("hnew");          <emphasis role="italic"><code>// will have tw
 <title>Normalizing Histograms</title>
 <para>You can scale a histogram (<emphasis role="bold"><code>TH1</code></emphasis> <code>*h</code>) such that the bins integral is equal to the normalization parameter norm:</para>
 
-<programlisting language="c++">
-Double_t scale = norm/h-&gt;Integral();
+<programlisting language="c++">Double_t scale = norm/h-&gt;Integral();
 h-&gt;Scale(scale);
 </programlisting>
 
@@ -1136,8 +1091,7 @@ h-&gt;Scale(scale);
 <title>Saving/Reading Histograms to/from a File</title>
 <para>The following statements create a ROOT file and store a histogram on the file. Because <emphasis role="bold"><code>TH1</code></emphasis> derives from <emphasis role="bold"><code>TNamed</code></emphasis>, the key identifier on the file is the histogram name:</para>
 
-<programlisting language="c++">
-TFile f("histos.root","new");
+<programlisting language="c++">TFile f("histos.root","new");
 TH1F h1("hgaus","histo from a gaussian",100,-3,3);
 h1.FillRandom("gaus",10000);
 h1-&gt;Write();
@@ -1145,15 +1099,13 @@ h1-&gt;Write();
 
 <para>To read this histogram in another ROOT session, do:</para>
 
-<programlisting language="c++">
-TFile f("histos.root");
+<programlisting language="c++">TFile f("histos.root");
 TH1F *h = (TH1F*)f.Get("hgaus");
 </programlisting>
 
 <para>One can save all histograms in memory to the file by: </para>
 
-<programlisting language="c++">
-file-&gt;Write();
+<programlisting language="c++">file-&gt;Write();
 </programlisting>
 
 <para>For a more detailed explanation, see “Input/Output”.</para>
@@ -1176,14 +1128,12 @@ file-&gt;Write();
 <listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetEntries()</code> - returns the number of entries.</para></listitem>
 <listitem><para><emphasis role="bold"><code>TH1</code></emphasis><code>::GetAsymmetry(</code><emphasis role="bold"><code>TH1</code></emphasis><code>*</code>         <code>h2,Double_t c2,Double_t dc2)</code> - returns an histogram containing the asymmetry of this histogram with <code>h2</code>, where the asymmetry is defined as: </para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-Asymmetry = (h1 - h2)/(h1 + h2)    <emphasis role="italic"><code>//where h1 = this</code></emphasis>
+<programlisting language="c++">Asymmetry = (h1 - h2)/(h1 + h2)    <emphasis role="italic"><code>//where h1 = this</code></emphasis>
 </programlisting>
 <itemizedlist>
 <listitem><para>It works for <code>1D</code>, <code>2D</code>, etc. histograms. The parameter <code>c2</code> is an optional argument that gives a relative weight between the two histograms, and <code>dc</code><code>2</code> is the error on this weight.  This is useful, for example, when forming an asymmetry between two histograms from two different data sets that need to be normalized to each other in some way.  The function calculates the errors assuming Poisson statistics on <code>h1</code> and <code>h2</code> (that is, <code>dh=sqrt(h)</code>). In the next example we assume that <code>h1</code> and <code>h2</code> are already filled:</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-h3 = h1-&gt;GetAsymmetry(h2)
+<programlisting language="c++">h3 = h1-&gt;GetAsymmetry(h2)
 </programlisting>
 <itemizedlist>
 <listitem><para>Then <code>h3</code> is created and filled with the asymmetry between <code>h1</code> and <code>h2</code>; <code>h1</code> and <code>h2</code> are left Intact. </para></listitem>
@@ -1200,8 +1150,7 @@ h3 = h1-&gt;GetAsymmetry(h2)
 <title>Option 1: SetBinLabel</title>
 <para>To set an alphanumeric bin label call:</para>
 
-<programlisting language="c++">
-<code>TAxis::SetBinLabel(bin,label);</code>
+<programlisting language="c++"><code>TAxis::SetBinLabel(bin,label);</code>
 </programlisting>
 
 <para>This can always be done before or after filling. Bin labels will be automatically drawn with the histogram.</para>
@@ -1219,8 +1168,7 @@ h3 = h1-&gt;GetAsymmetry(h2)
 <title>Option 2: Fill</title>
 <para>You can also call a <code>Fill()</code> function with one of the arguments being a string:</para>
 
-<programlisting language="c++">
-<code>hist1-&gt;Fill(somename,weigth);</code>
+<programlisting language="c++"><code>hist1-&gt;Fill(somename,weigth);</code>
 <code>hist2-&gt;Fill(x,somename,weight);</code>
 <code>hist2-&gt;Fill(somename,y,weight);</code>
 <code>hist2-&gt;Fill(somenamex,somenamey,weight);</code>
@@ -1232,8 +1180,7 @@ h3 = h1-&gt;GetAsymmetry(h2)
 <title>Option 3: TTree::Draw</title>
 <para>You can use a char* variable type to histogram strings with <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code>.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// here "Nation" and "Division" are two char* branches of a Tree</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// here "Nation" and "Division" are two char* branches of a Tree</code></emphasis>
 tree.Draw("Nation::Division");
 </programlisting>
 
@@ -1247,8 +1194,7 @@ tree.Draw("Nation::Division");
 <para>If a variable is defined as <code>char*</code> it is drawn as a string by default. You change that and draw the value of <code>char[0]</code> as an
 integer by adding an arithmetic operation to the expression as shown below.</para>
 
-<programlisting language="c++">
-<code>tree.Draw("MyChar + 0"); </code>
+<programlisting language="c++"><code>tree.Draw("MyChar + 0"); </code>
 <emphasis role="italic"><code>//this will draw the integer value of MyChar[0] where "MyChar" is char[5]</code></emphasis>
 </programlisting>
 
@@ -1258,8 +1204,7 @@ integer by adding an arithmetic operation to the expression as shown below.</par
 <title>Sort Options</title>
 <para>When using the options 2 or 3 above, the labels are automatically added to the list (<emphasis role="bold"><code>THashList</code></emphasis>) of labels for a given axis. By default, an axis is drawn with the order of bins corresponding to the filling sequence. It is possible to reorder the axis alphabetically or by increasing or decreasing values. The reordering can be triggered via the <emphasis role="bold"><code>TAxis</code></emphasis> context menu by selecting the menu item "<code>LabelsOption</code>" or by calling directly. </para>
 
-<programlisting language="c++">
-<code>TH1::LabelsOption(option,axis) </code>
+<programlisting language="c++"><code>TH1::LabelsOption(option,axis) </code>
 </programlisting>
 
 <para>Here <code>axis</code> may be X, Y, or Z. The parameter <code>option</code> may be:</para>
@@ -1274,8 +1219,7 @@ integer by adding an arithmetic operation to the expression as shown below.</par
 </itemizedlist>
 <para>When using the option second above, new labels are added by doubling the current number of bins in case one label does not exist yet. When the filling is terminated, it is possible to trim the number of bins to match the number of active labels by calling:</para>
 
-<programlisting language="c++">
-<code>TH1::LabelsDeflate(axis) </code>
+<programlisting language="c++"><code>TH1::LabelsDeflate(axis) </code>
 </programlisting>
 
 <para>Here <code>axis</code> may be X, Y, or Z. This operation is automatic when using <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code>. Once bin labels have been created, they become persistent if the histogram is written to a file or when generating the C++ code via <code>SavePrimitive</code>.</para>
@@ -1294,14 +1238,12 @@ integer by adding an arithmetic operation to the expression as shown below.</par
 
 <para>By default, <emphasis role="bold"><code>THStack</code></emphasis><code>::Draw</code>         draws the histograms stacked as shown in the left pad in the picture above. If the option <code>"nostack” is</code> used, the histograms are superimposed as if they were drawn one at a time using the <code>"same" </code>draw option<code>.</code> The right pad in this picture illustrates the <emphasis role="bold"><code>THStack</code></emphasis> drawn with the <code>"nostack"</code> option.</para>
 
-<programlisting language="c++">
-<code>hs-&gt;Draw("nostack");</code>
+<programlisting language="c++"><code>hs-&gt;Draw("nostack");</code>
 </programlisting>
 
 <para>Next is a simple example, for a more complex one see $<code>ROOTSYS/tutorials/hist/hstack.C.</code></para>
 
-<programlisting language="c++">
-<code>{ THStack hs("hs","test stacked histograms");</code>
+<programlisting language="c++"><code>{ THStack hs("hs","test stacked histograms");</code>
 <code>  TH1F *h1 = new TH1F("h1","test hstack",100,-4,4);</code>
 <code>  h1-&gt;FillRandom("gaus",20000);</code>
 <code>  h1-&gt;SetFillColor(kRed);</code>
@@ -1333,8 +1275,7 @@ integer by adding an arithmetic operation to the expression as shown below.</par
 <listitem><para><code>L[j]</code> contains the number of entries in the bin <code>j</code></para></listitem>
 <listitem><para><code>e[j]</code> or <code>s[j]</code> will be the resulting error depending on the selected option. See “Build Options“.</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-<code>E[j]  =  sum Y**2</code>
+<programlisting language="c++"><code>E[j]  =  sum Y**2</code>
 <code>L[j]  =  number of entries in bin J</code>
 <code>H[j]  =  sum Y</code>
 <code>h[j]  =  H[j] / L[j]</code>
@@ -1344,8 +1285,7 @@ integer by adding an arithmetic operation to the expression as shown below.</par
 
 <para>In the special case where <code>s[j]</code> is zero, when there is only one entry per bin, <code>e[j]</code> is computed from the average of the <code>s[j]</code> for all bins. This approximation is used to keep the bin during a fit operation. The <emphasis role="bold"><code>TProfile</code></emphasis> constructor takes up to eight arguments. The first five parameters are similar to <emphasis role="bold"><code>TH1D</code></emphasis> constructor. </para>
 
-<programlisting language="c++">
-<code>TProfile(const char *name,const char *title,Int_t nbinsx,</code>
+<programlisting language="c++"><code>TProfile(const char *name,const char *title,Int_t nbinsx,</code>
 <code>         Double_t xlow, Double_t xup, Double_t ylow, Double_t yup,</code>
 <code>         Option_t *option)</code>
 </programlisting>
@@ -1379,8 +1319,7 @@ constructor above where <code>ylow</code> and <code>yup</code> are specified.</p
 </itemizedlist>
 <para>The option '<code>i</code>' is used for integer Y values with the uncertainty of ±0.5, assuming the probability that Y takes any value between Y-0.5 and Y+0.5 is uniform (the same argument  for Y uniformly distributed between Y and Y+1). An example is an ADC measurement. The '<code>G</code> ' option is useful, if all Y variables are distributed according to some known Gaussian of standard deviation Sigma. For example when all Y's are experimental quantities measured with the same instrument with precision Sigma. The next figure shows the graphic output of this simple example of a profile histogram. </para>
 
-<programlisting language="c++">
-<code>{</code>
+<programlisting language="c++"><code>{</code>
 <emphasis role="italic"><code> // Create a canvas giving the coordinates and the size</code></emphasis>
 <code> TCanvas *c1 = new TCanvas("c1","Profile example",200,10,700,500);</code>
 <emphasis role="italic"><code>// Create a profile with the name, title, the number of bins, the </code></emphasis>
@@ -1395,8 +1334,7 @@ constructor above where <code>ylow</code> and <code>yup</code> are specified.</p
 <code>     gRandom-&gt;Rannor(px,py);</code>
 </programlisting>
 
-<programlisting language="c++">
-<code>     pz = px*px + py*py;</code>
+<programlisting language="c++"><code>     pz = px*px + py*py;</code>
 <code>     hprof-&gt;Fill(px,pz,1);</code>
 <code>  }</code>
 <code>  hprof-&gt;Draw();</code>
@@ -1425,8 +1363,7 @@ constructor above where <code>ylow</code> and <code>yup</code> are specified.</p
 <title>Create a Histogram from a Profile</title>
 <para>To create a regular histogram from a profile histogram, use the method <emphasis role="bold"><code>TProfile</code></emphasis><code>::ProjectionX</code> .This example instantiates a <emphasis role="bold"><code>TH1D</code></emphasis> object by copying the <code>TH1D</code> piece of <emphasis role="bold"><code>TProfile</code></emphasis>.</para>
 
-<programlisting language="c++">
-<code>TH1D *sum = myProfile.ProjectionX()</code>
+<programlisting language="c++"><code>TH1D *sum = myProfile.ProjectionX()</code>
 </programlisting>
 
 <para>You can do the same with a 2D profile using the method <emphasis role="bold"><code>TProfile2D</code></emphasis><code>::ProjectionXY</code>.</para>
@@ -1451,8 +1388,7 @@ contents (capital letters) and the values displayed (small letters) of the eleme
 <listitem><para><code>L[i,j]</code> contains the number of entries in the bin j</para></listitem>
 <listitem><para><code>e[j]</code> or <code>s[j]</code> will be the resulting error depending on the selected option. See “Build Options“.</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-<code>E[i,j]  =  sum z</code>
+<programlisting language="c++"><code>E[i,j]  =  sum z</code>
 <code>L[i,j]  =  sum l</code>
 <code>h[i,j]  =  H[i,j ] / L[i,j]</code>
 <code>s[i,j]  =  sqrt[E[i,j] / L[i,j]- h[i,j]**2]</code>
@@ -1462,8 +1398,7 @@ contents (capital letters) and the values displayed (small letters) of the eleme
 <para>In the special case where <code>s[i,j] </code>is zero, when there is only one entry per cell, <code>e[i,j]</code> is computed from the average
 of the <code>s[i,j]</code> for all cells. This approximation is used to keep the cell during a fit operation.</para>
 
-<programlisting language="c++">
-<code>{</code>
+<programlisting language="c++"><code>{</code>
 <emphasis role="italic"><code> // Creating a Canvas and a TProfile2D</code></emphasis>
 <code>  TCanvas *c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);</code>
 <code>  hprof2d  = new TProfile2D("hprof2d","Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);</code>
@@ -1503,8 +1438,7 @@ of the <code>s[i,j]</code> for all cells. This approximation is used to keep the
 
 <para/>
 
-<programlisting language="c++">
-void hist3d() {
+<programlisting language="c++">void hist3d() {
 TH3D *h3=new TH3D(« h3 », »h3 »,20,-2,2,20,-2,2,20,0,4);
 Double_t x,y,z;
 for (Int_t i=0; i&lt;10000; i++) {
@@ -1521,8 +1455,7 @@ h3-&gt;Draw(“iso”);
 <sect1>
 <title>3D Implicit Functions</title>
 
-<programlisting language="c++">
-<code>TF3 *fun3 = new TF3(“fun3”, “sin(x*x+y*y+z*z-36”,-2,2,-2,2,-2,2);</code>
+<programlisting language="c++"><code>TF3 *fun3 = new TF3(“fun3”, “sin(x*x+y*y+z*z-36”,-2,2,-2,2,-2,2);</code>
 <code>Fun3-&gt;Draw();</code>
 </programlisting>
 
@@ -1550,8 +1483,7 @@ h3-&gt;Draw(“iso”);
 <listitem><para>- <code>%frac</code> : to print the relative fraction of this slice</para></listitem>
 <listitem><para>- <code>%perc</code> : to print the % of this slice</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-mypie-&gt;SetLabelFormat("%txt (%frac)");
+<programlisting language="c++">mypie-&gt;SetLabelFormat("%txt (%frac)");
 </programlisting>
 
 <para>See the macro <code>$ROOTSYS/tutorials/graphics/piechart.C</code>.</para>
@@ -1597,8 +1529,7 @@ mypie-&gt;SetLabelFormat("%txt (%frac)");
 </para>
 <para>To see the differences do:</para>
 
-<programlisting language="c++">
-TFile f("hsimple.root");
+<programlisting language="c++">TFile f("hsimple.root");
 hpx-&gt;Draw("BAR1");        <emphasis role="italic"><code>// non ntuple histogram</code></emphasis>
 ntuple-&gt;Draw("px");       <emphasis role="italic"><code>// ntuple histogra</code></emphasis>m
 </programlisting>
@@ -1646,8 +1577,7 @@ ntuple-&gt;Draw("px");       <emphasis role="italic"><code>// ntuple histogra</c
 <para>Rebinning Tab: </para>
 <para>The Rebinning tab has two different layouts. One is for a histogram that is not drawn from an ntuple; the other one is available for a histogram, which is drawn from an ntuple. In this case, the rebin algorithm can create a rebinned histogram from the original data i.e. the ntuple. To see the differences do for example:</para>
 
-<programlisting language="c++">
-TFile f("hsimple.root");
+<programlisting language="c++">TFile f("hsimple.root");
 hpxpy-&gt;Draw("Lego2");              // non ntuple histogram
 ntuple-&gt;Draw("px:py","","Lego2");  // ntuple histogram
 </programlisting>
