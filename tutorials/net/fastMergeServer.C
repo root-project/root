@@ -59,7 +59,10 @@ void fastMergeServer(bool cache = false) {
    merger.SetPrintLevel(0);
 
    enum StatusKind {
-      kStartConnection = 0
+      kStartConnection = 0,
+      kProtocol = 1,
+      
+      kProtocolVersion = 1
    };
    if (cache) new TFileCacheWrite(merger.GetOutputFile(),32*1024*1024);
    while (1) {
@@ -76,6 +79,7 @@ void fastMergeServer(bool cache = false) {
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
             client->Send(clientCount, kStartConnection);
+            client->Send(kProtocolVersion, kProtocol);
             ++clientCount;
             mon->Add(client);
             printf("Accept %d connections\n",clientCount);
