@@ -2,6 +2,8 @@
 <hr/> 
 <a name="tree"></a> 
 <h3>Tree Libraries</h3>
+
+
 <h4>TEntryListArray: a list of entries and subentries in a TTree or TChain</h4>
 
 TEntryListArray is an extension of TEntryList, used to hold selected entries and subentries (sublists) for when the user has a TTree with containers (vectors, arrays, ...).
@@ -51,3 +53,49 @@ The class derives from TEntryList and can be used basically in the same way. Thi
   <li> RemoveSubListForEntry: to remove the sublist corresponding to the given entry
   <li> SetEntry: to get / set a sublist for the given entry </ul>
 </ol>  
+
+
+<h4>Others changes</h4>
+
+<ul>
+<li>Reduced the memory used by a TTree in half by refactoring the code reading and writing the TBasket data; 
+A single transient buffer holding the compressed data is  now managed by TTree (and could be made thread local)
+rather than having one per TBranch.
+</li>
+<li>Updated TBranchElement::Unroll to no longer split a base class
+that can not be split (i.e. respect the information returned
+by TStreamerElement::CannotSplit (and thus TClass::CanSplit).
+
+This disabling is currently _not_ done automatically for backward compatibility reasons and because
+  <ul>
+    <li>Without TClass::SetCanSplit there was no way to 
+        force the splitting (short of setting the split level lower)</li>
+    <li>Some classes still requires a custom streamer solely to
+        read older data files (for example for file written before
+        the advent of StreamerInfo) and are such not necessary to 
+        be used when writting (and schema evolution rules can not
+        yet be used in this case).</li>
+  </ul>
+</li>
+<li>Allowed removing branches when cloning a TNtuple.
+</li>
+<li>Added an option value ("cachedbranches") to the Print() function of TTreeCache to be able to print the list of cached branches.
+</li>
+<li>Made the ownership of the TBranch by fBranch clearer (and thus allow the 'reuse' of TTree object without memory leak)
+</li>
+<li>Introduced GetLeaf(branchname,leafname) used in TTreeFormula to avoid ambiguity in the syntax introduced by too many slashes
+</li>
+<li>Improved performance of <tt>TTree::GetEntry</tt>.  With this changes the 'overhead'
+compare to protobuf goes from 48% to 24%. (This does not include the
+cost of the file opening which can be comparatively large for small
+files.  For the example used in the comparison the cost <tt>TFile::Open</tt> is 8% of the cost
+of 100000 calls to <tt>TTree::GetEntry</tt>)
+</li>
+<li>Prevented the use of non-existent memory when reading in an object that is part of an STL collection and which used 
+to contains an embedded object (and this data member has been removed).
+</li>
+<li>Now properly recognize a TClonesArray data member even if the requested type was a typedef (to TClonesArray) that is in a namespace (for example edm::Event::ContaierType).
+</li>
+</ul>
+
+

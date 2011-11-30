@@ -3,12 +3,57 @@
 <a name="core"></a> 
 <h3>Core Libraries</h3>
 
+
+<h4>TClonesArray</h4>
+
+<ul>
+<li>Introduce <tt>TClonesArray::ConstructedAt</tt> which
+always returns an already constructed object.   If the slot is being used for the
+first time, it calls the default constructor otherwise it returns the object as 
+is (unless a string is passed as the 2nd argument to the function in which case,
+it also calls Clear(second_argument) on the object).
+This allows to replace code like:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   for (int i = 0; i < ev->Ntracks; i++) {
+       new(a[i]) TTrack(x,y,z,...);
+       ...
+       ...
+   }
+   ...
+   a.Delete(); // or a.Clear("C")
+</pre>
+with the simpler and more efficient:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   for (int i = 0; i < ev->Ntracks; i++) {   
+       TTrack *track = (TTrack*)a.ConstructedAt(i);
+       track->Set(x,y,z,....);
+       ...                                                          
+       ...                                                          
+   }                                                               
+   ...                                                             
+   a.Clear();
+</pre>
+even in case where the TTrack class allocates memory.
+</li>
+<li>TClonesArray: update ExpandCreateFast to also reset the non-used slots
+so that calling Clear (which does too much) is no longer necessary
+when using ExpandCreateFast.
+</li>
+</ul>
+
 <h4>New Thread Pool class</h4>
 <ul>
 <li>
 A first version of TThreadPool class has been introduced.
 This class implements <a href="http://en.wikipedia.org/wiki/Thread_pool_pattern">a Thread Pool pattern</a>.
 So far it supports only one type of queue - FIFO.
+</li>
+</ul>
+
+<h4>Thread library</h4>
+
+<ul>
+<li>Reduces risk of internal dead lock by using a private internal lock to protect the internals of TThread, rather than using TThread::Lock
+</li>
+<li>New header TThreadSlots.h to centralize and formalize the use of the TThread local memory slots amongst the ROOT packages.
 </li>
 </ul>
 
@@ -24,11 +69,19 @@ is zero and they now properly support tab completion.</li>
 are now thread local.</li>
 </ul>
 
-<h4>Dictionaries</h4>
+<h4>Meta</h4>
 <ul>
 <li>The new interface <tt>TDictionary::GetDictionary(const char*)</tt> offers a
 single entry point to query the type based on its name, conveniently combining
 TDataType and TClass queries. It does name normalization (removing std etc).
+</li>
+<li>Add the ability to explicitly forbid (or allow) the splitting of a class
+(<tt>TClass::SetSplit</tt>) so that user can inforce the use of a custom streamer in all possible split cases.
+</li>
+<li>Resolve several issues with the creation of StreamerInfo for abstract classes.
+</li>
+
+<li>When looking for the value corresponding to an enum type, skip global that are not enums. (This improves the speed of TFile::Open by 60%).
 </li>
 </ul>
 
@@ -38,3 +91,13 @@ TDataType and TClass queries. It does name normalization (removing std etc).
 The Modern style has now a transparent background for the histogram title.
 </li>
 </ul>
+
+<h4>Misc.</h4>
+<ul>
+<li>In the root executable, auto-detect command line arguments that are local root files even if their name does not end with ".root"
+</li>
+<li>If home directory is not correctly set in pw file or user is not known, use the HOME shell variable to find the desired home directory.
+</li>
+</ul>
+
+
