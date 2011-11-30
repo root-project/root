@@ -69,6 +69,7 @@ namespace RooStats {
         fReuseNll = false;
 	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+        fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
 	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
      }
@@ -82,6 +83,8 @@ namespace RooStats {
        fReuseNll = false;
        fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+       // avoid default tolerance to be too small (1. is default in RooMinimizer)
+       fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
      virtual ~ProfileLikelihoodTestStat() {
@@ -98,6 +101,7 @@ namespace RooStats {
 
      void SetMinimizer(const char* minimizer){ fMinimizer=minimizer;}
      void SetStrategy(Int_t strategy){fStrategy=strategy;}
+     void SetTolerance(double tol){fTolerance=tol;}
      void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
     
      // Main interface to evaluate the test statistic on a dataset
@@ -129,10 +133,11 @@ namespace RooStats {
       Bool_t fReuseNll ;
       TString fMinimizer;
       Int_t fStrategy;
+      Double_t fTolerance; 
       Int_t fPrintLevel;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,5)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,6)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 
