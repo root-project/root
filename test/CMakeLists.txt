@@ -13,10 +13,6 @@ include(${ROOT_USE_FILE})
 include_directories(${ROOT_INCLUDE_DIRS})
 
 
-if(NOT CMAKE_GENERATOR MATCHES Makefiles)
-  set(cfg $<CONFIGURATION>/)
-endif() 
-
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 
@@ -119,8 +115,8 @@ ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED")
 
 #--stressTMVA--------------------------------------------------------------------------------------
 if(ROOT_tmva_FOUND)
-  #  ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
-  #  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA)  
+  ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
+  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA)  
 endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
@@ -137,41 +133,40 @@ endif()
 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
-  #TODO-- Need to resolve the fact that RootFit not 'exported' due to allow the possibility to build standalone 
   ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED")  
 endif()
 
-#--stressFit----------------------------------------------------------------------------------------
+#--stressFit---------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED")
 
-#--stressHitoFit----------------------------------------------------------------------------------------
+#--stressHitoFit-----------------------------------------------------------------------------
 if(ROOT_unuran_FOUND)
   ROOT_EXECUTABLE(stressHistoFit stressHistoFit.cxx LIBRARIES MathCore Matrix Unuran Tree Gpad)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED")
 endif()
 
-#--stressEntryList----------------------------------------------------------------------------------------
+#--stressEntryList---------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressEntryList stressEntryList.cxx LIBRARIES MathCore Tree Hist)
 ROOT_ADD_TEST(test-stressentrylist COMMAND stressEntryList -b FAILREGEX "FAILED")
 
-#--stressIterators----------------------------------------------------------------------------------------
+#--stressIterators---------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressIterators stressIterators.cxx LIBRARIES Core)
 ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 
-#--stressInterpreter----------------------------------------------------------------------------------------
+#--stressInterpreter-------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
-#configure_file(stressInterpreter.cxx ${cfg}stressInterpreter.cxx @COPY_ONLY)
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
-              PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx ${cfg}stressInterpreter.cxx
+              PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
+                                              $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               FAILREGEX "FAILED|Error")
 
-#--stressHepix----------------------------------------------------------------------------------------
+#--stressHepix-------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED")
 
-#--stressProof----------------------------------------------------------------------------------
+#--stressProof-------------------------------------------------------------------------------
 if(NOT WIN32)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
   ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// FAILREGEX "FAILED")  
