@@ -212,8 +212,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       RooArgSet* fAltParameters;
       bool fFirstEval;
 
-      RooNLLVar* fNllNull ;
-      RooNLLVar* fNllAlt ;
+      RooNLLVar* fNllNull ;  //! transient copy of the null NLL
+      RooNLLVar* fNllAlt ; //!  transient copy of the alt NLL
       static Bool_t fAlwaysReuseNll ;
       Bool_t fReuseNll ;
 
