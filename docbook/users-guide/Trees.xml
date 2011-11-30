@@ -431,7 +431,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 
 <sect1>
 <title>Adding a TBranch to Hold an Object</title>
-<para>To write a branch to hold an event object, we need to load the definition of the <code>Event</code> class, which is in <code>$ROOTSYS/test/libEvent.so</code>         <code>(if it doesn’t exist type make in $ROOTSYS/test). </code>An object can be saved in a tree if a ROOT dictionary for it class has been generated and loaded. </para>
+<para>To write a branch to hold an event object, we need to load the definition of the <code>Event</code> class, which is in <code>$ROOTSYS/test/libEvent.so</code>         <code>(if it doesn’t exist type make in $ROOTSYS/test). </code>An object can be saved in a tree if a ROOT dictionary for its class has been generated and loaded. </para>
 
 <programlisting language="c++">
 <code>root[] </code><emphasis role="bold"><code>.L libEvent.so</code></emphasis>
@@ -457,7 +457,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 
 <sect2>
 <title>Setting the Split-level</title>
-<para>To split a branch means to create a sub-branch for each data member in the object. The split-level can be set to 0 to disable splitting or it can be a set to a number between 1 and 99 indicating the depth of splitting.</para>
+<para>To split a branch means to create a sub-branch for each data member in the object. The split-level can be set to 0 to disable splitting or it can be set to a number between 1 and 99 indicating the depth of splitting.</para>
 <para>If the split-level is set to zero, the whole object is written in its entirety to one branch. The <emphasis role="bold"><code>TTree</code></emphasis> will look like the one on the right, with one branch and one leaf holding the entire event object. </para>
 <informaltable>
 <tgroup cols="2">
