@@ -2478,17 +2478,25 @@ TGeoVolumeAssembly::ThreadData_t::~ThreadData_t()
 TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
-   TThread::Lock();
    if (tid >= fThreadSize)
    {
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
+      TThread::Lock();
+      if (tid >= fThreadSize)
+      {
+         fThreadData.resize(tid + 1);
+         fThreadSize = tid + 1;
+      }
+      TThread::UnLock();
    }
    if (fThreadData[tid] == 0)
    {
-      fThreadData[tid] = new ThreadData_t;
+      TThread::Lock();
+      if (fThreadData[tid] == 0)
+      {
+         fThreadData[tid] = new ThreadData_t;
+      }
+      TThread::UnLock();
    }
-   TThread::UnLock();
    return *fThreadData[tid];
 }
 

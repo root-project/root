@@ -83,29 +83,37 @@ TGeoXtru::ThreadData_t::~ThreadData_t()
 TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
-   TThread::Lock();
    if (tid >= fThreadSize)
    {
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
+      TThread::Lock();
+      if (tid >= fThreadSize)
+      {
+         fThreadData.resize(tid + 1);
+         fThreadSize = tid + 1;
+      }
+      TThread::UnLock();
    }
    if (fThreadData[tid] == 0)
    {
-      fThreadData[tid] = new ThreadData_t;
-      ThreadData_t &td = *fThreadData[tid];
+      TThread::Lock();
+      if (fThreadData[tid] == 0)
+      { 
+         fThreadData[tid] = new ThreadData_t;
+         ThreadData_t &td = *fThreadData[tid];
 
-      td.fXc = new Double_t [fNvert];
-      td.fYc = new Double_t [fNvert];
-      memcpy(td.fXc, fX, fNvert*sizeof(Double_t));
-      memcpy(td.fYc, fY, fNvert*sizeof(Double_t));
-      td.fPoly = new TGeoPolygon(fNvert);
-      td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
-      td.fPoly->FinishPolygon();
-      if (tid == 0 && td.fPoly->IsIllegalCheck()) {
-         Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-      }      
+         td.fXc = new Double_t [fNvert];
+         td.fYc = new Double_t [fNvert];
+         memcpy(td.fXc, fX, fNvert*sizeof(Double_t));
+         memcpy(td.fYc, fY, fNvert*sizeof(Double_t));
+         td.fPoly = new TGeoPolygon(fNvert);
+         td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
+         td.fPoly->FinishPolygon();
+         if (tid == 0 && td.fPoly->IsIllegalCheck()) {
+            Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
+         }      
+      }
+      TThread::UnLock();
    }
-   TThread::UnLock();
    return *fThreadData[tid];
 }
 
