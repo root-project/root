@@ -2256,15 +2256,30 @@ void RefreshPhysicalNodes(Bool_t lock = kTRUE)
 
 <sect1>
 <title>Geometry I/O</title>
-<para>Once geometry is successfully built, it can be saved in a root file or as C++ macro by calling: </para>
+<para>Once geometry is successfully built, it can be saved in a root file, as C++ macro or as GDML
+            file by calling: </para>
 
 <programlisting language="c++">
-TGeoManager::Export(const char *filename,const char*keyname="",Option_t *opt="v")
+TGeoManager::Export(const char *filename,const char*keyname="",Option_t *opt="vg")
 </programlisting>
 <itemizedlist>
-<listitem><para><code>Filename</code>is the name of the file to be written (mandatory). Depending on the extension of the file, the geometry is exported either as ,root file or .C(.cxx) macro. </para></listitem>
+<listitem><para><code>Filename</code>is the name of the file to be written (mandatory). Depending on the
+                    extension of the file, the geometry is exported either as ,root file or .C(.cxx)
+                    macro or GDML file in case extension is .gdml. </para></listitem>
 <listitem><para><code>keyname</code>is the name of the key in the file (default "") </para></listitem>
-<listitem><para><code>opt</code> = <code>"v"</code>          is an export voxelization (default), otherwise voxelization is recomputed after loading the geometry </para></listitem>
+<listitem><para><code>opt</code> = <code>"v"</code> is an export voxelization (default), otherwise
+                    voxelization is recomputed after loading the geometry, <code>"g"</code> this
+                    option (default) is taken into account only  for exporting to gdml file and it
+                    ensures compatibility with Geant4 (e.g. it adds extra plane to incorrectly set
+                    polycone, it checks whether offset of Phi division is in (-360;0> range, ...),
+                    for this gdml export there are two more option, that are not set by default:
+                        <code>"f"</code>  and <code>"n"</code>. If none of this two options are set,
+                    then names of solids and volumes in resulting gdml file will have incremental
+                    suffix (e.g. TGeoBBox_0x1, TGeoBBox_0x2, ...). If <code>"f"</code> option is set
+                    then then suffix will contain pointer of object (e.g. TGeoBBox_0xAAAAA01, ...).
+                    Finally if option <code>"n"</code>  is set then no suffix will be added, though
+                    in this case uniqness of the names is not ensured and it can cause that file
+                    will be invalid.</para></listitem>
 </itemizedlist>
 <para>Loading geometry from a root file can be done in the same way as for any other ROOT object, but a static method is also provided: </para>
 
@@ -2278,8 +2293,9 @@ TGeoManager::Import(const char *filename,const char *keyname="",Option_t *opt=""
 <code>// Writing to a file geometry definition ending with:</code>
 root[] <emphasis role="bold"><code>gGeoManager</code></emphasis><emphasis role="bold"><code>-&gt;CloseGeometry();</code></emphasis>
 <code>// geometry is ready</code>
-root[] <emphasis role="bold"><code>gGeoManager-&gt;Export("MyGeom.root")</code></emphasis>;  <code>// file MyGeom.root produced</code>
-root[] <emphasis role="bold"><code>gGeoManager-&gt;Export(“MyGeom.C”);</code></emphasis><emphasis role="italic"><code>      // C++ macro MyGeom.C produced</code></emphasis>
+root[] <emphasis role="bold"><code>gGeoManager-&gt;Export("MyGeom.root")</code></emphasis>; <emphasis role="italic"><code>// file MyGeom.root produced</code></emphasis>
+root[] <emphasis role="bold"><code>gGeoManager-&gt;Export(“MyGeom.C”);</code></emphasis><emphasis role="italic"><code>    // C++ macro MyGeom.C produced</code></emphasis>
+root[] <emphasis role="bold"><code>gGeoManager-&gt;Export(“MyGeom.gdml”);</code></emphasis><emphasis role="italic"><code> // GDML file MyGeom.gdml produced</code></emphasis>
 root[] <emphasis role="bold"><code>myVolume-&gt;SaveAs(“MyVolume.C”);</code></emphasis>      <emphasis role="italic">// C++ macro for the branch starting</emphasis>
 <emphasis role="italic"><code>                                           // with MyVolume</code></emphasis>
 <code>// Reading from a file</code>
@@ -2309,7 +2325,18 @@ top-&gt;AddNode(module2, 1, new TGeoTranslation(0,0,-100));
 <emphasis role="italic"><code>// One should close himself the geometry</code></emphasis>
 geom-&gt;CloseGeometry();
 </programlisting>
-
+<sect2>
+<title>GDML</title>
+<para>Few lines above word GDML was used. GDML stands for <emphasis role="bold">G</emphasis>eometry
+                    <emphasis role="bold">D</emphasis>escription <emphasis role="bold"
+                >M</emphasis>arkup <emphasis role="bold">L</emphasis>anguage. It is an
+                application-indepedent geometry description format based on XML. It is mainly used
+                for geometry interchange between ROOT and Geant4 framework. More details about this
+                project can be found http://gdml.web.cern.ch. This feature (importing/exporting
+                from/to gdml file format) is disabled by default in ROOT installation. To enable
+                this feature add <code>--enable-gdml</code> option to <code>./configure</code>
+                script call.</para>
+</sect2>
 </sect1>
 
 <sect1>
