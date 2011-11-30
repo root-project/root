@@ -2,14 +2,10 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-#---The following is needed becuase client codes of TMVA (in ROOT itself) assumes to find header files under /TVMA
-#execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMVA)
-
-if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-  cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-  project(TMVA)
-  include(${ROOTSYS}/cmake/modules/StandaloneBuild.cmake)
-endif()
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+project(TMVA)
+find_package(ROOT REQUIRED)
+include(${ROOT_USE_FILE})
 
 ROOT_USE_PACKAGE(math/mathcore)
 ROOT_USE_PACKAGE(math/minuit)
@@ -58,7 +54,7 @@ ROOT_GENERATE_DICTIONARY(G__TMVA4 ${theaders4} LINKDEF LinkDef4.h)
 ROOT_GENERATE_ROOTMAP(TMVA LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
                            DEPENDENCIES RIO Hist Matrix Tree Graf Gpad TreePlayer MLP Minuit MathCore XMLIO)
 
-ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA1.cxx G__TMVA2.cxx G__TMVA3.cxx G__TMVA4.cxx CMAKENOEXPORT LIBRARIES Core Cint 
+ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA1.cxx G__TMVA2.cxx G__TMVA3.cxx G__TMVA4.cxx LIBRARIES Core Cint 
                     DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION include/TMVA
