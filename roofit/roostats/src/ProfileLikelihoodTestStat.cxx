@@ -183,9 +183,11 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
 
    RooMinimizer minim(*fNll);
    minim.setStrategy(fStrategy);
+   minim.setEps(fTolerance);
    //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1 + an extra -1 
    int level = (fPrintLevel == 0) ? -1 : fPrintLevel -2;
    minim.setPrintLevel(level);
+   minim.setEps(fTolerance);
    // this cayses a memory leak
    minim.optimizeConst(true); 
    for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {

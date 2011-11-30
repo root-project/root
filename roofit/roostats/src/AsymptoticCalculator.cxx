@@ -251,6 +251,9 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        
        RooMinimizer minim(*nll);
        minim.setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+       // use tolerance - but never smaller than 1 (default in RooMinimizer)
+       double tol =  ROOT::Math::MinimizerOptions::DefaultTolerance();
+       if (tol > 1.)  minim.setEps( tol );
        //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;

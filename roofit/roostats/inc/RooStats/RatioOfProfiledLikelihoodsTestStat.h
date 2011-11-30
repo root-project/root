@@ -159,6 +159,10 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       fNullProfile.SetStrategy(strategy);  
       fAltProfile.SetStrategy(strategy);  
    }
+   void SetTolerance(Double_t tol){
+      fNullProfile.SetTolerance(tol);  
+      fAltProfile.SetTolerance(tol);  
+   }
    void SetPrintLevel(Int_t printLevel){
       fNullProfile.SetPrintLevel(printLevel);  
       fAltProfile.SetPrintLevel(printLevel);  
