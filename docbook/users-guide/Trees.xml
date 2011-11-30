@@ -23,8 +23,7 @@
 <title>A Simple TTree</title>
 <para>This script builds a <emphasis role="bold"><code>TTree</code></emphasis>         from an ASCII file containing statistics about the staff at CERN. This script, <code>staff.C</code> and its input file <code>staff.dat</code> are in <code>$ROOTSYS/tutorials/tree</code>.</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 <emphasis role="italic"><code>// example of macro to read data from an ascii file and</code></emphasis>
 <emphasis role="italic"><code>// create a root file with an histogram and a TTree</code></emphasis>
 <code>   gROOT-&gt;Reset();</code>
@@ -78,8 +77,7 @@
 <title>Show an Entry with TTree::Show</title>
 <para>An easy way to access one entry of a tree is the use the <emphasis role="bold"><code>TTree</code></emphasis><code>::Show</code> method. For example to look at the 10th entry in the <code>staff.root</code> tree:</para>
 
-<programlisting language="c++">
-<code>root[]</code> <emphasis role="bold"><code>TFile f("staff.root")</code></emphasis>
+<programlisting language="c++"><code>root[]</code> <emphasis role="bold"><code>TFile f("staff.root")</code></emphasis>
 <code>root[]</code> <emphasis role="bold"><code>T-&gt;Show(10)</code></emphasis>
 <code>======&gt; EVENT:10</code>
 <code> Category        = 361</code>
@@ -101,8 +99,7 @@
 <title>Print the Tree Structure with TTree::Print</title>
 <para>A helpful command to see the tree structure meaning the number of entries, the branches and the leaves, is <emphasis role="bold"><code>TTree</code></emphasis><code>::Print</code>.</para>
 
-<programlisting language="c++">
-<code>root[]</code> <emphasis role="bold"><code>T</code></emphasis><emphasis role="bold"><code>-&gt;Print()</code></emphasis>
+<programlisting language="c++"><code>root[]</code> <emphasis role="bold"><code>T</code></emphasis><emphasis role="bold"><code>-&gt;Print()</code></emphasis>
 *****************************************************************************
 <code>*Tree    :T         : staff data from ascii file                            *</code>
 <code>*Entries :3354      : Total = 245417 bytes  File  Size =              59945</code><code>*</code>
@@ -120,8 +117,7 @@
 <title>Scan a Variable the Tree with TTree::Scan</title>
 <para>The <emphasis role="bold"><code>TTree</code></emphasis><code>::Scan</code> method shows all values of the list of leaves separated by a colon. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Scan("Cost:Age:C</code></emphasis><emphasis role="bold"><code>hildren")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Scan("Cost:Age:C</code></emphasis><emphasis role="bold"><code>hildren")</code></emphasis>
 <code>************************************************</code>
 <code>*    Row   *      Cost *       Age *  Children *</code>
 <code>************************************************</code>
@@ -148,15 +144,13 @@ root[] <emphasis role="bold"><code>T-&gt;Scan("Cost:Age:C</code></emphasis><emph
 </para>
 </figure>
 
-<programlisting language="c++">
-<code>root[]</code><emphasis role="bold"><code> TFile f("staff.root")</code></emphasis>
+<programlisting language="c++"><code>root[]</code><emphasis role="bold"><code> TFile f("staff.root")</code></emphasis>
 <code>root[]</code><emphasis role="bold"><code> T-&gt;StartViewer()</code></emphasis>
 </programlisting>
 
 <para>If you want to start a tree viewer without a tree, you need to load the tree player library first:</para>
 
-<programlisting language="c++">
-<code>root[]</code><emphasis role="bold"><code> gSystem-&gt;Load("libTreeViewer.so")</code></emphasis>
+<programlisting language="c++"><code>root[]</code><emphasis role="bold"><code> gSystem-&gt;Load("libTreeViewer.so")</code></emphasis>
 <code>root[]</code><emphasis role="bold"><code> new TTreeViewer()</code></emphasis>
 </programlisting>
 
@@ -216,16 +210,14 @@ root[] <emphasis role="bold"><code>T-&gt;Scan("Cost:Age:C</code></emphasis><emph
 
 <para>To create a <emphasis role="bold"><code>TTree</code></emphasis> we use its constructor.  Then we design our data layout and add the branches. A tree can be created by giving a name and title:</para>
 
-<programlisting language="c++">
-<code>TTree t("MyTree","Example Tree")</code>
+<programlisting language="c++"><code>TTree t("MyTree","Example Tree")</code>
 </programlisting>
 
 <sect2>
 <title>Creating a Tree from a Folder Hierarchy</title>
 <para>An alternative way to create a tree and organize it is to use folders (see “Folders and Tasks”). You can build a folder structure  and create a tree with branches for each of the sub-folders: </para>
 
-<programlisting language="c++">
-<code>TTree folder_tree("MyFolderTree","/MyFolder")</code>
+<programlisting language="c++"><code>TTree folder_tree("MyFolderTree","/MyFolder")</code>
 </programlisting>
 
 <para>The second argument <code>"/MyFolder" </code>is the top folder, and the "/" signals the <emphasis role="bold"><code>TTree</code></emphasis> constructor that this is a folder not just the title. You fill the tree by placing the data into the folder structure and calling <emphasis role="bold"><code>TTree</code></emphasis><code>::Fill</code>. </para>
@@ -234,8 +226,7 @@ root[] <emphasis role="bold"><code>T-&gt;Scan("Cost:Age:C</code></emphasis><emph
 <sect2>
 <title>Tree and TRef Objects</title>
 
-<programlisting language="c++">
-MyTree-&gt;BranchRef();
+<programlisting language="c++">MyTree-&gt;BranchRef();
 </programlisting>
 
 <para>This call requests the construction of an optional branch supporting table of references (<emphasis role="bold"><code>TRefTable</code></emphasis>). This branch (<emphasis role="bold"><code>TBranchRef</code></emphasis>) will keep all the information needed to find the branches containing referenced objects at each <emphasis role="bold"><code>Tree</code></emphasis><code>::Fill</code>, the branch numbers containing the referenced objects are saved in the table of references. When the Tree header is saved (via <emphasis role="bold"><code>TTree</code></emphasis><code>::Write</code> for example), the branch is saved, keeping the information with the pointers to the branches having referenced objects. Enabling this optional table, allow <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> to automatically load the branches needed to dereference a <emphasis role="bold"><code>TRef</code></emphasis> (or <emphasis role="bold"><code>TRefArray</code></emphasis>) object.</para>
@@ -250,14 +241,12 @@ MyTree-&gt;BranchRef();
 <title>Trees with Circular Buffers</title>
 <para>When a <emphasis role="bold"><code>TTree</code></emphasis> is memory resident, you set it up so that it retains retain only the last few entries. For example, this can be very useful for monitoring purpose.</para>
 
-<programlisting language="c++">
-void TTree::SetCircular(Long64_t maxEntries)
+<programlisting language="c++">void TTree::SetCircular(Long64_t maxEntries)
 </programlisting>
 
 <para>where <code>maxEntries</code> is the maximum number of entries to be kept in the buffers. When the number of entries exceeds this value, the first entries in the <emphasis role="bold"><code>Tree</code></emphasis> are deleted and the buffers used again. An example of a script using a circular buffer is shown below:</para>
 
-<programlisting language="c++">
-void circular() {
+<programlisting language="c++">void circular() {
 gROOT-&gt;cd(); //make sure that the Tree is memory resident
 TTree *T = new TTree("T","test circular buffers");
 TRandom r;
@@ -301,8 +290,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>User Info Attached to a TTree Object</title>
 <para>The function <emphasis role="bold"><code>TTree</code></emphasis><code>::GetUserInfo()</code> allows adding any object defined by a user to the tree that is not depending on the entry number. For example:</para>
 
-<programlisting language="c++">
-<code>tree-&gt;GetUserInfo()-&gt;Add(myruninfo);</code>
+<programlisting language="c++"><code>tree-&gt;GetUserInfo()-&gt;Add(myruninfo);</code>
 </programlisting>
 
 </sect2>
@@ -311,8 +299,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Indexing a Tree</title>
 <para>Use <emphasis role="bold"><code>TTree</code></emphasis><code>::BuildIndex()</code>, to build an index table using expressions depending on the value in the leaves. </para>
 
-<programlisting language="c++">
-<code>tree-&gt;BuildIndex(majorname, minorname);</code>
+<programlisting language="c++"><code>tree-&gt;BuildIndex(majorname, minorname);</code>
 </programlisting>
 
 <para>The index is built in the following way:</para>
@@ -325,8 +312,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 </itemizedlist>
 <para>Once the index is computed, using the <emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntryWithIndex(majornumber, minornumber)</code>         one entry can be retrieved. Example:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// to create an index using leaves Run and Event</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// to create an index using leaves Run and Event</code></emphasis>
 <code>tree.BuildIndex("Run","Event");</code>
 <emphasis role="italic"><code>// to read entry corresponding to Run=1234 and Event=56789</code></emphasis>
 <code>tree.GetEntryWithIndex(1234,56789);</code>
@@ -335,8 +321,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <para>Note that <code>majorname</code> and <code>minorname</code> may be expressions using original tree variables e.g.: "<code>run-90000</code>", "<code>event +3*xx</code>". In case an expression is specified, the equivalent expression must be computed when calling <code>GetEntryWithIndex()</code>. To build an index with only <code>majorname</code>, specify <code>minorname="0"</code> (default). </para>
 <para>Note that once the index is built, it can be saved with the <emphasis role="bold"><code>TTree</code></emphasis> object with:</para>
 
-<programlisting language="c++">
-<code>tree.Write();</code>     <emphasis role="italic"><code>//if the file has been open in "update" mode</code></emphasis>
+<programlisting language="c++"><code>tree.Write();</code>     <emphasis role="italic"><code>//if the file has been open in "update" mode</code></emphasis>
 </programlisting>
 
 <para>The most convenient place to create the index is at the end of the filling process just before saving the tree header. If a previous index was computed, it is redefined by this new call. </para>
@@ -354,8 +339,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Adding a Branch to Hold a List of Variables</title>
 <para><inlinemediaobject><imageobject><imagedata fileref="pictures/030000F9.png" width="58.45pt" depth="81.15pt"/></imageobject></inlinemediaobject>As in the very first example (<code>staff.root</code>) the data we want to save is a list of simple variables, such as integers or floats. In this case, we use the following <emphasis role="bold"><code>TTree</code></emphasis><code>::Branch</code> signature:</para>
 
-<programlisting language="c++">
-<code>tree-&gt;Branch("Ev_Branch",&amp;event,"temp/F:ntrack/I:nseg:nvtex:flag/i ");</code>
+<programlisting language="c++"><code>tree-&gt;Branch("Ev_Branch",&amp;event,"temp/F:ntrack/I:nseg:nvtex:flag/i ");</code>
 </programlisting>
 
 <para>The first parameter is the branch name. </para>
@@ -363,26 +347,22 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <para>The leaf name is NOT used to pick the variable out of the structure, but is only used as the name for the leaf.  This means that the list of variables needs to be in a structure in the order described in the third parameter. </para>
 <para>This third parameter is a string describing the leaf list. Each leaf has a name and a type separated by a "/" and it is separated from the next leaf by a "<code>:</code>".</para>
 
-<programlisting language="c++">
-&lt;Variable&gt;/&lt;type&gt;:&lt;Variable&gt;/&lt;type&gt;
+<programlisting language="c++">&lt;Variable&gt;/&lt;type&gt;:&lt;Variable&gt;/&lt;type&gt;
 </programlisting>
 
 <para>The example on the next line has two leafs: a floating-point number called temp and an integer named <code>ntrack</code>. </para>
 
-<programlisting language="c++">
-<code>"temp/F:ntrack/I:"</code>
+<programlisting language="c++"><code>"temp/F:ntrack/I:"</code>
 </programlisting>
 
 <para>The type can be omitted and if no type is given, the same type as the previous variable is assumed. This leaf list has three integers called <code>ntrack</code>, <code>nseg</code>, and <code>nvtex</code>.</para>
 
-<programlisting language="c++">
-<code>"ntrack/I:nseg:nvtex"</code>
+<programlisting language="c++"><code>"ntrack/I:nseg:nvtex"</code>
 </programlisting>
 
 <para>There is one more rule: when no type is given for the very first leaf, it becomes a <code>float</code> (F). This leaf list has three floats called <code>temp</code>, <code>mass</code>, and <code>px</code>.</para>
 
-<programlisting language="c++">
-<code>"temp:mass:px"</code>
+<programlisting language="c++"><code>"temp:mass:px"</code>
 </programlisting>
 
 <para>The symbols used for the type are:</para>
@@ -402,21 +382,18 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <para>The type is used for a byte count to decide how much space to allocate. The variable written is simply the block of bytes starting at the starting address given in the second parameter. It may or may not match the leaf list depending on whether or not the programmer is being careful when choosing the leaf address, name, and type. </para>
 <para>By default, a variable will be copied with the number of bytes specified in the type descriptor symbol. However, if the type consists of two characters, the number specifies the number of bytes to be used when copying the variable to the output buffer.  The line below describes <code>ntrack</code> to be written as a 16-bit integer (rather than a 32-bit integer).</para>
 
-<programlisting language="c++">
-"ntrack/I2"
+<programlisting language="c++">"ntrack/I2"
 </programlisting>
 
 <para>With this Branch method, you can also add a leaf that holds an entire array of variables. To add an array of floats use the <code>f[n]</code> notation when describing the leaf. </para>
 
-<programlisting language="c++">
-<code>Float_t  f[10];</code>
+<programlisting language="c++"><code>Float_t  f[10];</code>
 <code>tree-&gt;Branch("fBranch",f,"f[10]/F");</code>
 </programlisting>
 
 <para>You can also add an array of variable length:</para>
 
-<programlisting language="c++">
-<code>{</code>
+<programlisting language="c++"><code>{</code>
 <code>   TFile *f = new TFile("peter.root","recreate");</code>
 <code>   Int_t nPhot;</code>
 <code>   Float_t E[500];</code>
@@ -433,21 +410,18 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Adding a TBranch to Hold an Object</title>
 <para>To write a branch to hold an event object, we need to load the definition of the <code>Event</code> class, which is in <code>$ROOTSYS/test/libEvent.so</code>         <code>(if it doesn’t exist type make in $ROOTSYS/test). </code>An object can be saved in a tree if a ROOT dictionary for its class has been generated and loaded. </para>
 
-<programlisting language="c++">
-<code>root[] </code><emphasis role="bold"><code>.L libEvent.so</code></emphasis>
+<programlisting language="c++"><code>root[] </code><emphasis role="bold"><code>.L libEvent.so</code></emphasis>
 </programlisting>
 
 <para>First, we need to open a file and create a tree.</para>
 
-<programlisting language="c++">
-<code>root[] </code>    <emphasis role="bold"><code>TFile *f = new TFile("AFile.root","RECREATE")</code></emphasis>
+<programlisting language="c++"><code>root[] </code>    <emphasis role="bold"><code>TFile *f = new TFile("AFile.root","RECREATE")</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>TTree *tree = new TTree("T","A Root Tree")</code></emphasis>
 </programlisting>
 
 <para>We need to create a pointer to an <code>Event</code> object that will be used as a reference in the <emphasis role="bold"><code>TTree</code></emphasis><code>::Branch</code> method. Then we create a branch with the <emphasis role="bold"><code>TTree</code></emphasis><code>::Branch</code> method.</para>
 
-<programlisting language="c++">
-<code>root[]</code>    <emphasis role="bold"><code> Event *event = new Event()</code></emphasis>
+<programlisting language="c++"><code>root[]</code>    <emphasis role="bold"><code> Event *event = new Event()</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>tree-&gt;Branch("EventBranch","Event",&amp;event,32000,99)</code></emphasis>
 </programlisting>
 
@@ -502,8 +476,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <listitem><para>Abstract base classes are never split.</para></listitem>
 <listitem><para>All STL containers are supported.</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-<emphasis role="italic"><code>// STL vector of vectors of TAxis*</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// STL vector of vectors of TAxis*</code></emphasis>
 <code>vector&lt;vector&lt;TAxis *&gt; &gt;  fVectAxis;   </code>
 <emphasis role="italic"><code>// STL map of string/vector</code></emphasis>
 <code>map&lt;string,vector&lt;int&gt; &gt;  fMapString;  </code>
@@ -523,8 +496,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Exempt a Data Member from Splitting</title>
 <para>If you are creating a branch with an object and in general you want the data members to be split, but you want to exempt a data member from the split. You can specify this in the comment field of the data member:</para>
 
-<programlisting language="c++">
-<code>class Event : public TObject {</code>
+<programlisting language="c++"><code>class Event : public TObject {</code>
 <code>private:</code>
 <code>   EventHeader    fEvtHdr;     </code><emphasis role="italic"><code> //|| Don't split the header</code></emphasis>
 </programlisting>
@@ -540,8 +512,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Identical Branch Names</title>
 <para>When a top-level object (say <code>event</code>), has two data members of the same class the sub branches end up with identical names. To distinguish the sub branch we must associate them with the master branch by including a “<code>.</code>” (a dot) at the end of the master branch name. This will force the name of the sub branch to be <code>master.sub</code> branch instead of simply <code>sub</code> branch. For example, a tree has two branches <code>Trigger</code> and <code>MuonTrigger</code>, each containing an object of the same class (<code>Trigger</code>). To identify uniquely the sub branches we add the dot:</para>
 
-<programlisting language="c++">
-<code>tree-&gt;Branch("Trigger.","Trigger",&amp;b1,8000,1);</code>
+<programlisting language="c++"><code>tree-&gt;Branch("Trigger.","Trigger",&amp;b1,8000,1);</code>
 <code>tree-&gt;Branch("MuonTrigger.","Trigger",&amp;b2,8000,1);</code>
 </programlisting>
 
@@ -553,8 +524,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Adding a Branch with a Folder</title>
 <para>Use the syntax below to add a branch from a folder:</para>
 
-<programlisting language="c++">
-<code>tree-&gt;Branch("/aFolder");</code>
+<programlisting language="c++"><code>tree-&gt;Branch("/aFolder");</code>
 </programlisting>
 
 <para>This method creates one branch for each element in the folder. The method returns the total number of branches created.</para>
@@ -564,8 +534,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Adding a Branch with a Collection</title>
 <para>This <code>Branch</code> method creates one branch for each element in the collection.</para>
 
-<programlisting language="c++">
-<code>tree-&gt;Branch(*aCollection, 8000, 99);</code>
+<programlisting language="c++"><code>tree-&gt;Branch(*aCollection, 8000, 99);</code>
 <emphasis role="italic"><code>// Int_t TTree::Branch(TCollection *list, Int_t bufsize,Int_t splitlevel,</code></emphasis>
 <emphasis role="italic"><code>//                     const char *name)</code></emphasis>
 </programlisting>
@@ -591,8 +560,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 </itemizedlist>
 <para>Each script contains the main function, with the same name as the file (i.e. <code>tree1</code>), the function to write - <code>tree1w</code>, and the function to read - <code>tree1r</code>. If the script is not run in batch mode, it displays the tree in the browser and tree viewer. To study the example scripts, you can either execute the main script, or load the script and execute a specific function. For example:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// execute the function that writes, reads, shows the tree</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// execute the function that writes, reads, shows the tree</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>x tree1.C</code></emphasis>
 <emphasis role="italic"><code>// use ACLiC to build shared library, check syntax, execute </code></emphasis>
 <code>root[] </code><emphasis role="bold"><code>x tree1.C++ </code></emphasis>
@@ -612,8 +580,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Writing the Tree</title>
 <para>Below is the function that writes the tree (<code>tree1w</code>). First, the variables are defined (<code>px, py, pz,</code> <code>random</code> and <code>ev</code>). Then we add a branch for each of the variables to the tree, by calling the <emphasis role="bold"><code>TTree</code></emphasis><code>::Branch</code> method for each variable. </para>
 
-<programlisting language="c++">
-<code>void tree1w()</code><code>{</code>
+<programlisting language="c++"><code>void tree1w()</code><code>{</code>
 
 <emphasis role="italic"><code> //create a tree file tree1.root - create the file, the Tree and a few branches</code></emphasis>
 <code>   TFile f("tree1.root","recreate");</code>
@@ -643,15 +610,13 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Creating Branches with A single Variable</title>
 <para>This is the signature of <emphasis role="bold"><code>TTree</code></emphasis><code>::Branch</code> to create a branch with a list of variables:</para>
 
-<programlisting language="c++">
-<code>TBranch* TTree::Branch(const char* name,void* address, const char* leaflist,</code>
+<programlisting language="c++"><code>TBranch* TTree::Branch(const char* name,void* address, const char* leaflist,</code>
 <code>                       Int_t bufsize = 32000)</code>
 </programlisting>
 
 <para>The first parameter is the branch name. The second parameter is the address from which to read the value. The third parameter is the leaf list with the name and type of each leaf. In this example, each branch has only one leaf. In the box below, the branch is named <code>px</code> and has one floating point type leaf also called <code>px</code>.</para>
 
-<programlisting language="c++">
-<code>t1.Branch("px",&amp;px,"px/F");</code>
+<programlisting language="c++"><code>t1.Branch("px",&amp;px,"px/F");</code>
 </programlisting>
 
 </sect3>
@@ -692,14 +657,12 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <title>Reading the Tree</title>
 <para>The <code>tree1r</code> function shows how to read the tree and access each entry and each leaf. We first define the variables to hold the read values.</para>
 
-<programlisting language="c++">
-Float_t px, py, pz;
+<programlisting language="c++">Float_t px, py, pz;
 </programlisting>
 
 <para>Then we tell the tree to populate these variables when reading an entry. We do this with the method <emphasis role="bold"><code>TTree</code></emphasis><code>::SetBranchAddress</code>. The first parameter is the branch name, and the second is the address of the variable where the branch data is to be placed. In this example, the branch name is <code>px</code>. This name was given when the tree was written (see <code>tree1w</code>). The second parameter is the address of the variable <code>px</code>.</para>
 
-<programlisting language="c++">
-<code>t1-&gt;SetBranchAddress("px",&amp;px);</code>
+<programlisting language="c++"><code>t1-&gt;SetBranchAddress("px",&amp;px);</code>
 </programlisting>
 
 <sect3>
@@ -707,8 +670,7 @@ Float_t px, py, pz;
 <para>Once the branches have been given the address, a specific entry can be read into the variables with the method <emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntry(n)</code>. It reads all the branches for entry (n) and populates the given address accordingly. By default, <code>GetEntry()</code> reuses the space allocated by the previous object for each branch. You can force the previous object to be automatically deleted if you call <code>mybranch.SetAutoDelete(kTRUE)</code> (default is <code>kFALSE</code>). </para>
 <para>Consider the example in <code>$ROOTSYS/test/Event.h</code>. The top-level branch in the tree <code>T</code> is declared with:</para>
 
-<programlisting language="c++">
-Event *event = 0;
+<programlisting language="c++">Event *event = 0;
 <emphasis role="italic"><code>//event must be null or point to a valid object; it must be initialized</code></emphasis>
 <code>T.SetBranchAddress("event",&amp;event);</code>
 </programlisting>
@@ -716,8 +678,7 @@ Event *event = 0;
 <para>When reading the Tree, one can choose one of these 3 options:</para>
 <para>Option 1:</para>
 
-<programlisting language="c++">
-<code>for (Int_t i = 0; i&lt;nentries; i++) {</code>
+<programlisting language="c++"><code>for (Int_t i = 0; i&lt;nentries; i++) {</code>
 <code> T.GetEntry(i);</code>
 <emphasis role="italic"><code>   //the object event has been filled at this point</code></emphasis>
 <code> }</code>
@@ -728,8 +689,7 @@ Event *event = 0;
 <para>The pointer member is read via the <code>pointer-&gt;Streamer(buf)</code>         if “<code>-&gt;</code>“ is specified. In this case, it is assumed that the pointer is never null (see pointer <emphasis role="bold"><code>TClonesArray</code></emphasis><code> *fTracks</code> in the <code>$ROOTSYS/test/Event</code> example). If “<code>-&gt;</code>" is not specified, the pointer member is read via <code>buf &gt;&gt; pointer</code>. In this case the pointer may be null. Note that the option with “<code>-&gt;</code>" is faster to read or write and it also consumes less space in the file.</para>
 <para>Option 2 - the option <code>AutoDelete</code> is set:</para>
 
-<programlisting language="c++">
-<code>TBranch</code><code> *branch = T.GetBranch("event");</code>
+<programlisting language="c++"><code>TBranch</code><code> *branch = T.GetBranch("event");</code>
 <code>branch-&gt;SetAddress(&amp;event);</code>
 <code>branch-&gt;SetAutoDelete(kTRUE);</code>
 <code>for (Int_t i=0; i&lt;nentries; i++) {</code>
@@ -740,8 +700,7 @@ Event *event = 0;
 <para>At any iteration, the <code>GetEntry</code> deletes the object <code>event</code> and a new instance of <code>Event</code> is created and filled.</para>
 <para>Option 3 - same as option 1, but you delete the event yourself:</para>
 
-<programlisting language="c++">
-<code>for (Int_t i=0; i&lt;nentries; i++) {</code>
+<programlisting language="c++"><code>for (Int_t i=0; i&lt;nentries; i++) {</code>
 <code>    delete event;</code>
 <code>    event = 0;  </code>    <emphasis role="italic"><code>//EXTREMELY IMPORTANT</code></emphasis>
 <code>    T.GetEntry(i);</code>
@@ -751,8 +710,7 @@ Event *event = 0;
 
 <para>It is strongly recommended to use the default option 1. It has the additional advantage that functions like <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> (internally calling <emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntry</code>) will be functional even when the classes in the file are not available. Reading selected branches is quicker than reading an entire entry. If you are interested in only one branch, you can use the <emphasis role="bold"><code>TBranch</code></emphasis><code>::GetEntry</code> method and only that branch is read. Here is the script <code>tree1r</code>:</para>
 
-<programlisting language="c++">
-<code>void tree1r()</code><code>{</code>
+<programlisting language="c++"><code>void tree1r()</code><code>{</code>
 <emphasis role="italic"><code>  //read the Tree generated by tree1w and fill two histograms</code></emphasis>
 <emphasis role="italic"><code>  //note that we use "new" to create the TFile and TTree objects,</code></emphasis>
 <emphasis role="italic"><code>  //to keep them alive after leaving this function.</code></emphasis>
@@ -805,8 +763,7 @@ Event *event = 0;
 </itemizedlist>
 <para>A C structure (<code>struct</code>) is used to build a ROOT tree. In general we discourage the use of C         structures<code>,</code> we recommend using a class instead. However, we do support them for legacy applications written in C or FORTRAN. The example <code>struct</code> holds simple variables and arrays.  It maps to a Geant3 common block <code>/gctrak/. </code>This is the definition of the common block/structure:</para>
 
-<programlisting language="c++">
-<code>const Int_t MAXMEC = 30;</code>
+<programlisting language="c++"><code>const Int_t MAXMEC = 30;</code>
 <emphasis role="italic"><code>// PARAMETER (MAXMEC=30) </code></emphasis>
 <emphasis role="italic"><code>// COMMON/GCTRAK/VECT(7),GETOT,GEKIN,VOUT(7)</code></emphasis>
 <emphasis role="italic"><code>//     + ,NMEC,LMEC(MAXMEC) </code></emphasis>
@@ -839,8 +796,7 @@ Event *event = 0;
 
 <para>When using Geant3, the common block is filled by Geant3 routines at each step and only the <emphasis role="bold"><code>TTree</code></emphasis><code>::Fill</code> method needs to be called. In this example we emulate the Geant3 step routine with the <code>helixStep</code> function. We also emulate the filling of the particle values. The calls to the <code>Branch</code> methods are the same as if Geant3 were used.</para>
 
-<programlisting language="c++">
-<code>void helixStep(Float_t step, Float_t *vect, Float_t *vout)</code>
+<programlisting language="c++"><code>void helixStep(Float_t step, Float_t *vect, Float_t *vout)</code>
 <code>{</code>
 <emphasis role="italic"><code>  // extrapolate track in constant field</code></emphasis>
 <code>   Float_t field = 20;</code><emphasis role="italic"><code> // field in kilogauss</code></emphasis>
@@ -873,8 +829,7 @@ Event *event = 0;
 <sect2>
 <title>Writing the Tree</title>
 
-<programlisting language="c++">
-<code>void tree2w() {</code>
+<programlisting language="c++"><code>void tree2w() {</code>
 <emphasis role="italic"><code>   // write tree2 example</code></emphasis>
 <emphasis role="italic"><code>   //create a Tree file tree2.root</code></emphasis>
 <code>   TFile f("tree2.root","recreate");</code>
@@ -958,8 +913,7 @@ Event *event = 0;
 <title>Adding a Branch with a Fixed Length Array</title>
 <para>At first, we create a tree and create branches for a subset of variables in the C structure<code> Gctrak_t</code>. Then we add several types of branches. The first branch reads seven floating-point values beginning at the address of <code>'gstep.vect'</code>. You do not need to specify <code>&amp;gstep.vect</code>, because in C and C++ the array variable holds the address of the first element. </para>
 
-<programlisting language="c++">
-<code>t2.Branch("vect",gstep.vect,"vect[7]/F");</code>
+<programlisting language="c++"><code>t2.Branch("vect",gstep.vect,"vect[7]/F");</code>
 <code>t2.Branch("getot",&amp;gstep.getot,"getot/F");</code>
 <code>t2.Branch("gekin",&amp;gstep.gekin,"gekin/F");</code>
 </programlisting>
@@ -970,15 +924,13 @@ Event *event = 0;
 <title>Adding a Branch with a Variable Length Array</title>
 <para>The next two branches are dependent on each other. The first holds the length of the variable length array and the second holds the variable length array. The <code>lmec</code> branch reads <code>nmec</code> number of integers beginning at the address <code>gstep.lmec</code>.</para>
 
-<programlisting language="c++">
-<code>t2.Branch("nmec",&amp;gstep.nmec,"nmec/I");</code>
+<programlisting language="c++"><code>t2.Branch("nmec",&amp;gstep.nmec,"nmec/I");</code>
 <code>t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");</code>
 </programlisting>
 
 <para>The variable <code>nmec</code> is a random number and is reset for each entry.</para>
 
-<programlisting language="c++">
-<code>gstep.nmec = (Int_t)(5*gRandom-&gt;Rndm());</code>
+<programlisting language="c++"><code>gstep.nmec = (Int_t)(5*gRandom-&gt;Rndm());</code>
 </programlisting>
 
 </sect3>
@@ -993,8 +945,7 @@ Event *event = 0;
 <title>Analysis</title>
 <para>In this analysis, we do not read the entire entry we only read one branch. First, we set the address for the branch to the file <code>dstep</code>, and then we use the <emphasis role="bold"><code>TBranch</code></emphasis><code>::GetEntry</code> method. Then we fill a histogram with the <code>dstep</code> branch entries, draw it and fit it with a Gaussian. In addition, we draw the particle's path using the three values in the vector. Here we use the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method. It automatically creates a histogram and plots the 3 expressions (see Trees in Analysis).</para>
 
-<programlisting language="c++">
-<code>void tree2r() {</code>
+<programlisting language="c++"><code>void tree2r() {</code>
 
 <code>   // read the Tree generated by tree2w and fill one histogram</code>
 <code>   // we are only interested by the destep branch</code>
@@ -1053,8 +1004,7 @@ gPad-&gt;GetViewer3D(“x3d”);
 <title>Adding a Branch to an Existing Tree</title>
 <para>You may want to add a branch to an existing tree. For example, if one variable in the tree was computed with a certain algorithm, you may want to try another algorithm and compare the results. One solution is to add a new branch, fill it, and save the tree. The code below adds a simple branch to an existing tree. Note that the <code>kOverwrite</code> option in the <code>Write</code> method overwrites the existing tree. If it is not specified, two copies of the tree headers are saved.</para>
 
-<programlisting language="c++">
-<code>void tree3AddBranch() {</code>
+<programlisting language="c++"><code>void tree3AddBranch() {</code>
 TFile f("tree3.root","update");
 Float_t new_v;
 TTree *t3 = (TTree*)f-&gt;Get("t3");
@@ -1080,27 +1030,23 @@ t3-&gt;Write("",TObject::kOverwrite);     <code>// save only the new version of 
 </para>
 <para>The <code>AddFriend</code> method has two parameters, the first is the tree name and the second is the name of the ROOT file where the friend tree is saved. <code>AddFriend</code> automatically opens the friend file. If no file name is given, the tree called <code>ft1</code> is assumed to be in the same file as the original tree.</para>
 
-<programlisting language="c++">
-<code>tree.AddFriend("ft1","friendfile1.root");</code>
+<programlisting language="c++"><code>tree.AddFriend("ft1","friendfile1.root");</code>
 </programlisting>
 
 <para>If the friend tree has the same name as the original tree, you can give it an alias in the context of the friendship:</para>
 
-<programlisting language="c++">
-<code>tree.AddFriend("tree1 = tree","friendfile1.root");</code>
+<programlisting language="c++"><code>tree.AddFriend("tree1 = tree","friendfile1.root");</code>
 </programlisting>
 
 <para>Once the tree has friends, we can use <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> as if the friend's variables were in the original tree. To specify which tree to use in the <code>Draw</code> method, use the syntax:</para>
 
-<programlisting language="c++">
-<code>&lt;treeName&gt;.&lt;branchname&gt;.&lt;varname&gt;</code>
+<programlisting language="c++"><code>&lt;treeName&gt;.&lt;branchname&gt;.&lt;varname&gt;</code>
 </programlisting>
 
 <para>If the <code>variablename</code> is enough to identify uniquely the variable, you can leave out the tree and/or branch name.</para>
 <para>For example, these commands generate a 3-d scatter plot of variable "<code>var</code>" in the <emphasis role="bold"><code>TTree</code></emphasis> <code>tree</code> versus variable <code>v1 in </code><emphasis role="bold"><code>TTree</code></emphasis><code> ft1</code> versus variable <code>v2</code> in <emphasis role="bold"><code>TTree</code></emphasis> <code>ft2</code>.</para>
 
-<programlisting language="c++">
-<code>tree.AddFriend("ft1","friendfile1.root");</code>
+<programlisting language="c++"><code>tree.AddFriend("ft1","friendfile1.root");</code>
 <code>tree.AddFriend("ft2","friendfile2.root");</code>
 <code>tree.Draw("var:ft1.v1:ft2.v2");</code>
 </programlisting>
@@ -1110,14 +1056,12 @@ t3-&gt;Write("",TObject::kOverwrite);     <code>// save only the new version of 
 <para>Use <emphasis role="bold"><code>TTree</code></emphasis><code>::GetListOfFriends</code> to retrieve the list of friends from a tree.</para>
 <para>When the tree is written to file (<emphasis role="bold"><code>TTree</code></emphasis><code>::Write</code>), the friends list is saved with it. Moreover, when the tree is retrieved, the trees on the friends list are also retrieved and the friendship restored. When a tree is deleted, the elements of the friend list are also deleted. It is possible to declare a friend tree that has the same internal structure (same branches and leaves) as the original tree, and compare the same values by specifying the tree.</para>
 
-<programlisting language="c++">
-<code>tree.Draw("var:ft1.var:ft2.var")</code>
+<programlisting language="c++"><code>tree.Draw("var:ft1.var:ft2.var")</code>
 </programlisting>
 
 <para>The example code is in <code>$ROOTSYS/tutorials/tree/tree3.C</code>. Here is the script:</para>
 
-<programlisting language="c++">
-<code>void tree3w() {</code>
+<programlisting language="c++"><code>void tree3w() {</code>
 
 <code>// Example of a Tree where branches are variable length arrays</code>
 <code>// A second Tree is created and filled in parallel.</code>
@@ -1224,8 +1168,7 @@ tree3r();
 </itemizedlist>
 <para>Below is the list of the <code>Event</code> data members. It contains a character array, several integers, a floating-point number, and an <code>EventHeader</code> object. The <code>EventHeader</code> class is described in the following paragraph. <code>Event</code> also has two pointers, one to a <emphasis role="bold"><code>TClonesArray</code></emphasis> of tracks and one to a histogram. The string "<code>-&gt;</code>" in the comment field of the members <code>*fTracks</code> and <code>*fH</code> instructs the automatic <code>Streamer</code> to assume that the objects <code>*fTracks</code> and <code>*fH</code> are never null pointers and that <code>fTracks-&gt;Streamer</code> can be used instead of the more time consuming form <code>R__b &lt;&lt; fTracks</code>.</para>
 
-<programlisting language="c++">
-<code>class Event : public TObject {</code>
+<programlisting language="c++"><code>class Event : public TObject {</code>
 <code>private:</code>
 <code>   char            fType[20];</code>
 <code>   Int_t           fNtrack;</code>
@@ -1252,8 +1195,7 @@ tree3r();
 <title>The EventHeader Class</title>
 <para>The <code>EventHeader</code> class (also defined in <code>Event.h</code>) does not inherit from <emphasis role="bold"><code>TObject</code></emphasis>. Beginning with ROOT 3.0, an object can be placed on a branch even though it does not inherit from <emphasis role="bold"><code>TObject</code></emphasis>. In previous releases branches were restricted to objects inheriting from the <emphasis role="bold"><code>TObject</code></emphasis>. However, it has always been possible to write a class not inheriting from <emphasis role="bold"><code>TObject</code></emphasis> to a tree by encapsulating it in a <emphasis role="bold"><code>TObject</code></emphasis> descending class as is the case in <code>EventHeader</code> and <code>Event</code>. </para>
 
-<programlisting language="c++">
-<code>class EventHeader {</code>
+<programlisting language="c++"><code>class EventHeader {</code>
 <code>private:</code>
 <code>   Int_t   fEvtNum;</code>
 <code>   Int_t   fRun;</code>
@@ -1269,8 +1211,7 @@ tree3r();
 <title>The Track Class</title>
 <para>The <code>Track</code> class descends from <emphasis role="bold"><code>TObject</code></emphasis> since tracks are in a <emphasis role="bold"><code>TClonesArray</code></emphasis> (i.e. a ROOT collection class) and contains a selection of basic types and an array of vertices. Its <emphasis role="bold"><code>TObject</code></emphasis> inheritance enables <code>Track</code> to be in a collection and in <code>Event</code> is a <emphasis role="bold"><code>TClonesArray</code></emphasis> of <code>Tracks</code>.</para>
 
-<programlisting language="c++">
-<code>class Track : public TObject {</code>
+<programlisting language="c++"><code>class Track : public TObject {</code>
 <code>private:</code>
 <code>   Float_t   fPx;         //X component of the momentum</code>
 <code>   Float_t   fPy;         //Y component of the momentum</code>
@@ -1301,8 +1242,7 @@ tree3r();
 <title>Writing the Tree</title>
 <para>We create a simple tree with two branches both holding <code>Event</code> objects. One is split and the other is not. We also create a pointer to an <code>Event</code> object (<code>event</code>). </para>
 
-<programlisting language="c++">
-<code>void tree4w() {</code>
+<programlisting language="c++"><code>void tree4w() {</code>
 <code>   // check to see if the event class is in the dictionary</code>
 <code>   // if it is not load the definition in libEvent.so</code>
 if (!TClassTable::GetDict("Event")) {
@@ -1360,8 +1300,7 @@ t4.Print();           <code>// Print the tree contents</code>
 <title>Reading the Tree</title>
 <para>First, we check if the shared library with the class definitions is loaded. If not we load it. Then we read two branches, one for the number of tracks and one for the entire event. We check the number of tracks first, and if it meets our condition, we read the entire event. We show the fist entry that meets the condition.</para>
 
-<programlisting language="c++">
-<code>void tree4r() {</code>
+<programlisting language="c++"><code>void tree4r() {</code>
 <code>  // check if the event class is in the dictionary</code>
 <code>  // if it is not load the definition in libEvent.so</code>
 if (!TClassTable::GetDict("Event")) {
@@ -1418,8 +1357,7 @@ Int_t nb = 0;
 <para>You can see the two branches in the tree in the left panel: the event branch is split and hence expands when clicked on. The other branch event not split is not expandable and we can not browse the data members. </para>
 <para>The <emphasis role="bold"><code>TClonesArray</code></emphasis> of tracks <code>fTracks</code> is also split because we set the split level to 2. The output on the command line is the result of <code>tree4-&gt;Show()</code>. It shows the first entry with more than 587 tracks:</para>
 
-<programlisting language="c++">
-<code>======&gt; EVENT:26</code>
+<programlisting language="c++"><code>======&gt; EVENT:26</code>
 <code> event_split     = </code>
 <code> fUniqueID       = 0</code>
 <code> fBits           = 50331648</code>
@@ -1444,14 +1382,12 @@ Int_t nb = 0;
 <title>Example 5: Import an ASCII File into a TTree</title>
 <para>The method <emphasis role="bold"><code>TTree</code></emphasis><code>::ReadFile</code> can be used to automatic define the structure of the <emphasis role="bold"><code>TTree</code></emphasis> and read the data from a formatted ascii file.</para>
 
-<programlisting language="c++">
-Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
+<programlisting language="c++">Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
 </programlisting>
 
 <para>Creates or simply read branches from the file named whose name is passed in <code>'filename'</code>.</para>
 
-<programlisting language="c++">
-<code>{  gROOT-&gt;Reset();</code>
+<programlisting language="c++"><code>{  gROOT-&gt;Reset();</code>
 <code>   TFile *f = new TFile("basic2.root","RECREATE");</code>
 <code>   TH1F *h1 = new TH1F("h1","x distribution",100,-4,4);</code>
 <code>   TTree *T = new TTree("ntuple","data from ascii file");</code>
@@ -1477,8 +1413,7 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
 <para>We will use the tree in <code>staff.root</code> that was made by the macro in <code>$ROOTSYS/tutorials/tree/staff.C</code>.</para>
 <para>First, open the file and lists its contents.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> f ("staff.root")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> f ("staff.root")</code></emphasis>
 root[] <emphasis role="bold"><code>f.ls()</code></emphasis>
 TFile**         staff.root
 TFile*         staff.root
@@ -1487,34 +1422,29 @@ KEY: TTree    T;1     staff data from ascii file
 
 <para>We can see the <emphasis role="bold"><code>TTree </code></emphasis>"<code>T</code>" in the file. We will use it to experiment with the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method, so let’s create a pointer to it:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TTree *MyTree = </code></emphasis><emphasis role="bold"><code>T</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TTree *MyTree = </code></emphasis><emphasis role="bold"><code>T</code></emphasis>
 </programlisting>
 
 <para>CINT allows us to get simply the object by using it. Here we define a pointer to a <emphasis role="bold"><code>TTree</code></emphasis> object and assign it the value of "<code>T</code>", the <emphasis role="bold"><code>TTree</code></emphasis> in the file. CINT looks for "<code>T</code>" and returns it. To show the different <code>Draw</code> options, we create a canvas with four sub-pads. We will use one sub-pad for each <code>Draw</code> command.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TCanvas</code></emphasis><emphasis role="bold"><code> *myCanvas = new TCanvas()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TCanvas</code></emphasis><emphasis role="bold"><code> *myCanvas = new TCanvas()</code></emphasis>
 root[]<emphasis role="bold"><code> myCanvas-&gt;Divide(2,2)</code></emphasis>
 </programlisting>
 
 <para>We activate the first pad with the <emphasis role="bold"><code>TCanvas</code></emphasis><code>::cd</code>         statement:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myCanvas-&gt;cd(1)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myCanvas-&gt;cd(1)</code></emphasis>
 </programlisting>
 
 <para>We then draw the variable <code>Cost</code>:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis role="bold"><code>C</code></emphasis><emphasis role="bold"><code>ost")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis role="bold"><code>C</code></emphasis><emphasis role="bold"><code>ost")</code></emphasis>
 </programlisting>
 
 <para>As you can see, the last call <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> has only one parameter. It is a string containing the leaf name. A histogram is automatically created as a result of a <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code>. The style of the histogram is inherited from the <emphasis role="bold"><code>TTree</code></emphasis> attributes and the current style (<emphasis role="italic"><emphasis role="bold"><code>gStyle</code></emphasis></emphasis>) is ignored. The <emphasis role="bold"><code>TTree</code></emphasis> gets its attributes from the current <emphasis role="bold"><code>TStyle</code></emphasis> at the time it was created. You can call the method <emphasis role="bold"><code>TTree</code></emphasis><code>::UseCurrentStyle</code> to change to the current style rather than the <emphasis role="bold"><code>TTree</code></emphasis> style. (See <emphasis role="italic"><emphasis role="bold"><code>gStyle</code></emphasis></emphasis>; see also “Graphics and the Graphical User Interface” )</para>
 <para>In the next segment, we activate the second pad and draw a scatter plot variables:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myCanvas-&gt;cd(2)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myCanvas-&gt;cd(2)</code></emphasis>
 root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis role="bold"><code>C</code></emphasis><emphasis role="bold"><code>ost:</code></emphasis><emphasis role="bold"><code>A</code></emphasis><emphasis role="bold"><code>ge")</code></emphasis>
 </programlisting>
 
@@ -1524,28 +1454,24 @@ root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis 
 <title>Using Selection with TTree:Draw</title>
 <para>Change the active pad to 3, and add a selection to the list of parameters of the draw command. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myCanvas-&gt;cd(3)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myCanvas-&gt;cd(3)</code></emphasis>
 root[] <emphasis role="bold"><code>MyTree-</code></emphasis><emphasis role="bold"><code>&gt;Draw("Cost:Age","Nation == "FR"")</code></emphasis>
 </programlisting>
 
 <para>This will draw the <code>Cost </code>vs.         <code>Age</code> for the entries where the nation is equal to “<code>FR</code>”. You can use any C++ operator, and some functions defined in <emphasis role="bold"><code>TFormula</code></emphasis>, in the selection parameter. The value of the selection is used as a weight when filling the histogram. If the expression includes only Boolean operations as in the example above, the result is 0 or 1. If the result is 0, the histogram is not filled.  In general, the expression is:</para>
 
-<programlisting language="c++">
-Selection = "weight *(boolean expression)"
+<programlisting language="c++">Selection = "weight *(boolean expression)"
 </programlisting>
 
 <para>If the Boolean expression evaluates to true, the histogram is filled with a weight. If the weight is not explicitly specified it is assumed to be 1.</para>
 <para>For example, this selection will add 1 to the histogram if x is less than y and the square root of z is less than 3.2. </para>
 
-<programlisting language="c++">
-"x&lt;y &amp;&amp; sqrt(z)&gt;3.2"
+<programlisting language="c++">"x&lt;y &amp;&amp; sqrt(z)&gt;3.2"
 </programlisting>
 
 <para>On the other hand, this selection will add <code>x+y</code> to the histogram if the square root of z is larger than 3.2.</para>
 
-<programlisting language="c++">
-"(x+y)*(sqrt(z)&gt;3.2)"
+<programlisting language="c++">"(x+y)*(sqrt(z)&gt;3.2)"
 </programlisting>
 
 <para>The <code>Draw</code> method has its own parser, and it only looks in the current tree for variables. This means that any variable used in the selection must be defined in the tree. You cannot use an arbitrary global variable in the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method. </para>
@@ -1555,22 +1481,19 @@ Selection = "weight *(boolean expression)"
 <title>Using TCut Objects in TTree::Draw</title>
 <para>The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method also accepts <emphasis role="bold"><code>TCut</code></emphasis><emphasis role="bold"><code>G</code></emphasis> objects. A <emphasis role="bold"><code>TCut</code></emphasis> is a specialized string object used for <emphasis role="bold"><code>TTree</code></emphasis> selections. A <emphasis role="bold"><code>TCut</code></emphasis> object has a name and a title. It does not have any data members in addition to what it inherits from <emphasis role="bold"><code>TNamed</code></emphasis>. It only adds a set of operators to do logical string concatenation. For example, assume:</para>
 
-<programlisting language="c++">
-<code>TCut cut1 = "x&lt;1"</code>
+<programlisting language="c++"><code>TCut cut1 = "x&lt;1"</code>
 <code>TCut cut2 = "y&gt;2" </code>
 </programlisting>
 
 <para>then</para>
 
-<programlisting language="c++">
-<code>cut1 &amp;&amp; cut2 </code>
+<programlisting language="c++"><code>cut1 &amp;&amp; cut2 </code>
 <code>//result is the string "(x&lt;1)&amp;&amp;(y&gt;2)"</code>
 </programlisting>
 
 <para>Operators  =,  +=,  +, *,  !,  &amp;&amp;,  ||  are overloaded, here are some examples:</para>
 
-<programlisting language="c++">
-<code>root[] </code>    <emphasis role="bold"><code>TCut c1 = "x &lt; 1"</code></emphasis>
+<programlisting language="c++"><code>root[] </code>    <emphasis role="bold"><code>TCut c1 = "x &lt; 1"</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>TCut c2 = "y &lt; 0"</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>TCut c3 = c1 &amp;&amp; c2</code></emphasis>
 <code>root[] </code>    <emphasis role="bold"><code>MyTree.Draw("x", c1)</code></emphasis>
@@ -1595,8 +1518,7 @@ htemp-&gt;GetEntries();
 
 <para>If you pipe the result of the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> into a histogram, the histogram is also available in the current directory. You can do:</para>
 
-<programlisting language="c++">
-<code>// Draw the histogram and fill hnew with it</code>
+<programlisting language="c++"><code>// Draw the histogram and fill hnew with it</code>
 nt-&gt;Draw("x&gt;&gt;hnew","cuts");
 <code>// get hnew from the current directory</code>
 TH1F *hnew = (TH1F*)gDirectory-&gt;Get("hnew");
@@ -1610,8 +1532,7 @@ TH1F *hnew = (TH1F*)gPad-&gt;GetPrimitive("hnew");
 <title>Using Draw Options in TTree::Draw</title>
 <para>The next parameter is the draw option for the histogram:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myCanvas-&gt;cd(4)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myCanvas-&gt;cd(4)</code></emphasis>
 root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis role="bold"><code>C</code></emphasis><emphasis role="bold"><code>ost:</code></emphasis><emphasis role="bold"><code>A</code></emphasis><emphasis role="bold"><code>ge","</code></emphasis><emphasis role="bold"><code>N</code></emphasis><emphasis role="bold"><code>ation == </code></emphasis><emphasis role="bold"><code>"FR"</code></emphasis><emphasis role="bold"><code>","surf2”);</code></emphasis>
 </programlisting>
 
@@ -1631,8 +1552,7 @@ root[] <emphasis role="bold"><code>MyTree-&gt;Draw("</code></emphasis><emphasis 
 <title>Superimposing Two Histograms</title>
 <para>When superimposing two 2-D histograms inside a script with <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> and using the "<code>same</code>" option, you will need to update the pad between <code>Draw</code> commands. </para>
 
-<programlisting language="c++">
-{ <code>// superimpose two 2D scatter plots</code>
+<programlisting language="c++">{ <code>// superimpose two 2D scatter plots</code>
 <code>  // Create a 2D histogram and fill it with random numbers</code>
 TH2 *h2 = new TH2D ("h2","2D histo",100,0,70,100,0,20000);
 for (Int_t i = 0; i &lt; 10000; i++)
@@ -1656,8 +1576,7 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <title>Setting the Range in TTree::Draw</title>
 <para>There are two more optional parameters to the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method: one is the number of entries and the second one is the entry to start with. For example, this command draws 1000 entries starting with entry 100:</para>
 
-<programlisting language="c++">
-myTree-&gt;Draw("Cost:Age", "","",1000,100);
+<programlisting language="c++">myTree-&gt;Draw("Cost:Age", "","",1000,100);
 </programlisting>
 
 </sect2>
@@ -1666,8 +1585,7 @@ myTree-&gt;Draw("Cost:Age", "","",1000,100);
 <title>TTree::Draw Examples</title>
 <para>The examples below use the <code>Event.root</code> file generated by the <code>$ROOTSYS/test/Event</code> executable and the <code>Event</code>, <code>Track</code>, and <code>EventHeader</code> class definitions are in <code>$ROOTSYS/test/Event.h</code>. The commands have been tested on the split-levels 0, 1, and 9. Each command is numbered and referenced by the explanations immediately following the examples.</para>
 
-<programlisting language="c++">
-<code>// Data members and methods</code>
+<programlisting language="c++"><code>// Data members and methods</code>
 <code>1   tree-&gt;Draw("fNtrack");</code>
 <code>2   tree-&gt;Draw("event.GetNtrack()");</code>
 <code>3   tree-&gt;Draw("GetNtrack()");</code>
@@ -2103,48 +2021,41 @@ myTree-&gt;Draw("Cost:Age", "","",1000,100);
 <title>Using TTree::Scan</title>
 <para><emphasis role="bold"><code>TTree</code></emphasis><code>::Scan</code> can be used to print the content of the tree's entries optional passing a selection.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree-&gt;Scan();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree-&gt;Scan();</code></emphasis>
 </programlisting>
 
 <para>will print the first 8 variables of the tree. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree-&gt;Scan("*");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree-&gt;Scan("*");</code></emphasis>
 </programlisting>
 
 <para>will print all the variable of the tree.</para>
 <para>Specific variables of the tree can be explicit selected by list them in column separated list:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree-&gt;Scan("var1:var2:var3");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree-&gt;Scan("var1:var2:var3");</code></emphasis>
 </programlisting>
 
 <para>will print the values of <code>var1</code>, <code>var2</code> and <code>var3</code>. A selection can be applied in the second argument:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree-&gt;Scan("var1:var2:var3","var1==0");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree-&gt;Scan("var1:var2:var3","var1==0");</code></emphasis>
 </programlisting>
 
 <para>will print the values of <code>var1</code>, <code>var2</code> and <code>var3</code> for the entries where var1 is exactly 0.</para>
 <para><emphasis role="bold"><code>TTree</code></emphasis><code>::Scan</code> returns the number of entries passing the selection. By default 50 rows are shown before <emphasis role="bold"><code>TTree</code></emphasis><code>::Scan</code> pauses and ask you to press the Enter key to see the next 50 rows. You can change the default number of rows to be shown before &lt;CR&gt; via <code>mytree-&gt;SetScanfield(maxrows)</code> where maxrows is 50 by default. If maxrows is set to 0 all rows of the <emphasis role="bold"><code>Tree</code></emphasis> are shown. This option is interesting when dumping the contents of a Tree to an ascii file, eg from the command line:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>tree-&gt;SetScanField(0)</code></emphasis>;
+<programlisting language="c++">root[] <emphasis role="bold"><code>tree-&gt;SetScanField(0)</code></emphasis>;
 root[] <emphasis role="bold"><code>tree-&gt;Scan("*"); &gt;tree.log</code></emphasis>
 </programlisting>
 
 <para>will create a file <code>tree.log</code>.</para>
 <para>Arrays (within an entry) are printed in their linear forms. If several arrays with multiple dimensions are printed together, they will NOT be synchronized.  For example, with a tree containing <code>arr1[4][2] </code>and <code>arr2[2][3]</code>,</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>MyTree("arr1:arr2");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>MyTree("arr1:arr2");</code></emphasis>
 </programlisting>
 
 <para>will results in a printing similar to:</para>
 
-<programlisting language="c++">
-************************************************
+<programlisting language="c++">************************************************
 *    Row   * Instance *      arr1 *      arr2 *
 ***********************************************
 *        x *        0 * arr1[0][0]* arr2[0][0]*
@@ -2167,8 +2078,7 @@ root[] <emphasis role="bold"><code>MyTree("arr1:arr2");</code></emphasis>
 </itemizedlist>
 <para>For example:</para>
 
-<programlisting language="c++">
-tree-&gt;Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
+<programlisting language="c++">tree-&gt;Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
 </programlisting>
 
 <para>will print 3 columns, the first 2 columns will be 30 characters long, the third columns will be 20 characters long. The printf format  for the columns (assuming they are numbers) will be respectively: <code>%30.3g</code> <code>%30.3g</code> <code>%20.10g</code>.</para>
@@ -2178,34 +2088,29 @@ tree-&gt;Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
 <title>TEventList and TEntryList</title>
 <para>The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw </code>method can also be used to build a list of the entries. When the first argument is preceded by <code>"&gt;&gt;"</code> ROOT knows that this command is not intended to draw anything, but to save the entries in a list with the name given by the first argument. As a result, a <emphasis role="bold"><code>TEventList</code></emphasis> or a <emphasis role="bold"><code>TEntryList</code></emphasis> object is created in the current directory. For example, to create a <emphasis role="bold"><code>TEventList</code></emphasis> of all entries with more than 600 tracks, do:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TFile *f = new TFile("E</code></emphasis><emphasis role="bold"><code>vent.root"</code></emphasis><emphasis role="bold"><code>)</code></emphasis>;
+<programlisting language="c++">root[] <emphasis role="bold"><code>TFile *f = new TFile("E</code></emphasis><emphasis role="bold"><code>vent.root"</code></emphasis><emphasis role="bold"><code>)</code></emphasis>;
 root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt; myList","fNtrack &gt; </code></emphasis><emphasis role="bold"><code>600")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>To create a <emphasis role="bold"><code>TEntryList</code></emphasis>, use the option "<code>entrylist</code>".</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;myList", "fNtrack&gt;600", "entrylist")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;myList", "fNtrack&gt;600", "entrylist")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>This list contains the entry number of all entries with more than 600 tracks. To see the entry numbers use the <code>Print("all")</code> command.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>myList-&gt;Print("all");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>myList-&gt;Print("all");</code></emphasis>
 </programlisting>
 
 <para>When using the "<code>&gt;&gt;</code>" whatever was in the list is overwritten. The list can be grown by using the "<code>&gt;&gt;+</code>" syntax. For example to add the entries, with exactly 600 tracks:</para>
 
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;+ myList","</code></emphasis><emphasis role="bold"><code>fNtrack == 600"</code></emphasis><emphasis role="bold"><code>, </code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;+ myList","</code></emphasis><emphasis role="bold"><code>fNtrack == 600"</code></emphasis><emphasis role="bold"><code>, </code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>If the <code>Draw</code> command generates duplicate entries, they are not added to the list.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;+ myList"," fNtrack &gt; 610"</code></emphasis><emphasis role="bold"><code>, </code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;+ myList"," fNtrack &gt; 610"</code></emphasis><emphasis role="bold"><code>, </code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>This command does not add any new entries to the list because all entries with more than 610 tracks have already been found by the previous command for entries with more than 600 tracks. </para>
@@ -2214,8 +2119,7 @@ root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;+ myList"," fNtrack &gt; 
 <title>Main Differences between TEventList and TEntryList</title>
 <para>The functionality is essentialy the same: both are used to store entry numbers. <emphasis role="bold"><code>TEntryList</code></emphasis>, however, uses considerably less memory for storage, and is optimized for both very high and very low selectivity of cuts (see <emphasis role="bold"><code>TEntryListBlock</code></emphasis> class description for the details of internal storage). Unlike the <emphasis role="bold"><code>TEventList</code></emphasis>, <emphasis role="bold"><code>TEntryList</code></emphasis> makes a distinction between indices from a <emphasis role="bold"><code>TChain</code></emphasis> and from a <emphasis role="bold"><code>TTree</code></emphasis>. While a <emphasis role="bold"><code>TEntryList</code></emphasis> for a <emphasis role="bold"><code>TTree</code></emphasis> can be seen as just a list of numbers, a <emphasis role="bold"><code>TEntryList</code></emphasis> for a <emphasis role="bold"><code>TChain</code></emphasis> is a collection of <emphasis role="bold"><code>TEntryList</code></emphasis>(s) for the <emphasis role="bold"><code>TTree</code></emphasis>(s) that constitute this <emphasis role="bold"><code>TChain</code></emphasis>. Such "sub-lists" can be extracted by calling the function </para>
 
-<programlisting language="c++">
-TEntryList::GetEntryList(const char *treename, const char *filename)
+<programlisting language="c++">TEntryList::GetEntryList(const char *treename, const char *filename)
 </programlisting>
 
 <para>and then be used to construct a new <emphasis role="bold"><code>TEntryList</code></emphasis> for a new <emphasis role="bold"><code>TChain</code></emphasis>, or processed independently as normal <emphasis role="bold"><code>TEntryList</code></emphasis>(s) for <emphasis role="bold"><code>TTre</code></emphasis><emphasis role="bold"><code>e</code></emphasis>(s). This modularity makes <emphasis role="bold"><code>TEntryList</code></emphasis> much better suited for PROOF processing than the <emphasis role="bold"><code>TEventList</code></emphasis>.</para>
@@ -2226,23 +2130,20 @@ TEntryList::GetEntryList(const char *treename, const char *filename)
 <para>A <emphasis role="bold"><code>TEventList</code></emphasis> or a <emphasis role="bold"><code>TEntryList</code></emphasis> can be used to limit the <emphasis role="bold"><code>TTree</code></emphasis> to the events in the list. The methods <code>SetEventList</code> and <code>SetEntryList</code> tell the tree to use the list and hence limit all subsequent calls to <code>Draw</code>, <code>Scan</code>, <code>Process</code>, <code>Query</code>, <code>Principal</code> and <code>CopyTree</code> methods to the entries in the list. In general, it affects the <code>GetEntryNumber</code> method and all functions using it for looping over the tree entries. The <code>GetEntry</code> and <code>GetEntries</code> methods are not affected. Note, that in the <code>SetEventList</code> method, the <emphasis role="bold"><code>TEventList</code></emphasis> argument is internally transformed into a <emphasis role="bold"><code>TEntryList</code></emphasis>, and this operation, in case of a <emphasis role="bold"><code>TChain</code></emphasis>, requires loading of all the tree headers. In this example, we create a list with all entries with more than 600 tracks and then set it so that the tree will use this list. To reset the <emphasis role="bold"><code>TTree</code></emphasis> to use all events use <code>SetEventList(0)</code> or <code>SetEntryList(0)</code>.</para>
 <para>1) Let’s look at an example. First, open the file and draw the <code>fNtrack</code>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[] <emphasis role="bold"><code>TTree *T = (TTree*)f-&gt;Get("T");</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack</code></emphasis><emphasis role="bold"><code>")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>2) Now, put the entries with over 600 tracks into a <emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis> called <code>myList</code>. We get the list from the current directory and assign it to a variable list.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;myList","</code></emphasis><emphasis role="bold"><code>fNtrack &gt; 600"</code></emphasis><emphasis role="bold"><code>,</code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;myList","</code></emphasis><emphasis role="bold"><code>fNtrack &gt; 600"</code></emphasis><emphasis role="bold"><code>,</code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[]<emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis> <emphasis role="bold"><code>*list=(</code></emphasis><emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis><emphasis role="bold"><code>*)gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;Get("myList")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para>3) Instruct the tree <emphasis role="bold"><code>T</code></emphasis> to use the new list and draw it again. Note that this is exactly the same <code>Draw</code> command. The list limits the entries.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;SetE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List(list)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;SetE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List(list)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack</code></emphasis><emphasis role="bold"><code>")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
@@ -2256,8 +2157,7 @@ root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack</code></emphasis><emphasi
 <title>Operations on TEntryLists</title>
 <para>If you have entry lists that were created using different cuts, you can combine the lists to get a new list, with entries passing at least one of the cuts. Example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;list1","fNtrack&gt;600","entrylist");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;list1","fNtrack&gt;600","entrylist");</code></emphasis>
 root[] <emphasis role="bold"><code>TEntryList *list1 = (TEntryList*)gDirectory-&gt;Get("list1");</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;list2","fNtrack&lt;</code></emphasis><emphasis role="bold"><code>59</code></emphasis><emphasis role="bold"><code>0","entrylist");</code></emphasis>
 root[] <emphasis role="bold"><code>TEntryList *list2 = (TEntryList*)gDirectory-&gt;Get("list2");</code></emphasis>
@@ -2266,16 +2166,14 @@ root[] <emphasis role="bold"><code>list1-&gt;Add(list2);</code></emphasis>
 
 <para><code>list1</code> now contains entries with more than 600 or less than 590 tracks. Check this by calling:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;SetEntryList(list1)</code></emphasis>;
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;SetEntryList(list1)</code></emphasis>;
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack")</code></emphasis>;
 </programlisting>
 
 <para>You can also subtract <emphasis role="bold"><code>TEntryList</code></emphasis> from each other, so that the first list contains only the entries, passing the selection of the first list and not present in the second list. </para>
 <para>To add some individual entries, use <emphasis role="bold"><code>TEntryList</code></emphasis><code>::Enter()</code> function. To remove the entries you don't like, use <emphasis role="bold"><code>TEntryList</code></emphasis><code>::Remove()</code>. To see if the entry is in the list, use <emphasis role="bold"><code>TEntryList</code></emphasis><code>::Contains()</code>. Remember, that all operation in a <emphasis role="bold"><code>TEntryList</code></emphasis> for a <emphasis role="bold"><code>TChain</code></emphasis> are on the <emphasis role="bold"><code>TTree</code></emphasis> level. This is illustrated by the following example:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TEntryList *</code></emphasis><emphasis role="bold"><code>list1 = new TEntryList("list1",</code></emphasis><emphasis role="bold"><code>"list1");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TEntryList *</code></emphasis><emphasis role="bold"><code>list1 = new TEntryList("list1",</code></emphasis><emphasis role="bold"><code>"list1");</code></emphasis>
 root[] <emphasis role="bold"><code>list1-&gt;SetTree("tree1",</code></emphasis><emphasis role="bold"><code>"file1")</code></emphasis>
 root[] <emphasis role="bold"><code>list1-&gt;Enter(0);</code></emphasis>
 root[] <emphasis role="bold"><code>list1-&gt;Enter(2);</code></emphasis>
@@ -2295,8 +2193,7 @@ tree2 file2
 
 <para>The result is a <emphasis role="bold"><code>TEntryList</code></emphasis> for a <emphasis role="bold"><code>TChain</code></emphasis> of <code>tree1</code> and <code>tree2</code>. If the second list was for the same <emphasis role="bold"><code>TTree</code></emphasis> in the same file as the first list, the result would be as follows:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TEntryList *list2_2 = new TEntryList("list2_2", "list2_2");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TEntryList *list2_2 = new TEntryList("list2_2", "list2_2");</code></emphasis>
 root[] <emphasis role="bold"><code>list2_2-&gt;SetTree("tree2", "file2");</code></emphasis>
 root[] <emphasis role="bold"><code>list2_2-&gt;Enter(1);</code></emphasis>
 root[] <emphasis role="bold"><code>list2_2-&gt;Enter(2);</code></emphasis>
@@ -2322,8 +2219,7 @@ tree2 file2
 <title>Filling a Histogram</title>
 <para>The <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> method can also be used to fill a specific histogram. The syntax is:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack &gt;&gt; myHisto")</code></emphasis>
 root[] <emphasis role="bold"><code>myHisto-&gt;Print()</code></emphasis>
 TH1.Print Name= myHisto, Entries= 100, Total sum= 100
@@ -2331,14 +2227,12 @@ TH1.Print Name= myHisto, Entries= 100, Total sum= 100
 
 <para>As we can see, this created a <emphasis role="bold"><code>TH1</code></emphasis>, called <code>myHisto</code>. If you want to append more entries to the histogram, you can use this syntax:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack &gt;&gt;+ myHisto")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack &gt;&gt;+ myHisto")</code></emphasis>
 </programlisting>
 
 <para>If you do not create a histogram ahead of time, ROOT will create one at the time of the Draw command (as is the case above). If you would like to draw the variable into a specific histogram where you, for example, set the range and bin number, you can define the histogram ahead of time and use it in the Draw command. The histogram has to be in the same directory as the tree.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold">TH1 *h1 = new TH1("h1","h1",50,0.,150.);</emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">TH1 *h1 = new TH1("h1","h1",50,0.,150.);</emphasis>
 root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 </programlisting>
 
@@ -2346,8 +2240,7 @@ root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 <para>The binning of the newly created histogram can be specified in two ways. You can set a default in the <code>.rootrc</code> and/or you can add the binning information in the <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> command.</para>
 <para>To set number of bins default for the 1-D, 2-D, 3-D histograms can be specified in the <code>.rootrc</code> file via the environment variables, e.g.:</para>
 
-<programlisting language="c++">
-<emphasis role="bold"><code># default binnings</code></emphasis>   <code>Hist.Binning.1D.x: 100</code>
+<programlisting language="c++"><emphasis role="bold"><code># default binnings</code></emphasis>   <code>Hist.Binning.1D.x: 100</code>
 
 <code>Hist.Binning.2D.x: 40</code>
 <code>Hist.Binning.2D.y: 40</code>
@@ -2368,8 +2261,7 @@ root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 <para>7-9 same for z-direction</para>
 <para>When a bin number is specified, the value becomes the default. Any of the numbers can be skipped. For example:</para>
 
-<programlisting language="c++">
-<code>tree.Draw("sqrt(x)&gt;&gt;hsqrt(500,10,20)";</code>
+<programlisting language="c++"><code>tree.Draw("sqrt(x)&gt;&gt;hsqrt(500,10,20)";</code>
 <emphasis role="italic"><code>// plot sqrt(x) between 10 and 20 using 500 bins</code></emphasis>
 <code>tree.Draw("sqrt(x):sin(y)&gt;&gt;hsqrt(100,10,,50,.1,.5)";</code>
 <emphasis role="italic"><code>// plot sqrt(x) against sin(y) 100 bins in x-direction;</code></emphasis>
@@ -2379,8 +2271,7 @@ root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 
 <para>When the name is followed by binning information, appending the histogram with a "+", will not reset <code>hsqrt</code>, but will continue to fill it.</para>
 
-<programlisting language="c++">
-<code>tree.Draw("sqrt(x)&gt;&gt;+hsqrt","y&gt;0");</code>
+<programlisting language="c++"><code>tree.Draw("sqrt(x)&gt;&gt;+hsqrt","y&gt;0");</code>
 </programlisting>
 
 <para>This works for 1-D, 2-D and 3-D histograms.</para>
@@ -2389,8 +2280,7 @@ root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 <title>Projecting a Histogram</title>
 <para>If you would like to fill a histogram, but not draw it you can use the <emphasis role="bold"><code>TTree</code></emphasis><code>::Project()</code>         method.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Project("quietHisto","fNtrack")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Project("quietHisto","fNtrack")</code></emphasis>
 </programlisting>
 
 </sect3>
@@ -2412,30 +2302,26 @@ root[] <emphasis role="bold"><code>T-&gt;Project("quietHisto","fNtrack")</code><
 </itemizedlist>
 <para>To read the drawn values of <code>fNtrack</code> into an array, and loop through the entries follow the lines below. First, open the file and draw the <code>fNtrack</code> variable:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack")</code></emphasis>
 </programlisting>
 
 <para>Then declare a pointer to a float and use the GetV1 method to retrieve the first dimension of the tree. In this example we only drew one dimension (<code>fNtrack</code>) if we had drawn two, we could use GetV2 to get the second one.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>Float_t *a</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>Float_t *a</code></emphasis>
 root[] <emphasis role="bold"><code>a = T-&gt;GetV1()</code></emphasis>
 </programlisting>
 
 <para>Loop through the first 10 entries and print the values of <code>fNtrack</code>:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>for (int i = 0; i &lt; 10; i++) </code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>for (int i = 0; i &lt; 10; i++) </code></emphasis>
 <code>root[]</code><emphasis role="bold"><code> cout &lt;&lt; a[i] &lt;&lt; " " &lt;&lt; endl    </code></emphasis><code>// need an endl to see the values</code>
 594 597 606 595 604 610 604 602 603 596
 </programlisting>
 
 <para>By default, <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> creates these arrays with <code>fEstimate</code> words where <code>fEstimate</code> can be set via <emphasis role="bold"><code>TTree</code></emphasis><code>::SetEstimate</code>. If you have more entries than <code>fEstimate</code> only the first <code>fEstimate</code> selected entries will be stored in the arrays. The arrays are used as buffers. When <code>fEstimate</code> entries have been processed, ROOT scans the buffers to compute the minimum and maximum of each coordinate and creates the corresponding histograms. You can use these lines to read all entries into these arrays:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>Int_t nestimate = (Int_t)T-&gt;GetEntries();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>Int_t nestimate = (Int_t)T-&gt;GetEntries();</code></emphasis>
  root[] <emphasis role="bold"><code>T-&gt;SetEstimate(nestimate);</code></emphasis>
 </programlisting>
 
@@ -2451,8 +2337,7 @@ root[] <emphasis role="bold"><code>Int_t nestimate = (Int_t)T-&gt;GetEntries();<
 <para>This is the <emphasis role="bold"><code>TTree</code></emphasis><code>::MakeClass</code> method. We will now go through the steps of using <code>MakeClass</code> with a simplified example. The methods used here obviously work for complex event loop calculations.</para>
 <para>These are our assumptions: we would like to do selective plotting and loop through each entry of the tree and tracks. We chose a simple example: we want to plot <code>fPx</code> of the first 100 tracks of each entry. We have a ROOT tree with a branch for each data member in the "<code>Event</code>" object. To build this file and tree follow the instructions on how to build the examples in <code>$ROOTSYS/test</code>. Execute <code>Event</code> and instruct it to split the object with this command (from the UNIX command line).</para>
 
-<programlisting language="c++">
-&gt; <emphasis role="bold"><code>$ROOTSYS/test/Event 400 1 2 1</code></emphasis>
+<programlisting language="c++">&gt; <emphasis role="bold"><code>$ROOTSYS/test/Event 400 1 2 1</code></emphasis>
 </programlisting>
 
 <para>This creates an <code>Event.root</code> file with 400 events, compressed, split, and filled. </para>
@@ -2463,8 +2348,7 @@ root[] <emphasis role="bold"><code>Int_t nestimate = (Int_t)T-&gt;GetEntries();<
 <title>Creating a Class with MakeClass</title>
 <para>First, we load the shared library and open <code>Event.root</code>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.L libEvent.so </code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.L libEvent.so </code></emphasis>
 root[] <emphasis role="bold"><code>TFile</code></emphasis><emphasis role="bold"><code> *f = new TFile("Event.root");</code></emphasis>
 root[] <emphasis role="bold"><code>f-&gt;ls(); </code></emphasis>
 TFile**         Event.root      TTree benchmark ROOT file
@@ -2475,14 +2359,12 @@ KEY: TTree    T;1     An example of a ROOT tree
 
 <para>We can see there is a tree “<code>T</code>”, and just to verify that we are working with the correct one, we print the tree, which will show us the header and branches. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Print();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Print();</code></emphasis>
 </programlisting>
 
 <para>From the output of print we can see that the tree has one branch for each data member of <code>Event</code>, <code>Track</code>, and <code>EventHeader</code>. Now we can use <emphasis role="bold"><code>TTree</code></emphasis><code>::MakeClass</code> on our tree “<code>T</code>”. <code>MakeClass</code> takes one parameter, a string containing the name of the class to be made. In the command below, the name of our class will be “<code>MyClass</code>”.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;MakeClass</code></emphasis><emphasis role="bold"><code>("MyClass")</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;MakeClass</code></emphasis><emphasis role="bold"><code>("MyClass")</code></emphasis>
 Files: MyClass.h and MyClass.C generated from Tree: T
 </programlisting>
 
@@ -2492,8 +2374,7 @@ Files: MyClass.h and MyClass.C generated from Tree: T
 <sect2>
 <title>MyClass.h</title>
 
-<programlisting language="c++">
-<code>class MyClass {</code>
+<programlisting language="c++"><code>class MyClass {</code>
 public :
 <code>//pointer to the analyzed TTree or TChain</code>
 TTree          *fChain;
@@ -2547,8 +2428,7 @@ void   Show(Int_t entry = -1);
 <title>MyClass.C</title>
 <para><code>MyClass::Loop</code> consists of a for-loop calling <code>GetEntry</code> for each entry.  In the template, the numbers of bytes are added up, but it does nothing else. If we were to execute it now, there would be no output.</para>
 
-<programlisting language="c++">
-<code>void MyClass::Loop()</code>         {
+<programlisting language="c++"><code>void MyClass::Loop()</code>         {
 if (fChain == 0) return;
 
 Int_t nentries = Int_t(fChain-&gt;GetEntries());
@@ -2569,8 +2449,7 @@ nb = fChain-&gt;GetEntry(jentry);   nbytes += nb;
 <title>Modifying MyClass::Loop</title>
 <para>Let us continue with the goal of going through the first 100 tracks of each entry and plot <code>Px</code>. To do this we change the Loop method.</para>
 
-<programlisting language="c++">
-…
+<programlisting language="c++">…
 if (fChain == 0) return;
 Int_t nentries = Int_t(fChain-&gt;GetEntries());
 TH1F *myHisto  = new TH1F("myHisto","fPx", 100, -5,5);
@@ -2580,8 +2459,7 @@ TH1F *smallHisto = new TH1F("small","fPx", 100, -5,5);
 
 <para>In the for-loop, we need to add another for-loop to go over all the tracks.  In the outer for-loop, we get the entry and the number of tracks. In the inner for-loop, we fill the large histogram (<code>myHisto</code>) with all tracks and the small histogram (<code>smallHisto</code>) with the track if it is in the first 100. </para>
 
-<programlisting language="c++">
-…
+<programlisting language="c++">…
 for (Int_t jentry=0; jentry&lt;nentries;jentry++) {
 GetEntry(jentry);
 for (Int_t j = 0; j &lt; 100; j++){
@@ -2596,8 +2474,7 @@ smallHisto-&gt;Fill(fTracks_fPx[j]);
 
 <para>Outside of the for-loop, we draw both histograms on the same canvas.</para>
 
-<programlisting language="c++">
-…
+<programlisting language="c++">…
 myHisto-&gt;Draw();
 smallHisto-&gt;Draw("Same");
 …
@@ -2610,16 +2487,14 @@ smallHisto-&gt;Draw("Same");
 <title>Loading MyClass</title>
 <para>The first step is to load the library and the class file. Then we can instantiate a <code>MyClass</code> object.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.L libEvent.so</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.L libEvent.so</code></emphasis>
 root[] <emphasis role="bold"><code>.L MyClass.C</code></emphasis>
 root[] <emphasis role="bold"><code>MyClass m</code></emphasis>
 </programlisting>
 
 <para>Now we can get a specific entry and populate the event leaf. In the code snipped below, we get entry 0, and print the number of tracks (594). Then we get entry 1 and print the number of tracks (597).</para>
 
-<programlisting language="c++">
-<code>root[] </code><emphasis role="bold"><code>m.GetEntry(0)</code></emphasis>
+<programlisting language="c++"><code>root[] </code><emphasis role="bold"><code>m.GetEntry(0)</code></emphasis>
 <code>(int)57503</code>
 <code>root[] </code><emphasis role="bold"><code>m.fNtrack()</code></emphasis>
 <code>(Int_t)594</code>
@@ -2631,8 +2506,7 @@ root[] <emphasis role="bold"><code>MyClass m</code></emphasis>
 
 <para>Now we can call the <code>Loop</code> method, which will build and display the two histograms.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>m.Loop() </code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>m.Loop() </code></emphasis>
 </programlisting>
 
 <para>You should now see a canvas that looks like this.</para>
@@ -2659,45 +2533,38 @@ root[] <emphasis role="bold"><code>m.Loop() </code></emphasis>
 <listitem><para>The <emphasis role="bold"><code>TSelector</code></emphasis>, unlike the resulting class from <code>MakeClass</code>, separates the processing into a <code>ProcessCut()</code> and <code>ProcessFill()</code>, so we can limit reading of branches to the ones we need.</para></listitem>
 <listitem><para>When a selector is used with a <emphasis role="bold"><code>TChain</code></emphasis> in methods         <code>Process()</code>, <code>ProcessFill()</code>, <code>ProcessCut()</code>, you must use the pointer to the current <emphasis role="bold"><code>TTree</code></emphasis> to call the method <code>GetEntry(entry)</code>. The parameter <code>entry</code> is always the local entry number in the current tree. Assuming that <code>fChain</code> is the pointer to the <emphasis role="bold"><code>TChain</code></emphasis> being processed, use</para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-fChain-&gt;GetTree()-&gt;GetEntry(entry);
+<programlisting language="c++">fChain-&gt;GetTree()-&gt;GetEntry(entry);
 </programlisting>
 
 <para>To create a selector call:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;MakeSelector("MySelector");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;MakeSelector("MySelector");</code></emphasis>
 </programlisting>
 
 <para>Where <code>T</code> is the <emphasis role="bold"><code>TTree</code></emphasis> and <code>MySelector</code> is the name of created class and the name of the <code>.h</code> and <code>.C</code> files. The resulting <emphasis role="bold"><code>TSelector</code></emphasis> is the argument to <emphasis role="bold"><code>TTree</code></emphasis><code>::Process</code>. The argument can be the file name or a pointer to the selector object. </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>T-&gt;Process("MySelector.C","",1000,100);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Process("MySelector.C","",1000,100);</code></emphasis>
 </programlisting>
 
 <para>This call will interpret the class defined in <code>MySelector.C</code> and process 1000 entries beginning with entry 100. The file name can be appended with a "+" or a "++" to use <code>ACLiC</code>.</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> T-&gt;Process("MySelector.C++","",1000,100);</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> T-&gt;Process("MySelector.C++","",1000,100);</code></emphasis>
 </programlisting>
 
 <para>When appending a "++", the class will be compiled and dynamically loaded.</para>
 
-<programlisting language="c++">
-<code>root[]</code><emphasis role="bold"><code> T-&gt;Process("MySelector.C+","",1000,100);</code></emphasis>
+<programlisting language="c++"><code>root[]</code><emphasis role="bold"><code> T-&gt;Process("MySelector.C+","",1000,100);</code></emphasis>
 </programlisting>
 
 <para>When appending a "+", the class will also be compiled and dynamically loaded. When it is called again, it recompiles only if the macro (<code>MySelector.C</code>) has changed since it was compiled last. If not, it loads the existing library. The next example shows how to create a selector with a pointer:</para>
 
-<programlisting language="c++">
-<code>MySelector *selector = (MySelector *)TSelector::GetSelector(“MySelector.C+”);</code>
+<programlisting language="c++"><code>MySelector *selector = (MySelector *)TSelector::GetSelector(“MySelector.C+”);</code>
 <code>T-&gt;Process(selector);</code>
 </programlisting>
 
 <para><code>Using this form, you can do things like:</code></para>
 
-<programlisting language="c++">
-<code>selector-&gt;public_attribute1 = init_value;</code>
+<programlisting language="c++"><code>selector-&gt;public_attribute1 = init_value;</code>
 <code>for (int i=0; i&lt;limit; i++) {</code>
 <code>T-&gt;Process(selector);</code>
 <code>   selector-&gt;public_attribute1 = function(selector-&gt;public_attribute2);</code>
@@ -2721,8 +2588,7 @@ root[]<emphasis role="bold"><code> T-&gt;Process("MySelector.C++","",1000,100);<
 <title>Impact of Compression on I/O</title>
 <para>This benchmark illustrates the pros and cons of the compression option. We recommend using compression when the time spent in I/O is small compared to the total processing time. In this case, if the I/O operation is increased by a factor of 5 it is still a small percentage of the total time and it may very well save a factor of 10 on disk space. On the other hand if the time spend on I/O is large, compression may slow down the program's performance. The standard test program <code>$ROOTSYS/test/Event</code> was used in various configurations with 400 events. The data file contains a <emphasis role="bold"><code>TTree</code></emphasis>. The program was invoked with: </para>
 
-<programlisting language="c++">
-Event 400 comp split
+<programlisting language="c++">Event 400 comp split
 </programlisting>
 
 <itemizedlist>
@@ -2838,8 +2704,7 @@ Event 400 comp split
 <title>Chains</title>
 <para>A <emphasis role="bold"><code>TChain</code></emphasis> object is a list of ROOT files containing the same tree. As an example, assume we have three files called <code>file1.root, file2.root, file3.root</code>. Each file contains one tree called "<code>T</code>". We can create a chain with the following statements: </para>
 
-<programlisting language="c++">
-TChain chain("T");   <code>// name of the tree is the argument</code>
+<programlisting language="c++">TChain chain("T");   <code>// name of the tree is the argument</code>
 chain.Add("file1.root");
 chain.Add("file2.root");
 chain.Add("file3.root");
@@ -2847,26 +2712,22 @@ chain.Add("file3.root");
 
 <para>The name of the <emphasis role="bold"><code>TChain</code></emphasis> will be the same as the name of the tree; in this case it will be <code>"T". Note that two </code>objects can have the same name as long as they are not histograms in the same directory, because there, the histogram names are used to build a hash table. The class <emphasis role="bold"><code>TChain</code></emphasis> is derived from the class <emphasis role="bold"><code>TTree</code></emphasis>. For example, to generate a histogram corresponding to the attribute "<code>x</code>" in tree "<code>T</code>" by processing sequentially the three files of this chain, we can use the <emphasis role="bold"><code>TChain</code></emphasis><code>::Draw</code> method. </para>
 
-<programlisting language="c++">
-<code>chain.Draw("x");</code>
+<programlisting language="c++"><code>chain.Draw("x");</code>
 </programlisting>
 
 <para>When using a <emphasis role="bold"><code>TChain</code></emphasis>, the branch address(es) must be set with:</para>
 
-<programlisting language="c++">
-<code>chain.SetBranchAdress</code><code>(branchname,…)  </code><emphasis role="italic"><code>// use this for TChain</code></emphasis>
+<programlisting language="c++"><code>chain.SetBranchAdress</code><code>(branchname,…)  </code><emphasis role="italic"><code>// use this for TChain</code></emphasis>
 </programlisting>
 
 <para>rather than:</para>
 
-<programlisting language="c++">
-<code>branch-&gt;SetAddress</code><code>(…);</code><emphasis role="italic"><code>  // this will not work</code></emphasis>
+<programlisting language="c++"><code>branch-&gt;SetAddress</code><code>(…);</code><emphasis role="italic"><code>  // this will not work</code></emphasis>
 </programlisting>
 
 <para>The second form returns the pointer to the branch of the current <emphasis role="bold"><code>TTree</code></emphasis> in the chain, typically the first one. The information is lost when the next <emphasis role="bold"><code>TTree</code></emphasis> is loaded. The following statements illustrate how to set the address of the object to be read and how to loop on all events of all files of the chain.</para>
 
-<programlisting language="c++">
-{
+<programlisting language="c++">{
 TChain chain("T");  <code>// create the chain with tree "T"</code>
 chain.Add("file1.root");  <code>// add the files</code>
 chain.Add("file2.root");
@@ -2896,8 +2757,7 @@ hnseg-&gt;Draw();
 <title>TChain::AddFriend</title>
 <para><code>A </code><emphasis role="bold"><code>TChain</code></emphasis> has a list of friends similar to a tree (see <emphasis role="bold"><code>TTree</code></emphasis><code>::AddFriend)</code>. You can add a friend to a chain with the <emphasis role="bold"><code>TChain</code></emphasis><code>::AddFriend</code> method. With <emphasis role="bold"><code>TChain</code></emphasis><code>::GetListOfFriends</code> you can retrieve the list of friends. The next example has four chains each has 20 ROOT trees from 20 ROOT files.</para>
 
-<programlisting language="c++">
-<code>TChain ch("t");    </code><emphasis role="italic"><code>// a chain with 20 trees from 20 files</code></emphasis>
+<programlisting language="c++"><code>TChain ch("t");    </code><emphasis role="italic"><code>// a chain with 20 trees from 20 files</code></emphasis>
 <code>TChain ch1("t1");  </code>
 <code>TChain ch2("t2");</code>
 <code>TChain ch3("t3");</code>
@@ -2905,22 +2765,19 @@ hnseg-&gt;Draw();
 
 <para>Now we can add the friends to the first chain.</para>
 
-<programlisting language="c++">
-<code>ch.AddFriend("t1")</code>
+<programlisting language="c++"><code>ch.AddFriend("t1")</code>
 <code>ch.AddFriend("t2")</code>
 <code>ch.AddFriend("t3")</code>
 </programlisting>
 
 <para>The parameter is the name of friend chain (the name of a chain is always the name of the tree from which it was created). The original chain has access to all variables in its friends. We can use the <emphasis role="bold"><code>TChain</code></emphasis><code>::Draw</code>         method as if the values in the friends were in the original chain. To specify the chain to use in the <code>Draw</code> method, use:</para>
 
-<programlisting language="c++">
-<code>&lt;chainname&gt;.&lt;branchname&gt;.&lt;varname&gt;</code>
+<programlisting language="c++"><code>&lt;chainname&gt;.&lt;branchname&gt;.&lt;varname&gt;</code>
 </programlisting>
 
 <para>If the variable name is enough to identify uniquely the variable, you can leave out the chain and/or branch name. For example, this generates a 3-d scatter plot of variable "<code>var</code>" in the <emphasis role="bold"><code>TChain</code></emphasis><code> ch</code> versus variable <code>v1 in </code><emphasis role="bold"><code>TChain</code></emphasis><code> t1</code> versus variable <code>v2</code> in <emphasis role="bold"><code>TChain</code></emphasis><code> t2</code>.</para>
 
-<programlisting language="c++">
-<code>ch.Draw("var:t1.v1:t2.v2");</code>
+<programlisting language="c++"><code>ch.Draw("var:t1.v1:t2.v2");</code>
 </programlisting>
 
 <para>When a <emphasis role="bold"><code>TChain</code></emphasis><code>::Draw</code> is executed, an automatic call to <emphasis role="bold"><code>TTree</code></emphasis><code>::AddFriend </code>connects the trees in the chain. When a chain is deleted, its friend elements are also deleted. </para>
