@@ -187,6 +187,8 @@ namespace cling {
     void runStaticInitializersOnce() const;
 
     int CXAAtExit(void (*func) (void*), void* arg, void* dso);
+
+	
     
   private:
     InvocationOptions m_Opts; // Interpreter options
@@ -219,6 +221,7 @@ namespace cling {
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     friend class runtime::internal::LifetimeHandler;
     
+	int addSymbol(const char* symbolName,  void* symbolAddress);
   public:
     ///\brief Evaluates given expression within given declaration context.
     ///

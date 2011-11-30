@@ -25,7 +25,7 @@ namespace clang {
 namespace cling {
   class Interpreter;
   class Value;
-  
+ 
   class ExecutionContext {
   public:
     typedef void* (*LazyFunctionCreatorFunc_t)(const std::string&);
@@ -40,6 +40,7 @@ namespace cling {
     
     void executeFunction(llvm::StringRef function, 
                          llvm::GenericValue* returnValue = 0);
+	int addSymbol(const char* symbolName,  void* symbolAddress);
     
   private:
     static void* HandleMissingFunction(const std::string&);

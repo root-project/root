@@ -198,6 +198,8 @@ namespace cling {
 
     // Warm them up
     m_IncrParser->Initialize();
+
+	m_ExecutionContext->addSymbol("local_cxa_atexit", (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
     
     if (getCI()->getLangOpts().CPlusPlus) {
       // Set up common declarations which are going to be available
@@ -693,5 +695,12 @@ namespace cling {
      return 0; // happiness
   }
 
+  int Interpreter::addSymbol(const char* symbolName,  void* symbolAddress){
+	  if (!symbolName|| !symbolAddress )
+		  return -1;
+
+	  return m_ExecutionContext->addSymbol(symbolName,  symbolAddress);
+  }
   
 } // namespace cling
+

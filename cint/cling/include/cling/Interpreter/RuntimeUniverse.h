@@ -45,14 +45,19 @@ namespace cling {
       /// when clang emits diagnostics on artificially inserted AST node.
       int InterpreterGeneratedCodeDiagnosticsMaybeIncorrect;
 
+	  
+//__cxa_atexit is declared later for WIN32
+#if (!_WIN32)
       // Implemented in Interpreter.cpp
       int local_cxa_atexit(void (*func) (void*), void* arg,
                            void* dso, cling::Interpreter* interp);
 
-      // Force the module to define __cxa_atexit, we need it.
+	  // Force the module to define __cxa_atexit, we need it.
       struct __trigger__cxa_atexit {
         ~__trigger__cxa_atexit(); // implemented in Interpreter.cpp
       } S;
+#endif 
+
     } // end namespace internal
   } // end namespace runtime
 } // end namespace cling
@@ -60,9 +65,37 @@ namespace cling {
 using namespace cling::runtime;
 
 // Global d'tors only for C++:
+#if !_WIN32 
+
 extern "C"
 int cling_cxa_atexit(void (*func) (void*), void* arg, void* dso) {
   return cling::runtime::internal::local_cxa_atexit(func, arg, dso, gCling);
 }
+
+#else
+
+extern "C" {
+
+	//Fake definition to avoid compilation missing function in windows environment
+	//it wont ever be called
+	void __dso_handle(){}
+
+	//Fake definition to avoid compilation missing function in windows environment
+	//it wont ever be called
+	int __cxa_atexit(void (*func) (), void* arg, void* dso) {
+		return 0;
+	}
+
+	//Manually provided by cling missing function resolution using sys::DynamicLibrary::AddSymbol()
+	//Included in extern C so its name is not mangled and easier to register
+	int local_cxa_atexit(void (*func) (void*), void* arg,
+                           void* dso, cling::Interpreter* interp);
+
+	//cling _cxa_atexit replacement
+	int cling_cxa_atexit(void (*func) (void*), void* arg, void* dso) {
+	  return local_cxa_atexit(func, arg, dso, cling::runtime::gCling);
+	}
+}
+#endif 
 
 #endif // __cplusplus

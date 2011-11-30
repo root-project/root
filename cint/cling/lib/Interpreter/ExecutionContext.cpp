@@ -15,6 +15,7 @@
 #include "llvm/ExecutionEngine/JIT.h"
 #include "llvm/ExecutionEngine/JITEventListener.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/DynamicLibrary.h"
 
 #include <cstdio>
 #include <iostream>
@@ -132,8 +133,8 @@ void*
 ExecutionContext::NotifyLazyFunctionCreators(const std::string& mangled_name)
 {
    void *ret = 0;
+
    std::vector<LazyFunctionCreatorFunc_t>::iterator it;
-  
    for (it=m_vec_lazy_function.begin(); it < m_vec_lazy_function.end(); it++) {
       ret = (void*)((LazyFunctionCreatorFunc_t)*it)(mangled_name);
       if (ret != 0) return ret;
@@ -277,4 +278,14 @@ ExecutionContext::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
 {
    m_vec_lazy_function.push_back(fp);
    //m_engine->InstallLazyFunctionCreator(fp);
+}
+
+int ExecutionContext::addSymbol(const char* symbolName,  void* symbolAddress){
+
+	void* actualAdress = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
+	if (actualAdress)
+		return -1;
+
+	llvm::sys::DynamicLibrary::AddSymbol(symbolName, symbolAddress);
+	return 0;
 }
