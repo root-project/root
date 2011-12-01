@@ -7,8 +7,7 @@
 <title>Classes, Methods and Constructors</title>
 <para>C++ extends C with the notion of class. If you’re used to structures in C, a class is a <code>struct</code> that is a group of related variables, which is extended with functions and routines specific to this structure (class). What is the interest? Consider a <code>struct</code> that is defined this way:</para>
 
-<programlisting language="c++">
-struct Line {
+<programlisting language="c++">struct Line {
 float x1;
 float y1;
 float x2;
@@ -17,8 +16,7 @@ float y2; }
 
 <para>This structure represents a line to be drawn in a graphical window. <code>(x1,y1)</code> are the coordinates of the first point, <code>(x2,y2)</code> the coordinates of the second point. In the standard C, if you want to draw effectively such a line, you first have to define a structure and initialize the points (you can try this):</para>
 
-<programlisting language="c++">
-Line firstline;
+<programlisting language="c++">Line firstline;
 firstline.x1 = 0.2;
 firstline.y1 = 0.2;
 firstline.x2 = 0.8;
@@ -27,14 +25,12 @@ firstline.y2 = 0.9;
 
 <para>This defines a line going from the point <code>(0.2,0.2)</code> to the point <code>(0.8,0.9)</code>. To draw this line, you will have to write a function, say <code>LineDraw(Line l)</code> and call it with your object as argument:</para>
 
-<programlisting language="c++">
-LineDraw(firstline);
+<programlisting language="c++">LineDraw(firstline);
 </programlisting>
 
 <para>In C++, we would not do that. We would instead define a class like this:</para>
 
-<programlisting language="c++">
-class TLine {
+<programlisting language="c++">class TLine {
 Double_t x1;
 Double_t y1;
 Double_t x2;
@@ -46,8 +42,7 @@ void Draw();
 
 <para>Here we added two functions, that we will call methods or member functions, to the <emphasis role="bold"><code>TLine</code></emphasis> class. The first method is used for initializing the line objects we would build. It is called a constructor. The second one is the <code>Draw</code> method itself. Therefore, to build and draw a line, we have to do:</para>
 
-<programlisting language="c++">
-TLine l(0.2,0.2,0.8,0.9);
+<programlisting language="c++">TLine l(0.2,0.2,0.8,0.9);
 l.Draw();
 </programlisting>
 
@@ -58,8 +53,7 @@ l.Draw();
 <title>Inheritance and Data Encapsulation</title>
 <para>We have defined a <emphasis role="bold"><code>TLine</code></emphasis> class that contains everything necessary to draw a line. If we want to draw an arrow, is it so different from drawing a line? We just have to draw a triangle at one end. It would be very inefficient to define the class <emphasis role="bold"><code>TArrow</code></emphasis> from scratch. Fortunately, inheritance allows a class to be defined from an existing class. We would write something like:</para>
 
-<programlisting language="c++">
-class TArrow : public TLine {
+<programlisting language="c++">class TArrow : public TLine {
 int ArrowHeadSize;
 void Draw();
 void SetArrowSize(int arrowsize); }
@@ -75,14 +69,12 @@ void SetArrowSize(int arrowsize); }
 the <code>Draw()</code> method; this applies to an object which type is known. Suppose we have an object <code>l</code> of type <emphasis role="bold"><code>TLine</code></emphasis> and
 an object <code>a</code> of type <emphasis role="bold"><code>TArrow</code></emphasis>. When you want to draw the line, you do:</para>
 
-<programlisting language="c++">
-l.Draw()
+<programlisting language="c++">l.Draw()
 </programlisting>
 
 <para><code>Draw()</code> from <emphasis role="bold"><code>TLine</code></emphasis> is called. If you do:</para>
 
-<programlisting language="c++">
-a.Draw()
+<programlisting language="c++">a.Draw()
 </programlisting>
 
 <para><code>Draw()</code> from <emphasis role="bold"><code>TArrow</code></emphasis> is called and the arrow <code>a</code> is drawn.</para>
@@ -92,23 +84,20 @@ a.Draw()
 <title>Data Encapsulation</title>
 <para>We have seen previously the keyword "<code>public</code>". This keyword means that every name declared public is seen by the outside world. This is opposed to "<code>private</code>" that means only the class where the name was declared private could see this name. For example, suppose we declare in <emphasis role="bold"><code>TArrow</code></emphasis> the variable <code>ArrowHeadSize</code> private.</para>
 
-<programlisting language="c++">
-private:
+<programlisting language="c++">private:
 int ArrowHeadSize;
 </programlisting>
 
 <para>Then, only the methods (i.e. member functions) of <emphasis role="bold"><code>TArrow</code></emphasis> will be able to access this variable. Nobody else will see it. Even the classes that we could derive from <emphasis role="bold"><code>TArrow</code></emphasis> will not see it. On the other hand, if we declare the method <code>Draw()</code> as public, everybody will be able to see it and use it. You see that the character public or private does not depend of the type of argument. It can be a data member, a member function, or even a class. For example, in the case of <emphasis role="bold"><code>TArrow</code></emphasis>, the base class <emphasis role="bold"><code>TLine</code></emphasis> is declared as public:</para>
 
-<programlisting language="c++">
-class TArrow : public TLine { ...
+<programlisting language="c++">class TArrow : public TLine { ...
 </programlisting>
 
 <para>This means that all methods of <emphasis role="bold"><code>TArrow</code></emphasis> will be able to access all methods of <emphasis role="bold"><code>TLine</code></emphasis>, but this will be also true for anybody in the outside world. Of course, this is true if <emphasis role="bold"><code>TLine</code></emphasis> accepts the outside world to see its methods/data members. If something is declared private in <emphasis role="bold"><code>TLine</code></emphasis>, nobody will see it, not even <emphasis role="bold"><code>TArrow</code></emphasis> members, even if <emphasis role="bold"><code>TLine</code></emphasis> is declared as a public base class.</para>
 <para>What if <emphasis role="bold"><code>TLine</code></emphasis> is declared "<code>private</code>" instead of "<code>public</code>"? Well, it will behave as any other name declared private in <emphasis role="bold"><code>TArrow</code></emphasis>: only the data members and methods of <emphasis role="bold"><code>TArrow</code></emphasis> will be able to access <emphasis role="bold"><code>TLine</code></emphasis>, its methods and data members, nobody else. This may seem a little bit confusing and readers should read a good C++ book if they want more details. Especially since, besides public and private, a member can be protected. Usually, one puts private the methods that the class uses internally, like some utilities classes, and that the programmer does not want to be seen in the outside world.</para>
 <para>With "good" C++ practice (which we have tried to use in ROOT), all data members of a class are private. This is called data encapsulation and is one of the strongest advantages of Object Oriented Programming (OOP). Private data members of a class are not visible, except to the class itself. So, from the outside world, if one wants to access those data members, one should use so called "getters" and "setters" methods, which are special methods used only to get or set the data members. The advantage is that if the programmers want to modify the inner workings of their classes, they can do so without changing what the user sees. The user does not even have to know that something has changed (for the better, hopefully). For example, in our <emphasis role="bold"><code>TArrow</code></emphasis> class, we would have set the data member <code>ArrowHeadSize</code> private. The setter method is <code>SetArrowSize()</code>, we do not need a getter method:</para>
 
-<programlisting language="c++">
-class TArrow : public TLine {
+<programlisting language="c++">class TArrow : public TLine {
 private:
 int ArrowHeadSize;
 public:
@@ -119,8 +108,7 @@ void SetArrowSize(int arrowsize);
 
 <para>To define an arrow object you call the constructor. This will also call the constructor of <emphasis role="bold"><code>TLine</code></emphasis>, which is the parent class of <emphasis role="bold"><code>TArrow</code></emphasis>, automatically. Then we can call any of the line or arrow public methods:   </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TArrow *myarrow = new TArrow(1,5,89,124);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TArrow *myarrow = new TArrow(1,5,89,124);</code></emphasis>
 root[] <emphasis role="bold"><code>myarrow-&gt;SetArrowSize(10);</code></emphasis>
 root[] <emphasis role="bold"><code>myarrow-&gt;Draw();</code></emphasis>
 </programlisting>
@@ -135,8 +123,7 @@ root[] <emphasis role="bold"><code>myarrow-&gt;Draw();</code></emphasis>
 <code>Quad.h</code>
 :</para>
 
-<programlisting language="c++">
-class Quad {
+<programlisting language="c++">class Quad {
 public:
 Quad(Float_t a, Float_t b, Float_t c);
 ~Quad();
@@ -151,8 +138,7 @@ Float_t fC;
 
 <para><code>Quad.cxx</code>:</para>
 
-<programlisting language="c++">
-#include &lt;iostream.h&gt;
+<programlisting language="c++">#include &lt;iostream.h&gt;
 #include &lt;math.h&gt;
 #include "Quad.h"
 
@@ -185,41 +171,35 @@ cout &lt;&lt; "There are no roots" &lt;&lt; endl;
 
 <para>Let us first look how we create an object. When we create an object by: </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>Quad my_object(1.,2.,-3.);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>Quad my_object(1.,2.,-3.);</code></emphasis>
 </programlisting>
 
 <para>We are creating an object on the stack. A FORTRAN programmer may be familiar with the idea; it is not unlike a local variable in a function or subroutine. Although there are still a few old timers who do not know it, FORTRAN is under no obligation to save local variables once the function or subroutine returns unless the SAVE statement is used. If not then it is likely that FORTRAN will place them on the stack and they will "pop off" when the RETURN statement is reached. To give an object more permanence it has to be placed on the heap.</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> .L Quad.cxx</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> .L Quad.cxx</code></emphasis>
 root[] <emphasis role="bold"><code>Quad *my_objptr = new Quad(1.,2.,-3.);</code></emphasis>
 </programlisting>
 
 <para>The second line declares a pointer to <code>Quad</code> called <code>my_objptr</code>. From the syntax point of view, this is just like all the other declarations we have seen so far, i.e. this is a stack variable. The value of the pointer is set equal to </para>
 
-<programlisting language="c++">
-new Quad(1.,2.,-3.)<emphasis role="bold"><code>;</code></emphasis>
+<programlisting language="c++">new Quad(1.,2.,-3.)<emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
 <para><code>new</code>, despite its looks, is an operator and creates an object or variable of the type that comes next, <code>Quad</code> in this case, on the heap. Just as with stack objects it has to be initialized by calling its constructor. The syntax requires that the argument list follow the type. This one statement has brought two items into existence, one on the heap and one on the stack. The heap object will live until the delete operator is applied to it. </para>
 <para>There is no FORTRAN parallel to a heap object; variables either come or go as control passes in and out of a function or subroutine, or, like a COMMON block variables, live for the lifetime of the program. However, most people in HEP who use FORTRAN will have experience of a memory manager and the act of creating a bank is a good equivalent of a heap object. For those who know systems like ZEBRA, it will come as a relief to learn that objects do not move, C++ does not garbage collect, so there is never a danger that a pointer to an object becomes invalid for that reason. However, having created an object, it is the user's responsibility to ensure that it is deleted when no longer needed, or to pass that responsibility onto to some other object. Failing to do that will result in a memory leak, one of the most common and most hard-to-find C++ bugs.</para>
 <para>To send a message to an object via a pointer to it, you need to use the "-<code>&gt;</code>" operator e.g.:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>my_objptr-&gt;Solve();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>my_objptr-&gt;Solve();</code></emphasis>
 </programlisting>
 
 <para>Although we chose to call our pointer <code>my_objptr</code>, to emphasize that it is a pointer, heap objects are so common in an object-oriented program that pointer names rarely reflect the fact - you have to be careful that you know if you are dealing with an object or its pointer! Fortunately, the compiler won't tolerate an attempt to do something like:</para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> my_objptr.Solve();</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> my_objptr.Solve();</code></emphasis>
 </programlisting>
 
 <para>Although this is a permitted by the CINT shortcuts, it is one that you are <emphasis role="italic">strongly</emphasis> advised not to follow! As we have seen, heap objects have to be accessed via pointers, whereas stack objects can be accessed directly. They can also be accessed via pointers: </para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> Quad stack_quad(1.,2.,-3.);</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> Quad stack_quad(1.,2.,-3.);</code></emphasis>
 root[]<emphasis role="bold"><code> Quad *stack_ptr = &amp;stack_quad;</code></emphasis>
 root[]<emphasis role="bold"><code> stack_ptr-&gt;Solve();</code></emphasis>
 </programlisting>
@@ -228,34 +208,29 @@ root[]<emphasis role="bold"><code> stack_ptr-&gt;Solve();</code></emphasis>
 <para>It is time to look at the destruction of objects. A destructor is a special C++ function that releases resources for (or destroy) an object of a class. It is opposite of a constructor that create the object of a class when is called. The compiler will provide a destructor that does nothing if none is provided. We will add one to our Quad class so that we can see when it is called. The class names the destructor but with a prefix ~ which is the C++ one's complement i.e. bit wise complement, and hence has destruction overtones! We declare it in the .h file and define it in the <code>.cxx</code> file. It does not do much except print out that it has been called (still a useful debug technique despite today's powerful debuggers!). </para>
 <para>Now run root, load the Quad class and create a heap object:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.L Quad.cxx</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.L Quad.cxx</code></emphasis>
 root[] <emphasis role="bold"><code>Quad *my_objptr = new Quad(1.,2.,-3.);</code></emphasis>
 </programlisting>
 
 <para>To delete the object:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>delete my_objptr;</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>delete my_objptr;</code></emphasis>
 root[] <emphasis role="bold"><code>my_objptr = 0;</code></emphasis>
 </programlisting>
 
 <para>You should see the print out from its destructor. Setting the pointer to zero afterwards is not strictly necessary (and CINT does it automatically), but the object is no more accessible, and any attempt to use the pointer again will, as has already been stated, cause grief. So much for heap objects, but how are stack objects deleted? In C++, a stack object is deleted as soon as control leaves the innermost compound statement that encloses it. Therefore, it is singularly futile to do something like:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>{  Quad my_object(1.,2.,-3.); }</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>{  Quad my_object(1.,2.,-3.); }</code></emphasis>
 </programlisting>
 
 <para>CINT does not follow this rule; if you type in the above line, you will not see the destructor message. As explained in the Script lesson, you can load in compound statements, which would be a bit pointless if everything disappeared as soon as it was loaded! Instead, to reset the stack you have to type:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>gROOT-&gt;Reset();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>gROOT-&gt;Reset();</code></emphasis>
 </programlisting>
 
 <para>This sends the Reset message via the global pointer to the ROOT object, which, amongst its many roles, acts as a resource manager. Start ROOT again and type in the following:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>.L Quad.cxx</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>.L Quad.cxx</code></emphasis>
 root[] <emphasis role="bold"><code>Quad my_object(1.,2.,-3.);</code></emphasis>
 root[] <emphasis role="bold"><code>Quad *my_objptr = new Quad(4.,5.,-6.);</code></emphasis>
 root[] <emphasis role="bold"><code>gROOT-&gt;Reset();</code></emphasis>
@@ -263,8 +238,7 @@ root[] <emphasis role="bold"><code>gROOT-&gt;Reset();</code></emphasis>
 
 <para>You will see that this deletes the first object but not the second. We have also painted ourselves into a corner, as <code>my_objptr</code> was also on the stack. This command will fail.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>my_objptr-&gt;Solve();</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>my_objptr-&gt;Solve();</code></emphasis>
 </programlisting>
 
 <para>CINT no longer knows what <code>my_objptr</code> is. This is a great example of a memory leak; the heap object exists but we have lost our way to access it. In general, this is not a problem. If any object will outlive the compound statement in which it was created then a more permanent pointer will point to it, which frequently is part of another heap object. See Resetting the Interpreter Environment in the chapter “CINT the C++ Interpreter”.</para>
