@@ -695,9 +695,10 @@ namespace cling {
      return 0; // happiness
   }
 
-  int Interpreter::addSymbol(const char* symbolName,  void* symbolAddress){
-	  if (!symbolName|| !symbolAddress )
-		  return -1;
+  bool Interpreter::addSymbol(const char* symbolName,  void* symbolAddress){
+	  // Forward to ExecutionContext;
+	  if (!symbolName || !symbolAddress )
+		  return false;
 
 	  return m_ExecutionContext->addSymbol(symbolName,  symbolAddress);
   }
