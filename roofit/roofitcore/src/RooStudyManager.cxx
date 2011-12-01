@@ -100,6 +100,12 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
+  // Check that PROOF initialization actually succeeeded
+  if (p==0) {
+    coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
+    return ;
+  }
+
   // Suppress GUI if so requested
   if (!showGui) {
     gROOT->ProcessLineFast(Form("((TProof*)%p)->SetProgressDialog(0) ;",p)) ;
