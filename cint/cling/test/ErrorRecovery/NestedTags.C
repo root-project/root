@@ -11,4 +11,8 @@ namespace Outer { struct Inner { enum E{i = 2}; }; };
 Outer::Inner::i
 // CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f]{8,}.}}
 
+enum A{a}; // 
+enum A{a}; // expected-error {{redefinition of 'A'}} expected-note {{previous definition is here}}
+a // expected-error {{use of undeclared identifier 'a'}}
+
 .q

@@ -20,6 +20,7 @@
 namespace clang {
   class ASTContext;
   class DeclContext;
+  class EnumDecl;
   class FunctionDecl;
   class NamedDecl;
   class NamespaceDecl;
@@ -134,6 +135,7 @@ namespace cling {
     void RevertNamedDecl(clang::NamedDecl* ND);
     void RevertVarDecl(clang::VarDecl* VD);
     void RevertFunctionDecl(clang::FunctionDecl* FD);
+    void RevertEnumDecl(clang::EnumDecl* ED);
     void RevertNamespaceDecl(clang::NamespaceDecl* NSD);
 
     ///\brief 

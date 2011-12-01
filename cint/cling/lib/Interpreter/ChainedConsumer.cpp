@@ -410,6 +410,8 @@ namespace cling {
           RevertFunctionDecl(FD);
         else if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(*Di))
           RevertNamespaceDecl(NSD);
+        else if (EnumDecl* ED = dyn_cast<EnumDecl>(*Di))
+          RevertEnumDecl(ED);
         else if (NamedDecl* ND = dyn_cast<NamedDecl>(*Di))
           RevertNamedDecl(ND);
         // Otherwise just get rid of it
@@ -608,7 +610,18 @@ namespace cling {
     }
   }
 
+  void ChainedConsumer::RevertEnumDecl(EnumDecl* ED) {
+    for (EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
+           E = ED->enumerator_end(); I != E; ++I) {
+      assert((*I)->getDeclName() && "EnumConstantDecl with no name?");
+      RevertNamedDecl(*I);
+    }
+    
+    RevertNamedDecl(ED);
+  }
+
   void ChainedConsumer::RevertNamespaceDecl(NamespaceDecl* NSD) {
+    //DeclContext* DC = NSD->getPrimaryContext();
     DeclContext* DC = NSD->getDeclContext();
     Scope* S = m_Sema->getScopeForContext(DC);
 
