@@ -3,13 +3,7 @@ project(RooFit)
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/foam)
-ROOT_USE_PACKAGE(math/minuit)
-ROOT_USE_PACKAGE(proof/proof)
-
 if(mathmore OR ROOT_mathmore_FOUND)
-  ROOT_USE_PACKAGE(math/mathmore)
   set(ROOT_MATHMORE_LIBRARY MathMore)
 endif()
 

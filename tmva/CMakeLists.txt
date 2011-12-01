@@ -7,13 +7,6 @@ project(TMVA)
 find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/minuit)
-ROOT_USE_PACKAGE(math/mlp)
-ROOT_USE_PACKAGE(hist/histpainter)
-ROOT_USE_PACKAGE(tree/treeplayer)
-ROOT_USE_PACKAGE(io/xml)
-
 set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h
 	     MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h

@@ -3,12 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-#---The following is needed becuase client codes of HistFactory assumes to find header files under RooStats/HistFactory
-#execute_process(COMMAND cmake -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/inc/RooStats)
-#execute_process(COMMAND cmake -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/RooStats/HistFactory)
-
-ROOT_USE_PACKAGE(io/xmlparser)
-
 ROOT_GENERATE_DICTIONARY(G__HistFactory RooStats/HistFactory/*.h LINKDEF LinkDef.h)
 
 ROOT_GENERATE_ROOTMAP(HistFactory LINKDEF LinkDef.h 

@@ -67,6 +67,8 @@ add_subdirectory (misc)
 add_subdirectory (main)
 add_subdirectory (bindings)
 add_subdirectory (sql)
+
+set(ROOT_DIR ${CMAKE_BINARY_DIR} CACHE PATH "Current build directory") 
 if(tmva)
   add_subdirectory(tmva)
 endif()
