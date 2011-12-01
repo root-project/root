@@ -1,8 +1,11 @@
 ############# MACROS ##############
 
-RC   := root-config
+RC     := root-config
 ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
-include $(shell $(RC) --etcdir)/Makefile.arch
+MKARCH := $(wildcard $(shell $(RC) --etcdir)/Makefile.arch)
+endif
+ifneq ($(MKARCH),)
+include $(MKARCH)
 else
 ROOTSYS = ../..
 include $(ROOTSYS)/etc/Makefile.arch
