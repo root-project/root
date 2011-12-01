@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter xmlns="http://docbook.org/ns/docbook" version="5.0">
 <title>Getting Started</title>
-<para>We begin by showing you how to use ROOT interactively. There are two examples to click through and learn how to use the GUI. We continue by using the command line, and explaining the coding conventions, global variables and the environment setup. If you have not installed ROOT, you can do so by following the instructions in the appendix, or on the ROOT web site:  <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri></para>
+<para>We begin by showing you how to use ROOT interactively. There are two 
+   examples to click through and learn how to use the GUI. We continue by using 
+   the command line, and explaining the coding conventions, global variables and 
+   the environment setup. If you have not installed ROOT, you can do so by 
+   following the instructions in the appendix, or on the ROOT web site:  
+   <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri></para>
 
 <sect1>
 <title>Setting the Environment Variables</title>
-<para>Before you can run ROOT you need to set the environment variable <code>ROOTSYS</code> and change your path to include <code>root/bin</code> and library path variables to include <code>root/lib</code>. Please note: the syntax is for <code>bash</code>, if you are running <code>tcsh</code> you will have to use <code>setenv</code> instead of <code>export</code>. </para>
+<para>Before you can run ROOT you need to set the environment variable 
+   <code>ROOTSYS</code> and change your path to include <code>root/bin</code> 
+   and library path variables to include <code>root/lib</code>. 
+   Please note: the syntax is for <code>bash</code>, if you are running 
+   <code>tcsh</code> you will have to use <code>setenv</code> instead of 
+   <code>export</code>. </para>
 <para>1. Define the variable $ROOTSYS to the directory where you unpacked the ROOT:</para>
 
 <programlisting language="c++"><emphasis role="bold"><code>$ export ROOTSYS=$HOME/root</code></emphasis>

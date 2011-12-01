@@ -459,8 +459,8 @@ The chapter “The Tutorials and Tests” has instructions on how to build all t
 
 <programlisting language="c++"
 ><emphasis role="bold"><code>&gt; ls -m $ROOTSYS/physics/inc</code></emphasis>
-CVS,LinkDef.h,TLorentzRotation.h,TLorentzVector.h,TRotation.h,TVector2.h,
-TVector3.h
+CVS,LinkDef.h,TLorentzRotation.h,TLorentzVector.h,TRotation.h,
+TVector2.h,TVector3.h
 </programlisting>
 
 </sect2>
