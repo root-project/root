@@ -7,8 +7,7 @@
 <title>The Fit Method</title>
 <para>To fit a histogram programmatically, you can use the <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code> method. Here is the signature of <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code> and an explanation of the parameters:</para>
 
-<programlisting language="c++">
-void Fit(const char *fname, Option_t *option, Option_t *goption,
+<programlisting language="c++">void Fit(const char *fname, Option_t *option, Option_t *goption,
 Axis_t xxmin, Axis_t  xxmax)
 </programlisting>
 
@@ -49,8 +48,7 @@ method:</para></listitem>
 <title>Fit with a Predefined Function</title>
 <para>To fit a histogram with a predefined function, simply pass the name of the function in the first parameter of <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code>. For example, this line fits histogram object <code>hist</code> with a Gaussian.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>hist.Fit("gaus");</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>hist.Fit("gaus");</code></emphasis>
 </programlisting>
 
 <para>The initial parameter values for pre-defined functions are set automatically.</para>
@@ -68,14 +66,12 @@ root[] <emphasis role="bold"><code>hist.Fit("gaus");</code></emphasis>
 <title>Creating a TF1 with a Formula</title>
 <para>Let's look at the first case. Here we call the <emphasis role="bold"><code>TF1</code></emphasis> constructor by giving it the formula: <code>sin(x)/x</code>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1  *f1 = new TF1("f1","sin(x)/x",0,10)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1  *f1 = new TF1("f1","sin(x)/x",0,10)</code></emphasis>
 </programlisting>
 
 <para>You can also use a <emphasis role="bold"><code>TF1</code></emphasis> object in the constructor of another <emphasis role="bold"><code>TF1</code></emphasis>.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1  *f2 = new TF1("f2","f1*2",0,10)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1  *f2 = new TF1("f2","f1*2",0,10)</code></emphasis>
 </programlisting>
 
 </sect2>
@@ -84,8 +80,7 @@ root[] <emphasis role="bold"><code>TF1  *f2 = new TF1("f2","f1*2",0,10)</code></
 <title>Creating a TF1 with Parameters</title>
 <para>The second way to construct a <emphasis role="bold"><code>TF1</code></emphasis> is to add parameters to the expression. Here we use two parameters:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);</code></emphasis>
 </programlisting>
 
 <figure><title>The function x*<code>sin(x)</code></title>
@@ -97,20 +92,17 @@ root[] <emphasis role="bold"><code>TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,
 <para/>
 <para>The parameter index is enclosed in square brackets. To set the initial parameters explicitly you can use:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>f1-&gt;SetParameter(0,10);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>f1-&gt;SetParameter(0,10);</code></emphasis>
 </programlisting>
 
 <para>This sets parameter 0 to 10. You can also use <code>SetParameters</code> to set multiple parameters at once.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>f1-&gt;SetParameters(10,5);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>f1-&gt;SetParameters(10,5);</code></emphasis>
 </programlisting>
 
 <para>This sets parameter 0 to 10 and parameter 1 to 5. We can now draw the <emphasis role="bold"><code>TF1</code></emphasis><code>:</code>   </para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>f1-&gt;Draw()</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>f1-&gt;Draw()</code></emphasis>
 </programlisting>
 
 </sect2>
@@ -119,8 +111,7 @@ root[] <emphasis role="bold"><code>f1-&gt;Draw()</code></emphasis>
 <title>Creating a TF1 with a User Function</title>
 <para>The third way to build a <emphasis role="bold"><code>TF1</code></emphasis> is to define a function yourself and then give its name to the constructor. A function for a <emphasis role="bold"><code>TF1</code></emphasis> constructor needs to have this exact signature:</para>
 
-<programlisting language="c++">
-Double_t fitf(Double_t *x,Double_t *par)
+<programlisting language="c++">Double_t fitf(Double_t *x,Double_t *par)
 </programlisting>
 
 <para>The two parameters are:</para>
@@ -130,8 +121,7 @@ Double_t fitf(Double_t *x,Double_t *par)
 </itemizedlist>
 <para>The following script <code>$ROOTSYS/tutorials/fit/myfit.C</code> illustrates how to fit a 1D histogram with a user-defined function. First we declare the function. </para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// define a function with 3 parameters</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// define a function with 3 parameters</code></emphasis>
 Double_t fitf(Double_t *x,Double_t *par)
 {
 Double_t arg = 0;
@@ -143,8 +133,7 @@ return fitval;
 
 <para>Now we use the function:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// this function used fitf to fit a histogram</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// this function used fitf to fit a histogram</code></emphasis>
 void fitexample() {
 
 <emphasis role="italic"><code>  // open a file and get a histogram</code></emphasis>
@@ -173,28 +162,24 @@ hpx-&gt;Fit("fit");
 <para>Parameters must be initialized before invoking the <code>Fit</code> method. The setting of the parameter initial values is automatic for the predefined functions: <code>poln</code>, <code>exp</code>, <code>gaus</code>, and <code>landau</code>. You can fix one or more parameters by specifying the "B" option when calling the <code>Fit</code> method. When a function is not predefined, the fit parameters must be initialized to some value as close as possible to the expected values before calling the fit function. </para>
 <para>To set bounds for one parameter, use <emphasis role="bold"><code>TF1</code></emphasis><code>::SetParLimits</code>: </para>
 
-<programlisting language="c++">
-<code>func-&gt;SetParLimits(0,-1,1);</code>
+<programlisting language="c++"><code>func-&gt;SetParLimits(0,-1,1);</code>
 </programlisting>
 
 <para>When the lower and upper limits are equal, the parameter is fixed. Next two statements fix parameter 4 at 10.</para>
 
-<programlisting language="c++">
-func-&gt;SetParameter(4,10);
+<programlisting language="c++">func-&gt;SetParameter(4,10);
 func-&gt;SetParLimits(4,10,10);
 </programlisting>
 
 <para>However, to fix a parameter to 0, one must call the <code>FixParameter</code> function:</para>
 
-<programlisting language="c++">
-func-&gt;SetParameter(4,0);
+<programlisting language="c++">func-&gt;SetParameter(4,0);
 func-&gt;FixParameter(4,0);
 </programlisting>
 
 <para>Note that you are not forced to set the limits for all parameters. For example, if you fit a function with 6 parameters, you can:</para>
 
-<programlisting language="c++">
-func-&gt;SetParameters(0,3.1,1.e-6,-1.5,0,100);
+<programlisting language="c++">func-&gt;SetParameters(0,3.1,1.e-6,-1.5,0,100);
 func-&gt;SetParLimits(3,-10,4);
 func-&gt;FixParameter(4,0);
 </programlisting>
@@ -206,15 +191,13 @@ func-&gt;FixParameter(4,0);
 <title>Fitting Sub Ranges</title>
 <para>By default, <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code>         will fit the function on the defined histogram range. You can specify the option "<code>R</code>" in the second parameter of <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code> to restrict the fit to the range specified in the <emphasis role="bold"><code>TF1</code></emphasis> constructor. In this example, the fit will be limited to –3 to 3, the range specified in the <emphasis role="bold"><code>TF1</code></emphasis> constructor.</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1 *f1 = new TF1("f1","[0]*x*sin([1]*x)",-3,3);</code></emphasis>
 root[] <emphasis role="bold"><code>hist-&gt;Fit("f1","R");</code></emphasis>
 </programlisting>
 
 <para>You can also specify a range in the call to <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code>:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>hist-&gt;Fit("f1","","",-2,2)</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>hist-&gt;Fit("f1","","",-2,2)</code></emphasis>
 </programlisting>
 
 <para>See macros <code>$ROOTSYS/tutorials/fit/myfit.C</code> and <code>multifit.C </code>as more completed examples.</para>
@@ -288,8 +271,7 @@ root[] <emphasis role="bold"><code>hist-&gt;Fit("f1","","",-2,2)</code></emphasi
 
 <para>First, four TF1 objects are created – one for each sub-range:</para>
 
-<programlisting language="c++">
-g1 = new TF1("m1","gaus",85,95);
+<programlisting language="c++">g1 = new TF1("m1","gaus",85,95);
 g2 = new TF1("m2","gaus",98,108);
 g3 = new TF1("m3","gaus",110,121);
 <emphasis role="italic"><code>// The total is the sum of the three, each has 3 parameters</code></emphasis>
@@ -298,8 +280,7 @@ total = new TF1("mstotal","gaus(0)+gaus(3)+gaus(6)",85,125);
 
 <para>Next, we fill a histogram with bins defined in the array x.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// Create a histogram and set it's contents</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// Create a histogram and set it's contents</code></emphasis>
 <code>h = new TH1F("g1","Example of several fits in subranges",np,85,134);</code>
 <code>h-&gt;SetMaximum(7);</code>
 <code>for (int i=0; i&lt;np; i++) {</code>
@@ -311,8 +292,7 @@ total = new TF1("mstotal","gaus(0)+gaus(3)+gaus(6)",85,125);
 
 <para>When fitting simple functions, such as a Gaussian, the initial values of the parameters are automatically computed by ROOT. In the more complicated case of the sum of 3 Gaussian functions, the initial values of parameters must be set. In this particular case, the initial values are taken from the result of the individual fits. The use of the "+" sign is explained below:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// Fit each function and add it to the list of functions</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// Fit each function and add it to the list of functions</code></emphasis>
 <code>h-&gt;Fit(g1,"R");</code>
 <code>h-&gt;Fit(g2,"R+");</code>
 <code>h-&gt;Fit(g3,"R+");</code>
@@ -333,8 +313,7 @@ total = new TF1("mstotal","gaus(0)+gaus(3)+gaus(6)",85,125);
 <title>Adding Functions to the List</title>
 <para>The example <code>$ROOTSYS/tutorials/fit/multifit.C</code> also illustrates how to fit several functions on the same histogram. By default a Fit command deletes the previously fitted function in the histogram object. You can specify the option "+" in the second parameter to add the newly fitted function to the existing list of functions for the histogram. </para>
 
-<programlisting language="c++">
-root[]<emphasis role="bold"><code> hist-&gt;Fit("f1","+","",-2,2)</code></emphasis>
+<programlisting language="c++">root[]<emphasis role="bold"><code> hist-&gt;Fit("f1","+","",-2,2)</code></emphasis>
 </programlisting>
 
 <para>Note that the fitted function(s) are saved with the histogram when it is written to a ROOT file.</para>
@@ -356,8 +335,7 @@ root[]<emphasis role="bold"><code> hist-&gt;Fit("f1","+","",-2,2)</code></emphas
 <para><code>par[0]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006A.png" width="13.05pt" depth="16.75pt"/></imageobject></inlinemediaobject>   <code>par[1]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006B.png" width="13.65pt" depth="16.75pt"/></imageobject></inlinemediaobject>   <code>par[2]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006C.png" width="13.05pt" depth="18pt"/></imageobject></inlinemediaobject>   <code>par[3]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006D.png" width="16.15pt" depth="16.75pt"/></imageobject></inlinemediaobject>   <code>par[4]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006E.png" width="13.05pt" depth="13.65pt"/></imageobject></inlinemediaobject> <code> par[5]=</code><inlinemediaobject><imageobject><imagedata fileref="pictures/0800006F.png" width="12.4pt" depth="12.4pt"/></imageobject></inlinemediaobject></para>
 <para>This script creates a histogram and fits it with the combination of two functions. First we define the two functions and the combination function:</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// Quadratic background function</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// Quadratic background function</code></emphasis>
 Double_t background(Double_t *x, Double_t *par) {
 return par[0] + par[1]*x[0] + par[2]*x[0]*x[0];
 }
@@ -432,8 +410,7 @@ signalFcn-&gt;Draw("same");
 <title>Associated Function</title>
 <para>One or more objects (typically a <emphasis role="bold"><code>TF1</code></emphasis>*) can be added to the list of functions (<code>fFunctions</code>) associated to each histogram. A call to <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code> adds the fitted function to this list. Given a histogram <code>h</code>, one can retrieve the associated function with:</para>
 
-<programlisting language="c++">
-TF1 *myfunc = h-&gt;GetFunction("myfunc");
+<programlisting language="c++">TF1 *myfunc = h-&gt;GetFunction("myfunc");
 </programlisting>
 
 </sect1>
@@ -442,8 +419,7 @@ TF1 *myfunc = h-&gt;GetFunction("myfunc");
 <title>Access to the Fit Parameters and Results</title>
 <para>If the histogram (or graph) is made persistent, the list of associated functions is also persistent. Retrieve a pointer to the function with the <emphasis role="bold"><code>TH1</code></emphasis><code>::GetFunction()</code> method. Then you can retrieve the fit parameters from the function (<emphasis role="bold"><code>TF1</code></emphasis>) with calls such as:</para>
 
-<programlisting language="c++">
-root[] <emphasis role="bold"><code>TF1 *fit = hist-&gt;GetFunction(function_name);</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold"><code>TF1 *fit = hist-&gt;GetFunction(function_name);</code></emphasis>
 root[]<emphasis role="bold"><code> Double_t chi2 = fit-&gt;GetChisquare();</code></emphasis>
 <emphasis role="italic"><code>// value of the first parameter</code></emphasis>
 root[] <emphasis role="bold"><code>Double_t p1 = fit-&gt;GetParameter(0);</code></emphasis>
@@ -457,8 +433,7 @@ root[] <emphasis role="bold"><code>Double_t e1 = fit-&gt;GetParError(0);</code><
 <title>Associated Errors</title>
 <para>By default, for each bin, the sum of weights is computed at fill time. One can also call <emphasis role="bold"><code>TH1</code></emphasis><code>::Sumw2</code> to force the storage and computation of the sum of the square of weights per bin. If Sumw2 has been called, the error per bin is computed as the <code>sqrt</code> <code>(</code>sum of squares of weights<code>)</code>; otherwise, the error is set equal to the <code>sqrt</code> <code>(bin content</code>). To return the error for a given bin number, do:</para>
 
-<programlisting language="c++">
-Double_t error = h-&gt;GetBinError(bin);
+<programlisting language="c++">Double_t error = h-&gt;GetBinError(bin);
 </programlisting>
 
 <para>Empty bins are excluded in the fit when using the Chi-square fit method. When fitting the histogram with the low statistics, it is recommended to use the Log-Likelihood method (option ‘<code>L</code>’ or “<code>LL</code>”).</para>
@@ -475,8 +450,7 @@ Double_t error = h-&gt;GetBinError(bin);
 </itemizedlist>
 <para>For example, to print the fit probability, parameter names/values, and errors, use:</para>
 
-<programlisting language="c++">
-gStyle-&gt;SetOptFit(1011);
+<programlisting language="c++">gStyle-&gt;SetOptFit(1011);
 </programlisting>
 
 </sect1>
@@ -496,8 +470,7 @@ gStyle-&gt;SetOptFit(1011);
 <listitem><para>The functions <code>SetObjectFit/GetObjectFit</code>         can be used inside the <code>FCN</code> function to set/get a referenced object instead of using global variables</para></listitem>
 <listitem><para>By default <code>fGraphicsMode</code> is true. When calling the <code>Minuit</code> functions such as <code>mncont</code>, <code>mnscan</code>, or any <code>Minuit</code> command invoking <code>mnplot</code>, <emphasis role="bold"><code>TMinuit</code></emphasis><code>::mnplot()</code> produces a <emphasis role="bold"><code>TGraph</code></emphasis> object pointed by <code>fPlot</code>. One can retrieve this object with <emphasis role="bold"><code>TMinuit</code></emphasis><code>::GetPlot().</code> For example: </para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-h-&gt;Fit("gaus");
+<programlisting language="c++">h-&gt;Fit("gaus");
 gMinuit-&gt;Command("SCAn 1");
 TGraph *gr = (TGraph*)gMinuit-&gt;GetPlot();
 gr-&gt;SetMarkerStyle(21);
@@ -506,8 +479,7 @@ gr-&gt;Draw("alp");
 <itemizedlist>
 <listitem><para>To set <code>Minuit</code> in no graphics mode, call </para></listitem>
 </itemizedlist>
-<programlisting language="c++">
-gMinuit-&gt;SetGraphicsMode(kFALSE);
+<programlisting language="c++">gMinuit-&gt;SetGraphicsMode(kFALSE);
 </programlisting>
 
 <sect2>
@@ -700,15 +672,13 @@ gMinuit-&gt;SetGraphicsMode(kFALSE);
 <para>In addition, input and output layer formulas can be preceded by '@' (e.g. "@out") if one wants to normalize the corresponding value. Also, if the string ends with '<code>!</code>', output neurons are set up for classification, i.e. with a sigmoid (1 neuron) or softmax (more neurons) activation function.</para>
 <para>Many questions on the good usage of neural network, including rules of dumb to determine the best network topology are addressed at  <uri xmlns:xlink="ftp://ftp.sas.com/pub/neural/FAQ.html">ftp://ftp.sas.com/pub/neural/FAQ.html</uri></para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// a simple network: 2 inputs, 10</code></emphasis><emphasis role="italic"><code> hidden and 1 normalized output neuron</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// a simple network: 2 inputs, 10</code></emphasis><emphasis role="italic"><code> hidden and 1 normalized output neuron</code></emphasis>
 TMultiLayerPerceptron network("r,z:10:@Br",tree);
 </programlisting>
 
 <para>Expressions are evaluated as for <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code>. Input and outputs are taken from the <emphasis role="bold"><code>TTree</code></emphasis> associated with the network. This <emphasis role="bold"><code>TTree</code></emphasis> can be given as argument of the constructor or defined later with <emphasis role="bold"><code>TMultiLayerPerceptron</code></emphasis><code>::SetData()</code>. Events can also be weighted. The weight expression can be given in the constructor or set later with the method <code>SetWeight()</code> of the class <emphasis role="bold"><code>TMultiLayerPerceptron</code></emphasis>. Two datasets must be defined before learning the network: a training dataset that is used when minimizing the error, and a test dataset that will avoid bias. Those two datasets can be build aside and then given to the network, or can be build from a standard expression. By default, half of the events are put in both datasets.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>// a more complex 4:8</code></emphasis><emphasis role="italic"><code>:1 network </code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>// a more complex 4:8</code></emphasis><emphasis role="italic"><code>:1 network </code></emphasis>
 <emphasis role="italic"><code>// the ptsumf branch is used as weigh; default event lists are explicit</code></emphasis>
 TMultiLayerPerceptron  network("m,pt,acol,acopl:8:type","pt",tree,
 "Entry$%2","Entry$/2");
@@ -716,8 +686,7 @@ TMultiLayerPerceptron  network("m,pt,acol,acopl:8:type","pt",tree,
 
 <para>The method <emphasis role="bold"><code>TMultiLayerPerceptron</code></emphasis><code>::SetLearningMethod()</code> defines the learning method. Learning methods are:</para>
 
-<programlisting language="c++">
-TMultiLayerPerceptron::kStochastic,
+<programlisting language="c++">TMultiLayerPerceptron::kStochastic,
 TMultiLayerPerceptron::kBatch,
 TMultiLayerPerceptron::kSteepestDescent,
 TMultiLayerPerceptron::kRibierePolak,
@@ -727,8 +696,7 @@ TMultiLayerPerceptron::kBFGS      <emphasis role="italic"><code>// default</code
 
 <para>The training can start with <emphasis role="bold"><code>TMultiLayerPerceptron</code></emphasis><code>::Train(Int_t nepoch,Option_t* options).</code> The first argument is the number of epochs while option is a string that can contain "<code>text</code>" (simple text output), "<code>graph</code>" (evaluating graphical training curves), "<code>update</code> <code>=</code> <code>X</code>" (step for the text/graph output update) or "<code>+</code>" (will skip the randomization and start from the previous values). All combinations are available.</para>
 
-<programlisting language="c++">
-network.Train(1000,"text,graph,update=10"); <emphasis role="italic"><code>//full output every 10 epochs</code></emphasis>
+<programlisting language="c++">network.Train(1000,"text,graph,update=10"); <emphasis role="italic"><code>//full output every 10 epochs</code></emphasis>
 network.Train(100,"text,+");                <emphasis role="italic"><code>//100 more epochs </code></emphasis>
 <emphasis role="italic"><code> //starts with existing weights</code></emphasis>
 </programlisting>
@@ -740,8 +708,7 @@ network.Train(100,"text,+");                <emphasis role="italic"><code>//100 
 <title>Examples</title>
 <para>An example of how to use <emphasis role="bold"><code>TMultiLayerPerceptron</code></emphasis> is the macro <code>mlpHiggs.C</code> in $ROOTSYS/tutorials. Using some standard simulated information that could have been obtained at <code>LEP</code>, a neural network is build, which can make the difference between <code>WW</code> events and events containing a Higgs boson. Starting with a <emphasis role="bold"><code>TFile</code></emphasis> containing two <emphasis role="bold"><code>TTree</code></emphasis>s: one for the signal, the other for the background, a simple script is used:</para>
 
-<programlisting language="c++">
-void mlpHiggs(Int_t ntrain=100)
+<programlisting language="c++">void mlpHiggs(Int_t ntrain=100)
 { if (!gROOT-&gt;GetClass("TMultiLayerPerceptron"))
 gSystem-&gt;Load("libMLP");
 <emphasis role="italic"><code>   // prepare inputs - the 2 trees are merged into one, and a "type"</code></emphasis>
@@ -755,8 +722,7 @@ TTree *simu = new TTree("MonteCarlo","Filtered Monte Carlo Events");
 
 <para>Since the input is a <emphasis role="bold"><code>TTree</code></emphasis> and we are starting from two different <emphasis role="bold"><code>TTree</code></emphasis>s (with different names), they are first merged into one, and a "<code>type</code>" branch is added, that says whether there is a signal or a background event. Those irrelevant details are skipped here.</para>
 
-<programlisting language="c++">
-...
+<programlisting language="c++">...
 TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf, acolin,
 acopl:8:type","ptsumf",simu,"Entry$%2","Entry$/2");
 mlp-&gt;Train(ntrain, "text,graph,update=10");
@@ -764,8 +730,7 @@ mlp-&gt;Train(ntrain, "text,graph,update=10");
 
 <para>The neural network is instantiated and trained. "<code>ptsumf</code>" is used as a weight, and the standard event lists are explicit. The network that is then build has four input neurons, eight additional ones in the only hidden layer and one single output neuron.</para>
 
-<programlisting language="c++">
-<emphasis role="italic"><code>   // Use the NN to plot the results for each sample</code></emphasis>
+<programlisting language="c++"><emphasis role="italic"><code>   // Use the NN to plot the results for each sample</code></emphasis>
 TH1F *bg = new TH1F("bgh","NN output",50,-.5,1.5);
 TH1F *sig = new TH1F("sigh","NN output",50,-.5,1.5);
 bg-&gt;SetDirectory(0);
