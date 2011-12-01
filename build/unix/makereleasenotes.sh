@@ -27,8 +27,7 @@ done
 # write header note
 for v in $VERS; do
    if [ -r doc/v${v}/index.html ]; then
-      echo "<!-- doc/v${v}/index.html -->" > $OUTDIR/v${v}/index.html
-      cat doc/v${v}/index.html >> $OUTDIR/v${v}/index.html
+      cat doc/v${v}/index.html > $OUTDIR/v${v}/index.html
    fi
 done
 

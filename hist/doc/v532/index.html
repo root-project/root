@@ -59,7 +59,7 @@ the axis. (fix from beischer@physik.rwth-aachen.de).
 { 
    TMultiGraph* mg = new TMultiGraph; 
    TGraph* g = new TGraph; 
-   for (int i = 0; i < 100; i++) g->SetPoint(i, 1289420808+i, i+2); 
+   for (int i = 0; i &lt; 100; i++) g->SetPoint(i, 1289420808+i, i+2); 
    mg->Add(g, "P"); 
    mg->Draw("AP"); 
    mg->GetXaxis()->SetTimeDisplay(1); 
@@ -135,7 +135,7 @@ X and Y vectors. The following macro generated a wrong output (tmp.C).
       double offset=55.0;
       TCanvas* myC = new TCanvas("myC","myC",600,400);
       TGraph* gr=new TGraph();
-      for(int i=0;i<1000;i++){
+      for (int i=0; i &lt; 1000; i++) {
          double point_x = 3.0+((double) i)*1e-7;
          double point_y = offset+((double) i)*1e-8;
          gr->SetPoint(i,point_x,point_y);
