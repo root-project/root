@@ -773,6 +773,11 @@ void TFile::Init(Bool_t create)
       if (fgReadInfo) {
          if (fSeekInfo > fBEGIN) {
             ReadStreamerInfo();
+            if (IsZombie()) {
+               R__LOCKGUARD2(gROOTMutex);
+               gROOT->GetListOfFiles()->Remove(this);
+               goto zombie;
+            }
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
             Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
          }
