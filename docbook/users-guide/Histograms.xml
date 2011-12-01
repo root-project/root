@@ -934,28 +934,28 @@ h2.Draw("[cut1,-cut2],surf,same");
 
 <programlisting language="c++">void twoscales() {
 TCanvas *c1 = new TCanvas("c1","different scales hists",600,400);
-<emphasis role="italic"><code>//create, fill and draw h1</code></emphasis>
+<emphasis role="italic">//create, fill and draw h1</emphasis>
 gStyle-&gt;SetOptStat(kFALSE);
 TH1F *h1 = new TH1F("h1","my histogram",100,-3,3);
 for (Int_t i=0;i&lt;10000;i++) h1-&gt;Fill(gRandom-&gt;Gaus(0,1));
 h1-&gt;Draw();
 c1-&gt;Update();
-<emphasis role="italic"><code>//create hint1 filled with the bins integral of h1</code></emphasis>
+<emphasis role="italic">//create hint1 filled with the bins integral of h1</emphasis>
 TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
 Float_t sum = 0;
 for (Int_t i=1;i&lt;=100;i++) {
 sum += h1-&gt;GetBinContent(i);
 hint1-&gt;SetBinContent(i,sum);
 }
-<emphasis role="italic"><code>   //scale hint1 to the pad coordinates</code></emphasis>
+<emphasis role="italic">   //scale hint1 to the pad coordinates</emphasis>
 Float_t rightmax = 1.1*hint1-&gt;GetMaximum();
 Float_t scale = gPad-&gt;GetUymax()/rightmax;
 hint1-&gt;SetLineColor(kRed);
 hint1-&gt;Scale(scale);
 hint1-&gt;Draw("same");
-<emphasis role="italic"><code>//draw an axis on the right side</code></emphasis>
-TGaxis *axis = new TGaxis(gPad-&gt;GetUxmax(),gPad-&gt;GetUymin(),gPad-&gt;GetUxmax(),
-gPad-&gt;GetUymax(),0,rightmax,510,"+L");
+<emphasis role="italic">//draw an axis on the right side</emphasis>
+TGaxis *axis = new TGaxis(gPad-&gt;GetUxmax(),gPad-&gt;GetUymin(),
+gPad-&gt;GetUxmax(),gPad-&gt;GetUymax(),0,rightmax,510,"+L");
 axis-&gt;SetLineColor(kRed);
 axis-&gt;SetLabelColor(kRed);
 axis-&gt;Draw();
@@ -1000,16 +1000,18 @@ axis-&gt;Draw();
 <listitem><para><code>k</code>the kurtosis</para></listitem>
 <listitem><para><code>K</code>the kurtosis and the kurtosis error</para></listitem>
 </itemizedlist>
-<programlisting language="c++"><code>gStyle-&gt;SetOptStat("ne");    </code><emphasis role="italic"><code>// prints the histogram name and number of entries</code></emphasis>
-<code>gStyle-&gt;SetOptStat("n");     </code><emphasis role="italic"><code>// prints the histogram name</code></emphasis>
-<code>gStyle-&gt;SetOptStat("nemr");  </code><emphasis role="italic"><code>// the default value </code></emphasis>
+<programlisting language="c++">gStyle-&gt;SetOptStat("ne");    <emphasis role="italic">// prints the histogram name and 
+                     // number of entries</emphasis>
+gStyle-&gt;SetOptStat("n");     <emphasis role="italic">// prints the histogram name</emphasis>
+gStyle-&gt;SetOptStat("nemr");  <emphasis role="italic">// the default value </emphasis>
 </programlisting>
 
 <para>With the option <code>"same"</code>, the statistic box is not redrawn. With the option <code>"sames"</code>, it is re-drawn. If it hides the previous statistics box, you can change its position with the next lines (where <code>h</code> is the histogram pointer):</para>
 
-<programlisting language="c++">root[] <emphasis role="bold"><code>TPaveStats</code></emphasis><emphasis role="bold"><code> *s = (TPaveStats*)h-&gt;GetListOfFunctions()-&gt;FindObject("stats");</code></emphasis>
-root[] <emphasis role="bold"><code>s-&gt;SetX1NDC (newx1);</code></emphasis>  <emphasis role="italic"><code>//new x start position</code></emphasis>
-root[] <emphasis role="bold"><code>s-&gt;SetX2NDC (newx2); </code></emphasis><emphasis role="italic"><code>//new x end position</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">TPaveStats *s = 
+       (TPaveStats*)h-&gt;GetListOfFunctions()-&gt;FindObject("stats");</emphasis>
+root[] <emphasis role="bold">s-&gt;SetX1NDC (newx1);</emphasis> <emphasis role="italic">//new x start position</emphasis>
+root[] <emphasis role="bold">s-&gt;SetX2NDC (newx2);</emphasis> <emphasis role="italic">//new x end position</emphasis>
 </programlisting>
 
 </sect1>
@@ -1071,8 +1073,10 @@ TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
 <title>Making a Copy of an Histogram</title>
 <para>Like for any other ROOT object derived from <emphasis role="bold"><code>TObject</code></emphasis>, the <code>Clone</code> method can be used. This makes an identical copy of the original histogram including all associated errors and functions:</para>
 
-<programlisting language="c++">TH1F *hnew = (TH1F*)h-&gt;Clone(); <emphasis role="italic"><code>// renaming is recommended, because otherwise you </code></emphasis>
-hnew-&gt;SetName("hnew");          <emphasis role="italic"><code>// will have two histograms with the same name</code></emphasis>
+<programlisting language="c++">TH1F *hnew = (TH1F*)h-&gt;Clone(); <emphasis role="italic">// renaming is recommended, 
+    // because otherwise you </emphasis>
+hnew-&gt;SetName("hnew");          <emphasis role="italic">// will have two histograms with 
+    // the same name</emphasis>
 </programlisting>
 
 </sect1>
@@ -1195,7 +1199,8 @@ tree.Draw("Nation::Division");
 integer by adding an arithmetic operation to the expression as shown below.</para>
 
 <programlisting language="c++"><code>tree.Draw("MyChar + 0"); </code>
-<emphasis role="italic"><code>//this will draw the integer value of MyChar[0] where "MyChar" is char[5]</code></emphasis>
+<emphasis role="italic"><code>//this will draw the integer value of MyChar[0] 
+    // where "MyChar" is char[5]</code></emphasis>
 </programlisting>
 
 </sect2>
@@ -1400,8 +1405,10 @@ of the <code>s[i,j]</code> for all cells. This approximation is used to keep the
 
 <programlisting language="c++"><code>{</code>
 <emphasis role="italic"><code> // Creating a Canvas and a TProfile2D</code></emphasis>
-<code>  TCanvas *c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);</code>
-<code>  hprof2d  = new TProfile2D("hprof2d","Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);</code>
+<code>  TCanvas *c1 = new TCanvas("c1","Profile histogram example",
+    200,10,700,500);</code>
+<code>  hprof2d  = new TProfile2D("hprof2d",
+    "Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);</code>
 
 <emphasis role="italic"><code>  // Filling the TProfile2D with 25000 points</code></emphasis>
 

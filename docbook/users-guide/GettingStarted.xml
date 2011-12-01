@@ -452,9 +452,9 @@ Print.Directory:          .
 <para>We have briefly touched on how to use the command line. There are different types of commands.</para>
 <para>1. CINT commands start with “<code>.</code>”</para>
 
-<programlisting language="c++">root[] <emphasis role="bold"><code>.?</code></emphasis>                   <emphasis role="italic"><code>//this command will list all the CINT commands</code></emphasis><emphasis>         </emphasis>
-root[] .<emphasis role="bold"><code>L &lt;filename&gt;</code></emphasis>   <emphasis role="italic"><code>//load [filename]</code></emphasis>
-root[] <emphasis role="bold"><code>.x &lt;filename&gt; </code></emphasis>           <emphasis role="italic"><code>//load and execute [filename]</code></emphasis>
+<programlisting language="c++">root[] <emphasis role="bold">.?</emphasis>  <emphasis role="italic">//this command will list all the CINT commands</emphasis>
+root[] <emphasis role="bold">.L &lt;filename&gt;</emphasis>  <emphasis role="italic">//load [filename]</emphasis>
+root[] <emphasis role="bold">.x &lt;filename&gt;</emphasis>  <emphasis role="italic">//load and execute [filename]</emphasis>
 </programlisting>
 
 <para>2. SHELL commands start with “<code>.!</code>” for example:</para>
