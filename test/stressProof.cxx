@@ -1027,7 +1027,7 @@ int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile
    }
 
    // If not PROOF-Lite, stop the daemon used for the test
-   if (gProof && !gProof->IsLite() && !extcluster) {
+   if (gProof && !gProof->IsLite() && !extcluster && gROOT->IsBatch()) {
       // Get the manager
       TProofMgr *mgr = gProof->GetManager();
       // Close the instance
@@ -1232,7 +1232,7 @@ Int_t PT_CheckH1(TQueryResult *qr, Int_t irun = 0)
    PutPoint();
    Long64_t runEntries[2] = {283813, 7525};
    if (qr->GetEntries() != runEntries[irun]) {
-      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
+      printf("\n >>> Test failure: wrong number of entries processed: %lld (expected %lld)\n", qr->GetEntries(), runEntries[irun]);
       return -1;
    }
 
@@ -2000,7 +2000,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 
    // Set/unset the parallel unzip flag
    AssertParallelUnzip();
-
+   
    // Multiple dataset used to create the entry list
    TString dsname("h1dseta|h1dsetb");
 
