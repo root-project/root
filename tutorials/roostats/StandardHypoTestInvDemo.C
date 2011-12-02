@@ -497,9 +497,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
          std::cout << "StandardHypoTestInvDemo" << "  -  Switch off all systematics by setting them constant to their initial values" << std::endl;
          RooStats::SetAllConstant(*nuisPar);
       }
-      const RooArgSet * bnuisPar = bModel->GetNuisanceParameters();
-      if (bnuisPar) 
-         RooStats::SetAllConstant(*bnuisPar);
+      if (bModel) { 
+         const RooArgSet * bnuisPar = bModel->GetNuisanceParameters();
+         if (bnuisPar) 
+            RooStats::SetAllConstant(*bnuisPar);
+      }
    }
   
    if (!bModel || bModel == sbModel) {
