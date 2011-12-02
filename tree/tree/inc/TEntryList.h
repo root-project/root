@@ -81,8 +81,10 @@ class TEntryList: public TNamed
    
    virtual Long64_t    Next();
    virtual void        OptimizeStorage();
+   virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = 0);
    virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0);
    virtual void        Reset();
+   virtual Int_t       ScanPaths(TList *roots, Bool_t notify = kTRUE);
 
    virtual void        Print(const Option_t* option = "") const;
    virtual void        SetDirectory(TDirectory *dir);
@@ -96,6 +98,10 @@ class TEntryList: public TNamed
    virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
    virtual void        Subtract(const TEntryList *elist);
 
+   static  Int_t       Relocate(const char *fn,
+                                const char *newroot, const char *oldroot = 0, const char *enlnm = 0);
+   static  Int_t       Scan(const char *fn, TList *roots);
+
 // Preventing warnings with -Weffc++ in GCC since the overloading of the || operator was a design choice.
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
 #pragma GCC diagnostic push
@@ -106,6 +112,6 @@ class TEntryList: public TNamed
 #pragma GCC diagnostic pop
 #endif
 
-   ClassDef(TEntryList, 1);  //A list of entries in a TTree
+   ClassDef(TEntryList, 2);  //A list of entries in a TTree
 };
 #endif
