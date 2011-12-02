@@ -1203,7 +1203,12 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          msg.Form("Lite-0: all output objects have been merged                                                         ");
          fprintf(stderr, "%s\n", msg.Data());
       }
-
+      // Save the performance info, if required
+      if (!fPerfTree.IsNull()) {
+         if (SavePerfTree() != 0) Error("Process", "saving performance info ...");
+         // Must be re-enabled each time
+         SetPerfTree(0);
+      }
    }
 
    // Done
