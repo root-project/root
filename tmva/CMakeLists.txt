@@ -2,10 +2,19 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(TMVA)
-find_package(ROOT REQUIRED)
-include(${ROOT_USE_FILE})
+if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
+  cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+  project(TMVA)
+  find_package(ROOT REQUIRED)
+  include(${ROOT_USE_FILE})
+endif()
+
+ROOT_USE_PACKAGE(math/mathcore)
+ROOT_USE_PACKAGE(math/minuit)
+ROOT_USE_PACKAGE(math/mlp)
+ROOT_USE_PACKAGE(hist/histpainter)
+ROOT_USE_PACKAGE(tree/treeplayer)
+ROOT_USE_PACKAGE(io/xml)
 
 set(headers1 Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h
 	     MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h

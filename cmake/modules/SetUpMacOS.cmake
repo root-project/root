@@ -24,7 +24,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
     #TODO: check haveconfig and rpath -> set rpath true
     #TODO: check Thread, define link command
     #TODO: more stuff check configure script
-    execute_process(COMMAND sysctl machdep.cpu.extfeatures OUTPUT_VARIABLE SYSCTL_OUTPUT)
+    execute_process(COMMAND /usr/sbin/sysctl machdep.cpu.extfeatures OUTPUT_VARIABLE SYSCTL_OUTPUT)
     if(${SYSCTL_OUTPUT} MATCHES 64)
        MESSAGE(STATUS "Found a 64bit system") 
        set(ROOT_ARCHITECTURE macosx64)
