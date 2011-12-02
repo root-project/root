@@ -293,7 +293,6 @@
 
 #include "getProof.C"
 void plotNtuple(TProof *p, const char *ds, const char *ntptitle);
-int getDebugEnum(const char *what);
 void SavePerfTree(TProof *proof, const char *fn);
 
 TDrawFeedback *fb = 0;
@@ -1274,62 +1273,6 @@ void plotNtuple(TProof *p, const char *ds, const char *ntptitle)
    // Clear parameters used for the plots
    p->DeleteParameters("PROOF_*Color");
    p->DeleteParameters("PROOF_*Style");
-}
-
-int getDebugEnum(const char *what)
-{
-   // Check if 'what' matches one of the TProofDebug enum and return the corresponding
-   // integer. Relies on a perfect synchronization with the content of TProofDebug.h .
-
-   TString sws(what), sw;
-   int rcmask = 0;
-   int from = 0;
-   while (sws.Tokenize(sw, from , "|")) {
-      if (sw.BeginsWith("k")) sw.Remove(0,1);
-
-      if (sw == "None") {
-         rcmask |= TProofDebug::kNone;
-      } else if (sw == "Packetizer") {
-         rcmask |= TProofDebug::kPacketizer;
-      } else if (sw == "Loop") {
-         rcmask |= TProofDebug::kLoop;
-      } else if (sw == "Selector") {
-         rcmask |= TProofDebug::kSelector;
-      } else if (sw == "Output") {
-         rcmask |= TProofDebug::kOutput;
-      } else if (sw == "Input") {
-         rcmask |= TProofDebug::kInput;
-      } else if (sw == "Global") {
-         rcmask |= TProofDebug::kGlobal;
-      } else if (sw == "Package") {
-         rcmask |= TProofDebug::kPackage;
-      } else if (sw == "Feedback") {
-         rcmask |= TProofDebug::kFeedback;
-      } else if (sw == "Condor") {
-         rcmask |= TProofDebug::kCondor;
-      } else if (sw == "Draw") {
-         rcmask |= TProofDebug::kDraw;
-      } else if (sw == "Asyn") {
-         rcmask |= TProofDebug::kAsyn;
-      } else if (sw == "Cache") {
-         rcmask |= TProofDebug::kCache;
-      } else if (sw == "Collect") {
-         rcmask |= TProofDebug::kCollect;
-      } else if (sw == "Dataset") {
-         rcmask |= TProofDebug::kDataset;
-      } else if (sw == "Submerger") {
-         rcmask |= TProofDebug::kSubmerger;
-      } else if (sw == "Monitoring") {
-         rcmask |= TProofDebug::kMonitoring;
-      } else if (sw == "All") {
-         rcmask |= TProofDebug::kAll;
-      } else if (!sw.IsNull()) {
-         Printf("WARNING: requested debug enum name '%s' does not exist: assuming 'All'", sw.Data());
-         rcmask |= TProofDebug::kAll;
-      }
-   }
-   // Done
-   return rcmask;
 }
 
 //______________________________________________________________________________

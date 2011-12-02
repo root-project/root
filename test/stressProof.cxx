@@ -8,7 +8,7 @@
 // *                                                                       * //
 // *  $ cd $ROOTSYS/test                                                   * //
 // *  $ make stressProof                                                   * //
-// *  $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile]             * //
+// *  $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile]     * //
 // *                  [-dyn] [-ds] [-t tests] [-h1 h1src]                  * //
 // *                  [-event src] [-dryrun] [master]                      * //
 // *                                                                       * //
@@ -19,7 +19,10 @@
 // *               default 'localhost:40000'                               * //
 // *   -n wrks     number of workers to be started when running on the     * //
 // *               local host; default is the nuber of local cores         * //
-// *   -d level    verbosity level [1]                                     * //
+// *   -d [scope:]level                                                    * //
+// *               verbosity scope and level; default level is 1; scope    * //
+// *               refers to PROOF debug options (see TProofDebug.h) and   * //
+// *               is enabled only is level > 1 (default kAll).            * //
 // *   -l logfile  file where to redirect the processing logs; default is  * //
 // *               a temporary file deleted at the end of the test; in     * //
 // *               case of success                                         * //
@@ -33,7 +36,10 @@
 // *               use h1src="download" to download them to a temporary    * //
 // *               location; by default the files are read directly from   * //
 // *               the ROOT http server; however this may give failures if * //
-// *               the connection is slow                                  * //
+// *               the connection is slow;                                 * //
+// *               if h1src ends with ".zip" the program assumes that the  * //
+// *               4 files are concatenated in a single zip archive and    * //
+// *               are accessible with the standard archive syntax.        * //
 // *   -punzip     use parallel unzipping for data-driven processing       * //
 // *   -dryrun     only show which tests would be run                      * //
 // *                                                                       * //
@@ -138,6 +144,7 @@ static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
 static TString gsandbox;
 static Int_t gverbose = 1;
+static TString gverbproof("kAll");
 static TString glogfile;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
@@ -157,6 +164,7 @@ static Bool_t gSkipDataSetTest = kTRUE;
 static Bool_t gUseParallelUnzip = kFALSE;
 static TString gh1src("http://root.cern.ch/files/h1");
 static Bool_t gh1ok = kTRUE;
+static char gh1sep = '/';
 static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root" };
 static TString geventsrc("http://root.cern.ch/files/data");
 static Bool_t geventok = kTRUE;
@@ -184,7 +192,7 @@ static TString gProcFileElem("$ROOTSYS/tutorials/proof/ProcFileElements.C");
 static TString gNtpRndm("$ROOTSYS/tutorials/proof/ntprndm.root");
 
 int stressProof(const char *url = "proof://localhost:40000",
-                Int_t nwrks = -1, Int_t verbose = 1,
+                Int_t nwrks = -1, const char *verbose = "1",
                 const char *logfile = 0, Bool_t dyn = kFALSE,
                 Bool_t skipds = kTRUE, const char *tests = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
@@ -202,7 +210,7 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile] [-dyn] [-ds]\n");
       printf("                 [-t tests] [-h1 h1src] [-event src] [-g] [-cpu] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
@@ -211,7 +219,9 @@ int main(int argc,const char *argv[])
       printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:40000'\n");
       printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
-      printf("   -d level      verbosity level [1]\n");
+      printf("   -d [scope:]level\n");
+      printf("                 verbosity scope and level; default level is 1; scope refers to PROOF debug\n");
+      printf("                 options (see TProofDebug.h) and is enabled only is level > 1 (default kAll).\n");
       printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
       printf("                 in case of success\n");
@@ -222,7 +232,9 @@ int main(int argc,const char *argv[])
       printf("                 to run tests 3, 6, 7, 8, 9 and 23 \n");
       printf("   -h1 h1src     specify a location for the H1 files; use h1src=\"download\" to download\n");
       printf("                 to a temporary location; by default the files are read directly from the\n");
-      printf("                 ROOT http server; however this may give failures if the connection is slow\n");
+      printf("                 ROOT http server; however this may give failures if the connection is slow.\n");
+      printf("                 If h1src ends with '.zip' the program assumes that the 4 files are concatenated\n");
+      printf("                 in a single zip archive and are accessible with the standard archive syntax.\n");
       printf("   -event src\n");
       printf("                 specify a location for the 'event' files; use src=\"download\" to download\n");
       printf("                 to a temporary location; by default the files are read directly from the\n");
@@ -237,7 +249,7 @@ int main(int argc,const char *argv[])
    // Parse options
    const char *url = 0;
    Int_t nWrks = -1;
-   Int_t verbose = 1;
+   const char *verbose = "1";
    Bool_t enablegraphics = kFALSE;
    Bool_t dryrun = kFALSE;
    Bool_t showcpu = kFALSE;
@@ -260,10 +272,10 @@ int main(int argc,const char *argv[])
          }
       } else if (!strcmp(argv[i],"-d")) {
          if (i+1 == argc || argv[i+1][0] == '-') {
-            printf(" -d should be followed by the debug level: ignoring \n");
+            printf(" -d should be followed by the debug '[scope:]level': ignoring \n");
             i++;
          } else  {
-            verbose = atoi(argv[i+1]);
+            verbose = argv[i+1];
             i += 2;
          }
       } else if (!strcmp(argv[i],"-l")) {
@@ -276,8 +288,8 @@ int main(int argc,const char *argv[])
          }
       } else if (!strncmp(argv[i],"-v",2)) {
          // For backward compatibility
-         if (!strcmp(argv[i],"-v")) verbose = 1;
-         if (!strncmp(argv[i],"-vv",3)) verbose = 2;
+         if (!strncmp(argv[i],"-vv",3)) verbose = "2";
+         if (!strncmp(argv[i],"-vvv",4)) verbose = "3";
          i++;
       } else if (!strncmp(argv[i],"-dyn",4)) {
          gDynamicStartup = kTRUE;
@@ -623,7 +635,7 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
+int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *logfile,
                 Bool_t dyn, Bool_t skipds, const char *tests,
                 const char *h1src, const char *eventsrc,
                 Bool_t dryrun, Bool_t showcpu)
@@ -636,7 +648,16 @@ int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile
    gDynamicStartup = (!strcmp(url,"lite://")) ? kFALSE : dyn;
 
    // Set verbosity
-   gverbose = verbose;
+   TString vv(verbose);
+   Ssiz_t icol = kNPOS;
+   if ((icol = vv.Index(":")) != kNPOS) {
+      TString sv = vv(icol+1, vv.Length() - icol -1);
+      gverbose = sv.Atoi();
+      vv.Remove(icol);
+      gverbproof = vv;
+   } else {
+      gverbose = vv.Atoi();
+   }
 
    // Notify/warn about the dynamic startup option, if any
    TUrl uu(url), udef(urldef);
@@ -1056,7 +1077,8 @@ Int_t PT_H1AssertFiles(const char *h1src)
       return -1;
    }
 
-   // Special case
+   gh1sep = '/';
+   // Special cases
    if (!strcmp(h1src,"download")) {
       gh1src = TString::Format("%s/h1", gtutdir.Data());
       if (gSystem->AccessPathName(gh1src)) {
@@ -1081,19 +1103,39 @@ Int_t PT_H1AssertFiles(const char *h1src)
       // Done
       gh1ok = kTRUE;
       return 0;
-   }
-
-   // Make sure the files exist at 'src'
-   Int_t i = 0;
-   for (i = 0; i < 4; i++) {
-      TString src = TString::Format("%s/%s", h1src, gh1file[i]);
-      if (gSystem->AccessPathName(src)) {
-         printf("\n >>> Test failure: file %s does not exist\n", src.Data());
+   } else if (TString(h1src).EndsWith(".zip")) {
+      // The files are in a zip archive ...
+      if (gSystem->AccessPathName(h1src)) {
+         printf("\n >>> Test failure: file %s does not exist\n", h1src);
          return -1;
       }
-      gSystem->RedirectOutput(0, 0, &gRH);
-      printf("%d\b", i);
-      gSystem->RedirectOutput(glogfile, "a", &gRH);
+      Int_t i = 0;
+      for (i = 0; i < 4; i++) {
+         TString src = TString::Format("%s#%s", h1src, gh1file[i]);
+         TFile *f = TFile::Open(src);
+         if (!f || (f && f->IsZombie())) {
+            printf("\n >>> Test failure: file %s not found in archive %s\n", src.Data(), h1src);
+            return -1;
+         }
+         gSystem->RedirectOutput(0, 0, &gRH);
+         printf("%d\b", i);
+         gSystem->RedirectOutput(glogfile, "a", &gRH);
+      }
+      gh1sep = '#';
+   } else {
+
+      // Make sure the files exist at 'src'
+      Int_t i = 0;
+      for (i = 0; i < 4; i++) {
+         TString src = TString::Format("%s/%s", h1src, gh1file[i]);
+         if (gSystem->AccessPathName(src)) {
+            printf("\n >>> Test failure: file %s does not exist\n", src.Data());
+            return -1;
+         }
+         gSystem->RedirectOutput(0, 0, &gRH);
+         printf("%d\b", i);
+         gSystem->RedirectOutput(glogfile, "a", &gRH);
+      }
    }
    gh1src = h1src;
 
@@ -1642,6 +1684,12 @@ Int_t PT_Open(void *args, RunTimes &tt)
       return -1;
    }
 
+   // Set debug level, if required
+   if (gverbose > 1) {
+      Int_t debugscope = getDebugEnum(gverbproof.Data());
+      p->SetLogLevel(gverbose, debugscope);
+   }
+
    PutPoint();
    if (PToa->nwrks > 0 && p->GetParallel() != PToa->nwrks) {
       printf("\n >>> Test failure: number of workers different from requested\n");
@@ -1793,7 +1841,7 @@ Int_t PT_H1Http(void *, RunTimes &tt)
    }
    Int_t i = 0;
    for (i = 0; i < 4; i++) {
-      chain->Add(TString::Format("%s/%s", gh1src.Data(), gh1file[i]));
+      chain->Add(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i]));
    }
 
    // Clear the list of query results
@@ -1861,7 +1909,7 @@ Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
    }
    Int_t i = 0;
    for (i = 0; i < 4; i++) {
-      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      fc->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
    }
 
    // Clear the list of query results
@@ -2113,11 +2161,11 @@ Int_t PT_DataSets(void *, RunTimes &tt)
    }
    Int_t i = 0;
    for (i = 0; i < 4; i++) {
-      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      fc->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
       if (i < 2) {
-         fca->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+         fca->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
       } else {
-         fcb->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+         fcb->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
       }
    }
    fc->Update();
@@ -2704,7 +2752,7 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
    }
    Int_t i = 0;
    for (i = 0; i < 4; i++) {
-      fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      fc->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
    }
 
    // Clear the list of query results
