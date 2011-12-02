@@ -618,6 +618,8 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          fDataSet = e->GetDataSet();
 
       TUrl url = e->GetFileName();
+      PDB(kPacketizer,2)
+         Info("TPacketizerAdaptive", "element name: %s (url: %s)", e->GetFileName(), url.GetUrl());
 
       // Map non URL filenames to dummy host
       TString host;
@@ -725,7 +727,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          Info("TPacketizerAdaptive", "processing element '%s'", e->GetFileName());
       PDB(kPacketizer,2)
          Info("TPacketizerAdaptive",
-              " --> first %lld, elenum %lld (cur %lld)", eFirst, eNum, cur);
+              " --> first %lld, elenum %lld (cur %lld) (entrylist: %p)", eFirst, eNum, cur, e->GetEntryList());
 
       if (!e->GetEntryList()) {
          // This element is before the start of the global range, skip it
@@ -782,12 +784,19 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
             eNum = enl->GetN();
+            PDB(kPacketizer,2)
+               Info("TPacketizerAdaptive", " --> entry-list element: %lld entries", enl->GetN());
          } else {
             TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
             eNum = evl ? evl->GetN() : eNum;
+            PDB(kPacketizer,2)
+               Info("TPacketizerAdaptive", " --> event-list element: %d entries", evl->GetN());
          }
-         if (!eNum)
+         if (!eNum) {
+            PDB(kPacketizer,2)
+               Info("TPacketizerAdaptive", " --> empty entry- or event-list element!");
             continue;
+         }
       }
       PDB(kPacketizer,2)
          Info("TPacketizerAdaptive", " --> next cur %lld", cur);
@@ -993,6 +1002,14 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *n
       }
    }
 
+   PDB(kPacketizer, 2) {
+      if (!file) {
+         Info("GetNextUnAlloc", "no file found!");
+      } else {
+         file->Print();
+      }
+   }
+
    return file;
 }
 
@@ -1194,6 +1211,7 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
 
          // try its own node first
          if ((node = slstat->GetFileNode()) != 0) {
+            PDB(kPacketizer,3) node->Print();
             file = GetNextUnAlloc(node);
             if (file == 0)
                slstat->SetFileNode(0);
