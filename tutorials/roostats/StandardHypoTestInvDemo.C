@@ -10,6 +10,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooStats/ModelConfig.h"
+#include "RooRandom.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
@@ -38,6 +39,7 @@ using namespace RooStats;
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file 
+TString resultFileName;                  // file with results (by default is built automatically using teh ws input file name)
 bool optimize = true;                    // optmize evaluation of test statistic 
 bool useVectorStore = true;              // convert data to use new roofit data store 
 bool generateBinned = false;             // generate binned data sets 
@@ -50,6 +52,9 @@ int nworkers = 4;                        // number of worker for Proof
 bool rebuild = false;                    // re-do extra toys for computing expected limits and rebuild test stat
                                          // distributions (N.B this requires much more CPU (factor is equivalent to nToyToRebuild)
 int nToyToRebuild = 100;                 // number of toys used to rebuild 
+int initialFit = -1;                     // do a first  fit to the model (-1 : default, 0 skip fit, 1 do always fit) 
+int randomSeed = -1;                     // random seed (if = -1: use default value, if = 0 always random )
+                                         // NOTE: Proof uses automatically a random seed
 
 std::string massValue = "";              // extra string to tag output file of result 
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
@@ -104,11 +109,13 @@ namespace RooStats {
       int     mNWorkers;
       int     mNToyToRebuild;
       int     mPrintLevel;
+      int     mInitialFit; 
+      int     mRandomSeed; 
       double  mNToysRatio;
       double  mMaxPoi;
       std::string mMassValue;
       std::string mMinimizerType;                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
-
+      TString     mResultFileName; 
    };
 
 } // end namespace RooStats
@@ -123,10 +130,13 @@ RooStats::HypoTestInvTool::HypoTestInvTool() : mPlotHypoTestResult(true),
                                                mNWorkers(4),
                                                mNToyToRebuild(100),
                                                mPrintLevel(0),
+                                               mInitialFit(-1),
+                                               mRandomSeed(-1),
                                                mNToysRatio(2),
                                                mMaxPoi(-1),
                                                mMassValue(""),
-                                               mMinimizerType(""){
+                                               mMinimizerType(""),
+                                               mResultFileName() {
 }
 
 
@@ -163,6 +173,8 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, int value){
    if (s_name.find("NWorkers") != std::string::npos) mNWorkers = value;
    if (s_name.find("NToyToRebuild") != std::string::npos) mNToyToRebuild = value;
    if (s_name.find("PrintLevel") != std::string::npos) mPrintLevel = value;
+   if (s_name.find("InitialFit") != std::string::npos) mInitialFit = value;
+   if (s_name.find("RandomSeed") != std::string::npos) mRandomSeed = value;
 
    return;
 }
@@ -195,6 +207,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, const char * value){
 
    if (s_name.find("MassValue") != std::string::npos) mMassValue.assign(value);
    if (s_name.find("MinimizerType") != std::string::npos) mMinimizerType.assign(value);
+   if (s_name.find("ResultFileName") != std::string::npos) mResultFileName = value;
 
    return;
 }
@@ -315,6 +328,9 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("MassValue", massValue.c_str());
    calc.SetParameter("MinimizerType", minimizerType.c_str());
    calc.SetParameter("PrintLevel", printLevel);
+   calc.SetParameter("InitialFit",initialFit);
+   calc.SetParameter("ResultFileName",resultFileName);
+   calc.SetParameter("RandomSeed",randomSeed);
 
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
@@ -379,7 +395,8 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       const char *  calcType = (calculatorType == 0) ? "Freq" : (calculatorType == 1) ? "Hybr" : "Asym";
       const char *  limitType = (useCLs) ? "CLs" : "Cls+b";
       const char * scanType = (npoints < 0) ? "auto" : "grid";
-      TString resultFileName = TString::Format("%s_%s_%s_ts%d_",calcType,limitType,scanType,testStatType);      
+      if (resultFileName.IsNull())
+         resultFileName = TString::Format("%s_%s_%s_ts%d_",calcType,limitType,scanType,testStatType);      
       //strip the / from the filename
       if (mMassValue.size()>0) {
          resultFileName += mMassValue.c_str();
@@ -410,6 +427,12 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    const char * resultName = r->GetName();
    TString plotTitle = TString::Format("%s CL Scan for workspace %s",typeName.c_str(),resultName);
    HypoTestInverterPlot *plot = new HypoTestInverterPlot("HTI_Result_Plot",plotTitle,r);
+
+   // plot in a new canvas with style
+   TString c1Name = TString::Format("%s_Scan",typeName.c_str());
+   TCanvas * c1 = new TCanvas(c1Name); 
+   c1->SetLogy(false);
+   
    plot->Draw("CLb 2CL");  // plot all and Clb
   
    const int nEntries = r->ArraySize();
@@ -541,37 +564,58 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    std::cout << "StandardHypoTestInvDemo : POI initial value:   " << poi->GetName() << " = " << poi->getVal()   << std::endl;  
   
    // fit the data first (need to use constraint )
-   Info( "StandardHypoTestInvDemo"," Doing a first fit to the observed data ");
-   if (minimizerType.size()==0) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-   else 
-      ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
-   Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
-        ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
-   RooArgSet constrainParams;
-   if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
-   RooStats::RemoveConstantParameters(&constrainParams);
    TStopwatch tw; 
-   tw.Start(); 
-   RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                                    Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
-   if (fitres->status() != 0) { 
-      Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-      fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
+
+   bool doFit = initialFit;
+   if (testStatType == 0 && initialFit == -1) doFit = false;
+   double poihat = 0;
+   if (doFit)  { 
+
+      // do the fit : By doing a fit the POI snapshot (for S+B)  is set to the fit value
+      // and the nuisance parameters nominal values will be set to the fit value. 
+      // This is relevant when using LEP test statistics
+
+      Info( "StandardHypoTestInvDemo"," Doing a first fit to the observed data ");
+      if (minimizerType.size()==0) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+      else 
+         ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
+      Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
+           ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
+      RooArgSet constrainParams;
+      if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
+      RooStats::RemoveConstantParameters(&constrainParams);
+      tw.Start(); 
+      RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
+                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
+      if (fitres->status() != 0) { 
+         Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
+         fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
+      }
+      if (fitres->status() != 0) 
+         Warning("StandardHypoTestInvDemo"," Fit still failed - continue anyway.....");
+  
+  
+      poihat  = poi->getVal();
+      std::cout << "StandardHypoTestInvDemo - Best Fit value : " << poi->GetName() << " = "  
+                << poihat << " +/- " << poi->getError() << std::endl;
+      std::cout << "Time for fitting : "; tw.Print(); 
+  
+      //save best fit value in the poi snapshot 
+      sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
+      std::cout << "StandardHypoTestInvo: snapshot of S+B Model " << sbModel->GetName() 
+                << " is set to the best fit value" << std::endl;
+  
    }
-   if (fitres->status() != 0) 
-      Warning("StandardHypoTestInvDemo"," Fit still failed - continue anyway.....");
-  
-  
-   double poihat  = poi->getVal();
-   std::cout << "StandardHypoTestInvDemo - Best Fit value : " << poi->GetName() << " = "  
-             << poihat << " +/- " << poi->getError() << std::endl;
-   std::cout << "Time for fitting : "; tw.Print(); 
-  
-   //save best fit value in the poi snapshot 
-   sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
-   std::cout << "StandardHypoTestInvo: snapshot of S+B Model " << sbModel->GetName() 
-             << " is set to the best fit value" << std::endl;
-  
+
+   // print a message in case of LEP test statistics because it affects result by doing or not doing a fit 
+   if (testStatType == 0) {
+      if (!doFit) 
+         Info("StandardHypoTestInvDemo","Using LEP test statistic - an initial fit is not done and the TS will use the nuisances at the model value");
+      else 
+         Info("StandardHypoTestInvDemo","Using LEP test statistic - an initial fit has been done and the TS will use the nuisances at the best fit value");
+   }
+
+
    // build test statistics and hypotest calculators for running the inverter 
   
    SimpleLikelihoodRatioTestStat slrts(*sbModel->GetPdf(),*bModel->GetPdf());
@@ -641,6 +685,9 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       if (mGenerateBinned &&  sbModel->GetObservables()->getSize() > 2) { 
          Warning("StandardHypoTestInvDemo","generate binned is activated but the number of ovservable is %d. Too much memory could be needed for allocating all the bins",sbModel->GetObservables()->getSize() );
       }
+
+      // set the random seed if needed
+      if (mRandomSeed >= 0) RooRandom::randomGenerator()->SetSeed(mRandomSeed); 
     
    }
   
