@@ -449,13 +449,16 @@ private:
    Double_t        fRealTime; // Real time used by the test
    Double_t        fRefCpu; // Ref CPU time used for PROOF marks
    Double_t        fProofMarks; // PROOF marks
+   
+   static Double_t gRefCpu[24]; // Reference Cpu times
 
 public:
    ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0,
-             const char *d = "", const char *sel = "", Double_t refcpu = -1.)
+             const char *d = "", const char *sel = "")
            : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a),
              fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE),
-             fCpuTime(-1.), fRealTime(-1.), fRefCpu(refcpu), fProofMarks(-1.) { }
+             fCpuTime(-1.), fRealTime(-1.), fProofMarks(-1.)
+             { fRefCpu = gRefCpu[fSeq-1]; }
    virtual ~ProofTest() { }
 
    void   Disable() { fEnabled = kFALSE; }
@@ -469,6 +472,35 @@ public:
    Int_t  Run(Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE);
    
    Double_t ProofMarks() const { return fProofMarks; }
+};
+
+// Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
+// @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
+Double_t ProofTest::gRefCpu[24] = {
+   0.090000,   // #1:  Open a session
+   0.000000,   // #2:  Get session logs
+   6.769999,   // #3:  Simple random number generation
+   0.000000,   // #4:  Dataset handling with H1 files
+   3.250000,   // #5:  H1: chain processing
+   1.930000,   // #6:  H1: file collection processing
+   1.790000,   // #7:  H1: file collection, TPacketizer 
+   1.490000,   // #8:  H1: by-name processing 
+   1.530001,   // #9:  H1: multi dataset processing
+   2.779997,   // #10: H1: multi dataset and entry list
+   0.040000,   // #11: Package management with 'event'
+   0.080000,   // #12: Package argument passing
+   11.990002,  // #13: Simple 'event' generation
+   0.020000,   // #14: Input data propagation
+   4.460003,   // #15: H1, Simple: async mode
+   0.000000,   // #16: Admin functionality
+   2.449997,   // #17: Dynamic sub-mergers functionality
+   12.189999,  // #18: Event range processing
+   11.610001,  // #19: Event range, TPacketizer
+   1.709999,   // #20: File-resident output: merge
+   0.620003,   // #21: File-resident output: merge w/ submergers
+   2.950005,   // #22: File-resident output: create dataset
+   10.010010,  // #23: TTree friends (and TPacketizerFile)
+   0.879990    // #24: TTree friends, same file
 };
 
 //
@@ -1040,7 +1072,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       gProof->GetStatistics((verbose > 0));
       // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
       // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
-      const double reftime = 21.060;
+      const double reftime = 78.410;
       double rootmarks = (gProof->GetCpuTime() > 0) ? 1000 * reftime / gProof->GetCpuTime() : -1;
       printf(" ROOTMARKS = %.2f ROOT version: %s\t%s@%d\n", rootmarks, gROOT->GetVersion(),
              gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
