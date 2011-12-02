@@ -3775,6 +3775,10 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
    } else {
 
+      // Reset compute stopwatch: we include all what done from now on
+      fCompute.Reset();
+      fCompute.Start();
+
       // Set not idle
       SetIdle(kFALSE);
 
@@ -3811,6 +3815,9 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Signal the master that we are starting processing
       fSocket->Send(kPROOF_STARTPROCESS);
+
+      // Reset latency stopwatch
+      fLatency.Reset();
 
       // Process
       PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
@@ -4135,6 +4142,10 @@ void TProofServ::ProcessNext(TString *slb)
    TProofQueryResult *pq = 0;
 
    // Process
+
+   // Reset compute stopwatch: we include all what done from now on
+   fCompute.Reset();
+   fCompute.Start();
 
    // Get next query info (also removes query from the list)
    pq = NextQuery();
@@ -6131,6 +6142,11 @@ void TProofServ::DeletePlayer()
    // Delete player instance.
 
    if (IsMaster()) {
+      PDB(kGlobal, 1) {
+         fCompute.Stop();
+         Printf(" +++ Latest processing times: %f s (CPU: %f s)",
+                fCompute.RealTime(), fCompute.CpuTime());
+      }
       if (fProof) fProof->SetPlayer(0);
    } else {
       SafeDelete(fPlayer);
