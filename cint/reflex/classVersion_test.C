@@ -10,8 +10,10 @@ void checkVersion(const char* name, short version, bool inhFromTObj = false) {
           (int)version, (int)inhFromTObj);
    TClass* cl = TClass::GetClass(name);
    RflxAssert(cl);
-   RflxEqual(cl->GetClassVersion(), version);
-   RflxEqual(inhFromTObj, cl->InheritsFrom(TObject::Class()));
+   if (cl) {
+      RflxEqual(cl->GetClassVersion(), version);
+      RflxEqual(inhFromTObj, cl->InheritsFrom(TObject::Class()));
+   }
 }
 
 void classVersion_test() {
