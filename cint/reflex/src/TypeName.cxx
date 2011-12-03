@@ -274,6 +274,9 @@ Reflex::TypeName::Unload() {
       if (Reflex::Instance::State() != Reflex::Instance::kTearingDown) {
          fName.ToHeap();
       }
+   } else {
+      // Still invalidate this instance.
+      fTypeBase = 0;
    }
 }
 
