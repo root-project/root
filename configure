@@ -4240,17 +4240,28 @@ elif test ! "x$xrootddir" = "x"; then
          xrdlibdir=""
       fi
    elif test ! "x$xrootddir" = "x"; then
-      xrdlibdir="$xrootddir/lib"
       xrdcomm="no, using xrootd at $xrootddir"
-      if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/include/xrootd"
-      elif test -f "$xrootddir/src/XrdVersion.hh" ; then
-         xrdincdir="$xrootddir/src"
-      else
-         enable_xrootd="no"
-         xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
-         xrdincdir=""
-         xrdlibdir=""
+      xrdlibdir="$xrootddir/lib"
+      if test ! -d "$xrootddir/lib" ; then
+         xrdlibdir="$xrootddir/lib64"
+         if test ! -d "$xrootddir/lib64" ; then
+            enable_xrootd="no"
+            xrdcomm="no, asked to use installation at $xrootddir, but neither 'lib' nor 'lib64' folders found: disabling"
+            xrdincdir=""
+            xrdlibdir=""
+         fi
+      fi
+      if test ! "x$xrdlibdir" = "x" ; then
+         if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
+            xrdincdir="$xrootddir/include/xrootd"
+         elif test -f "$xrootddir/src/XrdVersion.hh" ; then
+            xrdincdir="$xrootddir/src"
+         else
+            enable_xrootd="no"
+            xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
+            xrdincdir=""
+            xrdlibdir=""
+         fi
       fi
    fi
 fi
