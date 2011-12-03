@@ -51,10 +51,14 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 %_rflx_tmp2.C: %_rflxdriver.C
 	$(CMDECHO) echo '{gSystem->Load("libCintex"); gSystem->Load("libTree"); gROOT->ProcessLine(".x $<+");}' > $@
 
+RFLXDICTTESTS_DRIVERS_DLL := $(addsuffix driver_C.$(DllSuf),$(RFLXDICTTESTS))
+
 # and the actual test, building and "running" the library
-%_rflx.log: %_rflx_tmp1.C %_rflx_tmp2.C
-	$(CMDECHO) (root -l -b -q $*_rflx_tmp1.C > /dev/null 2>&1  \
-	&& root -l -b -q $*_rflx_tmp2.C 2>&1 | grep -v  'Processing ' | grep -v 'creating shared' > $@)|| cat $@
+$(RFLXDICTTESTS_DRIVERS_DLL): %_rflxdriver_C.$(DllSuf): %_rflx_tmp1.C
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $*_rflx_tmp1.C > $*_rflxdriver_C.log 2>&1 || handleError.sh --result=$$? --log=$*_rflxdriver_C.log
+
+%_rflx.log: %_rflxdriver_C.$(DllSuf) %_rflx_tmp1.C %_rflx_tmp2.C
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $*_rflx_tmp2.C 2>&1 | grep -v  'Processing ' | grep -v 'creating shared' > $@ || handleError.sh --result=$$? --log=$@
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
 $(RFLXDICTTESTS): %_rflx: %_rflx.log %_rflx.ref
