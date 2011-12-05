@@ -10,7 +10,8 @@
 // *  $ make stressProof                                                   * //
 // *  $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile]     * //
 // *                  [-dyn] [-ds] [-t tests] [-h1 h1src]                  * //
-// *                  [-event src] [-dryrun] [master]                      * //
+// *                  [-event src] [-dryrun] [-g] [-cpu] [-clearcache]     * //
+// *                  [master]                                             * //
 // *                                                                       * //
 // * Optional arguments:                                                   * //
 // *   -h          show help info                                          * //
@@ -42,6 +43,11 @@
 // *               are accessible with the standard archive syntax.        * //
 // *   -punzip     use parallel unzipping for data-driven processing       * //
 // *   -dryrun     only show which tests would be run                      * //
+// *   -g          enable graphics; default is to run in text mode         * //
+// *   -cpu        show CPU times used by each successful test; used for   * //
+// *               calibration                                             * //
+// *   -clearcache clear memory cache associated with the files processed  * //
+// *               when local                                              * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
@@ -108,6 +114,8 @@
 // *                                                                       * //
 // ************************************************************************* //
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -162,12 +170,15 @@ static Bool_t gDynamicStartup = kFALSE;
 static Bool_t gLocalCluster = kTRUE;
 static Bool_t gSkipDataSetTest = kTRUE;
 static Bool_t gUseParallelUnzip = kFALSE;
+static Bool_t gClearCache = kFALSE;
 static TString gh1src("http://root.cern.ch/files/h1");
 static Bool_t gh1ok = kTRUE;
+static Bool_t gh1local = kFALSE;
 static char gh1sep = '/';
 static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root" };
 static TString geventsrc("http://root.cern.ch/files/data");
 static Bool_t geventok = kTRUE;
+static Bool_t geventlocal = kFALSE;
 static Int_t geventnf = 10;
 static Long64_t gEventNum = 200000;
 static Long64_t gEventFst = 65000;
@@ -196,7 +207,8 @@ int stressProof(const char *url = "proof://localhost:40000",
                 const char *logfile = 0, Bool_t dyn = kFALSE,
                 Bool_t skipds = kTRUE, const char *tests = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
-                Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE);
+                Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
+                Bool_t clearcache = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -211,7 +223,7 @@ int main(int argc,const char *argv[])
       printf(" Usage:\n");
       printf(" \n");
       printf(" $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile] [-dyn] [-ds]\n");
-      printf("                 [-t tests] [-h1 h1src] [-event src] [-g] [-cpu] [master]\n");
+      printf("                 [-t tests] [-h1 h1src] [-event src] [-dryrun] [-g] [-cpu] [-clearcache] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -240,8 +252,10 @@ int main(int argc,const char *argv[])
       printf("                 to a temporary location; by default the files are read directly from the\n");
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
       printf("   -punzip       use parallel unzipping for data-driven processing.\n");
+      printf("   -dryrun       only show which tests would be run.\n");
       printf("   -g            enable graphics; default is to run in text mode.\n");
       printf("   -cpu          show CPU times used by each successful test; used for calibration.\n");
+      printf("   -clearcache   clear memory cache associated with the files processed when local.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -253,6 +267,7 @@ int main(int argc,const char *argv[])
    Bool_t enablegraphics = kFALSE;
    Bool_t dryrun = kFALSE;
    Bool_t showcpu = kFALSE;
+   Bool_t clearcache = kFALSE;
    const char *logfile = 0;
    const char *h1src = 0;
    const char *eventsrc = 0;
@@ -333,6 +348,9 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-cpu",4)) {
          showcpu = kTRUE;
          i++;
+      } else if (!strncmp(argv[i],"-clearcache",11)) {
+         clearcache = kTRUE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -346,7 +364,7 @@ int main(int argc,const char *argv[])
       new TApplication("stressProof", 0, 0);
 
    int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        tests, h1src, eventsrc, dryrun, showcpu);
+                        tests, h1src, eventsrc, dryrun, showcpu, clearcache);
 
    gSystem->Exit(rc);
 }
@@ -415,6 +433,30 @@ void AssertParallelUnzip()
    } else {
       gProof->SetParameter("PROOF_UseParallelUnzip", (Int_t)0);
    }
+}
+
+//______________________________________________________________________________
+void ReleaseCache(const char *fn)
+{
+   // Release the memory cache associated with file 'fn'.
+
+#if defined(R__LINUX)
+   TString filename(fn);
+   Int_t fd;
+   fd = open(filename.Data(), O_RDONLY);
+   if (fd > -1) {
+      fdatasync(fd);
+      posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
+      close(fd);
+   } else {
+      fprintf(stderr, "cannot open file '%s' for cache clean up; errno=%d \n",
+                      filename.Data(), errno);
+   }
+#else
+   fprintf(stderr, "ReleaseCache: dummy function: file '%s' untouched ...\n", fn);
+#endif
+   // Done
+   return;
 }
 
 //
@@ -670,7 +712,7 @@ static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *logfile,
                 Bool_t dyn, Bool_t skipds, const char *tests,
                 const char *h1src, const char *eventsrc,
-                Bool_t dryrun, Bool_t showcpu)
+                Bool_t dryrun, Bool_t showcpu, Bool_t clearcache)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -723,6 +765,9 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    } else {
      gSkipDataSetTest = gLocalCluster;
    }
+   
+   // Clear cache
+   gClearCache = clearcache;
 
    // Log file path
    Bool_t usedeflog = kTRUE;
@@ -791,6 +836,10 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
          geventsrc = eventsrc;
          geventok = kFALSE;
       }
+   }
+   if (clearcache && gverbose > 0) {
+      printf("*  Clearing cache associated to files, if possible ...          **\n");
+      printf("******************************************************************\n");
    }
    //
    // Reset dataset settings
@@ -1099,6 +1148,36 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
 }
 
 //_____________________________________________________________________________
+Int_t PT_H1ReleaseCache(const char *h1src)
+{
+   // Release memory cache associated with the H1 files at 'h1src', if it 
+   // makes any sense, i.e. are local ...
+
+   if (!h1src || strlen(h1src) <= 0) {
+      printf("\n >>> Test failure: src dir undefined\n");
+      return -1;
+   }
+
+   // If non-local, nothing to do
+   if (!gh1local) return 0;
+
+   TString src;
+   if (gh1sep == '/') {
+      // Loop through the files
+      for (Int_t i = 0; i < 4; i++) {
+         src.Form("%s/%s", h1src, gh1file[i]);
+         ReleaseCache(src.Data());
+      }
+   } else {
+      // Release the zip file ...
+      ReleaseCache(h1src);
+   }
+
+   // Done
+   return 0;
+}
+
+//_____________________________________________________________________________
 Int_t PT_H1AssertFiles(const char *h1src)
 {
    // Make sure that the needed H1 files are available at 'src'
@@ -1109,6 +1188,10 @@ Int_t PT_H1AssertFiles(const char *h1src)
       return -1;
    }
 
+   // Locality
+   TUrl u(h1src, kTRUE);
+   gh1local = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
+   
    gh1sep = '/';
    // Special cases
    if (!strcmp(h1src,"download")) {
@@ -1132,6 +1215,7 @@ Int_t PT_H1AssertFiles(const char *h1src)
          printf("%d\b", i);
          gSystem->RedirectOutput(glogfile, "a", &gRH);
       }
+      gh1local = kTRUE;
       // Done
       gh1ok = kTRUE;
       return 0;
@@ -1177,6 +1261,36 @@ Int_t PT_H1AssertFiles(const char *h1src)
 }
 
 //_____________________________________________________________________________
+Int_t PT_EventReleaseCache(const char *eventsrc, Int_t nf = 10)
+{
+   // Release memory cache associated with the event files at 'eventsrc', if it 
+   // makes any sense, i.e. are local ...
+
+   if (!eventsrc || strlen(eventsrc) <= 0) {
+      printf("\n >>> Test failure: src dir undefined\n");
+      return -1;
+   }
+   
+   if (nf > 50) {
+      printf("\n >>> Test failure: max 50 event files can be checked\n");
+      return -1;
+   }
+
+   // If non-local, nothing to do
+   if (!geventlocal) return 0;
+
+   TString src;
+   // Loop through the files
+   for (Int_t i = 0; i < nf; i++) {
+      src.Form("%s/event_%d.root", eventsrc, i+1);
+      ReleaseCache(src.Data());
+   }
+
+   // Done
+   return 0;
+}
+
+//_____________________________________________________________________________
 Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
 {
    // Make sure that the needed 'event' files are available at 'src'
@@ -1192,6 +1306,10 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
       printf("\n >>> Test failure: max 50 event files can be checked\n");
       return -1;
    }
+
+   // Locality
+   TUrl u(eventsrc, kTRUE);
+   geventlocal = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
 
    // Special case
    if (!strcmp(eventsrc,"download")) {
@@ -1215,6 +1333,7 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
          printf("%d\b", i);
          gSystem->RedirectOutput(glogfile, "a", &gRH);
       }
+      geventlocal = kTRUE;
       // Done
       geventok = kTRUE;
       return 0;
@@ -1876,6 +1995,13 @@ Int_t PT_H1Http(void *, RunTimes &tt)
       chain->Add(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i]));
    }
 
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
@@ -1944,6 +2070,13 @@ Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
       fc->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
    }
 
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
@@ -1993,6 +2126,13 @@ Int_t PT_H1DataSet(void *, RunTimes &tt)
    // Name for the target dataset
    const char *dsname = "h1dset";
 
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
@@ -2037,6 +2177,13 @@ Int_t PT_H1MultiDataSet(void *, RunTimes &tt)
 
    // Name for the target dataset
    const char *dsname = "h1dseta h1dsetb";
+
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
 
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
@@ -2084,6 +2231,13 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    // Multiple dataset used to create the entry list
    TString dsname("h1dseta|h1dsetb");
 
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
@@ -2107,6 +2261,13 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    // Count
    gH1Cnt++;
    gH1Time += gTimer.RealTime();
+
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
 
    // Run using the entrylist
    dsname = "h1dseta<<elist.root h1dsetb?enl=elist.root";
@@ -2787,6 +2948,13 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
       fc->Add(new TFileInfo(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i])));
    }
 
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    PutPoint();
    if (gProof->GetQueryResults()) {
@@ -3098,6 +3266,13 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
       chain->AddFile(TString::Format("%s/event_%d.root", geventsrc.Data(), i+1));
    }
 
+   // Clear associated memory cache
+   if (gClearCache && PT_EventReleaseCache(geventsrc.Data(), geventnf) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the event files\n");
+      return -1;
+   }
+
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
@@ -3162,6 +3337,13 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    PutPoint();
    if (gProof->VerifyDataSet("dsevent") != 0) {
       printf("\n >>> Test failure: could not verify 'dsevent'!\n");
+      return -1;
+   }
+
+   // Clear associated memory cache
+   if (gClearCache && PT_EventReleaseCache(geventsrc.Data(), geventnf) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the event files\n");
       return -1;
    }
    
