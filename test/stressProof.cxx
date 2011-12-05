@@ -1681,7 +1681,8 @@ Int_t PT_CheckDataset(TQueryResult *qr, Long64_t nevt)
          rch1s = -1;
          break;
       }
-      if (TMath::Abs((h1s[i]->GetMean() - hmea[i]) / hmea[i]) > prec ) {
+      Double_t mprec = 5 * h1s[i]->GetRMS() / TMath::Sqrt(h1s[i]->GetEntries()) ;
+      if (TMath::Abs((h1s[i]->GetMean() - hmea[i]) / hmea[i]) > mprec ) {
          emsg.Form("'%s' histo: wrong mean (%f: expected %f - RMS: %f)",
                 h1s[i]->GetName(), h1s[i]->GetMean(), hmea[i], h1s[i]->GetRMS());
          rch1s = -1;
