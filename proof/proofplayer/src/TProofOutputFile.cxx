@@ -300,6 +300,8 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
 {
    // Merge objects from the list into this object
 
+   PDB(kOutput,2) Info("Merge","enter: merge? %d", IsMerge());
+
    // Needs somethign to merge
    if(!list || list->IsEmpty()) return 0;
    
@@ -340,10 +342,12 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
          Error("Merge", "could not instantiate the file collection");
          return -1;
       }
+      fMerged = kTRUE;
       TString path;
       TFileInfo *fi = 0;
       // If new, add ourseelves
       dataset->Update();
+      PDB(kOutput,2) Info("Merge","dataset: %s (nfiles: %lld)", dataset->GetName(), dataset->GetNFiles());
       if (dataset->GetNFiles() == 0) {
          // Save the export and raw urls
          path.Form("%s/%s%s", GetDir(), GetFileName(), GetOptionsAnchor());
@@ -393,6 +397,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
          }
       }
    }
+   PDB(kOutput,2) Info("Merge","Done");
 
    // Done
    return 0;

@@ -1896,8 +1896,8 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
 {
    // Merge output in files
 
-   PDB(kSubmerger,1) Info("MergeOutputFiles", "enter: fOutput size: %d", fOutput->GetSize());
-   PDB(kSubmerger,1) fOutput->ls();
+   PDB(kOutput,1) Info("MergeOutputFiles", "enter: fOutput size: %d", fOutput->GetSize());
+   PDB(kOutput,2) fOutput->ls();
 
    TList *rmList = 0;
    if (fMergeFiles) {
@@ -1907,7 +1907,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
       while ((o = nxo())) {
          if ((pf = dynamic_cast<TProofOutputFile*>(o))) {
 
-            PDB(kSubmerger,2) pf->Print();
+            PDB(kOutput,2) pf->Print();
 
             if (pf->IsMerge()) {
 
@@ -1948,6 +1948,14 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
 
             } else {
 
+               // If not yet merged (for example when having only 1 active worker,
+               // we need to create the dataset by calling Merge on an effectively empty list
+               if (!pf->IsMerged()) {
+                  TList dumlist;
+                  dumlist.Add(new TNamed("dum", "dum"));
+                  dumlist.SetOwner(kTRUE);
+                  pf->Merge(&dumlist);
+               }
                // Point to the dataset
                TFileCollection *fc = pf->GetFileCollection();
                if (!fc) {
@@ -1974,6 +1982,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                fOutput->Remove(pf);
                if (!rmList) rmList = new TList;
                rmList->Add(pf);
+                  fOutput->Print();
             }
          }
       }
@@ -1990,7 +1999,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
       delete rmList;
    }
    
-   PDB(kSubmerger,1) Info("MergeOutputFiles", "done!");
+   PDB(kOutput,1) Info("MergeOutputFiles", "done!");
 
    // Done
    return kTRUE;
