@@ -75,9 +75,6 @@ namespace cling {
     // Create an instance builder, passing the llvmdir and arguments.
     //
     //  Initialize the llvm library.
-    //
-    // If not set, exception handling will not be turned on
-    llvm::JITExceptionHandling = true;
     llvm::InitializeNativeTarget();
     llvm::InitializeAllAsmPrinters();
     llvm::sys::Path resource_path;
