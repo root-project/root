@@ -2592,7 +2592,6 @@ void TProofServ::SendStatistics()
    if (IsMaster()) {
       bytesread = fProof->GetBytesRead();
       cputime = fProof->GetCpuTime();
-      realtime = fProof->GetRealTime();
    }
 
    TMessage mess(kPROOF_GETSTATS);
