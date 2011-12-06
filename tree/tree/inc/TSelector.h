@@ -65,9 +65,9 @@ public:
    virtual const char *GetOption() const { return fOption; }
    virtual Long64_t    GetStatus() const { return fStatus; }
    virtual Int_t       GetEntry(Long64_t /*entry*/, Int_t /*getall*/ = 0) { return 0; }
-   virtual Bool_t      ProcessCut(Long64_t /*entry*/) { return kTRUE; }
-   virtual void        ProcessFill(Long64_t /*entry*/) { }
-   virtual Bool_t      Process(Long64_t /*entry*/) { return kFALSE; }
+   virtual Bool_t      ProcessCut(Long64_t /*entry*/);
+   virtual void        ProcessFill(Long64_t /*entry*/);
+   virtual Bool_t      Process(Long64_t /*entry*/);
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }
