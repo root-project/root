@@ -183,8 +183,14 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 void TBuffer::Expand(Int_t newsize)
 {
    // Expand the I/O buffer to newsize bytes.
+   //
+   // In order to avoid losing data, if the current length is greater than
+   // the requested size, we only shrink down to the current length.
 
    Int_t l  = Length();
+   if ( l > newsize ) {
+      newsize = l;
+   }
    fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
                            fBufSize+kExtraSpace);
    if (fBuffer == 0) {
