@@ -590,7 +590,7 @@ check_library() {
                             fi
                             found_dir=$l
                             found_lib=$j
-                            if test "x$arch" = "linux"; then
+                            if test "x$arch" = "xlinux"; then
                                check_lib64 $n
                             else
                                is_lib64=0
