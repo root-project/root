@@ -185,8 +185,14 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    // Expand the I/O buffer to newsize bytes.
    // If copy is true (the default), the existing content of the
    // buffer is preserved, otherwise the buffer is returned zero-ed out.
+   //
+   // In order to avoid losing data, if the current length is greater than
+   // the requested size, we only shrink down to the current length.
 
    Int_t l  = Length();
+   if ( l > newsize ) {
+      newsize = l;
+   }
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
                               copy ? fBufSize+kExtraSpace : 0);

@@ -2041,7 +2041,8 @@ void TBranch::SetBasketSize(Int_t buffsize)
    // Set the basket size
    // The function makes sure that the basket size is greater than fEntryOffsetlen
 
-   if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
+   Int_t minsize = 100 + fName.Length();
+   if (buffsize < minsize+fEntryOffsetLen) buffsize = minsize+fEntryOffsetLen;
    fBasketSize = buffsize;
    TBasket *basket = (TBasket*)fBaskets[fWriteBasket];
    if (basket) {

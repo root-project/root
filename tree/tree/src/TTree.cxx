@@ -5514,7 +5514,12 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
       Double_t bmin_new = bmin*memFactor;
       Double_t bmax_new = bmax*memFactor;
       static const UInt_t hardmax = 1*1024*1024*1024; // Really, really never give more than 1Gb to a single buffer.
-      static const UInt_t hardmin = 8;                // Really, really never go lower than 8 bytes (we use this number so that the calculation of the number of basket is consistent but in fact SetBasketSize will not let the size go below 100+TBranch::fEntryOffsetLen)
+      // Really, really never go lower than 8 bytes (we use this number
+      // so that the calculation of the number of basket is consistent
+      // but in fact SetBasketSize will not let the size go below
+      // TBranch::fEntryOffsetLen + (100 + strlen(branch->GetName())
+      // (The 2nd part being a slight over estimate of the key length.
+      static const UInt_t hardmin = 8;
       bmin = (bmin_new > hardmax) ? hardmax : ( bmin_new < hardmin ? hardmin : (UInt_t)bmin_new );
       bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;         
    }
