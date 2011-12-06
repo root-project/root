@@ -1390,6 +1390,20 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
 
    /* allocate new type table entry */
    if (flag == 0 && typein) {
+      // If we already have a type/class of the same name that is registered in G__struct as forward declared and/or autoload,
+      // let's invalidate this entry.
+      int alias = G__defined_tagname(type_name,4);
+      if (alias != -1 && G__struct.type[alias] == 'a') {
+         char *old = G__struct.name[alias];
+         G__struct.namerange->Remove(old, alias);
+         
+         G__struct.name[alias] = (char*)malloc(strlen(old)+60);
+         strcpy(G__struct.name[alias],"@@ ex autload entry remove by typedef declaration @@"); // Okay, we allocated enough space
+         strcat(G__struct.name[alias],old); // Okay, we allocated enough space
+         G__struct.type[alias] = 0;
+         free(old);
+      }
+
       if (G__newtype.alltype == G__MAXTYPEDEF) {
          G__fprinterr(G__serr,
                       "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
