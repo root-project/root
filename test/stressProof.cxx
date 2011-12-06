@@ -469,6 +469,7 @@ public:
    RunTimes(Double_t c = -1., Double_t r = -1.) : fCpu(c), fReal(r) { }
    
    RunTimes &operator=(const RunTimes &rt) { fCpu = rt.fCpu; fReal = rt.fReal; return *this; }
+   void Print(const char *tag = "") { printf("%s real: %f s, cpu: %f s\n", tag, fReal, fCpu); }  
 };
 RunTimes operator-(const RunTimes &rt1, const RunTimes &rt2) {
    RunTimes rt(rt1.fCpu - rt2.fCpu, rt1.fReal - rt2.fReal);
@@ -489,18 +490,19 @@ private:
    Bool_t          fEnabled; // kTRUE if this test is enabled
    Double_t        fCpuTime; // CPU time used by the test
    Double_t        fRealTime; // Real time used by the test
-   Double_t        fRefCpu; // Ref CPU time used for PROOF marks
+   Double_t        fRefReal; // Ref Real time used for PROOF marks
    Double_t        fProofMarks; // PROOF marks
+   Bool_t          fUseForMarks; // Use in the calculation of the average PROOF marks
    
-   static Double_t gRefCpu[24]; // Reference Cpu times
+   static Double_t gRefReal[24]; // Reference Cpu times
 
 public:
    ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0,
-             const char *d = "", const char *sel = "")
+             const char *d = "", const char *sel = "", Bool_t useForMarks = kFALSE)
            : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a),
              fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE),
-             fCpuTime(-1.), fRealTime(-1.), fProofMarks(-1.)
-             { fRefCpu = gRefCpu[fSeq-1]; }
+             fCpuTime(-1.), fRealTime(-1.), fProofMarks(-1.), fUseForMarks(useForMarks)
+             { fRefReal = gRefReal[fSeq-1]; }
    virtual ~ProofTest() { }
 
    void   Disable() { fEnabled = kFALSE; }
@@ -514,11 +516,12 @@ public:
    Int_t  Run(Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE);
    
    Double_t ProofMarks() const { return fProofMarks; }
+   Bool_t UseForMarks() const { return fUseForMarks; }
 };
 
 // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
 // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
-Double_t ProofTest::gRefCpu[24] = {
+Double_t ProofTest::gRefReal[24] = {
    0.090000,   // #1:  Open a session
    0.000000,   // #2:  Get session logs
    6.769999,   // #3:  Simple random number generation
@@ -616,14 +619,15 @@ Int_t ProofTest::Run(Bool_t dryrun, Bool_t showcpu)
       fCpuTime = tt.fCpu;
       fRealTime = tt.fReal;
       // Proof marks
-      if (fRefCpu > 0)
-         fProofMarks = (fCpuTime > 0) ? 1000 * fRefCpu / fCpuTime : -1;
+      if (fRefReal > 0)
+         fProofMarks = (fRealTime > 0) ? 1000 * fRefReal / fRealTime : -1;
       gSystem->RedirectOutput(0, 0, &gRH);
       if (rc == 0) {
          Int_t np = totpoints - strlen(GetName()) - strlen(" OK *");
          while (np--) { printf("."); }
          if (showcpu) {
-            printf(" OK * (cpu: %f s, marks: %.2f)\n", fCpuTime, fProofMarks);
+            printf(" OK * (rt: %f s, cpu: %f s, marks: %.2f)\n",
+                   fRealTime, fCpuTime, fProofMarks);
          } else {
             printf(" OK *\n");
          }
@@ -855,57 +859,57 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    // Get logs
    testList->Add(new ProofTest("Get session logs", 2, &PT_GetLogs, (void *)&PToa, "1"));
    // Simple histogram generation
-   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple, 0, "1", "ProofSimple"));
+   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple, 0, "1", "ProofSimple", kTRUE));
    // Test of data set handling with the H1 http files
    testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets, 0, "1"));
    // H1 analysis over HTTP (chain)
-   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, 0, "1", "h1analysis"));
+   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, 0, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP (file collection)
-   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, 0, "1", "h1analysis"));
+   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, 0, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP: classic packetizer
    testList->Add(new ProofTest("H1: file collection, TPacketizer", 7,
-                               &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis"));
+                               &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis"));
+   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name splitted in two
-   testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis"));
+   testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis"));
+   testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis", kTRUE));
    // Test package management with 'event'
    testList->Add(new ProofTest("Package management with 'event'", 11, &PT_Packages, 0, "1"));
    // Test package argument passing
    testList->Add(new ProofTest("Package argument passing", 12, &PT_PackageArguments, 0, "1", "ProofTests"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1", "ProofEvent"));
+   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1", "ProofEvent", kTRUE));
    // Test input data propagation (it only works in the static startup mode)
    testList->Add(new ProofTest("Input data propagation", 14, &PT_InputData, 0, "1", "ProofTests"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 15, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
+   testList->Add(new ProofTest("H1, Simple: async mode", 15, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple", kTRUE));
    // Test admin functionality
    testList->Add(new ProofTest("Admin functionality", 16, &PT_AdminFunc, 0, "1"));
    // Test merging via submergers
    Bool_t useMergers = kTRUE;
    testList->Add(new ProofTest("Dynamic sub-mergers functionality", 17,
-                                &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
+                                &PT_Simple, (void *)&useMergers, "1", "ProofSimple", kTRUE));
    // Test range chain and dataset processing EventProc
    testList->Add(new ProofTest("Event range processing", 18,
-                               &PT_EventRange, 0, "1,11", "ProofEventProc,ProcFileElements"));
+                               &PT_EventRange, 0, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
    // Test range chain and dataset processing EventProc with TPacketizer
    testList->Add(new ProofTest("Event range, TPacketizer", 19,
-                               &PT_EventRange, (void *)&gStd_Old, "1,11", "ProofEventProc,ProcFileElements"));
+                               &PT_EventRange, (void *)&gStd_Old, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
    // Test TProofOutputFile technology for ntuple creation
-   testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, 0, "1", "ProofNtuple"));
+   testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, 0, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for ntuple creation using submergers
    testList->Add(new ProofTest("File-resident output: merge w/ submergers", 21,
-                               &PT_POFNtuple, (void *)&useMergers, "1", "ProofNtuple"));
+                               &PT_POFNtuple, (void *)&useMergers, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for dataset creation (tests TProofDraw too)
-   testList->Add(new ProofTest("File-resident output: create dataset", 22, &PT_POFDataset, 0, "1", "ProofNtuple"));
+   testList->Add(new ProofTest("File-resident output: create dataset", 22, &PT_POFDataset, 0, "1", "ProofNtuple", kTRUE));
    // Test TPacketizerFile and TTree friends in separate files
-   testList->Add(new ProofTest("TTree friends (and TPacketizerFile)", 23, &PT_Friends, 0, "1", "ProofFriends,ProofAux"));
+   testList->Add(new ProofTest("TTree friends (and TPacketizerFile)", 23, &PT_Friends, 0, "1", "ProofFriends,ProofAux", kTRUE));
    // Test TPacketizerFile and TTree friends in same file
    Bool_t sameFile = kTRUE;
    testList->Add(new ProofTest("TTree friends, same file", 24,
-                               &PT_Friends, (void *)&sameFile, "1", "ProofFriends,ProofAux"));
+                               &PT_Friends, (void *)&sameFile, "1", "ProofFriends,ProofAux", kTRUE));
 
    // The selectors
    gSystem->ExpandPathName(gH1Sel);
@@ -1108,23 +1112,30 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
 
    printf("******************************************************************\n");
    if (gProof) {
-      // Print single PROOF marks
-      if (gverbose > 1) {
-         nxt.Reset();
-         printf(" PROOFMARKS for single tests (-1 if unmeasured): \n");
-         while ((t = (ProofTest *)nxt()))
-            if (t->IsEnabled()) {
-               printf(" %d:\t %.2f \n", t->Num(), t->ProofMarks());
+      // Get average of single PROOF marks
+      int navg = 0;
+      double avgmarks = -1.;
+      nxt.Reset();
+      printf(" PROOFMARKS for single tests (-1 if unmeasured): \n");
+      while ((t = (ProofTest *)nxt()))
+         if (t->IsEnabled()) {
+            if (gverbose > 1) printf(" %d:\t %.2f \n", t->Num(), t->ProofMarks());
+            if (t->UseForMarks() && t->ProofMarks() > 0) {
+               navg++;
+               avgmarks += t->ProofMarks();
             }
-      }
+         }
+      if (navg > 0) avgmarks /= navg;
       
       gProof->GetStatistics((verbose > 0));
       // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
       // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
       const double reftime = 78.410;
-      double rootmarks = (gProof->GetCpuTime() > 0) ? 1000 * reftime / gProof->GetCpuTime() : -1;
-      printf(" ROOTMARKS = %.2f ROOT version: %s\t%s@%d\n", rootmarks, gROOT->GetVersion(),
+      double glbmarks = (gProof->GetRealTime() > 0) ? 1000 * reftime / gProof->GetRealTime() : -1;
+      printf(" ROOTMARKS = %.2f (overall: %.2f) ROOT version: %s\t%s@%d\n",
+             avgmarks, glbmarks, gROOT->GetVersion(),
              gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
+      // Average from the single tests
       printf("******************************************************************\n");
    }
 
