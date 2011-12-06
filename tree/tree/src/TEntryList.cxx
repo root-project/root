@@ -732,6 +732,27 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 }
 
 //______________________________________________________________________________
+void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
+{
+   // To be able to re-localize the entry-list we identify the file by just the
+   // name and the anchor, i.e. we drop protocol, host, options, ... 
+   // The result in the form 'file#anchor' (or 'file', if no anchor is present)
+   // is saved in 'fn'.
+   // The function optionally (is 'local' is defined) checks file locality (i.e.
+   // protocol 'file://') returning the result in '*local' .
+
+   TUrl u(filename, kTRUE);
+   if (local) *local = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
+   if (strlen(u.GetAnchor()) > 0) {
+      fn.Form("%s#%s", u.GetFile(), u.GetAnchor());
+   } else {
+      fn = u.GetFile();
+   }
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
 TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename, Option_t *opt)
 {
    //return the entry list, correspoding to treename and filename
@@ -749,24 +770,9 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
    Bool_t nexp = option.Contains("NE");
 
    TString fn;
-   TUrl u(filename, kTRUE);
-   Bool_t local =  kFALSE;
-   if (IsA()->GetClassVersion() > 1) {
-      local = (!nexp && !strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
-      if (strlen(u.GetAnchor()) > 0) {
-         fn.Form("%s#%s", u.GetFile(), u.GetAnchor());
-      } else {
-         fn = u.GetFile();
-      }
-   } else {
-      if (!nexp){
-         local = !strcmp(u.GetProtocol(), "file");
-         if (local) fn = u.GetFile();
-         else fn = u.GetUrl();
-      } else {
-         fn = filename;
-      }
-   }
+   Bool_t local;
+   GetFileName(filename, fn, &local);
+   if (nexp) local = kFALSE;
 
    if (gDebug > 1)
       Info("GetEntryList", "file: %s, local? %d", filename, local);
@@ -1054,16 +1060,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
    TEntryList *elist = 0;
 
    TString fn;
-   if (IsA()->GetClassVersion() > 1) {
-      TUrl u(filename, kTRUE);
-      if (strlen(u.GetAnchor()) > 0) {
-         fn.Form("%s#%s", u.GetFile(), u.GetAnchor());
-      } else {
-         fn = u.GetFile();
-      }
-   } else {
-      fn = filename;
-   }
+   GetFileName(filename, fn);
    
    TString stotal = treename;
    stotal.Append(fn.Data());
@@ -1502,4 +1499,24 @@ Int_t TEntryList::Scan(const char *fn, TList *roots)
    
    // Done
    return nrs;
+}
+
+//______________________________________________________________________________
+void TEntryList::Streamer(TBuffer &b)
+{
+   // Custom streamer for class TEntryList to handle the different interpretation
+   // of fFileName between version 1 and >1 .
+
+   if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      b.ReadClassBuffer(TEntryList::Class(), this, R__v, R__s, R__c);
+      if (R__v <= 1) {
+         // The filename contained also the protocol and host: this was dropped
+         // in version > 1 to allow re-localization
+         GetFileName(fFileName.Data(), fFileName);
+      }
+   } else {
+      b.WriteClassBuffer(TEntryList::Class(), this);
+   }
 }

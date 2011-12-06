@@ -50,6 +50,8 @@ class TEntryList: public TNamed
    TDirectory      *fDirectory;   //! Pointer to directory holding this tree
    Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
 
+   void             GetFileName(const char *filename, TString &fn, Bool_t * = 0);
+
  public:
    enum {kBlockSize = 64000}; //number of entries in each block (not the physical size).
 
