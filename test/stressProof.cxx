@@ -469,6 +469,7 @@ public:
    RunTimes(Double_t c = -1., Double_t r = -1.) : fCpu(c), fReal(r) { }
    
    RunTimes &operator=(const RunTimes &rt) { fCpu = rt.fCpu; fReal = rt.fReal; return *this; }
+   void Set(Double_t c = -1., Double_t r = -1.) { if (c > -1.) fCpu = c; if (r > -1.) fReal = r; }
    void Print(const char *tag = "") { printf("%s real: %f s, cpu: %f s\n", tag, fReal, fCpu); }  
 };
 RunTimes operator-(const RunTimes &rt1, const RunTimes &rt2) {
@@ -520,32 +521,32 @@ public:
 };
 
 // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
-// @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
+// @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 4 workers.
 Double_t ProofTest::gRefReal[24] = {
-   0.090000,   // #1:  Open a session
-   0.000000,   // #2:  Get session logs
-   6.769999,   // #3:  Simple random number generation
-   0.000000,   // #4:  Dataset handling with H1 files
-   3.250000,   // #5:  H1: chain processing
-   1.930000,   // #6:  H1: file collection processing
-   1.790000,   // #7:  H1: file collection, TPacketizer 
-   1.490000,   // #8:  H1: by-name processing 
-   1.530001,   // #9:  H1: multi dataset processing
-   2.779997,   // #10: H1: multi dataset and entry list
-   0.040000,   // #11: Package management with 'event'
-   0.080000,   // #12: Package argument passing
-   11.990002,  // #13: Simple 'event' generation
-   0.020000,   // #14: Input data propagation
-   4.460003,   // #15: H1, Simple: async mode
-   0.000000,   // #16: Admin functionality
-   2.449997,   // #17: Dynamic sub-mergers functionality
-   12.189999,  // #18: Event range processing
-   11.610001,  // #19: Event range, TPacketizer
-   1.709999,   // #20: File-resident output: merge
-   0.620003,   // #21: File-resident output: merge w/ submergers
-   2.950005,   // #22: File-resident output: create dataset
-   10.010010,  // #23: TTree friends (and TPacketizerFile)
-   0.879990    // #24: TTree friends, same file
+   3.047808,   // #1:  Open a session
+   0.021979,   // #2:  Get session logs
+   3.148925,   // #3:  Simple random number generation
+   0.276155,   // #4:  Dataset handling with H1 files
+   5.355514,   // #5:  H1: chain processing
+   2.414207,   // #6:  H1: file collection processing
+   3.381990,   // #7:  H1: file collection, TPacketizer 
+   3.227942,   // #8:  H1: by-name processing 
+   3.944204,   // #9:  H1: multi dataset processing
+   9.146988,   // #10: H1: multi dataset and entry list
+   2.703881,   // #11: Package management with 'event'
+   3.814625,   // #12: Package argument passing
+   9.028315,   // #13: Simple 'event' generation
+   0.123514,   // #14: Input data propagation
+   0.129757,   // #15: H1, Simple: async mode
+   0.349625,   // #16: Admin functionality
+   0.989456,   // #17: Dynamic sub-mergers functionality
+   11.23798,   // #18: Event range processing
+   6.087582,   // #19: Event range, TPacketizer
+   2.489555,   // #20: File-resident output: merge
+   0.180897,   // #21: File-resident output: merge w/ submergers
+   1.417233,   // #22: File-resident output: create dataset
+   7.452465,   // #23: TTree friends (and TPacketizerFile)
+   0.259239    // #24: TTree friends, same file
 };
 
 //
@@ -679,16 +680,6 @@ Int_t PT_POFDataset(void *, RunTimes &);
 Int_t PT_Friends(void *, RunTimes &);
 
 // Auxilliary functions
-void PT_GetLastProofTimes(RunTimes &tt)
-{
-   // Get in tt the Cpu and Real times used by PROOF since last call
-   // Update the statistics
-   gProof->GetStatistics(kFALSE);
-      // The runtimes
-   RunTimes proofTimesCurrent(gProof->GetCpuTime(), gProof->GetRealTime());
-   tt = proofTimesCurrent - gProofTimesZero;
-   gProofTimesZero = proofTimesCurrent;
-}
 void PT_GetLastTimes(RunTimes &tt)
 {
    // Get in tt the Cpu and Real times used during the run
@@ -696,6 +687,20 @@ void PT_GetLastTimes(RunTimes &tt)
    gStopwatch.Stop();
    tt.fCpu = gStopwatch.CpuTime();
    tt.fReal = gStopwatch.RealTime();
+}
+void PT_GetLastProofTimes(RunTimes &tt)
+{
+   // Get in tt the Cpu and Real times used by PROOF since last call
+   if (gProof->IsLite()) {
+      PT_GetLastTimes(tt);
+      return;
+   }
+   // Update the statistics
+   gProof->GetStatistics(kFALSE);
+      // The runtimes
+   RunTimes proofTimesCurrent(gProof->GetCpuTime(), gProof->GetRealTime());
+   tt = proofTimesCurrent - gProofTimesZero;
+   gProofTimesZero = proofTimesCurrent;
 }
 
 // Arguments structures
@@ -1116,7 +1121,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       int navg = 0;
       double avgmarks = -1.;
       nxt.Reset();
-      printf(" PROOFMARKS for single tests (-1 if unmeasured): \n");
+      if (gverbose > 1) printf(" PROOFMARKS for single tests (-1 if unmeasured): \n");
       while ((t = (ProofTest *)nxt()))
          if (t->IsEnabled()) {
             if (gverbose > 1) printf(" %d:\t %.2f \n", t->Num(), t->ProofMarks());
@@ -1129,8 +1134,8 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       
       gProof->GetStatistics((verbose > 0));
       // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
-      // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
-      const double reftime = 78.410;
+      // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 4 workers.
+      const double reftime = 70.169;
       double glbmarks = (gProof->GetRealTime() > 0) ? 1000 * reftime / gProof->GetRealTime() : -1;
       printf(" ROOTMARKS = %.2f (overall: %.2f) ROOT version: %s\t%s@%d\n",
              avgmarks, glbmarks, gROOT->GetVersion(),
