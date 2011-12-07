@@ -17,7 +17,7 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 48;
+const Int_t kMaxMCProcess = 49;
 
 enum TMCProcess
 {
@@ -69,6 +69,7 @@ enum TMCProcess
   kPLightAbsorption = 33,    // Cerenkov photon absorption
   kPLightDetection = 34,     // Optical photon detection (absorption + photoelectron production)
   kPLightScattering = 35,    // Cerenkov photon reflection/refraction
+  kPLightWLShifting = 48,    // Optical photon wavelength shifting
   kStepMax = 36,             // step limited by STEMAX
 
   kPCerenkov = 37,           // Cerenkov photon generation
@@ -133,6 +134,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Coulomb scattering",
   "Photo nuclear interaction",
   "User defined process",
+  "Optical photon wavelength shifting",
 };
 
 #endif //ROOT_TMCProcess
