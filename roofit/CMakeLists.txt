@@ -12,6 +12,7 @@ ROOT_USE_PACKAGE(proof/proof)
 
 if(mathmore OR ROOT_mathmore_FOUND)
   set(ROOT_MATHMORE_LIBRARY MathMore)
+  ROOT_USE_PACKAGE(math/mathmore)	
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roofit/inc) 
