@@ -933,7 +933,10 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
       }
    }
 
-   if (mat) mat->Use(height, width, layer_pixels);
+   if (mat) {
+      // mat->Use(height, width, layer_pixels);
+      memcpy(mat->GetMatrixArray(), layer_pixels, pixels_per_layer*sizeof(double));
+   }
 
    delete [] layer_pixels;
    return mat;
