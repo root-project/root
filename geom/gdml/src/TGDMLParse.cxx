@@ -62,6 +62,7 @@ TGDMLParse Class
 
  Approximated Solids:
  Ellipsoid (approximated to a TGeoBBox)
+ Elliptical cone (approximated to a TGeoCone)
 
  Geometry:
  TGeoVolume
@@ -198,6 +199,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* intestr = "intersection";
    const char* reflstr = "reflectedSolid";
    const char* ellistr = "ellipsoid";
+   const char* elcnstr = "elcone";
    Bool_t hasIsotopes;
 
    if ((strcmp(name, posistr)) == 0) {
@@ -234,6 +236,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = Box(gdml, node, attr);
    } else if ((strcmp(name, ellistr)) == 0) {
       node = Ellipsoid(gdml, node, attr);
+   } else if ((strcmp(name, elcnstr)) == 0) {
+      node = ElCone(gdml, node, attr);
    } else if ((strcmp(name, cutTstr)) == 0) {
       node = CutTube(gdml, node, attr);
    } else if ((strcmp(name, arb8str)) == 0) {
@@ -857,8 +861,8 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       TString tmpname = name;
       //deal with special case - Z of vacuum is always 0
       tmpname.ToLower();
-      if ( tmpname == "vacuum") {
-    	  valZ = 0;
+      if (tmpname == "vacuum") {
+         valZ = 0;
       }
       mat = new TGeoMaterial(NameShort(name), a, valZ, d);
       mixflag = 0;
@@ -1671,8 +1675,9 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
    TString ax = "0";
    TString by = "0";
    TString cz = "0";
-   TString zcut1 = "0";
-   TString zcut2 = "0";
+   //initialization to empty string
+   TString zcut1 = "";
+   TString zcut2 = "";
    TString name = "";
    TString tempattr;
 
@@ -1722,25 +1727,120 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
    Double_t sx = dx / radius;
    Double_t sy = dy / radius;
    Double_t sz = 1.;
-   zcut1line = TString::Format("%s*%s", zcut1.Data(), retunit.Data());
-   zcut2line = TString::Format("%s*%s", zcut2.Data(), retunit.Data());
-   Double_t z1 = Evaluate(zcut1line);
-   Double_t z2 = Evaluate(zcut2line);
+   Double_t z1, z2;
+   //Initialization of cutting
+   if (zcut1 == "") {
+      z1 = -radius;
+   } else {
+      zcut1line = TString::Format("%s*%s", zcut1.Data(), retunit.Data());
+      z1 = Evaluate(zcut1line);
+   }
+   if (zcut2 == "") {
+	   z2 = radius;
+   } else {
+	   zcut2line = TString::Format("%s*%s", zcut2.Data(), retunit.Data());
+	   z2 = Evaluate(zcut2line);
+   }
 
    TGeoSphere *sph = new TGeoSphere(0, radius);
    TGeoScale *scl = new TGeoScale("", sx, sy, sz);
    TGeoScaledShape *shape = new TGeoScaledShape(NameShort(name), sph, scl);
-   if (z1 == 0.0 && z2 == 0.0) {
-      fsolmap[name.Data()] = shape;
-   } else {
-      Double_t origin[3] = {0., 0., 0.};
-      origin[2] = 0.5 * (z1 + z2);
-      Double_t dz = 0.5 * (z2 - z1);
-      TGeoBBox *pCutBox = new TGeoBBox("cutBox", dx, dy, dz, origin);
-      TGeoBoolNode *pBoolNode = new TGeoIntersection(shape, pCutBox, 0, 0);
-      TGeoCompositeShape *cs = new TGeoCompositeShape(NameShort(name), pBoolNode);
-      fsolmap[name.Data()] = cs;
+
+   Double_t origin[3] = {0., 0., 0.};
+   origin[2] = 0.5 * (z1 + z2);
+   Double_t dz = 0.5 * (z2 - z1);
+   TGeoBBox *pCutBox = new TGeoBBox("cutBox", dx, dy, dz, origin);
+   TGeoBoolNode *pBoolNode = new TGeoIntersection(shape, pCutBox, 0, 0);
+   TGeoCompositeShape *cs = new TGeoCompositeShape(NameShort(name), pBoolNode);
+   fsolmap[name.Data()] = cs;
+
+   return node;
+
+}
+
+//___________________________________________________________________
+XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   //In the solids section of the GDML file, an elliptical cone may be declared.
+   //Unfortunately, the elliptical cone is not supported under ROOT so,
+   //when the elcone keyword is found, this function is called
+   //to convert it to a simple box with similar dimensions, and the
+   //dimensions required are taken and stored, these are then bound and
+   //converted to type TGeoBBox and stored in fsolmap map using the name
+   //as its key.
+
+   TString lunit = "mm";
+   TString dx = "0";
+   TString dy = "0";
+   TString zmax = "0";
+   TString zcut = "0";
+   TString name = "";
+   TString tempattr;
+
+   while (attr != 0) {
+
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      } else if (tempattr == "dx") {
+         dx = gdml->GetAttrValue(attr);
+      } else if (tempattr == "dy") {
+         dy = gdml->GetAttrValue(attr);
+      } else if (tempattr == "zmax") {
+         zmax = gdml->GetAttrValue(attr);
+      } else if (tempattr == "zcut") {
+         zcut = gdml->GetAttrValue(attr);
+      } else if (tempattr == "lunit") {
+         lunit = gdml->GetAttrValue(attr);
+      }
+
+      attr = gdml->GetNextAttr(attr);
    }
+
+   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+   }
+
+   //semiaxises of elliptical cone (elcone) are different then ellipsoid
+   TString dxline = "";
+   TString dyline = "";
+   TString zmaxline = "";
+   TString zcutline = "";
+   TString retunit;
+
+   retunit = GetScale(lunit);
+
+   //dxline and dyline are without units because they are as a ration
+   dxline = TString::Format("%s", dx.Data());
+   dyline = TString::Format("%s", dy.Data());
+   zmaxline = TString::Format("%s*%s", zmax.Data(), retunit.Data());
+   zcutline = TString::Format("%s*%s", zcut.Data(), retunit.Data());
+
+   Double_t dxratio = Evaluate(dxline);
+   Double_t dyratio = Evaluate(dyline);
+   Double_t z = Evaluate(zmaxline);
+   Double_t z1 = Evaluate(zcutline);
+   if (z1 <= 0) {
+      Info("ElCone", "ERROR! Parameter zcut = %f is not set properly, elcone will not be imported.", z1);
+      return node;
+   }
+   if (z1 > z){
+      z1 = z;
+   }
+   Double_t rx1 = (z + z1) * dxratio;
+   Double_t ry1 = (z + z1) * dyratio;
+   Double_t rx2 = (z - z1) * dxratio;
+   Double_t sx = 1.;
+   Double_t sy = ry1 / rx1;
+   Double_t sz = 1.;
+
+   TGeoCone *con = new TGeoCone(z1, 0, rx1, 0, rx2);
+   TGeoScale *scl = new TGeoScale("", sx, sy, sz);
+   TGeoScaledShape *shape = new TGeoScaledShape(NameShort(name), con, scl);
+
+   fsolmap[name.Data()] = shape;
 
    return node;
 

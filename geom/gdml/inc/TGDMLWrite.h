@@ -92,14 +92,39 @@
 #include "TGeoCompositeShape.h"
 #endif
 
+#ifndef ROOT_TGeoScaledShape
+#include "TGeoScaledShape.h"
+#endif
+
 #include <map>
 #include <vector>
 #include <iostream>
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGDMLWrite - Class for exporting geometries From ROOT's gGeoManager    //
+//    (instance of TGeoManager class) To GDML file. More about GDML       //
+//    see http://gdml.web.cern.ch.                                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
 
 class TGDMLWrite : public TObject {
 public:
    TGDMLWrite();
    virtual ~TGDMLWrite();
+
+   static void StartGDMLWriting(TGeoManager * geomanager, const char* filename, TString option) {
+      //static function -
+      //options:
+      //  g - set by default - geant4 compatibility
+      //  f,n - if none of this two is set then naming convention is
+      //        with incremental suffix, if "f" then suffix is pointer
+      //        if "n" then there is no suffix, but uniqness of names
+      //        is not secured.
+      TGDMLWrite *writer = new TGDMLWrite;
+      writer->WriteGDMLfile(geomanager, filename, option);
+      delete writer;
+   }
    //wrapper of all main methods for extraction
    void WriteGDMLfile(TGeoManager * geomanager, const char* filename = "test.gdml", TString option = "");
    enum ENamingType {
@@ -134,9 +159,6 @@ private:
    //General lists
    StructLst *fIsotopeList;   //list of isotopes
    StructLst *fElementList;   //list of elements
-   StructLst *fMaterialList;  //list of materials
-   StructLst *fShapeList;     //list of solids
-   StructLst *fVolumeList;    //list of volumes
    StructLst *fAccPatt;       //list of accepted patterns for division
    StructLst *fRejShape;      //list of rejected shapes
 
@@ -144,11 +166,12 @@ private:
 
    //Data members
    static TGDMLWrite *fgGDMLWrite;                         //pointer to gdml writer
-   Int_t  fgNamingSpeed;
-   Bool_t fgG4Compatibility;
-   XMLDocPointer_t  fGdmlFile;
-   TString fTopVolumeName;
-   TXMLEngine *fGdmlE;
+   Int_t  fgNamingSpeed;                                   //input option for volume and solid naming
+   Bool_t fgG4Compatibility;                               //input option for Geant4 compatibility
+   XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
+   TString fTopVolumeName;                                 //name of top volume
+   TXMLEngine *fGdmlE;                                     //xml engine pointer
+
    XMLNodePointer_t fDefineNode;                           //main <define> node...
    XMLNodePointer_t fMaterialsNode;                        //main <materials> node...
    XMLNodePointer_t fSolidsNode;                           //main <solids> node...
@@ -162,13 +185,11 @@ private:
    static const UInt_t fgkProcBitVol = BIT(19);    //19th bit is set when volume is processed
    static const UInt_t fgkMaxNameErr = 5;          //maximum number of errors for naming
 
-   //I. Methods returning pointer to the created node
+   //I. Methods processing the gGeoManager geometry object structure
    //1. Main methods to extract everything from ROOT gGeoManager
-
-
    XMLNodePointer_t ExtractMaterials(TList* materialsLst); //result <materials>...
-   void             ExtractSolids(TObjArray* shapesLst);   //result <solids>...
-   void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...
+   TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
+   void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
 
 
    //1.1 Materials sub methods - creating Nodes
@@ -206,6 +227,8 @@ private:
    XMLNodePointer_t CreateEltubeN(TGeoEltu * geoShape);
    XMLNodePointer_t CreateHypeN(TGeoHype * geoShape);
    XMLNodePointer_t CreateXtrusionN(TGeoXtru * geoShape);
+   XMLNodePointer_t CreateEllipsoidN(TGeoCompositeShape * geoShape, TString elName);
+   XMLNodePointer_t CreateElConeN(TGeoScaledShape * geoShape);
 
    XMLNodePointer_t CreateCommonBoolN(TGeoCompositeShape *geoShape);
 
@@ -221,7 +244,7 @@ private:
    //II. Utility methods
    Xyz GetXYZangles(const Double_t * rotationMatrix);
    //nodes to create position, rotation and similar types first-position/rotation...
-   XMLNodePointer_t CreatePositionN(const char * name, const Double_t *position, const char * type = "position", const char * unit = "cm");
+   XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
    TGeoCompositeShape* CreateFakeCtub(TGeoCtub * geoShape);  //create fake cut tube as intersection
 
@@ -231,6 +254,8 @@ private:
    TString GenName(TString oldname, TString objPointer);
    Bool_t CanProcess(TObject *pointer);
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
+   Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
+   void UnsetTemporaryBits(TGeoManager * geoMng);
 
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };

@@ -44,6 +44,10 @@ TGeoVoxelFinder::ThreadData_t::ThreadData_t() :
    fNcandidates(0), fCurrentVoxel(0), fCheckList(0), fBits1(0)
 {
    // Constructor.
+   fSlices[0] = fSlices[1] = fSlices[2] = 0;
+   fInc[0] = fInc[1] = fInc[2] = 0;
+   fInvdir[0] = fInvdir[1] = fInvdir[2] = 0.;
+   fLimits[0] = fLimits[1] = fLimits[2] = 0;
 }
 
 //______________________________________________________________________________
@@ -62,21 +66,27 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
    if (tid >= fThreadSize)
    {
       TThread::Lock();
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
+      if (tid >= fThreadSize)
+      {
+         fThreadData.resize(tid + 1);
+         fThreadSize = tid + 1;
+      }
       TThread::UnLock();
    }
    if (fThreadData[tid] == 0)
    {
       TThread::Lock();
-      fThreadData[tid] = new ThreadData_t;
-      ThreadData_t &td = *fThreadData[tid];
-
-      Int_t nd = fVolume->GetNdaughters();
-      if (nd > 0)
+      if (fThreadData[tid] == 0)
       {
-         td.fCheckList = new Int_t  [nd];
-         td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
+         fThreadData[tid] = new ThreadData_t;
+         ThreadData_t &td = *fThreadData[tid];
+
+         Int_t nd = fVolume->GetNdaughters();
+         if (nd > 0)
+         {
+            td.fCheckList = new Int_t  [nd];
+            td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
+         }
       }
       TThread::UnLock();
    }
@@ -86,6 +96,7 @@ TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
 //______________________________________________________________________________
 void TGeoVoxelFinder::ClearThreadData() const
 {
+   TThread::Lock();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -94,6 +105,7 @@ void TGeoVoxelFinder::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
 }
 
 
@@ -670,11 +682,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck, Int_t 
 {
 // Returns list of new candidates in next voxel. If NULL, nowhere to
 // go next. 
-   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
    }   
+   ThreadData_t& td = GetThreadData(tid);
    ncheck = 0;
    if (td.fLimits[0]<0) return 0;
    if (td.fLimits[1]<0) return 0;
@@ -1231,12 +1243,12 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck, Int_t 
 void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir, Int_t tid)
 {
 // get the list in the next voxel crossed by a ray
-   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       TGeoVoxelFinder *vox = (TGeoVoxelFinder*)this;
       vox->Voxelize();
       fVolume->FindOverlaps();
    }   
+   ThreadData_t& td = GetThreadData(tid);
    td.fCurrentVoxel = 0;
 //   printf("###Sort crossed voxels for %s\n", fVolume->GetName());
    td.fNcandidates = 0;
@@ -1364,11 +1376,11 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir, Int_t ti
 Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem, Int_t tid)
 {
 // get the list of daughter indices for which point is inside their bbox
-   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
    }   
+   ThreadData_t& td = GetThreadData(tid);
    if (fVolume->GetNdaughters() == 1) {
       if (fXb) {
          if (point[0]<fXb[0] || point[0]>fXb[1]) return 0;
@@ -1525,11 +1537,11 @@ Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t 
 {
 // get the list of new candidates for the next voxel crossed by current ray
 //   printf("### GetNextVoxel\n");
-   ThreadData_t& td = GetThreadData(tid);
    if (NeedRebuild()) {
       Voxelize();
       fVolume->FindOverlaps();
    }   
+   ThreadData_t& td = GetThreadData(tid);
    if (td.fCurrentVoxel==0) {
 //      printf(">>> first voxel, %i candidates\n", ncheck);
 //      printf("   bits[0]=%i\n", gGeoManager->GetBits()[0]);
