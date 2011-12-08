@@ -1037,10 +1037,14 @@ RooDataHist::~RooDataHist()
 
 
 //_____________________________________________________________________________
-Int_t RooDataHist::getIndex(const RooArgSet& coord)
+Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast)
 {
   checkInit() ;
-  _vars = coord ;
+  if (fast) {
+    _vars.assignFast(coord,kFALSE) ;
+  } else {
+    _vars.assignValueOnly(coord) ;
+  }
   return calcTreeIndex() ;
 }
 

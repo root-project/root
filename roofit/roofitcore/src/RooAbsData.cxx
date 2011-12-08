@@ -1589,12 +1589,21 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
     subsetVars.remove(splitCat,kTRUE,kTRUE) ;
   }
 
+  // Add weight variable explicitly if dataset has weights, but no top-level weight
+  // variable exists (can happen with composite datastores)
+  Bool_t addWV(kFALSE) ;
+  RooRealVar newweight("weight","weight",-1e9,1e9) ;
+  if (isWeighted()) {
+    subsetVars.add(newweight) ;
+    addWV = kTRUE ;
+  }
+
   // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
   if (createEmptyDataSets) {
     TIterator* stateIter = cloneCat->typeIterator() ;
     RooCatType* state ;
     while ((state=(RooCatType*)stateIter->Next())) {
-      RooAbsData* subset = emptyClone(state->GetName(),state->GetName(),&subsetVars) ;
+      RooAbsData* subset = emptyClone(state->GetName(),state->GetName(),&subsetVars,(addWV?"weight":0)) ;
       dsetList->Add((RooAbsArg*)subset) ;    
     }
     delete stateIter ;
@@ -1607,7 +1616,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
     const RooArgSet* row =  get(i) ;
     RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel()) ;
     if (!subset) {
-      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars) ;
+      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars,(addWV?"weight":0)) ;
       dsetList->Add((RooAbsArg*)subset) ;
     }
     subset->add(*row,weight()) ;

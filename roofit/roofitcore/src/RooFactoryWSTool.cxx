@@ -516,7 +516,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     return 0 ;
   }
   
-  RooRealSumPdf* pdf =  new RooRealSumPdf(objName,objName,amplList,coefList) ;
+  RooRealSumPdf* pdf =  new RooRealSumPdf(objName,objName,amplList,coefList,(amplList.getSize()==coefList.getSize())) ;
   pdf->setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
   return (RooRealSumPdf*) _ws->pdf(objName) ;
@@ -541,9 +541,16 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       // Conditional term
       *sep=0 ;
       sep++ ;
+
+      // |x is conditional on x, |~x is conditional on all but x
+      Bool_t invCond(kFALSE) ;
+      if (*sep=='~') {
+	invCond=kTRUE ;
+	sep++ ;
+      }
       
       try {
- 	cmdList.Add(Conditional(asSET(tok),asSET(sep),kTRUE).Clone()) ;
+ 	cmdList.Add(Conditional(asSET(tok),asSET(sep),!invCond).Clone()) ;
       } catch (string err) {
 	coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
 	logError() ;
