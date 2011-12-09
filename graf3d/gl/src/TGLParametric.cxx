@@ -278,7 +278,7 @@ TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
    fXAxis = &fCartesianXAxis;
    fYAxis = &fCartesianYAxis;
    fZAxis = &fCartesianZAxis;
-   
+
    fCoord = &fCartesianCoord;
 
    InitGeometry();
@@ -345,8 +345,11 @@ Bool_t TGLParametricPlot::InitGeometry()
       hist.GetZaxis()->Copy(fCartesianZAxis);
    
       fCartesianXAxis.Set(fMeshSize, min.X(), max.X());
+      fCartesianXAxis.SetTitle("x");//it's lost when copying from temp. hist.
       fCartesianYAxis.Set(fMeshSize, min.Y(), max.Y());
+      fCartesianYAxis.SetTitle("y");
       fCartesianZAxis.Set(fMeshSize, min.Z(), max.Z());
+      fCartesianZAxis.SetTitle("z");
 
       if (!fCoord->SetRanges(&fCartesianXAxis, &fCartesianYAxis, &fCartesianZAxis))
          return kFALSE;
