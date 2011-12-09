@@ -8,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-#include "Riostream.h"
 #include <cctype>
 
 #ifdef WIN32
@@ -19,6 +17,7 @@
 #include "TVirtualX.h"
 #include "TString.h"
 #include "TROOT.h"
+#include "TH3.h"
 
 #include "TGLPlotCamera.h"
 #include "TGLParametric.h"
@@ -276,6 +275,12 @@ TGLParametricPlot::TGLParametricPlot(TGLParametricEquation *eq,
                         fEquation(eq)
 {
    //Constructor.
+   fXAxis = &fCartesianXAxis;
+   fYAxis = &fCartesianYAxis;
+   fZAxis = &fCartesianZAxis;
+   
+   fCoord = &fCartesianCoord;
+
    InitGeometry();
    InitColors();
 }
@@ -329,20 +334,28 @@ Bool_t TGLParametricPlot::InitGeometry()
          }
          u += dU;
       }
+      
+      TH3F hist("tmp", "tmp", 2, -1., 1., 2, -1., 1., 2, -1., 1.);
+      hist.SetDirectory(0);
+      //TAxis has a lot of attributes, defaults, set by ctor,
+      //are not enough to be correctly painted by TGaxis object.
+      //To simplify their initialization - I use temporary histogram.
+      hist.GetXaxis()->Copy(fCartesianXAxis);
+      hist.GetYaxis()->Copy(fCartesianYAxis);
+      hist.GetZaxis()->Copy(fCartesianZAxis);
+   
+      fCartesianXAxis.Set(fMeshSize, min.X(), max.X());
+      fCartesianYAxis.Set(fMeshSize, min.Y(), max.Y());
+      fCartesianZAxis.Set(fMeshSize, min.Z(), max.Z());
 
-      const Double_t xRange = max.X() - min.X(), yRange = max.Y() - min.Y(), zRange = max.Z() - min.Z();
-      const Double_t xS = 1. / xRange, yS = 1. / yRange, zS = 1. / zRange;
+      if (!fCoord->SetRanges(&fCartesianXAxis, &fCartesianYAxis, &fCartesianZAxis))
+         return kFALSE;
 
       for (Int_t i = 0; i < fMeshSize; ++i) {
          for (Int_t j = 0; j < fMeshSize; ++j) {
             TGLVertex3 &ver = fMesh[i][j].fPos;
-            ver.X() *= xS, ver.Y() *= yS, ver.Z() *= zS;
+            ver.X() *= fCoord->GetXScale(), ver.Y() *= fCoord->GetYScale(), ver.Z() *= fCoord->GetZScale();
          }
-      }
-
-      if (!xRange || !yRange || !zRange) {
-         Error("InitGeometry", "Zero axis range");
-         return kFALSE;
       }
 
       u = uRange.first;
@@ -352,18 +365,17 @@ Bool_t TGLParametricPlot::InitGeometry()
             TGLVertex3 &ver = fMesh[i][j].fPos;
             fEquation->EvalVertex(v1, u + dd, v);
             fEquation->EvalVertex(v2, u, v + dd);
-            v1.X() *= xS, v1.Y() *= yS, v1.Z() *= zS;
-            v2.X() *= xS, v2.Y() *= yS, v2.Z() *= zS;
+            v1.X() *= fCoord->GetXScale(), v1.Y() *= fCoord->GetYScale(), v1.Z() *= fCoord->GetZScale();
+            v2.X() *= fCoord->GetXScale(), v2.Y() *= fCoord->GetYScale(), v2.Z() *= fCoord->GetZScale();
             Normal2Plane(ver.CArr(), v1.CArr(), v2.CArr(), fMesh[i][j].fNormal.Arr());
             v += dV;
          }
          u += dU;
       }
 
-      using Rgl::Range_t;
-      fBackBox.SetPlotBox(Range_t(min.X() * xS, max.X() * xS),
-                          Range_t(min.Y() * yS, max.Y() * yS),
-                          Range_t(min.Z() * zS, max.Z() * zS));
+      fBackBox.SetPlotBox(fCoord->GetXRangeScaled(),
+                          fCoord->GetYRangeScaled(),
+                          fCoord->GetZRangeScaled());
       if (fCamera) fCamera->SetViewVolume(fBackBox.Get3DBox());
    }
 

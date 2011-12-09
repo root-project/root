@@ -20,6 +20,9 @@
 #ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
 #endif
+#ifndef ROOT_TAxis
+#include "TAxis.h"
+#endif
 #ifndef ROOT_TF2
 #include "TF2.h"
 #endif
@@ -107,6 +110,12 @@ private:
    Int_t                  fColorScheme;
 
    TGLParametricEquation *fEquation;
+   
+   TAxis                  fCartesianXAxis;
+   TAxis                  fCartesianYAxis;
+   TAxis                  fCartesianZAxis;
+
+   TGLPlotCoordinates     fCartesianCoord;
 
 public:
    TGLParametricPlot(TGLParametricEquation *equation, TGLPlotCamera *camera);
