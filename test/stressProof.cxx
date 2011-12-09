@@ -155,6 +155,7 @@ static Int_t gverbose = 1;
 static TString gverbproof("kAll");
 static TString glogfile;
 static Int_t gpoints = 0;
+static Bool_t guseprogress = kTRUE;
 static Int_t totpoints = 53;
 static RedirectHandle_t gRH;
 static RedirectHandle_t gRHAdmin;
@@ -208,7 +209,7 @@ int stressProof(const char *url = "proof://localhost:40000",
                 Bool_t skipds = kTRUE, const char *tests = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
                 Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
-                Bool_t clearcache = kFALSE);
+                Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -223,7 +224,8 @@ int main(int argc,const char *argv[])
       printf(" Usage:\n");
       printf(" \n");
       printf(" $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile] [-dyn] [-ds]\n");
-      printf("                 [-t tests] [-h1 h1src] [-event src] [-dryrun] [-g] [-cpu] [-clearcache] [master]\n");
+      printf("                 [-t tests] [-h1 h1src] [-event src] [-dryrun] [-g] [-cpu]\n");
+      printf("                 [-clearcache] [-noprogress] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -256,6 +258,7 @@ int main(int argc,const char *argv[])
       printf("   -g            enable graphics; default is to run in text mode.\n");
       printf("   -cpu          show CPU times used by each successful test; used for calibration.\n");
       printf("   -clearcache   clear memory cache associated with the files processed when local.\n");
+      printf("   -noprogress   do not show progress whose escaped chars may confuse some wrapper applications.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -268,6 +271,7 @@ int main(int argc,const char *argv[])
    Bool_t dryrun = kFALSE;
    Bool_t showcpu = kFALSE;
    Bool_t clearcache = kFALSE;
+   Bool_t useprogress = kTRUE;
    const char *logfile = 0;
    const char *h1src = 0;
    const char *eventsrc = 0;
@@ -351,6 +355,9 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-clearcache",11)) {
          clearcache = kTRUE;
          i++;
+      } else if (!strncmp(argv[i],"-noprogress",11)) {
+         useprogress = kFALSE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -364,7 +371,7 @@ int main(int argc,const char *argv[])
       new TApplication("stressProof", 0, 0);
 
    int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        tests, h1src, eventsrc, dryrun, showcpu, clearcache);
+                        tests, h1src, eventsrc, dryrun, showcpu, clearcache, useprogress);
 
    gSystem->Exit(rc);
 }
@@ -398,6 +405,25 @@ void PrintStressProgress(Long64_t total, Long64_t processed, Float_t, Long64_t)
 
    gSystem->RedirectOutput(glogfile, "a", &gRH);
 }
+//______________________________________________________________________________
+void PrintEmptyProgress(Long64_t, Long64_t, Float_t, Long64_t)
+{
+   // Dummy PrintProgress
+   return;
+}
+   
+// Guard class
+class SwitchProgressGuard {
+public:
+   SwitchProgressGuard(Bool_t force = kFALSE) {
+      if (guseprogress || force) {
+         gProof->SetPrintProgress(&PrintStressProgress);
+      } else {
+         gProof->SetPrintProgress(&PrintEmptyProgress);
+      }
+   }
+   ~SwitchProgressGuard() { gProof->SetPrintProgress(0); }
+};
 
 //______________________________________________________________________________
 void CleanupSelector(const char *selpath)
@@ -721,7 +747,7 @@ static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *logfile,
                 Bool_t dyn, Bool_t skipds, const char *tests,
                 const char *h1src, const char *eventsrc,
-                Bool_t dryrun, Bool_t showcpu, Bool_t clearcache)
+                Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -740,6 +766,18 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       gverbproof = vv;
    } else {
       gverbose = vv.Atoi();
+   }
+
+   // No progress bar if not tty or explicitly not requested (i.e. for ctest)
+   guseprogress = useprogress;
+   if (isatty(0) == 0 || isatty(1) == 0) guseprogress = kFALSE;
+   if (!guseprogress) {
+      if (!useprogress) {
+         printf("*  Progress not shown (explicit request)                         *\n");
+      } else {
+         printf("*  Progress not shown (not tty)                                  *\n");
+      }
+      printf("******************************************************************\n");
    }
 
    // Notify/warn about the dynamic startup option, if any
@@ -1674,13 +1712,13 @@ Int_t PT_CheckDataset(TQueryResult *qr, Long64_t nevt)
 
    // Fill the histos using TProofDraw
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->DrawSelect(dsname, "3*px+2 >> h1s0","px**2+py**2>1");
-   PutPoint();
-   gProof->DrawSelect(dsname, "2*px+2 >> h1s1","pz>2");
-   PutPoint();
-   gProof->DrawSelect(dsname, "1.3*px+2 >> h1s2","(px^2+py^2>4) && py>0");
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->DrawSelect(dsname, "3*px+2 >> h1s0","px**2+py**2>1");
+      PutPoint();
+      gProof->DrawSelect(dsname, "2*px+2 >> h1s1","pz>2");
+      PutPoint();
+      gProof->DrawSelect(dsname, "1.3*px+2 >> h1s2","(px^2+py^2>4) && py>0");
+   }
     
    Int_t rch1s = 0;
    TString emsg;
@@ -1959,11 +1997,11 @@ Int_t PT_Simple(void *submergers, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(gSimpleSel.Data(), nevt);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(gSimpleSel.Data(), nevt);
+      gTimer.Stop();
+   }
 
    // Count
    gSimpleCnt++;
@@ -2026,11 +2064,11 @@ Int_t PT_H1Http(void *, RunTimes &tt)
    PutPoint();
    chain->SetProof();
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   chain->Process(gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      chain->Process(gH1Sel.Data());
+      gTimer.Stop();
+   }
    gProof->RemoveChain(chain);
 
    // Count
@@ -2099,12 +2137,12 @@ Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(fc, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
-
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(fc, gH1Sel.Data());
+      gTimer.Stop();
+   }
+   
    // Restore settings
    gProof->DeleteParameters("PROOF_Packetizer");
    gProof->DeleteParameters("PROOF_PacketizerStrategy");
@@ -2155,11 +2193,11 @@ Int_t PT_H1DataSet(void *, RunTimes &tt)
 
    // Process the dataset by name
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Count
    gH1Cnt++;
@@ -2207,11 +2245,11 @@ Int_t PT_H1MultiDataSet(void *, RunTimes &tt)
 
    // Process the dataset by name
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Count
    gH1Cnt++;
@@ -2260,11 +2298,12 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 
    // Entry-list creation run
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data(), "fillList=elist.root");
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data(), "fillList=elist.root");
+      gTimer.Stop();
+   }
+   
    // Cleanup entry-list from the input list
    TIter nxi(gProof->GetInputList());
    TObject *o = 0;
@@ -2289,11 +2328,11 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    // Run using the entrylist
    dsname = "h1dseta<<elist.root h1dsetb?enl=elist.root";
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Unlink the entry list file
    gSystem->Unlink("elist.root");
@@ -2565,9 +2604,9 @@ Int_t PT_Event(void *, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gEventSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gEventSel.Data(), nevt);
+   }
 
    // Make sure the query result is there
    PutPoint();
@@ -2674,9 +2713,9 @@ Int_t PT_InputData(void *, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Cleanup
    gSystem->Unlink(datafile.Data());
@@ -2781,9 +2820,9 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Some cleanup
    gProof->ClearPackage(pack1);
@@ -2858,9 +2897,9 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Some cleanup
    gProof->ClearPackage(pack2);
@@ -2979,34 +3018,34 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
       gProof->Remove("cleanupdir");
    }
 
-   // Submit the processing requests
-   PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(fc, gH1Sel.Data(), "ASYN");
-
    // Define the number of events and histos
    Long64_t nevt = 1000000;
    Int_t nhist = 16;
-   // The number of histograms is added as parameter in the input list
-   gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
-   gProof->Process(gSimpleSel.Data(), nevt, "ASYN");
+   // Submit the processing requests
+   PutPoint();
+   {  SwitchProgressGuard spg;
+      gProof->Process(fc, gH1Sel.Data(), "ASYN");
 
-   // Wait a bit as a function of previous runnings
-   Double_t dtw = 10;
-   if (gH1Cnt > 0 && gSimpleTime > 0) {
-      dtw = gH1Time / gH1Cnt + gSimpleTime / gSimpleCnt + 1;
-      if (dtw < 10) dtw = 10;
+      // The number of histograms is added as parameter in the input list
+      gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+      gProof->Process(gSimpleSel.Data(), nevt, "ASYN");
+
+      // Wait a bit as a function of previous runnings
+      Double_t dtw = 10;
+      if (gH1Cnt > 0 && gSimpleTime > 0) {
+         dtw = gH1Time / gH1Cnt + gSimpleTime / gSimpleCnt + 1;
+         if (dtw < 10) dtw = 10;
+      }
+      Int_t tw = (Int_t) (5 * dtw);
+
+      gTimedOut = kFALSE;
+      TTimeOutTimer t(tw*1000);
+
+      // Wait for the processing
+      while (!gProof->IsIdle() && !gTimedOut)
+         gSystem->InnerLoop();
+
    }
-   Int_t tw = (Int_t) (5 * dtw);
-
-   gTimedOut = kFALSE;
-   TTimeOutTimer t(tw*1000);
-
-   // Wait for the processing
-   while (!gProof->IsIdle() && !gTimedOut)
-      gSystem->InnerLoop();
-
-   gProof->SetPrintProgress(0);
    PutPoint();
 
    // Restore settings
@@ -3312,11 +3351,11 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    PutPoint();
    chain->SetProof();
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   chain->Process(gEventProcSel.Data(), "", gEventNum, gEventFst);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      chain->Process(gEventProcSel.Data(), "", gEventNum, gEventFst);
+      gTimer.Stop();
+   }
    gProof->RemoveChain(chain);
 
    // Count
@@ -3366,11 +3405,11 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process("dsevent", gEventProcSel.Data(), "", gEventNum, gEventFst);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process("dsevent", gEventProcSel.Data(), "", gEventNum, gEventFst);
+      gTimer.Stop();
+   }
    gProof->RemoveDataSet("dsevent");
 
    // Restore settings
@@ -3451,11 +3490,11 @@ Int_t PT_POFNtuple(void *submergers, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(gNtupleSel.Data(), nevt);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(gNtupleSel.Data(), nevt);
+      gTimer.Stop();
+   }
 
    // Remove any setting related to submergers
    gProof->DeleteParameters("PROOF_UseMergers");
@@ -3498,11 +3537,11 @@ Int_t PT_POFDataset(void *, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(gNtupleSel.Data(), nevt);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(gNtupleSel.Data(), nevt);
+      gTimer.Stop();
+   }
 
    // Remove any setting related to submergers
    gProof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
@@ -3626,11 +3665,11 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   dset->Process(gFriendsSel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      dset->Process(gFriendsSel.Data());
+      gTimer.Stop();
+   }
 
    // Remove any setting
    gProof->DeleteParameters("PROOF_DONT_PLOT");
