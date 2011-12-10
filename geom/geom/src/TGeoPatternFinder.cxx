@@ -70,26 +70,18 @@ TGeoPatternFinder::ThreadData_t::~ThreadData_t()
 TGeoPatternFinder::ThreadData_t& TGeoPatternFinder::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
+   TThread::Lock();
    if (tid >= fThreadSize)
    {
-      TThread::Lock();
-      if (tid >= fThreadSize)
-      {
-         fThreadData.resize(tid + 1);
-         fThreadSize = tid + 1;
-      }
-      TThread::UnLock();
+      fThreadData.resize(tid + 1);
+      fThreadSize = tid + 1;
    }
    if (fThreadData[tid] == 0)
    {
-      TThread::Lock();
-      if (fThreadData[tid] == 0)
-      {
-         fThreadData[tid] = new ThreadData_t;
-         fThreadData[tid]->fMatrix = CreateMatrix();
-      }
-      TThread::UnLock();
+      fThreadData[tid] = new ThreadData_t;
+      fThreadData[tid]->fMatrix = CreateMatrix();
    }
+   TThread::UnLock();
    return *fThreadData[tid];
 }
 

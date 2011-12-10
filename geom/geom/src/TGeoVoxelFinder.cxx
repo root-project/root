@@ -63,33 +63,25 @@ TGeoVoxelFinder::ThreadData_t::~ThreadData_t()
 TGeoVoxelFinder::ThreadData_t& TGeoVoxelFinder::GetThreadData(Int_t tid) const
 {
 //   Int_t tid = TGeoManager::ThreadId();
+   TThread::Lock();
    if (tid >= fThreadSize)
    {
-      TThread::Lock();
-      if (tid >= fThreadSize)
-      {
-         fThreadData.resize(tid + 1);
-         fThreadSize = tid + 1;
-      }
-      TThread::UnLock();
+      fThreadData.resize(tid + 1);
+      fThreadSize = tid + 1;
    }
    if (fThreadData[tid] == 0)
    {
-      TThread::Lock();
-      if (fThreadData[tid] == 0)
-      {
-         fThreadData[tid] = new ThreadData_t;
-         ThreadData_t &td = *fThreadData[tid];
+      fThreadData[tid] = new ThreadData_t;
+      ThreadData_t &td = *fThreadData[tid];
 
-         Int_t nd = fVolume->GetNdaughters();
-         if (nd > 0)
-         {
-            td.fCheckList = new Int_t  [nd];
-            td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
-         }
+      Int_t nd = fVolume->GetNdaughters();
+      if (nd > 0)
+      {
+         td.fCheckList = new Int_t  [nd];
+         td.fBits1     = new UChar_t[1 + ((nd-1)>>3)];
       }
-      TThread::UnLock();
    }
+   TThread::UnLock();
    return *fThreadData[tid];
 }
 
