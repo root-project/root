@@ -534,6 +534,13 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // Actual server creation work is done in CreateServer() to allow
    // overloading.
 
+   // If test and tty, we are done
+   Bool_t xtest = (argc && *argc == 1) ? kTRUE : kFALSE;
+   if (xtest) {
+      Printf("proofserv: command line testing: OK");
+      exit(0);
+   }
+
    // Read session specific rootrc file
    TString rcfile = gSystem->Getenv("ROOTRCFILE") ? gSystem->Getenv("ROOTRCFILE")
                                                   : "session.rootrc";
@@ -1259,6 +1266,14 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
 {
    // Get and handle command line options. Fixed format:
    // "proofserv"|"proofslave" <confdir>
+
+   Bool_t xtest = (argc && *argc > 3 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
+
+   // If test and tty
+   if (xtest && !(isatty(0) == 0 || isatty(1) == 0)) {
+      Printf("proofserv: command line testing: OK");
+      exit(0);
+   }
 
    if (*argc <= 1) {
       Fatal("GetOptions", "Must be started from proofd with arguments");
@@ -5827,7 +5842,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
       if (gProofServ != 0 && !recursive) {
          recursive = kTRUE;
-         gProofServ->GetSocket()->Send(kPROOF_FATAL);
+         if (gProofServ->GetSocket()) gProofServ->GetSocket()->Send(kPROOF_FATAL);
          recursive = kFALSE;
       }
 

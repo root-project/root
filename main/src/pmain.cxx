@@ -284,16 +284,17 @@ int main(int argc, char **argv)
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
 
-   TString getter("GetTProofServ");
-   TString prooflib = "libProof";
+   TString getter("GetTXProofServ");
+   TString prooflib = "libProofx";
    if (argc > 2) {
       if (!strcmp(argv[2], "lite")) {
-         // Lite version for local processing
+         // Lite version for local processing: this is in libProof and has its own getter
+         prooflib = "libProof";
          getter = "GetTProofServLite";
-      } else if (!strcmp(argv[2], "xpd")) {
-         // XPD: additionally load the appropriate library
-         prooflib = "libProofx";
-         getter = "GetTXProofServ";
+      } else if (strcmp(argv[2], "xpd")) {
+         // Not XPD: set the appropriate names for library and getter
+         prooflib = "libProof";
+         getter = "GetTProofServ";
       }
    }
    char *p = 0;
