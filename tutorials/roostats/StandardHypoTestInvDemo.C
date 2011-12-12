@@ -322,7 +322,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("NToysRatio", nToysRatio);
    calc.SetParameter("MaxPOI", maxPOI);
    calc.SetParameter("UseProof", useProof);
-   calc.SetParameter("Nworkers", nworkers);
+   calc.SetParameter("NWorkers", nworkers);
    calc.SetParameter("Rebuild", rebuild);
    calc.SetParameter("NToyToRebuild", nToyToRebuild);
    calc.SetParameter("MassValue", massValue.c_str());
@@ -619,9 +619,14 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    // build test statistics and hypotest calculators for running the inverter 
   
    SimpleLikelihoodRatioTestStat slrts(*sbModel->GetPdf(),*bModel->GetPdf());
-  
-   if (sbModel->GetSnapshot()) slrts.SetNullParameters(*sbModel->GetSnapshot());
-   if (bModel->GetSnapshot()) slrts.SetAltParameters(*bModel->GetSnapshot());
+
+   // null parameters must includes snapshot of poi plus the nuisance values 
+   RooArgSet nullParams(*sbModel->GetSnapshot());
+   if (sbModel->GetNuisanceParameters()) nullParams.add(*sbModel->GetNuisanceParameters());
+   if (sbModel->GetSnapshot()) slrts.SetNullParameters(nullParams);
+   RooArgSet altParams(*bModel->GetSnapshot());
+   if (bModel->GetNuisanceParameters()) altParams.add(*bModel->GetNuisanceParameters());
+   if (bModel->GetSnapshot()) slrts.SetAltParameters(altParams);
   
    // ratio of profile likelihood - need to pass snapshot for the alt
    RatioOfProfiledLikelihoodsTestStat 
@@ -679,7 +684,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
          Info("StandardHypoTestInvDemo","Data set is weighted, nentries = %d and sum of weights = %8.1f but toy generation is unbinned - it would be faster to set mGenerateBinned to true\n",data->numEntries(), data->sumEntries());
       }
       toymcs->SetGenerateBinned(mGenerateBinned);
-    
+  
       toymcs->SetUseMultiGen(mOptimize);
     
       if (mGenerateBinned &&  sbModel->GetObservables()->getSize() > 2) { 
@@ -705,6 +710,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
     
       // check for nuisance prior pdf in case of nuisance parameters 
       if (bModel->GetNuisanceParameters() || sbModel->GetNuisanceParameters() ) {
+
+         // fix for using multigen (does not work in this case)
+         toymcs->SetUseMultiGen(false);
+         ToyMCSampler::SetAlwaysUseMultiGen(false);
+
          RooAbsPdf * nuisPdf = 0; 
          if (nuisPriorName) nuisPdf = w->pdf(nuisPriorName);
          // use prior defined first in bModel (then in SbModel)
