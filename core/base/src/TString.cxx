@@ -55,6 +55,8 @@
 namespace std { using ::list; }
 #endif
 
+ClassImp(TString)
+
 // Mutex for string format protection
 TVirtualMutex *gStringMutex = 0;
 
@@ -76,8 +78,6 @@ const UInt_t kHashShift = 5;
 // The internal string is always null terminated.
 //
 // ------------------------------------------------------------------------
-
-ClassImp(TString)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
