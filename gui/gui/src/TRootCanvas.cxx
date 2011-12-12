@@ -1448,6 +1448,12 @@ void TRootCanvas::ShowEditor(Bool_t show)
       w = w - e;
    }
    Resize(w, h);
+   if (fParent && fParent != fClient->GetDefaultRoot()) {
+      // if the canvas is embedded (e.g. in the browser), then the layout of
+      // the main frame has to be re-applied when showing/hiding the editor
+      TGMainFrame *main = (TGMainFrame *)fParent->GetMainFrame();
+      if (main) main->Layout();
+   }
 
    if (savedPad) gPad = savedPad;
 }
