@@ -5557,8 +5557,10 @@ void THistPainter::PaintHist(Option_t *)
          if (Hoption.Logy) yb = TMath::Log10(TMath::Max(c1,.1*logymin));
          else              yb = c1;
       }
-      yb = TMath::Max(yb, ymin);
-      yb = TMath::Min(yb, ymax);
+      if(!Hoption.Line){
+         yb = TMath::Max(yb, ymin);
+         yb = TMath::Min(yb, ymax);
+      }
       keepy[j-first] = yb;
    }
 
