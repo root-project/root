@@ -118,6 +118,9 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef WIN32
+#include <io.h>
+#endif
 
 #include "Getline.h"
 #include "TApplication.h"
