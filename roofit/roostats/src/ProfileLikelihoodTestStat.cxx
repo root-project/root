@@ -189,7 +189,7 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
    minim.setPrintLevel(level);
    minim.setEps(fTolerance);
    // this cayses a memory leak
-   minim.optimizeConst(true); 
+   minim.optimizeConst(2); 
    for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
       //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
       status = minim.minimize(fMinimizer, "Minimize");
