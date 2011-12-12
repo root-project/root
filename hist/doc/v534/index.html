@@ -10,6 +10,22 @@ When 1D histograms are painted with the options TEXT and BAR simultaneously, the
 each bin is placed taking into account the bar offset and bar width attributes. Previously,
 when several histogram were drawn that way, the texts overlapped.
 </li>
+<li>
+When a </tt>TF1</tt> was clipped vertically, horizotal lines appeared at the maximum and minimum
+when the function was draw with a line width greater than 1.
+The follwoing macro reproduces the problem:
+<pre>
+{ 
+   TCanvas *c1=new TCanvas("c1", "A canvas", 10,0, 800, 600); 
+   c1->SetLogy(); 
+   histo_dummy=c1->DrawFrame(0,1e-4,27,10); 
+   TF1 gaussian_func("gaussian_func","gaus",0,25.4); 
+   gaussian_func.SetLineColor(kRed); 
+   gaussian_func.SetParameters(1e-2,10,3); 
+   gaussian_func.Draw("same"); 
+}
+</pre>
+</li>
 </ul>
 
 <h3>TH1</h3>
