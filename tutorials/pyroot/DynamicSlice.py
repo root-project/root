@@ -119,5 +119,5 @@ if __name__ == '__main__':
  # Add a TExec object to the canvas (explicit use of __main__ is for IPython)
    import __main__
    __main__.slicer = DynamicExec()
-   c1.AddExec( 'dynamic', 'TPython::Exec( "slicer()" )' )
+   c1.AddExec( 'dynamic', 'TPython::Exec( "slicer()" );' )
    c1.Update()
