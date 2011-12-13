@@ -7,10 +7,10 @@ $(DICT):
 		@echo "Generating $@"
 		@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 ifeq ($(CXXVERBOSE),)
-		@rootcint -f $@ -c $(CXXFLAGS) $^
+		@rootcint -f $@ -c $(filter-out -I/usr/include,$(CXXFLAGS)) $^
 #		@rootcint -f $@ -c $(filter -I%,$(CXXFLAGS)) $(filter -D%,$(CXXFLAGS)) $^
 else
-		rootcint -f $@ -c $(CXXFLAGS) $^
+		rootcint -f $@ -c $(filter-out -I/usr/include,$(CXXFLAGS)) $^
 endif
 
 $(SLIBRARY):
