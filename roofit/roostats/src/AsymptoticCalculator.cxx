@@ -159,11 +159,12 @@ AsymptoticCalculator::AsymptoticCalculator(
 
 
    // evaluate  the likelihood. Since we use on Asimov data , conditional and unconditional values should be the same
+   // do conditional fit since is faster
 
-   oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on ASIMOV data set" << endl;
+   oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI (e.g. mu=0)" << endl;
    oldVerboseLevel = fgPrintLevel;
    if (fgPrintLevel > 0) fgPrintLevel = 2; 
-   fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData );
+   fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, &poiAlt );
    if (verbose > 0) {
       std::cout << "Best Fit POI on Asimov data set " << std::endl;
       poi->Print("v");
@@ -849,8 +850,10 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    // need to fit nuisance parameters at their conditional MLE value
    RooLinkedListIter it = poi.iterator();
    RooRealVar*  tmpPar = NULL;
+   RooArgSet paramsSetConstant; 
    while((tmpPar = (RooRealVar*)it.Next())){
       tmpPar->setConstant();
+      paramsSetConstant.add(*tmpPar); 
    }
    if (model.GetNuisanceParameters()) {
       RooAbsPdf * pdf = model.GetPdf();
@@ -863,8 +866,11 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
          minimPrintLevel += 1;
       }
          
-      pdf->fitTo(realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
-                 RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false), RooFit::InitialHesse(false),
+      std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+      std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
+      pdf->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
+                 RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
+                 RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
                  RooFit::Constrain(constrainParams));
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
    } else {
@@ -974,7 +980,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
       // revert global observables to the data value
       gobs = snapGlobalObsData;
-      //Utils::SetAllConstant(paramsSetToConstants, false);
+      Utils::SetAllConstant(paramsSetConstant, false);
 
     
       if (verbose > 1) {
