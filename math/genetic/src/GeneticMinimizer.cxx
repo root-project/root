@@ -18,21 +18,64 @@ namespace Math {
 class MultiGenFunctionFitness : public TMVA::IFitterTarget {
 private:
    unsigned int fNCalls;
+   unsigned int fNFree; 
    const ROOT::Math::IMultiGenFunction& fFunc;
+   std::vector<int> fFixedParFlag; 
+   mutable std::vector<double> fValues; 
 
 public:
-   MultiGenFunctionFitness(const ROOT::Math::IMultiGenFunction& function) : fFunc(function) { fNCalls = 0; }
+   MultiGenFunctionFitness(const ROOT::Math::IMultiGenFunction& function) : fNCalls(0), 
+                                                                            fFunc(function)
+   { fNFree = fFunc.NDim(); }
 
    unsigned int NCalls() const { return fNCalls; }
-   unsigned int NDims() const { return fFunc.NDim(); }
+   unsigned int NDims() const { return fNFree; }
+
+   unsigned int NTotal() const { return fFunc.NDim(); } 
+
+   void FixParameter(unsigned int ipar, double value, bool fix = true) { 
+
+      if (fValues.size() != fFunc.NDim() ) {
+         fValues.resize(fFunc.NDim() );
+         fFixedParFlag.resize(fFunc.NDim());
+      }
+      
+      if (ipar >= fValues.size() ) return;
+
+      // first find if it has been already fixed 
+      fFixedParFlag[ipar] = fix;
+      fValues[ipar] = value;
+      // count number of fixed params
+      for (unsigned int i = 0; i < fFixedParFlag.size(); ++i)
+         if (!fFixedParFlag[i] ) fNFree++;
+              
+   }
+   
+   // transfrom from internal parameters (not fixed to external vector which include the fixed ones)
+   const std::vector<double> & Transform( const std::vector<double> & factors) const { 
+      unsigned int n = fValues.size(); 
+      if (n == 0 || fNFree == n ) 
+         return factors;
+
+      // in case of fixed parameters          
+      for (unsigned int i = 0, j = 0; i < n ; ++i) { 
+         if (!fFixedParFlag[i] ) {
+            assert (j < fNFree);
+            fValues[i] = factors[j];
+            j++;
+         } 
+      }
+      return fValues;
+   }
 
    Double_t Evaluate(const std::vector<double> & factors ) const {
-      return fFunc(&factors[0]);
+      const std::vector<double> & x = Transform( factors); 
+      return fFunc(&x[0]);
    }
 
    Double_t EstimatorFunction(std::vector<double> & factors ){
       fNCalls += 1;
-      return fFunc(&factors[0]);
+      return Evaluate( factors);
    }
 };
 
@@ -98,14 +141,29 @@ bool GeneticMinimizer::SetLimitedVariable(unsigned int , const std::string & , d
    return true;
 }
 
-bool GeneticMinimizer::SetVariable(unsigned int, const std::string&, double value, double step) 
+bool GeneticMinimizer::SetVariable(unsigned int, const std::string& name, double value, double step) 
 {
    //It does nothing! As there is no variable if it has no limits!
-   Info("GeneticMinimizer::SetVariable", "Variables should be limited on a Genetic Minimizer - set automatic range to 50 times step size");
-   fRanges.push_back( new TMVA::Interval(value - (50 * step), value + (50 * step)) );
+   double lower = value - (50 * step);
+   double upper = value + (50 * step);
+   Info("GeneticMinimizer::SetVariable", "Variables should be limited - set automatic range to 50 times step size for %s : [%f, %f]",
+        name.c_str(),lower,upper);
+   fRanges.push_back( new TMVA::Interval(lower, upper ) );
    
    return true;
 }
+
+bool GeneticMinimizer::SetFixedVariable(unsigned int par, const std::string& name, double value) {
+   // set a fixed variable 
+   if (!fFitness) {
+      Error("GeneticMinimizer::SetFixedVariable", "Function has not been set - cannot set fixed variables %s",name.c_str());
+      return false;
+   }
+
+   static_cast<MultiGenFunctionFitness*>(fFitness)->FixParameter(par, value);
+   return true;
+} 
+
 
 void GeneticMinimizer::SetParameters(const GeneticMinimizerParameters & params )
 {
@@ -189,7 +247,7 @@ bool GeneticMinimizer::Minimize()
    TMVA::GeneticAlgorithm mg( *fFitness, fParameters.fPopSize, fRanges );
 
    if (PrintLevel() > 0) { 
-      Info("GeneticMinimizer::Minimize","Start iterating - max iterations = %d , conv criteria (tolerance) = %10e6 ",
+      Info("GeneticMinimizer::Minimize","Start iterating - max iterations = %d , conv criteria (tolerance) = %e ",
            MaxIterations() ,  fParameters.fConvCrit );
    }
    
@@ -235,7 +293,10 @@ bool GeneticMinimizer::Minimize()
    std::vector<Double_t> gvec;
    gvec = genes->GetFactors();
 
-   fResult = gvec;   
+
+   // check if there are fixed parameters
+   fResult = static_cast<MultiGenFunctionFitness*>(fFitness)->Transform(gvec); 
+   std::cout << "result size = " << fResult.size() << std::endl;
 
 
    if (PrintLevel() > 0) { 
@@ -270,14 +331,16 @@ unsigned int GeneticMinimizer::NCalls() const
 unsigned int GeneticMinimizer::NDim() const 
 {
    if ( fFitness )
-      return static_cast<MultiGenFunctionFitness*>(fFitness)->NDims();
+      return static_cast<MultiGenFunctionFitness*>(fFitness)->NTotal();
    else
       return 0;
 }   
 unsigned int GeneticMinimizer::NFree() const 
 {
-   // They should be the same in this case!
-   return NDim();
+   if ( fFitness )
+      return static_cast<MultiGenFunctionFitness*>(fFitness)->NDims();
+   else
+      return 0;
 }   
 
 // Functions we don't need...

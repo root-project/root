@@ -62,6 +62,7 @@ public:
 
    virtual bool SetLimitedVariable(unsigned int , const std::string& , double , double , double, double);
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
+   virtual bool SetFixedVariable(unsigned int ivar  , const std::string & name , double val); 
 
    virtual  bool Minimize(); 
    virtual double MinValue() const; 
