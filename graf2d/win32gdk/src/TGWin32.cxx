@@ -4268,14 +4268,17 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
    fseek(fd, 0L, 0);
 
    if (!(GIFarr = (unsigned char *) calloc(filesize + 256, 1))) {
+      fclose(fd);
       Error("ReadGIF", "unable to allocate array for gif");
       return pic;
    }
 
    if (fread(GIFarr, filesize, 1, fd) != 1) {
+      fclose(fd);
       Error("ReadGIF", "GIF file read failed");
       return pic;
    }
+   fclose(fd);
 
    irep = GIFinfo(GIFarr, &width, &height, &ncolor);
    if (irep != 0) {
