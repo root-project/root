@@ -452,6 +452,7 @@ Int_t AnalysePS(const TString &filename)
       if (counting) count = count+l.Length();
    }
    if (gVerbose==1) printf(">>>>>>>>> Number of characters found in %s: %d\n",filename.Data(),count);
+   fclose(fp);
    return count;
 }
 
