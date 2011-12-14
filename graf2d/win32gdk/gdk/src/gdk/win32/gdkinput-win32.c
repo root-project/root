@@ -465,6 +465,7 @@ void gdk_input_init(void)
               WTOpen(GDK_DRAWABLE_XID(wintab_window), &lc,
                      TRUE)) == NULL) {
             g_warning("gdk_input_init: WTOpen failed");
+            g_free(hctx);
             return;
          }
          GDK_NOTE(MISC, g_print("opened Wintab device %d %#x\n",
