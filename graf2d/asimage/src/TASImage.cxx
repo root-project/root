@@ -407,15 +407,25 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
    switch (magic) {
       case 0x00:
       {
-         if (!fread(&magic, 1, 1, fp)) return 0;
-         if (!fread(&magic, 1, 1, fp)) return 0;
+         if (!fread(&magic, 1, 1, fp)) {
+            fclose(fp);
+            return 0;
+         }
+         if (!fread(&magic, 1, 1, fp)) {
+            fclose(fp);
+            return 0;
+         }
 
          ret = (magic == 1) ? "ico" : "cur";
          break;
       }
       case 0x25:
       {
-         if (!fread(&magic, 1, 1, fp)) return 0;
+         if (!fread(&magic, 1, 1, fp)) {
+            fclose(fp);
+            return 0;
+         }
+
          if (magic == 0x21) ret = "ps";
          else if (magic == 0x50) ret = "pdf";
          break;
@@ -1419,7 +1429,7 @@ void TASImage::Paint(Option_t *option)
          if (!fScaledImage) {
             fScaledImage = (TASImage*)TImage::Create();
             if (!fScaledImage) return;
-            
+
             if (fZoomWidth && fZoomHeight &&
                 ((fImage->width != fZoomWidth) || (fImage->height != fZoomHeight))) {
                // zoom and scale image
