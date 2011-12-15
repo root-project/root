@@ -31,6 +31,7 @@
 #endif
 
 
+class TF1;
 class TFile;
 class TProof;
 class TProofBenchRunCPU;
@@ -67,6 +68,15 @@ protected:
    TProofBenchDataSet     *fDS;     // Instance to handle datasets operations
 
    Bool_t fDebug;                // Debug switch
+
+   TNamed *fDescription;         // Strings describing the cluster for this test (saved in the output file)
+
+   static TF1 *fgFp1;                 // Simple 1st degree polynomial
+   static TF1 *fgFp1n;                // Normalized 1st degree
+   static TF1 *fgFp2;                 // Simple 2nd degree polynomial
+   static TF1 *fgFp2n;                // Normalized 2nd degree
+
+   static void AssertFittingFun(Double_t mi, Double_t mx);
 
 public:
 
@@ -109,8 +119,9 @@ public:
 
    Bool_t GetDebug() { return fDebug; }
 
-   static void DrawCPU(const char *outfile, const char *opt = "std:");
-   static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs");
+   static void DrawCPU(const char *outfile, const char *opt = "std:", Bool_t verbose = kFALSE, Int_t dofit = 0);
+   static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs", Bool_t verbose = kFALSE);
+   static void GetPerfSpecs(const char *path = ".");
 
    ClassDef(TProofBench, 0)   // Steering class for PROOF benchmarks
 };

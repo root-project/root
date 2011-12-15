@@ -34,9 +34,12 @@
 #include "TObjString.h"
 #include "TProof.h"
 #include "TROOT.h"
+#include "TSortedList.h"
+#include "TTimeStamp.h"
 #include "TUrl.h"
 
 #include "TCanvas.h"
+#include "TF1.h"
 #include "TGraphErrors.h"
 #include "TH1F.h"
 #include "TMath.h"
@@ -45,13 +48,56 @@
 
 ClassImp(TProofBench)
 
+// Functions for fitting
+
+TF1 *TProofBench::fgFp1 = 0;
+TF1 *TProofBench::fgFp1n = 0;
+TF1 *TProofBench::fgFp2 = 0;
+TF1 *TProofBench::fgFp2n = 0;
+
+//_____________________________________________________________________
+Double_t funp1(Double_t *xx, Double_t *par)
+{
+   // Simple polynomial 1st degree
+   
+   Double_t res = par[0] + par[1] * xx[0];
+   return res;
+}
+
+//_____________________________________________________________________
+Double_t funp2(Double_t *xx, Double_t *par)
+{
+   // Simple polynomial 2nd degree
+   
+   Double_t res = par[0] + par[1] * xx[0] + par[2] * xx[0] * xx[0];
+   return res;
+}
+
+//_____________________________________________________________________
+Double_t funp1n(Double_t *xx, Double_t *par)
+{
+   // Normalized 1st degree
+   
+   Double_t res = par[0] / xx[0] + par[1];
+   return res;
+}
+
+//_____________________________________________________________________
+Double_t funp2n(Double_t *xx, Double_t *par)
+{
+   // Normalized 2nd degree
+   
+   Double_t res = par[0] / xx[0] + par[1] + par[2] * xx[0];
+   return res;
+}
+
 //______________________________________________________________________________
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
             : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
               fDataSet("BenchDataSet"), fNFilesWrk(4),
               fDataGenSel(kPROOF_BenchSelDataGenDef),
-              fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE)
+              fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE), fDescription(0)
 {
    // Constructor: check PROOF and load selectors PAR
    
@@ -68,7 +114,13 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
    fProofDS = fProof;
    // The object is now valid
    ResetBit(kInvalidObject);
-
+   // Identifying string
+   TUrl u(url);
+   TString host(TString::Format("PROOF at %s", u.GetHost()));
+   if (!strcmp(u.GetProtocol(), "lite")) host.Form("PROOF-Lite on %s", gSystem->HostName());
+   fDescription = new TNamed("PB_description",
+                             TString::Format("%s, %d workers", host.Data(), fProof->GetParallel()).Data());
+   Printf(" Run description: %s", fDescription->GetTitle());
    // Set output file
    if (SetOutFile(outfile, kFALSE) != 0)
       Warning("TProofBench", "problems opening '%s' - ignoring: use SetOutFile to try"
@@ -85,6 +137,7 @@ TProofBench::~TProofBench()
    SafeDelete(fReadType);
    SafeDelete(fRunCPU);
    SafeDelete(fRunDS);
+   SafeDelete(fDescription);
 }
 
 //______________________________________________________________________________
@@ -109,7 +162,14 @@ Int_t TProofBench::OpenOutFile(Bool_t wrt, Bool_t verbose)
                                    " again or with another file", fOutFileName.Data());
          rc = -1;
       }
-      if (fOutFile) gROOT->GetListOfFiles()->Remove(fOutFile);
+      if (fOutFile) {
+         gROOT->GetListOfFiles()->Remove(fOutFile);
+         if (!strcmp(mode, "RECREATE")) {
+            // Save the description string
+            fOutFile->cd();
+            fDescription->Write();
+         }
+      }
    }
    return rc;
 }
@@ -212,13 +272,16 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
 }
 
 //______________________________________________________________________________
-void TProofBench::DrawCPU(const char *outfile, const char *opt)
+void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, Int_t dofit)
 {
    // Draw the CPU speedup plot.
    //  opt =    'std:'      draw standard evt/s plot
    //           'stdx:'     draw standard evt/s plot, 1 worker per node
    //           'norm:'     draw normalized plot
    //           'normx:'    draw normalized plot, 1 worker per node
+   //  dofit =  0           no fit
+   //           1           fit with the relevant '1st degree related' function
+   //           2           fit with the relevant '2nd degree related' function
    //
 
    // Get the TProfile an create the graphs
@@ -227,6 +290,11 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
       ::Error("DrawCPU", "could not open file '%s' ...", outfile);
       return;
    }
+   
+   // Get description
+   TString description("<not available>");
+   TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
+   if (nmdesc) description = nmdesc->GetTitle();
 
    TString oo(opt);
    const char *dirn = (oo.Contains("x:")) ? "RunCPUx" : "RunCPU";
@@ -239,14 +307,17 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
    }
    d->cd();
    TString hprofn;
+   Bool_t isnorm = kFALSE;
    if (!strcmp(opt, "std:")) {
       hprofn = "Prof_CPU_QR_Evts";
    } else if (!strcmp(opt, "stdx:")) {
       hprofn = "Prof_x_CPU_QR_Evts";
    } else if (!strcmp(opt, "norm:")) {
       hprofn = "Norm_CPU_QR_Evts";
-   } else if (!strcmp(opt, "normx:")) {
+      isnorm = kTRUE;
+    } else if (!strcmp(opt, "normx:")) {
       hprofn = "Norm_x_CPU_QR_Evts";
+      isnorm = kTRUE;
    } else {
       ::Error("DrawCPU", "unknown option '%s'", opt);
       fout->Close();
@@ -273,7 +344,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
    Int_t nbins = pf->GetNbinsX();
    TGraphErrors *gr = new TGraphErrors(nbins);
    Double_t xx, ex, yy, ey, ymi = pf->GetBinContent(1), ymx = ymi;
-   Int_t k =1;
+   Int_t k =1, kmx = -1;
    for (;k <= nbins; k++) {
       xx = pf->GetBinCenter(k);
       ex = pf->GetBinWidth(k) * .001;
@@ -282,9 +353,10 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
       if (k == 1) {
          ymi = yy;
          ymx = yy;
+         kmx = k;
       } else {
          if (yy < ymi) ymi = yy; 
-         if (yy > ymx) ymx = yy;
+         if (yy > ymx) { ymx = yy; kmx = k; }
       }
       gr->SetPoint(k-1, xx, yy);
       gr->SetPointError(k-1, ex, ey);
@@ -314,11 +386,247 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt)
    hgr->GetYaxis()->SetLabelSize(0.06);
    gr->SetHistogram(hgr);
 
-   gr->Print();
+   if (verbose) gr->Print();
    
    gr->Draw("alp");
-  
+
+   if (dofit > 0) {
+      // Make sure the fitting functions are defined
+      Double_t xmi = 0.9;
+      if (nbins > 5) xmi = 1.5;
+      AssertFittingFun(xmi, nbins + .1);
+
+      // Starting point for the parameters and fit
+      Double_t normrate = -1.;
+      if (dofit == 1) {
+         if (isnorm) {
+            fgFp1n->SetParameter(0, pf->GetBinContent(1));
+            fgFp1n->SetParameter(1, pf->GetBinContent(nbins-1));
+            gr->Fit(fgFp1n);
+            if (verbose) fgFp1n->Print();
+            normrate = fgFp1n->GetParameter(1);
+         } else {
+            fgFp1->SetParameter(0, 0.);
+            fgFp1->SetParameter(1, pf->GetBinContent(1));
+            gr->Fit(fgFp1);
+            if (verbose) fgFp1->Print();
+            normrate = fgFp1->GetParameter(1);
+         }
+      } else {
+         if (isnorm) {
+            fgFp2n->SetParameter(0, pf->GetBinContent(1));
+            fgFp2n->SetParameter(1, pf->GetBinContent(nbins-1));
+            fgFp2n->SetParameter(2, 0.);
+            gr->Fit(fgFp2n);
+            if (verbose) fgFp2n->Print();
+            normrate = fgFp2n->GetParameter(1);
+         } else {
+            fgFp2->SetParameter(0, 0.);
+            fgFp2->SetParameter(1, pf->GetBinContent(1));
+            fgFp2->SetParameter(2, 0.);
+            gr->Fit(fgFp2);
+            if (verbose) fgFp2->Print();
+            normrate = fgFp2->GetParameter(1);
+         }
+      }
+
+      // Notify the cluster performance parameters
+      if (!isnorm) {
+         printf("* ************************************************************ *\n");
+         printf("*                                                              *\r");
+         printf("* Cluster: %s\n", description.Data());
+         printf("* Performance measurement from scalability plot:               *\n");
+         printf("*                                                              *\r");
+         printf("*    rate max:         %.3f\tmegaRNGPS (@ %d workers)\n", ymx/1000000, kmx);
+         printf("*                                                              *\r");
+         printf("*    per-worker rate:  %.3f\tmegaRNGPS \n", normrate/1000000);
+         printf("* ************************************************************ *\n");
+      } else {
+         printf("* ************************************************************ *\n");
+         printf("*                                                              *\r");
+         printf("* Cluster: %s\n", description.Data());
+         printf("*                                                              *\r");
+         printf("* Per-worker rate from normalized plot:  %.3f\tmegaRNGPS\n", normrate/1000000);
+         printf("* ************************************************************ *\n");
+      }
+   }
+   // Close the file
    fout->Close();
+}
+
+//______________________________________________________________________________
+void TProofBench::AssertFittingFun(Double_t mi, Double_t mx)
+{
+   // Make sure that the fitting functions are defined
+
+   if (!fgFp1) {
+      fgFp1 = new TF1("funp1", funp1, mi, mx, 2);
+      fgFp1->SetParNames("offset", "slope");
+   }
+
+   if (!fgFp1n) {
+      fgFp1n = new TF1("funp1n", funp1n, mi, mx, 2);
+      fgFp1n->SetParNames("decay", "norm rate");
+   }
+
+   if (!fgFp2) {
+      fgFp2 = new TF1("funp2", funp2, mi, mx, 3);
+      fgFp2->SetParNames("offset", "slope", "deviation");
+   }
+
+   if (!fgFp2n) {
+      fgFp2n = new TF1("funp2n", funp2n, mi, mx, 3);
+      fgFp2n->SetParNames("decay", "norm rate", "deviation");
+   }
+
+}
+
+//______________________________________________________________________________
+class fileDesc : public TNamed {
+public:
+   Long_t  fMtime; // Modification time
+   TString fDesc; // Test description string, if any
+   fileDesc(const char *n, const char *o,
+            Long_t t, const char *d) : TNamed(n, o), fMtime(t), fDesc(d) { }
+   Int_t   Compare(const TObject *o) const {
+      const fileDesc *fd = static_cast<const fileDesc *>(o);
+      if (!fd || (fd && fd->fMtime == fMtime)) return 0;
+      if (fMtime < fd->fMtime) return -1;
+      return 1;
+   }
+};
+
+//______________________________________________________________________________
+void TProofBench::GetPerfSpecs(const char *path)
+{
+   // Get performance specs. Check file 'path', or files in directory 'path'
+   // (default current directory)
+   
+   // Locate the file (ask if many)
+   TString pp(path), fn, oo;
+   if (pp.IsNull()) pp = gSystem->WorkingDirectory();
+   FileStat_t st;
+   if (gSystem->GetPathInfo(pp.Data(), st) != 0) {
+      ::Error("GetPerfSpecs", "path '%s' could not be stat'ed - abort", pp.Data());
+      return;
+   }
+   TSortedList filels;
+   if (R_ISDIR(st.fMode)) {
+      // Scan the directory
+      void *dirp = gSystem->OpenDirectory(pp.Data());
+      if (!dirp) {
+         ::Error("GetPerfSpecs", "directory path '%s' could nto be open - abort", pp.Data());
+         return;
+      }
+      const char *ent = 0;
+      while ((ent = gSystem->GetDirEntry(dirp))) {
+         if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
+         fn.Form("%s/%s", pp.Data(), ent);
+         if (gSystem->GetPathInfo(fn.Data(), st) != 0) continue;
+         if (!R_ISREG(st.fMode)) continue;
+         fn += "?filetype=raw";
+         TFile *f = TFile::Open(fn);
+         if (!f) continue;
+         char rr[5] = {0};
+         if (!f->ReadBuffer(rr, 4)) {
+            if (!strncmp(rr, "root", 4)) {
+               SafeDelete(f);
+               fn.ReplaceAll("?filetype=raw", "");
+               f = TFile::Open(fn);
+               TString desc("<no decription>");
+               TNamed *nmdesc = (TNamed *) f->Get("PB_description");
+               if (nmdesc) desc = nmdesc->GetTitle();
+               if (f->GetListOfKeys()->FindObject("RunCPU"))
+                  filels.Add(new fileDesc(fn, "std:", st.fMtime, desc.Data()));
+               if (f->GetListOfKeys()->FindObject("RunCPUx"))
+                  filels.Add(new fileDesc(fn, "stdx:", st.fMtime, desc.Data()));
+            }
+         }
+         SafeDelete(f);
+      }
+   } else if (!R_ISREG(st.fMode)) {
+      ::Error("GetPerfSpecs",
+              "path '%s' not a regular file nor a directory - abort", pp.Data());
+      return;
+   } else {
+      // This is the file
+      fn = pp;
+      // Check it
+      TString emsg;
+      Bool_t isOk = kFALSE;
+      if (gSystem->GetPathInfo(fn.Data(), st) == 0) {
+         fn += "?filetype=raw";
+         TFile *f = TFile::Open(fn);
+         if (f) {
+            char rr[5] = {0};
+            if (!(f->ReadBuffer(rr, 4))) {
+               if (!strncmp(rr, "root", 4)) {
+                  fn.ReplaceAll("?filetype=raw", "");
+                  if ((f = TFile::Open(fn))) {
+                     if (f->GetListOfKeys()->FindObject("RunCPU")) oo = "std:";
+                     if (f->GetListOfKeys()->FindObject("RunCPUx")) oo = "stdx:";
+                     SafeDelete(f);
+                     if (!oo.IsNull()) {
+                        isOk = kTRUE;
+                     } else {
+                        emsg.Form("path '%s' does not contain the relevant dirs - abort", fn.Data());
+                     }
+                  } else {
+                     emsg.Form("path '%s' cannot be open - abort", fn.Data());
+                  }
+               } else {
+                  emsg.Form("'%s' is not a ROOT file - abort", fn.Data());
+               }
+            } else { 
+               emsg.Form("could not read first 4 bytes from '%s' - abort", fn.Data());
+            }
+            SafeDelete(f);
+         } else {
+            emsg.Form("path '%s' cannot be open in raw mode - abort", fn.Data());
+         }
+      } else {
+         emsg.Form("path '%s' cannot be stated - abort", fn.Data());
+      }
+      if (!isOk) {
+         ::Error("GetPerfSpecs", "%s", emsg.Data());
+         return;
+      }
+   }
+
+   fileDesc *nm = 0;
+   // Ask the user, if more then 1
+   if (filels.GetSize() == 1) {
+      nm = (fileDesc *) filels.First();
+      fn = nm->GetName();
+      oo = nm->GetTitle();
+   } else if (filels.GetSize() > 1) {
+      TIter nxf(&filels);
+      Int_t idx = 0;
+      Printf("Several possible files found:"); 
+      while ((nm = (fileDesc *) nxf())) {
+         Printf("  %d\t%s\t%s\t%s (file: %s)", idx++, nm->GetTitle(),
+                TTimeStamp(nm->fMtime).AsString("s"), nm->fDesc.Data(), nm->GetName());
+      }
+      TString a(Getline(TString::Format("Make your choice [%d] ", idx-1)));
+      if (a.IsNull() || a[0] == '\n') a.Form("%d", idx-1);
+      idx = a.Atoi();
+      if ((nm = (fileDesc *) filels.At(idx))) {
+         fn = nm->GetName();
+         oo = nm->GetTitle();
+      } else {
+         ::Error("GetPerfSpecs", "chosen index '%d' does not exist - abort", idx);
+         return;
+      }
+   } else {
+      if (fn.IsNull()) {
+         ::Error("GetPerfSpecs",
+                 "path '%s' is a directory but no ROOT file found in it - abort", pp.Data());
+         return;
+      }
+   }
+
+   // Now get the specs
+   TProofBench::DrawCPU(fn.Data(), oo.Data(), kFALSE, 1);
 }
 
 //______________________________________________________________________________
@@ -386,7 +694,8 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
 }
 
 //______________________________________________________________________________
-void TProofBench::DrawDataSet(const char *outfile, const char *opt, const char *type)
+void TProofBench::DrawDataSet(const char *outfile,
+                              const char *opt, const char *type, Bool_t verbose)
 {
    // Draw the CPU speedup plot.
    //  opt =    'std:'          Standard scaling plot
@@ -492,7 +801,7 @@ void TProofBench::DrawDataSet(const char *outfile, const char *opt, const char *
    hgr->GetYaxis()->SetLabelSize(0.06);
    gr->SetHistogram(hgr);
 
-   gr->Print();
+   if (verbose) gr->Print();
    
    gr->Draw("alp");
   
