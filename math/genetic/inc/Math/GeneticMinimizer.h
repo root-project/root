@@ -91,7 +91,7 @@ protected:
 
    std::vector<TMVA::Interval*> fRanges;
    TMVA::IFitterTarget* fFitness;
-
+   double fMinValue;
    std::vector<double> fResult;
 
    GeneticMinimizerParameters fParameters; 

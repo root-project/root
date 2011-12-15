@@ -95,6 +95,7 @@ GeneticMinimizerParameters::GeneticMinimizerParameters()
 
    GeneticMinimizer::GeneticMinimizer(int ): 
       fFitness(0), 
+      fMinValue(0),
       fParameters(GeneticMinimizerParameters() )
 {
 
@@ -132,6 +133,8 @@ void GeneticMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func)
    Clear();
 
    fFitness = new MultiGenFunctionFitness(func);
+   fResult = std::vector<double>(func.NDim() );
+   assert(fResult.size() == NDim() );
 }  
 
 bool GeneticMinimizer::SetLimitedVariable(unsigned int , const std::string & , double , double , double lower , double upper ) 
@@ -294,9 +297,10 @@ bool GeneticMinimizer::Minimize()
    gvec = genes->GetFactors();
 
 
-   // check if there are fixed parameters
-   fResult = static_cast<MultiGenFunctionFitness*>(fFitness)->Transform(gvec); 
-   std::cout << "result size = " << fResult.size() << std::endl;
+   // transform correctly gvec on fresult in case there are fixed parameters
+   const std::vector<double> & transVec = static_cast<MultiGenFunctionFitness*>(fFitness)->Transform(gvec); 
+   std::copy(transVec.begin(), transVec.end(), fResult.begin() );
+   fMinValue = static_cast<MultiGenFunctionFitness*>(fFitness)->Evaluate(gvec);
 
 
    if (PrintLevel() > 0) { 
@@ -312,13 +316,12 @@ bool GeneticMinimizer::Minimize()
 
 double GeneticMinimizer::MinValue() const 
 {
-   if ( fFitness )
-      return static_cast<MultiGenFunctionFitness*>(fFitness)->Evaluate(fResult);
-   else
-      return 0;
+   return (fFitness) ? fMinValue : 0; 
 }  
 
-const double *  GeneticMinimizer::X() const { return &fResult[0]; }  
+const double *  GeneticMinimizer::X() const { 
+   return (fFitness) ? &fResult[0] : 0; 
+}  
 
 unsigned int GeneticMinimizer::NCalls() const 
 {
