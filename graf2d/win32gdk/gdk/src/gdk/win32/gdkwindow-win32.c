@@ -63,6 +63,7 @@ SafeAdjustWindowRectEx(RECT * lpRect,
 
 static void gdk_win32_window_destroy(GdkDrawable * drawable)
 {
+   HICON hicon;
    GDK_NOTE(MISC, g_print("gdk_win32_window_destroy: %#x\n",
                           GDK_DRAWABLE_XID(drawable)));
 
@@ -72,6 +73,11 @@ static void gdk_win32_window_destroy(GdkDrawable * drawable)
       else
          g_warning("losing last reference to undestroyed window\n");
    }
+
+   hicon = (HICON)GetClassLong((HWND)GDK_DRAWABLE_XID(drawable), GCL_HICONSM);
+   if (hicon) DestroyIcon(hicon);
+   hicon = (HICON)GetClassLong((HWND)GDK_DRAWABLE_XID(drawable), GCL_HICON);
+   if (hicon) DestroyIcon(hicon);
 
    if (GDK_WINDOW_WIN32DATA(drawable)->bg_type == GDK_WIN32_BG_PIXMAP
        && GDK_WINDOW_WIN32DATA(drawable)->bg_pixmap != NULL)
@@ -637,9 +643,14 @@ gdk_window_internal_destroy(GdkWindow * window,
 
 void gdk_window_destroy(GdkWindow * window, gboolean xdestroy)
 {
+   HICON hicon;
    GDK_NOTE(MISC,
             g_print("gdk_window_destroy: %#x\n",
                     GDK_DRAWABLE_XID(window)));
+   hicon = (HICON)GetClassLong((HWND)GDK_DRAWABLE_XID(window), GCL_HICONSM);
+   if (hicon) DestroyIcon(hicon);
+   hicon = (HICON)GetClassLong((HWND)GDK_DRAWABLE_XID(window), GCL_HICON);
+   if (hicon) DestroyIcon(hicon);
    gdk_window_internal_destroy(window, xdestroy, TRUE);
    gdk_drawable_unref(window);
 }
