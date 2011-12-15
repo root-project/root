@@ -1982,9 +1982,9 @@ fi
 #
 if test "x$enable_soversion" = "xyes"; then
     logmsg "Enabling version numbers in so names"
-    major=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number`
-    minor=`sed 's|.*\.\(.*\)/.*|\1|' < build/version_number`
-    revis=`sed 's|.*\..*/\([0-9]*\).*|\1|' < build/version_number`
+    major=`sed 's|\(.*\)\..*/.*|\1|' < ${ac_srcdir}/build/version_number`
+    minor=`sed 's|.*\.\(.*\)/.*|\1|' < ${ac_srcdir}/build/version_number`
+    revis=`sed 's|.*\..*/\([0-9]*\).*|\1|' < ${ac_srcdir}/build/version_number`
 
     mkliboption="-v $major $minor $revis "
     unset major
