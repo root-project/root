@@ -399,7 +399,9 @@ Bool_t TShutdownTimer::Notify()
       TTimeStamp ts = xs->GetLastUsage();
       Long_t dt = (Long_t)(now.GetSec() - ts.GetSec()) * 1000 +
                   (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
-      Int_t to = gEnv->GetValue("ProofServ.ShutdonwTimeout", 20);
+      Int_t to = gEnv->GetValue("ProofServ.ShutdownTimeout", 20);
+      // Backward compaitibility: until 5.32 the variable was called ProofServ.ShutdonwTimeout
+      to = gEnv->GetValue("ProofServ.ShutdonwTimeout", to);
       if (dt > to * 60000) {
          Printf("TShutdownTimer::Notify: input socket: %p: did not show any activity"
                          " during the last %d mins: aborting", xs, to);
