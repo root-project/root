@@ -1892,17 +1892,25 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (id == kNone || id == kDefault ) return;
    QPainter paint(iwid(id));  
    paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
-   TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
+   TQtClientWidget *wd = dynamic_cast<TQtClientWidget*>(wid(id));
+   if (!wd) {
+      qDebug() << "TGQt::ClearArea: ***   wd = 0";
+      return;
+   }
    const QColor  *c = 0;
    const QPixmap *p = 0;
 #if QT_VERSION < 0x50000
-   c = wd ? wd->fEraseColor  : 0;
-   p = wd ? wd->fErasePixmap : 0;
+   c = wd->fEraseColor;
+   p = wd->fErasePixmap;
    const QColor  &cr = *c;
    const QPixmap &pr = *p;
 #else
-   const QColor  &cr = wd ? wd->palette().color(QPalette::Window) : *c;
-   c = wd ? &cr : 0;
+   const QColor  &cr = wd->palette().color(QPalette::Window);
+   c = &cr;
+   if (!p) {
+      qDebug() << "TGQt::ClearArea: ***   p = 0, code needs fixing";
+      return;
+   }
    const QPixmap &pr = *p;
 #endif
    if (int(w) <=0) {
