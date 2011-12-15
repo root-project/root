@@ -164,24 +164,32 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
    }
 
    Int_t nv, nt;
-   if (fscanf(f, "%d %d", &nv, &nt) != 2)
+   if (fscanf(f, "%d %d", &nv, &nt) != 2) {
+      fclose(f);
       throw kEH + "Reading nv, nt failed.";
-   if (nv < 0 || nt < 0)
-      throw kEH + "Negative number of vertices / triangles specified.";
+   }
 
+   if (nv < 0 || nt < 0) {
+      fclose(f);
+      throw kEH + "Negative number of vertices / triangles specified.";
+   }
 
    TEveTriangleSet* ts = new TEveTriangleSet(nv, nt);
 
    Float_t *vtx = ts->Vertex(0);
    for (Int_t i=0; i<nv; ++i, vtx+=3) {
-      if (fscanf(f, "%f %f %f", &vtx[0], &vtx[1], &vtx[2]) != 3)
+      if (fscanf(f, "%f %f %f", &vtx[0], &vtx[1], &vtx[2]) != 3) {
+         fclose(f);
          throw kEH + TString::Format("Reading vertex data %d failed.", i);
+      }
     }
 
    Int_t *tngl = ts->Triangle(0);
    for (Int_t i=0; i<nt; ++i, tngl+=3) {
-      if (fscanf(f, "%d %d %d", &tngl[0], &tngl[1], &tngl[2]) != 3)
+      if (fscanf(f, "%d %d %d", &tngl[0], &tngl[1], &tngl[2]) != 3) {
+         fclose(f);
          throw kEH + TString::Format("Reading triangle data %d failed.", i);
+      }
    }
 
    fclose(f);
