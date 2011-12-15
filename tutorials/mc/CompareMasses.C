@@ -22,6 +22,7 @@ void CompareMasses(){
   in1.open(fn);
   if (!in1.good()){
       Printf("Could not open PDG particle file %s",fn);
+      fclose(file);
       return;
   }
 
@@ -76,6 +77,7 @@ void CompareMasses(){
       }
     }
   }// while
+  fclose(file);
   if (ndiff == 0) Printf("Crongratulations !! All particles in ROOT and PDG have identical masses");
 
 }
