@@ -182,8 +182,18 @@ Double_t RooMultiVarGaussian::evaluate() const
 
 
 //_____________________________________________________________________________
-Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const 
 {
+  RooArgSet allVars(allVars) ;
+
+  // If allVars contains x_i it cannot contain mu_i
+  for (Int_t i=0 ; i<_x.getSize() ; i++) {
+    if (allVars.contains(*_x.at(i))) {
+      allVars.remove(*_mu.at(i),kTRUE,kTRUE) ;
+    }
+  }
+  
+  
   // Analytical integral known over all observables
   if (allVars.getSize()==_x.getSize() && !rangeName) {
     analVars.add(allVars) ;
@@ -206,6 +216,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
   Bool_t anyBits(kFALSE) ;
   syncMuVec() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
+
     // Check if integration over observable #i is requested
     if (allVars.find(_x.at(i)->GetName())) {
       // Check if range is wider than Z sigma 
@@ -221,6 +232,24 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& 
 			     << _z << " sigma, relying on numeric integral" << endl ;	
       }
     }
+
+    // Check if integration over parameter #i is requested
+    if (allVars.find(_mu.at(i)->GetName())) {
+      // Check if range is wider than Z sigma 
+      RooRealVar* pi = (RooRealVar*)_mu.at(i) ;
+      if (pi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && pi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
+	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() 
+			     << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << endl ;
+	bits.setBit(i) ;
+	anyBits = kTRUE ;
+	analVars.add(*allVars.find(_mu.at(i)->GetName())) ;
+      } else {
+	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << pi->GetName() << " is <" 
+			     << _z << " sigma, relying on numeric integral" << endl ;	
+      }
+    }
+
+
   }
 
   // Full numeric integration over requested observables maps always to code zero
