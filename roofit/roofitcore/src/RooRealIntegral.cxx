@@ -844,12 +844,13 @@ Double_t RooRealIntegral::evaluate() const
 
       if (cacheVal) {
 	retVal = *cacheVal ;
-//	cout << "using cached value of integral" << GetName() << endl ;
+	//	cout << "using cached value of integral" << GetName() << endl ;
       } else {
 
 
 	// Find any function dependents that are AClean 
 	// and switch them temporarily to ADirty
+	Bool_t origState = inhibitDirty() ;
 	setDirtyInhibit(kTRUE) ;
 	
 	// try to initialize our numerical integration engine
@@ -864,12 +865,10 @@ Double_t RooRealIntegral::evaluate() const
 	_saveSum = _sumList ;
 
 	// Evaluate sum/integral
-//  	cout << "RooRealIntegral::eval(" << GetName() << " begin executing numeric integration part sumList = " << _sumList << " intList = " << _intList << endl ;
 	retVal = sum() ;
-//  	cout << "RooRealIntegral::eval(" << GetName() << " end executing numeric integration part, result = " << retVal << endl ;
 
 	// This must happen BEFORE restoring dependents, otherwise no dirty state propagation in restore step
-	setDirtyInhibit(kFALSE) ;
+	setDirtyInhibit(origState) ;
 	
 	// Restore integral dependent values
 	_intList=_saveInt ;

@@ -1036,7 +1036,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   // Reorder cached elements. First constant nodes, then tracked nodes in order of dependence
 
   // Step 1 - split in constant and tracked
-  RooFIter itern = newVarSet.fwdIterator() ;
+  RooArgSet newVarSetCopy(newVarSet) ;
+  RooFIter itern = newVarSetCopy.fwdIterator() ;
   RooAbsArg* arg ;
   RooArgSet orderedArgs ;
   vector<RooAbsArg*> trackArgs ;
@@ -1051,6 +1052,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
       // in the likelihood
       if (arg->dependsOn(_vars) && !arg->getAttribute("NOCacheAndTrack")) {
 	trackArgs.push_back(arg) ;
+      } else {
+	newVarSet.remove(*arg) ;
       }
     }
   }
@@ -1066,6 +1069,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   }
   
   // WVE need to prune tracking entries _below_ constant nodes as the're not needed
+//   cout << "Number of Cache-and-Tracked args are " << trackArgs.size() << endl ;
 //   cout << "Compound ordered cache parameters = " << endl ;
 //   orderedArgs.Print("v") ;
 
