@@ -116,7 +116,7 @@ ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED")
 #--stressTMVA--------------------------------------------------------------------------------------
 if(ROOT_tmva_FOUND)
   ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
-  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA)  
+  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b)  
 endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
