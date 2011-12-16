@@ -19,14 +19,16 @@
 #include "RooGaussian.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
+#include "RooUnitTest.h"
+
 using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic101 : public RooFitTestUnit
+class TestBasic101 : public RooUnitTest
 {
 public: 
-  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose) {} ;
+  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l 
@@ -116,10 +118,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic102 : public RooFitTestUnit
+class TestBasic102 : public RooUnitTest
 {
 public: 
-  TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data import methods",refFile,writeRef,verbose) {} ;
+  TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Data import methods",refFile,writeRef,verbose) {} ;
 
   TH1* makeTH1() 
   {
@@ -285,10 +287,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic103 : public RooFitTestUnit
+class TestBasic103 : public RooUnitTest
 {
 public: 
-  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Interpreted expression p.d.f.",refFile,writeRef,verbose) {} ;
+  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Interpreted expression p.d.f.",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
     
     /////////////////////////////////////////////////////////
@@ -402,10 +404,10 @@ public:
 
 using namespace RooFit ;
 
-class TestBasic105 : public RooFitTestUnit
+class TestBasic105 : public RooUnitTest
 {
 public: 
-  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("C++ function binding operator p.d.f",refFile,writeRef,verbose) {} ;
+  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("C++ function binding operator p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // B i n d   T M a t h : : E r f   C   f u n c t i o n
@@ -497,10 +499,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic108 : public RooFitTestUnit
+class TestBasic108 : public RooUnitTest
 {
 public: 
-  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose) {} ;
+  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l 
@@ -625,10 +627,10 @@ public:
 #include "RooHist.h"
 using namespace RooFit ;
 
-class TestBasic109 : public RooFitTestUnit
+class TestBasic109 : public RooUnitTest
 {
 public: 
-  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose) {} ;
+  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
     
     // S e t u p   m o d e l 
@@ -718,10 +720,10 @@ public:
 #include "TCanvas.h"
 using namespace RooFit ;
 
-class TestBasic110 : public RooFitTestUnit
+class TestBasic110 : public RooUnitTest
 {
 public: 
-  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose) {} ;
+  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l 
@@ -813,10 +815,10 @@ public:
 #include <iomanip>
 using namespace RooFit ;
 
-class TestBasic111 : public RooFitTestUnit
+class TestBasic111 : public RooUnitTest
 {
 public: 
-  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Numeric integration configuration",refFile,writeRef,verbose) {} ;
+  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Numeric integration configuration",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // A d j u s t   g l o b a l   1 D   i n t e g r a t i o n   p r e c i s i o n 
@@ -914,10 +916,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic201 : public RooFitTestUnit
+class TestBasic201 : public RooUnitTest
 {
 public: 
-  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Addition operator p.d.f.",refFile,writeRef,verbose) {} ;
+  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Addition operator p.d.f.",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s 
@@ -1041,10 +1043,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic202 : public RooFitTestUnit
+class TestBasic202 : public RooUnitTest
 {
 public: 
-  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose) {} ;
+  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s 
@@ -1161,10 +1163,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic203 : public RooFitTestUnit
+class TestBasic203 : public RooUnitTest
 {
 public: 
-  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Basic fitting and plotting in ranges",refFile,writeRef,verbose) {} ;
+  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Basic fitting and plotting in ranges",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   m o d e l 
@@ -1249,10 +1251,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic204 : public RooFitTestUnit
+class TestBasic204 : public RooUnitTest
 {
 public: 
-  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Extended ML fit in sub range",refFile,writeRef,verbose) {} ;
+  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Extended ML fit in sub range",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
     
     // S e t u p   c o m p o n e n t   p d f s 
@@ -1342,10 +1344,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic205 : public RooFitTestUnit
+class TestBasic205 : public RooUnitTest
 {
 public: 
-  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Component plotting variations",refFile,writeRef,verbose) {} ;
+  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Component plotting variations",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // S e t u p   c o m p o s i t e    p d f
@@ -1472,10 +1474,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic208 : public RooFitTestUnit
+class TestBasic208 : public RooUnitTest
 {
 public: 
-  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("FFT Convolution operator p.d.f.",refFile,writeRef,verbose) {} ;
+  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose) {} ;
 
   Bool_t isTestAvailable() { 
 
@@ -1580,10 +1582,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic209 : public RooFitTestUnit
+class TestBasic209 : public RooUnitTest
 {
 public: 
-  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Analytical convolution operator",refFile,writeRef,verbose) {} ;
+  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Analytical convolution operator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
     
     // B - p h y s i c s   p d f   w i t h   t r u t h   r e s o l u t i o n
@@ -1671,10 +1673,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic301 : public RooFitTestUnit
+class TestBasic301 : public RooUnitTest
 {
 public: 
-  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Composition extension of basic p.d.f",refFile,writeRef,verbose) {} ;
+  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Composition extension of basic p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
@@ -1755,10 +1757,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic302 : public RooFitTestUnit
+class TestBasic302 : public RooUnitTest
 {
 public: 
-  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Sum and product utility functions",refFile,writeRef,verbose) {} ;
+  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Sum and product utility functions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   o b s e r v a b l e s ,   p a r a m e t e r s 
@@ -1867,7 +1869,7 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic303 : public RooFitTestUnit
+class TestBasic303 : public RooUnitTest
 {
 public: 
 
@@ -1895,7 +1897,7 @@ RooDataSet* makeFakeDataXY()
 
 
 
-  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of F(x|y)",refFile,writeRef,verbose) {} ;
+  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Conditional use of F(x|y)",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
@@ -1999,10 +2001,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic304 : public RooFitTestUnit
+class TestBasic304 : public RooUnitTest
 {
 public: 
-  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose) {} ;
+  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   c o m p o n e n t   p d f s   i n   x   a n d   y 
@@ -2085,10 +2087,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic305 : public RooFitTestUnit
+class TestBasic305 : public RooUnitTest
 {
 public: 
-  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with conditional term",refFile,writeRef,verbose) {} ;
+  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Product operator p.d.f. with conditional term",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y ) 
@@ -2186,10 +2188,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic306 : public RooFitTestUnit
+class TestBasic306 : public RooUnitTest
 {
 public: 
-  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose) {} ;
+  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
@@ -2304,10 +2306,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic307 : public RooFitTestUnit
+class TestBasic307 : public RooUnitTest
 {
 public: 
-  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose) {} ;
+  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
@@ -2413,10 +2415,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic308 : public RooFitTestUnit
+class TestBasic308 : public RooUnitTest
 {
 public: 
-  TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose) {} ;
+  TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   m o d e l 
@@ -2522,10 +2524,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic310 : public RooFitTestUnit
+class TestBasic310 : public RooUnitTest
 {
 public: 
-  TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in category slice",refFile,writeRef,verbose) {} ;
+  TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Data and p.d.f projection in category slice",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   B   d e c a y   p d f   w it h   m i x i n g 
@@ -2626,10 +2628,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic311 : public RooFitTestUnit
+class TestBasic311 : public RooUnitTest
 {
 public: 
-  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in sub range",refFile,writeRef,verbose) {} ;
+  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Data and p.d.f projection in sub range",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a 
@@ -2724,10 +2726,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic312 : public RooFitTestUnit
+class TestBasic312 : public RooUnitTest
 {
 public: 
-  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit in multiple rectangular ranges",refFile,writeRef,verbose) {} ;
+  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Fit in multiple rectangular ranges",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   2 D   p d f   a n d   d a t a 
@@ -2847,10 +2849,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic313 : public RooFitTestUnit
+class TestBasic313 : public RooUnitTest
 {
 public: 
-  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Integration over non-rectangular regions",refFile,writeRef,verbose) {} ;
+  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Integration over non-rectangular regions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f 
@@ -2936,10 +2938,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic314 : public RooFitTestUnit
+class TestBasic314 : public RooUnitTest
 {
 public: 
-  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose) {} ;
+  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f 
@@ -3030,10 +3032,10 @@ using namespace RooFit ;
 
 
 
-class TestBasic315 : public RooFitTestUnit
+class TestBasic315 : public RooUnitTest
 {
 public: 
-  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("P.d.f. marginalization through integration",refFile,writeRef,verbose) {} ;
+  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("P.d.f. marginalization through integration",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     // C r e a t e   p d f   m ( x , y )  =  g x ( x | y ) * g ( y )
@@ -3127,10 +3129,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic316 : public RooFitTestUnit
+class TestBasic316 : public RooUnitTest
 {
 public: 
-  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Likelihood ratio projection plot",refFile,writeRef,verbose) {} ;
+  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Likelihood ratio projection plot",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a 
@@ -3255,10 +3257,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic402 : public RooFitTestUnit
+class TestBasic402 : public RooUnitTest
 {
 public: 
-  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Basic operations on datasets",refFile,writeRef,verbose) {} ;
+  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Basic operations on datasets",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // Binned (RooDataHist) and unbinned datasets (RooDataSet) share
@@ -3385,10 +3387,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic403 : public RooFitTestUnit
+class TestBasic403 : public RooUnitTest
 {
 public: 
-  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fits with weighted datasets",refFile,writeRef,verbose) {} ;
+  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Fits with weighted datasets",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t 
@@ -3540,10 +3542,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic404 : public RooFitTestUnit
+class TestBasic404 : public RooUnitTest
 {
 public: 
-  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Categories basic functionality",refFile,writeRef,verbose) {} ;
+  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Categories basic functionality",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s 
@@ -3656,10 +3658,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic405 : public RooFitTestUnit
+class TestBasic405 : public RooUnitTest
 {
 public: 
-  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Real-to-category functions",refFile,writeRef,verbose) {} ;
+  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Real-to-category functions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
 
@@ -3784,10 +3786,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic406 : public RooFitTestUnit
+class TestBasic406 : public RooUnitTest
 {
 public: 
-  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Category-to-category functions",refFile,writeRef,verbose) {} ;
+  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Category-to-category functions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t  t w o   c a t e g o r i e s
@@ -3892,10 +3894,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic501 : public RooFitTestUnit
+class TestBasic501 : public RooUnitTest
 {
 public: 
-  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Simultaneous p.d.f. operator",refFile,writeRef,verbose) {} ;
+  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Simultaneous p.d.f. operator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   f o r   p h y s i c s   s a m p l e
@@ -4048,10 +4050,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic599 : public RooFitTestUnit
+class TestBasic599 : public RooUnitTest
 {
 public: 
-  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Workspace and p.d.f. persistence",refFile,writeRef,verbose) {} ;
+  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Workspace and p.d.f. persistence",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
     if (_write) {
@@ -4278,10 +4280,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic601 : public RooFitTestUnit
+class TestBasic601 : public RooUnitTest
 {
 public: 
-  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Interactive Minuit",refFile,writeRef,verbose) {} ;
+  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Interactive Minuit",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   p d f   a n d   l i k e l i h o o d 
@@ -4390,10 +4392,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic602 : public RooFitTestUnit
+class TestBasic602 : public RooUnitTest
 {
 public: 
-  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Chi2 minimization",refFile,writeRef,verbose) {} ;
+  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Chi2 minimization",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   m o d e l
@@ -4478,10 +4480,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic604 : public RooFitTestUnit
+class TestBasic604 : public RooUnitTest
 {
 public: 
-  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Auxiliary observable constraints",refFile,writeRef,verbose) {} ;
+  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Auxiliary observable constraints",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t 
@@ -4577,10 +4579,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic605 : public RooFitTestUnit
+class TestBasic605 : public RooUnitTest
 {
 public: 
-  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Profile Likelihood operator",refFile,writeRef,verbose) {} ;
+  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Profile Likelihood operator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l   a n d   d a t a s e t 
@@ -4688,10 +4690,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic606 : public RooFitTestUnit
+class TestBasic606 : public RooUnitTest
 {
 public: 
-  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("NLL error handling",refFile,writeRef,verbose) {} ;
+  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("NLL error handling",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t 
@@ -4795,10 +4797,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic607 : public RooFitTestUnit
+class TestBasic607 : public RooUnitTest
 {
 public: 
-  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit Result functionality",refFile,writeRef,verbose) {} ;
+  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Fit Result functionality",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   p d f ,   d a t a
@@ -4899,10 +4901,10 @@ public:
 
 using namespace RooFit ;
 
-class TestBasic609 : public RooFitTestUnit
+class TestBasic609 : public RooUnitTest
 {
 public: 
-  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose) {} ;
+  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   d a t a s e t   w i t h   X   a n d   Y   v a l u e s
@@ -4997,10 +4999,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic701 : public RooFitTestUnit
+class TestBasic701 : public RooUnitTest
 {
 public: 
-  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose) {} ;
+  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x ) 
@@ -5103,10 +5105,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic702 : public RooFitTestUnit
+class TestBasic702 : public RooUnitTest
 {
 public: 
-  TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose) {} ;
+  TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   Bool_t flat=kFALSE ;
@@ -5218,10 +5220,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic703 : public RooFitTestUnit
+class TestBasic703 : public RooUnitTest
 {
 public: 
-  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency product operator p.d.f",refFile,writeRef,verbose) {} ;
+  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Efficiency product operator p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
@@ -5320,10 +5322,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic704 : public RooFitTestUnit
+class TestBasic704 : public RooUnitTest
 {
 public: 
-  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Amplitude sum operator p.d.f",refFile,writeRef,verbose) {} ;
+  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Amplitude sum operator p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // S e t u p   2 D   a m p l i t u d e   f u n c t i o n s
@@ -5437,13 +5439,13 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic705 : public RooFitTestUnit
+class TestBasic705 : public RooUnitTest
 {
 public: 
 
   Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
 
-  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
+  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Linear morph operator p.d.f.",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   e n d   p o i n t   p d f   s h a p e s
@@ -5579,10 +5581,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic706 : public RooFitTestUnit
+class TestBasic706 : public RooUnitTest
 {
 public: 
-  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Histogram based p.d.f.s",refFile,writeRef,verbose) {} ;
+  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Histogram based p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   p d f   f o r   s a m p l i n g 
@@ -5671,10 +5673,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic707 : public RooFitTestUnit
+class TestBasic707 : public RooUnitTest
 {
 public: 
-  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Kernel estimation p.d.f.s",refFile,writeRef,verbose) {} ;
+  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Kernel estimation p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t 
@@ -5791,10 +5793,10 @@ public:
 using namespace RooFit ;
 
 // Elementary operations on a gaussian PDF
-class TestBasic708 : public RooFitTestUnit
+class TestBasic708 : public RooUnitTest
 {
 public: 
-  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("B Physics p.d.f.s",refFile,writeRef,verbose) {} ;
+  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("B Physics p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   ////////////////////////////////////////////////////
@@ -6012,10 +6014,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic801 : public RooFitTestUnit
+class TestBasic801 : public RooUnitTest
 {
 public: 
-  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Automated MC studies",refFile,writeRef,verbose) {} ;
+  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("Automated MC studies",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l
@@ -6130,10 +6132,10 @@ using namespace RooFit ;
 
 
 // Elementary operations on a gaussian PDF
-class TestBasic802 : public RooFitTestUnit
+class TestBasic802 : public RooUnitTest
 {
 public: 
-  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with chi^2 calculator",refFile,writeRef,verbose) {} ;
+  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("MC Study with chi^2 calculator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l 
@@ -6249,10 +6251,10 @@ public:
 using namespace RooFit ;
 
 
-class TestBasic803 : public RooFitTestUnit
+class TestBasic803 : public RooUnitTest
 {
 public: 
-  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with param rand. and Z calc",refFile,writeRef,verbose) {} ;
+  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("MC Study with param rand. and Z calc",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   // C r e a t e   m o d e l 
@@ -6379,13 +6381,14 @@ public:
 #include "RooPlot.h"
 #include "TCanvas.h"
 #include "TH1.h"
+
 using namespace RooFit ;
 
 
-class TestBasic804 : public RooFitTestUnit
+class TestBasic804 : public RooUnitTest
 {
 public: 
-  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
+  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
 
   Double_t htol() { return 0.1 ; } // numerically very difficult test
 

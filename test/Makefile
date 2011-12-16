@@ -195,6 +195,10 @@ ifeq ($(shell $(RC) --has-roofit),yes)
 STRESSROOFITO  = stressRooFit.$(ObjSuf)
 STRESSROOFITS  = stressRooFit.$(SrcSuf)
 STRESSROOFIT   = stressRooFit$(ExeSuf)
+
+STRESSROOSTATSO  = stressRooStats.$(ObjSuf)
+STRESSROOSTATSS  = stressRooStats.$(SrcSuf)
+STRESSROOSTATS   = stressRooStats$(ExeSuf)
 endif
 
 STRESSFITO    = stressFit.$(ObjSuf)
@@ -265,7 +269,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MIN
                 $(STRESSGO) $(STRESSSPO) $(TESTBITSO)  \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
-                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
+                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSROOSTATSO) $(STRESSPROOFO) \
                 $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
                 $(STRESSHISTO) $(STRESSGUIO)
 
@@ -275,7 +279,7 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING)
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
-                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) \
+                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP)  $(STRESSITER) \
                 $(STRESSHIST) $(STRESSGUI)
 
@@ -581,6 +585,7 @@ $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
 		@echo "$@ done"
 
 $(STRESSROOFITO): stressRooFit_tests.cxx
+$(STRESSROOSTATSO): stressRooStats_tests.cxx
 
 ifeq ($(shell $(RC) --has-mathmore),yes)
 ifeq ($(PLATFORM),win32)
@@ -596,6 +601,15 @@ ifeq ($(PLATFORM),win32)
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lRooFit -lRooFitCore -lHtml -lThread -lMinuit -lFoam $(EXTRAROOFITLIBS) $(OutPutOpt)$@
+endif
+		@echo "$@ done"
+
+$(STRESSROOSTATS): $(STRESSROOSTATSO)
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libRooStats.lib' '$(ROOTSYS)/lib/libRooFit.lib' '$(ROOTSYS)/lib/libRooFitCore.lib' '$(ROOTSYS)/lib/libHtml.lib' '$(ROOTSYS)/lib/libThread.lib' '$(ROOTSYS)/lib/libMinuit.lib' '$(ROOTSYS)/lib/libFoam.lib' '$(ROOTSYS)/lib/libProof.lib' $(EXTRAROOFITLIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lRooStats -lRooFit -lRooFitCore -lHtml -lThread -lMinuit -lFoam $(EXTRAROOFITLIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 

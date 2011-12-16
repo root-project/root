@@ -13,7 +13,9 @@
 #include "TH1.h"
 #include "TBenchmark.h"
 #include "RooGlobalFunc.h"
+#include "RooNumIntConfig.h"
 #include "RooMsgService.h"
+#include "RooResolutionModel.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "RooDouble.h"
@@ -39,7 +41,8 @@ using namespace RooFit ;
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
+Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
+
 
 //------------------------------------------------------------------------
 void StatusPrint(Int_t id,const TString &title,Int_t status)
@@ -54,16 +57,14 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
   cout << header << (status>0 ? "OK" : (status<0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
-
-//#include "stressRooFit_tests_direct.cxx"
-#include "stressRooFit_tests.cxx"
+#include "stressRooStats_tests.cxx"
 
 //______________________________________________________________________________
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
+Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
   // Save memory directory location
   RooUnitTest::gMemDir = gDirectory ;
-
+  
   if (doTreeStore) {
     RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
   }
@@ -72,7 +73,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   if (!dryRun) {
     if (TString(refFile).Contains("http:")) {
       if (writeRef) {
-	cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
+	cout << "stressRooStats ERROR: reference file must be local file in writing mode" << endl ;
 	return kFALSE ;
       }
       fref = new TWebFile(refFile) ;
@@ -80,7 +81,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
       fref = new TFile(refFile,writeRef?"RECREATE":"") ;
     }
     if (fref->IsZombie()) {
-      cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
+      cout << "stressRooStats ERROR: cannot open reference file " << refFile << endl ;
       return kFALSE ;
     }
   }
@@ -97,7 +98,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   RooMsgService::instance().addStream(RooFit::ERROR) ;
 
   cout << "******************************************************************" <<endl;
-  cout << "*  RooFit - S T R E S S suite                                    *" <<endl;
+  cout << "*  RooStats - S T R E S S suite                                   *" <<endl;
   cout << "******************************************************************" <<endl;
   cout << "******************************************************************" <<endl;
   
@@ -106,70 +107,19 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 
   list<RooUnitTest*> testList ;
   testList.push_back(new TestBasic101(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic102(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic103(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic105(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic108(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic109(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic110(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic111(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic201(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic202(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic203(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic204(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic205(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic208(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic209(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic301(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic302(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic303(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic304(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic305(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic306(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic307(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic308(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic310(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic311(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic312(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic313(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic315(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic314(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic316(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic402(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic403(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic404(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic405(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic406(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic501(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic599(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic601(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic602(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic604(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic605(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic606(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic607(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic609(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic701(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic702(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic703(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic704(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic705(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic706(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic707(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic708(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic801(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic802(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic803(fref,writeRef,doVerbose)) ;
-  testList.push_back(new TestBasic804(fref,writeRef,doVerbose)) ;
+//   testList.push_back(new TestBasic102(fref,writeRef,doVerbose)) ;
+//   testList.push_back(new TestBasic103(fref,writeRef,doVerbose)) ;
+//   testList.push_back(new TestBasic104(fref,writeRef,doVerbose)) ;
+//   testList.push_back(new TestBasic105(fref,writeRef,doVerbose)) ;
   
   cout << "*  Starting  S T R E S S  basic suite                            *" <<endl;
   cout << "******************************************************************" <<endl;
 
   if (doDump) {
-    TFile fdbg("stressRooFit_DEBUG.root","RECREATE") ;
+    TFile fdbg("stressRooStats_DEBUG.root","RECREATE") ;
   }  
   
-  gBenchmark->Start("StressRooFit");
+  gBenchmark->Start("StressRooStats");
 
   Int_t i(1) ;
   for (list<RooUnitTest*>::iterator iter = testList.begin () ; iter != testList.end() ; ++iter) {
@@ -187,7 +137,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     RooTrace::dump() ;
   }
 
-  gBenchmark->Stop("StressRooFit");
+  gBenchmark->Stop("StressRooStats");
   
   
   //Print table with results
@@ -219,7 +169,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 #else
   Double_t reftime = 93.59; //pcbrun4 compiled
 #endif
-  const Double_t rootmarks = 860*reftime/gBenchmark->GetCpuTime("StressRooFit");
+  const Double_t rootmarks = 860*reftime/gBenchmark->GetCpuTime("StressRooStats");
   
   printf("******************************************************************\n");
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
@@ -251,59 +201,59 @@ int main(int argc,const char *argv[])
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v530_ref.root" ;
+  string refFileName = "http://root.cern.ch/files/stressRooStats_v530_ref.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
 
     if (arg=="-f") {
-      cout << "stressRooFit: using reference file " << argv[i+1] << endl ;
+      cout << "stressRooStats: using reference file " << argv[i+1] << endl ;
       refFileName = argv[++i] ;
     }
 
     if (arg=="-w") {
-      cout << "stressRooFit: running in writing mode to updating reference file" << endl ;
+      cout << "stressRooStats: running in writing mode to updating reference file" << endl ;
       doWrite = kTRUE ;
     }
 
     if (arg=="-mc") {
-      cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << endl ;
+      cout << "stressRooStats: running in memcheck mode, no regression tests are performed" << endl ;
       dryRun=kTRUE ;
     }
 
     if (arg=="-ts") {
-      cout << "stressRooFit: setting tree-based storage for datasets" << endl ;
+      cout << "stressRooStats: setting tree-based storage for datasets" << endl ;
       doTreeStore=kTRUE ;
     }
 
     if (arg=="-v") {
-      cout << "stressRooFit: running in verbose mode" << endl ;
+      cout << "stressRooStats: running in verbose mode" << endl ;
       doVerbose = 1 ;
     }
 
     if (arg=="-vv") {
-      cout << "stressRooFit: running in very verbose mode" << endl ;
+      cout << "stressRooStats: running in very verbose mode" << endl ;
       doVerbose = 2 ;
     }
 
     if (arg=="-n") {
-      cout << "stressRooFit: running single test " << argv[i+1] << endl ;
+      cout << "stressRooStats: running single test " << argv[i+1] << endl ;
       oneTest = atoi(argv[++i]) ;      
     }
     
     if (arg=="-d") {
-      cout << "stressRooFit: setting gDebug to " << argv[i+1] << endl ;
+      cout << "stressRooStats: setting gDebug to " << argv[i+1] << endl ;
       gDebug = atoi(argv[++i]) ;
     }
     
     if (arg=="-c") {
-      cout << "stressRooFit: dumping comparison file for failed tests " << endl ;
+      cout << "stressRooStats: dumping comparison file for failed tests " << endl ;
       doDump=kTRUE ;
     }
 
     if (arg=="-h") {
-      cout << "usage: stressRooFit [ options ] " << endl ;
+      cout << "usage: stressRooStats [ options ] " << endl ;
       cout << "" << endl ;
       cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
       cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl ;
@@ -332,7 +282,7 @@ int main(int argc,const char *argv[])
     refFileName = ptr+1 ;
     delete[] buf ;
 
-    cout << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
+    cout << "stressRooStats: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
   }
 
   // Disable caching of complex error function calculation, as we don't 
@@ -340,7 +290,7 @@ int main(int argc,const char *argv[])
   RooMath::cacheCERF(kFALSE) ;
 
   gBenchmark = new TBenchmark();
-  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
+  stressRooStats(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
   return 0;
 }
 
