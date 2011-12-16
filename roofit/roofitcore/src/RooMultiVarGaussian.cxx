@@ -184,8 +184,8 @@ Double_t RooMultiVarGaussian::evaluate() const
 //_____________________________________________________________________________
 Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const 
 {
-  RooArgSet allVars(allVars) ;
-
+  RooArgSet allVars(allVarsIn) ;
+  
   // If allVars contains x_i it cannot contain mu_i
   for (Int_t i=0 ; i<_x.getSize() ; i++) {
     if (allVars.contains(*_x.at(i))) {
