@@ -80,6 +80,6 @@ namespace ROOT {
       TH1*       fProj; // Projection result
       ClassDef(THnSparseBrowsable, 0); // Browser-helper for THnSparse
    };
-};
+}
 #endif // ROOT_THnSparse_Internal
 
