@@ -72,7 +72,7 @@ public:
   Bool_t hasIdenticalBinning(const RooHist& other) const ;
 
   RooHist* makeResidHist(const RooCurve& curve,bool normalize=false) const;
-  RooHist* makePullHist(const RooCurve& curve) const {return makeResidHist(curve,false); }
+  RooHist* makePullHist(const RooCurve& curve) const {return makeResidHist(curve,true); }
 
 
   Bool_t isIdentical(const RooHist& other, Double_t tol=1e-6) const ;

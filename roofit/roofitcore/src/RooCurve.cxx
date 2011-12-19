@@ -53,6 +53,7 @@
 #include <assert.h>
 #include <deque>
 #include <algorithm>
+#include <limits>
 
 using namespace std ;
 
@@ -646,7 +647,7 @@ Int_t RooCurve::findPoint(Double_t xvalue, Double_t tolerance) const
   // Find the nearest point to xvalue. Return -1 if distance
   // exceeds tolerance
 
-  Double_t delta(999.),x,y ;
+  Double_t delta(std::numeric_limits<double>::max()),x,y ;
   Int_t i,n = GetN() ;
   Int_t ibest(-1) ;
   for (i=0 ; i<n ; i++) {
