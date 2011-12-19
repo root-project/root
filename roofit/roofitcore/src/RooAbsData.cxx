@@ -560,8 +560,8 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   //                                    Category must have two states with indices -1 and +1 or three states with indeces -1,0 and +1.
   // DataError(RooAbsData::EType)    -- Select the type of error drawn: Poisson (default) draws asymmetric Poisson
   //                                    confidence intervals. SumW2 draws symmetric sum-of-weights error
-  // Binning(double xlo, double xhi, -- Use specified binning to draw dataset
-  //                      int nbins)
+  // Binning(int nbins, double xlo,  -- Use specified binning to draw dataset
+  //                    double xhi)
   // Binning(const RooAbsBinning&)   -- Use specified binning to draw dataset
   // Binning(const char* name)       -- Use binning with specified name to draw dataset
   // RefreshNorm(Bool_t flag)        -- Force refreshing for PDF normalization information in frame.
