@@ -4330,18 +4330,6 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t zmin = fH->GetMinimum();
    Double_t zmax = fH->GetMaximum();
 
-   if (Hoption.Logz) {
-      if (zmin > 0) {
-         zmin = TMath::Log10(zmin*0.1);
-         zmax = TMath::Log10(zmax);
-      } else {
-         return;
-      }
-   } else {
-      zmax = TMath::Max(TMath::Abs(zmin),TMath::Abs(zmax));
-      zmin = 0;
-   }
-
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
    if (Hoption.Same) {
@@ -4361,6 +4349,18 @@ void THistPainter::PaintBoxes(Option_t *)
          }
          break;
       }
+   }
+      
+   if (Hoption.Logz) {
+      if (zmin > 0) {
+         zmin = TMath::Log10(zmin*0.1);
+         zmax = TMath::Log10(zmax);
+      } else {
+         return;
+      }
+   } else {
+      zmin = 0;
+      zmax = TMath::Max(TMath::Abs(zmin),TMath::Abs(zmax));      
    }
 
    Double_t zratio, dz = zmax - zmin;
