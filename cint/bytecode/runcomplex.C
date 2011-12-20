@@ -15,7 +15,7 @@ void runcomplex()
     for(int i=0; i<11; ++i)
     {
 	double x = Smith_x(0.0, 0.0);
-	cout<<"x = "<<x<<endl;
+	cerr<<"x = "<<x<<endl;
     }
 }
 
