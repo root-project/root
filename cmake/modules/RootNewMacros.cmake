@@ -271,7 +271,7 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
-
+  set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
   if(ARG_CMAKENOEXPORT)
     install(TARGETS ${library} RUNTIME DESTINATION bin

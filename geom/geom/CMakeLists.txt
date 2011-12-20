@@ -27,7 +27,7 @@ set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
 ROOT_GENERATE_DICTIONARY(G__${libname}1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__${libname}2 ${headers2} LINKDEF LinkDef2.h)
 
-ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef1.h  LinkDef2.h DEPENDENCIES RIO MathCore)
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}1.cxx G__${libname}2.cxx LIBRARIES RIO MathCore)
+ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef1.h  LinkDef2.h DEPENDENCIES Thread RIO MathCore)
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}1.cxx G__${libname}2.cxx DEPENDENCIES Thread RIO MathCore)
 ROOT_INSTALL_HEADERS()
 

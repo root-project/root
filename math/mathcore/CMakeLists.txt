@@ -26,8 +26,7 @@ ROOT_GENERATE_ROOTMAP(MathCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef_
 
 add_definitions(-DUSE_ROOT_ERROR )
 
-ROOT_LINKER_LIBRARY(MathCore *.cxx G__Math.cxx G__MathCore.cxx G__MathFit.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} Cint Core)
-set_target_properties(MathCore PROPERTIES LINK_INTERFACE_LIBRARIES "Core" )
+ROOT_LINKER_LIBRARY(MathCore *.cxx G__Math.cxx G__MathCore.cxx G__MathFit.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
 
 ROOT_INSTALL_HEADERS()
 
