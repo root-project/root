@@ -130,7 +130,6 @@ add_dependencies(Cint_static IOSENUM_H)
 
 #---Create the shared Cint library--------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Cint loadfile.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
-set_target_properties(Cint PROPERTIES LINK_INTERFACE_LIBRARIES "" )
 
 #---Create the cint cint executable-------------------------------------------------------------------------
 ROOT_EXECUTABLE(cint.exe ${CMAKE_CURRENT_SOURCE_DIR}/main/cppmain.cxx LIBRARIES Cint)
