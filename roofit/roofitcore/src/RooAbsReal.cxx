@@ -560,6 +560,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
   RooArgSet iset(iset2) ;
   const RooArgSet* nset = nset2 ;
 
+
   // Initialize local variables perparing for recursive loop
   Bool_t error = kFALSE ;
   const RooAbsReal* integrand = this ;
@@ -579,6 +580,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
   // Process integration over remaining integration variables
   while(iset.getSize()>0) {
+
 
     // Find largest set of observables that can be integrated in one go
     RooArgSet innerSet ;
@@ -901,7 +903,13 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   TString title(GetTitle());  
   title.Prepend("Projection of ");
 
-  RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*theClone,*projectedVars,&normSet,0,rangeName);
+
+  RooAbsReal* projected= theClone->createIntegral(*projectedVars,normSet,rangeName) ;
+  projected->SetName(name.Data()) ;
+  projected->SetTitle(title.Data()) ;
+
+//   RooAbsReal* projected2 = new RooRealIntegral(name.Data(),title.Data(),*theClone,*projectedVars,&normSet,0,rangeName);
+
   if(0 == projected || !projected->isValid()) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
     projectedVars->printStream(cout,kName|kArgs,kSingleLine);

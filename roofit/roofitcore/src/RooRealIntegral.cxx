@@ -768,6 +768,12 @@ RooRealIntegral::~RooRealIntegral()
 //_____________________________________________________________________________
 RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const 
 {
+
+  // Handle special case of no integration with default algorithm
+  if (iset.getSize()==0) {
+    return RooAbsReal::createIntegral(iset,nset,cfg,rangeName) ;
+  }
+
   // Special handling of integral of integral, return RooRealIntegral that represents integral over all dimensions in one pass
   RooArgSet isetAll(iset) ;
   isetAll.add(_sumList) ;

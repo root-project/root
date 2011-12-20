@@ -1451,6 +1451,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Loop over events and fill the histogram  
+  if (hist->GetSumw2()->fN==0) {    
+    hist->Sumw2() ;
+  }
   Int_t nevent= numEntries() ; //(Int_t)_tree->GetEntries();
   for(Int_t i=0; i < nevent; ++i) {
 

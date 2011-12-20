@@ -689,7 +689,7 @@ void RooHist::printClassName(ostream& os) const
 
 
 //_____________________________________________________________________________
-RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const 
+RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useAverage) const 
 {
   // Create and return RooHist containing  residuals w.r.t to given curve.
   // If normalize is true, the residuals are normalized by the histogram
@@ -727,8 +727,20 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const
 
     // Only calculate pull for bins inside curve range
     if (x<xstart || x>xstop) continue ;
-
-    Double_t yy = point - curve.interpolate(x) ;
+    
+    Double_t yy ;
+    if (useAverage) {
+      Double_t exl = GetErrorXlow(i);
+      Double_t exh = GetErrorXhigh(i) ;
+      if (exl<=0 ) exl = GetErrorX(i);
+      if (exh<=0 ) exh = GetErrorX(i);
+      if (exl<=0 ) exl = 0.5*getNominalBinWidth();
+      if (exh<=0 ) exh = 0.5*getNominalBinWidth();
+      yy = point - curve.average(x-exl,x+exh) ;
+    } else {
+      yy = point - curve.interpolate(x) ;
+    }
+   
     Double_t dyl = GetErrorYlow(i) ;
     Double_t dyh = GetErrorYhigh(i) ;
     if (normalize) {
