@@ -79,7 +79,8 @@ RooAddPdf::RooAddPdf() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
   _codeReg(10),
-  _snormList(0)
+  _snormList(0),
+  _recursive(kFALSE)
 {
   // Default constructor used for persistence
 
@@ -104,7 +105,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _coefList("!coefficients","List of coefficients",this),
   _snormList(0),
   _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE)
+  _allExtendable(kFALSE),
+  _recursive(kFALSE)
 {
   // Dummy constructor 
   _pdfIter   = _pdfList.createIterator() ;
@@ -129,7 +131,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE)
+  _allExtendable(kFALSE),
+  _recursive(kFALSE)
 {
   // Constructor with two PDFs and one coefficient
 
@@ -157,7 +160,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE)
+  _allExtendable(kFALSE),
+  _recursive(kFALSE)
 { 
   // Generic constructor from list of PDFs and list of coefficients.
   // Each pdf list element (i) is paired with coefficient list element (i).
@@ -264,6 +268,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
+  _recursive = recursiveFractions ;
+
 }
 
 
@@ -278,7 +284,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
-  _allExtendable(kTRUE)
+  _allExtendable(kTRUE),
+  _recursive(kFALSE)
 { 
   // Generic constructor from list of extended PDFs. There are no coefficients as the expected
   // number of events from each components determine the relative weight of the PDFs.
@@ -324,7 +331,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _pdfList("!pdfs",this,other._pdfList),
   _coefList("!coefficients",this,other._coefList),
   _haveLastCoef(other._haveLastCoef),
-  _allExtendable(other._allExtendable)
+  _allExtendable(other._allExtendable),
+  _recursive(other._recursive)
 {
   // Copy constructor
 
@@ -1035,12 +1043,29 @@ Double_t RooAddPdf::expectedEvents(const RooArgSet* nset) const
     RooFIter iter2 = cache->_rangeProjList.fwdIterator() ;
     RooFIter iter3 = _pdfList.fwdIterator() ;
 
-    RooAbsPdf* pdf ;
-    while ((pdf=(RooAbsPdf*)iter3.next())) {      
-      RooAbsReal* r1 = (RooAbsReal*)iter1.next() ;
-      RooAbsReal* r2 = (RooAbsReal*)iter2.next() ;
-      expectedTotal += (r2->getVal()/r1->getVal()) * pdf->expectedEvents(nset) ; 
-    }    
+    if (_allExtendable) {
+      
+      RooAbsPdf* pdf ;
+      while ((pdf=(RooAbsPdf*)iter3.next())) {      
+	RooAbsReal* r1 = (RooAbsReal*)iter1.next() ;
+	RooAbsReal* r2 = (RooAbsReal*)iter2.next() ;
+	expectedTotal += (r2->getVal()/r1->getVal()) * pdf->expectedEvents(nset) ; 
+      }    
+
+    } else {
+
+      RooFIter citer = _coefList.fwdIterator() ;
+      RooAbsReal* coef ;
+      while((coef=(RooAbsReal*)citer.next())) {
+	Double_t ncomp = coef->getVal(nset) ;
+	RooAbsReal* r1 = (RooAbsReal*)iter1.next() ;
+	RooAbsReal* r2 = (RooAbsReal*)iter2.next() ;
+	expectedTotal += (r2->getVal()/r1->getVal()) * ncomp ; 
+      }
+
+    }
+
+
 
   } else {
 

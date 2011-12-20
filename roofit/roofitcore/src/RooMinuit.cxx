@@ -154,6 +154,8 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _nPar      = _floatParamList->getSize() ;
   delete pIter ;
 
+  updateFloatVec() ;
+
   // Save snapshot of initial lists
   _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
   _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
@@ -805,6 +807,8 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
   }
 
+  updateFloatVec() ;
+
   return 0 ;
 }
 
@@ -1030,7 +1034,8 @@ Bool_t RooMinuit::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   // Modify PDF parameter value by ordinal index (needed by MINUIT)
 
-  RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
+  //RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
+  RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
 
   if (par->getVal()!=value) {
     if (verbose) cout << par->GetName() << "=" << value << ", " ;
@@ -1127,6 +1132,19 @@ void RooMinuit::backProp()
   }
 }
 
+
+//_____________________________________________________________________________
+void RooMinuit::updateFloatVec() 
+{
+  _floatParamVec.clear() ;
+  RooFIter iter = _floatParamList->fwdIterator() ;
+  RooAbsArg* arg ;
+  _floatParamVec.reserve(_floatParamList->getSize()) ;
+  Int_t i(0) ;
+  while((arg=iter.next())) {
+    _floatParamVec[i++] = arg ;
+  }
+}
 
 
 

@@ -55,7 +55,7 @@ public:
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
 
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet*vars=0) const {
+  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet*vars=0, const char* /*wgtVarName*/=0) const {
     // Return empty clone of this RooDataHist
     return new RooDataHist(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()) ; 
   }
@@ -123,7 +123,7 @@ public:
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;
 
-  Int_t getIndex(const RooArgSet& coord) ;
+  Int_t getIndex(const RooArgSet& coord, Bool_t fast=kFALSE) ;
 
   void removeSelfFromDir() { removeFromDir(this) ; }
   

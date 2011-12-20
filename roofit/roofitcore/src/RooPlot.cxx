@@ -924,7 +924,7 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t n
 
 
 //_____________________________________________________________________________
-RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool normalize) const
+RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
   // Return a RooHist containing the residuals of histogram 'histname' with respect
   // to curve 'curvename'. If normalize is true the residuals are divided by the error
@@ -944,7 +944,7 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename,bool nor
     return 0 ;
   }
 
-  return hist->makeResidHist(*curve,normalize) ;
+  return hist->makeResidHist(*curve,normalize,useAverage) ;
 }
 
 

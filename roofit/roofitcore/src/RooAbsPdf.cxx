@@ -693,6 +693,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   //                                    is the state of the master index category of the simultaneous fit
   // Constrain(const RooArgSet&pars) -- For p.d.f.s that contain internal parameter constraint terms, only apply constraints to given subset of parameters
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
+  // GlobalObservables(const RooArgSet&) -- Define the set of normalization observables to be used for the constraint terms.
+  //                                        If none are specified the constrained parameters are used
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
   // 
@@ -736,10 +738,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("cloneData","CloneData",2,0) ;
   pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
+  pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("Constrain","Constrained") ;
+  
   
   // Process and check varargs 
   pc.process(cmdList) ;
@@ -762,6 +766,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     cloneData = optConst ;
   }
   RooArgSet* cPars = pc.getSet("cPars") ;
+  RooArgSet* glObs = pc.getSet("glObs") ;
   Bool_t doStripDisconnected=kFALSE ;
 
   // If no explicit list of parameters to be constrained is specified apply default algorithm
@@ -847,7 +852,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
     
-    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,*cPars) ;
+    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,glObs ? *glObs : *cPars) ;
     nllCons->setOperMode(ADirty) ;
     RooAbsReal* orignll = nll ;
 
@@ -895,6 +900,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
   //                                    is the state of the master index category of the simultaneous fit
   // Constrained()                   -- Apply all constrained contained in the p.d.f. in the likelihood 
   // Contrain(const RooArgSet&pars)  -- Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
+  // GlobalObservables(const RooArgSet&) -- Define the set of normalization observables to be used for the constraint terms.
+  //                                        If none are specified the constrained parameters are used
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   //
   // Options to control flow of fit procedure
@@ -969,7 +976,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;

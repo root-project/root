@@ -423,6 +423,9 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     if (!doInline) coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,doInline) ;
     _mpfeArray[i]->initialize() ;
+    if (doInline) {
+      _mpfeArray[i]->addOwnedComponents(*gof) ;
+    }
   }
   //cout << "initMPMode --- done" << endl ;
   return ;

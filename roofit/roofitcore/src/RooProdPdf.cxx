@@ -226,7 +226,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (!pdf) {
       coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg " 
-			    << pdf->GetName() << " is not a PDF, ignored" << endl ;
+			    << arg->GetName() << " is not a PDF, ignored" << endl ;
       continue ;
     }
     _pdfList.add(*pdf) ;

@@ -29,6 +29,7 @@ class RooFitResult ;
 class RooArgList ;
 class RooRealVar ;
 class RooArgSet ;
+class RooAbsArg ;
 class TVirtualFitter ;
 class TH2F ;
 class RooPlot ;
@@ -104,6 +105,8 @@ protected:
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
+  void updateFloatVec() ;
+
 private:
 
   Int_t       _evalCounter ;
@@ -119,6 +122,7 @@ private:
   Bool_t      _doEvalErrorWall ;
   Int_t       _maxEvalMult ;
   RooArgList* _floatParamList ;
+  std::vector<RooAbsArg*> _floatParamVec ;
   RooArgList* _initFloatParamList ;
   RooArgList* _constParamList ;
   RooArgList* _initConstParamList ;

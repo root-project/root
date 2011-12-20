@@ -586,32 +586,38 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
 
     RooBinning xbins(href.GetNbinsX(),href.GetXaxis()->GetXbins()->GetArray()) ;
 
+    Double_t tolerance = 1e-6*xbins.averageBinWidth() ;
+    
     // Adjust xlo/xhi to nearest boundary
-    Double_t xloAdj = xbins.binLow(xbins.binNumber(xlo+1e-6)) ;
-    Double_t xhiAdj = xbins.binHigh(xbins.binNumber(xhi-1e-6)) ;
+    Double_t xloAdj = xbins.binLow(xbins.binNumber(xlo+tolerance)) ;
+    Double_t xhiAdj = xbins.binHigh(xbins.binNumber(xhi-tolerance)) ;
     xbins.setRange(xloAdj,xhiAdj) ;
+
     ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
-    if (fabs(xloAdj-xlo)>1e-6||fabs(xhiAdj-xhi)) {
+    if (fabs(xloAdj-xlo)>tolerance||fabs(xhiAdj-xhi)<tolerance) {
       coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
 			  << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
     }
 
     xvar->setBinning(xbins) ;
-    xmin = xbins.rawBinNumber(xloAdj+1e-6) ;
+    xmin = xbins.rawBinNumber(xloAdj+tolerance) ;
     if (offset) {
       offset[0] = xmin ;
     }
 
   } else {
+
     RooBinning xbins(href.GetXaxis()->GetXmin(),href.GetXaxis()->GetXmax()) ;
     xbins.addUniform(href.GetNbinsX(),href.GetXaxis()->GetXmin(),href.GetXaxis()->GetXmax()) ;
 
+    Double_t tolerance = 1e-6*xbins.averageBinWidth() ;
+
     // Adjust xlo/xhi to nearest boundary
-    Double_t xloAdj = xbins.binLow(xbins.binNumber(xlo+1e-6)) ;
-    Double_t xhiAdj = xbins.binHigh(xbins.binNumber(xhi-1e-6)) ;
+    Double_t xloAdj = xbins.binLow(xbins.binNumber(xlo+tolerance)) ;
+    Double_t xhiAdj = xbins.binHigh(xbins.binNumber(xhi-tolerance)) ;
     xbins.setRange(xloAdj,xhiAdj) ;
     ((RooRealVar*)vars.at(0))->setRange(xloAdj,xhiAdj) ;
-    if (fabs(xloAdj-xlo)>1e-6||fabs(xhiAdj-xhi)) {
+    if (fabs(xloAdj-xlo)>tolerance||fabs(xhiAdj-xhi)<tolerance) {
       coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
 			  << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
     }
@@ -619,7 +625,7 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
 
     RooUniformBinning xbins2(xloAdj,xhiAdj,xbins.numBins()) ;
     xvar->setBinning(xbins2) ;
-    xmin = xbins.rawBinNumber(xloAdj+1e-6) ;
+    xmin = xbins.rawBinNumber(xloAdj+tolerance) ;
     if (offset) {
       offset[0] = xmin ;
     }
@@ -642,19 +648,21 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
     if (href.GetYaxis()->GetXbins()->GetArray()) {
 
       RooBinning ybins(href.GetNbinsY(),href.GetYaxis()->GetXbins()->GetArray()) ;
+
+      Double_t tolerance = 1e-6*ybins.averageBinWidth() ;
       
       // Adjust ylo/yhi to nearest boundary
-      Double_t yloAdj = ybins.binLow(ybins.binNumber(ylo+1e-6)) ;
-      Double_t yhiAdj = ybins.binHigh(ybins.binNumber(yhi-1e-6)) ;
+      Double_t yloAdj = ybins.binLow(ybins.binNumber(ylo+tolerance)) ;
+      Double_t yhiAdj = ybins.binHigh(ybins.binNumber(yhi-tolerance)) ;
       ybins.setRange(yloAdj,yhiAdj) ;
       ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
-      if (fabs(yloAdj-ylo)>1e-6||fabs(yhiAdj-yhi)) {
+      if (fabs(yloAdj-ylo)>tolerance||fabs(yhiAdj-yhi)<tolerance) {
 	coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
 			    << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
       }
 
       yvar->setBinning(ybins) ;
-      ymin = ybins.rawBinNumber(yloAdj+1e-6) ;
+      ymin = ybins.rawBinNumber(yloAdj+tolerance) ;
       if (offset) {
 	offset[1] = ymin ;
       }
@@ -663,20 +671,22 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
 
       RooBinning ybins(href.GetYaxis()->GetXmin(),href.GetYaxis()->GetXmax()) ;
       ybins.addUniform(href.GetNbinsY(),href.GetYaxis()->GetXmin(),href.GetYaxis()->GetXmax()) ;
+
+      Double_t tolerance = 1e-6*ybins.averageBinWidth() ;
       
       // Adjust ylo/yhi to nearest boundary
-      Double_t yloAdj = ybins.binLow(ybins.binNumber(ylo+1e-6)) ;
-      Double_t yhiAdj = ybins.binHigh(ybins.binNumber(yhi-1e-6)) ;
+      Double_t yloAdj = ybins.binLow(ybins.binNumber(ylo+tolerance)) ;
+      Double_t yhiAdj = ybins.binHigh(ybins.binNumber(yhi-tolerance)) ;
       ybins.setRange(yloAdj,yhiAdj) ;
       ((RooRealVar*)vars.at(1))->setRange(yloAdj,yhiAdj) ;
-      if (fabs(yloAdj-ylo)>1e-6||fabs(yhiAdj-yhi)) {
+      if (fabs(yloAdj-ylo)>tolerance||fabs(yhiAdj-yhi)<tolerance) {
 	coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
 			    << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
       }
       
       RooUniformBinning ybins2(yloAdj,yhiAdj,ybins.numBins()) ;
       yvar->setBinning(ybins2) ;
-      ymin = ybins.rawBinNumber(yloAdj+1e-6) ;
+      ymin = ybins.rawBinNumber(yloAdj+tolerance) ;
       if (offset) {
 	offset[1] = ymin ;
       }
@@ -699,19 +709,21 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
     if (href.GetZaxis()->GetXbins()->GetArray()) {
 
       RooBinning zbins(href.GetNbinsZ(),href.GetZaxis()->GetXbins()->GetArray()) ;
+
+      Double_t tolerance = 1e-6*zbins.averageBinWidth() ;
       
       // Adjust zlo/zhi to nearest boundary
-      Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+1e-6)) ;
-      Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-1e-6)) ;
+      Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+tolerance)) ;
+      Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-tolerance)) ;
       zbins.setRange(zloAdj,zhiAdj) ;
       ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
-      if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
+      if (fabs(zloAdj-zlo)>tolerance||fabs(zhiAdj-zhi)<tolerance) {
 	coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
 			    << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
       }
       
       zvar->setBinning(zbins) ;
-      zmin = zbins.rawBinNumber(zloAdj+1e-6) ;
+      zmin = zbins.rawBinNumber(zloAdj+tolerance) ;
       if (offset) {
 	offset[2] = zmin ;
       }
@@ -720,20 +732,22 @@ void RooDataHist::adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset
 
       RooBinning zbins(href.GetZaxis()->GetXmin(),href.GetZaxis()->GetXmax()) ;
       zbins.addUniform(href.GetNbinsZ(),href.GetZaxis()->GetXmin(),href.GetZaxis()->GetXmax()) ;
+
+      Double_t tolerance = 1e-6*zbins.averageBinWidth() ;
       
       // Adjust zlo/zhi to nearest boundary
-      Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+1e-6)) ;
-      Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-1e-6)) ;
+      Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+tolerance)) ;
+      Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-tolerance)) ;
       zbins.setRange(zloAdj,zhiAdj) ;
       ((RooRealVar*)vars.at(2))->setRange(zloAdj,zhiAdj) ;
-      if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
+      if (fabs(zloAdj-zlo)>tolerance||fabs(zhiAdj-zhi)<tolerance) {
 	coutI(DataHandling) << "RooDataHist::adjustBinning(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
 			    << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
       }
       
       RooUniformBinning zbins2(zloAdj,zhiAdj,zbins.numBins()) ;
       zvar->setBinning(zbins2) ;
-      zmin = zbins.rawBinNumber(zloAdj+1e-6) ;
+      zmin = zbins.rawBinNumber(zloAdj+tolerance) ;
       if (offset) {
 	offset[2] = zmin ;
       }
@@ -902,7 +916,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) :
   RooAbsData(name,title,varSubset),
-  _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
+  _wgt(0), _binValid(0), _curWeight(0), _curVolume(1), _pbinv(0), _pbinvCacheMgr(0,10)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
   // of the data set are defined by the 'vars' RooArgSet, which can be identical
@@ -1037,10 +1051,14 @@ RooDataHist::~RooDataHist()
 
 
 //_____________________________________________________________________________
-Int_t RooDataHist::getIndex(const RooArgSet& coord)
+Int_t RooDataHist::getIndex(const RooArgSet& coord, Bool_t fast)
 {
   checkInit() ;
-  _vars = coord ;
+  if (fast) {
+    _vars.assignFast(coord,kFALSE) ;
+  } else {
+    _vars.assignValueOnly(coord) ;
+  }
   return calcTreeIndex() ;
 }
 

@@ -833,23 +833,28 @@ RooAbsData* RooDataSet::cacheClone(const RooAbsArg* newCacheOwner, const RooArgS
 
 
 //_____________________________________________________________________________
-RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars) const 
+RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars, const char* wgtVarName) const 
 {
   // Return an empty clone of this dataset. If vars is not null, only the variables in vars
   // are added to the definition of the empty clone
 
   // If variables are given, be sure to include weight variable if it exists and is not included
   RooArgSet vars2 ;
+  RooRealVar* tmpWgtVar = _wgtVar ;
+  if (wgtVarName && vars && !_wgtVar) {
+    tmpWgtVar = (RooRealVar*) vars->find(wgtVarName) ;
+  }
+
   if (vars) {
     vars2.add(*vars) ;
     if (_wgtVar && !vars2.find(_wgtVar->GetName())) {
       vars2.add(*_wgtVar) ;
-    }
+    } 
   } else {
     vars2.add(_vars) ;
   }
-
-  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars2,_wgtVar?_wgtVar->GetName():0) ; 
+  
+  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars2,tmpWgtVar?tmpWgtVar->GetName():0) ;
   //if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
   return dset ;
 }
