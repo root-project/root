@@ -16,6 +16,7 @@
 #include <TMath.h>
 #include <TNtuple.h>
 #include <TRandom3.h>
+#include <TROOT.h>
 #include <TString.h>
 #include <TStyle.h>
 #include <TSystem.h>
@@ -118,10 +119,8 @@ void ProofNtuple::SlaveBegin(TTree * /*tree*/)
    }
 
    // Open the file
-   TDirectory *savedir = gDirectory;
    fFile = fProofFile->OpenFile("RECREATE");
    if (fFile && fFile->IsZombie()) SafeDelete(fFile);
-   savedir->cd();
 
    // Cannot continue
    if (!fFile) {
@@ -135,8 +134,22 @@ void ProofNtuple::SlaveBegin(TTree * /*tree*/)
    fNtp->SetDirectory(fFile);
    fNtp->AutoSave();
 
-   // Init the random generator
-   fRandom = new TRandom3(0);
+   // Should we generate the random numbers or take them from the ntuple ?
+   TNamed *unr = (TNamed *) fInput->FindObject("PROOF_USE_NTP_RNDM");
+   if (unr) {
+      // Get the ntuple from the input list
+      if (!(fNtpRndm = dynamic_cast<TNtuple *>(fInput->FindObject("NtpRndm")))) {
+         Warning("SlaveBegin",
+                 "asked to use rndm ntuple but 'NtpRndm' not found in the"
+                 " input list! Using the random generator");
+         fInput->Print();
+      } else {
+         Info("SlaveBegin", "taking randoms from input ntuple 'NtpRndm'");
+      }
+   }
+
+   // Init the random generator, if required
+   if (!fNtpRndm) fRandom = new TRandom3(0);
 }
 
 Bool_t ProofNtuple::Process(Long64_t entry)
@@ -162,10 +175,23 @@ Bool_t ProofNtuple::Process(Long64_t entry)
    if (!fNtp) return kTRUE;
 
    // Fill ntuple
-   Float_t px, py;
-   fRandom->Rannor(px,py);
+   Float_t px, py, random;
+   if (fNtpRndm) {
+      // Get the entry
+      Float_t *ar = fNtpRndm->GetArgs();
+      Long64_t ent = entry % fNtpRndm->GetEntries(); 
+      fNtpRndm->GetEntry(ent);
+      random = ar[0];
+      px = (Float_t) TMath::ErfInverse((Double_t)(ar[1]*2 - 1.)) * TMath::Sqrt(2.);
+      py = (Float_t) TMath::ErfInverse((Double_t)(ar[2]*2 - 1.)) * TMath::Sqrt(2.);
+   } else if (fRandom) {
+      fRandom->Rannor(px,py);
+      random = fRandom->Rndm();
+   } else {
+      Abort("no way to get random numbers! Stop processing", kAbortProcess);
+      return kTRUE;
+   }
    Float_t pz = px*px + py*py;
-   Float_t random = fRandom->Rndm();
    Int_t i = (Int_t) entry;
    fNtp->Fill(px,py,pz,random,i);
 
@@ -180,6 +206,10 @@ void ProofNtuple::SlaveTerminate()
 
    // Write the ntuple to the file
    if (fFile) {
+      if (!fNtp) {
+         Error("SlaveTerminate", "'ntuple' is undefined!");
+         return;
+      }
       Bool_t cleanup = kFALSE;
       TDirectory *savedir = gDirectory;
       if (fNtp->GetEntries() > 0) {
@@ -238,4 +268,5 @@ void ProofNtuple::Terminate()
 
    // Plot ntuples
    if (fNtp) PlotNtuple(fNtp, "proof ntuple");
+
 }
