@@ -11,6 +11,6 @@ if (opengl)
    if(builtin_ftgl)
       add_subdirectory(ftgl)
    endif()
+  add_subdirectory(gviz3d) # special CMakeLists.txt
 endif()
-add_subdirectory(gviz3d) # special CMakeLists.txt
 
