@@ -131,6 +131,7 @@ static TString gsandbox;
 static Int_t gverbose = 1;
 static TString glogfile;
 static Int_t gpoints = 0;
+static Bool_t guseprogress = kTRUE;
 static Int_t totpoints = 53;
 static RedirectHandle_t gRH;
 static RedirectHandle_t gRHAdmin;
@@ -154,11 +155,11 @@ static TString gEventSel("$ROOTSYS/tutorials/proof/ProofEvent.C");
 static TString gSimpleSel("$ROOTSYS/tutorials/proof/ProofSimple.C");
 static TString gTestsSel("$ROOTSYS/tutorials/proof/ProofTests.C");
 
-void stressProof(const char *url = "proof://localhost:40000",
-                 Int_t nwrks = -1, Int_t verbose = 1,
-                 const char *logfile = 0, Bool_t dyn = kFALSE,
-                 Bool_t skipds = kTRUE, Int_t test = -1,
-                 const char *h1pfx = 0);
+int stressProof(const char *url = "proof://localhost:40000",
+                Int_t nwrks = -1, Int_t verbose = 1,
+                const char *logfile = 0, Bool_t dyn = kFALSE,
+                Bool_t skipds = kTRUE, Int_t test = -1,
+                const char *h1pfx = 0, Bool_t useprogress = kTRUE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -172,7 +173,8 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" Usage:\n");
       printf(" \n");
-      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds] [-t testnum] [-h1 h1src] [-g] [master]\n");
+      printf(" $ ./stressProof [-h] [-n <wrks>] [-v[v[v]]] [-l logfile] [-dyn] [-ds]\n");
+      printf("                 [-t testnum] [-h1 h1src] [-g] [-noprogress] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
@@ -192,6 +194,7 @@ int main(int argc,const char *argv[])
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
       printf("   -punzip       use parallel unzipping for data-driven processing.\n");
       printf("   -g            enable graphics; default is to run in text mode.\n");
+      printf("   -noprogress   do not show progress whose escaped chars may confuse some wrapper applications.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -202,6 +205,7 @@ int main(int argc,const char *argv[])
    Int_t verbose = 1;
    Int_t test = -1;
    Bool_t enablegraphics = kFALSE;
+   Bool_t useprogress = kTRUE;
    const char *logfile = 0;
    const char *h1src = 0;
    Int_t i = 1;
@@ -266,6 +270,9 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-g",2)) {
          enablegraphics = kTRUE;
          i++;
+      } else if (!strncmp(argv[i],"-noprogress",11)) {
+         useprogress = kFALSE;
+         i++;
       } else {
          url = argv[i];
          i++;
@@ -278,9 +285,10 @@ int main(int argc,const char *argv[])
    if (enablegraphics)
       new TApplication("stressProof", 0, 0);
 
-   stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest, test, h1src);
+   int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
+                        test, h1src, useprogress);
 
-   gSystem->Exit(0);
+   gSystem->Exit(rc);
 }
 #endif
 
@@ -312,6 +320,25 @@ void PrintStressProgress(Long64_t total, Long64_t processed, Float_t, Long64_t)
 
    gSystem->RedirectOutput(glogfile, "a", &gRH);
 }
+//______________________________________________________________________________
+void PrintEmptyProgress(Long64_t, Long64_t, Float_t, Long64_t)
+{
+   // Dummy PrintProgress
+   return;
+}
+   
+// Guard class
+class SwitchProgressGuard {
+public:
+   SwitchProgressGuard(Bool_t force = kFALSE) {
+      if (guseprogress || force) {
+         gProof->SetPrintProgress(&PrintStressProgress);
+      } else {
+         gProof->SetPrintProgress(&PrintEmptyProgress);
+      }
+   }
+   ~SwitchProgressGuard() { gProof->SetPrintProgress(0); }
+};
 
 //______________________________________________________________________________
 void CleanupSelector(const char *selpath)
@@ -495,8 +522,8 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
-                 Bool_t dyn, Bool_t skipds, Int_t test, const char *h1src)
+int stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfile,
+                 Bool_t dyn, Bool_t skipds, Int_t test, const char *h1src, Bool_t useprogress)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -507,6 +534,18 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    // Set verbosity
    gverbose = verbose;
+
+   // No progress bar if not tty or explicitly not requested (i.e. for ctest)
+   guseprogress = useprogress;
+   if (isatty(0) == 0 || isatty(1) == 0) guseprogress = kFALSE;
+   if (!guseprogress) {
+      if (!useprogress) {
+         printf("*  Progress not shown (explicit request)                         *\n");
+      } else {
+         printf("*  Progress not shown (not tty)                                  *\n");
+      }
+      printf("******************************************************************\n");
+   }
 
    // Notify/warn about the dynamic startup option, if any
    TUrl uu(url), udef(urldef);
@@ -558,7 +597,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       glogfile = "ProofStress_";
       if (!(flog = gSystem->TempFileName(glogfile, gSystem->TempDirectory()))) {
          printf(" >>> Cannot create a temporary log file on %s - exit\n", gSystem->TempDirectory());
-         return;
+         return 1;
       }
       fclose(flog);
       if (gverbose > 0) {
@@ -668,7 +707,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       if (!treq) {
          printf("* Test %2d not found among the registered tests - exiting        **\n", test);
          printf("******************************************************************\n");
-         return;
+         return 1;
       }
       // Enable the required tests
       Int_t tn = -1;
@@ -771,6 +810,9 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          printf("+++ Warning: test daemon probably still running!\n");
       }
    }
+
+   // Done
+   return (failed ? 1 : 0);
 }
 
 //_____________________________________________________________________________
@@ -1102,11 +1144,11 @@ Int_t PT_Simple(void *submergers)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(gSimpleSel.Data(), nevt);
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(gSimpleSel.Data(), nevt);
+      gTimer.Stop();
+   }
 
    // Count
    gSimpleCnt++;
@@ -1159,11 +1201,11 @@ Int_t PT_H1Http(void *)
    PutPoint();
    chain->SetProof();
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   chain->Process(gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      chain->Process(gH1Sel.Data());
+      gTimer.Stop();
+   }
    gProof->RemoveChain(chain);
 
    // Count
@@ -1222,12 +1264,12 @@ Int_t PT_H1FileCollection(void *arg)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(fc, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
-
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(fc, gH1Sel.Data());
+      gTimer.Stop();
+   }
+   
    // Restore settings
    gProof->DeleteParameters("PROOF_Packetizer");
    gProof->DeleteParameters("PROOF_PacketizerStrategy");
@@ -1268,11 +1310,11 @@ Int_t PT_H1DataSet(void *)
 
    // Process the dataset by name
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Count
    gH1Cnt++;
@@ -1310,11 +1352,11 @@ Int_t PT_H1MultiDataSet(void *)
 
    // Process the dataset by name
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Count
    gH1Cnt++;
@@ -1353,11 +1395,12 @@ Int_t PT_H1MultiDSetEntryList(void *)
 
    // Entry-list creation run
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data(), "fillList=elist.root");
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data(), "fillList=elist.root");
+      gTimer.Stop();
+   }
+   
    // Cleanup entry-list from the input list
    TIter nxi(gProof->GetInputList());
    TObject *o = 0;
@@ -1375,11 +1418,11 @@ Int_t PT_H1MultiDSetEntryList(void *)
    // Run using the entrylist
    dsname = "h1dseta<<elist.root h1dsetb?enl=elist.root";
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gTimer.Start();
-   gProof->Process(dsname, gH1Sel.Data());
-   gTimer.Stop();
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(dsname, gH1Sel.Data());
+      gTimer.Stop();
+   }
 
    // Unlink the entry list file
    gSystem->Unlink("elist.root");
@@ -1642,9 +1685,9 @@ Int_t PT_Event(void *)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gEventSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gEventSel.Data(), nevt);
+   }
 
    // Make sure the query result is there
    PutPoint();
@@ -1748,9 +1791,9 @@ Int_t PT_InputData(void *)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Cleanup
    gSystem->Unlink(datafile.Data());
@@ -1852,9 +1895,9 @@ Int_t PT_PackageArguments(void *)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Some cleanup
    gProof->ClearPackage(pack1);
@@ -1929,9 +1972,9 @@ Int_t PT_PackageArguments(void *)
 
    // Process
    PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(gTestsSel.Data(), nevt);
-   gProof->SetPrintProgress(0);
+   {  SwitchProgressGuard spg;
+      gProof->Process(gTestsSel.Data(), nevt);
+   }
 
    // Some cleanup
    gProof->ClearPackage(pack2);
@@ -2040,34 +2083,34 @@ Int_t PT_H1SimpleAsync(void *arg)
       gProof->Remove("cleanupdir");
    }
 
-   // Submit the processing requests
-   PutPoint();
-   gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(fc, gH1Sel.Data(), "ASYN");
-
    // Define the number of events and histos
    Long64_t nevt = 1000000;
    Int_t nhist = 16;
-   // The number of histograms is added as parameter in the input list
-   gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
-   gProof->Process(gSimpleSel.Data(), nevt, "ASYN");
+   // Submit the processing requests
+   PutPoint();
+   {  SwitchProgressGuard spg;
+      gProof->Process(fc, gH1Sel.Data(), "ASYN");
 
-   // Wait a bit as a function of previous runnings
-   Double_t dtw = 10;
-   if (gH1Cnt > 0 && gSimpleTime > 0) {
-      dtw = gH1Time / gH1Cnt + gSimpleTime / gSimpleCnt + 1;
-      if (dtw < 10) dtw = 10;
+      // The number of histograms is added as parameter in the input list
+      gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
+      gProof->Process(gSimpleSel.Data(), nevt, "ASYN");
+
+      // Wait a bit as a function of previous runnings
+      Double_t dtw = 10;
+      if (gH1Cnt > 0 && gSimpleTime > 0) {
+         dtw = gH1Time / gH1Cnt + gSimpleTime / gSimpleCnt + 1;
+         if (dtw < 10) dtw = 10;
+      }
+      Int_t tw = (Int_t) (5 * dtw);
+
+      gTimedOut = kFALSE;
+      TTimeOutTimer t(tw*1000);
+
+      // Wait for the processing
+      while (!gProof->IsIdle() && !gTimedOut)
+         gSystem->InnerLoop();
+
    }
-   Int_t tw = (Int_t) (5 * dtw);
-
-   gTimedOut = kFALSE;
-   TTimeOutTimer t(tw*1000);
-
-   // Wait for the processing
-   while (!gProof->IsIdle() && !gTimedOut)
-      gSystem->InnerLoop();
-
-   gProof->SetPrintProgress(0);
    PutPoint();
 
    // Retrieve the list of available query results
