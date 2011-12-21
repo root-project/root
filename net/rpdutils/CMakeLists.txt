@@ -22,7 +22,7 @@ endif()
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})
 
-ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa DEPENDENCIES Net)
-set_target_properties(SrvAuth PROPERTIES LINK_INTERFACE_LIBRARIES "" )
+ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLIBS} DEPENDENCIES Net)
+
 
 
