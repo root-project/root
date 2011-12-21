@@ -4328,7 +4328,8 @@ void THistPainter::PaintBoxes(Option_t *)
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
    Double_t zmin = fH->GetMinimum();
-   Double_t zmax = fH->GetMaximum();
+   Double_t zmax = TMath::Max(TMath::Abs(fH->GetMaximum()),
+                              TMath::Abs(fH->GetMinimum()));
 
    // In case of option SAME, zmin and zmax values are taken from the
    // first plotted 2D histogram.
@@ -4338,7 +4339,8 @@ void THistPainter::PaintBoxes(Option_t *)
       while ((h2 = (TH2 *)next())) {
          if (!h2->InheritsFrom(TH2::Class())) continue;
          zmin = h2->GetMinimum();
-         zmax = h2->GetMaximum();
+         zmax = TMath::Max(TMath::Abs(h2->GetMaximum()),
+                           TMath::Abs(h2->GetMinimum()));
          if (Hoption.Logz) {
             zmax = TMath::Log10(zmax);
             if (zmin <= 0) {
