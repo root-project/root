@@ -173,9 +173,7 @@ namespace cling {
 	  foundOldResInc = true;
 	}
       }
-      if (!foundOldResInc) {
-	llvm::report_fatal_error("Cannot update include for resource path (old entry not found)!");
-      }
+
       Opts.ResourceDir = resource_path.str();
     }
 
