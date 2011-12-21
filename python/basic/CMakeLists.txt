@@ -1,0 +1,6 @@
+if(ROOT_python_FOUND)
+  ROOT_ADD_ROOTTEST(python-basic-basic MACRO PyROOT_basictests.py)
+  ROOT_ADD_ROOTTEST(python-basic-datatype MACRO PyROOT_datatypetest.py)
+  ROOT_ADD_ROOTTEST(python-basic-operator MACRO PyROOT_operatortests.py)
+  ROOT_ADD_ROOTTEST(python-basic-overload MACRO PyROOT_overloadtests.py)
+endif()
