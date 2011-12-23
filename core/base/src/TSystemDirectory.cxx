@@ -130,12 +130,14 @@ Bool_t TSystemDirectory::IsItDirectory(const char *name) const
    Long64_t size;
    Long_t id, flags, modtime;
    const char *dirfile = GetTitle();
+   TString savDir = gSystem->WorkingDirectory();
 
    gSystem->ChangeDirectory(dirfile);
    flags = id = size = modtime = 0;
    gSystem->GetPathInfo(name, &id, &size, &flags, &modtime);
    Int_t isdir = (Int_t)flags & 2;
 
+   gSystem->ChangeDirectory(savDir);
    return isdir ? kTRUE : kFALSE;
 }
 
