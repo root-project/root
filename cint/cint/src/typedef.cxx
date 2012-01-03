@@ -297,18 +297,27 @@ void G__define_type()
       }
       c = G__fgetname_template(type1, 0, "{");
    }
-   if (!strcmp(type1, "::")) {  // FIXME: This makes no sense, there cannot be typedef ::{...};
+   if (!strcmp(type1, "::")) {
       // skip a :: without a namespace in front of it (i.e. global namespace!)
       c = G__fgetspace(); // skip the next ':'
       c = G__fgetname_template(type1, 0, "{");
    }
-   if (!strncmp(type1, "::", 2)) { // Strip a leading :: (global namespace operator)
-      // A leading '::' causes other typename matching functions to fail so
-      // we remove it. This is not the ideal solution (neither was the one
-      // above since it does not allow for distinction between global
-      // namespace and local namespace) ... but at least it is an improvement
-      // over the current behavior.
-      strcpy((char*)type1, type1 + 2);  // Okay since we reduce the size ...
+   if (!strncmp(type1, "::", 2)) {
+      // Strip a leading :: (global namespace operator).
+      // A leading '::' causes other typename matching
+      // functions to fail so we remove it. This is not
+      // the ideal solution (neither is the one above)
+      // since it does not allow for decriminating between
+      // global namespace and local namespace, but at
+      // least it is an improvement over the current
+      // behavior.
+      //
+      // Note: We must use memmove because the source
+      //       and destination strings overlap!
+      //
+      int t1len = strlen(type1);
+      memmove(type1, type1 + 2, t1len - 2);
+      type1.Set(t1len - 2, '\0');
    }
    while (isspace(c)) {
       len = strlen(type1);
