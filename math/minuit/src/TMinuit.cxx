@@ -7006,7 +7006,7 @@ void TMinuit::mnset()
       "MNCONT: MNCONTOUR PLOT (MNCROS SEARCH) "};
 
    /* System generated locals */
-   Int_t f_inqu();
+   //Int_t f_inqu();
 
    /* Local variables */
    Double_t val;
