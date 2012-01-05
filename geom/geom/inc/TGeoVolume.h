@@ -113,7 +113,7 @@ public:
    void            CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option=""); // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
-   virtual Bool_t  IsAssembly() const {return kFALSE;}
+   virtual Bool_t  IsAssembly() const;
    virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}

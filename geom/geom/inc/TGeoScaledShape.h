@@ -59,6 +59,7 @@ public:
    TGeoShape            *GetShape() const {return fShape;}
    TGeoScale            *GetScale() const {return fScale;}
    virtual void          InspectShape() const;
+   virtual Bool_t        IsAssembly() const;
    virtual Bool_t        IsCylType() const {return fShape->IsCylType();}
    virtual Bool_t        IsReflected() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
