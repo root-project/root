@@ -103,20 +103,29 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    TUrl uu(url), uref(refloc);
    Bool_t ext = (strcmp(uu.GetHost(), uref.GetHost()) ||
                  (uu.GetPort() != uref.GetPort())) ? kTRUE : kFALSE;
-   if (ext && url && strlen(url) > 0) {
-      Printf("getProof: trying to open a session on the external cluster at '%s'", url);
-      if (!strcmp(url, "lite://")) {
+   Bool_t lite = kFALSE;
+   if (ext && url) {
+      if (!strcmp(url, "lite://") || strlen(url) == 0) {
+         if (strlen(url) == 0) uu.SetUrl("lite://");
          if (dir && strlen(dir) > 0) gEnv->SetValue("Proof.Sandbox", dir);
-         if (nwrks > 0) uu.SetOptions(Form("workers=%d", nwrks));
+         TString swrk("<default> workers");
+         if (nwrks > 0) {
+            uu.SetOptions(Form("workers=%d", nwrks));
+            swrk.Form("%d workers", nwrks);
+         }
+         lite = kTRUE;
+         Printf("getProof: trying to open a PROOF-Lite session with %s", swrk.Data());
+      } else {
+         Printf("getProof: trying to open a session on the external cluster at '%s'", url);
       }
       p = TProof::Open(uu.GetUrl(), vopt);
       if (p && p->IsValid()) {
          // Check consistency
-         if (ext && nwrks > 0) {
+         if (ext && !lite && nwrks > 0) {
             Printf("getProof: WARNING: started/attached a session on external cluster (%s):"
                    " 'nwrks=%d' ignored", url, nwrks);
          }
-         if (ext && dir && strlen(dir) > 0) {
+         if (ext && !lite && dir && strlen(dir) > 0) {
             Printf("getProof: WARNING: started/attached a session on external cluster (%s):"
                    " 'dir=\"%s\"' ignored", url, dir);
          }
