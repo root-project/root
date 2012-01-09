@@ -23,6 +23,6 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__Minuit2 *.h Minuit2/*.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(Minuit2 LINKDEF LinkDef.h)
-ROOT_LINKER_LIBRARY(Minuit2 *.cxx G__Minuit2.cxx LIBRARIES MathCore Hist)
+ROOT_LINKER_LIBRARY(Minuit2 *.cxx G__Minuit2.cxx DEPENDENCIES MathCore Hist)
 ROOT_INSTALL_HEADERS()
 

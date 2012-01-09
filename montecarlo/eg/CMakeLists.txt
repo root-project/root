@@ -13,5 +13,5 @@ ROOT_USE_PACKAGE(math/physics)
 ROOT_GENERATE_DICTIONARY(G__${libname} T*.h  LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES Graf3d Graf Gpad MathCore )
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES Graf3d Graf Gpad MathCore )
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES Graf3d Graf Gpad MathCore )
 ROOT_INSTALL_HEADERS()
