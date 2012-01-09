@@ -26,7 +26,7 @@ ROOT_GENERATE_DICTIONARY(G__ASImage TASImage.h TASImagePlugin.h TASPluginGS.h LI
 ROOT_GENERATE_ROOTMAP(ASImage LINKDEF LinkDef.h DEPENDENCIES Graf MathCore)
 ROOT_LINKER_LIBRARY(ASImage TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx 
                     LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES}
-		    DEPENDENCIES Graf)
+                    DEPENDENCIES Graf)
 if(builtin_afterimage)
   add_dependencies(ASImage AFTERIMAGE)
 endif()

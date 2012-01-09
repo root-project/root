@@ -6,7 +6,7 @@ ROOT_USE_PACKAGE(cint/reflex)
 ROOT_USE_PACKAGE(core/metautils)
   
 #---Cintex library----------------------------------------------------------
-ROOT_LINKER_LIBRARY(Cintex *.cxx LIBRARIES Reflex Cint Core)  
+ROOT_LINKER_LIBRARY(Cintex *.cxx LIBRARIES Core DEPENDENCIES Reflex)  
 ROOT_GENERATE_ROOTMAP(Cintex LINKDEF LinkDef.h DEPENDENCIES Reflex)
 
 #---Install python modules--------------------------------------------------
