@@ -412,8 +412,11 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
        G__fprinterr(G__serr,"Exception %s: %s\n", buf2(), x.what());
     }
     else {
-       G__getexpr("#include <exception>");
-       buf.Format("new G__exception(\"%s\",\"CINT forwarded std::exception\")",x.what());
+       if (G__defined_tagname("G__exception", 2) != -1) {
+          buf.Format("new G__exception(\"%s\",\"CINT forwarded std::exception\")",x.what());
+       } else {
+          throw; // rethrow, better than nothing.
+       }
     }
 #endif
     G__exceptionbuffer = G__getexpr(buf);
@@ -465,12 +468,15 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
       throw std::runtime_error("CINT: Exception caught in compiled code");
     }
     //G__genericerror("Error: C++ exception caught");
-    G__getexpr("#include <exception>");
-    G__FastAllocString buf("new G__exception(\"G__exception\",\"CINT forwarded exception in compiled code\")");
-    G__exceptionbuffer = G__getexpr(buf);
-    G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
-    G__return = G__RETURN_TRY;
-    G__no_exec = 1;
+    if (G__defined_tagname("G__exception", 2) != -1) {
+       G__FastAllocString buf("new G__exception(\"G__exception\",\"CINT forwarded exception in compiled code\")");
+       G__exceptionbuffer = G__getexpr(buf);
+       G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
+       G__return = G__RETURN_TRY;
+       G__no_exec = 1;
+    } else {
+       throw; // rethrow, better than nothing.
+    }
   }
  return 0;
 #endif //ENABLE_CPP_EXCEPTIONS
