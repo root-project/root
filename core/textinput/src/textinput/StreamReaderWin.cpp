@@ -114,7 +114,14 @@ namespace textinput {
         WORD Key = buf.Event.KeyEvent.wVirtualKeyCode;
         if (buf.Event.KeyEvent.dwControlKeyState
           & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
+          if (buf.Event.KeyEvent.dwControlKeyState 
+             & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) {
+             // special "Alt Gr" case (equivalent to Ctrl+Alt)...
+            in.SetModifier(InputData::kModNone);
+          }
+          else {
             in.SetModifier(InputData::kModCtrl);
+          }
         }
         if ((Key >= 0x30 && Key <= 0x5A /*0-Z*/)
           || (Key >= VK_NUMPAD0 && Key <= VK_DIVIDE)

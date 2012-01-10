@@ -352,7 +352,7 @@ void ROOT::TextInputColorizer::ProcessCursorChange(size_t Cursor,
 
    size_t lenLine = input.length();
    // direction == -1: Cursor - 1 to front.
-   size_t scanBegin = Cursor - 1;
+   size_t scanBegin = (Cursor > 0) ? Cursor - 1 : 0;
    size_t scanLast = 0;
    if (direction == 1) {
       // direction == 1: Cursor + 1 to end.
