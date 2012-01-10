@@ -774,7 +774,7 @@ typedef int (*G__IgnoreInclude)();
 **************************************************************************/
 
 #ifdef G__LONGLINE
-#define G__ONELINE     G__LONGLINE  /* Length of subexpression,parameter,argument */
+#define G__ONELINE     1024  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME     G__LONGLINE  /* Variable name */
 #else
