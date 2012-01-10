@@ -94,25 +94,32 @@ function(ROOT_GET_SOURCES variable cwd )
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---REFLEX_GENERATE_DICTIONARY( dictionary headerfiles selectionfile OPTIONS opt1 opt2 ...)
+#---REFLEX_GENERATE_DICTIONARY( dictionary headerfiles SELECTION selectionfile OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
-macro(REFLEX_GENERATE_DICTIONARY dictionary _headerfiles _selectionfile)  
-  find_package(GCCXML)
-  find_package(ROOT)
-  PARSE_ARGUMENTS(ARG "OPTIONS" "" ${ARGN})  
-  if( IS_ABSOLUTE ${_selectionfile}) 
-   set( selectionfile ${_selectionfile})
+macro(REFLEX_GENERATE_DICTIONARY dictionary)  
+  PARSE_ARGUMENTS(ARG "SELECTION;OPTIONS" "" ${ARGN})  
+  #---Get List of header files---------------
+  set(headerfiles)
+  foreach(fp ${ARG_DEFAULT_ARGS})
+    file(GLOB files inc/${fp})
+    if(files)
+      foreach(f ${files})
+        if(NOT f MATCHES LinkDef)
+          set(headerfiles ${headerfiles} ${f})
+        endif()
+      endforeach()
+    else()
+      set(headerfiles ${headerfiles} ${fp})
+    endif()
+  endforeach()
+  #---Get Selection file------------------------------------
+  if(IS_ABSOLUTE ${ARG_SELECTION})
+    set(selectionfile ${ARG_SELECTION})
   else() 
-   set( selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${_selectionfile}) 
-  endif()
-  if( IS_ABSOLUTE ${_headerfiles}) 
-    set( headerfiles ${_headerfiles})
-  else()
-    set( headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${_headerfiles})
+    set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION}})
   endif()
  
   set(gensrcdict ${dictionary}_dict.cpp)
-
   if(MSVC)
     set(gccxmlopts "--gccxmlopt=\"--gccxml-compiler cl\"")
   else()
@@ -124,16 +131,16 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary _headerfiles _selectionfile)
   set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
 
   set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
-  get_directory_property(_incdirs INCLUDE_DIRECTORIES)
-  foreach( d ${_incdirs})    
+  get_directory_property(incdirs INCLUDE_DIRECTORIES)
+  foreach( d ${incdirs})    
    set(include_dirs ${include_dirs} -I${d})
   endforeach()
 
-  get_directory_property(_defs COMPILE_DEFINITIONS)
-  foreach( d ${_defs})    
+  get_directory_property(defs COMPILE_DEFINITIONS)
+  foreach( d ${defs})    
    set(definitions ${definitions} -D${d})
   endforeach()
-
+  
   add_custom_command(
     OUTPUT ${gensrcdict} ${rootmapname}     
     COMMAND ${ROOT_genreflex_cmd}       
@@ -143,8 +150,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary _headerfiles _selectionfile)
 
   # Creating this target at ALL level enables the possibility to generate dictionaries (genreflex step)
   # well before the dependent libraries of the dictionary are build  
-  add_custom_target(${dictionary}Gen ALL DEPENDS ${gensrcdict})
- 
+  add_custom_target(${dictionary}Gen ALL DEPENDS ${gensrcdict}) 
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
@@ -508,11 +514,12 @@ endmacro()
 #                        [TIMEOUT seconds] 
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
+#                        [WORKING_DIR dir]
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx])
 #
 function(ROOT_ADD_TEST test)
-  PARSE_ARGUMENTS(ARG "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;PROJECT;PASSREGEX;FAILREGEX;COMMAND;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS" 
+  PARSE_ARGUMENTS(ARG "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSREGEX;FAILREGEX;COMMAND;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS" 
                       "DEBUG" ${ARGN})
   #- Handle COMMAND argument
   list(LENGTH ARG_COMMAND _len)
@@ -555,6 +562,10 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_ERROR)
     set(_command ${_command} -DERR=${ARG_ERROR})
+  endif()
+  
+  if(ARG_WORKING_DIR)
+    set(_command ${_command} -DCWD=${ARG_WORKING_DIR})   
   endif()
 
   if(ARG_DEBUG)
