@@ -10,7 +10,8 @@ STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
 STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
 	$(filter-out stressRooFit_tests-test,\
-	$(notdir $(STRESSSRC:.cxx=-test)))))
+	$(filter-out stressRooStats_tests-test,\
+	$(notdir $(STRESSSRC:.cxx=-test))))))
 ifeq ($(findstring roofit,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
 endif
@@ -92,7 +93,7 @@ STRESSFILES := \
 	$(wildcard $(ROOT_LOC)/test/*.root))) \
 	$(ROOT_LOC)/test/Makefile
 
-	STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
+STRESSFILESHERE := $(subst $(ROOT_LOC)/,,$(STRESSFILES))
 STRESSFILESCOPIEDTAG := test/.COPIEDTAG
 
 
@@ -149,15 +150,11 @@ $(STRESSEXE): test/%: $(STRESSFILESCOPIEDTAG)
 # make sure $@ is newer than $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) touch $@
 
-# Copy files from $ROOT_LOC)/test to ./test/
+# Copy files from $(ROOT_LOC)/test to ./test/
 # so we don't build within $(ROOT_LOC)
 $(STRESSFILESHERE): test/%: $(ROOT_LOC)/test/%
 	$(CMDECHO) test -d test || mkdir -p test
 	$(CMDECHO) cp -f $< $@
-
-#test/Makefile.arch: $(ROOT_LOC)/etc/Makefile.arch
-#	$(CMDECHO) test -d test || mkdir -p test
-#	$(CMDECHO) cp -f $< $@
 
 test/libEvent.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
