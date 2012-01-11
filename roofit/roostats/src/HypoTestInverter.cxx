@@ -702,7 +702,6 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 // bool HybridNew::runLimit(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) {
 
    RooRealVar *r = fScannedVariable; 
-   r->setConstant(true);
    //w->loadSnapshot("clean");
 
   if ((hint != 0) && (*hint > r->getMin())) {
