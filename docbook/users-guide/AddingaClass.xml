@@ -107,7 +107,7 @@ and time by specifying:
 <programlisting language="c++">MyClass::Class()-&gt;IgnoreTObjectStreamer();
 </programlisting>
 
-<para>This sets a bit in the <emphasis role="bold"><code>TClass</code></emphasis> object. If the file is compressed, the savings are minimal since most values are zero; however, it saves some space when the file is not compressed. A call to<code> IgnoreObjectStreamer</code> also prevents the creation of two additional branches when splitting the object. If left alone, two branches called <code>fBits</code> and <code>fUniqueID</code> will appear.</para>
+<para>This sets a bit in the <emphasis role="bold"><code>TClass</code></emphasis> object. If the file is compressed, the savings are minimal since most values are zero; however, it saves some space when the file is not compressed. A call to<code> IgnoreTObjectStreamer</code> also prevents the creation of two additional branches when splitting the object. If left alone, two branches called <code>fBits</code> and <code>fUniqueID</code> will appear.</para>
 </sect2>
 </sect1>
 
