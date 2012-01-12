@@ -160,6 +160,7 @@ namespace PyROOT {
       Bool_t fKeepControl;
    };
 
+   PYROOT_DECLARE_ARRAY_CONVERTER( BoolArray );
    PYROOT_DECLARE_ARRAY_CONVERTER( ShortArray );
    PYROOT_DECLARE_ARRAY_CONVERTER( UShortArray );
    PYROOT_DECLARE_ARRAY_CONVERTER( IntArray );

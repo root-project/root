@@ -179,6 +179,7 @@ PyObject* PyROOT::T##name##ArrayExecutor::Execute( G__CallFunc* func, void* self
    return BufFac_t::Instance()->PyBuffer_FromMemory( (type*)func->ExecInt( self ) );\
 }
 
+PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Bool,   Bool_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Short,  Short_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( UShort, UShort_t )
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Int,    Int_t )
@@ -377,6 +378,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( ULongLong )
    PYROOT_EXECUTOR_FACTORY( CString )
    PYROOT_EXECUTOR_FACTORY( VoidArray )
+   PYROOT_EXECUTOR_FACTORY( BoolArray )
    PYROOT_EXECUTOR_FACTORY( ShortArray )
    PYROOT_EXECUTOR_FACTORY( UShortArray )
    PYROOT_EXECUTOR_FACTORY( IntArray )
@@ -424,6 +426,7 @@ namespace {
 
    // pointer/array factories
       NFp_t( "void*",              &CreateVoidArrayExecutor           ),
+      NFp_t( "bool*",              &CreateBoolArrayExecutor           ),
       NFp_t( "short*",             &CreateShortArrayExecutor          ),
       NFp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
       NFp_t( "int*",               &CreateIntArrayExecutor            ),

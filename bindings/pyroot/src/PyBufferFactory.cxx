@@ -40,6 +40,7 @@ namespace {
    PySequenceMethods Py##name##Buffer_SeqMethods = *(PyBuffer_Type.tp_as_sequence);\
    PyMappingMethods  Py##name##Buffer_MapMethods;
 
+   PYROOT_PREPARE_PYBUFFER_TYPE( Bool )
    PYROOT_PREPARE_PYBUFFER_TYPE( Short )
    PYROOT_PREPARE_PYBUFFER_TYPE( UShort )
    PYROOT_PREPARE_PYBUFFER_TYPE( Int )
@@ -144,6 +145,7 @@ namespace {
       return 0;                                                              \
    }
 
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Bool,   Bool_t,   Long_t,   PyBool_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Int,    Int_t,    Long_t,   PyInt_FromLong, PyInt_AsLong )
@@ -189,7 +191,9 @@ namespace {
    PyObject* buf_typecode( PyObject* pyobject, void* )
    {
    // return a typecode in the style of module array
-      if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
+      if ( PyObject_TypeCheck( pyobject, &PyBoolBuffer_Type ) )
+         return PyBytes_FromString( (char*)"b" );
+      else if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
          return PyBytes_FromString( (char*)"h" );
       else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
          return PyBytes_FromString( (char*)"H" );
@@ -257,6 +261,7 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
 // construct python buffer types
+   PYROOT_INSTALL_PYBUFFER_METHODS( Bool,   Bool_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( Short,  Short_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( UShort, UShort_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( Int,    Int_t )
@@ -296,6 +301,7 @@ PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, PyObject
    return buf;                                                                  \
 }
 
+PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Bool,   Bool_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Short,  Short_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( UShort, UShort_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Int,    Int_t )

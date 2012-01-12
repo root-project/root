@@ -177,6 +177,10 @@ inline Py_ssize_t PyNumber_AsSsize_t( PyObject* obj, PyObject* ) {
 # endif
 #endif
 
+#if PY_VERSION_HEX < 0x02020000
+#define PyBool_FromLong  PyInt_FromLong
+#endif
+
 #if PY_VERSION_HEX < 0x03000000
 // the following should quiet Solaris
 #ifdef Py_False

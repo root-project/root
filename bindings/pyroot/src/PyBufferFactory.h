@@ -17,6 +17,8 @@ class TPyBufferFactory {
 public:
    static TPyBufferFactory* Instance();
 
+   PyObject* PyBuffer_FromMemory( Bool_t* buf, Py_ssize_t size = -1 );
+   PyObject* PyBuffer_FromMemory( Bool_t* buf, PyObject* sizeCallback );
    PyObject* PyBuffer_FromMemory( Short_t* buf, Py_ssize_t size = -1 );
    PyObject* PyBuffer_FromMemory( Short_t* buf, PyObject* sizeCallback );
    PyObject* PyBuffer_FromMemory( UShort_t* buf, Py_ssize_t size = -1 );

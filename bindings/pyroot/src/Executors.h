@@ -52,6 +52,7 @@ namespace PyROOT {
 
 // pointer/array executors
    PYROOT_DECLARE_BASIC_EXECUTOR( VoidArray );
+   PYROOT_DECLARE_BASIC_EXECUTOR( BoolArray );
    PYROOT_DECLARE_BASIC_EXECUTOR( ShortArray );
    PYROOT_DECLARE_BASIC_EXECUTOR( UShortArray );
    PYROOT_DECLARE_BASIC_EXECUTOR( IntArray );

@@ -720,6 +720,7 @@ Bool_t PyROOT::T##name##ArrayConverter::ToMemory( PyObject* value, void* address
 }
 
 //____________________________________________________________________________
+PYROOT_IMPLEMENT_ARRAY_CONVERTER( Bool,   Bool_t,   'b' )   // signed char
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( Short,  Short_t,  'h' )
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( UShort, UShort_t, 'H' )
 PYROOT_IMPLEMENT_ARRAY_CONVERTER( Int,    Int_t,    'i' )
@@ -1136,6 +1137,7 @@ namespace {
    PYROOT_ARRAY_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstUCString )
+   PYROOT_ARRAY_CONVERTER_FACTORY( BoolArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( IntArray )
@@ -1181,6 +1183,7 @@ namespace {
       NFp_t( "#define",            &CreateMacroConverter              ),
 
    // pointer/array factories
+      NFp_t( "bool*",              &CreateBoolArrayConverter          ),
       NFp_t( "const unsigned char*", &CreateCStringConverter          ),
       NFp_t( "unsigned char*",     &CreateNonConstUCStringConverter   ),
       NFp_t( "short*",             &CreateShortArrayConverter         ),
