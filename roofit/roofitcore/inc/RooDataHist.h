@@ -88,8 +88,8 @@ public:
   }
   virtual Bool_t isNonPoissonWeighted() const ;
 
-  Double_t sum(Bool_t correctForBinSize) const ;
-  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
+  Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
+  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
 
   virtual Double_t weight() const { 
     // Return weight of current bin

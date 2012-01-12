@@ -59,6 +59,7 @@
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
+#include "RooVectorDataStore.h" 
 
 ClassImp(RooAbsOptTestStatistic)
 ;
@@ -602,6 +603,18 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // or a RooProduct respectively, track the components of these products instead
     // of the product term
     RooArgSet trackNodes ;
+
+
+    // Add safety check here - applyTrackingOpt will only be applied if present
+    // dataset is constructed in terms of a RooVectorDataStore
+    if (applyTrackingOpt) {
+      if (!dynamic_cast<RooVectorDataStore*>(_dataClone->store())) {
+	coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName() 
+			    << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
+			    << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << endl ;
+	applyTrackingOpt = kFALSE ;
+      }
+    }
 
     if (applyTrackingOpt) {
       RooArgSet branches ;

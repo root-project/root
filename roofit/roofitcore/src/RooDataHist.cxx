@@ -1490,7 +1490,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
 
 
 //_____________________________________________________________________________
-Double_t RooDataHist::sum(Bool_t correctForBinSize) const 
+Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const 
 {
   // Return the sum of the weights of all hist bins.
   //
@@ -1500,12 +1500,12 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   // represented by this histogram
 
   checkInit() ;
-    
+
   Int_t i ;
   Double_t total(0) ;
   for (i=0 ; i<_arrSize ; i++) {
     
-    Double_t theBinVolume = correctForBinSize ? _binv[i] : 1.0 ;
+    Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binv[i] : _binv[i]) : 1.0 ;
     // cout << "total += " << _wgt[i] << "*" << theBinVolume << endl ;
     total += _wgt[i]*theBinVolume ;
   }
@@ -1516,7 +1516,7 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
 
 
 //_____________________________________________________________________________
-Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize)
+Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseBinCor)
 {
   // Return the sum of the weights of a multi-dimensional slice of the histogram
   // by summing only over the dimensions specified in sumSet.
@@ -1579,7 +1579,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
     
     if (!skip) {
-      Double_t theBinVolume = correctForBinSize ? (*_pbinv)[ibin] : 1.0 ;
+      Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*_pbinv)[i] : (*_pbinv)[i] ) : 1.0 ;
 //       cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << endl ;
       total += _wgt[ibin]*theBinVolume ;
     }

@@ -733,11 +733,22 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
   // operating exclusively and directly on the data set dimensions, the equivalent
   // constructor with a string based cut expression is recommended.
 
-  // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars,*intree,cutVar,wgtVarName) ;
+  // Create tree version of datastore 
+  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*intree,cutVar,wgtVarName) ;
 
+  // Convert to vector datastore if needed
+  if (defaultStorageType==Tree) {
+    _dstore = tstore ;
+  } else if (defaultStorageType==Vector) {
+    RooVectorDataStore* vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
+    _dstore = vstore ;
+    _dstore->append(*tstore) ;
+    delete tstore ;
+  } else {
+    _dstore = 0 ;
+  }
+  
   appendToDir(this,kTRUE) ;
-
   initialize(wgtVarName) ;
 }
 
@@ -763,8 +774,20 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
   // equivalent constructor accepting RooFormulaVar reference as cut specification
   //
 
-  // Initialize datastore
-  _dstore = new RooTreeDataStore(name,title,_vars,*intree,selExpr,wgtVarName) ;
+  // Create tree version of datastore 
+  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*intree,selExpr,wgtVarName) ;
+
+  // Convert to vector datastore if needed
+  if (defaultStorageType==Tree) {
+    _dstore = tstore ;
+  } else if (defaultStorageType==Vector) {
+    RooVectorDataStore* vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
+    _dstore = vstore ;
+    _dstore->append(*tstore) ;
+    delete tstore ;
+  } else {
+    _dstore = 0 ;
+  }
 
   appendToDir(this,kTRUE) ;
 
