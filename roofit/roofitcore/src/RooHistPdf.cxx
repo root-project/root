@@ -354,11 +354,13 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
   }  
 
 
-  Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE) ;
-//   cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+  Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) ;
+
 //   cout << "intSet = " << intSet << endl ;
 //   cout << "slice position = " << endl ;
 //   _histObsList.Print("v") ;
+//   cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+
   return ret ;
 }
 
