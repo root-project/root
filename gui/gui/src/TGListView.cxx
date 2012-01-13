@@ -1463,8 +1463,8 @@ void TGListView::Layout()
       }
       fHeader->UnmapWindow();
    }
+   // coverity[null_returns]
    TGLayoutManager *lm = container->GetLayoutManager();
-
    lm->SetDefaultWidth(xl);
    TGCanvas::Layout();
 
