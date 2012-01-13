@@ -1102,7 +1102,7 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
       TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
       buf.SetReadMode();
       TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
-      if (obj->InheritsFrom("TMacro")) {
+      if (obj && obj->InheritsFrom("TMacro")) {
          TMacro *macro = (TMacro *)obj;
          TIter next(macro->GetListOfLines());
          TObjString *objs;
@@ -1110,7 +1110,7 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
             AddLine(objs->GetName());
          }
       }
-      else if (obj->InheritsFrom("TSystemFile")) {
+      else if (obj && obj->InheritsFrom("TSystemFile")) {
          TSystemFile *sfile = (TSystemFile *)obj;
          LoadFile(sfile->GetName());
          DataDropped(sfile->GetName());
