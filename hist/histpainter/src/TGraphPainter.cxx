@@ -2305,10 +2305,10 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
-   Double_t *theEXlow  = theGraph->GetEXlow();
-   Double_t *theEYlow  = theGraph->GetEYlow();
-   Double_t *theEXhigh = theGraph->GetEXhigh();
-   Double_t *theEYhigh = theGraph->GetEYhigh();
+   Double_t *theEXlow  = theGraph->GetEXlow();  if (!theEXlow) return;
+   Double_t *theEYlow  = theGraph->GetEYlow();  if (!theEYlow) return;
+   Double_t *theEXhigh = theGraph->GetEXhigh(); if (!theEXhigh) return;
+   Double_t *theEYhigh = theGraph->GetEYhigh(); if (!theEYhigh) return;
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
