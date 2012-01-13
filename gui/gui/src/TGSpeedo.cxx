@@ -490,6 +490,7 @@ void TGSpeedo::DrawNeedle()
    if (fImage2 && fImage2->IsValid()) {
       // First clone original image.
       TImage *img = (TImage*)fImage2->Clone("img");
+      if (!img || !img->IsValid()) return;
       if (fPeakMark) {
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#00ff00", 3);
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffffff", 1);
@@ -526,6 +527,7 @@ void TGSpeedo::DrawText()
       if (fImage2 && fImage2->IsValid())
          delete fImage2;
       fImage2 = (TImage*)fImage->Clone("fImage2");
+      if (!fImage2 || !fImage2->IsValid()) return;
       TString fp = gEnv->GetValue("Root.TTFontPath", "");
       TString ar = fp + "/arialbd.ttf";
       // format counter value
@@ -606,6 +608,7 @@ void TGSpeedo::DoRedraw()
       if (fImage2 && fImage2->IsValid())
          delete fImage2;
       fImage2 = (TImage*)fImage->Clone("fImage2");
+      if (!fImage2 || !fImage2->IsValid()) return;
       TString fp = gEnv->GetValue("Root.TTFontPath", "");
       TString ar = fp + "/arialbd.ttf";
       // format counter value
@@ -640,6 +643,7 @@ void TGSpeedo::DoRedraw()
       strSize = gVirtualX->TextWidth(fTextFS, fDisplay2.Data(), fDisplay2.Length()) - 6;
       fImage2->DrawText((Int_t)xc - (strSize / 2), (Int_t)yc + 38, fDisplay2.Data(), 8, "#ffffff", ar);
       TImage *img = (TImage*)fImage2->Clone("img");
+      if (!img || !img->IsValid()) return;
       if (fPeakMark) {
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#00ff00", 3);
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffffff", 1);
