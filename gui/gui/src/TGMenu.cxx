@@ -1319,7 +1319,7 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
    // Handle button event in the popup menu.
 
    int   id;
-   void *ud;
+   void *ud = 0;
 
    if (event->fType == kButtonRelease) {
       if (fStick) {
