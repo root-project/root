@@ -1825,7 +1825,9 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    // font + GC
    option = GetName()+5;         // unique digit id of the name
    TString parGC, parFont;
+   // coverity [null_returns]
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   // coverity [null_returns]
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC.GetGC())) {
