@@ -121,10 +121,10 @@ const char *TRootDialog::GetParameters()
 
       nparam++;
 
-      const char *type = str->GetString().Data();
+      const char *type = str ? str->GetString().Data() : 0;
       const char *data = 0;
 
-      if (obj->IsA() == TGTextEntry::Class())
+      if (obj && obj->IsA() == TGTextEntry::Class())
          data = ((TGTextEntry *) obj)->GetBuffer()->GetString();
 
       // TODO: Combobox...
@@ -138,7 +138,7 @@ const char *TRootDialog::GetParameters()
       }
 
       if (params.Length()) params += ",";
-      if (data) {
+      if (type && data) {
          if (!strncmp(type, "char*", 5))
             param = TString::Format("\"%s\"", data);
          else
