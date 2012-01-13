@@ -51,6 +51,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
       PMsgBox(title, msg, icon, buttons, ret_code, text_align);
    else
       MakeZombie();
+   // coverity [uninit_ctor]
 }
 
 //______________________________________________________________________________
@@ -106,6 +107,7 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
       PMsgBox(title, msg, icon_pic, buttons, ret_code, text_align);
    else
       MakeZombie();
+   // coverity [uninit_ctor]
 }
 
 //______________________________________________________________________________
