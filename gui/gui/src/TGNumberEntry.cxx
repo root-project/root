@@ -1062,7 +1062,7 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
                                        ULong_t back)
    : TGTextEntry(p, new TGTextBuffer(), id, norm, font, option, back),
      fNeedsVerification(kFALSE), fNumStyle(kNESReal), fNumAttr(kNEAAnyNumber),
-     fNumLimits(kNELNoLimits)
+     fNumLimits(kNELNoLimits), fNumMin(0.0), fNumMax(1.0)
 {
    // Constructs a number entry field.
 
