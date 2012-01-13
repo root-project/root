@@ -28,6 +28,7 @@ public:
       fFloat  = -44.f;
       fDouble = -55.;
 
+      fBoolArray2   = new Bool_t[N];
       fShortArray2  = new Short_t[N];
       fUShortArray2 = new UShort_t[N];
       fIntArray2    = new Int_t[N];
@@ -39,6 +40,8 @@ public:
       fDoubleArray2 = new Double_t[N];
 
       for ( int i = 0; i < N; ++i ) {
+         fBoolArray[i]    =  Bool_t(i%2);
+         fBoolArray2[i]   =  Bool_t((i+1)%2);
          fShortArray[i]   =  -1*i;
          fShortArray2[i]  =  -2*i;
          fUShortArray[i]  =   3u*i;
@@ -71,6 +74,7 @@ public:
 
    void DestroyArrays() {
       if ( fOwnsArrays == true ) {
+         delete[] fBoolArray2;
          delete[] fShortArray2;
          delete[] fUShortArray2;
          delete[] fIntArray2;
@@ -98,6 +102,8 @@ public:
    Float_t  GetFloat()  { return fFloat; }
    Double_t GetDouble() { return fDouble; }
 
+   Bool_t*   GetBoolArray()    { return fBoolArray; }
+   Bool_t*   GetBoolArray2()   { return fBoolArray2; }
    Short_t*  GetShortArray()   { return fShortArray; }
    Short_t*  GetShortArray2()  { return fShortArray2; }
    UShort_t* GetUShortArray()  { return fUShortArray; }
@@ -144,6 +150,8 @@ public:
    Double_t fDouble;
 
 // array types
+   Bool_t    fBoolArray[N];
+   Bool_t*   fBoolArray2;
    Short_t   fShortArray[N];
    Short_t*  fShortArray2;
    UShort_t  fUShortArray[N];
@@ -166,6 +174,7 @@ public:
    Pod fPod;
 
 public:
+   static Bool_t   sBool;
    static Char_t   sChar;
    static UChar_t  sUChar;
    static Short_t  sShort;
@@ -181,6 +190,7 @@ private:
    bool fOwnsArrays;
 };
 
+Bool_t   ClassWithData::sBool   = kFALSE;
 Char_t   ClassWithData::sChar   = 's';
 UChar_t  ClassWithData::sUChar  = 'u';
 Short_t  ClassWithData::sShort  = -101;

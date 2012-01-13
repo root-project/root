@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 09/30/10
+# Last: 01/12/12
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -44,6 +44,10 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       self.assertEqual( round( c.fDouble + 55., 8 ), 0 )
 
       for i in range(N):
+         self.assertEqual( c.fBoolArray[i],         i%2 )
+	 self.assertEqual( c.GetBoolArray()[i],     i%2 )
+	 self.assertEqual( c.fBoolArray2[i],    (i+1)%2 )
+	 self.assertEqual( c.GetBoolArray2()[i], (i+1)%2)
          self.assertEqual( c.fShortArray[i],       -1*i )
          self.assertEqual( c.GetShortArray()[i],   -1*i )
          self.assertEqual( c.fShortArray2[i],      -2*i )

@@ -140,6 +140,29 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
+   def test7WriteNonTObject( self ):
+      """Test writing of a non-TObject derived instance"""
+
+      f = TFile( self.fname, 'RECREATE' )
+
+      myarray = TArrayI( 1 )
+      f.WriteObject( myarray, 'myarray' )
+
+      f.Close()
+
+   def test8ReadNonTObject( self ):
+      """Test reading of a non-TObject derived instance"""
+
+      f = TFile( self.fname )
+
+      #myarray = f.Get( 'myarray' )
+      #self.assert_( isinstance( myarray, TArrayI ) )
+
+      myarray = MakeNullPointer( TArrayI )
+      f.GetObject( 'myarray', myarray )
+
+      f.Close()
+
 
 ## actual test run
 if __name__ == '__main__':

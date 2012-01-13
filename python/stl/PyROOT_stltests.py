@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 09/30/10
+# Last: 06/27/11
 
 """STL unit tests for PyROOT package."""
 
@@ -34,7 +34,9 @@ class STL1VectorTestCase( MyTestCase ):
       for i in range(self.N):
          a[i] = i
          self.assertEqual( a[i], i )
+         self.assertEqual( a.at(i), i )
 
+      self.assertEqual( a.size(), self.N )
       self.assertEqual( len(a), self.N )
 
    def test2BuiltinVectorType( self ):
@@ -43,8 +45,11 @@ class STL1VectorTestCase( MyTestCase ):
       a = std.vector( 'double' )()
       for i in range(self.N):
          a.push_back( i )
+         self.assertEqual( a.size(), i+1 )
          self.assertEqual( a[i], i )
+         self.assertEqual( a.at(i), i )
 
+      self.assertEqual( a.size(), self.N )
       self.assertEqual( len(a), self.N )
 
    def test3GeneratedVectorType( self ):

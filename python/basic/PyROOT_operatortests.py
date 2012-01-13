@@ -48,7 +48,7 @@ class Cpp1OperatorsTestCase( MyTestCase ):
       n -= Number(10)
       n *= Number(10)
       n /= Number(2)
-      self.failUnlessEqual( n ,Number(100) )
+      self.failUnlessEqual( n, Number(100) )
 
       nn = -n;
       self.failUnlessEqual( nn, Number( -100 ) )

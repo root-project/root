@@ -19,7 +19,7 @@ endif
 
 PyROOT_cpptests.log: Namespace_C.$(DllSuf) PointerPassing_C.$(DllSuf)
 
-PyROOT_cpptests: PyROOT_cpptests.log
+PyROOT_cpptests: PyROOT_cpptests.log PyROOT_advancedtests.log
 	$(TestDiff)
 
 PyROOT_advancedtests.log: AdvancedCpp_C.$(DllSuf) Template_C.$(DllSuf)

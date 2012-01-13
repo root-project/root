@@ -7,6 +7,15 @@ Test accessibility to macro classes ... ok
 Test doc strings existence ... ok
 Test (un)bound method calls ... ok
 Test whether the GIL can be properly released ... ok
+Test passing a TString by value through an interpreted function ... ok
+Test passing a TString by reference through an interpreted function ... ok
+Test passing a TLorentzVector by value through an interpreted function ... ok
+Test passing a TLorentzVector by reference through an interpreted function ... ok
+Test passing a TString by value through a compiled function ... ok
+Test passing a TString by reference through a compiled function ... ok
+Test passing a TLorentzVector by value through a compiled function ... ok
+Test passing a TLorentzVector by reference through a compiled function ... ok
+Test passing by-reference of builtin types ... ok
 Test string/TString/TObjString compatibility ... ok
 Test list/TList behavior and compatibility ... ok
 Test TVector2/3/T behavior ... ok

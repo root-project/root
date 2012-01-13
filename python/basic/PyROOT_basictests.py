@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 10/03/10
+# Last: 07/25/11
 
 """Basic unit tests for PyROOT package."""
 
@@ -15,7 +15,8 @@ __all__ = [
    'Basic1ModuleTestCase',
    'Basic2SetupTestCase',
    'Basic3PythonLanguageTestCase',
-   'Basic4PythonizationTestCase'
+   'Basic4ArgumentPassingTestCase',
+   'Basic5PythonizationTestCase',
 ]
 
 
@@ -113,8 +114,113 @@ class Basic3PythonLanguageTestCase( MyTestCase ):
       gROOT.GetVersion()
 
 
+### basic C++ argument basic (value/ref and compiled/interpreted) ============
+class Basic4ArgumentPassingTestCase( MyTestCase ):
+   def test1TStringByValueInterpreted( self ):
+      """Test passing a TString by value through an interpreted function"""
+
+      gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
+
+      f = InterpretedTest.StringValueArguments
+
+      self.assertEqual( f( 'aap' ), 'aap' )
+#      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1 ), 'default' )
+#      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+
+   def test2TStringByRefInterpreted( self ):
+      """Test passing a TString by reference through an interpreted function"""
+
+      # script ArgumentPassingInterpreted.C already loaded in by value test
+
+      f = InterpretedTest.StringRefArguments
+
+      self.assertEqual( f( 'aap' ), 'aap' )
+#      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1 ), 'default' )
+#      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+
+   def test3TLorentzVectorByValueInterpreted( self ):
+      """Test passing a TLorentzVector by value through an interpreted function"""
+
+      # script ArgumentPassingInterpreted.C already loaded in by value test
+
+      return # TODO: THIS FUNCTIONALITY IS YET TO BE IMPLEMENTED
+
+      f = InterpretedTest.LorentzVectorValueArguments
+
+      TLorentzVector( 5, 6, 7, 8 ).Print()
+#      f( TLorentzVector( 5, 6, 7, 8 ) ).Print()
+      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
+#      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+
+   def test4TLorentzVectorByRefInterpreted( self ):
+      """Test passing a TLorentzVector by reference through an interpreted function"""
+
+      # script ArgumentPassingInterpreted.C already loaded in by value test
+
+      f = InterpretedTest.LorentzVectorRefArguments
+
+      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
+      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+
+   def test5TStringByValueCompiled( self ):
+      """Test passing a TString by value through a compiled function"""
+
+      gROOT.LoadMacro( 'ArgumentPassingCompiled.C+' )
+
+      f = CompiledTest.StringValueArguments
+
+      self.assertEqual( f( 'aap' ), 'aap' )
+      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+
+   def test6TStringByRefCompiled( self ):
+      """Test passing a TString by reference through a compiled function"""
+
+      # script ArgumentPassingCompiled.C already loaded in by value test
+
+      f = CompiledTest.StringRefArguments
+
+      self.assertEqual( f( 'aap' ), 'aap' )
+      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+
+   def test7TLorentzVectorByValueCompiled( self ):
+      """Test passing a TLorentzVector by value through a compiled function"""
+
+      # script ArgumentPassingCompiled.C already loaded in by value test
+
+      f = CompiledTest.LorentzVectorValueArguments
+
+      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
+      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+
+   def test8TLorentzVectorByRefCompiled( self ):
+      """Test passing a TLorentzVector by reference through a compiled function"""
+
+      # script ArgumentPassingCompiled.C already loaded in by value test
+
+      f = CompiledTest.LorentzVectorRefArguments
+
+      self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
+      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+
+   def test9ByRefPassing( self ):
+      """Test passing by-reference of builtin types"""
+
+      import array, sys
+
+      if 'linux' in sys.platform:
+         a = array.array('I',[0])
+         val = CompiledTest.UnsignedIntByRef( a )
+         self.assertEqual( a[0], val )
+
+
 ### basic extension features test cases ======================================
-class Basic4PythonizationTestCase( MyTestCase ):
+class Basic5PythonizationTestCase( MyTestCase ):
    def test1Strings( self ):
       """Test string/TString/TObjString compatibility"""
 

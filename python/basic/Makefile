@@ -18,6 +18,8 @@ ifeq ($(FAIL),)
 endif
 
 
+PyROOT_basictests.log: ArgumentPassingCompiled_C.$(DllSuf)
+
 PyROOT_basictests: PyROOT_basictests.log
 	$(TestDiff)
 

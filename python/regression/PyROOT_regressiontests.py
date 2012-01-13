@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 12/07/10
+# Last: 05/04/11
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -30,7 +30,8 @@ __all__ = [
    'Regression11CoralAttributeListIterators',
    'Regression12ImportCout',
    'Regression13WriteTGraph',
-   'Regression14BaseClassUsing'
+   'Regression14BaseClassUsing',
+   'Regression15TPyException'
 ]
 
 
@@ -296,6 +297,16 @@ class Regression14BaseClassUsing( MyTestCase ):
 
       p = TPySelector()
       str( p.fInput )        # segfaults in case of failure
+
+
+### TPyException had troubles due to its base class of std::exception ========
+class Regression15TPyException( MyTestCase ):
+   def test1PythonAccessToTPyException( self ):
+      """Load TPyException into python and make sure its usable"""
+
+      e = PyROOT.TPyException()
+      self.assert_( e )
+      self.assertEqual( e.what(), "python exception" )
 
 
 ## actual test run

@@ -117,7 +117,7 @@ public:
 template class std::vector< RefTester >;
 
 
-// helper for math conversionts
+// helper for math conversions
 class Convertible {
 public:
    Convertible() : m_i( -99 ), m_d( -99. ) {}
@@ -157,6 +157,7 @@ double myGlobalDouble = 12.;
 double myGlobalArray[500];
 
 
+// helper class for life-line testing
 class SomeClassWithData {
 public:
    class SomeData {
