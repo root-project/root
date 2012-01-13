@@ -31,12 +31,13 @@ class TGeoBranchArray : public TObject
 {
 protected:
    UShort_t          fLevel;          // Branch depth
-   UShort_t         *fArray;          //[fLevel] Array of daughter indices
+   UShort_t          fMaxLevel;       // Array length
+   UShort_t         *fArray;          //[fMaxLevel] Array of daughter indices
    TGeoHMatrix      *fMatrix;         // Global matrix (owned)
    TObject          *fClient;         // Client object to notify
 
 public:
-   TGeoBranchArray() : TObject(), fLevel(0), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
+   TGeoBranchArray() : TObject(), fLevel(0), fMaxLevel(10), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
    TGeoBranchArray(UShort_t level);
    virtual ~TGeoBranchArray();
 
@@ -67,7 +68,7 @@ public:
    static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
    void              UpdateNavigator(TGeoNavigator *nav) const;
    
-   ClassDef(TGeoBranchArray, 2)
+   ClassDef(TGeoBranchArray, 3)
 };
 
 struct compareBAasc {

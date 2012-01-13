@@ -35,12 +35,14 @@ ClassImp(TGeoBranchArray)
 //______________________________________________________________________________
 TGeoBranchArray::TGeoBranchArray(UShort_t level)
                 :fLevel(level),
+                 fMaxLevel(0),
                  fArray(NULL),
                  fMatrix(NULL),
                  fClient(NULL)
 {
 // Constructor. Alocates the array with a size given by level.
-   fArray = new UShort_t[level];
+   fMaxLevel = (fLevel > 10) ? fLevel:10;
+   fArray = new UShort_t[fMaxLevel];
 }
 
 //______________________________________________________________________________
@@ -55,13 +57,17 @@ TGeoBranchArray::~TGeoBranchArray()
 TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
                 :TObject(other),
                  fLevel(other.fLevel),
+                 fMaxLevel(other.fMaxLevel),
                  fArray(NULL),
                  fMatrix(NULL),
                  fClient(other.fClient)
 {
 // Copy constructor.
-   if (fLevel) fArray = new UShort_t[fLevel];
-   if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));
+   if (fMaxLevel) {
+      fArray = new UShort_t[fMaxLevel];
+      if (fLevel) memcpy(fArray, other.fArray, fLevel*sizeof(UShort_t));
+   }
+   if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));   
 }   
       
 //______________________________________________________________________________
@@ -70,8 +76,20 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 // Assignment.
    if (&other == this) return *this;
    TThread::Lock();
+   TObject::operator=(other);
+   // Check if the array exists and has to be resized
+   if (fArray) {
+      if (fMaxLevel<other.fLevel) {
+         fMaxLevel = other.fMaxLevel;
+         delete [] fArray;
+         fArray = new UShort_t[fMaxLevel];
+      }
+   } else {
+      fMaxLevel = other.fMaxLevel;
+      fArray = new UShort_t[fMaxLevel];
+   }   
    fLevel = other.fLevel;
-   if (fLevel) fArray = new UShort_t[fLevel];
+   if (fLevel) memcpy(fArray, other.fArray, fLevel*sizeof(UShort_t));
    if (other.fMatrix) {
       fMatrix = new TGeoHMatrix();
       fMatrix->CopyFrom(other.fMatrix);
@@ -217,14 +235,14 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(nav->GetCurrentMatrix());
    if (!level) {
-//      delete [] fArray; fArray = 0;
       fLevel = 0;
       TThread::UnLock();
       return;
    }
-   if (!fArray || level>fLevel) {
+   if (!fArray || level>fMaxLevel) {
       delete [] fArray; 
-      fArray = new UShort_t[level];
+      fMaxLevel = level;
+      fArray = new UShort_t[fMaxLevel];
    }
    fLevel = level;
    TGeoNode *mother = nav->GetMother(fLevel);
