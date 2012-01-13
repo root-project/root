@@ -50,6 +50,7 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
 
    if (!p && !main) {
       MakeZombie();
+      // coverity [uninit_ctor]
       return;
    }
    SetCleanup(kDeepCleanup);
