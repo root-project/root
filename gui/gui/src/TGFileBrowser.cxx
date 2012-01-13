@@ -1414,7 +1414,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                TObject *obj2 = static_cast<TObject *>(item->GetUserData());
                // only delete TObjString as they are the only objects
                // created who have to be deleted
-               delete dynamic_cast<TObjString *>(obj2);
+               TObjString *ostr = dynamic_cast<TObjString *>(obj2);
+               if (ostr) delete ostr;
             }
             item->SetUserData(rfile);
             fNKeys = rfile->GetListOfKeys()->GetEntries();
