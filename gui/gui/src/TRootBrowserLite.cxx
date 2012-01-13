@@ -2172,7 +2172,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  break;
                               }
                            }
-                           if (obj2->InheritsFrom("TTree")) {
+                           if (obj2 && obj2->InheritsFrom("TTree")) {
                               // if a tree not attached to any directory (e.g. in a TFolder)
                               // then attach it to the current directory (gDirectory)
                               cmd = TString::Format("((TTree *)0x%lx)->GetDirectory();",
