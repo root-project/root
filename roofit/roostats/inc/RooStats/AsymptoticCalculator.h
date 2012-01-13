@@ -110,6 +110,7 @@ namespace RooStats {
       mutable RooAbsData * fAsimovData;   // asimov data set 
       RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables 
       mutable RooArgSet  fBestFitPoi;       // snapshot of best fitted POI values
+      mutable RooArgSet  fBestFitParams;       // snapshot of all best fitted Parameter values
       
       
    };
