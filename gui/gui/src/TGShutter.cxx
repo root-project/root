@@ -343,6 +343,7 @@ TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
 
    if (!p && !s) {
       MakeZombie();
+      // coverity [uninit_ctor]
       return;
    }
    fButton = new TGTextButton(this, s, id);
