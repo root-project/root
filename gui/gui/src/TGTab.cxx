@@ -237,7 +237,7 @@ void TGTabLayout::Layout()
       tw = el->fFrame->GetDefaultWidth();
       if (i == fMain->GetCurrent()) {
          el->fFrame->MoveResize(xtab-2, 0, tw+3, tabh+1);
-         elnxt->fFrame->RaiseWindow();
+         if (elnxt) elnxt->fFrame->RaiseWindow();
          el->fFrame->RaiseWindow();
       } else {
          el->fFrame->MoveResize(xtab, 2, tw, tabh-1);
@@ -247,8 +247,10 @@ void TGTabLayout::Layout()
       if (nw > 32768) nw = 1;
       UInt_t nh = (h - tabh - (bw << 1));
       if (nh > 32768) nh = 1;
-      elnxt->fFrame->MoveResize(bw, tabh + bw, nw, nh);
-      elnxt->fFrame->Layout();
+      if (elnxt) {
+         elnxt->fFrame->MoveResize(bw, tabh + bw, nw, nh);
+         elnxt->fFrame->Layout();
+      }
       xtab += (Int_t)tw;
       i++;
    }
@@ -269,9 +271,11 @@ TGDimension TGTabLayout::GetDefaultSize() const
       dsize_te = el->fFrame->GetDefaultSize();
       size_te.fWidth += dsize_te.fWidth;
       elnxt = (TGFrameElement *) next();
-      dsize = elnxt->fFrame->GetDefaultSize();
-      if (size.fWidth < dsize.fWidth) size.fWidth = dsize.fWidth;
-      if (size.fHeight < dsize.fHeight) size.fHeight = dsize.fHeight;
+      if (elnxt) {
+         dsize = elnxt->fFrame->GetDefaultSize();
+         if (size.fWidth < dsize.fWidth) size.fWidth = dsize.fWidth;
+         if (size.fHeight < dsize.fHeight) size.fHeight = dsize.fHeight;
+      }
    }
 
    // check if tab elements make a larger width than the containers
@@ -472,7 +476,7 @@ void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
          tw = el->fFrame->GetDefaultWidth();
          if (count == fCurrent) {
             el->fFrame->MoveResize(xtab-2, 0, tw+3, fTabh+1);
-            elnxt->fFrame->RaiseWindow();
+            if (elnxt) elnxt->fFrame->RaiseWindow();
             el->fFrame->RaiseWindow();
          } else {
             el->fFrame->MoveResize(xtab, 2, tw, fTabh-1);
@@ -565,7 +569,7 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 
    while (next()) {
       el = (TGFrameElement *) next();
-      if (count == tabIndex)
+      if (el && count == tabIndex)
          return (TGCompositeFrame *) el->fFrame;
       count++;
    }
