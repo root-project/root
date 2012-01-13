@@ -63,6 +63,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
 
    if (!p && !main) {
       MakeZombie();
+      // coverity [uninit_ctor]
       return;
    }
    fRetCode = ret_code;
@@ -314,6 +315,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
 
    if (!p && !main) {
       MakeZombie();
+      // coverity [uninit_ctor]
       return;
    }
    fPrinter      = printerName;
@@ -543,6 +545,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
 
    if (!p && !main) {
       MakeZombie();
+      // coverity [uninit_ctor]
       return;
    }
    fRetCode = ret_code;
