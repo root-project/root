@@ -33,6 +33,10 @@
 #include "Math/MinimizerOptions.h"
 #include "RooPoisson.h"
 #include "RooUniform.h"
+#include "RooGamma.h"
+#include "RooGaussian.h"
+#include "RooBifurGauss.h"
+#include "RooLognormal.h"
 #include <cmath>
 #include <typeinfo>
 
@@ -130,6 +134,11 @@ AsymptoticCalculator::AsymptoticCalculator(
       std::cout << "Best fitted POI\n";
       fBestFitPoi.Print("v");
    }
+   // keep snapshot of all best fit parameters
+   RooArgSet * allParams = nullPdf->getParameters(*obsData);
+   RemoveConstantParameters(allParams);
+   allParams->snapshot(fBestFitParams);
+   delete allParams;
    
    // compute Asimov data set for the background (alt poi ) value
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
@@ -313,6 +322,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     // reset the parameter free which where set as constant
     if (poiSet && paramsSetConstant.getSize() > 0) SetAllConstant(paramsSetConstant,false);
 
+
     delete allParams;
     delete nll;
 
@@ -346,7 +356,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
    assert(nullSnapshot && nullSnapshot->getSize() > 0);
-
+   
    // use as POI the nullSnapshot
    // if more than one POI exists, consider only the first one
    RooArgSet poiTest(*nullSnapshot);
@@ -355,6 +365,9 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator::GetHypoTest: snapshot has more than one POI - assume as POI first parameter " << std::endl;         
    }
 
+   RooArgSet * allParams = nullPdf->getParameters(*GetData() );
+   *allParams = fBestFitParams;
+   delete allParams;
 
    // evaluate the conditional NLL on the observed data for the snapshot value
    double condNLL = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()), &poiTest);
@@ -772,7 +785,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 
    RooRealVar * weightVar = new RooRealVar("binWeightAsimov", "binWeightAsimov", 1, 0, 1.E30 );
 
-   if (printLevel >= 1) cout <<" check expectedData by category"<<endl;
+   if (printLevel > 1) cout <<" Generate Asimov data for observables"<<endl;
   //RooDataSet* simData=NULL;
    const RooSimultaneous* simPdf = dynamic_cast<const RooSimultaneous*>(&pdf);
    if (!simPdf) { 
@@ -901,7 +914,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    RooAbsData * asimov = GenerateAsimovData(*model.GetPdf() , *model.GetObservables() );
    
    if (verbose>0) {
-      std::cout << "Generated Asimov data with time : ";  tw.Print(); 
+      std::cout << "Generated Asimov data for observables with time : ";  tw.Print(); 
    }
 
 
@@ -909,8 +922,20 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    // Their values must be the one satisfying the constraint. 
    // to do it make a nuisance pdf with all product of constraints and then 
    // assign to each constraint a glob observable value = to the current fitted nuisance parameter value
+   // IN general  one should solve in general the system of equations f( gobs| nuispar ) = 0 where f are the 
+   //  derivatives of the constraint with respect the nuisance parameter and they are evaluated at the best fit nuisance
+   // parameter points
+   // As simple solution assume that constrain has a direct dependence on the nuisance parameter, i.e. 
+   // Constraint (gobs, func( nuispar) ) and the condifion is satisfied for 
+   // gobs = func( nuispar) where nunispar is at the MLE value
+
 
    if (model.GetGlobalObservables() && model.GetGlobalObservables()->getSize() > 0) {
+
+      if (verbose>1) {
+         std::cout << "Generating Asimov data for global observables " << std::endl; 
+      }
+
       RooArgSet gobs(*model.GetGlobalObservables());
 
       // snapshot data global observables
@@ -939,36 +964,71 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
          if (cgobs->getSize() != 1) {
             oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName() 
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
-            continue;
+            continue; 
          }
          RooRealVar &rrv = dynamic_cast<RooRealVar &>(*cgobs->first());
 
-         RooAbsReal *match = 0;
-         if (cpars->getSize() == 1) {
-            match = dynamic_cast<RooAbsReal *>(cpars->first());
-         } else {
-            std::auto_ptr<TIterator> iter2(cpars->createIterator());
-            for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
-               RooRealVar *rrv2 = dynamic_cast<RooRealVar *>(a2); 
-               if (rrv2 != 0 && !rrv2->isConstant()) {
-                  if (match != 0) {
-                     oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
-                                                     << cterm->GetName() << " has multiple floating params" << std::endl;
-                     return 0; 
-                  }
-                  match = rrv2;
+         // remove the constant parameters in cpars 
+         RooStats::RemoveConstantParameters(cpars.get());
+         if (cpars->getSize() != 1) {
+            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                            << cterm->GetName() << " has multiple floating params - cannot generate - skip it " << std::endl;
+            continue;
+         }
+
+         // look at server of the constraint term
+         RooAbsArg * arg = cterm->findServer(rrv); 
+         if (!arg) {
+            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                            << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
+            continue;
+
+         }
+         std::auto_ptr<TIterator> iter2(cterm->serverIterator() );
+         bool foundServer = false;
+         // note : this will work only for thi stype of constraints
+         // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
+         TClass * cClass = cterm->IsA();
+         if (verbose > 2) std::cout << "Constraint " << cterm->GetName() << " of type " << cClass->GetName() << std::endl;
+         if ( cClass != RooGaussian::Class() && cClass != RooPoisson::Class() &&
+              cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
+              cClass != RooBifurGauss::Class()  )          
+            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                            << cterm->GetName() << " of type " << cClass->GetName() 
+                                            << " is a non-supported type - result might be not correct " << std::endl;
+            
+
+         for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
+            RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
+            if (verbose > 2) std::cout << "Loop on constraint server term  " << a2->GetName() << std::endl;
+            if (rrv2 && rrv2->dependsOn(nuis) ) { 
+
+
+               // found server depending on nuisance               
+               if (foundServer) { 
+                  oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
+                                            << cterm->GetName() << " constraint term has more server depending on nuisance- cannot generate it " <<
+                     std::endl;
+                  foundServer = false;
+                  break;
                }
+               rrv.setVal( rrv2->getVal() );
+               foundServer = true;
+
+               if (verbose>2) 
+                  std::cout << "setting global observable "<< rrv.GetName() << " to value " << rrv.getVal() 
+                         << " which comes from " << rrv2->GetName() << std::endl;
             }
          }
-         if (match == 0) {  
-            oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term " << cterm->GetName() << std::endl;
+
+         if (!foundServer) {  
+            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observales will not be set to Asimov value " << cterm->GetName() << std::endl;
             std::cerr << "Parameters: " << std::endl;
             cpars->Print("V");
             std::cerr << "Observables: " << std::endl;
             cgobs->Print("V");
-            return 0;
          }
-         rrv.setVal(match->getVal());
+//         rrv.setVal(match->getVal());
       }
 
       // make a snapshot of global observables 
@@ -982,7 +1042,10 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       gobs = snapGlobalObsData;
       Utils::SetAllConstant(paramsSetConstant, false);
 
-    
+
+      if (verbose>0) {
+         std::cout << "Generated Asimov data for global observables " << std::endl; 
+      }
       if (verbose > 1) {
          std::cout << "Global observables for data: " << std::endl;
          gobs.Print("V");
