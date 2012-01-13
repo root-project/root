@@ -403,7 +403,7 @@ void TGContainer::Layout()
    TGLayoutManager *lm = GetLayoutManager();
 
    // clear content if positions of subframes changed after layout
-   if (lm->IsModified()) ClearViewPort();
+   if (lm && lm->IsModified()) ClearViewPort();
 }
 
 //______________________________________________________________________________
