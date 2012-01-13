@@ -404,6 +404,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    if (fContextMenu->GetSelectedCanvas()) {
       TCanvas *c = (TCanvas *) fContextMenu->GetSelectedCanvas();
       // Embedded canvas has no canvasimp that is a TGFrame
+      // coverity [null_returns]
       if (c->GetCanvasImp()->IsA()->InheritsFrom(TGFrame::Class())) {
          w = fClient->GetWindowById(gVirtualX->GetWindowID(c->GetCanvasID()));
          if (!w) w = (TRootCanvas *) c->GetCanvasImp();
@@ -555,7 +556,8 @@ Bool_t TRootContextMenu::HandleButton(Event_t *event)
    // Handle button event in the context menu.
 
    int   id;
-   void *ud;
+   void *ud = 0;
+
    if ((event->fType == kButtonRelease) && (event->fX >= (Int_t)(fMenuWidth-15)) &&
        (event->fX <= (Int_t)fMenuWidth)) {
       id = EndMenu(ud);
