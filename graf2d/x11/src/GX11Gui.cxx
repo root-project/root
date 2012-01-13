@@ -2607,7 +2607,7 @@ Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
                               0, 0, width, height, bitmap_pad, 0);
 
    // use calloc since Xlib will use free() in XDestroyImage
-   xim->data = (char *) calloc(xim->bytes_per_line * xim->height, 1);
+   if (xim) xim->data = (char *) calloc(xim->bytes_per_line * xim->height, 1);
 
    return (Drawable_t) xim;
 }
