@@ -18,7 +18,7 @@ if(NOT APPLE)
     PATHS /opt/dnssd/include /usr/include  /usr/local/include
   )
   find_library(BONJOUR_LIBRARY 
-    NAMES libdns_sd
+    NAMES dns_sd
     PATHS /opt/dnssd/lib /usr/lib /usr/local/lib
   )
   if(NOT BONJOUR_INCLUDE_DIR OR NOT BONJOUR_LIBRARY)
@@ -43,7 +43,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Linux)
   # layer, also the other libraries must be in the same location.
   foreach(l client common core) 
     find_library(AVAHI_${l}_LIBRARY 
-      NAMES libavahi-${l}.so
+      NAMES avahi-${l}.so
       PATHS /opt/lib /usr/lib /usr/local/lib
     )
     if(AVAHI_${l}_LIBRARY)
