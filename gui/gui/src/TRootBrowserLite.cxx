@@ -447,6 +447,8 @@ TRootIconBox::TRootIconBox(TRootBrowserLite *browser, TGListView *lv, UInt_t opt
    fWasGrouped = kFALSE;
    fActiveObject = 0;
    fIsEmpty = kTRUE;
+   fLargeCachedPic = 0;
+   fSmallCachedPic = 0;
 
    // Don't use timer HERE (timer is set in TBrowser).
    StopRefreshTimer();
