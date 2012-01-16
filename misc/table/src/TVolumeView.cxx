@@ -849,11 +849,9 @@ TString TVolumeView::PathP() const
       str += "/";
    }
    str +=  GetName();
-   UInt_t positionId = 0;
    TVolumePosition *p = GetPosition();
    if (p) {
       char buffer[10];
-      positionId = p->GetId();
       snprintf(buffer,10,";%d",p->GetId());
       str +=  buffer;
    }
