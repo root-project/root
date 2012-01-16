@@ -421,6 +421,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    xim = XCreateImage(fDisplay, fVisual,
                       depth, ZPixmap, 0, 0, w, h,
                       depth == 24 ? 32 : (depth==15?16:depth), 0);
+   if (!xim) return;
 
    // use malloc since Xlib will use free() in XDestroyImage
    xim->data = (char *) malloc(xim->bytes_per_line * h);
@@ -477,7 +478,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    // put the Ximage on the screen
    Window_t cws = GetCurrentWindow();
    GC *gc = GetGC(6);      // gGCpxmp
-   XPutImage(fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
+   if (gc) XPutImage(fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
    XDestroyImage(xim);
 }
 
