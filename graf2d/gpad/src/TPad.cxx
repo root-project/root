@@ -1320,7 +1320,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
          pt->SetTextAlign(12);
          pt->SetTextSize(tsiz);
          TBox *box = pt->AddBox(0,(y1+0.01-v1)/dv,0,(v2-0.01-v1)/dv);
-         box->SetFillColor(17);
+         if (box) box->SetFillColor(17);
          pt->AddLine(0,(y1-v1)/dv,0,(y1-v1)/dv);
          TText *title = pt->AddText(0.5,(0.5*(y1+v2)-v1)/dv,(char*)cl->GetName());
          title->SetTextAlign(22);
@@ -4624,7 +4624,10 @@ void TPad::RedrawAxis(Option_t *option)
       }
       if (obj->InheritsFrom(TMultiGraph::Class())) {
          TMultiGraph *mg = (TMultiGraph*)obj;
-         if (mg) mg->GetHistogram()->DrawCopy("sameaxis");
+         if (mg) {
+            TH1F *h1f = mg->GetHistogram();
+            if (h1f) h1f->DrawCopy("sameaxis");
+         }
          return;
       }
       if (obj->InheritsFrom(TGraph::Class())) {
