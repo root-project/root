@@ -2586,7 +2586,7 @@ void TGX11::SetOpacity(Int_t percent)
    // get pixmap from server as image
    XImage *image = XGetImage(fDisplay, gCws->fDrawing, 0, 0, gCws->fWidth,
                              gCws->fHeight, AllPlanes, ZPixmap);
-
+   if (!image) return;
    // collect different image colors
    int x, y;
    for (y = 0; y < (int) gCws->fHeight; y++) {
