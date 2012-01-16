@@ -13,7 +13,7 @@ STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressRooStats_tests-test,\
 	$(notdir $(STRESSSRC:.cxx=-test))))))
 ifeq ($(findstring roofit,$(shell root-config --features)),)
-STRESSTESTS  := $(filter-out stressRooFit-test,$(STRESSTESTS))
+STRESSTESTS  := $(filter-out stressRooStats-test,$(filter-out stressRooFit-test,$(STRESSTESTS)))
 endif
 ifeq ($(findstring mathmore,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressMathMore-test,$(STRESSTESTS))
@@ -65,7 +65,8 @@ STRESSTESTSCOMP := $(STRESSTESTS:-test=-ctest)
 #### disabled tests
 # Run all tests in interpreted mode except for those that CINT
 # cannot interpret - these are run in compiled mode instead.
-STRESSTESTSINTERP_VETO := stressMathCore-itest stressMathMore-itest stressRooFit-itest \
+STRESSTESTSINTERP_VETO := stressMathCore-itest stressMathMore-itest \
+  stressRooFit-itest stressRooStats-itest \
   stressLinear-itest stressVector-itest stressGeometry-itest stressIterators-itest stressHistogram-itest stressHistoFit-itest \
   stressTMVA-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
