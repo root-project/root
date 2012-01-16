@@ -90,7 +90,8 @@ void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
 
    // setting layout manager if it differs from the main frame type
-   // coverity [null_returns]
+   // coverity[returned_null]
+   // coverity[dereference]
    TGLayoutManager * lm = GetLayoutManager();
    if ((GetOptions() & kHorizontalFrame) &&
        (lm->InheritsFrom(TGHorizontalLayout::Class()))) {

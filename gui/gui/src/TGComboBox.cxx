@@ -374,7 +374,8 @@ void TGComboBox::EnableTextInput(Bool_t on)
       }
       fTextEntry->SetBackgroundColor(back);
       MapSubwindows();
-      // coverity[null_returns]
+      // coverity[returned_null]
+      // coverity[dereference]
       GetLayoutManager()->Layout();
    } else {
       if (fTextEntry) {
@@ -395,7 +396,8 @@ void TGComboBox::EnableTextInput(Bool_t on)
       }
       fSelEntry->SetBackgroundColor(back);
       MapSubwindows();
-      // coverity[null_returns]
+      // coverity[returned_null]
+      // coverity[dereference]
       GetLayoutManager()->Layout();
    }
 }
@@ -566,7 +568,8 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                   TGTextLBEntry *te = (TGTextLBEntry*)e;
                   fTextEntry->SetText(te->GetText()->GetString());
                }
-               // coverity[null_returns]
+               // coverity[returned_null]
+               // coverity[dereference]
                GetLayoutManager()->Layout();
                fComboFrame->EndPopup();
                fDDButton->SetState(kButtonUp);

@@ -404,7 +404,8 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    if (fContextMenu->GetSelectedCanvas()) {
       TCanvas *c = (TCanvas *) fContextMenu->GetSelectedCanvas();
       // Embedded canvas has no canvasimp that is a TGFrame
-      // coverity [null_returns]
+      // coverity[returned_null]
+      // coverity[dereference]
       if (c->GetCanvasImp()->IsA()->InheritsFrom(TGFrame::Class())) {
          w = fClient->GetWindowById(gVirtualX->GetWindowID(c->GetCanvasID()));
          if (!w) w = (TRootCanvas *) c->GetCanvasImp();

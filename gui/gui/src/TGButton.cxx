@@ -146,7 +146,8 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
 //      fOptions &= ~(kRaisedFrame | kDoubleBorder);
 //   }
 
-   // coverity[null_returns]
+   // coverity[returned_null]
+   // coverity[dereference]
    if (p && p->IsA()->InheritsFrom(TGButtonGroup::Class())) {
       TGButtonGroup *bg = (TGButtonGroup*) p;
       bg->Insert(this, id);
