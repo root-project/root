@@ -1623,7 +1623,7 @@ XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, In
 {
 // Creates "divisionvol" node for GDML
 
-   XMLNodePointer_t childN;
+   XMLNodePointer_t childN = 0;
    XMLNodePointer_t mainN = fGdmlE->NewChild(0, 0, "divisionvol", 0);
    fGdmlE->NewAttr(mainN, 0, "axis", axis);
    fGdmlE->NewAttr(mainN, 0, "number", TString::Format("%i", number));
