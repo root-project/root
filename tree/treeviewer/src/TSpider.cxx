@@ -285,7 +285,7 @@ void TSpider::AddVariable(const char* varexp)
          ++entry;
       }
    }
-   fAve[fNcols-1]/=notSkipped;
+   if (notSkipped) fAve[fNcols-1]/=notSkipped;
 
    Color_t lc;
    Style_t lt;
@@ -929,7 +929,7 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
          ++entry;
       }
    }
-   for(ui=0;ui<fNcols;++ui) fAve[ui]/=notSkipped;
+   if (notSkipped) {for(ui=0;ui<fNcols;++ui) fAve[ui]/=notSkipped;}
 }
 
 
