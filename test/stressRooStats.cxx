@@ -63,7 +63,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
   // Save memory directory location
-  RooUnitTest::gMemDir = gDirectory ;
+  RooUnitTest::setMemDir(gDirectory) ;
   
   if (doTreeStore) {
     RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
