@@ -377,6 +377,7 @@ void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, F
          }
       }
 
+      if (!sum) return;
       Float_t ratio = (float)sum1/sum;
 
       Float_t width = x2 - x1;
