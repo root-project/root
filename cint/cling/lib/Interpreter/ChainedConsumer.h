@@ -149,7 +149,7 @@ namespace cling {
       T* PrevDecl = 0;
 
       // [0]=>C [1]=>B [2]=>A ...
-      while ((PrevDecl = R->getPreviousDeclaration())) {
+      while ((PrevDecl = R->getPreviousDecl())) {
         PrevDecls.push_back(PrevDecl);
         R = PrevDecl;
       }
@@ -166,7 +166,7 @@ namespace cling {
         }
       }
 
-      return PrevDecls.empty() ? 0 : PrevDecls[0]->getMostRecentDeclaration();
+      return PrevDecls.empty() ? 0 : PrevDecls[0]->getMostRecentDecl();
     }
 
     friend class IncrementalParser;

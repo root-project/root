@@ -576,7 +576,7 @@ namespace cling {
       if (Pos->second.isNull()) {
         // When we have template specialization we have to clean up
         if (FD->isFunctionTemplateSpecialization()) {
-          while ((FD = FD->getPreviousDeclaration())) {
+          while ((FD = FD->getPreviousDecl())) {
             RevertNamedDecl(FD);
           } 
           return;
