@@ -3450,15 +3450,13 @@ int x3d_exec_command(int pointerX, int pointerY, char command)
    and the no events of interest show up due to the call to GetInput()
 ******************************************************************************/
 {
-int same, dx, dy;
+int dx, dy;
 double X, Y, Z;
 
    Ginfo *g = gGInfo;
    Oinfo *o = gOInfo;
 
    X = Y = Z = 0.0;
-
-   same = 1;
 
 /* dx, dy, dz are the amount to step about each axis every frame
    We want the scene to continue to rotate even if the user does
@@ -3476,7 +3474,7 @@ double X, Y, Z;
          case ' ' : break;
 
          case 'm' :
-         case 'M' : same = 0; g->helpMenu    = !g->helpMenu;
+         case 'M' : g->helpMenu    = !g->helpMenu;
              /*
              if(g->helpMenu == False){
                XUnmapWindow(g->dpy, g->helpWin);
@@ -3487,81 +3485,79 @@ double X, Y, Z;
              break;
 
          case 's' :
-         case 'S' : same = 0; g->stereo  = !g->stereo; g->modeChanged = 1;
+         case 'S' : g->stereo  = !g->stereo; g->modeChanged = 1;
              break;
 
          case 'd' :
-         case 'D' : same = 0; g->stereoBlue = !g->stereoBlue; g->modeChanged = 1;
+         case 'D' : g->stereoBlue = !g->stereoBlue; g->modeChanged = 1;
              break;
 
          case 'f' :
-         case 'F' : same = 0; g->buffer = !g->buffer; g->modeChanged = 1;
+         case 'F' : g->buffer = !g->buffer; g->modeChanged = 1;
              break;
 
          case 'o' :
-         case 'O' : same = 0; g->Relative = !g->Relative; break;
+         case 'O' : g->Relative = !g->Relative; break;
 
          case 'w' :
-         case 'W' : same = 0; g->renderMode = WIREFRAME; g->modeChanged = 1;
+         case 'W' : g->renderMode = WIREFRAME; g->modeChanged = 1;
              break;
 
          case 'e' :
          case 'E' : if(o->numPolys) {
-                      same = 0; g->renderMode = HIDDENLINE; g->modeChanged = 1;
+                      g->renderMode = HIDDENLINE; g->modeChanged = 1;
                     }
              break;
 
          case 'r' :
          case 'R' : if(o->numPolys) {
-                      same = 0; g->renderMode = SOLID; g->modeChanged = 1;
+                      g->renderMode = SOLID; g->modeChanged = 1;
                     }
              break;
 
-         case 'l' : same = 0; o->tX  -= deltaMove; break;
-         case 'j' : same = 0; o->tY  -= deltaMove; break;
-         case 'k' : same = 0; o->tY  += deltaMove; break;
-         case 'h' : same = 0; o->tX  += deltaMove; break;
-         case 'i' : same = 0; o->tZ  += deltaMove; break;
-         case 'u' : same = 0; o->tZ  -= deltaMove; break;
-         case 'L' : same = 0; o->tX  -= 5*deltaMove; break;
-         case 'J' : same = 0; o->tY  -= 5*deltaMove; break;
-         case 'K' : same = 0; o->tY  += 5*deltaMove; break;
-         case 'H' : same = 0; o->tX  += 5*deltaMove; break;
-         case 'I' : same = 0; o->tZ  += 5*deltaMove; break;
-         case 'U' : same = 0; o->tZ  -= 5*deltaMove; break;
-         case '1' : same = 0; o->dX += 0.02; break;
-         case '2' : same = 0; o->dX =  0.0 ; break;
-         case '3' : same = 0; o->dX -= 0.02; break;
-         case '4' : same = 0; o->dY -= 0.02; break;
-         case '5' : same = 0; o->dY =  0.0 ; break;
-         case '6' : same = 0; o->dY += 0.02; break;
-         case '7' : same = 0; o->dZ += 0.02; break;
-         case '8' : same = 0; o->dZ =  0.0 ; break;
-         case '9' : same = 0; o->dZ -= 0.02; break;
-         case 'x' : same = 0; X -= 0.03; break;
-         case 'X' : same = 0; X += 0.03; break;
-         case 'y' : same = 0; Y += 0.03; break;
-         case 'Y' : same = 0; Y -= 0.03; break;
-         case 'z' : same = 0; Z -= 0.03; break;
-         case 'Z' : same = 0; Z += 0.03; break;
-         case 'a' : same = 0; X -= 0.05; break;
-         case 'A' : same = 0; X += 0.05; break;
-         case 'b' : same = 0; Y += 0.05; break;
-         case 'B' : same = 0; Y -= 0.05; break;
-         case 'c' : same = 0; Z -= 0.05; break;
-         case 'C' : same = 0; Z += 0.05; break;
-         case '[' : same = 0;
-                    o->focus += 0.1;
+         case 'l' : o->tX  -= deltaMove; break;
+         case 'j' : o->tY  -= deltaMove; break;
+         case 'k' : o->tY  += deltaMove; break;
+         case 'h' : o->tX  += deltaMove; break;
+         case 'i' : o->tZ  += deltaMove; break;
+         case 'u' : o->tZ  -= deltaMove; break;
+         case 'L' : o->tX  -= 5*deltaMove; break;
+         case 'J' : o->tY  -= 5*deltaMove; break;
+         case 'K' : o->tY  += 5*deltaMove; break;
+         case 'H' : o->tX  += 5*deltaMove; break;
+         case 'I' : o->tZ  += 5*deltaMove; break;
+         case 'U' : o->tZ  -= 5*deltaMove; break;
+         case '1' : o->dX += 0.02; break;
+         case '2' : o->dX =  0.0 ; break;
+         case '3' : o->dX -= 0.02; break;
+         case '4' : o->dY -= 0.02; break;
+         case '5' : o->dY =  0.0 ; break;
+         case '6' : o->dY += 0.02; break;
+         case '7' : o->dZ += 0.02; break;
+         case '8' : o->dZ =  0.0 ; break;
+         case '9' : o->dZ -= 0.02; break;
+         case 'x' : X -= 0.03; break;
+         case 'X' : X += 0.03; break;
+         case 'y' : Y += 0.03; break;
+         case 'Y' : Y -= 0.03; break;
+         case 'z' : Z -= 0.03; break;
+         case 'Z' : Z += 0.03; break;
+         case 'a' : X -= 0.05; break;
+         case 'A' : X += 0.05; break;
+         case 'b' : Y += 0.05; break;
+         case 'B' : Y -= 0.05; break;
+         case 'c' : Z -= 0.05; break;
+         case 'C' : Z += 0.05; break;
+         case '[' : o->focus += 0.1;
                     if((o->focus > 1.8))
                        o->focus = 1.8;
                     break;
-         case ']' : same = 0;
-                    o->focus -= 0.1;
+         case ']' : o->focus -= 0.1;
                     if((o->focus < -0.8))
                        o->focus = -0.8;
                     break;
-         case '{' : same = 0; o->BViewpointX -= 4.0; break;
-         case '}' : same = 0; o->BViewpointX += 4.0; break;
+         case '{' : o->BViewpointX -= 4.0; break;
+         case '}' : o->BViewpointX += 4.0; break;
 
          case 'q' :
          case 'Q' : return(1);
@@ -3583,7 +3579,6 @@ double X, Y, Z;
 
                X -= (dy * POINTERRATIO);
                Z -= (dx * POINTERRATIO);
-               same = 0;
             }
             g->oldPointerY = pointerY;
             g->oldPointerX = pointerX;
