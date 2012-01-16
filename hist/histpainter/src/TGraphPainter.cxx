@@ -2810,8 +2810,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
-   Double_t *theEX = theGraph->GetEX();
-   Double_t *theEY = theGraph->GetEY();
+   Double_t *theEX = theGraph->GetEX(); if (!theEX) return;
+   Double_t *theEY = theGraph->GetEY(); if (!theEY) return;
 
    if (strchr(option,'X') || strchr(option,'x')) {PaintGraphSimple(theGraph, option); return;}
    Bool_t brackets = kFALSE;
@@ -3269,7 +3269,8 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    while ((obj = next())) {
       if (!obj->InheritsFrom(TPaveText::Class())) continue;
       title = (TPaveText*)obj;
-      if (strcmp(title->GetName(),"title")) {title = 0; continue;}
+      if (title->GetName())
+         if (strcmp(title->GetName(),"title")) {title = 0; continue;}
       break;
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
