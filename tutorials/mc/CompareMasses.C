@@ -14,14 +14,15 @@ using namespace std;
 
 void CompareMasses(){
   
-  char *fn = "mass_width_2008.mc.txt";
+  TString massWidthFile = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+  massWidthFile.ReplaceAll("tasks.C","mass_width_2008.mc.txt");
   
-  FILE* file = fopen(fn,"r");
+  FILE* file = fopen(massWidthFile.Data(),"r");
 
   ifstream in1;
-  in1.open(fn);
+  in1.open(massWidthFile);
   if (!in1.good()){
-      Printf("Could not open PDG particle file %s",fn);
+      Printf("Could not open PDG particle file %s",massWidthFile.Data());
       fclose(file);
       return;
   }
