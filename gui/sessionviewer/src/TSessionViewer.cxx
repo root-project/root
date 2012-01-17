@@ -196,7 +196,8 @@ ToolBarData_t tb_data[] = {
 //______________________________________________________________________________
 TSessionServerFrame::TSessionServerFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h), fFrmNewServer(0), fTxtName(0), fTxtAddress(0),
-      fTxtConfig(0), fTxtUsrName(0), fViewer(0)
+   fNumPort(0), fLogLevel(0), fTxtConfig(0), fTxtUsrName(0), fSync(0),
+   fViewer(0), fBtnAdd(0), fBtnConnect(0)
 {
    // Constructor.
 }
@@ -835,9 +836,19 @@ Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
 //______________________________________________________________________________
 TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h)
+   TGCompositeFrame(p, w, h), fTab(0), fFA(0), fFB(0), fFC(0), fFD(0), fFE(0),
+   fCommandTxt(0), fCommandBuf(0), fInfoTextView(0), fClearCheck(0), 
+   fBtnShowLog(0), fBtnNewQuery(0), fBtnGetQueries(0), fLBPackages(0),
+   fBtnAdd(0), fBtnRemove(0), fBtnUp(0), fBtnDown(0), fBtnShow(0),
+   fBtnShowEnabled(0), fChkMulti(0), fChkEnable(0), fBtnUpload(0),
+   fBtnEnable(0), fBtnClear(0), fBtnDisable(0), fDSetView(0), fDataSetTree(0),
+   fBtnUploadDSet(0), fBtnRemoveDSet(0), fBtnVerifyDSet(0), fBtnRefresh(0),
+   fTxtParallel(0), fLogLevel(0), fApplyLogLevel(0), fApplyParallel(0),
+   fViewer(0)
 {
    // Constructor.
+
+   for (int i=0;i<19;++i) fInfoLine[i] = 0;
 }
 
 //______________________________________________________________________________
@@ -1186,7 +1197,7 @@ void TSessionFrame::ProofInfos()
       fInfoLine[0]->SetText(buf.Data());
       UserGroup_t *userGroup = gSystem->GetUserInfo();
       fInfoLine[1]->SetText("User :");
-      buf.Form("%s", userGroup->fRealName.Data());
+      if (userGroup) buf.Form("%s", userGroup->fRealName.Data());
       fInfoLine[2]->SetText(buf.Data());
       fInfoLine[3]->SetText("Working directory :");
       buf.Form("%s", gSystem->WorkingDirectory());
@@ -1205,7 +1216,7 @@ void TSessionFrame::ProofInfos()
       fInfoLine[16]->SetText(" ");
       fInfoLine[17]->SetText(" ");
       fInfoLine[18]->SetText(" ");
-      delete userGroup;
+      if (userGroup) delete userGroup;
       Layout();
       Resize(GetDefaultSize());
       return;
@@ -2042,7 +2053,10 @@ void TSessionFrame::ShutdownSession()
 
 //______________________________________________________________________________
 TEditQueryFrame::TEditQueryFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h, kVerticalFrame)
+   TGCompositeFrame(p, w, h, kVerticalFrame), fFrmMore(0), fBtnMore(0),
+   fTxtQueryName(0), fTxtChain(0), fTxtSelector(0), fTxtOptions(0),
+   fNumEntries(0), fNumFirstEntry(0), fTxtParFile(0), fTxtEventList(0),
+   fViewer(0), fQuery(0), fChain(0)
 {
    // Create a new Query dialog, used by the Session Viewer, to Edit a Query if
    // the editmode flag is set, or to create a new one if not set.
@@ -2340,17 +2354,14 @@ void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
 
 //______________________________________________________________________________
 TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h)
+   TGCompositeFrame(p, w, h), fBtnSubmit(0), fBtnFinalize(0), fBtnStop(0),
+   fBtnAbort(0), fBtnShowLog(0), fBtnRetrieve(0), fBtnSave(0), fInfoTextView(0),
+   fModified(0), fFiles(0), fFirst(0), fEntries(0), fPrevTotal(0),
+   fPrevProcessed(0), fLabInfos(0), fLabStatus(0), fTotal(0), fRate(0),
+   fStatus(kStopped), fTab(0), fFA(0), fFB(0), fFC(0), fFD(0), frmProg(0),
+   fECanvas(0), fStatsCanvas(0), fViewer(0), fDesc(0)
 {
    // Constructor
-
-   fEntries = 0;
-   fFiles = 0;
-   fFirst = 0;
-   fModified = 0;
-   fPrevProcessed = 0;
-   fPrevTotal = 0;
-   fStatus = kStopped;
 }
 
 //______________________________________________________________________________
@@ -3448,7 +3459,7 @@ void TSessionQueryFrame::UpdateInfos()
 
 //______________________________________________________________________________
 TSessionOutputFrame::TSessionOutputFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fLVContainer(0)
+   TGCompositeFrame(p, w, h), fEntryTmp(0), fLVContainer(0), fViewer(0)
 {
    // Constructor.
 }
@@ -3544,7 +3555,7 @@ void TSessionOutputFrame::AddObject(TObject *obj)
 
 //______________________________________________________________________________
 TSessionInputFrame::TSessionInputFrame(TGWindow* p, Int_t w, Int_t h) :
-   TGCompositeFrame(p, w, h), fLVContainer(0)
+   TGCompositeFrame(p, w, h), fViewer(0), fLVContainer(0)
 {
    // Constructor.
 }
