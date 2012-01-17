@@ -214,6 +214,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    CreatePainter();
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   if (!fCanvasImp) return;
    SetName(name);
    Build();
 }
@@ -284,6 +285,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+      if (!fCanvasImp) return;
       fBatch        = kTRUE;
    } else {                  //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
@@ -301,6 +303,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 3) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
+      if (!fCanvasImp) return;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -369,10 +372,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       fCw           = ww;
       fCh           = wh;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+      if (!fCanvasImp) return;
       fBatch        = kTRUE;
    } else {
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
+      if (!fCanvasImp) return;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -447,10 +452,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       fCw           = ww;
       fCh           = wh;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+      if (!fCanvasImp) return;
       fBatch        = kTRUE;
    } else {                   //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
+      if (!fCanvasImp) return;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -800,11 +807,13 @@ void TCanvas::Draw(Option_t *)
    }
    if (gROOT->IsBatch()) {   //We are in Batch mode
       fCanvasImp  = gBatchGuiFactory->CreateCanvasImp(this, GetName(), fWindowWidth, fWindowHeight);
+      if (!fCanvasImp) return;
       fBatch = kTRUE;
 
    } else {                   //normal mode with a screen window
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                                 fWindowWidth, fWindowHeight);
+      if (!fCanvasImp) return;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
    }
    Build();
@@ -859,6 +868,7 @@ TObject *TCanvas::DrawClonePad()
    if (fCanvasID == -1) {
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
+      if (!fCanvasImp) return 0;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fCanvasID = fCanvasImp->InitWindow();
    }
@@ -954,6 +964,7 @@ void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
    fUpdating     = kFALSE;
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, GetName(), fCw, fCh);
+   if (!fCanvasImp) return;
    Build();
    Resize();
 }
