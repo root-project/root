@@ -1632,6 +1632,7 @@ int TGHtml::GetDarkShadowColor(int iBgColor)
 
    if (fIDark[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
+      val.fMask = kDoRed | kDoGreen | kDoBlue;
       pRef = fApColor[iBgColor];
       if (IsDarkColor(pRef)) {
          int t1, t2;
@@ -1672,6 +1673,7 @@ int TGHtml::GetLightShadowColor(int iBgColor)
 
    if (fILight[iBgColor] == 0) {
       ColorStruct_t *pRef, val;
+      val.fMask = kDoRed | kDoGreen | kDoBlue;
       pRef = fApColor[iBgColor];
       if (IsLightColor(pRef)) {
          val.fRed = (unsigned short) (pRef->fRed * 0.9);
