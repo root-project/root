@@ -492,8 +492,8 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    if (cw + size.fWidth < dw) {
       Int_t gedx = 0, gedy = 0;
       gedx = cx+cw+4;
-      gedy = cy-20;
-      MoveResize(gedx, gedy,size.fWidth, size.fHeight);
+      gedy = (cy > 20) ? cy-20 : 0;
+      MoveResize(gedx, gedy, size.fWidth, size.fHeight);
       SetWMPosition(gedx, gedy);
    } 
 
