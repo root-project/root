@@ -1948,7 +1948,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Event_t event;
                         event.fType = kButtonPress;
                         event.fCode = kButton1;
-
+                        event.fX = event.fY = 1;
                         fBarCommand->HandleButton(&event);
                      }
                      fBarCommand->SetCursorPosition(15);
