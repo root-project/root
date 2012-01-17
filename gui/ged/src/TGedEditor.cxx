@@ -215,10 +215,11 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
 
    // create a title frame for each tab
    TGedFrame* nf = CreateNameFrame(tc, name);
-   nf->SetGedEditor(this);
-   nf->SetModelClass(0);
-   tc->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
-
+   if (nf) {
+      nf->SetGedEditor(this);
+      nf->SetModelClass(0);
+      tc->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+   }
    // add to list of created tabs
    TGedTabInfo* ti = new TGedTabInfo(te, tc);
    fCreatedTabs.Add(ti);
