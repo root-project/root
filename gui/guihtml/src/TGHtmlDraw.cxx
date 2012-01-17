@@ -50,6 +50,7 @@ TGHtmlBlock::TGHtmlBlock() : TGHtmlElement(Html_Block)
    fLeft = fRight = 0;
    fN = 0;
    fPPrev = fPNext = 0;
+   fBPrev = fBNext = 0;
 }
 
 //______________________________________________________________________________
