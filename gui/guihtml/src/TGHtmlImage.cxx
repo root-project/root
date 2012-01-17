@@ -299,6 +299,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    TGHtmlElement *pElem = p;
 
    z = pElem->MarkupArg(opt, "");
+   if (!z) return z;
    if (!strchr(z, '%')) return z;
    // coverity[secure_coding]
    if (!sscanf(z, "%d", &n)) return z;
