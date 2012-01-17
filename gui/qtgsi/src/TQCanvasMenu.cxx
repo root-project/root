@@ -217,9 +217,10 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
          // Get the current value and form it as a text:
          char val[256];
          if (!strncmp(basictype, "char*", 5)) {
-            char *tdefval;
+            char *tdefval = 0;
             m->GetterMethod()->Execute(object, "", &tdefval);
-            strlcpy(val, tdefval, 256);
+            if (tdefval && strlen(tdefval))
+               strlcpy(val, tdefval, 256);
          }
          else if (!strncmp(basictype, "float", 5) ||
             !strncmp(basictype, "double", 6)) {
