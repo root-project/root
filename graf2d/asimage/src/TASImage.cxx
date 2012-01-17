@@ -1497,9 +1497,9 @@ void TASImage::Paint(Option_t *option)
    if (gVirtualPS) {
       if (gVirtualPS->InheritsFrom("TImageDump")) { // PostScript is asimage
          TImage *dump = (TImage *)gVirtualPS->GetStream();
+         if (!dump) return;
          dump->Merge(fScaledImage ? fScaledImage : this, "alphablend",
                      gPad->XtoAbsPixel(0), gPad->YtoAbsPixel(1));
-         if (!dump) return;
 
          if (grad_im) {
             TASImage tgrad;
