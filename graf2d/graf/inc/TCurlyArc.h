@@ -30,7 +30,7 @@ private:
    static Bool_t   fgDefaultIsCurly;      //default curly type
 
 public:
-   TCurlyArc(){;}
+   TCurlyArc();
    TCurlyArc(Double_t x1, Double_t y1, Double_t rad,
              Double_t phimin, Double_t phimax,
              Double_t wl = .02, Double_t amp = .01);

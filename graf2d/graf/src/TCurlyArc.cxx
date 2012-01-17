@@ -39,6 +39,18 @@ ClassImp(TCurlyArc)
 
 
 //______________________________________________________________________________
+TCurlyArc::TCurlyArc()
+{
+   // Default constructor
+   
+   fR1     = 0.;
+   fPhimin = 0.;
+   fPhimax = 0.;
+   fTheta  = 0.;
+}
+
+
+//______________________________________________________________________________
 TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
                    Double_t rad, Double_t phimin, Double_t phimax,
                    Double_t wl, Double_t amp)
