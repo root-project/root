@@ -752,6 +752,7 @@ void TGSelectBox::GrabPointer()
    Event_t event;
    event.fType = kButtonPress;
    event.fCode = kButton1;
+   event.fX = event.fY = 1;
    Int_t position = fTe->GetCursorPosition();
    fTe->HandleButton(&event);
    fTe->SetCursorPosition(position);
