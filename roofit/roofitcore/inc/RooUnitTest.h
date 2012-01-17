@@ -56,7 +56,7 @@ public:
   virtual Double_t fctol() { return 1e-3 ; } // fit correlation test tolerance
   virtual Double_t vtol() { return 1e-3 ; } // value test tolerance
 
-  static void setMemDir(TDirectory* memDir) { gMemDir = memDir ; }
+  static void setMemDir(TDirectory* memDir);
 
 protected:
 
