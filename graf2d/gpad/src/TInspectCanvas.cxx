@@ -363,6 +363,7 @@ void TInspectCanvas::GoBackward()
    // static function , inspect previous object
 
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
+   if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
    TObject *obj = inspect->GetObjects()->Before(cur);
    if (obj)       inspect->InspectObject(obj);
@@ -375,6 +376,7 @@ void TInspectCanvas::GoForward()
    // static function , inspect next object
 
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
+   if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
    TObject *obj = inspect->GetObjects()->After(cur);
    if (obj)       inspect->InspectObject(obj);
