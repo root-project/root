@@ -4810,6 +4810,7 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    Int_t ii = 0;
    UInt_t x = 0;
    UInt_t *arr = tile->GetArgbArray();
+   if (!arr) return;
    UInt_t xx = 0;
    UInt_t yy = 0;
    UInt_t yyy = 0;
