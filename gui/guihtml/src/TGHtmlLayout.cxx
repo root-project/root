@@ -946,11 +946,11 @@ TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
          y += hr->fH + fHtml->GetRulePadding() * 2 + 1;
          hr->fX = x;
          z = p->MarkupArg("width", "100%");
-         zl = strlen(z);
+         zl = z ? strlen(z) : 0;
          if (zl > 0 && z[zl-1] == '%') {
             wd = (atoi(z) * w) / 100;
          } else {
-            wd = atoi(z);
+            wd = z ? atoi(z) : w;
          }
          if (wd > w) wd = w;
          hr->fW = wd;
