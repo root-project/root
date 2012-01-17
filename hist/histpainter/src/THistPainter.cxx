@@ -2827,7 +2827,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t curdist = big;
    Int_t yxaxis, dyaxis,xyaxis, dxaxis;
    Bool_t dsame;
-   TString doption = gPad->GetPadPointer()->GetDrawOption();
+   TObject *PadPointer = gPad->GetPadPointer();
+   if (!PadPointer) return 0;
+   TString doption = PadPointer->GetDrawOption();
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
       factor = fH->GetNormFactor()/fH->GetSumOfWeights();
