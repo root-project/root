@@ -1492,6 +1492,14 @@ void TRecorderRecording::RecordMousePosition()
    ev.fType = kMotionNotify;
    ev.fState = 0;
    ev.fWindow = 0;
+   ev.fUser[0] = ev.fUser[1] = ev.fUser[2] = ev.fUser[3] = ev.fUser[4] = 0;
+   ev.fCount = 0;
+   ev.fFormat = 0;
+   ev.fHandle = 0;
+   ev.fHeight = 0;
+   ev.fSendEvent = 0;
+   ev.fTime = 0;
+   ev.fWidth = 0;
 
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
