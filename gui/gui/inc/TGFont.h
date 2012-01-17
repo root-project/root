@@ -100,13 +100,14 @@ struct FontAttributes_t {
 
    FontAttributes_t& operator=(const FontAttributes_t& f) // assignment operator
    {
-      // coverity [self_assign]
-      fFamily     = f.fFamily;
-      fPointsize  = f.fPointsize;
-      fWeight     = f.fWeight;
-      fSlant      = f.fSlant;
-      fUnderline  = f.fUnderline;
-      fOverstrike = f.fOverstrike;
+      if (this != &f) {
+         fFamily     = f.fFamily;
+         fPointsize  = f.fPointsize;
+         fWeight     = f.fWeight;
+         fSlant      = f.fSlant;
+         fUnderline  = f.fUnderline;
+         fOverstrike = f.fOverstrike;
+      }
       return *this;
    }
 
