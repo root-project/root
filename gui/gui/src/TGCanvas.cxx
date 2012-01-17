@@ -1028,8 +1028,10 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
          } else {
             cl = obj->IsA();
          }
-         const char *name = obj->GetIconName() ? obj->GetIconName() : cl->GetName();
-         iconname = (strlen(name) > 0) ? name : obj->GetName();
+         const char *name = obj->GetIconName();
+         if (((name == 0) || (strlen(name) == 0)) && (cl != 0))
+            name = cl->GetName();
+         iconname = ((name != 0) && (strlen(name) > 0)) ? name : obj->GetName();
 
          if (obj->IsA()->InheritsFrom("TGeoVolume")) {
             iconname = obj->GetIconName() ? obj->GetIconName() : obj->IsA()->GetName();

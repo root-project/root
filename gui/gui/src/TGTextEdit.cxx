@@ -186,8 +186,20 @@ public:
       fText = new TGText(txt);
       fBreakLine = kFALSE;
    }
+   TDelTextCom(const TDelTextCom &dtc) : TGTextEditCommand(dtc) {
+      fText = new TGText(dtc.fText);
+      fBreakLine = dtc.fBreakLine;
+   }
+   virtual ~TDelTextCom() { delete fText; }
 
-   virtual ~TDelTextCom() {  delete fText; }
+   TDelTextCom &operator=(const TDelTextCom &dtc) {
+      if (this != &dtc) {
+         if (fText) delete fText;
+         fText = new TGText(dtc.fText);
+         fBreakLine = dtc.fBreakLine;
+      }
+      return *this;
+   }
 
    void SetEndPos(TGLongPosition end) {
       fEndPos = end;

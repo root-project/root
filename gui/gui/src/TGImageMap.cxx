@@ -58,11 +58,11 @@ TGRegionData &TGRegionData::operator=(const TGRegionData &r)
 {
    // Assignemnt of region data object.
 
-   // coverity [self_assign]
-   fRefs   = r.fRefs;
-   fRgn    = r.fRgn;
-   fIsNull = r.fIsNull;
-
+   if (this != &r) {
+      fRefs   = r.fRefs;
+      fRgn    = r.fRgn;
+      fIsNull = r.fIsNull;
+   }
    return *this;
 }
 
