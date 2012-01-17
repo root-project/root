@@ -342,9 +342,10 @@ void TGuiBldMenuDialog::Build()
             char val[256];
 
             if (!strncmp(basictype, "char*", 5)) {
-               char *tdefval;
+               char *tdefval = 0;
                m->GetterMethod()->Execute(fObject, "", &tdefval);
-               strlcpy(val, tdefval, sizeof(val));
+               if (tdefval && strlen(tdefval))
+                  strlcpy(val, tdefval, sizeof(val));
             } else if (!strncmp(basictype, "float", 5) ||
                        !strncmp(basictype, "double", 6)) {
                Double_t ddefval = 0.0;
