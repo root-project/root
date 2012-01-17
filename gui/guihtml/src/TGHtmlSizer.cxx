@@ -1127,9 +1127,9 @@ void TGHtml::Sizer()
          case Html_TH: {
             TGHtmlCell *cell = (TGHtmlCell *) p;
             z = p->MarkupArg("rowspan", "1");
-            cell->fRowspan = atoi(z);
+            cell->fRowspan = z ? atoi(z) : 1;
             z = p->MarkupArg("colspan", "1");
-            cell->fColspan = atoi(z);
+            cell->fColspan = z ? atoi(z) : 1;
             p->fFlags |= HTML_Visible;
             break;
          }
@@ -1159,6 +1159,7 @@ void TGHtml::Sizer()
                image->fAscent = fontMetrics.fAscent;
                image->fDescent = fontMetrics.fDescent;
                image->fZAlt = p->MarkupArg("alt", "<image>");
+               if (image->fZAlt == 0) image->fZAlt = "<image>";
                image->fW = font->TextWidth(image->fZAlt, strlen(image->fZAlt));
             } else {
                int w, h;
