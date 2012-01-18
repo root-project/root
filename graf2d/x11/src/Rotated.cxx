@@ -280,6 +280,7 @@ static XImage *MakeXImage(Display *dpy,int  w, int h)
    }
 
    image->byte_order=image->bitmap_bit_order=MSBFirst;
+   free(data);
    return image;
 }
 
