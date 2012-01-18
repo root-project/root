@@ -2852,6 +2852,7 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
    }
 
    fontlist = XListFonts(fDisplay, fontname, 1, &fontcount);
+   if (!fontlist) return 1;
 
    if (fontcount != 0) {
       if (mode == kLoad) {
