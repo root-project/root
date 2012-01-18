@@ -62,10 +62,11 @@ protected:
    THnBase* CloneEmpty(const char* name, const char* title,
                        const TObjArray* axes, Bool_t keepTargetAxis) const;
 
-public:
    THn(): fCoordBuf() {}
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
        const Double_t* xmin, const Double_t* xmax);
+
+public:
    virtual ~THn();
 
    static THn* CreateHn(const char* name, const char* title, const TH1* h1) {
