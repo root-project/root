@@ -404,6 +404,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    // LayoutGlyphs should have been called before.
 
    TTGlyph* glyph = TTF::fgGlyphs;
+   GC *gc;
 
    // compute the size and position of the XImage that will contain the text
    Int_t Xoff = 0; if (TTF::GetBox().xMin < 0) Xoff = -TTF::GetBox().xMin;
@@ -429,7 +430,8 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
    ULong_t   bg;
    XGCValues values;
-   XGetGCValues(fDisplay, *GetGC(3), GCForeground | GCBackground, &values);
+   gc = GetGC(3);
+   if (gc) XGetGCValues(fDisplay, *gc, GCForeground | GCBackground, &values);
 
    // get the background
    if (mode == kClear) {
@@ -477,7 +479,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
    // put the Ximage on the screen
    Window_t cws = GetCurrentWindow();
-   GC *gc = GetGC(6);      // gGCpxmp
+   gc = GetGC(6);
    if (gc) XPutImage(fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
    XDestroyImage(xim);
 }
