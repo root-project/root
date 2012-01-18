@@ -1761,12 +1761,27 @@ if test "x$platform" = "xmacosx" ; then
    fi
 fi
 
-debmultiarch=
-if `$cwhich dpkg-architecture > /dev/null 2>&1` ; then
-    if `dpkg-architecture -qDEB_HOST_MULTIARCH > /dev/null 2>&1` ; then
-        logmsg "Checking dpkg-architecture"
-        debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH 2> /dev/null`
-        logmsg "$debmultiarch"
+if test "x$platform" = "xlinux" ; then
+    linuxdist=
+    if `$cwhich lsb_release > /dev/null 2>&1` ; then
+       if lsb_release -d | grep 'Ubuntu' > /dev/null 2>& 1; then
+          linuxdist="ubuntu"
+       fi
+    fi
+
+    debmultiarch=
+    if test "x$linuxdist" = "xubuntu"; then
+        if `$cwhich dpkg-architecture > /dev/null 2>&1` ; then
+            if `dpkg-architecture -qDEB_HOST_MULTIARCH > /dev/null 2>&1` ; then
+                logmsg "Checking dpkg-architecture"
+                debmultiarch=`dpkg-architecture -qDEB_HOST_MULTIARCH 2> /dev/null`
+                logmsg "$debmultiarch"
+            fi
+        else
+            result "`basename $0`: dpkg-architecture MUST be installed"
+            result "See http://root.cern.ch/drupal/content/build-prerequisites"
+            exit 1
+        fi
     fi
 fi
 
