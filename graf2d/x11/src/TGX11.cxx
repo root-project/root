@@ -1105,7 +1105,7 @@ Int_t TGX11::OpenDisplay(Display *disp)
          strcpy(gFont[i].name, " ");
       }
       fontlist = XListFonts(fDisplay, "*courier*", 1, &fontcount);
-      if (fontcount != 0) {
+      if (fontlist && fontcount != 0) {
          gFont[gCurrentFontNumber].id = XLoadQueryFont(fDisplay, fontlist[0]);
          gTextFont = gFont[gCurrentFontNumber].id;
          strcpy(gFont[gCurrentFontNumber].name, "*courier*");
@@ -1114,7 +1114,7 @@ Int_t TGX11::OpenDisplay(Display *disp)
       } else {
          // emergency: try fixed font
          fontlist = XListFonts(fDisplay, "fixed", 1, &fontcount);
-         if (fontcount != 0) {
+         if (fontlist && fontcount != 0) {
             gFont[gCurrentFontNumber].id = XLoadQueryFont(fDisplay, fontlist[0]);
             gTextFont = gFont[gCurrentFontNumber].id;
             strcpy(gFont[gCurrentFontNumber].name, "fixed");
@@ -2852,9 +2852,8 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
    }
 
    fontlist = XListFonts(fDisplay, fontname, 1, &fontcount);
-   if (!fontlist) return 1;
 
-   if (fontcount != 0) {
+   if (fontlist && fontcount != 0) {
       if (mode == kLoad) {
          if (gFont[gCurrentFontNumber].id)
             XFreeFont(fDisplay, gFont[gCurrentFontNumber].id);
