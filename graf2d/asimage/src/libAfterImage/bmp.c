@@ -512,8 +512,10 @@ read_bmp_image( FILE *infile, size_t data_offset, BITMAPINFOHEADER *bmp_info,
 		cmap_entry_size = 3;
 	if( cmap_entries )
 	{
+		size_t ret;
 		cmap = safemalloc( cmap_entries * cmap_entry_size );
-		fread(cmap, sizeof (CARD8), cmap_entries * cmap_entry_size, infile);
+		ret = fread(cmap, sizeof (CARD8), cmap_entries * cmap_entry_size, infile);
+		if (ret != cmap_entries * cmap_entry_size) return NULL;
 	}
 
 	if( add_colormap )
@@ -621,7 +623,9 @@ ico2ASImage( const char * path, ASImageImportParams *params )
 	if( bmp_read16( infile, &icon_dir.idReserved, 3 ) == 3)
 		if( icon_dir.idType == 1 || icon_dir.idType == 2)
 		{
-			fread( &(icon.bWidth), sizeof(CARD8),4,infile );
+			size_t ret;
+			ret = fread( &(icon.bWidth), sizeof(CARD8),4,infile );
+                        if (ret != 4) return NULL;
 			bmp_read16( infile, &(icon.wPlanes), 2 );
 			if( bmp_read32( infile, &(icon.dwBytesInRes), 2 ) == 2 )
 			{

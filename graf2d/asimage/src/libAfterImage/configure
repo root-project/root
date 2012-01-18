@@ -2724,7 +2724,9 @@ else
 
 		if test "x$GCC" = "xyes"; then
 	  if test -z "`echo $CFLAGS | grep '\-Wall' 2> /dev/null`" ; then
-  		CFLAGS="$CFLAGS -Wall"
+  		#CFLAGS="$CFLAGS -Wall"
+                #rdm No -Wall to silence unused warnings on Ubuntu.
+  		CFLAGS="$CFLAGS"
 	  fi
 	fi
 
