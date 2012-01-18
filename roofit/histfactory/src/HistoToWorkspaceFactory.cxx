@@ -348,7 +348,6 @@ namespace HistFactory{
       std::stringstream str;
       str<<"_"<<i;
       string command="sum::"+totName+str.str()+"(";
-      vector<string>::iterator it=syst_x_expectedPrefixNames.begin();
       string prepend="";
       for(unsigned int j=0; j<syst_x_expectedPrefixNames.size();++j){
         command+=prepend+normByNames.at(j)+"*"+syst_x_expectedPrefixNames.at(j)+str.str();
