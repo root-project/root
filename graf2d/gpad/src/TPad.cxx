@@ -4637,7 +4637,10 @@ void TPad::RedrawAxis(Option_t *option)
       }
       if (obj->InheritsFrom(THStack::Class())) {
          THStack *hs = (THStack*)obj;
-         if (hs) hs->GetHistogram()->DrawCopy("sameaxis");
+         if (hs) {
+            TH1 *h1 = hs->GetHistogram();
+            if (h1) h1->DrawCopy("sameaxis");
+         }
          return;
       }
    }
