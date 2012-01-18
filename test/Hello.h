@@ -31,8 +31,6 @@ public:
    virtual ~TChar() { }
 
    char GetChar() {
-      char *tmp;
-      tmp = (char*)GetTitle();
       return GetTitle()[0];
    }
 
