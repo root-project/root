@@ -1416,13 +1416,12 @@ void  TGQt::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
    TQtLock lock;
    if (fSelectedWindow)
    {
-      int i,j,icol,ix,w,h,current_icol,lh;
+      int i,j,icol,w,h,current_icol,lh;
 
       current_icol = -1;
       w            = TMath::Max((x2-x1)/(nx),1);
       h            = TMath::Max((y1-y2)/(ny),1);
       lh           = y1-y2;
-      ix           = x1;
 
       if (w+h == 2)
       {

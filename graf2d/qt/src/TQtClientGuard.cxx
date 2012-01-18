@@ -90,15 +90,12 @@ void TQtClientGuard::DisconnectChildren(TQtClientWidget *w)
 #else /* QT_VERSION */
       const QObjectList &childList = w->children();
 #endif /* QT_VERSION */
-      int nChild = 0;
 #if QT_VERSION < 0x40000
       if (childList) {
-         nChild = childList->count();
          QObjectListIterator next(*childList);
          next.toLast();
 #else /* QT_VERSION */
       if (!childList.isEmpty()) {
-         nChild = childList.count();
          QListIterator<QObject *> next(childList);
          next.toBack();
 #endif /* QT_VERSION */

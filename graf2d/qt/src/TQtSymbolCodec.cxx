@@ -153,15 +153,15 @@ QString QSymbolCodec::toUnicode(const char* chars, int len ) const
    return r;
 }
 //_______________________________________________________________________
-QByteArray QSymbolCodec::fromUnicode(const QString& uc, int& lenInOut) const
+QByteArray QSymbolCodec::fromUnicode(const QString& /*uc*/, int& /*lenInOut*/) const
 {
    // process only len chars...
    qWarning( "Method <QSymbolCodec::fromUnicode> has not been implemated yet");
-   int l;
-   if( lenInOut > 0 )
-      l = qMin((int)uc.length(),lenInOut);
-   else
-      l = (int)uc.length();
+   //int l;
+   //if( lenInOut > 0 )
+   //   l = qMin((int)uc.length(),lenInOut);
+   //else
+   //   l = (int)uc.length();
    QByteArray rstr;
 
    return rstr;

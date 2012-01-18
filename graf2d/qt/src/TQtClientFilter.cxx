@@ -652,11 +652,9 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
        break;
    };
 
-   bool justInit =  false;
    if (!fRootEventQueue) {
       fRootEventQueue = new TQtEventQueue();
       // send message to another thread
-      justInit = true;
    }
 #if ROOT_VERSION_CODE >= ROOT_VERSION(9,15,9)         
    if (evt.fType ==  kExpose ) {
