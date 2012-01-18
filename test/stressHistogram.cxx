@@ -45,8 +45,8 @@
 // Test 12: Interpolation tests for Histograms...............................OK  //
 // Test 13: Scale tests for Profiles.........................................OK  //
 // Test 14: Integral tests for Histograms....................................OK  //
-// Test 15: TH1-THnSparse Conversion tests...................................OK  //
-// Test 16: Filldata tests for Histograms and Sparses........................OK  //
+// Test 15: TH1-THn[Sparse] Conversion tests.................................OK  //
+// Test 16: Filldata tests for Histograms and THn[Sparse]....................OK  //
 // Test 17: Reference File Read for Histograms and Profiles..................OK  //
 // ****************************************************************************  //
 // stressHistogram: Real Time =  64.01 seconds Cpu Time =  63.89 seconds         //
@@ -62,6 +62,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TH2.h"
+#include "THn.h"
 #include "THnSparse.h"
 
 #include "TProfile.h"
@@ -145,8 +146,8 @@ void FillProfiles(TProfile* p1, TProfile* p2, Double_t c1 = 1.0, Double_t c2 = 1
 int equals(const char* msg, TH1D* h1, TH1D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int equals(const char* msg, TH2D* h1, TH2D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int equals(const char* msg, TH3D* h1, TH3D* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int equals(const char* msg, THnSparse* h1, TH1* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(const char* msg, THnBase* h1, THnBase* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+int equals(const char* msg, THnBase* h1, TH1* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = defaultErrorLimit);
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = defaultErrorLimit);
 ostream& operator<<(ostream& out, TH1D* h);
@@ -896,9 +897,10 @@ bool testAdd3DProfile2()
    return ret;
 }
 
-bool testAddSparse()
+template<typename HIST>
+bool testAddHn()
 {
-   // Tests the Add method for Sparse Histograms
+   // Tests the Add method for n-dimensional Histograms
 
    Double_t c = r.Rndm();
 
@@ -908,9 +910,9 @@ bool testAddSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("tS-s1", "s1", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("tS-s2", "s2", 3, bsize, xmin, xmax);
-   THnSparseD* s3 = new THnSparseD("tS-s3", "s3=s1+c*s2", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("tS-s1", "s1", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("tS-s2", "s2", 3, bsize, xmin, xmax);
+   HIST* s3 = new HIST("tS-s3", "s3=s1+c*s2", 3, bsize, xmin, xmax);
 
    s1->Sumw2();s2->Sumw2();s3->Sumw2();
 
@@ -933,7 +935,7 @@ bool testAddSparse()
    }
 
    s1->Add(s2, c);
-   bool ret = equals("AddSparse", s3, s1, cmpOptStats , 1E-10);
+   bool ret = equals(TString::Format("AddHn<%s>", HIST::Class()->GetName()), s3, s1, cmpOptStats , 1E-10);
    delete s2;
    delete s3;
    return ret;
@@ -1390,7 +1392,8 @@ bool testMul3D2()
    return ret;
 }
 
-bool testMulSparse()
+template<typename HIST>
+bool testMulHn()
 {
   // Tests the Multiply method for Sparse Histograms
 
@@ -1400,9 +1403,9 @@ bool testMulSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("m3D2-s1", "s1-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("m3D2-s2", "s2-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s3 = new THnSparseD("m3D2-s3", "s3=s1*s2", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("m3D2-s1", "s1-Title", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("m3D2-s2", "s2-Title", 3, bsize, xmin, xmax);
+   HIST* s3 = new HIST("m3D2-s3", "s3=s1*s2", 3, bsize, xmin, xmax);
 
    s1->Sumw2();s2->Sumw2();s3->Sumw2();
 
@@ -1453,7 +1456,7 @@ bool testMulSparse()
 
    s1->Multiply(s2);
 
-   bool ret = equals("MultSparse", s3, s1, cmpOptNone, 1E-10);
+   bool ret = equals(TString::Format("MultHn<%s>", HIST::Class()->GetName()), s3, s1, cmpOptNone, 1E-10);
    delete s2;
    delete s3;
    return ret;
@@ -1670,6 +1673,7 @@ bool testMulF3D2()
    return status;
 }
 
+template <typename HIST>
 bool testMulFND()
 {
    const UInt_t nDims = 3;
@@ -1681,8 +1685,8 @@ bool testMulFND()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", nDims, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
+   HIST* s1 = new HIST("mfND-s1", "s1-Title", nDims, bsize, xmin, xmax);
+   HIST* s2 = new HIST("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
 
    TF1* f = new TF1("sin", "sin(x)", minRange - 2, maxRange + 2);
    
@@ -1701,12 +1705,13 @@ bool testMulFND()
 
    s1->Multiply(f, c1);
 
-   int status = equals("MULF HND", s1, s2);
+   int status = equals(TString::Format("MULF HND<%s>", HIST::Class()->GetName()), s1, s2);
    delete s1;
    delete f;
    return status;
 }
 
+template<typename HIST>
 bool testMulFND2()
 {
    const UInt_t nDims = 3;
@@ -1718,8 +1723,8 @@ bool testMulFND2()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", nDims, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
+   HIST* s1 = new HIST("mfND-s1", "s1-Title", nDims, bsize, xmin, xmax);
+   HIST* s2 = new HIST("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
 
    TF2* f = new TF2("sin2", "sin(x)*cos(y)", 
                     minRange - 2, maxRange + 2,
@@ -1742,7 +1747,7 @@ bool testMulFND2()
 
    s1->Multiply(f, c1);
 
-   int status = equals("MULF HND2", s1, s2);
+   int status = equals(TString::Format("MULF HND2<%s>", HIST::Class()->GetName()), s1, s2);
    delete s1;
    delete f;
    return status;
@@ -2217,7 +2222,8 @@ bool testDivide3D2()
    return ret;
 }
 
-bool testDivSparse1()
+template <typename HIST>
+bool testDivHn1()
 {
    // Tests the first Divide method for 3D Histograms
 
@@ -2231,9 +2237,9 @@ bool testDivSparse1()
    const Double_t c1 = 1; 
    const Double_t c2 = 1;
 
-   THnSparseD* s1 = new THnSparseD("dND1-s1", "s1-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("dND1-s2", "s2-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s4 = new THnSparseD("dND1-s4", "s4=s3*s2)", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("dND1-s1", "s1-Title", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("dND1-s2", "s2-Title", 3, bsize, xmin, xmax);
+   HIST* s4 = new HIST("dND1-s4", "s4=s3*s2)", 3, bsize, xmin, xmax);
 
    s1->Sumw2();s2->Sumw2();s4->Sumw2();
 
@@ -2254,7 +2260,7 @@ bool testDivSparse1()
       s4->Fill(points, 1.0);
    }
 
-   THnSparseD* s3 = new THnSparseD("dND1-s3", "s3=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
+   HIST* s3 = new HIST("dND1-s3", "s3=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
    s3->Divide(s1, s2, c1, c2);
       
    s4->Multiply(s3);
@@ -2271,15 +2277,15 @@ bool testDivSparse1()
       s4->SetBinError(coord, sqrt(error));
    }
 
-   bool ret = equals("DivideND1", s1, s4, cmpOptNone, 1E-6);
+   bool ret = equals(TString::Format("DivideND1<%s>", HIST::Class()->GetName()), s1, s4, cmpOptNone, 1E-6);
    delete s1;
    delete s2;
    delete s3;
    return ret;
 }
 
-
-bool testDivSparse2()
+template <typename HIST>
+bool testDivHn2()
 {
    // Tests the second Divide method for 3D Histograms
 
@@ -2293,9 +2299,9 @@ bool testDivSparse2()
    const Double_t c1 = 1; 
    const Double_t c2 = 1;
 
-   THnSparseD* s1 = new THnSparseD("dND2-s1", "s1-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("dND2-s2", "s2-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s4 = new THnSparseD("dND2-s4", "s4=s3*s2)", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("dND2-s1", "s1-Title", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("dND2-s2", "s2-Title", 3, bsize, xmin, xmax);
+   HIST* s4 = new HIST("dND2-s4", "s4=s3*s2)", 3, bsize, xmin, xmax);
 
    s1->Sumw2();s2->Sumw2();s4->Sumw2();
 
@@ -2316,10 +2322,10 @@ bool testDivSparse2()
       s4->Fill(points, 1.0);
    }
 
-   THnSparseD* s3 = static_cast<THnSparseD*>( s1->Clone() );
+   HIST* s3 = static_cast<HIST*>( s1->Clone() );
    s3->Divide(s2);
    
-   THnSparseD* s5 = new THnSparseD("dND2-s5", "s5=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
+   HIST* s5 = new HIST("dND2-s5", "s5=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
    s5->Divide(s1,s2);
       
    s4->Multiply(s3);
@@ -2336,7 +2342,7 @@ bool testDivSparse2()
       s4->SetBinError(coord, sqrt(error));
    }
 
-   bool ret = equals("DivideND2", s1, s4, cmpOptNone, 1E-6);
+   bool ret = equals(TString::Format("DivideND2<%s>", HIST::Class()->GetName()), s1, s4, cmpOptNone, 1E-6);
    
    delete s1;
    delete s2;
@@ -2897,7 +2903,8 @@ bool testCloneProfile3D()
    return ret;
 }
 
-bool testCloneSparse()
+template <typename HIST>
+bool testCloneHn()
 {
    // Tests the clone method for Sparse histograms
 
@@ -2908,7 +2915,7 @@ bool testCloneSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("clS-s1","s1-Title", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("clS-s1","s1-Title", 3, bsize, xmin, xmax);
 
    for ( Int_t i = 0; i < nEvents * nEvents; ++i ) {
       Double_t points[3];
@@ -2918,9 +2925,9 @@ bool testCloneSparse()
       s1->Fill(points);
    }
 
-   THnSparseD* s2 = (THnSparseD*) s1->Clone();
+   HIST* s2 = (HIST*) s1->Clone();
 
-   bool ret = equals("Clone Function THnSparse", s1, s2);
+   bool ret = equals(TString::Format("Clone Function %s", HIST::Class()->GetName()), s1, s2);
    delete s1;
    return ret;
 }
@@ -3147,9 +3154,10 @@ bool testWriteReadProfile3D()
    return ret;
 }
 
-bool testWriteReadSparse()
+template <typename HIST>
+bool testWriteReadHn()
 {
-   // Tests the write and read methods for Sparse Histograms
+   // Tests the write and read methods for n-dim Histograms
 
    Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
                      TMath::Nint( r.Uniform(1, 5) ),
@@ -3158,7 +3166,7 @@ bool testWriteReadSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
    
-   THnSparseD* s1 = new THnSparseD("wrS-s1","s1-Title", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("wrS-s1","s1-Title", 3, bsize, xmin, xmax);
    s1->Sumw2();
 
    for ( Int_t i = 0; i < nEvents * nEvents; ++i ) {
@@ -3174,9 +3182,9 @@ bool testWriteReadSparse()
    f.Close();
 
    TFile f2("tmpHist.root");
-   THnSparseD* s2 = static_cast<THnSparseD*> ( f2.Get("wrS-s1") );
+   HIST* s2 = static_cast<HIST*> ( f2.Get("wrS-s1") );
 
-   bool ret = equals("Read/Write Hist 3D", s1, s2, cmpOptNone);
+   bool ret = equals(TString::Format("Read/Write Hist %s", HIST::Class()->GetName()), s1, s2, cmpOptNone);
    delete s1;
    return ret;
 }
@@ -3525,9 +3533,10 @@ bool testMergeProf3D()
    return ret;
 }
 
-bool testMergeSparse() 
+template <typename HIST>
+bool testMergeHn() 
 {
-   // Tests the merge method for Sparse Histograms
+   // Tests the merge method for n-dim Histograms
 
    Int_t bsize[] = { TMath::Nint( r.Uniform(1, 5) ),
                      TMath::Nint( r.Uniform(1, 5) ),
@@ -3536,10 +3545,10 @@ bool testMergeSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = new THnSparseD("mergeS-s1", "s1-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("mergeS-s2", "s2-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s3 = new THnSparseD("mergeS-s3", "s3-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s4 = new THnSparseD("mergeS-s4", "s4-Title", 3, bsize, xmin, xmax);
+   HIST* s1 = new HIST("mergeS-s1", "s1-Title", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("mergeS-s2", "s2-Title", 3, bsize, xmin, xmax);
+   HIST* s3 = new HIST("mergeS-s3", "s3-Title", 3, bsize, xmin, xmax);
+   HIST* s4 = new HIST("mergeS-s4", "s4-Title", 3, bsize, xmin, xmax);
 
    s1->Sumw2();s2->Sumw2();s3->Sumw2();
 
@@ -3576,7 +3585,7 @@ bool testMergeSparse()
 
    s1->Merge(list);
 
-   bool ret = equals("MergeSparse", s1, s4, cmpOptNone, 1E-10);
+   bool ret = equals(TString::Format("MergeHn<%s>", HIST::Class()->GetName()), s1, s4, cmpOptNone, 1E-10);
    delete s1;
    delete s2;
    delete s3;
@@ -6154,6 +6163,12 @@ bool testConversion1D()
    THnSparse* s1f = THnSparse::CreateSparse("s1f", "s1fTitle", h1f);
    THnSparse* s1d = THnSparse::CreateSparse("s1d", "s1dTitle", h1d);
 
+   TH1* h1cn = (TH1*) h1c->Clone("h1cn");
+   TH1* h1sn = (TH1*) h1s->Clone("h1sn");
+   TH1* h1in = (TH1*) h1i->Clone("h1in");
+   TH1* h1fn = (TH1*) h1f->Clone("h1fn");
+   TH1* h1dn = (TH1*) h1s->Clone("h1dn");
+
    int status = 0;
    status += equals("TH1-THnSparseC", s1c, h1c);
    status += equals("TH1-THnSparseS", s1s, h1s);
@@ -6166,6 +6181,24 @@ bool testConversion1D()
    delete s1i;
    delete s1f;
    delete s1d;
+
+   THn* n1c = THn::CreateHn("n1c", "n1cTitle", h1cn);
+   THn* n1s = THn::CreateHn("n1s", "n1sTitle", h1sn);
+   THn* n1i = THn::CreateHn("n1i", "n1iTitle", h1in);
+   THn* n1f = THn::CreateHn("n1f", "n1fTitle", h1fn);
+   THn* n1d = THn::CreateHn("n1d", "n1dTitle", h1dn);
+
+   status += equals("TH1-THnC", n1c, h1cn);
+   status += equals("TH1-THnS", n1s, h1sn);
+   status += equals("TH1-THnI", n1i, h1in);
+   status += equals("TH1-THnF", n1f, h1fn);
+   status += equals("TH1-THnD", n1d, h1dn);
+
+   delete n1c;
+   delete n1s;
+   delete n1i;
+   delete n1f;
+   delete n1d;
 
    return status;
 }
@@ -6213,6 +6246,12 @@ bool testConversion2D()
    THnSparse* s2f = THnSparse::CreateSparse("s2f", "s2fTitle", h2f);
    THnSparse* s2d = THnSparse::CreateSparse("s2d", "s2dTitle", h2d);
 
+   TH2* h2cn = (TH2*) h2c->Clone("h2cn");
+   TH2* h2sn = (TH2*) h2s->Clone("h2sn");
+   TH2* h2in = (TH2*) h2i->Clone("h2in");
+   TH2* h2fn = (TH2*) h2f->Clone("h2fn");
+   TH2* h2dn = (TH2*) h2d->Clone("h2dn");
+
    int status = 0;
    status += equals("TH2-THnSparseC", s2c, h2c);
    status += equals("TH2-THnSparseS", s2s, h2s);
@@ -6225,6 +6264,24 @@ bool testConversion2D()
    delete s2i;
    delete s2f;
    delete s2d;
+
+   THn* n2c = THn::CreateHn("n2c", "n2cTitle", h2cn);
+   THn* n2s = THn::CreateHn("n2s", "n2sTitle", h2sn);
+   THn* n2i = THn::CreateHn("n2i", "n2iTitle", h2in);
+   THn* n2f = THn::CreateHn("n2f", "n2fTitle", h2fn);
+   THn* n2d = THn::CreateHn("n2d", "n2dTitle", h2dn);
+
+   status += equals("TH2-THnC", n2c, h2cn);
+   status += equals("TH2-THnS", n2s, h2sn);
+   status += equals("TH2-THnI", n2i, h2in);
+   status += equals("TH2-THnF", n2f, h2fn);
+   status += equals("TH2-THnD", n2d, h2dn);
+
+   delete n2c;
+   delete n2s;
+   delete n2i;
+   delete n2f;
+   delete n2d;
 
    return status;
 }
@@ -6278,6 +6335,12 @@ bool testConversion3D()
    THnSparse* s3f = THnSparse::CreateSparse("s3f", "s3fTitle", h3f);
    THnSparse* s3d = THnSparse::CreateSparse("s3d", "s3dTitle", h3d);
 
+   TH3* h3cn = (TH3*) h3c->Clone("h3cn");
+   TH3* h3sn = (TH3*) h3s->Clone("h3sn");
+   TH3* h3in = (TH3*) h3i->Clone("h3in");
+   TH3* h3fn = (TH3*) h3f->Clone("h3fn");
+   TH3* h3dn = (TH3*) h3d->Clone("h3dn");
+
    int status = 0;
    status += equals("TH3-THnSparseC", s3c, h3c);
    status += equals("TH3-THnSparseS", s3s, h3s);
@@ -6290,6 +6353,24 @@ bool testConversion3D()
    delete s3i;
    delete s3f;
    delete s3d;
+
+   THn* n3c = THn::CreateHn("n3c", "n3cTitle", h3cn);
+   THn* n3s = THn::CreateHn("n3s", "n3sTitle", h3sn);
+   THn* n3i = THn::CreateHn("n3i", "n3iTitle", h3in);
+   THn* n3f = THn::CreateHn("n3f", "n3fTitle", h3fn);
+   THn* n3d = THn::CreateHn("n3d", "n3dTitle", h3dn);
+
+   status += equals("TH3-THnC", n3c, h3cn);
+   status += equals("TH3-THnS", n3s, h3sn);
+   status += equals("TH3-THnI", n3i, h3in);
+   status += equals("TH3-THnF", n3f, h3fn);
+   status += equals("TH3-THnD", n3d, h3dn);
+
+   delete n3c;
+   delete n3s;
+   delete n3i;
+   delete n3f;
+   delete n3d;
 
    return status;
 }
@@ -7513,9 +7594,10 @@ bool test2DRebinProfile()
    return ret;
 }
 
-bool testSparseRebin1() 
+template <typename HIST>
+bool testHnRebin1() 
 {
-   // Tests rebin method for Sparse Histogram
+   // Tests rebin method for n-dim Histogram
 
    const int rebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
 
@@ -7529,8 +7611,8 @@ bool testSparseRebin1()
                     
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
-   THnSparseD* s1 = new THnSparseD("rebin1-s1","s1-Title", 3, bsize, xmin, xmax);
-   THnSparseD* s2 = new THnSparseD("rebin1-s2","s2-Title", 3, bsizeRebin, xmin, xmax);
+   HIST* s1 = new HIST("rebin1-s1","s1-Title", 3, bsize, xmin, xmax);
+   HIST* s2 = new HIST("rebin1-s2","s2-Title", 3, bsizeRebin, xmin, xmax);
 
    for ( Int_t i = 0; i < nEvents; ++i ) {
       Double_t points[3];
@@ -7541,9 +7623,9 @@ bool testSparseRebin1()
       s2->Fill(points);
    }
 
-   THnSparse* s3 = s1->Rebin(rebin);
+   HIST* s3 = (HIST*)s1->Rebin(rebin);
 
-   bool ret = equals("THnSparse Rebin 1", s2, s3);
+   bool ret = equals(TString::Format("%s Rebin 1", HIST::Class()->GetName()), s2, s3);
    delete s1;
    delete s2;
    return ret;
@@ -8246,6 +8328,7 @@ private:
    TH1D* hw1ZY;
    
    THnSparseD* s3;
+   THnD* n3;
 
    bool buildWithWeights;
 
@@ -8345,6 +8428,7 @@ public:
       Double_t xmin[] = {lower_limit, lower_limit, lower_limit};
       Double_t xmax[] = {upper_limit, upper_limit, upper_limit};
       s3 = new THnSparseD("s3","s3", 3, bsize, xmin, xmax);
+      n3 = new THnD("n3","n3", 3, bsize, xmin, xmax);
 
    }
    
@@ -8396,6 +8480,7 @@ public:
       delete hw1ZY;
 
       delete s3;
+      delete n3;
 
       // delete all histogram in gROOT
       TList * l = gROOT->GetList(); 
@@ -8414,7 +8499,7 @@ public:
    
    void buildHistograms()
    {
-      if (h3->GetSumw2N() ) s3->Sumw2();
+      if (h3->GetSumw2N() ) {s3->Sumw2(); n3->Sumw2();}
 
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
          double xc = h3->GetXaxis()->GetBinCenter(ix);
@@ -8431,6 +8516,7 @@ public:
 
                   Double_t points[] = {x,y,z};
                   s3->Fill(points);
+                  n3->Fill(points);
                   
                   h2XY->Fill(x,y);
                   h2XZ->Fill(x,z);
@@ -8494,6 +8580,7 @@ public:
    void buildHistogramsWithWeights()
    {
       s3->Sumw2();
+      n3->Sumw2();
 
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
          double xc = h3->GetXaxis()->GetBinCenter(ix);
@@ -8511,6 +8598,7 @@ public:
 
                Double_t points[] = {x,y,z};
                s3->Fill(points,w);
+               n3->Fill(points,w);
                
                h2XY->Fill(x,y,w);
                h2XZ->Fill(x,z,w);
@@ -8586,6 +8674,7 @@ public:
 
                   Double_t points[] = {x,y,z};
                   s3->Fill(points);
+                  n3->Fill(points);
                   
                   if ( h3->GetXaxis()->FindBin(x) >= xmin && h3->GetXaxis()->FindBin(x) <= xmax &&
                        h3->GetYaxis()->FindBin(y) >= ymin && h3->GetYaxis()->FindBin(y) <= ymax &&
@@ -8664,11 +8753,15 @@ public:
       h1Y->GetXaxis()->SetRange(ymin, ymax);
       h1Z->GetXaxis()->SetRange(zmin, zmax);
 
-      // Neet to set up the rest of the ranges!
+      // Need to set up the rest of the ranges!
 
       s3->GetAxis(1)->SetRange(xmin, xmax);
       s3->GetAxis(2)->SetRange(ymin, ymax);
       s3->GetAxis(3)->SetRange(zmin, zmax);
+
+      n3->GetAxis(1)->SetRange(xmin, xmax);
+      n3->GetAxis(2)->SetRange(ymin, ymax);
+      n3->GetAxis(3)->SetRange(zmin, zmax);
 
       buildWithWeights = false;
    }
@@ -8912,6 +9005,13 @@ public:
       status += equals("STH3 -> YZ", h2YZ, (TH2D*) s3->Projection(2,1), options);
       status += equals("STH3 -> ZX", h2ZX, (TH2D*) s3->Projection(0,2), options); 
       status += equals("STH3 -> ZY", h2ZY, (TH2D*) s3->Projection(1,2), options); 
+
+      status += equals("THn3 -> XY", h2XY, (TH2D*) n3->Projection(1,0), options);
+      status += equals("THn3 -> XZ", h2XZ, (TH2D*) n3->Projection(2,0), options);
+      status += equals("THn3 -> YX", h2YX, (TH2D*) n3->Projection(0,1), options);
+      status += equals("THn3 -> YZ", h2YZ, (TH2D*) n3->Projection(2,1), options);
+      status += equals("THn3 -> ZX", h2ZX, (TH2D*) n3->Projection(0,2), options); 
+      status += equals("THn3 -> ZY", h2ZY, (TH2D*) n3->Projection(1,2), options); 
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
@@ -8921,6 +9021,10 @@ public:
       status += equals("STH3 -> X", h1X, (TH1D*) s3->Projection(0), options);
       status += equals("STH3 -> Y", h1Y, (TH1D*) s3->Projection(1), options);
       status += equals("STH3 -> Z", h1Z, (TH1D*) s3->Projection(2), options);
+
+      status += equals("THn3 -> X", h1X, (TH1D*) n3->Projection(0), options);
+      status += equals("THn3 -> Y", h1Y, (TH1D*) n3->Projection(1), options);
+      status += equals("THn3 -> Z", h1Z, (TH1D*) n3->Projection(2), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
@@ -9007,19 +9111,19 @@ int stressHistogram()
                                         rangeTestPointer };
 
   // Test 4
-   const unsigned int numberOfRebin = 10;
+   const unsigned int numberOfRebin = 11;
    pointer2Test rebinTestPointer[numberOfRebin] = { testIntegerRebin,       testIntegerRebinProfile,
                                                     testIntegerRebinNoName, testIntegerRebinNoNameProfile,
                                                     testArrayRebin,         testArrayRebinProfile,
                                                     test2DRebin, test3DRebin, test2DRebinProfile,
-                                                    testSparseRebin1};
+                                                    testHnRebin1<THnD>,     testHnRebin1<THnSparseD>};
    struct TTestSuite rebinTestSuite = { numberOfRebin, 
                                         "Histogram Rebinning..............................................",
                                         rebinTestPointer };
 
    // Test 5
    // Add Tests
-   const unsigned int numberOfAdds = 21;
+   const unsigned int numberOfAdds = 22;
    pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1, 
                                                  testAdd2,    testAddProfile2,
                                                  testAdd3,   
@@ -9032,7 +9136,8 @@ int stressHistogram()
                                                  testAdd2D2,  testAdd2DProfile2,
                                                  testAdd3D1,  testAdd3DProfile1,
                                                  testAdd3D2,  testAdd3DProfile2,
-                                                 testAddSparse
+                                                 testAddHn<THnSparseD>,
+                                                 testAddHn<THnD>
    };
    struct TTestSuite addTestSuite = { numberOfAdds, 
                                       "Add tests for 1D, 2D and 3D Histograms and Profiles..............",
@@ -9040,16 +9145,20 @@ int stressHistogram()
 
    // Test 6
    // Multiply Tests
-   const unsigned int numberOfMultiply = 17;
+   const unsigned int numberOfMultiply = 20;
    pointer2Test multiplyTestPointer[numberOfMultiply] = { testMul1,      testMul2,
                                                           testMulVar1,   testMulVar2,
                                                           testMul2D1,    testMul2D2,
                                                           testMul3D1,    testMul3D2,
-                                                          testMulSparse,
+                                                          testMulHn<THnD>,
+                                                          testMulHn<THnSparseD>,
                                                           testMulF1D,    testMulF1D2,
                                                           testMulF2D,    testMulF2D2,
                                                           testMulF3D,    testMulF3D2,
-                                                          testMulFND,    testMulFND2
+                                                          testMulFND<THnD>,
+                                                          testMulFND<THnSparseD>,
+                                                          testMulFND2<THnD>,
+                                                          testMulFND2<THnSparseD>
    };
    struct TTestSuite multiplyTestSuite = { numberOfMultiply, 
                                            "Multiply tests for 1D, 2D and 3D Histograms......................",
@@ -9057,12 +9166,15 @@ int stressHistogram()
 
    // Test 7
    // Divide Tests
-   const unsigned int numberOfDivide = 10;
+   const unsigned int numberOfDivide = 12;
    pointer2Test divideTestPointer[numberOfDivide] = { testDivide1,     testDivide2,
                                                       testDivideVar1,  testDivideVar2,
                                                       testDivide2D1,   testDivide2D2,
                                                       testDivide3D1,   testDivide3D2,
-                                                      testDivSparse1,  testDivSparse2
+                                                      testDivHn1<THnD>,
+                                                      testDivHn1<THnSparseD>,
+                                                      testDivHn2<THnD>,
+                                                      testDivHn2<THnSparseD>
    };
    struct TTestSuite divideTestSuite = { numberOfDivide, 
                                          "Divide tests for 1D, 2D and 3D Histograms........................",
@@ -9075,7 +9187,7 @@ int stressHistogram()
 
    // Test 8
    // Copy Tests
-   const unsigned int numberOfCopy = 25;
+   const unsigned int numberOfCopy = 26;
    pointer2Test copyTestPointer[numberOfCopy] = { testAssign1D,             testAssignProfile1D, 
                                                   testAssignVar1D,          testAssignProfileVar1D, 
                                                   testCopyConstructor1D,    testCopyConstructorProfile1D, 
@@ -9088,7 +9200,7 @@ int stressHistogram()
                                                   testAssign3D,             testAssignProfile3D,
                                                   testCopyConstructor3D,    testCopyConstructorProfile3D,
                                                   testClone3D,              testCloneProfile3D,
-                                                  testCloneSparse
+                                                  testCloneHn<THnD>,        testCloneHn<THnSparseD>
    };
    struct TTestSuite copyTestSuite = { numberOfCopy, 
                                        "Copy tests for 1D, 2D and 3D Histograms and Profiles.............",
@@ -9096,12 +9208,12 @@ int stressHistogram()
 
    // Test 9
    // WriteRead Tests
-   const unsigned int numberOfReadwrite = 9;
-   pointer2Test readwriteTestPointer[numberOfReadwrite] = { testWriteRead1D,     testWriteReadProfile1D,
-                                                            testWriteReadVar1D,  testWriteReadProfileVar1D,
-                                                            testWriteRead2D,     testWriteReadProfile2D,
-                                                            testWriteRead3D,     testWriteReadProfile3D, 
-                                                            testWriteReadSparse
+   const unsigned int numberOfReadwrite = 10;
+   pointer2Test readwriteTestPointer[numberOfReadwrite] = { testWriteRead1D,      testWriteReadProfile1D,
+                                                            testWriteReadVar1D,   testWriteReadProfileVar1D,
+                                                            testWriteRead2D,      testWriteReadProfile2D,
+                                                            testWriteRead3D,      testWriteReadProfile3D, 
+                                                            testWriteReadHn<THnD>,testWriteReadHn<THnSparseD>
    };
    struct TTestSuite readwriteTestSuite = { numberOfReadwrite, 
                                             "Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......",
@@ -9109,12 +9221,12 @@ int stressHistogram()
 
    // Test 10
    // Merge Tests
-   const unsigned int numberOfMerge = 42;
+   const unsigned int numberOfMerge = 43;
    pointer2Test mergeTestPointer[numberOfMerge] = { testMerge1D,                 testMergeProf1D,
                                                     testMergeVar1D,              testMergeProfVar1D,
                                                     testMerge2D,                 testMergeProf2D,
                                                     testMerge3D,                 testMergeProf3D,
-                                                    testMergeSparse,
+                                                    testMergeHn<THnD>,           testMergeHn<THnSparseD>,
                                                     testMerge1DLabelSame,        testMergeProf1DLabelSame,
                                                     testMerge2DLabelSame,        testMergeProf2DLabelSame,
                                                     testMerge3DLabelSame,        testMergeProf3DLabelSame,
@@ -9182,14 +9294,14 @@ int stressHistogram()
                                            integralTestPointer };
 
    // Test 15
-   // TH1-THnSparse Conversions Tests
+   // TH1-THn[Sparse] Conversions Tests
    const unsigned int numberOfConversions = 3;
    pointer2Test conversionsTestPointer[numberOfConversions] = { testConversion1D,
                                                                 testConversion2D,
                                                                 testConversion3D,
    };
    struct TTestSuite conversionsTestSuite = { numberOfConversions, 
-                                              "TH1-THnSparse Conversion tests...................................",
+                                              "TH1-THn[Sparse] Conversion tests.................................",
                                               conversionsTestPointer };
 
    // Test 16
@@ -9346,7 +9458,7 @@ void FillProfiles(TProfile* p1, TProfile* p2, Double_t c1, Double_t c2)
 
 // Methods for histogram comparisions
 
-int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ERRORLIMIT)
+int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORLIMIT)
 {
    options = options | defaultEqualOptions;
    bool print = options & cmpOptPrint;
@@ -9387,7 +9499,7 @@ int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ER
          }
    
    // Statistical tests:
-   // No statistical tests possible for THnSparse so far...
+   // No statistical tests possible for THnBase so far...
 //    if ( compareStats )
 //       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
@@ -9398,7 +9510,7 @@ int equals(const char* msg, THnSparse* h1, THnSparse* h2, int options, double ER
    return differents;
 }
 
-int equals(const char* msg, THnSparse* s, TH1* h2, int options, double ERRORLIMIT)
+int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
 {
    options = options | defaultEqualOptions;
    bool print = options & cmpOptPrint;
@@ -9419,7 +9531,7 @@ int equals(const char* msg, THnSparse* s, TH1* h2, int options, double ERRORLIMI
               
    TArray* array = dynamic_cast<TArray*>(h2);
    if ( !array )
-      Fatal( "equals(const char* msg, THnSparse* s, TH1* h2, int options, double ERRORLIMIT)" ,"NO ARRAY!");
+      Fatal( "equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)" ,"NO ARRAY!");
 
    Int_t* coord = new Int_t[3];
    for (Long64_t i = 0; i < s->GetNbins(); ++i) 

@@ -19,7 +19,7 @@
 
 
 class TH1; 
-class THnSparse;
+class THnBase;
 class TF1;
 class TF2;
 class TGraph; 
@@ -73,9 +73,9 @@ namespace ROOT {
       TFitResultPtr FitObject(TGraph2D * gr, TF1 *f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range); 
 
       /**
-         fitting function for a THnSparse (called from THnSparse::Fit)
+         fitting function for a THn / THnSparse (called from THnBase::Fit)
        */
-      TFitResultPtr FitObject(THnSparse * s1, TF1 *f1, Foption_t & option, const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range); 
+      TFitResultPtr FitObject(THnBase * s1, TF1 *f1, Foption_t & option, const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range); 
 #endif
 
       /** 
@@ -100,16 +100,16 @@ namespace ROOT {
       void FillData ( SparseData  & dv, const TH1 * hist, TF1 * func = 0); 
 
       /** 
-          fill the data vector from a THnSparse. Pass also the TF1 function which is 
+          fill the data vector from a THnBase. Pass also the TF1 function which is 
           needed in case of integral option and to reject points rejected by the function
       */ 
-      void FillData ( SparseData  & dv, const THnSparse * hist, TF1 * func = 0); 
+      void FillData ( SparseData  & dv, const THnBase * hist, TF1 * func = 0); 
 
       /** 
-          fill the data vector from a THnSparse. Pass also the TF1 function which is 
+          fill the data vector from a THnBase. Pass also the TF1 function which is 
           needed in case of integral option and to reject points rejected by the function
       */ 
-      void FillData ( BinData  & dv, const THnSparse * hist, TF1 * func = 0); 
+      void FillData ( BinData  & dv, const THnBase * hist, TF1 * func = 0); 
 
       /** 
           fill the data vector from a TGraph2D. Pass also the TF1 function which is 

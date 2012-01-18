@@ -2,7 +2,7 @@
 // Author: Axel Naumann (2007-09-11)
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -65,21 +65,5 @@ class THnSparseArrayChunk: public TObject {
 
    ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
 };
-
-namespace ROOT {
-   class THnSparseBrowsable: public TNamed {
-   public:
-      THnSparseBrowsable(THnSparse* hist, Int_t axis);
-      ~THnSparseBrowsable();
-      void Browse(TBrowser *b);
-      Bool_t IsFolder() const { return kFALSE; }
-
-   private:
-      THnSparse* fHist; // Original histogram
-      Int_t      fAxis; // Axis to visualize
-      TH1*       fProj; // Projection result
-      ClassDef(THnSparseBrowsable, 0); // Browser-helper for THnSparse
-   };
-}
 #endif // ROOT_THnSparse_Internal
 

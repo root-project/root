@@ -11,7 +11,7 @@
 #include "TGraph.h"
 #include "TMultiGraph.h"
 #include "TGraph2D.h"
-#include "THnSparse.h"
+#include "THnBase.h"
 
 #include "Fit/Fitter.h"
 #include "Fit/BinData.h"
@@ -48,7 +48,7 @@ namespace HFit {
    int GetDimension(const TGraph * ) { return 1; }
    int GetDimension(const TMultiGraph * ) { return 1; }
    int GetDimension(const TGraph2D * ) { return 2; }
-   int GetDimension(const THnSparse * s1) { return s1->GetNdimensions(); }
+   int GetDimension(const THnBase * s1) { return s1->GetNdimensions(); }
 
    int CheckFitFunction(const TF1 * f1, int hdim);
 
@@ -61,7 +61,7 @@ namespace HFit {
    void GetDrawingRange(TGraph * gr, ROOT::Fit::DataRange & range);
    void GetDrawingRange(TMultiGraph * mg, ROOT::Fit::DataRange & range);
    void GetDrawingRange(TGraph2D * gr, ROOT::Fit::DataRange & range);
-   void GetDrawingRange(THnSparse * s, ROOT::Fit::DataRange & range);
+   void GetDrawingRange(THnBase * s, ROOT::Fit::DataRange & range);
 
 
    template <class FitObject>
@@ -501,7 +501,7 @@ void HFit::GetDrawingRange(TGraph2D * gr,  ROOT::Fit::DataRange & range) {
    if (h1) HFit::GetDrawingRange(h1, range);
 }
 
-void HFit::GetDrawingRange(THnSparse * s1, ROOT::Fit::DataRange & range) { 
+void HFit::GetDrawingRange(THnBase * s1, ROOT::Fit::DataRange & range) { 
    // get range from histogram and update the DataRange class  
    // if a ranges already exist in that dimension use that one
 
@@ -839,7 +839,7 @@ TFitResultPtr ROOT::Fit::FitObject(TGraph2D * gr, TF1 *f1 , Foption_t & foption 
    return HFit::Fit(gr,f1,foption,moption,goption,range); 
 }
 
-TFitResultPtr ROOT::Fit::FitObject(THnSparse * s1, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
+TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption , const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range) { 
    // sparse histogram fitting
    return HFit::Fit(s1,f1,foption,moption,goption,range); 
 }
