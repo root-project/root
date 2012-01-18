@@ -18,59 +18,59 @@
 ClassImp(TDialogCanvas)
 
 //______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*
-//*-*   A DialogCanvas is a canvas specialized to set attributes.
-//*-*   It contains, in general, TGroupButton objects.
-//*-*   When the APPLY button is executed, the actions corresponding
-//*-*   to the active buttons are executed via the Interpreter.
-//*-*
-//*-*  See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
+// A DialogCanvas is a canvas specialized to set attributes.
+// It contains, in general, TGroupButton objects.
+// When the APPLY button is executed, the actions corresponding
+// to the active buttons are executed via the Interpreter.
+//
+// See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
+
 
 //______________________________________________________________________________
 TDialogCanvas::TDialogCanvas() : TCanvas()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas default constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ================================
+   // DialogCanvas default constructor
 
+   fRefObject = 0;
+   fRefPad    = 0;
 }
+
 
 //_____________________________________________________________________________
 TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t ww, Int_t wh)
              : TCanvas(name,title,-ww,wh)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
+   // DialogCanvas constructor
 
    SetFillColor(36);
    fRefObject = 0;
    fRefPad    = 0;
 }
+
 
 //_____________________________________________________________________________
 TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh)
              : TCanvas(name,title,-wtopx,wtopy,ww,wh)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
-
+   // DialogCanvas constructor
+   
    SetFillColor(36);
    fRefObject = 0;
    fRefPad    = 0;
 }
 
+
 //______________________________________________________________________________
 TDialogCanvas::~TDialogCanvas()
 {
-//*-*-*-*-*-*-*-*-*-*-*DialogCanvas default destructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+   // DialogCanvas default destructor
 }
+
 
 //______________________________________________________________________________
 void TDialogCanvas::Apply(const char *action)
 {
-//*-*-*-*-*-*-*-*-*Called when the APPLY button is executed*-*-*-*-*-*-*-*-*-*-*
-//*-*              ========================================
+   // Called when the APPLY button is executed
 
    if (!fRefPad) return;
    SetCursor(kWatch);
@@ -93,11 +93,11 @@ void TDialogCanvas::Apply(const char *action)
    gROOT->GetSelectedPad()->Update();
 }
 
+
 //______________________________________________________________________________
 void TDialogCanvas::BuildStandardButtons()
 {
-//*-*-*-*-*-*-*-*-*Create APPLY, gStyle and CLOSE buttons*-*-*-*-*-*-*-*-*-*-*
-//*-*              ======================================
+   // Create APPLY, gStyle and CLOSE buttons
 
    TGroupButton *apply = new TGroupButton("APPLY","Apply","",.05,.01,.3,.09);
    apply->SetTextSize(0.55);
@@ -118,20 +118,20 @@ void TDialogCanvas::BuildStandardButtons()
    apply->Draw();
 }
 
+
 //______________________________________________________________________________
 void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
-//*-*                  =======================================
+   // Set world coordinate system for the pad
 
    TPad::Range(x1,y1,x2,y2);
 }
 
+
 //______________________________________________________________________________
 void TDialogCanvas::RecursiveRemove(TObject *obj)
 {
-//*-*-*-*-*-*-*-*Recursively remove object from a pad and its subpads*-*-*-*-*
-//*-*            ====================================================
+   // Recursively remove object from a pad and its subpads
 
    TPad::RecursiveRemove(obj);
    if (fRefObject == obj) fRefObject = 0;
