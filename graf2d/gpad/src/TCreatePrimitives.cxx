@@ -423,7 +423,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->Modified(kTRUE);
          if (mode == kCutG && gr) {
             gr->Set(gr->GetN() + 1);
-            Double_t x0, y0;
+            Double_t x0 = 0., y0 = 0.;
             gr->GetPoint(0, x0, y0);
             gr->SetPoint(npoints, x0, y0);
          }
