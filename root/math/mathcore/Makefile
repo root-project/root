@@ -1,13 +1,15 @@
 # This is a template for all makefiles.
 
+MATHCORETESTS := testSpecFuncSiCi testRootFinder
+
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog $(addsuffix .cxx,$(MATHCORETESTS)) 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += testSpecFuncSiCi testRootFinder mytest
+TEST_TARGETS += $(MATHCORETESTS)
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -31,14 +33,6 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
-# The name of this target should be changed according to the test being run.  Any name changes
-#  should also be reflected in the TEST_TARGETS variable above.
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-
 # Outputs a message if the FAIL variable is null
 
 testWithFailure:
@@ -59,9 +53,15 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+%.cxx: $(ROOT_SRCDIRDEP)/math/mathcore/test/%.cxx
+	@cp $< $@
 
+#%.h: $(ROOT_SRCDIRDEP)/math/mathcore/test/%.h
+#	@cp $< $@
 
-testRootFinder.elog: $(ROOT_SRCDIRDEP)/math/mathcore/test/testRootFinder_cxx.$(DllSuf)
+#$(addsuffix _cxx.$(DllSuf),$(MATHCORETESTS)): AnyDependentHeaders.h
+
+testRootFinder.elog: testRootFinder_cxx.$(DllSuf)
 
 testRootFinder: testRootFinder.elog
 	$(TestDiff)
@@ -69,4 +69,4 @@ testRootFinder: testRootFinder.elog
 testSpecFuncSiCi: testSpecFuncSiCi.elog
 	$(TestDiff)
 
-testSpecFuncSiCi.elog: $(ROOT_SRCDIRDEP)/math/mathcore/test/testSpecFuncSiCi_cxx.$(DllSuf)
+testSpecFuncSiCi.elog: testSpecFuncSiCi_cxx.$(DllSuf)
