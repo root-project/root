@@ -387,7 +387,7 @@ void TProofPerfTree::FileDist(Bool_t writedet)
       // Display histos
       gStyle->SetOptStat(0);
 
-      TCanvas *c1 = new TCanvas("cv-hfdis", GetCanvasTitle(hfdis->GetTitle()), 800,10,700,700);
+      TCanvas *c1 = new TCanvas("cv-hfdis", GetCanvasTitle(hfdis->GetTitle()), 800,50,700,700);
       c1->Divide(1,2);
       TPad *pad1 = (TPad *) c1->GetPad(1);
       TPad *pad2 = (TPad *) c1->GetPad(2);
@@ -397,7 +397,7 @@ void TProofPerfTree::FileDist(Bool_t writedet)
       hbdis->Draw();
       c1->Update();
 
-      TCanvas *c2 = new TCanvas("cv-hxpak",  GetCanvasTitle(hxpak->GetTitle()), 12.00,350,700,700);
+      TCanvas *c2 = new TCanvas("cv-hxpak",  GetCanvasTitle(hxpak->GetTitle()), 500,350,700,700);
       c2->cd();
       hxpak->Draw("lego");
       c2->Update();
