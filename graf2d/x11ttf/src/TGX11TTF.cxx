@@ -431,7 +431,11 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    ULong_t   bg;
    XGCValues values;
    gc = GetGC(3);
-   if (gc) XGetGCValues(fDisplay, *gc, GCForeground | GCBackground, &values);
+   if (!gc) {
+      Error("DrawText", "error getting Graphics Context");
+      return;
+   }
+   XGetGCValues(fDisplay, *gc, GCForeground | GCBackground, &values);
 
    // get the background
    if (mode == kClear) {
