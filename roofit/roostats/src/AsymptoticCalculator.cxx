@@ -268,12 +268,12 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;
        minim.optimizeConst(2);
-       for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
+       TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
+       TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo(); 
+       for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
           //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
-          TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
-          TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo(); 
-          status = minim.minimize(minimizer, algorithm);       
-          if (status == 0) {  
+          status = minim.minimize(minimizer, algorithm);  
+          if (status%1000 == 0) {  // ignore erros from Improve 
              break;
           } else {
              if (tries > 1) {
@@ -281,8 +281,17 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
                 minim.minimize(minimizer,"Scan");
              }
              if (tries > 2) {
-                printf("    ----> trying with strategy = 1\n");
-                minim.setStrategy(1);
+                if (ROOT::Math::MinimizerOptions::DefaultStrategy() == 0 ) { 
+                   printf("    ----> trying with strategy = 1\n");
+                   minim.setStrategy(1);
+                }
+                else 
+                   tries++; // skip this trial if stratehy is already 1 
+             }
+             if (tries > 3) {
+                printf("    ----> trying with improve\n");
+                minimizer = "Minuit";
+                algorithm = "migradimproved";
              }
           }
        }
@@ -290,7 +299,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        RooFitResult * result = 0; 
 
 
-       if (status == 0) { 
+       if (status%100 == 0) { // ignore errors in Hesse or in Improve
           result = minim.save();
           val = result->minNll();
        }

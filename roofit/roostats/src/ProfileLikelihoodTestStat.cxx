@@ -191,19 +191,30 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
    minim.setEps(fTolerance);
    // this cayses a memory leak
    minim.optimizeConst(2); 
-   for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
-      //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
-      status = minim.minimize(fMinimizer, "Minimize");
-      if (status == 0) {  
+   TString minimizer = fMinimizer;
+   TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
+   if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+   for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
+      status = minim.minimize(minimizer,algorithm);
+      if (status%1000 == 0) {  // ignore erros from Improve 
          break;
       } else {
          if (tries > 1) {
             printf("    ----> Doing a re-scan first\n");
-            minim.minimize(fMinimizer,"Scan");
+            minim.minimize(minimizer,"Scan");
          }
          if (tries > 2) {
-            printf("    ----> trying with strategy = 1\n");
-            minim.setStrategy(1);
+            if (fStrategy == 0 ) { 
+               printf("    ----> trying with strategy = 1\n");
+               minim.setStrategy(1);
+            }
+            else 
+               tries++; // skip this trial if stratehy is already 1 
+         }
+         if (tries > 3) {
+            printf("    ----> trying with improve\n");
+            minimizer = "Minuit";
+            algorithm = "migradimproved";
          }
       }
    }
