@@ -5932,9 +5932,9 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
    fprintf(fp, "   const int imax = 6, dmax = 8, umax = 50;\n");
    fprintf(fp, "   int objsize, type, i, icnt = 0, dcnt = 0, ucnt = 0;\n");
    fprintf(fp, "   G__value *pval;\n");
-   fprintf(fp, "   G__int64 lval[imax];\n");
-   fprintf(fp, "   double dval[dmax];\n");
-   fprintf(fp, "   union { G__int64 lval; double dval; } u[umax];\n");
+   fprintf(fp, "   G__int64 lval[imax] = {0};\n");
+   fprintf(fp, "   double dval[dmax] = {0};\n");
+   fprintf(fp, "   union { G__int64 lval; double dval; } u[umax] = {{0}};\n");
               
    if (tagnum != -1 && !ifunc->staticalloc[ifn])
       fprintf(fp, "   lval[icnt] = G__getstructoffset(); icnt++; // this pointer\n");
