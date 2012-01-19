@@ -244,10 +244,13 @@ void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    eventSt.fX = px;
    eventSt.fY = py;
    eventSt.fState = 0;
+   eventSt.fXRoot = eventSt.fYRoot = 0;
 
    if (event != kKeyPress) {
       eventSt.fY -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
       eventSt.fX -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+      eventSt.fXRoot = eventSt.fX;
+      eventSt.fYRoot = eventSt.fY;
    }
 
    switch (event) {
