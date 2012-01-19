@@ -24,4 +24,6 @@
 #pragma link C++ class TPBHistType+;
 #pragma link C++ class TPBHandleDSType+;
 
+#pragma link C++ class TProofPerfAnalysis+;
+
 #endif
