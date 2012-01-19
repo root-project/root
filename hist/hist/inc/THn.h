@@ -114,6 +114,11 @@ public:
       if (!GetCalculateErrors()) Sumw2();
       fSumw2.At(bin) = e2;
    }
+   void AddBinContent(const Int_t* idx, Double_t v = 1.) {
+      // Forwards to THnBase::SetBinContent().
+      // Non-virtual, CINT-compatible replacement of a using declaration.
+      THnBase::AddBinContent(idx, v);
+   }
    void AddBinContent(Long64_t bin, Double_t v = 1.) {
       GetArray().AddAt(bin, v);
    }
