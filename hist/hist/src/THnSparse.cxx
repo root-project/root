@@ -37,6 +37,9 @@ namespace {
       virtual Long64_t Next(Int_t* coord = 0);
 
    private:
+      THnSparseBinIter(const THnSparseBinIter&); // intentionally unimplemented
+      THnSparseBinIter& operator=(const THnSparseBinIter&); // intentionally unimplemented
+
       const THnSparse* fHist;
       Int_t* fCoord; // coord buffer for fIndex; fCoord[0] == -1 if not yet calculated
       Long64_t fNbins; // number of bins to iterate over
@@ -112,6 +115,8 @@ public:
    THnSparseCoordCompression(const THnSparseCoordCompression& other);
    ~THnSparseCoordCompression();
 
+   THnSparseCoordCompression& operator=(const THnSparseCoordCompression& other);
+
    ULong64_t GetHashFromBuffer(const Char_t* buf) const;
    Int_t     GetBufferSize() const { return fCoordBufferSize; }
    Int_t     GetNdimensions() const { return fNdimensions; }
@@ -164,6 +169,20 @@ THnSparseCoordCompression::THnSparseCoordCompression(const THnSparseCoordCompres
    fCoordBufferSize = other.fCoordBufferSize;
    fBitOffsets = new Int_t[fNdimensions + 1];
    memcpy(fBitOffsets, other.fBitOffsets, sizeof(Int_t) * fNdimensions);
+}
+
+
+//______________________________________________________________________________
+THnSparseCoordCompression& THnSparseCoordCompression::operator=(const THnSparseCoordCompression& other)
+{
+   // Set this to other.
+   
+   fNdimensions = other.fNdimensions;
+   fCoordBufferSize = other.fCoordBufferSize;
+   delete [] fBitOffsets;
+   fBitOffsets = new Int_t[fNdimensions + 1];
+   memcpy(fBitOffsets, other.fBitOffsets, sizeof(Int_t) * fNdimensions);
+   return *this;
 }
 
 
@@ -344,6 +363,12 @@ public:
       memcpy(fCoordBuffer, buf, GetBufferSize());
       fHash = GetHashFromBuffer(fCoordBuffer);
    }
+
+private:
+   // intentionally not implemented
+   THnSparseCompactBinCoord(const THnSparseCompactBinCoord&);
+   // intentionally not implemented
+   THnSparseCompactBinCoord& operator=(const THnSparseCompactBinCoord&);
 
 private:
    ULong64_t fHash;      // hash for current coordinates; 0 if not calculated

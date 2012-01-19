@@ -30,7 +30,11 @@ namespace {
 
       Long64_t Next(Int_t* coord = 0);
       Int_t GetCoord(Int_t dim) const { return fCounter[dim].i; }
+   private:
+      THnBinIter(const THnBinIter&); // intentionally unimplemented
+      THnBinIter& operator=(const THnBinIter&); // intentionally unimplemented
 
+   public:
       Int_t fNdimensions;
       Long64_t fIndex;
       const TNDArray* fArray;
