@@ -31,6 +31,8 @@
 #include "Riostream.h"
 #include "Riostream.h"
 #include "RooTruthModel.h"
+#include <algorithm>
+using namespace std ;
 
 ClassImp(RooTruthModel) 
 ;
@@ -257,9 +259,13 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
       // WVE fixed for ranges
       Double_t result(0) ;
       if (tau==0) return 1 ;
-      if (basisSign != Minus) result += tau*(exp(-x.min(rangeName)/tau)-exp(-x.max(rangeName)/tau)) ;
-      if (basisSign != Plus) result += tau*(exp(-x.max(rangeName)/tau)-exp(x.min(rangeName)/tau)) ;
-      //cout << "RooTruthModel::ai(" << GetName() << ") rangeName = " << rangeName << " ret = " << result << endl ;
+      if ((basisSign != Minus) && (x.max(rangeName)>0)) {
+	result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
+      }
+      if ((basisSign != Plus) && (x.min(rangeName)<0)) {
+	result -= tau*(-exp(-max(0.,x.min(rangeName))/tau)) - -tau*exp(-x.max(rangeName)/tau) ;   // minus and both
+      }
+
       return result ;
     }
   case sinBasis:
