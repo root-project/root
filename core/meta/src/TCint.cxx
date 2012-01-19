@@ -1165,6 +1165,7 @@ Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0
    //    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
    
    if (classes == 0 || classes[0] == 0) return 0;
+   if (!includes) includes = "";
    
    // Split the input list
    std::vector<std::string> listClasses;
