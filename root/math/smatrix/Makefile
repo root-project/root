@@ -1,13 +1,15 @@
 # This is a template for all makefiles.
 
+SMATRIXTESTS := testInversion testOperations testKalman testSMatrix 
+
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog $(addsuffix .cxx,$(SMATRIXTESTS)) 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += testInversion testOperations testKalman testSMatrix mytest
+TEST_TARGETS += $(SMATRIXTESTS)
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -32,13 +34,6 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-# The name of this target should be changed according to the test being run.  Any name changes
-#  should also be reflected in the TEST_TARGETS variable above.
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-
 # Outputs a message if the FAIL variable is null
 
 testWithFailure:
@@ -58,20 +53,25 @@ endif
 
 TESTDIR:=$(ROOT_SRCDIRDEP)/math/smatrix/test
 
-test%.cxx: $(TESTDIR)/test%.cxx
-	cp $< $@
+%.cxx: $(TESTDIR)/%.cxx
+	@cp $< $@
+
+%.h: $(TESTDIR)/%.h
+	@cp $< $@
+
+$(addsuffix _cxx.$(DllSuf),$(SMATRIXTESTS)): matrix_util.h TestTimer.h
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 #skip tests on Windows 
-testSMatrix.elog: $(TESTDIR)/testSMatrix_cxx.$(DllSuf)
+testSMatrix.elog: testSMatrix_cxx.$(DllSuf)
 
 
 testSMatrix: testSMatrix.elog
 	$(TestDiff)
 
-testKalman.elog: $(TESTDIR)/testKalman_cxx.$(DllSuf)
+testKalman.elog: testKalman_cxx.$(DllSuf)
 
 testKalman: testKalman.elog
 	$(TestDiff)
@@ -81,7 +81,7 @@ testOperations.elog: $(TESTDIR)/testOperations_cxx.$(DllSuf)
 testOperations: testOperations.elog
 	$(TestDiff)
 
-testInversion.elog: $(TESTDIR)/testInversion_cxx.$(DllSuf)
+testInversion.elog: testInversion_cxx.$(DllSuf)
 
 testInversion: testInversion.elog
 	$(TestDiff)
