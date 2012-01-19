@@ -1,14 +1,15 @@
 # This is a template for all makefiles.
 
+GENVECTORTESTS := rotationApplication testGenVector coordinates4D coordinates3D
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog 
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog $(addsuffix .cxx,$(GENVECTORTESTS)) \
+	RotationTraits.h CoordinateTraits.h
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-GENVECTORTESTS := rotationApplication testGenVector coordinates4D coordinates3D
 TEST_TARGETS += $(GENVECTORTESTS)
 
 # Search for Rules.mk in roottest/scripts
@@ -59,10 +60,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 ##endif
 
 %.cxx: $(ROOT_SRCDIRDEP)/math/genvector/test/%.cxx
-	cp $< $@
+	@cp $< $@
 
 %.h: $(ROOT_SRCDIRDEP)/math/genvector/test/%.h
-	cp $< $@
+	@cp $< $@
 
 $(addsuffix _cxx.$(DllSuf),$(GENVECTORTESTS)): CoordinateTraits.h RotationTraits.h
 
