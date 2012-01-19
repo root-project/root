@@ -11,14 +11,14 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofPerfTree                                                       //
+// TProofPerfAnalysis                                                       //
 //                                                                      //
 // Set of tools to analyse the performance tree                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include <errno.h>
 
-#include "TProofPerfTree.h"
+#include "TProofPerfAnalysis.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TGraph.h"
@@ -37,7 +37,7 @@
 //
 // Auxilliary internal class
 //_______________________________________________________________________
-class TProofPerfTree::TWrkInfo : public TNamed {
+class TProofPerfAnalysis::TWrkInfo : public TNamed {
 public:
    TWrkInfo(const char *ord, const char *name) :
       TNamed(ord, name), fPackets(0), fRemotePackets(0), fEventsProcessed(0),
@@ -92,9 +92,9 @@ public:
                                           return 1; }
 };
 
-Int_t TProofPerfTree::fgDebug = 0;
+Int_t TProofPerfAnalysis::fgDebug = 0;
 //________________________________________________________________________
-TProofPerfTree::TProofPerfTree(const char *perffile,
+TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                                const char *title, const char *treename)
                : TNamed(perffile, title), fTreeName(treename),
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
@@ -110,7 +110,7 @@ TProofPerfTree::TProofPerfTree(const char *perffile,
    fFile = TFile::Open(perffile);
    if (!fFile || (fFile && fFile->IsZombie())) {
       SafeDelete(fFile);
-      Error("TProofPerfTree", "problems opening file '%s'",
+      Error("TProofPerfAnalysis", "problems opening file '%s'",
                               perffile ? perffile : "<undef>"); 
       return;
    }
@@ -129,7 +129,7 @@ TProofPerfTree::TProofPerfTree(const char *perffile,
    TDirectory *dir = fFile;
    if (!fDirName.IsNull()) {
       if (!(dir = dynamic_cast<TDirectory *>(fFile->Get(fDirName)))) {
-         Error("TProofPerfTree", "directory '%s' not found or not loadable", fDirName.Data());
+         Error("TProofPerfAnalysis", "directory '%s' not found or not loadable", fDirName.Data());
          fFile->Close();
          SafeDelete(fFile);
          return;
@@ -139,7 +139,7 @@ TProofPerfTree::TProofPerfTree(const char *perffile,
    // Load the performance tree
    LoadTree(dir);
    if (!fTree) {
-      Error("TProofPerfTree", "tree '%s' not found or not loadable", fTreeName.Data());
+      Error("TProofPerfAnalysis", "tree '%s' not found or not loadable", fTreeName.Data());
       fFile->Close();
       SafeDelete(fFile);
       return;
@@ -154,7 +154,7 @@ TProofPerfTree::TProofPerfTree(const char *perffile,
 }
 
 //________________________________________________________________________
-TProofPerfTree::~TProofPerfTree()
+TProofPerfAnalysis::~TProofPerfAnalysis()
 {
    // Destructor: detach the tree and close the file
 
@@ -165,7 +165,7 @@ TProofPerfTree::~TProofPerfTree()
 }
 
 //________________________________________________________________________
-TString TProofPerfTree::GetCanvasTitle(const char *t)
+TString TProofPerfAnalysis::GetCanvasTitle(const char *t)
 {
    // If defined, add '- <this title>' to the canvas title 't'
 
@@ -182,7 +182,7 @@ TString TProofPerfTree::GetCanvasTitle(const char *t)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::LoadTree(TDirectory *dir)
+void TProofPerfAnalysis::LoadTree(TDirectory *dir)
 {
    // Load tree fTreeName from directory 'dir'. If not found, look for the
    // first TTree in the directory (and sub-directories) with the name containing
@@ -221,7 +221,7 @@ void TProofPerfTree::LoadTree(TDirectory *dir)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::FileDist(Bool_t writedet)
+void TProofPerfAnalysis::FileDist(Bool_t writedet)
 {
    // Analyse the file distribution. If writedet, underling details are 
    // written out to a text file.
@@ -407,7 +407,7 @@ void TProofPerfTree::FileDist(Bool_t writedet)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::GetFileInfo(TList *wl, TList *sl)
+void TProofPerfAnalysis::GetFileInfo(TList *wl, TList *sl)
 {
    // Fill file info
 
@@ -447,7 +447,7 @@ void TProofPerfTree::GetFileInfo(TList *wl, TList *sl)
 }
 
 //________________________________________________________________________
-Int_t TProofPerfTree::CompareOrd(const char *ord1, const char *ord2)
+Int_t TProofPerfAnalysis::CompareOrd(const char *ord1, const char *ord2)
 {
    // Return -1 if ord1 comes before ord2, 0 i they are equal,
    // 1 if ord1 comes after ord2
@@ -484,7 +484,7 @@ Int_t TProofPerfTree::CompareOrd(const char *ord1, const char *ord2)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
+void TProofPerfAnalysis::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
 {
    // Fill file info
 
@@ -535,7 +535,7 @@ void TProofPerfTree::FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
+void TProofPerfAnalysis::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
 {
    // Fill file info when there is only one file server
 
@@ -582,7 +582,7 @@ void TProofPerfTree::FillFileDistOneSrv(TH1F *hx, Bool_t wdet)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::WorkerActivity()
+void TProofPerfAnalysis::WorkerActivity()
 {
    // Measure the worker activity
 
@@ -658,7 +658,7 @@ void TProofPerfTree::WorkerActivity()
 }
 
 //________________________________________________________________________
-void TProofPerfTree::PrintWrkInfo(Int_t showlast)
+void TProofPerfAnalysis::PrintWrkInfo(Int_t showlast)
 {
    // Print information for all or the slowest showlast workers.
    // Use showlast < 0 to print all
@@ -675,7 +675,7 @@ void TProofPerfTree::PrintWrkInfo(Int_t showlast)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::PrintWrkInfo(const char *wn)
+void TProofPerfAnalysis::PrintWrkInfo(const char *wn)
 {
    // Print information for worker 'wn' (ordinal) or on the machine whose
    // ordinal or fqdn matches 'wn'. Multiple specifications separated by ','
@@ -706,7 +706,7 @@ void TProofPerfTree::PrintWrkInfo(const char *wn)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::FillWrkInfo(Bool_t force)
+void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
 {
    // Fill basic worker info; if 'force' rescan the TTree even already done
 
@@ -844,7 +844,7 @@ void TProofPerfTree::FillWrkInfo(Bool_t force)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::SetDebug(Int_t d)
+void TProofPerfAnalysis::SetDebug(Int_t d)
 {
    // Static setter for the verbosity level
    
@@ -852,7 +852,7 @@ void TProofPerfTree::SetDebug(Int_t d)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::EventDist()
+void TProofPerfAnalysis::EventDist()
 {
    // Display event and packet distribution
 
@@ -877,7 +877,7 @@ void TProofPerfTree::EventDist()
 }
 
 //________________________________________________________________________
-void TProofPerfTree::RatePlot(const char *wrks)
+void TProofPerfAnalysis::RatePlot(const char *wrks)
 {
    // Show event processing or MB processing rate plot vs time
 
@@ -959,7 +959,7 @@ void TProofPerfTree::RatePlot(const char *wrks)
 }
 
 //________________________________________________________________________
-void TProofPerfTree::LatencyPlot(const char *wrks)
+void TProofPerfAnalysis::LatencyPlot(const char *wrks)
 {
    // Show event processing or MB processing rate plot vs time
    // Create the histograms

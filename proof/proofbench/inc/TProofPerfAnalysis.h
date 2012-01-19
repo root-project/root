@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofPerfTree
-#define ROOT_TProofPerfTree
+#ifndef ROOT_TProofPerfAnalysis
+#define ROOT_TProofPerfAnalysis
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofPerfTree                                                       //
+// TProofPerfAnalysis                                                       //
 //                                                                      //
 // Set of tools to analyse the performance tree                         //
 //                                                                      //
@@ -35,7 +35,7 @@ class TH1F;
 class TH2F;
 class TList;
 class TTree;
-class TProofPerfTree : public TNamed {
+class TProofPerfAnalysis : public TNamed {
 
 public:              // public because of Sun CC bug
    class TWrkInfo;
@@ -67,9 +67,9 @@ private:
 
 public:
 
-   TProofPerfTree(const char *perffile, const char *title = "",
+   TProofPerfAnalysis(const char *perffile, const char *title = "",
                   const char *treename = "PROOF_PerfStats");
-   virtual ~TProofPerfTree();
+   virtual ~TProofPerfAnalysis();
 
    Bool_t IsValid() const { return (fFile && fTree) ? kTRUE : kFALSE; } 
    Bool_t WrkInfoOK() const { return (fWrksInfo.GetSize() > 0) ? kTRUE : kFALSE; } 
@@ -84,7 +84,7 @@ public:
    
    void  SetDebug(Int_t d = 0);   // Setter for the verbosity level
 
-   ClassDef(TProofPerfTree, 0)   // Set of tools to analyse the performance tree
+   ClassDef(TProofPerfAnalysis, 0)   // Set of tools to analyse the performance tree
 };
 
 #endif
