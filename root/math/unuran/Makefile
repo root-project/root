@@ -64,7 +64,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 unuran%.cxx: $(ROOT_SRCDIRDEP)/math/unuran/test/unuran%.cxx
-	cp $(ROOT_SRCDIR)/math/unuran/test/unuran$*.cxx .
+	@cp $(ROOT_SRCDIR)/math/unuran/test/unuran$*.cxx .
 
 unuranSimple: unuranSimple.elog
 	$(TestDiff)
