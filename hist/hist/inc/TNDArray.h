@@ -89,6 +89,10 @@ public:
    virtual void SetAsDouble(ULong64_t linidx, Double_t value) = 0;
    virtual void AddAt(ULong64_t linidx, Double_t value) = 0;
 
+private:
+   TNDArray(const TNDArray&); // intentionally not implemented
+   TNDArray& operator=(const TNDArray&); // intentionally not implemented
+
 protected:
    Int_t  fNdimPlusOne; // Number of dimensions plus one
    Long64_t* fSizes; //[fNdimPlusOne] bin count
