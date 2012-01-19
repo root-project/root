@@ -106,7 +106,7 @@ protected:
 
   virtual Bool_t setDataSlave(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE, Bool_t /*ownNewDataAnyway*/=kFALSE) { return kTRUE ; }
 
-private:  
+  //private:  
 
 
   virtual Bool_t processEmptyDataSets() const { return kTRUE ; }
