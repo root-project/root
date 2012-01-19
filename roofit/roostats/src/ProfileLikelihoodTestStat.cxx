@@ -93,7 +93,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        tsw.Stop();
        double fitTime1  = tsw.CpuTime();
           
-       double ret = 0; 
+       //double ret = 0; 
        int statusN = 0;
        tsw.Start();
 
@@ -169,9 +169,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);
-
+       
        if(statusN!=0 || statusD!=0)
-	 ret= -1; // indicate failed fit
+	 // ret= -1; // indicate failed fit [ WVE commented since not used ]
 
        if (type == 1) return uncondML;
        if (type == 2) return condML;

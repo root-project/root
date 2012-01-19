@@ -445,7 +445,7 @@ namespace HistFactory{
       obsNameVecStr += obsName;
     }
 
-    vector<string>::iterator it=syst_x_expectedPrefixNames.begin();
+    //vector<string>::iterator it=syst_x_expectedPrefixNames.begin();
     for(unsigned int j=0; j<syst_x_expectedPrefixNames.size();++j){
       std::stringstream str;
       str<<"_"<<j;
