@@ -24,7 +24,7 @@ private:
    Double_t PDK(Double_t a, Double_t b, Double_t c);  
 
 public:
-   TGenPhaseSpace() {}
+   TGenPhaseSpace(): fNt(0), fMass(), fBeta(), fTeCmTm(0.), fWtMax(0.) {}
    TGenPhaseSpace(const TGenPhaseSpace &gen);
    virtual ~TGenPhaseSpace() {}
 
