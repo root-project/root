@@ -2,13 +2,14 @@
 
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += rotationApplication testGenVector coordinates4D coordinates3D mytest
+GENVECTORTESTS := rotationApplication testGenVector coordinates4D coordinates3D
+TEST_TARGETS += $(GENVECTORTESTS)
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -31,14 +32,6 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
-
-# The name of this target should be changed according to the test being run.  Any name changes
-#  should also be reflected in the TEST_TARGETS variable above.
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
 
 # Outputs a message if the FAIL variable is null
 
@@ -65,23 +58,31 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 ##ifneq ($(PLATFORM),win32)
 ##endif
 
+%.cxx: $(ROOT_SRCDIRDEP)/math/genvector/test/%.cxx
+	cp $< $@
+
+%.h: $(ROOT_SRCDIRDEP)/math/genvector/test/%.h
+	cp $< $@
+
+$(addsuffix _cxx.$(DllSuf),$(GENVECTORTESTS)): CoordinateTraits.h RotationTraits.h
+
 #this suppress check in log file
-coordinates3D.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
+coordinates3D.elog: coordinates3D_cxx.$(DllSuf)
 
 coordinates3D: coordinates3D.elog
 	$(TestDiff)
 
-coordinates4D.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/coordinates4D_cxx.$(DllSuf)
+coordinates4D.elog: coordinates4D_cxx.$(DllSuf)
 
 coordinates4D: coordinates4D.elog
 	$(TestDiff)
 
-rotationApplication.elog: $(ROOT_SRCDIRDEP)/math/genvector/test/rotationApplication_cxx.$(DllSuf)
+rotationApplication.elog: rotationApplication_cxx.$(DllSuf)
 
 rotationApplication: rotationApplication.elog
 	$(TestDiff)
 
-testGenVector.log: $(ROOT_SRCDIRDEP)/math/genvector/test/testGenVector_cxx.$(DllSuf)
+testGenVector.log: testGenVector_cxx.$(DllSuf)
 
 testGenVector: testGenVector.log
 	$(TestDiff)
