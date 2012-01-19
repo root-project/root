@@ -28,6 +28,11 @@
 using std::string;
 using std::ostream;
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4251 ) // fNSPrefix needs to have dll-interface
+#endif
+
 namespace Cint {
 
 class
@@ -80,5 +85,8 @@ private:
 } // end namespace Cint
 
 using namespace Cint;
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #endif // G__SHADOW_H
