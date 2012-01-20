@@ -637,7 +637,7 @@ void TTreeCloner::WriteBaskets()
          }
          Int_t len = from->GetBasketBytes()[index];
 
-         basket->LoadBasketBuffers(pos,len,fromfile);
+         basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
          basket->IncrementPidOffset(fPidOffset);
          basket->CopyTo(tofile);
          to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);

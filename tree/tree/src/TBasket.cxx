@@ -221,7 +221,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 }
 
 //_______________________________________________________________________
-Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
+Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree)
 { 
    // Load basket buffers in memory without unziping.
    // This function is called by TTreeCloner.
@@ -244,8 +244,24 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
-   if (file->ReadBuffer(buffer,len)) {
-      return 1; //error while reading
+   TFileCacheRead *pf = file->GetCacheRead(tree);
+   if (pf) {
+      Int_t st = pf->ReadBuffer(buffer,pos,len);
+      if (st < 0) {
+         return 1;
+      } else if (st == 0) {
+         // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
+         file->Seek(pos);
+         if (file->ReadBuffer(buffer,len)) {
+            return 1;
+         }
+      }
+      // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
+      file->SetOffset(pos + len);
+   } else {
+      if (file->ReadBuffer(buffer,len)) {
+         return 1; //error while reading
+      }
    }
 
    fBufferRef->SetReadMode();
@@ -412,7 +428,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    Int_t uncompressedBufferLen;
 
    // See if the cache has already unzipped the buffer for us.
-   TFileCacheRead *pf = file->GetCacheRead();
+   TFileCacheRead *pf = file->GetCacheRead(fBranch->GetTree());
    if (pf) {
       Int_t res = -1;
       Bool_t free = kTRUE;
@@ -443,9 +459,20 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
        return 1;
    }
 
-   // Read from the file and unstream the header information.
-   if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
-      return 1;
+   if (pf) {
+      Int_t st = pf->ReadBuffer(readBufferRef->Buffer(),pos,len);
+      if (st < 0) {
+         return 1;
+      } else if (st == 0) {
+         if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
+            return 1;
+         }
+      }
+   } else {
+      // Read from the file and unstream the header information.
+      if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
+         return 1;
+      }
    }
    Streamer(*readBufferRef);
    if (IsZombie()) {

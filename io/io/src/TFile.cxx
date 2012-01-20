@@ -154,6 +154,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fOffset          = 0;
    fArchive         = 0;
    fCacheRead       = 0;
+   fCacheReadMap    = new TMap();
    fCacheWrite      = 0;
    fArchiveOffset   = 0;
    fReadCalls       = 0;
@@ -340,6 +341,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fNProcessIDs  = 0;
    fOffset       = 0;
    fCacheRead    = 0;
+   fCacheReadMap = new TMap();
    fCacheWrite   = 0;
    fReadCalls    = 0;
    SetBit(kBinaryFile, kTRUE);
@@ -503,6 +505,7 @@ TFile::~TFile()
    SafeDelete(fOpenPhases);
    SafeDelete(fAsyncHandle);
    SafeDelete(fCacheRead);
+   SafeDelete(fCacheReadMap);
    SafeDelete(fCacheWrite);
 
    R__LOCKGUARD2(gROOTMutex);
@@ -1080,11 +1083,20 @@ void TFile::ResetErrno() const
 }
 
 //______________________________________________________________________________
-TFileCacheRead *TFile::GetCacheRead() const
+TFileCacheRead *TFile::GetCacheRead(TObject* tree) const
 {
    // Return a pointer to the current read cache.
 
-   return fCacheRead;
+   if (!tree) {
+      if (!fCacheRead && fCacheReadMap->GetSize() == 1) {
+         TIter next(fCacheReadMap);
+         return (TFileCacheRead *)fCacheReadMap->GetValue(next());
+      }
+      return fCacheRead;
+   }
+   TFileCacheRead *cache = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
+   if (!cache) return fCacheRead;
+   return cache;
 }
 
 //______________________________________________________________________________
@@ -1993,7 +2005,7 @@ void TFile::SetCompressionSettings(Int_t settings)
 }
 
 //______________________________________________________________________________
-void TFile::SetCacheRead(TFileCacheRead *cache)
+void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
 {
    // Set a pointer to the read cache.
    // NOTE:  This relinquish ownership of the previous cache, so if you do not
@@ -2001,7 +2013,12 @@ void TFile::SetCacheRead(TFileCacheRead *cache)
    // cache), you ought to retrieve (and delete it if needed) using:
    //    TFileCacheRead *older = myfile->GetCacheRead();
 
-   fCacheRead = cache;
+   if (tree) {
+      if (cache) fCacheReadMap->Add(tree, cache);
+      else fCacheReadMap->RemoveEntry(tree);
+   } else {
+      fCacheRead = cache;
+   }
 }
 
 //______________________________________________________________________________

@@ -529,7 +529,7 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
          // Humm ... let's double check on the file.
          TFile *file = fTree->GetCurrentFile();
          if (file) {
-            TFileCacheRead *cache = file->GetCacheRead();
+            TFileCacheRead *cache = file->GetCacheRead(fTree);
             if (cache) {
                cacheSize = cache->GetBufferSize();
             }
@@ -784,15 +784,10 @@ TTree::~TTree()
       //delete the file cache if it points to this Tree
       TFile *file = fDirectory->GetFile();
       if (file) {
-         TFileCacheRead *pf = file->GetCacheRead();
-         if (pf && pf->InheritsFrom(TTreeCache::Class())) {
-            TTreeCache *tpf = (TTreeCache*)pf;
-            if (tpf->GetOwner() == this) {
-               delete tpf;
-               tpf = 0;
-               file->SetCacheRead(0);
-            }
-         }
+         TFileCacheRead *pf = file->GetCacheRead(this);
+         delete pf;
+         pf = 0;
+         file->SetCacheRead(0,this);
       }
    }
    // We don't own the leaves in fLeaves, the branches do.
@@ -893,7 +888,7 @@ void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
    
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->AddBranch(bname,subbranches);
 }
 
@@ -906,7 +901,7 @@ void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
    
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->AddBranch(b,subbranches);
 }
 
@@ -920,7 +915,7 @@ void TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
    
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->DropBranch(bname,subbranches);
 }
 
@@ -933,7 +928,7 @@ void TTree::DropBranchFromCache(TBranch *b, Bool_t subbranches)
    
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->DropBranch(b,subbranches);
 }
 
@@ -6100,7 +6095,7 @@ void TTree::PrintCacheStats(Option_t* option) const
 
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(const_cast<TTree*>(this));
    if (tc) tc->Print(option);
 }
 
@@ -7126,7 +7121,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       fCacheSize = cacheSize;
       return;
    }
-   TFileCacheRead* pf = file->GetCacheRead();
+   TFileCacheRead* pf = file->GetCacheRead(this);
    if (pf) {
       if (cacheSize == fCacheSize) {
          return;
@@ -7134,7 +7129,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       delete pf;
       pf = 0;
       if (cacheSize == 0) {
-         file->SetCacheRead(0);
+         file->SetCacheRead(0, this);
          fCacheSize=0;
          return;
       }
@@ -7157,7 +7152,7 @@ void TTree::SetCacheEntryRange(Long64_t first, Long64_t last)
 
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->SetEntryRange(first,last);
 }
 
@@ -7654,7 +7649,7 @@ void TTree::StopCacheLearningPhase()
 
    TFile *f = GetCurrentFile();
    if (!f) return;
-   TTreeCache *tc = (TTreeCache*)f->GetCacheRead();
+   TTreeCache *tc = (TTreeCache*)f->GetCacheRead(this);
    if (tc) tc->StopLearningPhase();
 }
 

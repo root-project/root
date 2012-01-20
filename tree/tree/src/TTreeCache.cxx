@@ -272,7 +272,7 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
 }
 
 //______________________________________________________________________________
-TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize),
+TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize,tree),
    fEntryMin(0),
    fEntryMax(tree->GetEntriesFast()),
    fEntryCurrent(-1),

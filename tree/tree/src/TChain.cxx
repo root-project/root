@@ -182,9 +182,9 @@ TChain::~TChain()
    fFiles = 0;
 
    //first delete cache if exists
-   if (fFile && fFile->GetCacheRead()) {
-      delete fFile->GetCacheRead();
-      fFile->SetCacheRead(0);
+   if (fFile && fFile->GetCacheRead(fTree)) {
+      delete fFile->GetCacheRead(fTree);
+      fFile->SetCacheRead(0, fTree);
    }
 
    delete fFile;
@@ -1406,16 +1406,16 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // FIXME: The "unless" case here causes us to leak memory.
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
-         tpf = (TTreeCache*) fFile->GetCacheRead();
+         tpf = (TTreeCache*) fFile->GetCacheRead(fTree);
          if (tpf) {
-           tpf->ResetCache();
-           if (tpf->IsEnablePrefetching()){
-              //wait for thread to finish current work
-              tpf->GetPrefetchObj()->GetMutexSynch()->Lock();
-              tpf->GetPrefetchObj()->GetMutexSynch()->UnLock();
-           }
+            tpf->ResetCache();
+            if (tpf->IsEnablePrefetching()){
+               //wait for thread to finish current work
+               tpf->GetPrefetchObj()->GetMutexSynch()->Lock();
+               tpf->GetPrefetchObj()->GetMutexSynch()->UnLock();
+            }
          }
-         fFile->SetCacheRead(0);
+         fFile->SetCacheRead(0, fTree);
          // If the tree has clones, copy them into the chain
          // clone list so we can change their branch addresses
          // when necessary.
@@ -1500,7 +1500,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (tpf) {
       if (fFile) {
          tpf->ResetCache();
-         fFile->SetCacheRead(tpf);
+         fFile->SetCacheRead(tpf, fTree);
          tpf->SetFile(fFile);
          // FIXME: fTree may be zero here.
          tpf->UpdateBranches(fTree);
@@ -2164,6 +2164,20 @@ void TChain::SetAutoDelete(Bool_t autodelete)
       SetBit(kAutoDelete, 1);
    } else {
       SetBit(kAutoDelete, 0);
+   }
+}
+
+void TChain::SetCacheSize(Long64_t cacheSize)
+{
+   TTree::SetCacheSize(cacheSize);
+   TFile* file = GetCurrentFile();
+   if (!file) {
+      return;
+   }
+   TFileCacheRead* pf = file->GetCacheRead(this);
+   if (pf) {
+      file->SetCacheRead(0, this);
+      file->SetCacheRead(pf, fTree);
    }
 }
 

@@ -82,7 +82,7 @@ TFileCacheRead::TFileCacheRead() : TObject()
 }
 
 //_____________________________________________________________________________
-TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
+TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
            : TObject()
 {
    // Creates a TFileCacheRead data structure.
@@ -147,16 +147,16 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    }
    else {
       fAsyncReading = gEnv->GetValue("TFile.AsyncReading", 0);
-   if (fAsyncReading) {
-      // Check if asynchronous reading is supported by this TFile specialization
-      fAsyncReading = kFALSE;
-      if (file && !(file->ReadBufferAsync(0, 0)))
-         fAsyncReading = kTRUE;
-   }
-   if (!fAsyncReading) {
-      // we use sync primitives, hence we need the local buffer
-      fBuffer = new char[fBufferSize];
-   }
+      if (fAsyncReading) {
+         // Check if asynchronous reading is supported by this TFile specialization
+         fAsyncReading = kFALSE;
+         if (file && !(file->ReadBufferAsync(0, 0)))
+            fAsyncReading = kTRUE;
+      }
+      if (!fAsyncReading) {
+         // we use sync primitives, hence we need the local buffer
+         fBuffer = new char[fBufferSize];
+      }
    }  
 
    fIsSorted    = kFALSE;
@@ -164,7 +164,7 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fBIsSorted = kFALSE;
    fBIsTransferred = kFALSE;
 
-   if (file) file->SetCacheRead(this);
+   if (file) file->SetCacheRead(this, tree);
 }
 
 //_____________________________________________________________________________
@@ -479,12 +479,10 @@ Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, In
          
          if (buf) {
             // disable cache to avoid infinite recursion
-            fFile->SetCacheRead(0);
             if (fFile->ReadBuffer(buf, pos, len)) {
                return -1;
             }
             fFile->SetOffset(pos+len);
-            fFile->SetCacheRead(this);
          }
          
          retval = 1;

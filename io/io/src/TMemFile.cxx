@@ -317,6 +317,8 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fNProcessIDs  = 0;
    fOffset       = 0;
    fCacheRead    = 0;
+   delete fCacheReadMap;
+   fCacheReadMap = 0;
    fCacheWrite   = 0;
    fReadCalls    = 0;
    if (fFree) {

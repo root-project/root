@@ -2129,12 +2129,12 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       TTreeCache *tpf = 0;
       TFile *curfile = fTree->GetCurrentFile();
       if (curfile && fTree->GetCacheSize() > 0) {
-         tpf = (TTreeCache*)curfile->GetCacheRead();
+         tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
          if (tpf)
             tpf->SetEntryRange(firstentry,firstentry+nentries);
          else {
             fTree->SetCacheSize(fTree->GetCacheSize());
-            tpf = (TTreeCache*)curfile->GetCacheRead();
+            tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
             if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
          }
       }
@@ -2188,7 +2188,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       {
          TFile *curfile2 = fTree->GetCurrentFile();
          if (curfile2 && fTree->GetCacheSize() > 0) {
-            tpf = (TTreeCache*)curfile2->GetCacheRead();
+            tpf = (TTreeCache*)curfile2->GetCacheRead(fTree);
             if (tpf) tpf->SetEntryRange(0,0);
          }
       }

@@ -429,7 +429,11 @@ TEventIterTree::TFileTree::~TFileTree()
    // Default dtor.
 
    // Avoid destroying the cache; must be placed before deleting the trees
-   fFile->SetCacheRead(0);
+   TTree *tree = (TTree *)fTrees->First();
+   while (tree) {
+      fFile->SetCacheRead(0, tree);
+      tree = (TTree *)fTrees->After(tree);
+   }
    SafeDelete(fTrees);
    SafeDelete(fFile);
 }
@@ -525,10 +529,10 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
          if (curfile) {
             if (!fTreeCache) {
                main->SetCacheSize(fCacheSize);
-               fTreeCache = (TTreeCache *)curfile->GetCacheRead();
+               fTreeCache = (TTreeCache *)curfile->GetCacheRead(main);
                if (fCacheSize < 0) fCacheSize = main->GetCacheSize();
             } else {
-               curfile->SetCacheRead(fTreeCache);
+               curfile->SetCacheRead(fTreeCache, main);
                fTreeCache->UpdateBranches(main, kTRUE);
             }
             if (fTreeCache) {

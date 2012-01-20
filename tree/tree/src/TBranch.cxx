@@ -1101,7 +1101,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TFileCacheRead *pf = file->GetCacheRead();
+   TFileCacheRead *pf = file->GetCacheRead(fTree);
    if (pf){
       if (pf->IsLearning()) pf->AddBranch(this);
       if (fSkipZip) pf->SetSkipZip();

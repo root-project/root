@@ -85,7 +85,7 @@ public:
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
    virtual void    Reset();
 
-           Int_t   LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+           Int_t   LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = 0);
    Long64_t        CopyTo(TFile *to);
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }
