@@ -88,6 +88,7 @@
 #pragma link C++ class TNDArrayRef<ULong_t>+;
 #pragma link C++ class TNDArrayRef<UInt_t>+;
 #pragma link C++ class TNDArrayRef<UShort_t>+;
+/*
 #pragma link C++ class TNDArrayRef<const Float_t>+;
 //#pragma link C++ class TNDArrayRef<const Float16_t>+;
 #pragma link C++ class TNDArrayRef<const Double_t>+;
@@ -101,6 +102,7 @@
 #pragma link C++ class TNDArrayRef<const ULong_t>+;
 #pragma link C++ class TNDArrayRef<const UInt_t>+;
 #pragma link C++ class TNDArrayRef<const UShort_t>+;
+*/
 #pragma link C++ class THn+;
 #pragma link C++ class THnT<Float_t>+;
 //#pragma link C++ class THnT<Float16_t>+;

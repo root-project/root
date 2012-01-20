@@ -102,7 +102,7 @@ protected:
 template <typename T>
 class TNDArrayRef {
 public:
-   TNDArrayRef(T* data, const Long64_t* sizes):
+   TNDArrayRef(const T* data, const Long64_t* sizes):
    fData(data), fSizes(sizes) {}
    
    TNDArrayRef<T> operator[] (Int_t idx) const {
@@ -117,7 +117,7 @@ public:
    }
 
 private:
-   T* fData; // pointer into TNDArray's fData
+   const T* fData; // pointer into TNDArray's fData
    const Long64_t* fSizes; // pointer into TNDArray's fSizes
    ClassDefNV(TNDArrayRef, 0); // subdimension of a TNDArray
 };
@@ -153,18 +153,12 @@ public:
    }
 
 #ifndef __CINT__
-   TNDArrayRef<const T> operator[] (Int_t idx) const {
-      if (!fData) return TNDArrayRef<const T>(0, 0);
-      R__ASSERT(idx < fSizes[0] / fSizes[1] && "index out of range!");
-      return TNDArrayRef<const T>(fData + idx * fSizes[1], fSizes + 2);
-   }
-   
-   TNDArrayRef<T> operator[] (Int_t idx) {
+   TNDArrayRef<T> operator[](Int_t idx) const {
       if (!fData) return TNDArrayRef<T>(0, 0);
       R__ASSERT(idx < fSizes[0] / fSizes[1] && "index out of range!");
       return TNDArrayRef<T>(fData + idx * fSizes[1], fSizes + 2);
    }
-#endif // __CINT__
+#endif // __CINT__   
    
    T At(const Int_t* idx) const {
       return At(GetBin(idx));
