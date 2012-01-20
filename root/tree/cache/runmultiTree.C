@@ -1,5 +1,6 @@
 #include "TTree.h"
 #include "TFile.h"
+#include "TFileCacheRead.h"
 
 TTree *fillTree(int index) 
 {  
@@ -33,6 +34,45 @@ void readtree(TTree* tree) {
    }
 }
 
+void readfileOldInterface()
+{
+   TFile input("multi.root");
+
+   TTree *tree1; input.GetObject("tree1",tree1);
+   tree1->SetCacheSize(300*1024);
+
+   TFileCacheRead *cache1 = input.GetCacheRead();
+   input.SetCacheRead(0);
+
+   TTree *tree2; input.GetObject("tree2",tree2);
+   tree2->SetCacheSize(400*2048);
+
+   TFileCacheRead *cache2 = input.GetCacheRead();
+   input.SetCacheRead(0);
+
+   TTree *tree3; input.GetObject("tree3",tree3);
+   tree3->SetCacheSize(500*4096);
+
+   TFileCacheRead *cache3 = input.GetCacheRead();
+   input.SetCacheRead(0);
+
+   input.SetCacheRead(cache1);
+   readtree(tree1);
+   input.SetCacheRead(cache2);
+   readtree(tree2);
+   input.SetCacheRead(cache3);
+   readtree(tree3);
+
+   cache1->Print();
+   cache2->Print();
+   cache3->Print();
+
+   delete cache1;
+   delete cache2;
+   delete cache3;
+}
+
+
 void readfile() {
    TFile input("multi.root");
 
@@ -52,14 +92,11 @@ void readfile() {
    tree1->PrintCacheStats();
    tree2->PrintCacheStats();
    tree3->PrintCacheStats();
-
 }
 
 int runmultiTree() {
-   // Fill out the code of the actual test
-
-
    writefile();
+   readfileOldInterface();
    readfile();
    return 0;
 }
