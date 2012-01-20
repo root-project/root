@@ -5,12 +5,13 @@ TTree *fillTree(int index)
 {  
    TString name = Form("tree%d",index);
    TTree *tree = new TTree(name,name);
-   int var = 33;
-   for(int i = 0; i<20; ++i) {
+   int var[500];// = 33;
+   for(int i = 0; i<200+index*100; ++i) {
       TString lname =  Form("%s_i_%d",tree->GetName(),i);
-      tree->Branch(lname,&var,lname,1000);
+      var[i] = 123+i-index/98;
+      tree->Branch(lname,&var[i],lname,512);
    }
-   for(int j = 0; j<1000*index; ++j) {
+   for(int j = 0; j<1000/*index*/; ++j) {
       tree->Fill();
    }
    tree->ResetBranchAddresses();
@@ -27,7 +28,7 @@ void writefile() {
 }
 
 void readtree(TTree* tree) {
-   for(int i = 0; i<100 /* tree->GetEntries() */; ++i) {
+   for(int i = 0; i<tree->GetEntries(); ++i) {
       tree->GetEntry(i);
    }
 }
@@ -36,17 +37,22 @@ void readfile() {
    TFile input("multi.root");
 
    TTree *tree1; input.GetObject("tree1",tree1);
-   tree1->SetCacheSize(10000000);
+   tree1->SetCacheSize(300*1024);
 
    TTree *tree2; input.GetObject("tree2",tree2);
-   tree2->SetCacheSize(10000000);
+   tree2->SetCacheSize(400*2048);
 
    TTree *tree3; input.GetObject("tree3",tree3);
-   tree3->SetCacheSize(10000000);
+   tree3->SetCacheSize(500*4096);
 
    readtree(tree1);
    readtree(tree2);
    readtree(tree3);
+
+   tree1->PrintCacheStats();
+   tree2->PrintCacheStats();
+   tree3->PrintCacheStats();
+
 }
 
 int runmultiTree() {
