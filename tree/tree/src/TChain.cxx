@@ -649,7 +649,7 @@ TFriendElement* TChain::AddFriend(const char* chain, const char* dummy /* = "" *
 
    // We need to invalidate the loading of the current tree because its list
    // of real friends is now obsolete.  It is repairable only from LoadTree.
-   fTreeNumber = -1;
+   InvalidateCurrentTree();
 
    TTree* tree = fe->GetTree();
    if (!tree) {
@@ -676,7 +676,7 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
-   fTreeNumber = -1;
+   InvalidateCurrentTree();
 
    TTree *t = fe->GetTree();
    if (!t) {
@@ -702,7 +702,7 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
 
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
-   fTreeNumber = -1;
+   InvalidateCurrentTree();
 
    TTree *t = fe->GetTree();
    if (!t) {
@@ -1206,6 +1206,31 @@ Double_t TChain::GetWeight() const
    }
 }
 
+
+//______________________________________________________________________________
+void TChain::InvalidateCurrentTree()
+{
+   // Set the TTree to be reloaded as soon as possible.  In particular this
+   // is needed when adding a Friend.
+
+   // If the tree has clones, copy them into the chain
+   // clone list so we can change their branch addresses
+   // when necessary.
+   //
+   // This is to support the syntax:
+   //
+   //      TTree* clone = chain->GetTree()->CloneTree(0);
+   //
+   if (fTree && fTree->GetListOfClones()) {
+      for (TObjLink* lnk = fTree->GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
+         TTree* clone = (TTree*) lnk->GetObject();
+         AddClone(clone);
+      }
+   }
+   fTreeNumber = -1;
+   fTree = 0;
+}
+
 //______________________________________________________________________________
 Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 {
@@ -1374,24 +1399,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
       return treeReadEntry;
    }
 
-   // If the tree has clones, copy them into the chain
-   // clone list so we can change their branch addresses
-   // when necessary.
-   //
-   // This is to support the syntax:
-   //
-   //      TTree* clone = chain->GetTree()->CloneTree(0);
-   //
-   if (fTree && fTree->GetListOfClones()) {
-      for (TObjLink* lnk = fTree->GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
-         TTree* clone = (TTree*) lnk->GetObject();
-         AddClone(clone);
-      }
-   }
-
    // Delete the current tree and open the new tree.
-   TTreeCache* tpf = 0;
 
+   TTreeCache* tpf = 0;
    // Delete file unless the file owns this chain!
    // FIXME: The "unless" case here causes us to leak memory.
    if (fFile) {
@@ -1411,9 +1421,17 @@ Long64_t TChain::LoadTree(Long64_t entry)
          }
          delete fFile;
          fFile = 0;
-         // Note: We do *not* own fTree.
-         fTree = 0;
       }
+      // If the tree has clones, copy them into the chain
+      // clone list so we can change their branch addresses
+      // when necessary.
+      //
+      // This is to support the syntax:
+      //
+      //      TTree* clone = chain->GetTree()->CloneTree(0);
+      //
+      if (fTree) InvalidateCurrentTree();
+      
    }
 
    TChainElement* element = (TChainElement*) fFiles->At(treenum);

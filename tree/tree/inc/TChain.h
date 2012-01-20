@@ -51,6 +51,7 @@ private:
    TChain& operator=(const TChain&); // not implemented
 
 protected:
+   void InvalidateCurrentTree();
    void ReleaseChainProof();
 
 public:
