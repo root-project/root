@@ -1416,22 +1416,35 @@ Long64_t TChain::LoadTree(Long64_t entry)
            }
          }
          fFile->SetCacheRead(0);
+         // If the tree has clones, copy them into the chain
+         // clone list so we can change their branch addresses
+         // when necessary.
+         //
+         // This is to support the syntax:
+         //
+         //      TTree* clone = chain->GetTree()->CloneTree(0);
+         //
+         // We need to call the invalidate exactly here, since
+         // we no longer need the value of fTree and it is 
+         // about to be deleted.
+         if (fTree) InvalidateCurrentTree();
+
          if (fCanDeleteRefs) {
             fFile->Close("R");
          }
          delete fFile;
          fFile = 0;
+      } else {
+         // If the tree has clones, copy them into the chain
+         // clone list so we can change their branch addresses
+         // when necessary.
+         //
+         // This is to support the syntax:
+         //
+         //      TTree* clone = chain->GetTree()->CloneTree(0);
+         //
+         if (fTree) InvalidateCurrentTree();
       }
-      // If the tree has clones, copy them into the chain
-      // clone list so we can change their branch addresses
-      // when necessary.
-      //
-      // This is to support the syntax:
-      //
-      //      TTree* clone = chain->GetTree()->CloneTree(0);
-      //
-      if (fTree) InvalidateCurrentTree();
-      
    }
 
    TChainElement* element = (TChainElement*) fFiles->At(treenum);
