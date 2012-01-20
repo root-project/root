@@ -175,8 +175,10 @@ THnSparseCoordCompression::THnSparseCoordCompression(const THnSparseCoordCompres
 //______________________________________________________________________________
 THnSparseCoordCompression& THnSparseCoordCompression::operator=(const THnSparseCoordCompression& other)
 {
-   // Set this to other.
-   
+   // Set this to other if different.
+
+   if (&other == this) return *this;
+
    fNdimensions = other.fNdimensions;
    fCoordBufferSize = other.fCoordBufferSize;
    delete [] fBitOffsets;
