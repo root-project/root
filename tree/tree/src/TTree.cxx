@@ -1448,6 +1448,19 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
    // to give names to collections to avoid misleading branch names or
    // identical branch names. By default collections have a name equal to
    // the corresponding class name, e.g. the default name for a TList is "TList".
+   // 
+   // And in general in any cases two or more master branches contain subbranches 
+   // with identical names, one must add a "." (dot) character at the end
+   // of the master branch name. This will force the name of the subbranch
+   // to be master.subbranch instead of simply subbranch.
+   // This situation happens when the top level object (say event)
+   // has two or more members referencing the same class.
+   // For example, if a Tree has two branches B1 and B2 corresponding
+   // to objects of the same class MyClass, one can do:
+   //       tree.Branch("B1.","MyClass",&b1,8000,1);
+   //       tree.Branch("B2.","MyClass",&b2,8000,1);
+   // if MyClass has 3 members a,b,c, the two instructions above will generate
+   // subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
    //
    // Example--------------------------------------------------------------:
    /*
@@ -4672,10 +4685,13 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //  when calling mytree.GetEntry(i); only branches "a" and "b" will be read.
    //
    //  WARNING!!
-   //  If your Tree has been created in split mode with a parent branch "parent",
+   //  If your Tree has been created in split mode with a parent branch "parent.",
    //     mytree.SetBranchStatus("parent",1);
    //  will not activate the sub-branches of "parent". You should do:
    //     mytree.SetBranchStatus("parent*",1);
+   //
+   //  Without the trailing dot in the branch creation you have no choice but to 
+   //  call SetBranchStatus explicitly for each of the sub branches.
    //
    //  An alternative is to call directly
    //     brancha.GetEntry(i)
