@@ -7121,8 +7121,10 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       fCacheSize = cacheSize;
       return;
    }
-   TFileCacheRead* pf = file->GetCacheRead(this);
-   if (pf) {
+   // Only care about the 'current' TFileCacheRead if it is related to 
+   // this TTree.
+   TTreeCache* pf = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
+   if (pf && pf->GetTree()==this) {
       if (cacheSize == fCacheSize) {
          return;
       }

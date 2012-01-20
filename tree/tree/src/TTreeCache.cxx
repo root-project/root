@@ -307,6 +307,10 @@ TTreeCache::~TTreeCache()
 {
    // destructor. (in general called by the TFile destructor)
 
+   // Informe the TFile that we have been deleted (in case
+   // we are deleted explicitly by legacy user code).
+   fFile->SetCacheRead(0, fTree);   
+   
    delete fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
 }
