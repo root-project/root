@@ -10,10 +10,10 @@ int write()
   fprintf(stdout,"Writing %s\n",filename);
   Top* atop = new Top();
   TFile afile(filename, "recreate");
-  TTree tree("tree", "tree");
+  TTree *tree = new TTree("tree", "tree");
  
-  tree.BranchRef();
-  tree.Branch("top", atop);
+  tree->BranchRef();
+  tree->Branch("top", atop);
 
   for (size_t i=0;i<10;i++) {
     ObjA* a = static_cast<ObjA*>(atop->fObjAArray->New(i));
@@ -23,9 +23,10 @@ int write()
     a->fObjB = b;
     atop->fLastB = b;
   }
-  tree.Fill();
-  tree.Write();
+  tree->Fill();
+  tree->Write();
   afile.Close();
+  tree = 0;
   fprintf(stdout,"Done writing %s\n",filename);
      
   return 0;
