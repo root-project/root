@@ -804,6 +804,10 @@ N: Marco van Leeuwen
 E: mvl@nikhef.nl
 D: THistPainter improvements: support for log scales with CONT options
 
+N: Peter van Gemmeren
+E: peter.van.gemmeren@cern.ch
+D: Support for multiple cached TTree in a single TFile
+
 N: Wouter Verkerke
 E: verkerke@nikhef.nl
 D: Author of the RooFit package
