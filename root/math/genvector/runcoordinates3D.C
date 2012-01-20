@@ -1,6 +1,6 @@
 {
 // compile and run the coordinates3D test in genvector directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/genvector/test/coordinates3D.cxx+");
+   gROOT->ProcessLine(".L coordinates3D.cxx+");
    int ret = coordinates3D(); 
    if (ret == 0)
       std::cerr << "test coordinates3D:  OK" << std::endl;

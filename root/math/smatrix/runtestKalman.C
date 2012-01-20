@@ -1,6 +1,6 @@
 {
 // compile and run the test in smatrix directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/smatrix/test/testKalman.cxx+");
+   gROOT->ProcessLine(".L testKalman.cxx+");
    int ret = testKalman(); 
    if (ret == 0)
       std::cout << "testKalman OK" << std::endl;

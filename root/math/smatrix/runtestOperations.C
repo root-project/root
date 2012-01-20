@@ -1,6 +1,6 @@
 {
 // compile and run the test in smatrix directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/smatrix/test/testOperations.cxx+");
+   gROOT->ProcessLine(".L testOperations.cxx+");
    int ret = testOperations(); 
    if (ret == 0)
       std::cout << "testOperations OK" << std::endl;

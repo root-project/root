@@ -59,7 +59,7 @@ TESTDIR:=$(ROOT_SRCDIRDEP)/math/smatrix/test
 %.h: $(TESTDIR)/%.h
 	@cp $< $@
 
-$(addsuffix _cxx.$(DllSuf),$(SMATRIXTESTS)): matrix_util.h TestTimer.h
+$(addsuffix _cxx.$(DllSuf),$(SMATRIXTESTS)): matrix_util.h TestTimer.h matrix_op.h
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
@@ -76,7 +76,7 @@ testKalman.elog: testKalman_cxx.$(DllSuf)
 testKalman: testKalman.elog
 	$(TestDiff)
 
-testOperations.elog: $(TESTDIR)/testOperations_cxx.$(DllSuf)
+testOperations.elog: testOperations_cxx.$(DllSuf)
 
 testOperations: testOperations.elog
 	$(TestDiff)

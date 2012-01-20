@@ -1,6 +1,6 @@
 {
 // compile and run the  test in genvector directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/genvector/test/rotationApplication.cxx+");
+   gROOT->ProcessLine(".L rotationApplication.cxx+");
    int ret = rotationApplication(); 
    if (ret == 0)
       std::cerr << "test rotationApplication: OK" << std::endl;

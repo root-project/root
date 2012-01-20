@@ -1,6 +1,6 @@
 {
    // Compile and run the code of math/mathcore/test directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/mathcore/test/testRootFinder.cxx+");
+   gROOT->ProcessLine(".L testRootFinder.cxx+");
    int ret = testRootFinder(); 
    if (ret == 0)
       std::cout << "testRooFinder OK" << std::endl;

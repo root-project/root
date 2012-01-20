@@ -1,6 +1,6 @@
 {
 // compile and run the testGenVector in genvector directory
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/genvector/test/testGenVector.cxx+");
+   gROOT->ProcessLine(".L testGenVector.cxx+");
    int ret = testGenVector(); 
    if (ret == 0)
       std::cout << "testGenVector OK" << std::endl;

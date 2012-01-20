@@ -1,6 +1,6 @@
 {
    // Compile and run the code of math/mathcore/test directory 
-   gROOT->ProcessLine(".L $(ROOT_SRCDIR)/math/mathcore/test/testSpecFuncSiCi.cxx+");
+   gROOT->ProcessLine(".L testSpecFuncSiCi.cxx+");
    int ret = testSpecFuncSiCi();
    if (ret == 0)
        std::cout << "testSpecFuncSiCi: OK" << std::endl;
