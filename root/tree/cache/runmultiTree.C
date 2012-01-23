@@ -1,6 +1,23 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TFileCacheRead.h"
+#include "TTreeCache.h"
+
+void print(TFileCacheRead *fcache)
+{
+   TTreeCache *tcache = dynamic_cast<TTreeCache*>(fcache);
+   printf("Number of branches in the cache ...: %d\n",tcache->GetCachedBranches()->GetEntries());
+   printf("Cache Efficiency ..................: %f\n",tcache->GetEfficiency());
+   printf("Cache Efficiency Rel...............: %f\n",tcache->GetEfficiencyRel());
+   printf("Reading............................: %d transactions\n",fcache->GetFile()->GetReadCalls());
+   printf("Number of blocks in current cache..: %d, total size: %d\n",fcache->GetNseek(),fcache->GetNtot());
+   //fcache->Print();
+}
+
+void print(TTree *tree)
+{
+   print(tree->GetCurrentFile()->GetCacheRead(tree));
+}
 
 TTree *fillTree(int index) 
 {  
@@ -63,9 +80,9 @@ void readfileOldInterface()
    input.SetCacheRead(cache3);
    readtree(tree3);
 
-   cache1->Print();
-   cache2->Print();
-   cache3->Print();
+   print(cache1);
+   print(cache2);
+   print(cache3);
 
    delete cache1;
    delete cache2;
@@ -89,9 +106,9 @@ void readfile() {
    readtree(tree2);
    readtree(tree3);
 
-   tree1->PrintCacheStats();
-   tree2->PrintCacheStats();
-   tree3->PrintCacheStats();
+   print(tree1);
+   print(tree2);
+   print(tree3);
 }
 
 int runmultiTree() {
