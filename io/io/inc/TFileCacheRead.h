@@ -85,6 +85,9 @@ public:
    virtual void        AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual void        AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual Int_t       GetBufferSize() const { return fBufferSize; };
+           TFile      *GetFile() const { return fFile; }   // Return the TFile being cached.
+           Int_t       GetNseek() const { return fNseek; } // Return the number of blocks in the current cache.
+           Int_t       GetNtot() const { return fNtot; }   // Return the total size of the prefetched blocks.
    virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
            Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
