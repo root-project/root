@@ -822,6 +822,8 @@ void runProof(const char *what = "simple",
          return;
       }
       pfelem += aMode;
+      // Add include to test trasmission
+      pfelem += TString::Format(",%s/proof/EmptyInclude.h", tutorials.Data());
       proof->Load(pfelem);
 
       // Extract the number of files to process, data source and

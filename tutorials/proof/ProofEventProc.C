@@ -20,6 +20,7 @@
 #include "TRandom.h"
 #include "TNamed.h"
 #include "TROOT.h"
+#include "EmptyInclude.h"
 
 
 void ProofEventProc::Begin(TTree *)

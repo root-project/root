@@ -204,6 +204,7 @@ static TString gAuxSel("$ROOTSYS/tutorials/proof/ProofAux.C");
 static TString gProcFileElem("$ROOTSYS/tutorials/proof/ProcFileElements.C");
 
 // Special files
+static TString gEmptyInclude("$ROOTSYS/tutorials/proof/EmptyInclude.h");
 static TString gNtpRndm("$ROOTSYS/tutorials/proof/ntprndm.root");
 
 int stressProof(const char *url = "proof://localhost:40000",
@@ -964,6 +965,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    gSystem->ExpandPathName(gSimpleSel);
    gSystem->ExpandPathName(gTestsSel);
    gSystem->ExpandPathName(gProcFileElem);
+   gSystem->ExpandPathName(gEmptyInclude);
    gSystem->ExpandPathName(gNtupleSel);
    gSystem->ExpandPathName(gFriendsSel);
    gSystem->ExpandPathName(gAuxSel);
@@ -3336,7 +3338,12 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
    // Load special class for event ranges checks
-   gProof->Load(gProcFileElem.Data());
+   if (gProof->Load(TString::Format("%s,%s", gProcFileElem.Data(), gEmptyInclude.Data())) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not load auxilliary files %s and %s\n",
+             gProcFileElem.Data(), gEmptyInclude.Data());
+      return -1;
+   }
 
    // Add some parameters for later checking in Terminate
    Int_t ifst = gEventFst / gEventSiz + 1;
