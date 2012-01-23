@@ -306,6 +306,8 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    THnBase* ret = (THnBase*)type->New();
    ret->Init(name, title, hn->GetListOfAxes(),
              kFALSE /*keepTargetAxes*/, chunkSize);
+
+   ret->Add(hn);
    return ret;
 }
 
