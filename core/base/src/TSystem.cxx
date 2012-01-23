@@ -132,8 +132,10 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    fNfd                 = 0;
    fSigcnt              = 0;
 
-   gLibraryVersion = new Int_t [gLibraryVersionMax];
-   memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
+   if (!gLibraryVersion) {
+      gLibraryVersion = new Int_t [gLibraryVersionMax];
+      memset(gLibraryVersion, 0, gLibraryVersionMax*sizeof(Int_t));
+   }
 }
 
 //______________________________________________________________________________
