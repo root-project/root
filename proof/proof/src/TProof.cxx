@@ -7802,12 +7802,10 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       // The files are now on the workers: now we send the loading request
       TMessage mess(kPROOF_CACHE);
       if (GetRemoteProtocol() < 34) {
-         Printf("%d: sending: '%s'", GetRemoteProtocol(), bmsg.Data());
          mess << Int_t(kLoadMacro) << basemacro;
          // This may be needed
          AddIncludePath("../../cache");
       } else {
-         Printf("%d: sending: '%s'", GetRemoteProtocol(), bmsg.Data());
          mess << Int_t(kLoadMacro) << bmsg;
       }
       Broadcast(mess, kActive);
