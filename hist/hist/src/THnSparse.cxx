@@ -623,7 +623,7 @@ void THnSparse::AddBinContent(Long64_t bin, Double_t v)
 //______________________________________________________________________________
 THnSparseArrayChunk* THnSparse::AddChunk()
 {
-   //Create a new chunk of bin content
+   // Create a new chunk of bin content
    THnSparseArrayChunk* chunk =
       new THnSparseArrayChunk(GetCompactCoord()->GetBufferSize(),
                               GetCalculateErrors(), GenerateArray());
@@ -632,48 +632,11 @@ THnSparseArrayChunk* THnSparse::AddChunk()
 }
 
 //______________________________________________________________________________
-THnBase* THnSparse::CloneEmpty(const char* name, const char* title,
-                                 const TObjArray* axes, Bool_t keepTargetAxis) const
+void THnSparse::InitStorage(Int_t* nbins, Int_t chunkSize)
 {
-   // Create a new THnSparse object that is of the same type as *this,
-   // but with dimensions and bins given by axes.
-   // If keepTargetAxis is true, the axes will keep their original xmin / xmax,
-   // else they will be restricted to the range selected (first / last).
-
-   THnSparse* ret = (THnSparse*)IsA()->New();
-   ret->SetNameTitle(name, title);
-   ret->fNdimensions = axes->GetEntriesFast();
-   ret->fChunkSize = fChunkSize;
-
-   TIter iAxis(axes);
-   const TAxis* axis = 0;
-   Int_t pos = 0;
-   Int_t *nbins = new Int_t[axes->GetEntriesFast()];
-   while ((axis = (TAxis*)iAxis())) {
-      TAxis* reqaxis = (TAxis*)axis->Clone();
-      if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
-         Int_t binFirst = axis->GetFirst();
-         Int_t binLast = axis->GetLast();
-         Int_t nBins = binLast - binFirst + 1;
-         if (axis->GetXbins()->GetSize()) {
-            // non-uniform bins:
-            reqaxis->Set(nBins, axis->GetXbins()->GetArray() + binFirst - 1);
-         } else {
-            // uniform bins:
-            reqaxis->Set(nBins, axis->GetBinLowEdge(binFirst), axis->GetBinUpEdge(binLast));
-         }
-         reqaxis->ResetBit(TAxis::kAxisRange);
-      }
-
-      nbins[pos] = reqaxis->GetNbins();
-      ret->fAxes.AddAtAndExpand(reqaxis->Clone(), pos++);
-   }
-   ret->fAxes.SetOwner();
-
-   ret->fCompactCoord = new THnSparseCompactBinCoord(pos, nbins);
-   delete [] nbins;
-
-   return ret;
+   // Initialize the storage of a histogram created via Init()
+   fChunkSize = chunkSize;
+   fCompactCoord = new THnSparseCompactBinCoord(fNdimensions, nbins);
 }
 
 //______________________________________________________________________________

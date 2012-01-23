@@ -59,8 +59,7 @@ protected:
       FillBinBase(w);
    }
 
-   THnBase* CloneEmpty(const char* name, const char* title,
-                       const TObjArray* axes, Bool_t keepTargetAxis) const;
+   void InitStorage(Int_t* nbins, Int_t chunkSize);
 
    THn(): fCoordBuf() {}
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
@@ -71,6 +70,9 @@ public:
 
    static THn* CreateHn(const char* name, const char* title, const TH1* h1) {
       return (THn*) CreateHnAny(name, title, h1, kFALSE /*THn*/, -1);
+   }
+   static THn* CreateHn(const char* name, const char* title, const THnBase* hn) {
+      return (THn*) CreateHnAny(name, title, hn, kFALSE /*THn*/, -1);
    }
 
    ROOT::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;

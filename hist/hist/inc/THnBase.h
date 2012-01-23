@@ -99,8 +99,12 @@ private:
       fIntegralStatus = kInvalidInt;
    }
 
-   virtual THnBase* CloneEmpty(const char* name, const char* title,
-                               const TObjArray* axes, Bool_t keepTargetAxis) const = 0;
+   virtual void InitStorage(Int_t* nbins, Int_t chunkSize) = 0;
+   void Init(const char* name, const char* title,
+             const TObjArray* axes, Bool_t keepTargetAxis,
+             Int_t chunkSize = 1024 * 16);
+   THnBase* CloneEmpty(const char* name, const char* title,
+                       const TObjArray* axes, Bool_t keepTargetAxis) const;
    virtual void Reserve(Long64_t /*nbins*/) {}
    virtual void SetFilledBins(Long64_t /*nbins*/) {};
 
@@ -117,7 +121,10 @@ private:
 
    static THnBase* CreateHnAny(const char* name, const char* title,
                                const TH1* h1, Bool_t sparse,
-                               Int_t ChunkSize = 1024 * 16);
+                               Int_t chunkSize = 1024 * 16);
+   static THnBase* CreateHnAny(const char* name, const char* title,
+                               const THnBase* hn, Bool_t sparse,
+                               Int_t chunkSize = 1024 * 16);
 
  public:
    virtual ~THnBase();

@@ -83,8 +83,7 @@ class THnSparse: public THnBase {
       chunk->AddBinContent(bin % fChunkSize, w);
       FillBinBase(w);
    }
-   THnBase* CloneEmpty(const char* name, const char* title,
-                       const TObjArray* axes, Bool_t keepTargetAxis) const;
+   void InitStorage(Int_t* nbins, Int_t chunkSize);
 
  public:
    virtual ~THnSparse();
@@ -92,6 +91,11 @@ class THnSparse: public THnBase {
    static THnSparse* CreateSparse(const char* name, const char* title,
                                   const TH1* h1, Int_t chunkSize = 1024 * 16) {
       return (THnSparse*) CreateHnAny(name, title, h1, kTRUE /*sparse*/,
+                                       chunkSize);
+   }
+   static THnSparse* CreateSparse(const char* name, const char* title,
+                                  const THnBase* hn, Int_t chunkSize = 1024 * 16) {
+      return (THnSparse*) CreateHnAny(name, title, hn, kTRUE /*sparse*/,
                                        chunkSize);
    }
 

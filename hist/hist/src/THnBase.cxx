@@ -67,6 +67,64 @@ THnBase::~THnBase() {
    if (fIntegralStatus != kNoInt) delete [] fIntegral;
 }
 
+
+//______________________________________________________________________________
+THnBase* THnBase::CloneEmpty(const char* name, const char* title,
+                             const TObjArray* axes, Bool_t keepTargetAxis) const
+{
+   // Create a new THnBase object that is of the same type as *this,
+   // but with dimensions and bins given by axes.
+   // If keepTargetAxis is true, the axes will keep their original xmin / xmax,
+   // else they will be restricted to the range selected (first / last).
+   THnBase* ret = (THnBase*)IsA()->New();
+   Int_t chunkSize = 1024 * 16;
+   if (InheritsFrom(THnSparse::Class())) {
+      chunkSize = ((const THnSparse*)this)->GetChunkSize();
+   }
+   ret->Init(name, title, axes, keepTargetAxis, chunkSize);
+   return ret;
+}
+
+
+//______________________________________________________________________________
+void THnBase::Init(const char* name, const char* title,
+                   const TObjArray* axes, Bool_t keepTargetAxis,
+                   Int_t chunkSize /*= 1024 * 16*/)
+{
+   // Initialize axes and name.
+   SetNameTitle(name, title);
+
+   TIter iAxis(axes);
+   const TAxis* axis = 0;
+   Int_t pos = 0;
+   Int_t *nbins = new Int_t[axes->GetEntriesFast()];
+   while ((axis = (TAxis*)iAxis())) {
+      TAxis* reqaxis = (TAxis*)axis->Clone();
+      if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
+         Int_t binFirst = axis->GetFirst();
+         Int_t binLast = axis->GetLast();
+         Int_t nBins = binLast - binFirst + 1;
+         if (axis->GetXbins()->GetSize()) {
+            // non-uniform bins:
+            reqaxis->Set(nBins, axis->GetXbins()->GetArray() + binFirst - 1);
+         } else {
+            // uniform bins:
+            reqaxis->Set(nBins, axis->GetBinLowEdge(binFirst), axis->GetBinUpEdge(binLast));
+         }
+         reqaxis->ResetBit(TAxis::kAxisRange);
+      }
+
+      nbins[pos] = reqaxis->GetNbins();
+      fAxes.AddAtAndExpand(reqaxis->Clone(), pos++);
+   }
+   fAxes.SetOwner();
+
+   fNdimensions = axes->GetEntriesFast();
+   InitStorage(nbins, chunkSize);
+   delete [] nbins;
+}
+
+
 //______________________________________________________________________________
 TH1* THnBase::CreateHist(const char* name, const char* title,
                            const TObjArray* axes,
@@ -188,6 +246,67 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
 
    s->Add(h);
    return s;
+}
+
+
+//______________________________________________________________________________
+THnBase* THnBase::CreateHnAny(const char* name, const char* title,
+                              const THnBase* hn, Bool_t sparse,
+                              Int_t chunkSize /*= 1024 * 16*/)
+{
+   // Create a THnSparse (if "sparse") or THn  from "hn", possibly
+   // converting THn <-> THnSparse.
+   TClass* type = 0;
+   if (hn->InheritsFrom(THnSparse::Class())) {
+      if (sparse) type = hn->IsA();
+      else {
+         char bintype;
+         if (hn->InheritsFrom(THnSparseD::Class())) bintype = 'D';
+         else if (hn->InheritsFrom(THnSparseF::Class())) bintype = 'F';
+         else if (hn->InheritsFrom(THnSparseL::Class())) bintype = 'L';
+         else if (hn->InheritsFrom(THnSparseI::Class())) bintype = 'I';
+         else if (hn->InheritsFrom(THnSparseS::Class())) bintype = 'S';
+         else if (hn->InheritsFrom(THnSparseC::Class())) bintype = 'C';
+         else {
+            hn->Error("CreateHnAny", "Type %s not implemented; please inform the ROOT team!",
+                  hn->IsA()->GetName());
+            return 0;
+         }
+         type = TClass::GetClass(TString::Format("THn%c", bintype));
+      }
+   } else if (hn->InheritsFrom(THn::Class())) {
+      if (!sparse) type = hn->IsA();
+      else {
+         char bintype = 0;
+         if (hn->InheritsFrom(THnD::Class())) bintype = 'D';
+         else if (hn->InheritsFrom(THnF::Class())) bintype = 'F';
+         else if (hn->InheritsFrom(THnC::Class())) bintype = 'C';
+         else if (hn->InheritsFrom(THnS::Class())) bintype = 'S';
+         else if (hn->InheritsFrom(THnI::Class())) bintype = 'I';
+         else if (hn->InheritsFrom(THnL::Class())) bintype = 'L';
+         else if (hn->InheritsFrom(THnL64::Class())) {
+            hn->Error("CreateHnAny", "Type THnSparse with Long64_t bins is not available!");
+            return 0;
+         }
+         if (bintype) {
+            type = TClass::GetClass(TString::Format("THnSparse%c", bintype));
+         }
+      }
+   } else {
+      hn->Error("CreateHnAny", "Unhandled type %s, not deriving from THn nor THnSparse!",
+            hn->IsA()->GetName());
+      return 0;
+   }
+   if (!type) {
+      hn->Error("CreateHnAny", "Unhandled type %s, please inform the ROOT team!",
+            hn->IsA()->GetName());
+      return 0;
+   }
+
+   THnBase* ret = (THnBase*)type->New();
+   ret->Init(name, title, hn->GetListOfAxes(),
+             kFALSE /*keepTargetAxes*/, chunkSize);
+   return ret;
 }
 
 

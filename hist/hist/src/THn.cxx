@@ -142,50 +142,11 @@ void THn::Sumw2() {
 
  
 //______________________________________________________________________________
-THnBase* THn::CloneEmpty(const char* name, const char* title,
-                         const TObjArray* axes, Bool_t keepTargetAxis) const
+void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
-   // Create a new THn object that is of the same type as *this,
-   // but with dimensions and bins given by axes.
-   // If keepTargetAxis is true, the axes will keep their original xmin / xmax,
-   // else they will be restricted to the range selected (first / last).
-
-   THn* ret = (THn*)IsA()->New();
-   ret->SetNameTitle(name, title);
-
-   TIter iAxis(axes);
-   const TAxis* axis = 0;
-   Int_t pos = 0;
-   Int_t *nbins = new Int_t[axes->GetEntriesFast()];
-   while ((axis = (TAxis*)iAxis())) {
-      TAxis* reqaxis = (TAxis*)axis->Clone();
-      if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
-         Int_t binFirst = axis->GetFirst();
-         Int_t binLast = axis->GetLast();
-         Int_t nBins = binLast - binFirst + 1;
-         if (axis->GetXbins()->GetSize()) {
-            // non-uniform bins:
-            reqaxis->Set(nBins, axis->GetXbins()->GetArray() + binFirst - 1);
-         } else {
-            // uniform bins:
-            reqaxis->Set(nBins, axis->GetBinLowEdge(binFirst), axis->GetBinUpEdge(binLast));
-         }
-         reqaxis->ResetBit(TAxis::kAxisRange);
-      }
-
-      nbins[pos] = reqaxis->GetNbins();
-      ret->fAxes.AddAtAndExpand(reqaxis->Clone(), pos++);
-   }
-   ret->fAxes.SetOwner();
-
-   ret->fNdimensions = axes->GetEntriesFast();
-   ret->fCoordBuf = new Int_t[ret->fNdimensions];
-   ret->GetArray().Init(ret->fNdimensions, nbins, true /*addOverflow*/);
-
-   delete [] nbins;
-
-   return ret;
-   
+   // Initialize the storage of a histogram created via Init()
+   fCoordBuf = new Int_t[fNdimensions];
+   GetArray().Init(fNdimensions, nbins, true /*addOverflow*/);
 }
 
 //______________________________________________________________________________
