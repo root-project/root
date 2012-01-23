@@ -58,6 +58,8 @@ private:
    TMD5            *fMD5;            //-> md5 digest of the file
    TList           *fMetaDataList;   // generic list of file meta data object(s)
 
+   Int_t            fIndex;          // Index to be used when sorting with index
+
    void             ParseInput(const char *in);
 
    TFileInfo& operator=(const TFileInfo&);  // not implemented
@@ -65,7 +67,8 @@ private:
 public:
    enum EStatusBits {
       kStaged    = BIT(15),
-      kCorrupted = BIT(16)
+      kCorrupted = BIT(16),
+      kSortWithIndex  = BIT(17)     // Use index when sorting (in Compare)
    };
 
    TFileInfo(const char *url = 0, Long64_t size = -1, const char *uuid = 0,
@@ -101,6 +104,9 @@ public:
 
    Bool_t          IsSortable() const { return kTRUE; }
    Int_t           Compare(const TObject *obj) const;
+
+   Int_t           GetIndex() const { return fIndex; }
+   void            SetIndex(Int_t idx) { fIndex = idx; }
 
    void            Print(Option_t *options="") const;
 
