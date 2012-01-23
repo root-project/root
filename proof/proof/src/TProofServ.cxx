@@ -5537,40 +5537,48 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (slb) slb->Form("%d", type);
          break;
       case TProof::kLoadMacro:
+         {
+            (*mess) >> package;
 
-         (*mess) >> package;
+            // By first forwarding the load command to the unique workers
+            // and only then loading locally we load/build in parallel
+            if (IsMaster())
+               fProof->Load(package, kFALSE, kTRUE);
 
-         // By first forwarding the load command to the unique workers
-         // and only then loading locally we load/build in parallel
-         if (IsMaster())
-            fProof->Load(package, kFALSE, kTRUE);
+            // Atomic action
+            fCacheLock->Lock();
 
-         // Atomic action
-         fCacheLock->Lock();
+            // Load locally; the implementation and header files (and perhaps
+            // the binaries) are already in the cache
+            TString fn;
+            Ssiz_t from = 0;
+            while ((package.Tokenize(fn, from, ",")))
+               CopyFromCache(fn, kTRUE);
 
-         // Load locally; the implementation and header files (and perhaps
-         // the binaries) are already in the cache
-         CopyFromCache(package, kTRUE);
+            // Load the macro
+            TString pack(package);
+            if ((from = pack.Index(",")) != kNPOS) pack.Remove(from);
+            Info("HandleCache", "loading macro %s ...", pack.Data());
+            gROOT->ProcessLine(TString::Format(".L %s", pack.Data()));
 
-         // Load the macro
-         Info("HandleCache", "loading macro %s ...", package.Data());
-         gROOT->ProcessLine(TString::Format(".L %s", package.Data()));
+            // Cache binaries, if any new
+            from = 0;
+            while ((package.Tokenize(fn, from, ",")))
+               CopyToCache(fn, 1);
 
-         // Cache binaries, if any new
-         CopyToCache(package, 1);
+            // Release atomicity
+            fCacheLock->Unlock();
 
-         // Release atomicity
-         fCacheLock->Unlock();
+            // Now we collect the result from the unique workers and send the load request
+            // to the other workers (no compilation)
+            if (IsMaster())
+               fProof->Load(package, kFALSE, kFALSE);
 
-         // Now we collect the result from the unique workers and send the load request
-         // to the other workers (no compilation)
-         if (IsMaster())
-            fProof->Load(package, kFALSE, kFALSE);
+            // Notify the upper level
+            LogToMaster();
 
-         // Notify the upper level
-         LogToMaster();
-
-         if (slb) slb->Form("%d %s", type, package.Data());
+            if (slb) slb->Form("%d %s", type, package.Data());
+         }
          break;
       default:
          Error("HandleCache", "unknown type %d", type);

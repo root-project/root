@@ -7720,7 +7720,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
          implname.Remove(icom);
       }
       TString basemacro = gSystem->BaseName(implname), mainmacro(implname);
-      TString acmode, args, io;
+      TString bmsg(basemacro), acmode, args, io;
       implname = gSystem->SplitAclicMode(implname, acmode, args, io);
 
       // Macro names must have a standard format
@@ -7788,17 +7788,28 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
          TIter nxfn(&addfiles);
          TObjString *os = 0;
          while ((os = (TObjString *) nxfn())) {
-            if (SendFile(os->GetName(), kAscii | kForward , "cache") == -1) {
+            // These files need to be available everywhere, cache and sandbox
+            if (SendFile(os->GetName(), kAscii | kForward, "cache") == -1) {
                Error("Load", "problems sending additional file %s", os->GetName());
                return -1;
             }
+            // Add the base names to the message broadcasted
+            bmsg += TString::Format(",%s", gSystem->BaseName(os->GetName()));
          }
          addfiles.SetOwner(kTRUE);
       }
          
       // The files are now on the workers: now we send the loading request
       TMessage mess(kPROOF_CACHE);
-      mess << Int_t(kLoadMacro) << basemacro;
+      if (GetRemoteProtocol() < 34) {
+         Printf("%d: sending: '%s'", GetRemoteProtocol(), bmsg.Data());
+         mess << Int_t(kLoadMacro) << basemacro;
+         // This may be needed
+         AddIncludePath("../../cache");
+      } else {
+         Printf("%d: sending: '%s'", GetRemoteProtocol(), bmsg.Data());
+         mess << Int_t(kLoadMacro) << bmsg;
+      }
       Broadcast(mess, kActive);
 
       // Load locally, if required
