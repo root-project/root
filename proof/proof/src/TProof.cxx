@@ -7723,6 +7723,10 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
          addfiles.SetOwner(kTRUE);
       }
          
+      // This may be needed to access additional files (adaptation of fix 42761)
+      TString incadd = IsLite() ? "../../../cache" : "../../cache";
+      AddIncludePath(incadd);
+
       // The files are now on the workers: now we send the loading request
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kLoadMacro) << basemacro;
