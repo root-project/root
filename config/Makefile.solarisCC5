@@ -19,11 +19,11 @@ ifneq ($(OSTHREADLIB),)
 MTOPT         = -mt
 endif
 
-CC_MINOR_VER := $(shell CC -V 2>&1 | sed 's,^.*5\.\([^[:space:]]*\).*$$,\1,')
+CC_MINOR_VER := $(shell CC -V 2>&1 | sed 's,^.*5\.\([0-9]*\) .*$$,\1,')
 SOLCPU       := $(shell uname -p)
 
 CCPTR := -ptr$(ROOTSYS)
-ifeq ($(findstring $(CC_MINOR_VER),0 1 2 3 4),)
+ifeq ($(patsubst $(CC_MINOR_VER),,0 1 2 3 4),0 1 2 3 4)
 # newer than 5.4
 CCPTR :=
 ifeq ($(SOLCPU),i386)
