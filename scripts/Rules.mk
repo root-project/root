@@ -581,6 +581,13 @@ LibSuf        = so
 endif
 endif
 
+ifneq ($(ARCH:solaris%=%),$(ARCH))
+# solaris
+LDFLAGS  ?= `root-config --ldflags`
+SOFLAGS  ?= -G $(LDFLAGS) -KPIC
+CXXFLAGS += -KPIC
+endif
+
 ifeq ($(PT),)
 CALLROOTEXE  ?= root.exe
 else

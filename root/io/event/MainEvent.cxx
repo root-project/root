@@ -95,6 +95,8 @@
 #include <cstdio>
 #include <iostream>
 
+using namespace std; // solaris std::atoi
+
 const char* gFilename = "Event.root";
 static Int_t gBufSize = 64000;
 
