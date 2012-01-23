@@ -77,7 +77,7 @@ if [ -z "${MANPATH}" ]; then
    if `which manpath > /dev/null 2>&1` ; then
       default_manpath=`manpath`
    else
-      default_manpath=`man -w`
+      default_manpath=`man -w 2> /dev/null`
    fi
 fi
 
