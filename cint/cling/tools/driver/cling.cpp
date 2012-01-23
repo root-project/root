@@ -47,18 +47,18 @@ int main( int argc, char **argv )
   }
 
    bool ret = true;
-   const std::vector<std::pair<clang::InputKind, std::string> >& Inputs
+   const std::vector<clang::FrontendInputFile>& Inputs
      = CI->getInvocation().getFrontendOpts().Inputs;
 
    // Interactive means no input (or one input that's "-")
    bool Interactive = Inputs.empty()
-     || (Inputs.size() == 1 && Inputs[0].second == "-");
+     || (Inputs.size() == 1 && Inputs[0].File == "-");
    if (!Interactive) {
      //---------------------------------------------------------------------------
      // We're supposed to parse files
      //---------------------------------------------------------------------------
       for (size_t I = 0, N = Inputs.size(); I < N; ++I) {
-        ret = interpreter.executeFile(Inputs[I].second);
+        ret = interpreter.executeFile(Inputs[I].File);
       }
    }
    //----------------------------------------------------------------------------
