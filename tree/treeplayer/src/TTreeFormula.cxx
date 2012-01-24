@@ -4037,7 +4037,18 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kRightShift: pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) >>((Long64_t) tab[pos]); continue;
 
             case kJump   : i = (oper & kTFOperMask); continue;
-            case kJumpIf : pos--; if (!tab[pos]) i = (oper & kTFOperMask); continue;
+            case kJumpIf : {
+               pos--; 
+               if (!tab[pos]) { 
+                  i = (oper & kTFOperMask);
+                  // If we skip the left (true) side of the if statement we may,
+                  // skip some of the branch loading (since we remove duplicate branch
+                  // request (in TTreeFormula constructor) and so we need to force the
+                  // loading here.
+                  if (willLoad) fDidBooleanOptimization = kTRUE;
+               }
+               continue;
+            }
 
             case kStringConst: {
                // String
