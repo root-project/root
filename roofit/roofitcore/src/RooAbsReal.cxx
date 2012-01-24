@@ -74,6 +74,7 @@
 #include "RooMoment.h"
 #include "RooBrentRootFinder.h"
 #include "RooVectorDataStore.h"
+#include "RooCachedReal.h"
 
 #include "Riostream.h"
 
@@ -514,31 +515,15 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   // Integral over multiple ranges
   RooArgSet components ;
   
-  // char* buf = new char[strlen(rangeName)+1] ;
-  //   strlcpy(buf,rangeName) ;
-  //   char* range = strtok(buf,",") ;
-  
-  //   while (range) {
-  //     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg,range) ;
-  //     components.add(*compIntegral) ;
-  //     range = strtok(0,",") ;
-  //   }
-  //   delete[] buf ;
-  
-  // + ALEX
   TObjArray* oa = TString(rangeName).Tokenize(",");
   
   for( Int_t i=0; i < oa->GetEntries(); ++i) {
     TObjString* os = (TObjString*) (*oa)[i];
-//     cout<< "    ALEX:: RooAbsReal::createIntegral (" << GetName() << ")  os = " << os->GetString().Data() <<endl;
     if(!os) break;
     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg,os->GetString().Data()) ;
-//     cout << "just created " << compIntegral->GetName() << " for rangename = " << os->GetString().Data() << endl ;
     components.add(*compIntegral) ;
   }
   delete oa;
-  // - ALEX 
-//     cout<< "    ALEX:: RooAbsReal::createIntegral (" << GetName() << ")  components = " << components <<endl;
 
   TString title(GetTitle()) ;
   title.Prepend("Integral of ") ;
@@ -628,6 +613,31 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     coutE(Integration) << GetName() << " : ERROR while defining recursive integral over observables with parameterized integration ranges, please check that integration rangs specify uniquely defined integral " << endl; 
     delete integral ;
     integral = 0 ;
+  }
+
+
+  // After-burner: apply interpolating cache on (numeric) integral if requested by user
+  const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
+  if (cacheParamsStr && strlen(cacheParamsStr)) {
+
+    RooArgSet* intParams = integral->getVariables() ;
+    
+    RooNameSet cacheParamNames ;
+    cacheParamNames.setNameList(cacheParamsStr) ;
+    RooArgSet* cacheParams = cacheParamNames.select(*intParams) ;
+
+    if (cacheParams->getSize()>0) {
+      coutI(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
+		     << "-dim value cache for integral over " << iset2 << endl ;
+      string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams->contentsString().c_str()) ;
+      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
+      cachedIntegral->setInterpolationOrder(2) ;
+      cachedIntegral->addOwnedComponents(*integral) ;
+      integral = cachedIntegral ;
+    }
+
+    delete cacheParams ;
+    delete intParams ;
   }
 
   return integral ;
@@ -4380,5 +4390,21 @@ void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m)
 }
 
 
-
+//_____________________________________________________________________________
+void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars) 
+{
+  RooFIter iter = paramVars.fwdIterator() ;
+  RooAbsArg* arg ;
+  string plist ;
+  while((arg=iter.next())) {
+    if (!dependsOnValue(*arg)) {
+      coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName() 
+			    << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;
+      continue ;
+    }
+    if (plist.size()>0) plist += ":" ;
+    plist += arg->GetName() ;    
+  }
+  setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
+}
 

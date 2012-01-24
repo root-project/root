@@ -532,14 +532,18 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
 
       Double_t coefInt = getCoefNorm(index,intCoefSet,rangeName) ;
-      Double_t term = (rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() : conv->getNorm(intConvSet) ) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
-      if (coefInt!=0) integral += coefInt*term ;
+      if (coefInt!=0) {
+	Double_t term = (rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() : conv->getNorm(intConvSet) ) ;
+	integral += coefInt*term ;
+      }
 
       Double_t coefNorm = getCoefNorm(index,normCoefSet) ;
-      term = conv->getNorm(normConvSet) ;
       //cout << "coefNorm[" << index << "] = " << coefNorm << "*" << term << " " << (normCoefSet?*normCoefSet:RooArgSet()) << endl ;
-      if (coefNorm!=0) norm += coefNorm*term ;
+      if (coefNorm!=0) {
+	Double_t term = conv->getNorm(normConvSet) ;
+	norm += coefNorm*term ;
+      }
 
       index++ ;
     }

@@ -57,7 +57,7 @@ protected:
   // point of this class
   virtual Double_t getValV(const RooArgSet* nset=0) const { 
     // Forward call to RooAbsReal
-    return RooAbsReal::getVal(nset) ; 
+    return RooAbsReal::getValV(nset) ; 
   }
 
   static RooCategory* _dummyBlindState ; 
