@@ -39,8 +39,8 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   pythia/% \
   sql/% \
   tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
-  roostats/rs401d_FeldmanCousins.C \
-  histfactory/ModifyInterpolation.C \
+  roostats/rs401d_FeldmanCousins \
+  histfactory/ModifyInterpolation \
   tree/copytree2 tree/copytree3 tree/copytree \
   math/testUnfold4 \
   fit/minuit2FitBench \
