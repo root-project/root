@@ -110,7 +110,7 @@ public:
 
    void            Print(Option_t *options="") const;
 
-   ClassDef(TFileInfo,3)   // Describes generic file info including meta data information
+   ClassDef(TFileInfo,4)   // Describes generic file info including meta data information
 };
 
 
