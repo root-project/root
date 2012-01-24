@@ -224,11 +224,12 @@ TEveManager::~TEveManager()
    fSelection->DecDenyDestroy();
 
    delete fMacroFolder;
-   delete fStampedElements;
+   
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;
    delete fExcHandler;
+   delete fStampedElements;
 
    fLTEFrame->DeleteWindow();
 
@@ -489,9 +490,9 @@ void TEveManager::ElementStamped(TEveElement* element)
    // Mark element as changed -- it will be processed on next redraw.
 
    UInt_t slot;
-   if (fStampedElements->GetValue((ULong_t) element, (Long_t) element, slot) == 0)
+   if (fStampedElements->GetValue((ULong64_t) element, (Long64_t) element, slot) == 0)
    {
-      fStampedElements->AddAt(slot, (ULong_t) element, (Long_t) element, 1);
+      fStampedElements->AddAt(slot, (ULong64_t) element, (Long64_t) element, 1);
    }
 }
 
@@ -601,8 +602,8 @@ void TEveManager::PreDeleteElement(TEveElement* element)
    if (fScenes)
       fScenes->DestroyElementRenderers(element);
 
-   if (fStampedElements->GetValue((ULong_t) element, (Long_t) element) != 0)
-      fStampedElements->Remove((ULong_t) element, (Long_t) element);
+   if (fStampedElements->GetValue((ULong64_t) element, (Long64_t) element) != 0)
+      fStampedElements->Remove((ULong64_t) element, (Long64_t) element);
 
    if (element->fImpliedSelected > 0)
       fSelection->RemoveImpliedSelected(element);
