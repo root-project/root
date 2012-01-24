@@ -1741,7 +1741,7 @@ G__value G__getitem(const char* item)
 {
    // --
    int known;
-   G__value result3;
+   G__value result3 = G__null;
    int c;
    char store_var_typeB;
    G__value reg;

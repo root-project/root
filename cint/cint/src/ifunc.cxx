@@ -8084,6 +8084,7 @@ struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal* ifunc)
    G__ifunc_table iref;
    iref.tagnum = ifunc->tagnum;
    iref.page = ifunc->page;
+   iref.ifunc_cached = 0;
    std::set<G__ifunc_table>::const_iterator irefIter = G__ifunc_refs()[iref.tagnum].insert(iref).first;
    G__ifunc_table& irefInSet = const_cast<G__ifunc_table&>(*irefIter);
    irefInSet.ifunc_cached = ifunc;

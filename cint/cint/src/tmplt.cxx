@@ -3563,7 +3563,7 @@ int G__templatefunc(G__value *result,const char *funcname,G__param *libp
 
       G__friendtagnum = store_friendtagnum;
 
-      if(pexplicitarg[0]) {
+      if(pexplicitarg != clnull) {
         free((void*)pexplicitarg);
       }
 
