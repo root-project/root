@@ -1480,7 +1480,7 @@ void G__set_class_autoloading_table(char* classname, char* libname)
                break;
             }
          }
-         G__createtemplateclass(templatename, 0, 0);
+         G__createtemplateclass(templatename, 0, 1); // Declare is only as 'forward' declared.
          G__ifile.fp = store_fp;
          G__def_tagnum = store_def_tagnum;
          G__tagdefining = store_tagdefining;
