@@ -816,6 +816,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileSaveAs:
                      {
+                        TString workdir = gSystem->WorkingDirectory();
                         static TString dir(".");
                         static Int_t typeidx = 0;
                         static Bool_t overwr = kFALSE;
@@ -825,6 +826,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         fi.fFileTypeIdx = typeidx;
                         fi.fOverwrite = overwr;
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+                        gSystem->ChangeDirectory(workdir.Data());
                         if (!fi.fFilename) return kTRUE;
                         Bool_t  appendedType = kFALSE;
                         TString fn = fi.fFilename;

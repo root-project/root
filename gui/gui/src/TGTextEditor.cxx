@@ -566,6 +566,7 @@ Bool_t TGTextEditor::SaveFileAs()
    // Save the edited text in a file selected with TGFileDialog.
    // Shouldn't we create a backup file?
 
+   TString workdir = gSystem->WorkingDirectory();
    static TString dir(".");
    static Bool_t overwr = kFALSE;
    TGFileInfo fi;
@@ -573,6 +574,7 @@ Bool_t TGTextEditor::SaveFileAs()
    fi.fIniDir    = StrDup(dir);
    fi.fOverwrite = overwr;
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
+   gSystem->ChangeDirectory(workdir.Data());
    overwr = fi.fOverwrite;
    if (fi.fFilename && strlen(fi.fFilename)) {
       SaveFile(fi.fFilename);
