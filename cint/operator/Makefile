@@ -40,7 +40,7 @@ ParanTest: t01.log
 	$(CMDECHO) diff -b t01.log t01.ref
 
 ConversionOp.log : runConversionOp.C ConversionOp.C ConversionOp_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runConversionOp.C | \
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runConversionOp.C 2>&1 | \
 	        $(RemoveLeadingDirs) -e 's?FILE:.*[/\]?FILE:?' -e 's/.dll/.so/g' \
 	        | grep -v -e tagnum -e 'int c' -e 'public: void ~' > $@ 2>&1
 
