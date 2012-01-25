@@ -161,7 +161,6 @@ main(int argc,
    if (!map_gen.good()) {
       cout << "ERR0R: cannot open output file: '" << rootmap << "'" << endl
            << sl.Error() << endl;
-      sl.Unload();
       return 1;
    }
    //--- Iterate over component factories ---------------------------------------
@@ -182,7 +181,6 @@ main(int argc,
             }
          }
          map_gen.genTrailer();
-         sl.Unload();
          return 0;
       }
       catch (std::exception& e) {
@@ -192,7 +190,6 @@ main(int argc,
       return 1;
    }
    cout << "library does not contain plugin factories" << endl;
-   sl.Unload();
    return 0;
 } // main
 
