@@ -48,7 +48,7 @@ End_Macro
 
 Begin_Html
 </ol>
-             <h4>Operations on entry lists</h4>
+<h4>Operations on entry lists</h4>
 
 <ul>
 <li> <b>Add</b>() - if the lists are for the same tree, adds all the entries of the second list
@@ -65,7 +65,7 @@ Begin_Html
                 for 2 or more indices in a row.
 </ul>
 
-                     <h4>TTree::Draw() and TChain::Draw()</h4>
+<h4>TTree::Draw() and TChain::Draw()</h4>
 
   Use option <b>entrylist</b> to write the results of TTree::Draw and TChain::Draw into 
   an entry list. Example:
@@ -74,40 +74,40 @@ Begin_Html
      TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
 </pre>
 
-                                <h4> Example of Loop en TEntryList with a TChain</h4>
+<h4> Example of Loop on TEntryList with a TChain</h4>
 <pre>
 void loopChain() {
    TFile *fe = TFile::Open("myelist.root");
-   TEntryList *myelist=(TEntryList*)fe->Get("myelist");
+   TEntryList *myelist = (TEntryList*)fe->Get("myelist");
    TChain *ch = new TChain("ntuple");
    ch->Add("hsimple.root");
    ch->Add("hsimple2.root");
-   Long64_t listEntries=myelist->GetN();
+   Long64_t listEntries = myelist->GetN();
    Long64_t chainEntries = ch->GetEntries();
-   Int_t treenum=0;
+   Int_t treenum = 0;
    ch->SetEntryList(myelist);
-   for (Long64_t el =0;el<listEntries;el++) {
+   for (Long64_t el = 0; el &lt; listEntries; el++) {
       Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
       Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];
-      printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n",el,treeEntry,chainEntry,treenum);
+      printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
    }
 }
 </pre>
 
-                                <h4> TSelectors</h4>
+<h4> TSelectors</h4>
 
   To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
   to the output list of the selector (TSelector::fOutput). This is the only way to 
   make the sub-lists of the TEntryList switch when the current tree of the TChain is
   changed. 
 
-   <h4> Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())</h4>
+<h4> Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())</h4>
 
   while the TTree::SetEntryList() function is only setting the TTree::fEntryList
   data member, the same function in TChain also finds correspondance between
   the TTrees of this TChain and the sub-lists of this TEntryList.
 
-                       <h4>TEntryList and the current directory</h4>
+<h4>TEntryList and the current directory</h4>
 
   TEntryList objects are automatically added to the current directory (like TTrees).
   However, in case of a TEntryList for a chain, only the top-level entry list is added,
@@ -117,7 +117,7 @@ void loopChain() {
   function, he has to add it to the current directory to be able to use it in 
   TTreeFormula expressions.
 
-                      <h4>TEntryList and TEventList</h4>
+<h4>TEntryList and TEventList</h4>
 
   TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
   See comments to those functions for more details
