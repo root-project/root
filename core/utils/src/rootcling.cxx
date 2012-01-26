@@ -703,7 +703,7 @@ const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const c
       // Try to find a complete definition if any.
       const clang::TagDecl *tagdecl = llvm::dyn_cast<clang::TagDecl>(result);
       while(tagdecl && !tagdecl->isCompleteDefinition()) {
-         tagdecl = tagdecl->getPreviousDeclaration();
+         tagdecl = tagdecl->getPreviousDecl();
       }
       if (tagdecl) {
          result = tagdecl;
