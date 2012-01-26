@@ -10440,7 +10440,6 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
   if (tagnum < 0) return 0;
    
   char *p;
-  G__FastAllocString buf(G__ONELINE);
 
   if (G__struct.incsetup_memvar[tagnum]==0)
      G__struct.incsetup_memvar[tagnum] = new std::list<G__incsetup>();
@@ -10523,7 +10522,7 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
         G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
   }
   /* add template names */
-  buf = G__struct.name[tagnum];
+  G__FastAllocString buf(G__fulltagname(tagnum,0));
   if((p=strchr(buf,'<'))) {
     *p='\0';
     if(!G__defined_templateclass(buf)) {
