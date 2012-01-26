@@ -3137,7 +3137,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 #endif // ROOTINCDIR
 
    clang::CompilerInstance * CI = fInterpreter->getCI ();
-   CI->getPreprocessor().getHeaderSearchInfo().configureModules(dictDir.Data(), "NONE");
+   CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.Data());
    const char* dictEntry = 0;
    void* dictDirPtr = gSystem->OpenDirectory(dictDir);
    while ((dictEntry = gSystem->GetDirEntry(dictDirPtr))) {
