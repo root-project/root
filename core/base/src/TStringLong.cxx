@@ -85,7 +85,7 @@ TStringLong::~TStringLong()
 }
 
 //______________________________________________________________________________
-void TStringLong::FillBuffer(char *&buffer)
+void TStringLong::FillBuffer(char *&buffer) const
 {
    // Fill buffer.
 

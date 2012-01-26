@@ -1041,7 +1041,7 @@ void TString::Clone(Ssiz_t tot)
 // ------------------- ROOT I/O ------------------------------------
 
 //______________________________________________________________________________
-void TString::FillBuffer(char *&buffer)
+void TString::FillBuffer(char *&buffer) const
 {
    // Copy string into I/O buffer.
 

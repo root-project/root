@@ -47,7 +47,7 @@ public:
    virtual ~TStringLong();
 
    // ROOT I/O interface
-   virtual void     FillBuffer(char *&buffer);
+   virtual void     FillBuffer(char *&buffer) const;
    virtual void     ReadBuffer(char *&buffer);
    virtual Int_t    Sizeof() const;
 
