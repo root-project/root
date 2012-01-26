@@ -77,6 +77,7 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 #endif
 const UChar_t kPidOffsetShift = 48;
 
+static TString gTDirectoryString = "TDirectory";
 UInt_t keyAbsNumber = 0;
 
 ClassImp(TKey)
@@ -399,7 +400,7 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 
    fClassName = classname;
    //the following test required for forward and backward compatibility
-   if (fClassName == "TDirectoryFile") fClassName = "TDirectory";
+   if (fClassName == "TDirectoryFile") SetBit(kIsDirectoryFile);
 
    fVersion = TKey::Class_Version();
 
@@ -599,7 +600,12 @@ void TKey::FillBuffer(char *&buffer)
       tobuf(buffer, (Int_t)fSeekKey);
       tobuf(buffer, (Int_t)fSeekPdir);
    }
-   fClassName.FillBuffer(buffer);
+   if (TestBit(kIsDirectoryFile)) {
+      // We want to record "TDirectory" instead of TDirectoryFile so that the file can be read by ancient version of ROOT.
+      gTDirectoryString.FillBuffer(buffer);
+   } else {
+      fClassName.FillBuffer(buffer);
+   }
    fName.FillBuffer(buffer);
    fTitle.FillBuffer(buffer);
 }
@@ -1077,7 +1083,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       baseOffset = cl->GetBaseClassOffset(TObject::Class());
       if (baseOffset==-1) {
          Fatal("ReadObj","Incorrect detection of the inheritance from TObject for class %s.\n",
-            fClassName.Data());
+               fClassName.Data());
       }
       TObject *tobj = (TObject*)( ((char*)pobj) +baseOffset);
 
@@ -1217,7 +1223,10 @@ void TKey::ReadKeyBuffer(char *&buffer)
    }
    fClassName.ReadBuffer(buffer);
    //the following test required for forward and backward compatibility
-   if (fClassName == "TDirectory") fClassName = "TDirectoryFile";
+   if (fClassName == "TDirectory") {
+      fClassName = "TDirectoryFile";
+      SetBit(kIsDirectoryFile);
+   }
 
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
@@ -1295,7 +1304,11 @@ Int_t TKey::Sizeof() const
 
    Int_t nbytes = 22; if (fVersion > 1000) nbytes += 8;
    nbytes      += fDatime.Sizeof();
-   nbytes      += fClassName.Sizeof();
+   if (TestBit(kIsDirectoryFile)) {
+      nbytes   += 11; // strlen("TDirectory")+1
+   } else {
+      nbytes   += fClassName.Sizeof();
+   }
    nbytes      += fName.Sizeof();
    nbytes      += fTitle.Sizeof();
    return nbytes;
@@ -1334,6 +1347,11 @@ void TKey::Streamer(TBuffer &b)
          b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
       fClassName.Streamer(b);
+      //the following test required for forward and backward compatibility
+      if (fClassName == "TDirectory") {
+         fClassName = "TDirectoryFile";
+         SetBit(kIsDirectoryFile);
+      }
       fName.Streamer(b);
       fTitle.Streamer(b);
       if (fKeylen < 0) {
@@ -1351,8 +1369,7 @@ void TKey::Streamer(TBuffer &b)
          MakeZombie();
          fNbytes = 0;
       }
-      
-         
+
    } else {
       b << fNbytes;
       version = (Version_t)fVersion;
@@ -1378,7 +1395,12 @@ void TKey::Streamer(TBuffer &b)
          b << (Int_t)fSeekKey;
          b << (Int_t)fSeekPdir;
       }
-      fClassName.Streamer(b);
+      if (TestBit(kIsDirectoryFile)) {
+         // We want to record "TDirectory" instead of TDirectoryFile so that the file can be read by ancient version of ROOT.
+         gTDirectoryString.Streamer(b);
+      } else {
+         fClassName.Streamer(b);
+      }
       fName.Streamer(b);
       fTitle.Streamer(b);
    }
