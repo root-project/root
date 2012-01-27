@@ -140,10 +140,13 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
       char *cdef;
 
       TList *lc = (TList*)gROOT->GetListOfCanvases();
-      if (lc->FindObject(defcanvas))
-         cdef = StrDup(Form("%s_n%d",defcanvas,lc->GetSize()+1));
-      else
+      if (lc->FindObject(defcanvas)) {
+         Int_t n = lc->GetSize()+1;
+         while (lc->FindObject(Form("%s_n%d",defcanvas,n))) n++;
+         cdef = StrDup(Form("%s_n%d",defcanvas,n));
+      } else {
          cdef = StrDup(Form("%s",defcanvas));
+      }
       Constructor(cdef, cdef, 1);
       delete [] cdef;
    }
