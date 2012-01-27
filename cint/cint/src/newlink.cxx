@@ -10521,17 +10521,24 @@ int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char 
         G__struct.incsetup_memfunc[tagnum]->push_back(setup_memfunc);
   }
   /* add template names */
-  G__FastAllocString buf(G__fulltagname(tagnum,0));
-  if((p=strchr(buf,'<'))) {
-    *p='\0';
-    if(!G__defined_templateclass(buf)) {
+  G__FastAllocString cl_name = G__struct.name[tagnum]; 
+  G__FastAllocString cl_fullname = G__fulltagname(tagnum,0);
+  if((p=strchr(cl_name,'<'))) {
+    // p is the location in the unqualified name,
+    // let's calculate where in the qualified name it is.
+    char *q = ((char*)cl_fullname.data()) + strlen(cl_fullname.data()) - strlen(cl_name) + (p - cl_name);
+    *q='\0';
+    *p = '\0';
+    if(!G__defined_templateclass(cl_fullname)) {
       int store_def_tagnum = G__def_tagnum;
       int store_tagdefining = G__tagdefining;
       FILE* store_fp = G__ifile.fp;
       G__ifile.fp = (FILE*)NULL;
       G__def_tagnum = G__struct.parent_tagnum[tagnum];
       G__tagdefining = G__struct.parent_tagnum[tagnum];
-      G__createtemplateclass(buf,(struct G__Templatearg*)NULL,0);
+       
+      G__createtemplateclass(cl_name,(struct G__Templatearg*)NULL,0);
+
       G__ifile.fp = store_fp;
       G__def_tagnum = store_def_tagnum;
       G__tagdefining = store_tagdefining;
