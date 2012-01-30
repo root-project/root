@@ -56,7 +56,14 @@ namespace RooStats {
       virtual HypoTestResult *GetHypoTest() const; 
 
       // make the asimov data from the ModelConfig and list of poi - return data set annd snapshoot of global obs 
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & paramValues, RooArgSet & globObs); 
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs); 
+
+
+      // make a nominal asimov data from the ModelConfig and parameter values
+      // The parameter values (including the nunisance) could be given from a fit to data or be at the nominal values 
+      static RooAbsData * MakeAsimovData( const ModelConfig & model,  const RooArgSet & allParamValues, RooArgSet & globObs); 
+
+
 
       static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
 
