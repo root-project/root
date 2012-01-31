@@ -265,42 +265,29 @@ TFileCollection *TFileCollection::GetStagedSubset()
 //______________________________________________________________________________
 Long64_t TFileCollection::Merge(TCollection *li) 
 {
-   //merge all TFileCollection objects in li into this TFileCollection object
-	
+   // Merge all TFileCollection objects in li into this TFileCollection object.
+   // Updates counters at the end.
+   // Returns the number of merged collections or -1 in case of error.
+   
+
    if (!li) return 0;
    if (li->IsEmpty()) return 0;
 
-   // We don't want to add the clone to gDirectory,
-   // so remove our kMustCleanup bit temporarily
-   Bool_t mustCleanup = TestBit(kMustCleanup);
-   if (mustCleanup) ResetBit(kMustCleanup);
-   TList inlist;
-   TFileCollection* hclone = (TFileCollection*)Clone("FirstClone");
-   if (mustCleanup) SetBit(kMustCleanup);
-   R__ASSERT(hclone);
-//    BufferEmpty(1);         // To remove buffer.
-//    Reset();                // BufferEmpty sets limits so we can't use it later.
-   inlist.Add(hclone);
-   inlist.AddAll(li);
-
    Long64_t nentries=0;
-   TIter next(&inlist);
+   TIter next(li);
    while (TObject *o = next()) {
       TFileCollection* coll = dynamic_cast<TFileCollection*> (o);
       if (!coll) {
-         Error("Add","Attempt to add object of class: %s to a %s",
-            o->ClassName(),this->ClassName());
+         Error("Add", "attempt to add object of class: %s to a %s",
+                      o->ClassName(),this->ClassName());
          return -1;
       }
       Add(coll);
       nentries++;
    }
-	 
-   //copy merged stats
-   inlist.Remove(hclone);
-   delete hclone;
+   Update();
+
    return nentries;
-	
 }
 
 //______________________________________________________________________________
