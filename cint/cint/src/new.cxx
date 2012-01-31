@@ -112,14 +112,14 @@ G__value G__new_operator(const char* expression)
    basictype = type;
    {
       size_t len = strlen(type);
-      unsigned int nest = 0;
+      int nest = 0;
       for (size_t ind = len - 1; ind > 0; --ind) {
          switch (type[ind]) {
             case '<':
-               --nest;
+               ++nest;
                break;
             case '>':
-               ++nest;
+               --nest;
                break;
             case ':':
                if (!nest && (type[ind-1] == ':')) {
