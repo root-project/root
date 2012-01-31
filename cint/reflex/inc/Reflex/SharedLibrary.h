@@ -40,7 +40,7 @@ public:
    bool Symbol(const std::string& symname,
                void*& sym);
 
-   const std::string Error();
+   std::string Error();
 
 private:
    /** a handle to the loaded library */
@@ -65,10 +65,10 @@ inline Reflex::SharedLibrary::SharedLibrary(const std::string& libname):
 
 
 //-------------------------------------------------------------------------------
-inline const std::string
+inline std::string
 Reflex::SharedLibrary::Error() {
 //-------------------------------------------------------------------------------
-   std::string errString = "";
+   std::string errString;
 #ifdef _WIN32
    int error = ::GetLastError();
    LPVOID lpMessageBuffer;
@@ -84,7 +84,10 @@ Reflex::SharedLibrary::Error() {
    // Free the buffer allocated by the system
    ::LocalFree(lpMessageBuffer);
 #else
-   errString = std::string(dlerror());
+   const char* err = dlerror();
+   if (err) {
+      errString = err;
+   }
 #endif
    return errString;
 } // Error
