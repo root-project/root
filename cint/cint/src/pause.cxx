@@ -1305,7 +1305,11 @@ static void G__redirectoutput(char *com
          if (isspace(*redirectin)) {
             *psin = G__sin;
 #ifndef G__WIN32
-            if (!strlen(stdinsav)) G__strlcpy(stdinsav, ttyname(STDIN_FILENO),sizeof(stdinsav));
+            if (!strlen(stdinsav) && ttyname(STDIN_FILENO)) {
+               G__strlcpy(stdinsav, ttyname(STDIN_FILENO), sizeof(stdinsav));
+            } else {
+               stdinsav[0] = 0;
+            }
 #endif
             G__sin = freopen(filename, "r", G__sin);
             if (!G__sin) {
