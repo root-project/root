@@ -80,7 +80,7 @@ void AsymptoticCalculator::SetPrintLevel(int level) {
 AsymptoticCalculator::AsymptoticCalculator(
    RooAbsData &data,
    const ModelConfig &altModel,
-   const ModelConfig &nullModel) :
+   const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
       fOneSided(false), fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
@@ -91,6 +91,8 @@ AsymptoticCalculator::AsymptoticCalculator(
    // and build an Asimov data set. 
    // It will then also fit the model to the Asimov data set to find the likelihood value  
    // of the Asimov data set
+   // nominalAsimov is an option for using Asimov data set obtained using nominal nuisance parameter values 
+   // By default the nuisance parameters are fitted to the data  
    // NOTE: If a fit has been done before, one for speeding up could set all the initial prameters 
    // to the fit value and in addition set the null snapshot to the best fit
    
@@ -122,6 +124,14 @@ AsymptoticCalculator::AsymptoticCalculator(
       return;
    }
    
+   // keep snapshot for the initial parameter values (need for nominal Asimov)
+   RooArgSet nominalParams; 
+   RooArgSet * allParams = nullPdf->getParameters(*obsData);
+   RemoveConstantParameters(allParams);
+   if (nominalAsimov) { 
+      allParams->snapshot(nominalParams);
+   }
+
    // evaluate the unconditional nll for the full model on the  observed data  
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
    int oldVerboseLevel = fgPrintLevel;
@@ -135,8 +145,6 @@ AsymptoticCalculator::AsymptoticCalculator(
       fBestFitPoi.Print("v");
    }
    // keep snapshot of all best fit parameters
-   RooArgSet * allParams = nullPdf->getParameters(*obsData);
-   RemoveConstantParameters(allParams);
    allParams->snapshot(fBestFitParams);
    delete allParams;
    
@@ -152,7 +160,18 @@ AsymptoticCalculator::AsymptoticCalculator(
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
 
 
-   fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs);
+   if (!nominalAsimov) {
+      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata will be generated using fitted nuisance parameter values" << endl;
+      fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs);
+   }
+
+   else {
+      // assume use current value of nuisance as nominal ones
+      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
+      nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
+      fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
+   }
+
    if (!fAsimovData) return;
 
    // set global observables to their Asimov values 
@@ -189,12 +208,13 @@ AsymptoticCalculator::AsymptoticCalculator(
 
 //_________________________________________________________________
 Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet *poiSet) {
+
+    int verbose = fgPrintLevel;
       
     
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+    if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-    int verbose = fgPrintLevel;
 
 
     RooArgSet* allParams = pdf.getParameters(data);
@@ -310,7 +330,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
 
        minim.optimizeConst(false);
 
-       RooMsgService::instance().setGlobalKillBelow(msglevel);
+       if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(msglevel);
 
     }
 
@@ -560,8 +580,12 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    HypoTestResult* res = new HypoTestResult(resultname.c_str(), pnull, palt);
    res->SetBackgroundAsAlt(true);
 
-   oocoutP((TObject*)0,Eval) << "poi = " << muTest->getVal() << " qmu = " << qmu << " qmu_A = " << qmu_A 
-                             << "  CLsplusb = " << pnull << " CLb = " << palt << " CLs = " <<  res->CLs() << std::endl; 
+   if (verbose > 0) 
+      //std::cout 
+      oocoutP((TObject*)0,Eval) 
+         << "poi = " << muTest->getVal() << " qmu = " << qmu << " qmu_A = " << qmu_A 
+         << " sigma = " << muTest->getVal()/sqrtqmu_A
+         << "  CLsplusb = " << pnull << " CLb = " << palt << " CLs = " <<  res->CLs() << std::endl; 
 
    return res; 
 
@@ -877,49 +901,89 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       tmpPar->setConstant();
       paramsSetConstant.add(*tmpPar); 
    }
+
+   // find conditional value of the nnuisance parameters
+   bool hasFloatParams = false;
+   RooArgSet  constrainParams;
    if (model.GetNuisanceParameters()) {
-      RooAbsPdf * pdf = model.GetPdf();
-      RooArgSet  constrainParams(*model.GetNuisanceParameters());
+      constrainParams.add(*model.GetNuisanceParameters());
       RooStats::RemoveConstantParameters(&constrainParams);
-      TStopwatch tw2; tw2.Start(); 
-      int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-      if (verbose>0) { 
-         std::cout << "MakeAsimov: doing a conditional fit for finding best nuisance values " << std::endl;
-         minimPrintLevel += 1;
-      }
-         
-      std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-      std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
-      pdf->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
-                 RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
-                 RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
-                 RooFit::Constrain(constrainParams));
-      if (verbose>0) { std::cout << "fit time "; tw2.Print();}
+      if (constrainParams.getSize() > 0) hasFloatParams = true; 
+
    } else {
       // Do we have free parameters anyway that need fitting?
-      bool hasFloatParams = false;
       std::auto_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
       std::auto_ptr<TIterator> iter(params->createIterator());
       for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
          RooRealVar *rrv = dynamic_cast<RooRealVar *>(a);
          if ( rrv != 0 && rrv->isConstant() == false ) { hasFloatParams = true; break; }
       } 
-      if (hasFloatParams) model.GetPdf()->fitTo(realData, RooFit::Minimizer("Minuit2","minimize"), RooFit::Strategy(1));
    }
-   // after the fit the nuisance parameters will have their best fit value
-   if (model.GetNuisanceParameters() && verbose > 1) {
-      std::cout << "Nuisance parameters after fit for asimov dataset: " << std::endl;
-      model.GetNuisanceParameters()->Print("V");
-   }
-   
-   // generate the Asimov data set for the observables 
-   // need to distinguish  if Simpdf or normal pdf
- 
-   // toymcoptutils::SimPdfGenInfo newToyMC(*model.GetPdf(), *model.GetObservables(), false); 
+   if (hasFloatParams) { 
+      // models need to be fitted to find best nuisance parameter values
 
+      TStopwatch tw2; tw2.Start(); 
+      int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+      if (verbose>0) { 
+         std::cout << "MakeAsimov: doing a conditional fit for finding best nuisance values " << std::endl;
+         minimPrintLevel += 1;
+      }         
+      std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+      std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
+      model.GetPdf()->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
+                 RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
+                 RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
+                 RooFit::Constrain(constrainParams));
+      if (verbose>0) { std::cout << "fit time "; tw2.Print();}
+      if (verbose > 1) { 
+         // after the fit the nuisance parameters will have their best fit value
+         if (model.GetNuisanceParameters() ) {
+            std::cout << "Nuisance parameters after fit for asimov dataset: " << std::endl;
+            model.GetNuisanceParameters()->Print("V");
+         }
+      }
+
+   }
+
+   // restore the parameters which were set constant
+   Utils::SetAllConstant(paramsSetConstant, false);
+
+
+   RooArgSet *  allParams = model.GetPdf()->getParameters(realData);
+   RooStats::RemoveConstantParameters( allParams );
+
+   // now do the actual generation of the AsimovData Set
+   // no need to pass parameters values since we have set them before
+   RooAbsData * asimovData =  MakeAsimovData(model, RooArgSet(), asimovGlobObs);
+
+   delete allParams;
+
+   return asimovData;
+
+}
+
+//______________________________________________________________________________
+RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, const  RooArgSet & allParamValues, RooArgSet & asimovGlobObs)  {
+   // static function to the an Asimov data set
+   // given the model and the values of all parameters including the nuisance 
+   // Return the asimov data set + global observables set to values satisfying the constraints
+
+
+   int verbose = fgPrintLevel;
+ 
    TStopwatch tw; 
    tw.Start();
 
+   // set the parameter values (do I need the poi to be constant ? )
+   // the nuisance parameter values could be set at their fitted value (the MLE)
+   if (allParamValues.getSize() > 0) { 
+      RooArgSet *  allVars = model.GetPdf()->getVariables();
+      *allVars = allParamValues;
+      delete allVars;
+   }
+
+
+   // generate the Asimov data set for the observables 
    RooAbsData * asimov = GenerateAsimovData(*model.GetPdf() , *model.GetObservables() );
    
    if (verbose>0) {
@@ -952,7 +1016,16 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       Utils::SetAllConstant(gobs, true);
       gobs.snapshot(snapGlobalObsData);
 
-      RooArgSet nuis(*model.GetNuisanceParameters());
+
+      RooArgSet nuis; 
+      if (model.GetNuisanceParameters()) nuis.add(*model.GetNuisanceParameters());
+      if (nuis.getSize() == 0) { 
+            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model does not have nuisance parameters but has global observables"
+                                            << " set global observales to model values " << endl;
+            asimovGlobObs = gobs;
+            return asimov;
+      }
+
       // part 1: create the nuisance pdf
       std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
       // unfold the nuisance pdf 
@@ -1001,11 +1074,12 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
          if (verbose > 2) std::cout << "Constraint " << cterm->GetName() << " of type " << cClass->GetName() << std::endl;
          if ( cClass != RooGaussian::Class() && cClass != RooPoisson::Class() &&
               cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
-              cClass != RooBifurGauss::Class()  )          
+              cClass != RooBifurGauss::Class()  ) {          
+            TString className =  (cClass) ?  cClass->GetName() : "undefined"; 
             oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
-                                            << cterm->GetName() << " of type " << cClass->GetName() 
+                                            << cterm->GetName() << " of type " << className 
                                             << " is a non-supported type - result might be not correct " << std::endl;
-            
+         }
 
          for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
@@ -1049,19 +1123,17 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
       // revert global observables to the data value
       gobs = snapGlobalObsData;
-      Utils::SetAllConstant(paramsSetConstant, false);
-
 
       if (verbose>0) {
          std::cout << "Generated Asimov data for global observables " << std::endl; 
       }
+
       if (verbose > 1) {
          std::cout << "Global observables for data: " << std::endl;
          gobs.Print("V");
          std::cout << "Global observables for asimov: " << std::endl;
          asimovGlobObs.Print("V");
       }
-
 
 
    }

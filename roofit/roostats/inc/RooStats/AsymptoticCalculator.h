@@ -41,7 +41,8 @@ namespace RooStats {
       AsymptoticCalculator(
          RooAbsData &data,  // need to pass non-const since RooAbsPdf::fitTo takes a non-const data set 
          const ModelConfig &altModel,
-         const ModelConfig &nullModel
+         const ModelConfig &nullModel,  
+         bool nominalAsimov = false 
          );
       //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
       // {
@@ -56,7 +57,14 @@ namespace RooStats {
       virtual HypoTestResult *GetHypoTest() const; 
 
       // make the asimov data from the ModelConfig and list of poi - return data set annd snapshoot of global obs 
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & paramValues, RooArgSet & globObs); 
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs); 
+
+
+      // make a nominal asimov data from the ModelConfig and parameter values
+      // The parameter values (including the nunisance) could be given from a fit to data or be at the nominal values 
+      static RooAbsData * MakeAsimovData( const ModelConfig & model,  const RooArgSet & allParamValues, RooArgSet & globObs); 
+
+
 
       static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
 
@@ -70,6 +78,7 @@ namespace RooStats {
 
       // set using of qtilde, by default is controlled if RoORealVar is limited or not 
       void SetQTilde(bool on) { fUseQTilde = on; }
+
 
       static void SetPrintLevel(int level);
 
@@ -101,7 +110,8 @@ namespace RooStats {
 
    private: 
 
-      bool fOneSided;
+      bool fOneSided;                // for one sided PL test statistic
+      bool fNominalAsimov;  
       mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs; 
