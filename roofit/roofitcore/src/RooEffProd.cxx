@@ -159,7 +159,7 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   cache->_intObs.addClone(allVars) ;
   cache->_clone = (RooEffProd*) clone(Form("%s_clone",GetName())) ;
   cache->_clone->_fixedNset = &cache->_intObs ;
-  cache->_int = cache->_clone->createIntegral(cache->_intObs) ;
+  cache->_int = cache->_clone->createIntegral(cache->_intObs,rangeName) ;
 
   // Store cache and return index as code
   Int_t code = _cacheMgr.setObj(&allVars,&allVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ; 
