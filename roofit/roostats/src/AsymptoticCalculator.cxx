@@ -1055,11 +1055,12 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          if (verbose > 2) std::cout << "Constraint " << cterm->GetName() << " of type " << cClass->GetName() << std::endl;
          if ( cClass != RooGaussian::Class() && cClass != RooPoisson::Class() &&
               cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
-              cClass != RooBifurGauss::Class()  )          
+              cClass != RooBifurGauss::Class()  ) {          
+            TString className =  (cClass) ?  cClass->GetName() : "undefined"; 
             oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
-                                            << cterm->GetName() << " of type " << cClass->GetName() 
+                                            << cterm->GetName() << " of type " << className 
                                             << " is a non-supported type - result might be not correct " << std::endl;
-            
+         }
 
          for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {
             RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2); 
