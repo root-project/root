@@ -190,7 +190,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, double value){
    std::string s_name(name);
 
    if (s_name.find("NToysRatio") != std::string::npos) mNToysRatio = value;
-   if (s_name.find("MaxPoi") != std::string::npos) mMaxPoi = value;
+   if (s_name.find("MaxPOI") != std::string::npos) mMaxPoi = value;
 
    return;
 }
@@ -237,6 +237,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
   type = 0 Freq calculator 
   type = 1 Hybrid calculator
   type = 2 Asymptotic calculator  
+  type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
 
   testStatType = 0 LEP
   = 1 Tevatron 
@@ -248,7 +249,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
   npoints:        number of points to scan , for autoscan set npoints = -1 
 
   poimin,poimax:  min/max value to scan in case of fixed scans 
-  (if min >= max, try to find automatically)                           
+  (if min >  max, try to find automatically)                           
 
   ntoys:         number of toys to use 
 
@@ -419,7 +420,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       typeName = "Frequentist";
    if (calculatorType == 1 )
       typeName = "Hybrid";   
-   else if (calculatorType == 2 ) { 
+   else if (calculatorType == 2 || calculatorType == 3) { 
       typeName = "Asymptotic";
       mPlotHypoTestResult = false; 
    }
@@ -555,6 +556,23 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
          }         
       }
    }
+
+   // check model  has global observables when there are nuisance pdf
+   // for the hybrid case the globobs are not needed
+   if (type != 1 ) { 
+      bool hasNuisParam = (sbModel->GetNuisanceParameters() && sbModel->GetNuisanceParameters()->getSize() > 0);
+      bool hasGlobalObs = (sbModel->GetGlobalObservables() && sbModel->GetGlobalObservables()->getSize() > 0);
+      if (hasNuisParam && !hasGlobalObs ) {  
+         // try to see if model has nuisance parameters first 
+         RooAbsPdf * constrPdf = RooStats::MakeNuisancePdf(*sbModel,"nuisanceConstraintPdf_sbmodel");
+         if (constrPdf) { 
+            Warning("StandardHypoTestInvDemo","Model %s has nuisance parameters but no global observables associated",sbModel->GetName());
+            Warning("StandardHypoTestInvDemo","\tThe effect of the nuisance parameters will not be treated correctly ",sbModel->GetName());
+         }
+      }
+   }
+
+
   
    // run first a data fit 
   
@@ -567,7 +585,8 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    TStopwatch tw; 
 
    bool doFit = initialFit;
-   if (testStatType == 0 && initialFit == -1) doFit = false;
+   if (testStatType == 0 && initialFit == -1) doFit = false;  // case of LEP test statistic
+   if (type == 3  && initialFit == -1) doFit = false;         // case of Asymptoticcalculator with nominal Asimov
    double poihat = 0;
    if (doFit)  { 
 
@@ -657,7 +676,8 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
-   else if (type == 2) hc = new AsymptoticCalculator(*data, *bModel, *sbModel);
+   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel);
+   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true);  // for using Asimov data generated with nominal values 
    else {
       Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
@@ -752,13 +772,17 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       
       }
    } 
-   else if (type == 2) { 
-      ((AsymptoticCalculator*) hc)->SetOneSided(true); 
+   else if (type == 2 || type == 3) { 
+      if (testStatType == 3) ((AsymptoticCalculator*) hc)->SetOneSided(true);  
+      if (testStatType != 2 && testStatType != 3)  
+         Warning("StandardHypoTestInvDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
+
       // ((AsymptoticCalculator*) hc)->SetQTilde(true); // not needed should be done automatically now
       ((AsymptoticCalculator*) hc)->SetPrintLevel(mPrintLevel+1); 
    }
-   else if (type != 2) 
+   else if (type == 0 || type == 1) 
       ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/mNToysRatio); 
+
   
    // Get the result
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
