@@ -80,7 +80,7 @@ void AsymptoticCalculator::SetPrintLevel(int level) {
 AsymptoticCalculator::AsymptoticCalculator(
    RooAbsData &data,
    const ModelConfig &altModel,
-   const ModelConfig &nullModel) :
+   const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
       fOneSided(false), fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
@@ -91,6 +91,8 @@ AsymptoticCalculator::AsymptoticCalculator(
    // and build an Asimov data set. 
    // It will then also fit the model to the Asimov data set to find the likelihood value  
    // of the Asimov data set
+   // nominalAsimov is an option for using Asimov data set obtained using nominal nuisance parameter values 
+   // By default the nuisance parameters are fitted to the data  
    // NOTE: If a fit has been done before, one for speeding up could set all the initial prameters 
    // to the fit value and in addition set the null snapshot to the best fit
    
@@ -122,6 +124,14 @@ AsymptoticCalculator::AsymptoticCalculator(
       return;
    }
    
+   // keep snapshot for the initial parameter values (need for nominal Asimov)
+   RooArgSet nominalParams; 
+   RooArgSet * allParams = nullPdf->getParameters(*obsData);
+   RemoveConstantParameters(allParams);
+   if (nominalAsimov) { 
+      allParams->snapshot(nominalParams);
+   }
+
    // evaluate the unconditional nll for the full model on the  observed data  
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
    int oldVerboseLevel = fgPrintLevel;
@@ -135,8 +145,6 @@ AsymptoticCalculator::AsymptoticCalculator(
       fBestFitPoi.Print("v");
    }
    // keep snapshot of all best fit parameters
-   RooArgSet * allParams = nullPdf->getParameters(*obsData);
-   RemoveConstantParameters(allParams);
    allParams->snapshot(fBestFitParams);
    delete allParams;
    
@@ -152,7 +160,18 @@ AsymptoticCalculator::AsymptoticCalculator(
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
 
 
-   fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs);
+   if (!nominalAsimov) {
+      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata will be generated using fitted nuisance parameter values" << endl;
+      fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs);
+   }
+
+   else {
+      // assume use current value of nuisance as nominal ones
+      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
+      nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
+      fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
+   }
+
    if (!fAsimovData) return;
 
    // set global observables to their Asimov values 

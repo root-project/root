@@ -41,7 +41,8 @@ namespace RooStats {
       AsymptoticCalculator(
          RooAbsData &data,  // need to pass non-const since RooAbsPdf::fitTo takes a non-const data set 
          const ModelConfig &altModel,
-         const ModelConfig &nullModel
+         const ModelConfig &nullModel,  
+         bool nominalAsimov = false 
          );
       //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
       // {
@@ -78,6 +79,7 @@ namespace RooStats {
       // set using of qtilde, by default is controlled if RoORealVar is limited or not 
       void SetQTilde(bool on) { fUseQTilde = on; }
 
+
       static void SetPrintLevel(int level);
 
    protected:
@@ -108,7 +110,8 @@ namespace RooStats {
 
    private: 
 
-      bool fOneSided;
+      bool fOneSided;                // for one sided PL test statistic
+      bool fNominalAsimov;  
       mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs; 
