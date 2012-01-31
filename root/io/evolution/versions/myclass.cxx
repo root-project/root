@@ -80,6 +80,7 @@ int runAddVersion(int mode, const char *whatlib)
    case 0:
       return wcomp(whatlib);
    case 1:
+      gROOT->ProcessLine(".O0");
       return checkLibFirst(whatlib,0);
    case 2:
       return checkFileFirst(whatlib,0);
