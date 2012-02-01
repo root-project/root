@@ -26,7 +26,7 @@
 #endif
 
 #include "classloader.h"
-#include "Riostream.h"
+#include <iostream>
 
 typedef Reflex::Type TypeH;
 
@@ -34,11 +34,11 @@ typedef Reflex::Type TypeH;
 // using namespace pool;
 
 void patchClass(TClass* cl, const std::type_info& ) {
-   if (gDebug) cerr << "Pool would have patched (from info): " << cl->GetName() << endl;
+   if (gDebug) cerr << "Pool would have patched (from info): " << cl->GetName() << std::endl;
    //assert(0);
 } 
 void patchClass(TClass* cl, TypeH& ) {
-   if (gDebug) cerr << "Pool would have patched (from Reflex type):  " << cl->GetName() << endl;
+   if (gDebug) cerr << "Pool would have patched (from Reflex type):  " << cl->GetName() << std::endl;
    //assert(0);
 }
 
@@ -72,7 +72,7 @@ namespace pool {
   void showRealData(TClass* cl)   {
     TRealData *dm;
     //    DbPrint log("CINT");
-    std::ostream &log(cout);
+    std::ostream &log(std::cout);
 
     TIter   next(cl->GetListOfRealData());
     while ((dm = (TRealData *) next()))  {
@@ -93,7 +93,7 @@ namespace pool {
   void showDataMembers(TClass* cl)   {
     TDataMember *dm;
     //    DbPrint log("CINT");
-    std::ostream &log(cout);
+    std::ostream &log(std::cout);
 
     TIter   next(cl->GetListOfDataMembers());
     while ((dm = (TDataMember*) next()))  {
@@ -321,7 +321,7 @@ namespace pool {
         case TClassEdit::kNotSTL:
         case TClassEdit::kEnd:
         default:
-          if (gDebug) cout << "POOL would have registered its own streamer for " << root_class->GetName() << ".\n";
+          if (gDebug) std::cout << "POOL would have registered its own streamer for " << root_class->GetName() << ".\n";
 #if 0
           if ( IsTypeOf(typ,"pool::Reference") )  {
             // std::cout << "patch class:" << typ.Name(SCOPED) << std::endl;
@@ -440,7 +440,7 @@ TClass* RootClassLoader::i_loadClass(const char* classname)  {
     return 0;
   }
   else  {
-    if (gDebug) cout << "Pool loading: " << classname << '\n';
+    if (gDebug) std::cout << "Pool loading: " << classname << '\n';
     switch(classname[0])  {
       case 'b':
         if ( strcmp(classname,"bool")           ==0 ) return 0;
@@ -522,7 +522,7 @@ TClass* RootClassLoader::i_loadClass(const char* classname)  {
 
 /// Load the class unconditionally
 DbStatus RootClassLoader::unloadClass(const std::string& name)  {
-   cout << "Unloading of " << name << " not done\n";
+  std::cout << "Unloading of " << name << " not done\n";
 //   DbPrint log(  "RootClassLoader");
 //   log << DbPrintLvl::Error << "Unloading of reflection gateways currently not"
 //     << " supported... Class: \"" << name << "\"" << DbPrint::endmsg;

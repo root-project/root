@@ -5,7 +5,7 @@
 
 #include <utility>
 #include <vector>
-#include <Riostream.h>
+#include <iostream>
 
 class ClassAIns
 {
@@ -51,8 +51,8 @@ public:
       m_d.SetUnit(unit);
    }
    void Print() {
-      cout << "ClassA: \n";
-      cout << "   m_md_set: " << m_md_set << ' ' << (void*)this << ' ' << (char*)(&m_md_set)-(char*)this << ' ' << (void*)&m_md_set << '\n';
+      std::cout << "ClassA: \n";
+      std::cout << "   m_md_set: " << m_md_set << ' ' << (void*)this << ' ' << (char*)(&m_md_set)-(char*)this << ' ' << (void*)&m_md_set << '\n';
    }
 };
 
