@@ -22,7 +22,7 @@ bigeventTest.write.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 
 bigeventTest.read.log: ./Event$(ExeSuf) ./libEvent.$(DllSuf) bigeventTest.write.log
 	$(CMDECHO)./Event 10 1 1 20 > Event.write.log 2>bigeventTest.read.log && echo "read success" > bigeventTest.read.log
- 
+
 bigeventTest.log: bigeventTest.write.log bigeventTest.read.log
 	$(CMDECHO) cat bigeventTest.write.log bigeventTest.read.log > bigeventTest.log
 
