@@ -27,7 +27,7 @@ HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 	$(CMDECHO) rootcint -f $@ -c $^
 
 ifeq ($(R__EXPLICITLINK),yes)
-lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOT_LOC)/lib/libReflex.$(DllSuf)
+lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOT_LOC)/lib/libReflex.$(LibSuf)
 else
 lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf)
 endif

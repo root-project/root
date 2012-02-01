@@ -627,7 +627,7 @@ MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
 ROOTCORELIBS_LIST = Core Cint Tree Hist TreePlayer
-ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
+ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(LibSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
@@ -643,7 +643,7 @@ override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 $(ROOTMAP): 
 	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; $(MAKE) map)'
 
-check: $(ROOT_LOC)/lib/libCore.$(DllSuf)
+check: $(ROOT_LOC)/lib/libCore.$(LibSuf)
 
 UTILS_PREREQ =  $(UTILS_LIBS) 
 
