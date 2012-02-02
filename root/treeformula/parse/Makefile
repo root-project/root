@@ -43,13 +43,13 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-#BoolOrder.log: runBoolOrder.C BoolOrder.ref $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
+#BoolOrder.log: runBoolOrder.C BoolOrder.ref $(ROOT_LOC)/lib/libTreePlayer.$(LibSuf)
 #	$(CMDECHO) $(CALLROOTEXE) -q -b -l runBoolOrder.C 2>&1 | grep -v -e LorentzVector -e TVector3 > $@
 
 BoolOrder: BoolOrder.log
 	$(TestDiff)
 
-templateName.log: templateName_cpp.$(DllSuf) $(ROOTCORELIBS) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
+templateName.log: templateName_cpp.$(DllSuf) $(ROOTCORELIBS) $(ROOT_LOC)/lib/libTreePlayer.$(LibSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runtemplateName.C 2>&1 | grep -v 'ROOT version' | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable' > templateName.log
 
 templateName: templateName.log
