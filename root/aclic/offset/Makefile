@@ -9,6 +9,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 offsetTest: TOffset_cxx.$(DllSuf)
 
-TOffset_cxx.$(DllSuf) : TOffset.cxx TOffset.h $(ROOT_LOC)/lib/libCore.$(DllSuf)
+TOffset_cxx.$(DllSuf) : TOffset.cxx TOffset.h $(ROOT_LOC)/lib/libCore.$(LibSuf)
 
 
