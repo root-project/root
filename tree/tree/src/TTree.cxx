@@ -785,9 +785,8 @@ TTree::~TTree()
       TFile *file = fDirectory->GetFile();
       if (file) {
          TFileCacheRead *pf = file->GetCacheRead(this);
-         delete pf;
-         pf = 0;
          file->SetCacheRead(0,this);
+         delete pf;
       }
    }
    // We don't own the leaves in fLeaves, the branches do.
@@ -7128,10 +7127,10 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       if (cacheSize == fCacheSize) {
          return;
       }
+      file->SetCacheRead(0, this);
       delete pf;
       pf = 0;
       if (cacheSize == 0) {
-         file->SetCacheRead(0, this);
          fCacheSize=0;
          return;
       }
