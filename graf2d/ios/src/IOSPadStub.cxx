@@ -15,6 +15,12 @@ namespace ROOT {
 namespace iOS {
 
 //______________________________________________________________________________
+TLegend *PadStub::BuildLegend(Double_t, Double_t, Double_t, Double_t, const char *)
+{
+   return 0;
+}
+
+//______________________________________________________________________________
 void PadStub::Close(Option_t *)
 {
 }

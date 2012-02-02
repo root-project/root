@@ -33,6 +33,7 @@ namespace iOS {
 
 class PadStub : public TVirtualPad {
 public:
+   TLegend *BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *title);
    void Close(Option_t *);
    void AddExec(const char *, const char *);
    void CopyPixmap();
