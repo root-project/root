@@ -34,7 +34,7 @@ $(ROOTFILE): copiedEvent$(ExeSuf)
 Event2.root: $(ROOTFILE)
 	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
-ChainFriend.log: $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf) files 
+ChainFriend.log: $(ROOT_LOC)/lib/libTreePlayer.$(LibSuf) files 
 
 ChainFriend: ChainFriend.log 
 	$(TestDiff)
