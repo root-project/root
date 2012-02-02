@@ -452,6 +452,7 @@ namespace cling {
                                                               m_NoSLoc,
                                                               /*IsArrow=*/false,
                                                               SS,
+							      m_NoSLoc,
                                                     /*FirstQualifierInScope=*/0,
                                                               MemberLookup,
                                                               /*TemplateArgs=*/0
