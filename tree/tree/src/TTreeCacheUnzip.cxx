@@ -244,11 +244,11 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       // Check if owner has a TEventList set. If yes we optimize for this
       // Special case reading only the baskets containing entries in the
       // list.
-      TEventList *elist = fOwner->GetEventList();
+      TEventList *elist = fTree->GetEventList();
       Long64_t chainOffset = 0;
       if (elist) {
-         if (fOwner->IsA() ==TChain::Class()) {
-            TChain *chain = (TChain*)fOwner;
+         if (fTree->IsA() ==TChain::Class()) {
+            TChain *chain = (TChain*)fTree;
             Int_t t = chain->GetTreeNumber();
             chainOffset = chain->GetTreeOffset()[t];
          }
@@ -326,12 +326,12 @@ void TTreeCacheUnzip::StopLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCacheUnzip::UpdateBranches(TTree *tree, Bool_t owner)
+void TTreeCacheUnzip::UpdateBranches(TTree *tree)
 {
    //update pointer to current Tree and recompute pointers to the branches in the cache
    R__LOCKGUARD(fMutexList);
 
-   TTreeCache::UpdateBranches(tree, owner);
+   TTreeCache::UpdateBranches(tree);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

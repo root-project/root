@@ -103,7 +103,7 @@ public:
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    void                SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void        StopLearningPhase();
-   void                UpdateBranches(TTree *tree, Bool_t owner = kFALSE);
+   void                UpdateBranches(TTree *tree);
 
    // Methods related to the thread
    static EParUnzipMode GetParallelUnzip();

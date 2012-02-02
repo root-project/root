@@ -44,7 +44,6 @@ protected:
    Int_t           fNReadPref;   //Number of blocks that were prefetched
    TObjArray      *fBranches;    //! List of branches to be stored in the cache
    TList          *fBrNames;     //! list of branch names in the cache
-   TTree          *fOwner;       //! pointer to the owner Tree/chain
    TTree          *fTree;        //! pointer to the current Tree
    Bool_t          fIsLearning;  //! true if cache is in learning mode
    Bool_t          fIsManual;    //! true if cache is StopLearningPhase was used
@@ -65,7 +64,7 @@ public:
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCache();
-   virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
+   virtual void        AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
@@ -75,7 +74,6 @@ public:
    static Int_t        GetLearnEntries();
 
    virtual Bool_t      FillBuffer();
-   TTree              *GetOwner() const;
    TTree              *GetTree() const;
    virtual Bool_t      IsLearning() const {return fIsLearning;}
    virtual void        Print(Option_t *option="") const;
@@ -87,7 +85,7 @@ public:
    static void         SetLearnEntries(Int_t n = 10);
    void                StartLearningPhase();
    virtual void        StopLearningPhase();
-   virtual void        UpdateBranches(TTree *tree, Bool_t owner = kFALSE);
+   virtual void        UpdateBranches(TTree *tree);
 
    ClassDef(TTreeCache,2)  //Specialization of TFileCacheRead for a TTree
 };

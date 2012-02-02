@@ -256,7 +256,6 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fNReadPref(0),
    fBranches(0),
    fBrNames(0),
-   fOwner(0),
    fTree(0),
    fIsLearning(kTRUE),
    fIsManual(kFALSE),
@@ -283,8 +282,7 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fNReadPref(0),
    fBranches(0),
    fBrNames(new TList),
-   fOwner(tree),
-   fTree(0),
+   fTree(tree),
    fIsLearning(kTRUE),
    fIsManual(kFALSE),
    fFirstBuffer(kTRUE),
@@ -324,7 +322,7 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    if (!fIsLearning) return;
 
    // Reject branch that are not from the cached tree.
-   if (!b || fOwner->GetTree() != b->GetTree()) return;
+   if (!b || fTree->GetTree() != b->GetTree()) return;
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -368,7 +366,7 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    TLeaf *leaf, *leafcount;
 
    Int_t i;
-   Int_t nleaves = (fOwner->GetListOfLeaves())->GetEntriesFast();
+   Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
    TRegexp re(bname,kTRUE);
    Int_t nb = 0;
 
@@ -377,12 +375,12 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    Bool_t all = kFALSE;
    if (!strcmp(bname,"*")) all = kTRUE;
    for (i=0;i<nleaves;i++)  {
-      leaf = (TLeaf*)(fOwner->GetListOfLeaves())->UncheckedAt(i);
+      leaf = (TLeaf*)(fTree->GetListOfLeaves())->UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (!all) { //Regexp gives wrong result for [] in name
          TString longname; 
-         longname.Form("%s.%s",fOwner->GetName(),branch->GetName());
+         longname.Form("%s.%s",fTree->GetName(),branch->GetName());
          if (strcmp(bname,branch->GetName()) 
              && longname != bname
              && s.Index(re) == kNPOS) continue;
@@ -396,7 +394,7 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       }
    }
    if (nb==0 && strchr(bname,'*')==0) {
-      branch = fOwner->GetBranch(bname);
+      branch = fTree->GetBranch(bname);
       if (branch) {
          AddBranch(branch, subbranches);
          ++nb;
@@ -405,8 +403,8 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 
    //search in list of friends
    UInt_t foundInFriend = 0;
-   if (fOwner->GetListOfFriends()) {
-      TIter nextf(fOwner->GetListOfFriends());
+   if (fTree->GetListOfFriends()) {
+      TIter nextf(fTree->GetListOfFriends());
       TFriendElement *fe;
       TString name;
       while ((fe = (TFriendElement*)nextf())) {
@@ -447,7 +445,7 @@ void TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    if (!fIsLearning) return;
    
    // Reject branch that are not from the cached tree.
-   if (!b || fOwner->GetTree() != b->GetTree()) return;
+   if (!b || fTree->GetTree() != b->GetTree()) return;
    
    //Is branch already in the cache?
    if (fBranches->Remove(b)) {
@@ -485,7 +483,7 @@ void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    TLeaf *leaf, *leafcount;
    
    Int_t i;
-   Int_t nleaves = (fOwner->GetListOfLeaves())->GetEntriesFast();
+   Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
    TRegexp re(bname,kTRUE);
    Int_t nb = 0;
    
@@ -494,12 +492,12 @@ void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    Bool_t all = kFALSE;
    if (!strcmp(bname,"*")) all = kTRUE;
    for (i=0;i<nleaves;i++)  {
-      leaf = (TLeaf*)(fOwner->GetListOfLeaves())->UncheckedAt(i);
+      leaf = (TLeaf*)(fTree->GetListOfLeaves())->UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (!all) { //Regexp gives wrong result for [] in name
          TString longname; 
-         longname.Form("%s.%s",fOwner->GetName(),branch->GetName());
+         longname.Form("%s.%s",fTree->GetName(),branch->GetName());
          if (strcmp(bname,branch->GetName()) 
              && longname != bname
              && s.Index(re) == kNPOS) continue;
@@ -513,7 +511,7 @@ void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       }
    }
    if (nb==0 && strchr(bname,'*')==0) {
-      branch = fOwner->GetBranch(bname);
+      branch = fTree->GetBranch(bname);
       if (branch) {
          DropBranch(branch, subbranches);
          ++nb;
@@ -522,8 +520,8 @@ void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    
    //search in list of friends
    UInt_t foundInFriend = 0;
-   if (fOwner->GetListOfFriends()) {
-      TIter nextf(fOwner->GetListOfFriends());
+   if (fTree->GetListOfFriends()) {
+      TIter nextf(fTree->GetListOfFriends());
       TFriendElement *fe;
       TString name;
       while ((fe = (TFriendElement*)nextf())) {
@@ -642,11 +640,11 @@ Bool_t TTreeCache::FillBuffer()
    // Check if owner has a TEventList set. If yes we optimize for this
    // Special case reading only the baskets containing entries in the
    // list.
-   TEventList *elist = fOwner->GetEventList();
+   TEventList *elist = fTree->GetEventList();
    Long64_t chainOffset = 0;
    if (elist) {
-      if (fOwner->IsA() ==TChain::Class()) {
-         TChain *chain = (TChain*)fOwner;
+      if (fTree->IsA() ==TChain::Class()) {
+         TChain *chain = (TChain*)fTree;
          Int_t t = chain->GetTreeNumber();
          chainOffset = chain->GetTreeOffset()[t];
       }
@@ -808,14 +806,6 @@ Int_t TTreeCache::GetLearnEntries()
    //see SetLearnEntries
 
    return fgLearnEntries;
-}
-
-//_____________________________________________________________________________
-TTree *TTreeCache::GetOwner() const
-{
-   //return the owner of this cache.
-
-   return fOwner;
 }
 
 //_____________________________________________________________________________
@@ -1028,15 +1018,20 @@ void TTreeCache::StopLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
+void TTreeCache::UpdateBranches(TTree *tree)
 {
    // Update pointer to current Tree and recompute pointers to the branches in the cache.
 
-   if (owner) {
-      fOwner = tree;
-      SetFile(tree->GetCurrentFile());
+
+   if (fFile && fTree) {
+      fFile->SetCacheRead(0,fTree);
    }
    fTree = tree;
+   TFile *file = tree->GetCurrentFile();
+   if (file) {
+      file->SetCacheRead(this,tree);
+   }
+   SetFile(file);
 
    fEntryMin  = 0;
    fEntryMax  = fTree->GetEntries();
