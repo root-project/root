@@ -661,11 +661,23 @@ int Cint::G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
 
   // Actually find the last :: to get the full classname, including
   // namespace and/or containing classes.
+  int templtnest = 0;
   char *fname = 0;
   char * tmp = classname;
-  while ( (tmp = strstr(tmp,"::")) ) {
-    fname = tmp;
-    tmp += 2;
+  while (*tmp) {
+     switch (*tmp) {
+       case ':':
+         if (tmp[1] == ':') {
+           if (templtnest == 0) {
+             fname = tmp;
+           }
+           ++tmp;
+         }
+         break;
+       case '<': ++templtnest; break;
+       case '>': --templtnest; break;
+     }
+     ++tmp;
   }
   if(fname) {
     *fname=0;
