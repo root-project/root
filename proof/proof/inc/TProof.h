@@ -837,21 +837,9 @@ public:
    Int_t       RemoveIncludePath(const char *incpath, Bool_t onClient = kFALSE);
 
    //-- dataset management
-   Int_t       UploadDataSet(const char *dataset,
-                             TList *files,
-                             const char *dest = 0,
-                             Int_t opt = kAskUser,
-                             TList *skippedFiles = 0);
-   Int_t       UploadDataSet(const char *dataset,
-                             const char *files,
-                             const char *dest = 0,
-                             Int_t opt = kAskUser,
-                             TList *skippedFiles = 0);
-   Int_t       UploadDataSetFromFile(const char *dataset,
-                                     const char *file,
-                                     const char *dest = 0,
-                                     Int_t opt = kAskUser,
-                                     TList *skippedFiles = 0);
+   Int_t       UploadDataSet(const char *, TList *, const char * = 0, Int_t = 0, TList * = 0);
+   Int_t       UploadDataSet(const char *, const char *, const char * = 0, Int_t = 0, TList * = 0);
+   Int_t       UploadDataSetFromFile(const char *, const char *, const char * = 0, Int_t = 0, TList * = 0);
    virtual Bool_t  RegisterDataSet(const char *name,
                                TFileCollection *dataset, const char* optStr = "");
    virtual TMap *GetDataSets(const char *uri = "", const char* optStr = "");
@@ -1011,8 +999,8 @@ public:
    Int_t       ActivateWorker(const char *ord);
    Int_t       DeactivateWorker(const char *ord);
 
-   const char *GetDataPoolUrl() const { return fDataPoolUrl; }
-   void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
+   const char *GetDataPoolUrl() const { return fManager ? fManager->GetMssUrl() : 0; }
+   void        SetDataPoolUrl(const char *url) { if (fManager) fManager->SetMssUrl(url); }
 
    void        SetPrintProgress(PrintProgress_t pp) { fPrintProgress = pp; }
 

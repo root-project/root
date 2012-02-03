@@ -1795,6 +1795,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg, Int_t int2,
    reqhdr.proof.int1 = kind;
    reqhdr.proof.int2 = int2;
    switch (kind) {
+      case kQueryMssUrl:
       case kQueryROOTVersions:
       case kQuerySessions:
       case kQueryWorkers:

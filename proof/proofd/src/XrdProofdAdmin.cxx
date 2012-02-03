@@ -116,6 +116,8 @@ int XrdProofdAdmin::Process(XrdProofdProtocol *p, int type)
 
    XrdOucString emsg;
    switch (type) {
+      case kQueryMssUrl:
+         return QueryMssUrl(p);
       case kQuerySessions:
          return QuerySessions(p);
       case kQueryLogPaths:
@@ -296,6 +298,29 @@ int XrdProofdAdmin::DoDirectiveCpCmd(char *val, XrdOucStream *cfg, bool)
    fCpCmds = "";
    fAllowedCpCmds.Apply(ExportCpCmd, (void *)&fCpCmds);
 
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdAdmin::QueryMssUrl(XrdProofdProtocol *p)
+{
+   // Handle request for the URL to the MSS attached to the cluster.
+   // The reply contains also the namespace, i.e. proto://host:port//namespace
+   XPDLOC(ALL, "Admin::QueryMssUrl")
+
+   int rc = 0;
+   XPD_SETRESP(p, "QueryMssUrl");
+
+   XrdOucString msg = fMgr->PoolURL();
+   msg += "/";
+   msg += fMgr->NameSpace();
+
+   TRACEP(p, DBG, "sending: "<<msg);
+
+   // Send back to user
+   response->Send((void *)msg.c_str(), msg.length()+1);
+
+   // Over
    return 0;
 }
 

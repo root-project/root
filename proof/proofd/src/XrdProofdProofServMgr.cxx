@@ -2165,12 +2165,6 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    } else {
       // Setup was successful
       XrdOucString info;
-      if (p->ConnType() == kXPD_ClientMaster) {
-         // Send also back the data pool url
-         info = fMgr->PoolURL();
-         if (!info.endswith('/')) info += '/';
-         info += fMgr->NameSpace();
-      }
       // The log file path (so we do it independently of a successful session startup)
       info += "|log:";
       info += xps->Fileout();

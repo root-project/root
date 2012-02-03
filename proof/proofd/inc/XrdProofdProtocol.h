@@ -30,9 +30,10 @@
 //  1002 (0x3EA) -> 1003 (0x3EB) : many new features
 //  1003 (0x3EB) -> 1004 (0x3EC) : restructuring
 //  1004 (0x3EC) -> 1005 (0x3ED) : deeper restructuring
-//  1005 (0x3EC) -> 1006 (0x3EE) : support for ls,rm,stat,md5sum, getfile, ...
-#define XPROOFD_VERSBIN 0x000003EE
-#define XPROOFD_VERSION "0.6"
+//  1005 (0x3ED) -> 1006 (0x3EE) : support for ls,rm,stat,md5sum, getfile, ...
+//  1006 (0x3EE) -> 1007 (0x3EF) : introduce kQueryMssUrl
+#define XPROOFD_VERSBIN 0x000003EF
+#define XPROOFD_VERSION "0.7"
 
 #include "XpdSysPthread.h"
 

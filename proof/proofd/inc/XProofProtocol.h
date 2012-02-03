@@ -104,8 +104,9 @@ enum EAdminMsgType {
    kGetFile           = 1014,
    kPutFile           = 1015,
    kCpFile            = 1016,
+   kQueryMssUrl       = 1017,
 //
-   kUndef             = 1017    // This should always be last: do not touch it
+   kUndef             = 1018    // This should always be last: do not touch it
 };
 
 // Exec types

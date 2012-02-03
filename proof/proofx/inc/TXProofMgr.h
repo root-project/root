@@ -71,6 +71,7 @@ public:
    TProof     *AttachSession(TProofDesc *d, Bool_t gui = kFALSE);
    void        DetachSession(Int_t, Option_t * = "");
    void        DetachSession(TProof *, Option_t * = "");
+   const char *GetMssUrl(Bool_t = kFALSE);
    TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0,
                               const char *pattern = "-v \"| SvcMsg\"",
                               Bool_t rescan = kFALSE);

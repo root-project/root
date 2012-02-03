@@ -24,17 +24,23 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
 
-class TList;
+class TFileCollection;
 class TObjString;
 class TProof;
 class TProofDesc;
@@ -56,7 +62,10 @@ private:
    static TProofMgr_t fgTXProofMgrHook; // Constructor hooks for TXProofMgr
    static TProofMgr_t GetXProofMgrHook();
 
+   static void ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph);
+
 protected:
+   TString        fMssUrl;         // URL for the remote data pool, if any
    Int_t          fRemoteProtocol; // Protocol number run by the daemon server
    EServType      fServType;       // Type of server: old-proofd, XrdProofd
    TList         *fSessions;       // PROOF session managed by this server
@@ -85,6 +94,7 @@ public:
    virtual void        DetachSession(Int_t, Option_t * = "");
    virtual void        DetachSession(TProof *, Option_t * = "");
    virtual void        DiscardSession(TProof *p);
+   virtual const char *GetMssUrl(Bool_t = kFALSE) { return fMssUrl.Data(); }
    virtual TProofDesc *GetProofDesc(Int_t id);
    virtual TProofDesc *GetProofDesc(TProof *p);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
@@ -102,6 +112,7 @@ public:
    virtual void        ShowWorkers();
    virtual Int_t       SendMsgToUsers(const char *, const char * = 0);
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
+   virtual void        SetMssUrl(const char *mss) { fMssUrl = mss; }
    virtual void        SetROOTVersion(const char *) { }
    virtual void        ShowROOTVersions() { }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
@@ -128,6 +139,9 @@ public:
    static TProofMgr   *Create(const char *url, Int_t loglevel = -1,
                               const char *alias = 0, Bool_t xpd = kTRUE);
    static Int_t        Ping(const char *url, Bool_t checkxrd = kFALSE);
+
+   static TFileCollection *UploadFiles(TList *src, const char *mss, const char *dest = 0); 
+   static TFileCollection *UploadFiles(const char *txtfile, const char *mss, const char *dest = 0); 
 
    ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
 };

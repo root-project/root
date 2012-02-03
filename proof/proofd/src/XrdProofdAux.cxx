@@ -50,7 +50,7 @@ const char *XrdProofdAux::AdminMsgType(int type)
      "QuerySessions", "SessionTag", "SessionAlias", "GetWorkers", "QueryWorkers",
      "CleanupSessions", "QueryLogPaths", "ReadBuffer", "QueryROOTVersions",
      "ROOTVersion", "GroupProperties", "SendMsgToUser", "ReleaseWorker",
-     "Exec", "GetFile", "PutFile", "CpFile"};
+     "Exec", "GetFile", "PutFile", "CpFile", "QueryMssUrl"};
 
    if (type < 1000 || type >= kUndef) {
       return msgtypes[0];

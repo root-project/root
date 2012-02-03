@@ -74,6 +74,7 @@ public:
 
    int               Process(XrdProofdProtocol *p, int type);
 
+   int               QueryMssUrl(XrdProofdProtocol *p);
    int               QuerySessions(XrdProofdProtocol *p);
    int               QueryLogPaths(XrdProofdProtocol *p);
    int               CleanupSessions(XrdProofdProtocol *p);

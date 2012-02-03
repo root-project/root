@@ -9605,12 +9605,12 @@ void TProof::SetAlias(const char *alias)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSet(const char *dataSetName,
-                            TList *files,
-                            const char *desiredDest,
-                            Int_t opt,
-                            TList *skippedFiles)
+Int_t TProof::UploadDataSet(const char *, TList *, const char *, Int_t, TList *)
 {
+   // *** This function is deprecated and will disappear in future versions ***
+   // *** It is just a wrapper around TFile::Cp. 
+   // *** Please use TProofMgr::UploadFiles.
+   //
    // Upload a set of files and save the list of files by name dataSetName.
    // The 'files' argument is a list of TFileInfo objects describing the files
    // as first url.
@@ -9638,176 +9638,18 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    // (*)|-------> call RegisterDataSet ------->|
    // (*) - optional
 
-   if (!IsValid()) {
-      Error("UploadDataSet", "not connected");
-      return -1;
-   }
-
-   if (fProtocol < 15) {
-      Info("UploadDataSet", "functionality not available: the server has an"
-                            " incompatible version of TFileInfo");
-      return -1;
-   }
-
-   if (IsLite()) {
-      Info("UploadDataSet", "Lite-session: functionality not needed - do nothing");
-      return -1;
-   }
-
-   // check if  dataSetName is not excluded
-   if (strchr(dataSetName, '/')) {
-      if (strstr(dataSetName, "public") != dataSetName) {
-         Error("UploadDataSet",
-               "Name of public dataset should start with public/");
-         return kError;
-      }
-   }
-   if ((opt & kOverwriteAllFiles && opt & kOverwriteNoFiles) ||
-       (opt & kNoOverwriteDataSet && opt & kAppend) ||
-       (opt & kOverwriteDataSet && opt & kAppend) ||
-       (opt & kNoOverwriteDataSet && opt & kOverwriteDataSet)) {
-      Error("UploadDataSet", "you specified contradicting options.");
-      return kError;
-   }
-
-   // Decode options
-   Int_t overwriteAll = (opt & kOverwriteAllFiles) ? kTRUE : kFALSE;
-   Int_t overwriteNone = (opt & kOverwriteNoFiles) ? kTRUE : kFALSE;
-   Int_t goodName = (opt & (kOverwriteDataSet | kAppend)) ? 1 : -1;
-   Int_t appendToDataSet = (opt & kAppend) ? kTRUE : kFALSE;
-   Int_t overwriteNoDataSet = (opt & kNoOverwriteDataSet) ? kTRUE : kFALSE;
-
-
-   //If skippedFiles is not provided we can not return list of skipped files.
-   if (!skippedFiles && overwriteNone) {
-      Error("UploadDataSet",
-            "Provide pointer to TList object as skippedFiles argument when using kOverwriteNoFiles option.");
-      return kError;
-   }
-   //If skippedFiles is provided but did not point to a TList the have to STOP
-   if (skippedFiles) {
-      if (skippedFiles->Class() != TList::Class()) {
-         Error("UploadDataSet",
-               "Provided skippedFiles argument does not point to a TList object.");
-         return kError;
-      }
-   }
-
-   Int_t fileCount = 0; // return value
-   if (goodName == -1) { // -1 for undefined
-      // First check whether this dataset already exists unless
-      // kAppend or kOverWriteDataSet
-      TMessage nameMess(kPROOF_DATASETS);
-      nameMess << Int_t(kCheckDataSetName);
-      nameMess << TString(dataSetName);
-      Broadcast(nameMess);
-      Collect(kActive, fCollectTimeout); //after each call to HandleDataSets
-      if (fStatus == -1) {
-         //We ask user to agree on overwriting the dataset name
-         while (goodName == -1 && !overwriteNoDataSet) {
-            Info("UploadDataSet", "dataset %s already exist. ",
-                   dataSetName);
-            Info("UploadDataSet", "do you want to overwrite it[Yes/No/Append]?");
-            TString answer;
-            answer.ReadToken(cin);
-            if (!strncasecmp(answer.Data(), "y", 1)) {
-               goodName = 1;
-            } else if (!strncasecmp(answer.Data(), "n", 1)) {
-               goodName = 0;
-            } else if (!strncasecmp(answer.Data(), "a", 1)) {
-               goodName = 1;
-               appendToDataSet = kTRUE;
-            }
-         }
-      } else {
-         goodName = 1;
-      }
-   } // if (goodName == -1)
-   if (goodName == 1) {  //must be == 1 as -1 was used for a bad name!
-
-      TString dest;
-      dest.Form("%s/%s/%s",  GetDataPoolUrl(), 
-                             gSystem->GetUserInfo()->fUser.Data(),
-                             desiredDest ? desiredDest : "");
-      dest.ReplaceAll("//", "/");
-      dest.Remove(TString::kTrailing, '/');
-
-      // Now we will actually copy files and create the TList object
-      TFileCollection *fileList = new TFileCollection();
-      TIter next(files);
-      while (TFileInfo *fileInfo = ((TFileInfo*)next())) {
-         TUrl *fileUrl = fileInfo->GetFirstUrl();
-         if (gSystem->AccessPathName(fileUrl->GetUrl()) == kFALSE) {
-            //matching dir entry
-            //getting the file name from the path represented by fileUrl
-            const char *ent = gSystem->BaseName(fileUrl->GetFile());
-
-            Int_t goodFileName = 1;
-            if (!overwriteAll &&
-               gSystem->AccessPathName(TString::Format("%s/%s", dest.Data(), ent), kFileExists)
-                  == kFALSE) {  //Destination file exists
-               goodFileName = -1;
-               while (goodFileName == -1 && !overwriteAll && !overwriteNone) {
-                  Info("UploadDataSet", "file %s/%s already exists. ", dest.Data(), ent);
-                  Info("UploadDataSet", "do you want to overwrite it [Yes/No/all/none]?");
-                  TString answer;
-                  answer.ReadToken(cin);
-                  if (!strncasecmp(answer.Data(), "y", 1))
-                     goodFileName = 1;
-                  else if (!strncasecmp(answer.Data(), "all", 3))
-                     overwriteAll = kTRUE;
-                  else if (!strncasecmp(answer.Data(), "none", 4))
-                     overwriteNone = kTRUE;
-                  else if (!strncasecmp(answer.Data(), "n", 1))
-                     goodFileName = 0;
-               }
-            } //if file exists
-
-            // Copy the file to the redirector indicated
-            if (goodFileName == 1 || overwriteAll) {
-               //must be == 1 as -1 was meant for bad name!
-               Info("UploadDataSet", "Uploading %s to %s/%s",
-                      fileUrl->GetUrl(), dest.Data(), ent);
-               if (TFile::Cp(fileUrl->GetUrl(), TString::Format("%s/%s", dest.Data(), ent))) {
-                  fileList->GetList()->Add(new TFileInfo(TString::Format("%s/%s", dest.Data(), ent)));
-               } else
-                  Error("UploadDataSet", "file %s was not copied", fileUrl->GetUrl());
-            } else {  // don't overwrite, but file exist and must be included
-               fileList->GetList()->Add(new TFileInfo(TString::Format("%s/%s", dest.Data(), ent)));
-               if (skippedFiles) {
-                  // user specified the TList *skippedFiles argument so we create
-                  // the list of skipped files
-                  skippedFiles->Add(new TFileInfo(fileUrl->GetUrl()));
-               }
-            }
-         } //if matching dir entry
-      } //while
-
-      if ((fileCount = fileList->GetList()->GetSize()) == 0) {
-         Info("UploadDataSet", "no files were copied. The dataset will not be saved");
-      } else {
-         TString o = (appendToDataSet) ? "" : "O";
-         if (!RegisterDataSet(dataSetName, fileList, o)) {
-            Error("UploadDataSet", "Error while saving dataset: %s", dataSetName);
-            fileCount = kError;
-         }
-      }
-      delete fileList;
-   } else if (overwriteNoDataSet) {
-      Info("UploadDataSet", "dataset %s already exists", dataSetName);
-      return kDataSetExists;
-   } //if(goodName == 1)
-
-   return fileCount;
+   Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
+   
+   return -1;
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSet(const char *dataSetName,
-                            const char *files,
-                            const char *desiredDest,
-                            Int_t opt,
-                            TList *skippedFiles)
+Int_t TProof::UploadDataSet(const char *, const char *, const char *, Int_t, TList *)
 {
+   // *** This function is deprecated and will disappear in future versions ***
+   // *** It is just a wrapper around TFile::Cp. 
+   // *** Please use TProofMgr::UploadFiles.
+   //
    // Upload a set of files and save the list of files by name dataSetName.
    // The mask 'opt' is a combination of EUploadOpt:
    //   kAppend             (0x1)   if set true files will be appended to
@@ -9827,86 +9669,28 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
    // not uploaded.
    //
 
-   if (fProtocol < 15) {
-      Info("UploadDataSet", "functionality not available: the server has an"
-                            " incompatible version of TFileInfo");
-      return -1;
-   }
+   Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
 
-   TList fileList;
-   fileList.SetOwner();
-   void *dataSetDir = gSystem->OpenDirectory(gSystem->DirName(files));
-   if (dataSetDir) {
-      const char* ent;
-      TString filesExp(gSystem->BaseName(files));
-      filesExp.ReplaceAll("*",".*");
-      TRegexp rg(filesExp);
-      while ((ent = gSystem->GetDirEntry(dataSetDir))) {
-         TString entryString(ent);
-         if (entryString.Index(rg) != kNPOS) {
-            // Matching dir entry: add to the list
-            TString u = TString::Format("file://%s/%s", gSystem->DirName(files), ent);
-            if (gSystem->AccessPathName(u, kReadPermission) == kFALSE)
-               fileList.Add(new TFileInfo(u));
-         } //if matching dir entry
-      } //while
-      // Close the directory
-      gSystem->FreeDirectory(dataSetDir);
-   } else {
-      Warning("UploadDataSet", "cannot open: directory '%s'", gSystem->DirName(files));
-   }
-   Int_t fileCount;
-   if ((fileCount = fileList.GetSize()) == 0)
-      Printf("No files match your selection. The dataset will not be saved");
-   else
-      fileCount = UploadDataSet(dataSetName, &fileList, desiredDest,
-                                opt, skippedFiles);
-   return fileCount;
+   return -1;
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadDataSetFromFile(const char *dataset, const char *file,
-                                    const char *dest, Int_t opt,
-                                    TList *skippedFiles)
+Int_t TProof::UploadDataSetFromFile(const char *, const char *, const char *, Int_t, TList *)
 {
+   // *** This function is deprecated and will disappear in future versions ***
+   // *** It is just a wrapper around TFile::Cp. 
+   // *** Please use TProofMgr::UploadFiles.
+   //
    // Upload files listed in "file" to PROOF cluster.
    // Where file = name of file containing list of files and
    // dataset = dataset name and opt is a combination of EUploadOpt bits.
    // Each file description (line) can include wildcards.
    // Check TFileInfo compatibility
 
-   if (fProtocol < 15) {
-      Info("UploadDataSetFromFile", "functionality not available: the server has an"
-                                    " incompatible version of TFileInfo");
-      return -1;
-   }
+   Printf(" *** WARNING: this function is obsolete: it has been replaced by TProofMgr::UploadFiles ***");
 
-   Int_t fileCount = -1;
-   // Create the list to feed UploadDataSet(char *dataset, TList *l, ...)
-   TList fileList;
-   fileList.SetOwner();
-   ifstream f;
-   f.open(gSystem->ExpandPathName(file), ifstream::out);
-   if (f.is_open()) {
-      while (f.good()) {
-         TString line;
-         line.ReadToDelim(f);
-         line.Strip(TString::kTrailing, '\n');
-         if (gSystem->AccessPathName(line, kReadPermission) == kFALSE)
-            fileList.Add(new TFileInfo(line));
-      }
-      f.close();
-      if ((fileCount = fileList.GetSize()) == 0)
-         Info("UploadDataSetFromFile",
-              "no files match your selection. The dataset will not be saved");
-      else
-         fileCount = UploadDataSet(dataset, &fileList, dest,
-                                   opt, skippedFiles);
-   } else {
-      Error("UploadDataSetFromFile", "unable to open the specified file");
-   }
-   // Done
-   return fileCount;
+    // Done
+   return -1;
 }
 
 //______________________________________________________________________________
