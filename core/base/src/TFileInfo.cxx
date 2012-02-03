@@ -71,7 +71,7 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
 TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
                                             fCurrentUrl(0), fUrlList(0),
                                             fSize(fi.fSize), fUUID(0), fMD5(0),
-                                            fMetaDataList(0), fIndex(-1)
+                                            fMetaDataList(0), fIndex(fi.fIndex)
 {
    // Copy constructor.
 

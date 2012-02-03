@@ -93,7 +93,7 @@ Int_t TFileCollection::Add(TFileCollection *coll)
       while ((fi = (TFileInfo *) nxfi())) {
          TFileInfo *info = new TFileInfo(*fi);
          fList->Add(info);
-         if (info->GetIndex() < 0) info->SetIndex(fList->GetSize());
+         if (fi->GetIndex() < 0) info->SetIndex(fList->GetSize());
       }
       return 1;
    } else {
