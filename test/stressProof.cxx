@@ -1539,7 +1539,7 @@ Int_t PT_CheckH1(TQueryResult *qr, Int_t irun = 0)
 //_____________________________________________________________________________
 Int_t PT_CheckEvent(TQueryResult *qr, const char *pack = "TPacketizerAdaptive")
 {
-   // Check the result of the H1 analysis
+   // Check the result of the EventProc analysis
 
    if (!qr) {
       printf("\n >>> Test failure: %s: output list not found\n", pack);
@@ -3401,7 +3401,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
 
    // Verify the dataset
    PutPoint();
-   if (gProof->VerifyDataSet("dsevent") != 0) {
+   if (gProof->VerifyDataSet("dsevent") < 0) {
       printf("\n >>> Test failure: could not verify 'dsevent'!\n");
       return -1;
    }
