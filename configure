@@ -3095,21 +3095,6 @@ if test ! "x$enable_qt" = "xno" || \
             check_library "libQt3Support Qt3Support Qt3Support$qt4suffix Qt3Support4" \
                 "$enable_shared" "$found_raw_dir" ""
             qtlib="$qtlib $found_lib"
-            check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix QtOpenGL4" \
-                "$enable_shared" "$found_raw_dir" ""
-            qtlib="$qtlib $found_lib"
-            check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" \
-                "$enable_shared" "$found_raw_dir" ""
-            qtlib="$qtlib $found_lib"
-            check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
-                "$enable_shared" "$found_raw_dir" ""
-            qtlib="$qtlib $found_lib"
-            check_library "libQtWebKit QtWebKit QtWebKit$qt4suffix QtWebKit4" \
-                "$enable_shared" "$found_raw_dir" ""
-            qtlib="$qtlib $found_lib"
-            check_library "libQtNetwork QtNetwork QtNetwork$qt4suffix QtNetwork4" \
-                "$enable_shared" "$found_raw_dir" ""
-            qtlib="$qtlib $found_lib"
         else
             qtinc=
             qtmainincdir=
