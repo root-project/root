@@ -50,12 +50,16 @@ ClassImp(TGraph)
 /* Begin_Html
 <center><h2>Graph class</h2></center>
 A Graph is a graphics object made of two arrays X and Y with npoints each.
-<p>
+</p>
 The TGraph painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
-<p>
+</p>
+<i>Note:</i>Unlike histogram or tree (or even TGraph2D), TGraph objects 
+ are not automatically attached to the current TFile, in order to keep the 
+ management and size of the TGraph has small as possible.
+</p>
 The picture below gives an example:
 End_Html
 Begin_Macro(source)
