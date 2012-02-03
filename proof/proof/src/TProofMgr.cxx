@@ -816,13 +816,11 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
       return ds;
    }
    
-   Bool_t need_bn = kFALSE;
    TList dirph;
 
    // If the destination is defined we need to understand if we have place-holders
    if (dest && strlen(dest) > 0) {
       TString dst(dest), dt;
-      if (dst.Contains("<bn>")) need_bn = kTRUE;
       Ssiz_t from = 0;
       TRegexp re("<d+[0-9]>");
       while (dst.Tokenize(dt, from, "/")) {
