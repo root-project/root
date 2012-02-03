@@ -277,7 +277,8 @@ void ProofEventProc::CheckRanges()
       return;
    }
    if (pfef->fFirst != fst) {
-      nout->SetTitle("First entry differs");
+      TString t = TString::Format("First entry differs {found: %lld, expected: %lld}", pfef->fFirst, fst);
+      nout->SetTitle(t.Data());
       return;
    }
 
