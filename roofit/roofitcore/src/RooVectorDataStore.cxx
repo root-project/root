@@ -39,6 +39,7 @@
 
 #include <iomanip>
 #include <algorithm>
+#include <memory>
 using namespace std ;
 
 ClassImp(RooVectorDataStore)
@@ -1156,7 +1157,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
 typedef RooVectorDataStore::RealVector* pRealVector ;
 //_____________________________________________________________________________
-void RooVectorDataStore::recalculateCache() 
+void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs ) 
 {
   if (!_cache) return ;
 
@@ -1177,6 +1178,9 @@ void RooVectorDataStore::recalculateCache()
   // Refill caches of elements that require recalculation
 //   cout << "recalc error count before update = " << RooAbsReal::numEvalErrors() << endl ;
   RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
+  std::auto_ptr<RooArgSet> nset( (RooArgSet*) _vars.snapshot(kFALSE) );
+  if (projectedArgs) nset->remove(*projectedArgs,kFALSE,kTRUE);
+  // cout << "RooVectorDataStore::recalculateCache: _vars = " << _vars << " projected = " << (projectedArgs?*projectedArgs:RooArgSet()) <<  " nset = " << *nset << endl;
   Int_t ne = numEntries() ;
   for (int i=0 ; i<ne ; i++) {
     get(i) ;    
@@ -1187,7 +1191,7 @@ void RooVectorDataStore::recalculateCache()
     }
     for (int j=0 ; j<ntv ; j++) {
       tv[j]->_nativeReal->_valueDirty=kTRUE ;
-      tv[j]->_nativeReal->getValV(&_vars) ;
+      tv[j]->_nativeReal->getValV(nset.get()) ;
 //       cout << "updating tracked cache slot " << i << " element " ; tv[j]->_nativeReal->Print() ;
       tv[j]->write(i) ;
     }

@@ -98,7 +98,7 @@ public:
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
   virtual void resetCache() ;
-  virtual void recalculateCache() ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/=0) ;
 
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
 
