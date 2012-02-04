@@ -36,7 +36,8 @@ mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 
 # mixture of files, wildcards, and directories
 WILDCARDS="LICENSE README bin \
-   include lib man cint/cint/include tutorials \
+   include lib man config/Makefile.comp config/Makefile.config \
+   cint/cint/include tutorials \
    cint/cint/lib cint/cint/stl geom/gdml/*.py \
    test/*.cxx test/*.h test/Makefile* test/README \
    test/*.C test/*.sh test/dt_Makefile \
