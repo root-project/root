@@ -37,11 +37,7 @@
 #include <string>
 #include <map>
 #ifndef __CINT__
-#if defined(__APPLE__)
 #include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 #endif
 class TObjArray;
 class TCollectionProxyFactory;
