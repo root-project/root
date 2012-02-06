@@ -85,7 +85,7 @@ unpack.last: geometries.tar.gz
 	    touch $(C_FILES_IN_TAR)
 endif
 
-readGeo.log: unpack.last aleph.root ams.root brahms.root btev.root d0.root e907.root gem.root phobos.root tesla.root $(ROOT_LOC)/lib/libGeom.$(DllSuf)
+readGeo.log: unpack.last aleph.root ams.root brahms.root btev.root d0.root e907.root gem.root phobos.root tesla.root $(ROOT_LOC)/lib/libGeom.$(LibSuf)
 
 readGeo: readGeo.log
 	$(TestDiff)
