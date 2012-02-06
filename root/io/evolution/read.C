@@ -54,9 +54,11 @@ void extractfiles(const char* s, char** arr) {
    TString f;
    while (*s) {
       if (*s == ' ') {
-         arr[num] = new char[f.Length() + 1];
-         strcpy(arr[num++], f.Data());
-         f = "";
+         if (f.Length()) {
+            arr[num] = new char[f.Length() + 1];
+            strcpy(arr[num++], f.Data());
+            f = "";
+         }
       } else {
          f += *s;
       }
