@@ -3604,6 +3604,66 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 }
 
 //______________________________________________________________________________
+TMap *TProofServ::GetDataSetNodeMap(const char *dsn, TString &emsg)
+{
+   // Get a map {server-name, list-of-files} for the daset dsn to be used in
+   // TPacketizerFile. Returns a pointer to the map (ownership of the caller).
+   // Or (TMap *)0 and an error message in emsg.
+
+   TMap *fcmap = 0;
+   emsg = "";
+   
+   // Make sure we have something in input and a dataset manager
+   if (!fDataSetManager) {
+      emsg.Form("dataset manager not initialized!");
+      return fcmap;
+   }
+   if (!dsn || (dsn && strlen(dsn) <= 0)) {
+      emsg.Form("dataset name undefined!");
+      return fcmap;
+   }
+
+   TFileCollection *fc = 0;
+   // Get the dataset
+   if (!(fc = fDataSetManager->GetDataSet(dsn))) {
+      emsg.Form("requested dataset '%s' does not exists", dsn);
+      return fcmap;
+   }
+    
+   // Prepare data set map
+   fcmap = new TMap();
+
+   TIter nxf(fc->GetList());
+   TFileInfo *fiind = 0;
+   TString key;
+   while ((fiind = (TFileInfo *)nxf())) {
+      TUrl *xurl = fiind->GetCurrentUrl();
+      // Find the key for this server
+      key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
+      if (xurl->GetPort() > 0) 
+         key += TString::Format(":%d", xurl->GetPort());
+         // Get the map entry for this key
+      TPair *ent = 0;
+      THashList* l = 0;
+      if ((ent = (TPair *) fcmap->FindObject(key.Data()))) {
+         // Attach to the list
+         l = (THashList *) ent->Value();
+      } else {
+         // Create list 
+         l = new THashList;
+         l->SetOwner(kTRUE);
+         // Add it to the map
+         fcmap->Add(new TObjString(key.Data()), l);
+      }
+      // Add fileinfo with index to list
+      l->Add(fiind);
+   }
+  
+   // Done
+   return fcmap;
+}
+
+//______________________________________________________________________________
 void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 {
    // Handle processing request.
@@ -3639,9 +3699,9 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
    if (IsTopMaster()) {
 
+      TString emsg;
       // Make sure the dataset contains the information needed
       if ((!hasNoData) && dset->GetListOfElements()->GetSize() == 0) {
-         TString emsg;
          if (TProof::AssertDataSet(dset, input, fDataSetManager, emsg) != 0) {
             SendAsynMessage(TString::Format("AssertDataSet on %s: %s",
                                  fPrefix.Data(), emsg.Data()));
@@ -3649,6 +3709,30 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
             // To terminate collection
             if (sync) SendLogFile();
             return;
+         }
+      } else if (hasNoData) {
+         // Check if we are required to process with TPacketizerFile a registered dataset
+         TNamed *ftp = dynamic_cast<TNamed *>(input->FindObject("PROOF_FilesToProcess"));
+         if (ftp) {
+            TString dsn(ftp->GetTitle());
+            if (!dsn.Contains(":") || dsn.BeginsWith("dataset:")) {
+               dsn.ReplaceAll("dataset:", "");
+               // Get the map for TPacketizerFile
+               TMap *fcmap = GetDataSetNodeMap(dsn, emsg);
+               if (!fcmap) {
+                  SendAsynMessage(TString::Format("HandleProcess on %s: %s",
+                                                  fPrefix.Data(), emsg.Data()));
+                  Error("HandleProcess", "%s", emsg.Data());
+                  // To terminate collection
+                  if (sync) SendLogFile();
+                  return;
+               }
+               input->Remove(ftp);
+               delete ftp;
+               fcmap->SetOwner(kTRUE);
+               fcmap->SetName("PROOF_FilesToProcess");
+               input->Add(fcmap);
+            }
          }
       }
 
@@ -3668,7 +3752,6 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       SafeDelete(input);
 
       // Save input data, if any
-      TString emsg;
       if (TProof::SaveInputData(pq, fCacheDir.Data(), emsg) != 0)
          Warning("HandleProcess", "could not save input data: %s", emsg.Data());
 
@@ -4300,8 +4383,10 @@ void TProofServ::ProcessNext(TString *slb)
       if (psr) {
          if (RegisterDataSets(input, fPlayer->GetOutputList()) != 0)
             Warning("ProcessNext", "problems registering produced datasets");
-         fPlayer->GetOutputList()->Remove(psr);
-         delete psr;
+         do {
+            fPlayer->GetOutputList()->Remove(psr);
+            delete psr;
+         } while ((psr = (TNamed *) fPlayer->GetOutputList()->FindObject("PROOFSERV_RegisterDataSet")));
       }
    }
 
@@ -4384,6 +4469,11 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
          if (!(fcn = (TNamed *) out->FindObject(tag))) continue;
          // Register option
          TString regopt(fcn->GetTitle());
+         // Sort according to the internal index, if required
+         if (regopt.Contains(":sortidx:")) {
+            ds->Sort(kTRUE);
+            regopt.ReplaceAll(":sortidx:", "");
+         }
          // Register this dataset
          if (fDataSetManager) {
             if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
@@ -4429,9 +4519,11 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
             Error("RegisterDataSets", "dataset manager is undefined!");
             return -1;
          }
-         // Cleanup temporary stuff
-         out->Remove(fcn);
-         SafeDelete(fcn);
+         // Cleanup all temporary stuff (there may be more objects with the same name, created by each worker)
+         do {
+            out->Remove(fcn);
+            SafeDelete(fcn);
+         } while ((fcn = (TNamed *) out->FindObject(tag)));
       }
    }
 

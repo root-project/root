@@ -46,11 +46,13 @@ private:
    TList      *fIters;           // Iterators on the file lists per node
    Long64_t    fAssigned;        // No.files processed or being processed.
    Bool_t      fProcNotAssigned; // Whether to process files not asdigned to a worker
+   Bool_t      fAddFileInfo;     // Whether to add the TFileInfo object in the packet
 
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
 
    TPacketizerFile();
-   // : fFiles(0), fIters(0), fAssigned(0), fStopwatch(0) { }
+   // : fFiles(0), fNotAssigned(0), fIters(0), fAssigned(0),
+   //                    fProcNotAssigned(kTRUE), fAddFileInfo(kFALSE), fStopwatch(0) { }
    TPacketizerFile(const TPacketizerFile&);     // no implementation, will generate
    void operator=(const TPacketizerFile&);  // error on accidental usage
 

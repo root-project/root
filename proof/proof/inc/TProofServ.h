@@ -43,25 +43,26 @@
 #include "TProofQueryResult.h"
 #endif
 
+class TDataSetManager;
 class TDSet;
+class TDSetElement;
+class TFileCollection;
+class TFileHandler;
+class THashList;
+class TIdleTOTimer;
+class TList;
+class TMap;
+class TMessage;
+class TMonitor;
+class TMutex;
 class TProof;
-class TVirtualProofPlayer;
 class TProofLockPath;
 class TQueryResultManager;
-class TSocket;
-class THashList;
-class TList;
-class TDSetElement;
-class TMessage;
-class TShutdownTimer;
 class TReaperTimer;
-class TIdleTOTimer;
-class TMutex;
-class TFileCollection;
-class TDataSetManager;
-class TFileHandler;
-class TMonitor;
 class TServerSocket;
+class TShutdownTimer;
+class TSocket;
+class TVirtualProofPlayer;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -200,6 +201,7 @@ private:
    Int_t         SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
    Bool_t        AcceptResults(Int_t connections, TVirtualProofPlayer *mergerPlayer);
    
+   TMap         *GetDataSetNodeMap(const char *dsn, TString &emsg);
    Int_t         RegisterDataSets(TList *in, TList *out);
 
    // Waiting queries handlers

@@ -56,6 +56,7 @@
 
 #pragma link C++ class TDataSetManager;
 #pragma link C++ class TDataSetManagerFile;
+#pragma link C++ class TSelVerifyDataSet+;
 
 // For backward compatibility with old client / masters
 #pragma link C++ class std::pair<TDSetElement*, TString>;

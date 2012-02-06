@@ -9695,7 +9695,7 @@ Int_t TProof::UploadDataSetFromFile(const char *, const char *, const char *, In
 
 //______________________________________________________________________________
 Bool_t TProof::RegisterDataSet(const char *dataSetName,
-                               TFileCollection *dataSet, const char* optStr)
+                               TFileCollection *dataSet, const char *optStr)
 {
    // Register the 'dataSet' on the cluster under the current
    // user, group and the given 'dataSetName'.
@@ -9707,6 +9707,8 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
    // is configured to allow so). By default the dataset is not verified.
    // If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
    // is trusted, i.e. not reset (if the dataset manager is configured to allow so).
+   // If 'opts' contains 'S' validation would be run serially (meaningful only if
+   // validation is required).
    // Returns kTRUE on success.
 
    // Check TFileInfo compatibility
@@ -9721,10 +9723,20 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
       return kFALSE;
    }
 
+   Bool_t parallelverify = kFALSE;
+   TString sopt(optStr);
+   if (sopt.Contains("V") && fProtocol >= 34 && !sopt.Contains("S")) {
+      // We do verification in parallel later on; just register for now
+      parallelverify = kTRUE;
+      sopt.ReplaceAll("V", "");
+   }
+   // This would screw up things remotely, make sure is not there
+   sopt.ReplaceAll("S", "");
+
    TMessage mess(kPROOF_DATASETS);
    mess << Int_t(kRegisterDataSet);
    mess << TString(dataSetName);
-   mess << TString(optStr);
+   mess << sopt;
    mess.WriteObject(dataSet);
    Broadcast(mess);
 
@@ -9733,8 +9745,21 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
    if (fStatus != 0) {
       Error("RegisterDataSet", "dataset was not saved");
       result = kFALSE;
+      return result;
    }
-   return result;
+
+   // If old server or not verifying in parallel we are done
+   if (!parallelverify) return result;
+   
+   // If we are here it means that we will verify in parallel
+   sopt += "V";
+   if (VerifyDataSet(dataSetName, sopt) < 0){
+      Error("RegisterDataSet", "problems verifying dataset '%s'", dataSetName);
+      return kFALSE;
+   }
+
+   // We are done
+   return kTRUE; 
 }
 
 //______________________________________________________________________________
@@ -9993,32 +10018,132 @@ TList* TProof::FindDataSets(const char* /*searchString*/, const char* /*optStr*/
 }
 
 //______________________________________________________________________________
-Int_t TProof::VerifyDataSet(const char *uri, const char* optStr)
+Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
 {
    // Verify if all files in the specified dataset are available.
    // Print a list and return the number of missing files.
+   // Returns -1 in case of error.
 
    if (fProtocol < 15) {
       Info("VerifyDataSet", "functionality not available: the server has an"
                             " incompatible version of TFileInfo");
-      return kError;
+      return -1;
    }
 
-   Int_t nMissingFiles = 0;
-   TMessage nameMess(kPROOF_DATASETS);
-   nameMess << Int_t(kVerifyDataSet);
-   nameMess << TString(uri ? uri : "");
-   nameMess << TString(optStr ? optStr : "");
-   Broadcast(nameMess);
+   // Sanity check
+   if (!uri || (uri && strlen(uri) <= 0)) {
+      Error("VerifyDataSet", "dataset name is is mandatory");
+      return -1;
+   }
 
-   Collect(kActive, fCollectTimeout);
+   Int_t nmissingfiles = 0;
 
-   if (fStatus < 0) {
-      Info("VerifyDataSet", "no such dataset %s", uri);
-      return  -1;
-   } else
-      nMissingFiles = fStatus;
-   return nMissingFiles;
+   TString sopt(optStr);
+   if (fProtocol < 34 || sopt.Contains("S")) {
+      sopt.ReplaceAll("S", "");
+      Info("VerifyDataSet", "Master-only verification");
+      TMessage nameMess(kPROOF_DATASETS);
+      nameMess << Int_t(kVerifyDataSet);
+      nameMess << TString(uri ? uri : "");
+      nameMess << sopt;
+      Broadcast(nameMess);
+
+      Collect(kActive, fCollectTimeout);
+
+      if (fStatus < 0) {
+         Info("VerifyDataSet", "no such dataset %s", uri);
+         return  -1;
+      } else
+         nmissingfiles = fStatus;
+      return nmissingfiles;
+   }
+
+   //Let PROOF master prepare node-files map
+   SetParameter("PROOF_FilesToProcess", Form("dataset:%s", uri));
+
+   // Use TPacketizerFile
+   TString oldpack;
+   if (TProof::GetParameter(GetInputList(), "PROOF_Packetizer", oldpack) != 0) oldpack = "";
+   SetParameter("PROOF_Packetizer", "TPacketizerFile");
+
+   // Add dataset name
+   SetParameter("PROOF_VerifyDataSet", uri);
+   // Add options
+   SetParameter("PROOF_VerifyDataSetOption", optStr);
+   Int_t oldifiip = -1;
+   if (TProof::GetParameter(GetInputList(), "PROOF_IncludeFileInfoInPacket", oldifiip) != 0) oldifiip = -1;
+   SetParameter("PROOF_IncludeFileInfoInPacket", (Int_t)1);
+
+   // TO DO : figure out mss and stageoption
+   const char* mss="";
+   SetParameter("PROOF_MSS", mss);
+   const char* stageoption="";
+   SetParameter("PROOF_StageOption", stageoption);
+
+   GetInputList()->Print();
+
+   // Process verification in parallel
+   Process("TSelVerifyDataSet", (Long64_t) 1);
+
+   // Restore packetizer
+   if (!oldpack.IsNull())
+      SetParameter("PROOF_Packetizer", oldpack);
+   else
+      DeleteParameters("PROOF_Packetizer");
+
+   // Delete or restore parameters
+   DeleteParameters("PROOF_FilesToProcess");
+   DeleteParameters("PROOF_VerifyDataSet");
+   DeleteParameters("PROOF_VerifyDataSetOption");
+   DeleteParameters("PROOF_MSS");
+   DeleteParameters("PROOF_StageOption");
+   if (oldifiip > -1) {
+      SetParameter("PROOF_IncludeFileInfoInPacket", oldifiip);
+   } else {
+      DeleteParameters("PROOF_IncludeFileInfoInPacket");
+   }
+
+   // Merge outputs
+   Int_t nopened = 0;
+   Int_t ntouched = 0;
+   Bool_t changed_ds = kFALSE;
+
+   TIter nxtout(GetOutputList());
+   TObject* obj;
+   TList *lfiindout = new TList;
+   while ((obj = nxtout())) {
+      TList *l = dynamic_cast<TList *>(obj);
+      if (l && TString(l->GetName()).BeginsWith("PROOF_ListFileInfos_")) {
+         TIter nxt(l);
+         TFileInfo *fiindout = 0;
+         while ((fiindout = (TFileInfo*) nxt())) {
+            lfiindout->Add(fiindout);
+         }
+      }
+      // Add up number of disppeared files
+      TParameter<Int_t>* pdisappeared = dynamic_cast<TParameter<Int_t>*>(obj);
+      if ( pdisappeared && TString(pdisappeared->GetName()).BeginsWith("PROOF_NoFilesDisppeared_")) {
+         nmissingfiles += pdisappeared->GetVal();
+      }
+      TParameter<Int_t>* pnopened = dynamic_cast<TParameter<Int_t>*>(obj);
+      if (pnopened && TString(pnopened->GetName()).BeginsWith("PROOF_NoFilesOpened_")) {
+         nopened += pnopened->GetVal();
+      }
+      TParameter<Int_t>* pntouched = dynamic_cast<TParameter<Int_t>*>(obj);
+      if (pntouched && TString(pntouched->GetName()).BeginsWith("PROOF_NoFilesTouched_")) {
+         ntouched += pntouched->GetVal();
+      }
+      TParameter<Bool_t>* pchanged_ds = dynamic_cast<TParameter<Bool_t>*>(obj);
+      if (pchanged_ds && TString(pchanged_ds->GetName()).BeginsWith("PROOF_DataSetChanged_")) {
+         if (pchanged_ds->GetVal() == kTRUE) changed_ds = kTRUE;
+      }
+   }
+
+   Info("VerifyDataset", "%s: changed? %d (# files opened = %d, # files touched = %d,"
+                         " # missing files = %d)",
+                         uri, changed_ds, nopened, ntouched, nmissingfiles);
+
+   return nmissingfiles;
 }
 
 //______________________________________________________________________________
