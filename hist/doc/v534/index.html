@@ -3,6 +3,20 @@
 <a name="hist"></a> 
 <h3>Histogram Libraries</h3>
 
+<h3>THn, THnBase, THNSparse</h3>
+<ul>
+<li>The new, non-sparse n-dimensional histogram <tt>THn</tt> has been introduced.
+It follows the same interfaces as <tt>THnSparse</tt>, and thus also implements <tt>THnF THnD THnC THnS THnI THnL</tt>.<br/>
+<b>NOTE</b>: the memory usage of this class increases with the number of bins, i.e. <em>exponentially</em> with the number of dimensions!
+A 5-dimensional <tt>THnD</tt> with 100 bins per dimension uses more than 80GB of RAM!
+Better use <tt>THnSparse</tt> if only a small fraction of the bins are filled.</li>
+<li>Most algorithms are now implemented in <tt>THnBase</tt>, the new common base class of <tt>THnSparse</tt> and <tt>THn</tt>.
+If a function does not care about the actual storage format on in incoming objects it might as well reference a <tt>THnBase</tt>.</li>
+<li>The bins of <tt>THn</tt> are held by objects of the new type <tt>TNDArray</tt>: an n-dimensional array with lazy allocation (only when a bin is set) that implements an <tt>operator []</tt>.</li>
+<li><tt>THn</tt> and <tt>THnSparse</tt> can be created from histograms and from each other, allowing for easy conversion. There is currently no support for drawing a <tt>THnBase</tt>-derived object; project it into a <tt>TH1/2/3</tt> first.</li>
+</ul>
+</li>
+
 <h3>THistPainter</h3>
 <ul>
 <li>
