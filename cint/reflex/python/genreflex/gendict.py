@@ -1140,6 +1140,20 @@ class genDictionary(object) :
       if attrs['id'] in self.vtables : mod += ' | ::Reflex::VIRTUAL'
     else :  # new in version 0.6.0
       if self.isClassVirtual(attrs) :  mod += ' | ::Reflex::VIRTUAL'
+    # report fields attributes that do not have a member
+    if 'extra' in attrs and 'fields' in attrs['extra'] :
+      for fattrs in attrs['extra']['fields'] :
+        if not fattrs.has_key('name') : continue
+        found = False
+        for mid in members :
+          mattrs = self.xref[mid]['attrs']
+          if 'name' in mattrs and fattrs['name'] == mattrs['name']:
+            found = True
+            break
+        if not found:
+          self.warnings += 1
+          print '--->> genreflex: WARNING: member %s not found in class %s' % (fattrs['name'], cls)
+
     members = filter(self.memberfilter, members)  # Eliminate problematic members
 
     # Fill the different streams sc: constructor, ss: stub functions
