@@ -64,6 +64,7 @@ private:
    Bool_t   fMerged;
    ERunType fRunType;     // Type of run (see enum ERunType)
    UInt_t   fTypeOpt;     // Option (see enum ETypeOpt)
+   Bool_t   fMergeHistosOneGo;  // If true merge histos in one go (argument to TFileMerger)
 
    TFileCollection *fDataSet;  // Instance of the file collection in 'dataset' mode
    TFileMerger *fMerger;  // Instance of the file merger in 'merge' mode
