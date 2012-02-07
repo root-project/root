@@ -63,6 +63,7 @@ TProofOutputFile::TProofOutputFile(const char *path,
    //             'R'      register: dataset run with dataset registration
    //             'O'      overwrite: force dataset replacement during registration
    //             'V'      verify: verify the registered dataset
+   //             'H'      merge histograms in one go (option to TFileMerger)
    // Special 'option' values for backward compatibility:
    //              ""      equivalent to "M"
    //         "LOCAL"      equivalent to "ML" or "L"
@@ -71,6 +72,7 @@ TProofOutputFile::TProofOutputFile(const char *path,
    fMerged = kFALSE;
    fMerger = 0;
    fDataSet = 0;
+   fMergeHistosOneGo = kFALSE;
 
    // Fill the run type and option type
    fRunType = kMerge;
@@ -78,6 +80,7 @@ TProofOutputFile::TProofOutputFile(const char *path,
    if (option && strlen(option) > 0) {
       TString opt(option);
       if (opt.Contains("L") || (opt == "LOCAL")) fTypeOpt = kLocal;
+      if (opt.Contains("H")) fMergeHistosOneGo = kTRUE;
       if (!opt.Contains("M") && opt.Contains("D")) {
          // Dataset creation mode
          fRunType = kDataset;
@@ -494,7 +497,7 @@ TFileMerger *TProofOutputFile::GetFileMerger(Bool_t local)
    // Get instance of the file merger to be used in 'merge' mode
 
    if (!fMerger)
-      fMerger = new TFileMerger(local);
+      fMerger = new TFileMerger(local, fMergeHistosOneGo);
    return fMerger;
 }
 
