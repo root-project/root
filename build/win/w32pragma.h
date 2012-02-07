@@ -49,6 +49,8 @@
 #pragma warning (disable: 4748)
 /* function(): resolved overload was found by argument-dependent lookup */
 #pragma warning (disable: 4675)
+/* X needs to have dll-interface to be used by clients of class Y */
+#pragma warning (disable: 4251)
 /* decorated name length exceeded, name was truncated */
 #pragma warning (disable: 4503)
 
