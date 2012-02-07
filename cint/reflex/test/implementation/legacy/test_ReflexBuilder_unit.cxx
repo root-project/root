@@ -136,7 +136,9 @@ void
 ReflexBuilderUnitTest::demangler() {
    CPPUNIT_ASSERT_EQUAL(string("int"), Tools::Demangle(typeid(int)));
    CPPUNIT_ASSERT_EQUAL(string("int*"), Tools::Demangle(typeid(int*)));
-#if defined(__GNUC__) && __GNUC__ >= 4 || (__GNUC__ >= 3 && defined(__GNUC_MINOR__) && __GNUC_MINOR__ >= 4)
+#if defined(__GNUC__) && \
+   (  (__GNUC__ == 4 && __GNUC_MINOR__ < 6) || \
+      (__GNUC__ == 3 && __GNUC_MINOR__ >= 4 ) )
    CPPUNIT_ASSERT_EQUAL(string("float ()(int)"), Tools::Demangle(typeid(float (int))));
    CPPUNIT_ASSERT_EQUAL(string("float* ()(int)"), Tools::Demangle(typeid(float* (int))));
 #else
