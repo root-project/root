@@ -77,11 +77,11 @@ endif
 
 ifneq ($(FAIL),yes)
 unpack.last: geometries.tar.gz
-	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf $(TARFLAGS) - && touch unpack.last && \
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - $(TARFLAGS) && touch unpack.last && \
 	    touch $(FILES_IN_TAR)
 else
 unpack.last: geometries.tar.gz
-	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf $TARFLAGS) - && touch unpack.last && \
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - $(TARFLAGS) && touch unpack.last && \
 	    touch $(C_FILES_IN_TAR)
 endif
 
