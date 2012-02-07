@@ -417,7 +417,7 @@ void G__LD_p0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__nonintarrayindex G__P((struct G__var_array*,int));
 void G__nonintarrayindex(struct G__var_array *var,int ig15)
 {
-  G__fprinterr(G__serr,"Error: %s[] invalud type for array index"
+  G__fprinterr(G__serr,"Error: %s[] invalid type for array index"
                ,var->varnamebuf[ig15]);
   G__genericerror((char*)NULL);
 }
