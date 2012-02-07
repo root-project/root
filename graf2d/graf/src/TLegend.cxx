@@ -160,7 +160,7 @@ End_Macro
 
 
 //______________________________________________________________________________
-TLegend::TLegend(): TPave(), TAttText()
+TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetTextFont(),0)
 {
    /* Begin_Html
    Default constructor.
