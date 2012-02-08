@@ -587,86 +587,203 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    return (cmp == kExact) ? HashCase() : HashFoldCase();
 }
 
+namespace {
+   // MurmurHash3 - a blazingly fast public domain hash!
+   // See http://code.google.com/p/smhasher/
+   // There are two versions, one optimized for 32 bit and one for 64 bit.
+   // They give different hash results!
+   // We use only the 64 bit version which also works on 32 bit.
+
+   //-----------------------------------------------------------------------------
+   // MurmurHash3 was written by Austin Appleby, and is placed in the public
+   // domain. The author hereby disclaims copyright to this source code.
+
+   // Note - The x86 and x64 versions do _not_ produce the same results, as the
+   // algorithms are optimized for their respective platforms. You can still
+   // compile and run any of them on any platform, but your performance with the
+   // non-native version will be less than optimal.
+
+   //-----------------------------------------------------------------------------
+   // Platform-specific functions and macros
+
+   // From MurmurHash.h:
+
+#if defined(_MSC_VER)
+   // Microsoft Visual Studio
+   typedef unsigned char uint8_t;
+   typedef unsigned long uint32_t;
+   typedef unsigned __int64 uint64_t;
+#else	// defined(_MSC_VER)
+   // Other compilers
+#include <stdint.h>
+#endif // !defined(_MSC_VER)
+
+   // From MurmurHash.cpp:
+#if defined(_MSC_VER)
+   // Microsoft Visual Studio
+#define FORCE_INLINE    __forceinline
+#include <stdlib.h>
+#define ROTL64(x,y)     _rotl64(x,y)
+#define BIG_CONSTANT(x) (x)
+#else   // defined(_MSC_VER)
+   // Other compilers
+   inline uint64_t rotl64 ( uint64_t x, int8_t r )
+   {
+      return (x << r) | (x >> (64 - r));
+   }
+
+#define FORCE_INLINE __attribute__((always_inline))
+#define ROTL64(x,y)     rotl64(x,y)
+#define BIG_CONSTANT(x) (x##LLU)
+#endif // !defined(_MSC_VER)
+
+   //-----------------------------------------------------------------------------
+   FORCE_INLINE uint64_t getblock(const uint64_t* p, int i)
+   {
+      // Block read - if your platform needs to do endian-swapping or can only
+      // handle aligned reads, do the conversion here
+      return p[i];
+   }
+
+   //-----------------------------------------------------------------------------
+   FORCE_INLINE uint64_t fmix(uint64_t k)
+   {
+      // Finalization mix - force all bits of a hash block to avalanche
+      k ^= k >> 33;
+      k *= BIG_CONSTANT(0xff51afd7ed558ccd);
+      k ^= k >> 33;
+      k *= BIG_CONSTANT(0xc4ceb9fe1a85ec53);
+      k ^= k >> 33;
+
+      return k;
+   }
+
+   //-----------------------------------------------------------------------------
+   static void MurmurHash3_x64_128(const void * key, const int len,
+                                   const uint32_t seed, void * out )
+   {
+      // "key" is input to be hashed.
+      // "len" is the number of bytes to hash starting at "key".
+      // "seed" is a hash seed, "out" is a buffer (128 bytes) that will receive
+      // the results.
+      const uint8_t * data = (const uint8_t*)key;
+      const int nblocks = len / 16;
+
+      uint64_t h1 = seed;
+      uint64_t h2 = seed;
+
+      uint64_t c1 = BIG_CONSTANT(0x87c37b91114253d5);
+      uint64_t c2 = BIG_CONSTANT(0x4cf5ad432745937f);
+
+      //----------
+      // body
+
+      const uint64_t * blocks = (const uint64_t *)(data);
+
+      for(int i = 0; i < nblocks; i++)
+         {
+            uint64_t k1 = getblock(blocks,i*2+0);
+            uint64_t k2 = getblock(blocks,i*2+1);
+
+            k1 *= c1; k1  = ROTL64(k1,31); k1 *= c2; h1 ^= k1;
+
+            h1 = ROTL64(h1,27); h1 += h2; h1 = h1*5+0x52dce729;
+
+            k2 *= c2; k2  = ROTL64(k2,33); k2 *= c1; h2 ^= k2;
+
+            h2 = ROTL64(h2,31); h2 += h1; h2 = h2*5+0x38495ab5;
+         }
+
+      //----------
+      // tail
+
+      const uint8_t * tail = (const uint8_t*)(data + nblocks*16);
+
+      uint64_t k1 = 0;
+      uint64_t k2 = 0;
+
+      switch(len & 15)
+         {
+         case 15: k2 ^= uint64_t(tail[14]) << 48;
+         case 14: k2 ^= uint64_t(tail[13]) << 40;
+         case 13: k2 ^= uint64_t(tail[12]) << 32;
+         case 12: k2 ^= uint64_t(tail[11]) << 24;
+         case 11: k2 ^= uint64_t(tail[10]) << 16;
+         case 10: k2 ^= uint64_t(tail[ 9]) << 8;
+         case  9: k2 ^= uint64_t(tail[ 8]) << 0;
+            k2 *= c2; k2  = ROTL64(k2,33); k2 *= c1; h2 ^= k2;
+
+         case  8: k1 ^= uint64_t(tail[ 7]) << 56;
+         case  7: k1 ^= uint64_t(tail[ 6]) << 48;
+         case  6: k1 ^= uint64_t(tail[ 5]) << 40;
+         case  5: k1 ^= uint64_t(tail[ 4]) << 32;
+         case  4: k1 ^= uint64_t(tail[ 3]) << 24;
+         case  3: k1 ^= uint64_t(tail[ 2]) << 16;
+         case  2: k1 ^= uint64_t(tail[ 1]) << 8;
+         case  1: k1 ^= uint64_t(tail[ 0]) << 0;
+            k1 *= c1; k1  = ROTL64(k1,31); k1 *= c2; h1 ^= k1;
+         };
+
+      //----------
+      // finalization
+
+      h1 ^= len; h2 ^= len;
+
+      h1 += h2;
+      h2 += h1;
+
+      h1 = fmix(h1);
+      h2 = fmix(h2);
+
+      h1 += h2;
+      h2 += h1;
+
+      ((uint64_t*)out)[0] = h1;
+      ((uint64_t*)out)[1] = h2;
+   }
+
+   //-----------------------------------------------------------------------------
+}
+
 //______________________________________________________________________________
 UInt_t TString::Hash(const void *txt, Int_t ntxt)
 {
    // Calculates hash index from any char string. (static function)
-   // Based on precalculated table of 256 specially selected numbers.
-   // These numbers are selected in such a way, that for string
-   // length == 4 (integer number) the hash is unambigous, i.e.
-   // from hash value we can recalculate input (no degeneration).
-   //
-   // The quality of hash method is good enough, that
-   // "random" numbers made as R = Hash(1), Hash(2), ...Hash(N)
-   // tested by <R>, <R*R>, <Ri*Ri+1> gives the same result
-   // as for libc rand().
-   //
    // For string:  i = TString::Hash(string,nstring);
    // For int:     i = TString::Hash(&intword,sizeof(int));
    // For pointer: i = TString::Hash(&pointer,sizeof(void*));
    //
-   //              V.Perev
-
-   static const UInt_t utab[] = {
-      0xdd367647,0x9caf993f,0x3f3cc5ff,0xfde25082,0x4c764b21,0x89affca7,0x5431965c,0xce22eeec,
-      0xc61ab4dc,0x59cc93bd,0xed3107e3,0x0b0a287a,0x4712475a,0xce4a4c71,0x352c8403,0x94cb3cee,
-      0xc3ac509b,0x09f827a2,0xce02e37e,0x7b20bbba,0x76adcedc,0x18c52663,0x19f74103,0x6f30e47b,
-      0x132ea5a1,0xfdd279e0,0xa3d57d00,0xcff9cb40,0x9617f384,0x6411acfa,0xff908678,0x5c796b2c,
-      0x4471b62d,0xd38e3275,0xdb57912d,0x26bf953f,0xfc41b2a5,0xe64bcebd,0x190b7839,0x7e8e6a56,
-      0x9ca22311,0xef28aa60,0xe6b9208e,0xd257fb65,0x45781c2c,0x9a558ac3,0x2743e74d,0x839417a8,
-      0x06b54d5d,0x1a82bcb4,0x06e97a66,0x70abdd03,0xd163f30d,0x222ed322,0x777bfeda,0xab7a2e83,
-      0x8494e0cf,0x2dca2d4f,0x78f94278,0x33f04a09,0x402b6452,0x0cd8b709,0xdb72a39e,0x170e00a2,
-      0x26354faa,0x80e57453,0xcfe8d4e1,0x19e45254,0x04c291c3,0xeb503738,0x425af3bc,0x67836f2a,
-      0xfac22add,0xfafc2b8c,0x59b8c2a0,0x03e806f9,0xcb4938b9,0xccc942af,0xcee3ae2e,0xfbe748fa,
-      0xb223a075,0x85c49b5d,0xe4576ac9,0x0fbd46e2,0xb49f9cf5,0xf3e1e86a,0x7d7927fb,0x711afe12,
-      0xbf61c346,0x157c9956,0x86b6b046,0x2e402146,0xb2a57d8a,0x0d064bb1,0x30ce390c,0x3a3e1eb1,
-      0xbe7f6f8f,0xd8e30f87,0x5be2813c,0x73a3a901,0xa3aaf967,0x59ff092c,0x1705c798,0xf610dd66,
-      0xb17da91e,0x8e59534e,0x2211ea5b,0xa804ba03,0xd890efbb,0xb8b48110,0xff390068,0xc8c325b4,
-      0xf7289c07,0x787e104f,0x3d0df3d0,0x3526796d,0x10548055,0x1d59a42b,0xed1cc5a3,0xdd45372a,
-      0x31c50d57,0x65757cb7,0x3cfb85be,0xa329910d,0x6ad8ce39,0xa2de44de,0x0dd32432,0xd4a5b617,
-      0x8f3107fc,0x96485175,0x7f94d4f3,0x35097634,0xdb3ca782,0x2c0290b8,0x2045300b,0xe0f5d15a,
-      0x0e8cbffa,0xaa1cc38a,0x84008d6f,0xe9a9e794,0x5c602c25,0xfa3658fa,0x98d9d82b,0x3f1497e7,
-      0x84b6f031,0xe381eff9,0xfc7ae252,0xb239e05d,0xe3723d1f,0xcc3bda82,0xe21b1ad3,0x9104f7c8,
-      0x4bb2dfcd,0x4d14a8bc,0x6ba7f28c,0x8f89886c,0xad44c97e,0xb30fd975,0x633cdab1,0xf6c2d514,
-      0x067a49d2,0xdc461ad9,0xebaf9f3f,0x8dc6cac3,0x7a060f16,0xbab063ad,0xf42e25e6,0x60724ca6,
-      0xc7245c2e,0x4e48ea3c,0x9f89a609,0xa1c49890,0x4bb7f116,0xd722865c,0xa8ee3995,0x0ee070b1,
-      0xd9bffcc2,0xe55b64f9,0x25507a5a,0xc7a3e2b5,0x5f395f7e,0xe7957652,0x7381ba6a,0xde3d21f1,
-      0xdf1708dd,0xad0c9d0c,0x00cbc9e5,0x1160e833,0x6779582c,0x29d5d393,0x3f11d7d7,0x826a6b9b,
-      0xe73ff12f,0x8bad3d86,0xee41d3e5,0x7f0c8917,0x8089ef24,0x90c5cb28,0x2f7f8e6b,0x6966418a,
-      0x345453fb,0x7a2f8a68,0xf198593d,0xc079a532,0xc1971e81,0x1ab74e26,0x329ef347,0x7423d3d0,
-      0x942c510b,0x7f6c6382,0x14ae6acc,0x64b59da7,0x2356fa47,0xb6749d9c,0x499de1bb,0x92ffd191,
-      0xe8f2fb75,0x848dc913,0x3e8727d3,0x1dcffe61,0xb6e45245,0x49055738,0x827a6b55,0xb4788887,
-      0x7e680125,0xd19ce7ed,0x6b4b8e30,0xa8cadea2,0x216035d8,0x1c63bc3c,0xe1299056,0x1ad3dff4,
-      0x0aefd13c,0x0e7b921c,0xca0173c6,0x9995782d,0xcccfd494,0xd4b0ac88,0x53d552b1,0x630dae8b,
-      0xa8332dad,0x7139d9a2,0x5d76f2c4,0x7a4f8f1e,0x8d1aef97,0xd1cf285d,0xc8239153,0xce2608a9,
-      0x7b562475,0xe4b4bc83,0xf3db0c3a,0x70a65e48,0x6016b302,0xdebd5046,0x707e786a,0x6f10200c
-   };
-
-   static const UInt_t msk[] = { 0x11111111, 0x33333333, 0x77777777, 0xffffffff };
-
-   const UChar_t *uc = (const UChar_t *) txt;
-   UInt_t uu = 0;
-   union {
-      UInt_t   u;
-      UShort_t s[2];
-   } u;
-   u.u = 0;
-   Int_t i, idx;
-
-   for (i = 0; i < ntxt; i++) {
-      idx = (uc[i] ^ i) & 255;
-      uu  = (uu << 1) ^ (utab[idx] & msk[i & 3]);
-      if ((i & 3) == 3) u.u ^= uu;
+   // This employs two different hash functions, depending on ntxt:
+   //   ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
+   //   else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
+   if (ntxt != sizeof(void*)) {
+      ULong64_t buf[2];
+      MurmurHash3_x64_128(txt, ntxt, 0x6384BA69, &buf);
+      return (UInt_t) buf[0];
+   } else {
+      // simple, superfast hash for pointers and alike
+      UInt_t ret = (UInt_t)0x6384BA69;
+      // aligned?
+      if (((size_t)txt) % sizeof(void*)) {
+         UInt_t* itxt = (UInt_t*)txt;
+         ret ^= itxt[0];
+         if (sizeof(void*) > sizeof(UInt_t)) {
+            ret ^= itxt[1];
+         }
+      } else {
+         const char* ctxt = (const char*) txt;
+         for (int i = 0; i < 4; ++i) {
+            ret ^= ctxt[i] << (i * 8);
+         }
+         if (sizeof(void*) > sizeof(UInt_t)) {
+            ctxt += 4;
+            for (int i = 0; i < 4; ++i) {
+               ret ^= ctxt[i] << (i * 8);
+            }
+         }         
+      }
+      return ret;
    }
-   if (i & 3) u.u ^= uu;
-
-   u.u *= 1879048201;      // prime number
-   u.s[0] += u.s[1];
-   u.u *= 1979048191;      // prime number
-   u.s[1] ^= u.s[0];
-   u.u *= 2079048197;      // prime number
-
-   return u.u;
 }
 
 //______________________________________________________________________________
