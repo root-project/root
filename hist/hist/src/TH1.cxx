@@ -3635,6 +3635,10 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
    ROOT::Fit::DataRange range(xxmin,xxmax);
    ROOT::Math::MinimizerOptions minOption;
 
+   // need to empty the buffer before 
+   // (t.b.d. do a ML unbinned fit with buffer data)
+   if (fBuffer) BufferEmpty();
+
    return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
 }
 
