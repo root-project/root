@@ -25,6 +25,7 @@
 #endif
 
 #include "TXUnixSocket.h"
+#include "TEnv.h"
 #include "XrdProofPhyConn.h"
 
 ClassImp(TXUnixSocket)
@@ -72,12 +73,15 @@ Int_t TXUnixSocket::Reconnect()
                         fConn, (fConn ? fConn->IsValid() : 0), fUrl.Data());
    }
 
-   if (fXrdProofdVersion < 1005) {
-      Info("Reconnect","%p: server does not support reconnections (protocol: %d < 1005)",
-                       this, fXrdProofdVersion);
+   Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 1);
+   if (tryreconnect == 0 || fXrdProofdVersion < 1005) {
+      if (tryreconnect == 0)
+         Info("Reconnect","%p: reconnection attempts explicitely disabled!", this);
+      else
+         Info("Reconnect","%p: server does not support reconnections (protocol: %d < 1005)",
+                          this, fXrdProofdVersion);
       return -1;
    }
-
 
    if (fConn && !fConn->IsValid()) {
 
