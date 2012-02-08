@@ -24,7 +24,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   install(DIRECTORY python/genreflex DESTINATION lib/python FILES_MATCHING PATTERN "*.py" PATTERN ".svn" EXCLUDE)
   install(CODE "execute_process(COMMAND python -m compileall  ${CMAKE_INSTALL_PREFIX}/lib/python/genreflex)")
   #---genmap executable------------------------------------------------------
-  ROOT_EXECUTABLE(genmap genmap/genmap.cxx LIBRARIES Reflex)
+  ROOT_EXECUTABLE(genmap genmap/genmap.cxx LIBRARIES Reflex ${CMAKE_DL_LIBS})
   #---install headers--------------------------------------------------------
   ROOT_INSTALL_HEADERS()
     
