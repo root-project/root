@@ -13,7 +13,37 @@ endif
 
 # $_ should be source .../thisroot.csh
 set ARGS=($_)
-set THIS="`dirname ${ARGS[2]}`"
+if ("$ARGS" != "") then
+   set THIS="`dirname ${ARGS[2]}`"
+else
+   # But $_ might not be set if the script is source non-interactively.
+   # In [t]csh the sourced file is inserted 'in place' inside the
+   # outer script, so we need an external source of information
+   # either via the current directory or an extra parameter.
+   if ( -e thisroot.csh ) then
+      set THIS=${PWD}
+   else if ( -e bin/thisroot.csh ) then 
+      set THIS=${PWD}/bin
+   else if ( "$1" != "" ) then
+      if ( -e ${1}/bin/thisroot.csh ) then
+         set THIS=${1}/bin
+      else if ( -e ${1}/thisroot.csh ) then
+         set THIS=${1}
+      else 
+         echo "thisroot.csh: ${1} does not contain a ROOT installation"
+      endif 
+   else
+      echo 'Error: The call to "source where_root_is/bin/thisroot.csh" can not determine the location of the ROOT installation'
+      echo "because it was embedded another script (this is an issue specific to csh)."
+      echo "Use either:"
+      echo "   cd where_root_is; source bin/thisroot.csh"
+      echo "or"
+      echo "   source where_root_is/bin/thisroot.csh where_root_is" 
+   endif
+endif
+
+if ($?THIS) then 
+
 setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
 if ($?OLD_ROOTSYS) then
@@ -114,3 +144,5 @@ if ($?MANPATH) then
 else
    setenv MANPATH `dirname @mandir@`:$default_manpath
 endif
+
+endif # if ("$THIS" != "")
