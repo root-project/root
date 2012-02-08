@@ -63,6 +63,9 @@ else()
   endif()   
   set(rlibmap_cmd rlibmap)   
 endif()
+#---Dictionary dependencies to ${CMAKE_SOURCE_DIR}/cint/cint/inc/cintdictversion.h and rootcint executable 
+set(ROOTCINTDEP ${CMAKE_SOURCE_DIR}/cint/cint/inc/cintdictversion.h ROOTCINTTARGET)
+set(CINTDEP ${CMAKE_SOURCE_DIR}/cint/cint/inc/cintdictversion.h CINTTARGET)
 
 set(CMAKE_VERBOSE_MAKEFILES OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
@@ -210,7 +213,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h
                      COMMAND ${rootcint_cmd} -cint -f  ${dictionary}.cxx 
                                           -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef} 
-                     DEPENDS ${headerfiles} ${_linkdef} rootcint)
+                     DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
 endfunction()
 
 

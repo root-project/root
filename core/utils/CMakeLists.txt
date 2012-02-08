@@ -29,6 +29,9 @@ ROOT_EXECUTABLE(rootcint_tmp  rootcint_tmp.cxx RStl_tmp.cxx loadfile_tmp.cxx
                               LIBRARIES Cint_static ${CMAKE_DL_LIBS})
 add_dependencies(rootcint_tmp IOSENUM_H)
 
+#---Trick to avoid building all dictionaties when CINT is changed-------------
+add_custom_target(ROOTCINTTARGET DEPENDS rootcint rootcint_tmp)
+
 #---rlibmap executable--------------------------------------------------------
 ROOT_EXECUTABLE(rlibmap rlibmap.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 
