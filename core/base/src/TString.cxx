@@ -632,7 +632,12 @@ namespace {
       return (x << r) | (x >> (64 - r));
    }
 
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) <= 40101
+// gcc v4.1.1 can't inline getblock, so don't really force it.
+#define FORCE_INLINE inline
+#else
 #define FORCE_INLINE __attribute__((always_inline))
+#endif
 #define ROTL64(x,y)     rotl64(x,y)
 #define BIG_CONSTANT(x) (x##LLU)
 #endif // !defined(_MSC_VER)
