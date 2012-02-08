@@ -8,9 +8,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_GuiTypes
+// include this header in CINT is not avoided using the usual heuristic
+// (have a class with the same name as the header) but is leading to 
+// annoying warnings and error
+/*
+ Warning: Re-initialization ignored const kNone /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:90:
+ Warning: Re-initialization ignored const kCopyFromParent /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:91:
+ Warning: Re-initialization ignored const kParentRelative /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:92:
+ Error: Function BIT(0) is not defined in current scope  /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:141:
+ *** Interpreter error recovered ***
+*/ 
+#if !defined(ROOT_GuiTypes) && ( !defined(__CINT__) || defined (__MAKECINT__) )
 #define ROOT_GuiTypes
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
