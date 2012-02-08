@@ -162,6 +162,7 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _dataVars("!dataVars", this, other._dataVars ),
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
+  _binMap( other._binMap ),
   _dataSet( other._dataSet )
 {
   ;
@@ -181,7 +182,17 @@ ParamHistFunc::~ParamHistFunc()
 Int_t ParamHistFunc::getCurrentBin() const {
 
   Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
-  Int_t currentIndex = _binMap[ dataSetIndex ];
+
+  Int_t currentIndex = -1;
+  if( _binMap.find( dataSetIndex ) != _binMap.end() ) {
+    currentIndex = _binMap[ dataSetIndex ];
+  }
+  else {
+    std::cout << "Error: ParamHistFunc internal bin index map "
+	      << "not properly configured" << std::endl;
+    throw -1;
+    return -1;
+  }
 
   return currentIndex;
 
@@ -586,6 +597,10 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   // Fill the mapping between
   // RooDataHist bins and TH1 Bins:
 
+  // Clear the map
+  _binMap.clear();
+
+  // Fill the map
   for( Int_t i = 0; i < numBinsX; ++i ) {
     for( Int_t j = 0; j < numBinsY; ++j ) {
       for( Int_t k = 0; k < numBinsZ; ++k ) {
