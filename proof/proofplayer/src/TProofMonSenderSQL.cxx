@@ -61,8 +61,7 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
    fFileInfoVrs = 1;
 
    // Transfer verbosity requirements
-   PDB(TProofDebug::kMonitoring,1)
-      if (fWriter) fWriter->Verbose(kTRUE);
+   PDB(kMonitoring,1) if (fWriter) fWriter->Verbose(kTRUE);
 
    // Reformat the send options strings, if needed
    if (dstab && strlen(dstab) > 0) fDSetSendOpts.Form("bulk,table=%s", dstab);
@@ -165,8 +164,7 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
    // Are we requested to send this info?
    if (!TestBit(TProofMonSender::kSendSummary)) return 0;
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendSummary", "preparing (qid: '%s')", dumid);
+   PDB(kMonitoring,1) Info("SendSummary", "preparing (qid: '%s')", dumid);
 
    // Make sure we have something to send
    if (!recs || (recs && recs->GetSize() <= 0)) {
@@ -195,8 +193,7 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
       }
    }
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendSummary", "sending (%d entries)", xrecs->GetSize());
+   PDB(kMonitoring,1) Info("SendSummary", "sending (%d entries)", xrecs->GetSize());
 
    // Now we are ready to send
    Bool_t rc = fWriter->SendParameters(xrecs, dumid);
@@ -276,8 +273,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
       return -1;
    }
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendDataSetInfo", "preparing (qid: '%s')", qid);
+   PDB(kMonitoring,1) Info("SendDataSetInfo", "preparing (qid: '%s')", qid);
 
    TList plets;
    // Extract the information and save it into the relevant multiplets
@@ -309,8 +305,9 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
             }
          }
       } else if ((dsete = dynamic_cast<TDSet *>(o))) {
-         PDB(TProofDebug::kMonitoring,1)
-            Info("SendDataSetInfo", "dset '%s' (%d files)", o->GetName(), dsete->GetListOfElements()->GetSize());
+         PDB(kMonitoring,1)
+            Info("SendDataSetInfo", "dset '%s' (%d files)",
+                                    o->GetName(), dsete->GetListOfElements()->GetSize());
          TIter nxee(dsete->GetListOfElements());
          while ((ee = (TDSetElement *) nxee())) {
             dse = ee->GetDataSet();
@@ -366,7 +363,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
       values.Add(new TObjString(ent.Data()));
    }
 
-   PDB(TProofDebug::kMonitoring,1)
+   PDB(kMonitoring,1)
       Info("SendDataSetInfo", "sending (%d entries)", values.GetSize());
    
    // Now we are ready to send
@@ -437,8 +434,7 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
       return -1;
    }
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendFileInfo", "preparing (qid: '%s')", qid);
+   PDB(kMonitoring,1) Info("SendFileInfo", "preparing (qid: '%s')", qid);
    THashList hmiss;
    if (missing) {
       TIter nxfm(missing);
@@ -446,7 +442,7 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
       while ((fi = (TFileInfo *)nxfm())) {
          hmiss.Add(new TObjString(fi->GetCurrentUrl()->GetUrl()));
       }
-      PDB(TProofDebug::kMonitoring,2) hmiss.Print();
+      PDB(kMonitoring,2) hmiss.Print();
    }
 
    TList values;
@@ -474,8 +470,9 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
                      qid, begin, status.Data());
          values.Add(new TObjString(ent.Data()));
       } else if ((dsete = dynamic_cast<TDSet *>(o))) {
-         PDB(TProofDebug::kMonitoring,1)
-            Info("SendFileInfo", "dset '%s' (%d files)", o->GetName(), dsete->GetListOfElements()->GetSize());
+         PDB(kMonitoring,1)
+            Info("SendFileInfo", "dset '%s' (%d files)",
+                                 o->GetName(), dsete->GetListOfElements()->GetSize());
          TIter nxee(dsete->GetListOfElements());
          while ((ee = (TDSetElement *) nxee())) {
             fne = ee->GetName();
@@ -495,8 +492,7 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
       }
    }
 
-   PDB(TProofDebug::kMonitoring,1)
-      Info("SendFileInfo", "sending (%d entries)", values.GetSize());
+   PDB(kMonitoring,1) Info("SendFileInfo", "sending (%d entries)", values.GetSize());
    
    // Now we are ready to send
    Bool_t rc = fWriter->SendParameters(&values, fFilesSendOpts);
