@@ -3467,7 +3467,7 @@ check_explicit "$enable_fitsio" "$enable_fitsio_explicit" \
 if test ! "x$enable_gviz" = "xno"; then
     # Check for graphviz include and library
     check_header "gvc.h" "$gvizincdir" \
-        $GVIZ ${GVIZ:+$GVIZ/include} \
+        $GVIZ ${GVIZ:+$GVIZ/include/graphviz} ${GVIZ:+$GVIZ/include} \
         ${finkdir:+$finkdir/include/graphviz} \
         /usr/local/include/graphviz /usr/include/graphviz
     gvizinc=$found_hdr
@@ -3476,29 +3476,29 @@ if test ! "x$enable_gviz" = "xno"; then
     # At this time, libgvplugin_core.a should always be prefered over .so,
     # to avoid forcing users to install graphviz.
     check_library "libgvc gvc" "no" "$gvizlibdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib1=$found_lib
     gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
     check_library "libgraph graph" "no" "$gvizlibdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib2=$found_lib
     check_library "libcdt cdt" "no" "$gvizlibdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib3=$found_lib
     check_library "libpathplan pathplan" "no" "$gvizlibdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib4=$found_lib
     check_library "libexpat expat" "$enable_shared" "$gvizlibdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib
     gvizlib5=$found_lib
@@ -3513,7 +3513,7 @@ if test ! "x$enable_gviz" = "xno"; then
         gvizlibpdir="$gvizlibdir"
     fi
     check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" \
-        $GVIZ ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
+        $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib/graphviz} \
         /usr/local/lib/graphviz /usr/lib/graphviz
     gvizlibp1=$found_lib
