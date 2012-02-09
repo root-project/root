@@ -2,3 +2,13 @@
 <hr/> 
 <a name="gui"></a> 
 <h3>GUI Libraries</h3>
+
+<h4>TGTextButton</h4>
+<ul>
+<li>Fix a problem with new style when using <tt>SetBackgroundPixmap()</tt> with flat buttons. To be able to set (and keep) a pixmap as background, one should set the <tt>kOwnBackground</tt> flag. E.g.:
+<pre>
+   fButton->SetBackgroundPixmap(img->GetPixmap());
+   fButton->ChangeOptions(fButton->GetOptions() | kOwnBackground);
+   fButton->SetStyle("modern");
+</pre></li>
+</ul>
