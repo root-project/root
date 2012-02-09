@@ -665,7 +665,7 @@ namespace {
 
    //-----------------------------------------------------------------------------
    static void MurmurHash3_x64_128(const void * key, const int len,
-                                   const uint32_t seed, void * out )
+                                   const uint32_t seed, uint64_t out[2] )
    {
       // "key" is input to be hashed.
       // "len" is the number of bytes to hash starting at "key".
@@ -762,8 +762,8 @@ UInt_t TString::Hash(const void *txt, Int_t ntxt)
    //   ntxt == sizeof(void*): a simple bitwise xor to get fast pointer hashes
    //   else: MurmurHash3_x64_128 http://code.google.com/p/smhasher/
    if (ntxt != sizeof(void*)) {
-      ULong64_t buf[2];
-      MurmurHash3_x64_128(txt, ntxt, 0x6384BA69, &buf);
+      uint64_t buf[2] = {0};
+      MurmurHash3_x64_128(txt, ntxt, 0x6384BA69, buf);
       return (UInt_t) buf[0];
    } else {
       // simple, superfast hash for pointers and alike
