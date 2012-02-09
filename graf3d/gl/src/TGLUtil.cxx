@@ -1515,7 +1515,7 @@ void TGLUtil::SetDefaultDrawQuality(UInt_t dq)
 }
 
 //______________________________________________________________________________
-void TGLUtil::CheckError(const char * loc)
+Int_t TGLUtil::CheckError(const char * loc)
 {
    // Check current GL error state, outputing details via ROOT
    // Error method if one
@@ -1530,6 +1530,7 @@ void TGLUtil::CheckError(const char * loc)
          Error("TGLUtil::CheckError", "GL Error %s", (const char *)errString);
       }
    }
+   return errCode;
 }
 
 /******************************************************************************/
