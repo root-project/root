@@ -2,3 +2,13 @@
 <hr/> 
 <a name="io"></a> 
 <h3>I/O Libraries</h3>
+
+<h4>TFileCacheRead</h4>
+<ul>
+<li>Support for multiple <tt>TFileCacheRead</tt> per <tt>TFile</tt>.<p/>
+Multiple <tt>TFileCacheRead</tt> per <tt>TFile</tt> are supported by augmenting the existing <tt>TFile::SetCacheRead()</tt> function with an optional <tt>TObject*</tt> argument specifying the owner (i.e. tree) of the cache. This function will assign a <tt>TFileCacheRead</tt> to a <tt>TFile</tt> for the given <tt>TTree</tt>. A cache can be removed by setting the pointer <tt>TFileCacheRead</tt> to 0.<p/>
+Similarly, in <tt>TFile::GetCacheRead()</tt> an optional <tt>TObject*</tt> argument was added to obtain the <tt>TFileCacheRead</tt> from a <tt>TFile</tt>.<p/>
+In addition to the unassigned <tt>TFileCacheRead</tt> pointer, <tt>TFile</tt> will maintain a map of tree specific cache pointer.<p/>
+Backward compatibility in both functions is handled by making the <tt>TObject*</tt> argument optional. If it is not specified in the <tt>TFile::SetCacheRead()</tt> call, only the unassigned <tt>TFileCacheRead</tt> pointer is updated, otherwise the map and the unassigned cache are updated. In  <tt>TFile::GetCacheRead()</tt>, if an owner is not specified or doesn't exist in the files' cache map, the unassigned cache is returned, unless it is 0 and there is exactly one entry in the cache map.<p/>
+</li>
+</ul>
