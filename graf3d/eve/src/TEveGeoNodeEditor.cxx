@@ -170,7 +170,7 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    fVisLevel->SetShowSlider(kFALSE);
    fVisLevel->SetNELength(4);
    fVisLevel->Build();
-   fVisLevel->SetLimits(0, 10, 10, TGNumberFormat::kNESInteger);
+   fVisLevel->SetLimits(0, 30, 31, TGNumberFormat::kNESInteger);
    fVisLevel->SetToolTip("Level (depth) to which the geometry is traversed.\nWhen zero, maximum number of nodes to draw can be specified.");
    fVisLevel->Connect("ValueSet(Double_t)", "TEveGeoTopNodeEditor", this, "DoVisLevel()");
    AddFrame(fVisLevel, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
