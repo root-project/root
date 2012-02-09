@@ -80,10 +80,8 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
 
-  // Following pointers are only used during 
-  // construction and need not to be proxied
-  RooResolutionModel* _model   ; //! Original resolution model
-  RooRealVar* _convVar ;         //! Convolution variable
+  RooRealProxy _model ; // Original model
+  RooRealProxy _convVar ; // Convolution variable
 
   RooArgSet* parseIntegrationRequest(const RooArgSet& intSet, Int_t& coefCode, RooArgSet* analVars=0) const ;
 
@@ -112,7 +110,7 @@ protected:
 
   mutable RooAICRegistry _codeReg ;   //! Registry of analytical integration codes
 
-  ClassDef(RooAbsAnaConvPdf,1) // Abstract Composite Convoluted PDF
+  ClassDef(RooAbsAnaConvPdf,2) // Abstract Composite Convoluted PDF
 };
 
 #endif

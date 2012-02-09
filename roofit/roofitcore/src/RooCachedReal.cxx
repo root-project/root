@@ -51,7 +51,8 @@ RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal& _f
 RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs) :
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
-   _cacheObs("cacheObs","cacheObs",this,kFALSE,kFALSE)  
+   _cacheObs("cacheObs","cacheObs",this,kFALSE,kFALSE),
+   _useCdfBoundaries(kFALSE)
  { 
    // Constructor taking name, title and function to be cached and
    // fixed choice of variable to cache. To control granularity of the

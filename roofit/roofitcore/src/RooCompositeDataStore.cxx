@@ -118,6 +118,18 @@ Bool_t RooCompositeDataStore::valid() const
 
 
 //_____________________________________________________________________________
+void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) 
+{
+  // Forward recalculate request to all subsets
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize) ;
+  }
+}
+
+
+
+//_____________________________________________________________________________
 Int_t RooCompositeDataStore::fill()
 {
   // Forward fill request to appropriate subset

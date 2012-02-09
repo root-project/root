@@ -77,8 +77,6 @@ ClassImp(RooAbsAnaConvPdf)
 //_____________________________________________________________________________
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
   _isCopy(kFALSE),
-  _model(0),
-  _convVar(0),
   _convNormSet(0),
   _convSetIter(_convSet.createIterator())
 {
@@ -91,7 +89,8 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 
 				   const RooResolutionModel& model, RooRealVar& cVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
-  _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&cVar),
+  _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
+  _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
   _coefNormMgr(this,10),
@@ -108,8 +107,8 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 //_____________________________________________________________________________
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) : 
   RooAbsPdf(other,name), _isCopy(kTRUE),
-  _model(other._model), 
-  _convVar(other._convVar), 
+  _model("!model",this,other._model),
+  _convVar("!convVar",this,other._convVar),
   _convSet("!convSet",this,other._convSet),
   _basisList(other._basisList),
   _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
@@ -169,15 +168,15 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   }
 
   // Resolution model must support declared basis
-  if (!_model->isBasisSupported(expression)) {
+  if (!((RooResolutionModel*)_model.absArg())->isBasisSupported(expression)) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model " 
-			  << _model->GetName() 
+			  << _model.absArg()->GetName() 
 			  << " doesn't support basis function " << expression << endl ;
     return -1 ;
   }
 
   // Instantiate basis function
-  RooArgList basisArgs(*_convVar) ;
+  RooArgList basisArgs(_convVar.arg()) ;
   basisArgs.add(params) ;
 
   TString basisName(expression) ;
@@ -196,7 +195,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   _basisList.addOwned(*basisFunc) ;
 
   // Instantiate resModel x basisFunc convolution
-  RooAbsReal* conv = _model->convolution(basisFunc,this) ;
+  RooAbsReal* conv = ((RooResolutionModel*)_model.absArg())->convolution(basisFunc,this) ;
   if (!conv) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '" 
 			  << expression << "'" << endl ;
@@ -243,7 +242,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   _convSet.removeAll() ;
   _convSet.addOwned(newConvSet) ;
 
-  _model = (RooResolutionModel*) &newModel ;
+  _model.setArg((RooResolutionModel&)newModel) ;
   return kFALSE ;
 }
 
@@ -261,12 +260,12 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   // a (slower) generic generation context that uses accept/reject sampling
 
 
-  RooArgSet* modelDep = _model->getObservables(&vars) ;
+  RooArgSet* modelDep = _model.absArg()->getObservables(&vars) ;
   modelDep->remove(*convVar(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
 
-  if (dynamic_cast<RooTruthModel*>(_model)) {
+  if (dynamic_cast<RooTruthModel*>(_model.absArg())) {
     // Truth resolution model: use generic context explicitly allowing generation of convolution variable
     RooArgSet forceDirect(*convVar()) ;
     return new RooGenContext(*this,vars,prototype,auxProto,verbose,&forceDirect) ;
@@ -305,8 +304,8 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 
   // All direct generation of convolution arg if model is truth model
-  if (!TString(_convVar->GetName()).CompareTo(arg.GetName()) && 
-      dynamic_cast<RooTruthModel*>(_model)) {
+  if (!TString(_convVar.absArg()->GetName()).CompareTo(arg.GetName()) && 
+      dynamic_cast<RooTruthModel*>(_model.absArg())) {
     return kTRUE ;
   }
 

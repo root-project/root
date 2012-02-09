@@ -183,7 +183,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
 
-  _dataClone->store()->recalculateCache( _projDeps ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
 
   Double_t sumWeight(0) ;
   for (i=firstEvent ; i<lastEvent ; i+=stepSize) {

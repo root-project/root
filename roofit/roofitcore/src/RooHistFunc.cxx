@@ -88,6 +88,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     }
   }
   delete iter ;
+
 }
 
 

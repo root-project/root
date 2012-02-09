@@ -1157,7 +1157,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
 typedef RooVectorDataStore::RealVector* pRealVector ;
 //_____________________________________________________________________________
-void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs ) 
+void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) 
 {
   if (!_cache) return ;
 
@@ -1180,9 +1180,9 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs )
   RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
   std::auto_ptr<RooArgSet> nset( (RooArgSet*) _vars.snapshot(kFALSE) );
   if (projectedArgs) nset->remove(*projectedArgs,kFALSE,kTRUE);
-  // cout << "RooVectorDataStore::recalculateCache: _vars = " << _vars << " projected = " << (projectedArgs?*projectedArgs:RooArgSet()) <<  " nset = " << *nset << endl;
-  Int_t ne = numEntries() ;
-  for (int i=0 ; i<ne ; i++) {
+  //cout << "RooVectorDataStore::recalculateCache: _vars = " << _vars << " projected = " << (projectedArgs?*projectedArgs:RooArgSet()) <<  " nset = " << *nset << endl;
+  //Int_t ne = numEntries() ;
+  for (int i=firstEvent ; i<lastEvent ; i+=stepSize) {
     get(i) ;    
     Bool_t zeroWeight = (weight()==0) ;
     if (zeroWeight) {

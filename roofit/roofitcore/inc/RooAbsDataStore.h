@@ -102,7 +102,7 @@ public:
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) = 0 ;
   const RooArgSet& cachedVars() const { return _cachedVars ; }
   virtual void resetCache() = 0 ;
-  virtual void recalculateCache(const RooArgSet* /*proj*/=0) {} ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/) {} ;
 
   virtual void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
   Bool_t dirtyProp() const { return _doDirtyProp ; }

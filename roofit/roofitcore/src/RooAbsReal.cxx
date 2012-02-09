@@ -633,6 +633,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(*integral) ;
+      //cachedIntegral->disableCache(kTRUE) ;
       integral = cachedIntegral ;
     }
 
@@ -1151,10 +1152,11 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
   }
   
   // Make deep clone of self and attach to dataset observables
-  RooArgSet* origObs = getObservables(hist) ;  
-  //RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
-  //RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
-  const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
+  //RooArgSet* origObs = getObservables(hist) ;  
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
+  theClone->recursiveRedirectServers(*hist->get()) ;
+  //const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
 
   // Iterator over all bins of RooDataHist and fill weights
   Int_t onePct = hist->numEntries()/100 ;
@@ -1166,14 +1168,14 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
       ccoutP(Eval) << "." << flush ;
     }
     const RooArgSet* obs = hist->get(i) ;
-    Double_t binVal = /*theClone->*/getVal(normSet?normSet:obs)*scaleFactor ;
+    Double_t binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
     if (correctForBinSize) binVal*= hist->binVolume() ;
     hist->set(binVal) ;
   }
 
-  //delete cloneSet ;
-  const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*origObs) ;
-  delete origObs ;
+  delete cloneSet ;
+  //const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*origObs) ;
+  //delete origObs ;
 
   return hist;
 }
@@ -1944,7 +1946,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Construct optimized data weighted average
     RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
-    dwa.constOptimizeTestStatistic(Activate) ;
+
+    // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
+    dwa.constOptimizeTestStatistic(Activate,kFALSE) ;
 
     RooRealBinding projBind(dwa,*plotVar) ;
     RooScaledFunc scaleBind(projBind,o.scaleFactor);
