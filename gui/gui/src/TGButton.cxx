@@ -220,6 +220,7 @@ void TGButton::SetStyle(UInt_t newstyle)
    // Set the button style (modern or classic).
 
    fStyle = newstyle;
+   fBgndColor = fBackground;
    if (fStyle > 0) {
       ChangeOptions(GetOptions() & ~kRaisedFrame);
    }
@@ -233,6 +234,7 @@ void TGButton::SetStyle(const char *style)
 {
    // Set the button style (modern or classic).
 
+   fBgndColor = fBackground;
    if (style && strstr(style, "modern")) {
       fStyle = 1;
       ChangeOptions(GetOptions() & ~kRaisedFrame);
@@ -696,10 +698,8 @@ void TGTextButton::DoRedraw()
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
 
-   if (fStyle > 0)
+   if ((fStyle > 0) && !(fOptions & kOwnBackground))
       gVirtualX->SetWindowBackground(fId, fBgndColor);
-   else
-      gVirtualX->SetWindowBackground(fId, fBackground);
    TGFrame::DoRedraw();
 
    if (fTMode & kTextLeft) {
@@ -1021,10 +1021,8 @@ void TGPictureButton::DoRedraw()
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
 
-   if (fStyle > 0)
+   if ((fStyle > 0) && !(fOptions & kOwnBackground))
       gVirtualX->SetWindowBackground(fId, fBgndColor);
-   else
-      gVirtualX->SetWindowBackground(fId, fBackground);
    TGFrame::DoRedraw();
 
    if (fState == kButtonDown || fState == kButtonEngaged) {
