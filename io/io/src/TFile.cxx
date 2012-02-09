@@ -1732,7 +1732,7 @@ Int_t TFile::Recover()
       bufread = header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
-         Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
+         Error("Recover","Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
          break;
       }
       if (nbytes < 0) {
