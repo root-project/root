@@ -5561,7 +5561,7 @@ int main(int argc, char **argv)
                // filter out undesirable options
                if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
                    && strcmp("-p", argv[ic])) {
-                  clingArgs.push_back(argv[ic++]);
+                  clingArgs.push_back(argv[ic]);
                }
                argvv[argcc++] = argv[ic++];
             } else {
