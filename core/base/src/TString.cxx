@@ -707,8 +707,8 @@ namespace {
       uint64_t k1 = 0;
       uint64_t k2 = 0;
 
-      switch(len & 15)
-         {
+      switch(len & 15) {
+         // intentionally falling through in all cases
          case 15: k2 ^= uint64_t(tail[14]) << 48;
          case 14: k2 ^= uint64_t(tail[13]) << 40;
          case 13: k2 ^= uint64_t(tail[12]) << 32;
@@ -727,7 +727,7 @@ namespace {
          case  2: k1 ^= uint64_t(tail[ 1]) << 8;
          case  1: k1 ^= uint64_t(tail[ 0]) << 0;
             k1 *= c1; k1  = ROTL64(k1,31); k1 *= c2; h1 ^= k1;
-         };
+      };
 
       //----------
       // finalization
