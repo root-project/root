@@ -194,7 +194,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
    // TMinuit level is shift by 1 -1 means 0;
    arglist[0] = PrintLevel() - 1;
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
-   if (PrintLevel() == 0) SuppressMinuitWarnings();
+   if (PrintLevel() <= 0) SuppressMinuitWarnings();
 }
 
 

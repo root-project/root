@@ -4130,7 +4130,7 @@ L30:
          fG2[i-1]  = sag*2 / (d*d);
          fGrd[i-1] = (fs1 - fs2) / (d*2);
          if (ldebug) {
-            Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],fG2[i-1],fGrd[i-1],sag);
+            Printf("%4d%2d%12.5g%12.5g%12.5g%12.5g%12.5g",i,idrv,fGstep[i-1],d,fG2[i-1],fGrd[i-1],sag);
          }
          if (fGstep[i-1] > 0) fGstep[i-1] =  TMath::Abs(d);
          else                 fGstep[i-1] = -TMath::Abs(d);
