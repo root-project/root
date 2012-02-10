@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
-abstract.root: writeAbstract_cxx.$(DllSuf) Abstract.h
+abstract.root: writeAbstract_cxx.$(DllSuf) abstract.h
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeAbstract.cxx+ > writeAbstract.log 2>&1 
 
 inherit.root: write.C marker_h.$(DllSuf)
@@ -72,7 +72,7 @@ read.log: read.C marker_h.$(DllSuf) inherit.root
 rewrite.log: rewrite.C marker_h.$(DllSuf) inherit.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l rewrite.C > rewrite.log 2>&1 
 
-readAbstract.log: readAbstract_cxx.$(DllSuf)
+readAbstract.log: readAbstract_cxx.$(DllSuf) abstract.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l readAbstract.cxx+ > readAbstract.log 2>&1 
 
 read: read.log
