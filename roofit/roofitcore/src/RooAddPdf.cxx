@@ -929,7 +929,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   // Now retrieve codes for integration over common set of analytically integrable observables for each component
   _pdfIter->Reset() ;
   n=0 ;
-  Int_t* subCode = new Int_t[_pdfList.getSize()] ;
+  std::vector<Int_t> subCode(_pdfList.getSize());
   Bool_t allOK(kTRUE) ;
   while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     RooArgSet subAnalVars ;
@@ -945,7 +945,6 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     n++ ;
   }  
   if (!allOK) {
-    delete[] subCode ;
     delete avIter ;
     return 0 ;
   }
@@ -955,9 +954,8 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
   // Store set of variables analytically integrated
   RooArgSet* intSet = new RooArgSet(allAnalVars) ;
-  Int_t masterCode = _codeReg.store(subCode,_pdfList.getSize(),intSet)+1 ;
+  Int_t masterCode = _codeReg.store(subCode,intSet)+1 ;
 
-  delete[] subCode ;
   delete avIter ;
 
   return masterCode ;
@@ -977,8 +975,8 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 
   // Retrieve analytical integration subCodes and set of observabels integrated over
   RooArgSet* intSet ;
-  const Int_t* subCode = _codeReg.retrieve(code-1,intSet) ;
-  if (!subCode) {
+  const std::vector<Int_t>& subCode = _codeReg.retrieve(code-1,intSet) ;
+  if (subCode.empty()) {
     coutE(InputArguments) << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code << endl ;
     assert(0) ;    
   }

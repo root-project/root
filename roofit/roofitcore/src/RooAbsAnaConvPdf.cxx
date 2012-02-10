@@ -447,11 +447,12 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   }
 
 
+
   // Store integration configuration in registry
   Int_t masterCode(0) ;
-  Int_t tmp(0) ;
+  std::vector<Int_t> tmp(1, 0) ;
 
-  masterCode = _codeReg.store(&tmp,1,intCoefSet,intConvSet,normCoefSet,normConvSet)+1 ; // takes ownership of all sets
+  masterCode = _codeReg.store(tmp, intCoefSet, intConvSet, normCoefSet, normConvSet) + 1 ; // takes ownership of all sets
 
   analVars.add(*allDeps) ;
   delete allDeps ;

@@ -120,6 +120,33 @@ Double_t RooHistFunc::evaluate() const
   return ret ;
 }
 
+//_____________________________________________________________________________
+Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const 
+{
+  // Only handle case of maximum in all variables
+  RooAbsCollection* common = _depList.selectCommon(vars) ;
+  if (common->getSize()==_depList.getSize()) {
+    delete common ;
+    return 1;
+  }
+  delete common ;
+  return 0 ;
+}
+
+//_____________________________________________________________________________
+Double_t RooHistFunc::maxVal(Int_t code) const 
+{
+  assert(code==1) ;
+
+  Double_t max(-1) ;
+  for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
+    _dataHist->get(i) ;
+    Double_t wgt = _dataHist->weight() ;
+    if (wgt>max) max=wgt ;
+  }
+
+  return max*1.05 ;
+}
 
 //_____________________________________________________________________________
 Double_t RooHistFunc::totVolume() const

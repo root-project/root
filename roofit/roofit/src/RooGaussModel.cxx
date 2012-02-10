@@ -210,8 +210,8 @@ Double_t RooGaussModel::evaluate() const
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 8th form tau = " << tau << endl ;
     Double_t result(0);   
     int sgn = ( basisType == coshBasis ? +1 : -1 );
-    if (basisSign!=Minus) result += 0.5*(evalCerfRe(0,-u,c*(1-_y))+sgn*evalCerfRe(0,-u,c*(1+_y))) ; 
-    if (basisSign!=Plus)  result += 0.5*(evalCerfRe(0, u,c*(1-_y))+sgn*evalCerfRe(0, u,c*(1+_y))) ; 
+    if (basisSign!=Minus) result += 0.5*(    evalCerfRe(0,-u,c*(1-_y))+sgn*evalCerfRe(0,-u,c*(1+_y))) ; 
+    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerfRe(0, u,c*(1-_y))+    evalCerfRe(0, u,c*(1+_y))) ; 
     if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 8 " << endl; 
     return result ;
   }
@@ -392,8 +392,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (verboseEval()>0) {cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 8th form tau=" << tau << endl ; }
     Double_t result(0) ;
     int sgn = ( basisType == coshBasis ? +1 : -1 );
-    if (basisSign!=Minus) result += 0.5*(evalCerfInt(+1,0,tau/(1-_y),-umin,-umax,c*(1-_y)).re()+ sgn*evalCerfInt(+1,0,tau/(1+_y),-umin,-umax,c*(1+_y)).re());
-    if (basisSign!=Plus)  result += 0.5*(evalCerfInt(-1,0,tau/(1-_y), umin, umax,c*(1-_y)).re()+ sgn*evalCerfInt(-1,0,tau/(1+_y), umin, umax,c*(1+_y)).re());
+    if (basisSign!=Minus) result += 0.5*(    evalCerfInt(+1,0,tau/(1-_y),-umin,-umax,c*(1-_y)).re()+ sgn*evalCerfInt(+1,0,tau/(1+_y),-umin,-umax,c*(1+_y)).re());
+    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerfInt(-1,0,tau/(1-_y), umin, umax,c*(1-_y)).re()+     evalCerfInt(-1,0,tau/(1+_y), umin, umax,c*(1+_y)).re());
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 6 " << endl; }
     return result*ssfInt ;
   }

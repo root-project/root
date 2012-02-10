@@ -13,7 +13,7 @@
  *****************************************************************************/
 #ifndef ROO_EFF_GEN_CONTEXT
 #define ROO_EFF_GEN_CONTEXT
-                                                                                                                      
+
 #include "RooAbsGenContext.h"
 class RooAbsPdf;
 class RooArgSet;
@@ -22,7 +22,7 @@ class RooAbsReal;
 
 class RooEffGenContext : public RooAbsGenContext {
 public:
-  RooEffGenContext(const RooAbsPdf &model, 
+  RooEffGenContext(const RooAbsPdf &model,
                    const RooAbsPdf &pdf,const RooAbsReal& eff,
                    const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
@@ -31,11 +31,14 @@ public:
 protected:
   void initGenerator(const RooArgSet &theEvent);
   void generateEvent(RooArgSet &theEvent, Int_t remaining);
-private:
-   RooArgSet *_cloneSet;           // Internal clone of p.d.f.
-   RooAbsReal *_eff;               // Pointer to efficiency function
-   RooAbsGenContext *_generator;   // Generator context for p.d.f
 
-   ClassDef(RooEffGenContext,0) // Context for generating a dataset from a PDF
+private:
+   RooArgSet* _cloneSet;           // Internal clone of p.d.f.
+   RooAbsReal* _eff;               // Pointer to efficiency function
+   RooAbsGenContext* _generator;   // Generator context for p.d.f
+   RooArgSet* _vars;               // Vars to generate
+   double _maxEff;                 // Maximum of efficiency in vars
+
+   ClassDef(RooEffGenContext, 1) // Context for generating a dataset from a PDF
 };
 #endif

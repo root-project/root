@@ -2030,19 +2030,20 @@ Int_t RooProdPdf::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
   // Now find direct integrator for relevant components ;
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
-  Int_t code[64], n(0) ;
+  std::vector<Int_t> code;
+  code.reserve(64);
   while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
     RooArgSet pdfDirect ;
-    code[n] = pdf->getGenerator(directSafe,pdfDirect,staticInitOK) ;
-    if (code[n]!=0) {
+    Int_t pdfCode = pdf->getGenerator(directSafe,pdfDirect,staticInitOK);
+    code.push_back(pdfCode);
+    if (pdfCode != 0) {
       generateVars.add(pdfDirect) ;
     }
-    n++ ;
   }
 
 
   if (generateVars.getSize()>0) {
-    Int_t masterCode = _genCode.store(code,n) ;
+    Int_t masterCode = _genCode.store(code) ;
     return masterCode+1 ;    
   } else {
     return 0 ;
@@ -2059,7 +2060,7 @@ void RooProdPdf::initGenerator(Int_t code)
 
   if (!_useDefaultGen) return ;
 
-  const Int_t* codeList = _genCode.retrieve(code-1) ;
+  const std::vector<Int_t>& codeList = _genCode.retrieve(code-1) ;
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t i(0) ;
@@ -2082,7 +2083,7 @@ void RooProdPdf::generateEvent(Int_t code)
 
   if (!_useDefaultGen) return ;
 
-  const Int_t* codeList = _genCode.retrieve(code-1) ;
+  const std::vector<Int_t>& codeList = _genCode.retrieve(code-1) ;
   _pdfIter->Reset() ;
   RooAbsPdf* pdf ;
   Int_t i(0) ;
