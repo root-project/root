@@ -592,7 +592,6 @@ void PiecewiseInterpolation::Streamer(TBuffer &R__b)
 }
 
 
-
 /*
 //_____________________________________________________________________________
 void PiecewiseInterpolation::printMetaArgs(ostream& os) const 

@@ -19,6 +19,7 @@ fi
 
 echo "Creating directory structure..."
 mkdir -p $DIR/config
+mkdir -p $DIR/config/examples
 mkdir -p $DIR/data
 mkdir -p $DIR/results
 
@@ -27,9 +28,21 @@ cp $ROOTSYS/etc/HistFactorySchema.dtd $DIR/config/
 cp $ROOTSYS/tutorials/histfactory/example.xml $DIR/config/
 cp $ROOTSYS/tutorials/histfactory/example_channel.xml $DIR/config/
 
+cp $ROOTSYS/etc/HistFactorySchema.dtd $DIR/config/examples
+cp $ROOTSYS/tutorials/histfactory/example_Expression.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_Expression_channel.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_ShapeSys.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_ShapeSys_channel.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_ShapeSys2D.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_ShapeSys2D_channel.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_DataDriven.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_DataDriven_signalRegion.xml $DIR/config/examples/
+cp $ROOTSYS/tutorials/histfactory/example_DataDriven_controlRegion.xml $DIR/config/examples/
+
+
 #echo "Making skeleton data files..."
 root -b -q $ROOTSYS/tutorials/histfactory/makeExample.C
-mv example.root $DIR/data
+mv ShapeSys.root ShapeSys2D.root StatError.root  dataDriven.root example.root $DIR/data
 
 echo "Done!"
 #echo "You can run the example with: hist2workspace $DIR/config/example.xml"
