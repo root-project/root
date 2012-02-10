@@ -941,8 +941,9 @@ Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
    //---------------------------------------------------------------------------
    R__LOCKGUARD(gCINTMutex);
 
-   if( !in_memory_cl || !in_memory_cl->GetSchemaRules() )
+   if( !in_memory_cl || !in_memory_cl->GetSchemaRules() ) {
       return kFALSE;
+   }
 
    const TObjArray* rules;
 
@@ -1296,11 +1297,20 @@ void TStreamerInfo::BuildOld()
             // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
             // case the base class contains a member used as an array dimension in the derived classes.
             Int_t version = base->GetBaseVersion();
-            TStreamerInfo* infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
+            // Calculate the offset using the 'real' base class name (as opposed to the 
+            // '@@emulated' in the case of the emulation of an abstract base class.
+            Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
+            TStreamerInfo* infobase;
+            if (fClass->TestBit(TClass::kIsEmulation) && (baseclass->Property() & kIsAbstract)) {
+               infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
+               baseclass = infobase->GetClass();
+            }
+            else {
+               infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
+            }
             if (infobase && infobase->GetTypes() == 0) {
                infobase->BuildOld();
             }
-            Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
 
             if (infobase && shouldHaveInfoLoc && baseclass->TestBit(TClass::kIsEmulation) ) {
                if ( (fNVirtualInfoLoc + infobase->fNVirtualInfoLoc) > virtualInfoLocAlloc ) {
@@ -1317,7 +1327,7 @@ void TStreamerInfo::BuildOld()
                }
                fNVirtualInfoLoc += infobase->fNVirtualInfoLoc;
             }
-            // FIXME: Presumably we're in emulated mode, but is still does not make any sense
+            // FIXME: Presumably we're in emulated mode, but it still does not make any sense
             // shouldn't it be element->SetNewType(-1) ?
             if (baseOffset < 0) {
                baseOffset = 0;
@@ -3156,7 +3166,13 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
             }
             Int_t base_offset = curelem->GetOffset();
             Int_t local_offset = 0;
-            element = ((TStreamerInfo*)baseClass->GetStreamerInfo())->GetStreamerElement(datamember, local_offset);
+            TStreamerInfo *baseInfo;
+            if (baseClass->Property() & kIsAbstract) {
+               baseInfo = (TStreamerInfo*)baseClass->GetStreamerInfoAbstractEmulated();
+            } else {
+               baseInfo = (TStreamerInfo*)baseClass->GetStreamerInfo();
+            }
+            element = baseInfo->GetStreamerElement(datamember, local_offset);
             if (element) {
                offset = base_offset + local_offset;
                return element;
@@ -3614,6 +3630,14 @@ void* TStreamerInfo::New(void *obj)
          break;
 
          case kBase:
+         {
+            if (cle->Property() & kIsAbstract) {
+               cle->GetStreamerInfoAbstractEmulated()->New(eaddr);
+            } else {
+               cle->New(eaddr);               
+            }
+            break;
+         }
          case kObject:
          case kAny:
          case kTObject:
@@ -3774,11 +3798,19 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
          }
       }
 
-      if (etype == kObject || etype == kAny || etype == kBase ||
+      if (etype == kBase) {
+         if (cle->Property() & kIsAbstract) {
+            cle->GetStreamerInfoAbstractEmulated()->Destructor(eaddr, kTRUE);
+         } else {
+            cle->Destructor(eaddr, kTRUE);
+         }
+     }
+
+      if (etype == kObject || etype == kAny ||
           etype == kTObject || etype == kTString || etype == kTNamed) {
          // A data member is destroyed, but not deleted.
-         cle->Destructor(eaddr, kTRUE);
-      }
+         cle->Destructor(eaddr, kTRUE); 
+     }
 
       if (etype == kSTL) {
          // A data member is destroyed, but not deleted.

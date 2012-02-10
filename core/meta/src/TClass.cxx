@@ -1673,7 +1673,20 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
 
    R__LOCKGUARD(gCINTMutex);
 
-   TIter next(GetStreamerInfo()->GetElements());
+   TVirtualStreamerInfo *info;
+   if (Property() & kIsAbstract) {
+      info = GetStreamerInfoAbstractEmulated();
+   } else {
+      info = GetStreamerInfo();
+   }
+   if (!info) {
+      // This class is abstract, but we don't yet have a SteamerInfo for it ...
+      Error("BuildEmulatedRealData","Missing StreamerInfo for %s",GetName());      
+      // Humm .. no information ... let's bail out
+      return;
+   }
+
+   TIter next(info->GetElements());
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
       Int_t etype    = element->GetType();
@@ -3473,10 +3486,10 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
-TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
+TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 {
    // returns a pointer to the TVirtualStreamerInfo object for version
-   // If the object doest not exist, it is created
+   // If the object does not exist, it is created
    //
    // Note: There are two special version numbers:
    //
@@ -3493,12 +3506,14 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
 
    // Handle special version, 0 means currently loaded version.
    // Warning:  This may be -1 for an emulated class.
+   // If version == -2, the user is requested the emulated streamerInfo
+   // for an abstract base class eventhough we have a dictionary for it.
    if (version == 0) {
       version = fClassVersion;
    }
    if (!fStreamerInfo) {
       TMmallocDescTemp setreset;
-      fStreamerInfo = new TObjArray(version + 10, -1);
+      fStreamerInfo = new TObjArray(version + 10, -2);
    } else {
       Int_t ninfos = fStreamerInfo->GetSize();
       if ((version < -1) || (version >= ninfos)) {
@@ -3510,9 +3525,9 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
    TVirtualStreamerInfo* sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
    if (!sinfo && (version != fClassVersion)) {
       // When the requested version does not exist we return
-      // the TVirtualStreamerInfo for the currently loaded class vesion.
+      // the TVirtualStreamerInfo for the currently loaded class version.
       // FIXME: This arguably makes no sense, we should warn and return nothing instead.
-      // Note: This is done for STL collactions
+      // Note: This is done for STL collections
       // Note: fClassVersion could be -1 here (for an emulated class).
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
@@ -3521,6 +3536,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
          // This class is abstract, we can not build a proper StreamerInfo unless we already have
          // the list of real data.
          // We have to wait until one of the derived class creates its StreamerInfo.
+         
          return 0;
       }
       // We just were not able to find a streamer info, we have to make a new one.
@@ -3556,6 +3572,69 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
    // Cache the current info if we now have it.
    if (version == fClassVersion) {
       fCurrentInfo = sinfo;
+   }
+   return sinfo;
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* = 0 */) const
+{
+   // For the case where the requestor class is emulated and this class is abstract,
+   // returns a pointer to the TVirtualStreamerInfo object for version with an emulated
+   // representation whether or not the class is loaded.
+   //
+   // If the object does not exist, it is created
+   //
+   // Note: There are two special version numbers:
+   //
+   //       0: Use the class version from the currently loaded class library.
+   //      -1: Assume no class library loaded (emulated class).
+   //
+   // Warning:  If we create a new streamer info, whether or not the build
+   //           optimizes is controlled externally to us by a global variable!
+   //           Don't call us unless you have set that variable properly
+   //           with TStreamer::Optimize()!
+   //
+
+   R__LOCKGUARD(gCINTMutex);
+
+   TString newname( GetName() );
+   newname += "@@emulated";
+
+   TClass *emulated = TClass::GetClass(newname);
+
+   TVirtualStreamerInfo* sinfo = 0;
+
+   if (emulated) {
+      sinfo = emulated->GetStreamerInfo(version);
+   }
+   if (!sinfo) {
+      // The emulated version of the streamerInfo is explicitly requested and has
+      // not been built yet.
+
+      sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
+      if (!sinfo && (version != fClassVersion)) {
+         // When the requested version does not exist we return
+         // the TVirtualStreamerInfo for the currently loaded class version.
+         // FIXME: This arguably makes no sense, we should warn and return nothing instead.
+         sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
+      }
+      if (!sinfo) {
+         // Let's take the first available StreamerInfo as a start
+         Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
+            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
+         }
+      }
+      if (sinfo) {
+         sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
+         
+         sinfo->SetClass(0);
+         sinfo->SetName( newname );
+         sinfo->BuildCheck();
+         sinfo->BuildOld();
+         sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
+      }
    }
    return sinfo;
 }
@@ -5401,7 +5480,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    // Cache this treamer info
    //----------------------------------------------------------------------------
    if (!arr) {
-      arr = new TObjArray(16, -1);
+      arr = new TObjArray(16, -2);
       if (!fConversionStreamerInfo) {
          fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
       }

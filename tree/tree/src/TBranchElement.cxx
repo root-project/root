@@ -1861,7 +1861,7 @@ void TBranchElement::InitInfo()
       // Check if we're dealing with the name change
       //------------------------------------------------------------------------
       TClass* targetClass = 0;
-      if( fTargetClass.GetClassName()[0]) {
+      if( fTargetClass.GetClassName()[0] ) {
          targetClass = fTargetClass;
          if( !targetClass ) {
             Error( "InitInfo", "The target class dictionary is not present!" );
@@ -1870,12 +1870,26 @@ void TBranchElement::InitInfo()
       } else {
          targetClass = cl;
       }
-
       if (cl) {
          //---------------------------------------------------------------------
          // Get the streamer info for given version
          //---------------------------------------------------------------------
          {
+            if ( (cl->Property() & kIsAbstract) && cl == targetClass) {
+               TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
+               if (parent && parent != this && !parent->GetClass()->IsLoaded() ) { 
+                  // Our parent's class is emulated and we represent an abstract class.
+                  // and the target class has not been set explicilty.
+                  TString target = cl->GetName();
+                  target += "@@emulated";
+                  fTargetClass.SetName(target);
+                  
+                  if (!fTargetClass) {
+                     cl->GetStreamerInfoAbstractEmulated(fClassVersion);
+                  }
+                  targetClass = fTargetClass;
+               }
+            }
             if( targetClass != cl ) {
                fInfo = (TStreamerInfo*)targetClass->GetConversionStreamerInfo( cl, fClassVersion );
             } else {
@@ -2907,7 +2921,7 @@ void TBranchElement::InitializeOffsets()
             // Get our parent class.
             TClass* pClass = 0;
             // First check whether this sub-branch is part of the 'cache' (because the data member it
-            // represent is no longer in the current class layout.
+            // represents is no longer in the current class layout.
             TStreamerInfo *subInfo = subBranch->GetInfoImp();
             if (subInfo && subBranch->TestBit(kCache)) { // subInfo->GetElements()->At(subBranch->GetID())->TestBit(TStreamerElement::kCache)) {
                pClass = ((TStreamerElement*)subInfo->GetElements()->At(0))->GetClassPointer();
@@ -2918,6 +2932,19 @@ void TBranchElement::InitializeOffsets()
                   // -- Parent branch is a base class branch.
                   // FIXME: Is using branchElem here the right thing?
                   pClass = branchElem->GetClassPointer();
+                  if (pClass->Property() & kIsAbstract) {
+                     // the class is abstract, let see if the 
+                     
+                     TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
+                     if (parent && parent != this && !parent->GetClass()->IsLoaded() ) { 
+                        // Our parent's class is emulated and we represent an abstract class.
+                        // and the target class has not been set explicilty.
+                        TString target = pClass->GetName();
+                        target += "@@emulated";
+                        
+                        pClass = TClass::GetClass(target);
+                     }
+                  }
                } else {
                   // -- Parent branch is *not* a base class branch.
                   // FIXME: This sometimes returns a null pointer.
@@ -2949,6 +2976,7 @@ void TBranchElement::InitializeOffsets()
                   //Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
             }
+
 
             //------------------------------------------------------------------
             // If we have the are the sub-branch of the TBranchSTL, we need
