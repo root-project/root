@@ -159,6 +159,14 @@
 #pragma link C++ typedef THnSparseS;
 #pragma link C++ typedef THnSparseC;
 
+#pragma link C++ typedef THnD;
+#pragma link C++ typedef THnF;
+#pragma link C++ typedef THnL;
+#pragma link C++ typedef THnI;
+#pragma link C++ typedef THnS;
+#pragma link C++ typedef THnC;
+
+
 // for autoloading of typedef's (make some dummy ifdef) 
 // which are not recognized by the autoloading 
 #ifdef DO_AUTOLOAD_TYPEDEF
@@ -168,6 +176,13 @@
 #pragma link C++ class THnSparseI;
 #pragma link C++ class THnSparseS;
 #pragma link C++ class THnSparseC;
+
+#pragma link C++ class THnD;
+#pragma link C++ class THnF;
+#pragma link C++ class THnL;
+#pragma link C++ class THnI;
+#pragma link C++ class THnS;
+#pragma link C++ class THnC;
 #endif
 
 
