@@ -51,6 +51,26 @@ maximal boxes' size when an histogram is drawn with the option BOX.
 </li>
 </ul>
 
+<h3>TGraph2DPainter</h3>
+<ul>
+<li>
+Because of the range along the Z axis, the following macro produced a wrong plot. 
+The markers' colors did not match the palette and some of them were not clipped.
+<pre>
+{
+   Double_t x[10] = {1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
+   Double_t y[10] = {.4,.5,.1,.3,.8,.4,.5,.6,.2,.1};
+   Double_t z[10] = {1.,2.,3.,4.,5.,6.,7.3,8.,9.,10.};
+   TGraph2D *gr = new TGraph2D("graph2d","graph2d",10,x,y,z);
+   gr->SetMarkerStyle(20);
+   gr->SetMaximum(7.5);
+   gr->SetMinimum(2.5);
+   gr->Draw("zpcol");
+}
+</pre>
+</li>
+</ul>
+   
 <h3>TH1</h3>
 <ul>
 <li>
