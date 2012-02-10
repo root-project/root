@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog inherit*.root
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += read rewrite
+TEST_TARGETS += read rewrite readAbstract
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -60,18 +60,27 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
+abstract.root: writeAbstract_cxx.$(DllSuf) Abstract.h
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeAbstract.cxx+ > writeAbstract.log 2>&1 
+
 inherit.root: write.C marker_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 2>&1 
-	
+
 read.log: read.C marker_h.$(DllSuf) inherit.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l read.C > read.log 2>&1 
 
 rewrite.log: rewrite.C marker_h.$(DllSuf) inherit.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l rewrite.C > rewrite.log 2>&1 
 
+readAbstract.log: readAbstract_cxx.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l readAbstract.cxx+ > readAbstract.log 2>&1 
+
 read: read.log
 	$(TestDiff)
 
 rewrite: rewrite.log
+	$(TestDiff)
+
+readAbstract: readAbstract.log
 	$(TestDiff)
 
