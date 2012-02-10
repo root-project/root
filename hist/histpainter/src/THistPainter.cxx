@@ -5147,9 +5147,15 @@ void THistPainter::PaintErrors(Option_t *)
          delta = fH->GetBinWidth(k);
          ex1 = xerror*delta;
       }
-      ey1 = factor*fH->GetBinError(k);
+      if (fH->GetBinErrorOption() == TH1::kNormal) { 
+         ey1 = factor*fH->GetBinError(k);
+         ey2 = ey1; 
+      }
+      else { 
+         ey1 = factor*fH->GetBinErrorLow(k);
+         ey2 = factor*fH->GetBinErrorUp(k);
+      }
       ex2 = ex1;
-      ey2 = ey1;
 
       xi4 = xp;
       xi3 = xp;
@@ -5339,7 +5345,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    // Paint the Errors
    Double_t x, ex, x1, x2;
    Double_t y, ey, y1, y2;
-   Double_t z, ez, z1, z2;
+   Double_t z, ez1, ez2, z1, z2;
    Double_t temp1[3],temp2[3];
    Double_t xyerror;
    if (Hoption.Error == 110) {
@@ -5382,9 +5388,16 @@ void THistPainter::Paint2DErrors(Option_t *)
             else        x2 = Hparam.xmin;
          }
          z  = fH->GetBinContent(bin);
-         ez = fH->GetBinError(bin);
-         z1 = z-ez;
-         z2 = z+ez;
+         if (fH->GetBinErrorOption() == TH1::kNormal) {
+            ez1 = fH->GetBinError(bin);
+            ez2 = ez1;
+         }
+         else {
+            ez1 = fH->GetBinErrorLow(bin);
+            ez2 = fH->GetBinErrorUp(bin);
+         }
+         z1 = z - ez1;
+         z2 = z + ez2; 
          if (Hoption.Logz) {
             if (z > 0)   z = TMath::Log10(z);
             else         z = Hparam.zmin;
@@ -5803,9 +5816,15 @@ Int_t THistPainter::PaintInit()
          ymin = TMath::Min(ymin,c1);
       }
       if (Hoption.Error) {
-         e1 = fH->GetBinError(i);
+         if (fH->GetBinErrorOption() == TH1::kNormal) 
+            e1 = fH->GetBinError(i);
+         else 
+            e1 = fH->GetBinErrorUp(i); 
          if (e1 > 0) nonNullErrors++;
          ymax = TMath::Max(ymax,c1+e1);
+         if (fH->GetBinErrorOption() != TH1::kNormal) 
+            e1 = fH->GetBinErrorLow(i);
+
          if (Hoption.Logy) {
             if (c1-e1>0.01*TMath::Abs(c1)) ymin = TMath::Min(ymin,c1-e1);
          } else {

@@ -76,6 +76,15 @@ class TVirtualHistPainter;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
+public: 
+
+   // enumeration specifying type of statistics for bin errors
+   enum  EBinErrorOpt { 
+         kNormal = 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
+         kPoisson = 1 ,  // errors from Poisson interval at 68.3% (1 sigma)
+         kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)            
+   };
+
 protected:
     Int_t         fNcells;          //number of bins(1D), cells (2D) +U/Overflows
     TAxis         fXaxis;           //X axis descriptor
@@ -101,6 +110,7 @@ protected:
     Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        //!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
+    EBinErrorOpt  fBinStatErrOpt;   //option for bin statistical errors 
     static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
@@ -158,6 +168,8 @@ public:
    enum { 
       kNstat       = 13  // size of statistics data (up to TProfile3D)
    };
+
+
 
    TH1(const TH1&);
    virtual ~TH1();
@@ -237,6 +249,9 @@ public:
    virtual Double_t GetBinError(Int_t bin) const;
    virtual Double_t GetBinError(Int_t binx, Int_t biny) const;
    virtual Double_t GetBinError(Int_t binx, Int_t biny, Int_t binz) const;
+   virtual Double_t GetBinErrorLow(Int_t bin) const;
+   virtual Double_t GetBinErrorUp(Int_t bin) const;
+   virtual EBinErrorOpt  GetBinErrorOption() const { return fBinStatErrOpt; }
    virtual Double_t GetBinLowEdge(Int_t bin) const {return fXaxis.GetBinLowEdge(bin);}
    virtual Double_t GetBinWidth(Int_t bin) const {return fXaxis.GetBinWidth(bin);}
    virtual Double_t GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx=0, Int_t lastx=0,Double_t maxdiff=0) const;
@@ -329,6 +344,7 @@ public:
    virtual void     SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
 			    const Double_t *zBins);
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
+   virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content);
@@ -370,7 +386,7 @@ public:
    void             UseCurrentStyle();
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
-   ClassDef(TH1,6)  //1-Dim histogram base class
+   ClassDef(TH1,7)  //1-Dim histogram base class
 };
 
 //________________________________________________________________________

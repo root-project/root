@@ -42,6 +42,7 @@
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
+#include "Math/QuantFuncMathCore.h"
 
 //______________________________________________________________________________
 /* Begin_Html
@@ -557,6 +558,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fMinimum       = -1111;
    fBufferSize    = 0;
    fBuffer        = 0;
+   fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -731,6 +733,7 @@ void TH1::Build()
    fMinimum       = -1111;
    fBufferSize    = 0;
    fBuffer        = 0;
+   fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -8001,6 +8004,71 @@ Double_t TH1::GetBinError(Int_t bin) const
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetBinErrorLow(Int_t bin) const
+{
+   //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
+   //             ==================================================
+   //  
+   //    The error will depend on the statistic option used will return 
+   //     the binContent - lower interval value
+   //
+   //
+   //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (fBinStatErrOpt == kNormal || fSumw2.fN) return GetBinError(bin);
+   if (bin < 0) bin = 0;
+   if (bin >= fNcells) bin = fNcells-1;
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
+   Double_t alpha = 1.- 0.682689492;
+   if (fBinStatErrOpt == kPoisson2) alpha = 0.05; 
+
+   Double_t c = GetBinContent(bin);
+   Int_t n = int(c);  
+   if (n < 0) { 
+      Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
+      ((TH1*)this)->fBinStatErrOpt = kNormal;
+      return GetBinError(bin);
+   }
+
+   if (n == 0) return 0; 
+   return c - ROOT::Math::gamma_quantile( alpha/2, n, 1.);   
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetBinErrorUp(Int_t bin) const
+{
+   //   -*-*-*-*-*Return lower error associated to bin number bin*-*-*-*-*
+   //             ==================================================
+   //  
+   //    The error will depend on the statistic option used will return 
+   //     the binContent - lower interval value
+   //
+   //
+   //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   if (fBinStatErrOpt == kNormal || fSumw2.fN) return GetBinError(bin);
+   if (bin < 0) bin = 0;
+   if (bin >= fNcells) bin = fNcells-1;
+   if (fBuffer) ((TH1*)this)->BufferEmpty();
+
+   Double_t alpha = 1.- 0.682689492;
+   if (fBinStatErrOpt == kPoisson2) alpha = 0.05; 
+
+   Double_t c = GetBinContent(bin);
+   Int_t n = int(c);  
+   if (n < 0) { 
+      Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
+      ((TH1*)this)->fBinStatErrOpt = kNormal;
+      return GetBinError(bin);
+   }
+
+   // return an upper limit for N == 0
+   if (n == 0) return ROOT::Math::gamma_quantile_c(alpha,n+1,1);
+   return ROOT::Math::gamma_quantile_c( alpha/2, n+1, 1) - c;   
 }
 
 //______________________________________________________________________________

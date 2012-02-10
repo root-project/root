@@ -49,6 +49,9 @@ was not zero.
 Take into account the absolute value of the histogram's minimum to compute the 
 maximal boxes' size when an histogram is drawn with the option BOX.
 </li>
+<li>
+Add support for drawing the asymmetric errors for the TH1 and TH2
+</li>
 </ul>
 
 <h3>TGraph2DPainter</h3>
@@ -77,4 +80,17 @@ The markers' colors did not match the palette and some of them were not clipped.
 A canvas saved in a <tt>.C</tt> file generated wrong code if it contained
 an histogram drawn with the option <tt>COLZ</tt>.
 </li>
+<li>
+Add the support for asymmetric errors, by adding the methods <tt>TH1::GetBinErrorLow(ibin)</tt> and
+<tt>TH1::GetBinErrorUp(ibin)</tt>.
+</li>
+<li>Add possibility to use different bin error types with <tt>TH1::SetBinErrorOption(type)</tt>. The type of errors which one can set are:
+<ul><li><tt>TH1::kNormal</tt>: this are the default errors (symmetric) based on the normal approximation. Bin error = sqrt(N).
+  In case of a weighted histogram (non-integer bin content), the normal approximation is always used</li>
+  <li>TH1::kPoisson: in this case the lower and upper error are defined by the 68% classical (frequentist) Poisson interval for N counts
+  (Garwood Poisson interval).</li>
+  <li>TH1::kPoisson2: as above but in this case a 95% (2-sigma) Poisson interval is used. </li>
+  </ul>
+</li>
+
 </ul>
