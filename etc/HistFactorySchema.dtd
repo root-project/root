@@ -5,7 +5,7 @@
 <!ELEMENT Combination (Function*,Input+,Measurement*)>
 <!ATTLIST Combination
         OutputFilePrefix         CDATA            #REQUIRED
-        Mode               CDATA            #REQUIRED
+        Mode                     CDATA            #IMPLIED
 > 
 
 <!-- Input files detailing the channels. One channel per file -->
@@ -64,7 +64,7 @@ of the model in the channel setup. Typically the NormFactor for xsec measurement
 can be set at this level in which case they will become defaul to
 all subsequent elements. Otherwise they can be set in individual 
 subelements -->
-<!ELEMENT Channel (Data*,Sample+)>
+<!ELEMENT Channel (Data*,StatErrorConfig*,Sample+)>
 <!-- InputFile: input file where the input histogram can be found (use abs path) -->
 <!-- HistoPath: the path (within the root file) where the histogram can be found -->
 <!-- HistoName: the name of the histogram to be used for this (and following in not overridden) item -->
@@ -85,9 +85,15 @@ For this element there is no sublemenents so the setting will only have local ef
         HistoName         CDATA            #IMPLIED
 >
 
+<!ELEMENT StatErrorConfig EMPTY>
+<!ATTLIST StatErrorConfig
+        RelErrorThreshold      CDATA            #IMPLIED
+        ConstraintType         CDATA            #IMPLIED
+>
+
 
 <!-- Sample elements are made up of systematic variations -->
-<!ELEMENT Sample (HistoSys*,OverallSys*,NormFactor*)>
+<!ELEMENT Sample (StatError | HistoSys | OverallSys | ShapeSys | NormFactor | ShapeFactor)*>
 <!ATTLIST Sample
         Name              CDATA            #REQUIRED
         InputFile         CDATA            #IMPLIED
@@ -97,6 +103,14 @@ For this element there is no sublemenents so the setting will only have local ef
 > 
 
 <!-- Systematics for which the variation is provided by histograms -->
+<!ELEMENT StatError EMPTY>
+<!ATTLIST StatError
+	  Activate          CDATA            #REQUIRED
+          HistoName         CDATA            #IMPLIED
+          InputFile         CDATA            #IMPLIED
+          HistoPath         CDATA            #IMPLIED
+> 
+
 <!ELEMENT HistoSys EMPTY>
 <!ATTLIST HistoSys
         Name              CDATA            #REQUIRED
@@ -117,6 +131,16 @@ For this element there is no sublemenents so the setting will only have local ef
         Low               CDATA            #REQUIRED
 > 
 
+<!-- Systematics for which the variation is provided by simple overall scaling -->
+<!ELEMENT ShapeSys EMPTY>
+<!ATTLIST ShapeSys
+          Name              CDATA            #REQUIRED
+          HistoName         CDATA            #REQUIRED
+          HistoPath         CDATA            #IMPLIED
+          InputFile         CDATA            #IMPLIED
+          ConstraintType    CDATA            #IMPLIED
+> 
+
 <!-- Scaling factor, which may be the parameter of interest for cross section measurements-->
 <!ELEMENT NormFactor EMPTY>
 <!ATTLIST NormFactor
@@ -127,4 +151,10 @@ For this element there is no sublemenents so the setting will only have local ef
         Const             CDATA            #IMPLIED
 > 
 
+
+<!-- Systematics for which the variation is provided by simple overall scaling -->
+<!ELEMENT ShapeFactor EMPTY>
+<!ATTLIST ShapeFactor
+          Name              CDATA            #REQUIRED
+> 
 
