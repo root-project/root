@@ -784,20 +784,23 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
+   Double_t hzmin = gCurrentHist->GetMinimum();
+   Double_t hzmax = gCurrentHist->GetMaximum();
    Int_t    npd = 0;
    for (it=0; it<fNpoints; it++) {
       xm[it] = 0;
       ym[it] = 0;
       if(fX[it] < fXmin || fX[it] > fXmax) continue;
       if(fY[it] < fYmin || fY[it] > fYmax) continue;
+      if(fZ[it] < hzmin || fZ[it] > hzmax) continue;
       npd++;
       temp1[0] = fX[it];
       temp1[1] = fY[it];
       temp1[2] = fZ[it];
       temp1[0] = TMath::Max(temp1[0],fXmin);
       temp1[1] = TMath::Max(temp1[1],fYmin);
-      temp1[2] = TMath::Max(temp1[2],fZmin);
-      temp1[2] = TMath::Min(temp1[2],fZmax);
+      temp1[2] = TMath::Max(temp1[2],hzmin);
+      temp1[2] = TMath::Min(temp1[2],hzmax);
       if (Hoption.Logx) temp1[0] = TMath::Log10(temp1[0]);
       if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
       if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
@@ -809,7 +812,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       PaintPolyMarker0(npd,xm,ym);
    } else if (colors) {
       for (it=0; it<fNpoints; it++) {
-         theColor = (Int_t)( ((fZ[it]-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+         theColor = (Int_t)( ((fZ[it]-hzmin)/(hzmax-hzmin))*(ncolors-1) );
          fGraph2D->SetMarkerColor(gStyle->GetColorPalette(theColor));
          fGraph2D->TAttMarker::Modify();
          gPad->PaintPolyMarker(1,&xm[it],&ym[it]);
