@@ -260,8 +260,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 
   _ipOrder = order ;
 
-  Int_t i ;
-  for (i=0 ; i<_cacheMgr.cacheSize() ; i++) {
+  for (UInt_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
     FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;

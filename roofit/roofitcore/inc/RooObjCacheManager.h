@@ -56,7 +56,6 @@ protected:
   Bool_t _clearOnRedirect ;
   Bool_t _optCacheModeSeen  ;              //! 
 
-  std::list<RooArgSet*> _optCacheObsList ; //! list of all optCacheObservables owned
   RooArgSet* _optCacheObservables ;        //! current optCacheObservables 
 
   static Bool_t _clearObsList ; // Clear obslist on sterilize?

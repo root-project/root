@@ -51,7 +51,9 @@ public:
     // Returns normalization integral for coefficient coefIdx for observables nset in range rangeNae
     return getCoefNorm(coefIdx,&nset,rangeName) ; 
   }
-  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const ;
+  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const {
+       return getCoefNorm(coefIdx,nset,RooNameReg::ptr(rangeName));
+  }
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
@@ -68,6 +70,7 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
     
 protected:
+  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
 
   Bool_t _isCopy ;
 

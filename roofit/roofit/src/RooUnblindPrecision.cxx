@@ -43,7 +43,7 @@ ClassImp(RooUnblindPrecision)
 
 
 //_____________________________________________________________________________
-RooUnblindPrecision::RooUnblindPrecision() : _blindEngine("") 
+RooUnblindPrecision::RooUnblindPrecision() 
 {
   // Default constructor
 }

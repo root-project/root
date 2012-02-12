@@ -548,7 +548,7 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedLis
     Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
     //cout << "partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
     value *= piVal ;
-    if (value<_cutOff) {
+    if (value<=_cutOff) {
       break ;
     }
   }
@@ -604,7 +604,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 // 	//cout << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet()) << " = " << piVal << endl ;
 //       }
       value *= piVal ;
-      if (value<_cutOff) {
+      if (value<=_cutOff) {
 	break ;
       }
     }

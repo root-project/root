@@ -23,7 +23,7 @@
 #include "Rtypes.h" 
 #include "TString.h"
 
-class RooBlindTools{
+class RooBlindTools {
 
 //--------------------
 // Instance Members --
@@ -40,6 +40,8 @@ public:
 public:
 
   // Constructors
+  RooBlindTools() {} ;
+
   RooBlindTools
   (const char *stSeed,	// blinding seed string
    blindMode Mode=full,	// blinding mode

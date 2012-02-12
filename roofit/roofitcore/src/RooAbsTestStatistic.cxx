@@ -509,7 +509,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
   TIterator* iter = dsetList->MakeIterator() ;
   TObject* ds ;
-  while(ds=iter->Next()) {
+  while((ds=iter->Next())) {
     delete ds ;
   }
   delete iter ;
