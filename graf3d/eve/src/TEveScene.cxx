@@ -60,6 +60,25 @@ TEveScene::TEveScene(const char* n, const char* t) :
 }
 
 //______________________________________________________________________________
+TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
+   TEveElementList(n, t),
+   fPad    (0),
+   fGLScene(gl_scene),
+   fChanged      (kFALSE),
+   fSmartRefresh (kTRUE),
+   fHierarchical (kFALSE)
+{
+   // Constructor.
+
+   fPad = new TEvePad;
+   fPad->GetListOfPrimitives()->Add(this);
+   fGLScene->SetPad(fPad);
+   fGLScene->SetName(n);
+   fGLScene->SetAutoDestruct(kFALSE);
+   fGLScene->SetSmartRefresh(kTRUE);
+}
+
+//______________________________________________________________________________
 TEveScene::~TEveScene()
 {
    // Destructor.

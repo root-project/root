@@ -41,6 +41,7 @@ protected:
 
 public:
    TEveScene(const char* n="TEveScene", const char* t="");
+   TEveScene(TGLScenePad* gl_scene, const char* n="TEveScene", const char* t="");
    virtual ~TEveScene();
 
    virtual void CollectSceneParents(List_t& scenes);
