@@ -429,6 +429,20 @@ void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* p
 
    if (lvl < 0) lvl = pshp->GetSelected();
 
+   Float_t dr[3];
+   glGetFloatv(GL_DEPTH_RANGE, dr);
+   dr[2] = dr[1] - dr[0];
+
+   Bool_t dr_reset = kFALSE;
+   if (rnrCtx.HighlightDepthRangeOffset() != 0)
+   {
+      dr_reset = kTRUE;
+      if (rnrCtx.HighlightDepthRangeOffset() > 0)
+         glDepthRange(dr[0] + rnrCtx.HighlightDepthRangeOffset() * dr[2], dr[1]);
+      else
+         glDepthRange(dr[0], dr[1] + rnrCtx.HighlightDepthRangeOffset() * dr[2]);
+   }
+
    rnrCtx.SetHighlightOutline(kTRUE);
    TGLUtil::LockColor();
    Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
@@ -451,11 +465,27 @@ void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* p
    glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
 
    pshp->SetupGLColors(rnrCtx);
-   Float_t dr[2];
-   glGetFloatv(GL_DEPTH_RANGE,dr);
-   glDepthRange(dr[0], 0.5*dr[1]);
+
+   if (rnrCtx.HighlightedObjectDepthRangeOffset() != 0)
+   {
+      dr_reset = kTRUE;
+      if (rnrCtx.HighlightedObjectDepthRangeOffset() > 0)
+         glDepthRange(dr[0] + rnrCtx.HighlightedObjectDepthRangeOffset() * dr[2], dr[1]);
+      else
+         glDepthRange(dr[0], dr[1] + rnrCtx.HighlightedObjectDepthRangeOffset() * dr[2]);
+   }
+   else if (dr_reset)
+   {
+      glDepthRange(dr[0], dr[1]);
+      dr_reset = kFALSE;
+   }
+
    Draw(rnrCtx);
-   glDepthRange(dr[0], dr[1]);
+
+   if (dr_reset)
+   {
+      glDepthRange(dr[0], dr[1]);
+   }
 }
 
 //______________________________________________________________________________

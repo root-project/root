@@ -896,6 +896,7 @@ Bool_t TGLScene::ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx)
    {
       rec.SetTransparent(pshp->IsTransparent());
       rec.SetPhysShape(pshp);
+      rec.SetLogShape(const_cast<TGLLogicalShape*>(pshp->GetLogical()));
       rec.SetObject(pshp->GetLogical()->GetExternal());
       rec.SetSpecific(0);
       return kTRUE;

@@ -65,7 +65,7 @@ public:
    virtual ~TGLScenePad() {}
 
    TVirtualPad* GetPad() const { return fPad; }
-   // void SetPad(TVirtualPad* p) { fPad = p; /* also need to drop contents */ }
+   void SetPad(TVirtualPad* p) { fPad = p; }
 
    // Histo import and Sub-pad traversal
    void AddHistoPhysical(TGLLogicalShape* log, const Float_t *histColor = 0);

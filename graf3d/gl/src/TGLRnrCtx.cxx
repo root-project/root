@@ -58,6 +58,8 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fCamera    (0),
    fSceneInfo (0),
 
+   fRenderOrder  (kAllClearDepthSelected),
+
    fViewerLOD    (kLODUndef),
    fSceneLOD     (kLODUndef),
    fCombiLOD     (kLODUndef),
@@ -84,6 +86,9 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    fHighlight    (kFALSE),  fHighlightOutline (kFALSE),
    fSelection    (kFALSE),  fSecSelection     (kFALSE),
+   fSelectTransparents                (kIfNoOpaques),
+   fHighlightDepthRangeOffset         (0),
+   fHighlightedObjectDepthRangeOffset (-0.5),
    fPickRadius   (0),
    fPickRectangle(0),
    fSelectBuffer (0),

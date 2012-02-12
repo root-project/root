@@ -460,6 +460,46 @@ void TGLViewerBase::RenderSelected()
 }
 
 //______________________________________________________________________
+void TGLViewerBase::RenderOpaque(Bool_t rnr_non_selected, Bool_t rnr_selected)
+{
+   // Render opaque objects from all scenes.
+
+   if (rnr_non_selected)
+   {
+      SubRenderScenes(&TGLSceneBase::RenderOpaque);
+   }
+   if (rnr_selected)
+   {
+      SubRenderScenes(&TGLSceneBase::RenderSelOpaque);
+   }
+
+   TGLUtil::CheckError("TGLViewerBase::RenderOpaque - pre exit check");
+}
+
+//______________________________________________________________________
+void TGLViewerBase::RenderTransparent(Bool_t rnr_non_selected, Bool_t rnr_selected)
+{
+   // Render transparent objects from all scenes.
+
+   TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
+
+   if (rnr_non_selected)
+   {
+      SubRenderScenes(&TGLSceneBase::RenderTransp);
+   }
+   if (rnr_selected)
+   {
+      SubRenderScenes(&TGLSceneBase::RenderSelTransp);
+   }
+
+   glDepthMask(GL_TRUE);
+
+   TGLUtil::CheckError("TGLViewerBase::RenderTransparent - pre exit check");
+}
+
+//______________________________________________________________________
 void TGLViewerBase::RenderOverlay(Int_t state, Bool_t selection)
 {
    // Render overlay objects.

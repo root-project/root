@@ -132,8 +132,8 @@ void TGLEventHandler::SelectForClicked(Event_t *event)
    fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
 
    TGLPhysicalShape *pshp = fGLViewer->fSelRec.GetPhysShape();
-   TGLLogicalShape  *lshp = pshp ? const_cast<TGLLogicalShape*>(pshp->GetLogical()) : 0;
-   TObject          *obj  = lshp ? lshp->GetExternal() : 0;
+   TGLLogicalShape  *lshp = fGLViewer->fSelRec.GetLogShape();
+   TObject          *obj  = fGLViewer->fSelRec.GetObject();
       
    // secondary selection
    if (lshp && (event->fState & kKeyMod1Mask || (fSecSelType == TGLViewer::kOnRequest && lshp->AlwaysSecondarySelect())))
@@ -175,8 +175,8 @@ void TGLEventHandler::SelectForMouseOver()
    fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
 
    TGLPhysicalShape *pshp = fGLViewer->fSelRec.GetPhysShape();
-   TGLLogicalShape  *lshp = pshp ? const_cast<TGLLogicalShape*>(pshp->GetLogical()) : 0;
-   TObject          *obj  = lshp ? lshp->GetExternal() : 0;
+   TGLLogicalShape  *lshp = fGLViewer->fSelRec.GetLogShape();
+   TObject          *obj  = fGLViewer->fSelRec.GetObject();
 
    if (lshp && (fSecSelType == TGLViewer::kOnRequest && lshp->AlwaysSecondarySelect()))
    {

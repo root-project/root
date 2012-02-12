@@ -17,6 +17,7 @@
 class TObject;
 class TGLSceneInfo;
 class TGLPhysicalShape;
+class TGLLogicalShape;
 class TGLOverlayElement;
 
 /**************************************************************************/
@@ -81,6 +82,7 @@ protected:
    Bool_t            fTransparent;
    TGLSceneInfo     *fSceneInfo; // SceneInfo
    TGLPhysicalShape *fPhysShape; // PhysicalShape, if applicable
+   TGLLogicalShape  *fLogShape;  // LogicalShape, if applicable
    TObject          *fObject;    // Master TObject, if applicable
    void             *fSpecific;  // Scene specific, if applicable
    Bool_t            fMultiple;  // Mutliple selection requested (set by event-handler).
@@ -102,6 +104,7 @@ public:
    Bool_t             GetTransparent() const { return fTransparent; }
    TGLSceneInfo     * GetSceneInfo()   const { return fSceneInfo; }
    TGLPhysicalShape * GetPhysShape()   const { return fPhysShape; }
+   TGLLogicalShape  * GetLogShape()    const { return fLogShape; }
    TObject          * GetObject()      const { return fObject; }
    void             * GetSpecific()    const { return fSpecific; }
    Bool_t             GetMultiple()    const { return fMultiple; }
@@ -112,6 +115,7 @@ public:
    void SetTransparent(Bool_t t)               { fTransparent = t; }
    void SetSceneInfo  (TGLSceneInfo* si)       { fSceneInfo = si; }
    void SetPhysShape  (TGLPhysicalShape* pshp) { fPhysShape = pshp; }
+   void SetLogShape   (TGLLogicalShape* lshp)  { fLogShape = lshp; }
    void SetObject     (TObject* obj)           { fObject = obj; }
    void SetSpecific   (void* spec)             { fSpecific = spec; }
    void SetMultiple   (Bool_t multi)           { fMultiple = multi; }

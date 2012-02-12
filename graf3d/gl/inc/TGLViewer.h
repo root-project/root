@@ -308,6 +308,7 @@ public:
    // Request methods post cross thread request via TROOT::ProcessLineFast().
    void RequestDraw(Short_t LOD = TGLRnrCtx::kLODMed); // Cross thread draw request
    virtual void PreRender();
+   virtual void Render();
    virtual void PostRender();
    void DoDraw(Bool_t swap_buffers=kTRUE);
    void DoDrawMono(Bool_t swap_buffers);

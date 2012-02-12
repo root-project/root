@@ -262,10 +262,10 @@ void TGLSelectRecord::Print()
    // Print contents of the select record to stdout.
 
    printf("SelectRecord   N=%d, miZ=%.4f, maxZ=%.4f\n"
-          "    sceneinfo=%p, pshp=%p, transp=%d,\n"
+          "    sceneinfo=%p, pshp=%p, transp=%d, mult=%d, hilite=%d\n"
           "    tobj=%p (name='%s'), spec=%p\n",
           fN, fMinZ, fMaxZ,
-          fSceneInfo,  fPhysShape,  fTransparent,
+          fSceneInfo,  fPhysShape,  fTransparent, fMultiple, fHighlight,
           fObject, fObject ? fObject->GetName() : "",
           fSpecific);
 }

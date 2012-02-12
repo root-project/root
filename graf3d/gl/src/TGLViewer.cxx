@@ -507,6 +507,48 @@ void TGLViewer::PreRender()
 }
 
 //______________________________________________________________________________
+void TGLViewer::Render()
+{
+   // Normal rendering, following instructions from TGLRnrCtx::RenderOrder().
+
+   if (fRnrCtx->RenderOrder() == TGLRnrCtx::kAllClearDepthSelected ||
+       fRnrCtx->RenderOrder() == TGLRnrCtx::kAllSelected)
+   {
+      RenderNonSelected();
+      RenderSelected();
+      DrawGuides();
+      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
+
+      if (fRnrCtx->RenderOrder() == TGLRnrCtx::kAllClearDepthSelected)
+      {
+         glClear(GL_DEPTH_BUFFER_BIT);
+      }
+
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderSelected();
+      fRnrCtx->SetHighlight(kFALSE);
+   }
+   else // fRnrCtx->RenderOrder() == TGLRnrCtx::kOpaqueTransparent
+   {
+      RenderOpaque(kTRUE,  kTRUE);
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderOpaque(kFALSE, kTRUE);
+      fRnrCtx->SetHighlight(kFALSE);
+
+      RenderTransparent(kTRUE,  kTRUE);
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderTransparent(kFALSE, kTRUE);
+      fRnrCtx->SetHighlight(kFALSE);
+
+      DrawGuides();
+      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
+   }
+
+   glClear(GL_DEPTH_BUFFER_BIT);
+   DrawDebugInfo();
+}
+
+//______________________________________________________________________________
 void TGLViewer::PostRender()
 {
    // Restore state set in PreRender().
@@ -607,17 +649,7 @@ void TGLViewer::DoDrawMono(Bool_t swap_buffers)
    fRnrCtx->StartStopwatch();
    if (fFader < 1)
    {
-      RenderNonSelected();
-      RenderSelected();
-      DrawGuides();
-      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
-
-      glClear(GL_DEPTH_BUFFER_BIT);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderSelected();
-      fRnrCtx->SetHighlight(kFALSE);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      DrawDebugInfo();
+      Render();
    }
    fRnrCtx->StopStopwatch();
 
@@ -683,17 +715,7 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
    fRnrCtx->StartStopwatch();
    if (fFader < 1)
    {
-      RenderNonSelected();
-      RenderSelected();
-      DrawGuides();
-      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
-
-      glClear(GL_DEPTH_BUFFER_BIT);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderSelected();
-      fRnrCtx->SetHighlight(kFALSE);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      DrawDebugInfo();
+      Render();
    }
    fRnrCtx->StopStopwatch();
 
@@ -721,17 +743,7 @@ void TGLViewer::DoDrawStereo(Bool_t swap_buffers)
    fRnrCtx->StartStopwatch();
    if (fFader < 1)
    {
-      RenderNonSelected();
-      RenderSelected();
-      DrawGuides();
-      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
-
-      glClear(GL_DEPTH_BUFFER_BIT);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderSelected();
-      fRnrCtx->SetHighlight(kFALSE);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      DrawDebugInfo();
+      Render();
    }
    fRnrCtx->StopStopwatch();
 
@@ -1190,11 +1202,13 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
       Int_t idx = 0;
       if (FindClosestRecord(fSelRec, idx))
       {
-         if (fSelRec.GetTransparent())
+         if (fSelRec.GetTransparent() && fRnrCtx->SelectTransparents() != TGLRnrCtx::kIfClosest)
          {
             TGLSelectRecord opaque;
             if (FindClosestOpaqueRecord(opaque, ++idx))
                fSelRec = opaque;
+            else if (fRnrCtx->SelectTransparents() == TGLRnrCtx::kNever)
+               fSelRec.Reset();
          }
          if (gDebug > 1) fSelRec.Print();
       }
