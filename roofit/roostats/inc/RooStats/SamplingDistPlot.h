@@ -17,6 +17,7 @@
 #include "TNamed.h"
 #include "TIterator.h"
 #include "TH1F.h"
+#include "TF1.h"
 #include "TLegend.h"
 
 #ifndef ROOSTATS_SamplingDistribution
@@ -35,6 +36,7 @@ namespace RooStats {
    public:
     // Constructors for SamplingDistribution
     SamplingDistPlot(Int_t nbins = 100);
+    SamplingDistPlot(Int_t nbins, Double_t min, Double_t max);
 //    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     // Destructor of SamplingDistribution
@@ -48,7 +50,13 @@ namespace RooStats {
 
     // add a line
     void AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title = NULL);
-
+    // add a TH1
+    void AddTH1(TH1* h, Option_t *drawOptions="");
+    // add a TF1
+    void AddTF1(TF1* f, const char* title = NULL, Option_t *drawOptions="SAME");
+    // set legend
+    void SetLegend(TLegend* l){ fLegend = l; }
+    
     void Draw(Option_t *options=0);
 
     // Applies a predefined style if fApplyStyle is kTRUE (default).
@@ -73,12 +81,17 @@ namespace RooStats {
     // Returns the TH1F associated with the give SamplingDistribution.
     // Intended use: Access to member functions of TH1F like GetMean(),
     // GetRMS() etc.
-    TH1F* GetTH1F(const SamplingDistribution *samplDist);
+    TH1F* GetTH1F(const SamplingDistribution *samplDist = NULL);
 
     // changes plot to log scale on x axis
     void SetLogXaxis(Bool_t lx) { fLogXaxis = lx; }
     // changes plot to log scale on y axis
     void SetLogYaxis(Bool_t ly) { fLogYaxis = ly; }
+
+    // change x range
+    void SetXRange( double mi, double ma ) { fXMin = mi; fXMax = ma; }
+    // change y range
+    void SetYRange( double mi, double ma ) { fYMin = mi; fYMax = ma; }
 
     // write to Root file
     void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress=1);
@@ -106,6 +119,8 @@ namespace RooStats {
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
     Bool_t fLogYaxis;
+
+    double fXMin, fXMax, fYMin, fYMax;
 
     Bool_t fApplyStyle;
     Style_t fFillStyle;

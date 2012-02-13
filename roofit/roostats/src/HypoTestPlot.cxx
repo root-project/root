@@ -23,28 +23,34 @@ ClassImp(RooStats::HypoTestPlot)
 using namespace RooStats;
 #include "TStyle.h"
 
-HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins) :
+HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Option_t* opt) :
    SamplingDistPlot(bins),
    fHypoTestResult(&result)
 {
-   ApplyResult(result);
+   ApplyResult(result, opt);
+}
+HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Double_t min, Double_t max, Option_t* opt) :
+   SamplingDistPlot(bins,min,max),
+   fHypoTestResult(&result)
+{
+   ApplyResult(result, opt);
 }
 
-void HypoTestPlot::ApplyResult(HypoTestResult& result) {
-   fLegend = new TLegend(0.70,0.95-0.2*0.66,0.95,0.95);
+void HypoTestPlot::ApplyResult(HypoTestResult& result, Option_t* opt) {
+   fLegend = new TLegend(0.55,0.95-0.3*0.66,0.95,0.95);
 
    const SamplingDistribution *alt = result.GetAltDistribution();
    const SamplingDistribution *null = result.GetNullDistribution();
    if(!result.HasTestStatisticData()) {
-      if(alt) AddSamplingDistribution(alt, "NORMALIZE HIST");
-      if(null) AddSamplingDistribution(null, "NORMALIZE HIST");
+      if(alt) AddSamplingDistribution(alt, opt);
+      if(null) AddSamplingDistribution(null, opt);
    }else{
       if(result.GetPValueIsRightTail()) {
-         if(alt) AddSamplingDistributionShaded(alt, result.GetTestStatisticData(), RooNumber::infinity(), "NORMALIZE HIST");
-         if(null) AddSamplingDistributionShaded(null, result.GetTestStatisticData(), RooNumber::infinity() , "NORMALIZE HIST");
+         if(alt) AddSamplingDistributionShaded(alt, result.GetTestStatisticData(), RooNumber::infinity(), opt);
+         if(null) AddSamplingDistributionShaded(null, result.GetTestStatisticData(), RooNumber::infinity() , opt);
       }else{
-         if(alt) AddSamplingDistributionShaded(alt, -RooNumber::infinity(), result.GetTestStatisticData(), "NORMALIZE HIST");
-         if(null) AddSamplingDistributionShaded(null, - RooNumber::infinity(), result.GetTestStatisticData() , "NORMALIZE HIST");
+         if(alt) AddSamplingDistributionShaded(alt, -RooNumber::infinity(), result.GetTestStatisticData(), opt);
+         if(null) AddSamplingDistributionShaded(null, - RooNumber::infinity(), result.GetTestStatisticData() , opt);
       }
    }
 

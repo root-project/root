@@ -33,6 +33,11 @@ objects.
 #include "RooMsgService.h"
 #endif
 
+#include <limits>
+#define NaN numeric_limits<float>::quiet_NaN()
+#define IsNaN(a) isnan(a)
+
+
 /// ClassImp for building the THtml documentation of the class 
 ClassImp(RooStats::SamplingDistPlot);
 
@@ -47,6 +52,7 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
    fRooPlot(NULL),
    fLogXaxis(kFALSE),
    fLogYaxis(kFALSE),
+   fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
    fApplyStyle(kTRUE),
    fFillStyle(3004)
 {
@@ -58,9 +64,8 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
   fColor = 1;
 }
 
-/*
 //_______________________________________________________
-SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax) :
+SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
    fHist(0),
    fLegend(NULL),
    fItems(),
@@ -68,18 +73,21 @@ SamplingDistPlot::SamplingDistPlot(const char* name, const char* title, Int_t nb
    fRooPlot(NULL),
    fLogXaxis(kFALSE),
    fLogYaxis(kFALSE),
+   fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
    fApplyStyle(kTRUE),
    fFillStyle(3004)
 {
-  // SamplingDistPlot constructor
-  fHist = new TH1F(name, title, nbins, xmin, xmax);
+  // SamplingDistPlot constructor with bin size, min and max
   fIterator = fItems.MakeIterator();
   fIsWeighted = kFALSE;
   fBins = nbins;
   fMarkerType = 20;
   fColor = 1;
+  
+  SetXRange( min, max );
 }
-*/
+
+
 
 //_______________________________________________________
 Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
@@ -97,15 +105,19 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
 
    Double_t xmin = *(std::min_element(fSamplingDistr.begin(), fSamplingDistr.end()));
    Double_t xmax = *(std::max_element(fSamplingDistr.begin(), fSamplingDistr.end()));
+   
+   // add 1.5 bins left and right
    assert(fBins > 1);
-   Double_t xlow = xmin - 0.5*(xmax-xmin)/(fBins-1);
-   Double_t xup  = xmax + 0.5*(xmax-xmin)/(fBins-1);
+   double binWidth = (xmax-xmin)/(fBins);
+   Double_t xlow = xmin - 1.5*binWidth;
+   Double_t xup  = xmax + 1.5*binWidth;
+   if( !IsNaN(fXMin) ) xlow = fXMin;
+   if( !IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
 
-   TString varName = samplingDist->GetVarName();
-   fHist->GetXaxis()->SetTitle(varName.Data());
-   if(varName.Length() > 0) fVarName = samplingDist->GetVarName().Data();
+   if( fVarName.Length() == 0 ) fVarName = samplingDist->GetVarName();
+   fHist->GetXaxis()->SetTitle(fVarName.Data());
 
 
    std::vector<Double_t>::iterator valuesIt = fSamplingDistr.begin();
@@ -183,6 +195,15 @@ void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y
    addOtherObject(line, ""); // no options
 }
 
+void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
+   if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
+   addObject(h, drawOptions);
+}
+void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) {
+   if(fLegend  &&  title) fLegend->AddEntry(f, title, "L");
+   addOtherObject(f, drawOptions);
+}
+
 
 //_______________________________________________________
 void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist)
@@ -240,8 +261,12 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
 
    ApplyDefaultStyle();
 
-   Float_t theMin(0.), theMax(0.), theYMax(0.);
+   Float_t theMin(0.), theMax(0.), theYMin(NaN), theYMax(0.);
    GetAbsoluteInterval(theMin, theMax, theYMax);
+   if( !IsNaN(fXMin) ) theMin = fXMin;
+   if( !IsNaN(fXMax) ) theMax = fXMax;
+   if( !IsNaN(fYMin) ) theYMin = fYMin;
+   if( !IsNaN(fYMax) ) theYMax = fYMax;
 
    RooRealVar xaxis("xaxis", fVarName.Data(), theMin, theMax);
 
@@ -251,7 +276,14 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
 
    fRooPlot = xaxis.frame();
    fRooPlot->SetTitle("");
-   fRooPlot->SetMaximum(theYMax);
+   if( !IsNaN(theYMax) ) {
+      //coutI(InputArguments) << "Setting maximum to " << theYMax << endl;
+      fRooPlot->SetMaximum(theYMax);
+   }
+   if( !IsNaN(theYMin) ) {
+      //coutI(InputArguments) << "Setting minimum to " << theYMin << endl;
+      fRooPlot->SetMinimum(theYMin);
+   }
 
    fIterator->Reset();
    TH1F *obj = 0;
@@ -259,6 +291,14 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
       //obj->Draw(fIterator->GetOption());
       // add cloned objects to avoid mem leaks
       TH1 * cloneObj = (TH1*)obj->Clone();
+      if( !IsNaN(theYMax) ) {
+         //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << endl;
+         cloneObj->SetMaximum(theYMax);
+      }
+      if( !IsNaN(theYMin) ) {
+         //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
+         cloneObj->SetMinimum(theYMin);
+      }
       cloneObj->SetDirectory(0);
       fRooPlot->addTH1(cloneObj, fIterator->GetOption());
    }
@@ -345,6 +385,20 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
 
    if (samplDist == 0) {
       fHist->SetLineColor(color);
+
+      fIterator->Reset();
+      TH1F *obj = 0;
+
+      TString shadedName(fHist->GetName());
+      shadedName += "_shaded";
+
+      while ((obj = (TH1F*) fIterator->Next())) {
+         if (!strcmp(obj->GetName(), shadedName.Data())) {
+            obj->SetLineColor(color);
+            obj->SetFillColor(color);
+            //break;
+         }
+      }
    } else {
       fIterator->Reset();
       TH1F *obj = 0;

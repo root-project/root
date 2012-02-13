@@ -130,6 +130,37 @@ void MarkovChain::Add(RooArgSet& entry, Double_t nllValue, Double_t weight)
    //fChain->add(*fDataEntry);
 }
 
+void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
+{
+   // Discards the first n accepted points.
+
+   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   int counter = 0;
+   for( int i=0; i < otherChain.Size(); i++ ) {
+      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      counter += 1;
+      if( counter > burnIn ) {
+         AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
+      }
+   }
+}
+void MarkovChain::Add(MarkovChain& otherChain, Double_t discardEntries)
+{
+   // Discards the first entries. This is different to the definition of
+   // burn-in used in the Bayesian calculator where the first n accepted
+   // terms from the proposal function are discarded.
+
+   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   double counter = 0.0;
+   for( int i=0; i < otherChain.Size(); i++ ) {
+      RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
+      counter += otherChain.Weight();
+      if( counter > discardEntries ) {
+         AddFast( *entry, otherChain.NLL(), otherChain.Weight() );
+      }
+   }
+}
+
 void MarkovChain::AddFast(RooArgSet& entry, Double_t nllValue, Double_t weight)
 {
    RooStats::SetParameters(&entry, fDataEntry);
