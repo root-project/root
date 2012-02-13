@@ -35,7 +35,8 @@ objects.
 
 #include <limits>
 #define NaN numeric_limits<float>::quiet_NaN()
-#define IsNaN(a) isnan(a)
+#include "TMath.h"
+#define IsNaN(a) TMath::IsNaN(a)
 
 
 /// ClassImp for building the THtml documentation of the class 
