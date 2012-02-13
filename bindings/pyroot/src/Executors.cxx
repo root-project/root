@@ -129,10 +129,12 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute( G__CallFunc* func, void* self 
 {
 // execute <func> with argument <self>, return python string return value
    if ( ! fAssignable ) {
-      return PyROOT_PyUnicode_FromString( ((std::string*)func->ExecInt( self ))->c_str() );
+      std::string* result = (std::string*)func->ExecInt( self );
+      return PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
    } else {
       std::string* result = (std::string*)func->ExecInt( self );
-      *result = std::string( PyROOT_PyUnicode_AsString( fAssignable ) );
+      *result = std::string(
+         PyROOT_PyUnicode_AsString( fAssignable ), PyROOT_PyUnicode_GET_SIZE( fAssignable ) );
 
       Py_DECREF( fAssignable );
       fAssignable = 0;
@@ -200,7 +202,8 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( G__CallFunc* func, void* self )
       return PyStrings::gEmptyString;
    }
 
-   PyObject* pyresult = PyROOT_PyUnicode_FromString( result->c_str() );
+   PyObject* pyresult =
+      PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
 
 // stop CINT from tracking the object, then force delete
    G__pop_tempobject_nodel();

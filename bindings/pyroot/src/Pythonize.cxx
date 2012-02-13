@@ -926,12 +926,24 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    return ! PyObject_RichCompareBool( one, other, Py_EQ );
 }
 #endif
-#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name, func )             \
+   static inline PyObject* PyROOT_PyString_FromCppString( std::string* s ) {
+      return PyROOT_PyUnicode_FromStringAndSize( s->c_str(), s->size() );
+   }
+
+   static inline PyObject* PyROOT_PyString_FromCppString( TString* s ) {
+      return PyROOT_PyUnicode_FromStringAndSize( s->Data(), s->Length() );
+   }
+
+   static inline PyObject* PyROOT_PyString_FromCppString( TObjString* s ) {
+      return PyROOT_PyUnicode_FromStringAndSize( s->GetString().Data(), s->GetString().Length() );
+   }
+
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name )                   \
    inline PyObject* name##GetData( PyObject* self ) {                         \
       if ( PyROOT::ObjectProxy_Check( self ) ) {                              \
          type* obj = ((type*)((ObjectProxy*)self)->GetObject());              \
          if ( obj ) {                                                         \
-            return PyROOT_PyUnicode_FromString( obj->func() );                \
+            return PyROOT_PyString_FromCppString( obj );                      \
          } else {                                                             \
             return ObjectProxy_Type.tp_str( self );                           \
          }                                                                    \
@@ -975,8 +987,8 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    // Only define StlStringCompare:
    // TStringCompare is unused and generates a warning;
-#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( type, name, func )         \
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name, func )                  \
+#define PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( type, name )               \
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( type, name )                        \
    PyObject* name##StringCompare( PyObject* self, PyObject* obj )             \
    {                                                                          \
       PyObject* data = name##GetData( self );                                 \
@@ -990,12 +1002,12 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       return PyInt_FromLong( result );                                        \
    }
 
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( std::string, Stl, c_str )
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TString,  T, Data )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( std::string, Stl )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION( TString, T )
 
 
 //- TObjString behavior --------------------------------------------------------
-   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObjString, TObj, GetName )
+   PYROOT_IMPLEMENT_STRING_PYTHONIZATION_CMP( TObjString, TObj )
 
 //____________________________________________________________________________
    PyObject* TObjStringLength( PyObject* self )

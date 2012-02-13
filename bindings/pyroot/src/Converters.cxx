@@ -115,7 +115,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
       const char* buf = PyROOT_PyUnicode_AsString( value );                   \
       if ( PyErr_Occurred() )                                                 \
          return kFALSE;                                                       \
-      int len = strlen( buf );                                                \
+      int len = PyROOT_PyUnicode_GET_SIZE( value );                           \
       if ( len != 1 ) {                                                       \
          PyErr_Format( PyExc_TypeError, #type" expected, got string of size %d", len );\
          return kFALSE;                                                       \
@@ -487,7 +487,7 @@ Bool_t PyROOT::TCStringConverter::SetArg(
    if ( PyErr_Occurred() )
       return kFALSE;
 
-   fBuffer = s;
+   fBuffer = std::string( s, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
    para.fVoidp = (void*)fBuffer.c_str();
 
 // verify (too long string will cause truncation, no crash)
@@ -507,8 +507,8 @@ PyObject* PyROOT::TCStringConverter::FromMemory( void* address )
 // construct python object from C++ const char* read at <address>
    if ( address && *(char**)address ) {
       if ( fMaxSize != UINT_MAX ) {          // need to prevent reading beyond boundary
-         std::string buf( *(char**)address, fMaxSize );
-         return PyROOT_PyUnicode_FromString( buf.c_str() );
+         std::string buf( *(char**)address, fMaxSize );     // cut on fMaxSize
+         return PyROOT_PyUnicode_FromString( buf.c_str() ); // cut on \0
       }
 
       return PyROOT_PyUnicode_FromString( *(char**)address );
@@ -746,15 +746,16 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
 
 
 //- converters for special cases ----------------------------------------------
-#define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
+#define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, type, F1, F2 )  \
 PyROOT::T##name##Converter::T##name##Converter() :                            \
-      TRootObjectConverter( TClass::GetClass( #strtype ) ) {}                 \
+      TRootObjectConverter( TClass::GetClass( #type ) ) {}                    \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )\
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
-      fBuffer = PyROOT_PyUnicode_AsString( pyobject );                        \
+      fBuffer = type( PyROOT_PyUnicode_AsString( pyobject ),                  \
+                      PyROOT_PyUnicode_GET_SIZE( pyobject ) );                \
       para.fVoidp = &fBuffer;                                                 \
       if ( func ) {                                                           \
          G__value v;                                                          \
@@ -775,7 +776,7 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 {                                                                             \
    if ( address )                                                             \
-      return PyROOT_PyUnicode_FromString( ((strtype*)address)->DF1() );       \
+      return PyROOT_PyUnicode_FromStringAndSize( ((type*)address)->F1(), ((type*)address)->F2() );\
    Py_INCREF( PyStrings::gEmptyString );                                      \
    return PyStrings::gEmptyString;                                            \
 }                                                                             \
@@ -783,15 +784,15 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( value ) ) {                                   \
-      *((strtype*)address) = PyROOT_PyUnicode_AsString( value );              \
+      *((type*)address) = PyROOT_PyUnicode_AsString( value );                 \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
    return TRootObjectConverter::ToMemory( value, address );                   \
 }
 
-PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
-PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str )
+PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data, Length )
+PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str, size )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TRootObjectConverter::SetArg(
