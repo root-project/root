@@ -343,8 +343,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	  RooAbsRealLValue* leaflv = dynamic_cast<RooAbsRealLValue*>(leaf) ;
 	  if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
 	    oocxcoutD(&function,Integration) << function.GetName() << " : Observable " << leaf->GetName() << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf" << endl ;
-	    addServer(*leaflv->getBinning(rangeName).lowBoundFunc(),kTRUE,kFALSE) ;
-	    addServer(*leaflv->getBinning(rangeName).highBoundFunc(),kTRUE,kFALSE) ;
+	    if (leaflv->getBinning(rangeName).lowBoundFunc()) {
+	      addServer(*leaflv->getBinning(rangeName).lowBoundFunc(),kTRUE,kFALSE) ;
+	    }
+	    if(leaflv->getBinning(rangeName).highBoundFunc()) {
+	      addServer(*leaflv->getBinning(rangeName).highBoundFunc(),kTRUE,kFALSE) ;
+	    }
 	  } else {
 	    oocxcoutD(&function,Integration) << function.GetName() << ": Adding observable " << leaf->GetName() << " of server " 
 					     << arg->GetName() << " as shape dependent" << endl ;

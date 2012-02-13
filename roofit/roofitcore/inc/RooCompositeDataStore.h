@@ -90,6 +90,8 @@ public:
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
   virtual void resetCache() ;
 
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/) ;
+  
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ;
   
  protected:

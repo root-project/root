@@ -45,6 +45,8 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
+  void setNameList(const char* givenList) ;
+
   Int_t _len ;
   char* _nameList ; //[_len]
 

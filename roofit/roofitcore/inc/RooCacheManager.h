@@ -53,7 +53,7 @@ public:
   }
 
   inline T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx, const char* isetRangeName)  {
-    if (_wired) return *_object ;
+    if (_wired) return _object[0] ;
     return getObj(nset,iset,sterileIdx,RooNameReg::ptr(isetRangeName)) ;
   }
 
@@ -109,8 +109,8 @@ protected:
   Int_t _size ;       // Actual use
   Int_t _lastIndex ;  // Last slot accessed
 
-  RooNormSetCache* _nsetCache ; //! Normalization/Integration set manager
-  T** _object ;                 //! Payload
+  std::vector<RooNormSetCache> _nsetCache ; //! Normalization/Integration set manager
+  std::vector<T*> _object ;                 //! Payload
   Bool_t _wired ;               //! In wired mode, there is a single payload which is returned always
 
   ClassDef(RooCacheManager,1) // Cache Manager class generic objects
@@ -126,8 +126,8 @@ RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
   // cache operation mode changes
 
   _maxSize = maxSize ;
-  _nsetCache = new RooNormSetCache[maxSize] ;
-  _object = new T*[maxSize] ;
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
   _wired = kFALSE ;
 }
 
@@ -142,8 +142,8 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
   _maxSize = maxSize ;
   _size = 0 ;
 
-  _nsetCache = new RooNormSetCache[maxSize] ;
-  _object = new T*[maxSize] ;
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
@@ -163,8 +163,8 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   _maxSize = other._maxSize ;
   _size = other._size ;
   
-  _nsetCache = new RooNormSetCache[_maxSize] ;
-  _object = new T*[_maxSize] ;
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[_maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[_maxSize] ;
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
@@ -187,12 +187,12 @@ RooCacheManager<T>::~RooCacheManager()
 {
   // Destructor
 
-  delete[] _nsetCache ;  
+  //delete[] _nsetCache ;  
   Int_t i ;
   for (i=0 ; i<_size ; i++) {
     delete _object[i] ;
   }
-  delete[] _object ;
+  //delete[] _object ;
 }
 
 
@@ -251,7 +251,9 @@ Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T
   }
 
   if (_size==_maxSize) {
-    return -1 ;
+    _maxSize *=2 ;
+    _object.resize(_maxSize,0) ;
+    _nsetCache.resize(_maxSize) ;
   }
 
   _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
@@ -282,8 +284,8 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
 
   // Fast-track for wired mode
   if (_wired) {
-    if(*_object==0 && sterileIdx) *sterileIdx=0 ;
-    return *_object ;
+    if(_object[0]==0 && sterileIdx) *sterileIdx=0 ;
+    return _object[0] ;
   }
   
   Int_t i ;

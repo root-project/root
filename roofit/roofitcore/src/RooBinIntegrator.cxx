@@ -59,7 +59,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 //_____________________________________________________________________________
-RooBinIntegrator::RooBinIntegrator() : _x(0)
+RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE), _x(0)
 {
   // Default constructor
 }
@@ -76,6 +76,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
 
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
+  _numBins = 100 ;
 
   _xmin.resize(_function->getDimension()) ;
   _xmax.resize(_function->getDimension()) ;

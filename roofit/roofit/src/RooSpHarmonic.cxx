@@ -135,8 +135,8 @@ Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
   if (code==3) {
     return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;  
   } else if (code == 2) {
-    if (_m1!=0 || _m2!=0) return 0;
-    return _n*N(_l1)*N(_l2)*2*TMath::Pi()*RooLegendre::evaluate();
+    if ( _sgn1*_m1 != _sgn2*_m2) return 0;
+    return ( _m1==0 ? 2 : 1 ) * TMath::Pi()*_n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
   } else {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::analyticalIntegral(code,range);
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );

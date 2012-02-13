@@ -101,7 +101,7 @@ public:
   }
 
   RooLinkedListIter iterator(Bool_t dir = kIterForward) const ;
-  RooFIter fwdIterator() const ;
+  RooFIter fwdIterator() const { return RooFIter(&_list); }
 
   inline Int_t getSize() const { 
     // Return the number of elements in the collection

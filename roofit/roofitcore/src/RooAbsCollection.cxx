@@ -138,16 +138,6 @@ RooLinkedListIter RooAbsCollection::iterator(Bool_t dir) const
     return _list.iterator(dir) ;
 }
 
-
-
-//_____________________________________________________________________________
-RooFIter RooAbsCollection::fwdIterator() const 
-{ 
-  return RooFIter(&_list) ; 
-}
-
-
-
 //_____________________________________________________________________________
 void RooAbsCollection::safeDeleteList() 
 {

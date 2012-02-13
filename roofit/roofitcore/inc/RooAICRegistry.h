@@ -16,38 +16,38 @@
 #ifndef ROO_AIC_REGISTRY
 #define ROO_AIC_REGISTRY
 
+#include <vector>
 #include "Riosfwd.h"
 #include <assert.h>
 #include "Rtypes.h"
 class RooArgSet ;
 
-typedef Int_t* pInt_t ;
 typedef RooArgSet* pRooArgSet ;
 
 class RooAICRegistry {
 
 public:
-  RooAICRegistry(Int_t regSize=10) ;
+  RooAICRegistry(UInt_t size = 10) ;
   RooAICRegistry(const RooAICRegistry& other) ;
   virtual ~RooAICRegistry() ;
 
-  Int_t store(Int_t* codeList, Int_t size, RooArgSet* set1=0, RooArgSet* set2=0, RooArgSet* set3=0, RooArgSet* set4=0) ;
-  const Int_t* retrieve(Int_t masterCode) const ;
-  const Int_t* retrieve(Int_t masterCode, pRooArgSet& set1) const ;
-  const Int_t* retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const ;
-  const Int_t* retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const ;
+  Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = 0, RooArgSet* set2 = 0,
+              RooArgSet* set3 = 0, RooArgSet* set4 = 0);
+  const std::vector<Int_t>& retrieve(Int_t masterCode) const ;
+  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1) const ;
+  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const ;
+  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1,
+                                      pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const ;
 
 protected:
 
-  Int_t _regSize ;      // Size of registry
-  Int_t* _clSize;       //! Array is size of code lists
-  pInt_t* _clArr;       //! Array of array of code lists
-  pRooArgSet* _asArr1;  //! Array of 1st RooArgSet pointers
-  pRooArgSet* _asArr2;  //! Array of 2nd RooArgSet pointers
-  pRooArgSet* _asArr3;  //! Array of 3rd RooArgSet pointers
-  pRooArgSet* _asArr4;  //! Array of 4th RooArgSet pointers
+  std::vector<std::vector<Int_t> > _clArr;       //! Array of array of code lists
+  std::vector<pRooArgSet> _asArr1;  //! Array of 1st RooArgSet pointers
+  std::vector<pRooArgSet> _asArr2;  //! Array of 2nd RooArgSet pointers
+  std::vector<pRooArgSet> _asArr3;  //! Array of 3rd RooArgSet pointers
+  std::vector<pRooArgSet> _asArr4;  //! Array of 4th RooArgSet pointers
 
-  ClassDef(RooAICRegistry,1) // Registry for analytical integration codes
+  ClassDef(RooAICRegistry,2) // Registry for analytical integration codes
 } ;
 
 #endif 

@@ -231,6 +231,7 @@ Bool_t RooUnitTest::runCompTests()
       
       Stat_t nItems = iter->first->numItems() ;
       for (Stat_t i=0 ; i<nItems ; i++) {
+	// coverity[NULL_RETURNS]
 	TObject* obj = iter->first->getObject((Int_t)i) ;
 	
 	// Retrieve corresponding object from reference frame
@@ -484,6 +485,7 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (!areTHidentical(iter6->first,bmark)) {
+	// coverity[NULL_RETURNS]
 	cout << "stressRooFit ERROR: comparison of object " << iter6->first->IsA()->GetName() << "::" << iter6->first->GetName() 
 	     <<   " fails comparison with counterpart in reference TH1 " << bmark->GetName() << endl ;
 

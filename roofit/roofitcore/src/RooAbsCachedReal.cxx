@@ -92,6 +92,7 @@ Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
   // if (!nset) return evaluate() ;
 
   // Calculate current unnormalized value of object
+  // coverity[NULL_RETURNS]
   FuncCacheElem* cache = getCache(nset) ;
  
   _value = cache->func()->getVal() ;
@@ -134,7 +135,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE)) {
-      coutI(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cache " << cache << " function " 
+      ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function " 
 		  << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
       fillCacheObject(*cache) ;  
       cache->func()->setValueDirty() ;
@@ -163,7 +164,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
-  coutI(Caching) << "RooAbsCachedReal::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
+  ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
   
   return cache ;
 }
@@ -260,8 +261,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 
   _ipOrder = order ;
 
-  Int_t i ;
-  for (i=0 ; i<_cacheMgr.cacheSize() ; i++) {
+  for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
     FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;

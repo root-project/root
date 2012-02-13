@@ -77,8 +77,6 @@ ClassImp(RooAbsAnaConvPdf)
 //_____________________________________________________________________________
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
   _isCopy(kFALSE),
-  _model(0),
-  _convVar(0),
   _convNormSet(0),
   _convSetIter(_convSet.createIterator())
 {
@@ -91,7 +89,8 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title, 
 				   const RooResolutionModel& model, RooRealVar& cVar) :
   RooAbsPdf(name,title), _isCopy(kFALSE),
-  _model((RooResolutionModel*)&model), _convVar((RooRealVar*)&cVar),
+  _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
+  _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
   _convNormSet(0), _convSetIter(_convSet.createIterator()),
   _coefNormMgr(this,10),
@@ -108,8 +107,8 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
 //_____________________________________________________________________________
 RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* name) : 
   RooAbsPdf(other,name), _isCopy(kTRUE),
-  _model(other._model), 
-  _convVar(other._convVar), 
+  _model("!model",this,other._model),
+  _convVar("!convVar",this,other._convVar),
   _convSet("!convSet",this,other._convSet),
   _basisList(other._basisList),
   _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
@@ -169,15 +168,15 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   }
 
   // Resolution model must support declared basis
-  if (!_model->isBasisSupported(expression)) {
+  if (!((RooResolutionModel*)_model.absArg())->isBasisSupported(expression)) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model " 
-			  << _model->GetName() 
+			  << _model.absArg()->GetName() 
 			  << " doesn't support basis function " << expression << endl ;
     return -1 ;
   }
 
   // Instantiate basis function
-  RooArgList basisArgs(*_convVar) ;
+  RooArgList basisArgs(_convVar.arg()) ;
   basisArgs.add(params) ;
 
   TString basisName(expression) ;
@@ -196,7 +195,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   _basisList.addOwned(*basisFunc) ;
 
   // Instantiate resModel x basisFunc convolution
-  RooAbsReal* conv = _model->convolution(basisFunc,this) ;
+  RooAbsReal* conv = ((RooResolutionModel*)_model.absArg())->convolution(basisFunc,this) ;
   if (!conv) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '" 
 			  << expression << "'" << endl ;
@@ -243,7 +242,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   _convSet.removeAll() ;
   _convSet.addOwned(newConvSet) ;
 
-  _model = (RooResolutionModel*) &newModel ;
+  _model.setArg((RooResolutionModel&)newModel) ;
   return kFALSE ;
 }
 
@@ -261,12 +260,12 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   // a (slower) generic generation context that uses accept/reject sampling
 
 
-  RooArgSet* modelDep = _model->getObservables(&vars) ;
+  RooArgSet* modelDep = _model.absArg()->getObservables(&vars) ;
   modelDep->remove(*convVar(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
 
-  if (dynamic_cast<RooTruthModel*>(_model)) {
+  if (dynamic_cast<RooTruthModel*>(_model.absArg())) {
     // Truth resolution model: use generic context explicitly allowing generation of convolution variable
     RooArgSet forceDirect(*convVar()) ;
     return new RooGenContext(*this,vars,prototype,auxProto,verbose,&forceDirect) ;
@@ -305,8 +304,8 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 
   // All direct generation of convolution arg if model is truth model
-  if (!TString(_convVar->GetName()).CompareTo(arg.GetName()) && 
-      dynamic_cast<RooTruthModel*>(_model)) {
+  if (!TString(_convVar.absArg()->GetName()).CompareTo(arg.GetName()) && 
+      dynamic_cast<RooTruthModel*>(_model.absArg())) {
     return kTRUE ;
   }
 
@@ -448,11 +447,12 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   }
 
 
+
   // Store integration configuration in registry
   Int_t masterCode(0) ;
-  Int_t tmp(0) ;
+  std::vector<Int_t> tmp(1, 0) ;
 
-  masterCode = _codeReg.store(&tmp,1,intCoefSet,intConvSet,normCoefSet,normConvSet)+1 ; // takes ownership of all sets
+  masterCode = _codeReg.store(tmp, intCoefSet, intConvSet, normCoefSet, normConvSet) + 1 ; // takes ownership of all sets
 
   analVars.add(*allDeps) ;
   delete allDeps ;
@@ -513,11 +513,12 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
     // Integral over unnormalized function
     Double_t integral(0) ;
+    const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
-      Double_t coef = getCoefNorm(index++,intCoefSet,rangeName) ; 
+      Double_t coef = getCoefNorm(index++,intCoefSet,_rangeName) ; 
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
       if (coef!=0) {
-	integral += coef*(rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() :  conv->getNorm(intConvSet) ) ;       
+	integral += coef*(_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() :  conv->getNorm(intConvSet) ) ;       
 	cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index-1 << "] integral += " << conv->getNorm(intConvSet) << endl ;
       }
 
@@ -529,17 +530,22 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
     // Integral over normalized function
     Double_t integral(0) ;
     Double_t norm(0) ;
+    const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     while(((conv=(RooResolutionModel*)_convSetIter->Next()))) {
 
-      Double_t coefInt = getCoefNorm(index,intCoefSet,rangeName) ;
-      Double_t term = (rangeName ? conv->getNormObj(0,intConvSet,RooNameReg::ptr(rangeName))->getVal() : conv->getNorm(intConvSet) ) ;
+      Double_t coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
-      if (coefInt!=0) integral += coefInt*term ;
+      if (coefInt!=0) {
+	Double_t term = (_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() : conv->getNorm(intConvSet) ) ;
+	integral += coefInt*term ;
+      }
 
       Double_t coefNorm = getCoefNorm(index,normCoefSet) ;
-      term = conv->getNorm(normConvSet) ;
       //cout << "coefNorm[" << index << "] = " << coefNorm << "*" << term << " " << (normCoefSet?*normCoefSet:RooArgSet()) << endl ;
-      if (coefNorm!=0) norm += coefNorm*term ;
+      if (coefNorm!=0) {
+	Double_t term = conv->getNorm(normConvSet) ;
+	norm += coefNorm*term ;
+      }
 
       index++ ;
     }
@@ -597,14 +603,14 @@ Bool_t RooAbsAnaConvPdf::forceAnalyticalInt(const RooAbsArg& /*dep*/) const
 
 
 //_____________________________________________________________________________
-Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const char* rangeName) const 
+Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const 
 {
   // Returns the normalization integral value of the coefficient with number coefIdx over normalization
   // set nset in range rangeName
 
   if (nset==0) return coefficient(coefIdx) ;
 
-  CacheElem* cache = (CacheElem*) _coefNormMgr.getObj(nset,0,0,RooNameReg::ptr(rangeName)) ;
+  CacheElem* cache = (CacheElem*) _coefNormMgr.getObj(nset,0,0,rangeName) ;
   if (!cache) {
 
     cache = new CacheElem ;
@@ -614,11 +620,11 @@ Double_t RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, con
     makeCoefVarList(cache->_coefVarList) ;  
 
     for (i=0 ; i<cache->_coefVarList.getSize() ; i++) {
-      RooAbsReal* coefInt = static_cast<RooAbsReal&>(*cache->_coefVarList.at(i)).createIntegral(*nset,rangeName) ;
+      RooAbsReal* coefInt = static_cast<RooAbsReal&>(*cache->_coefVarList.at(i)).createIntegral(*nset,RooNameReg::str(rangeName)) ;
       cache->_normList.addOwned(*coefInt) ;      
     }  
 
-    _coefNormMgr.setObj(nset,0,cache,RooNameReg::ptr(rangeName)) ;
+    _coefNormMgr.setObj(nset,0,cache,rangeName) ;
   }
 
   return ((RooAbsReal*)cache->_normList.at(coefIdx))->getVal() ;

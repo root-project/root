@@ -74,6 +74,7 @@
 #include "RooMoment.h"
 #include "RooBrentRootFinder.h"
 #include "RooVectorDataStore.h"
+#include "RooCachedReal.h"
 
 #include "Riostream.h"
 
@@ -514,31 +515,15 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   // Integral over multiple ranges
   RooArgSet components ;
   
-  // char* buf = new char[strlen(rangeName)+1] ;
-  //   strlcpy(buf,rangeName) ;
-  //   char* range = strtok(buf,",") ;
-  
-  //   while (range) {
-  //     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg,range) ;
-  //     components.add(*compIntegral) ;
-  //     range = strtok(0,",") ;
-  //   }
-  //   delete[] buf ;
-  
-  // + ALEX
   TObjArray* oa = TString(rangeName).Tokenize(",");
   
   for( Int_t i=0; i < oa->GetEntries(); ++i) {
     TObjString* os = (TObjString*) (*oa)[i];
-//     cout<< "    ALEX:: RooAbsReal::createIntegral (" << GetName() << ")  os = " << os->GetString().Data() <<endl;
     if(!os) break;
     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg,os->GetString().Data()) ;
-//     cout << "just created " << compIntegral->GetName() << " for rangename = " << os->GetString().Data() << endl ;
     components.add(*compIntegral) ;
   }
   delete oa;
-  // - ALEX 
-//     cout<< "    ALEX:: RooAbsReal::createIntegral (" << GetName() << ")  components = " << components <<endl;
 
   TString title(GetTitle()) ;
   title.Prepend("Integral of ") ;
@@ -628,6 +613,33 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     coutE(Integration) << GetName() << " : ERROR while defining recursive integral over observables with parameterized integration ranges, please check that integration rangs specify uniquely defined integral " << endl; 
     delete integral ;
     integral = 0 ;
+    return integral ;
+  }
+
+
+  // After-burner: apply interpolating cache on (numeric) integral if requested by user
+  const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
+  if (cacheParamsStr && strlen(cacheParamsStr)) {
+
+    RooArgSet* intParams = integral->getVariables() ;
+    
+    RooNameSet cacheParamNames ;
+    cacheParamNames.setNameList(cacheParamsStr) ;
+    RooArgSet* cacheParams = cacheParamNames.select(*intParams) ;
+
+    if (cacheParams->getSize()>0) {
+      coutI(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
+		     << "-dim value cache for integral over " << iset2 << " as a function of " << *cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  endl ;
+      string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams->contentsString().c_str()) ;
+      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
+      cachedIntegral->setInterpolationOrder(2) ;
+      cachedIntegral->addOwnedComponents(*integral) ;
+      //cachedIntegral->disableCache(kTRUE) ;
+      integral = cachedIntegral ;
+    }
+
+    delete cacheParams ;
+    delete intParams ;
   }
 
   return integral ;
@@ -905,10 +917,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 
   RooAbsReal* projected= theClone->createIntegral(*projectedVars,normSet,rangeName) ;
-  projected->SetName(name.Data()) ;
-  projected->SetTitle(title.Data()) ;
-
-//   RooAbsReal* projected2 = new RooRealIntegral(name.Data(),title.Data(),*theClone,*projectedVars,&normSet,0,rangeName);
 
   if(0 == projected || !projected->isValid()) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
@@ -918,6 +926,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     delete dependentIterator;
     return 0;
   }
+
+  projected->SetName(name.Data()) ;
+  projected->SetTitle(title.Data()) ;
+
   // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
   cloneSet->addOwned(*projected);
 
@@ -1141,10 +1153,11 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
   }
   
   // Make deep clone of self and attach to dataset observables
-  RooArgSet* origObs = getObservables(hist) ;  
-  //RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
-  //RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
-  const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
+  //RooArgSet* origObs = getObservables(hist) ;  
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
+  theClone->recursiveRedirectServers(*hist->get()) ;
+  //const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
 
   // Iterator over all bins of RooDataHist and fill weights
   Int_t onePct = hist->numEntries()/100 ;
@@ -1156,14 +1169,14 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
       ccoutP(Eval) << "." << flush ;
     }
     const RooArgSet* obs = hist->get(i) ;
-    Double_t binVal = /*theClone->*/getVal(normSet?normSet:obs)*scaleFactor ;
+    Double_t binVal = theClone->getVal(normSet?normSet:obs)*scaleFactor ;
     if (correctForBinSize) binVal*= hist->binVolume() ;
     hist->set(binVal) ;
   }
 
-  //delete cloneSet ;
-  const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*origObs) ;
-  delete origObs ;
+  delete cloneSet ;
+  //const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*origObs) ;
+  //delete origObs ;
 
   return hist;
 }
@@ -1930,11 +1943,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Attach dataset
     projection->getVal(projDataSel->get()) ;
     projection->attachDataSet(*projDataSel) ;
-    
+
     // Construct optimized data weighted average
     RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
-    dwa.constOptimizeTestStatistic(Activate) ;
+
+    // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
+    dwa.constOptimizeTestStatistic(Activate,kFALSE) ;
 
     RooRealBinding projBind(dwa,*plotVar) ;
     RooScaledFunc scaleBind(projBind,o.scaleFactor);
@@ -4380,5 +4395,21 @@ void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m)
 }
 
 
-
+//_____________________________________________________________________________
+void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars) 
+{
+  RooFIter iter = paramVars.fwdIterator() ;
+  RooAbsArg* arg ;
+  string plist ;
+  while((arg=iter.next())) {
+    if (!dependsOnValue(*arg)) {
+      coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName() 
+			    << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;
+      continue ;
+    }
+    if (plist.size()>0) plist += ":" ;
+    plist += arg->GetName() ;    
+  }
+  setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
+}
 

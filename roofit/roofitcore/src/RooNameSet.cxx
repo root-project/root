@@ -93,6 +93,19 @@ void RooNameSet::extendBuffer(Int_t inc)
 
 
 //_____________________________________________________________________________
+void RooNameSet::setNameList(const char* givenList) 
+{
+  // Increment internal buffer by specified amount
+  _len = strlen(givenList) ;
+  char * newbuf = new char[_len+1] ;
+  strncpy(newbuf,givenList,_len+1) ;
+  delete[] _nameList ;
+  _nameList = newbuf ;
+}
+
+
+
+//_____________________________________________________________________________
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   // Refill internal contents from names in given argSet

@@ -51,7 +51,7 @@ protected:
   virtual void fillCacheObject(FuncCacheElem& cacheFunc) const ;
   virtual Double_t evaluate() const { 
     // Dummy evaluate, it is never called
-    return 0 ; 
+    return func ;
   }
 
   virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }

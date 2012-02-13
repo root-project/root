@@ -181,9 +181,9 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
-//   cout << "RooNLLVar::evaluatePartition(" << GetName() << ")" << endl ;
+  // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
 
-  _dataClone->store()->recalculateCache() ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
 
   Double_t sumWeight(0) ;
   for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
@@ -193,7 +193,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     //if (wgt==0) continue ;
 
     _dataClone->get(i) ;
-//     cout << "NLL - now loading event #" << i << endl ;
+    //cout << "NLL - now loading event #" << i << endl ;
 //     _funcObsSet->Print("v") ;
     
 
@@ -208,6 +208,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_weightSq) eventWeight *= eventWeight ;
 
     Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
+    //cout << "term = " << term << endl ;
     sumWeight += eventWeight ;
 
     result-= term;

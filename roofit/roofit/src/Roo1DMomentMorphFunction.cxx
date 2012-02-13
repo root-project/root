@@ -31,7 +31,7 @@ ClassImp(Roo1DMomentMorphFunction)
 
 
 //_____________________________________________________________________________
-  Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0) 
+  Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0), _setting(Linear)
 {
   _varItr    = _varList.createIterator() ;
 }
@@ -64,6 +64,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
   delete varItr ;
 
   _mref      = new TVectorD(mrefpoints);
+  _frac      = 0 ;
   _varItr    = _varList.createIterator() ;
 
   // initialization
@@ -80,6 +81,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
   _setting(other._setting)
 { 
   _mref = new TVectorD(*other._mref) ;
+  _frac = 0 ;
   _varItr    = _varList.createIterator() ;
 
   // initialization

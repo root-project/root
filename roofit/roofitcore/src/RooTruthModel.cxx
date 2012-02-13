@@ -31,6 +31,8 @@
 #include "Riostream.h"
 #include "Riostream.h"
 #include "RooTruthModel.h"
+#include <algorithm>
+using namespace std ;
 
 ClassImp(RooTruthModel) 
 ;
@@ -156,6 +158,7 @@ Double_t RooTruthModel::evaluate() const
   // Return desired basis function
   switch(basisType) {    
   case expBasis: {
+    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-fabs((Double_t)x)/tau) << " tau = " << tau << endl ;
     return exp(-fabs((Double_t)x)/tau) ;
   }
   case sinBasis: {
@@ -253,10 +256,16 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
   switch (basisType) {
   case expBasis:
     {
+      // WVE fixed for ranges
       Double_t result(0) ;
       if (tau==0) return 1 ;
-      if (basisSign != Minus) result += tau*(1-exp(-x.max(rangeName)/tau)) ;
-      if (basisSign != Plus) result += tau*(1-exp(x.min(rangeName)/tau)) ;
+      if ((basisSign != Minus) && (x.max(rangeName)>0)) {
+	result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
+      }
+      if ((basisSign != Plus) && (x.min(rangeName)<0)) {
+	result -= tau*(-exp(-max(0.,x.min(rangeName))/tau)) - -tau*exp(-x.max(rangeName)/tau) ;   // minus and both
+      }
+
       return result ;
     }
   case sinBasis:
@@ -264,8 +273,6 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
       Double_t result(0) ;
       if (tau==0) return 0 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      //if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + 1/tau;
-      //if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + 1/tau ;
       if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + dm;  // fixed FMV 08/29/03
       if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + dm ;  // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
@@ -276,7 +283,6 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
       if (tau==0) return 1 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*cos(dm*x.max(rangeName)) + dm*sin(dm*x.max(rangeName))) + 1/tau ;
-      //if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) - dm*sin(dm*(-x.min(rangeName)))) + 1/tau ;
       if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) + dm*sin(dm*(-x.min(rangeName)))) + 1/tau ; // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }

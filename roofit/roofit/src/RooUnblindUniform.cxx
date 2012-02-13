@@ -42,7 +42,7 @@ ClassImp(RooUnblindUniform)
 
 
 //_____________________________________________________________________________
-RooUnblindUniform::RooUnblindUniform() : _blindEngine("") 
+RooUnblindUniform::RooUnblindUniform()
 {
   // Default constructor
 }

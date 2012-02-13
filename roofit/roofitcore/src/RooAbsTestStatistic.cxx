@@ -292,9 +292,9 @@ Bool_t RooAbsTestStatistic::initialize()
   // One-time initialization of the test statistic. Setup
   // infrastructure for simultaneous p.d.f processing and/or
   // parallelized processing if requested
-
+  
   if (_init) return kFALSE ;
-
+  
   if (_gofOpMode==MPMaster) {
     initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   } else if (_gofOpMode==SimMaster) {
@@ -445,7 +445,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat() ;
 
-
   TString simCatName(simCat.GetName()) ;
   TList* dsetList = const_cast<RooAbsData*>(data)->split(simCat,processEmptyDataSets()) ;
   if (!dsetList) {
@@ -506,10 +505,18 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       }
     }
   }
+  
+  // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
+  TIterator* iter = dsetList->MakeIterator() ;
+  TObject* ds ;
+  while((ds=iter->Next())) {
+    delete ds ;
+  }
+  delete iter ;
 
-  dsetList->Delete() ;
   delete dsetList ;
   delete catIter ;
+
 }
 
 

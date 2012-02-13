@@ -43,7 +43,7 @@ ClassImp(RooUnblindCPAsymVar)
 
 
 //_____________________________________________________________________________
-RooUnblindCPAsymVar::RooUnblindCPAsymVar() : _blindEngine("") 
+RooUnblindCPAsymVar::RooUnblindCPAsymVar()
 {
   // Default constructor
 }

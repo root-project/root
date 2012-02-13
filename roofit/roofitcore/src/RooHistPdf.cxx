@@ -239,6 +239,14 @@ Double_t RooHistPdf::totVolume() const
   return _totVolume ;
 }
 
+namespace {
+    bool fullRange(const RooAbsArg& x ,const char* range)  {
+      if (range == 0 || strlen(range) == 0 ) return true;
+      const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
+      if (!_x) return false;
+      return ( _x->getMin(range) == _x->getMin() && _x->getMax(range) == _x->getMax() ) ; 
+    }
+}
 
 
 //_____________________________________________________________________________
@@ -250,12 +258,9 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // histogram. If interpolation is used on the integral over
   // all histogram observables is supported
 
-  // Only analytical integrals over the full range are defined
-  if (rangeName!=0) {
-    return 0 ;
-  }
 
   // First make list of pdf observables to histogram observables
+  // and select only those for which the integral is over the full range
   RooArgList hobsl(_histObsList),pobsl(_pdfObsList) ;
   RooArgSet allVarsHist ;
   TIterator* iter = allVars.createIterator() ;
@@ -264,7 +269,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
     Int_t idx = pobsl.index(pdfobs) ;
     if (idx>=0) {
       RooAbsArg* hobs = hobsl.at(idx) ;
-      if (hobs) {
+      if (hobs && fullRange( *hobs, rangeName ) ) {
 	allVarsHist.add(*hobs) ;
       }
     }

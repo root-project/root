@@ -48,8 +48,8 @@ protected:
 
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;	
-
-
+  RooBinIntegrator(const RooBinIntegrator&) ;
+  
   // Numerical integrator workspace
   mutable std::vector<Double_t> _xmin;      //! Lower integration bound
   mutable std::vector<Double_t> _xmax;      //! Upper integration bound

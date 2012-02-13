@@ -39,6 +39,7 @@
 
 #include <iomanip>
 #include <algorithm>
+#include <memory>
 using namespace std ;
 
 ClassImp(RooVectorDataStore)
@@ -68,7 +69,8 @@ RooVectorDataStore::RooVectorDataStore() :
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
 }
 
@@ -95,7 +97,8 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
@@ -184,7 +187,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _curWgtErrLo(other._curWgtErrLo),
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   // Regular copy ctor
 
@@ -235,7 +239,8 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
@@ -1156,7 +1161,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
 typedef RooVectorDataStore::RealVector* pRealVector ;
 //_____________________________________________________________________________
-void RooVectorDataStore::recalculateCache() 
+void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) 
 {
   if (!_cache) return ;
 
@@ -1177,8 +1182,11 @@ void RooVectorDataStore::recalculateCache()
   // Refill caches of elements that require recalculation
 //   cout << "recalc error count before update = " << RooAbsReal::numEvalErrors() << endl ;
   RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
-  Int_t ne = numEntries() ;
-  for (int i=0 ; i<ne ; i++) {
+  std::auto_ptr<RooArgSet> nset( (RooArgSet*) _vars.snapshot(kFALSE) );
+  if (projectedArgs) nset->remove(*projectedArgs,kFALSE,kTRUE);
+  //cout << "RooVectorDataStore::recalculateCache: _vars = " << _vars << " projected = " << (projectedArgs?*projectedArgs:RooArgSet()) <<  " nset = " << *nset << endl;
+  //Int_t ne = numEntries() ;
+  for (int i=firstEvent ; i<lastEvent ; i+=stepSize) {
     get(i) ;    
     Bool_t zeroWeight = (weight()==0) ;
     if (zeroWeight) {
@@ -1187,7 +1195,7 @@ void RooVectorDataStore::recalculateCache()
     }
     for (int j=0 ; j<ntv ; j++) {
       tv[j]->_nativeReal->_valueDirty=kTRUE ;
-      tv[j]->_nativeReal->getValV(&_vars) ;
+      tv[j]->_nativeReal->getValV(nset.get()) ;
 //       cout << "updating tracked cache slot " << i << " element " ; tv[j]->_nativeReal->Print() ;
       tv[j]->write(i) ;
     }
