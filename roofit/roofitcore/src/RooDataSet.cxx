@@ -1362,7 +1362,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
     get(i);
     
     if (select && select->eval()==0) continue ;
-    histogram->Fill(plotVarX->getVal(), plotVarY->getVal()) ;
+    histogram->Fill(plotVarX->getVal(), plotVarY->getVal(),weight()) ;
   }
 
   if (ownPlotVarX) delete plotVarX ;
