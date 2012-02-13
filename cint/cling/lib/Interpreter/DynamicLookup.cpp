@@ -415,11 +415,14 @@ namespace cling {
           // 2.4 Call the best-match constructor. The method does overload 
           // resolution of the constructors and then initializes the new
           // variable with it
-          m_Sema->AddCXXDirectInitializerToDecl(HandlerInstance,
-                                                m_NoSLoc,
-                                                move_arg(Inits),
-                                                m_NoELoc,
-                                                /*TypeMayContainAuto*/ false);
+	  ExprResult InitExprResult 
+	    = m_Sema->ActOnParenListExpr(m_NoSLoc,
+					 m_NoELoc,
+					 move_arg(Inits));
+          m_Sema->AddInitializerToDecl(HandlerInstance,
+				       InitExprResult.take(),
+				       /*DirectInit*/ true,
+				       /*TypeMayContainAuto*/ false);
 
           // 2.5 Register the instance in the enclosing context
           CuredDecl->getDeclContext()->addDecl(HandlerInstance);
