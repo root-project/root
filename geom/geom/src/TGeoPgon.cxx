@@ -53,6 +53,8 @@ TGeoPgon::TGeoPgon()
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
+   fIntBuffer = 0;
+   fDblBuffer = 0;
 }   
 
 //_____________________________________________________________________________
@@ -62,6 +64,8 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
+   fIntBuffer = 0;
+   fDblBuffer = 0;
 }
 
 //_____________________________________________________________________________
@@ -71,6 +75,8 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
+   fIntBuffer = 0;
+   fDblBuffer = 0;
 }
 
 //_____________________________________________________________________________
@@ -87,6 +93,8 @@ TGeoPgon::TGeoPgon(Double_t *param)
 // param[5] = Rmin1
 // param[6] = Rmax1
 // ...
+   fIntBuffer = 0;
+   fDblBuffer = 0;
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
@@ -96,6 +104,8 @@ TGeoPgon::TGeoPgon(Double_t *param)
 TGeoPgon::~TGeoPgon()
 {
 // destructor
+   delete [] fIntBuffer;
+   delete [] fDblBuffer;
 }
 
 //_____________________________________________________________________________
@@ -348,8 +358,10 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
       ipl++;
    }
    Double_t stepmax = step;
-   Double_t *sph = gGeoManager->GetDblBuffer(fNedges+4);
-   Int_t *iph = gGeoManager->GetIntBuffer(fNedges+4);
+   if (!fIntBuffer) fIntBuffer = new Int_t[fNedges+10];
+   if (!fDblBuffer) fDblBuffer = new Double_t[fNedges+10];
+   Double_t *sph = fDblBuffer;
+   Int_t *iph = fIntBuffer;
    // locate current phi sector [0,fNedges-1]; -1 for dead region
    LocatePhi(point, ipsec);
    if (ipsec<0) {
@@ -1035,8 +1047,10 @@ Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
          }   
       }   
    }   
-   Double_t *sph = gGeoManager->GetDblBuffer(fNedges+2);
-   Int_t *iph = gGeoManager->GetIntBuffer(fNedges+2);
+   if (!fIntBuffer) fIntBuffer = new Int_t[fNedges+10];
+   if (!fDblBuffer) fDblBuffer = new Double_t[fNedges+10];
+   Double_t *sph = fDblBuffer;
+   Int_t *iph = fIntBuffer;
    Int_t icrossed;
    // locate current phi sector [0,fNedges-1]; -1 for dead region
    // if ray is perpendicular to Z, solve this particular case

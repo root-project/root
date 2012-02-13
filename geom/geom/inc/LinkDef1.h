@@ -18,6 +18,7 @@
 #pragma link C++ global gGeoIdentity;
 
 #pragma link C++ class TGeoAtt+;
+#pragma link C++ struct TGeoStateInfo+;
 #pragma link C++ class TGeoBoolNode+;
 #pragma link C++ class TGeoUnion+;
 #pragma link C++ class TGeoIntersection+;

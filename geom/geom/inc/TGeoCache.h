@@ -17,6 +17,10 @@
 #include "TGeoNode.h"
 #endif
 
+#ifndef ROOT_TGeoStateInfo
+#include "TGeoStateInfo.h"
+#endif
+
 // forward declarations
 class TGeoManager;
 class TGeoHMatrix;
@@ -53,7 +57,7 @@ public:
    void                 SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=0);
    Bool_t               GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
 
-   ClassDef(TGeoCacheState, 4)       // class storing the cache state
+   ClassDef(TGeoCacheState, 0)       // class storing the cache state
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -67,8 +71,10 @@ class TGeoNodeCache : public TObject
 private:
    Int_t                 fGeoCacheMaxLevels;// maximum supported number of levels
    Int_t                 fGeoCacheStackSize;// maximum size of the stack
+   Int_t                 fGeoInfoStackSize; // maximum size of the stack of info states
    Int_t                 fLevel;            // level in the current branch
    Int_t                 fStackLevel;       // current level in the stack
+   Int_t                 fInfoLevel;       // current level in the stack
    Int_t                 fCurrentID;        // unique ID of current node
    Int_t                 fIndex;            // index in array of ID's
    Int_t                 fIdBranch[100];    // current branch of indices
@@ -80,9 +86,9 @@ private:
    TGeoHMatrix         **fMatrixBranch;     // current branch of global matrices
    TGeoHMatrix         **fMPB;              // pre-built matrices
    TGeoNode            **fNodeBranch;       // current branch of nodes
+   TGeoStateInfo       **fInfoBranch;       // current branch of nodes
    Int_t                *fNodeIdArray;      //! array of node id's
 
-protected:
    TGeoNodeCache(const TGeoNodeCache&); // Not implemented
    TGeoNodeCache& operator=(const TGeoNodeCache&); // Not implemented
 
@@ -109,6 +115,8 @@ public:
    TGeoHMatrix         *GetMotherMatrix(Int_t up=1) const {return ((fLevel-up)>=0)?fMatrixBranch[fLevel-up]:0;}
    TGeoNode            *GetNode() const        {return fNode;}
    TGeoNode            *GetTopNode() const     {return fTop;}
+   TGeoStateInfo       *GetInfo();
+   void                 ReleaseInfo();
    Int_t                GetLevel() const       {return fLevel;}
    const char          *GetPath();
    Int_t                GetStackLevel() const  {return fStackLevel;}
@@ -133,5 +141,3 @@ public:
 };
 
 #endif
-
-

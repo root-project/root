@@ -531,7 +531,10 @@ void TGeoNode::PrintCandidates() const
       return;
    }
    Int_t ncheck = 0;
-   Int_t *check_list = voxels->GetCheckList(&point[0], ncheck, 0);
+   TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
+   TGeoStateInfo &info = *nav->GetCache()->GetInfo();
+   Int_t *check_list = voxels->GetCheckList(&point[0], ncheck, info);
+   nav->GetCache()->ReleaseInfo();
    voxels->PrintVoxelLimits(&point[0]);
    if (!check_list) {
       printf("no candidates for current point\n");

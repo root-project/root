@@ -184,9 +184,13 @@ Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
    Double_t local[3];
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
-      Int_t tid = TGeoManager::ThreadId();
-      check_list = voxels->GetCheckList(&point[0], ncheck, tid);
-      if (!check_list) return kFALSE;
+      TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
+      TGeoStateInfo &td = *nav->GetCache()->GetInfo();
+      check_list = voxels->GetCheckList(&point[0], ncheck, td);
+      if (!check_list) {
+         nav->GetCache()->ReleaseInfo();
+         return kFALSE;
+      }   
       for (id=0; id<ncheck; id++) {
          node = fVolume->GetNode(check_list[id]);
          shape = node->GetVolume()->GetShape();
@@ -194,9 +198,11 @@ Bool_t TGeoShapeAssembly::Contains(Double_t *point) const
          if (shape->Contains(local)) {
             fVolume->SetCurrentNodeIndex(check_list[id]);
             fVolume->SetNextNodeIndex(check_list[id]);
+            nav->GetCache()->ReleaseInfo();
             return kTRUE;
          }   
       }
+      nav->GetCache()->ReleaseInfo();
       return kFALSE;
    }      
    Int_t nd = fVolume->GetNdaughters();
@@ -286,9 +292,11 @@ Double_t TGeoShapeAssembly::DistFromOutside(Double_t *point, Double_t *dir, Int_
    // current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
    Int_t *vlist = 0;
-   Int_t tid = TGeoManager::ThreadId();
-   voxels->SortCrossedVoxels(pt, dir, tid);
-   while ((vlist=voxels->GetNextVoxel(pt, dir, ncheck, tid))) {
+   TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
+   TGeoStateInfo &td = *nav->GetCache()->GetInfo();
+   
+   voxels->SortCrossedVoxels(pt, dir, td);
+   while ((vlist=voxels->GetNextVoxel(pt, dir, ncheck, td))) {
       for (i=0; i<ncheck; i++) {
          node = fVolume->GetNode(vlist[i]);
          node->MasterToLocal(pt, lpoint);
@@ -301,6 +309,7 @@ Double_t TGeoShapeAssembly::DistFromOutside(Double_t *point, Double_t *dir, Int_
          }
       }
    }
+   nav->GetCache()->ReleaseInfo();
    if (found) {
       snext += stepmax;
       return snext;

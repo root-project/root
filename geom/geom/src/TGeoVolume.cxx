@@ -362,7 +362,6 @@ ClassImp(TGeoVolume)
 void TGeoVolume::ClearThreadData() const
 {
    if (fFinder) fFinder->ClearThreadData();
-   if (fVoxels) fVoxels->ClearThreadData();
    if (fShape)  fShape->ClearThreadData();
 }   
 

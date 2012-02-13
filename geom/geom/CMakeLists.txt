@@ -8,7 +8,7 @@ ROOT_USE_PACKAGE(math)
 ROOT_USE_PACKAGE(io/io)
 ROOT_USE_PACKAGE(hist/hist)
 
-set(headers1 TGeoAtt.h TGeoBoolNode.h
+set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoMedium.h TGeoMaterial.h
              TGeoMatrix.h TGeoVolume.h TGeoNode.h
              TGeoVoxelFinder.h TGeoShape.h TGeoBBox.h

@@ -47,6 +47,9 @@ class TGeoManager : public TNamed
 protected:
    static Bool_t         fgLock;            //! Lock preventing a second geometry to be loaded
    static Int_t          fgVerboseLevel;    //! Verbosity level for Info messages (no IO).
+   static Int_t          fgMaxLevel;        //! Maximum level in geometry
+   static Int_t          fgMaxDaughters;    //! Maximum number of daughters
+   static Int_t          fgMaxXtruVert;     //! Maximum number of Xtru vertices
 
    TGeoManager(const TGeoManager&); 
    TGeoManager& operator=(const TGeoManager&); 
@@ -144,21 +147,6 @@ public:
    TGeoManager(const char *name, const char *title);
    // destructor
    virtual ~TGeoManager();
-   struct ThreadData_t
-   {
-      Int_t              fIntSize;          //! int buffer size
-      Int_t              fDblSize;          //! dbl buffer size
-      Int_t             *fIntBuffer;        //! transient int buffer
-      Double_t          *fDblBuffer;        //! transient dbl buffer
-
-      ThreadData_t();
-      ~ThreadData_t();
-   };
-
-   mutable std::vector<ThreadData_t*> fThreadData; //! Thread private data
-   mutable Int_t                      fThreadSize; //! Length of thread data
-
-   ThreadData_t&         GetThreadData()   const;
    void                  ClearThreadData() const;
    //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
@@ -431,15 +419,17 @@ public:
 
    //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=0, Int_t nlevels=10000, Int_t option=0);
+   void                   CountLevels();
    virtual void           ExecuteEvent(Int_t event, Int_t px, Int_t py);
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    Int_t                  TransformVolumeToAssembly(const char *vname);
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
-   Int_t                 *GetIntBuffer(Int_t length);
-   Double_t              *GetDblBuffer(Int_t length);
    void                   SetAllIndex();
+   static Int_t           GetMaxDaughters() {return fgMaxDaughters;}
+   static Int_t           GetMaxLevels()     {return fgMaxLevel;}
+   static Int_t           GetMaxXtruVert()  {return fgMaxXtruVert;}
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Bool_t                 IsMultiThread() const {return fMultiThread;}
    static void            SetNavigatorsLock(Bool_t flag) {fgLockNavigators = flag;}

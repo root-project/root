@@ -34,6 +34,8 @@ class TGeoPgon : public TGeoPcon
 protected:
    // data members
    Int_t                 fNedges;    // number of edges (at least one)
+   mutable Int_t        *fIntBuffer; //![fNedges+4] temporary int buffer array
+   mutable Double_t     *fDblBuffer; //![fNedges+4] temporary double buffer array
    
    Int_t                 GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=TGeoShape::Big()) const;
    Bool_t                IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const;

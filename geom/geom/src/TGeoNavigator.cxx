@@ -1025,8 +1025,9 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
    Int_t ncheck = 0;
    Int_t sumchecked = 0;
    Int_t *vlist = 0;
-   voxels->SortCrossedVoxels(point, dir, fThreadId);
-   while ((sumchecked<nd) && (vlist=voxels->GetNextVoxel(point, dir, ncheck, fThreadId))) {
+   TGeoStateInfo &info = *fCache->GetInfo();
+   voxels->SortCrossedVoxels(point, dir, info);
+   while ((sumchecked<nd) && (vlist=voxels->GetNextVoxel(point, dir, ncheck, info))) {
       for (i=0; i<ncheck; i++) {
          current = vol->GetNode(vlist[i]);
          if (fGeometry->IsActivityEnabled() && !current->GetVolume()->IsActive()) continue;
@@ -1067,6 +1068,7 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
          }
       }
    }
+   fCache->ReleaseInfo();
    if (vol->IsAssembly()) ((TGeoVolumeAssembly*)vol)->SetNextNodeIndex(idaughter);
    return nodefound;
 }
@@ -1817,17 +1819,22 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    Int_t id;
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
-      check_list = voxels->GetCheckList(&point[0], ncheck, fThreadId);
+      check_list = voxels->GetCheckList(&point[0], ncheck, *fCache->GetInfo());
       // if none in voxel, see if this is the last one
       if (!check_list) {
-         if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
+         if (!fCurrentNode->GetVolume()->IsAssembly()) {
+            fCache->ReleaseInfo();
+            return fCurrentNode;
+         }   
          // Point in assembly - go up
          node = fCurrentNode;
          if (!fLevel) {
             fIsOutside = kTRUE;
+            fCache->ReleaseInfo();
             return 0;
          }
          CdUp();
+         fCache->ReleaseInfo();
          return SearchNode(kFALSE,node);
       }   
       // loop all nodes in voxel
@@ -1848,6 +1855,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
                fOverlapMark += nc;
                node = FindInCluster(cluster, nc);
                fOverlapMark -= nc;
+               fCache->ReleaseInfo();
                return node;
             }
          }
@@ -1856,17 +1864,23 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          node = SearchNode(kTRUE);
          if (node) {
             fIsSameLocation = kFALSE;
+            fCache->ReleaseInfo();
             return node;
          }
          CdUp();
       }
-      if (!fCurrentNode->GetVolume()->IsAssembly()) return fCurrentNode;
+      if (!fCurrentNode->GetVolume()->IsAssembly()) {
+         fCache->ReleaseInfo();
+         return fCurrentNode;
+      }   
       node = fCurrentNode;
       if (!fLevel) {
          fIsOutside = kTRUE;
+         fCache->ReleaseInfo();
          return 0;
       }
       CdUp();
+      fCache->ReleaseInfo();
       return SearchNode(kFALSE,node);
    }
    // if there are no voxels just loop all daughters
@@ -2238,8 +2252,11 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
    Int_t ncheck = 0;
    Double_t local1[3];
    if (voxels) {
-      check_list = voxels->GetCheckList(local, ncheck, fThreadId);
-      if (!check_list) return kTRUE;
+      check_list = voxels->GetCheckList(local, ncheck, *fCache->GetInfo());
+      if (!check_list) {
+         fCache->ReleaseInfo();
+         return kTRUE;
+      }   
       if (!change) PushPath();
       for (Int_t id=0; id<ncheck; id++) {
 //         node = vol->GetNode(check_list[id]);
@@ -2248,14 +2265,17 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
          if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
             if (!change) {
                PopPath();
+               fCache->ReleaseInfo();
                return kFALSE;
             }
             SearchNode(kTRUE);
+            fCache->ReleaseInfo();
             return kFALSE;
          }
          CdUp();
       }
       if (!change) PopPath();
+      fCache->ReleaseInfo();
       return kTRUE;
    }
    Int_t id = 0;

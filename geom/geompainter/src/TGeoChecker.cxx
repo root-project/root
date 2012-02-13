@@ -1150,7 +1150,9 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
    TGeoNode *node1, *node2;
    Int_t novlps = 0;
    TGeoHMatrix mat1, mat2;
-   Int_t tid = TGeoManager::ThreadId();
+//   Int_t tid = TGeoManager::ThreadId();
+   TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
+   TGeoStateInfo &td = *nav->GetCache()->GetInfo();
    while (ipoint < npoints) {
    // Shoot randomly in the bounding box.
       pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
@@ -1167,7 +1169,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
       // Check if the point is inside one or more daughters
       in = kFALSE;
       ipoint++;
-      check_list = voxels->GetCheckList(pt, ncheck, tid);
+      check_list = voxels->GetCheckList(pt, ncheck, td);
       if (!check_list || ncheck<2) continue;
       for (id=0; id<ncheck; id++) {
          id0 = check_list[id];
@@ -1226,7 +1228,7 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t /* ovlp */, 
          if (nodeovlp->GetOverlap()<safe) nodeovlp->SetOverlap(safe);
       }
    }
-
+   nav->GetCache()->ReleaseInfo();
    if (flags) delete [] flags;
    if (!novlps) return;
    Double_t capacity = vol->GetShape()->Capacity();
@@ -2663,12 +2665,13 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
    Double_t local[3];
    Int_t *checklist;
    Int_t ncheck;
-   Int_t tid = TGeoManager::ThreadId();
+   TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
+   TGeoStateInfo &td = *nav->GetCache()->GetInfo();
    timer.Start();
    for (Int_t i=0; i<npoints; i++) {
       point = xyz + 3*i;
       if (!shape->Contains(point)) continue;
-      checklist = voxels->GetCheckList(point, ncheck, tid);
+      checklist = voxels->GetCheckList(point, ncheck, td);
       if (!checklist) continue;
       if (!ncheck) continue;
       for (Int_t id=0; id<ncheck; id++) {
@@ -2678,6 +2681,7 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
          if (node->GetVolume()->GetShape()->Contains(&local[0])) break;
       }   
    }
+   nav->GetCache()->ReleaseInfo();
    time = timer.CpuTime();
    return time;
 }   
