@@ -509,40 +509,16 @@ void TGLViewer::PreRender()
 //______________________________________________________________________________
 void TGLViewer::Render()
 {
-   // Normal rendering, following instructions from TGLRnrCtx::RenderOrder().
+   // Normal rendering, used by mono and stereo rendering.
 
-   if (fRnrCtx->RenderOrder() == TGLRnrCtx::kAllClearDepthSelected ||
-       fRnrCtx->RenderOrder() == TGLRnrCtx::kAllSelected)
-   {
-      RenderNonSelected();
-      RenderSelected();
-      DrawGuides();
-      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
+   RenderOpaque();
+   RenderTransparent();
+   DrawGuides();
+   RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
-      if (fRnrCtx->RenderOrder() == TGLRnrCtx::kAllClearDepthSelected)
-      {
-         glClear(GL_DEPTH_BUFFER_BIT);
-      }
-
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderSelected();
-      fRnrCtx->SetHighlight(kFALSE);
-   }
-   else // fRnrCtx->RenderOrder() == TGLRnrCtx::kOpaqueTransparent
-   {
-      RenderOpaque(kTRUE,  kTRUE);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderOpaque(kFALSE, kTRUE);
-      fRnrCtx->SetHighlight(kFALSE);
-
-      RenderTransparent(kTRUE,  kTRUE);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderTransparent(kFALSE, kTRUE);
-      fRnrCtx->SetHighlight(kFALSE);
-
-      DrawGuides();
-      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
-   }
+   fRnrCtx->SetHighlight(kTRUE);
+   RenderSelected();
+   fRnrCtx->SetHighlight(kFALSE);
 
    glClear(GL_DEPTH_BUFFER_BIT);
    DrawDebugInfo();

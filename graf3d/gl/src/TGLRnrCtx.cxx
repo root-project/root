@@ -58,8 +58,6 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fCamera    (0),
    fSceneInfo (0),
 
-   fRenderOrder  (kAllClearDepthSelected),
-
    fViewerLOD    (kLODUndef),
    fSceneLOD     (kLODUndef),
    fCombiLOD     (kLODUndef),
@@ -86,9 +84,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
 
    fHighlight    (kFALSE),  fHighlightOutline (kFALSE),
    fSelection    (kFALSE),  fSecSelection     (kFALSE),
-   fSelectTransparents                (kIfNoOpaques),
-   fHighlightDepthRangeOffset         (0),
-   fHighlightedObjectDepthRangeOffset (-0.5),
+   fSelectTransparents (kIfNoOpaques),
    fPickRadius   (0),
    fPickRectangle(0),
    fSelectBuffer (0),
@@ -107,7 +103,6 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fGrabbedImage  (0)
 {
    // Constructor.
-
    
    fColorSetStack = new lpTGLColorSet_t;
    fColorSetStack->push_back(0);

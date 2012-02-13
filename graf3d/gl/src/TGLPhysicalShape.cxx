@@ -367,7 +367,25 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
    if (fInvertedWind)  glFrontFace(GL_CW);
    if (rnrCtx.Highlight() && !rnrCtx.Selection() && !rnrCtx.IsDrawPassOutlineLine())
    {
+      glPushAttrib(GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+      glDisable(GL_CULL_FACE);
+      glDisable(GL_DEPTH_TEST);
+      glEnable(GL_STENCIL_TEST);
+      glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+      glClear(GL_STENCIL_BUFFER_BIT);
+      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+      fLogicalShape->Draw(rnrCtx);
+
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
       fLogicalShape->DrawHighlight(rnrCtx, this);
+
+      glPopAttrib();
    }
    else
    {

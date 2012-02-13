@@ -53,13 +53,6 @@ public:
    };
    static const char* StyleName(Short_t style);
 
-   enum ERenderOrder
-   {
-      kAllClearDepthSelected = 0,
-      kAllSelected,
-      kOpaqueTransparent
-   };
-
    enum EPass
    {
       kPassUndef      =  -1,
@@ -106,8 +99,6 @@ protected:
    TGLCamera      *fCamera;
    TGLSceneInfo   *fSceneInfo;
 
-   Short_t         fRenderOrder;
-
    Short_t         fViewerLOD;
    Short_t         fSceneLOD;
    Short_t         fCombiLOD;     // Combined viewer/scene lod.
@@ -139,8 +130,6 @@ protected:
    Bool_t          fSelection;        // True when in selection.
    Bool_t          fSecSelection;     // True when in secondary selection.
    Short_t         fSelectTransparents;
-   Float_t         fHighlightDepthRangeOffset;
-   Float_t         fHighlightedObjectDepthRangeOffset;
    Int_t           fPickRadius;
    TGLRect        *fPickRectangle;
    TGLSelectBuffer*fSelectBuffer;
@@ -181,9 +170,6 @@ public:
    // void SetViewer   (TGLViewerBase* v) { fViewer = v; }
    void SetCamera   (TGLCamera*     c) { fCamera = c; }
    void SetSceneInfo(TGLSceneInfo* si) { fSceneInfo = si; }
-
-   Short_t RenderOrder()        const { return fRenderOrder; }
-   void    SetRenderOrder(Short_t ro) { fRenderOrder = ro;   }
 
    // Draw LOD, style, clip, rnr-pass
    Short_t ViewerLOD()   const         { return fViewerLOD; }
@@ -241,20 +227,15 @@ public:
    void    SetSelection(Bool_t sel)       { fSelection = sel;       }
    Bool_t  SecSelection() const           { return fSecSelection;   }
    void    SetSecSelection(Bool_t secSel) { fSecSelection = secSel; }
-   // Highlight parameters
-   Short_t SelectTransparents()                        const { return fSelectTransparents; }
-   void    SetSelectTransparents(Short_t st)                 { fSelectTransparents = st;   }
-   Float_t HighlightDepthRangeOffset()                 const { return fHighlightDepthRangeOffset; }
-   void    SetHighlightDepthRangeOffset(Float_t dro)         { fHighlightDepthRangeOffset = dro;  }
-   Float_t HighlightedObjectDepthRangeOffset()         const { return fHighlightedObjectDepthRangeOffset; }
-   void    SetHighlightedObjectDepthRangeOffset(Float_t dro) { fHighlightedObjectDepthRangeOffset = dro;  }
-   // Low-level getters
+   // Highlight / selection parameters
+   Short_t SelectTransparents()        const { return fSelectTransparents; }
+   void    SetSelectTransparents(Short_t st) { fSelectTransparents = st;   }
    TGLRect         * GetPickRectangle();
    Int_t             GetPickRadius();
    TGLSelectBuffer * GetSelectBuffer() const { return fSelectBuffer; }
-   // Composed operations
-   void      BeginSelection(Int_t x, Int_t y, Int_t r=3);
-   void      EndSelection  (Int_t glResult);
+   // Selection setup / end
+   void    BeginSelection(Int_t x, Int_t y, Int_t r=3);
+   void    EndSelection  (Int_t glResult);
 
    void         PushColorSet();
    TGLColorSet& ColorSet();
