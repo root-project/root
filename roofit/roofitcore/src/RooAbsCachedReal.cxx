@@ -92,6 +92,7 @@ Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
   // if (!nset) return evaluate() ;
 
   // Calculate current unnormalized value of object
+  // coverity[NULL_RETURNS]
   FuncCacheElem* cache = getCache(nset) ;
  
   _value = cache->func()->getVal() ;
@@ -260,7 +261,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 
   _ipOrder = order ;
 
-  for (UInt_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
+  for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
     FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;

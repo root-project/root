@@ -118,8 +118,8 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
   _realSetIter = _realSet.createIterator() ;
   _catSetIter = _catSet.createIterator() ;
 
-  _realSet.add(other._realSet) ;
-  _catSet.add(other._catSet) ;
+//   _realSet.add(other._realSet) ;
+//   _catSet.add(other._catSet) ;
 
 }
 

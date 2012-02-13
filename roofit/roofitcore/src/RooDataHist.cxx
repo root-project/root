@@ -1537,7 +1537,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   sliceOnlySet->remove(sumSet,kTRUE,kTRUE) ;
 
   _vars = *sliceOnlySet ;
-  calculatePartialBinVolume(sumSet) ;
+  calculatePartialBinVolume(*sliceOnlySet) ;
   delete sliceOnlySet ;
 
   TIterator* ssIter = sumSet.createIterator() ;

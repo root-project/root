@@ -76,6 +76,9 @@ RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* 
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName)),
   _extWgtArray(0),
+  _extWgtErrLoArray(0),
+  _extWgtErrHiArray(0),
+  _extSumW2Array(0),
   _curWgt(1)
 {
   // Constructor to facilitate reading of legacy RooDataSets

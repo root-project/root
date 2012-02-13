@@ -47,7 +47,7 @@ public:
     return getObj(nset,0,sterileIndex,isetRangeName) ;
   }
 
-  UInt_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=0) {
+  Int_t setObj(const RooArgSet* nset, T* obj, const TNamed* isetRangeName=0) {
     // Setter function without integration set 
     return setObj(nset,0,obj,isetRangeName) ;
   }
@@ -58,7 +58,7 @@ public:
   }
 
   T* getObj(const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIndex=0, const TNamed* isetRangeName=0) ;
-  UInt_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=0) ;  
+  Int_t setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName=0) ;  
 
   void reset() ;
   virtual void sterilize() ;
@@ -67,9 +67,9 @@ public:
     // Return index of slot used in last get or set operation
     return _lastIndex ; 
   }
-  UInt_t cacheSize() const { 
+  Int_t cacheSize() const { 
     // Return size of cache
-    return _object.size() ; 
+    return _size ; 
   }
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
@@ -84,34 +84,36 @@ public:
     // Interface function to cache add contents to output in tree printing mode
   } 
 
-  T* getObjByIndex(UInt_t index) const ;
-  const RooNameSet* nameSet1ByIndex(UInt_t index) const ;
-  const RooNameSet* nameSet2ByIndex(UInt_t index) const ;
+  T* getObjByIndex(Int_t index) const ;
+  const RooNameSet* nameSet1ByIndex(Int_t index) const ;
+  const RooNameSet* nameSet2ByIndex(Int_t index) const ;
 
   virtual void insertObjectHook(T&) {
     // Interface function to perform post-insert operations on cached object
   } 
 
   void wireCache() {
-    if (cacheSize()==0) {
+    if (_size==0) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << endl ;
-    } else if (cacheSize()==1) {
+    } else if (_size==1) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") now wiring cache" << endl ;
       _wired=kTRUE ;
-    } else if (cacheSize()>1) {
+    } else if (_size>1) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") cache cannot be wired because it contains more than one element" << endl ; 
     }
   }
  
 protected:
 
+  Int_t _maxSize ;    // Maximum size
+  Int_t _size ;       // Actual use
   Int_t _lastIndex ;  // Last slot accessed
 
   std::vector<RooNormSetCache> _nsetCache ; //! Normalization/Integration set manager
   std::vector<T*> _object ;                 //! Payload
-  Bool_t _wired ;                           //! In wired mode, there is a single payload which is returned always
+  Bool_t _wired ;               //! In wired mode, there is a single payload which is returned always
 
-  ClassDef(RooCacheManager,2) // Cache Manager class generic objects
+  ClassDef(RooCacheManager,1) // Cache Manager class generic objects
 } ;
 
 
@@ -123,8 +125,9 @@ RooCacheManager<T>::RooCacheManager(Int_t maxSize) : RooAbsCache(0)
   // and will not receive information on server redirects and
   // cache operation mode changes
 
-  _nsetCache.reserve(maxSize);
-  _object.reserve(maxSize);
+  _maxSize = maxSize ;
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
   _wired = kFALSE ;
 }
 
@@ -135,10 +138,20 @@ RooCacheManager<T>::RooCacheManager(RooAbsArg* owner, Int_t maxSize) : RooAbsCac
   // made with this constructor is registered with its owner
   // and will receive information on server redirects and
   // cache operation mode changes
-  _nsetCache.reserve(maxSize) ;
-  _object.reserve(maxSize) ;
+  
+  _maxSize = maxSize ;
+  _size = 0 ;
+
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[maxSize] ;
   _wired = kFALSE ;
   _lastIndex = -1 ;
+
+  Int_t i ;
+  for (i=0 ; i<_maxSize ; i++) {
+    _object[i]=0 ;
+  }
+
 }
 
 
@@ -147,15 +160,25 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
 {
   // Copy constructor
 
-  _nsetCache.resize(other._nsetCache.size()) ;
-  for (UInt_t i = 0; i < other._nsetCache.size(); i++) {
-    _nsetCache[i].initialize(other._nsetCache[i]) ;
-  }
-
-  _object.resize(other._object.size(), 0) ;
+  _maxSize = other._maxSize ;
+  _size = other._size ;
+  
+  _nsetCache.resize(_maxSize) ; // = new RooNormSetCache[_maxSize] ;
+  _object.resize(_maxSize,0) ; // = new T*[_maxSize] ;
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
+//   cout << "RooCacheManager:cctor(" << this << ")" << endl ;
+
+  Int_t i ;
+  for (i=0 ; i<other._size ; i++) {    
+    _nsetCache[i].initialize(other._nsetCache[i]) ;
+    _object[i] = 0 ;
+  }
+
+  for (i=other._size ; i<_maxSize ; i++) {    
+    _object[i] = 0 ;
+  }
 }
 
 
@@ -163,9 +186,13 @@ template<class T>
 RooCacheManager<T>::~RooCacheManager()
 {
   // Destructor
-  for (UInt_t i=0 ; i<cacheSize(); i++) {
-    if (_object[i]) delete _object[i] ;
+
+  //delete[] _nsetCache ;  
+  Int_t i ;
+  for (i=0 ; i<_size ; i++) {
+    delete _object[i] ;
   }
+  //delete[] _object ;
 }
 
 
@@ -174,13 +201,14 @@ void RooCacheManager<T>::reset()
 {
   // Clear the cache
 
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  Int_t i ;
+  for (i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
     _object[i]=0 ;
     _nsetCache[i].clear() ;
   }  
   _lastIndex = -1 ;
-  _object.resize(0) ;
+  _size = 0 ;
 }
   
 
@@ -191,16 +219,17 @@ void RooCacheManager<T>::sterilize()
   // Clear the cache payload but retain slot mapping w.r.t to
   // normalization and integration sets.
 
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  Int_t i ;
+  for (i=0 ; i<_maxSize ; i++) {
     delete _object[i] ;
     _object[i]=0 ;
-  }
+  }  
 }
   
 
 
 template<class T>
-UInt_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName) 
+Int_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, T* obj, const TNamed* isetRangeName) 
 {
   // Insert payload object 'obj' in cache indexed on nset,iset and isetRangeName
 
@@ -212,7 +241,7 @@ UInt_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, 
 
 
   if (sterileIdx>=0) {
-    // Found sterile slot that should be recycled [ sterileIndex only set if isetRangeName matches ]
+    // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
     _object[sterileIdx] = obj ;
 
     // Allow optional post-processing of object inserted in cache
@@ -221,9 +250,19 @@ UInt_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, 
     return lastIndex() ;
   }
 
-  _object.push_back(obj) ;
-  _nsetCache.push_back(RooNormSetCache()) ;
-  _nsetCache.back().autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
+  if (_size==_maxSize) {
+    _maxSize *=2 ;
+    _object.resize(_maxSize,0) ;
+    _nsetCache.resize(_maxSize) ;
+  }
+
+  _nsetCache[_size].autoCache(_owner,nset,iset,isetRangeName,kTRUE) ;
+  if (_object[_size]) {
+    delete _object[_size] ;
+  }
+
+  _object[_size] = obj ;
+  _size++ ;
 
   // Allow optional post-processing of object inserted in cache
   insertObjectHook(*obj) ;
@@ -231,7 +270,7 @@ UInt_t RooCacheManager<T>::setObj(const RooArgSet* nset, const RooArgSet* iset, 
   // Unwire cache in case it was wired
   _wired = kFALSE ;
 
-  return cacheSize() - 1 ;
+  return _size-1 ;
 }
 
 
@@ -249,7 +288,8 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
     return _object[0] ;
   }
   
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  Int_t i ;
+  for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].contains(nset,iset,isetRangeName)==kTRUE) {      
       _lastIndex = i ;
       if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
@@ -257,7 +297,7 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
     }
   }
 
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].autoCache(_owner,nset,iset,isetRangeName,kFALSE)==kFALSE) {
       _lastIndex = i ;
       if(_object[i]==0 && sterileIdx) *sterileIdx=i ;
@@ -271,39 +311,39 @@ T* RooCacheManager<T>::getObj(const RooArgSet* nset, const RooArgSet* iset, Int_
 
 
 template<class T>
-T* RooCacheManager<T>::getObjByIndex(UInt_t index) const 
+T* RooCacheManager<T>::getObjByIndex(Int_t index) const 
 {
   // Retrieve payload object by slot index
-  
-  if (index>=cacheSize()) {
+
+  if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-           << index << ") out of range [0," << cacheSize()-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return _object[index] ;
 }
 
 template<class T>
-const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(UInt_t index) const
+const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(Int_t index) const
 {
   // Retrieve RooNameSet associated with slot at given index
 
-  if (index>=cacheSize()) {
+  if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-           << index << ") out of range [0," << cacheSize()-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet1() ;
 }
 
 template<class T>
-const RooNameSet* RooCacheManager<T>::nameSet2ByIndex(UInt_t index) const 
+const RooNameSet* RooCacheManager<T>::nameSet2ByIndex(Int_t index) const 
 {
   // Retrieve RooNameSet associated with slot at given index
 
-  if (index>=cacheSize()) {
+  if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-           << index << ") out of range [0," << cacheSize()-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet2() ;

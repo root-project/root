@@ -91,7 +91,7 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
     
   } else {
 
-    for (UInt_t i=0 ; i<cacheSize() ; i++) {
+    for (Int_t i=0 ; i<cacheSize() ; i++) {
       _object[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
     }
 
@@ -111,7 +111,7 @@ void RooObjCacheManager::operModeHook()
     return ;
   }
 
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  for (Int_t i=0 ; i<cacheSize() ; i++) {
     if (_object[i]) {
       _object[i]->operModeHook(_owner->operMode()) ;
     }
@@ -139,7 +139,7 @@ void RooObjCacheManager::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
     _optCacheObservables = (RooArgSet*) new RooArgSet(obs) ;
   }
   
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  for (Int_t i=0 ; i<cacheSize() ; i++) {
     if (_object[i]) {
       _object[i]->optimizeCacheMode(obs,optNodes,processedNodes) ;
     }
@@ -192,7 +192,7 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
 {
   // Add details on cache contents when printing in tree mode
 
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  for (Int_t i=0 ; i<cacheSize() ; i++) {
     if (_object[i]) {
       _object[i]->printCompactTreeHook(os,indent,i,cacheSize()-1) ;
     }
@@ -211,7 +211,7 @@ void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cach
     return ;
   }
   
-  for (UInt_t i=0 ; i<cacheSize() ; i++) {
+  for (Int_t i=0 ; i<cacheSize() ; i++) {
     if (_object[i]) {
       _object[i]->findConstantNodes(obs,cacheList, processedNodes) ;
     }

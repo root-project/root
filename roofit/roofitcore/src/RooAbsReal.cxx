@@ -613,6 +613,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     coutE(Integration) << GetName() << " : ERROR while defining recursive integral over observables with parameterized integration ranges, please check that integration rangs specify uniquely defined integral " << endl; 
     delete integral ;
     integral = 0 ;
+    return integral ;
   }
 
 
@@ -916,10 +917,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 
   RooAbsReal* projected= theClone->createIntegral(*projectedVars,normSet,rangeName) ;
-  projected->SetName(name.Data()) ;
-  projected->SetTitle(title.Data()) ;
-
-//   RooAbsReal* projected2 = new RooRealIntegral(name.Data(),title.Data(),*theClone,*projectedVars,&normSet,0,rangeName);
 
   if(0 == projected || !projected->isValid()) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
@@ -929,6 +926,10 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     delete dependentIterator;
     return 0;
   }
+
+  projected->SetName(name.Data()) ;
+  projected->SetTitle(title.Data()) ;
+
   // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
   cloneSet->addOwned(*projected);
 
@@ -1942,7 +1943,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Attach dataset
     projection->getVal(projDataSel->get()) ;
     projection->attachDataSet(*projDataSel) ;
-    
+
     // Construct optimized data weighted average
     RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;

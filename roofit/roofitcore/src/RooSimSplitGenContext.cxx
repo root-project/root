@@ -67,6 +67,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 			       << " generate the index category" << endl ;
       _isValid = kFALSE ;
       _numPdf = 0 ;
+      // coverity[UNINIT_CTOR]
       return ;
     }
   } else {
@@ -88,6 +89,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 			       << " generate all components of a derived index category" << endl ;
       _isValid = kFALSE ;
       _numPdf = 0 ;
+      // coverity[UNINIT_CTOR]
       return ;
     }
   }
@@ -99,6 +101,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 			     << " to calculate number of events per category" << endl ;
     _isValid = kFALSE ;
     _numPdf = 0 ;
+    // coverity[UNINIT_CTOR]
     return ;
   }
 
@@ -121,11 +124,12 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
     delete compVars ;
 
-    // Name the context after the associated state and add to list
+    const RooCatType* state = idxCat->lookupType(proxy->name()) ; 
+
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(idxCat->lookupType(proxy->name())->getVal()) ;
-
+    _gcIndex.push_back(state->getVal()) ;
+    
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&allPdfVars) ;
     i++ ;

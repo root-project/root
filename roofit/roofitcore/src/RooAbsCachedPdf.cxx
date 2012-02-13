@@ -326,7 +326,7 @@ void RooAbsCachedPdf::setInterpolationOrder(Int_t order)
 
   _ipOrder = order ;
 
-  UInt_t i ;
+  Int_t i ;
   for (i=0 ; i<_cacheMgr.cacheSize() ; i++) {
     PdfCacheElem* cache = (PdfCacheElem*) _cacheMgr.getObjByIndex(i) ;
     if (cache) {

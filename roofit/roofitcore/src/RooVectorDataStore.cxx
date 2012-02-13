@@ -69,7 +69,8 @@ RooVectorDataStore::RooVectorDataStore() :
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
 }
 
@@ -96,7 +97,8 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
@@ -185,7 +187,8 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _curWgtErrLo(other._curWgtErrLo),
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   // Regular copy ctor
 
@@ -236,7 +239,8 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   _curWgtErrLo(0),
   _curWgtErrHi(0),
   _curWgtErr(0),
-  _cache(0)
+  _cache(0),
+  _cacheOwner(0)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;

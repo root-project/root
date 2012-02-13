@@ -180,9 +180,10 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
       smap[itero->first] = dclone->store() ;
     }
 
-    if (!dynamic_cast<const RooCompositeDataStore*>(other.store())) {
-      cout << "Huh, have owned components, but store is not composite?" << endl ;
-    }
+//     if (!dynamic_cast<const RooCompositeDataStore*>(other.store())) {
+//       cout << "Huh, have owned components, but store is not composite?" << endl ;
+//     }
+
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
     _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
     

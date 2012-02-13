@@ -65,7 +65,7 @@ public:
   class GenSpec {
   public:
     virtual ~GenSpec() ;
-    GenSpec() { _genContext = 0 ; _protoData = 0 ; _init = kFALSE ; }
+    GenSpec() { _genContext = 0 ; _protoData = 0 ; _init = kFALSE ; _extended=kFALSE, _nGen=0 ; _randProto = kFALSE ; _resampleProto=kFALSE ; }
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, Bool_t extended, 
 	    Bool_t randProto, Bool_t resampleProto, TString dsetName, Bool_t init=kFALSE) ;

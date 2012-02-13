@@ -55,7 +55,7 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 
 
 //_____________________________________________________________________________
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(0)
 {
   // Constructor
   //
@@ -141,8 +141,14 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 
 //_____________________________________________________________________________
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
-{
+{  
   // Destructor
+  if (_array) {
+    for (Int_t i=0 ; i<_nseg ; i++) {
+      delete _array[i] ;
+    }
+    delete _array ;
+  }
 }
 
 
