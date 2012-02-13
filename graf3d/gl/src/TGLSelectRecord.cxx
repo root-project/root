@@ -158,6 +158,7 @@ TGLSelectRecord::TGLSelectRecord() :
    fTransparent (kFALSE),
    fSceneInfo   (0),
    fPhysShape   (0),
+   fLogShape    (0),
    fObject      (0),
    fSpecific    (0),
    fMultiple    (kFALSE),
@@ -173,6 +174,7 @@ TGLSelectRecord::TGLSelectRecord(UInt_t* data) :
    fTransparent (kFALSE),
    fSceneInfo   (0),
    fPhysShape   (0),
+   fLogShape    (0),
    fObject      (0),
    fSpecific    (0),
    fMultiple    (kFALSE),
@@ -188,6 +190,7 @@ TGLSelectRecord::TGLSelectRecord(const TGLSelectRecord& rec) :
    fTransparent (rec.fTransparent),
    fSceneInfo   (rec.fSceneInfo),
    fPhysShape   (rec.fPhysShape),
+   fLogShape    (rec.fLogShape),
    fObject      (rec.fObject),
    fSpecific    (rec.fSpecific),
    fMultiple    (rec.fMultiple),
@@ -214,6 +217,7 @@ TGLSelectRecord& TGLSelectRecord::operator=(const TGLSelectRecord& rec)
       fTransparent = rec.fTransparent;
       fSceneInfo   = rec.fSceneInfo;
       fPhysShape   = rec.fPhysShape;
+      fLogShape    = rec.fLogShape;
       fObject      = rec.fObject;
       fSpecific    = rec.fSpecific;
       fMultiple    = rec.fMultiple;
@@ -233,6 +237,7 @@ void TGLSelectRecord::Set(UInt_t* data)
    fTransparent = kFALSE;
    fSceneInfo   = 0;
    fPhysShape   = 0;
+   fLogShape    = 0;
    fObject      = 0;
    fSpecific    = 0;
    fMultiple    = kFALSE;
@@ -249,6 +254,7 @@ void TGLSelectRecord::Reset()
    fTransparent = kFALSE;
    fSceneInfo   = 0;
    fPhysShape   = 0;
+   fLogShape    = 0;
    fObject      = 0;
    fSpecific    = 0;
    fMultiple    = kFALSE;
