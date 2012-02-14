@@ -256,6 +256,18 @@ class STL5StringHandlingTestCase( MyTestCase ):
       self.assertEqual( c.m_string, "another test" )
       self.assertEqual( c.GetString1(), "another test" )
 
+   def test3StringWithNullCharacter( self ):
+      """Test that strings with NULL do not get truncated"""
+
+      t0 = "aap\0noot"
+      self.assertEqual( t0, "aap\0noot" )
+
+      c, s = StringyClass(), std.string( t0, len(t0) )
+
+      c.SetString1( s )
+      self.assertEqual( t0, c.GetString1() )
+      self.assertEqual( s, c.GetString1() )
+
 
 ### Iterator comparison ======================================================
 class STL6IteratorComparisonTestCase( MyTestCase ):
