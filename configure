@@ -4174,19 +4174,25 @@ if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
     myruby=`$cwhich ruby 2> /dev/null`
     if test ! "x$myruby" = "x" && test -x "$myruby" ; then
-       rubysysincdir=`ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
-       rubysyslibdir=`ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
+       rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["includedir"]'`
+       rubysysarchdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["archdir"]'`
+       rubysyslibdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["libdir"]'`
+       rubysysarch=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["arch"]'`
     fi
-    rubysysincdir2=
+    rubysysarchdir2=
     if test "x$platform" = "xmacosx" ; then
-       rubysysincdir2=`echo $rubysysincdir | sed -e 's/powerpc/universal/'`
+       rubysysarchdir2=`echo $rubysysarchdir | sed -e 's/powerpc/universal/'`
     fi
     check_header "ruby.h" "$rubyincdir" \
         $RUBYDIR ${RUBYDIR:+$RUBYDIR/include} \
-        $rubysysincdir $rubysysincdir2 \
+        $rubysysincdir $rubysysarchdir $rubysysarchdir2 \
         /usr/local/include/ruby /usr/include/ruby
     rubyinc=$found_hdr
     rubyincdir=$found_dir
+    check_header "ruby/config.h" "" $rubysysincdir/$rubysysarch
+    if test "x$found_hdr" != "x" ; then
+        rubyincdir="$rubyincdir $found_dir"
+    fi
 
     if test "x$arch" = "xwin32" || \
        test "x$enable_shared" = "xno" ; then
@@ -6757,7 +6763,7 @@ rm -f RConfigOptions.tmp
 
 if test ! "x$enable_ruby" = "xno"; then
    echo "" >> RConfigOptions-out.tmp
-   ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
+   ruby -rrbconfig -e 'puts RbConfig::CONFIG["ruby_version"]' | \
    sed 's/^\([0-9]\)\.\([0-9]\).*$/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
    tr '@' '\n' >> RConfigOptions-out.tmp
 fi

@@ -24,6 +24,17 @@
 
 #include "ruby.h"
 
+// Define macros for old ruby versions
+#ifndef RSTRING_PTR
+#define RSTRING_PTR(s) (RSTRING(s)->ptr)
+#endif
+#ifndef RFLOAT_VALUE
+#define RFLOAT_VALUE(v) (RFLOAT(v)->value)
+#endif
+#ifndef RARRAY_LEN
+#define RARRAY_LEN(s) (RARRAY(s)->len)
+#endif
+
 #include "rrcommon.h"
 
 /* ROOT's global enums.  */
@@ -34,7 +45,7 @@
 #include "dlfcn.h"
 #endif
 
-#if ((R__RUBY_MAJOR<1) || (R__RUBY_MAJOR==1)&&(R__RUBY_MINOR<=9))
+#if ((R__RUBY_MAJOR<1) || (R__RUBY_MAJOR==1)&&(R__RUBY_MINOR<=8))
 #  define rb_frame_this_func rb_frame_last_func
 #endif
 
@@ -158,9 +169,9 @@ void * rr_parse_void (VALUE o)
    switch (TYPE(o))
       {
       case T_STRING:
-         return (void *) RSTRING(o)->ptr;
+         return (void *) RSTRING_PTR(o);
       case T_FLOAT:
-         return (void *) &RFLOAT(o)->value;
+         return (void *) &RFLOAT_VALUE(o);
       case T_FIXNUM:
          /* FIXME: Memory leak until I find the correct way. Until
           * then please use integers in TTrees with care. --elathan
@@ -172,8 +183,9 @@ void * rr_parse_void (VALUE o)
          RRGRAB(o, void *, res);
          return res;
       default:
-         rb_fatal ("Failed convertion of %d to void *.\n",
-                   STR2CSTR(CLASS_OF(o)));
+         VALUE tmp = CLASS_OF(o);
+         rb_fatal ("Failed convertion of %d to void *.\n", 
+                   StringValuePtr(tmp));
          break;
       }
 
@@ -392,7 +404,7 @@ static VALUE via (VALUE self, VALUE ameth, VALUE bmeth, VALUE parms)
       }
 
    VALUE keys = rb_funcall(parms, rb_intern("keys"), 0);
-   for (int i = 0; i < RARRAY(keys)->len; i++)
+   for (int i = 0; i < RARRAY_LEN(keys); i++)
       {
          VALUE key = rb_ary_entry (keys, i);
          rb_funcall (self, rb_to_id (ameth), 2, key, rb_hash_aref (parms, key));
@@ -424,7 +436,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
     * 3. When we want both 1 and 2
     */
 
-   int nargs = RARRAY(inargs)->len - offset;
+   int nargs = RARRAY_LEN(inargs) - offset;
    double *arr = NULL;
    TObject *ptr = NULL;
    VALUE v = 0;
@@ -446,7 +458,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                if (cproto) strcat(cproto, "double");
                break;
             case T_STRING:
-               if (f) f->SetArg((long) STR2CSTR(arg));
+               if (f) f->SetArg((long) StringValuePtr(arg));
                if (cproto) strcat(cproto, "char*");
                break;
             case T_ARRAY:
@@ -455,8 +467,8 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                 */
                if (f)
                   {
-                     arr = ALLOC_N (double, RARRAY(arg)->len);
-                     for (int j = 0; j < RARRAY(arg)->len; j++)
+                     arr = ALLOC_N (double, RARRAY_LEN(arg));
+                     for (int j = 0; j < RARRAY_LEN(arg); j++)
                         arr[j] = NUM2DBL(rb_ary_entry (arg, j));
                      f->SetArg((long) arr);
                   }
@@ -469,7 +481,8 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                      Data_Get_Struct (v, TObject, ptr);
                      if (f) f->SetArg((long) ptr);
                      if (cproto) {
-                        strcat(cproto, STR2CSTR(rb_iv_get (arg, "__rr_class__")));
+                        VALUE tmp = rb_iv_get (arg, "__rr_class__");
+                        strcat(cproto, StringValuePtr(tmp));
                         if( ((reference_map>>ntobjects)&0x1) ) {
                            strcat(cproto, "*");
                         } else {
@@ -637,11 +650,11 @@ static VALUE drr_as(VALUE self, VALUE klass)
    VALUE v;
 
    /* Check if there is a ROOT dict. available.  */
-   TClass *c = TClass::GetClass(STR2CSTR(klass));
+   TClass *c = TClass::GetClass(StringValuePtr(klass));
    if (c)
       {
          VALUE k;
-         char *name = STR2CSTR(klass);
+         char *name = StringValuePtr(klass);
          if (!rb_const_defined (rb_cObject, rb_intern(name)))
             k = rb_define_class (name, drrAbstractClass);
          else
@@ -652,7 +665,7 @@ static VALUE drr_as(VALUE self, VALUE klass)
          rb_iv_set (v, "__rr_class__", klass);
       }
    else
-      rb_raise( rb_eArgError, "No TClass found for %s. Is this a Root type?", STR2CSTR(klass) );
+      rb_raise( rb_eArgError, "No TClass found for %s. Is this a Root type?", StringValuePtr(klass) );
 
    return v;
 }
@@ -671,7 +684,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
 
    /* Call the requested ctor.  */
 
-   if (RARRAY(inargs)->len) {
+   if (RARRAY_LEN(inargs)) {
       drr_find_method_prototype (&klass, classname, inargs, cproto, 0);
       drr_set_method_args ( inargs, &func, 0);
    }
@@ -767,7 +780,7 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    char * classname = (char *) rb_class2name(self);
 	
    rb_scan_args (argc, argv, "0*", &inargs);
-   nargs = RARRAY(inargs)->len - 1;
+   nargs = RARRAY_LEN(inargs) - 1;
 
    G__CallFunc *func = new G__CallFunc();
    G__ClassInfo *klass = new G__ClassInfo (classname);
@@ -816,12 +829,13 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
    /* Grab method, class and the instance pointer.  */
    methname = (char*) rb_id2name (rb_to_id(argv[0]));
-   classname = STR2CSTR(rb_iv_get (self, "__rr_class__"));
+   VALUE tmp = rb_iv_get (self, "__rr_class__");
+   classname = StringValuePtr(tmp);
    TObject *caller = drr_grab_object (self);
 
    rb_scan_args (argc, argv, "0*", &inargs);
 
-   nargs = RARRAY(inargs)->len - 1;
+   nargs = RARRAY_LEN(inargs) - 1;
    VALUE rklass = rb_class_of (self);
 
    G__CallFunc *func = new G__CallFunc();
@@ -890,7 +904,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
 
    rb_scan_args (argc, argv, "0*", &inargs);
 
-   nargs = RARRAY(inargs)->len;
+   nargs = RARRAY_LEN(inargs);
 
    G__CallFunc *func = NULL;
 
