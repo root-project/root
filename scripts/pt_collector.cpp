@@ -169,7 +169,7 @@ TTree* GetTree(TString& fileName, TString& testName, int argc, char** argv, cons
       fileName.Remove(posDot); // cut file name after first '.'
    }
    fileName.Prepend("pt_");
-   fileName += testName.Hash();
+   fileName += testName.MD5();
    fileName += ".root";
 
    TFile* file = TFile::Open(fileName, "UPDATE");

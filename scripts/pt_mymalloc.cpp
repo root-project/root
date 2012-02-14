@@ -13,8 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 
-using namespace std;
-
 // Intercepts calls to malloc, realloc, free, by planting replacement symbols.
 // This library is meant to be LD_PRELOAD'ed to do its job.
 //
