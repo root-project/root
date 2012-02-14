@@ -29,8 +29,6 @@ class TGeoShapeAssembly : public TGeoBBox
 {
 protected :
 // data members
-   Int_t                 fCurrent;  //! node number for current node
-   Int_t                 fNext;     //! node number for next crossed node
    TGeoVolumeAssembly   *fVolume;   // assembly volume
    Bool_t                fBBoxOK;   // has bounding box been calculated
 

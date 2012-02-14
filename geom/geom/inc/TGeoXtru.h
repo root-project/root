@@ -44,6 +44,7 @@ public:
    };
    ThreadData_t&         GetThreadData()   const;
    virtual void          ClearThreadData() const;
+   virtual void          CreateThreadData(Int_t nthreads);
 
 protected:
    // data members

@@ -66,7 +66,12 @@ TGeoBoolNode::ThreadData_t::~ThreadData_t()
 TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
+/*
    TThread::Lock();
+   if (tid >= fThreadSize) {
+      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
+             tid, fThreadSize);
+   }          
    if (tid >= fThreadSize)
    {
       fThreadData.resize(tid + 1);
@@ -78,6 +83,7 @@ TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
       fThreadData[tid] = new ThreadData_t;
    }   
    TThread::UnLock();
+*/
    return *fThreadData[tid];
 }
 
@@ -93,6 +99,21 @@ void TGeoBoolNode::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
+}
+
+//______________________________________________________________________________
+void TGeoBoolNode::CreateThreadData(Int_t nthreads)
+{
+// Create thread data for n threads max.
+   TThread::Lock();
+   fThreadData.resize(nthreads);
+   fThreadSize = nthreads;
+   for (Int_t tid=0; tid<nthreads; tid++) {
+      if (fThreadData[tid] == 0) {
+         fThreadData[tid] = new ThreadData_t;
+      }
+   }   
    TThread::UnLock();
 }
 
@@ -115,6 +136,7 @@ TGeoBoolNode::TGeoBoolNode()
    fNpoints  = 0;
    fPoints   = 0;
    fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //______________________________________________________________________________
@@ -128,6 +150,7 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    fNpoints  = 0;
    fPoints   = 0;
    fThreadSize = 0;
+   CreateThreadData(1);
    if (!MakeBranch(expr1, kTRUE)) {
       return;
    }
@@ -146,6 +169,7 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    fNpoints  = 0;
    fPoints   = 0;
    fThreadSize = 0;
+   CreateThreadData(1);
    if (!fLeftMat) fLeftMat = gGeoIdentity;
    else fLeftMat->RegisterYourself();
    fRightMat = rmat;

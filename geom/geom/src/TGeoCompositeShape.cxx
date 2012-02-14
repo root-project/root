@@ -166,6 +166,13 @@ void TGeoCompositeShape::ClearThreadData() const
    if (fNode) fNode->ClearThreadData();
 }
 
+//______________________________________________________________________________
+void TGeoCompositeShape::CreateThreadData(Int_t nthreads)
+{
+   // Needed just for cleanup.
+   if (fNode) fNode->CreateThreadData(nthreads);
+}
+
 //_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape()
                    :TGeoBBox(0, 0, 0)

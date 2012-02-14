@@ -365,6 +365,13 @@ void TGeoVolume::ClearThreadData() const
    if (fShape)  fShape->ClearThreadData();
 }   
 
+//______________________________________________________________________________
+void TGeoVolume::CreateThreadData(Int_t nthreads)
+{
+   if (fFinder) fFinder->CreateThreadData(nthreads);
+   if (fShape)  fShape->CreateThreadData(nthreads);
+}   
+
 //_____________________________________________________________________________
 TGeoVolume::TGeoVolume()
 { 
@@ -2477,14 +2484,18 @@ TGeoVolumeAssembly::ThreadData_t::~ThreadData_t()
 TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
+/*
    TThread::Lock();
    if (tid >= fThreadSize)
    {
+      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
+             tid, fThreadSize);        
       fThreadData.resize(tid + 1);
       fThreadSize = tid + 1;
    }
    if (fThreadData[tid] == 0) fThreadData[tid] = new ThreadData_t;
    TThread::UnLock();
+*/
    return *fThreadData[tid];
 }
 
@@ -2505,27 +2516,42 @@ void TGeoVolumeAssembly::ClearThreadData() const
 }
 
 //______________________________________________________________________________
+void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
+{
+   TThread::Lock();
+   // Create assembly thread data here
+   fThreadData.resize(nthreads);
+   fThreadSize = nthreads;
+   for (Int_t tid=0; tid<nthreads; tid++) {
+      if (fThreadData[tid] == 0) {
+         fThreadData[tid] = new ThreadData_t;
+      }
+   }      
+   TThread::UnLock();
+}
+
+//______________________________________________________________________________
 Int_t TGeoVolumeAssembly::GetCurrentNodeIndex() const
 {
-   return GetThreadData().fCurrent;
+   return fThreadData[TGeoManager::ThreadId()]->fCurrent;
 }
 
 //______________________________________________________________________________
 Int_t TGeoVolumeAssembly::GetNextNodeIndex() const
 {
-   return GetThreadData().fNext;
+   return fThreadData[TGeoManager::ThreadId()]->fNext;
 }
 
 //______________________________________________________________________________
 void TGeoVolumeAssembly::SetCurrentNodeIndex(Int_t index)
 {
-   GetThreadData().fCurrent = index;
+   fThreadData[TGeoManager::ThreadId()]->fCurrent = index;
 }
 
 //______________________________________________________________________________
 void TGeoVolumeAssembly::SetNextNodeIndex(Int_t index)
 {
-   GetThreadData().fNext = index;
+   fThreadData[TGeoManager::ThreadId()]->fNext = index;
 }
 
 //_____________________________________________________________________________
@@ -2534,6 +2560,7 @@ TGeoVolumeAssembly::TGeoVolumeAssembly()
 {
 // Default constructor
    fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -2547,6 +2574,7 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
    fShape = new TGeoShapeAssembly(this);
    if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
    fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________

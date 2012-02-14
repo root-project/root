@@ -82,8 +82,14 @@ TGeoXtru::ThreadData_t::~ThreadData_t()
 //______________________________________________________________________________
 TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
 {
+   if (!fThreadSize) ((TGeoXtru*)this)->CreateThreadData(1);
    Int_t tid = TGeoManager::ThreadId();
+/*
    TThread::Lock();
+   if (tid >= fThreadSize) {
+      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
+             tid, fThreadSize);
+   }          
    if (tid >= fThreadSize)
    {
       fThreadData.resize(tid + 1);
@@ -106,6 +112,7 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
       }      
    }
    TThread::UnLock();
+*/
    return *fThreadData[tid];
 }
 
@@ -120,6 +127,32 @@ void TGeoXtru::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+}
+
+//______________________________________________________________________________
+void TGeoXtru::CreateThreadData(Int_t nthreads)
+{
+// Create thread data for n threads max.
+   TThread::Lock();
+   fThreadData.resize(nthreads);
+   fThreadSize = nthreads;
+   for (Int_t tid=0; tid<nthreads; tid++) {
+      if (fThreadData[tid] == 0) {
+         fThreadData[tid] = new ThreadData_t;
+         ThreadData_t &td = *fThreadData[tid];
+         td.fXc = new Double_t [fNvert];
+         td.fYc = new Double_t [fNvert];
+         memcpy(td.fXc, fX, fNvert*sizeof(Double_t));
+         memcpy(td.fYc, fY, fNvert*sizeof(Double_t));
+         td.fPoly = new TGeoPolygon(fNvert);
+         td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
+         td.fPoly->FinishPolygon();
+         if (tid == 0 && td.fPoly->IsIllegalCheck()) {
+            Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
+         }      
+      }
+   }   
+   TThread::UnLock();
 }
 
 //______________________________________________________________________________

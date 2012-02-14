@@ -106,7 +106,7 @@ private :
    typedef ThreadsMap_t::const_iterator             ThreadsMapIt_t;
    
    NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
-   static ThreadsMap_t   fgThreadId;        //! Thread id's map
+   static ThreadsMap_t  *fgThreadId;        //! Thread id's map
    static Int_t          fgNumThreads;      //! Number of registered threads
    static Bool_t         fgLockNavigators;   //! Lock existing navigators
    TGeoNavigator        *fCurrentNavigator; //! current navigator
@@ -130,6 +130,7 @@ private :
    Int_t                 fNPNEId;           // number of PN entries having a unique ID
    Int_t                *fKeyPNEId;         //[fSizePNEId] array of uid values for PN entries
    Int_t                *fValuePNEId;       //[fSizePNEId] array of pointers to PN entries with ID's
+   Int_t                 fMaxThreads;       //! Max number of threads
    Bool_t                fMultiThread;      //! Flag for multi-threading
 //--- private methods
 
@@ -147,7 +148,6 @@ public:
    TGeoManager(const char *name, const char *title);
    // destructor
    virtual ~TGeoManager();
-   void                  ClearThreadData() const;
    //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
    Int_t                  AddOverlap(const TNamed *ovlp);
@@ -430,12 +430,16 @@ public:
    static Int_t           GetMaxDaughters() {return fgMaxDaughters;}
    static Int_t           GetMaxLevels()     {return fgMaxLevel;}
    static Int_t           GetMaxXtruVert()  {return fgMaxXtruVert;}
+   Int_t                  GetMaxThreads() const {return fMaxThreads;}
+   void                   SetMaxThreads(Int_t nthreads);
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Bool_t                 IsMultiThread() const {return fMultiThread;}
    static void            SetNavigatorsLock(Bool_t flag) {fgLockNavigators = flag;}
    static Int_t           ThreadId();
    static Int_t           GetNumThreads() {return fgNumThreads;}
    static void            ClearThreadsMap();
+   void                   ClearThreadData() const;
+   void                   CreateThreadData() const;
 
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="vg");

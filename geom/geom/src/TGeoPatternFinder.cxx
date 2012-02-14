@@ -70,6 +70,12 @@ TGeoPatternFinder::ThreadData_t::~ThreadData_t()
 TGeoPatternFinder::ThreadData_t& TGeoPatternFinder::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
+/*
+   if (tid >= fThreadSize) {
+      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
+             tid, fThreadSize);
+   }          
+
    TThread::Lock();
    if (tid >= fThreadSize)
    {
@@ -82,6 +88,7 @@ TGeoPatternFinder::ThreadData_t& TGeoPatternFinder::GetThreadData() const
       fThreadData[tid]->fMatrix = CreateMatrix();
    }
    TThread::UnLock();
+*/
    return *fThreadData[tid];
 }
 
@@ -97,6 +104,22 @@ void TGeoPatternFinder::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
+   TThread::UnLock();
+}
+
+//______________________________________________________________________________
+void TGeoPatternFinder::CreateThreadData(Int_t nthreads)
+{
+// Create thread data for n threads max.
+   TThread::Lock();
+   fThreadData.resize(nthreads);
+   fThreadSize = nthreads;
+   for (Int_t tid=0; tid<nthreads; tid++) {
+      if (fThreadData[tid] == 0) {
+         fThreadData[tid] = new ThreadData_t;
+         fThreadData[tid]->fMatrix = CreateMatrix();
+      }
+   }   
    TThread::UnLock();
 }
 
@@ -218,6 +241,7 @@ void TGeoPatternFinder::SetRange(Double_t start, Double_t step, Int_t ndivisions
 TGeoPatternX::TGeoPatternX()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -229,6 +253,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dx;
    fEnd = dx;
    fStep = 2*dx/ndivisions;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -240,6 +265,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fStart = -dx;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -250,6 +276,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -365,6 +392,7 @@ void TGeoPatternX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 TGeoPatternY::TGeoPatternY()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -376,6 +404,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dy;
    fEnd = dy;
    fStep = 2*dy/ndivisions;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -387,6 +416,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fStart = -dy;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -397,6 +427,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -512,6 +543,7 @@ void TGeoPatternY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 TGeoPatternZ::TGeoPatternZ()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
@@ -522,6 +554,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dz;
    fEnd = dz;
    fStep = 2*dz/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -532,6 +565,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fStart = -dz;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -541,6 +575,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternZ::~TGeoPatternZ()
@@ -653,6 +688,7 @@ void TGeoPatternZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 TGeoPatternParaX::TGeoPatternParaX()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
@@ -663,6 +699,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dx;
    fEnd = dx;
    fStep = 2*dx/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -673,6 +710,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart = -dx;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -682,6 +720,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaX::~TGeoPatternParaX()
@@ -787,6 +826,7 @@ TGeoPatternParaY::TGeoPatternParaY()
 {
 // Default constructor
    fTxy = 0;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
@@ -798,6 +838,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dy;
    fEnd = dy;
    fStep = 2*dy/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -809,6 +850,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart = -dy;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -819,6 +861,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaY::~TGeoPatternParaY()
@@ -923,6 +966,7 @@ TGeoPatternParaZ::TGeoPatternParaZ()
 // Default constructor
    fTxz = 0;
    fTyz = 0;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
@@ -935,6 +979,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dz;
    fEnd = dz;
    fStep = 2*dz/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -947,6 +992,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart = -dz;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -959,6 +1005,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -1061,6 +1108,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ()
 // Default constructor
    fTxz = 0;
    fTyz = 0;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
@@ -1075,6 +1123,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
    fStart = -dz;
    fEnd = dz;
    fStep = 2*dz/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1089,6 +1138,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart = -dz;
    fEnd = fStart + ndivisions*step;
    fStep       = step;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
@@ -1102,6 +1152,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternTrapZ::~TGeoPatternTrapZ()
@@ -1200,12 +1251,14 @@ void TGeoPatternTrapZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 TGeoPatternCylR::TGeoPatternCylR()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
 // constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1213,6 +1266,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
 {   
 // constructor
    fStep       = step;
+   CreateThreadData(1);
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1223,6 +1277,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylR::~TGeoPatternCylR()
@@ -1314,6 +1369,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi()
 {
 // Default constructor
    fSinCos = 0;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
@@ -1329,6 +1385,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
       fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
       fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
    }
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1341,6 +1398,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
       fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
    }
+   CreateThreadData(1);
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1361,6 +1419,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
       fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
    }
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylPhi::~TGeoPatternCylPhi()
@@ -1482,6 +1541,7 @@ void TGeoPatternCylPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 TGeoPatternSphR::TGeoPatternSphR()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions)
@@ -1489,6 +1549,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions)
 {   
 // constructor
 // compute step, start, end
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1496,6 +1557,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
 {   
 // constructor
    fStep       = step;
+   CreateThreadData(1);
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1506,6 +1568,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphR::~TGeoPatternSphR()
@@ -1565,6 +1628,7 @@ void TGeoPatternSphR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 TGeoPatternSphTheta::TGeoPatternSphTheta()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions)
@@ -1572,6 +1636,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions)
 {   
 // constructor
 // compute step, start, end
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Double_t step)
@@ -1579,6 +1644,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
 {   
 // constructor
    fStep       = step;
+   CreateThreadData(1);
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1589,6 +1655,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphTheta::~TGeoPatternSphTheta()
@@ -1648,12 +1715,14 @@ void TGeoPatternSphTheta::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 TGeoPatternSphPhi::TGeoPatternSphPhi()
 {
 // Default constructor
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
 // constructor
+   CreateThreadData(1);
 // compute step, start, end
 }
 //_____________________________________________________________________________
@@ -1662,6 +1731,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
 {   
 // constructor
    fStep       = step;
+   CreateThreadData(1);
 // compute start, end
 }
 //_____________________________________________________________________________
@@ -1672,6 +1742,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fStart      = start;
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternSphPhi::~TGeoPatternSphPhi()
@@ -1735,6 +1806,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb()
    fAxisOnRows  = 0;            
    fNdivisions  = 0;             
    fStart       = 0;                 
+   CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
@@ -1745,6 +1817,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
    fAxisOnRows  = 0;            
    fNdivisions  = 0;             
    fStart       = 0;                 
+   CreateThreadData(1);
 // compute everything else
 }
 //_____________________________________________________________________________
@@ -1756,7 +1829,9 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
   fStart(pfh.fStart)
 { 
    //copy constructor
+   CreateThreadData(1);
 }
+
 //_____________________________________________________________________________
 TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh) 
 {

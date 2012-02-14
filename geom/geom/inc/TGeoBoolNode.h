@@ -47,6 +47,7 @@ enum EGeoBoolType {
    };
    ThreadData_t&     GetThreadData()   const;
    void              ClearThreadData() const;
+   void              CreateThreadData(Int_t nthreads);
 private:
    TGeoBoolNode(const TGeoBoolNode&); // Not implemented
    TGeoBoolNode& operator=(const TGeoBoolNode&); // Not implemented

@@ -44,6 +44,7 @@ public:
    };
    ThreadData_t& GetThreadData()   const;
    void          ClearThreadData() const;
+   void          CreateThreadData(Int_t nthreads);
 
 protected :
    enum EGeoPatternFlags {

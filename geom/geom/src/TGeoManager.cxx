@@ -330,23 +330,13 @@ Int_t  TGeoManager::fgMaxLevel = 1;
 Int_t  TGeoManager::fgMaxDaughters = 1;
 Int_t  TGeoManager::fgMaxXtruVert = 1;
 Int_t  TGeoManager::fgNumThreads   = 0;
-TGeoManager::ThreadsMap_t TGeoManager::fgThreadId;
-
-
-//______________________________________________________________________________
-void TGeoManager::ClearThreadData() const
-{
-   TThread::Lock();
-   TIter next(fVolumes);
-   TGeoVolume *vol;
-   while ((vol=(TGeoVolume*)next())) vol->ClearThreadData();
-   TThread::UnLock();
-}
+TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 
 //_____________________________________________________________________________
 TGeoManager::TGeoManager()
 {
 // Default constructor.
+   if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    if (TClass::IsCallingNew() == TClass::kDummyNew) {
       fTimeCut = kFALSE;
       fTmin = 0.;
@@ -409,6 +399,7 @@ TGeoManager::TGeoManager()
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      fMaxThreads = 0;
       ClearThreadsMap();
    } else {
       Init();
@@ -441,6 +432,7 @@ void TGeoManager::Init()
    }
 
    gGeoManager = this;
+   if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    fTimeCut = kFALSE;
    fTmin = 0.;
    fTmax = 999.;
@@ -502,6 +494,7 @@ void TGeoManager::Init()
    fKeyPNEId = 0;
    fValuePNEId = 0;
    fMultiThread = kFALSE;
+   fMaxThreads = 0;
    ClearThreadsMap();
 }
 
@@ -568,11 +561,13 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fNPNEId(0),
   fKeyPNEId(0),
   fValuePNEId(0),
+  fMaxThreads(0),
   fMultiThread(kFALSE)
 {
    //copy constructor
    for(Int_t i=0; i<256; i++)
       fPdgId[i]=gm.fPdgId[i];
+   if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    ClearThreadsMap();
 }
 
@@ -580,6 +575,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
 TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
 {
    //assignment operator
+   if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    if(this!=&gm) {
       TNamed::operator=(gm);
       fPhimin=gm.fPhimin;
@@ -645,6 +641,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fKeyPNEId = 0;
       fValuePNEId = 0;
       fMultiThread = kFALSE;
+      fMaxThreads = 0;
       ClearThreadsMap();
       ClearThreadData();
    }
@@ -901,12 +898,49 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 }      
 
 //_____________________________________________________________________________
+void TGeoManager::SetMaxThreads(Int_t nthreads)
+{
+// Set maximum number of threads for navigation.
+   if (fMaxThreads) {
+      ClearThreadsMap();
+      ClearThreadData();
+   }
+   fMaxThreads = nthreads;
+   if (fMaxThreads>0) {
+      fMultiThread = kTRUE;
+      CreateThreadData();
+   }   
+}
+
+//______________________________________________________________________________
+void TGeoManager::ClearThreadData() const
+{
+   TThread::Lock();
+   TIter next(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) vol->ClearThreadData();
+   TThread::UnLock();
+}
+
+//______________________________________________________________________________
+void TGeoManager::CreateThreadData() const
+{
+// Create thread private data for all geometry objects.
+   if (!fMaxThreads) return;
+   TThread::Lock();
+   TIter next(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) vol->CreateThreadData(fMaxThreads);
+   TThread::UnLock();
+}
+
+//_____________________________________________________________________________
 void TGeoManager::ClearThreadsMap()
 {
 // Clear the current map of threads. This will be filled again by the calling
 // threads via ThreadId calls.
    TThread::Lock();
-//   if (!fgThreadId.empty()) fgThreadId.clear();
+   if (!fgThreadId->empty()) fgThreadId->clear();
    fgNumThreads = 0;
    TThread::UnLock();
 }
@@ -916,18 +950,19 @@ Int_t TGeoManager::ThreadId()
 {
 // Translates the current thread id to an ordinal number. This can be used to
 // manage data which is pspecific for a given thread.
-   Int_t tid = 0;
+   static __thread Int_t tid = -1;
+   if (tid > -1) return tid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
    Long_t selfId = TThread::SelfId();
-   TGeoManager::ThreadsMapIt_t it = fgThreadId.find(selfId);
-   if (it != fgThreadId.end()) return it->second;
+   TGeoManager::ThreadsMapIt_t it = fgThreadId->find(selfId);
+   if (it != fgThreadId->end()) return it->second;
    // Map needs to be updated.
    TThread::Lock();
-   fgThreadId[selfId] = fgNumThreads;
+   (*fgThreadId)[selfId] = fgNumThreads;
    tid = fgNumThreads++;
    TThread::UnLock();
    return tid;
-}   
+}
    
 //_____________________________________________________________________________
 void TGeoManager::Browse(TBrowser *b)

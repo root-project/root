@@ -81,6 +81,7 @@ protected :
 
 public:
    virtual void  ClearThreadData() const;
+   virtual void  CreateThreadData(Int_t nthreads);
 
 public:
    enum EGeoVolumeTypes {
@@ -310,6 +311,7 @@ public:
 
    ThreadData_t& GetThreadData()   const;
    virtual void  ClearThreadData() const;
+   virtual void  CreateThreadData(Int_t nthreads);
 
 protected:
    mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector

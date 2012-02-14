@@ -75,6 +75,7 @@ enum EShapeType {
    kGeoSavePrimitive = BIT(20)
 };
    virtual void  ClearThreadData() const {}
+   virtual void  CreateThreadData(Int_t) {}
 
 protected :
 // data members
