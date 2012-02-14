@@ -602,5 +602,11 @@ namespace ROOT {
       return fDestructor;
    }
 
+   DirAutoAdd_t  TGenericClassInfo::GetDirectoryAutoAdd() const
+   {
+      // Get the wrapper around the directory-auto-add function .
+
+      return fDirAutoAdd;
+   }
 
 }
