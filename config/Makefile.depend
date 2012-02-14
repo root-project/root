@@ -100,7 +100,7 @@ endif
 CINTEXLIBDEPM          = $(REFLEXLIB)
 REFLEXDICTLIBDEPM      = $(REFLEXLIB)
 RAUTHLIBDEPM           = $(NETLIB) $(IOLIB)
-GLBSAUTHLIBDEPM        = $(RAUTHLIB)
+GLBSAUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
 KRB5AUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
 SRVAUTHLIBDEPM         = $(NETLIB)
 QTGSILIBDEPM           = $(GUILIB) $(GPADLIB)
@@ -366,7 +366,7 @@ endif
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
 RAUTHLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
-GLBSAUTHLIBEXTRA        = lib/libRootAuth.lib
+GLBSAUTHLIBEXTRA        = lib/libRootAuth.lib lib/libNet.lib
 KRB5AUTHLIBEXTRA        = lib/libRootAuth.lib lib/libNet.lib
 SRVAUTHLIBEXTRA         = lib/libNet.lib
 QTGSILIBEXTRA           = lib/libGui.lib lib/libGpad.lib
@@ -498,7 +498,7 @@ HISTFACTORYLIBEXTRA     = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
 RAUTHLIBEXTRA           = -Llib -lNet -lRIO
-GLBSAUTHLIBEXTRA        = -Llib -lRootAuth
+GLBSAUTHLIBEXTRA        = -Llib -lRootAuth -lNet
 KRB5AUTHLIBEXTRA        = -Llib -lRootAuth -lNet
 SRVAUTHLIBEXTRA         = -Llib -lNet
 QTGSILIBEXTRA           = -Llib -lGui -lGpad
