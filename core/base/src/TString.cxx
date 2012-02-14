@@ -47,6 +47,7 @@
 #include "TError.h"
 #include "Bytes.h"
 #include "TClass.h"
+#include "TMD5.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
@@ -839,6 +840,17 @@ Ssiz_t TString::Last(char c) const
 
    const char *f = strrchr(Data(), (unsigned char) c);
    return f ? f - Data() : kNPOS;
+}
+
+//______________________________________________________________________________
+TString TString::MD5() const
+{
+   // Return the MD5 digest for this string, in a string representation.
+   TMD5 md5;
+   md5.Update((const UChar_t*)Data(), Length());
+   UChar_t digest[16];
+   md5.Final(digest);
+   return md5.AsString();
 }
 
 //______________________________________________________________________________

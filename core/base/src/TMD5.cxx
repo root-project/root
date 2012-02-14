@@ -43,7 +43,8 @@
 ClassImp(TMD5)
 
 //______________________________________________________________________________
-TMD5::TMD5()
+TMD5::TMD5():
+fBits(), fIn(), fString(), fDigest(), fFinalized(kFALSE)
 {
    // Create TMD5 object. Set bit count to 0 and buffer to mysterious
    // initialization constants.
@@ -52,18 +53,11 @@ TMD5::TMD5()
    fBuf[1] = 0xefcdab89;
    fBuf[2] = 0x98badcfe;
    fBuf[3] = 0x10325476;
-
-   fBits[0] = 0;
-   fBits[1] = 0;
-
-   memset(fIn, 0, 64);
-
-   memset(fDigest, 0, 16);
-   fFinalized = kFALSE;
 }
 
 //______________________________________________________________________________
-TMD5::TMD5(const UChar_t *digest)
+TMD5::TMD5(const UChar_t *digest):
+fBuf(), fBits(), fIn(), fString(), fFinalized(kTRUE)
 {
    // Create finalized TMD5 object containing passed in 16 byte digest.
 
@@ -73,17 +67,11 @@ TMD5::TMD5(const UChar_t *digest)
       memset(fDigest, 0, 16);
       Error("TMD5::TMD5", "digest is 0");
    }
-
-   // Zero out sensitive information
-   memset(fBuf,  0, 4*sizeof(UInt_t));
-   memset(fBits, 0, 2*sizeof(UInt_t));
-   memset(fIn,   0, 64);
-
-   fFinalized = kTRUE;
 }
 
 //______________________________________________________________________________
-TMD5::TMD5(const TMD5 &md5)
+TMD5::TMD5(const TMD5 &md5):
+fString()
 {
    // MD5 copy ctor. Special copy ctor avoids copying unnecessary
    // temp arrays when finalized.
@@ -109,6 +97,7 @@ TMD5 &TMD5::operator=(const TMD5 &rhs)
 
       memcpy(fDigest, rhs.fDigest, 16);
       fFinalized = rhs.fFinalized;
+      memcpy(fString, rhs.fString, sizeof(fString));
    }
    return *this;
 }
@@ -222,30 +211,28 @@ void TMD5::Print() const
       return;
    }
 
-   for (int i = 0; i < 16; i++)
-      printf("%.2hx", (UShort_t)fDigest[i]);
-   printf("\n");
+   printf("%s\n", AsString());
 }
 
 //______________________________________________________________________________
 const char *TMD5::AsString() const
 {
    // Return message digest as string. Returns "" in case Final() has
-   // not yet been called. Copy result because it points to a statically
-   // allocated string.
+   // not yet been called.
 
    if (!fFinalized) {
       Error("TMD5::AsString", "Final() has not yet been called");
       return "";
    }
 
-   static char s[33];
-
-   for (int i = 0; i < 16; i++)
-      sprintf((s+2*i), "%.2hx", (UShort_t)fDigest[i]);
-   s[32] = 0;
-
-   return s;
+   if (!fString[0]) {
+      static const char hexdig[] = "0123456789abcdef";
+      for (int i = 0; i < 16; ++i) {
+         fString[i * 2] = hexdig[fDigest[i] / 16];
+         fString[i * 2 + 1] = hexdig[fDigest[i] % 16];
+      }
+   }
+   return fString;
 }
 
 //______________________________________________________________________________

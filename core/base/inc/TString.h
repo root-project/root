@@ -377,6 +377,7 @@ public:
    Ssiz_t       Length() const         { return IsLong() ? GetLongSize() : GetShortSize(); }
    Bool_t       MaybeRegexp() const;
    Bool_t       MaybeWildcard() const;
+   TString      MD5() const;
    TString     &Prepend(const char *cs);     // Prepend a character string
    TString     &Prepend(const char *cs, Ssiz_t n);
    TString     &Prepend(const TString &s);
