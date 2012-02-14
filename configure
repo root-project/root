@@ -1764,13 +1764,16 @@ fi
 if test "x$platform" = "xlinux" ; then
     linuxdist=
     if `$cwhich lsb_release > /dev/null 2>&1` ; then
-       if lsb_release -d | grep 'Ubuntu' > /dev/null 2>& 1; then
-          linuxdist="ubuntu"
+       if lsb_release -d | grep -i 'ubuntu' > /dev/null 2>& 1; then
+          linuxdist="multiarch"
+       fi
+       if lsb_release -d | grep -i 'debian' > /dev/null 2>& 1; then
+          linuxdist="multiarch"
        fi
     fi
 
     debmultiarch=
-    if test "x$linuxdist" = "xubuntu"; then
+    if test "x$linuxdist" = "xmultiarch"; then
         if `$cwhich dpkg-architecture > /dev/null 2>&1` ; then
             if `dpkg-architecture -qDEB_HOST_MULTIARCH > /dev/null 2>&1` ; then
                 logmsg "Checking dpkg-architecture"
