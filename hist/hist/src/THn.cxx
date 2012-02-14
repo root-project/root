@@ -14,6 +14,10 @@
 #include "TClass.h"
 
 namespace {
+   //______________________________________________________________________________
+   //
+   // Helper struct to hold one dimension's bin range for THnBinIter.
+   //______________________________________________________________________________
    struct CounterRange_t {
       Int_t i;
       Int_t first;
@@ -22,6 +26,10 @@ namespace {
       Long64_t cellSize;
    };
 
+   //______________________________________________________________________________
+   //
+   // THnBinIter iterates over all bins of a THn, recursing over all dimensions.
+   //______________________________________________________________________________
    class THnBinIter: public ROOT::THnBaseBinIter {
    public:
       THnBinIter(Int_t dim, const TObjArray* axes, const TNDArray* arr,
@@ -47,6 +55,7 @@ namespace {
                               const TNDArray* arr, Bool_t respectAxisRange):
       ROOT::THnBaseBinIter(respectAxisRange),
       fNdimensions(dim), fIndex(-1), fArray(arr) {
+      // Construct a THnBinIter.
       fCounter = new CounterRange_t[dim]();
       for (Int_t i = 0; i < dim; ++i) {
          TAxis *axis = (TAxis*) axes->At(i);
@@ -79,6 +88,8 @@ namespace {
 
    //______________________________________________________________________________
    Long64_t THnBinIter::Next(Int_t* coord /*= 0*/) {
+      // Return the current linear bin index (in range), then go to the next bin.
+      // If all bins have been visited, return -1.
       if (fNdimensions < 0) return -1; // end
       ++fCounter[fNdimensions - 1].i;
       ++fIndex;
@@ -105,6 +116,59 @@ namespace {
 } // unnamed namespce
 
 
+
+//______________________________________________________________________________
+//
+//
+//    Multidimensional histogram.
+//
+// Use a THn if you really, really have to store more than three dimensions,
+// and if a large fraction of all bins are filled.
+// Better alternatives are
+//   * THnSparse if a fraction of all bins are filled
+//   * TTree
+// The major problem of THn is the memory use caused by n-dimensional
+// histogramming: a THnD with 8 dimensions and 100 bins per dimension needs
+// more than 2.5GB of RAM!
+//
+// To construct a THn object you must use one of its templated, derived
+// classes:
+// THnD (typedef for THnSparse<Double_t>): bin content held by a Double_t,
+// THnF (typedef for THnSparse<Float_t>): bin content held by a Float_t,
+// THnL (typedef for THnSparse<Long_t>): bin content held by a Long_t,
+// THnI (typedef for THnSparse<Int_t>): bin content held by an Int_t,
+// THnS (typedef for THnSparse<Short_t>): bin content held by a Short_t,
+// THnC (typedef for THnSparse<Char_t>): bin content held by a Char_t,
+//
+// They take name and title, the number of dimensions, and for each dimension
+// the number of bins, the minimal, and the maximal value on the dimension's
+// axis. A TH2F h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
+//   Int_t bins[2] = {10, 20};
+//   Double_t xmin[2] = {0., -5.};
+//   Double_t xmax[2] = {10., 5.};
+//   THnF hn("hn", "hn", 2, bins, min, max);
+//
+// * Filling
+// A THn is filled just like a regular histogram, using
+// THn::Fill(x, weight), where x is a n-dimensional Double_t value.
+// To take errors into account, Sumw2() must be called before filling the
+// histogram.
+// Storage is allocated when the first bin content is stored.
+//
+// * Projections
+// The dimensionality of a THn can be reduced by projecting it to
+// 1, 2, 3, or n dimensions, which can be represented by a TH1, TH2, TH3, or
+// a THn. See the Projection() members. To only project parts of the
+// histogram, call
+//   hn->GetAxis(12)->SetRange(from_bin, to_bin);
+//
+// * Conversion from other histogram classes
+// The static factory function THn::CreateHn() can be used to create a THn
+// from a TH1, TH2, TH3, THnSparse and (for copying) even from a THn. The
+// created THn will have compatble storage type, i.e. calling CreateHn() on
+// a TH2F will create a THnF.
+
+ClassImp(THn);
 
 //______________________________________________________________________________
 THn::THn(const char* name, const char* title,
