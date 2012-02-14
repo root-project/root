@@ -90,7 +90,6 @@ TGeoStateInfo &TGeoStateInfo::operator=(const TGeoStateInfo &other)
 // Assignment
    if (this==&other) return *this;
    fNode = other.fNode;
-   Int_t nd = fNode->GetNdaughters();
    fAsmCurrent = other.fAsmCurrent;
    fAsmNext = other.fAsmNext;
    fDivCurrent = other.fDivCurrent;

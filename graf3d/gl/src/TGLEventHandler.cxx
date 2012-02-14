@@ -131,7 +131,6 @@ void TGLEventHandler::SelectForClicked(Event_t *event)
 
    fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
 
-   TGLPhysicalShape *pshp = fGLViewer->fSelRec.GetPhysShape();
    TGLLogicalShape  *lshp = fGLViewer->fSelRec.GetLogShape();
    TObject          *obj  = fGLViewer->fSelRec.GetObject();
       
