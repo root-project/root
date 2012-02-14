@@ -1,5 +1,5 @@
 //*********************************************************************
-//+ Evaluate the performance of THnSparse vs THnF (or Float_t arrays)
+//+ Evaluate the performance of THnSparse vs TH1/2/3/nF
 //  for different numbers of dimensions and bins per dimension.
 // 
 //  The script calculates the bandwidth for filling and retrieving
@@ -7,9 +7,9 @@
 //  histogramming techniques, where "seconds" is CPU and real time.
 //
 //  The first line of the plots contains the bandwidth based on the 
-//  CPU time (THnSpase, THnF/Float_t*, ratio), the second line shows
+//  CPU time (THnSpase, TH1/2/3/nF*, ratio), the second line shows
 //  the plots for real time, and the third line shows the fraction of
-//  filled bins and memory used by THnSparse vs. THnF/Float_t.
+//  filled bins and memory used by THnSparse vs. TH1/2/3/nF.
 // 
 //  The timing depends on the distribution and the amount of entries
 //  in the histograms; here, a Gaussian distribution (center is
@@ -34,6 +34,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
+#include "THn.h"
 #include "THnSparse.h"
 #include "TStopwatch.h"
 #include "TRandom.h"
@@ -48,7 +49,7 @@ public:
    enum ETime { kReal, kCPU, kNumTime };
    TTimeHists(Int_t dim, Int_t bins, Long_t num):
       fValue(0), fDim(dim), fBins(bins), fNum(num),
-      fSparse(0), fHist(0), fArray(0) {}
+      fSparse(0), fHist(0), fHn(0) {}
    ~TTimeHists();
    bool Run();
    Double_t GetTime(EHist hist, ETime time) const {
@@ -72,7 +73,7 @@ private:
    Double_t fTime[2][2];
    THnSparse* fSparse;
    TH1*       fHist;
-   Float_t*  fArray;
+   THn*       fHn;
    static Int_t fgDebug;
 };
 
@@ -83,7 +84,7 @@ TTimeHists::~TTimeHists()
    delete [] fValue;
    delete fSparse;
    delete fHist;
-   delete [] fArray;
+   delete fHn;
 }
 
 bool TTimeHists::Run()
@@ -106,8 +107,8 @@ bool TTimeHists::Run()
             check[h] = Check((EHist) h);
             w.Stop();
             ++rep[h];
-         } while (!h && w.RealTime() < 0.1
-            || h && rep[0] > 0 && rep[1] < rep[0]);
+         } while ((!h && w.RealTime() < 0.1)
+            || (h && rep[0] > 0 && rep[1] < rep[0]));
 
          fTime[h][0] = (1.* fNum * rep[h]) / w.RealTime() / 1E6;
          fTime[h][1] = (1.* fNum * rep[h]) / w.CpuTime() / 1E6;
@@ -137,10 +138,10 @@ bool TTimeHists::Run()
    }
    if (check[0] != check[1])
       if (check[0] != -1.)
-         printf("ERROR: mismatch of histogram / array (%g) and sparse histogram (%g) for dim=%d, bins=%d!\n",
+         printf("ERROR: mismatch of histogram (%g) and sparse histogram (%g) for dim=%d, bins=%d!\n",
                 check[0], check[1], fDim, fBins);
       // else
-      //   printf("ERROR: cannot allocate histogram / array for dim=%d, bins=%d - out of memory!\n",
+      //   printf("ERROR: cannot allocate histogram for dim=%d, bins=%d - out of memory!\n",
       //          fDim, fBins);
    return (check[0] == check[1]);
 }
@@ -173,18 +174,7 @@ void TTimeHists::Fill(EHist hist)
          case 1: fHist->Fill(fValue[0]); break;
          case 2: ((TH2F*)fHist)->Fill(fValue[0], fValue[1]); break;
          case 3: ((TH3F*)fHist)->Fill(fValue[0], fValue[1], fValue[2]); break;
-         default:
-            {
-               Long_t pos = 0;
-               for (Int_t d = 0; d < fDim; ++d) {
-                  pos *= (fBins + 2);
-                  Int_t ibin = (Int_t)((fValue[d] + 1.) / 2. * fBins + 1);
-                  if (ibin > fBins) ibin = fBins + 1;
-                  if (ibin < 0) ibin = 0;
-                  pos += ibin;
-               }
-               ++fArray[pos];
-            }
+         default: fHn->Fill(fValue); break;
          }
       } else {
          fSparse->Fill(fValue);
@@ -206,16 +196,23 @@ void TTimeHists::SetupHist(EHist hist)
             Int_t size = 1;
             for (Int_t d = 0; d < fDim; ++d) {
                if ((Int_t)(size * sizeof(Float_t)) > INT_MAX / (fBins + 2)
-                  || meminfo.fMemFree > 0 
-                  && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000))
+                  || (meminfo.fMemFree > 0 
+                  && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000)))
                   throw std::bad_alloc();
                size *= (fBins + 2);
             }
             if (meminfo.fMemFree > 0 
                && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000))
                throw std::bad_alloc();
-            fArray = new Float_t[size];
-            memset(fArray, 0, sizeof(Float_t)*size);
+            Int_t* bins = new Int_t[fDim];
+            Double_t *xmin = new Double_t[fDim];
+            Double_t *xmax = new Double_t[fDim];
+            for (Int_t d = 0; d < fDim; ++d) {
+               bins[d] = fBins;
+               xmin[d] = -1.;
+               xmax[d] =  1.;
+            }
+            fHn = new THnF("hn", "hn", fDim, bins, xmin, xmax);
          }
       }
    } else {
@@ -251,14 +248,14 @@ Double_t TTimeHists::Check(EHist hist)
             else if (fDim == 3) histidx = fHist->GetBin(x[0], x[1], x[2]);
             v = fHist->GetBinContent(histidx);
          }
-         else v = fArray[idx];
+         else v = fHn->GetBinContent(x);
          Double_t checkx = 0.;
          if (v)
             for (Int_t d = 0; d < fDim; ++d)
                checkx += x[d];
          check += checkx * v;
 
-         if (fgDebug > 2 || fgDebug > 1 && v) {
+         if (fgDebug > 2 || (fgDebug > 1 && v)) {
             printf("%s%d", fDim < 4 ? "hist" : "arr", fDim);
             for (Int_t d = 0; d < fDim; ++d)
                printf("[%d]", x[d]);
@@ -314,7 +311,7 @@ void sparsehist() {
          if (t == 0) name += "_r";
 
          TString title;
-         title.Form("Throughput (fill,get) %s (%s, 1M entries/sec);dim;bins;1M entries/sec", h == 0 ? "THnF/Float_t[n]" : "THnSparseF", t == 0 ? "real" : "CPU");
+         title.Form("Throughput (fill,get) %s (%s, 1M entries/sec);dim;bins;1M entries/sec", h == 0 ? "TH1/2/3/nF" : "THnSparseF", t == 0 ? "real" : "CPU");
          htime[h][t] = new TH2F(name, title, 6, 0.5, 6.5, 10, 5, 105);
       }
 
