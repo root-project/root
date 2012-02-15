@@ -3812,7 +3812,6 @@ void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
    }
    delete (tcling_ClassInfo*) cl->fClassInfo;
    cl->fClassInfo = 0;
-   cl->fDecl = 0;
    std::string name(cl->GetName());
    tcling_ClassInfo* info = new tcling_ClassInfo(name.c_str());
    if (!info->IsValid()) {
@@ -3838,7 +3837,6 @@ void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
       }
    }
    cl->fClassInfo = info; // Note: We are transfering ownership here.
-   cl->fDecl = const_cast<clang::Decl*>(info->GetDecl());
    // In case a class contains an external enum, the enum will be seen as a
    // class. We must detect this special case and make the class a Zombie.
    // Here we assume that a class has at least one method.
@@ -3863,7 +3861,6 @@ void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
       // this happens when no CINT dictionary is available
       delete info;
       cl->fClassInfo = 0;
-      cl->fDecl = 0;
    }
    if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
       cl->MakeZombie();
