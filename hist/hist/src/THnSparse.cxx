@@ -499,12 +499,12 @@ void THnSparseArrayChunk::Sumw2()
 //
 // To construct a THnSparse object you must use one of its templated, derived
 // classes:
-// THnSparseD (typedef for THnSparse<ArrayD>): bin content held by a Double_t,
-// THnSparseF (typedef for THnSparse<ArrayF>): bin content held by a Float_t,
-// THnSparseL (typedef for THnSparse<ArrayL>): bin content held by a Long_t,
-// THnSparseI (typedef for THnSparse<ArrayI>): bin content held by an Int_t,
-// THnSparseS (typedef for THnSparse<ArrayS>): bin content held by a Short_t,
-// THnSparseC (typedef for THnSparse<ArrayC>): bin content held by a Char_t,
+// THnSparseD (typedef for THnSparseT<ArrayD>): bin content held by a Double_t,
+// THnSparseF (typedef for THnSparseT<ArrayF>): bin content held by a Float_t,
+// THnSparseL (typedef for THnSparseT<ArrayL>): bin content held by a Long_t,
+// THnSparseI (typedef for THnSparseT<ArrayI>): bin content held by an Int_t,
+// THnSparseS (typedef for THnSparseT<ArrayS>): bin content held by a Short_t,
+// THnSparseC (typedef for THnSparseT<ArrayC>): bin content held by a Char_t,
 //
 // They take name and title, the number of dimensions, and for each dimension
 // the number of bins, the minimal, and the maximal value on the dimension's

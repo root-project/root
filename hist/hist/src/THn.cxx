@@ -133,12 +133,12 @@ namespace {
 //
 // To construct a THn object you must use one of its templated, derived
 // classes:
-// THnD (typedef for THnSparse<Double_t>): bin content held by a Double_t,
-// THnF (typedef for THnSparse<Float_t>): bin content held by a Float_t,
-// THnL (typedef for THnSparse<Long_t>): bin content held by a Long_t,
-// THnI (typedef for THnSparse<Int_t>): bin content held by an Int_t,
-// THnS (typedef for THnSparse<Short_t>): bin content held by a Short_t,
-// THnC (typedef for THnSparse<Char_t>): bin content held by a Char_t,
+// THnD (typedef for THnT<Double_t>): bin content held by a Double_t,
+// THnF (typedef for THnT<Float_t>): bin content held by a Float_t,
+// THnL (typedef for THnT<Long_t>): bin content held by a Long_t,
+// THnI (typedef for THnT<Int_t>): bin content held by an Int_t,
+// THnS (typedef for THnT<Short_t>): bin content held by a Short_t,
+// THnC (typedef for THnT<Char_t>): bin content held by a Char_t,
 //
 // They take name and title, the number of dimensions, and for each dimension
 // the number of bins, the minimal, and the maximal value on the dimension's
