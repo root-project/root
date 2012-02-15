@@ -13,15 +13,6 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-testWithFailure:
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-endif
-
 # Remember that sometest.log can be made automatically from
 # from runsometest.C
 
