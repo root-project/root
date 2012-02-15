@@ -31,10 +31,12 @@ ClassImp(TVirtualMagField)
 TVirtualMagField::~TVirtualMagField()
 {
 // Destructor. Unregisters the field.
-   TVirtualMagField *global_field = TGeoGlobalMagField::Instance()->GetField();
-   if (global_field == this)
-      Fatal("~TVirtualMagField", "Not allowed to delete a field once set global. \
-             \n To delete the field call: TGeoGlobalMagField::Instance()->SetField(NULL)");
+   if (TGeoGlobalMagField::GetInstance()) {
+      TVirtualMagField *global_field = TGeoGlobalMagField::GetInstance()->GetField();
+      if (global_field == this)
+         Fatal("~TVirtualMagField", "Not allowed to delete a field once set global. \
+                \n To delete the field call: TGeoGlobalMagField::Instance()->SetField(NULL)");
+   }
 }
 
 //______________________________________________________________________________
