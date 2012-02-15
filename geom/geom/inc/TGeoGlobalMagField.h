@@ -51,6 +51,7 @@ public:
    
    // The field manager should be accessed via TGeoGlobalMagField::Instance()
    static TGeoGlobalMagField *Instance();
+   static TGeoGlobalMagField *GetInstance() {return fgInstance;}
 
    // Inline access to Field() method
    void                    Field(const Double_t *x, Double_t *B) {if (fField) fField->Field(x,B);}
