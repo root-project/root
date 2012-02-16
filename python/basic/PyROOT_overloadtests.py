@@ -81,8 +81,8 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       self.assertEqual( MyD().GetInt( ai ), 525252 )
 
       ah = array( 'h', [ 25 ] )
-      self.assertEqual( MyC().GetInt( ai ), 525252 )
-      self.assertEqual( MyD().GetInt( ai ), 525252 )
+      self.assertEqual( MyC().GetInt( ah ), 25 )
+      self.assertEqual( MyD().GetInt( ah ), 25 )
 
 
 ### basic functioning test cases =============================================
