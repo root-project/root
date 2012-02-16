@@ -1010,7 +1010,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), fM->fData->GetSliceTransparency(i->fMaxSlice));
             Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
             Float_t x = i->X();
-            float_t y = i->Y();
+            Float_t y = i->Y();
             Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
             glVertex3f(x - bw, y - bw, z);
             glVertex3f(x + bw, y - bw, z);
