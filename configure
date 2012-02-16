@@ -3201,7 +3201,7 @@ if test ! "x$enable_rfio" = "xno" ; then
         fi
     fi
 
-    check_library "librfio libdpm libshift shiftmd shift" "$enable_shared" \
+    check_library "librfio libdpm libcastorrfio libshift shiftmd shift" "$enable_shared" \
         "$shiftlibdir" \
         $RFIO ${RFIO:+$RFIO/lib} /cern/pro/lib /cern/new/lib /cern/old/lib \
         /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
@@ -3212,6 +3212,10 @@ if test ! "x$enable_rfio" = "xno" ; then
     if test "x$shiftincdir" = "x" || test "x$shiftlib" = "x"; then
         enable_rfio="no"
     else
+        case $shiftlib in
+            *dpm)        shiftlib="$shiftlib -llcgdm" ;;
+            *castorrfio) shiftlib="$shiftlib -lcastorcommon" ;;
+        esac
         case $platform in
            linux | macosx)
                 for i in "" -ladns ; do
@@ -3221,14 +3225,7 @@ if test ! "x$enable_rfio" = "xno" ; then
                         break ;
                     fi
                 done
-                # Explicit linking: which libraries are needed to satisfy symbols
-                # from libshift?
-                # 2.1.9 has new library layout
-                shiftlibdep="-lcastorrfio -lcastorclient -lcastorcommon"
-                check_link "$shiftlib $shiftlibdep" "$shiftlibdir" rfio_fchmod
-                if test $link_result -eq 1 ; then
-                    shiftlib="$shiftlib $shiftlibdep"
-                else
+                if test $link_result -ne 1 ; then
                     enable_rfio="no"
                 fi
                 ;;
@@ -3298,7 +3295,7 @@ if test ! "x$enable_castor" = "xno" ; then
         fi
     fi
 
-    check_library "libshift shiftmd shift" "$enable_shared" "$castorlibdir" \
+    check_library "libcastorrfio libshift shiftmd shift" "$enable_shared" "$castorlibdir" \
         $CASTOR ${CASTOR:+$CASTOR/lib} /cern/pro/lib /cern/new/lib \
         /cern/old/lib /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
         /usr/local/lib/shift /usr/lib /usr/local/lib
@@ -3308,6 +3305,9 @@ if test ! "x$enable_castor" = "xno" ; then
     if test "x$castorincdir" = "x" || test "x$castorlib" = "x"; then
         enable_castor="no"
     else
+        case $castorlib in
+            *castorrfio) castorlib="$castorlib -lcastorclient -lcastorns -lcastorcommon" ;;
+        esac
         case $platform in
            linux | macosx)
                 for i in "" -ladns ; do
@@ -3317,14 +3317,7 @@ if test ! "x$enable_castor" = "xno" ; then
                         break ;
                     fi
                 done
-                # Explicit linking: which libraries are needed to satisfy symbols
-                # from libshift?
-                # 2.1.9 has new library layout
-                castorlibdep="-lcastorrfio -lcastorclient -lcastorns -lcastorcommon"
-                check_link "$castorlib $castorlibdep" "$castorlibdir" rfio_fchmod
-                if test $link_result -eq 1 ; then
-                    castorlib="$castorlib $castorlibdep"
-                else
+                if test $link_result -ne 1 ; then
                     enable_castor="no"
                 fi
                 ;;
