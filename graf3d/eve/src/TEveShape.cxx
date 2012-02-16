@@ -31,7 +31,7 @@ TEveShape::TEveShape(const char* n, const char* t) :
    fLineColor(5),
    fLineWidth(1),
    fDrawFrame(kTRUE),
-   fHighlightFrame(kTRUE),
+   fHighlightFrame(kFALSE),
    fMiniFrame(kTRUE)
 {
    // Constructor.
