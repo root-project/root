@@ -57,6 +57,8 @@ namespace RooStats {
 
   class ProfileLikelihoodTestStat : public TestStatistic{
 
+     enum LimitType {twoSided, oneSided, oneSidedDiscovery};
+
    public:
      ProfileLikelihoodTestStat() {
         // Proof constructor. Do not use.
@@ -65,7 +67,8 @@ namespace RooStats {
         fNll = 0;
         fCachedBestFitParams = 0;
         fLastData = 0;
-	fOneSided = false;
+	fLimitType = twoSided;
+	fSigned = false;
         fReuseNll = false;
 	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
@@ -79,7 +82,8 @@ namespace RooStats {
        fNll = 0;
        fCachedBestFitParams = 0;
        fLastData = 0;
-       fOneSided = false;
+       fLimitType = twoSided;
+       fSigned = false;
        fReuseNll = false;
        fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
@@ -94,7 +98,9 @@ namespace RooStats {
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
      }
-     void SetOneSided(Bool_t flag=true) {fOneSided = flag;}
+     void SetOneSided(Bool_t flag=true) {fLimitType = (flag ? oneSided : twoSided);}
+     void SetOneSidedDiscovery(Bool_t flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
+     void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
 
      static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
@@ -127,7 +133,8 @@ namespace RooStats {
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      Double_t fLastMLE;
-      Bool_t fOneSided;
+      LimitType fLimitType;
+      Bool_t fSigned;
 
       static Bool_t fgAlwaysReuseNll ;
       Bool_t fReuseNll ;
@@ -137,7 +144,7 @@ namespace RooStats {
       Int_t fPrintLevel;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,6)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,7)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 
