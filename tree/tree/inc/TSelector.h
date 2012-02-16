@@ -42,12 +42,12 @@ public:
    enum EAbort { kContinue, kAbortProcess, kAbortFile };
 
 protected:
-   Long64_t       fStatus;  //selector status
-   EAbort         fAbort;   //abort status
-   TString        fOption;  //option given to TTree::Process
-   TObject       *fObject;  //current object if processing object (vs. TTree)
-   TList         *fInput;   //list of objects available during processing
-   TSelectorList *fOutput;  //list of objects created during processing
+   Long64_t       fStatus;  // Selector status
+   EAbort         fAbort;   // Abort status
+   TString        fOption;  // Option given to TTree::Process
+   TObject       *fObject;  //!Current object if processing object (vs. TTree)
+   TList         *fInput;   // List of objects available during processing
+   TSelectorList *fOutput;  //!List of objects created during processing
 
 private:
    TSelector(const TSelector&);            // not implemented
@@ -72,6 +72,7 @@ public:
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }
    virtual void        SetStatus(Long64_t status) { fStatus = status; }
+   virtual TList      *GetInputList() const { return fInput; }
    virtual TList      *GetOutputList() const { return fOutput; }
    virtual void        SlaveTerminate() { }
    virtual void        Terminate() { }
@@ -82,7 +83,7 @@ public:
    static  TSelector  *GetSelector(const char *filename);
    static  Bool_t      IsStandardDraw(const char *selec);
 
-   ClassDef(TSelector,0)  //A utility class for tree and object processing
+   ClassDef(TSelector,2)  //A utility class for tree and object processing
 };
 
 #endif
