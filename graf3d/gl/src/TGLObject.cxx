@@ -46,7 +46,7 @@ Bool_t TGLObject::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
    if (!fDLCache ||
        !fScene   ||
        (rnrCtx.SecSelection() && SupportsSecondarySelect()) ||
-       (fMultiColor && (rnrCtx.HighlightOutline() || rnrCtx.IsDrawPassOutlineLine())) ||
+       (fMultiColor && (rnrCtx.Highlight() || rnrCtx.IsDrawPassOutlineLine())) ||
        (AlwaysSecondarySelect() && rnrCtx.Highlight()))
    {
       return kFALSE;

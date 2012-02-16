@@ -137,7 +137,8 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glDisable(GL_CULL_FACE);
 
-   fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
+   // This tells TGLObject we don't want display-lists in some cases.
+   fMultiColor = fM->fDrawFrame;
 
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
