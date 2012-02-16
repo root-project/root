@@ -54,6 +54,7 @@ class QDropEvent;
 class QDragEnterEvent;
 class QCloseEvent;
 class QEvent;
+class QObject;
 
 class TQRootCanvas : public QWidget
 {
