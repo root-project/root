@@ -8871,7 +8871,7 @@ GLboolean glxewGetExtension (const char* name)
   GLuint len = _glewStrLen((const GLubyte*)name);
 /*   if (glXQueryExtensionsString == NULL || glXGetCurrentDisplay == NULL) return GL_FALSE; */
 /*   p = (GLubyte*)glXQueryExtensionsString(glXGetCurrentDisplay(), DefaultScreen(glXGetCurrentDisplay())); */
-  if (glXGetClientString == NULL || glXGetCurrentDisplay == NULL) return GL_FALSE;
+  if (glXGetCurrentDisplay == NULL) return GL_FALSE;
   p = (GLubyte*)glXGetClientString(glXGetCurrentDisplay(), GLX_EXTENSIONS);
   if (0 == p) return GL_FALSE;
   end = p + _glewStrLen(p);
