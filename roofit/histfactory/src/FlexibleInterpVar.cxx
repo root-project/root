@@ -44,6 +44,7 @@ FlexibleInterpVar::FlexibleInterpVar()
   // Default constructor
   _paramIter = _paramList.createIterator() ;
   _nominal = 0;
+  _interpBoundary=1.;
 }
 
 
@@ -53,7 +54,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 		       double nominal, vector<double> low, vector<double> high) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(nominal), _low(low), _high(high)
+  _nominal(nominal), _low(low), _high(high), _interpBoundary(1.)
 {
 
   _paramIter = _paramList.createIterator() ;
@@ -81,7 +82,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 				     vector<int> code) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(nominal), _low(low), _high(high), _interpCode(code)
+  _nominal(nominal), _low(low), _high(high), _interpCode(code), _interpBoundary(1.)
 {
 
   _paramIter = _paramList.createIterator() ;
@@ -115,7 +116,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
 FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char* name) :
   RooAbsReal(other, name), 
   _paramList("paramList",this,other._paramList),
-  _nominal(other._nominal), _low(other._low), _high(other._high), _interpCode(other._interpCode)
+  _nominal(other._nominal), _low(other._low), _high(other._high), _interpCode(other._interpCode), _interpBoundary(other._interpBoundary)
   
 {
   // Copy constructor
@@ -215,6 +216,64 @@ Double_t FlexibleInterpVar::evaluate() const
 	total +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
 	
+    } else if(_interpCode.at(i)==4){ // Aaron Armbruster - exponential extrapolation, polynomial interpolation
+      double boundary = _interpBoundary;
+      // piece-wise log + parabolic
+      if(param->getVal()>=boundary)
+	{
+	total *= pow(_high.at(i)/_nominal, +param->getVal());
+      }
+      else if (param->getVal() < boundary && param->getVal() > -boundary && boundary != 0)
+      {
+	double x0 = boundary;
+	double x  = param->getVal();
+
+// 	double pow_up       = pow(_high.at(i)/_nominal, x0);
+// 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
+// 	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
+// 	double pow_down_log =-pow_down*TMath::Log(_low.at(i));
+// 	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
+// 	double pow_down_log2=-pow_down*TMath::Log(_low.at(i));
+
+
+//fcns+der are eq at bd
+// 	  double a =  1./(4*pow(x0, 1))*(3*A0 - x0*S1);
+// 	double b =  1./(4*pow(x0, 2))*(4*S0 - x0*A1 - 8);
+// 	double c = -1./(4*pow(x0, 3))*(  A0 - x0*S1);
+// 	double d = -1./(4*pow(x0, 4))*(2*S0 - x0*A1 - 4);
+// 	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4);
+
+
+//fcns+der+2nd_der are eq at bd
+
+	double pow_up       = pow(_high.at(i)/_nominal, x0);
+	double pow_down     = pow(_low.at(i)/_nominal,  x0);
+	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
+	double pow_down_log = -pow_down*TMath::Log(_low.at(i));
+	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
+	double pow_down_log2= pow_down_log*TMath::Log(_low.at(i));
+
+	double S0 = (pow_up+pow_down)/2;
+	double A0 = (pow_up-pow_down)/2;
+	double S1 = (pow_up_log+pow_down_log)/2;
+	double A1 = (pow_up_log-pow_down_log)/2;
+	double S2 = (pow_up_log2+pow_down_log2)/2;
+	double A2 = (pow_up_log2-pow_down_log2)/2;
+
+//fcns+der+2nd_der are eq at bd
+	double a = 1./(8*pow(x0, 1))*(      15*A0 -  7*x0*S1 + x0*x0*A2);
+	double b = 1./(8*pow(x0, 2))*(-24 + 24*S0 -  9*x0*A1 + x0*x0*S2);
+	double c = 1./(4*pow(x0, 3))*(    -  5*A0 +  5*x0*S1 - x0*x0*A2);
+	double d = 1./(4*pow(x0, 4))*( 12 - 12*S0 +  7*x0*A1 - x0*x0*S2);
+	double e = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
+	double f = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
+
+	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4) + e*pow(x, 5) + f*pow(x, 6);
+      }
+      else if (param->getVal()<=-boundary)
+      {
+	total *= pow(_low.at(i)/_nominal,  -param->getVal());
+      }
     } else {
       coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  " << param->GetName() 
 			    << " with unknown interpolation code" << endl ;
