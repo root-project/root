@@ -459,6 +459,26 @@ void TGLViewerBase::RenderSelected()
    TGLUtil::CheckError("TGLViewerBase::RenderSelected - pre exit check");
 }
 
+//______________________________________________________________________________
+void TGLViewerBase::RenderSelectedForHighlight()
+{
+   // Render selected objects from all scenes for highlight.
+
+   fRnrCtx->SetHighlight(kTRUE);
+
+   SubRenderScenes(&TGLSceneBase::RenderSelOpaqueForHighlight);
+
+   TGLCapabilityEnabler blend(GL_BLEND, kTRUE);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glDepthMask(GL_FALSE);
+
+   SubRenderScenes(&TGLSceneBase::RenderSelTranspForHighlight);
+
+   glDepthMask(GL_TRUE);
+
+   fRnrCtx->SetHighlight(kFALSE);
+}
+
 //______________________________________________________________________
 void TGLViewerBase::RenderOpaque(Bool_t rnr_non_selected, Bool_t rnr_selected)
 {

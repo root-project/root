@@ -460,6 +460,18 @@ void TGLSceneBase::RenderSelOpaque(TGLRnrCtx & /*rnrCtx*/)
 //______________________________________________________________________________
 void TGLSceneBase::RenderSelTransp(TGLRnrCtx & /*rnrCtx*/)
 {
+   // Render selected transparent elements for highlight.
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderSelOpaqueForHighlight(TGLRnrCtx & /*rnrCtx*/)
+{
+   // Render selected opaque elements for highlight.
+}
+
+//______________________________________________________________________________
+void TGLSceneBase::RenderSelTranspForHighlight(TGLRnrCtx & /*rnrCtx*/)
+{
    // Render selected transparent elements.
 }
 

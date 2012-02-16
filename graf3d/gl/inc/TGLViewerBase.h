@@ -130,6 +130,7 @@ public:
    virtual void Render();
    virtual void RenderNonSelected();
    virtual void RenderSelected();
+   virtual void RenderSelectedForHighlight();
    virtual void RenderOpaque(Bool_t rnr_non_selected=kTRUE, Bool_t rnr_selected=kTRUE);
    virtual void RenderTransparent(Bool_t rnr_non_selected=kTRUE, Bool_t rnr_selected=kTRUE);
    virtual void RenderOverlay(Int_t state, Bool_t selection);

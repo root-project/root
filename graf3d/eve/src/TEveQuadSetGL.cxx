@@ -133,7 +133,6 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx& rnrCtx) const
 
    switch (mQ.fQuadType)
    {
-
       case TEveQuadSet::kQT_FreeQuad:
       {
          Float_t e1[3], e2[3], normal[3];
@@ -467,7 +466,6 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 
    switch (mQ.fQuadType)
    {
-
       case TEveQuadSet::kQT_HexagonXY:
       {
          while (qi.next()) {

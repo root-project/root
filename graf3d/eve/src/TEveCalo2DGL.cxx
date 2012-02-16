@@ -386,11 +386,13 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
          }
 
          // reference phi sum
-         for (Int_t s = 0; s < nSlices; ++s) {
+         for (Int_t s = 0; s < nSlices; ++s)
+         {
             sliceValsUpRef[s] = 0; sliceValsLowRef[s] = 0;
          }
          TEveCaloData::vCellId_t& cidsRef = *(fM->fCellLists[etaBin]);
-         for (TEveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++) {
+         for (TEveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++)
+         {
             data->GetCellData(*i, cellData);
             if (cellData.Phi() > 0)
                sliceValsUpRef [i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
@@ -462,14 +464,10 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
    static const TEveException eh("TEveCalo2DGL::DrawHighlight ");
 
    if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
+   {
       return;
+   }
 
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
-   glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-   TGLUtil::LineWidth(2);
    TGLUtil::LockColor();
    try
    {
@@ -484,25 +482,19 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
       }
       if (!fM->fData->GetCellsSelected().empty())
       {
-         Float_t dr[2];
-         glGetFloatv(GL_DEPTH_RANGE,dr);
          glColor4ubv(rnrCtx.ColorSet().Selection(1).CArr());
-         glDepthRange(dr[0], 0.8*dr[1]);
          if (IsRPhi())
             DrawRPhiHighlighted(fM->fCellListsSelected);
          else
             DrawRhoZHighlighted(fM->fCellListsSelected);
 
-         glDepthRange(dr[0], dr[1]);
       }
    }
    catch (TEveException& exc)
    {
       Warning(eh, "%s", exc.what());
    }
-
    TGLUtil::UnlockColor();
-   glPopAttrib();
 }
 
 //______________________________________________________________________________

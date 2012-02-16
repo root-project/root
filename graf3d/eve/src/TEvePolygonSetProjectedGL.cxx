@@ -78,6 +78,8 @@ void TEvePolygonSetProjectedGL::DrawOutline() const
 
    if (fM->fPols.size() == 0) return;
 
+   Bool_t done_p = kFALSE;
+
    if (fM->GetMiniFrame())
    {
       std::map<Edge_t, Int_t> edges;
@@ -99,11 +101,13 @@ void TEvePolygonSetProjectedGL::DrawOutline() const
          {
             glVertex3fv(fM->fPnts[i->first.fI].Arr());
             glVertex3fv(fM->fPnts[i->first.fJ].Arr());
+            done_p = kTRUE;
          }
       }
       glEnd();
    }
-   else
+
+   if ( ! done_p)
    {
       for (TEvePolygonSetProjected::vpPolygon_ci i = fM->fPols.begin();
            i != fM->fPols.end(); ++i)
@@ -137,7 +141,7 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.0f,1.0f);
+   glPolygonOffset(1, 1);
    GLUtesselator *tessObj = TGLUtil::GetDrawTesselator3fv();
 
    TEveVector* pnts = fM->fPnts;
@@ -160,9 +164,9 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
       {
          gluBeginPolygon(tessObj);
          gluNextContour(tessObj, (GLenum)GLU_UNKNOWN);
-         glNormal3f(0., 0., 1.);
+         glNormal3f(0, 0, 1);
          Double_t coords[3];
-         coords[2] = 0.;
+         coords[2] = 0;
          for (Int_t k = 0; k < pntsN; ++k)
          {
             vi = (*i).fPnts[k];
@@ -192,52 +196,19 @@ void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysic
 {
    // Draw polygons in highlight mode.
 
-   // XXXX to support highlight AND selection ...
    if (lvl < 0) lvl = pshp->GetSelected();
+
+   glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());
+   TGLUtil::LockColor();
 
    if (fM->GetHighlightFrame())
    {
-      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-      glDisable(GL_LIGHTING);
-      glEnable(GL_LINE_SMOOTH);
-
-      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-
-      const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-      Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
-      Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
-                            { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
-
-      rnrCtx.SetHighlightOutline(kTRUE);
-      TGLUtil::LockColor();
-      Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
-      for (int i = first_outer; i < 8; ++i)
-      {
-         glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
-         DrawOutline();
-      }
-      TGLUtil::UnlockColor();
-      rnrCtx.SetHighlightOutline(kFALSE);
-
-      TGLUtil::Color(fM->fLineColor);
-      for (int i = 0; i < 4; ++i)
-      {
-         glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
-         DrawOutline();
-      }
-      glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
-
-      pshp->SetupGLColors(rnrCtx);
-      Float_t dr[2];
-      glGetFloatv(GL_DEPTH_RANGE,dr);
-      glDepthRange(dr[0], 0.5*dr[1]);
       DrawOutline();
-      glDepthRange(dr[0], dr[1]);
-
-      glPopAttrib();
    }
    else
    {
-      TGLLogicalShape::DrawHighlight(rnrCtx, pshp);
+      Draw(rnrCtx);
    }
+
+   TGLUtil::UnlockColor();
 }

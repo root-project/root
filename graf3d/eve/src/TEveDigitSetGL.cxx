@@ -34,7 +34,7 @@ Bool_t TEveDigitSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
    // Set color for rendering of the specified digit.
 
-   TEveDigitSet &DS = * (TEveDigitSet*)fExternalObj;
+   TEveDigitSet &DS = * (TEveDigitSet*) fExternalObj;
 
    if (DS.fSingleColor)
    {
@@ -95,9 +95,6 @@ void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
 
    if (AlwaysSecondarySelect())
    {
-      Float_t dr[2];
-      glGetFloatv(GL_DEPTH_RANGE,dr);
-
       if ( ! DS.RefHighlightedSet().empty())
       {
          fHighlightSet = & DS.RefHighlightedSet();
@@ -105,10 +102,8 @@ void TEveDigitSetGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
       }
       if ( ! DS.RefSelectedSet().empty())
       {
-         glDepthRange(dr[0], 0.8*dr[1]);
          fHighlightSet = & DS.RefSelectedSet();
          TGLObject::DrawHighlight(rnrCtx, pshp, 1);
-         glDepthRange(dr[0], dr[1]);
       }
       fHighlightSet = 0;
    }

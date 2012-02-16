@@ -516,9 +516,10 @@ void TGLViewer::Render()
    DrawGuides();
    RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
-   fRnrCtx->SetHighlight(kTRUE);
-   RenderSelected();
-   fRnrCtx->SetHighlight(kFALSE);
+   if ( ! fRnrCtx->Selection())
+   {
+      RenderSelectedForHighlight();
+   }
 
    glClear(GL_DEPTH_BUFFER_BIT);
    DrawDebugInfo();
@@ -1224,7 +1225,7 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
    TUnlocker ulck(this);
 
    if (! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
-       ! fSelRec.GetPhysShape()->GetLogical()->SupportsSecondarySelect())
+       ! fSelRec.GetLogShape()->SupportsSecondarySelect())
    {
       if (gDebug > 0)
          Info("TGLViewer::SecondarySelect", "Skipping secondary selection "

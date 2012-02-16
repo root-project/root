@@ -422,25 +422,12 @@ void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* p
    // If lvl argument is less than 0 (-1 by default), the index into color-set
    // is taken from the physical shape itself.
 
-   const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-   Int_t offsets[12][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
-                            { 1, 0}, { 0, 1}, {-1, 0}, { 0,-1},
-                            { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
-
    if (lvl < 0) lvl = pshp->GetSelected();
 
-   rnrCtx.SetHighlightOutline(kTRUE);
+   glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());
    TGLUtil::LockColor();
-   for (int i = 0; i < 12; ++i)
-   {
-      glViewport(vp.X() + offsets[i][0], vp.Y() + offsets[i][1], vp.Width(), vp.Height());
-      glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());
-      Draw(rnrCtx);
-   }
+   Draw(rnrCtx);
    TGLUtil::UnlockColor();
-   rnrCtx.SetHighlightOutline(kFALSE);
-
-   glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
 }
 
 //______________________________________________________________________________

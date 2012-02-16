@@ -957,24 +957,21 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    }
    else
    {
-      Float_t x, y;
-      if (!rnrCtx.HighlightOutline())
+      Float_t maxv = 0;
+      bws = 1e5;
+      for (vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i)
       {
-         Float_t maxv = 0;
-         bws = 1e5;
-         for (vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i)
-         {
-            if (i->MinSize() < bws)   bws  = i->MinSize();
-            if (i->fSumVal   > maxv)  maxv = i->fSumVal;
-         }
-         bws   *= 0.5f;
-         logMax = TMath::Log10(maxv + 1);
-         fValToPixel =  bws/logMax;
+         if (i->MinSize() < bws)   bws  = i->MinSize();
+         if (i->fSumVal   > maxv)  maxv = i->fSumVal;
       }
+      bws   *= 0.5f;
+      logMax = TMath::Log10(maxv + 1);
+      fValToPixel = bws / logMax;
 
-      // special draw for name stack
       if (rnrCtx.SecSelection())
       {
+         // Special draw for name stack.
+
          for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
          {
             glLoadName(i->fMaxSlice);
@@ -992,8 +989,10 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          }
       }
       else
-      {// optimised draw without name stack
-         if (!rnrCtx.HighlightOutline())
+      {
+         // Optimised draw without name stack.
+
+         if ( ! rnrCtx.Highlight())
          {
             glBegin(GL_POINTS);
             for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
@@ -1010,8 +1009,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          {
             TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), fM->fData->GetSliceTransparency(i->fMaxSlice));
             Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
-            x = i->X();
-            y = i->Y();
+            Float_t x = i->X();
+            float_t y = i->Y();
             Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
             glVertex3f(x - bw, y - bw, z);
             glVertex3f(x + bw, y - bw, z);
@@ -1057,7 +1056,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 
    // text
    if (fCurrentPixelsPerBin > fM->fDrawNumberCellPixels &&
-       (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE)
+       ! rnrCtx.Selection() && ! rnrCtx.Highlight())
    {
       TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
       TGLFont font;
@@ -1090,8 +1089,6 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
       return;
    }
 
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-
    // modelview matrix
    glPushMatrix();
    Float_t sx, sy, sz;
@@ -1099,11 +1096,15 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
    glScalef(sx, sy, sz);
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
-   glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   if (fCells3D)
+   {
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      TGLUtil::LineWidth(2);
+   }
 
-   TGLUtil::LineWidth(2);
    TGLUtil::LockColor();
    if (!fM->fData->GetCellsHighlighted().empty()) 
    {
@@ -1112,17 +1113,17 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
    }
    if (!fM->fData->GetCellsSelected().empty())
    {
-      Float_t dr[2];
-      glGetFloatv(GL_DEPTH_RANGE,dr);
       glColor4ubv(rnrCtx.ColorSet().Selection(1).CArr());
-      glDepthRange(dr[0], 0.8*dr[1]);
       DrawSelectedCells(rnrCtx, fM->fData->GetCellsSelected());
-      glDepthRange(dr[0], dr[1]);
+   }
+   TGLUtil::UnlockColor();
+
+   if (fCells3D)
+   {
+      glPopAttrib();
    }
 
-   TGLUtil::UnlockColor();
    glPopMatrix();
-   glPopAttrib();
 }
 
 

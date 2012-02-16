@@ -1894,6 +1894,18 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveElement::SetPickableRecursively(Bool_t p)
+{
+   // Set pickable state on the element and all its children.
+
+   fPickable = p;
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->SetPickableRecursively(p);
+   }
+}
+
+//______________________________________________________________________________
 TEveElement* TEveElement::ForwardSelection()
 {
    // Returns element to be selected on click.

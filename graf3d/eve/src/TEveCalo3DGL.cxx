@@ -610,6 +610,7 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*p
       DrawSelectedCells(fM->fData->GetCellsSelected());
       glDepthRange(dr[0], dr[1]);
    }
+
    TGLUtil::UnlockColor();
    glPopAttrib();
 }

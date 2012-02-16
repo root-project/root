@@ -609,7 +609,7 @@ void TGLScene::RenderOpaque(TGLRnrCtx& rnrCtx)
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fOpaqueElements.empty())
-       RenderAllPasses(rnrCtx, sinfo->fOpaqueElements, kTRUE);
+      RenderAllPasses(rnrCtx, sinfo->fOpaqueElements, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -619,7 +619,7 @@ void TGLScene::RenderTransp(TGLRnrCtx& rnrCtx)
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fTranspElements.empty())
-       RenderAllPasses(rnrCtx, sinfo->fTranspElements, kTRUE);
+      RenderAllPasses(rnrCtx, sinfo->fTranspElements, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -628,8 +628,8 @@ void TGLScene::RenderSelOpaque(TGLRnrCtx& rnrCtx)
    // Render selected opaque elements.
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
-   if (!sinfo->fSelOpaqueElements.empty())
-       RenderAllPasses(rnrCtx, sinfo->fSelOpaqueElements, kFALSE);
+   if ( ! sinfo->fSelOpaqueElements.empty())
+      RenderAllPasses(rnrCtx, sinfo->fSelOpaqueElements, kFALSE);
 }
 
 //______________________________________________________________________________
@@ -639,7 +639,58 @@ void TGLScene::RenderSelTransp(TGLRnrCtx& rnrCtx)
 
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (!sinfo->fSelTranspElements.empty())
-       RenderAllPasses(rnrCtx, sinfo->fSelTranspElements, kFALSE);
+      RenderAllPasses(rnrCtx, sinfo->fSelTranspElements, kFALSE);
+}
+
+//______________________________________________________________________________
+void TGLScene::RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx)
+{
+   // Render selected opaque elements for highlight.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
+   if ( ! sinfo->fSelOpaqueElements.empty())
+      RenderHighlight(rnrCtx, sinfo->fSelOpaqueElements);
+}
+
+//______________________________________________________________________________
+void TGLScene::RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx)
+{
+   // Render selected transparent elements for highlight.
+
+   TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
+   if (!sinfo->fSelTranspElements.empty())
+      RenderHighlight(rnrCtx, sinfo->fSelTranspElements);
+}
+
+//______________________________________________________________________________
+void TGLScene::RenderHighlight(TGLRnrCtx&           rnrCtx,
+                               DrawElementPtrVec_t& elVec)
+{
+   DrawElementPtrVec_t svec(1);
+
+   glEnable(GL_STENCIL_TEST);
+   for (DrawElementPtrVec_i i = elVec.begin(); i != elVec.end(); ++i)
+   {
+      svec[0] = *i;
+
+      glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+      glClear(GL_STENCIL_BUFFER_BIT);
+
+      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+      RenderAllPasses(rnrCtx, svec, kFALSE);
+
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+      glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+      rnrCtx.SetHighlightOutline(kTRUE);
+      RenderAllPasses(rnrCtx, svec, kFALSE);
+      rnrCtx.SetHighlightOutline(kFALSE);
+   }
+   glDisable(GL_STENCIL_TEST);
 }
 
 //______________________________________________________________________________
@@ -686,7 +737,8 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
       case TGLRnrCtx::kOutline:
       {
          glEnable(GL_LIGHTING);
-         if (sinfo->ShouldClip()) {
+         if (sinfo->ShouldClip())
+         {
             // Clip object - two sided lighting, two side polygons, don't cull (BACK) faces
             glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -694,11 +746,14 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
          }
          // No clip - default single side lighting,
          // front polygons, cull (BACK) faces ok
-         if (sceneStyle == TGLRnrCtx::kOutline) {
+         if (sceneStyle == TGLRnrCtx::kOutline && ! (rnrCtx.Selection() || rnrCtx.Highlight()))
+         {
             reqPasses = 2;   // Outline needs two full draws
             rnrPass[0] = TGLRnrCtx::kPassOutlineFill;
             rnrPass[1] = TGLRnrCtx::kPassOutlineLine;
-         } else {
+         }
+         else
+         {
             rnrPass[0] = TGLRnrCtx::kPassFill;
          }
          break;

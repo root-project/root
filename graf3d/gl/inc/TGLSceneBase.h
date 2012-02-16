@@ -90,15 +90,17 @@ public:
    virtual void          LodifySceneInfo(TGLRnrCtx& ctx);
 
    // Rendering
-   virtual void PreDraw   (TGLRnrCtx & rnrCtx);
-   virtual void PreRender (TGLRnrCtx & rnrCtx);
-   virtual void Render    (TGLRnrCtx & rnrCtx);
-   virtual void RenderOpaque    (TGLRnrCtx & rnrCtx);
-   virtual void RenderTransp    (TGLRnrCtx & rnrCtx);
-   virtual void RenderSelOpaque (TGLRnrCtx & rnrCtx);
-   virtual void RenderSelTransp (TGLRnrCtx & rnrCtx);
-   virtual void PostRender(TGLRnrCtx & rnrCtx);
-   virtual void PostDraw  (TGLRnrCtx & rnrCtx);
+   virtual void PreDraw   (TGLRnrCtx& rnrCtx);
+   virtual void PreRender (TGLRnrCtx& rnrCtx);
+   virtual void Render    (TGLRnrCtx& rnrCtx);
+   virtual void RenderOpaque   (TGLRnrCtx& rnrCtx);
+   virtual void RenderTransp   (TGLRnrCtx& rnrCtx);
+   virtual void RenderSelOpaque(TGLRnrCtx& rnrCtx);
+   virtual void RenderSelTransp(TGLRnrCtx& rnrCtx);
+   virtual void RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx);
+   virtual void RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx);
+   virtual void PostRender(TGLRnrCtx& rnrCtx);
+   virtual void PostDraw  (TGLRnrCtx& rnrCtx);
 
    virtual TGLLogicalShape* FindLogical(TObject*) const { return 0; }
 

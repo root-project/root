@@ -364,27 +364,34 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
-   if (fInvertedWind)  glFrontFace(GL_CW);
-   if (rnrCtx.Highlight() && !rnrCtx.Selection() && !rnrCtx.IsDrawPassOutlineLine())
+   if (fInvertedWind) glFrontFace(GL_CW);
+   if (rnrCtx.Highlight())
    {
-      glPushAttrib(GL_LIGHTING_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+      glPushAttrib(GL_LIGHTING_BIT | GL_DEPTH_BUFFER_BIT);
 
       glDisable(GL_LIGHTING);
-      glDisable(GL_CULL_FACE);
       glDisable(GL_DEPTH_TEST);
-      glEnable(GL_STENCIL_TEST);
-      glStencilFunc(GL_ALWAYS, 0x1, 0x1);
-      glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-      glClear(GL_STENCIL_BUFFER_BIT);
-      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-      fLogicalShape->Draw(rnrCtx);
+      if (rnrCtx.HighlightOutline())
+      {
+         const Int_t offsets[12][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
+                                        { 1, 0}, { 0, 1}, {-1, 0}, { 0,-1},
+                                        { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
 
-      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-      glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
-      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+         const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
 
-      fLogicalShape->DrawHighlight(rnrCtx, this);
+         for (int i = 0; i < 12; ++i)
+         {
+            glViewport(vp.X() + offsets[i][0], vp.Y() + offsets[i][1], vp.Width(), vp.Height());
+            fLogicalShape->DrawHighlight(rnrCtx, this);
+         }
+
+         glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+      }
+      else
+      {
+         fLogicalShape->DrawHighlight(rnrCtx, this);
+      }
 
       glPopAttrib();
    }
