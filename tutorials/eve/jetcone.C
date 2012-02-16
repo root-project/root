@@ -4,6 +4,9 @@
 const char* esd_geom_file_name =
    "http://root.cern.ch/files/alice_ESDgeometry.root";
 
+TEveVector GetTEveVector(Float_t eta, Float_t phi);
+void       geomGentleTPC();
+
 void jetcone()
 {
    TEveManager::Create();
@@ -126,7 +129,7 @@ void jetcone()
 }
 
 //___________________________________________________________________________
-TEveVector GetTEveVector( Float_t& eta, Float_t& phi )
+TEveVector GetTEveVector(Float_t eta, Float_t phi)
 {
   TEveVector vec( (Float_t) Cos ( (Double_t) phi)/ CosH( (Double_t) eta ),
 		  (Float_t) Sin ( (Double_t) phi)/ CosH( (Double_t) eta ),
@@ -138,6 +141,7 @@ TEveVector GetTEveVector( Float_t& eta, Float_t& phi )
 void geomGentleTPC()
 {
    // Simple geometry
+   TFile::SetCacheFileDir(".");
    TFile* geom = TFile::Open(esd_geom_file_name, "CACHEREAD");
    if (!geom)
       return;

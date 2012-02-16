@@ -186,5 +186,6 @@ void add_jet(TEveElement* parent, const char* name,
    jet->SetCylinder(129 - 10, 268.36 - 10);
    jet->AddEllipticCone(eta, phi, deta, dphi);
    jet->SetPickable(kTRUE);
+   jet->SetHighlightFrame(kFALSE);
    parent->AddElement(jet);
 }

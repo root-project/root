@@ -38,6 +38,7 @@ void projection()
    TEveGeoShape* gsre = TEveGeoShape::ImportShapeExtract(gse, 0);
    geom->Close();
    delete geom;
+   gsre->SetPickableRecursively(kTRUE);
    gEve->AddGlobalElement(gsre);
    gEve->GetGlobalScene()->SetRnrState(kFALSE);
    mng->ImportElements(gsre);
