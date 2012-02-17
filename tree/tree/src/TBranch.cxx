@@ -1259,14 +1259,15 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    Int_t bufbegin = 0;
    if (entryOffset) {
       bufbegin = entryOffset[entry-first];
+      buf->SetBufferOffset(bufbegin);
       Int_t* displacement = basket->GetDisplacement();
       if (R__unlikely(displacement)) {
          buf->SetBufferDisplacement(displacement[entry-first]);
       }
    } else {
       bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+      buf->SetBufferOffset(bufbegin);
    }
-   buf->SetBufferOffset(bufbegin);
    
    // Int_t bufbegin = buf->Length();
    // Remember which entry we are reading.
@@ -1318,22 +1319,24 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    }
    TBuffer* buf = basket->GetBufferRef();
    // Set entry offset in buffer and read data from all leaves.
-   if (!buf->IsReading()) {
-      basket->SetReadMode();
+   if (!TestBit(kDoNotUseBufferMap)) {
+      buf->ResetMap();
    }
+   if (R__unlikely(!buf->IsReading())) {
+      basket->SetReadMode();
+   } 
+  Int_t* entryOffset = basket->GetEntryOffset();
    Int_t bufbegin = 0;
-   Int_t* entryOffset = basket->GetEntryOffset();
    if (entryOffset) {
       bufbegin = entryOffset[entry-first];
+      buf->SetBufferOffset(bufbegin);
+      Int_t* displacement = basket->GetDisplacement();
+      if (R__unlikely(displacement)) {
+         buf->SetBufferDisplacement(displacement[entry-first]);
+      }
    } else {
-      bufbegin = basket->GetKeylen() + ((entry - first) * basket->GetNevBufSize());
-   }
-   buf->SetBufferOffset(bufbegin);
-   Int_t* displacement = basket->GetDisplacement();
-   if (displacement) {
-      buf->SetBufferDisplacement(displacement[entry-first]);
-   } else {
-      buf->SetBufferDisplacement();
+      bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
+      buf->SetBufferOffset(bufbegin);
    }
    // Remember which entry we are reading.
    fReadEntry = entry;
