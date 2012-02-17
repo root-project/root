@@ -195,7 +195,7 @@ THashList *TProofPlayer::fgDrawInputPars = 0;
 
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer(TProof *)
-   : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
+   : fAutoBins(0), fOutput(0), fSelector(0), fCreateSelObj(kTRUE), fSelectorClass(0),
      fFeedbackTimer(0), fFeedbackPeriod(2000),
      fEvIter(0), fSelStatus(0),
      fTotalEvents(0), fQueryResults(0), fQuery(0), fDrawQueries(0),
@@ -717,6 +717,42 @@ void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
 }
 
 //______________________________________________________________________________
+Int_t TProofPlayer::AssertSelector(const char *selector_file)
+{
+   // Make sure that a valid selector object
+   // Return -1 in case of problems, 0 otherwise
+
+   if (selector_file && strlen(selector_file)) {
+      if (fCreateSelObj) SafeDelete(fSelector);
+      // Get selector files from cache
+      if (gProofServ) {
+         gProofServ->GetCacheLock()->Lock();
+         gProofServ->CopyFromCache(selector_file, 1);
+      }
+
+      if (!(fSelector = TSelector::GetSelector(selector_file))) {
+         Error("AssertSelector", "cannot load: %s", selector_file );
+         gProofServ->GetCacheLock()->Unlock();
+         return -1;
+      }
+
+      // Save binaries to cache, if any
+      if (gProofServ) {
+         gProofServ->CopyToCache(selector_file, 1);
+         gProofServ->GetCacheLock()->Unlock();
+      }
+      fCreateSelObj = kTRUE;
+      Info("AssertSelector", "Processing via filename");
+   } else if (!fSelector) {
+      Error("AssertSelector", "no TSelector object define : cannot continue!");
+   } else {
+      Info("AssertSelector", "Processing via TSelector object");
+   }
+   // Done
+   return 0;
+}  
+
+//______________________________________________________________________________
 Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
                                Long64_t first)
@@ -732,26 +768,12 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    TCleanup clean(this);
 
-   SafeDelete(fSelector);
    fSelectorClass = 0;
    Int_t version = -1;
    TRY {
-      // Get selector files from cache
-      if (gProofServ) {
-         gProofServ->GetCacheLock()->Lock();
-         gProofServ->CopyFromCache(selector_file, 1);
-      }
-
-      if (!(fSelector = TSelector::GetSelector(selector_file))) {
-         Error("Process", "cannot load: %s", selector_file );
-         gProofServ->GetCacheLock()->Unlock();
+      if (AssertSelector(selector_file) != 0 ) {
+         Error("Process", "cannot assert the selector object");
          return -1;
-      }
-
-      // Save binaries to cache, if any
-      if (gProofServ) {
-         gProofServ->CopyToCache(selector_file, 1);
-         gProofServ->GetCacheLock()->Unlock();
       }
 
       fSelectorClass = fSelector->IsA();
@@ -815,6 +837,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          if (IsClient()) {
             // on client (for local run)
             PDB(kLoop,1) Info("Process","Call Begin(0)");
+            fSelector->GetOutputList()->Clear();
             fSelector->Begin(0);
          }
          if (fSelStatus->IsOk()) {
@@ -1071,6 +1094,26 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TPerfStats::Stop();
 
    return 0;
+}
+
+//______________________________________________________________________________
+Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
+                               Option_t *option, Long64_t nentries,
+                               Long64_t first)
+{
+   // Process specified TDSet on PROOF worker with TSelector object
+   // The return value is -1 in case of error and TSelector::GetStatus()
+   // in case of success.
+
+   if (!selector) {
+      Error("Process", "selector object undefiend!");
+      return -1;
+   }
+
+   if (fCreateSelObj) SafeDelete(fSelector);
+   fSelector = selector;
+   fCreateSelObj = kFALSE;
+   return Process(dset, (const char *)0, option, nentries, first);
 }
 
 //______________________________________________________________________________
@@ -1686,14 +1729,22 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TPerfStats::Setup(fInput);
    }
 
-   if(!SendSelector(selector_file)) return -1;
+   // Define filename
+   TString fn;
+
+   if (fCreateSelObj) {
+      if(!SendSelector(selector_file)) return -1;
+      fn = gSystem->BaseName(selector_file);
+   } else {
+      fn = selector_file;
+   }
 
    TMessage mesg(kPROOF_PROCESS);
-   TString fn(gSystem->BaseName(selector_file));
 
    // Parse option
    Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
 
+   TList *inputtmp = 0;  // List of temporary input objects
    TDSet *set = dset;
    if (fProof->IsMaster()) {
 
@@ -1746,19 +1797,50 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          Info("Process","starting new query");
       }
 
-      SafeDelete(fSelector);
-      fSelectorClass = 0;
-      if (!(fSelector = TSelector::GetSelector(selector_file))) {
-         if (!sync)
-            gSystem->RedirectOutput(0);
-         return -1;
+      // Define fSelector in Client if processing with filename
+      if (fCreateSelObj) {
+         SafeDelete(fSelector);
+         if (!(fSelector = TSelector::GetSelector(selector_file))) {
+            if (!sync)
+               gSystem->RedirectOutput(0);
+            return -1;
+         }
       }
+
+      fSelectorClass = 0;
       fSelectorClass = fSelector->IsA();
+
+      // Add fSelector to inputlist if processing with object
+      if (!fCreateSelObj) {
+         // In any input list was set into the selector move it to the PROOF
+         // input list, because we do not want to stream the selector one
+         if (fSelector->GetInputList() && fSelector->GetInputList()->GetSize() > 0) {
+            TIter nxi(fSelector->GetInputList());
+            TObject *o = 0;
+            while ((o = nxi())) {
+               if (!fInput->FindObject(o)) {
+                  fInput->Add(o);
+                  if (!inputtmp) {
+                     inputtmp = new TList;
+                     inputtmp->SetOwner(kFALSE);
+                  }
+                  inputtmp->Add(o);
+               }
+            }
+         }
+         fInput->Add(fSelector);
+      }
+      // Set the input list for initialization
       fSelector->SetInputList(fInput);
       fSelector->SetOption(option);
+      fSelector->GetOutputList()->Clear();
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
+
+      // Reset the input list to avoid double streaming and related problems (saving
+      // the TQueryResult)
+      if (!fCreateSelObj) fSelector->SetInputList(0);
 
       // Send large input data objects, if any
       fProof->SendInputDataFile();
@@ -1881,16 +1963,54 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                              fPacketizer->GetInitTime(),
                                              fPacketizer->GetProcTime());
          }
+      } else {
+         // Set the input list: maybe required at termination
+         if (!fCreateSelObj) fSelector->SetInputList(fInput);
       }
       StopFeedback();
 
+      Long64_t rc = -1;
       if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
-         return Finalize(kFALSE,sync);
-      else
-         return -1;
+         rc = Finalize(kFALSE,sync);
+            
+      // Remove temporary input objects, if any
+      if (inputtmp) {
+         TIter nxi(inputtmp);
+         TObject *o = 0;
+         while ((o = nxi())) fInput->Remove(o);
+         SafeDelete(inputtmp);
+      }
+
+      // Done
+      return rc;
    }
 }
 
+//______________________________________________________________________________
+Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
+                                     Option_t *option, Long64_t nentries,
+                                     Long64_t first)
+{
+   // Process specified TDSet on PROOF.
+   // This method is called on client and on the PROOF master.
+   // The return value is -1 in case of an error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (!selector) {
+      Error("Process", "selector object undefined");
+      return -1;
+   }
+
+   // Define fSelector in Client
+   if (IsClient() && (selector != fSelector)) {
+      if (fCreateSelObj) SafeDelete(fSelector);
+      fSelector = selector;
+   }
+
+   fCreateSelObj = kFALSE;
+
+   return Process(dset, selector->ClassName(), option, nentries, first);
+}
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::MergeOutputFiles()
 {
@@ -2098,6 +2218,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
       status->SetMemValues(vmaxmst, rmaxmst, kTRUE);
 
       SafeDelete(fSelector);
+
    } else {
       if (fExitStatus != kAborted) {
 
@@ -2163,11 +2284,17 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             Warning("Finalize","current TQueryResult object is undefined!");
          }
 
+         if (!fCreateSelObj) {
+            fInput->Remove(fSelector);
+            fOutput->Remove(fSelector);
+            output->Remove(fSelector);
+         }
+
          // We have transferred copy of the output objects in TQueryResult,
          // so now we can cleanup the selector, making sure that we do not
          // touch the output objects
          output->SetOwner(kFALSE);
-         SafeDelete(fSelector);
+         if (fCreateSelObj) SafeDelete(fSelector);
 
          // Delete fOutput (not needed anymore, cannot be finalized twice),
          // making sure that the objects saved in TQueryResult are not deleted

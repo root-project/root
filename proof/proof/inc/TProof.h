@@ -95,6 +95,7 @@ class TFileCollection;
 class TMap;
 class TDataSetManager;
 class TMacro;
+class TSelector;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -592,6 +593,8 @@ protected:
    EQueryMode      fQueryMode;      // default query mode
    Bool_t          fDynamicStartup; // are the workers started dynamically?
 
+   TSelector       *fSelector;      // Selector to be processed, if any
+
    static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
 private:
@@ -781,6 +784,18 @@ public:
                             Option_t *option = "", Long64_t nentries = -1,
                             Long64_t firstentry = 0, TObject *enl = 0);
    virtual Long64_t Process(const char *selector, Long64_t nentries,
+                            Option_t *option = "");
+   // Process via TSelector
+   virtual Long64_t Process(TDSet *dset, TSelector *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0);
+   virtual Long64_t Process(TFileCollection *fc, TSelector *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0);
+   virtual Long64_t Process(const char *dsetname, TSelector *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0, TObject *enl = 0);
+   virtual Long64_t Process(TSelector *selector, Long64_t nentries,
                             Option_t *option = "");
 
    virtual Long64_t DrawSelect(TDSet *dset, const char *varexp,

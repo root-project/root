@@ -114,6 +114,18 @@ public:
                     { return TProof::Process(dsname, sel, o, nent, fst, enl); }
    Long64_t Process(const char *sel, Long64_t nent, Option_t *o = "")
                     { return TProof::Process(sel, nent, o); }
+   // Process via TSelector
+   Long64_t Process(TDSet *dset, TSelector *sel, Option_t *o = "",
+                    Long64_t nent = -1, Long64_t fst = 0)
+                    { return TProof::Process(dset, sel, o, nent, fst); }
+   Long64_t Process(TFileCollection *fc, TSelector *sel, Option_t *o = "",
+                    Long64_t nent = -1, Long64_t fst = 0)
+                    { return TProof::Process(fc, sel, o, nent, fst); }
+   Long64_t Process(const char *dsname, TSelector *sel, Option_t *o = "",
+                    Long64_t nent = -1, Long64_t fst = 0, TObject *enl = 0)
+                    { return TProof::Process(dsname, sel, o, nent, fst, enl); }
+   Long64_t Process(TSelector* sel, Long64_t nent, Option_t *o = "")
+                    { return TProof::Process(sel, nent, o); }
 
    // Cache management
    void  ShowCache(Bool_t all = kFALSE);

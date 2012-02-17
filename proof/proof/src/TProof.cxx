@@ -82,6 +82,7 @@
 #include "TFileCollection.h"
 #include "TDataSetManager.h"
 #include "TMacro.h"
+#include "TSelector.h"
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -558,6 +559,8 @@ void TProof::InitMembers()
    fFinalizationRunning = kFALSE;
    
    fPerfTree = "";
+
+   fSelector = 0;
 
    // Check if the user defined a list of environment variables to send over:
    // include them into the dedicated list
@@ -2958,6 +2961,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                         // Add the unique query tag as TNamed object to the input list
                         // so that it is available in TSelectors for monitoring
                         TString qid = TString::Format("%s:%s",pq->GetTitle(),pq->GetName());
+                        if (fPlayer->GetInputList()->FindObject("PROOF_QueryTag"))
+                           fPlayer->GetInputList()->Remove(fPlayer->GetInputList()->FindObject("PROOF_QueryTag"));
                         fPlayer->AddInput(new TNamed("PROOF_QueryTag", qid.Data()));
                      } else {
                         Warning("HandleInputMessage","kPROOF_OUTPUTOBJECT: query result missing");
@@ -4359,7 +4364,8 @@ void TProof::Print(Option_t *option) const
 Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector (.C) file.
+   // Process a data set (TDSet) using the specified selector (.C) file or
+   // Tselector object
    // Entry- or event-lists should be set in the data set object using
    // TDSet::SetEntryList.
    // The return value is -1 in case of error and TSelector::GetStatus() in
@@ -4396,7 +4402,15 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
-   Long64_t rv = fPlayer->Process(dset, selector, opt.Data(), nentries, first);
+   Long64_t rv = -1;
+   if (selector && strlen(selector)) {
+      rv = fPlayer->Process(dset, selector, opt.Data(), nentries, first);
+   } else if (fSelector) {
+      rv = fPlayer->Process(dset, fSelector, opt.Data(), nentries, first);
+   } else {
+      Error("Process", "neither a selecrot file nor a selector object have"
+                       " been specified: cannot process!");
+   }
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -4417,7 +4431,8 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 Long64_t TProof::Process(TFileCollection *fc, const char *selector,
                          Option_t *option, Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TFileCollection) using the specified selector (.C) file.
+   // Process a data set (TFileCollection) using the specified selector (.C) file
+   // or TSelector object.
    // The default tree is analyzed (i.e. the first one found). To specify another
    // tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
    // The return value is -1 in case of error and TSelector::GetStatus() in
@@ -4435,7 +4450,17 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
    // fake TDSet with infor about it
    TDSet *dset = new TDSet(TString::Format("TFileCollection:%s", fc->GetName()), 0, 0, "");
    fPlayer->AddInput(fc);
-   Long64_t retval = Process(dset, selector, option, nentries, first);
+
+   
+   Long64_t retval = -1;
+   if (selector && strlen(selector)) {
+      retval = Process(dset, selector, option, nentries, first);
+   } else if (fSelector) {
+      retval = Process(dset, fSelector, option, nentries, first);
+   } else {
+      Error("Process", "neither a selecrot file nor a selector object have"
+                       " been specified: cannot process!");
+   }
    fPlayer->GetInputList()->Remove(fc); // To avoid problems in future
 
    // Cleanup
@@ -4693,7 +4718,15 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
       dset->SetEntryList(elist);
    }
    // Run
-   Long64_t retval = Process(dset, selector, option, nentries, first);
+   Long64_t retval = -1;
+   if (selector && strlen(selector)) {
+      retval = Process(dset, selector, option, nentries, first);
+   } else if (fSelector) {
+      retval = Process(dset, fSelector, option, nentries, first);
+   } else {
+      Error("Process", "neither a selecrot file nor a selector object have"
+                       " been specified: cannot process!");
+   }
    // Cleanup
    if (IsLite() && !fSync) {
       if (!fRunningDSets) fRunningDSets = new TList;
@@ -4708,7 +4741,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
 Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
 {
    // Generic (non-data based) selector processing: the Process() method of the
-   // specified selector (.C) is called 'n' times.
+   // specified selector (.C) or TSelector object is called 'n' times.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
@@ -4723,7 +4756,15 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
    TDSet *dset = new TDSet;
    dset->SetBit(TDSet::kEmpty);
 
-   Long64_t retval = Process(dset, selector, option, n);
+   Long64_t retval = -1;
+   if (selector && strlen(selector)) {
+      retval = Process(dset, selector, option, n);
+   } else if (fSelector) {
+      retval = Process(dset, fSelector, option, n);
+   } else {
+      Error("Process", "neither a selecrot file nor a selector object have"
+                       " been specified: cannot process!");
+   }
 
    // Cleanup
    if (IsLite() && !fSync) {
@@ -4733,6 +4774,104 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
       delete dset;
    }
    return retval;
+}
+
+//______________________________________________________________________________
+Long64_t TProof::Process(TDSet *dset, TSelector *selector, Option_t *option,
+                         Long64_t nentries, Long64_t first)
+{
+   // Process a data set (TDSet) using the specified selector object.
+   // Entry- or event-lists should be set in the data set object using
+   // TDSet::SetEntryList.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (fProtocol < 34) {
+      Error("Process", "server version < 5.33/02:"
+                       "processing by object not supported");
+      return -1;
+   }
+   if (!selector) {
+      Error("Process", "selector object undefined!");
+      return -1;
+   }
+   fSelector = selector;
+   Long64_t rc = Process(dset, (const char*)0, option, nentries, first);
+   fSelector = 0;
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Long64_t TProof::Process(TFileCollection *fc, TSelector *selector,
+                         Option_t *option, Long64_t nentries, Long64_t first)
+{
+   // Process a data set (TFileCollection) using the specified selector object
+   // The default tree is analyzed (i.e. the first one found). To specify another
+   // tree, the default tree can be changed using TFileCollection::SetDefaultMetaData .
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (fProtocol < 34) {
+      Error("Process", "server version < 5.33/02:"
+                       "processing by object not supported");
+      return -1;
+   }
+   if (!selector) {
+      Error("Process", "selector object undefined!");
+      return -1;
+   }
+   fSelector = selector;
+   Long64_t rc = Process(fc, (const char*)0, option, nentries, first);
+   fSelector = 0;
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Long64_t TProof::Process(const char *dsetname, TSelector *selector,
+                         Option_t *option, Long64_t nentries,
+                         Long64_t first, TObject *elist)
+{
+   // Process with name of dataset and TSelector object
+   if (fProtocol < 34) {
+      Error("Process", "server version < 5.33/02:"
+                       "processing by object not supported");
+      return -1;
+   }
+   if (!selector) {
+      Error("Process", "selector object undefined!");
+      return -1;
+   }
+   fSelector = selector;
+   Long64_t rc = Process(dsetname, (const char*)0, option, nentries, first, elist);
+   fSelector = 0;
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Long64_t TProof::Process(TSelector *selector, Long64_t n, Option_t *option)
+{
+   // Generic (non-data based) selector processing: the Process() method of the
+   // specified selector is called 'n' times.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (fProtocol < 34) {
+      Error("Process", "server version < 5.33/02:"
+                       "processing by object not supported");
+      return -1;
+   }
+   if (!selector) {
+      Error("Process", "selector object undefined!");
+      return -1;
+   }
+   fSelector = selector;
+   Long64_t rc = Process((const char*)0, n, option);
+   fSelector = 0;
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________

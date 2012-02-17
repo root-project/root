@@ -53,20 +53,26 @@ void ProofSimple::Begin(TTree * /*tree*/)
    TString option = GetOption();
 
    // Histos array
-   fNhist = 100;
    if (fInput->FindObject("ProofSimple_NHist")) {
       TParameter<Long_t> *p =
          dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimple_NHist"));
       fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
    }
+   if (fNhist < 1) {
+      Abort("fNhist must be > 0!", kAbortProcess);
+      return;
+   }
    fHist = new TH1F*[fNhist];
-   
+
    if (fInput->FindObject("ProofSimple_NHist3")) {
       TParameter<Long_t> *p =
          dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimple_NHist3"));
       fNhist3 = (p) ? (Int_t) p->GetVal() : fNhist3;
    }
-   if (fNhist3 > 0) fHist3 = new TH3F*[fNhist3];
+   if (fNhist3 > 0) {
+      fHist3 = new TH3F*[fNhist3];
+      Info("Begin", "%d 3D histograms requested", fNhist3);
+   }
 }
 
 //_____________________________________________________________________________
@@ -79,17 +85,22 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
    TString option = GetOption();
 
    // Histos array
-   fNhist = 100;
    if (fInput->FindObject("ProofSimple_NHist")) {
       TParameter<Long_t> *p =
          dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimple_NHist"));
       fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
    }
+   if (fNhist < 1) {
+      Abort("fNhist must be > 0!", kAbortProcess);
+      return;
+   }
    fHist = new TH1F*[fNhist];
 
+   TString hn;
    // Create the histogram
    for (Int_t i=0; i < fNhist; i++) {
-      fHist[i] = new TH1F(Form("h%d",i), Form("h%d",i), 100, -3., 3.);
+      hn.Form("h%d",i);
+      fHist[i] = new TH1F(hn.Data(), hn.Data(), 100, -3., 3.);
       fHist[i]->SetFillColor(kRed);
       fOutput->Add(fHist[i]);
    }
@@ -102,9 +113,11 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
    }
    if (fNhist3 > 0) {
       fHist3 = new TH3F*[fNhist3];
+      Info("Begin", "%d 3D histograms requested", fNhist3);
       // Create the 3D histogram
       for (Int_t i=0; i < fNhist3; i++) {
-         fHist3[i] = new TH3F(Form("h%d_3d",i), Form("h3%d_3d",i),
+         hn.Form("h%d_3d",i);
+         fHist3[i] = new TH3F(hn.Data(), hn.Data(),
                               100, -3., 3., 100, -3., 3., 100, -3., 3.);
          fOutput->Add(fHist3[i]);
       }
@@ -170,7 +183,12 @@ void ProofSimple::Terminate()
    //
    // Create a canvas, with 100 pads
    //
-   TCanvas *c1 = new TCanvas("c1","Proof ProofSimple canvas",200,10,700,700);
+   TCanvas *c1 = (TCanvas *) gDirectory->FindObject("c1");
+   if (c1) {
+      gDirectory->Remove(c1);
+      delete c1;
+   }
+   c1 = new TCanvas("c1","Proof ProofSimple canvas",200,10,700,700);
    Int_t nside = (Int_t)TMath::Sqrt((Float_t)fNhist);
    nside = (nside*nside < fNhist) ? nside+1 : nside;
    c1->Divide(nside,nside,0,0);

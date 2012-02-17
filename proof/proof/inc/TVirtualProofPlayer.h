@@ -42,7 +42,7 @@ class TSocket;
 class TVirtualPacketizer;
 class TProofProgressStatus;
 class TProofProgressInfo;
-
+class TSelector;
 
 class TVirtualProofPlayer : public TObject, public TQObject {
 
@@ -56,6 +56,9 @@ public:
 
    virtual Long64_t  Process(TDSet *set,
                              const char *selector, Option_t *option = "",
+                             Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
+   virtual Long64_t  Process(TDSet *set,
+                             TSelector *selector, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
    virtual Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) = 0;
    virtual Long64_t  Finalize(TQueryResult *qr) = 0;

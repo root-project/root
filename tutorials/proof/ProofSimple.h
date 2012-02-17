@@ -21,10 +21,10 @@ public :
 
    // Specific members
    Int_t            fNhist;
-   TH1F           **fHist;//[fNhist]
+   TH1F           **fHist;//![fNhist]
    Int_t            fNhist3;
-   TH3F           **fHist3;//[fNhist3]
-   TRandom3        *fRandom;
+   TH3F           **fHist3;//![fNhist3]
+   TRandom3        *fRandom;//!
 
    ProofSimple();
    virtual ~ProofSimple();
@@ -39,7 +39,7 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
-   ClassDef(ProofSimple,0);
+   ClassDef(ProofSimple,2);
 };
 
 #endif

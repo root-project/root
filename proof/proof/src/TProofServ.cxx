@@ -108,6 +108,7 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TProofOutputFile.h"
+#include "TSelector.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -3912,6 +3913,19 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
          fPlayer->AddInput(o);
       }
 
+      // Check if a TSelector object is passed via input list
+      TObject *obj = 0;
+      TSelector *selector_obj = 0;
+      TIter nxt(input);
+      while ((obj = nxt())){
+         if (obj->InheritsFrom("TSelector")) {
+            selector_obj = (TSelector *) obj;
+            filename == selector_obj->ClassName();
+            Info("HandleProcess", "selector obj for '%s' found", selector_obj->ClassName());
+            break;
+         }
+      }
+
       // Signal the master that we are starting processing
       fSocket->Send(kPROOF_STARTPROCESS);
 
@@ -3920,7 +3934,15 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Process
       PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
-      fPlayer->Process(dset, filename, opt, nentries, first);
+       
+      if (selector_obj){
+         Info("HandleProcess", "calling fPlayer->Process() with selector object: %s", selector_obj->ClassName());
+         fPlayer->Process(dset, selector_obj, opt, nentries, first);
+      }
+      else {
+         Info("HandleProcess", "calling fPlayer->Process() with selector name: %s", filename.Data());
+         fPlayer->Process(dset, filename, opt, nentries, first);
+      }
 
       // Return number of events processed
       TMessage m(kPROOF_STOPPROCESS);
@@ -4020,6 +4042,13 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
          // Notify the user
          SendLogFile();
       }
+
+      // Prevent from double-deleting in input
+      TIter nex(input);
+      while ((obj = nex())) {
+         if (obj->InheritsFrom("TSelector")) input->Remove(obj);
+      }
+
       // Make also sure the input list objects are deleted
       fPlayer->GetInputList()->SetOwner(0);
       
@@ -4240,6 +4269,9 @@ void TProofServ::ProcessNext(TString *slb)
    // TObject *elist = 0;
    TProofQueryResult *pq = 0;
 
+   TObject* obj = 0;
+   TSelector* selector_obj = 0;
+
    // Process
 
    // Reset compute stopwatch: we include all what done from now on
@@ -4288,6 +4320,18 @@ void TProofServ::ProcessNext(TString *slb)
          gSystem->Exec(TString::Format("%s %s", kRM, pq->GetSelecHdr()->GetName()));
          pq->GetSelecHdr()->SaveSource(pq->GetSelecHdr()->GetName());
       }
+
+      // Taking out a TSelector object from input list
+      TIter nxt(input);
+      while ((obj = nxt())){
+         if (obj->InheritsFrom("TSelector") &&
+            !strcmp(pq->GetSelecImp()->GetName(), obj->ClassName())) {
+            selector_obj = (TSelector *) obj;
+            Info("ProcessNext", "found object for selector '%s'", obj->ClassName());
+            break;
+         }
+      }
+
    } else {
       // Should never get here
       Error("ProcessNext", "empty waiting queries list!");
@@ -4357,7 +4401,14 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Process
    PDB(kGlobal, 1) Info("ProcessNext", "calling %s::Process()", fPlayer->IsA()->GetName());
-   fPlayer->Process(dset, filename, opt, nentries, first);
+   if (selector_obj){
+      Info("ProcessNext", "calling fPlayer->Process() with selector object: %s", selector_obj->ClassName());
+      fPlayer->Process(dset, selector_obj, opt, nentries, first);
+   }
+   else {
+      Info("ProcessNext", "calling fPlayer->Process() with selector name: %s", filename.Data());
+      fPlayer->Process(dset, filename, opt, nentries, first);
+   }
 
    // Return number of events processed
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {

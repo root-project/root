@@ -43,6 +43,9 @@ public:
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
+   Long64_t       Process(TDSet *set, TSelector *selector,
+                          Option_t *option = "", Long64_t nentries = -1,
+                          Long64_t firstentry = 0);
    Long64_t       Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
    Long64_t       Finalize(TQueryResult *qr)
                             { return TProofPlayerRemote::Finalize(qr); }

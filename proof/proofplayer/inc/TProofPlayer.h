@@ -82,6 +82,7 @@ protected:
    TList        *fInput;           //-> list with input objects
    TList        *fOutput;          //   list with output objects
    TSelector    *fSelector;        //!  the latest selector
+   Bool_t        fCreateSelObj;    //!  kTRUE when fSelector has been created locally
    TClass       *fSelectorClass;   //!  class of the latest selector
    TTimer       *fFeedbackTimer;   //!  timer for sending intermediate results
    Long_t        fFeedbackPeriod;  //!  period (ms) for sending intermediate results
@@ -124,6 +125,7 @@ protected:
       ~TCleanup() { fPlayer->StopFeedback(); }
    };
 
+   Int_t  AssertSelector(const char *selector_file);
    Bool_t CheckMemUsage(Long64_t &mfreq, Bool_t &w80r, Bool_t &w80v, TString &wmsg);
 
    void MapOutputListToDataMembers() const;
@@ -136,6 +138,9 @@ public:
 
    Long64_t  Process(TDSet *set,
                      const char *selector, Option_t *option = "",
+                     Long64_t nentries = -1, Long64_t firstentry = 0);
+   Long64_t  Process(TDSet *set,
+                     TSelector *selector, Option_t *option = "",
                      Long64_t nentries = -1, Long64_t firstentry = 0);
    TVirtualPacketizer *GetPacketizer() const { return 0; }
    Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
@@ -291,6 +296,9 @@ public:
    virtual Long64_t Process(TDSet *set, const char *selector,
                             Option_t *option = "", Long64_t nentries = -1,
                             Long64_t firstentry = 0);
+   virtual Long64_t Process(TDSet *set, TSelector *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0);
    virtual Long64_t Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
    virtual Long64_t Finalize(TQueryResult *qr);
    Long64_t       DrawSelect(TDSet *set, const char *varexp,
@@ -385,6 +393,11 @@ public:
    Long64_t Process(TDSet *set, const char *selector,
                     Option_t *option = "", Long64_t nentries = -1,
                     Long64_t firstentry = 0);
+   Long64_t Process(TDSet *set, TSelector *selector,
+                    Option_t *option = "", Long64_t nentries = -1,
+                    Long64_t firstentry = 0)
+                    { return TProofPlayerRemote::Process(set, selector, option,
+                                                         nentries, firstentry); }
    void  Progress(Long64_t total, Long64_t processed)
                     { TProofPlayerRemote::Progress(total, processed); }
    void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,

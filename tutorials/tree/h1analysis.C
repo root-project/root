@@ -165,6 +165,9 @@ void h1analysis::Begin(TTree * /*tree*/)
 //  -it creates histograms
 //  -it sets some initialisation for the entry list
 
+   // This is needed when re-processing the object
+   Reset();
+
    //print the option specified in the Process function.
    TString option = GetOption();
    Info("Begin", "starting h1analysis with process option: %s", option.Data());

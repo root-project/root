@@ -58,6 +58,7 @@ class TIter;
 class TList;
 class TProof;
 class TProofChain;
+class TSelector;
 class TTree;
 
 // For backward compatibility (handle correctly requests from old clients)
@@ -193,6 +194,10 @@ public:
    virtual Bool_t        Add(TFileInfo *fileinfo, const char *meta = 0);
    virtual void          AddFriend(TDSet *friendset, const char *alias);
 
+   virtual Long64_t      Process(TSelector *selector, Option_t *option = "",
+                                 Long64_t nentries = -1,
+                                 Long64_t firstentry = 0,
+                                 TObject *enl = 0); // *MENU*
    virtual Long64_t      Process(const char *selector, Option_t *option = "",
                                  Long64_t nentries = -1,
                                  Long64_t firstentry = 0,

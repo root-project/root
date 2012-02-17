@@ -1124,7 +1124,11 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    Long64_t rv = 0;
    if (!(pq->IsDraw())) {
-      rv = fPlayer->Process(dset, selec, option, nentries, first);
+      if (selector && strlen(selector)) {
+         rv = fPlayer->Process(dset, selec, option, nentries, first);
+      } else {
+         rv = fPlayer->Process(dset, fSelector, option, nentries, first);
+      }
    } else {
       rv = fPlayer->DrawSelect(dset, varexp, selection, option, nentries, first);
    }

@@ -314,14 +314,17 @@ Long64_t TProofChain::Process(const char *filename, Option_t *option,
 Long64_t TProofChain::Process(TSelector *selector, Option_t *option,
                               Long64_t nentries, Long64_t firstentry)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   if (selector || option || nentries || firstentry) { }
-   //   return fSet->Process(selector, option, nentries, firstentry);
-   Warning("Process", "not implemented"); // TODO
-   return -1;
+   // Set either the entry-list (priority) or the event-list
+   if (fEntryList) {
+      fSet->SetEntryList(fEntryList);
+   } else if (fEventList) {
+      fSet->SetEntryList(fEventList);
+   }
+
+   return fSet->Process(selector, option, nentries, firstentry);
 }
 
 //______________________________________________________________________________

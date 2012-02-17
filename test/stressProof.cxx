@@ -86,6 +86,15 @@
 // *   Test 15 : H1, Simple: async mode :.......................... OK *   * //
 // *   Test 16 : Admin functionality .............................. OK *   * //
 // *   Test 17 : Dynamic sub-mergers functionality ................ OK *   * //
+// *   Test 18 : Event range processing ........................... OK *   * //
+// *   Test 19 : Event range, TPacketizer ......................... OK *   * //
+// *   Test 20 : File-resident output: merge ...................... OK *   * //
+// *   Test 21 : File-resident output: merge w/ submergers ........ OK *   * //
+// *   Test 22 : File-resident output: create dataset ............. OK *   * //
+// *   Test 23 : TTree friends (and TPacketizerFile) .............. OK *   * //
+// *   Test 24 : TTree friends, same file ......................... OK *   * //
+// *   Test 25 : Simple: selector by object ....................... OK *   * //
+// *   Test 26 : H1 dataset: selector by object ................... OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -148,8 +157,10 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TSelector.h"
 
 #include "../tutorials/proof/getProof.C"
+#include "../tutorials/proof/ProofSimple.h"
 
 static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
@@ -371,8 +382,11 @@ int main(int argc,const char *argv[])
    if (!url) url = urldef;
 
    // Enable graphics if required
-   if (enablegraphics)
+   if (enablegraphics) {
       new TApplication("stressProof", 0, 0);
+   } else {
+      gROOT->SetBatch(kTRUE);
+   }
 
    int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
                         tests, h1src, eventsrc, dryrun, showcpu, clearcache, useprogress);
@@ -525,7 +539,7 @@ private:
    Double_t        fProofMarks; // PROOF marks
    Bool_t          fUseForMarks; // Use in the calculation of the average PROOF marks
    
-   static Double_t gRefReal[24]; // Reference Cpu times
+   static Double_t gRefReal[26]; // Reference Cpu times
 
 public:
    ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0,
@@ -552,7 +566,7 @@ public:
 
 // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
 // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 4 workers.
-Double_t ProofTest::gRefReal[24] = {
+Double_t ProofTest::gRefReal[26] = {
    3.047808,   // #1:  Open a session
    0.021979,   // #2:  Get session logs
    3.148925,   // #3:  Simple random number generation
@@ -576,7 +590,9 @@ Double_t ProofTest::gRefReal[24] = {
    0.180897,   // #21: File-resident output: merge w/ submergers
    1.417233,   // #22: File-resident output: create dataset
    7.452465,   // #23: TTree friends (and TPacketizerFile)
-   0.259239    // #24: TTree friends, same file
+   0.259239,   // #24: TTree friends, same file
+   0.000000,   // #25: Simple random number generation by TSelector object
+   0.000000    // #26: H1: by-object processing
 };
 
 //
@@ -708,6 +724,8 @@ Int_t PT_EventRange(void *, RunTimes &);
 Int_t PT_POFNtuple(void *, RunTimes &);
 Int_t PT_POFDataset(void *, RunTimes &);
 Int_t PT_Friends(void *, RunTimes &);
+Int_t PT_SimpleByObj(void *, RunTimes &);
+Int_t PT_H1ChainByObj(void *, RunTimes &);
 
 // Auxilliary functions
 void PT_GetLastTimes(RunTimes &tt)
@@ -958,6 +976,10 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    testList->Add(new ProofTest("TTree friends, same file", 24,
                                &PT_Friends, (void *)&sameFile, "1", "ProofFriends,ProofAux", kTRUE));
 
+   // Simple histogram generation by TSelector object
+   testList->Add(new ProofTest("Simple: selector by object", 25, &PT_SimpleByObj, 0, "1", "ProofSimple", kTRUE));
+   // H1 analysis over HTTP by TSeletor object
+   testList->Add(new ProofTest("H1 chain: selector by object", 26, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
    // The selectors
    gSystem->ExpandPathName(gH1Sel);
    gSystem->ExpandPathName(gEventSel);
@@ -1019,7 +1041,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
             printf("*  Non-positive test number: %d\n", test);
             continue;
          }
-         const int tmx = 24;
+         const int tmx = 26;
          if (test > tmx) {
             printf("*                                                               **\r");
             printf("*  Unknown test number: %d\n", test);
@@ -3220,8 +3242,11 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
                                    macroMore.GetListOfLines()->GetSize());
       return -1;
    }
-   macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
-   macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
+   TObjString *os = (TObjString *) macroMore.GetListOfLines()->First();
+   while (!os->GetString().BeginsWith("// Test macro")) {
+      macroMore.GetListOfLines()->Remove(macroMore.GetListOfLines()->First());
+      os = (TObjString *) macroMore.GetListOfLines()->First();
+   }
    TMD5 *testMoreMd5 = macroMore.Checksum();
    if (!testMoreMd5) {
       // MD5 sum not calculated
@@ -3694,5 +3719,132 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
    return PT_CheckFriends(gProof->GetQueryResult(), nevt * nwrk);
 }
 
+//_____________________________________________________________________________
+Int_t PT_SimpleByObj(void *submergers, RunTimes &tt)
+{
+   // Test run for the ProofSimple analysis (see tutorials) passing the
+   // selector by object
 
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
 
+   // Setup submergers if required
+   if (submergers) {
+      gProof->SetParameter("PROOF_UseMergers", 0);
+   }
+
+   // Define the number of events and histos
+   Long64_t nevt = 1000000;
+   Int_t nhist = 16;
+   // The number of histograms is set inside the selector object; make sure
+   // that it is not passed in the input list
+   gProof->DeleteParameters("ProofSimple_NHist");
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Define TSelector object
+   gProof->Load("../tutorials/proof/ProofSimple.C+");
+   ProofSimple *sel = (ProofSimple *)TSelector::GetSelector("ProofSimple");
+   sel->fNhist = nhist;
+
+   // Process
+   PutPoint();
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      gProof->Process(sel, nevt);
+      gTimer.Stop();
+   }
+
+   // Count
+   gSimpleCnt++;
+   gSimpleTime += gTimer.RealTime();
+
+   // Remove any setting related to submergers
+   gProof->DeleteParameters("PROOF_UseMergers");
+
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
+   // Check the results
+   PutPoint();
+   return PT_CheckSimple(gProof->GetQueryResult(), nevt, nhist);
+}
+
+//_____________________________________________________________________________
+Int_t PT_H1ChainByObj(void *, RunTimes &tt)
+{
+   // Test run for the H1 analysis as a chain reading the data from HTTP and
+   // passing the selector by object
+
+   // Checking arguments
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+   // Not yet supported for PROOF-Lite
+   if (gSkipDataSetTest) {
+      return 1;
+   }
+   PutPoint();
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
+
+   // Create the chain
+   PutPoint();
+   TChain *chain = new TChain("h42");
+
+   // Assert the files, if needed
+   if (!gh1ok) {
+      if (PT_H1AssertFiles(gh1src.Data()) != 0) {
+         gProof->SetPrintProgress(0);
+         printf("\n >>> Test failure: could not assert the H1 files\n");
+         return -1;
+      }
+   }
+   Int_t i = 0;
+   for (i = 0; i < 4; i++) {
+      chain->Add(TString::Format("%s%c%s", gh1src.Data(), gh1sep, gh1file[i]));
+   }
+
+   // Clear associated memory cache
+   if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
+      gProof->SetPrintProgress(0);
+      printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
+      return -1;
+   }
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Load TSelector
+   gProof->Load("../tutorials/tree/h1analysis.C+");
+   TSelector *sel = TSelector::GetSelector("h1analysis");
+
+   // Process
+   PutPoint();
+   chain->SetProof();
+   PutPoint();
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      chain->Process(sel);
+      gTimer.Stop();
+   }
+   gProof->RemoveChain(chain);
+
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
+
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
+   // Check the results
+   PutPoint();
+   return PT_CheckH1(gProof->GetQueryResult());
+}

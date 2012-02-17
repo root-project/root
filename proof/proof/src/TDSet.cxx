@@ -71,6 +71,7 @@
 #include "TChainElement.h"
 #include "TSystem.h"
 #include "THashList.h"
+#include "TSelector.h"
 
 #include "TVirtualStreamerInfo.h"
 #include "TClassRef.h"
@@ -874,6 +875,31 @@ TDSet::~TDSet()
    fSrvMapsIter = 0;
 
    gROOT->GetListOfDataSets()->Remove(this);
+}
+
+//______________________________________________________________________________
+Long64_t TDSet::Process(TSelector *selector, Option_t *option, Long64_t nentries,
+                        Long64_t first, TObject *enl)
+{
+   // Process TDSet on currently active PROOF session.
+   // The last argument 'enl' specifies an entry- or event-list to be used as
+   // event selection.
+   // The return value is -1 in case of error and TSelector::GetStatus() in
+   // in case of success.
+
+   if (!IsValid() || !fElements->GetSize()) {
+      Error("Process", "not a correctly initialized TDSet");
+      return -1;
+   }
+
+   // Set entry list
+   SetEntryList(enl);
+
+   if (gProof)
+      return gProof->Process(this, selector, option, nentries, first);
+
+   Error("Process", "no active PROOF session");
+   return -1;
 }
 
 //______________________________________________________________________________
