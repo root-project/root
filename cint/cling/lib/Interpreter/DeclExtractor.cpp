@@ -99,8 +99,8 @@ namespace cling {
               for (EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
                      E = ED->enumerator_end(); I != E; ++I) {
                 assert((*I)->getDeclName() && "EnumConstantDecl with no name?");
-                m_Sema->PushOnScopeChains(*I, S,
-                                          /*AddToContext*/false);
+                  m_Sema->PushOnScopeChains(*I, S,
+                                            /*AddToContext*/false);
               }
             }
 
@@ -113,9 +113,10 @@ namespace cling {
         // Insert the extracted declarations before the wrapper
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
           DC->addDecl(TouchedDecls[i]);
-          m_Sema->PushOnScopeChains(TouchedDecls[i], 
-                                    m_Sema->getScopeForContext(DC),
-                                    /*AddToContext*/false);
+          if (!isa<UsingDirectiveDecl>(TouchedDecls[i]))
+            m_Sema->PushOnScopeChains(TouchedDecls[i], 
+                                      m_Sema->getScopeForContext(DC),
+                                      /*AddToContext*/false);
           m_Sema->Consumer.HandleTopLevelDecl(DeclGroupRef(TouchedDecls[i]));
         }
       }

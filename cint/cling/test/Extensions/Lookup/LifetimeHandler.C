@@ -5,7 +5,7 @@
 
 #include "SymbolResolverCallback.h"
 
-.dynamicExtensions 
+.dynamicExtensions 1
 
 cling::test::SymbolResolverCallback* SRC = new cling::test::SymbolResolverCallback(gCling, /*Enabled=*/ false);
 gCling->setCallbacks(SRC);
