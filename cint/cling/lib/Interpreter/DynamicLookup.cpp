@@ -655,13 +655,15 @@ namespace cling {
     else
       VPReq = m_Sema->ActOnCXXBoolLiteral(m_NoSLoc, tok::kw_false).take();
 
-    ASTOwningVector<Expr*> ConstructorArgs(*m_Sema);
-    ConstructorArgs.push_back(ExprTemplate);
-    ConstructorArgs.push_back(ExprAddresses);
-    ConstructorArgs.push_back(VPReq);
+    ASTOwningVector<Expr*> CtorArgs(*m_Sema);
+    CtorArgs.push_back(ExprTemplate);
+    CtorArgs.push_back(ExprAddresses);
+    CtorArgs.push_back(VPReq);
 
     // 5. Call the constructor
     QualType ExprInfoTy = m_Context->getTypeDeclType(ExprInfo);
+    ExprResult Initializer = m_Sema->ActOnParenListExpr(m_NoSLoc, m_NoELoc, 
+						      move_arg(CtorArgs));
     Expr* Result = m_Sema->BuildCXXNew(m_NoSLoc,
                                        /*UseGlobal=*/false,
                                        m_NoSLoc,
@@ -674,9 +676,8 @@ namespace cling {
                                        //BuildCXXNew depends on the SLoc to be
                                        //valid!
                                        // TODO: Propose a patch in clang
-                                       m_NoSLoc,
-                                       move_arg(ConstructorArgs),
-                                       m_NoELoc,
+                                       m_NoRange,
+                                       Initializer.take(),
                                        /*TypeMayContainAuto*/false
                                        ).take();
     return Result;
