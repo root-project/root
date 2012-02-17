@@ -23,6 +23,7 @@
 #include "clang/Frontend/Utils.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Sema/SemaInternal.h"
 
 #include "llvm/Linker.h"
 #include "llvm/Support/DynamicLibrary.h"
@@ -376,9 +377,9 @@ namespace cling {
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()
-    Diag.setDiagnosticMapping(DiagnosticIDs::getIdFromName("warn_unused_expr"),
+    Diag.setDiagnosticMapping(clang::diag::warn_unused_expr,
                               clang::diag::MAP_IGNORE, SourceLocation());
-    Diag.setDiagnosticMapping(DiagnosticIDs::getIdFromName("warn_unused_call"),
+    Diag.setDiagnosticMapping(clang::diag::warn_unused_call,
                               clang::diag::MAP_IGNORE, SourceLocation());
     CompilationResult Result = handleLine(wrapped, functName, rawInput, D);
 
