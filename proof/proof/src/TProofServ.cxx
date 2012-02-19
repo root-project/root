@@ -4503,10 +4503,13 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
 {
    // Register TFileCollections in 'out' as datasets according to the rules in 'in'
 
-   PDB(kDataset, 1) Info("RegisterDataSets", "enter");
+   PDB(kDataset, 1)
+      Info("RegisterDataSets", "enter: %d objs in the output list", (out ? out->GetSize() : -1));
 
    if (!in || !out) return 0;
 
+   THashList tags;
+   TList torm;
    TString msg;
    TIter nxo(out);
    TObject *o = 0;
@@ -4518,6 +4521,11 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
          TNamed *fcn = 0;
          TString tag = TString::Format("DATASET_%s", ds->GetName());
          if (!(fcn = (TNamed *) out->FindObject(tag))) continue;
+         // If this tag is in the list of processed tags, flag it for removal
+         if (tags.FindObject(tag)) {
+            torm.Add(o);
+            continue;
+         }
          // Register option
          TString regopt(fcn->GetTitle());
          // Sort according to the internal index, if required
@@ -4552,6 +4560,9 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
                   } else {
                      Info("RegisterDataSets", "dataset '%s' successfully registered", ds->GetName());
                      msg.Form("Registering and verifying dataset '%s' ... OK", ds->GetName());
+                     // Add tag to the list of processed tags to avoid double processing (there may be more objects with
+                     // the same name, created by each worker)
+                     tags.Add(new TObjString(tag));
                   }
                   SendAsynMessage(msg.Data(), kTRUE);
                   // Notify
@@ -4570,13 +4581,13 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
             Error("RegisterDataSets", "dataset manager is undefined!");
             return -1;
          }
-         // Cleanup all temporary stuff (there may be more objects with the same name, created by each worker)
-         do {
-            out->Remove(fcn);
-            SafeDelete(fcn);
-         } while ((fcn = (TNamed *) out->FindObject(tag)));
       }
    }
+   // Cleanup all temporary stuff possibly created by each worker
+   TIter nxrm(&torm);
+   while ((o = nxrm())) out->Remove(o);
+   tags.SetOwner(kTRUE);
+   torm.SetOwner(kTRUE);
 
    PDB(kDataset, 1) Info("RegisterDataSets", "exit");
    // Done
