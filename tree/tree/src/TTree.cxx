@@ -7393,12 +7393,17 @@ void TTree::SetEventList(TEventList *evlist)
 }
 
 //_______________________________________________________________________
-void TTree::SetEstimate(Long64_t n)
+void TTree::SetEstimate(Long64_t n /* = 10000 */)
 {
    // Set number of entries to estimate variable limits.
+   // If n is -1, the estimate is set to be the current maximum
+   // for the tree (i.e. GetEntries() + 1)
+   // If n is less than -1, the behavior is undefined.
 
-   if (n <= 0) {
+   if (n == 0) {
       n = 10000;
+   } else if (n < 0) {
+      n = fEntries - n;
    }
    fEstimate = n;
    GetPlayer();
