@@ -694,6 +694,20 @@ Limitation of CINT
 
     (This list is not complete.)
 
+# Special Variables
+
+  CINT can be customized by client libraries to provide the automatic 
+  declaration of variables.  For example, in the case of ROOT, the
+  user can access from the CINT prompt any object stored in a ROOT file
+  by just using their name:
+     TFile file("input.root");
+     hist->Draw();
+  However this mechanism is available only for the outer part of an
+  expression and thus the following fails:
+     TFile file("input.root");
+     MyNtuple->SetEstimate(MyNtuple->GetEntries() + 1);
+  because the 'MyNtuple' inside the function call is not properly parsed.
+
 # BUGS
    Report bugs and requirements to cint@pcroot.cern.ch. Bugs tend to 
   be fixed very quickly. Any kind of comments or messages will be appreciated.
