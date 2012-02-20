@@ -1705,6 +1705,11 @@ ios*)
    message "Checking for iOS SDK"
    iossdk=`make -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
    result "$iossdk"
+   if [ ! -d $iossdk ]; then
+       result "`basename $0`: no iOS SDK found at $iossdk"
+       result "Run "xcode-select" to update the developer directory path"
+       exit 1
+   fi
    enable_cintex="no"
    enable_reflex="no"
    enable_genvector="no"
