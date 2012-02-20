@@ -696,7 +696,7 @@ Limitation of CINT
 
 # Special Variables
 
-  CINT can be customized by client libraries to provide the automatic 
+  CINT can be customized by client libraries to provide for automatic 
   declaration of variables.  For example, in the case of ROOT, the
   user can access from the CINT prompt any object stored in a ROOT file
   by just using their name:
