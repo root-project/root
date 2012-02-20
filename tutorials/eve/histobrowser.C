@@ -68,7 +68,6 @@ void histobrowser(const char* name="HLT Histos")
    // --- Create an embedded canvas
 
    gEve->GetBrowser()->StartEmbedding(1);
-   gROOT->ProcessLineFast("new TCanvas");
-   g_hlt_canvas = (TCanvas*) gPad;
+   g_hlt_canvas = new TCanvas;
    gEve->GetBrowser()->StopEmbedding("HLT Canvas");
 }
