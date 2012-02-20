@@ -468,6 +468,8 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
       return;
    }
 
+   TGLCapabilitySwitch cull_off (GL_CULL_FACE, kFALSE);
+
    TGLUtil::LockColor();
    try
    {
