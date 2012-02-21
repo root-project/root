@@ -3920,7 +3920,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       while ((obj = nxt())){
          if (obj->InheritsFrom("TSelector")) {
             selector_obj = (TSelector *) obj;
-            filename == selector_obj->ClassName();
+            filename = selector_obj->ClassName();
             Info("HandleProcess", "selector obj for '%s' found", selector_obj->ClassName());
             break;
          }
