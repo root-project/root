@@ -156,7 +156,7 @@ class NuisanceParametersSampler {
 
 
 
-Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kTRUE ;
+Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kFALSE ;
 
 
 

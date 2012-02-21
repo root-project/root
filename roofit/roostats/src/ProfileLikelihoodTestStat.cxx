@@ -102,7 +102,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        bool doConditionalFit = (type != 1); 
 
        // skip the conditional ML (the numerator) only when fit value is smaller than test value
-       if (fOneSided &&  fit_favored_mu > initial_mu_value) { 
+       if (!fSigned && type==0 &&
+           ((fLimitType==oneSided          && fit_favored_mu >= initial_mu_value) ||
+            (fLimitType==oneSidedDiscovery && fit_favored_mu <= initial_mu_value))) {
           doConditionalFit = false; 
           condML = uncondML;
        }
@@ -141,6 +143,19 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        tsw.Stop();
        double fitTime2 = tsw.CpuTime();
 
+       double pll;
+       if      (type == 1) pll = uncondML;
+       else if (type == 2) pll = condML;
+       else {
+         pll = condML-uncondML;
+         if (fSigned) {
+           if (pll<0.0) pll = 0.0;   // bad fit
+           if (fLimitType==oneSidedDiscovery ? (fit_favored_mu < initial_mu_value)
+                                             : (fit_favored_mu > initial_mu_value))
+             pll = -pll;
+         }
+       }
+
        if (fPrintLevel > 0) { 
           std::cout << "EvaluateProfileLikelihood - ";
           if (type <= 1)  
@@ -148,7 +163,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           if (type != 1) 
              std::cout << " cond ML = " << condML;
           if (type == 0)
-             std::cout << " pll =  " << condML-uncondML; 
+             std::cout << " pll = " << pll;
           std::cout << " time (create/fit1/2) " << createTime << " , " << fitTime1 << " , " << fitTime2  
                     << std::endl;
        }
@@ -170,13 +185,10 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-       if(statusN!=0 || statusD!=0) {
-	 // ret= -1; // indicate failed fit (WVE is not used anywhere yet)
-       }
+       // if(statusN!=0 || statusD!=0)
+       //     ret= -1; // indicate failed fit [ WVE commented since not used ]
 
-       if (type == 1) return uncondML;
-       if (type == 2) return condML;
-       return condML-uncondML;
+       return pll;
              
      }     
 

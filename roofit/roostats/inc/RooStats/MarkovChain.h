@@ -52,10 +52,14 @@ namespace RooStats {
       // add an entry to the chain ONLY IF you have constructed with parameters
       // or called SetParameters
       virtual void AddFast(RooArgSet& entry, Double_t nllValue, Double_t weight = 1.0);
+      // add another markov chain
+      virtual void AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn = 0);
+      // add another markov chain
+      virtual void Add(MarkovChain& otherChain, Double_t discardEntries = 0.0);
       // set which of your parameters this chain should store
       virtual void SetParameters(RooArgSet& parameters);
       // get the number of steps in the chain
-      virtual Int_t Size() const { return fChain->numEntries(); }
+      virtual Int_t Size() const { return fChain ? fChain->numEntries() : 0; }
       // get the entry at position i
       virtual const RooArgSet* Get(Int_t i) const { return fChain->get(i); }
       // get the entry at the current position
