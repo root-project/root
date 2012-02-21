@@ -211,21 +211,19 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
       status = minim.minimize(minimizer,algorithm);
       if (status%1000 == 0) {  // ignore erros from Improve 
          break;
-      } else {
-         if (tries > 1) {
-            printf("    ----> Doing a re-scan first\n");
-            minim.minimize(minimizer,"Scan");
-         }
-         if (tries > 2) {
+      } else if (tries < maxtries) {
+         cout << "    ----> Doing a re-scan first" << endl;
+         minim.minimize(minimizer,"Scan");
+         if (tries == 2) {
             if (fStrategy == 0 ) { 
-               printf("    ----> trying with strategy = 1\n");
+               cout << "    ----> trying with strategy = 1" << endl;;
                minim.setStrategy(1);
             }
             else 
                tries++; // skip this trial if stratehy is already 1 
          }
-         if (tries > 3) {
-            printf("    ----> trying with improve\n");
+         if (tries == 3) {
+            cout << "    ----> trying with improve" << endl;;
             minimizer = "Minuit";
             algorithm = "migradimproved";
          }
