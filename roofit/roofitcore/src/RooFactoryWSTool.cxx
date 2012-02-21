@@ -192,8 +192,9 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
 
   // Add listed state names
   if (stateNameList) {
-    char *tmp = new char[strlen(stateNameList)+1] ;
-    strlcpy(tmp,stateNameList,strlen(stateNameList)+1) ;
+     const size_t tmpSize = strlen(stateNameList)+1;
+    char *tmp = new char[tmpSize] ;
+    strlcpy(tmp,stateNameList,tmpSize) ;
     char* save ;
     char* tok = strtok_r(tmp,",",&save) ;
     while(tok) {
@@ -902,9 +903,10 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   // e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
 
   // Allocate and fill work buffer
-  char* buf_base = new char[strlen(token)+1] ;   
+   const size_t bufBaseSize = strlen(token)+1;
+  char* buf_base = new char[bufBaseSize] ;
   char* buf = buf_base ;
-  strlcpy(buf,token,strlen(token)+1) ;
+  strlcpy(buf,token,bufBaseSize) ;
   char* p = buf ;
 
   list<string> singleExpr ;
@@ -976,8 +978,9 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   }
 
   // Allocate and fill work buffer
-  char* buf = new char[strlen(arg)+1] ; 
-  strlcpy(buf,arg,strlen(arg)+1) ;
+  const size_t bufSize = strlen(arg)+1;
+  char* buf = new char[bufSize] ;
+  strlcpy(buf,arg,bufSize) ;
   char* bufptr = buf ;
 
   string func,prefix ;
@@ -1114,8 +1117,9 @@ string RooFactoryWSTool::processListExpression(const char* arg)
   // E.g.   '{x(-10,10),s}  --> '{x,s}'
 
   // Allocate and fill work buffer
-  char* buf = new char[strlen(arg)+1] ;
-  strlcpy(buf,arg,strlen(arg)+1) ;
+  const size_t bufSize = strlen(arg)+1;
+  char* buf = new char[bufSize] ;
+  strlcpy(buf,arg,bufSize) ;
 
   vector<string> args ;
 
@@ -1402,8 +1406,9 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
 vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr) 
 {
   // Allocate and fill work buffer
-  char* buf = new char[strlen(funcExpr)+1] ; 
-  strlcpy(buf,funcExpr,strlen(funcExpr)+1) ;
+  const size_t bufSize = strlen(funcExpr)+1;
+  char* buf = new char[bufSize] ;
+  strlcpy(buf,funcExpr,bufSize) ;
   char* bufptr = buf ;
 
   string func ;

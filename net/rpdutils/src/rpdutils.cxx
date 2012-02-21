@@ -1550,13 +1550,15 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
       *OffSet = ofs;
       // return token if requested
       if (Token) {
-         *Token = new char[strlen(tkn)+1];
-         strlcpy(*Token,tkn,strlen(tkn)+1);
+         const size_t tokenSize = strlen(tkn)+1;
+         *Token = new char[tokenSize];
+         strlcpy(*Token,tkn,tokenSize);
       }
       if (Sec == 3) {
          if (GlbsUser) {
-            *GlbsUser = new char[strlen(usr)+1];
-            strlcpy(*GlbsUser,usr,strlen(usr)+1);
+            const size_t glbsUserSize = strlen(usr)+1;
+            *GlbsUser = new char[glbsUserSize];
+            strlcpy(*GlbsUser,usr,glbsUserSize);
          }
          if (ShmId)
             *ShmId = shmid;
@@ -2153,8 +2155,9 @@ int RpdCheckHost(const char *Host, const char *host)
       if (gDebug > 2)
          ErrorInfo("RpdCheckHost: Checking Host IP: %s", hh);
    } else {
-      hh = new char[strlen(Host)+1];
-      strlcpy(hh,Host,strlen(Host)+1);
+      const size_t hhSize = strlen(Host)+1;
+      hh = new char[hhSize];
+      strlcpy(hh,Host,hhSize);
       if (gDebug > 2)
          ErrorInfo("RpdCheckHost: Checking Host name: %s", hh);
    }
@@ -2174,8 +2177,9 @@ int RpdCheckHost(const char *Host, const char *host)
    int first= 1;
    int ends= 0;
    int starts= 0;
-   char *h = new char[strlen(host)+1];
-   strlcpy(h,host,strlen(host)+1);
+   const size_t hSize = strlen(host)+1;
+   char *h = new char[hSize];
+   strlcpy(h,host,hSize);
    char *tk = strtok(h,"*");
    while (tk) {
 
@@ -5260,8 +5264,9 @@ int RpdSecureRecv(char **str)
                    strlen(buftmp));
 
       // Prepare output
-      *str = new char[strlen(buftmp) + 1];
-      strlcpy(*str, buftmp, strlen(buftmp)+1);
+      const size_t strSize = strlen(buftmp) + 1;
+      *str = new char[strSize];
+      strlcpy(*str, buftmp, strSize);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
       unsigned char iv[8];

@@ -747,9 +747,10 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
   TString selName(GetName()) ;
   selName.Append("_selection") ;
   RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ; 
-  
-  char* buf = new char[strlen(nameList)+1] ;
-  strlcpy(buf,nameList,strlen(nameList)+1) ;
+
+  const size_t bufSize = strlen(nameList) + 1;
+  char* buf = new char[bufSize] ;
+  strlcpy(buf,nameList,bufSize) ;
   char* wcExpr = strtok(buf,",") ;
   while(wcExpr) {
     TRegexp rexp(wcExpr,kTRUE) ;
@@ -1197,8 +1198,9 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
     if (strchr(rangeSpec,',')==0) {
       cutVec.push_back(rangeSpec) ;
     } else {
-      char* buf = new char[strlen(rangeSpec)+1] ;
-      strlcpy(buf,rangeSpec,strlen(rangeSpec)+1) ;
+      const size_t bufSize = strlen(rangeSpec)+1;
+      char* buf = new char[bufSize] ;
+      strlcpy(buf,rangeSpec,bufSize) ;
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;

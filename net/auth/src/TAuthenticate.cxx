@@ -3775,8 +3775,9 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
          return -1;
 
       // Prepare output
-      *str = new char[strlen(buftmp) + 1];
-      strlcpy(*str, buftmp,strlen(buftmp) + 1);
+      const size_t strSize = strlen(buftmp) + 1;
+      *str = new char[strSize];
+      strlcpy(*str, buftmp, strSize);
 
    } else if (key == 1) {
 #ifdef R__SSL
@@ -4192,13 +4193,14 @@ Int_t TAuthenticate::ReadRootAuthrc()
          continue;
 
       // Now scan
-      char *tmp = new char[strlen(line)+1];
+      const size_t tmpSize = strlen(line) + 1;
+      char *tmp = new char[tmpSize];
       if (!tmp) {
          ::Error("TAuthenticate::ReadRootAuthrc",
                  "could not allocate temporary buffer");
          return 0;
       }
-      strlcpy(tmp,line,strlen(line)+1);
+      strlcpy(tmp, line, tmpSize);
       char *nxt = strtok(tmp," ");
 
       if (!strcmp(nxt, "proofserv") || cont) {

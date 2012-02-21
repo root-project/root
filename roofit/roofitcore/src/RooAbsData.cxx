@@ -1440,8 +1440,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     if (strchr(cutRange,',')==0) {
       cutVec.push_back(cutRange) ;
     } else {
-      char* buf = new char[strlen(cutRange)+1] ;
-      strlcpy(buf,cutRange,strlen(cutRange)+1) ;
+      const size_t bufSize = strlen(cutRange)+1;
+      char* buf = new char[bufSize] ;
+      strlcpy(buf,cutRange,bufSize) ;
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;
