@@ -1722,29 +1722,36 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                fnam.ReplaceAll("cache:", TString::Format("%s/", fCacheDir.Data()));
                copytocache = kFALSE;
             }
+
+            Int_t rfrc = 0;
             if (size > 0) {
-               ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
+               rfrc = ReceiveFile(fnam, bin ? kTRUE : kFALSE, size);
             } else {
                // Take it from the cache
                if (!fnam.BeginsWith(fCacheDir.Data())) {
                   fnam.Insert(0, TString::Format("%s/", fCacheDir.Data()));
                }
             }
-            // copy file to cache if not a PAR file
-            if (copytocache && size > 0 &&
-                strncmp(fPackageDir, name, fPackageDir.Length()))
-               CopyToCache(name, 0);
-            if (IsMaster() && fw == 1) {
-               Int_t opt = TProof::kForward | TProof::kCp;
-               if (bin)
-                  opt |= TProof::kBinary;
-               PDB(kGlobal, 1)
-                  Info("HandleSocketInput","forwarding file: %s", fnam.Data());
-               if (fProof->SendFile(fnam, opt, (copytocache ? "cache" : "")) < 0) {
-                  Error("HandleSocketInput", "forwarding file: %s", fnam.Data());
+            if (rfrc == 0) {
+               // copy file to cache if not a PAR file
+               if (copytocache && size > 0 &&
+                  strncmp(fPackageDir, name, fPackageDir.Length()))
+                  CopyToCache(name, 0);
+               if (IsMaster() && fw == 1) {
+                  Int_t opt = TProof::kForward | TProof::kCp;
+                  if (bin)
+                     opt |= TProof::kBinary;
+                  PDB(kGlobal, 1)
+                     Info("HandleSocketInput","forwarding file: %s", fnam.Data());
+                  if (fProof->SendFile(fnam, opt, (copytocache ? "cache" : "")) < 0) {
+                     Error("HandleSocketInput", "forwarding file: %s", fnam.Data());
+                  }
                }
+               if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
+            } else {
+               // There was an error
+               SendLogFile(1);
             }
-            if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
          }
          break;
 

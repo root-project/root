@@ -5664,6 +5664,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       fnam = gSystem->BaseName(file);
    }
    // List on which we will collect the results
+   fStatus = 0;
    while ((sl = (TSlave *)next())) {
       if (!sl->IsValid())
          continue;
@@ -5727,7 +5728,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
    if (slaves != fActiveSlaves && slaves != fUniqueSlaves)
       SafeDelete(slaves);
 
-   return nsl;
+   // We return failure is at least one unique worker failed
+   return (fStatus != 0) ? -1 : nsl;
 }
 
 //______________________________________________________________________________
