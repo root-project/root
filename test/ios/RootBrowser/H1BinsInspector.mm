@@ -93,11 +93,13 @@
    const unsigned nBins = xAxis->GetNbins();
 
    const double xMin = xAxis->GetBinLowEdge(1);
-   minLabel.text = [NSString stringWithFormat : @"%.3g", xMin];
+   const double xMinSelected = xAxis->GetBinLowEdge(xAxis->GetFirst());
+   minLabel.text = [NSString stringWithFormat : @"%.3g", xMinSelected];
    const double xMax = xAxis->GetBinUpEdge(nBins);
-   maxLabel.text = [NSString stringWithFormat : @"%.3g", xMax];
+   const double xMaxSelected = xAxis->GetBinUpEdge(xAxis->GetLast());
+   maxLabel.text = [NSString stringWithFormat : @"%.3g", xMaxSelected];
    
-   [axisRangeSlider setSliderMin : xMin max : xMax selectedMin : xMin selectedMax : xMax];
+   [axisRangeSlider setSliderMin : xMin max : xMax selectedMin : xMinSelected selectedMax : xMaxSelected];
    minLabel.center = CGPointMake([axisRangeSlider getMinThumbX], minLabel.center.y);
    maxLabel.center = CGPointMake([axisRangeSlider getMaxThumbX], maxLabel.center.y);
 }

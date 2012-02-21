@@ -64,6 +64,8 @@
    selectedMinimumValue = sMin;
    selectedMaximumValue = sMax;
    
+   minimumRange = 0.2 * (maximumValue - minimumValue);
+   
    minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
    maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
    
