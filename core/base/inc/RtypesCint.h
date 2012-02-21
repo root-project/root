@@ -55,9 +55,12 @@ public: \
 //
 //////////////////////////////////////////////////////////////////////////
 class TVirtualPad;
+class TPad;
+
 struct TPadThreadLocal
 {
    operator TVirtualPad*() { return TVirtualPad::Pad(); }
+   operator TPad*() { return (TPad*)TVirtualPad::Pad(); }
    operator bool() { return 0!=TVirtualPad::Pad(); }
 
    // Emulate the pointer behavior
