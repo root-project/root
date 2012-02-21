@@ -1,13 +1,14 @@
 {
-   TCanvas *Ms = new TCanvas("mathsymb","Mathematical Symbols",500,600);
+   TCanvas *Ms = new TCanvas("mathsymb","Mathematical Symbols",800,500);
 
    TLatex Tl;
-   Tl.SetTextSize(0.03);
+   Tl.SetTextSize(0.036);
 
    // Draw First Column
    Tl.SetTextAlign(12);
    float y, step, x1, x2;
-   y = 0.96; step = 0.0465; x1 = 0.02; x2 = x1+0.04;
+   float step = 0.057;
+   y = 0.96; x1 = 0.02; x2 = x1+0.04;
                Tl.DrawLatex(x1, y, "#club")           ; Tl.DrawText(x2, y, "#club");
    y -= step ; Tl.DrawLatex(x1, y, "#voidn")          ; Tl.DrawText(x2, y, "#voidn");
    y -= step ; Tl.DrawLatex(x1, y, "#leq")            ; Tl.DrawText(x2, y, "#leq");
@@ -25,14 +26,14 @@
    y -= step ; Tl.DrawLatex(x1, y, "#arcbottom")      ; Tl.DrawText(x2, y, "#arcbottom");
    y -= step ; Tl.DrawLatex(x1, y, "#downarrow")      ; Tl.DrawText(x2, y, "#downarrow");
    y -= step ; Tl.DrawLatex(x1, y, "#leftrightarrow") ; Tl.DrawText(x2, y, "#leftrightarrow");
-   y -= step ; Tl.DrawLatex(x1, y, "#Downarrow")      ; Tl.DrawText(x2, y, "#Downarrow");
+
+   // Draw Second Column
+   y = 0.96; x1 = 0.22; x2 = x1+0.04;
+               Tl.DrawLatex(x1, y, "#Downarrow")      ; Tl.DrawText(x2, y, "#Downarrow");
    y -= step ; Tl.DrawLatex(x1, y, "#Leftrightarrow") ; Tl.DrawText(x2, y, "#Leftrightarrow");
    y -= step ; Tl.DrawLatex(x1, y, "#void8")          ; Tl.DrawText(x2, y, "#void8");
    y -= step ; Tl.DrawLatex(x1, y, "#hbar")           ; Tl.DrawText(x2, y, "#hbar");
-
-   // Draw Second Column
-   y = 0.96; step = 0.0465; x1 = 0.27; x2 = x1+0.04;
-               Tl.DrawLatex(x1, y, "#diamond")        ; Tl.DrawText(x2, y, "#diamond");
+   y -= step ; Tl.DrawLatex(x1, y, "#diamond")        ; Tl.DrawText(x2, y, "#diamond");
    y -= step ; Tl.DrawLatex(x1, y, "#aleph")          ; Tl.DrawText(x2, y, "#aleph");
    y -= step ; Tl.DrawLatex(x1, y, "#geq")            ; Tl.DrawText(x2, y, "#geq");
    y -= step ; Tl.DrawLatex(x1, y, "#neq")            ; Tl.DrawText(x2, y, "#neq");
@@ -45,7 +46,11 @@
    y -= step ; Tl.DrawLatex(x1, y, "#circ")           ; Tl.DrawText(x2, y, "#circ");
    y -= step ; Tl.DrawLatex(x1, y, "#infty")          ; Tl.DrawText(x2, y, "#infty");
    y -= step ; Tl.DrawLatex(x1, y, "#angle")          ; Tl.DrawText(x2, y, "#angle");
-   y -= step ; Tl.DrawLatex(x1, y, "#cbar")           ; Tl.DrawText(x2, y, "#cbar");
+   
+
+   // Draw Third Column
+   y = 0.96; x1 = 0.42; x2 = x1+0.04;
+               Tl.DrawLatex(x1, y, "#cbar")           ; Tl.DrawText(x2, y, "#cbar");
    y -= step ; Tl.DrawLatex(x1, y, "#arctop")         ; Tl.DrawText(x2, y, "#arctop");
    y -= step ; Tl.DrawLatex(x1, y, "#leftarrow")      ; Tl.DrawText(x2, y, "#leftarrow");
    y -= step ; Tl.DrawLatex(x1, y, "#otimes")         ; Tl.DrawText(x2, y, "#otimes");
@@ -53,10 +58,7 @@
    y -= step ; Tl.DrawLatex(x1, y, "#prod")           ; Tl.DrawText(x2, y, "#prod");
    y -= step ; Tl.DrawLatex(x1, y, "#Box")            ; Tl.DrawText(x2, y, "#Box");
    y -= step ; Tl.DrawLatex(x1, y, "#parallel")       ; Tl.DrawText(x2, y, "#parallel");
-
-   // Draw Third Column
-   y = 0.96; step = 0.0465; x1 = 0.52; x2 = x1+0.04;
-               Tl.DrawLatex(x1, y, "#heart")          ; Tl.DrawText(x2, y, "#heart");
+   y -= step ; Tl.DrawLatex(x1, y, "#heart")          ; Tl.DrawText(x2, y, "#heart");
    y -= step ; Tl.DrawLatex(x1, y, "#Jgothic")        ; Tl.DrawText(x2, y, "#Jgothic");
    y -= step ; Tl.DrawLatex(x1, y, "#LT")             ; Tl.DrawText(x2, y, "#LT");
    y -= step ; Tl.DrawLatex(x1, y, "#equiv")          ; Tl.DrawText(x2, y, "#equiv");
@@ -65,7 +67,12 @@
    y -= step ; Tl.DrawLatex(x1, y, "#wedge")          ; Tl.DrawText(x2, y, "#wedge");
    y -= step ; Tl.DrawLatex(x1, y, "#oright")         ; Tl.DrawText(x2, y, "#oright");
    y -= step ; Tl.DrawLatex(x1, y, "#AA")             ; Tl.DrawText(x2, y, "#AA");
-   y -= step ; Tl.DrawLatex(x1, y, "#pm")             ; Tl.DrawText(x2, y, "#pm");
+   
+
+   // Draw Fourth Column
+   y = 0.96; x1 = 0.62; x2 = x1+0.04;
+               Tl.DrawLatex(x1, y, "#pm")             ; Tl.DrawText(x2, y, "#pm");
+   y -= step ; Tl.DrawLatex(x1, y, "#mp")             ; Tl.DrawText(x2, y, "#mp");
    y -= step ; Tl.DrawLatex(x1, y, "#3dots")          ; Tl.DrawText(x2, y, "#3dots");
    y -= step ; Tl.DrawLatex(x1, y, "#nabla")          ; Tl.DrawText(x2, y, "#nabla");
    y -= step ; Tl.DrawLatex(x1, y, "#downleftarrow")  ; Tl.DrawText(x2, y, "#downleftarrow");
@@ -77,14 +84,14 @@
    y -= step ; Tl.DrawLatex(x1, y-0.01, "#sum")       ; Tl.DrawText(x2, y, "#sum");
    y -= step ; Tl.DrawLatex(x1, y, "#perp")           ; Tl.DrawText(x2, y, "#perp");
    y -= step ; Tl.DrawLatex(x1, y, "#forall")         ; Tl.DrawText(x2, y, "#forall");  
-
-   // Draw Fourth Column
-   y = 0.96; step = 0.0465; x1 = 0.77; x2 = x1+0.04;
-               Tl.DrawLatex(x1, y, "#spade")          ; Tl.DrawText(x2, y, "#spade");
+   y -= step ; Tl.DrawLatex(x1, y, "#spade")          ; Tl.DrawText(x2, y, "#spade");
    y -= step ; Tl.DrawLatex(x1, y, "#Rgothic")        ; Tl.DrawText(x2, y, "#Rgothic");
    y -= step ; Tl.DrawLatex(x1, y, "#GT")             ; Tl.DrawText(x2, y, "#GT");
    y -= step ; Tl.DrawLatex(x1, y, "#propto")         ; Tl.DrawText(x2, y, "#propto");
-   y -= step ; Tl.DrawLatex(x1, y, "#notsubset")      ; Tl.DrawText(x2, y, "#notsubset");
+   
+   // Draw Fith Column
+   y = 0.96; x1 = 0.82; x2 = x1+0.04;
+               Tl.DrawLatex(x1, y, "#notsubset")      ; Tl.DrawText(x2, y, "#notsubset");
    y -= step ; Tl.DrawLatex(x1, y, "#oslash")         ; Tl.DrawText(x2, y, "#oslash");
    y -= step ; Tl.DrawLatex(x1, y, "#vee")            ; Tl.DrawText(x2, y, "#vee");
    y -= step ; Tl.DrawLatex(x1, y, "#void1")          ; Tl.DrawText(x2, y, "#void1");

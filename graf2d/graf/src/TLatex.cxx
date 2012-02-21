@@ -544,6 +544,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opPerp          = 0;    // position of #perp
    Int_t opOdot          = 0;    // position of #odot
    Int_t opHbar          = 0;    // position of #hbar
+   Int_t opMp            = 0;    // position of #mp
    Int_t opParallel      = 0;    // position of #parallel
    Int_t opSplitLine     = -1;   // Position of first \splitline
    Int_t opKern          = -1;   // Position of first #kern
@@ -637,7 +638,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       // detect other operators
       if (text[i]=='\\' || (text[i]=='#' && !opFound && nBrackets==0 && nCroch==0)) {
 
-         if (length>i+10 ) {
+         if (length>i+10) {
             Char_t buf[11];
             strncpy(buf,&text[i+1],10);
             if (strncmp(buf,"splitline{",10)==0) {
@@ -646,7 +647,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                continue;
             }
          }
-         if (length>i+8 ) {
+         if (length>i+8) {
             Char_t buf[9];
             strncpy(buf,&text[i+1],8);
             if (!opParallel && strncmp(buf,"parallel",8)==0) {
@@ -674,7 +675,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                continue ;
             }
          }
-         if (length>i+5 ) {
+         if (length>i+5) {
             Char_t buf[6];
             strncpy(buf,&text[i+1],5);
             if (strncmp(buf,"frac{",5)==0) {
@@ -698,7 +699,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                continue ;
             }
          }
-         if (length>i+4 ) {
+         if (length>i+4) {
             Char_t buf[5];
             strncpy(buf,&text[i+1],4);
             if (!opOdot && strncmp(buf,"odot",4)==0) {
@@ -755,6 +756,15 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                opIt=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue ;
+            }
+         }
+         if (length>i+2) {
+            Char_t buf[3];
+            strncpy(buf,&text[i+1],2);
+            if (!opMp && strncmp(buf,"mp",2)==0) {
+               opMp=1; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue;
             }
          }
          for(k=0;k<54;k++) {
@@ -1053,6 +1063,26 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          hbar.PaintText(xx,yy,"h");
          DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opMp) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+3,length-3);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+3,length-3);
+         TText mp;
+         mp.SetTextFont(122);
+         mp.SetTextColor(fTextColor);
+         mp.SetTextSize(spec.fSize);
+         mp.SetTextAngle(fTextAngle+180);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
+         mp.PaintText(xx,yy,"\261");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
