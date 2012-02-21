@@ -31,6 +31,11 @@ namespace textinput {
       // Is can be misinterpreted as the start of a CSI terminal
       // sequence; use this to disambiguate.
       fEscCmdEnabled = enable; fEscPending = false; }
+    bool IsEscCommandEnabled() const {
+      // Whether "Esc" has a meaning by itself, e.g.
+      // during history search
+      return fEscCmdEnabled;
+    }
     bool IsEscPending() const { return fEscPending; }
 
   private:

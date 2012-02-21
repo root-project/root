@@ -17,7 +17,9 @@
 
 #include "textinput/StreamReaderUnix.h"
 
+#include "textinput/KeyBinding.h"
 #include "textinput/TerminalConfigUnix.h"
+#include "textinput/TextInputContext.h"
 
 #include <sys/uio.h>
 #include <sys/select.h>
@@ -234,7 +236,10 @@ namespace textinput {
     if (c == -1) {
       in.SetExtended(InputData::kEIEOF);
     } else if (c == 0x1b) {
-      if (!ProcessCSI(in)) {
+      // Only try to process CSI if Esc does not have a meaning
+      // by itself.
+      if (GetContext()->GetKeyBinding()->IsEscCommandEnabled()
+          || !ProcessCSI(in)) {
         in.SetExtended(InputData::kEIEsc);
       }
     } else if (isprint(c)) {
