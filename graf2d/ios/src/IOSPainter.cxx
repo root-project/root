@@ -528,6 +528,8 @@ void Painter::DrawText(Double_t x, Double_t y, const CTLineGuard &ctLine)
    
    CGContextSaveGState(fCtx);
 
+   CGContextSetTextMatrix(fCtx, CGAffineTransformIdentity);
+
    CGContextSetTextPosition(fCtx, 0.f, 0.f);
    CGContextTranslateCTM(fCtx, x, y);  
    CGContextRotateCTM(fCtx, gVirtualX->GetTextAngle() * TMath::DegToRad());
