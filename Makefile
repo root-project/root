@@ -638,7 +638,12 @@ ifeq ($$(F77),f2c)
 	f2c -a -A $$<
 	$$(CC) $$(F77OPT) $$(CFLAGS) $$(CXXOUT)$$@ -c $$(@:.o=.c)
 else
+ifneq ($(findstring gfortran, $(F77)),)
+# Ignore gfortran warnings, our Fortran code is old, won't change and works
+	$$(F77) $$(F77OPT) $$(F77FLAGS) $$(CXXOUT)$$@ -c $$< 2>&1 | sed -e s/Warning:/ROOT-Ignore:/ >&2
+else
 	$$(F77) $$(F77OPT) $$(F77FLAGS) $$(CXXOUT)$$@ -c $$<
+endif
 endif
 endef
 
@@ -659,7 +664,12 @@ ifeq ($(F77),f2c)
 	f2c -a -A $<
 	$(CC) $(F77OPT) $(CFLAGS) $(CXXOUT)$@ -c $*.c
 else
+ifneq ($(findstring gfortran, $(F77)),)
+# Ignore gfortran warnings, our Fortran code is old, won't change and works
+	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $< 2>&1 | sed -e s/Warning:/ROOT-Ignore:/ >&2
+else
 	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $<
+endif
 endif
 
 ##### TARGETS #####
