@@ -136,35 +136,32 @@ ClassImp(TRandom)
 //______________________________________________________________________________
 TRandom::TRandom(UInt_t seed): TNamed("Random","Default Random number generator")
 {
-//*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================
+   // Default constructor. For seed see SetSeed().
 
    SetSeed(seed);
-
 }
 
 //______________________________________________________________________________
 TRandom::~TRandom()
 {
-//*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
+   // Default destructor. Can reset gRandom to 0 if gRandom points to this
+   // generator.
 
-if (gRandom == this) gRandom = 0;
+   if (gRandom == this) gRandom = 0;
 }
 
 //______________________________________________________________________________
 Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 {
-// Generates a random integer N according to the binomial law
-// Coded from Los Alamos report LA-5061-MS
-//
-// N is binomially distributed between 0 and ntot inclusive
-// with mean prob*ntot.
-// prob is between 0 and 1.
-//
-// Note: This function should not be used when ntot is large (say >100).
-// The normal approximation is then recommended instead
-// (with mean =*ntot+0.5 and standard deviation sqrt(ntot*prob*(1-prob)).
+   // Generates a random integer N according to the binomial law.
+   // Coded from Los Alamos report LA-5061-MS.
+   //
+   // N is binomially distributed between 0 and ntot inclusive
+   // with mean prob*ntot and prob is between 0 and 1.
+   //
+   // Note: This function should not be used when ntot is large (say >100).
+   // The normal approximation is then recommended instead
+   // (with mean =*ntot+0.5 and standard deviation sqrt(ntot*prob*(1-prob)).
 
    if (prob < 0 || prob > 1) return 0;
    Int_t n = 0;
@@ -178,7 +175,7 @@ Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 //______________________________________________________________________________
 Double_t TRandom::BreitWigner(Double_t mean, Double_t gamma)
 {
-//  Return a number distributed following a BreitWigner function with mean and gamma
+   // Return a number distributed following a BreitWigner function with mean and gamma.
 
    Double_t rval, displ;
    rval = 2*Rndm() - 1;
@@ -190,7 +187,7 @@ Double_t TRandom::BreitWigner(Double_t mean, Double_t gamma)
 //______________________________________________________________________________
 void TRandom::Circle(Double_t &x, Double_t &y, Double_t r)
 {
-   // generates random vectors, uniformly distributed over a circle of given radius.
+   // Generates random vectors, uniformly distributed over a circle of given radius.
    //   Input : r = circle radius
    //   Output: x,y a random 2-d vector of length r
 
@@ -202,9 +199,9 @@ void TRandom::Circle(Double_t &x, Double_t &y, Double_t r)
 //______________________________________________________________________________
 Double_t TRandom::Exp(Double_t tau)
 {
-// returns an exponential deviate.
-//
-//          exp( -t/tau )
+   // Returns an exponential deviate.
+   //
+   //          exp( -t/tau )
 
    Double_t x = Rndm();              // uniform on ] 0, 1 ]
    Double_t t = -tau * TMath::Log( x ); // convert to exponential distribution
@@ -214,25 +211,20 @@ Double_t TRandom::Exp(Double_t tau)
 //______________________________________________________________________________
 Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 {
-//               
-//  samples a random number from the standard Normal (Gaussian) Distribution 
-//  with the given mean and sigma.                                                 
-//  Uses the Acceptance-complement ratio from W. Hoermann and G. Derflinger 
-//  This is one of the fastest existing method for generating normal random variables. 
-//  It is a factor 2/3 faster than the polar (Box-Muller) method used in the previous 
-//  version of TRandom::Gaus. The speed is comparable to the Ziggurat method (from Marsaglia)
-//  implemented for example in GSL and available in the MathMore library. 
-//                                                                           
-//                                                                             
-//  REFERENCE:  - W. Hoermann and G. Derflinger (1990):                       
-//               The ACR Method for generating normal random variables,       
-//               OR Spektrum 12 (1990), 181-185.                             
-//                                                                           
-//  Implementation taken from 
-//   UNURAN (c) 2000  W. Hoermann & J. Leydold, Institut f. Statistik, WU Wien 
-///////////////////////////////////////////////////////////////////////////////
-
-
+   // Samples a random number from the standard Normal (Gaussian) Distribution 
+   // with the given mean and sigma.                                                 
+   // Uses the Acceptance-complement ratio from W. Hoermann and G. Derflinger 
+   // This is one of the fastest existing method for generating normal random variables. 
+   // It is a factor 2/3 faster than the polar (Box-Muller) method used in the previous 
+   // version of TRandom::Gaus. The speed is comparable to the Ziggurat method (from Marsaglia)
+   // implemented for example in GSL and available in the MathMore library. 
+   //                                                                           
+   // REFERENCE:  - W. Hoermann and G. Derflinger (1990):                       
+   //              The ACR Method for generating normal random variables,       
+   //              OR Spektrum 12 (1990), 181-185.                             
+   //                                                                           
+   // Implementation taken from 
+   // UNURAN (c) 2000  W. Hoermann & J. Leydold, Institut f. Statistik, WU Wien 
 
    const Double_t kC1 = 1.448242853;
    const Double_t kC2 = 3.307147487;
@@ -262,7 +254,6 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 
    Double_t result;
    Double_t rn,x,y,z;
-
 
    do {
       y = Rndm();
@@ -311,18 +302,14 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
                result = rn; break; }
       }
    } while(0);
-
-
+   
    return mean + sigma * result;
-
-} 
-
-
+}
 
 //______________________________________________________________________________
 UInt_t TRandom::Integer(UInt_t imax)
 {
-//  returns a random integer on [ 0, imax-1 ].
+   // Returns a random integer on [ 0, imax-1 ].
 
    UInt_t ui;
    ui = (UInt_t)(imax*Rndm());
@@ -332,11 +319,11 @@ UInt_t TRandom::Integer(UInt_t imax)
 //______________________________________________________________________________
 Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
 {
-//  Generate a random number following a Landau distribution
-//  with mpv(most probable value) and sigma
-//  Use function landau_quantile(x,sigma) which provides 
-//  the inverse of the landau cumulative distribution 
-//  landau_quantile has been converted from CERNLIB ranlan(G110) 
+   // Generate a random number following a Landau distribution
+   // with mpv(most probable value) and sigma.
+   // Use function landau_quantile(x,sigma) which provides 
+   // the inverse of the landau cumulative distribution.
+   // landau_quantile has been converted from CERNLIB ranlan(G110).
 
    if (sigma <= 0) return 0;
    Double_t x = Rndm(); 
@@ -347,18 +334,19 @@ Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
 //______________________________________________________________________________
 Int_t TRandom::Poisson(Double_t mean)
 {
-// Generates a random integer N according to a Poisson law.
-// Prob(N) = exp(-mean)*mean^N/Factorial(N)
-//
-// Use a different procedure according to the mean value.
-// The algorithm is the same used by CLHEP
-// For lower value (mean < 25) use the rejection method based on
-// the exponential
-// For higher values use a rejection method comparing with a Lorentzian
-// distribution, as suggested by several authors
-// This routine since is returning 32 bits integer will not work for values larger than 2*10**9
-// One should then use the Trandom::PoissonD for such large values
-//
+   // Generates a random integer N according to a Poisson law.
+   // Prob(N) = exp(-mean)*mean^N/Factorial(N)
+   //
+   // Use a different procedure according to the mean value.
+   // The algorithm is the same used by CLHEP.
+   // For lower value (mean < 25) use the rejection method based on
+   // the exponential.
+   // For higher values use a rejection method comparing with a Lorentzian
+   // distribution, as suggested by several authors.
+   // This routine since is returning 32 bits integer will not work for values
+   // larger than 2*10**9.
+   // One should then use the Trandom::PoissonD for such large values.
+
    Int_t n;
    if (mean <= 0) return 0;
    if (mean < 25) {
@@ -405,12 +393,12 @@ Int_t TRandom::Poisson(Double_t mean)
 //______________________________________________________________________________
 Double_t TRandom::PoissonD(Double_t mean)
 {
-// Generates a random number according to a Poisson law.
-// Prob(N) = exp(-mean)*mean^N/Factorial(N)
-//
-// This function is a variant of TRandom::Poisson returning a double
-// instead of an integer.
-//
+   // Generates a random number according to a Poisson law.
+   // Prob(N) = exp(-mean)*mean^N/Factorial(N)
+   //
+   // This function is a variant of TRandom::Poisson returning a double
+   // instead of an integer.
+
    Int_t n;
    if (mean <= 0) return 0;
    if (mean < 25) {
@@ -455,7 +443,7 @@ Double_t TRandom::PoissonD(Double_t mean)
 //______________________________________________________________________________
 void TRandom::Rannor(Float_t &a, Float_t &b)
 {
-//      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
+   // Return 2 numbers distributed following a gaussian with mean=0 and sigma=1.
 
    Double_t r, x, y, z;
 
@@ -470,7 +458,7 @@ void TRandom::Rannor(Float_t &a, Float_t &b)
 //______________________________________________________________________________
 void TRandom::Rannor(Double_t &a, Double_t &b)
 {
-//      Return 2 numbers distributed following a gaussian with mean=0 and sigma=1
+   // Return 2 numbers distributed following a gaussian with mean=0 and sigma=1.
 
    Double_t r, x, y, z;
 
@@ -485,9 +473,8 @@ void TRandom::Rannor(Double_t &a, Double_t &b)
 //_____________________________________________________________________________
 void TRandom::ReadRandom(const char *filename)
 {
-   //
-   // Reads saved random generator status from filename
-   //
+   // Reads saved random generator status from filename.
+
    if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
    TDirectory *file = (TDirectory*)gROOT->ProcessLine(Form("TFile::Open(\"%s\");",fntmp));
@@ -501,15 +488,14 @@ void TRandom::ReadRandom(const char *filename)
 //______________________________________________________________________________
 Double_t TRandom::Rndm(Int_t)
 {
-//  Machine independent random number generator.
-//  Based on the BSD Unix (Rand) Linear congrential generator
-//  Produces uniformly-distributed floating points between 0 and 1.
-//  Identical sequence on all machines of >= 32 bits.
-//  Periodicity = 2**31
-//  generates a number in ]0,1]
-//  Note that this is a generator which is known to have defects
-//  (the lower random bits are correlated) and therefore should NOT be
-//  used in any statistical study.
+   //  Machine independent random number generator.
+   //  Based on the BSD Unix (Rand) Linear congrential generator.
+   //  Produces uniformly-distributed floating points between 0 and 1.
+   //  Identical sequence on all machines of >= 32 bits.
+   //  Periodicity = 2**31, generates a number in ]0,1].
+   //  Note that this is a generator which is known to have defects
+   //  (the lower random bits are correlated) and therefore should NOT be
+   //  used in any statistical study).
 
 #ifdef OLD_TRANDOM_IMPL
    const Double_t kCONS = 4.6566128730774E-10;
@@ -531,7 +517,7 @@ Double_t TRandom::Rndm(Int_t)
 //______________________________________________________________________________
 void TRandom::RndmArray(Int_t n, Double_t *array)
 {
-   // Return an array of n random numbers uniformly distributed in ]0,1]
+   // Return an array of n random numbers uniformly distributed in ]0,1].
 
    const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
    Int_t i=0;
@@ -544,7 +530,7 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
 //______________________________________________________________________________
 void TRandom::RndmArray(Int_t n, Float_t *array)
 {
-   // Return an array of n random numbers uniformly distributed in ]0,1]
+   // Return an array of n random numbers uniformly distributed in ]0,1].
 
    const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
    Int_t i=0;
@@ -557,15 +543,16 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
 //______________________________________________________________________________
 void TRandom::SetSeed(UInt_t seed)
 {
-//  Set the random generator seed. Note that default value is zero, which is different than the 
-//  default value used when constructing the class.  
-//  If the seed is zero the seed is set to a random value 
-//  which in case of TRandom depends on the  machine clock. 
-//  Note that the machine clock is returned with a precision of 1 second.
-//  If one calls SetSeed(0) within a loop and the loop time is less than 1s,
-//  all generated numbers will be identical!
-//  Instead if a different generator implementation is used (TRandom1 , 2 or 3) the seed is generated using 
-//  a 128 bit UUID. This results in different seeds and then random sequence for every SetSeed(0) call. 
+   // Set the random generator seed. Note that default value is zero, which is
+   // different than the default value used when constructing the class.  
+   // If the seed is zero the seed is set to a random value 
+   // which in case of TRandom depends on the machine clock. 
+   // Note that the machine clock is returned with a precision of 1 second.
+   // If one calls SetSeed(0) within a loop and the loop time is less than 1s,
+   // all generated numbers will be identical!
+   // Instead if a different generator implementation is used (TRandom1, 2 or 3)
+   // the seed is generated using a 128 bit UUID. This results in different seeds
+   // and then random sequence for every SetSeed(0) call. 
 
    if( seed==0 ) {
       time_t curtime;      // Set 'random' seed number  if seed=0
@@ -579,12 +566,12 @@ void TRandom::SetSeed(UInt_t seed)
 //______________________________________________________________________________
 void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
 {
-   // generates random vectors, uniformly distributed over the surface
+   // Generates random vectors, uniformly distributed over the surface
    // of a sphere of given radius.
    //   Input : r = sphere radius
    //   Output: x,y,z a random 3-d vector of length r
-   // Method:  (based on algorithm suggested by Knuth and attributed to Robert E Knop)
-   //          which uses less random numbers than the CERNLIB RN23DIM algorithm
+   // Method: (based on algorithm suggested by Knuth and attributed to Robert E Knop)
+   //         which uses less random numbers than the CERNLIB RN23DIM algorithm
 
    Double_t a=0,b=0,r2=1;
    while (r2 > 0.25) {
@@ -602,7 +589,7 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1)
 {
-// returns a uniform deviate on the interval  ]0, x1].
+   // Returns a uniform deviate on the interval  ]0, x1].
 
    Double_t ans = Rndm();
    return x1*ans;
@@ -611,7 +598,7 @@ Double_t TRandom::Uniform(Double_t x1)
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 {
-// returns a uniform deviate on the interval ]x1, x2].
+   // Returns a uniform deviate on the interval ]x1, x2].
 
    Double_t ans= Rndm();
    return x1 + (x2-x1)*ans;
@@ -620,9 +607,8 @@ Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 //_____________________________________________________________________________
 void TRandom::WriteRandom(const char *filename)
 {
-   //
-   // Writes random generator status to filename
-   //
+   // Writes random generator status to filename.
+
    if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
    TDirectory *file = (TDirectory*)gROOT->ProcessLine(Form("TFile::Open(\"%s\",\"recreate\");",fntmp));
