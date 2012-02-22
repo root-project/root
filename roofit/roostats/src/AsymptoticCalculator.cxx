@@ -134,11 +134,8 @@ AsymptoticCalculator::AsymptoticCalculator(
 
    // evaluate the unconditional nll for the full model on the  observed data  
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
-   int oldVerboseLevel = fgPrintLevel;
-   if (fgPrintLevel > 0) fgPrintLevel = 2; 
    fNLLObs = EvaluateNLL( *nullPdf, *obsData);
    // fill also snapshot of best poi
-   fgPrintLevel = oldVerboseLevel;
    poi->snapshot(fBestFitPoi);
    if (verbose > 0) {
       std::cout << "Best fitted POI\n";
@@ -190,14 +187,11 @@ AsymptoticCalculator::AsymptoticCalculator(
    // do conditional fit since is faster
 
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI (e.g. mu=0)" << endl;
-   oldVerboseLevel = fgPrintLevel;
-   if (fgPrintLevel > 0) fgPrintLevel = 2; 
    fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, &poiAlt );
    if (verbose > 0) {
       std::cout << "Best Fit POI on Asimov data set " << std::endl;
       poi->Print("v");
    }
-   fgPrintLevel = oldVerboseLevel;
 
    
    // restore previous value 
@@ -273,14 +267,13 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        val = nll->getVal(); // just evaluate nll in conditional fits with model without nuisance params
     else {
 
-       if (verbose > 0 )
-          std::cout << "Doing NLL minimization....." << std::endl;
        
        int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
        if (verbose > 1) minimPrintLevel = verbose; 
        
        RooMinimizer minim(*nll);
-       minim.setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+       int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
+       minim.setStrategy( strategy);
        // use tolerance - but never smaller than 1 (default in RooMinimizer)
        double tol =  ROOT::Math::MinimizerOptions::DefaultTolerance();
        if (tol > 1.)  minim.setEps( tol );
@@ -290,17 +283,23 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        minim.optimizeConst(2);
        TString minimizer = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
        TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo(); 
+
+       if (verbose > 0 )
+          std::cout << "AsymptoticCalculator::EvaluateNLL  ........ using " << minimizer << " / " << algorithm 
+                    << " with strategy  " << strategy << " and tolerance " << tol << std::endl;
+
+
        for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
           //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
           status = minim.minimize(minimizer, algorithm);  
           if (status%1000 == 0) {  // ignore erros from Improve 
              break;
-          } else {
-             if (tries > 1) {
+          } else { 
+             if (tries == 1) {
                 printf("    ----> Doing a re-scan first\n");
                 minim.minimize(minimizer,"Scan");
              }
-             if (tries > 2) {
+             if (tries == 2) {
                 if (ROOT::Math::MinimizerOptions::DefaultStrategy() == 0 ) { 
                    printf("    ----> trying with strategy = 1\n");
                    minim.setStrategy(1);
@@ -308,7 +307,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
                 else 
                    tries++; // skip this trial if stratehy is already 1 
              }
-             if (tries > 3) {
+             if (tries == 3) {
                 printf("    ----> trying with improve\n");
                 minimizer = "Minuit";
                 algorithm = "migradimproved";
@@ -880,7 +879,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 }
 
 //______________________________________________________________________________
-RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs)  {
+RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs, const RooArgSet * genPoiValues )  {
    // static function to the an Asimov data set
    // given an observed dat set, a model and a snapshot of poi. 
    // Return the asimov data set + global observables set to values satisfying the constraints
@@ -952,9 +951,12 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    RooArgSet *  allParams = model.GetPdf()->getParameters(realData);
    RooStats::RemoveConstantParameters( allParams );
 
+   // if a RooArgSet of poi is passed , different poi will be used for generating the Asimov data set 
+   if (genPoiValues) *allParams = *genPoiValues;
+
    // now do the actual generation of the AsimovData Set
    // no need to pass parameters values since we have set them before
-   RooAbsData * asimovData =  MakeAsimovData(model, RooArgSet(), asimovGlobObs);
+   RooAbsData * asimovData =  MakeAsimovData(model, *allParams, asimovGlobObs);
 
    delete allParams;
 
