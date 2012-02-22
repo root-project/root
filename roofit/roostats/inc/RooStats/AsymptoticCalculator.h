@@ -57,12 +57,14 @@ namespace RooStats {
       virtual HypoTestResult *GetHypoTest() const; 
 
       // make the asimov data from the ModelConfig and list of poi - return data set annd snapshoot of global obs 
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs); 
+      // poiValues is the snapshot of POI used for finding the best buisance parameter values (conditioned at these values)
+      // genPoiValues is optionally a different set of POI values used for generating. By default the same POI are used for generating and for finding the nuisance parameters
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0); 
 
 
       // make a nominal asimov data from the ModelConfig and parameter values
-      // The parameter values (including the nunisance) could be given from a fit to data or be at the nominal values 
-      static RooAbsData * MakeAsimovData( const ModelConfig & model,  const RooArgSet & allParamValues, RooArgSet & globObs); 
+      // The parameter values (including the nunisance) could be given from a fit to data or be at the nominal values
+      static RooAbsData * MakeAsimovData( const ModelConfig & model,  const RooArgSet & allParamValues, RooArgSet & globObs);
 
 
 
