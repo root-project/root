@@ -74,7 +74,7 @@ TFile *hsimple(Int_t get=0)
 
 
    // Fill histograms randomly
-   gRandom->SetSeed();
+   gRandom->SetSeed(42);
    Float_t px, py, pz;
    const Int_t kUPDATE = 1000;
    for (Int_t i = 0; i < 25000; i++) {
