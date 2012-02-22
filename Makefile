@@ -640,7 +640,7 @@ ifeq ($$(F77),f2c)
 else
 ifneq ($(findstring gfortran, $(F77)),)
 # Ignore gfortran warnings, our Fortran code is old, won't change and works
-	$$(F77) $$(F77OPT) $$(F77FLAGS) $$(CXXOUT)$$@ -c $$< 2>&1 | sed -e s/Warning:/ROOT-Ignore:/ >&2
+	$$(F77) $$(F77OPT) $$(F77FLAGS) $$(CXXOUT)$$@ -c $$< 2>&1 | sed -e s/arning:/arn-Ignore:/ >&2
 else
 	$$(F77) $$(F77OPT) $$(F77FLAGS) $$(CXXOUT)$$@ -c $$<
 endif
@@ -666,7 +666,7 @@ ifeq ($(F77),f2c)
 else
 ifneq ($(findstring gfortran, $(F77)),)
 # Ignore gfortran warnings, our Fortran code is old, won't change and works
-	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $< 2>&1 | sed -e s/Warning:/ROOT-Ignore:/ >&2
+	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $< 2>&1 | sed -e s/arning:/arn-Ignore:/ >&2
 else
 	$(F77) $(F77OPT) $(F77FLAGS) $(CXXOUT)$@ -c $<
 endif
