@@ -118,6 +118,9 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
 $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
+ifeq ($(GCC_MAJOR),4)
+$(GQTO): CXXFLAGS += -Wno-strict-overflow
+endif
 
 $(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
 	$(MAKEDIR)
