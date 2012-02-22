@@ -144,6 +144,13 @@ FINK_CFLAGS   := $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/includ
 FINK_LDFLAGS  := $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)
 endif
 
+ifeq ($(MACOSX_MINOR),7)
+MACOSX_SSL_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),8)
+MACOSX_SSL_DEPRECATED = yes
+endif
+
 ifeq ($(CONFIGURE),yes)
 showcxx:
 	@echo "$(CXX)"

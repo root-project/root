@@ -73,3 +73,4 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(PLATFORM),aix5)
 $(X11O): CXXFLAGS += -I$(X11DIRI)
 endif
+$(X11O) $(X11DO): CXXFLAGS += $(X11INCDIR:%=-I%)

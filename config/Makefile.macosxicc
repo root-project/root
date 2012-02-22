@@ -166,3 +166,9 @@ INSTALL      := /bin/cp -pPR
 INSTALLDATA  := /bin/cp -pPR
 
 # Extras
+ifeq ($(MACOSX_MINOR),7)
+MACOSX_SSL_DEPRECATED = yes
+endif
+ifeq ($(MACOSX_MINOR),8)
+MACOSX_SSL_DEPRECATED = yes
+endif

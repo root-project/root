@@ -69,3 +69,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(X3DDEP) $(X3DDS) $(X3DDH) $(X3DLIB) $(X3DMAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(X3DO): CXXFLAGS += $(X11INCDIR:%=-I%)
+$(X3DO): CFLAGS   += $(X11INCDIR:%=-I%)

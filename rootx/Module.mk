@@ -46,3 +46,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTXDEP) $(ROOTX)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+$(ROOTXO): CXXFLAGS += $(X11INCDIR:%=-I%)

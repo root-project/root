@@ -88,7 +88,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-ifeq ($(MACOSX_MINOR),7)
+ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
 $(call stripsrc,$(NETDIRS)/TWebFile.o): CXXFLAGS += $(NETSSL)

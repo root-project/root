@@ -1337,6 +1337,7 @@ showbuild:
 	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"
+	@echo "X11INCDIR          = $(X11INCDIR)"
 	@echo "TTFFONTDIR         = $(TTFFONTDIR)"
 	@echo "OPENGLLIBDIR       = $(OPENGLLIBDIR)"
 	@echo "OPENGLULIB         = $(OPENGLULIB)"
