@@ -240,7 +240,6 @@ private:
    bool fUsed;
    bool fMinosRun; 
    unsigned int fDim; 
-   unsigned int fStrategy;
    std::vector<double> fParams;
    std::vector<double> fErrors;
    std::vector<double> fCovar; 

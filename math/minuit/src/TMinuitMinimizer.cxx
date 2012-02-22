@@ -52,7 +52,6 @@ TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type, unsigned i
    fUsed(false),
    fMinosRun(false),
    fDim(ndim),
-   fStrategy(1),
    fType(type), 
    fMinuit(0)
 {
@@ -69,7 +68,6 @@ TMinuitMinimizer::TMinuitMinimizer(const char *  type, unsigned int ndim ) :
    fUsed(false),
    fMinosRun(false),
    fDim(ndim),
-   fStrategy(1),
    fMinuit(0)
 {
    // constructor from a char * for the algorithm type, used by the plug-in manager
@@ -416,6 +414,13 @@ bool TMinuitMinimizer::Minimize() {
    if (Precision() > 0)  { 
       arglist[0] = Precision();
       fMinuit->mnexcm("SET EPS",arglist,1,ierr);
+   }
+
+   // set strategy 
+   int strategy = Strategy(); 
+   if (strategy >=0 && strategy <=2 ) {
+      arglist[0] = strategy;
+      fMinuit->mnexcm("SET STR",arglist,1,ierr);
    }
 
    arglist[0] = MaxFunctionCalls(); 
