@@ -155,6 +155,7 @@
 //      loops on all defined branches and for each branch invokes the Fill function.
 //
 //         See also the class TNtuple (a simple Tree with branches of floats)
+//         and the class TNtupleD (a simple Tree with branches of doubles)
 //
 //       Adding a Branch to an Existing Tree
 //       ===================================
