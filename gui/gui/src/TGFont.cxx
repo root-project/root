@@ -1824,8 +1824,9 @@ char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
       }
 
       if (str) {
-         result[i] = new char[strlen(str)+1];
-         strlcpy(result[i], str, strlen(str)+1);
+         int len = strlen(str)+1;
+         result[i] = new char[len];
+         strlcpy(result[i], str, len);
       } else {
          result[i] = new char[20];
          snprintf(result[i], 20, "%d", num);
@@ -1947,8 +1948,9 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
 
    XLFDAttributes_t xa;
 
-   char *str = new char[strlen(string)+1];
-   strlcpy(str, string, strlen(string)+1);
+   int len = strlen(string)+1;
+   char *str = new char[len];
+   strlcpy(str, string, len);
 
    if (*str == '-' || *str == '*') {
 
