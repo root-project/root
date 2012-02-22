@@ -308,6 +308,12 @@ void TThread::Constructor()
    ThreadInternalLock();
    SetComment("Constructor: MainInternalMutex Locked");
    memset(fTsd, 0, ROOT::kMaxThreadSlot*sizeof(void*));
+   // In order for the thread 'gDirectory' value to be properly
+   // initialized we need to set it now (otherwise it default
+   // to zero which is 'unexpected')
+   // We initialize it to gROOT rather than gDirectory, since
+   // TFile are currently expected to not be shared by two threads.
+   fTsd[ROOT::kDirectoryThreadSlot] = gROOT;
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev = 0; fgMain = this;
