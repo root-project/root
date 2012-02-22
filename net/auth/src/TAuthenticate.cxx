@@ -3622,7 +3622,7 @@ char *TAuthenticate::GetRandString(Int_t opt, Int_t len)
    //       1      letters and numbers  (upper and lower case)
    //       2      hex characters       (upper and lower case)
 
-   int iimx[4][4] = {
+   unsigned int iimx[4][4] = {
       {0x0, 0xffffff08, 0xafffffff, 0x2ffffffe}, // opt = 0
       {0x0, 0x3ff0000, 0x7fffffe, 0x7fffffe},    // opt = 1
       {0x0, 0x3ff0000, 0x7e, 0x7e},              // opt = 2

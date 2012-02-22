@@ -434,7 +434,7 @@ void TGL5DPainter::SetSurfaceColor(ConstSurfIter_t it)const
 {
    //Set the color for iso-surface.
    Color_t ind = it->fColor;
-   Float_t rgba[] = {0.f, 0.f, 0.f, it->fAlpha / 100.};
+   Float_t rgba[] = {0.f, 0.f, 0.f, static_cast<Float_t>(it->fAlpha / 100.)};
    Rgl::Pad::ExtractRGB(ind, rgba);
    //Set color for surface.
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgba);

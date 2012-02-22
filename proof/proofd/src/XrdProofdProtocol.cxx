@@ -286,7 +286,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    struct ClientInitHandShake hsdata;
    char  *hsbuff = (char *)&hsdata;
 
-   static hs_response_t hsresp = {0, 0, htonl(XPROOFD_VERSBIN), 0};
+   static hs_response_t hsresp = {0, 0, kXR_int32(htonl(XPROOFD_VERSBIN)), 0};
 
    XrdProofdProtocol *xp;
    int dlen;

@@ -4932,10 +4932,11 @@ char *RpdGetRandString(int Opt, int Len)
    //       2      hex characters       (upper and lower case)
    //       3      crypt like           [a-zA-Z0-9./]
 
-   int iimx[4][4] = { { 0x0, 0xffffff08, 0xafffffff, 0x2ffffffe }, // Opt = 0
-                      { 0x0, 0x3ff0000,  0x7fffffe,  0x7fffffe },  // Opt = 1
-                      { 0x0, 0x3ff0000,  0x7e,       0x7e },       // Opt = 2
-                      { 0x0, 0x3ffc000,  0x7fffffe,  0x7fffffe }   // Opt = 3
+   unsigned int iimx[4][4] = {
+      { 0x0, 0xffffff08, 0xafffffff, 0x2ffffffe }, // Opt = 0
+      { 0x0, 0x3ff0000,  0x7fffffe,  0x7fffffe },  // Opt = 1
+      { 0x0, 0x3ff0000,  0x7e,       0x7e },       // Opt = 2
+      { 0x0, 0x3ffc000,  0x7fffffe,  0x7fffffe }   // Opt = 3
    };
 
    const char *cOpt[4] = { "Any", "LetNum", "Hex", "Crypt" };

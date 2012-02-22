@@ -112,11 +112,11 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       TGLVector3 center(c.X(), c.Y(), c.Z());
       camera.RefModelViewMatrix().MultiplyIP(center);
       // Float_t pos0[] = { center.X(), center.Y(), frontLightZ, 1.0 };
-      Float_t pos0[] = { 0.0,        0.0,                      frontLightZ, 1.0 };
-      Float_t pos1[] = { center.X(), center.Y() + lightRadius, sideLightsZ, 1.0 };
-      Float_t pos2[] = { center.X(), center.Y() - lightRadius, sideLightsZ, 1.0 };
-      Float_t pos3[] = { center.X() - lightRadius, center.Y(), sideLightsZ, 1.0 };
-      Float_t pos4[] = { center.X() + lightRadius, center.Y(), sideLightsZ, 1.0 };
+      Float_t pos0[] = { 0.0,        0.0,                      Float_t(frontLightZ), 1.0 };
+      Float_t pos1[] = { Float_t(center.X()), Float_t(center.Y() + lightRadius), Float_t(sideLightsZ), 1.0 };
+      Float_t pos2[] = { Float_t(center.X()), Float_t(center.Y() - lightRadius), Float_t(sideLightsZ), 1.0 };
+      Float_t pos3[] = { Float_t(center.X() - lightRadius), Float_t(center.Y()), Float_t(sideLightsZ), 1.0 };
+      Float_t pos4[] = { Float_t(center.X() + lightRadius), Float_t(center.Y()), Float_t(sideLightsZ), 1.0 };
 
       Float_t specular = fUseSpecular ? fSpecularPower : 0.0f;
       const Float_t frontLightColor[] = { fFrontPower, fFrontPower, fFrontPower, 1.0f };

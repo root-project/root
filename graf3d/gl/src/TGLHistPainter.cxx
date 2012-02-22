@@ -619,7 +619,8 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
    
    PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian,
                                 kTRUE, kTRUE, kTRUE, //Show back box, show front box, show axes.
-                                gPad->GetLogx(), gPad->GetLogy(), gPad->GetLogz()};
+                                Bool_t(gPad->GetLogx()), Bool_t(gPad->GetLogy()),
+                                Bool_t(gPad->GetLogz())};
 
    //Check coordinate system type.
    if (FindAndRemoveOption(options, "pol"))

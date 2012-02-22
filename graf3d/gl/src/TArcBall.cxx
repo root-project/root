@@ -193,7 +193,7 @@ void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 inline void TArcBall::MapToSphere(const TPoint &NewPt, Double_t *NewVec) const
 {
    //map to sphere
-   Double_t tempPt[] = {NewPt.fX, NewPt.fY};
+   Double_t tempPt[] = { static_cast<Double_t>(NewPt.fX), static_cast<Double_t>(NewPt.fY)};
    //Adjust point coords and scale down to range of [-1 ... 1]
    tempPt[0]  = tempPt[0] * fAdjustWidth  - 1.;
    tempPt[1]  = 1. - tempPt[1] * fAdjustHeight;

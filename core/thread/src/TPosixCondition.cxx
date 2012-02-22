@@ -73,7 +73,7 @@ Int_t TPosixCondition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // documentation for why absolute times are better than relative.
    // Returns 0 if successfully signalled, 1 if time expired.
 
-   timespec rqts = { secs, nanoSecs };
+   timespec rqts = { (Long_t)secs, (Long_t)nanoSecs };
 
    int rc = pthread_cond_timedwait(&fCond, &(fMutex->fMutex), &rqts);
 

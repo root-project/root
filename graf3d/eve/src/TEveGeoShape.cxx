@@ -315,7 +315,7 @@ TEveGeoShapeExtract* TEveGeoShape::DumpShapeTree(TEveGeoShape* gsre,
    {
       Int_t   ci = gsre->GetFillColor();
       TColor *c  = gROOT->GetColor(ci);
-      Float_t rgba[4] = { 1, 0, 0, 1 - gsre->GetMainTransparency()/100. };
+      Float_t rgba[4] = { 1, 0, 0, Float_t(1 - gsre->GetMainTransparency()/100.) };
       if (c)
       {
          rgba[0] = c->GetRed();
