@@ -841,9 +841,16 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    // are
    //          "BenchDataSet", "event"
    // respectively.
-   // Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenOar to change it
+   // These can be changed via dset and fnroot, respectively.
+   // The string 'fnroot' defines the location of the files, interpreted as an URL.
+   // Examples:
+   //          fnroot             files
+   //          'event'            <datadir>/event_<ord>_<#>.root
+   //          '/mss/event'       /mss/event_<ord>_<#>.root
+   //          'root://srv//mss/event?remote=1'
+   //                             root://srv//mss/event_<ord>_<#>?remote=1.root          
+   // Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
    // and to pass the list of PARs defining the alternative selector.
-   // These can be changed via dset, sel and fnroot, respectively.
    // The argument 'nevt' controls the number of events per file (-1 for the default,
    // which is 30000).
    // Return 0 on success, -1 on error
@@ -899,7 +906,20 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    }
 
    // For files, 30000 evst each (about 600 MB total) per worker
-   TString fn, fnr = (fnroot && strlen(fnroot) > 0) ? fnroot : "event";
+   TString fn, fnr("event");
+   if (fnroot && strlen(fnroot) > 0) {
+      TUrl ur(fnroot, kTRUE);
+      if (!strcmp(ur.GetProtocol(), "file") &&
+         !gSystem->IsAbsoluteFileName(ur.GetFile())) {
+         fnr = fnroot;
+      } else {
+         fnr = gSystem->BaseName(ur.GetFile());
+         // We need to set the basedir
+         TString bdir(fnroot);
+         bdir.ReplaceAll(fnr, "<fn>");
+         fProof->SetParameter("PROOF_BenchmarkBaseDir", bdir.Data());
+      }
+   }
    TProofNodes pn(fProof);
    TMap *filesmap = new TMap;
    TMap *nodesmap = pn.GetMapOfNodes();
@@ -940,6 +960,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    fProof->Process(fDataGenSel, (Long64_t) 1);
    fProof->DeleteParameters("PROOF_BenchmarkNEvents");
    fProof->DeleteParameters("PROOF_BenchmarkRegenerate");
+   fProof->DeleteParameters("PROOF_BenchmarkBaseDir");
 
    // Restore parameters
    if (!oldpack.IsNull())
@@ -989,7 +1010,11 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
 
    // Get updated information
    fc = fProof->GetDataSet(fDataSet);
-   fc->Print("F");
+   if (fc) {
+      fc->Print("F");
+   } else {
+      Warning("MakeDataSet", "dataset '%s' was not generated!", fDataSet.Data());
+   }
    
    SafeDelete(fc);
 
