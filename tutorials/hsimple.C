@@ -6,7 +6,7 @@
 #include <TFrame.h>
 #include <TROOT.h>
 #include <TSystem.h>
-#include <TRandom.h>
+#include <TRandom3.h>
 #include <TBenchmark.h>
 #include <TInterpreter.h>
 
@@ -74,17 +74,17 @@ TFile *hsimple(Int_t get=0)
 
 
    // Fill histograms randomly
-   gRandom->SetSeed(42);
+   TRandom3 random;
    Float_t px, py, pz;
    const Int_t kUPDATE = 1000;
    for (Int_t i = 0; i < 25000; i++) {
-      gRandom->Rannor(px,py);
+      random.Rannor(px,py);
       pz = px*px + py*py;
-      Float_t random = gRandom->Rndm(1);
+      Float_t rnd = random.Rndm(1);
       hpx->Fill(px);
       hpxpy->Fill(px,py);
       hprof->Fill(px,pz);
-      ntuple->Fill(px,py,pz,random,i);
+      ntuple->Fill(px,py,pz,rnd,i);
       if (i && (i%kUPDATE) == 0) {
          if (i == kUPDATE) hpx->Draw();
          c1->Modified();
