@@ -41,7 +41,7 @@
 // Test  8: Copy tests for 1D, 2D and 3D Histograms and Profiles.............OK  //
 // Test  9: Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......OK  //
 // Test 10: Merge tests for 1D, 2D and 3D Histograms and Profiles............OK  //
-// Test 11: Label tests for 1D Histograms (TAxis)............................OK  //
+// Test 11: Label tests for 1D and 2D Histograms  ...........................OK  //
 // Test 12: Interpolation tests for Histograms...............................OK  //
 // Test 13: Scale tests for Profiles.........................................OK  //
 // Test 14: Integral tests for Histograms....................................OK  //
@@ -5619,29 +5619,117 @@ bool testLabel()
 {
    // Tests labelling a 1D Histogram
 
-   TH1D* h1 = new TH1D("lD1-h1", "h1-Title", numberOfBins, minRange, maxRange);
-   TH1D* h2 = new TH1D("lD1-h2", "h2-Title", numberOfBins, minRange, maxRange);
+   TH1D* h1 = new TH1D("lD1-h1", "h1-Title", 2*numberOfBins, minRange, maxRange);
+   // build histo with extra  labels to tets the deflate option
+   int extraBins = 20;
+   TH1D* h2 = new TH1D("lD1-h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + extraBins*h1->GetXaxis()->GetBinWidth(1));
 
+
+   // set labels 
+   std::vector<std::string> vLabels;
    for ( Int_t bin = 1; bin <= h1->GetNbinsX() ; ++bin ) {
       ostringstream label;
       label << bin;
+      vLabels.push_back(label.str());
       h2->GetXaxis()->SetBinLabel(bin, label.str().c_str());
    }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end() );  
+
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(minRange, maxRange);
       Int_t bin = h1->GetXaxis()->FindBin(value);
       h1->Fill(h1->GetXaxis()->GetBinCenter(bin), 1.0);
 
-      ostringstream label;
-      label << bin;
-      h2->Fill(label.str().c_str(), 1.0);
+      h2->Fill(vLabels[bin-1].c_str(), 1.0);
    }
+
+   h2->LabelsOption("a");
+   h2->LabelsDeflate();
 
    bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
    delete h1;
    return status;
 }
+
+
+bool testLabel2DX()
+{
+   // Tests labelling a 1D Histogram
+
+   TH2D* h1 = new TH2D("lD2-h1", "h1-Title", 2*numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);
+   // build histo with extra  labels to tets the deflate option
+   TH2D* h2 = new TH2D("lD2-h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + 20*h1->GetXaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange);
+
+   // set labels 
+   std::vector<std::string> vLabels;
+   for ( Int_t bin = 1; bin <= h1->GetNbinsX() ; ++bin ) {
+      ostringstream label;
+      label << bin;
+      vLabels.push_back(label.str());
+      h2->GetXaxis()->SetBinLabel(bin, label.str().c_str());
+   }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end() );  
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(minRange, maxRange);
+      Int_t binx = h1->GetXaxis()->FindBin(xvalue);
+      Int_t biny = h1->GetYaxis()->FindBin(yvalue);
+      h1->Fill(h1->GetXaxis()->GetBinCenter(binx), h1->GetYaxis()->GetBinCenter(biny), 1.0);
+
+      h2->Fill( vLabels[binx-1].c_str(), h1->GetYaxis()->GetBinCenter(biny), 1.0);
+   }
+
+   h2->LabelsOption("a");
+
+   h2->LabelsDeflate();
+
+   bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
+   delete h1;
+   return status;
+}
+
+bool testLabel2DY()
+{
+   // Tests labelling a 1D Histogram
+
+   TH2D* h1 = new TH2D("lD2-h1", "h1-Title", numberOfBins, minRange, maxRange, 2*numberOfBins, minRange, maxRange);
+   // build histo with extra  labels to tets the deflate option
+   TH2D* h2 = new TH2D("lD2-h2", "h2-Title", numberOfBins, minRange, maxRange, 2*numberOfBins+20, minRange, maxRange + 20*h1->GetYaxis()->GetBinWidth(1));
+
+   // set labels 
+   std::vector<std::string> vLabels;
+   for ( Int_t bin = 1; bin <= h1->GetNbinsY() ; ++bin ) {
+      ostringstream label;
+      label << bin;
+      vLabels.push_back(label.str());
+      h2->GetYaxis()->SetBinLabel(bin, label.str().c_str());
+   }
+   // sort labels in alphabetic order
+   std::sort(vLabels.begin(), vLabels.end() );  
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t xvalue = r.Uniform(minRange, maxRange);
+      Double_t yvalue = r.Uniform(minRange, maxRange);
+      Int_t binx = h1->GetXaxis()->FindBin(xvalue);
+      Int_t biny = h1->GetYaxis()->FindBin(yvalue);
+      h1->Fill(h1->GetXaxis()->GetBinCenter(binx), h1->GetYaxis()->GetBinCenter(biny), 1.0);
+
+      h2->Fill(  h1->GetXaxis()->GetBinCenter(binx), vLabels[biny-1].c_str(), 1.0);
+   }
+
+   h2->GetYaxis()->LabelsOption("a");
+
+   h2->LabelsDeflate("Y");
+
+   bool status = equals("Fill(char*)", h1, h2, cmpOptStats, 1E-13);
+   delete h1;
+   return status;
+}
+
 
 bool testLabelsInflateProf1D()
 {
@@ -9251,12 +9339,12 @@ int stressHistogram()
                                         mergeTestPointer };
    // Test 11
    // Label Tests
-   const unsigned int numberOfLabel = 2;
-   pointer2Test labelTestPointer[numberOfLabel] = { testLabel,
+   const unsigned int numberOfLabel = 4;
+   pointer2Test labelTestPointer[numberOfLabel] = { testLabel, testLabel2DX, testLabel2DY,
                                                     testLabelsInflateProf1D
    };
    struct TTestSuite labelTestSuite = { numberOfLabel, 
-                                        "Label tests for 1D Histograms (TAxis)............................",
+                                        "Label tests for 1D and 2D Histograms ...........................",
                                         labelTestPointer };
 
    // Test 12

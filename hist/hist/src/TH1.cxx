@@ -4751,6 +4751,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    Double_t entries = fEntries;
    Int_t n = TMath::Min(axis->GetNbins(), labels->GetSize());
    Int_t *a = new Int_t[n+2];
+
    Int_t i,j,k;
    Double_t *cont   = 0;
    Double_t *errors = 0;
@@ -4787,7 +4788,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
          Int_t nx = fXaxis.GetNbins();
          Int_t ny = fYaxis.GetNbins();
          cont = new Double_t[(nx+2)*(ny+2)];
-         if (fSumw2.fN) errors = new Double_t[n];
+         if (fSumw2.fN) errors = new Double_t[(nx+2)*(ny+2)];
          for (i=1;i<=nx;i++) {
             for (j=1;j<=ny;j++) {
                cont[i+nx*j] = GetBinContent(i,j);
@@ -4805,19 +4806,25 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
             obj->SetUniqueID(i+1);
          }
          delete [] pcont;
-         for (i=1;i<=nx;i++) {
-            for (j=1;j<=ny;j++) {
-               if (axis == GetXaxis()) {
+         if (axis == GetXaxis()) {
+            for (i=1;i<=n;i++) {
+               for (j=1;j<=ny;j++) {
                   SetBinContent(i,j,cont[a[i-1]+1+nx*j]);
                   if (errors) SetBinError(i,j,errors[a[i-1]+1+nx*j]);
-               } else {
+               }
+            }
+         }
+         else { 
+            // using y axis
+            for (i=1;i<=nx;i++) {
+               for (j=1;j<=n;j++) {
                   SetBinContent(i,j,cont[i+nx*(a[j-1]+1)]);
                   if (errors) SetBinError(i,j,errors[i+nx*(a[j-1]+1)]);
                }
             }
          }
       } else {
-         //to be implemented
+         //to be implemented for 3d 
       }
    } else {
       //---alphabetic sort
@@ -4871,12 +4878,16 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
                if (errors) errors[i+nx*j] = GetBinError(i,j);
             }
          }
-         for (i=0;i<nx;i++) {
-            for (j=0;j<ny;j++) {
-               if (axis == GetXaxis()) {
+         if (axis == GetXaxis()) {
+            for (i=1;i<=n;i++) {
+               for (j=0;j<ny;j++) {
                   SetBinContent(i,j,cont[a[i]+nx*j]);
                   if (errors) SetBinError(i,j,errors[a[i]+nx*j]);
-               } else {
+               }
+            }
+         } else {
+            for (i=0;i<nx;i++) {
+               for (j=1;j<=n;j++) {
                   SetBinContent(i,j,cont[i+nx*a[j]]);
                   if (errors) SetBinError(i,j,errors[i+nx*a[j]]);
                }
@@ -4896,16 +4907,33 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
                }
             }
          }
-         for (i=0;i<nx;i++) {
-            for (j=0;j<ny;j++) {
-               for (k=0;k<nz;k++) {
-                  if (axis == GetXaxis()) {
+         if (axis == GetXaxis()) {
+            // labels on x axis
+            for (i=1;i<=n;i++) {
+               for (j=0;j<ny;j++) {
+                  for (k=0;k<nz;k++) {
                      SetBinContent(i,j,k,cont[a[i]+nx*(j+ny*k)]);
                      if (errors) SetBinError(i,j,k,errors[a[i]+nx*(j+ny*k)]);
-                  } else if (axis == GetYaxis()) {
+                  }
+               }
+            }
+         }         
+         else if (axis == GetYaxis()) {
+            // labels on y axis
+            for (i=0;i<nx;i++) {
+               for (j=1;j<=n;j++) {
+                  for (k=0;k<nz;k++) {
                      SetBinContent(i,j,k,cont[i+nx*(a[j]+ny*k)]);
                      if (errors) SetBinError(i,j,k,errors[i+nx*(a[j]+ny*k)]);
-                  } else {
+                  }
+               }
+            }
+         }
+         else {
+            // labels on z axis
+            for (i=0;i<nx;i++) {
+               for (j=0;j<ny;j++) {
+                  for (k=1;k<=n;k++) {
                      SetBinContent(i,j,k,cont[i+nx*(j+ny*a[k])]);
                      if (errors) SetBinError(i,j,k,errors[i+nx*(j+ny*a[k])]);
                   }
