@@ -371,6 +371,9 @@ public:
    Bool_t       IsDigit() const;
    Bool_t       IsFloat() const;
    Bool_t       IsHex() const;
+   Bool_t       IsBin() const;
+   Bool_t       IsOct() const;
+   Bool_t       IsDec() const;
    Bool_t       IsNull() const         { return Length() == 0; }
    Bool_t       IsWhitespace() const   { return (Length() == CountChar(' ')); }
    Ssiz_t       Last(char c) const;

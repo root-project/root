@@ -1863,13 +1863,62 @@ Bool_t TString::IsFloat() const
 Bool_t TString::IsHex() const
 {
    // Returns true if all characters in string are hexidecimal digits
-   // (0-9,a-f,A-F). Returns false in case string length is 0.
+   // (0-9,a-f,A-F). Returns false in case string length is 0 or string
+   // contains other characters.
 
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
    for (Ssiz_t i = 0; i < len; ++i)
       if (!isxdigit(cp[i]))
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsBin () const
+{
+   // Returns true if all characters in string are binary digits (0,1). 
+   // Returns false in case string length is 0 or string contains other
+   // characters.
+
+   const char *cp = Data();
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
+      if (cp[i] != '0' && cp[i] != '1')
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsOct () const
+{
+   // Returns true if all characters in string are octal digits (0-7).
+   // Returns false in case string length is 0 or string contains other
+   // characters.
+
+   const char *cp = Data();
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
+      if (!isdigit(cp[i]) || cp[i]=='8' || cp[i]=='9') 
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsDec () const
+{
+   // Returns true if all characters in string are decimal digits (0-9).
+   // Returns false in case string length is 0 or string contains other
+   // characters.
+
+   const char *cp = Data();
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
+      if (!isdigit(cp[i])) 
          return kFALSE;
    return kTRUE;
 }
