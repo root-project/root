@@ -770,7 +770,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fSelectorClass = 0;
    Int_t version = -1;
-   Int_t mapDataMembers = 1;
    TString wmsg;
    TRY {
       if (AssertSelector(selector_file) != 0 ) {
@@ -847,28 +846,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             fSelector->SlaveBegin(0);  // Init is called explicitly
                                        // from GetNextEvent()
          }
-      }
-
-      // Selector Data Member mapping: can be disabled dynamically or statically
-      if (TProof::GetParameter(fInput, "PROOF_MapSelectorDataMembers", mapDataMembers) != 0) {
-         // Check also static settings in the rootrc files
-         TString tag("Proof.MapSelectorDataMembers");
-         TString tags = TString::Format("Proof.MapSelectorDataMembers.%s", fSelector->ClassName());
-         if (gEnv->Lookup(tag.Data()) || gEnv->Lookup(tags.Data())) {
-            mapDataMembers = gEnv->GetValue(tag.Data(), 1);
-            mapDataMembers = gEnv->GetValue(tags.Data(), mapDataMembers);
-            if (mapDataMembers == 0) {
-               wmsg.Form("Data members mapping for '%s' explicitly disabled via"
-                         " rootrc", fSelector->ClassName());
-               fSelStatus->AddInfo(wmsg);
-            }
-         } else {
-            mapDataMembers = 1;
-         }
-      } else if (mapDataMembers == 0) {
-         wmsg.Form("Data members mapping for '%s' explicitly disabled via input"
-                   " list", fSelector->ClassName());
-         fSelStatus->AddInfo(wmsg);
       }
 
    } CATCH(excode) {
@@ -1091,8 +1068,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
       }
 
-      // Selector Data Member mapping, if required
-      if (mapDataMembers != 0) MapOutputListToDataMembers();
+      MapOutputListToDataMembers();
 
       if (fSelStatus->IsOk()) {
          if (version == 0) {
