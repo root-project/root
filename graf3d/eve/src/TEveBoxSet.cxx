@@ -183,7 +183,7 @@ void TEveBoxSet::AddEllipticCone(const TEveVector& pos, const TEveVector& dir,
                                  Float_t r, Float_t r2, Float_t angle)
 {
    // Create a cone with apex at pos, axis dir and radius r.
-   // To be used for box-type kBT_Cone.
+   // To be used for box-type kBT_EllipticCone.
 
    static const TEveException eH("TEveBoxSet::AddEllipticCone ");
 
