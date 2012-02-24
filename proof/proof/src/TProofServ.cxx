@@ -4397,7 +4397,7 @@ void TProofServ::ProcessNext(TString *slb)
             if (mbh != 0) {
                // Administrator settings have the priority
                TObject *o = 0;
-               if ((o = input->FindObject("PROOF_MergersByHost"))) { fInput->Remove(o); delete o; }
+               if ((o = input->FindObject("PROOF_MergersByHost"))) { input->Remove(o); delete o; }
                input->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
                PDB(kSubmerger, 2) Info("ProcessNext", "submergers setup by host/node");
             }
