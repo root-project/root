@@ -18,6 +18,40 @@
 
 #include <cassert>
 
+//==============================================================================
+// TEveMagFiled classes -- documentation only
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Abstract base-class for interfacing to magnetic field needed by the
+// TEveTrackPropagator.
+// See sub-classes for two simple implementations.
+//
+// NOTE: Magnetic field direction convention is inverted.
+
+ClassImp(TEveMagField);
+
+//______________________________________________________________________________
+//
+// Implements constant magnetic field, given by a vector fB.
+//
+// NOTE: Magnetic field direction convention is inverted.
+
+ClassImp(TEveMagFieldConst);
+
+//______________________________________________________________________________
+//
+// Implements constant magnetic filed that switches on given axial radius fR2
+// from vector fBIn to fBOut.
+//
+// NOTE: Magnetic field direction convention is inverted.
+
+ClassImp(TEveMagFieldDuo);
+
+
+//==============================================================================
+
 namespace
 {
    const Double_t kBMin     = 1e-6;
@@ -164,16 +198,20 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4D& v, const TEveVectorD
 // Holding structure for a number of track rendering parameters.
 // Calculates path taking into account the parameters.
 //
+// NOTE: Magnetic field direction convention is inverted.
+//
 // This is decoupled from TEveTrack/TEveTrackList to allow sharing of the
-// Propagator among several instances. Back references are kept so the
-// tracks can be recreated when the parameters change.
+// Propagator among several instances. Back references are kept so the tracks
+// can be recreated when the parameters change.
 //
 // TEveTrackList has Get/Set methods for RnrStlye. TEveTrackEditor and
 // TEveTrackListEditor provide editor access.
 //
-// Specify whether 2D projected tracks get broken into several
-// segments when the projected space consists of separate domains
-// (like Rho-Z). This is true by default.
+// Enum EProjTrackBreaking_e and member fProjTrackBreaking specify whether 2D
+// projected tracks get broken into several segments when the projected space
+// consists of separate domains (like Rho-Z). The track-breaking is enabled by
+// default.
+//
 
 ClassImp(TEveTrackPropagator);
 

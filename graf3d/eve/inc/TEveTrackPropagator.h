@@ -33,10 +33,10 @@ protected:
    Bool_t  fFieldConstant;
 
 public:
-   TEveMagField(): fFieldConstant(kFALSE){}
-   virtual ~TEveMagField(){}
+   TEveMagField() : fFieldConstant(kFALSE) {}
+   virtual ~TEveMagField() {}
 
-   virtual Bool_t IsConst() const {return fFieldConstant;};
+   virtual Bool_t IsConst() const { return fFieldConstant; }
 
    virtual void  PrintField(Double_t x, Double_t y, Double_t z) const
    {
@@ -69,7 +69,8 @@ protected:
    TEveVectorD fB;
 
 public:
-   TEveMagFieldConst(Double_t x, Double_t y, Double_t z) : TEveMagField(), fB(x, y, z)
+   TEveMagFieldConst(Double_t x, Double_t y, Double_t z) :
+      TEveMagField(), fB(x, y, z)
    { fFieldConstant = kTRUE; }
    virtual ~TEveMagFieldConst() {}
 
@@ -93,8 +94,9 @@ protected:
    Double_t    fR2;
 
 public:
-   TEveMagFieldDuo(Double_t r, Double_t bIn, Double_t bOut) : TEveMagField(),
-     fBIn(0,0,bIn), fBOut(0,0,bOut), fR2(r*r)
+   TEveMagFieldDuo(Double_t r, Double_t bIn, Double_t bOut) :
+      TEveMagField(),
+      fBIn(0,0,bIn), fBOut(0,0,bOut), fR2(r*r)
    {
       fFieldConstant = kFALSE;
    }
@@ -107,7 +109,7 @@ public:
    virtual Double_t GetMaxFieldMagD() const
    { Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
 
-   ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
+   ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
 
