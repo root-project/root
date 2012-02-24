@@ -71,6 +71,14 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
 
    fUrl.SetUrl(url);
 
+   // Default initializations                                                                                                                                          
+   fServSock = 0;
+   fCacheLock = 0;
+   fQueryLock = 0;
+   fQMgr = 0;
+   fDataSetManager = 0;
+   InitMembers();
+
    // This may be needed during init
    fManager = mgr;
 
