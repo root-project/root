@@ -552,6 +552,7 @@ void TProof::InitMembers()
    fCloseMutex = 0;
 
    fMergersSet = kFALSE;
+   fMergersByHost = kFALSE;
    fMergers = 0;
    fMergersCount = -1;
    fLastAssignedMerger = 0;
@@ -3665,6 +3666,8 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                   fMergersCount = -1; // No mergers used if not set by user
                   TParameter<Int_t> *mc = dynamic_cast<TParameter<Int_t> *>(GetParameter("PROOF_UseMergers"));
                   if (mc) fMergersCount = mc->GetVal(); // Value set by user
+                  TParameter<Int_t> *mh = dynamic_cast<TParameter<Int_t> *>(GetParameter("PROOF_MergersByHost"));
+                  if (mh) fMergersByHost = (mh->GetVal() != 0) ? kTRUE : kFALSE; // Assign submergers by hostname
 
                   // Mergers count specified by user but not valid
                   if (fMergersCount < 0 || (fMergersCount > (activeWorkers/2) )) {
@@ -3677,7 +3680,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      fMergersCount = 0;
                   }
                   // Mergers count will be set dynamically
-                  if (fMergersCount == 0) {
+                  if ((fMergersCount == 0) && (!fMergersByHost)) {
                      if (activeWorkers > 1) {
                         fMergersCount = TMath::Nint(TMath::Sqrt(activeWorkers));
                         if (activeWorkers / fMergersCount < 2)
@@ -3685,6 +3688,32 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      }
                      if (fMergersCount > 1)
                         msg.Form("%s: Number of mergers set dynamically to %d (for %d workers)",
+                                 prefix, fMergersCount, activeWorkers);
+                     else {
+                        msg.Form("%s: No mergers will be used for %d workers",
+                                 prefix, activeWorkers);
+                        fMergersCount = -1;
+                     }
+                     if (gProofServ)
+                        gProofServ->SendAsynMessage(msg);
+                     else
+                        Printf("%s",msg.Data());
+                  } else if (fMergersByHost) {
+                     // We force mergers at host level to minimize network traffic
+                     if (activeWorkers > 1) {
+                        fMergersCount = 0;
+                        THashList hosts;
+                        TIter nxwk(fSlaves);
+                        TObject *wrk = 0;
+                        while ((wrk = nxwk())) {
+                           if (!hosts.FindObject(wrk->GetName())) {
+                              hosts.Add(new TObjString(wrk->GetName()));
+                              fMergersCount++;
+                           }
+                        }
+                     }
+                     if (fMergersCount > 1)
+                        msg.Form("%s: Number of mergers set to %d (for %d workers), one for each slave host",
                                  prefix, fMergersCount, activeWorkers);
                      else {
                         msg.Form("%s: No mergers will be used for %d workers",
@@ -3727,11 +3756,22 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                      // No mergers. Workers send their outputs directly to master
                      AskForOutput(sl);
                   } else {
-                     if (fRedirectNext > 0 ) {
+                     if ((fRedirectNext > 0 ) && (!fMergersByHost)) {
                         RedirectWorker(s, sl, output_size);
                         fRedirectNext--;
                      } else {
-                        if (fMergersCount > fMergers->GetSize()) {
+                        Bool_t newMerger = kTRUE;
+                        if (fMergersByHost) {
+                           TIter nxmg(fMergers);
+                           TMergerInfo *mgi = 0;
+                           while ((mgi = (TMergerInfo *) nxmg())) {
+                              if (!strcmp(sl->GetName(), mgi->GetMerger()->GetName())) {
+                                 newMerger = kFALSE;
+                                 break;
+                              }
+                           }
+                        }
+                        if ((fMergersCount > fMergers->GetSize()) && newMerger) {
                            // Still not enough mergers established
                            if (!CreateMerger(sl, merging_port)) {
                               // Cannot establish a merger
@@ -3757,7 +3797,20 @@ void TProof::RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size)
 {
    // Redirect output of worker sl to some merger
 
-   Int_t merger_id = FindNextFreeMerger();
+   Int_t merger_id = -1;
+
+   if (fMergersByHost) {
+      for (Int_t i = 0; i < fMergers->GetSize(); i++) {
+         TMergerInfo *mgi = (TMergerInfo *)fMergers->At(i);
+         if (!strcmp(sl->GetName(), mgi->GetMerger()->GetName())) {
+            merger_id = i;
+            break;
+         }
+      }
+   } else {
+      merger_id  = FindNextFreeMerger();
+   }
+
    if (merger_id == -1) {
       // No free merger (probably it had crashed before)
       AskForOutput(sl);
@@ -3950,20 +4003,35 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
          Info("CreateMerger", "cannot create merger on port %d - exit", port);
       return kFALSE;
    }
-   Int_t mergersToCreate = fMergersCount - fMergers->GetSize();
 
-   // Number of pure workers, which are not simply divisible by mergers
-   Int_t rest = fWorkersToMerge % mergersToCreate;
-
-   // We add one more worker for each of the first 'rest' mergers being established
-   if (rest > 0 && fMergers->GetSize() < rest) {
-      rest = 1;
+   Int_t workers = -1;
+   if (!fMergersByHost) {
+      Int_t mergersToCreate = fMergersCount - fMergers->GetSize();
+      // Number of pure workers, which are not simply divisible by mergers
+      Int_t rest = fWorkersToMerge % mergersToCreate;
+      // We add one more worker for each of the first 'rest' mergers being established
+      if (rest > 0 && fMergers->GetSize() < rest) {
+         rest = 1;
+      } else {
+         rest = 0;
+      }
+      workers = (fWorkersToMerge / mergersToCreate) + rest;
    } else {
-      rest = 0;
+      Int_t workersOnHost = 0;
+      for (Int_t i = 0; i < fSlaves->GetSize(); i++) {
+         if(!strcmp(sl->GetName(), fSlaves->At(i)->GetName())) workersOnHost++;
+      }
+      workers = workersOnHost - 1;
    }
 
-   Int_t workers = (fWorkersToMerge / mergersToCreate) + rest;
-
+   TString msg;
+   msg.Form("worker %s on host %s will be merger for %d additional workers", sl->GetOrdinal(), sl->GetName(), workers);
+                     
+   if (gProofServ) {
+      gProofServ->SendAsynMessage(msg);
+   } else {
+      Printf("%s",msg.Data());
+   }
    TMergerInfo * merger = new TMergerInfo(sl, port, workers);
 
    TMessage bemerger(kPROOF_SUBMERGER);
@@ -10966,7 +11034,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       input->RecursiveRemove(dataset);
       // Add it to the local list
       datasets->Add(new TPair(dataset, new TObjString("")));
-      // Make sure we lookup everything (unless the client or the administartor
+      // Make sure we lookup everything (unless the client or the administrator
       // required something else)
       if (TProof::GetParameter(input, "PROOF_LookupOpt", lookupopt) != 0) {
          lookupopt = gEnv->GetValue("Proof.LookupOpt", "all");

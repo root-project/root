@@ -770,6 +770,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fSelectorClass = 0;
    Int_t version = -1;
+   Int_t mapDataMembers = 1;
+   TString wmsg;
    TRY {
       if (AssertSelector(selector_file) != 0 ) {
          Error("Process", "cannot assert the selector object");
@@ -847,6 +849,28 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
       }
 
+      // Selector Data Member mapping: can be disabled dynamically or statically
+      if (TProof::GetParameter(fInput, "PROOF_MapSelectorDataMembers", mapDataMembers) != 0) {
+         // Check also static settings in the rootrc files
+         TString tag("Proof.MapSelectorDataMembers");
+         TString tags = TString::Format("Proof.MapSelectorDataMembers.%s", fSelector->ClassName());
+         if (gEnv->Lookup(tag.Data()) || gEnv->Lookup(tags.Data())) {
+            mapDataMembers = gEnv->GetValue(tag.Data(), 1);
+            mapDataMembers = gEnv->GetValue(tags.Data(), mapDataMembers);
+            if (mapDataMembers == 0) {
+               wmsg.Form("Data members mapping for '%s' explicitly disabled via"
+                         " rootrc", fSelector->ClassName());
+               fSelStatus->AddInfo(wmsg);
+            }
+         } else {
+            mapDataMembers = 1;
+         }
+      } else if (mapDataMembers == 0) {
+         wmsg.Form("Data members mapping for '%s' explicitly disabled via input"
+                   " list", fSelector->ClassName());
+         fSelStatus->AddInfo(wmsg);
+      }
+
    } CATCH(excode) {
       SetProcessing(kFALSE);
       Error("Process","exception %d caught", excode);
@@ -885,7 +909,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
       Long64_t singleshot = 1, memlogfreq = (par) ? par->GetVal() : 100;
       Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
-      TString lastMsg, wmsg;
+      TString lastMsg;
 
       // Initial memory footprint
       if (!CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg)) {
@@ -1029,7 +1053,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Final memory footprint
    Long64_t singleshot = 1;
    Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
-   TString wmsg;
    Bool_t shrc = CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg);
    if (!wmsg.IsNull()) Warning("Process", "%s (%s)", wmsg.Data(), shrc ? "warn" : "hwm");
 
@@ -1068,7 +1091,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
       }
 
-      MapOutputListToDataMembers();
+      // Selector Data Member mapping, if required
+      if (mapDataMembers != 0) MapOutputListToDataMembers();
 
       if (fSelStatus->IsOk()) {
          if (version == 0) {
@@ -1780,7 +1804,18 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Check whether we have to enforce the use of submergers
       if (gEnv->Lookup("Proof.UseMergers") && !fInput->FindObject("PROOF_UseMergers")) {
          Int_t smg = gEnv->GetValue("Proof.UseMergers",-1);
-         if (smg >= 0) fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+         if (smg >= 0) {
+            fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+            if (gEnv->Lookup("Proof.MergersByHost")) {
+               Int_t mbh = gEnv->GetValue("Proof.MergersByHost",0);
+               if (mbh != 0) {
+                  // Administrator settings have the priority
+                  TObject *o = 0;
+                  if ((o = fInput->FindObject("PROOF_MergersByHost"))) { fInput->Remove(o); delete o; }
+                  fInput->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
+               }
+            }
+         }
       }
 
       // For a new query clients should make sure that the temporary
@@ -2135,7 +2170,8 @@ void TProofPlayerRemote::SetSelectorDataMembersFromOutputList()
    TOutputListSelectorDataMap* olsdm
       = TOutputListSelectorDataMap::FindInList(fOutput);
    if (!olsdm) {
-      PDB(kOutput,1) Warning("SetSelectorDataMembersFromOutputList","Failed to find map object in output list!");
+      PDB(kOutput,1) Warning("SetSelectorDataMembersFromOutputList",
+                             "failed to find map object in output list!");
       return;
    }
 
