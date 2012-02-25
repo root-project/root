@@ -273,6 +273,8 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
    if (nargs > 0) {
       TIter next(fMethod->GetListOfMethodArgs());
       TMethodArg *arg;
+      va_list local_ap;
+      R__VA_COPY(local_ap, ap);
 
       for (int i = 0; i < nargs; i++) {
          arg = (TMethodArg*) next();
@@ -281,36 +283,27 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
          if (dt)
             type = dt->GetFullTypeName();
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, void*));
-            //fCallEnv->SetParam((Long_t) va_arg(ap, void*));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, void*));
          else if (type == "bool")
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // bool is promoted to int
-            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // bool is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // bool is promoted to int
          else if (type == "char" || type == "unsigned char")
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // char is promoted to int
-            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // char is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // char is promoted to int
          else if (type == "short" || type == "unsigned short")
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));  // short is promoted to int
-            //fCallEnv->SetParam((Long_t) va_arg(ap, int));  // short is promoted to int
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // short is promoted to int
          else if (type == "int" || type == "unsigned int")
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, int));
-            //fCallEnv->SetParam((Long_t) va_arg(ap, int));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));
          else if (type == "long" || type == "unsigned long")
-            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(ap, long));
-            //fCallEnv->SetParam((Long_t) va_arg(ap, long));
+            gCint->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, long));
          else if (type == "long long")
-            gCint->CallFunc_SetArg(fFunc,(Long64_t) va_arg(ap, Long64_t));
-            //fCallEnv->SetParam((Long64_t) va_arg(ap, Long64_t));
+            gCint->CallFunc_SetArg(fFunc,(Long64_t) va_arg(local_ap, Long64_t));
          else if (type == "unsigned long long")
-            gCint->CallFunc_SetArg(fFunc,(ULong64_t) va_arg(ap, ULong64_t));
-            //fCallEnv->SetParam((ULong64_t) va_arg(ap, ULong64_t));
+            gCint->CallFunc_SetArg(fFunc,(ULong64_t) va_arg(local_ap, ULong64_t));
          else if (type == "float")
-            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(ap, double));  // float is promoted to double
-            //fCallEnv->SetParam((Double_t) va_arg(ap, double));  // float is promoted to double
+            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(local_ap, double));  // float is promoted to double
          else if (type == "double")
-            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(ap, double));
-            //fCallEnv->SetParam((Double_t) va_arg(ap, double));
+            gCint->CallFunc_SetArg(fFunc,(Double_t) va_arg(local_ap, double));
       }
+      va_end(local_ap);
    }
 
    if (object) address = (void*)((Long_t)object + fOffset);
