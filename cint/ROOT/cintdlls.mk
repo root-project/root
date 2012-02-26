@@ -292,8 +292,7 @@ clean-$(MODNAME):
 	  $(CINTDLLDIRL)/G__c_$${cintdll}.d \
 	  $(CINTDLLDIRL)/G__cpp_$${cintdll}.d \
 	  core/metautils/src/stlLoader_$${cintdll}.d; done)
-	@rm -f $(ALLCINTDLLS) \
-	  $(CINTDLLDIRL)/posix/exten.o \
+	@rm -f $(CINTDLLDIRL)/posix/exten.o \
 	  $(CINTDLLDIRDLLS)/posix.* \
 	  $(CINTDLLDIRDLLS)/ipc.*
 
