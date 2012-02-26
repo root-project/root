@@ -277,6 +277,12 @@ void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedir
       fBasicUrl += fUrl.GetPort();
       fBasicUrl += "/";
       fBasicUrl += fUrl.GetFile();
+      // add query string again
+      TString rdl(redirectLocation); 
+      if (rdl.Index("?") >= 0) { 
+         rdl = rdl(rdl.Index("?"), rdl.Length()); 
+         fBasicUrl += rdl; 
+      }
    }
 
    if (fMsgReadBuffer10 != "") {
@@ -654,7 +660,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
             return ret;
          if (redirect) {
             ws.ReOpen();
-            return GetFromWeb10(buf, len, msg);
+            // set message to reflect the redirectLocation and add bytes field
+            TString msg_1 = fMsgReadBuffer10; 
+            msg_1 += fOffset; 
+            msg_1 += "-"; 
+            msg_1 += fOffset+len-1; 
+            msg_1 += "\r\n\r\n"; 
+            return GetFromWeb10(buf, len, msg_1);
          }
 
          if (first >= 0) {
@@ -711,11 +723,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
                Error("GetFromWeb10", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
             }
          } else if (code >= 300) {
-            if (code == 301 || code == 303)
+            if (code == 301 || code == 303) {
                redirect = 1;   // permanent redirect
-            else if (code == 302 || code == 307)
-               redirect = 2;   // temp redirect
-            else {
+            } else if (code == 302 || code == 307) {
+               // treat 302 as 303: permanent redirect 
+               redirect = 1; 
+               //redirect = 2; // temp redirect
+            } else {
                ret = -1;
                TString mess = res(13, 1000);
                Error("GetFromWeb10", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
