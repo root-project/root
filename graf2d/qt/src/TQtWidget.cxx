@@ -325,7 +325,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
    //    . . .
    //  Gui.Prompt   yes
    //
-   static int localArgc      =0;
+   static int localArgc     =0;
    static char **localArgv  =0;
    if (!gApplication) {
        QStringList args  = QCoreApplication::arguments ();
@@ -359,7 +359,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
              Int_t nchi = nextarg.length()+1;
              localArgv[i]= new char[nchi]; 
              memcpy(localArgv[i], nextarg.toAscii().constData(),nchi-1);
-             localArgv[nchi-1]=0;
+             localArgv[i][nchi-1]=0;
           } 
        } else {
          localArgv  = argv;
