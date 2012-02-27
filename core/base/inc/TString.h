@@ -168,22 +168,22 @@ private:
 
    enum { kMinCap = (sizeof(LongStr_t) - 1)/sizeof(char) > 2 ?
                     (sizeof(LongStr_t) - 1)/sizeof(char) : 2 };
-   
+
    struct ShortStr_t
    {
       unsigned char fSize;           // String length (excluding null)
       char          fData[kMinCap];  // Short string data
    };
-   
+
    union UStr_t { LongStr_t fL; ShortStr_t fS; };
-   
+
    enum { kNwords = sizeof(UStr_t) / sizeof(Ssiz_t)};
-   
+
    struct RawStr_t
    {
       Ssiz_t fWords[kNwords];
    };
-   
+
    struct Rep_t
    {
       union
@@ -194,7 +194,7 @@ private:
       };
    };
 
-protected:   
+protected:
 #ifndef __CINT__
    Rep_t          fRep;           // String data
 #endif
@@ -209,7 +209,7 @@ protected:
    static Ssiz_t  Align(Ssiz_t s) { return (s + (kAlignment-1)) & ~(kAlignment-1); }
    static Ssiz_t  Recommend(Ssiz_t s) { return (s < kMinCap ? kMinCap : Align(s+1)) - 1; }
    static Ssiz_t  AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap);
-   
+
 private:
    Bool_t         IsLong() const { return Bool_t(fRep.fShort.fSize & kShortMask); }
 #ifdef R__BYTESWAP
@@ -374,6 +374,7 @@ public:
    Bool_t       IsBin() const;
    Bool_t       IsOct() const;
    Bool_t       IsDec() const;
+   Bool_t       IsInBaseN(Int_t base) const;
    Bool_t       IsNull() const         { return Length() == 0; }
    Bool_t       IsWhitespace() const   { return (Length() == CountChar(' ')); }
    Ssiz_t       Last(char c) const;
@@ -419,6 +420,11 @@ public:
    static Ssiz_t  GetInitialCapacity();
    static Ssiz_t  GetResizeIncrement();
    static Ssiz_t  GetMaxWaste();
+   static TString Itoa   (    Int_t value, Int_t base);  // Converts int to string with respect to the base specified (2-36)
+   static TString UItoa  (   UInt_t value, Int_t base);
+   static TString LLtoa  ( Long64_t value, Int_t base);
+   static TString ULLtoa (ULong64_t value, Int_t base);
+   static TString BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out);  // Converts string from base base_in to base base_out (supported bases 2-36)
    static TString Format(const char *fmt, ...)
 #if defined(__GNUC__) && !defined(__CINT__)
    __attribute__((format(printf, 1, 2)))

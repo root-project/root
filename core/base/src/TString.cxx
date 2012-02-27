@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <list>
+#include <algorithm>
 
 #include "snprintf.h"
 #include "Varargs.h"
@@ -212,7 +213,7 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
    // size capacity and containing nchar characters.
 
    if (capacity > MaxSize()) {
-      Error("Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
+      Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
       capacity = MaxSize();
       if (nchar > capacity)
          nchar = capacity;
@@ -316,7 +317,7 @@ TString& TString::Append(char c, Ssiz_t rep)
    Ssiz_t tot = len + rep;  // Final string length
 
    if (tot > MaxSize()) {
-      Error("Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      Error("TString::Append", "rep too large (%d, max = %d)", rep, MaxSize()-len);
       tot = MaxSize();
       rep = tot - len;
    }
@@ -785,7 +786,7 @@ UInt_t TString::Hash(const void *txt, Int_t ntxt)
             for (int i = 0; i < 4; ++i) {
                ret ^= ctxt[i] << (i * 8);
             }
-         }         
+         }
       }
       return ret;
    }
@@ -888,7 +889,7 @@ TString& TString::Prepend(char c, Ssiz_t rep)
    Ssiz_t tot = len + rep;  // Final string length
 
    if (tot > MaxSize()) {
-      Error("Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
+      Error("TString::Prepend", "rep too large (%d, max = %d)", rep, MaxSize()-len);
       tot = MaxSize();
       rep = tot - len;
    }
@@ -1099,7 +1100,7 @@ Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 
    Ssiz_t ms = MaxSize();
    if (newCap > ms - 1) {
-      Error("AdjustCapacity", "capacity too large (%d, max = %d)",
+      Error("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
    Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
@@ -1121,7 +1122,7 @@ void TString::Clobber(Ssiz_t nc)
    // Clear string and make sure it has a capacity of nc.
 
    if (nc > MaxSize()) {
-      Error("Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
+      Error("TString::Clobber", "capacity too large (%d, max = %d)", nc, MaxSize());
       nc = MaxSize();
    }
 
@@ -1152,7 +1153,7 @@ void TString::Clone(Ssiz_t tot)
    if (len >= tot) return;
 
    if (tot > MaxSize()) {
-      Error("Clone", "tot too large (%d, max = %d)", tot, MaxSize());
+      Error("TString::Clone", "tot too large (%d, max = %d)", tot, MaxSize());
       tot = MaxSize();
    }
 
@@ -1212,7 +1213,7 @@ void TString::ReadBuffer(char *&buffer)
       nchars = nwh;
 
    if (nchars < 0) {
-      Error("ReadBuffer", "found case with nwh=%d and nchars=%d", nwh, nchars);
+      Error("TString::ReadBuffer", "found case with nwh=%d and nchars=%d", nwh, nchars);
       return;
    }
 
@@ -1838,7 +1839,7 @@ Bool_t TString::IsFloat() const
    TString tmp = *this;
    //now we look for occurrences of '.', ',', e', 'E', '+', '-' and replace each
    //with ' ', if it is a floating point, IsDigit() will then return kTRUE
-   
+
    tmp.ToLower();
    Ssiz_t pos = tmp.First('.');
    if (pos != kNPOS) tmp.Replace(pos, 1, " ", 1);
@@ -1876,9 +1877,9 @@ Bool_t TString::IsHex() const
 }
 
 //______________________________________________________________________________
-Bool_t TString::IsBin () const
+Bool_t TString::IsBin() const
 {
-   // Returns true if all characters in string are binary digits (0,1). 
+   // Returns true if all characters in string are binary digits (0,1).
    // Returns false in case string length is 0 or string contains other
    // characters.
 
@@ -1892,7 +1893,7 @@ Bool_t TString::IsBin () const
 }
 
 //______________________________________________________________________________
-Bool_t TString::IsOct () const
+Bool_t TString::IsOct() const
 {
    // Returns true if all characters in string are octal digits (0-7).
    // Returns false in case string length is 0 or string contains other
@@ -1902,13 +1903,13 @@ Bool_t TString::IsOct () const
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
    for (Ssiz_t i = 0; i < len; ++i)
-      if (!isdigit(cp[i]) || cp[i]=='8' || cp[i]=='9') 
+      if (!isdigit(cp[i]) || cp[i]=='8' || cp[i]=='9')
          return kFALSE;
    return kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TString::IsDec () const
+Bool_t TString::IsDec() const
 {
    // Returns true if all characters in string are decimal digits (0-9).
    // Returns false in case string length is 0 or string contains other
@@ -1918,9 +1919,40 @@ Bool_t TString::IsDec () const
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
    for (Ssiz_t i = 0; i < len; ++i)
-      if (!isdigit(cp[i])) 
+      if (!isdigit(cp[i]))
          return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsInBaseN(Int_t base) const
+{
+   // Returns true if all characters in string are expressed in the base
+   // specified (range=2-36), i.e. {0,1} for base 2, {0-9,a-f,A-F} for base 16,
+   // {0-9,a-z,A-Z} for base 36. Returns false in case string length is 0 or
+   // string contains other characters.
+
+   if (base < 2 || base > 36) {
+      Error("TString::IsInBaseN", "base %d is not supported. Suppported bases are {2,3,...,36}.", base);
+      return kFALSE;
+   }
+   if (Length() == 0) {
+      Error("TString::IsInBaseN", "input string is empty.") ;
+      return kFALSE;
+   }
+   TString str = TString(Data()) ;
+   str.ToUpper() ;
+   TString str_ref0 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" ;
+   TString str_ref = str_ref0 ;
+   str_ref.Remove(base) ;
+   Bool_t isInBase = kTRUE ;
+   for (Int_t k = 0; k < str.Length(); k++) {
+      if (! str_ref.Contains(str[k])) {
+         isInBase = kFALSE ;
+         break ;
+      }
+   }
+   return (isInBase);
 }
 
 //______________________________________________________________________________
@@ -2017,6 +2049,174 @@ Double_t TString::Atof() const
    end = tmp.Length();
    tmp2 += tmp(start, end-start);
    return atof(tmp2.Data());
+}
+
+//______________________________________________________________________________
+TString TString::Itoa(Int_t value, Int_t base)
+{
+   // Converts an Int_t to a TString with respect to the base specified (2-36).
+   // Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
+   // http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+   // Usage: the following statement produce the same output, namely "1111"
+   //   cout << TString::Itoa(15,2) ;
+   //   cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
+   //   cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
+   // In case of error returns the "!" string.
+
+   std::string buf;
+   // check that the base if valid
+   if (base < 2 || base > 36) {
+      Error("TString::Itoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base) ;
+      return (TString("!"));
+   }
+   buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
+   Int_t quotient = value;
+   // Translating number to string with base:
+   do {
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      quotient /= base;
+   } while (quotient);
+   // Append the negative sign
+   if (value < 0) buf += '-';
+   std::reverse(buf.begin(), buf.end());
+   return (TString(buf.data()));
+}
+
+//______________________________________________________________________________
+TString TString::UItoa(UInt_t value, Int_t base)
+{
+   // Converts a UInt_t (twice the range of an Int_t) to a TString with respect
+   // to the base specified (2-36). Thus it is an enhanced version of sprintf
+   // (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+   // In case of error returns the "!" string.
+
+   std::string buf;
+   // check that the base if valid
+   if (base < 2 || base > 36) {
+      Error("TString::UItoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      return (TString("!"));
+   }
+   buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
+   UInt_t quotient = value;
+   // Translating number to string with base:
+   do {
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ quotient % base ];
+      quotient /= base;
+   } while (quotient);
+   std::reverse(buf.begin(), buf.end());
+   return (TString(buf.data()));
+}
+
+//______________________________________________________________________________
+TString TString::LLtoa(Long64_t value, Int_t base)
+{
+   // Converts a Long64_t to a TString with respect to the base specified (2-36).
+   // Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
+   // http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+   // In case of error returns the "!" string.
+
+   std::string buf;
+   // check that the base if valid
+   if (base < 2 || base > 36) {
+      Error("TString::LLtoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      return (TString("!"));
+   }
+   buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
+   Long64_t quotient = value;
+   // Translating number to string with base:
+   do {
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      quotient /= base;
+   } while (quotient);
+   // Append the negative sign
+   if (value < 0) buf += '-';
+   std::reverse(buf.begin(), buf.end());
+   return (TString(buf.data()));
+}
+
+//______________________________________________________________________________
+TString TString::ULLtoa(ULong64_t value, Int_t base)
+{
+   // Converts a ULong64_t (twice the range of an Long64_t) to a TString with
+   // respect to the base specified (2-36). Thus it is an enhanced version of
+   // sprintf (adapted from versions 0.4 of http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
+   // In case of error returns the "!" string.
+
+   std::string buf;
+   // check that the base if valid
+   if (base < 2 || base > 36) {
+      Error("TString::ULLtoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      return (TString("!"));
+   }
+   buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
+   ULong64_t quotient = value;
+   // Translating number to string with base:
+   do {
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ quotient % base ];
+      quotient /= base;
+   } while (quotient);
+   std::reverse(buf.begin(), buf.end());
+   return (TString(buf.data()));
+}
+
+//______________________________________________________________________________
+TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
+{
+   // Converts string from base base_in to base base_out. Supported bases
+   // are 2-36. At most 32 bit data can be converted for the time being
+   // (long long int argument functions (e.g. strtoll) being not supported
+   // on all platforms yet (C99))
+
+   TString s_out = "!" ;  // return value in case of issue
+   // checking base range
+   if (base_in < 2 || base_in > 36 || base_out < 2 || base_out > 36) {
+      Error("TString::BaseConvert", "only bases 2-36 are supported (base_in=%d, base_out=%d).", base_in, base_out);
+      return (s_out);
+   }
+   // cleaning s_in
+   TString s_in_ = s_in;
+   Bool_t isSigned = kFALSE;
+   if (s_in_[0] == '-') {
+      isSigned = kTRUE;
+      s_in_.Remove(0, 1);
+   }
+   if (!isSigned && s_in_[0] == '+') s_in_.Remove(0, 1);  // !isSigned to avoid strings beginning with "-+"
+   if (base_in == 16 && s_in_.BeginsWith("0x")) s_in_.Remove(0, 2);  // removing hex prefix if any
+   s_in_ = TString(s_in_.Strip(TString::kLeading, '0'));  // removing leading zeros (necessary for length comparison below)
+   // checking s_in_ is expressed in the mentionned base
+   if (!s_in_.IsInBaseN(base_in)) {
+      Error("TString::BaseConvert", "s_in=\"%s\" is not in base %d", s_in.Data(), base_in);
+      return (s_out);
+   }
+   // checking s_in <= 32 bits
+   TString s_max = TString::UItoa(UInt_t(4294967295), base_in);  // 4294967295 = 2^32 - 1 in decimal
+   // 64 bit: TString s_max = TString::ULLtoa(18446744073709551615,base_in);
+   if (s_in_.Length() > s_max.Length()) {
+      // string comparison (s_in_>s_max) does not take care of length
+      Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^32-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
+      return (s_out);
+   } else if (s_in_.Length() == s_max.Length()) {
+      // if ( s_in_.Length() < s_max.Length() ) everything's fine
+      s_in_.ToLower();  // s_max is lower case
+      if (s_in_ > s_max) {
+         // string comparison
+         Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^32-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
+         return (s_out);
+      }
+   }
+   // returning s_in if base_in=base_out (performed after all checks on s_in)
+   if (base_in == base_out) {
+      // for the next to come 64 bit upgrade, this test should be commented to make sure implicit cast does not occur while computing s_out
+      Warning("TString::BaseConvert", "base_in = base_out = %d  so  s_out = s_in = \"%s\"",base_in,s_in.Data());
+      return (s_in);
+   }
+   // computing s_out
+   UInt_t i = UInt_t(strtoul(s_in_.Data(), 0, base_in));
+   // 64 bit: ULong64_t i = ULong64_t(strtoull(s_in.Data(),0,base_in));
+   s_out = TString::UItoa(i, base_out);
+   // 64 bit: s_out = TString::ULLtoa(i,base_out);
+   if (isSigned) s_out.Prepend("-");
+   return (s_out);
 }
 
 //______________________________________________________________________________
