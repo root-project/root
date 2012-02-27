@@ -1500,8 +1500,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (tpf) {
       if (fFile) {
          tpf->ResetCache();
-         fFile->SetCacheRead(tpf, fTree);
-         tpf->SetFile(fFile);
          // FIXME: fTree may be zero here.
          tpf->UpdateBranches(fTree);
       } else {
