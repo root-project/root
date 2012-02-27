@@ -42,6 +42,11 @@ TFileCacheRead::TFileCacheRead() : TObject()
    fBufferSizeMin = 0;
    fBufferSize  = 0;
    fBufferLen   = 0;
+   fBytesRead   = 0;
+   fNoCacheBytesRead = 0;
+   fBytesReadExtra = 0;
+   fReadCalls   = 0;
+   fNoCacheReadCalls = 0;
    fNseek       = 0;
    fNtot        = 0;
    fNb          = 0;
@@ -92,6 +97,11 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
 
    fBufferSizeMin = fBufferSize;
    fBufferLen   = 0;
+   fBytesRead   = 0;
+   fNoCacheBytesRead = 0;
+   fBytesReadExtra = 0;
+   fReadCalls   = 0;
+   fNoCacheReadCalls = 0;
    fNseek       = 0;
    fNtot        = 0;
    fNb          = 0;
@@ -322,9 +332,10 @@ void TFileCacheRead::Print(Option_t *option) const
       
    TString opt = option;
    opt.ToLower();
-   printf("Reading............................: %lld bytes in %d transactions\n",fFile->GetBytesRead(),  fFile->GetReadCalls());
-   printf("Readahead..........................: %d bytes with overhead = %lld bytes\n",TFile::GetReadaheadSize(),fFile->GetBytesReadExtra());
-   printf("Average transaction................: %f Kbytes\n",0.001*Double_t(fFile->GetBytesRead())/Double_t(fFile->GetReadCalls()));
+   printf("Cached Reading.....................: %lld bytes in %d transactions\n",this->GetBytesRead(), this->GetReadCalls());
+   printf("Reading............................: %lld bytes in %d uncached transactions\n",this->GetNoCacheBytesRead(), this->GetNoCacheReadCalls());
+   printf("Readahead..........................: %d bytes with overhead = %lld bytes\n",TFile::GetReadaheadSize(),this->GetBytesReadExtra());
+   printf("Average transaction................: %f Kbytes\n",0.001*Double_t(this->GetBytesRead())/Double_t(this->GetReadCalls()));
    printf("Number of blocks in current cache..: %d, total size: %d\n",fNseek,fNtot);
    if (fPrefetch){
      printf("Prefetching .......................: %lli blocks\n", fPrefetchedBlocks);
@@ -353,8 +364,18 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // otherwise need to make a normal read from file. Returns -1 in case of
    // read error, 0 in case not in cache, 1 in case read from cache.
 
+   Long64_t fileBytesRead0 = fFile->GetBytesRead();
+   Long64_t fileBytesReadExtra0 = fFile->GetBytesReadExtra();
+   Int_t fileReadCalls0 = fFile->GetReadCalls();
+
    Int_t loc = -1;
-   return ReadBufferExt(buf, pos, len, loc);
+   Int_t rc = ReadBufferExt(buf, pos, len, loc);
+
+   fBytesRead += fFile->GetBytesRead() - fileBytesRead0;
+   fBytesReadExtra += fFile->GetBytesReadExtra() - fileBytesReadExtra0;
+   fReadCalls += fFile->GetReadCalls() - fileReadCalls0;
+
+   return rc;
 }
 
 //_____________________________________________________________________________
