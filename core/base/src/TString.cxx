@@ -53,6 +53,10 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 
+#if defined(R__WIN32)
+#define strtoull _strtoui64
+#endif
+
 #ifdef R__GLOBALSTL
 namespace std { using ::list; }
 #endif
@@ -2163,9 +2167,7 @@ TString TString::ULLtoa(ULong64_t value, Int_t base)
 TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
 {
    // Converts string from base base_in to base base_out. Supported bases
-   // are 2-36. At most 32 bit data can be converted for the time being
-   // (long long int argument functions (e.g. strtoll) being not supported
-   // on all platforms yet (C99))
+   // are 2-36. At most 64 bit data can be converted.
 
    TString s_out = "!" ;  // return value in case of issue
    // checking base range
@@ -2188,33 +2190,25 @@ TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
       Error("TString::BaseConvert", "s_in=\"%s\" is not in base %d", s_in.Data(), base_in);
       return (s_out);
    }
-   // checking s_in <= 32 bits
-   TString s_max = TString::UItoa(UInt_t(4294967295), base_in);  // 4294967295 = 2^32 - 1 in decimal
-   // 64 bit: TString s_max = TString::ULLtoa(18446744073709551615,base_in);
+   // checking s_in <= 64 bits
+   TString s_max = TString::ULLtoa(18446744073709551615ULL, base_in);
    if (s_in_.Length() > s_max.Length()) {
       // string comparison (s_in_>s_max) does not take care of length
-      Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^32-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
+      Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^64-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
       return (s_out);
    } else if (s_in_.Length() == s_max.Length()) {
       // if ( s_in_.Length() < s_max.Length() ) everything's fine
       s_in_.ToLower();  // s_max is lower case
       if (s_in_ > s_max) {
          // string comparison
-         Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^32-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
+         Error("TString::BaseConvert", "s_in=\"%s\" > %s = 2^64-1 in base %d.", s_in.Data(), s_max.Data(), base_in);
          return (s_out);
       }
    }
-   // returning s_in if base_in=base_out (performed after all checks on s_in)
-   if (base_in == base_out) {
-      // for the next to come 64 bit upgrade, this test should be commented to make sure implicit cast does not occur while computing s_out
-      Warning("TString::BaseConvert", "base_in = base_out = %d  so  s_out = s_in = \"%s\"",base_in,s_in.Data());
-      return (s_in);
-   }
+
    // computing s_out
-   UInt_t i = UInt_t(strtoul(s_in_.Data(), 0, base_in));
-   // 64 bit: ULong64_t i = ULong64_t(strtoull(s_in.Data(),0,base_in));
-   s_out = TString::UItoa(i, base_out);
-   // 64 bit: s_out = TString::ULLtoa(i,base_out);
+   ULong64_t i = ULong64_t(strtoull(s_in.Data(), 0, base_in));
+   s_out = TString::ULLtoa(i, base_out);
    if (isSigned) s_out.Prepend("-");
    return (s_out);
 }
