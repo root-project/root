@@ -152,7 +152,6 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    }
 }
 
-
 //______________________________________________________________________________
 void TCanvas::Constructor()
 {
@@ -180,7 +179,6 @@ void TCanvas::Constructor()
    SetBit(kShowEditor);
    SetBit(kShowToolBar);
 }
-
 
 //______________________________________________________________________________
 TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
@@ -222,7 +220,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    Build();
 }
 
-
 //_____________________________________________________________________________
 TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDoubleBuffer(0)
 {
@@ -242,7 +239,6 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDou
 
    Constructor(name, title, form);
 }
-
 
 //_____________________________________________________________________________
 void TCanvas::Constructor(const char *name, const char *title, Int_t form)
@@ -321,7 +317,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    fCanvasImp->Show();
 }
 
-
 //_____________________________________________________________________________
 TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad(), fDoubleBuffer(0)
 {
@@ -337,7 +332,6 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
 
    Constructor(name, title, ww, wh);
 }
-
 
 //_____________________________________________________________________________
 void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t wh)
@@ -395,7 +389,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    fCanvasImp->Show();
 }
 
-
 //_____________________________________________________________________________
 TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh)
         : TPad(), fDoubleBuffer(0)
@@ -414,7 +407,6 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
 
    Constructor(name, title, wtopx, wtopy, ww, wh);
 }
-
 
 //_____________________________________________________________________________
 void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
@@ -475,7 +467,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    fCanvasImp->Show();
 }
 
-
 //_____________________________________________________________________________
 void TCanvas::Init()
 {
@@ -517,7 +508,6 @@ void TCanvas::Init()
    fEventY          = -1;
    fContextMenu     = 0;
 }
-
 
 //_____________________________________________________________________________
 void TCanvas::Build()
@@ -601,7 +591,6 @@ void TCanvas::Build()
    }
 }
 
-
 //______________________________________________________________________________
 TCanvas::~TCanvas()
 {
@@ -609,7 +598,6 @@ TCanvas::~TCanvas()
 
    Destructor();
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Browse(TBrowser *b)
@@ -620,7 +608,6 @@ void TCanvas::Browse(TBrowser *b)
    cd();
    if (fgIsFolder) fPrimitives->Browse(b);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Destructor()
@@ -643,7 +630,6 @@ void TCanvas::Destructor()
    delete fPainter;
 }
 
-
 //______________________________________________________________________________
 TVirtualPad *TCanvas::cd(Int_t subpadnumber)
 {
@@ -662,7 +648,6 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
    }
    return gPad;
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Clear(Option_t *option)
@@ -702,7 +687,6 @@ void TCanvas::Clear(Option_t *option)
    fClickSelectedPad = 0;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::Cleared(TVirtualPad *pad)
 {
@@ -711,7 +695,6 @@ void TCanvas::Cleared(TVirtualPad *pad)
    Emit("Cleared(TVirtualPad*)", (Long_t)pad);
 }
 
-
 //______________________________________________________________________________
 void TCanvas::Closed()
 {
@@ -719,7 +702,6 @@ void TCanvas::Closed()
 
    Emit("Closed()");
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Close(Option_t *option)
@@ -770,7 +752,6 @@ deletepad:
    Closed();
 }
 
-
 //______________________________________________________________________________
 void TCanvas::CopyPixmaps()
 {
@@ -781,7 +762,6 @@ void TCanvas::CopyPixmaps()
       TPad::CopyPixmaps();
    }
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Draw(Option_t *)
@@ -801,7 +781,7 @@ void TCanvas::Draw(Option_t *)
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
 
    if (fWindowWidth  == 0) {
-      if (fCw !=0) fWindowWidth = fCw+4; 
+      if (fCw !=0) fWindowWidth = fCw+4;
       else         fWindowWidth = 800;
    }
    if (fWindowHeight == 0) {
@@ -825,7 +805,6 @@ void TCanvas::Draw(Option_t *)
    Modified();
 }
 
-
 //______________________________________________________________________________
 TObject *TCanvas::DrawClone(Option_t *option) const
 {
@@ -848,7 +827,6 @@ TObject *TCanvas::DrawClone(Option_t *option) const
    newCanvas->Update();
    return newCanvas;
 }
-
 
 //______________________________________________________________________________
 TObject *TCanvas::DrawClonePad()
@@ -906,7 +884,6 @@ TObject *TCanvas::DrawClonePad()
    return 0;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
@@ -937,7 +914,6 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    gPad = savepad;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::EditorBar()
 {
@@ -945,7 +921,6 @@ void TCanvas::EditorBar()
 
    TVirtualPadEditor::GetPadEditor();
 }
-
 
 //______________________________________________________________________________
 void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
@@ -971,7 +946,6 @@ void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
    Build();
    Resize();
 }
-
 
 //______________________________________________________________________________
 void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
@@ -1006,7 +980,6 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
    gPad   = padsav;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -1031,7 +1004,6 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-
 //______________________________________________________________________________
 void TCanvas::FeedbackMode(Bool_t set)
 {
@@ -1045,7 +1017,6 @@ void TCanvas::FeedbackMode(Bool_t set)
       gVirtualX->SetDrawMode(TVirtualX::kCopy); // set drawing mode back to normal (copy) mode
    }
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Flush()
@@ -1081,7 +1052,6 @@ void TCanvas::Flush()
    if (padsav) padsav->cd();
 }
 
-
 //______________________________________________________________________________
 void TCanvas::UseCurrentStyle()
 {
@@ -1104,7 +1074,6 @@ void TCanvas::UseCurrentStyle()
    }
 }
 
-
 //______________________________________________________________________________
 Int_t TCanvas::GetWindowTopX()
 {
@@ -1116,7 +1085,6 @@ Int_t TCanvas::GetWindowTopX()
    return fWindowTopX;
 }
 
-
 //______________________________________________________________________________
 Int_t TCanvas::GetWindowTopY()
 {
@@ -1127,7 +1095,6 @@ Int_t TCanvas::GetWindowTopY()
 
    return fWindowTopY;
 }
-
 
 //______________________________________________________________________________
 void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
@@ -1160,9 +1127,10 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
                     // canvas via the GetCanvas member and not via
                     // gPad->GetCanvas
 
-      fSelected->ExecuteEvent(event, px, py);
-
-      RunAutoExec();
+      if (fSelected) {
+         fSelected->ExecuteEvent(event, px, py);
+         RunAutoExec();
+      }
 
       break;
 
@@ -1266,8 +1234,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       FeedbackMode(kTRUE);
 
-      fSelected->Pop();           // pop object to foreground
-      pad->cd();                  // and make its pad the current pad
+      if (fSelected) fSelected->Pop();  // pop object to foreground
+      pad->cd();                        // and make its pad the current pad
       if (gDebug)
          printf("Current Pad: %s / %s\n", pad->GetName(), pad->GetTitle());
 
@@ -1279,8 +1247,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
             tc->Update();
       }
 
-      /*if (pad->GetGLDevice() != -1 && fSelected)
-         fSelected->ExecuteEvent(event, px, py);*/
+      //if (pad->GetGLDevice() != -1 && fSelected)
+      //   fSelected->ExecuteEvent(event, px, py);
 
       break;   // don't want fPadSave->cd() to be executed at the end
 
@@ -1307,7 +1275,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       if (!fDoubleBuffer) FeedbackMode(kFALSE);
 
-      if (fContextMenu && !fSelected->TestBit(kNoContextMenu) &&
+      if (fContextMenu && fSelected && !fSelected->TestBit(kNoContextMenu) &&
          !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
          fContextMenu->Popup(px, py, fSelected, this, pad);
 
@@ -1332,6 +1300,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       RunAutoExec();
 
       break;
+
    case kButton1Shift:
       // Try to select
       pad = Pick(px, py, prevSelObj);
@@ -1343,18 +1312,22 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       gPad = pad;   // don't use cd() we will use the current
                     // canvas via the GetCanvas member and not via
                     // gPad->GetCanvas
-      fSelected->ExecuteEvent(event, px, py);
-      RunAutoExec();
-
+      if (fSelected) {
+         fSelected->ExecuteEvent(event, px, py);
+         RunAutoExec();
+      }
       break;
+
    case kWheelUp:
    case kWheelDown:
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
       gPad = pad;
-      fSelected->ExecuteEvent(event, px, py);
+      if (fSelected)
+         fSelected->ExecuteEvent(event, px, py);
       break;
+
    default:
       break;
    }
@@ -1368,7 +1341,6 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    }
 }
 
-
 //______________________________________________________________________________
 Bool_t TCanvas::IsFolder() const
 {
@@ -1376,7 +1348,6 @@ Bool_t TCanvas::IsFolder() const
 
    return fgIsFolder;
 }
-
 
 //______________________________________________________________________________
 void TCanvas::ls(Option_t *option) const
@@ -1389,7 +1360,6 @@ void TCanvas::ls(Option_t *option) const
    TPad::ls(option);
    TROOT::DecreaseDirLevel();
 }
-
 
 //______________________________________________________________________________
 TCanvas *TCanvas::MakeDefCanvas()
@@ -1416,7 +1386,6 @@ TCanvas *TCanvas::MakeDefCanvas()
    return c;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::MoveOpaque(Int_t set)
 {
@@ -1430,7 +1399,6 @@ void TCanvas::MoveOpaque(Int_t set)
    SetBit(kMoveOpaque,set);
 }
 
-
 //______________________________________________________________________________
 void TCanvas::Paint(Option_t *option)
 {
@@ -1438,7 +1406,6 @@ void TCanvas::Paint(Option_t *option)
 
    if (fCanvas) TPad::Paint(option);
 }
-
 
 //______________________________________________________________________________
 TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
@@ -1481,7 +1448,6 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
    return pad;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 {
@@ -1495,7 +1461,6 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 
    Emit("Picked(TPad*,TObject*,Int_t)", args);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
@@ -1511,7 +1476,6 @@ void TCanvas::Selected(TVirtualPad *pad, TObject *obj, Int_t event)
    Emit("Selected(TVirtualPad*,TObject*,Int_t)", args);
 }
 
-
 //______________________________________________________________________________
 void TCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *obj)
 {
@@ -1526,7 +1490,6 @@ void TCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *obj)
 
    Emit("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)", args);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Resize(Option_t *)
@@ -1604,7 +1567,6 @@ void TCanvas::Resize(Option_t *)
    if (padsav) padsav->cd();
 }
 
-
 //______________________________________________________________________________
 void TCanvas::ResizeOpaque(Int_t set)
 {
@@ -1617,7 +1579,6 @@ void TCanvas::ResizeOpaque(Int_t set)
 
    SetBit(kResizeOpaque,set);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::RunAutoExec()
@@ -1669,7 +1630,6 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    cd();
    TPad::SavePrimitive(out,option);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SaveSource(const char *filename, Option_t *option)
@@ -1809,7 +1769,6 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    if (!lenfile) delete [] fname;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::SetBatch(Bool_t batch)
 {
@@ -1821,7 +1780,6 @@ void TCanvas::SetBatch(Bool_t batch)
    else
       fBatch = batch;
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
@@ -1840,7 +1798,6 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
    }
 }
 
-
 //______________________________________________________________________________
 void TCanvas::SetCursor(ECursor cursor)
 {
@@ -1849,7 +1806,6 @@ void TCanvas::SetCursor(ECursor cursor)
    if (IsBatch()) return;
    gVirtualX->SetCursor(fCanvasID, cursor);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SetDoubleBuffer(Int_t mode)
@@ -1867,7 +1823,6 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    } else
       if (fCanvasID != -1) fPainter->SelectDrawable(fCanvasID);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SetFixedAspectRatio(Bool_t fixed)
@@ -1890,7 +1845,6 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
    }
 }
 
-
 //______________________________________________________________________________
 void TCanvas::SetFolder(Bool_t isfolder)
 {
@@ -1899,7 +1853,6 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
    fgIsFolder = isfolder;
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SetSelected(TObject *obj)
@@ -1910,7 +1863,6 @@ void TCanvas::SetSelected(TObject *obj)
    if (obj) obj->SetBit(kMustCleanup);
 }
 
-
 //______________________________________________________________________________
 void TCanvas::SetTitle(const char *title)
 {
@@ -1919,7 +1871,6 @@ void TCanvas::SetTitle(const char *title)
    fTitle = title;
    if (fCanvasImp) fCanvasImp->SetWindowTitle(title);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::Size(Float_t xsize, Float_t ysize)
@@ -1946,7 +1897,6 @@ void TCanvas::Size(Float_t xsize, Float_t ysize)
 
    Resize();
 }
-
 
 //_______________________________________________________________________
 void TCanvas::Streamer(TBuffer &b)
@@ -2060,7 +2010,6 @@ void TCanvas::Streamer(TBuffer &b)
    }
 }
 
-
 //______________________________________________________________________________
 void TCanvas::ToggleAutoExec()
 {
@@ -2069,7 +2018,6 @@ void TCanvas::ToggleAutoExec()
    Bool_t autoExec = TestBit(kAutoExec);
    SetBit(kAutoExec,!autoExec);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::ToggleEventStatus()
@@ -2082,7 +2030,6 @@ void TCanvas::ToggleEventStatus()
    if (fCanvasImp) fCanvasImp->ShowStatusBar(showEventStatus);
 }
 
-
 //______________________________________________________________________________
 void TCanvas::ToggleToolBar()
 {
@@ -2093,7 +2040,6 @@ void TCanvas::ToggleToolBar()
 
    if (fCanvasImp) fCanvasImp->ShowToolBar(showToolBar);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::ToggleEditor()
@@ -2149,7 +2095,6 @@ void TCanvas::Update()
    fUpdating = kFALSE;
 }
 
-
 //______________________________________________________________________________
 void TCanvas::DisconnectWidget()
 {
@@ -2159,7 +2104,6 @@ void TCanvas::DisconnectWidget()
    fContextMenu = 0;
 }
 
-
 //______________________________________________________________________________
 Bool_t TCanvas::IsGrayscale()
 {
@@ -2167,7 +2111,6 @@ Bool_t TCanvas::IsGrayscale()
 
    return TestBit(kIsGrayscale);
 }
-
 
 //______________________________________________________________________________
 void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
@@ -2179,7 +2122,6 @@ void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
    SetBit(kIsGrayscale, set);
    Paint(); // update canvas and all sub-pads, unconditionally!
 }
-
 
 //______________________________________________________________________________
 void TCanvas::CreatePainter()
@@ -2203,7 +2145,6 @@ void TCanvas::CreatePainter()
       }
    }
 }
-
 
 //______________________________________________________________________________
 TVirtualPadPainter *TCanvas::GetCanvasPainter()
