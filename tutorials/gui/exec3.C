@@ -1,6 +1,7 @@
 #include <TH1.h>
 #include <TCanvas.h>
 #include <TQObject.h>
+#include "TROOT.h"
 
 void exec3()
 {
@@ -9,6 +10,10 @@ void exec3()
    // or class methods. Compare this with tutorials exec1.C and exec2.C.
    //Author: Ilka Antcheva
    
+   // Temporary work around the lack of automatic refresh of the list
+   // when a script is reloaded.
+   gROOT->GetListOfGlobalFunctions()->Delete();
+
    TH1F *h = new TH1F("h","h",100,-3,3);
    h->FillRandom("gaus",1000);
    TCanvas *c1=new TCanvas("c1");
