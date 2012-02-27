@@ -125,10 +125,12 @@ else
 		fi; \
 		if [ "$(ARCH)" = "solarisCC5" ]; then \
 			ACFLAGS="$$ACFLAGS -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
+			MMX="--disable-mmx_optimization"; \
 		fi; \
 		if [ "$(ARCH)" = "solaris64CC5" ]; then \
 			ACC="$$ACC -m64"; \
 			ACFLAGS="$$ACFLAGS -KPIC -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
+			MMX="--disable-mmx_optimization"; \
 		fi; \
 		if [ "$(ARCH)" = "sgicc64" ]; then \
 			ACC="$$ACC -mabi=64"; \
