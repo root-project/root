@@ -252,7 +252,10 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
       } else if (st == 0) {
          // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
          file->Seek(pos);
-         if (file->ReadBuffer(buffer,len)) {
+         Int_t ret = file->ReadBuffer(buffer,len);
+         pf->AddNoCacheBytesRead(len);
+         pf->AddNoCacheReadCalls(1);
+         if (ret) {
             return 1;
          }
       }
@@ -464,7 +467,10 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       if (st < 0) {
          return 1;
       } else if (st == 0) {
-         if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
+         Int_t ret = file->ReadBuffer(readBufferRef->Buffer(),pos,len);
+         pf->AddNoCacheBytesRead(len);
+         pf->AddNoCacheReadCalls(1);
+         if (ret) {
             return 1;
          }
       }
