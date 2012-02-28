@@ -821,8 +821,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
-    char* buf = new char[strlen(rangeName)+1] ;
-    strlcpy(buf,rangeName,strlen(rangeName)+1) ;
+    Int_t ssize = strlen(rangeName)+1 ;
+    char* buf = new char[ssize] ;
+    strlcpy(buf,rangeName,ssize) ;
     char* token = strtok(buf,",") ;
     while(token) {
       RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr,cloneData) ;
