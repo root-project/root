@@ -1023,15 +1023,7 @@ void TTreeCache::UpdateBranches(TTree *tree)
    // Update pointer to current Tree and recompute pointers to the branches in the cache.
 
 
-   if (fFile && fTree) {
-      fFile->SetCacheRead(0,fTree);
-   }
    fTree = tree;
-   TFile *file = tree->GetCurrentFile();
-   if (file) {
-      file->SetCacheRead(this,tree);
-   }
-   SetFile(file);
 
    fEntryMin  = 0;
    fEntryMax  = fTree->GetEntries();

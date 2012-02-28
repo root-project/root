@@ -2015,8 +2015,14 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
 
    if (tree) {
       if (cache) fCacheReadMap->Add(tree, cache);
-      else fCacheReadMap->RemoveEntry(tree);
+      else {
+         TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->FindObject(tree);
+         if (tpf) tpf->SetFile(0);
+         fCacheReadMap->RemoveEntry(tree);
+      }
    }
+   if (cache) cache->SetFile(this);
+   else if (!tree && fCacheRead) fCacheRead->SetFile(0);
    // For backward compatibility the last Cache set is the default cache.
    fCacheRead = cache;
 }
