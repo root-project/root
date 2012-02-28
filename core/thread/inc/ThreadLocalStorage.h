@@ -43,7 +43,14 @@
 #include "RConfigure.h"
 #endif
 
-#if defined(R__MACOSX) || defined(R__LINUX) || defined(R__AIX)
+#if defined(R__MACOSX)
+#  if defined(__clang__)
+#    define R__HAS___THREAD
+#  else
+#    define R__HAS_PTHREAD
+#  endif
+#endif
+#if defined(R__LINUX) || defined(R__AIX)
 #  define R__HAS___THREAD
 #endif
 #if defined(R__SOLARIS)
