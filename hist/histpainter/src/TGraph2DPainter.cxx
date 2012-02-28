@@ -458,6 +458,8 @@ void TGraph2DPainter::PaintContour(Option_t * /*option*/)
       while ((obj = next())) {
          if(obj->InheritsFrom(TGraph::Class()) ) {
             g=(TGraph*)obj;
+            g->SetLineWidth(fGraph2D->GetLineWidth());
+            g->SetLineStyle(fGraph2D->GetLineStyle());
             theColor = Int_t((k+0.99)*Float_t(ncolors)/Float_t(ndivz));
             g->SetLineColor(gStyle->GetColorPalette(theColor));
             g->Paint("l");
