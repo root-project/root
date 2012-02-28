@@ -58,35 +58,37 @@ column in a <tt>TLegend</tt>.
 <pre>
    {
       int x[10], y[10]; int i;
-      for(i = 0; i < 10; i++) {x[i] = 10*i;y[i] = i;}
+      for(i = 0; i &lt; 10; i++) {x[i] = 10*i;y[i] = i;}
       TGraph *gr = new TGraph(10,x,y);
       gr->Draw("AL");  
       TPaveLabel *hello = new TPaveLabel(0.2,0.4,0.8,0.6,"Hello World");
       hello->Draw();
    }
 </pre>
-<li>
+</li>
 </ul>
 
 <h4>iOS module</h4>
 <ul>
-<li>New module 'ios' was added into graf2d to make it possible to use ROOT's graphics on iOS devices (iPad, iPhone, iPod touch).<br>
-    Among other things, it has the ROOT::iOS::Pad class, which is a version of TPad for iOS (pad with TF2 example below).<br>
+<li>New module 'ios' was added into graf2d to make it possible to use ROOT's 
+graphics on iOS devices (iPad, iPhone, iPod touch).
+Among other things, it has the ROOT::iOS::Pad class, which is a version 
+of TPad for iOS (pad with TF2 example below).<br/>
 <center>
 <img alt="TF2 object in a ROOT::iOS::Pad" title="TF2 object in a ROOT::iOS::Pad (painted with a transparency)" src="iospad.gif"/>
-</center><br>
-    Two applications, based on this module, were developed for iOS (currently, for iPad only): "Tutorials" and "RootBrowser".
-    They can be found in $ROOTSYS/test/ios.
-</li><br><br>
+</center><br/>
+Two applications, based on this module, were developed for iOS (currently, 
+for iPad only): "Tutorials" and "RootBrowser".
+They can be found in $ROOTSYS/test/ios.
+</li>
 
 <li>
-   <b>"Tutorials" app</b><br><br>
-   Small application with several demos, "iOS version" of the $ROOTSYS/tutorlas/demos.C.<br>
+   <b>"Tutorials" app</b><br/>
+   Small application with several demos, "iOS version" of the $ROOTSYS/tutorlas/demos.C.<br/>
    <center>
    <img alt="Tutorials app" title="Tutorials app" src="tutorials.gif"/>
-   </center>
-   <br><b>"Tutorials" application:</b><br>
-   <pre>
+   </center><br/>
+   <b>"Tutorials" application:</b><br/>
    <ul>
       <li>supports portrait and landscape orientation</li>
       <li>has several demos (can be selected by tapping on table's cells)</li>
@@ -95,36 +97,47 @@ column in a <tt>TLegend</tt>.
       <li>has "selection" mode - with single tap user can select different objects inside pad - axes, histograms, pavestats etc.; 3D objects can be rotated.</li>
       <li>has a simple editor to modify pad's parameters : fill color, logarithmic scale, grid, ticks, etc.</li>
    </ul>
-   </pre>
    <center>
    <img alt="Editor" title="Pad's editor" src="tut_editor.gif"/>
    </center>
-</li><br><br>
+</li>
 
 <li>
-   <b>"RootBrowser" app</b><br><br>
-   This application is a simplified version of TBrowser and TCanvas for iOS. User can open ROOT's file (application uses TWebFile) and browse file's contents.<br>
-   RootBrower registeres *.root file extension in a system, so for example, attached root files from a mail client can be opened by RootBrowser.<br><br>
-   Application has several views. In a top level view, user can see opened files, open new files, close files (long press gesture on a file icon):<br><br>
-   <center>
-   <img alt="Top level view" title="Top level view" src="top_level.gif"/>
-   </center>
-   <br><br>
-   Tap gesture on a file's icon will open "File contents" view. This view shows objects and nested directories. For objects small previews are<br>
-   generated. Tapping on a directory's icon will open new view with directory's contents. Simple search is supported (in the current TDirectoryFile).<br><br>
-   <center>
-   <img alt="File contents view" title="File's contents view" src="file_contents.gif"/>
-   </center>
-   <br><br>
-   Tap on a object's preview will open detailed view for this object. Using pinch gesture or double tap, you can zoom in/zoom out pad's contents.<br>
-   If you have several objects in a file or directory, you can navigate through directory contents by using swipe gesture, scrolling your objects.<br><br>
-   <center>
-   <img alt="Detail view" title="Detail view" src="detail_view.gif"/>
-   </center>
-   <br><br>
-   It's possible to modify properties of objects the same way you can do it in TCanvas - RootBrowser has an editor. After you press "Edit" button, you can
-   pick histogram, axis, frame, pavestats, etc. in a pad and modify its properties in the editor (selected object is highlihgted in a pad). <br>At the moment, there are editors for:
-   <pre>
+   <b>"RootBrowser" app</b><br/>
+   <p>This application is a simplified version of TBrowser and TCanvas 
+      for iOS. User can open ROOT's file (application uses TWebFile) and
+      browse file's contents.</p>
+   <p>RootBrower registers *.root file extension in a system, so for 
+      example, attached root files from a mail client can be opened by 
+      RootBrowser.</p>
+   <p>Application has several views. In a top level view, user can see
+      opened files, open new files, close files (long press gesture on
+      a file icon):</p>
+   <img alt="Top level view" width="750" height="461" title="Top level view" src="top_level.gif"/>
+   <br/>
+   <p>Tap gesture on a file's icon will open "File contents" view. This
+      view shows objects and nested directories. For objects small 
+      previews are generated. Tapping on a directory's icon will open
+      new view with directory's contents. Simple search is supported 
+      (in the current TDirectoryFile).</p>
+   <img alt="File contents view" width="750" height="461" title="File's contents view" src="file_contents.gif"/>
+   <br/>
+   <p>Tap on a object's preview will open detailed view for this object. 
+      Using pinch gesture or double tap, you can zoom in/zoom out pad's 
+      contents.</p>
+   <p>If you have several objects in a file or directory, you can 
+      navigate through directory contents by using swipe gesture, 
+      scrolling your objects.</p>
+
+   <img alt="Detail view" width="750" height="315" title="Detail view" src="detail_view.gif"/>
+
+   <br/>
+   <p>It's possible to modify properties of objects the same way you 
+      can do it in TCanvas - RootBrowser has an editor. After you 
+      press "Edit" button, you can pick histogram, axis, frame, 
+      pavestats, etc. in a pad and modify its properties in the 
+      editor (selected object is highlihgted in a pad).</p>
+   <p>At the moment, there are editors for:</p>
    <ul>
    <li>TH1 objects</li>
    <li>TGraph objects</li>
@@ -133,13 +146,12 @@ column in a <tt>TLegend</tt>.
    <li>Pad object (fill properties, log scales, ticks, grid)</li>
    <li>Markers</li>
    </ul>
-   </pre><br><br>
-   <center>
-   <img alt="Editors" title="Editors" src="editors.gif"/>
-   </center>
-   <br><br>
-   Using pan gesture along the selected axis, you can change the axis range - "zoom".<br>
-   Modified object can be saved locally (in application's directory) and sent as an e-mail attachment <br>
-   ("Save" functionality will be improved soon).
+   <img alt="Editors" width="750" height="264" title="Editors" src="editors.gif"/>
+   <br/>
+   <p>Using pan gesture along the selected axis, you can change the 
+      axis range - "zoom".</p>
+   <p>Modified object can be saved locally (in application's directory) 
+      and sent as an e-mail attachment ("Save" functionality will be 
+      improved soon).</p>
 </li>
 </ul>
