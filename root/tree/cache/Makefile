@@ -63,13 +63,8 @@ cachedchain.log: runcachedchain.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runcachedchain.C 2>&1 \
 	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > cachedchain.log
 
-ifeq ($(FAIL),)
-cachedchain:
-	$(WarnFailTest)
-else
 cachedchain: cachedchain.log
 	$(TestDiff)
-endif
 
 multiTree: multiTree.log
 	$(TestDiff)
