@@ -1047,7 +1047,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   RooArgSet orderedArgs ;
   vector<RooAbsArg*> trackArgs ;
   while((arg=itern.next())) {
-    if (arg->getAttribute("ConstantExpression")) {
+    if (arg->getAttribute("ConstantExpression") && !arg->getAttribute("NOCacheAndTrack")) {
       orderedArgs.add(*arg) ;
     } else {
 

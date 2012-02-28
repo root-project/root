@@ -118,7 +118,11 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _paramSet.add(*params) ;
   delete params ;
 
-  if (_nCPU>1) {
+  if (_nCPU>1 || _nCPU==-1) {
+
+    if (_nCPU==-1) {
+      _nCPU=1 ;
+    }
 
     _gofOpMode = MPMaster ;
 
@@ -165,8 +169,12 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   // Our parameters are those of original
   _paramSet.add(other._paramSet) ;
 
-  if (_nCPU>1) {
+  if (_nCPU>1 || _nCPU==-1) {
 
+    if (_nCPU==-1) {
+      _nCPU=1 ;
+    }
+      
     _gofOpMode = MPMaster ;
 
   } else {

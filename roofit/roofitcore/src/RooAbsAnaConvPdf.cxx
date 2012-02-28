@@ -100,6 +100,7 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
   // convoluted variable as this physics model ('convVar')
 
   _convNormSet = new RooArgSet(cVar,"convNormSet") ;
+  _model.absArg()->setAttribute("NOCacheAndTrack") ;
 }
 
 
@@ -117,7 +118,9 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   _codeReg(other._codeReg)
 {
   // Copy constructor
-
+  if (_model.absArg()) {
+    _model.absArg()->setAttribute("NOCacheAndTrack") ;
+  }
 }
 
 
