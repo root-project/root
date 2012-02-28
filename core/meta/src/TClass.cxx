@@ -3628,12 +3628,14 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
       }
       if (sinfo) {
          sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
-         
-         sinfo->SetClass(0);
-         sinfo->SetName( newname );
-         sinfo->BuildCheck();
-         sinfo->BuildOld();
-         sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
+         if (sinfo) {
+            sinfo->SetClass(0);
+            sinfo->SetName( newname );
+            sinfo->BuildCheck();
+            sinfo->BuildOld();
+            sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
+         } else
+            Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
       }
    }
    return sinfo;
