@@ -203,7 +203,7 @@ int XrdProofPhyConn::TryConnect(int fd)
 
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;
-#if ROOTXRDVERS < ROOT_PhyConnNoReuse
+#if ROOTXRDVERS <= ROOT_PhyConnNoReuse
    if (fd > 0) {
       TRACE(XERR, "Reusing an existing connection (descriptor "<<fd<<
                   ") not supported by the xroot client version (requires xrootd >= 3.0.3)");
