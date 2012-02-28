@@ -362,6 +362,15 @@ Int_t TGeoElementRN::GetNdecays() const
 }
 
 //______________________________________________________________________________
+Double_t TGeoElementRN::GetSpecificActivity() const
+{
+// Get the activity in Bq of a gram of material made from this element.
+   static const Double_t ln2 = TMath::Log(2.);
+   Double_t sa = (fHalfLife>0 && fA>0)?(ln2*TMath::Na()/fHalfLife/fA):0.;
+   return sa;
+}
+
+//______________________________________________________________________________
 Bool_t TGeoElementRN::CheckDecays() const
 {
 // Check if all decay chain of the element is OK.

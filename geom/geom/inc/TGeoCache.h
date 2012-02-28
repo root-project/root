@@ -100,6 +100,7 @@ public:
    void                 BuildIdArray();
    void                 CdNode(Int_t nodeid);
    Bool_t               CdDown(Int_t index);
+   Bool_t               CdDown(TGeoNode *node);
    void                 CdTop() {fLevel=1; CdUp();}
    void                 CdUp();
    void                 FillIdBranch(const Int_t *br, Int_t startlevel=0) {memcpy(fIdBranch+startlevel,br,(fLevel+1-startlevel)*sizeof(Int_t)); fIndex=fIdBranch[fLevel];}

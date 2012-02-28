@@ -30,15 +30,15 @@ class TGeoNode;
 class TGeoBranchArray : public TObject
 {
 protected:
-   UShort_t          fLevel;          // Branch depth
-   UShort_t          fMaxLevel;       // Array length
-   UShort_t         *fArray;          //[fMaxLevel] Array of daughter indices
+   Int_t             fLevel;          // Branch depth
+   Int_t             fMaxLevel;       // Array length
+   TGeoNode        **fArray;          //![fMaxLevel] Array of nodes
    TGeoHMatrix      *fMatrix;         // Global matrix (owned)
    TObject          *fClient;         // Client object to notify
 
 public:
    TGeoBranchArray() : TObject(), fLevel(0), fMaxLevel(10), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
-   TGeoBranchArray(UShort_t level);
+   TGeoBranchArray(Int_t level);
    virtual ~TGeoBranchArray();
 
    TGeoBranchArray(const TGeoBranchArray&);
@@ -50,14 +50,14 @@ public:
    Bool_t operator >=(const TGeoBranchArray& other) const;
    Bool_t operator <=(const TGeoBranchArray& other) const;
    
-   void              AddLevel(UShort_t dindex);
+   void              AddLevel(Int_t dindex);
    virtual Int_t     Compare(const TObject *obj) const;
    void              CleanMatrix();
-   UShort_t         *GetArray() const   {return fArray;}
+   TGeoNode        **GetArray() const   {return fArray;}
    TObject          *GetClient() const  {return fClient;}
-   UShort_t          GetLevel() const   {return fLevel;}
+   Int_t             GetLevel() const   {return fLevel;}
    TGeoHMatrix      *GetMatrix() const  {return fMatrix;}
-   TGeoNode         *GetNode(UShort_t level) const;
+   TGeoNode         *GetNode(Int_t level) const {return fArray[level];}
    void              GetPath(TString &path) const;
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}

@@ -102,7 +102,9 @@ public:
    virtual Double_t         GetZ()  const      {return fZ;}
    virtual Int_t            GetDefaultColor() const;
    virtual Double_t         GetDensity() const {return fDensity;}
+   virtual Int_t            GetNelements() const {return 1;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
+   virtual void             GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i=0);
    TGeoElement             *GetBaseElement() const {return fElement;}
    char                    *GetPointerName() const;
    virtual Double_t         GetRadLen() const  {return fRadLen;}
@@ -113,6 +115,7 @@ public:
    Double_t                 GetTemperature() const {return fTemperature;}
    Double_t                 GetPressure() const {return fPressure;}
    EGeoMaterialState        GetState() const {return fState;}
+   virtual Double_t         GetSpecificActivity(Int_t) const {return 0.;}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
@@ -180,11 +183,13 @@ public:
    // getters
    virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
    virtual TGeoElement     *GetElement(Int_t i=0) const;
-   Int_t                    GetNelements() const {return fNelements;}
+   virtual void             GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i=0) {a=fAmixture[i]; z=fZmixture[i]; w=fWeights[i];}
+   virtual Int_t            GetNelements() const {return fNelements;}
    Double_t                *GetZmixt() const     {return fZmixture;}
    Double_t                *GetAmixt() const     {return fAmixture;}
    Double_t                *GetWmixt() const     {return fWeights;}
    Int_t                   *GetNmixt() const     {return fNatoms;}
+   virtual Double_t         GetSpecificActivity(Int_t i=-1) const;
    // utilities
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual Bool_t           IsMixture() const {return kTRUE;}

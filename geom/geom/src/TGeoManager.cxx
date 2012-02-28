@@ -285,6 +285,7 @@
 #include "THashList.h"
 #include "TClass.h"
 #include "TThread.h"
+#include "ThreadLocalStorage.h"
 
 #include "TGeoVoxelFinder.h"
 #include "TGeoElement.h"
@@ -945,6 +946,8 @@ void TGeoManager::ClearThreadsMap()
    TThread::UnLock();
 }
 
+TTHREAD_TLS_DECLARE(Int_t, tid);
+
 //_____________________________________________________________________________
 Int_t TGeoManager::ThreadId()
 {
@@ -952,7 +955,9 @@ Int_t TGeoManager::ThreadId()
 // manage data which is pspecific for a given thread.
 //   static __thread Int_t tid = -1;
 //   if (tid > -1) return tid;
-   Int_t tid = 0;
+   TTHREAD_TLS_INIT(Int_t,tid,-1);
+   Int_t ttid = TTHREAD_TLS_GET(Int_t,tid);
+   if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
    Long_t selfId = TThread::SelfId();
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(selfId);
@@ -960,9 +965,9 @@ Int_t TGeoManager::ThreadId()
    // Map needs to be updated.
    TThread::Lock();
    (*fgThreadId)[selfId] = fgNumThreads;
-   tid = fgNumThreads++;
+   TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
    TThread::UnLock();
-   return tid;
+   return fgNumThreads++;
 }
    
 //_____________________________________________________________________________

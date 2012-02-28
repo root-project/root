@@ -81,6 +81,8 @@ public:
    Int_t                    GetNisotopes() const {return fNisotopes;}
    TGeoIsotope             *GetIsotope(Int_t i) const;
    Double_t                 GetRelativeAbundance(Int_t i) const;
+   // Specific activity (in Bq/gram)
+   virtual Double_t         GetSpecificActivity() const {return 0.;}
    Bool_t                   HasIsotopes() const {return (fNisotopes==0)?kFALSE:kTRUE;}
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
@@ -172,6 +174,7 @@ public:
 
    // Getters
    virtual Int_t            ENDFCode()    const {return fENDFcode;}
+   virtual Double_t         GetSpecificActivity() const;
    virtual Bool_t           IsRadioNuclide() const {return kTRUE;}
    Int_t                    MassNo()      const {return (Int_t)fA;}
    Int_t                    AtomicNo()    const {return fZ;}

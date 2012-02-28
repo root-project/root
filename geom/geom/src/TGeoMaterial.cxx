@@ -358,7 +358,15 @@ TGeoElement *TGeoMaterial::GetElement(Int_t) const
    TGeoElementTable *table = gGeoManager->GetElementTable();
    return table->GetElement(Int_t(fZ));
 }
-
+//_____________________________________________________________________________
+void TGeoMaterial::GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t)
+{
+// Single interface to get element properties.
+   a = fA;
+   z = fZ;
+   w = 1.;
+}   
+   
 //_____________________________________________________________________________
 Int_t TGeoMaterial::GetIndex()
 {
@@ -776,6 +784,19 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
    return table->GetElement(Int_t(fZmixture[i]));
 }
 
+//_____________________________________________________________________________
+Double_t TGeoMixture::GetSpecificActivity(Int_t i) const
+{
+// Get specific activity (in Bq/gram) for the whole mixture (no argument) or
+// for a given component.
+   if (i>=0 && i<fNelements) return fWeights[i]*GetElement(i)->GetSpecificActivity();
+   Double_t sa = 0;
+   for (Int_t iel=0; iel<fNelements; iel++) {
+      sa += fWeights[iel]*GetElement(iel)->GetSpecificActivity();
+   }
+   return sa;
+}   
+      
 //_____________________________________________________________________________
 Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 {

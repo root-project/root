@@ -65,7 +65,7 @@ include/%.h:    $(GEOMDIRI)/%.h
 $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGeom.$(SOEXT) $@ "$(GEOMO) $(GEOMDO)" \
-		   "$(GEOMLIBEXTRA)"
+		   "$(GEOMLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
 $(GEOMDS1):     $(GEOMH1) $(GEOML1) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)

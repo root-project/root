@@ -383,7 +383,6 @@ void TGeoNavigator::CdDown(Int_t index)
 {
 // Make a daughter of current node current. Can be called only with a valid
 // daughter index (no check). Updates cache accordingly.
-   if (!fCache) return;
    TGeoNode *node = fCurrentNode->GetDaughter(index);
    Bool_t is_offset = node->IsOffset();
    if (is_offset)
@@ -397,6 +396,22 @@ void TGeoNavigator::CdDown(Int_t index)
    fLevel++;
 }
 
+//_____________________________________________________________________________
+void TGeoNavigator::CdDown(TGeoNode *node)
+{
+// Make a daughter of current node current. Can be called only with a valid
+// daughter node (no check). Updates cache accordingly.
+   Bool_t is_offset = node->IsOffset();
+   if (is_offset)
+      node->cd();
+   else
+      fCurrentOverlapping = node->IsOverlapping();
+   fCache->CdDown(node);
+   fCurrentNode = node;
+   fGlobalMatrix = fCache->GetCurrentMatrix();
+   if (fCurrentOverlapping) fNmany++;
+   fLevel++;
+}
 
 //_____________________________________________________________________________
 void TGeoNavigator::CdUp()

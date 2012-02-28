@@ -98,6 +98,7 @@ public :
    Bool_t                 CheckPath(const char *path) const;
    void                   CdNode(Int_t nodeid);
    void                   CdDown(Int_t index);
+   void                   CdDown(TGeoNode *node);
    void                   CdUp();
    void                   CdTop();
    void                   CdNext();

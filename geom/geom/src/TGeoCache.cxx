@@ -199,6 +199,30 @@ Bool_t TGeoNodeCache::CdDown(Int_t index)
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoNodeCache::CdDown(TGeoNode *newnode)
+{
+// Make daughter INDEX of current node the active state. Compute global matrix.
+   if (!newnode) return kFALSE;
+   fLevel++;
+   if (fNodeIdArray) {
+      Int_t index = fNode->GetVolume()->GetIndex(newnode);
+      fIndex = fNodeIdArray[fIndex+index+1];
+      fIdBranch[fLevel] = fIndex;
+   }
+   fNode = newnode;
+   fNodeBranch[fLevel] = fNode;
+   TGeoMatrix  *local = newnode->GetMatrix();
+   TGeoHMatrix *newmat = fMPB[fLevel];
+   if (!local->IsIdentity()) {
+      newmat->CopyFrom(fMatrix);
+      newmat->Multiply(local);
+      fMatrix = newmat;
+   }
+   fMatrixBranch[fLevel] = fMatrix;
+   return kTRUE;
+}
+
+//_____________________________________________________________________________
 void TGeoNodeCache::CdUp()
 {
 // Make mother of current node the active state.
