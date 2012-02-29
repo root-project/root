@@ -129,31 +129,7 @@ namespace RooStats {
       Double_t NullPValueError() const;
 
 
-      void Print(const Option_t* = "") const {
-         // Print out some information about the results
-         // Note: use Alt/Null labels for the hypotheses here as the Null
-         // might be the s+b hypothesis.
-
-         cout << endl << "Results " << GetName() << ": " << endl;
-         if(HasTestStatisticData()  &&  fNullDistr) {
-            cout << " - Null p-value = " << NullPValue() << " +/- " << NullPValueError() << endl;
-            cout << " - Significance = " << Significance() << " sigma" << endl;
-         }
-         if(fAltDistr)
-            cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
-         if(fNullDistr)
-            cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
-         if(HasTestStatisticData())
-            cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
-         if(HasTestStatisticData()  &&  fNullDistr)
-            cout << " - CL_b: " << CLb() << " +/- " << CLbError() << std::endl;
-         if(HasTestStatisticData()  &&  fAltDistr)
-            cout << " - CL_s+b: " << CLsplusb() << " +/- " << CLsplusbError() << std::endl;
-         if(HasTestStatisticData()  &&  fAltDistr  &&  fNullDistr)
-            cout << " - CL_s: " << CLs() << " +/- " << CLsError()  << std::endl;
-
-         return;
-      }
+      void Print(const Option_t* = "") const;
 
    private:
       void UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror,  Bool_t pIsRightTail);

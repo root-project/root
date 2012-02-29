@@ -207,3 +207,35 @@ void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &p
    }
 }
 
+void HypoTestResult::Print(Option_t * ) const
+{
+   // Print out some information about the results
+   // Note: use Alt/Null labels for the hypotheses here as the Null
+   // might be the s+b hypothesis.
+   
+   bool fromToys = (fAltDistr || fNullDistr);
+   
+   cout << endl << "Results " << GetName() << ": " << endl;
+   cout << " - Null p-value = " << NullPValue(); 
+   if (fromToys) cout << " +/- " << NullPValueError();
+   cout << endl;
+   cout << " - Significance = " << Significance() << " sigma" << endl;
+   if(fAltDistr)
+      cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
+   if(fNullDistr)
+      cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
+   
+   if (HasTestStatisticData() ) cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
+   cout << " - CL_b: " << CLb();
+   if (fromToys) cout << " +/- " << CLbError();
+   cout << std::endl;
+   cout << " - CL_s+b: " << CLsplusb();
+   if (fromToys) cout << " +/- " << CLsplusbError();
+   cout << std::endl;
+   cout << " - CL_s: " << CLs();
+   if (fromToys) cout << " +/- " << CLsError();
+   cout << std::endl;
+   
+   return;
+}
+
