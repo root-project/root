@@ -199,7 +199,6 @@ ASEXTRALIBDIR  := @asextralibdir@
 ASJPEGINCDIR   := $(filter-out /usr/include, @asjpegincdir@)
 ASPNGINCDIR    := $(filter-out /usr/include, @aspngincdir@)
 ASTIFFINCDIR   := $(filter-out /usr/include, @astiffincdir@)
-ASGIFINCDIR    := $(filter-out /usr/include, @asgifincdir@)
 ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
 ASLIB          := @asimagelib@
 ASLIBDIR       := @asimagelibdir@

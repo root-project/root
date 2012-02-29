@@ -171,9 +171,6 @@ else
 		elif [ "$(ASTIFFINCDIR)" != "" ]; then \
 			TIFFINCDIR="--with-tiff-includes=$(ASTIFFINCDIR)"; \
 		fi; \
-		if [ "$(ASGIFINCDIR)" != "" ]; then \
-			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
-		fi; \
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
 			TTFINCDIR="--with-ttf-includes=-I../../../../$(FREETYPEDIRI)"; \
 		fi; \
@@ -186,7 +183,6 @@ else
 		$$MMX \
 		$(ASTEPDBG) \
 		--with-builtin-ungif \
-		$$GIFINCDIR \
 		--with-jpeg \
 		$$JPEGINCDIR \
 		--with-png \

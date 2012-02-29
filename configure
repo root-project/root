@@ -3990,11 +3990,6 @@ if test ! "x$enable_asimage" = "xno" ; then
        else
            astiffincdir="--with-tiff=no"
        fi
-       check_header "gif_lib.h" "" \
-          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
-          ${finkdir:+$finkdir/include} \
-          /usr/local/include /usr/include /opt/include
-       asgifincdir=$found_dir
 
        asextralib=""
        asextralibdir=""
@@ -4002,12 +3997,10 @@ if test ! "x$enable_asimage" = "xno" ; then
        found_dirz=""
        # libz must be before libpng, if libz is not found don't
        # add libpng which needs libz
-       # note that failure to find system libungif is not fatal since
-       # libAfterImage contains embedded libungif source if needed
        if test ! "x$enable_astiff" = "xno" ; then
-           aslibs="libjpeg libtiff libungif libz libpng"
+           aslibs="libjpeg libtiff libz libpng"
        else
-           aslibs="libjpeg libungif libz libpng"
+           aslibs="libjpeg libz libpng"
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
@@ -4022,9 +4015,6 @@ if test ! "x$enable_asimage" = "xno" ; then
            if test "x$k" = "xlibpng" && test "x$found_libz" = "x" ; then
                break;
            fi
-           if test "x$k" = "xlibungif" && test "x$found_lib" = "x" ; then
-               asgifincdir=""
-           fi
            if test ! "x$found_lib" = "x" ; then
                asextralib="$asextralib $found_lib"
                asextralibdir="$asextralibdir $found_dir"
@@ -4036,7 +4026,6 @@ if test ! "x$enable_asimage" = "xno" ; then
            asjpegincdir=""
            aspngincdir=""
            astiffincdir=""
-           asgifincdir=""
        else
            asextralib="$asextralib $found_libz"
            asextralibdir="$asextralibdir $found_dirz"
@@ -6423,7 +6412,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@asjpegincdir@|$asjpegincdir|"        \
     -e "s|@aspngincdir@|$aspngincdir|"          \
     -e "s|@astiffincdir@|$astiffincdir|"        \
-    -e "s|@asgifincdir@|$asgifincdir|"          \
     -e "s|@asimageincdir@|$asimageincdir|"      \
     -e "s|@asimagelib@|$asimagelib|"            \
     -e "s|@asimagelibdir@|$asimagelibdir|"      \
