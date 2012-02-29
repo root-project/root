@@ -72,7 +72,7 @@
 #elif defined(R__HAS_DECLSPEC_THREAD)
 
 #  define TTHREAD_TLS_DECLARE(type,name)
-#  define TTHREAD_TLS_INIT(type,name,value) __declspec(thread) type name = (value)
+#  define TTHREAD_TLS_INIT(type,name,value) static __declspec(thread) type name = (value)
 #  define TTHREAD_TLS_SET(type,name,value)  name = (value)
 #  define TTHREAD_TLS_GET(type,name)        (name)
 #  define TTHREAD_TLS_FREE(name)
