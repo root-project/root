@@ -2019,7 +2019,7 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
          // The only addition to fCacheReadMap is via an interface that takes
          // a TFileCacheRead* so the C-cast is safe.
          TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
-         if (tpf) tpf->SetFile(0);
+         if (tpf && tpf->GetFile() == this) tpf->SetFile(0);
          fCacheReadMap->RemoveEntry(tree);
       }
    }
