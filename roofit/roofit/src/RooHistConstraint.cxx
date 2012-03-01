@@ -201,7 +201,7 @@ Double_t RooHistConstraint::logSum(Int_t i) const
     for (Int_t ii=0 ; ii<5000 ; ii++) _lut[ii] = 0 ;
 
     for (Int_t j=1 ; j<=5000 ; j++) {
-      Double_t logj = log(j) ;
+      Double_t logj = log((Double_t)j) ;
       for (Int_t ii=j ; ii<=5000 ; ii++) {
 	_lut[ii-1] += logj ;	
       }
@@ -214,7 +214,7 @@ Double_t RooHistConstraint::logSum(Int_t i) const
     Double_t ret = _lut[4999] ;
     cout << "logSum i=" << i << endl ;
     for (Int_t j=5000 ; j<=i ; j++) {
-      ret += log(j) ;
+      ret += log((Double_t)j) ;
     }
     return ret ;
   }
