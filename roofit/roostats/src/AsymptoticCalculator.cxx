@@ -159,7 +159,7 @@ AsymptoticCalculator::AsymptoticCalculator(
 
 
    if (!nominalAsimov) {
-      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata will be generated using fitted nuisance parameter values" << endl;
+      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
       RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot(); 
       fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs,tmp);
    }
@@ -171,7 +171,10 @@ AsymptoticCalculator::AsymptoticCalculator(
       fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
    }
 
-   if (!fAsimovData) return;
+   if (!fAsimovData) { 
+      oocoutE((TObject*)0,InputArguments) << "AsymptoticCalculator: Error : Asimov data set could not be generated " << endl;
+      return;
+   }
 
    // set global observables to their Asimov values 
    RooArgSet globObs;
@@ -212,7 +215,6 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
     if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-
 
 
     RooArgSet* allParams = pdf.getParameters(data);
@@ -333,7 +335,6 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
 
        minim.optimizeConst(false);
 
-       if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(msglevel);
 
     }
 
@@ -348,11 +349,15 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
           std::cout << "\tfit time : ";  
           tw.Print();
        }
+       else 
+          std::cout << std::endl;
     }
 
     // reset the parameter free which where set as constant
     if (poiSet && paramsSetConstant.getSize() > 0) SetAllConstant(paramsSetConstant,false);
 
+
+    if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(msglevel);
 
     delete allParams;
     delete nll;
@@ -675,49 +680,79 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 }
 
 
-void AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs) 
+bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs) 
 {
-   // iterate a Prod pdf to find the Poisson part to set the observed value to expected one
+   // iterate a Prod pdf to find the Poisson or Gaussian part to set the observed value to expected one
     std::auto_ptr<TIterator> iter(prod.pdfList().createIterator());
     for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
+        RooGaussian * gaus = 0;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != 0) {
-            SetObsToExpected(*pois, obs);
+            return SetObsToExpected(*pois, obs);
+        } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != 0) {
+            return SetObsToExpected(*gaus, obs);
         } else {
-           // should try to add also Gaussian and lognormal case ? 
+           // should try to add also lognormal case ? 
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
-            if (subprod) SetObsToExpected(*subprod, obs);
+            if (subprod) 
+               return SetObsToExpected(*subprod, obs);
             else {
                oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: depends on observables, but not Poisson or Product" << endl;
-               return;
+               return false;
             }
         }
     }
+    return false;
 }
 
-void AsymptoticCalculator::SetObsToExpected(RooPoisson &pois, const RooArgSet &obs) 
+bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs) 
 {
-   // set observed value in Poisson to the expected one
+   // set observed value to the expected one 
+   // works for Gaussian, Poisson or LogNormal
+   // assumes mean parameter value is the argument not constant and not depoending on observables
+   // (if more than two arguments are not constant will use first one but printr a warning !)
    // need to iterate on the components of the POisson to get n and nu (nu can be a RooAbsReal)
-   // (code from G. Petrucciani)
+   // (code from G. Petrucciani and extended by L.M.)
    RooRealVar *myobs = 0;
    RooAbsReal *myexp = 0;
-   std::auto_ptr<TIterator> iter(pois.serverIterator());
+   const char * pdfName = pdf.IsA()->GetName();
+   std::auto_ptr<TIterator> iter(pdf.serverIterator());
    for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
       if (obs.contains(*a)) {
-         assert(myobs == 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): Two observables??");
+         if (myobs != 0) { 
+            oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
+            return false;
+         }
          myobs = dynamic_cast<RooRealVar *>(a);
-         assert(myobs != 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): Observables is not a RooRealVar??");
+         if (myobs == 0) { 
+            oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Observable is not a RooRealVar??" << endl;
+            return false; 
+         }
       } else {
-         assert(myexp == 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): Two expecteds??");
-         myexp = dynamic_cast<RooAbsReal *>(a);
-         assert(myexp != 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): Expectedis not a RooAbsReal??");
+         if (!a->isConstant() ) {
+            if (myexp != 0) { 
+               oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two non-const arguments  " << endl;
+               return false;
+            }
+            myexp = dynamic_cast<RooAbsReal *>(a);
+            if (myexp == 0) { 
+               oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Expected is not a RooAbsReal??" << endl;
+               return false; 
+            }
+         }
       }
    }
-   assert(myobs != 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): No observable?");
-   assert(myexp != 0 && "SinglePdfGenInfo::setToExpected(RooPoisson): No expected?");
+   if (myobs == 0)  { 
+      oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
+      return false;
+   }
+   if (myexp == 0) {    
+      oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
+      return false;
+   }
    myobs->setVal(myexp->getVal());
+   return true;
 }
 
 
@@ -728,13 +763,18 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     RooArgSet obs(observables);
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooPoisson *pois = 0;
+    RooGaussian *gaus = 0;
+    bool r = false;
     if (prod != 0) {
-        SetObsToExpected(*prod, observables);
+        r = SetObsToExpected(*prod, observables);
     } else if ((pois = dynamic_cast<RooPoisson *>(&pdf)) != 0) {
-        SetObsToExpected(*pois, observables);
+        r = SetObsToExpected(*pois, observables);
+    } else if ((gaus = dynamic_cast<RooGaussian *>(&pdf)) != 0) {
+        r = SetObsToExpected(*gaus, observables);
     } else {
        oocoutE((TObject*)0,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson" << endl;
     }
+    if (!r) return 0;
     int icat = 0;
     if (channelCat) {
        icat = channelCat->getIndex(); 
@@ -918,7 +958,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       paramsSetConstant.add(*tmpPar); 
    }
 
-   // find conditional value of the nnuisance parameters
+   // find conditional value of the nuisance parameters
    bool hasFloatParams = false;
    RooArgSet  constrainParams;
    if (model.GetNuisanceParameters()) {

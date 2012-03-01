@@ -104,8 +104,8 @@ namespace RooStats {
 
       static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet *poiSet = 0); 
 
-      static void SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs); 
-      static void SetObsToExpected(RooPoisson &pois, const RooArgSet &obs);
+      static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
+      static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs); 
 
    protected:
       ClassDef(AsymptoticCalculator,1)
