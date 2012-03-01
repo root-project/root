@@ -1652,24 +1652,6 @@ bool CheckClassDef(const clang::RecordDecl *cl)
 }
 
 //______________________________________________________________________________
-bool HasDirectoryAutoAdd(G__ClassInfo &cl)
-{
-   // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
-
-   // Detect if the class has a DirectoryAutoAdd
-
-   // Detect if the class or one of its parent has a DirectoryAutoAdd
-   long offset;
-   const char *proto = "TDirectory*";
-   const char *name = "DirectoryAutoAdd";
-
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-
-   return hasMethodWithSignature;
-}
-
-//______________________________________________________________________________
 bool HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl)
 {
    // Return true if the class has a method DirectoryAutoAdd(TDirectory *)
@@ -1683,24 +1665,6 @@ bool HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl)
    return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
-
-//______________________________________________________________________________
-bool HasNewMerge(G__ClassInfo &cl)
-{
-   // Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
-   
-   // Detect if the class has a 'new' Merge function.
-   
-   // Detect if the class or one of its parent has a DirectoryAutoAdd
-   long offset;
-   const char *proto = "TCollection*,TFileMergeInfo*";
-   const char *name = "Merge";
-   
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
-   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
-   return hasMethodWithSignature;
-}
 
 //______________________________________________________________________________
 bool HasNewMerge(const clang::CXXRecordDecl *cl)
@@ -1717,23 +1681,6 @@ bool HasNewMerge(const clang::CXXRecordDecl *cl)
 }
 
 //______________________________________________________________________________
-bool HasOldMerge(G__ClassInfo &cl)
-{
-   // Return true if the class has a method Merge(TCollection*)
-   
-   // Detect if the class has an old fashion Merge function.
-   
-   // Detect if the class or one of its parent has a DirectoryAutoAdd
-   long offset;
-   const char *proto = "TCollection*";
-   const char *name = "Merge";
-   
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
-   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
-   return hasMethodWithSignature;
-}
-//______________________________________________________________________________
 bool HasOldMerge(const clang::CXXRecordDecl *cl)
 {
    // Return true if the class has a method Merge(TCollection*)
@@ -1747,25 +1694,6 @@ bool HasOldMerge(const clang::CXXRecordDecl *cl)
    return R__CheckPublicFuncWithProto(cl,name,proto);
 }
 
-
-//______________________________________________________________________________
-bool HasResetAfterMerge(G__ClassInfo &cl)
-{
-   // Return true if the class has a method ResetAfterMerge(TFileMergeInfo *)
-   
-   // Detect if the class has a 'new' Merge function.
-   // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
-   
-   // Detect if the class or one of its parent has a DirectoryAutoAdd
-   long offset;
-   const char *proto = "TFileMergeInfo*";
-   const char *name = "ResetAfterMerge";
-   
-   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-   bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
-   return hasMethodWithSignature;
-}
 
 //______________________________________________________________________________
 bool HasResetAfterMerge(const clang::CXXRecordDecl *cl)
@@ -1959,7 +1887,6 @@ bool HasCustomOperatorNew(G__ClassInfo& cl);
 bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
 bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl);
 bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
-bool NeedConstructor(G__ClassInfo& cl);
 
 //______________________________________________________________________________
 bool HasCustomOperatorNew(const clang::RecordDecl *cl)
@@ -2133,103 +2060,6 @@ bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl)
    return custom;
 }
 
-//______________________________________________________________________________
-bool CheckConstructor(G__MethodInfo &methodinfo, int argRequested)
-{
-   // Return true if the method is a valid, public constructor.
-
-   if (    methodinfo.NArg()==(argRequested+methodinfo.NDefaultArg())
-           && (methodinfo.Property() & G__BIT_ISPUBLIC)) {
-      if (argRequested) {
-         if (methodinfo.ifunc()) {
-            // filter out constructor taking a void* or char*
-            G__MethodArgInfo args( methodinfo );
-            args.Next();
-            if (args.Type()->Tagnum() == -1 ) {
-               return false;
-            }
-            //switch ( args.Type()->Type() ) {
-            //   case 'B': /* unsigned char* */
-            //   case 'C': /* signed char* */
-            //   case 'Y': /* void* */
-            //      return false;
-            //   default:
-            //      ;
-            //};
-         }
-      }
-      return true;
-   }
-   return false;
-}
-
-
-
-//______________________________________________________________________________
-bool HasDefaultConstructor(G__ClassInfo& cl, string *arg)
-{
-   // return true if we can find an constructor calleable without any arguments
-
-   bool result = false;
-   long offset;
-
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
-   if (cl.Property() & G__BIT_ISABSTRACT) return false;
-
-   for(unsigned int i=0; i<gIoConstructorTypes.size(); ++i) {
-      string proto( gIoConstructorTypes[i].GetName() );
-      int extra = (proto.size()==0) ? 0 : 1;
-      if (extra==0) {
-         // Looking for default constructor
-         result = true;
-      } else {
-         proto += '*';
-      }
-      G__MethodInfo methodinfo  = cl.GetMethod(cl.TmpltName(),proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
-      G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),     proto.c_str(),&offset,G__ClassInfo::ExactMatch,G__ClassInfo::InThisScope);
-
-      if (methodinfo.IsValid()) {
-
-         result = CheckConstructor( methodinfo, extra);
-         if (result && extra && arg) {
-            *arg = "( (";
-            *arg += proto;
-            *arg += ")0 )";
-         }
-
-      } else if (tmethodinfo.IsValid()) {
-
-         // exactly same as above with a function with the full template name
-         result = CheckConstructor( tmethodinfo, extra);
-         if (result && extra && arg) {
-            *arg = "( (";
-            *arg += proto;
-            *arg += ")0 )";
-         }
-
-      } else if (extra==0) {
-         // Case where the default constructor is explicitly
-         // declared but we could not get a hold of it (i.e. it is not
-         // accessible.
-         if (cl.HasMethod(cl.TmpltName())) result = false;
-         if (cl.HasMethod(cl.Name())) result = false;
-      }
-
-      // Check for private operator new
-      if (result) {
-         const char *name = "operator new";
-         proto = "size_t";
-         methodinfo = cl.GetMethod(name,proto.c_str(),&offset);
-         if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
-            result = false;
-         }
-         if (result) return true;
-      }
-   }
-   return result;
-}
-
-
 bool CheckConstructor(const clang::CXXRecordDecl *cl, const char *arg)
 {
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
@@ -2307,66 +2137,6 @@ bool HasDefaultConstructor(const clang::CXXRecordDecl *cl, string *arg)
    return result;
 }
 
-//______________________________________________________________________________
-bool NeedConstructor(G__ClassInfo& cl)
-{
-   // We need a constructor if:
-   //   the class is not abstract
-   //   the class is not an stl container
-   //   the class version is greater than 0
-   //   or (the option + has been specified and ShowMembers is missing)
-
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
-
-   bool res= ((GetClassVersion(cl)>0
-               || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-                   && strncmp(cl.FileName(),"prec_stl",8)!=0 )
-               ) && !(cl.Property() & G__BIT_ISABSTRACT));
-   return res;
-}
-
-//______________________________________________________________________________
-bool NeedConstructor(const RScanner::AnnotatedRecordDecl *cl)
-{
-   // We need a constructor if:
-   //   the class is not abstract
-   //   the class is not an stl container
-   //   the class version is greater than 0
-   //   or (the option + has been specified and ShowMembers is missing)
-   
-   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl->GetRecordDecl());
-   if (!CRD) {
-      return false;
-   }
-   bool res= ((GetClassVersion(CRD)>0
-               || (!ClassInfo__HasMethod(CRD,"ShowMembers") && (cl->RequestStreamerInfo())
-                   && !IsStdClass(*CRD) )
-               ) && !CRD->isAbstract());
-   return res;
-}
-
-//______________________________________________________________________________
-bool NeedDestructor(G__ClassInfo& cl)
-{
-   long offset;
-   const char *proto = "";
-   string name = "~";
-   name += cl.TmpltName();
-   
-   if (cl.Property() & G__BIT_ISNAMESPACE) return false;
-   
-   G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
-   
-   // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
-   if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
-      return false;
-   }
-   return true;
-   /* (GetClassVersion(cl)>0
-    || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-    && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
-    */
-}
 
 //______________________________________________________________________________
 bool NeedDestructor(const clang::CXXRecordDecl *cl)
@@ -2383,17 +2153,6 @@ bool NeedDestructor(const clang::CXXRecordDecl *cl)
       }
    }
    return true;
-}
-
-//______________________________________________________________________________
-bool HasCustomStreamerMemberFunction(G__ClassInfo &cl)
-{
-   // Return true if the class has a custom member function streamer.
-
-   long offset;
-   static const char *proto = "TBuffer&";
-   G__MethodInfo info(cl.GetMethod("Streamer",proto,&offset));
-   return (info.IsValid() && info.MemberOf()->Tagnum() == cl.Tagnum() && ( (cl.RootFlag() & G__NOSTREAMER) || (!(cl.RootFlag() & G__USEBYTECOUNT)) ) );
 }
 
 //______________________________________________________________________________
@@ -2837,7 +2596,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
       }
    }
 
-   if (NeedDestructor(clinfo)) {
+   if (NeedDestructor(clxx)) {
       (*dictSrcOut) << "   // Wrapper around operator delete" << std::endl
                     << "   static void delete_" << mappedname.c_str() << "(void *p) {" << std::endl
                     << "      delete ((" << classname.c_str() << "*)p);" << std::endl
@@ -3399,16 +3158,17 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
 
    bool add_template_keyword = NeedTemplateKeyword(cl);
 
-   string clsname;
-   R__GetName(clsname,cl);
-   
-   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(cl->getDeclContext());
+   string fullname;
+   R__GetQualifiedName(fullname,cl);
+
+   string clsname = fullname;
+
+   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
    string nsname;
    if (nsdecl && nsdecl!=cl ) {
       R__GetQualifiedName(nsname,nsdecl);
+      clsname.erase (0, nsname.size() + 2);
    }
-   string fullname;
-   R__GetQualifiedName(fullname,cl);
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
