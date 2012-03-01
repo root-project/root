@@ -69,6 +69,15 @@ namespace RooStats {
         fLastData = 0;
 	fLimitType = twoSided;
 	fSigned = false;
+        fDetailedOutputEnabled = false;
+        fDetailedOutput = NULL;
+      
+        fUncML = new RooRealVar("uncondML","unconditional ML", 0.0);
+        fFitStatus = new RooRealVar("fitStatus","fit status", 0.0);
+        fCovQual = new RooRealVar("covQual","quality of covariance matrix", 0.0);
+        fNumInvalidNLLEval = new RooRealVar("numInvalidNLLEval","number of invalid NLL evaluations", 0.0);
+      
+        fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
 	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
@@ -84,6 +93,15 @@ namespace RooStats {
        fLastData = 0;
        fLimitType = twoSided;
        fSigned = false;
+       fDetailedOutputEnabled = false;
+       fDetailedOutput = NULL;
+      
+       fUncML = new RooRealVar("uncondML","unconditional ML", 0.0);
+       fFitStatus = new RooRealVar("fitStatus","fit status", 0.0);
+       fCovQual = new RooRealVar("covQual","quality of covariance matrix", 0.0);
+       fNumInvalidNLLEval = new RooRealVar("numInvalidNLLEval","number of invalid NLL evaluations", 0.0);
+      
+       fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
        fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
@@ -97,10 +115,12 @@ namespace RooStats {
        if(fProfile) delete fProfile;
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
+       if(fDetailedOutput) delete fDetailedOutput;
      }
      void SetOneSided(Bool_t flag=true) {fLimitType = (flag ? oneSided : twoSided);}
      void SetOneSidedDiscovery(Bool_t flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
      void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
+     //void SetOneSidedDiscovery(Bool_t flag=true) {fOneSidedDiscovery = flag;}
 
      static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
@@ -117,8 +137,12 @@ namespace RooStats {
 
      // evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2) 
      virtual Double_t EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
+     
+     virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
+     virtual const RooArgSet* GetDetailedOutput(void) const { return fDetailedOutput; }
     
-      virtual const TString GetVarName() const {return "Profile Likelihood Ratio";}
+     virtual void SetVarName(const char* name) { fVarName = name; }
+     virtual const TString GetVarName() const {return fVarName;}
       
       //      const bool PValueIsRightTail(void) { return false; } // overwrites default
 
@@ -135,6 +159,18 @@ namespace RooStats {
       //      Double_t fLastMLE;
       LimitType fLimitType;
       Bool_t fSigned;
+      
+      // this will store a snapshot of the unconditional nuisance
+      // parameter fit.
+      bool fDetailedOutputEnabled;
+      const RooArgSet* fDetailedOutput; //!
+      
+      RooRealVar* fUncML; //!
+      RooRealVar* fFitStatus; //!
+      RooRealVar* fCovQual; //!
+      RooRealVar* fNumInvalidNLLEval; //!      
+      
+      TString fVarName;
 
       static Bool_t fgAlwaysReuseNll ;
       Bool_t fReuseNll ;
@@ -144,7 +180,8 @@ namespace RooStats {
       Int_t fPrintLevel;
 
    protected:
-      ClassDef(ProfileLikelihoodTestStat,7)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+
+      ClassDef(ProfileLikelihoodTestStat,8)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

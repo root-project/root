@@ -590,8 +590,9 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
       HypoTestResult tempResult; 
       tempResult.SetPValueIsRightTail( result->GetPValueIsRightTail() );
       tempResult.SetBackgroundAsAlt( true);
-      tempResult.SetNullDistribution( sbDistribution );
-      tempResult.SetAltDistribution( bDistribution );
+      // ownership of SamplingDistribution is in HypoTestResult class now
+      tempResult.SetNullDistribution( new SamplingDistribution(*sbDistribution) );
+      tempResult.SetAltDistribution( new SamplingDistribution(*bDistribution ) );
       
       std::vector<double> values(bDistribution->GetSize()); 
       for (int i = 0; i < bDistribution->GetSize(); ++i) { 

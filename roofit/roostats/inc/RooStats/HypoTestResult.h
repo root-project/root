@@ -66,6 +66,9 @@ namespace RooStats {
       
       // default constructor
       explicit HypoTestResult(const char* name = 0);
+      
+      // copy constructor
+      HypoTestResult(const HypoTestResult& other);
 
       // constructor from name, null and alternate p values 
       HypoTestResult(const char* name, Double_t nullp, Double_t altp);
@@ -104,12 +107,18 @@ namespace RooStats {
 
       SamplingDistribution* GetNullDistribution(void) const { return fNullDistr; }
       SamplingDistribution* GetAltDistribution(void) const { return fAltDistr; }
+      RooDataSet* GetNullDetailedOutput(void) const { return fNullDetailedOutput; }
+      RooDataSet* GetAltDetailedOutput(void) const { return fAltDetailedOutput; }
       Double_t GetTestStatisticData(void) const { return fTestStatisticData; }
+      const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData; }
       Bool_t HasTestStatisticData(void) const;
 
       void SetAltDistribution(SamplingDistribution *alt);
       void SetNullDistribution(SamplingDistribution *null);
+      void SetAltDetailedOutput(RooDataSet* d) { fAltDetailedOutput = d; }
+      void SetNullDetailedOutput(RooDataSet* d) { fNullDetailedOutput = d; }
       void SetTestStatisticData(const Double_t tsd);
+      void SetAllTestStatisticsData(const RooArgList* tsd);
 
       void SetPValueIsRightTail(Bool_t pr);
       Bool_t GetPValueIsRightTail(void) const { return fPValueIsRightTail; }
@@ -142,12 +151,15 @@ namespace RooStats {
       mutable Double_t fNullPValueError; // error of p-value for the null hypothesis (small number means disfavored)
       mutable Double_t fAlternatePValueError; // error of p-value for the alternate hypothesis (small number means disfavored)
       Double_t fTestStatisticData; // result of the test statistic evaluated on data
+      const RooArgList* fAllTestStatisticsData; // for the case of multiple test statistics, holds all the results
       SamplingDistribution *fNullDistr;
       SamplingDistribution *fAltDistr;
+      RooDataSet* fNullDetailedOutput;
+      RooDataSet* fAltDetailedOutput;
       Bool_t fPValueIsRightTail;
       Bool_t fBackgroundIsAlt;
 
-      ClassDef(HypoTestResult,2)  // Base class to represent results of a hypothesis test
+      ClassDef(HypoTestResult,3)  // Base class to represent results of a hypothesis test
 
    };
 }

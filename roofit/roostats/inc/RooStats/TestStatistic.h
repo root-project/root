@@ -44,6 +44,9 @@ class TestStatistic {
       // Defines the sign convention of the test statistic. Overwrite function if necessary.
       virtual  bool PValueIsRightTail(void) const { return true; }
 
+      // return detailed output: for fits this can be pulls, processing time, ...
+      virtual const RooArgSet* GetDetailedOutput() const { return NULL; }
+
    protected:
    ClassDef(TestStatistic,1) // Interface for a TestStatistic
 };

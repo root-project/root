@@ -21,10 +21,13 @@
 
 
 
-ClassImp(RooStats::ToyMCStudy)
+ClassImp(RooStats::ToyMCStudy);
+
+ClassImp(RooStats::ToyMCPayload);
+
+
 
 namespace RooStats {
-
 
 // _____________________________________________________________________________
 Bool_t ToyMCStudy::initialize(void) {
@@ -45,8 +48,9 @@ Bool_t ToyMCStudy::initialize(void) {
 
 // _____________________________________________________________________________
 Bool_t ToyMCStudy::execute(void) {
-   SamplingDistribution *sd = fToyMCSampler->GetSamplingDistributionSingleWorker(fParamPointOfInterest);
-   storeDetailedOutput(*sd);
+   RooDataSet* sd = fToyMCSampler->GetSamplingDistributionsSingleWorker(fParamPoint);
+   ToyMCPayload *sdw = new ToyMCPayload(sd);
+   storeDetailedOutput(*sdw);
 
    return kFALSE;
 }
@@ -62,27 +66,31 @@ Bool_t ToyMCStudy::finalize(void) {
 }
 
 
-Bool_t ToyMCStudy::merge(SamplingDistribution& result) {
-   // returns true if there was an error
+RooDataSet* ToyMCStudy::merge() {
    coutP(Generation) << "merge" << endl;
+   RooDataSet* samplingOutput = NULL;
 
    if(!detailedData()) {
       coutE(Generation) << "No detailed output present." << endl;
-      return kTRUE;
+      return NULL;
    }
 
    RooLinkedListIter iter = detailedData()->iterator();
    TObject *o = NULL;
    while((o = iter.Next())) {
-      if(!dynamic_cast<SamplingDistribution*>(o)) {
-         coutW(Generation) << "Merging Results problem: not a SamplingDistribution" << endl;
+      ToyMCPayload *oneWorker = dynamic_cast< ToyMCPayload* >(o);
+      if(!oneWorker) {
+         coutW(Generation) << "Merging Results problem: not correct type" << endl;
          continue;
       }
+      
+      if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions(), "proofOutput");
+      else samplingOutput->append( *oneWorker->GetSamplingDistributions() );
 
-      result.Add(dynamic_cast<SamplingDistribution*>(o));
+      //delete oneWorker;
    }
 
-   return kFALSE;
+   return samplingOutput;
 }
 
 

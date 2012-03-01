@@ -32,9 +32,12 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        RooRealVar* firstPOI = dynamic_cast<RooRealVar*>( paramsOfInterest.first());       
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
+       if (fPrintLevel > 0) { 
+            cout << "POIs: " << endl;
+            paramsOfInterest.Print("v");
+       }
 
        RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-
        if (fPrintLevel < 3) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
        // simple
@@ -52,10 +55,10 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
           created = kTRUE ;
           delete allParams;
-          //cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
        }
        if (reuse && !created) {
-          //cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
           fNll->setData(data,kFALSE) ;
        }
 
@@ -84,10 +87,34 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        double fit_favored_mu = 0;
        int statusD = 0;
        if (type != 2) {
+          // minimize and count eval errors
+          fNll->clearEvalErrorLog();
           uncondML = GetMinNLL(statusD);
+          int invalidNLLEval = fNll->numEvalErrors();
 
           // get best fit value for one-sided interval 
           if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
+          
+          // save this snapshot
+          if( fDetailedOutputEnabled ) {
+            if( fDetailedOutput ) delete fDetailedOutput;
+            
+            RooArgSet detOut( *attachedSet );
+            RooStats::RemoveConstantParameters( &detOut );
+            
+            // monitor a few more variables
+            fUncML->setVal( uncondML ); detOut.add( *fUncML );
+            fFitStatus->setVal( statusD ); detOut.add( *fFitStatus );
+            //fCovQual->setVal( covQual ); detOut.add( *fCovQual );
+            fNumInvalidNLLEval->setVal( invalidNLLEval ); detOut.add( *fNumInvalidNLLEval );
+            
+            // store it
+            fDetailedOutput = (const RooArgSet*)detOut.snapshot();
+            
+            cout << endl << "STORING THIS AS DETAILED OUTPUT:" << endl;
+            fDetailedOutput->Print("v");
+            cout << endl;
+          }
 
        }
        tsw.Stop();
@@ -159,9 +186,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (fPrintLevel > 0) { 
           std::cout << "EvaluateProfileLikelihood - ";
           if (type <= 1)  
-             std::cout << "mu hat = " << fit_favored_mu  <<  " uncond ML = " << uncondML; 
+             std::cout << "mu hat = " << fit_favored_mu  <<  ", uncond ML = " << uncondML; 
           if (type != 1) 
-             std::cout << " cond ML = " << condML;
+             std::cout << ", cond ML = " << condML;
           if (type == 0)
              std::cout << " pll = " << pll;
           std::cout << " time (create/fit1/2) " << createTime << " , " << fitTime1 << " , " << fitTime2  
@@ -185,8 +212,9 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-       // if(statusN!=0 || statusD!=0)
-       //     ret= -1; // indicate failed fit [ WVE commented since not used ]
+       if(statusN!=0 || statusD!=0) {
+	      return -1; // indicate failed fit (WVE is not used anywhere yet)
+       }
 
        return pll;
              

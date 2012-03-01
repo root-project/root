@@ -126,8 +126,8 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
            }
         }
      }
-     std::cout << "BEST FIT values " << std::endl;
-     allParams->Print("V");
+     //std::cout << "BEST FIT values " << std::endl;
+     //allParams->Print("V");
 
      RooMsgService::instance().setGlobalKillBelow(msglevel);
      delete nll;

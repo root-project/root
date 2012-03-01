@@ -39,6 +39,8 @@ END_HTML
 #include "RooLinkedList.h"
 #include "RooLinkedListIter.h"
 
+#include <vector>
+
 namespace RooStats {
 
 class ToyMCStudy: public RooAbsStudy {
@@ -47,7 +49,6 @@ class ToyMCStudy: public RooAbsStudy {
       // need to have constructor without arguments for proof
       ToyMCStudy(const char *name = "ToyMCStudy", const char *title = "ToyMCStudy") :
          RooAbsStudy(name, title),
-
          fToyMCSampler(NULL)
       {
          // In this case, this is the normal output. The SamplingDistribution
@@ -55,29 +56,61 @@ class ToyMCStudy: public RooAbsStudy {
          storeDetailedOutput(kTRUE);
       }
 
-	RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }     
+	   RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }     
 
-      virtual ~ToyMCStudy() {
-      }
+      virtual ~ToyMCStudy() {}
 
       // RooAbsStudy interfaces
       virtual Bool_t initialize(void);
       virtual Bool_t execute(void);
       virtual Bool_t finalize(void);
 
-      Bool_t merge(SamplingDistribution& result);
+      RooDataSet* merge();
 
       void SetToyMCSampler(ToyMCSampler& t) { fToyMCSampler = &t; }
-      void SetParamPoint(const RooArgSet& poi) { fParamPointOfInterest.add(poi); }
+      void SetParamPoint(const RooArgSet& paramPoint) { fParamPoint.add(paramPoint); }
 
    protected:
 
       ToyMCSampler *fToyMCSampler;
-      RooArgSet fParamPointOfInterest;
+      RooArgSet fParamPoint;
 
    protected:
-   ClassDef(ToyMCStudy,1) // toy MC study for parallel processing
+   ClassDef(ToyMCStudy,1); // toy MC study for parallel processing
+   
 };
+
+
+class ToyMCPayload : public TNamed {
+   
+   public:
+      
+      ToyMCPayload() {
+         // proof constructor, do not use
+      }
+
+      ToyMCPayload(RooDataSet* sd)
+      {
+         fDataSet = sd;
+      }
+      
+      virtual ~ToyMCPayload() {
+      }
+
+
+      RooDataSet* GetSamplingDistributions()
+      {
+         return fDataSet;
+      }
+   
+   private:
+      RooDataSet* fDataSet;
+   
+   protected:
+   ClassDef(ToyMCPayload,1);
+};
+
+
 }
 
 

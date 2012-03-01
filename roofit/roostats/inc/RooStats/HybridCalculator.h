@@ -46,10 +46,6 @@ namespace RooStats {
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
          fPriorNuisanceNull(0),
          fPriorNuisanceAlt(0),
-         fNullImportanceDensity(NULL),
-         fNullImportanceSnapshot(NULL),
-         fAltImportanceDensity(NULL),
-         fAltImportanceSnapshot(NULL),
          fNToysNull(-1),
          fNToysAlt(-1),
          fNToysNullTail(0),
@@ -58,28 +54,12 @@ namespace RooStats {
       }
 
       ~HybridCalculator() {
-         if(fNullImportanceSnapshot) delete fNullImportanceSnapshot;
-         if(fAltImportanceSnapshot) delete fAltImportanceSnapshot;
       }
 
 
       // Override the distribution used for marginalizing nuisance parameters that is infered from ModelConfig
       virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { fPriorNuisanceNull = &priorNuisance; }
       virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) { fPriorNuisanceAlt = &priorNuisance; }
-
-      // sets importance density and snapshot (optional)
-      void SetNullImportanceDensity(RooAbsPdf *p, const RooArgSet *s = NULL) {
-         fNullImportanceDensity = p;
-         if(s) fNullImportanceSnapshot = (RooArgSet*)s->snapshot();
-         else fNullImportanceSnapshot = NULL;
-      }
-
-      // sets importance density and snapshot (optional)
-      void SetAltImportanceDensity(RooAbsPdf *p, const RooArgSet *s = NULL) {
-         fAltImportanceDensity = p;
-         if(s) fAltImportanceSnapshot = (RooArgSet*)s->snapshot();
-         else fAltImportanceSnapshot = NULL;
-      }
 
       // set number of toys
       void SetToys(int toysNull, int toysAlt) { fNToysNull = toysNull; fNToysAlt = toysAlt; }
@@ -100,11 +80,6 @@ namespace RooStats {
    protected:
       RooAbsPdf *fPriorNuisanceNull;
       RooAbsPdf *fPriorNuisanceAlt;
-
-      RooAbsPdf *fNullImportanceDensity;
-      const RooArgSet *fNullImportanceSnapshot;
-      RooAbsPdf *fAltImportanceDensity;
-      const RooArgSet *fAltImportanceSnapshot;
 
       // different number of toys for null and alt
       int fNToysNull;

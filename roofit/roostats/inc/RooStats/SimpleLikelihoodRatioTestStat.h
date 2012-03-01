@@ -30,6 +30,8 @@
 #include "RooNLLVar.h"
 #endif
 
+#include "RooRealVar.h"
+
 #include "RooStats/TestStatistic.h"
 #include "RooWorkspace.h"
 
@@ -45,6 +47,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       {
          // Constructor for proof. Do not use.
          fFirstEval = true;
+	     fDetailedOutputEnabled = false;
+        fDetailedOutput = NULL;
          fNullParameters = NULL;
          fAltParameters = NULL;
 	 fReuseNll=kFALSE ;
@@ -72,6 +76,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          fAltParameters = (RooArgSet*) allAltVars->snapshot();
          delete allAltVars;
 
+	     fDetailedOutputEnabled = false;
+        fDetailedOutput = NULL;
+
 	 fReuseNll=kFALSE ;
 	 fNllNull=NULL ;
 	 fNllAlt=NULL ;
@@ -92,6 +99,10 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
          fNullParameters = (RooArgSet*) nullParameters.snapshot();
          fAltParameters = (RooArgSet*) altParameters.snapshot();
+
+	     fDetailedOutputEnabled = false;
+        fDetailedOutput = NULL;
+
 	 fReuseNll=kFALSE ;
 	 fNllNull=NULL ;
 	 fNllAlt=NULL ;
@@ -103,6 +114,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          if (fAltParameters) delete fAltParameters;
 	 if (fNllNull) delete fNllNull ;
 	 if (fNllAlt) delete fNllAlt ;
+	 if (fDetailedOutput) delete fDetailedOutput;
       }
 
      static void SetAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
@@ -160,7 +172,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
 	 Bool_t created = kFALSE ;
 	 if (!fNllNull) {
-	   fNllNull = (RooNLLVar*) fNullPdf->createNLL(data, RooFit::CloneData(kFALSE));
+      RooArgSet* allParams = fNullPdf->getParameters(data);
+	   fNllNull = (RooNLLVar*) fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+	   delete allParams;
 	   created = kTRUE ;
 	 }
 	 if (reuse && !created) {
@@ -172,6 +186,10 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = *fNullParameters;
          *attachedSet = nullPOI;
          double nullNLL = fNllNull->getVal();
+         
+         //cout << endl << "SLRTS: null params:" << endl;
+         //attachedSet->Print("v");
+         
 
          if (!reuse) {
             delete fNllNull ; fNllNull = NULL ;
@@ -180,7 +198,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
 	 created = kFALSE ;
 	 if (!fNllAlt) {
-	   fNllAlt = (RooNLLVar*) fAltPdf->createNLL(data, RooFit::CloneData(kFALSE));
+      RooArgSet* allParams = fAltPdf->getParameters(data);
+	   fNllAlt = (RooNLLVar*) fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+	   delete allParams;
 	   created = kTRUE ;
 	 }
 	 if (reuse && !created) {
@@ -191,14 +211,41 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = *fAltParameters;
          double altNLL = fNllAlt->getVal();
 
+         //cout << endl << "SLRTS: alt params:" << endl;
+         //attachedSet->Print("v");
+
+
+         //cout << endl << "SLRTS null NLL: " << nullNLL << "    alt NLL: " << altNLL << endl << endl;
+
+
          if (!reuse) { 
             delete fNllAlt ; fNllAlt = NULL ;
          }
          delete attachedSet;
 
+
+
+         // save this snapshot
+         if( fDetailedOutputEnabled ) {
+            if( !fDetailedOutput ) {
+               fDetailedOutput = new RooArgSet( *(new RooRealVar("nullNLL","null NLL",0)), "detailedOut_SLRTS" );
+               fDetailedOutput->add( *(new RooRealVar("altNLL","alternate NLL",0)) );
+            }
+            fDetailedOutput->setRealValue( "nullNLL", nullNLL );
+            fDetailedOutput->setRealValue( "altNLL", altNLL );
+
+//             cout << endl << "STORING THIS AS DETAILED OUTPUT:" << endl;
+//             fDetailedOutput->Print("v");
+//             cout << endl;
+         }
+
+
          RooMsgService::instance().setGlobalKillBelow(msglevel);
          return nullNLL - altNLL;
       }
+
+      virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
+      virtual const RooArgSet* GetDetailedOutput(void) const { return fDetailedOutput; }
 
       virtual const TString GetVarName() const {
          return "log(L(#mu_{1}) / L(#mu_{0}))";
@@ -211,6 +258,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       RooArgSet* fNullParameters;
       RooArgSet* fAltParameters;
       bool fFirstEval;
+      
+      bool fDetailedOutputEnabled;
+      RooArgSet* fDetailedOutput; //!
 
       RooNLLVar* fNllNull ;  //! transient copy of the null NLL
       RooNLLVar* fNllAlt ; //!  transient copy of the alt NLL
@@ -219,7 +269,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 
 
    protected:
-   ClassDef(SimpleLikelihoodRatioTestStat,1)
+   ClassDef(SimpleLikelihoodRatioTestStat,2)
 };
 
 }

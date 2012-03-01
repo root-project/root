@@ -115,16 +115,32 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    bothParams->add(*altParams,false);
    RooArgSet *saveAll = (RooArgSet*) bothParams->snapshot();
 
+   // check whether we have a ToyMCSampler and if so, keep a pointer to it
+   ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>( fTestStatSampler );
+
 
    // evaluate test statistic on data
    RooArgSet nullP(*nullSnapshot);
-   double obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
+   double obsTestStat; 
+   
+   RooArgList* allTS = NULL;
+   if( toymcs ) {
+      allTS = toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP);
+      //oocoutP((TObject*)0,Generation) << "All Test Statistics on data: " << endl;
+      //allTS->Print("v");
+      RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
+      obsTestStat = firstTS->getVal();
+   }else{
+      obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
+   }
    oocoutP((TObject*)0,Generation) << "Test Statistic on data: " << obsTestStat << endl;
 
    // set parameters back ... in case the evaluation of the test statistic
    // modified something (e.g. a nuisance parameter that is not randomized
    // must be set here)
    *bothParams = *saveAll;
+   
+
 
    // Generate sampling distribution for null
    SetupSampler(*fNullModel);
@@ -132,7 +148,12 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    if(PreNullHook(&paramPointNull, obsTestStat) != 0) {
       oocoutE((TObject*)0,Generation) << "PreNullHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
+   SamplingDistribution* samp_null = NULL;
+   RooDataSet* detOut_null = NULL;
+   if(toymcs) {
+      detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
+      if( detOut_null ) samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
+   }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
 
    // set parameters back
    *bothParams = *saveAll;
@@ -143,7 +164,12 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    if(PreAltHook(&paramPointAlt, obsTestStat) != 0) {
       oocoutE((TObject*)0,Generation) << "PreAltHook did not return 0." << endl;
    }
-   SamplingDistribution* samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
+   SamplingDistribution* samp_alt = NULL;
+   RooDataSet* detOut_alt = NULL;
+   if(toymcs) {
+      detOut_alt = toymcs->GetSamplingDistributions(paramPointAlt);
+      if( detOut_alt ) samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
+   }else samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
 
 
    // create result
@@ -153,6 +179,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    res->SetTestStatisticData(obsTestStat);
    res->SetAltDistribution(samp_alt);
    res->SetNullDistribution(samp_null);
+   res->SetAltDetailedOutput( detOut_alt );
+   res->SetNullDetailedOutput( detOut_null );
+   res->SetAllTestStatisticsData( allTS );
 
    *bothParams = *saveAll;
    delete bothParams;
