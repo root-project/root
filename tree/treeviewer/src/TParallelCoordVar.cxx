@@ -444,6 +444,7 @@ void TParallelCoordVar::GetQuantiles()
    // Get the box plot values (quantiles).
 
    Double_t *quantiles = new Double_t[3];
+   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.;
    Double_t *prob = new Double_t[3];
    prob[0]=0.25; prob[1]=0.5; prob[2] = 0.75;
    Long64_t first = fParallel->GetCurrentFirst();
