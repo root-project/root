@@ -74,13 +74,13 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
       // apply strategy for how to distribute the #toys between the distributions
       if( fToysStrategy == EQUALTOYSPERDENSITY ) {
          // assuming alltoys = one null + N imp densities. And round up.
-         fNToys = ceil(  allToys/(fImportanceDensities.size()+1)  ); 
+         fNToys = ceil(  double(allToys)/(fImportanceDensities.size()+1)  ); 
       }else if(fToysStrategy == EXPONENTIALTOYDISTRIBUTION ) {
          // for N densities, split the toys into (2^(N+1))-1 parts, and assign 2^0 parts to the first
          // density (which is the null), 2^1 to the second (first imp dens), etc, up to 2^N
-         fNToys = ceil(  allToys * pow( 2, i+1 )  /  (pow( 2, fImportanceDensities.size()+1 )-1)  );
+         fNToys = ceil(  double(allToys) * pow( double(2) , i+1 )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
          
-         int largestNToys = ceil(  allToys * pow( 2, fImportanceDensities.size() )  /  (pow( 2, fImportanceDensities.size()+1 )-1)  );
+         int largestNToys = ceil(  allToys * pow( double(2), int(fImportanceDensities.size()) )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
          reweight.setVal( ((double)largestNToys) / fNToys );
       }
       
