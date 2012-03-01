@@ -217,6 +217,10 @@ using <tt>TH1::GetOption</tt>:
 
 <table border=0>
 
+<tr><th valign=top>"E"</th><td>
+Draw error bars.
+</td></tr> 
+
 <tr><th valign=top>"AXIS"</th><td>
 Draw only axis.
 </td></tr>
@@ -304,10 +308,6 @@ Like option "BAR", but bars are drawn horizontally.
 
 <tr><th valign=top>"C"</th><td>
 Draw a smooth Curve through the histogram bins.
-</td></tr>
-
-<tr><th valign=top>"E"</th><td>
-Draw error bars.
 </td></tr>
 
 <tr><th valign=top>"E0"</th><td>
@@ -920,6 +920,24 @@ Begin_Macro(source)
    TH1F *he3 = he4->DrawClone("E3");
    he3->SetTitle("Distribution drawn option E3");
    return ce4;
+}
+End_Macro
+Begin_Html
+ 
+<p>2D histograms can be drawn with error bars as shown is the following example:
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2e = new TCanvas("c2e","c2e",600,400);
+   TH2F *h2e = new TH2F("h2e","TH2 drawn with option E",40,-4,4,40,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      h2e->Fill(px,5*py);
+   }
+   h2e->Draw("E");
+   return c2e;
 }
 End_Macro
 Begin_Html
