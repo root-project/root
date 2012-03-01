@@ -201,6 +201,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   funcname.Append("_CACHE") ;
   funcname.Append(self.cacheNameSuffix(*nset2)) ;
   _func = new RooHistFunc(funcname,funcname,*observables,*_hist,self.getInterpolationOrder()) ;
+  if (self.operMode()==ADirty) _func->setOperMode(ADirty) ;
 
   // Set initial state of cache to dirty
   _func->setValueDirty() ;

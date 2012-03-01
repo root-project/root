@@ -188,6 +188,12 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;
   _funcClone->recursiveRedirectServers(*origParams) ;
 
+    // Mark all projected dependents as such
+  if (projDeps.getSize()>0) {
+    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(projDeps) ;
+    projDataDeps->setAttribAll("projectedDependent") ;
+    delete projDataDeps ;    
+  }
 
   // If PDF is a RooProdPdf (with possible constraint terms)
   // analyze pdf for actual parameters (i.e those in unconnected constraint terms should be
@@ -376,7 +382,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     delete tobedel ;
 
     // Mark all projected dependents as such
-    RooArgSet *projDataDeps = (RooArgSet*) _dataClone->get()->selectCommon(*_projDeps) ;
+    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
     projDataDeps->setAttribAll("projectedDependent") ;
     delete projDataDeps ;    
   } 

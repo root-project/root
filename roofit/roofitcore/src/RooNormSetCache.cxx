@@ -60,6 +60,7 @@ RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
   // Copy constructor
 
   //_htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
+  initialize(other) ;
 }
 
 

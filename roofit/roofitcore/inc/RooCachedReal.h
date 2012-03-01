@@ -54,6 +54,8 @@ protected:
     return func ;
   }
 
+  void operModeHook() ;
+
   virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }
   
   RooRealProxy func ;           // Proxy to function being cached

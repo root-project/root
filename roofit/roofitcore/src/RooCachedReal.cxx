@@ -149,6 +149,13 @@ RooArgSet* RooCachedReal::actualParameters(const RooArgSet& nset) const
 }
 
 
+void RooCachedReal::operModeHook() 
+{
+  if (operMode()==ADirty) {
+    ((RooAbsArg*)func.absArg())->setOperMode(ADirty) ;
+  }
+}
+
 
 
 
