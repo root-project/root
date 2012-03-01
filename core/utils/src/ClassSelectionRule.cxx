@@ -94,9 +94,29 @@ void ClassSelectionRule::SetRequestOnlyTClass(bool value)
    fRequestOnlyTClass = value;
 }
 
+void ClassSelectionRule::SetRequestProtected(bool value)
+{
+   fRequestProtected = value;
+}
+
+void ClassSelectionRule::SetRequestPrivate(bool value)
+{
+   fRequestPrivate = value;
+}
+
 bool ClassSelectionRule::RequestOnlyTClass() const
 {
    return fRequestOnlyTClass;
+}
+
+bool ClassSelectionRule::RequestProtected() const
+{
+   return fRequestProtected;
+}
+
+bool ClassSelectionRule::RequestPrivate() const
+{
+   return fRequestPrivate;
 }
 
 bool ClassSelectionRule::RequestNoStreamer() const

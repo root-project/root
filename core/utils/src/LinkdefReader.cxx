@@ -303,6 +303,20 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                csr.SetRequestOnlyTClass(true);
             }
             int len = identifier.length();
+            if (len > 8) { // process class+protected and class+private
+               static std::string protStr("+protected");
+               static std::string privStr("+private");
+
+               if (identifier.compare(0,protStr.length(),protStr) == 0) {
+                  csr.SetRequestProtected(true);
+                  identifier.erase(0,protStr.length()+1);
+                  len = identifier.length();
+               } else if (identifier.compare(0,privStr.length(),privStr) == 0) {
+                  csr.SetRequestPrivate(true);
+                  identifier.erase(0,privStr.length()+1);
+                  len = identifier.length();
+               }
+            }
             if (len > 2) { // process the +, -, -! endings of the classes
                
                bool ending = false;
@@ -626,10 +640,11 @@ public:
          end = tok;
          PP.Lex(tok);
       }
-      if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule",tok);
-         return;
-      }
+      // Pragma read rule do not need to end in a semi colon
+      // if (tok.isNot(clang::tok::semi)) {
+      //    Error("Error: missing ; at end of rule",tok);
+      //    return;
+      // }
       if (end.is(clang::tok::unknown)) {
          Error("",tok);
       } else {
