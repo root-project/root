@@ -2490,7 +2490,11 @@ TFile* TTree::ChangeFile(TFile* file)
    }
    Int_t compress = file->GetCompressionSettings();
    TFile* newfile = TFile::Open(fname, "recreate", "chain files", compress);
-   Printf("Fill: Switching to new file: %s", fname);
+   if (newfile == 0) {
+      Error("Fill: Failed to open new file %s, continuing as a memory tree.",fname); 
+   } else {
+      Printf("Fill: Switching to new file: %s", fname);
+   }
    // The current directory may contain histograms and trees.
    // These objects must be moved to the new file.
    TBranch* branch = 0;
@@ -2521,7 +2525,7 @@ TFile* TTree::ChangeFile(TFile* file)
          continue;
       }
       // Not a TH1 or a TTree, move object to new file.
-      newfile->Append(obj);
+      if (newfile) newfile->Append(obj);
       file->Remove(obj);
    }
    delete file;
@@ -5718,6 +5722,8 @@ TTree* TTree::MergeTrees(TList* li, Option_t* /* option */)
          
          // Once the cloning is done, separate the trees,
          // to avoid as many side-effects as possible
+         // The list of clones is guaranteed to exist since we
+         // just cloned the tree.
          tree->GetListOfClones()->Remove(newtree);
          tree->ResetBranchAddresses();
          newtree->ResetBranchAddresses();
