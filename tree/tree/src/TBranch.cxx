@@ -1857,6 +1857,8 @@ void TBranch::Refresh(TBranch* b)
    //  refresh this branch using new information in b
    //  This function is called by TTree::Refresh
 
+   if (b==0) return;
+
    fEntryOffsetLen = b->fEntryOffsetLen;
    fWriteBasket    = b->fWriteBasket;
    fEntryNumber    = b->fEntryNumber;
