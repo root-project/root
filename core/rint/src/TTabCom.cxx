@@ -1103,8 +1103,10 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    ///////////////////////////////////////////////////////
 
    FileStat_t stat;
-   gSystem->GetPathInfo(fileName, stat);
-   return R_ISDIR(stat.fMode);
+   if (!gSystem->GetPathInfo(fileName, stat)) 
+      return R_ISDIR(stat.fMode);
+   else 
+      return false;
 }
 
 //______________________________________________________________________________
