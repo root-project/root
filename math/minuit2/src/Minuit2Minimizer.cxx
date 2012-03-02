@@ -334,7 +334,7 @@ bool Minuit2Minimizer::Minimize() {
    MnPrint::SetLevel(PrintLevel() );
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
+   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -634,7 +634,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
       fMinimum->SetErrorDef(ErrorDef() );
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
+   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -672,7 +672,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
  
    ROOT::Minuit2::MinosError me(i, fMinimum->UserState().Value(i),low, up);
 
-   if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
+   if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
    // debug result of Minos 
    // print error message in Minos
@@ -744,7 +744,7 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    }
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
+   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    MnPrint::SetLevel( PrintLevel() );
 
@@ -758,7 +758,7 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // first value is param value
    std::vector<std::pair<double, double> > result = scan(ipar, nstep-1, xmin, xmax);
 
-   if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
+   if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
    if (result.size() != nstep) { 
       MN_ERROR_MSG2("Minuit2Minimizer::Scan"," Invalid result from MnParameterScan");
@@ -805,7 +805,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       fMinimum->SetErrorDef(ErrorDef() );
 
    // switch off Minuit2 printing (for level of  0,1)
-   int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -1; 
+   int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    MnPrint::SetLevel( PrintLevel() );
 
@@ -815,7 +815,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    // eventually one should specify tolerance in contours 
    MnContours contour(*fMinuitFCN, *fMinimum, Strategy() ); 
    
-   if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
+   if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
    std::vector<std::pair<double,double> >  result = contour(ipar,jpar, npoints);
    if (result.size() != npoints) { 
@@ -848,7 +848,7 @@ bool Minuit2Minimizer::Hesse( ) {
    int maxfcn = MaxFunctionCalls(); 
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() == 0 ) ?   TurnOffPrintInfoLevel() : -1; 
+   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    MnPrint::SetLevel( PrintLevel() );
 
@@ -870,7 +870,7 @@ bool Minuit2Minimizer::Hesse( ) {
       fState = hesse( *fMinuitFCN, fState, maxfcn); 
    }
 
-   if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
+   if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
 
    if (PrintLevel() >= 3) { 
       std::cout << "State returned from Hesse " << std::endl;

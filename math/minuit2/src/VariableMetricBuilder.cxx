@@ -186,9 +186,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    if (edm > 10*edmval) {
       min.Add( result.back(), FunctionMinimum::MnAboveMaxEdm() );
 #ifdef WARNINGMSG
-      MN_INFO_MSG("VariableMetricBuilder: Invalid function minimum - edm is above tolerance");
+      MN_INFO_VAL2("VariableMetricBuilder: INVALID function minimum - edm is above tolerance,",edm);
+      MN_INFO_VAL2("VariableMetricBuilder: Required tolerance  is 10 x ",edmval);
 #endif
-      std::cout << "EDM is above max tolerance " << edm << "  " << edmval << std::endl;
    }
    else {
       // check if minimum has edm above max before
