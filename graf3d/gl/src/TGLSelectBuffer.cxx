@@ -87,9 +87,11 @@ void TGLSelectBuffer::ProcessResult(Int_t glResult)
 }
 
 //______________________________________________________________________________
-void TGLSelectBuffer::SelectRecord(TGLSelectRecordBase& rec, Int_t i)
+Int_t TGLSelectBuffer::SelectRecord(TGLSelectRecordBase& rec, Int_t i)
 {
-   // Return select record on (sorted) position i.
+   // Fill select record rec with data on (sorted) position i.
+   // Returns depth of name-stack for this record.
 
    rec.Set(fSortedRecords[i].second);
+   return rec.GetN();
 }

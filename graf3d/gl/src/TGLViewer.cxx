@@ -511,8 +511,8 @@ void TGLViewer::Render()
 {
    // Normal rendering, used by mono and stereo rendering.
 
-   RenderOpaque();
-   RenderTransparent();
+   TGLViewerBase::Render();
+
    DrawGuides();
    RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
@@ -1165,7 +1165,7 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
    glRenderMode(GL_SELECT);
 
    PreRender();
-   Render();
+   TGLViewerBase::Render();
    PostRender();
 
    Int_t nHits = glRenderMode(GL_RENDER);

@@ -411,16 +411,12 @@ void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
 //______________________________________________________________________
 void TGLViewerBase::Render()
 {
-   // Render all scenes. This is done in four passes:
+   // Render all scenes. This is done in two main passes:
    // - render opaque objects from all scenes
    // - render transparent objects from all scenes
-   // - clear depth buffer
-   // - render opaque selected objects from all scenes (with highlight)
-   // - render transparent selected objects from all scenes (with highlight)
 
-   RenderNonSelected();
-   glClear(GL_DEPTH_BUFFER_BIT);
-   RenderSelected();
+   RenderOpaque();
+   RenderTransparent();
 }
 
 //______________________________________________________________________
@@ -601,7 +597,9 @@ Bool_t TGLViewerBase::ResolveSelectRecord(TGLSelectRecord& rec, Int_t recIdx)
    if (recIdx >= sb->GetNRecords())
        return kFALSE;
 
-   sb->SelectRecord(rec, recIdx);
+   if (sb->SelectRecord(rec, recIdx) < 1)
+      return kFALSE;
+
    UInt_t sceneIdx = rec.GetItem(0);
    if (sceneIdx >= fVisScenes.size())
        return kFALSE;

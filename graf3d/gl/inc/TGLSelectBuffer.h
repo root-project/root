@@ -52,7 +52,7 @@ public:
 
    UInt_t* RawRecord(Int_t i) { return fSortedRecords[i].second; }
 
-   void SelectRecord(TGLSelectRecordBase& rec, Int_t i);
+   Int_t   SelectRecord(TGLSelectRecordBase& rec, Int_t i);
 
    ClassDef(TGLSelectBuffer, 0) // OpenGL select buffer with depth sorting.
 };
