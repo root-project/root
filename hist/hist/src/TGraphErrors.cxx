@@ -319,6 +319,9 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
 
       // Looping
       while (std::getline(infile, line, '\n')) {
+         if (line[line.size() - 1] == char(13)) {  // removing DOS CR character 
+            line.erase(line.end() - 1, line.end()) ;
+         }
          if (line != "") {
             token = strtok(const_cast<char*>(line.c_str()), option) ;
             while (token != NULL && value_idx < ntokensToBeSaved) {
