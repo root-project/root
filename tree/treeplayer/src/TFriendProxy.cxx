@@ -37,7 +37,7 @@ namespace ROOT {
    {
       // Constructor.
 
-      if (main) {
+      if (main && main->GetListOfFriends()) {
          TObject *obj = main->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
          if (element) fDirector.SetTree(element->GetTree());
