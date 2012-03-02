@@ -1,8 +1,31 @@
 /* -*- mode: c++ -*- */
-// Standard tutorial macro for performing an inverted  hypothesis test 
+// Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
 //
-// This macro will perform a scan of tehe p-values for computing the limit
-// 
+// This macro will perform a scan of the p-values for computing the interval or limit
+//
+//Author:  L. Moneta
+//
+// Usage: 
+//
+// root>.L StandardHypoTestInvDemo.C
+// root> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, use CLS, 
+//                                number of points, xmin, xmax, number of toys, use number counting)
+//
+//
+// type = 0 Freq calculator 
+// type = 1 Hybrid calculator
+// type = 2 Asymptotic calculator  
+// type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
+//
+// testStatType = 0 LEP
+//              = 1 Tevatron 
+//              = 2 Profile Likelihood
+//              = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
+//              = 4 Profiel Likelihood signed ( pll = -pll if mu < mu_hat) 
+//              = 5 Max Likelihood Estimate as test statistic
+//              = 6 Number of observed event as test statistic
+//
+ 
 
 #include "TFile.h"
 #include "RooWorkspace.h"
@@ -28,6 +51,7 @@
 #include "RooStats/SimpleLikelihoodRatioTestStat.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 #include "RooStats/MaxLikelihoodEstimateTestStat.h"
+#include "RooStats/NumEventsTestStat.h"
 
 #include "RooStats/HypoTestInverter.h"
 #include "RooStats/HypoTestInverterResult.h"
@@ -39,7 +63,7 @@ using namespace RooStats;
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file 
-TString resultFileName;                  // file with results (by default is built automatically using teh ws input file name)
+TString resultFileName;                  // file with results (by default is built automatically using the workspace input file name)
 bool optimize = true;                    // optmize evaluation of test statistic 
 bool useVectorStore = true;              // convert data to use new roofit data store 
 bool generateBinned = false;             // generate binned data sets 
@@ -243,6 +267,9 @@ StandardHypoTestInvDemo(const char * infile = 0,
   = 1 Tevatron 
   = 2 Profile Likelihood
   = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
+  = 4 Profiel Likelihood signed ( pll = -pll if mu < mu_hat) 
+  = 5 Max Likelihood Estimate as test statistic
+  = 6 Number of observed event as test statistic
 
   useCLs          scan for CLs (otherwise for CLs+b)    
 
@@ -374,14 +401,19 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
                                           int npoints,
                                           const char * fileNameBase ){
 
-   // analyize result produced by the inverter, optionally save it in a file 
+   // analyze result produced by the inverter, optionally save it in a file 
    
+  
    double upperLimit = r->UpperLimit();
    double ulError = r->UpperLimitEstimatedError();
-  
+   double lowerLimit = r->LowerLimit();
+   double llError = r->LowerLimitEstimatedError();
+   if (lowerLimit < upperLimit*(1.- 1.E-4)) 
+      std::cout << "The computed lower limit is: " << lowerLimit << " +/- " << llError << std::endl;
    std::cout << "The computed upper limit is: " << upperLimit << " +/- " << ulError << std::endl;
   
    // compute expected limit
+   std::cout << "Expected upper limits, using the B (alternate) model : " << std::endl;
    std::cout << " expected limit (median) " << r->GetExpectedUpperLimit(0) << std::endl;
    std::cout << " expected limit (-1 sig) " << r->GetExpectedUpperLimit(-1) << std::endl;
    std::cout << " expected limit (+1 sig) " << r->GetExpectedUpperLimit(1) << std::endl;
@@ -396,19 +428,20 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       const char *  calcType = (calculatorType == 0) ? "Freq" : (calculatorType == 1) ? "Hybr" : "Asym";
       const char *  limitType = (useCLs) ? "CLs" : "Cls+b";
       const char * scanType = (npoints < 0) ? "auto" : "grid";
-      if (resultFileName.IsNull())
-         resultFileName = TString::Format("%s_%s_%s_ts%d_",calcType,limitType,scanType,testStatType);      
-      //strip the / from the filename
-      if (mMassValue.size()>0) {
-         resultFileName += mMassValue.c_str();
-         resultFileName += "_";
+      if (mResultFileName.IsNull()) {
+         mResultFileName = TString::Format("%s_%s_%s_ts%d_",calcType,limitType,scanType,testStatType);      
+         //strip the / from the filename
+         if (mMassValue.size()>0) {
+            mResultFileName += mMassValue.c_str();
+            mResultFileName += "_";
+         }
+    
+         TString name = fileNameBase; 
+         name.Replace(0, name.Last('/')+1, "");
+         mResultFileName += name;
       }
-    
-      TString name = fileNameBase; 
-      name.Replace(0, name.Last('/')+1, "");
-      resultFileName += name;
-    
-      TFile * fileOut = new TFile(resultFileName,"RECREATE");
+
+      TFile * fileOut = new TFile(mResultFileName,"RECREATE");
       r->Write();
       fileOut->Close();                                                                     
    }   
@@ -433,8 +466,13 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    TString c1Name = TString::Format("%s_Scan",typeName.c_str());
    TCanvas * c1 = new TCanvas(c1Name); 
    c1->SetLogy(false);
-   
+
    plot->Draw("CLb 2CL");  // plot all and Clb
+
+   // if (useCLs) 
+   //    plot->Draw("CLb 2CL");  // plot all and Clb
+   // else 
+   //    plot->Draw("");  // plot all and Clb
   
    const int nEntries = r->ArraySize();
   
@@ -588,6 +626,14 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    if (testStatType == 0 && initialFit == -1) doFit = false;  // case of LEP test statistic
    if (type == 3  && initialFit == -1) doFit = false;         // case of Asymptoticcalculator with nominal Asimov
    double poihat = 0;
+
+   if (minimizerType.size()==0) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   else 
+      ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
+    
+   Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
+        ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
+   
    if (doFit)  { 
 
       // do the fit : By doing a fit the POI snapshot (for S+B)  is set to the fit value
@@ -595,17 +641,12 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       // This is relevant when using LEP test statistics
 
       Info( "StandardHypoTestInvDemo"," Doing a first fit to the observed data ");
-      if (minimizerType.size()==0) minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-      else 
-         ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
-      Info("StandardHypoTestInvDemo","Using %s as minimizer for computing the test statistic",
-           ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str() );
       RooArgSet constrainParams;
       if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
       RooStats::RemoveConstantParameters(&constrainParams);
       tw.Start(); 
       RooFitResult * fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
-                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
+                                                       Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true) );
       if (fitres->status() != 0) { 
          Warning("StandardHypoTestInvDemo","Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
          fitres = sbModel->GetPdf()->fitTo(*data,InitialHesse(true), Hesse(false),Minimizer(minimizerType.c_str(),"Migrad"), Strategy(1), PrintLevel(mPrintLevel+1), Constrain(constrainParams), Save(true) );
@@ -651,11 +692,13 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    RatioOfProfiledLikelihoodsTestStat 
       ropl(*sbModel->GetPdf(), *bModel->GetPdf(), bModel->GetSnapshot());
    ropl.SetSubtractMLE(false);
+   if (testStatType == 11) ropl.SetSubtractMLE(true);
    ropl.SetPrintLevel(mPrintLevel);
    ropl.SetMinimizer(minimizerType.c_str());
   
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
-   if (testStatType == 3) profll.SetOneSided(1);
+   if (testStatType == 3) profll.SetOneSided(true);
+   if (testStatType == 4) profll.SetSigned(true);
    profll.SetMinimizer(minimizerType.c_str());
    profll.SetPrintLevel(mPrintLevel);
 
@@ -666,11 +709,15 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    if (mOptimize) { 
       profll.SetStrategy(0);
       ropl.SetStrategy(0);
+      ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
    }
   
    if (mMaxPoi > 0) poi->setMax(mMaxPoi);  // increase limit
   
    MaxLikelihoodEstimateTestStat maxll(*sbModel->GetPdf(),*poi); 
+   NumEventsTestStat nevtts;
+
+   AsymptoticCalculator::SetPrintLevel(mPrintLevel);
   
    // create the HypoTest calculator class 
    HypoTestCalculatorGeneric *  hc = 0;
@@ -686,9 +733,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    // set the test statistic 
    TestStatistic * testStat = 0;
    if (testStatType == 0) testStat = &slrts;
-   if (testStatType == 1) testStat = &ropl;
-   if (testStatType == 2 || testStatType == 3) testStat = &profll;
-   if (testStatType == 4) testStat = &maxll;
+   if (testStatType == 1 || testStatType == 11) testStat = &ropl;
+   if (testStatType == 2 || testStatType == 3 || testStatType == 4) testStat = &profll;
+   if (testStatType == 5) testStat = &maxll;
+   if (testStatType == 6) testStat = &nevtts;
+
    if (testStat == 0) { 
       Error("StandardHypoTestInvDemo","Invalid - test statistic type = %d supported values are only :\n\t\t\t 0 (SLR) , 1 (Tevatron) , 2 (PLR), 3 (PLR1), 4(MLE)",testStatType);
       return 0;
@@ -696,7 +745,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
   
   
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
-   if (toymcs) { 
+   if (toymcs && (type == 0 || type == 1) ) { 
       if (useNumberCounting) toymcs->SetNEventsPerToy(1);
       toymcs->SetTestStatistic(testStat);
     
@@ -776,9 +825,6 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       if (testStatType == 3) ((AsymptoticCalculator*) hc)->SetOneSided(true);  
       if (testStatType != 2 && testStatType != 3)  
          Warning("StandardHypoTestInvDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
-
-      // ((AsymptoticCalculator*) hc)->SetQTilde(true); // not needed should be done automatically now
-      ((AsymptoticCalculator*) hc)->SetPrintLevel(mPrintLevel+1); 
    }
    else if (type == 0 || type == 1) 
       ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/mNToysRatio); 
