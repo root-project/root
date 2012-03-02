@@ -197,7 +197,7 @@ public:
             fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&arowPtr) {;}
             //fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&arowPtr) ) {;}
          iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
-         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
+         iterator &operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; return *this; }
          void operator++()    { ++fCurrentRow;   }
          void operator++(int) {   fCurrentRow++; }
          void operator--()    { --fCurrentRow;   }
