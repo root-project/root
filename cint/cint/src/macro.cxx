@@ -858,6 +858,8 @@ int G__execfuncmacro_noexec(const char* macroname)
    fpos_t call_pos;
    if (G__ifile.fp) {
       fgetpos(G__ifile.fp, &call_pos);
+   } else {
+      memset(&call_pos,0,sizeof(fpos_t));
    }
    //
    //  Search for translated macro function.
