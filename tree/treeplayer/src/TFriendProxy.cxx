@@ -68,7 +68,7 @@ namespace ROOT {
    {
       // Update the address of the underlying tree.
 
-      if (newmain) {
+      if (newmain && newmain->GetListOfFriends()) {
          TObject *obj = newmain->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
          if (element) fDirector.SetTree(element->GetTree());
