@@ -2491,7 +2491,7 @@ TFile* TTree::ChangeFile(TFile* file)
    Int_t compress = file->GetCompressionSettings();
    TFile* newfile = TFile::Open(fname, "recreate", "chain files", compress);
    if (newfile == 0) {
-      Error("Fill: Failed to open new file %s, continuing as a memory tree.",fname); 
+      Error("Fill","Failed to open new file %s, continuing as a memory tree.",fname); 
    } else {
       Printf("Fill: Switching to new file: %s", fname);
    }
