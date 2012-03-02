@@ -3108,7 +3108,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    interpInclude = ROOTETCDIR;
 #endif // ROOTINCDIR
    interpInclude.Prepend("-I");
-   const char* interpArgs[] = {interpInclude.Data(), 0};
+   const char* interpArgs[] = {"cling4root", interpInclude.Data(), 0};
 
    TString llvmDir;
    if (gSystem->Getenv("$(LLVMDIR)")) {
@@ -3120,7 +3120,8 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    }
 #endif // R__LLVMDIR
 
-   fInterpreter = new cling::Interpreter(1, interpArgs, llvmDir); 
+   fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*) - 1,
+                                         interpArgs, llvmDir); 
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
    // Add the current path to the include path
