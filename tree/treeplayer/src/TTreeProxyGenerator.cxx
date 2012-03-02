@@ -1514,7 +1514,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                     arr = (TClonesArray*)(obj+lOffset);
                     }
                   */
-                  cname = arr->GetClass()->GetName();
+                  if (arr) cname = arr->GetClass()->GetName();
 
                   if (cname.Length()==0) {
                      Error("AnalyzeTree",
