@@ -27,9 +27,10 @@ private:
    Int_t  fIndx;
    Int_t  fTotalKeys;
    Int_t  fFirstIndx;
+   TTableIter(const TTableIter &org); // Intentioanlly not implemented
+   TTableIter &operator=(const TTableIter &org); // Intentioanlly not implemented
 protected:
    TTableIter(){;}
-   TTableIter(const TTableIter &org) : TObject(org) {;}
 
 public:
    TTableIter(const TTableSorter *table, Float_t  &keyvalue);

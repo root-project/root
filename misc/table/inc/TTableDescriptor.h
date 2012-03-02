@@ -23,6 +23,8 @@ class TClass;
 
 
 class TTableDescriptor : public TTable {
+private:
+   TTableDescriptor &operator=(const TTableDescriptor &dsc); // Intentionally not implemented.
 protected:
    friend class TTable;
    TClass  *fRowClass;                  // TClass defining 

@@ -33,6 +33,8 @@ class TTableMap : public TObject
  , public std::vector<Long_t>
 #endif
 {
+private:
+   TTableMap &operator=(const TTableMap &orig); // intentionally not implemented.
 protected:
    const TTable  *fTable;         // pointer to the refered TTable
 
