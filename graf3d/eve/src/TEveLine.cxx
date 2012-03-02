@@ -309,7 +309,7 @@ void TEveLine::SetDefaultSmooth(Bool_t r)
 
 //______________________________________________________________________________
 //
-// Projected copy of a TEvePointSet.
+// Projected copy of a TEveLine.
 
 ClassImp(TEveLineProjected);
 
