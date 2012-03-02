@@ -1571,7 +1571,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
             strlcat(curname, occur,1000); 
          }
          TBranchElement* br = (TBranchElement*) Bronch(curname, obj->ClassName(), add, bufsize, splitlevel - 1);
-         br->SetBranchFolder();
+         if (br) br->SetBranchFolder();
       }
    }
    delete[] curname;
