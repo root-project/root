@@ -101,6 +101,9 @@ private:
    char  fRawEndBuffer[TVirtualCollectionProxy::fgIteratorArenaSize];
 
    struct TInternalIterator {
+   private:
+      TInternalIterator &operator=(const TInternalIterator&); // intentionally not implemented
+   public:
       TInternalIterator() : fCopy(0),fDelete(0),fNext(0),fIter(0) {}
       TInternalIterator(const TInternalIterator &source) : fCopy(source.fCopy),fDelete(source.fDelete),fNext(source.fNext),fIter(0) {}
 
