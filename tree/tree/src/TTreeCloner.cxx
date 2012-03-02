@@ -540,6 +540,7 @@ void TTreeCloner::CopyProcessIds()
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
          TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
+         if (!pid) continue;
 
          //UShort_t out = TProcessID::WriteProcessID(id,tofile);
          UShort_t out = 0;
