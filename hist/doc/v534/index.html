@@ -15,7 +15,6 @@ If a function does not care about the actual storage format on in incoming objec
 <li>The bins of <tt>THn</tt> are held by objects of the new type <tt>TNDArray</tt>: an n-dimensional array with lazy allocation (only when a bin is set) that implements an <tt>operator []</tt>.</li>
 <li><tt>THn</tt> and <tt>THnSparse</tt> can be created from histograms and from each other, allowing for easy conversion. There is currently no support for drawing a <tt>THnBase</tt>-derived object; project it into a <tt>TH1/2/3</tt> first.</li>
 </ul>
-</li>
 
 <h3>THistPainter</h3>
 <ul>
@@ -25,7 +24,7 @@ each bin is placed taking into account the bar offset and bar width attributes. 
 when several histogram were drawn that way, the texts overlapped.
 </li>
 <li>
-When a </tt>TF1</tt> was clipped vertically, horizotal lines appeared at the maximum and minimum
+When a <tt>TF1</tt> was clipped vertically, horizotal lines appeared at the maximum and minimum
 when the function was draw with a line width greater than 1.
 The follwoing macro reproduces the problem:
 <pre>
