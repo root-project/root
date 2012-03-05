@@ -900,14 +900,22 @@ void TGTextEntry::Del()
 
    Int_t minP = MinMark();
    Int_t maxP = MaxMark();
+   Int_t offset = IsFrameDrawn() ? 4 : 0;
+   Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
    if (HasMarkedText())  {
       fText->RemoveText(minP, maxP-minP);
       fSelectionOn = kFALSE;
+      TString dt = GetDisplayText();
+      Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data(), dt.Length());
+      fOffset = w - textWidth - 1;
       SetCursorPosition(minP);
    }  else if (fCursorIX != (Int_t)fText->GetTextLength()) {
       fSelectionOn = kFALSE;
       fText->RemoveText(fCursorIX , 1);
+      TString dt = GetDisplayText();
+      Int_t textWidth = gVirtualX->TextWidth(fFontStruct, dt.Data(), dt.Length());
+      fOffset = w - textWidth - 1;
       SetCursorPosition(fCursorIX);
    }
    TextChanged();
@@ -987,6 +995,7 @@ void TGTextEntry::Home(Bool_t mark)
    if (mark){
       fSelectionOn = kTRUE;
       fStartIX = fCursorIX;
+      UpdateOffset();
       NewMark(0);
    } else {
       fSelectionOn = kFALSE;
@@ -1011,6 +1020,7 @@ void TGTextEntry::End(Bool_t mark)
    if (mark){
       fSelectionOn = kTRUE;
       fStartIX = fCursorIX;
+      UpdateOffset();
       NewMark(len);
    } else {
       fSelectionOn = kFALSE;
@@ -1625,7 +1635,7 @@ void TGTextEntry::UpdateOffset()
       offset = 2;
    Int_t w = GetWidth() - 2 * offset;   // subtract border twice
 
-   if (textWidth > 0 && textWidth > w) {                          // may need to scroll.
+   if (textWidth > 0 && textWidth > w) { // may need to scroll.
       if (IsCursorOutOfFrame()) ScrollByChar();
    }
    else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
