@@ -72,8 +72,14 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
    fMax = max;
    
    fVar = var;
-   if (!sel) fSelect = var->GetParallel()->GetCurrentSelection();
-   else fSelect = sel;
+   
+   if (!sel) {
+      TParallelCoordSelect* s = var->GetParallel()->GetCurrentSelection();
+      if (s) fSelect = s;
+      else return;
+   } else {
+      fSelect = sel;
+   }
    
    SetLineColor(fSelect->GetLineColor());
    
