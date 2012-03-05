@@ -232,7 +232,7 @@ fMain-&gt;MapWindow();
 <code>We compile the example:</code></para>
 
 <programlisting language="c++">rootcint -f ex2aDict.cxx -c example2a.h ex2aLinkDef.h
-g++ `root-config --cflags --glibs` -o example2a example2a.cxx ex2aDict.cxx
+g++ -o example2a example2a.cxx ex2aDict.cxx `root-config --cflags --glibs`
 </programlisting>
 
 <para>
