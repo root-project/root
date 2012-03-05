@@ -566,7 +566,7 @@ void TFitEditor::CreateFunctionGroup()
 
    TGCompositeFrame *tf1 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
-   TGHButtonGroup *bgr = new TGHButtonGroup(tf1,"Operation");
+   TGHButtonGroup *bgr = new TGHButtonGroup(tf1, "Operation");
    bgr->SetRadioButtonExclusive();
    fNone = new TGRadioButton(bgr, "Nop", kFP_NONE);
    fNone->SetToolTipText("No operation defined");
@@ -584,9 +584,9 @@ void TFitEditor::CreateFunctionGroup()
    bgr->SetLayoutHints(fLayoutConv,fConv);
    bgr->Show();
    bgr->ChangeOptions(kFitWidth | kHorizontalFrame);
-   tf1->AddFrame(bgr, new TGLayoutHints(kLHintsNormal, 15, 0, 3, 0));
+   tf1->AddFrame(bgr, new TGLayoutHints(kLHintsExpandX, 0, 0, 3, 0));
 
-   gf1->AddFrame(tf1, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
+   gf1->AddFrame(tf1, new TGLayoutHints(kLHintsExpandX));
 
    TGCompositeFrame *tf2 = new TGCompositeFrame(gf1, 350, 26,
                                                 kHorizontalFrame);
@@ -1945,7 +1945,7 @@ void TFitEditor::DoFit()
    {
       // If not, then show an error message and leave.
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error...", "DoFit\nVerify the entered function string!",
+                   "Error...", "Verify the entered function string!",
                    kMBIconStop,kMBOk, 0);
       return;
    }
@@ -2397,7 +2397,7 @@ void TFitEditor::DoEnteredFunction()
 
    if (ok != 0) {
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error...", "DoEnteredFunction\nVerify the entered function string!",
+                   "Error...", "Verify the entered function string!",
                    kMBIconStop,kMBOk, 0);
       return;
    }
@@ -3415,7 +3415,7 @@ TF1* TFitEditor::GetFitFunction()
       if ( tmpF1 == 0 )
       {
                new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                            "Error...", "GetFitFunction\nVerify the entered function string!",
+                            "Error...", "Verify the entered function string!",
                             kMBIconStop,kMBOk, 0);
                return 0;
       }
