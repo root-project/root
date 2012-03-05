@@ -33,6 +33,7 @@
 #include "TGIcon.h"
 #include "TGLabel.h"
 #include "TList.h"
+#include "KeySymbols.h"
 
 
 ClassImp(TGMsgBox)
@@ -285,6 +286,7 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    height = GetDefaultHeight();
 
    Resize(width, height);
+   AddInput(kKeyPressMask);
 
    // position relative to the parent's window
 
@@ -372,3 +374,32 @@ Bool_t TGMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    return kTRUE;
 }
+
+//______________________________________________________________________________
+Bool_t TGMsgBox::HandleKey(Event_t* event)
+{
+   // Handle enter and escape keys (used as Ok and Cancel for now).
+
+   if (event->fType == kGKeyPress) {
+      UInt_t keysym;
+      char input[10];
+      gVirtualX->LookupString(event, input, sizeof(input), keysym);
+
+      if ((EKeySym)keysym == kKey_Escape) {
+         if (fCancel) {
+            if (fRetCode) *fRetCode = (Int_t) kMBCancel;
+            DeleteWindow();
+         }
+         return kTRUE;
+      }
+      else if ((EKeySym)keysym == kKey_Enter || (EKeySym)keysym == kKey_Return) {
+         if (fOK) {
+            if (fRetCode) *fRetCode = (Int_t) kMBOk;
+            DeleteWindow();
+         }
+         return kTRUE;
+      }
+   }
+   return TGMainFrame::HandleKey(event);
+}
+
