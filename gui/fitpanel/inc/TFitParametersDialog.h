@@ -81,6 +81,7 @@ protected:
    TGTextButton        *fReset;           // Reset button
    TGTextButton        *fOK;              // OK button
    TGTextButton        *fCancel;          // Cancel button
+   TList                fTextEntries;     // list of text entries used for keyboard navigation
 
    void  DisconnectSlots();
 public:
@@ -102,6 +103,8 @@ public:
    virtual void  DoSlider();
    virtual void  DrawFunction();
    virtual void  HandleButtons(Bool_t update);
+   virtual void  HandleShiftTab();
+   virtual void  HandleTab();
 
 protected:
    void SetParameters();

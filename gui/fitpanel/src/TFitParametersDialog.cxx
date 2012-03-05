@@ -172,6 +172,9 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       (fParVal[i]->GetNumberEntry())->Connect("ReturnPressed()", "TFitParametersDialog",
                                               this, "DoParValue()");
       fParVal[i]->Connect("ValueSet(Long_t)", "TFitParametersDialog", this, "DoParValue()");
+      (fParVal[i]->GetNumberEntry())->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()");
+      (fParVal[i]->GetNumberEntry())->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
+      fTextEntries.Add(fParVal[i]->GetNumberEntry());
    }
    f1->AddFrame(fContVal, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
@@ -187,7 +190,11 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                                  fFunc->GetParName(i)));
       fContMin->AddFrame(fParMin[i], new TGLayoutHints(kLHintsExpandX, 2, 2, 7, 5));
       fParMin[i]->SetNumber(fPmin[i]);
-      fParMin[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, "DoParMinLimit()");
+      fParMin[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, 
+                          "DoParMinLimit()");
+      fParMin[i]->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()");
+      fParMin[i]->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
+      fTextEntries.Add(fParMin[i]);
    }
    f1->AddFrame(fContMin, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
@@ -217,6 +224,9 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fContMax->AddFrame(fParMax[i], new TGLayoutHints(kLHintsExpandX, 2, 2, 7, 5));
       fParMax[i]->SetNumber(fPmax[i]);
       fParMax[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, "DoParMaxLimit()");
+      fParMax[i]->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()");
+      fParMax[i]->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
+      fTextEntries.Add(fParMax[i]);
    }
    f1->AddFrame(fContMax, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
@@ -234,6 +244,9 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       (fParStp[i]->GetNumberEntry())->Connect("ReturnPressed()", "TFitParametersDialog",
                                               this, "DoParStep()");
       fParStp[i]->Connect("ValueSet(Long_t)", "TFitParametersDialog", this, "DoParStep()");
+      (fParStp[i]->GetNumberEntry())->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()"); 
+      (fParStp[i]->GetNumberEntry())->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
+      fTextEntries.Add(fParStp[i]->GetNumberEntry());
    }
    f1->AddFrame(fContStp, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
 
@@ -332,6 +345,7 @@ TFitParametersDialog::~TFitParametersDialog()
    // Destructor.
 
    DisconnectSlots();   
+   fTextEntries.Clear();
    Cleanup();
    delete [] fPval;
    delete [] fPmin;
@@ -905,6 +919,14 @@ void TFitParametersDialog::DisconnectSlots()
       fParSld[i]->Disconnect("PointerPositionChanged()");
       fParSld[i]->Disconnect("PositionChanged()");
       fParStp[i]->Disconnect("ValueSet(Long_t)");
+      fParVal[i]->Disconnect("TabPressed(Long_t)");
+      fParVal[i]->Disconnect("ShiftTabPressed(Long_t)");
+      fParMin[i]->Disconnect("TabPressed(Long_t)");
+      fParMin[i]->Disconnect("ShiftTabPressed(Long_t)");
+      fParMax[i]->Disconnect("TabPressed(Long_t)");
+      fParMax[i]->Disconnect("ShiftTabPressed(Long_t)");
+      fParStp[i]->Disconnect("TabPressed(Long_t)");
+      fParStp[i]->Disconnect("ShiftTabPressed(Long_t)");
    }
    fUpdate->Disconnect("Toggled(Bool_t)");
    fReset->Disconnect("Clicked()");
@@ -912,4 +934,36 @@ void TFitParametersDialog::DisconnectSlots()
    fOK->Disconnect("Clicked()");
    fCancel->Disconnect("Clicked()");
 }
+
+//______________________________________________________________________________
+void TFitParametersDialog::HandleShiftTab()
+{
+   // Handle Shift+Tab key event (set focus to the previous number entry field)
+
+   TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
+   next = (TGNumberEntryField *)fTextEntries.Before((TObject *)sender);
+   if (next == 0)
+      next = (TGNumberEntryField *)fTextEntries.Last();
+   if (next) {
+      next->SetFocus();
+      next->Home();
+   }
+}
+
+//______________________________________________________________________________
+void TFitParametersDialog::HandleTab()
+{
+   // Handle Tab key event (set focus to the next number entry field)
+
+   TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
+   next = (TGNumberEntryField *)fTextEntries.After((TObject *)sender);
+   if (next == 0)
+      next = (TGNumberEntryField *)fTextEntries.First();
+   if (next) {
+      next->SetFocus();
+      next->Home();
+   }
+}
+
+
 
