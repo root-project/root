@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(montecarlo/EG)
+ROOT_USE_PACKAGE(montecarlo/eg)
 ROOT_USE_PACKAGE(math/physics)
 include_directories(${PYTHIA8_INCLUDE_DIR})
 
