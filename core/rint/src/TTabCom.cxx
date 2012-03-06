@@ -551,6 +551,7 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
 
    if (!fpEnvVars) {
       const char *tmpfilename = tmpnam(0);
+      if (!tmpfilename) return 0;
       TString cmd;
 
 #ifndef WIN32
@@ -893,6 +894,8 @@ TString TTabCom::DetermineClass(const char varName[])
    IfDebug(cerr << "DetermineClass(\"" << varName << "\");" << endl);
 
    const char *tmpfile = tmpnam(0);
+   if (!tmpfile) return "";
+
    TString cmd("gROOT->ProcessLine(\"");
    cmd += varName;
    cmd += "\"); > ";
@@ -1041,6 +1044,7 @@ TString TTabCom::GetSysIncludePath()
    // get this part of the include path from the interpreter
    // and stick it in a tmp file.
    const char *tmpfilename = tmpnam(0);
+   if (!tmpfilename) return "";
 
    FILE *fout = fopen(tmpfilename, "w");
    if (!fout) return "";
