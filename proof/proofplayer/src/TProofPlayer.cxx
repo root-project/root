@@ -1906,7 +1906,8 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
             if (pf->IsMerge()) {
 
                // Point to the merger
-               TFileMerger *filemerger = pf->GetFileMerger();
+               Bool_t localMerge = (pf->GetTypeOpt() == TProofOutputFile::kLocal) ? kTRUE : kFALSE;
+               TFileMerger *filemerger = pf->GetFileMerger(localMerge);
                if (!filemerger) {
                   Error("MergeOutputFiles", "file merger is null in TProofOutputFile! Protocol error?");
                   pf->Print();
