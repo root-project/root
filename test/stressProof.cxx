@@ -928,7 +928,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    // Test package argument passing
    testList->Add(new ProofTest("Package argument passing", 12, &PT_PackageArguments, 0, "1", "ProofTests"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1", "ProofEvent", kTRUE));
+   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1,11", "ProofEvent", kTRUE));
    // Test input data propagation (it only works in the static startup mode)
    testList->Add(new ProofTest("Input data propagation", 14, &PT_InputData, 0, "1", "ProofTests"));
    // Test asynchronous running
