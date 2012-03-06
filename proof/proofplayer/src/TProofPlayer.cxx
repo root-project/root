@@ -1844,7 +1844,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Set the input list for initialization
       fSelector->SetInputList(fInput);
       fSelector->SetOption(option);
-      fSelector->GetOutputList()->Clear();
+      if (fSelector->GetOutputList()) fSelector->GetOutputList()->Clear();
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);

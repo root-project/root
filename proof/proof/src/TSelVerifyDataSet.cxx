@@ -41,25 +41,51 @@ ClassImp(TSelVerifyDataSet)
 TSelVerifyDataSet::TSelVerifyDataSet(TTree *)
 {
    // Constructor
+   InitMembers();
 }
 
 //______________________________________________________________________________
 TSelVerifyDataSet::TSelVerifyDataSet()
 {
    // Constructor
+   InitMembers();
 }
 
 //______________________________________________________________________________
-void TSelVerifyDataSet::Begin(TTree *)
+void TSelVerifyDataSet::InitMembers()
 {
-   Init(0);
+   // Initialize members
+
+   fFopt = -1;
+   fSopt = 0;
+   fRopt = 0;
+
+   fAllf = 0;
+   fCheckstg = 0;
+   fNonStgf = 0;
+   fReopen = 0;
+   fTouch = 0;
+   fStgf = 0;
+   fNoaction = 0;
+   fFullproc = 0;
+   fLocateonly = 0;
+   fStageonly = 0;
+   fDoall       = 0;
+   fGetlistonly = 0;
+   fScanlist    = 0;
+   fDbg = 0;
+
+   fChangedDs = kFALSE;
+   fTouched = 0;
+   fOpened = 0;
+   fDisappeared = 0;
+   fSubDataSet = 0;
 }
 
 //______________________________________________________________________________
 void TSelVerifyDataSet::SlaveBegin(TTree *)
 {
-
-   Init(0);
+   // Worker Begin
 
    TString dsname, opts;
 
@@ -310,6 +336,8 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 //______________________________________________________________________________
 void TSelVerifyDataSet::SlaveTerminate()
 {
+   // Worker Terminate
+   
    if (fSubDataSet) {
       fSubDataSet->Update();
       if (fSubDataSet->GetNFiles() > 0) {
@@ -335,7 +363,3 @@ void TSelVerifyDataSet::SlaveTerminate()
    TString schanged= TString::Format("PROOF_DataSetChanged_%s_%s", hostname.Data(), thisordinal.Data());
    fOutput->Add(new TParameter<Bool_t>(schanged.Data(), fChangedDs));
 }
-
-//______________________________________________________________________________
-void TSelVerifyDataSet::Terminate()
-{}

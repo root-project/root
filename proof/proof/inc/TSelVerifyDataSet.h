@@ -68,60 +68,27 @@ private:
 
    TFileCollection *fSubDataSet; // Sub-dataset being verified
 
+   void InitMembers();
+
 public :
 
    TSelVerifyDataSet(TTree *);
    TSelVerifyDataSet();
    virtual ~TSelVerifyDataSet() {}
    virtual Int_t   Version() const {return 1;}
-   virtual void    Begin(TTree *);
+   virtual void    Begin(TTree *) { }
    virtual void    SlaveBegin(TTree *tree);
-   virtual void    Init(TTree *tree);
-   virtual Bool_t  Notify();
+   virtual void    Init(TTree *) { }
+   virtual Bool_t  Notify() { return kTRUE; }
    virtual Bool_t  Process(Long64_t entry);
    virtual void    SetOption(const char *option) { fOption = option; }
    virtual void    SetObject(TObject *obj) { fObject = obj; }
    virtual void    SetInputList(TList *input) {fInput = input;}
    virtual TList  *GetOutputList() const { return fOutput; }
    virtual void    SlaveTerminate();
-   virtual void    Terminate();
+   virtual void    Terminate() { }
 
    ClassDef(TSelVerifyDataSet,0) //PROOF selector for parallel dataset verification
 };
 
 #endif
-
-#ifdef TSelVerifyDataSet_cxx
-void TSelVerifyDataSet::Init(TTree *)
-{
-   fFopt = -1;
-   fSopt = 0;
-   fRopt = 0;
-
-   fAllf = 0;
-   fCheckstg = 0;
-   fNonStgf = 0;
-   fReopen = 0;
-   fTouch = 0;
-   fStgf = 0;
-   fNoaction = 0;
-   fFullproc = 0;
-   fLocateonly = 0;
-   fStageonly = 0;
-   fDoall       = 0;
-   fGetlistonly = 0;
-   fScanlist    = 0;
-   fDbg = 0;
-
-   fChangedDs = kFALSE;
-   fTouched = 0;
-   fOpened = 0;
-   fDisappeared = 0;
-   fSubDataSet = 0;
-}
-
-Bool_t TSelVerifyDataSet::Notify()
-{
-   return kTRUE;
-}
-#endif // #ifdef TSelVerifyDataSet_cxx

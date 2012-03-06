@@ -85,7 +85,8 @@ public:
    enum EStatusBits { kOutputFileNameSet = BIT(16)};
    TProofOutputFile() : fDir(), fRawDir(), fFileName(), fOptionsAnchor(), fOutputFileName(),
                         fWorkerOrdinal(), fLocalHost(), fIsLocal(kFALSE), fMerged(kFALSE),
-                        fRunType(kMerge), fTypeOpt(kRemote), fDataSet(0), fMerger(0) { }
+                        fRunType(kMerge), fTypeOpt(kRemote), fMergeHistosOneGo(kFALSE),
+                        fDataSet(0), fMerger(0) { }
    TProofOutputFile(const char *path, const char *option = "M", const char *dsname = 0);
    TProofOutputFile(const char *path, ERunType type, UInt_t opt = kRemote, const char *dsname = 0);
    virtual ~TProofOutputFile();
