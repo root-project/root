@@ -749,7 +749,7 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
    }
 
    Bool_t reset = false;
-   while ( fCurrentEntry < entry ) {
+   while ( fResult && fCurrentEntry < entry ) {
       ++fCurrentEntry;
       delete fRow;
       fRow = fResult->Next();
