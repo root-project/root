@@ -258,7 +258,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    //create a buffer where the object will be streamed
    //We are forced to go via the I/O package (ie TBufferFile).
    //Invoking TBufferFile via CINT will automatically load the I/O library
-   TBuffer *buffer = (TBuffer*)gROOT->ProcessLine(Form("new TBufferFile((TBuffer::EMode)%d,10000);",TBuffer::kWrite));
+   TBuffer *buffer = (TBuffer*)gROOT->ProcessLine("new TBufferFile(TBuffer::kWrite,10000);");
    if (!buffer) return 0;
    buffer->MapObject(obj);  //register obj in map to handle self reference
    const_cast<TObject*>(obj)->Streamer(*buffer);
