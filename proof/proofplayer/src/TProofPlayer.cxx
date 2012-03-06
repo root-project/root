@@ -735,6 +735,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    SafeDelete(fSelector);
    fSelectorClass = 0;
    Int_t version = -1;
+   TString wmsg;
    TRY {
       // Get selector files from cache
       if (gProofServ) {
@@ -862,7 +863,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
       Long64_t singleshot = 1, memlogfreq = (par) ? par->GetVal() : 100;
       Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
-      TString lastMsg, wmsg;
+      TString lastMsg;
 
       // Initial memory footprint
       if (!CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg)) {
@@ -1006,7 +1007,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Final memory footprint
    Long64_t singleshot = 1;
    Bool_t warnHWMres = kTRUE, warnHWMvir = kTRUE;
-   TString wmsg;
    Bool_t shrc = CheckMemUsage(singleshot, warnHWMres, warnHWMvir, wmsg);
    if (!wmsg.IsNull()) Warning("Process", "%s (%s)", wmsg.Data(), shrc ? "warn" : "hwm");
 
@@ -1729,7 +1729,18 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Check whether we have to enforce the use of submergers
       if (gEnv->Lookup("Proof.UseMergers") && !fInput->FindObject("PROOF_UseMergers")) {
          Int_t smg = gEnv->GetValue("Proof.UseMergers",-1);
-         if (smg >= 0) fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+         if (smg >= 0) {
+            fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+            if (gEnv->Lookup("Proof.MergersByHost")) {
+               Int_t mbh = gEnv->GetValue("Proof.MergersByHost",0);
+               if (mbh != 0) {
+                  // Administrator settings have the priority
+                  TObject *o = 0;
+                  if ((o = fInput->FindObject("PROOF_MergersByHost"))) { fInput->Remove(o); delete o; }
+                  fInput->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
+               }
+            }
+         }
       }
 
       // For a new query clients should make sure that the temporary
@@ -1912,7 +1923,8 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
             if (pf->IsMerge()) {
 
                // Point to the merger
-               TFileMerger *filemerger = pf->GetFileMerger();
+               Bool_t localMerge = (pf->GetTypeOpt() == TProofOutputFile::kLocal) ? kTRUE : kFALSE;
+               TFileMerger *filemerger = pf->GetFileMerger(localMerge);
                if (!filemerger) {
                   Error("MergeOutputFiles", "file merger is null in TProofOutputFile! Protocol error?");
                   pf->Print();
@@ -2006,7 +2018,8 @@ void TProofPlayerRemote::SetSelectorDataMembersFromOutputList()
    TOutputListSelectorDataMap* olsdm
       = TOutputListSelectorDataMap::FindInList(fOutput);
    if (!olsdm) {
-      PDB(kOutput,1) Warning("SetSelectorDataMembersFromOutputList","Failed to find map object in output list!");
+      PDB(kOutput,1) Warning("SetSelectorDataMembersFromOutputList",
+                             "failed to find map object in output list!");
       return;
    }
 
