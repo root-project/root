@@ -429,6 +429,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    if (!fpClasses) {
       // generate a text list of classes on disk
       const char *tmpfilename = tmpnam(0);
+      if (!tmpfilename) return 0;
       FILE *fout = fopen(tmpfilename, "w");
       if (!fout) return 0;
       gCint->DisplayClass(fout, (char*)"", 0, 0);
