@@ -165,7 +165,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
                istemplate = kTRUE;
                break;
             case '>':
-               --nest;
+               if (nest) --nest;
                break;
             case ':': {
                   if (nest == 0 && clname[cur+1] == ':') {
