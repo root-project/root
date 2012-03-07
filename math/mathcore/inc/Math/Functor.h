@@ -328,7 +328,7 @@ public:
    It can wrap all the following types:
    <ul>
    <li> any C++ callable object implemention double operator()( const double *  ) 
-   <li> a free C function of type double ()(double * ) 
+   <li> a free C function of type double ()(const double * ) 
    <li> a member function with the correct signature like Foo::Eval(const double * ). 
        In this case one pass the object pointer and a pointer to the member function (&Foo::Eval) 
    </ul>

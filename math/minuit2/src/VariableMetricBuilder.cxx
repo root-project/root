@@ -187,7 +187,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       min.Add( result.back(), FunctionMinimum::MnAboveMaxEdm() );
 #ifdef WARNINGMSG
       MN_INFO_VAL2("VariableMetricBuilder: INVALID function minimum - edm is above tolerance,",edm);
-      MN_INFO_VAL2("VariableMetricBuilder: Required tolerance  is 10 x ",edmval);
+      MN_INFO_VAL2("VariableMetricBuilder: Required tolerance  is 10 x edmval ",edmval);
 #endif
    }
    else {
