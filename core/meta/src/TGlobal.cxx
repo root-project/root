@@ -53,11 +53,13 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
 {
    // Assignment operator.
    
-   gCint->DataMemberInfo_Delete(fInfo);
-   if (rhs.fInfo) {
-      fInfo = gCint->DataMemberInfo_FactoryCopy(rhs.fInfo);
-      SetName(gCint->DataMemberInfo_Name(fInfo));
-      SetTitle(gCint->DataMemberInfo_Title(fInfo));
+   if (this != &rhs) {
+      gCint->DataMemberInfo_Delete(fInfo);
+      if (rhs.fInfo) {
+         fInfo = gCint->DataMemberInfo_FactoryCopy(rhs.fInfo);
+         SetName(gCint->DataMemberInfo_Name(fInfo));
+         SetTitle(gCint->DataMemberInfo_Title(fInfo));
+      }
    }
    return *this;   
 }

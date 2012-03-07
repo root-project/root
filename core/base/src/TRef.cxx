@@ -269,9 +269,11 @@ TRef &TRef::operator=(const TRef &ref)
 {
    // TRef assignment operator.
 
-   SetUniqueID(ref.GetUniqueID());
-   fPID = ref.fPID;
-   SetBit(kHasUUID,ref.TestBit(kHasUUID));
+   if (this != &ref) {
+      SetUniqueID(ref.GetUniqueID());
+      fPID = ref.fPID;
+      SetBit(kHasUUID,ref.TestBit(kHasUUID));
+   }
    return *this;
 }
 
