@@ -4150,9 +4150,10 @@ void TPad::Print(const char *filenam, Option_t *option)
    //   The physical size of the Postscript page is the one selected in the
    //   current style. This size can be modified via TStyle::SetPaperSize.
    //   Examples:
-   //        gStyle->SetPaperSize(kA4);  //default
-   //        gStyle->SetPaperSize(kUSLetter);
-   //     where kA4 and kUSLetter are defined in the enum EPaperSize in TStyle.h
+   //      gStyle->SetPaperSize(TStyle::kA4);  //default
+   //      gStyle->SetPaperSize(TStyle::kUSLetter);
+   //    where TStyle::kA4 and TStyle::kUSLetter are defined in the enum
+   //    EPaperSize in TStyle.h
    //    An alternative is to call:
    //        gStyle->SetPaperSize(20,26);  same as kA4
    // or     gStyle->SetPaperSize(20,24);  same as kUSLetter
