@@ -193,7 +193,7 @@ void TLeafC::ReadValue(istream &s)
    if ( TestBit(kNewValue) &&
         (temp.size()+1 > ((UInt_t)fNdata))) {
       // Grow buffer if needed and we created the buffer.
-      fNdata = temp.size() + 1;
+      fNdata = ((UInt_t)temp.size()) + 1;
       if (TestBit(kIndirectAddress) && fPointer) {
          delete [] *fPointer;
          *fPointer = new char[fNdata];
