@@ -25,11 +25,6 @@
 // TRefProxy is a reference proxy, which allows to access ROOT references (TRef)
 // stored contained in other objects from TTree::Draw
 
-//______________________________________________________________________________
-TRefProxy::~TRefProxy() 
-{
-   // Default destructor
-}
 
 //______________________________________________________________________________
 Bool_t TRefProxy::Update()  

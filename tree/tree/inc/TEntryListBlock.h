@@ -64,6 +64,7 @@ class TEntryListBlock:public TObject
    TEntryListBlock();
    TEntryListBlock(const TEntryListBlock &eblock);
    ~TEntryListBlock();
+   TEntryListBlock &operator=(const TEntryListBlock &rhs);
 
    Bool_t  Enter(Int_t entry);
    Bool_t  Remove(Int_t entry);

@@ -35,9 +35,12 @@ public:
    virtual TFormLeafInfo* DeepCopy() const;
    virtual ~TFormLeafInfo();
 
+   void Swap(TFormLeafInfo &other);
+   TFormLeafInfo &operator=(const TFormLeafInfo &orig);
+
    // Data Members
    TClass           *fClass;   //! This is the class of the data pointed to
-   //   TStreamerInfo    *fInfo;    //! == fClass->GetStreamerInfo()
+   //TStreamerInfo  *fInfo;    //! == fClass->GetStreamerInfo()
    Long_t            fOffset;  //! Offset of the data pointed inside the class fClass
    TStreamerElement *fElement; //! Descriptor of the data pointed to.
          //Warning, the offset in fElement is NOT correct because it does not take into
@@ -95,6 +98,7 @@ public:
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
 
    virtual Bool_t    Update();
+
 };
 
 //______________________________________________________________________________
@@ -107,7 +111,6 @@ public:
    TFormLeafInfoDirect(TBranchElement * from);
    TFormLeafInfoDirect(const TFormLeafInfoDirect& orig);
    virtual TFormLeafInfo* DeepCopy() const;
-   virtual ~TFormLeafInfoDirect();
 
    virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
@@ -122,14 +125,19 @@ public:
 // numerical value inside a collection
 
 class TFormLeafInfoNumerical : public TFormLeafInfo {
-public:
    EDataType fKind;
-   Bool_t fIsBool;
+   Bool_t    fIsBool;
+public:
    TFormLeafInfoNumerical(TVirtualCollectionProxy *holder_of);
    TFormLeafInfoNumerical(EDataType kind);
    TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig);
+   
    virtual TFormLeafInfo* DeepCopy() const;
+   void Swap(TFormLeafInfoNumerical &other);
+   TFormLeafInfoNumerical &operator=(const TFormLeafInfoNumerical &orig);
+
    virtual ~TFormLeafInfoNumerical();
+
    virtual Bool_t    IsString() const;
    virtual Bool_t    Update();
 };
@@ -144,6 +152,10 @@ class TFormLeafInfoCollectionObject : public TFormLeafInfo {
    Bool_t fTop;  //If true, it indicates that the branch itself contains
 public:
    TFormLeafInfoCollectionObject(TClass* classptr = 0, Bool_t fTop = kTRUE);
+   TFormLeafInfoCollectionObject(const TFormLeafInfoCollectionObject &orig);
+
+   void Swap(TFormLeafInfoCollectionObject &other);
+   TFormLeafInfoCollectionObject &operator=(const TFormLeafInfoCollectionObject &orig);
 
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoCollectionObject(*this);
@@ -164,13 +176,18 @@ public:
 // member on a TClonesArray object stored in a TTree.
 
 class TFormLeafInfoClones : public TFormLeafInfo {
-public:
    Bool_t fTop;  //If true, it indicates that the branch itself contains
+public:
    //either the clonesArrays or something inside the clonesArray
    TFormLeafInfoClones(TClass* classptr = 0, Long_t offset = 0);
    TFormLeafInfoClones(TClass* classptr, Long_t offset, Bool_t top);
    TFormLeafInfoClones(TClass* classptr, Long_t offset, TStreamerElement* element,
                        Bool_t top = kFALSE);
+   TFormLeafInfoClones(const TFormLeafInfoClones &orig);
+
+   void Swap(TFormLeafInfoClones &other);
+   TFormLeafInfoClones &operator=(const TFormLeafInfoClones &orig);
+
    virtual TFormLeafInfo* DeepCopy() const {
       return new TFormLeafInfoClones(*this);
    }
@@ -192,13 +209,13 @@ public:
 // on a generic collection object stored in a TTree.
 
 class TFormLeafInfoCollection : public TFormLeafInfo {
-public:
    Bool_t fTop;  //If true, it indicates that the branch itself contains
-                 //either the clonesArrays or something inside the clonesArray
+   //either the clonesArrays or something inside the clonesArray
    TClass                  *fCollClass;
    TString                  fCollClassName;
    TVirtualCollectionProxy *fCollProxy;
    TStreamerElement        *fLocalElement;
+public:
 
    TFormLeafInfoCollection(TClass* classptr,
                            Long_t offset,
@@ -214,6 +231,9 @@ public:
    TFormLeafInfoCollection(const TFormLeafInfoCollection& orig);
 
    ~TFormLeafInfoCollection();
+
+   void Swap(TFormLeafInfoCollection &other);
+   TFormLeafInfoCollection &operator=(const TFormLeafInfoCollection &orig);
 
    virtual TFormLeafInfo* DeepCopy() const;
 
@@ -247,6 +267,9 @@ public:
 
    ~TFormLeafInfoCollectionSize();
 
+   void Swap(TFormLeafInfoCollectionSize &other);
+   TFormLeafInfoCollectionSize &operator=(const TFormLeafInfoCollectionSize &orig);
+
    virtual TFormLeafInfo* DeepCopy() const;
 
    virtual Bool_t    Update();
@@ -267,7 +290,7 @@ class TFormLeafInfoPointer : public TFormLeafInfo {
 public:
    TFormLeafInfoPointer(TClass* classptr = 0, Long_t offset = 0,
                         TStreamerElement* element = 0);
-   TFormLeafInfoPointer(const TFormLeafInfoPointer& orig);
+   // The default copy constructor is the right implementation.
 
    virtual TFormLeafInfo* DeepCopy() const;
 
@@ -283,19 +306,22 @@ public:
 class TFormLeafInfoMethod : public TFormLeafInfo {
 
    TMethodCall *fMethod;
-   TString fMethodName;
-   TString fParams;
-   Double_t fResult;
-   TString  fCopyFormat;
-   TString  fDeleteFormat;
-   void    *fValuePointer;
-   Bool_t   fIsByValue;
+   TString      fMethodName;
+   TString      fParams;
+   Double_t     fResult;
+   TString      fCopyFormat;
+   TString      fDeleteFormat;
+   void        *fValuePointer;
+   Bool_t       fIsByValue;
 
 public:
 
    TFormLeafInfoMethod(TClass* classptr = 0, TMethodCall *method = 0);
    TFormLeafInfoMethod(const TFormLeafInfoMethod& orig);
    ~TFormLeafInfoMethod();
+
+   void Swap(TFormLeafInfoMethod &other);
+   TFormLeafInfoMethod &operator=(const TFormLeafInfoMethod &orig);
 
    virtual TFormLeafInfo* DeepCopy() const;
 
@@ -337,8 +363,10 @@ public:
    TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig);
    ~TFormLeafInfoMultiVarDim();
    
+   void Swap(TFormLeafInfoMultiVarDim &other);
+   TFormLeafInfoMultiVarDim &operator=(const TFormLeafInfoMultiVarDim &orig);
+
    virtual TFormLeafInfo* DeepCopy() const;
-   
 
    /* The proper indexing and unwinding of index is done by prior leafinfo in the chain. */
    //virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
@@ -367,8 +395,7 @@ public:
 
 class TFormLeafInfoMultiVarDimDirect : public TFormLeafInfoMultiVarDim {
 public:
-   TFormLeafInfoMultiVarDimDirect();
-   TFormLeafInfoMultiVarDimDirect(const TFormLeafInfoMultiVarDimDirect& orig);
+   // The default constructor are the correct implementation.
 
    virtual TFormLeafInfo* DeepCopy() const;
 
@@ -388,9 +415,8 @@ public:
       TClass* elementclassptr, TFormLeafInfo *parent);
    TFormLeafInfoMultiVarDimCollection(TClass* classptr, Long_t offset,
       TStreamerElement* element, TFormLeafInfo* parent);
-   TFormLeafInfoMultiVarDimCollection();
-   TFormLeafInfoMultiVarDimCollection(const TFormLeafInfoMultiVarDimCollection& orig);
-
+   // The default copy constructor is the right implementation.
+   
    virtual TFormLeafInfo* DeepCopy() const;
 
    virtual Int_t GetArrayLength() { return 0; }
@@ -411,8 +437,7 @@ public:
       TClass* elementclassptr, TFormLeafInfo *parent);
    TFormLeafInfoMultiVarDimClones(TClass* classptr, Long_t offset,
       TStreamerElement* element, TFormLeafInfo* parent);
-   TFormLeafInfoMultiVarDimClones();
-   TFormLeafInfoMultiVarDimClones(const TFormLeafInfoMultiVarDimClones& orig);
+   // The default copy constructor is the right implementation.
 
    virtual TFormLeafInfo* DeepCopy() const;
 
@@ -438,6 +463,9 @@ public:
    TFormLeafInfoCast(const TFormLeafInfoCast& orig);
    virtual ~TFormLeafInfoCast();
 
+   void Swap(TFormLeafInfoCast &other);
+   TFormLeafInfoCast &operator=(const TFormLeafInfoCast &orig);
+
    virtual TFormLeafInfo* DeepCopy() const;
 
    // Currently only implemented in TFormLeafInfoCast
@@ -459,7 +487,9 @@ class TFormLeafInfoTTree : public TFormLeafInfo {
 public:
    TFormLeafInfoTTree(TTree *tree = 0, const char *alias = 0, TTree *current = 0);
    TFormLeafInfoTTree(const TFormLeafInfoTTree& orig);
-   ~TFormLeafInfoTTree();
+
+   void Swap(TFormLeafInfoTTree &other);
+   TFormLeafInfoTTree &operator=(const TFormLeafInfoTTree &orig);
 
    virtual TFormLeafInfo* DeepCopy() const;
 

@@ -41,6 +41,8 @@ public:
    TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
    TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
    virtual ~TCutG();
+   
+   TCutG &operator=(const TCutG &);
    virtual Double_t Area() const;
    virtual void     Center(Double_t &cx, Double_t &cy) const;
    TObject         *GetObjectX() const {return fObjectX;}

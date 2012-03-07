@@ -84,8 +84,8 @@ public:
       EDataType       fKind;       // kind of ROOT-fundamental type
       size_t          fSize;       // fSize of the contained object
 
-      // Copy constructor
-      Value(const Value& inside);
+      // Default copy constructor has the correct implementation.
+
       // Initializing constructor
       Value(const std::string& info, Bool_t silent);
       // Delete individual item from STL container
@@ -214,6 +214,7 @@ public:
       Method() : call(0)                       {      }
       Method(Call_t c) : call(c)               {      }
       Method(const Method& m) : call(m.call)   {      }
+      Method &operator=(const Method& m) { call = m.call; return *this; }
       void* invoke(void* obj) const { return (*call)(obj); }
    };
 
@@ -233,6 +234,7 @@ public:
       Method0() : call(0)                       {      }
       Method0(Call_t c) : call(c)               {      }
       Method0(const Method0& m) : call(m.call)   {      }
+      Method0 &operator=(const Method0& m) { call = m.call; return *this; }
       void* invoke() const { return (*call)(); }
    };
  
@@ -353,6 +355,11 @@ public:
    // Copy constructor.
    TGenCollectionProxy(const TGenCollectionProxy& copy);
 
+private:
+   // Assignment operator
+   TGenCollectionProxy &operator=(const TGenCollectionProxy&); // Not Implemented
+
+public:
    // Initializing constructor
    TGenCollectionProxy(Info_t typ, size_t iter_size);
    TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl);

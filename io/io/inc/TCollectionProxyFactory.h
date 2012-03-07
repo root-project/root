@@ -173,12 +173,15 @@ public:
   * @version 1.0
   */
 class TCollectionClassStreamer : public TClassStreamer, public TCollectionStreamer {
-public:
-   /// Initializing constructor
-   TCollectionClassStreamer() : TClassStreamer(0)     {                        }
+ protected:
+   TCollectionClassStreamer &operator=(const TCollectionClassStreamer &rhs); // Not implemented.
    /// Copy constructor
    TCollectionClassStreamer(const TCollectionClassStreamer& c)
       : TClassStreamer(c), TCollectionStreamer(c)      {                        }
+
+public:
+   /// Initializing constructor
+   TCollectionClassStreamer() : TClassStreamer(0)     {                        }
    /// Standard destructor
    virtual ~TCollectionClassStreamer()                {                        }
    /// Streamer for I/O handling
@@ -219,6 +222,8 @@ public:
   * @version 1.0
   */
 class TCollectionMemberStreamer : public TMemberStreamer, public TCollectionStreamer {
+private:
+   TCollectionMemberStreamer &operator=(const TCollectionMemberStreamer &rhs); // Not implemented.
 public:
    /// Initializing constructor
    TCollectionMemberStreamer() : TMemberStreamer(0) { }

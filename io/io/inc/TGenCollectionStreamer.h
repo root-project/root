@@ -46,7 +46,10 @@ protected:
    void ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj);
    void ReadBufferDefault(TBuffer &b, void *obj);
    void ReadBufferGeneric(TBuffer &b, void *obj);
-      
+
+private:
+   TGenCollectionStreamer &operator=(const TGenCollectionStreamer&); // Not implemented.
+
 public:
    // Virtual copy constructor
    virtual TVirtualCollectionProxy* Generate() const;

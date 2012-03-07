@@ -41,6 +41,10 @@ public:
    TFormLeafInfoReference(const TFormLeafInfoReference& orig);
    // Default destructor
    virtual ~TFormLeafInfoReference();
+   // Exception safe swap.
+   void Swap(TFormLeafInfoReference &other);
+   // Exception safe assignment operator.
+   TFormLeafInfoReference &operator=(const TFormLeafInfoReference &orig);
    // Virtual copy constructor
    virtual TFormLeafInfo* DeepCopy()  const;
 

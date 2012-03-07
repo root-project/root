@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "TStreamerInfo.h"
+#include <assert.h>
 
 namespace TStreamerInfoActions {
 
@@ -64,13 +65,26 @@ namespace TStreamerInfoActions {
          TStreamerInfoLoopAction_t       fLoopAction;
       };
       TConfiguration              *fConfiguration;
+   private:
+      // assignment operator must be the default because the 'copy' constructor is actually a move constructor and must be used.
    public:
       TConfiguredAction() : fAction(0), fConfiguration(0) {}
       TConfiguredAction(const TConfiguredAction &rval) : TObject(rval), fAction(rval.fAction), fConfiguration(rval.fConfiguration)
       {
-         // Technically this is a move constructor ...
+         // WARNING: Technically this is a move constructor ...
          const_cast<TConfiguredAction&>(rval).fConfiguration = 0;
       }
+      TConfiguredAction &operator=(const TConfiguredAction &rval) 
+      { 
+         // WARNING: Technically this is a move assignment!.
+         
+         TConfiguredAction tmp(rval); // this does a move.
+         TObject::operator=(tmp);     // we are missing TObject::Swap
+         std::swap(fAction,tmp.fAction);
+         std::swap(fConfiguration,tmp.fConfiguration);
+         return *this; 
+      };
+
       TConfiguredAction(TStreamerInfoAction_t action, TConfiguration *conf) : fAction(action), fConfiguration(conf)
       {
          // Usual constructor.

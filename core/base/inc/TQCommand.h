@@ -48,6 +48,9 @@ protected:
                      const char *redo, const char *undo);
    virtual void PrintCollectionHeader(Option_t* option) const;
    
+private:
+   TQCommand &operator=(const TQCommand &); // Not yet implemented.
+
 public:
    TQCommand(const char *cl = 0, void *object = 0,
              const char *redo = 0, const char *undo = 0);

@@ -41,8 +41,9 @@ public:
    TRefProxy() : fClass("TRef") {}
    /// Copy constructor
    TRefProxy(const TRefProxy& c) : TVirtualRefProxy(), fClass(c.fClass) {}
-   /// Standard destructor
-   virtual ~TRefProxy();
+   /// Assignement operator
+   TRefProxy &operator=(const TRefProxy& c) { fClass =c.fClass; return *this; }
+
    /// TVirtualRefProxy overload: Release the reference proxy (virtual destructor)
    virtual void Release()                         { delete this;                }
    /// TVirtualRefProxy overload: Clone the reference proxy (virtual constructor)

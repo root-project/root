@@ -245,7 +245,6 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    }
 }
 
-
 //______________________________________________________________________________
 TCutG::~TCutG()
 {
@@ -254,6 +253,21 @@ TCutG::~TCutG()
    delete fObjectX;
    delete fObjectY;
    gROOT->GetListOfSpecials()->Remove(this);
+}
+
+//______________________________________________________________________________
+TCutG &TCutG::operator=(const TCutG &rhs) 
+{
+   // Assignment operator.
+
+   if (this != &rhs) {
+      TGraph::operator=(rhs);
+      delete fObjectX;
+      delete fObjectY;
+      fObjectX = fObjectX->Clone();
+      fObjectY = fObjectY->Clone();
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

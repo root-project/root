@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/meta:$Id$
 // Author: Victor Perev and Philippe Canal   08/05/02
 
 /*************************************************************************
@@ -31,6 +31,7 @@ protected:
 public:
    TMemberStreamer(MemberStreamerFunc_t pointer) : fStreamer(pointer) {};
    TMemberStreamer(const TMemberStreamer &rhs) : fStreamer(rhs.fStreamer) {};
+   TMemberStreamer &operator=(const TMemberStreamer &rhs) { fStreamer = rhs.fStreamer; return *this; }
 
    virtual  ~TMemberStreamer(){};
 

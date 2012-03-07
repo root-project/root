@@ -1,4 +1,4 @@
-// @(#)root/meta:$Id$
+// @(#)root/treeplayer:$Id$
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -23,12 +23,8 @@
 //______________________________________________________________________________
 class TRefArrayProxy : public TRefProxy  {
 public:
-   // Default constructor
-   TRefArrayProxy() : TRefProxy() {}
-   // Copy constructor
-   TRefArrayProxy(const TRefArrayProxy& c) : TRefProxy(c) {}
-   // Standard destructor
-   virtual ~TRefArrayProxy() {}
+   // The implicit's constructor and destructor have the correct implementation.
+
    // TVirtualRefProxy overload: Clone the reference proxy (virtual constructor)
    virtual TVirtualRefProxy* Clone() const        { return new TRefArrayProxy(*this);}
    // TVirtualRefProxy overload: Flag to indicate if this is a container reference

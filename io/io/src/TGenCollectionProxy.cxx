@@ -343,22 +343,6 @@ public:
    }
 };
 
-
-//______________________________________________________________________________
-TGenCollectionProxy::Value::Value(const Value& copy)
-{
-   // Constructor.
-
-   fType   = copy.fType;
-   fCase   = copy.fCase;
-   fProperties = copy.fProperties;
-   fKind   = copy.fKind;
-   fSize   = copy.fSize;
-   fCtor   = copy.fCtor;
-   fDtor   = copy.fDtor;
-   fDelete = copy.fDelete;
-}
-
 //______________________________________________________________________________
 TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
 {

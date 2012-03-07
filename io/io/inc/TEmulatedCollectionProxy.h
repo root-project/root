@@ -55,6 +55,9 @@ protected:
    // Expand the container
    void Expand(UInt_t nCurr, UInt_t left);
 
+private:
+   TEmulatedCollectionProxy &operator=(const TEmulatedCollectionProxy &); // Not implemented.
+   
 public:
    // Virtual copy constructor
    virtual TVirtualCollectionProxy* Generate() const;

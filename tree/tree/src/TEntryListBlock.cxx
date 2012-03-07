@@ -71,11 +71,10 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
 {
    //copy c-tor
 
-   Int_t i;
    fN = eblock.fN;
    if (eblock.fIndices){
       fIndices = new UShort_t[fN];
-      for (i=0; i<fN; i++)
+      for (Int_t i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
    } else {
       fIndices = 0;
@@ -97,6 +96,31 @@ TEntryListBlock::~TEntryListBlock()
    if (fIndices)
       delete [] fIndices;
    fIndices = 0;
+}
+
+//______________________________________________________________________________
+TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
+{
+   if (this != &eblock) {
+      if (fIndices)
+         delete [] fIndices;
+
+      fN = eblock.fN;
+      if (eblock.fIndices){
+         fIndices = new UShort_t[fN];
+         for (Int_t i=0; i<fN; i++)
+            fIndices[i] = eblock.fIndices[i];
+      } else {
+         fIndices = 0;
+      }
+      fNPassed = eblock.fNPassed;
+      fType = eblock.fType;
+      fPassing = eblock.fPassing;
+      fCurrent = eblock.fCurrent;
+      fLastIndexReturned = -1;
+      fLastIndexQueried = -1;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

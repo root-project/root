@@ -57,6 +57,24 @@ TFormLeafInfoReference::~TFormLeafInfoReference()
 }
 
 //______________________________________________________________________________
+void TFormLeafInfoReference::Swap(TFormLeafInfoReference &other)
+{
+   // Exception safe swap.
+   TFormLeafInfo::Swap(other); 
+   std::swap(fProxy,other.fProxy);
+   std::swap(fBranch,other.fBranch);
+}
+
+//______________________________________________________________________________
+TFormLeafInfoReference &TFormLeafInfoReference::operator=(const TFormLeafInfoReference &other)
+{
+   // Exception safe assignment operator.
+   TFormLeafInfoReference tmp(other);
+   Swap(tmp);
+   return *this;
+}
+
+//______________________________________________________________________________
 TFormLeafInfo* TFormLeafInfoReference::DeepCopy() const
 {
    // Virtual copy constructor.

@@ -27,10 +27,11 @@
 class TClassStreamer {
 protected:
    TClassStreamer() : fStreamer(0) {};
+   TClassStreamer(const TClassStreamer &rhs) : fStreamer(rhs.fStreamer), fOnFileClass() {};
+   TClassStreamer &operator=(const TClassStreamer &rhs) {   fOnFileClass = rhs.fOnFileClass; fStreamer = rhs.fStreamer; return *this; }
 
 public:
    TClassStreamer(ClassStreamerFunc_t pointer) : fStreamer(pointer), fOnFileClass() {};
-   TClassStreamer(const TClassStreamer &rhs) : fStreamer(rhs.fStreamer), fOnFileClass() {};
 
    virtual void SetOnFileClass( const TClass* cl ) { fOnFileClass = const_cast<TClass*>(cl); }
    virtual const TClass* GetOnFileClass() const { return fOnFileClass; }
