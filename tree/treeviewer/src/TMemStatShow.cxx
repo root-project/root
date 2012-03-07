@@ -220,7 +220,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    fgTip2 = 0;
    fgBtidlist = 0;
       
-   Long64_t ne = nfreebytes/32;
+   Long64_t ne = nfreebytes/32LL;
    if (ne < nentries) nentries = ne;
    fgT->SetEstimate(nentries+10);
    printf("sel: ivmin=%lld, ivmax=%lld, nentries=%lld\n",ivmin,ivmax,nentries);
@@ -245,7 +245,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    Long64_t nvm = Long64_t(ivmax-ivmin+1);
    printf("==>The data Tree contains %lld entries with addresses in range[%lld,%lld]\n",nsel,ivmin,ivmax);
    //ne = (1000000*nfree-nvm*12)/32;
-   ne = 1000000*nfree/32;
+   ne = 1000000LL*nfree/32LL;
    if (ne < 0) return;    
    if (ne < nentries) {
       //we take only the first side of the allocations
