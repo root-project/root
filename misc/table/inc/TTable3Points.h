@@ -19,6 +19,10 @@ class TTable3Points :  public TTablePoints
 protected:
    ULong_t   *fColumnOffset; //!
 
+private:
+   TTable3Points(const TTable3Points&);           // Not implemented.
+   TTable3Points &operator=(const TTable3Points&); // Not implemented.
+
 public:
    enum EPointDirection {kXPoints,kYPoints,kZPoints,kTotalSize};
    TTable3Points();

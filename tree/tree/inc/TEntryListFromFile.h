@@ -39,7 +39,7 @@ class TFile;
 
 class TEntryListFromFile: public TEntryList 
 {
- protected:
+protected:
    TString    fListFileName;  //from this string names of all files can be found
    TString    fListName;      //name of the list
    Int_t      fNFiles;        //total number of files
@@ -48,7 +48,11 @@ class TEntryListFromFile: public TEntryList
                               //fCurrent points to the currently open list
    TObjArray *fFileNames;     //! points to the fFiles data member of the corresponding chain
    
- public:
+private:
+   TEntryListFromFile(const TEntryListFromFile&);            // Not implemented.
+   TEntryListFromFile &operator=(const TEntryListFromFile&); // Not implemented.
+
+public:
 
    enum {
       kBigNumber = 1234567890

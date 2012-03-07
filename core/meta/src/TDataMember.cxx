@@ -247,7 +247,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    char cmt[2048];
    char opt[2048];
    char *opt_ptr = 0;
-   char *ptr1    = 0;
+   const char *ptr1    = 0;
    char *ptr2    = 0;
    char *ptr3    = 0;
    char *tok     = 0;
@@ -383,9 +383,9 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       TOptionListItem *it1 = 0;
       while ((it=(TOptionListItem*)next())) {
 
-         ptr1 = it->fOptName;
+         ptr1 = it->fOptName;  // We will change the value of OptName ... but it is fine since we delete the object at the end of the loop.
          Bool_t islabel = (ptr1[0]=='\"');   // value is label or numerical?
-         ptr2 = strtok(ptr1,"=\"");          //extract LeftHandeSide
+         ptr2 = strtok((char*)ptr1,"=\"");   //extract LeftHandeSide
          ptr3 = strtok(0,"=\"");             //extract RightHandedSize
 
          if (islabel) {
@@ -812,57 +812,11 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
    fValue         = val;
    fValueMaskBit  = valmask;
    fToggleMaskBit = tglmask;
-   if (name){
+   if (name) {
+      fOptName = name;
+   }
 
-      Int_t nch1 = strlen(name)+1;
-      fOptName = new char[nch1];
-      strlcpy(fOptName,name,nch1);
-
-   } else fOptName = 0;
-
-   if(label){
-
-      Int_t nch2 = strlen(label)+1;
-      fOptLabel = new char[nch2];
-      strlcpy(fOptLabel,label,nch2);
-
-   } else fOptLabel = 0;
-}
-
-//______________________________________________________________________________
-TOptionListItem::TOptionListItem(const TOptionListItem& oli) :
-  TObject(oli),
-  fDataMember(oli.fDataMember),
-  fValue(oli.fValue),
-  fValueMaskBit(oli.fValueMaskBit),
-  fToggleMaskBit(oli.fToggleMaskBit),
-  fOptName(oli.fOptName),
-  fOptLabel(oli.fOptLabel)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TOptionListItem& TOptionListItem::operator=(const TOptionListItem& oli)
-{
-   //assignment operator
-   if(this!=&oli) {
-      TObject::operator=(oli);
-      fDataMember=oli.fDataMember;
-      fValue=oli.fValue;
-      fValueMaskBit=oli.fValueMaskBit;
-      fToggleMaskBit=oli.fToggleMaskBit;
-      fOptName=oli.fOptName;
-      fOptLabel=oli.fOptLabel;
-   } 
-   return *this;
-}
-
-//______________________________________________________________________________
-TOptionListItem::~TOptionListItem()
-{
-   // Destructor.
-
-   if (fOptName)  delete [] fOptName;
-   if (fOptLabel) delete [] fOptLabel;
+   if(label) {
+      fOptLabel = fOptLabel;
+   }
 }

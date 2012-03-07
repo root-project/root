@@ -47,6 +47,12 @@ protected:
    TDataSet        *GetNullSet();      // return a fake pointer == -1 casted to (TDataSet *)
 
    static TDataSet *fgNullDataSet;
+
+private:
+
+   TDataSetIter(const TDataSetIter&);            // Not implemented.
+   TDataSetIter &operator=(const TDataSetIter&); // Not implemented.
+   
 public:
    TDataSetIter(TDataSet *l=0, Int_t depth=1, Bool_t dir=kIterForward);
    TDataSetIter(TDataSet *l, Bool_t dir);

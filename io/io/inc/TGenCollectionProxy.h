@@ -254,6 +254,10 @@ public:
       size_t  fReserved; // Amount of space already reserved.
       size_t  fSize;     // Number of elements
       size_t  fSizeOf;   // size of each elements
+      
+      TStaging(const TStaging&);            // Not implemented.
+      TStaging &operator=(const TStaging&); // Not implemented.
+      
    public:
       TStaging(size_t size, size_t size_of) : fTarget(0), fContent(0), fReserved(0), fSize(size), fSizeOf(size_of)
       {

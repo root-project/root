@@ -302,7 +302,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                               TIter nxt(m->GetOptions());
                               TOptionListItem *it;
                               while ((it = (TOptionListItem*) nxt())) {
-                                 char *name = it->fOptName;
+                                 const char *name = it->fOptName;
                                  Long_t val = it->fValue;
 
                                  TToggle *t = new TToggle;

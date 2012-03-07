@@ -41,7 +41,11 @@ protected:
    TTreeFormula  *fMinorFormula;        //! Pointer to minor TreeFormula
    TTreeFormula  *fMajorFormulaParent;  //! Pointer to major TreeFormula in Parent tree (if any)
    TTreeFormula  *fMinorFormulaParent;  //! Pointer to minor TreeFormula in Parent tree (if any)
-   
+
+private:
+   TTreeIndex(const TTreeIndex&);            // Not implemented.
+   TTreeIndex &operator=(const TTreeIndex&); // Not implemented.
+
 public:
    TTreeIndex();
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);

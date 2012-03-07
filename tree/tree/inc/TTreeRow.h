@@ -42,6 +42,9 @@ private:
    TTreeRow(TSQLRow *original);
    Bool_t  IsValid(Int_t field);
 
+   TTreeRow(const TTreeRow&);            // Not implemented.
+   TTreeRow &operator=(const TTreeRow&); // Not implemented.
+   
 public:
    TTreeRow();
    TTreeRow(Int_t nfields);

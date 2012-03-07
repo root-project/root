@@ -51,6 +51,9 @@ private:
 
    Bool_t  IsValid(Int_t field);
 
+   TOracleResult(const TOracleResult&);            // Not implemented;
+   TOracleResult &operator=(const TOracleResult&); // Not implemented;
+   
 protected:
    void    initResultSet(Statement *stmt);
    void    ProducePool();

@@ -33,6 +33,9 @@ private:
    class TParentBuf;
    TParentBuf* fParent; // current inspection "path"
 
+   TMemberInspector(const TMemberInspector&);            // Not implemented.
+   TMemberInspector &operator=(const TMemberInspector&); // Not implemented.
+
 public:
    TMemberInspector();
    virtual ~TMemberInspector();

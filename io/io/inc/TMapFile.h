@@ -164,6 +164,9 @@ private:
    Int_t            fBufSize;    // buffer size
    TMapRec         *fNext;       // next MapRec in list
 
+   TMapRec(const TMapRec&);            // Not implemented.
+   TMapRec &operator=(const TMapRec&); // Not implemented.
+
 public:
    TMapRec(const char *name, const TObject *obj, Int_t size, void *buf);
    ~TMapRec();

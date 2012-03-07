@@ -52,6 +52,9 @@ private:
    Double_t fDouble;
    } fValue;
 
+   TTableSorter(const TTableSorter&);            // Not implemented.
+   TTableSorter &operator=(const TTableSorter&); // Not implemented.
+
 protected:
    //   enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
    //                           ,kULong, kUShort, kUChar, kChar };

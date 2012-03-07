@@ -29,6 +29,10 @@ class TMemFile : public TFile {
 
 private:
    struct TMemBlock {
+   private:
+      TMemBlock(const TMemBlock&);            // Not implemented
+      TMemBlock &operator=(const TMemBlock&); // Not implemented.
+   public:
       TMemBlock();
       TMemBlock(Long64_t size, TMemBlock *previous = 0);
       ~TMemBlock();
@@ -60,6 +64,8 @@ private:
    Int_t    SysSync(Int_t fd);
 
    void ResetObjects(TDirectoryFile *, TFileMergeInfo *) const;
+
+   TMemFile &operator=(const TMemFile&); // Not implemented.
 
 public:
    TMemFile(const char *name, Option_t *option="", const char *ftitle="", Int_t compress=1);

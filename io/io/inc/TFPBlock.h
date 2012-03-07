@@ -37,6 +37,9 @@ private:
    Int_t    *fLen;          // array of lengths of each segment
    Long64_t *fPos;          // array of positions of each segment
 
+   TFPBlock(const TFPBlock&);            // Not implemented.
+   TFPBlock &operator=(const TFPBlock&); // Not implemented.
+
 public:
    TFPBlock(Long64_t*, Int_t*, Int_t);
    virtual ~TFPBlock();

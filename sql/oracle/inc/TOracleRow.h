@@ -40,6 +40,9 @@ private:
 
    Bool_t  IsValid(Int_t field);
 
+   TOracleRow(const TOracleRow&);            // Not implemented.
+   TOracleRow &operator=(const TOracleRow&); // Not implemented.
+   
 protected:
    void        GetRowData();
 

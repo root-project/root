@@ -73,6 +73,10 @@ protected:
    
    static ULong64_t fgAllocSizeLimit;
 
+private:
+   TMySQLStatement(const TMySQLStatement&);            // Not implemented.
+   TMySQLStatement &operator=(const TMySQLStatement&); // Not implemented.
+
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();

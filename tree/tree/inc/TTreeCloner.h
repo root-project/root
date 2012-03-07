@@ -87,6 +87,10 @@ class TTreeCloner {
    
    void ImportClusterRanges();
 
+private:
+   TTreeCloner(const TTreeCloner&);            // Not implemented.
+   TTreeCloner &operator=(const TTreeCloner&); // Not implemented.
+
 public:
    enum EClonerOptions {
       kNone       = 0,

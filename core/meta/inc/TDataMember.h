@@ -92,21 +92,16 @@ public:
 
 class TOptionListItem : public TObject {
 
-protected:
-   TOptionListItem(const TOptionListItem&);
-   TOptionListItem& operator=(const TOptionListItem&);
-
 public:
    TDataMember     *fDataMember;     //Data member to which this option belongs
    Long_t           fValue;          //Numerical value assigned to option
    Long_t           fValueMaskBit;   //Not used yet: bitmask used when option is a toggle group
    Long_t           fToggleMaskBit;  //Not used yet: bitmask used when toggling value
-   char            *fOptName;        //Text assigned to option which appears in option menu
-   char            *fOptLabel;       //Text (or enum) value assigned to option.
+   TString          fOptName;        //Text assigned to option which appears in option menu
+   TString          fOptLabel;       //Text (or enum) value assigned to option.
 
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
-   ~TOptionListItem();
 };
 
 #endif

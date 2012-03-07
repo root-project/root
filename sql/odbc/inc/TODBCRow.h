@@ -39,6 +39,10 @@ protected:
    
    void        CopyFieldValue(Int_t field);
    
+private:
+   TODBCRow(const TODBCRow&);            // Not implemented.
+   TODBCRow &operator=(const TODBCRow&); // Not implemented.
+
 public:
    TODBCRow(SQLHSTMT stmt, Int_t fieldcount);
    virtual ~TODBCRow();

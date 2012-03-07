@@ -5404,7 +5404,7 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
                               TOptionListItem *it;
 
                               while ((it = (TOptionListItem*) nxt())) {
-                                 char  *name  = it->fOptName;
+                                 const char  *name  = it->fOptName;
                                  Long_t val   = it->fValue;
 
                                  TToggle *t = new TToggle;
