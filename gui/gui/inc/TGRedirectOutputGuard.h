@@ -51,6 +51,10 @@ private:
    TGTextView  *fTextView;
    FILE        *fLogFileRead;
 
+private:
+   TGRedirectOutputGuard(const TGRedirectOutputGuard&);            // Not implemented.
+   TGRedirectOutputGuard &operator=(const TGRedirectOutputGuard&); // Not implemented.
+
 public:
    TGRedirectOutputGuard(TGTextView *tv,
                          const char *flog = 0, const char *mode = "a");

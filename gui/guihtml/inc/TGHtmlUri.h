@@ -55,6 +55,10 @@
 //   http://192.168.1.1:8080/cgi-bin/printenv?name=xyzzy&addr=none#frag
 
 class TGHtmlUri : public TObject {
+private:
+   TGHtmlUri(const TGHtmlUri&);            // Not implemented.
+   TGHtmlUri &operator=(const TGHtmlUri&); // Not implemented.
+
 public:
    TGHtmlUri(const char *zUri = 0);
    TGHtmlUri(const TGHtmlUri *uri);

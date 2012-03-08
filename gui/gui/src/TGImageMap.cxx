@@ -190,6 +190,7 @@ TGRegion &TGRegion::operator=(const TGRegion &r)
    // Region assignment operator.
 
    if (this != &r) {
+      TObject::operator=(r);
       r.fData->AddReference();
 
       if (fData->RemoveReference() <= 0) {

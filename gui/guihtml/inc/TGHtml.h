@@ -287,6 +287,10 @@ public:
 // virtual canvas. The y coordinate refers to the baseline.
 
 class TGHtmlTextElement : public TGHtmlElement {
+private:
+   TGHtmlTextElement(const TGHtmlTextElement&);            // Not implemented.
+   TGHtmlTextElement &operator=(const TGHtmlTextElement&); // Not implemented.
+
 public:
    TGHtmlTextElement(int size);
    virtual ~TGHtmlTextElement();
@@ -504,6 +508,10 @@ class TGHtml;
 class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
+private:
+   TGHtmlImage(const TGHtmlImage&);            // Not implemented.
+   TGHtmlImage &operator=(const TGHtmlImage&); // Not implemented.
+
 public:
    TGHtmlImage(TGHtml *htm, const char *url, const char *width,
                const char *height);
