@@ -1484,6 +1484,8 @@ const char *TCint::TypeName(const char *typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
 
+   if (typeDesc == 0) return "";
+
    static char *t = 0;
    static unsigned int tlen = 0;
    
