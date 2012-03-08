@@ -327,19 +327,23 @@ void TParallelCoordEditor::CleanUpSelections()
       TParallelCoordSelect* sel;
       while ((sel = (TParallelCoordSelect*)next())) {
          fSelectionSelect->AddEntry(sel->GetTitle(),i);
-         fSelectionSelect->GetListBox()->GetEntry(i)->SetBackgroundColor(TColor::Number2Pixel(sel->GetLineColor()));
+         TGLBEntry *entry = fSelectionSelect->GetListBox()->GetEntry(i);
+         if (entry)
+            entry->SetBackgroundColor(TColor::Number2Pixel(sel->GetLineColor()));
          ++i;
       }
       sel = fParallel->GetCurrentSelection();
-      fSelectionSelect->Select(list->IndexOf(sel),kFALSE);
-      Color_t c;
-      Pixel_t p;
-      c = sel->GetLineColor();
-      p = TColor::Number2Pixel(c);
-      fSelectLineColor->SetColor(p);
-      fSelectLineWidth->Select(sel->GetLineWidth());
-      fActivateSelection->SetOn(sel->TestBit(TParallelCoordSelect::kActivated));
-      fShowRanges->SetOn(sel->TestBit(TParallelCoordSelect::kShowRanges));
+      if (sel) {
+         fSelectionSelect->Select(list->IndexOf(sel),kFALSE);
+         Color_t c;
+         Pixel_t p;
+         c = sel->GetLineColor();
+         p = TColor::Number2Pixel(c);
+         fSelectLineColor->SetColor(p);
+         fSelectLineWidth->Select(sel->GetLineWidth());
+         fActivateSelection->SetOn(sel->TestBit(TParallelCoordSelect::kActivated));
+         fShowRanges->SetOn(sel->TestBit(TParallelCoordSelect::kShowRanges));
+      }
    }
 }
 
