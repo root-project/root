@@ -127,14 +127,7 @@ namespace cling {
       kMoreInputExpected
     };
 
-    //---------------------------------------------------------------------
-    //! Constructor
-    //---------------------------------------------------------------------
     Interpreter(int argc, const char* const *argv, const char* llvmdir = 0);
-    
-    //---------------------------------------------------------------------
-    //! Destructor
-    //---------------------------------------------------------------------
     virtual ~Interpreter();
 
     const InvocationOptions& getOptions() const { return m_Opts; }
@@ -157,13 +150,15 @@ namespace cling {
     ///
     /// @param[in] input_line - the input to be compiled
     /// @param[in] rawInput - turns on or off the wrapping of the input
+    /// @param[out] V - returns the tuple llvm::GenericValue and clang::Type
     /// @param[out] D - returns the first declaration that was parsed from the
     ///                 input
     ///
     CompilationResult processLine(const std::string& input_line, 
                                   bool rawInput = false,
+                                  Value* V = 0,
                                   const clang::Decl** D = 0);
-    
+
     bool loadFile(const std::string& filename,
                   const std::string* trailcode = 0,
                   bool allowSharedLib = true);
@@ -186,10 +181,7 @@ namespace cling {
 
     void runStaticInitializersOnce() const;
 
-    int CXAAtExit(void (*func) (void*), void* arg, void* dso);
-
-	
-    
+    int CXAAtExit(void (*func) (void*), void* arg, void* dso);    
   private:
     InvocationOptions m_Opts; // Interpreter options
     llvm::OwningPtr<ExecutionContext> m_ExecutionContext;
@@ -216,7 +208,8 @@ namespace cling {
     void handleFrontendOptions();
     CompilationResult handleLine(llvm::StringRef Input,
                                  llvm::StringRef FunctionName,
-                                 bool rawInput = false, const clang::Decl** D = 0);
+                                 bool rawInput = false,
+                                 const clang::Decl** D = 0);
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     friend class runtime::internal::LifetimeHandler;

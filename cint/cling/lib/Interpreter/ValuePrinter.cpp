@@ -8,8 +8,10 @@
 
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
+#include "cling/Interpreter/Value.h"
 
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Type.h"
 
@@ -49,11 +51,35 @@ static void StreamRef(llvm::raw_ostream& o, const void* v) {
 }
   
 static void StreamPtr(llvm::raw_ostream& o, const void* v) {
-  o << *(intptr_t
-*)v << "\n";
+  o << *(intptr_t*)v << "\n";
 }
   
-static void StreamObj(llvm::raw_ostream& o, const void* v) {
+static void StreamObj(llvm::raw_ostream& o, const void* v,
+                      const cling::ValuePrinterInfo& VPI) {
+  const clang::Type* Ty = VPI.getExpr()->getType().getTypePtr(); 
+  if (clang::CXXRecordDecl* CXXRD = Ty->getAsCXXRecordDecl())
+    if (CXXRD->getQualifiedNameAsString().compare("cling::Value") == 0) {
+      cling::Value* V = (cling::Value*)v;
+      if (V->type) {
+        o << "boxes [";
+        o << 
+          "(" << 
+          clang::QualType::getAsString(V->type, clang::Qualifiers()) << 
+          ") ";
+        if (V->type->isPointerType())
+          o << V->value.PointerVal;
+        else if (V->type->isFloatingType())
+          o << V->value.DoubleVal;
+        else if (V->type->isIntegerType())
+          o << V->value.IntVal.getSExtValue();
+        else if (V->type->isBooleanType())
+          o << V->value.IntVal.getBoolValue();
+        o << "]\n";
+
+        return;
+      }
+    }
+
   // TODO: Print the object members.
   o << "@" << v << "\n";
 }
@@ -75,16 +101,16 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
     case clang::BuiltinType::Float:  o << *(float*)p << "\n"; break;
     case clang::BuiltinType::Double: o << *(double*)p << "\n"; break;
     default:
-      StreamObj(o, p);
+      StreamObj(o, p, VPI);
     }
   } 
   else if (Ty.getAsString().compare("std::string") == 0) {
-    StreamObj(o, p);
+    StreamObj(o, p, VPI);
     o <<"c_str: ";
     StreamCharPtr(o, ((const char*) (*(const std::string*)p).c_str()));
   } 
   else if (Ty->isEnumeralType()) {
-    StreamObj(o, p);
+    StreamObj(o, p, VPI);
     int value = *(int*)p;
     clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
     bool IsFirst = true;
@@ -112,7 +138,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
       StreamPtr(o, p);
   }
   else
-    StreamObj(o, p);
+    StreamObj(o, p, VPI);
 }
   
 namespace cling {

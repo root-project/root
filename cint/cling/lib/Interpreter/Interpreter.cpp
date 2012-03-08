@@ -200,7 +200,7 @@ namespace cling {
     // Warm them up
     m_IncrParser->Initialize();
 
-	m_ExecutionContext->addSymbol("local_cxa_atexit", (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
+    m_ExecutionContext->addSymbol("local_cxa_atexit", (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
     
     if (getCI()->getLangOpts().CPlusPlus) {
       // Set up common declarations which are going to be available
@@ -221,18 +221,12 @@ namespace cling {
 
     handleFrontendOptions();
   }
-  
-  //---------------------------------------------------------------------------
-  // Destructor
-  //---------------------------------------------------------------------------
-  Interpreter::~Interpreter()
-  {
+
+  Interpreter::~Interpreter() {
     for (size_t I = 0, N = m_AtExitFuncs.size(); I < N; ++I) {
       const CXAAtExitElement& AEE = m_AtExitFuncs[N - I - 1];
       (*AEE.m_Func)(AEE.m_Arg);
     }
-
-    //delete m_prev_module; // Don't do this, the engine does it.
   }
    
   const char* Interpreter::getVersion() const {
@@ -355,22 +349,20 @@ namespace cling {
   CompilerInstance* Interpreter::getCI() const {
     return m_IncrParser->getCI();
   }
-  
+
+  ///\brief Maybe transform the input line to implement cint command line 
+  /// semantics (declarations are global) and compile to produce a module.
+  ///
   Interpreter::CompilationResult
   Interpreter::processLine(const std::string& input_line, 
-                           bool rawInput /*= false*/,
-                           const Decl** D /*=0*/) {
-    //
-    //  Transform the input line to implement cint
-    //  command line semantics (declarations are global),
-    //  and compile to produce a module.
-    //
-    
+                           bool rawInput /*=false*/,
+                           Value* V, /*=0*/
+                           const Decl** D /*=0*/) {    
     std::string functName;
     std::string wrapped = input_line;
     if (strncmp(input_line.c_str(),"#",strlen("#")) != 0 &&
         strncmp(input_line.c_str(),"extern ",strlen("extern ")) != 0 &&
-        !rawInput) {
+        !rawInput && !V) {
       WrapInput(wrapped, functName);
     }
 
@@ -381,7 +373,12 @@ namespace cling {
                               clang::diag::MAP_IGNORE, SourceLocation());
     Diag.setDiagnosticMapping(clang::diag::warn_unused_call,
                               clang::diag::MAP_IGNORE, SourceLocation());
-    CompilationResult Result = handleLine(wrapped, functName, rawInput, D);
+
+    CompilationResult Result = kSuccess; 
+    if (V)
+      *V = Evaluate(input_line.c_str(), /*DeclContext=*/0);
+    else
+      Result = handleLine(wrapped, functName, rawInput, D);
 
     return Result;
   }
@@ -420,8 +417,7 @@ namespace cling {
     return false;
   }
 
-  std::string Interpreter::createUniqueName()
-  {
+  std::string Interpreter::createUniqueName() {
     // Create an unique name
     
     std::ostringstream swrappername;
@@ -432,7 +428,7 @@ namespace cling {
   
   Interpreter::CompilationResult
   Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
-                          bool rawInput, const Decl** D) {
+                          bool rawInput /*=false*/, const Decl** D /*=0*/) {
     // if we are using the preprocessor
     if (rawInput || input[0] == '#') {
       
@@ -534,8 +530,9 @@ namespace cling {
   
   Value Interpreter::Evaluate(const char* expr, DeclContext* DC,
                               bool ValuePrinterReq) {
-    assert(DC && "DeclContext cannot be null!");
-
+    Sema& TheSema = getCI()->getSema();
+    if (!DC)
+      DC = TheSema.getASTContext().getTranslationUnitDecl();
     // Execute and get the result
     Value Result;
 
@@ -546,20 +543,20 @@ namespace cling {
     
     // Set up the declaration context
     DeclContext* CurContext;
-    Sema& TheSema = getCI()->getSema();
 
     CurContext = TheSema.CurContext;
     TheSema.CurContext = DC;
 
     llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
-    assert(TheSema.ExternalSource && "No ExternalSource set!");
-
-    DynamicIDHandler* DIDH = 
-      static_cast<DynamicIDHandler*>(TheSema.ExternalSource);
-    DIDH->Callbacks->setEnabled();
-    m_IncrParser->Parse(Wrapper, DGRs);
-    DIDH->Callbacks->setEnabled(false);
-
+    if (TheSema.ExternalSource) {
+      DynamicIDHandler* DIDH = 
+        static_cast<DynamicIDHandler*>(TheSema.ExternalSource);
+      DIDH->Callbacks->setEnabled();
+      m_IncrParser->Parse(Wrapper, DGRs);
+      DIDH->Callbacks->setEnabled(false);
+    }
+    else 
+      m_IncrParser->Parse(Wrapper, DGRs);
     assert((DGRs.size() || DGRs.size() > 2) && "Only FunctionDecl expected!");
 
     TheSema.CurContext = CurContext;
@@ -585,7 +582,7 @@ namespace cling {
             TopLevelFD->setType(FuncTy);
             // add return stmt
             Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
-            CS->setStmts(Context, &RetS, 1);
+            CS->setLastStmt(RetS);
           }
         }
     TheSema.CurContext = CurContext;
