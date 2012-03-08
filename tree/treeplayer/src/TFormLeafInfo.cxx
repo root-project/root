@@ -920,13 +920,6 @@ TFormLeafInfoDirect::TFormLeafInfoDirect(TBranchElement * from) :
 }
 
 //______________________________________________________________________________
-TFormLeafInfoDirect::TFormLeafInfoDirect(const TFormLeafInfoDirect& orig) :
-   TFormLeafInfo(orig)
-{
-   // Constructor.
-}
-
-//______________________________________________________________________________
 TFormLeafInfo* TFormLeafInfoDirect::DeepCopy() const
 {
    // Copy this object and its content.

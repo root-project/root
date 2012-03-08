@@ -109,7 +109,8 @@ public:
 class TFormLeafInfoDirect : public TFormLeafInfo {
 public:
    TFormLeafInfoDirect(TBranchElement * from);
-   TFormLeafInfoDirect(const TFormLeafInfoDirect& orig);
+   // The implicit default constructor's implementation is correct.
+
    virtual TFormLeafInfo* DeepCopy() const;
 
    virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0);
