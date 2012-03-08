@@ -2195,7 +2195,7 @@ void TBufferSQL2::ReadCharP(Char_t    *c)
    // Reads array of characters from buffer
 
    const char* buf = SqlReadCharStarValue();
-   strcpy(c, buf);
+   if (buf) strcpy(c, buf);
 }
 
 //________________________________________________________________________
