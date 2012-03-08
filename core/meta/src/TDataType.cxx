@@ -270,7 +270,9 @@ void TDataType::SetType(const char *name)
    fType = kOther_t;
    fSize = 0;
 
-   if (!strcmp("unsigned int", name)) {
+   if (name==0) {
+      return;
+   } else if (!strcmp("unsigned int", name)) {
       fType = kUInt_t;
       fSize = sizeof(UInt_t);
    } else if (!strcmp("unsigned", name)) {
