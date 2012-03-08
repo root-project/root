@@ -195,11 +195,7 @@ int XrdProofPhyConn::TryConnect(int fd)
    const char *ctype[2] = {"UNIX", "TCP"};
 
    // Create physical connection
-#if ROOTXRDVERS < ROOT_OldPhyConn
-   fPhyConn = new XrdClientPhyConnection(this);
-#else
    fPhyConn = new XrdClientPhyConnection(this, 0);
-#endif
 
    // Connect
    bool isUnix = (fTcp) ? 0 : 1;
