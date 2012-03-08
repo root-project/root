@@ -53,14 +53,10 @@
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
-#ifndef ROOT_XrdSysToOuc
-#include "XrdSysToOuc.h"
-#endif
 
 class TFileStager;
 class TSocket;
 class XrdClient;
-class XrdSysRecMutex;
 
 class TXNetFile : public TNetFile {
 
@@ -76,8 +72,8 @@ private:
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility
    static TFileStager *fgFileStager; // Stager for IsStaged checks
 
-   XrdSysRecMutex    *fInitMtx;     // Protects fInitDone, serializes the
-                                   // attempts to Init() for this object only
+   void              *fInitMtx;     // Protects fInitDone, serializes the
+                                    // attempts to Init() for this object only
 
    // Methods
    TXNetFile(const TXNetFile&);  // Not implemented
