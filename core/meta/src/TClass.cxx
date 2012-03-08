@@ -2423,9 +2423,13 @@ TClassStreamer *TClass::GetStreamer() const
       if (local->fStreamer==0) {
          local->fStreamer = fStreamer->Generate();
          const type_info &orig = ( typeid(*fStreamer) );
-         const type_info &copy = ( typeid(*local->fStreamer) );
-         if (strcmp(orig.name(),copy.name())!=0) {
-            Warning("GetStreamer","For %s, the TClassStreamer passed does not properly implement the Generate method (%s vs %s\n",GetName(),orig.name(),copy.name());
+         if (!local->fStreamer) {
+            Warning("GetStreamer","For %s, the TClassStreamer (%s) passed's call to Generate failed!",GetName(),orig.name());
+         } else {
+            const type_info &copy = ( typeid(*local->fStreamer) );
+            if (strcmp(orig.name(),copy.name())!=0) {
+               Warning("GetStreamer","For %s, the TClassStreamer passed does not properly implement the Generate method (%s vs %s)\n",GetName(),orig.name(),copy.name());
+            }
          }
       }
       return local->fStreamer;
