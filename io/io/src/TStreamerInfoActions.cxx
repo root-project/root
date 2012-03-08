@@ -667,7 +667,7 @@ namespace TStreamerInfoActions
             fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                    " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
                    info->GetClass()->GetName(),aElement->GetName(),fElemId,info->GetTypes()[fElemId],
-                   aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache()->GetObjectAt(0));
+                   aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
          }            
 
       }
