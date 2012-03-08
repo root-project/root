@@ -146,7 +146,7 @@ void
 ExecutionContext::executeFunction(llvm::StringRef funcname, 
                                   llvm::GenericValue* returnValue)
 {
-   // Call an extern C function without arguments
+  // Call an extern C function without arguments
   //runCodeGen();
 
   // Rewire atexit:
@@ -161,11 +161,9 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
 
    llvm::Function* f = m_engine->FindFunctionNamed(funcname.data());
    if (!f) {
-      fprintf(
-           stderr
-         , "ExecutionContext::executeFunction: Could not find function named: %s\n"
-         , funcname.data()
-      );
+      fprintf(stderr, "executeFunction: Could not find function named: %s\n",
+              funcname.data()
+              );
       return;
    }
    JITtedFunctionCollector listener;
@@ -201,13 +199,13 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
    std::vector<llvm::GenericValue> args;
    llvm::GenericValue val;
    if (!returnValue)
-      returnValue = &val;
+     returnValue = &val;
 
    *returnValue = m_engine->runFunction(f, args);
    //
    //fprintf(stderr, "Finished running generated code with JIT.\n");
    //
-   // Print the result.
+   //Print the result.
    //llvm::outs() << "Result: " << ret.IntVal << "\n";
    m_engine->freeMachineCodeForFunction(f);
 }
