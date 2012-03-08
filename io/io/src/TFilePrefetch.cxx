@@ -461,10 +461,11 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
       file = TFile::Open(fullPath, "new");
    }
 
-   file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
-   file->Close();
-
-   delete file;
+   if (file) {
+      file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
+      file->Close();
+      delete file;
+   }
    delete md;
 }
 
