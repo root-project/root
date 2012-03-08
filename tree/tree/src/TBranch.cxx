@@ -2479,7 +2479,8 @@ void TBranch::Streamer(TBuffer& b)
       if (v < 2) {
          fBasketSeek = new Long64_t[fMaxBaskets];
          for (n=0;n<fWriteBasket;n++) {
-            fBasketSeek[n] = GetBasket(n)->GetSeekKey();
+            TBasket *basket = GetBasket(n);
+            fBasketSeek[n] = basket ? basket->GetSeekKey() : 0;
          }
       } else {
          fBasketSeek = new Long64_t[fMaxBaskets];
