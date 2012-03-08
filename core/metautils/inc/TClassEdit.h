@@ -82,6 +82,7 @@ namespace TClassEdit {
    int         IsSTLCont (const char *type,int testAlloc=0);
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);
+   std::string GetLong64_Name(const char *original);
    std::string GetLong64_Name(const std::string& original);
    int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc, EModType mode = TClassEdit::kNone);
    int         STLKind   (const char *type);    //Kind of stl container

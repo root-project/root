@@ -420,6 +420,17 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
 }
 
 //______________________________________________________________________________
+string TClassEdit::GetLong64_Name(const char* original)
+{
+   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+
+   if (original==0)
+      return "";
+   else 
+      return GetLong64_Name(string(original));
+}
+
+//______________________________________________________________________________
 string TClassEdit::GetLong64_Name(const string& original)
 {
    // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
