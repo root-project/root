@@ -500,7 +500,9 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          }
       }
 
-      if ((nstar==1) &&
+      if (name == 0) 
+         fRetType = kOther;
+      else if ((nstar==1) &&
           (!strcmp("unsigned char", name)        || !strcmp("char", name)         ||
            !strcmp("UChar_t", name)              || !strcmp("Char_t", name)       ||
            !strcmp("const unsigned char", name)  || !strcmp("const char", name)   ||
