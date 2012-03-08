@@ -88,7 +88,8 @@ G__value G__blockscope_expr::getitem(const string& item_string)
       }
       ++i;
    }
-   return getobject(item);
+   G__object_id objid;
+   return getobject(item,&objid);
 }
 
 //______________________________________________________________________________
@@ -128,7 +129,8 @@ G__value G__blockscope_expr::member_operator(const string& item, int& i)
    //  POPSTROS
 
    string name = item.substr(0, i);
-   G__value obj = getobject(name);
+   G__object_id objid;
+   G__value obj = getobject(name,&objid);
    m_localscope.Init(obj.tagnum);
    m_isobject = 1;
    m_isfixed = 0;
@@ -167,7 +169,8 @@ G__value G__blockscope_expr::pointer_operator(const string& item, int& i)
    //  POPSTROS
 
    string name = item.substr(0, i);
-   G__value obj = getobject(name);
+   G__object_id objid;
+   G__value obj = getobject(name,&objid);
    m_isfixed = 0;
    G__TypeReader ty(obj);
 
