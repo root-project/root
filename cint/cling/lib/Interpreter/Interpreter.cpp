@@ -101,7 +101,7 @@ namespace cling {
         return interp->CXAAtExit(func, arg, dso);
       }
       struct __trigger__cxa_atexit {
-        ~__trigger__cxa_atexit(); // implemented in Interpreter.cpp
+        ~__trigger__cxa_atexit();
       };
       __trigger__cxa_atexit::~__trigger__cxa_atexit() {}
     }
