@@ -149,15 +149,18 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
    if (!fgInfoFactory) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualStreamerInfo","TStreamerInfo"))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
+         if (h->LoadPlugin() == -1) {
+            ::Fatal("TVirtualStreamerInfo::Factory",
+                    "The plugin handler for TVirtualStreamerInfo was found but failed to load!");
+         } else {
+            fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
+         }
       } else {
          TString filename("$ROOTSYS/etc/plugins/TVirtualStreamerInfo");
          gSystem->ExpandPathName(filename);
          if (gSystem->AccessPathName(filename)) {            
             ::Fatal("TVirtualStreamerInfo::Factory",
-                    "Cannot find the plugin handlers for TVirtualStreamerInfo! "
+                    "Cannot find the plugin handler for TVirtualStreamerInfo! "
                     "$ROOTSYS/etc/plugins/TVirtualStreamerInfo does not exist "
                     "or is inaccessible.");
          } else {
