@@ -617,9 +617,11 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    string answer;
 
    // get list of all arguments
-   TSplitType arglist(typeDesc, (EModType) mode);
-   arglist.ShortType(answer, mode);
-   
+   if (typeDesc) {
+      TSplitType arglist(typeDesc, (EModType) mode);
+      arglist.ShortType(answer, mode);
+   }
+
    return answer;
 }
 
