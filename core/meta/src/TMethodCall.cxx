@@ -491,7 +491,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 
       Bool_t isEnum = kFALSE;
       TypeInfo_t *typed = 0;
-      if (!strcmp("(unknown)",name)) {
+      if (name && !strcmp("(unknown)",name)) {
          typed = gCint->TypeInfo_Factory();         
          gCint->TypeInfo_Init(typed,func->GetReturnTypeName());
          name  = gCint->TypeInfo_TrueName(typed);
