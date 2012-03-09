@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ################################################################################
-# Simple script that helps to heal the llvm's make update command, which       #
-# overwrites the current local rev number of cling's repository. It takes the  #
-# revision that it thinks is the current, the correct revision and optional    #
-# path. If no path provided it uses the current dir.                           #
+# Simple script that helps to heal the svn update command, which overwrites    #
+# the current local rev number of cling's repo when inline in llvm source tree.#
+# It takes the revision that it thinks is the current, the correct revision    #
+# and optional path. If no path provided it uses the current dir.                           #
 ################################################################################
 #                                                                              #
 #                Author: Vassil Vassilev (vvasilev@cern.ch)                    #
