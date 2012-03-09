@@ -80,5 +80,7 @@ dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
 	echo "$@ made"
 
 #Windows does not like piping 
-#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | $(CALLROOTEXE)  -b $(OUTPUT) && \
+#	@echo 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"))' | $(CALLROOTEXE)  -b $(OUTPUT) &&
 
+# teach MingW that drawtest should not be created by copying drawtest.sh
+.PHONY: drawtest
