@@ -148,6 +148,7 @@ void TGedPatternFrame::DoRedraw()
       SetFillStyle(fgGC, fPattern);
       gVirtualX->FillRectangle(fId, fgGC->GetGC(), 0, 0, fWidth, fHeight);
    }
+   DrawBorder();
 }
 
 //______________________________________________________________________________
