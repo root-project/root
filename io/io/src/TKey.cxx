@@ -697,20 +697,22 @@ TObject *TKey::ReadObj()
    //  object of the class type it describes. This new object now calls its
    //  Streamer function to rebuilt itself.
    //
-   //  see TKey::ReadObjectAny to read any object non-derived from TObject
+   //  Use TKey::ReadObjectAny to read any object non-derived from TObject
+   //  
+   //  Note:
+   //  A C style cast can only be used in the case where the final class 
+   //  of this object derives from TObject as a first inheritance, otherwise
+   //  one must use a dynamic_cast.
    //
-   //  NOTE:
-   //  In case the class of this object derives from TObject but not
-   //  as a first inheritance, one must cast the return value twice.
-   //  Example1: Normal case:
+   //  Example1: simplified case:
    //      class MyClass : public TObject, public AnotherClass
-   //   then on return, one can do:
+   //   then on return, one get away with using:
    //    MyClass *obj = (MyClass*)key->ReadObj();
    //
-   //  Example2: Special case:
-   //      class MyClass : public AnotherClass, public TObject
-   //   then on return, one must do:
+   //  Example2: Usual case (recommended unless performance is critical)
    //    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
+   //  which support also the more complex inheritance like:
+   //    class MyClass : public AnotherClass, public TObject
    //
    //  Of course, dynamic_cast<> can also be used in the example 1.
 
