@@ -401,9 +401,9 @@ void TCint::EnableAutoLoading()
 
    R__LOCKGUARD(gCINTMutex);
 
+   LoadLibraryMap();
    G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    G__set_class_autoloading(1);
-   LoadLibraryMap();
 }
 
 //______________________________________________________________________________
