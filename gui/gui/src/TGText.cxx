@@ -86,7 +86,7 @@ TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength),
 
    fString = 0;
    if (tl.fString) {
-      fString = new char[fLength];
+      fString = new char[fLength+1];
       strncpy(fString, tl.fString, fLength);
       fString[fLength] = 0;
    }
@@ -100,7 +100,7 @@ TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
    if (this != &tl) {
       fLength = tl.fLength;
       if (fString) delete [] fString;
-      fString = new char[fLength];
+      fString = new char[fLength+1];
       strncpy(fString, tl.fString, fLength);
       fString[fLength] = 0;
       fPrev = tl.fPrev;
