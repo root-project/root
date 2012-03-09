@@ -79,10 +79,17 @@ TGTextLine::TGTextLine(const char *string)
 }
 
 //______________________________________________________________________________
-TGTextLine::TGTextLine(const TGTextLine& tl) : fString(tl.fString), 
-   fLength(tl.fLength), fPrev(tl.fPrev), fNext(tl.fNext)
+TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength), 
+   fPrev(tl.fPrev), fNext(tl.fNext)
 { 
    //copy constructor
+
+   fString = 0;
+   if (tl.fString) {
+      fString = new char[fLength];
+      strncpy(fString, tl.fString, fLength);
+      fString[fLength] = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -91,8 +98,11 @@ TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
    //assignment operator
 
    if (this != &tl) {
-      fString = tl.fString;
       fLength = tl.fLength;
+      if (fString) delete [] fString;
+      fString = new char[fLength];
+      strncpy(fString, tl.fString, fLength);
+      fString[fLength] = 0;
       fPrev = tl.fPrev;
       fNext = tl.fNext;
    } 
