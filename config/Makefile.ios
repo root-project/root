@@ -16,22 +16,21 @@ endif
 
 # iOS version
 ifeq ($(IPHONEOS_DEPLOYMENT_TARGET),)
-IOSVERS       = 4.0
+IOSVERS       = 5.1
 else
 IOSVERS       = $(IPHONEOS_DEPLOYMENT_TARGET)
 endif
 XCODE_PATH   := $(shell /usr/bin/xcode-select -print-path)
 IOS_MAJOR    := $(shell echo $(IOSVERS) | cut -d . -f 1)
-IOSSDK        = $(XCODE_PATH)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$(IOSVERS).sdk
-IOSSDKBIN     = $(XCODE_PATH)/Platforms/iPhoneOS.platform/Developer/usr/bin
+IOSSDK       := $(XCODE_PATH)/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$(IOSVERS).sdk
 
 # Compiler:
 ifeq ($(subst $(IOS_MAJOR),,1234),1234)
-CXX           = $(IOSSDKBIN)/clang++
-CC            = $(IOSSDKBIN)/clang
+CXX          := $(shell xcrun -find clang++)
+CC           := $(shell xcrun -find clang)
 else
-CXX           = $(IOSSDKBIN)/g++
-CC            = $(IOSSDKBIN)/gcc
+CXX          := $(shell xcrun -find g++)
+CC           := $(shell xcrun -find gcc)
 endif
 CXXFLAGS      = -arch armv7 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common -fvisibility-inlines-hidden \
@@ -53,9 +52,9 @@ COMPILER      = gnu
 
 # Linker:
 ifeq ($(subst $(IOS_MAJOR),,1234),1234)
-LD            = $(IOSSDKBIN)/clang++
+LD           := $(shell xcrun -find clang++)
 else
-LD            = $(IOSSDKBIN)/g++
+LD           := $(shell xcrun -find g++)
 endif
 LDFLAGS       = $(OPT) -arch armv7 -isysroot $(IOSSDK) \
                 -miphoneos-version-min=$(IOSVERS)
