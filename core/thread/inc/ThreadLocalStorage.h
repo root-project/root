@@ -44,7 +44,7 @@
 #endif
 
 #if defined(R__MACOSX)
-#  if defined(__clang__) && defined(MAC_OS_X_VERSION_10_7)
+#  if defined(__clang__) && defined(MAC_OS_X_VERSION_10_7) && defined(__x86_64__)
 #    define R__HAS___THREAD
 #  else
 #    define R__HAS_PTHREAD
