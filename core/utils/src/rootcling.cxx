@@ -171,6 +171,7 @@
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/CIFactory.h"
+#include "cling/Interpreter/Value.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
@@ -794,7 +795,8 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       
       const clang::Decl* D = 0;
       const clang::FunctionDecl* ResultFD = 0;
-      if (gInterp->processLine(Str, /*rawInput*/true, &D)
+      cling::Value value;
+      if (gInterp->processLine(Str, /*rawInput*/true, &value, &D)
           == cling::Interpreter::kSuccess) {
          if (D) {
             FDVisitor FDV = FDVisitor();

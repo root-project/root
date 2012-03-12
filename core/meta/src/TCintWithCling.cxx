@@ -55,6 +55,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Serialization/ASTReader.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Value.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
@@ -3151,8 +3152,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
       Info("LoadDictionaries", "Loading PCH %s", dictEntry);
       TString module(dictEntry);
       module.Remove(module.Length() - 4, 4);
+      cling::Value value;
       fInterpreter->processLine(std::string("__import_module__ ") + module.Data() + ";",
-                                true /*raw*/);
+                                true /*raw*/,&value);
    }
    gSystem->FreeDirectory(dictDirPtr);
 

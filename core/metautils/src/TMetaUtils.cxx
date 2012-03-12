@@ -20,6 +20,7 @@
 #include "TMetaUtils.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Value.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/Decl.h"
 #include <string>
@@ -34,7 +35,8 @@ clang::QualType ROOT::TMetaUtils::LookupTypeDecl(cling::Interpreter& interp,
    std::string code("void ");
    code += funcname + "(" + tyname + "*);";
    const clang::Decl* decl = 0;
-   interp.processLine(code, true, &decl);
+   cling::Value value;
+   interp.processLine(code, true, &value, &decl);
    const clang::FunctionDecl* funcDecl = 0;
    while (decl
           && (!(funcDecl = clang::dyn_cast<clang::FunctionDecl>(decl))
