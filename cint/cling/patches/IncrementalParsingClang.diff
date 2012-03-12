@@ -1,6 +1,6 @@
 Index: tools/clang/include/clang/Lex/Preprocessor.h
 ===================================================================
---- tools/clang/include/clang/Lex/Preprocessor.h	(revision 152030)
+--- tools/clang/include/clang/Lex/Preprocessor.h	(revision 152550)
 +++ tools/clang/include/clang/Lex/Preprocessor.h	(working copy)
 @@ -148,6 +148,10 @@
    /// with this preprocessor.
@@ -40,7 +40,7 @@ Index: tools/clang/include/clang/Lex/Preprocessor.h
    ///
 Index: tools/clang/lib/Lex/PPLexerChange.cpp
 ===================================================================
---- tools/clang/lib/Lex/PPLexerChange.cpp	(revision 152030)
+--- tools/clang/lib/Lex/PPLexerChange.cpp	(revision 152550)
 +++ tools/clang/lib/Lex/PPLexerChange.cpp	(working copy)
 @@ -328,16 +328,18 @@
      CurLexer->BufferPtr = EndPos;
@@ -67,7 +67,7 @@ Index: tools/clang/lib/Lex/PPLexerChange.cpp
    for (WarnUnusedMacroLocsTy::iterator
 Index: tools/clang/lib/Lex/Preprocessor.cpp
 ===================================================================
---- tools/clang/lib/Lex/Preprocessor.cpp	(revision 152030)
+--- tools/clang/lib/Lex/Preprocessor.cpp	(revision 152550)
 +++ tools/clang/lib/Lex/Preprocessor.cpp	(working copy)
 @@ -54,18 +54,19 @@
                             HeaderSearch &Headers, ModuleLoader &TheModuleLoader,
@@ -76,7 +76,7 @@ Index: tools/clang/lib/Lex/Preprocessor.cpp
 -                           bool DelayInitialization)
 +                           bool DelayInitialization,
 +                           bool IncrProcessing)
-   : Diags(&diags), Features(opts), Target(target),FileMgr(Headers.getFileMgr()),
+   : Diags(&diags), LangOpts(opts), Target(target),FileMgr(Headers.getFileMgr()),
      SourceMgr(SM), HeaderInfo(Headers), TheModuleLoader(TheModuleLoader),
 -    ExternalSource(0), 
 -    Identifiers(opts, IILookup), CodeComplete(0),
@@ -95,7 +95,7 @@ Index: tools/clang/lib/Lex/Preprocessor.cpp
      Initialize(*Target);
 Index: tools/clang/lib/Parse/Parser.cpp
 ===================================================================
---- tools/clang/lib/Parse/Parser.cpp	(revision 152030)
+--- tools/clang/lib/Parse/Parser.cpp	(revision 152550)
 +++ tools/clang/lib/Parse/Parser.cpp	(working copy)
 @@ -475,6 +475,11 @@
  bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
@@ -111,7 +111,7 @@ Index: tools/clang/lib/Parse/Parser.cpp
  
 @@ -483,15 +488,17 @@
      // Late template parsing can begin.
-     if (getLang().DelayedTemplateParsing)
+     if (getLangOpts().DelayedTemplateParsing)
        Actions.SetLateTemplateParser(LateTemplateParserCallback, this);
 +    if (!PP.isIncrementalProcessingEnabled())
 +      Actions.ActOnEndOfTranslationUnit();
@@ -129,4 +129,3 @@ Index: tools/clang/lib/Parse/Parser.cpp
    Result = ParseExternalDeclaration(attrs);
    return false;
  }
-
