@@ -195,7 +195,7 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
          NameSpace2FileName(mangledM);
          Int_t overloadIdx = methWrap->GetOverloadIdx();
          if (overloadIdx) {
-            mangledM += "%";
+            mangledM += "@";
             mangledM += overloadIdx;
          }
          classFile << mangledM << "\">";
@@ -1603,7 +1603,7 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
    mangled = name;
    NameSpace2FileName(mangled);
    if (guessedMethod && guessedMethod->GetOverloadIdx()) {
-      mangled += "%";
+      mangled += "@";
       mangled += guessedMethod->GetOverloadIdx();
    }
    out << mangled << "\" href=\"src/" << filename;
