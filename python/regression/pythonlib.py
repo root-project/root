@@ -1,12 +1,18 @@
-import distutils.sysconfig, sys, os; 
-#print (distutils.sysconfig.get_config_var("LDLIBRARY") or ("Python%d%d" % (sys.version_info[0],sys.version_info[1]))),
-lib = os.path.join(distutils.sysconfig.get_config_var('LIBDIR'), distutils.sysconfig.get_config_var('LDLIBRARY'))
+import distutils.sysconfig as conf, sys, os; 
+ldlib = conf.get_config_var('LDLIBRARY')
+if ldlib:
+   for libdir in [conf.get_config_var('LIBDIR'),
+                  conf.get_config_var('LIBPL'),
+                  os.path.join('/System','Library','Frameworks'),
+                  os.path.join('/Library','Frameworks')]:
+      lib = os.path.join(libdir,ldlib)
+      if os.path.isfile(lib):
+         break
+elif 'win' in sys.platform:
+   # mingw severely limited in distutils vars, construct 'by hand'
+   prefix = conf.get_config_var('prefix')
+   version = conf.get_config_var('VERSION')
+   lib = os.path.join(prefix,'python%s.dll' % version)
 if not os.path.isfile(lib):
-   lib = os.path.join(distutils.sysconfig.get_config_var('LIBPL'), distutils.sysconfig.get_config_var('LDLIBRARY'))
-   if not os.path.isfile(lib):
-     lib = os.path.join('/System','Library','Frameworks',distutils.sysconfig.get_config_var('LDLIBRARY'))
-     if not os.path.isfile(lib):
-       lib = os.path.join('/Library','Frameworks',distutils.sysconfig.get_config_var('LDLIBRARY'))
-       if not os.path.isfile(lib):
-         raise RuntimeError("Cannot locate Python dynamic libraries");
+   raise RuntimeError("Cannot locate Python dynamic libraries");
 print lib
