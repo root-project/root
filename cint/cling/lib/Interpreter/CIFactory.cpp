@@ -220,7 +220,7 @@ namespace cling {
     CI->createPreprocessor();
     Preprocessor& PP = CI->getPreprocessor();
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
-					   PP.getLangOptions());
+					   PP.getLangOpts());
 
     // Set up the ASTContext
     ASTContext *Ctx = new ASTContext(CI->getLangOpts(),

@@ -394,7 +394,7 @@ namespace cling {
                           );
           // Build Arg2 llvm::StringRef
           // Get the type of the type without specifiers 
-          PrintingPolicy Policy(m_Context->getLangOptions());
+          PrintingPolicy Policy(m_Context->getLangOpts());
           Policy.SuppressTagKeyword = 1;
           std::string Res;
           CuredDeclTy.getAsStringInternal(Res, Policy);

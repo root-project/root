@@ -298,7 +298,7 @@ namespace cling {
         return false;
       }
 
-      if (!m_Sema->getLangOptions().CPlusPlus) {
+      if (!m_Sema->getLangOpts().CPlusPlus) {
         // FIXME: This makes sure that we ignore the contexts associated
         // with C structs, unions, and enums when looking for a matching
         // tag declaration or definition. See the similar lookup tweak
@@ -321,7 +321,7 @@ namespace cling {
       Previous.clear();
     }
 
-    if (m_Sema->getLangOptions().CPlusPlus && Name && DC && m_Sema->StdNamespace 
+    if (m_Sema->getLangOpts().CPlusPlus && Name && DC && m_Sema->StdNamespace 
         && DC->Equals(m_Sema->getStdNamespace()) && Name->isStr("bad_alloc")) {
       // This is a declaration of or a reference to "std::bad_alloc".
       isStdBadAlloc = true;
@@ -346,7 +346,7 @@ namespace cling {
       // technically forbidden by the current standard but which is
       // okay according to the likely resolution of an open issue;
       // see http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_active.html#407
-      if (m_Sema->getLangOptions().CPlusPlus) {
+      if (m_Sema->getLangOpts().CPlusPlus) {
         if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(PrevDecl)) {
           if (const TagType *TT = TD->getUnderlyingType()->getAs<TagType>()) {
             TagDecl *Tag = TT->getDecl();
@@ -496,7 +496,7 @@ namespace cling {
         // lookup.  This is only actually possible in C++, where a few
         // things like templates still live in the tag namespace.
       } else {
-        assert(m_Sema->getLangOptions().CPlusPlus);
+        assert(m_Sema->getLangOpts().CPlusPlus);
         
         // Diagnose if the declaration is in scope.
         if (!m_Sema->isDeclInScope(PrevDecl, SearchDC, 

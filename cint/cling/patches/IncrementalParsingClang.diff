@@ -1,0 +1,132 @@
+Index: tools/clang/include/clang/Lex/Preprocessor.h
+===================================================================
+--- tools/clang/include/clang/Lex/Preprocessor.h	(revision 152030)
++++ tools/clang/include/clang/Lex/Preprocessor.h	(working copy)
+@@ -148,6 +148,10 @@
+   /// with this preprocessor.
+   std::vector<CommentHandler *> CommentHandlers;
+ 
++  /// \brief True if we want to ignore EOF token and continue later on (thus 
++  /// avoid tearing the Lexer and etc. down).
++  bool IncrementalProcessing;
++
+   /// \brief The code-completion handler.
+   CodeCompletionHandler *CodeComplete;
+ 
+@@ -344,7 +348,8 @@
+                ModuleLoader &TheModuleLoader,
+                IdentifierInfoLookup *IILookup = 0,
+                bool OwnsHeaderSearch = false,
+-               bool DelayInitialization = false);
++               bool DelayInitialization = false,
++               bool IncrProcessing = false);
+ 
+   ~Preprocessor();
+ 
+@@ -691,6 +696,14 @@
+   /// \brief Recompute the current lexer kind based on the CurLexer/CurPTHLexer/
+   /// CurTokenLexer pointers.
+   void recomputeCurLexerKind();
++
++  /// \brief Returns true if incremental processing is enabled
++  bool isIncrementalProcessingEnabled() const { return IncrementalProcessing; }
++
++  /// \brief Enables the incremental processing
++  void enableIncrementalProcessing(bool value = true) {
++    IncrementalProcessing = value;
++  }
+   
+   /// \brief Specify the point at which code-completion will be performed.
+   ///
+Index: tools/clang/lib/Lex/PPLexerChange.cpp
+===================================================================
+--- tools/clang/lib/Lex/PPLexerChange.cpp	(revision 152030)
++++ tools/clang/lib/Lex/PPLexerChange.cpp	(working copy)
+@@ -328,16 +328,18 @@
+     CurLexer->BufferPtr = EndPos;
+     CurLexer->FormTokenWithChars(Result, EndPos, tok::eof);
+ 
+-    // We're done with the #included file.
+-    CurLexer.reset();
++    if (!isIncrementalProcessingEnabled())
++      // We're done with lexing.
++      CurLexer.reset();
+   } else {
+     assert(CurPTHLexer && "Got EOF but no current lexer set!");
+     CurPTHLexer->getEOF(Result);
+     CurPTHLexer.reset();
+   }
++  
++  if (!isIncrementalProcessingEnabled())
++    CurPPLexer = 0;
+ 
+-  CurPPLexer = 0;
+-
+   // This is the end of the top-level file. 'WarnUnusedMacroLocs' has collected
+   // all macro locations that we need to warn because they are not used.
+   for (WarnUnusedMacroLocsTy::iterator
+Index: tools/clang/lib/Lex/Preprocessor.cpp
+===================================================================
+--- tools/clang/lib/Lex/Preprocessor.cpp	(revision 152030)
++++ tools/clang/lib/Lex/Preprocessor.cpp	(working copy)
+@@ -54,18 +54,19 @@
+                            HeaderSearch &Headers, ModuleLoader &TheModuleLoader,
+                            IdentifierInfoLookup* IILookup,
+                            bool OwnsHeaders,
+-                           bool DelayInitialization)
++                           bool DelayInitialization,
++                           bool IncrProcessing)
+   : Diags(&diags), Features(opts), Target(target),FileMgr(Headers.getFileMgr()),
+     SourceMgr(SM), HeaderInfo(Headers), TheModuleLoader(TheModuleLoader),
+-    ExternalSource(0), 
+-    Identifiers(opts, IILookup), CodeComplete(0),
++    ExternalSource(0), Identifiers(opts, IILookup), 
++    IncrementalProcessing(IncrProcessing), CodeComplete(0), 
+     CodeCompletionFile(0), CodeCompletionOffset(0), CodeCompletionReached(0),
+     SkipMainFilePreamble(0, true), CurPPLexer(0), 
+     CurDirLookup(0), CurLexerKind(CLK_Lexer), Callbacks(0), MacroArgCache(0), 
+     Record(0), MIChainHead(0), MICache(0) 
+ {
+   OwnsHeaderSearch = OwnsHeaders;
+-  
++
+   if (!DelayInitialization) {
+     assert(Target && "Must provide target information for PP initialization");
+     Initialize(*Target);
+Index: tools/clang/lib/Parse/Parser.cpp
+===================================================================
+--- tools/clang/lib/Parse/Parser.cpp	(revision 152030)
++++ tools/clang/lib/Parse/Parser.cpp	(working copy)
+@@ -475,6 +475,11 @@
+ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+   DelayedCleanupPoint CleanupRAII(TopLevelDeclCleanupPool);
+ 
++  // Skip over the EOF token, flagging end of previous input for incremental 
++  // processing
++  if (PP.isIncrementalProcessingEnabled() && Tok.is(tok::eof))
++    ConsumeToken();
++
+   while (Tok.is(tok::annot_pragma_unused))
+     HandlePragmaUnused();
+ 
+@@ -483,15 +488,17 @@
+     // Late template parsing can begin.
+     if (getLang().DelayedTemplateParsing)
+       Actions.SetLateTemplateParser(LateTemplateParserCallback, this);
++    if (!PP.isIncrementalProcessingEnabled())
++      Actions.ActOnEndOfTranslationUnit();
++    //else don't tell Sema that we ended parsing: more input might come.
+ 
+-    Actions.ActOnEndOfTranslationUnit();
+     return true;
+   }
+ 
+   ParsedAttributesWithRange attrs(AttrFactory);
+   MaybeParseCXX0XAttributes(attrs);
+   MaybeParseMicrosoftAttributes(attrs);
+-  
++
+   Result = ParseExternalDeclaration(attrs);
+   return false;
+ }
+

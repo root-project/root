@@ -44,7 +44,7 @@ namespace cling {
                 p = C->DisableConsumer(ChainedConsumer::kDeclExtractor);
                 q = C->DisableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
                 Expr* Result = 0;
-                if (m_Sema->getLangOptions().CPlusPlus)
+                if (m_Sema->getLangOpts().CPlusPlus)
                   Result = SynthesizeCppVP(To);
                 else 
                   Result = SynthesizeVP(To);

@@ -257,7 +257,7 @@ namespace cling {
       
     Preprocessor& PP = CI->getPreprocessor();
     ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headerOpts,
-                                    PP.getLangOptions(),
+                                    PP.getLangOpts(),
                                     PP.getTargetInfo().getTriple());      
   }
 
