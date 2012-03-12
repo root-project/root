@@ -182,6 +182,26 @@
         }
      </pre>
 </li>
+<li> In some case, when a graph had some  vertical parts, the exclusion
+     zone was not drawn correctly. The following small example shows the 
+     problem:
+     <pre>
+        {
+            TCanvas *c1 = new TCanvas();
+            gPad->DrawFrame(-1,-1,3,3);
+      
+            TGraph * graph=new TGraph(3);
+            graph->SetFillColor(3);
+            graph->SetFillStyle(3001);
+            graph->SetLineWidth(2000);
+      
+            graph->SetPoint(0,1.,1.);
+            graph->SetPoint(1,1.,0);
+            graph->SetPoint(2,0.,0.);
+            graph->Draw("*L");
+         }
+     </pre>
+</li>
 </ul>
 
 <h4>TUnfold</h4>
