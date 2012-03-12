@@ -152,8 +152,11 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
          if (h->LoadPlugin() == -1) {
             ::Fatal("TVirtualStreamerInfo::Factory",
                     "The plugin handler for TVirtualStreamerInfo was found but failed to load!");
-         } else {
-            fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
+         } 
+         fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
+         if (fgInfoFactory == 0) {
+            ::Fatal("TVirtualStreamerInfo::Factory",
+                    "The plugin handler for TVirtualStreamerInfo was found but failed to create the factory object!");
          }
       } else {
          TString filename("$ROOTSYS/etc/plugins/TVirtualStreamerInfo");
@@ -172,8 +175,7 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
       }
    }
 
-   if (fgInfoFactory) return fgInfoFactory;
-   return 0;
+   return fgInfoFactory;
 }
 
 //______________________________________________________________________________
