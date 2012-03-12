@@ -2,15 +2,15 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 12/08/10
+  Last: 03/12/12
 */
 
 #include <vector>
 
-class A {
+class PR_A {
 public:
-   A() { m_a = 1; m_da = 1.1; }
-   virtual ~A() {}
+   PR_A() { m_a = 1; m_da = 1.1; }
+   virtual ~PR_A() {}
    virtual int GetValue() = 0;
 
 public:
@@ -18,9 +18,9 @@ public:
    double m_da;
 };
 
-class B : public virtual A {
+class PR_B : public virtual PR_A {
 public:
-   B() { m_b = 2; m_db = 2.2;}
+   PR_B() { m_b = 2; m_db = 2.2;}
    virtual int GetValue() { return m_b; }
 
 public:
@@ -28,30 +28,30 @@ public:
    double m_db;
 };
 
-// NOTE: class C : public virtual A, public virtual B
+// NOTE: class PR_C : public virtual PR_A, public virtual PR_B
 //  causes gROOT->GetClass() to fail ...
-class C : public virtual B, public virtual A {
+class PR_C : public virtual PR_B, public virtual PR_A {
 public:
-   C() { m_c = 3; }
+   PR_C() { m_c = 3; }
    virtual int GetValue() { return m_c; }
 
 public:
    int m_c;
 };
 
-class D : public virtual C, public virtual A {
+class PR_D : public virtual PR_C, public virtual PR_A {
 public:
-   D() { m_d = 4; }
+   PR_D() { m_d = 4; }
    virtual int GetValue() { return m_d; }
 
 public:
    int m_d;
 };
 
-int GetA( A& a ) { return a.m_a; }
-int GetB( B& b ) { return b.m_b; }
-int GetC( C& c ) { return c.m_c; }
-int GetD( D& d ) { return d.m_d; }
+int GetA( PR_A& a ) { return a.m_a; }
+int GetB( PR_B& b ) { return b.m_b; }
+int GetC( PR_C& c ) { return c.m_c; }
+int GetD( PR_D& d ) { return d.m_d; }
 
 template< typename T >
 class T1 {

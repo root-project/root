@@ -33,7 +33,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       """Test data member access when using virtual inheritence"""
 
     #-----
-      b = B()
+      b = PR_B()
       self.assertEqual( b.m_a,         1 )
       self.assertEqual( b.m_da,      1.1 )
       self.assertEqual( b.m_b,         2 )
@@ -59,7 +59,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       del b
 
     #-----
-      c = C()
+      c = PR_C()
       self.assertEqual( c.m_a,         1 )
       self.assertEqual( c.m_b,         2 )
       self.assertEqual( c.m_c,         3 )
@@ -80,7 +80,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       del c
 
     #-----
-      d = D()
+      d = PR_D()
       self.assertEqual( d.m_a,         1 )
       self.assertEqual( d.m_b,         2 )
       self.assertEqual( d.m_c,         3 )
@@ -111,14 +111,14 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       """Test reference passing when using virtual inheritance"""
 
     #-----
-      b = B()
+      b = PR_B()
       b.m_a, b.m_b = 11, 22
       self.assertEqual( GetA( b ), 11 )
       self.assertEqual( GetB( b ), 22 )
       del b
 
     #-----
-      c = C()
+      c = PR_C()
       c.m_a, c.m_b, c.m_c = 11, 22, 33
       self.assertEqual( GetA( c ), 11 )
       self.assertEqual( GetB( c ), 22 )
@@ -126,7 +126,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       del c
 
     #-----
-      d = D()
+      d = PR_D()
       d.m_a, d.m_b, d.m_c, d.m_d = 11, 22, 33, 44
       self.assertEqual( GetA( d ), 11 )
       self.assertEqual( GetB( d ), 22 )
