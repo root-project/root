@@ -3482,6 +3482,7 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       if (x[i]==x[i-1] && y[i]==y[i-1]) continue;
       nf++;
       xf[nf] = rx*(x[i]-rx1)+x1ndc;
+      if (xf[i]==xf[i-1]) xf[i] += 0.000001; // add an epsilon to avoid exact vertical lines.
       yf[nf] = ry*(y[i]-ry1)+y1ndc;
    }
 
