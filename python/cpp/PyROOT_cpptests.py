@@ -104,16 +104,16 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       gROOT.LoadMacro( "Namespace.C+" )
 
-      self.assertEqual( A.sa,          1 )
-      self.assertEqual( A.B.sb,        2 )
-      self.assertEqual( A.B().fb,     -2 )
-      self.assertEqual( A.B.C.sc,      3 )
-      self.assertEqual( A.B.C().fc,   -3 )
-      self.assertEqual( A.D.sd,        4 )
-      self.assertEqual( A.D.E.se,      5 )
-      self.assertEqual( A.D.E().fe,   -5 )
-      self.assertEqual( A.D.E.F.sf,    6 )
-      self.assertEqual( A.D.E.F().ff, -6 )
+      self.assertEqual( PR_NS_A.sa,                            1 )
+      self.assertEqual( PR_NS_A.PR_ST_B.sb,                    2 )
+      self.assertEqual( PR_NS_A.PR_ST_B().fb,                 -2 )
+      self.assertEqual( PR_NS_A.PR_ST_B.PR_ST_C.sc,            3 )
+      self.assertEqual( PR_NS_A.PR_ST_B.PR_ST_C().fc,         -3 )
+      self.assertEqual( PR_NS_A.PR_NS_D.sd,                    4 )
+      self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E.se,            5 )
+      self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E().fe,         -5 )
+      self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E.PR_ST_F.sf,    6 )
+      self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E.PR_ST_F().ff, -6 )
 
    def test08VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""

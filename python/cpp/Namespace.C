@@ -1,28 +1,28 @@
-namespace A {
+namespace PR_NS_A {
    int sa = 1;
 
-   struct B {
-      B() { fb = -2; }
+   struct PR_ST_B {
+      PR_ST_B() { fb = -2; }
       int fb;
       static int sb;
 
-      struct C {
-         C() { fc = -3; }
+      struct PR_ST_C {
+         PR_ST_C() { fc = -3; }
          int fc;
          static int sc;
       };
    };
 
-   namespace D {
+   namespace PR_NS_D {
       int sd = 4;
 
-      struct E {
-         E() { fe = -5; }
+      struct PR_ST_E {
+         PR_ST_E() { fe = -5; }
          int fe;
          static int se;
 
-         struct F {
-            F() { ff = -6; }
+         struct PR_ST_F {
+            PR_ST_F() { ff = -6; }
             int ff;
             static int sf;
          };
@@ -32,7 +32,7 @@ namespace A {
 
 } // namespace A
 
-int A::B::sb       = 2;
-int A::B::C::sc    = 3;
-int A::D::E::se    = 5;
-int A::D::E::F::sf = 6;
+int PR_NS_A::PR_ST_B::sb                   = 2;
+int PR_NS_A::PR_ST_B::PR_ST_C::sc          = 3;
+int PR_NS_A::PR_NS_D::PR_ST_E::se          = 5;
+int PR_NS_A::PR_NS_D::PR_ST_E::PR_ST_F::sf = 6;
