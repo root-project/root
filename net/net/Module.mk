@@ -91,4 +91,6 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(MACOSX_MINOR),7)
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
+$(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
+$(call stripsrc,$(NETDIRS)/THTTPMessage.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
 $(call stripsrc,$(NETDIRS)/TWebFile.o): CXXFLAGS += $(NETSSL)
