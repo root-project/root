@@ -959,15 +959,15 @@ Int_t TGeoManager::ThreadId()
    Int_t ttid = TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
-   Long_t selfId = TThread::SelfId();
-   TGeoManager::ThreadsMapIt_t it = fgThreadId->find(selfId);
+   TGeoManager::ThreadsMapIt_t it = fgThreadId->find(TThread::SelfId());
    if (it != fgThreadId->end()) return it->second;
    // Map needs to be updated.
    TThread::Lock();
-   (*fgThreadId)[selfId] = fgNumThreads;
+   (*fgThreadId)[TThread::SelfId()] = fgNumThreads;
    TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
+   fgNumThreads++;
    TThread::UnLock();
-   return fgNumThreads++;
+   return fgNumThreads-1;
 }
    
 //_____________________________________________________________________________
