@@ -356,7 +356,11 @@ namespace cling {
         // 5. Set the new initializer of A
         if (CuredDeclTy->isLValueReferenceType())
           continue;
-        
+
+        // Set Sema's Current DeclContext to the one we need
+        DeclContext* OldDC = m_Sema->CurContext;
+        m_Sema->CurContext = CuredDecl->getDeclContext();
+
         // 2.1 Find the LifetimeHandler type
         CXXRecordDecl* Handler 
           = cast_or_null<CXXRecordDecl>(m_Interpreter->LookupDecl("cling").
@@ -482,6 +486,9 @@ namespace cling {
           CuredDecl->setInit(Result);
 
           NewNode.addNode(Node);
+
+          // Restore Sema's original DeclContext
+          m_Sema->CurContext = OldDC;
           return NewNode;
         }
       }
