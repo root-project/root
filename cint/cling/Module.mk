@@ -34,7 +34,7 @@ CLINGCXXFLAGS := $(shell $(LLVMCONFIG) --cxxflags) -I$(MODDIR)/include \
 	'-DR__LLVMDIR="$(shell cd $(shell $(LLVMCONFIG) --libdir)/..; pwd)"'
 CLINGLLVMLIBS:= -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
-		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic) \
+		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic Edit) \
 	$(patsubst -lLLVM%Disassembler,,\
 	$(patsubst -lLLVM%AsmParser,,\
 	$(filter-out -lLLVMipa,\
