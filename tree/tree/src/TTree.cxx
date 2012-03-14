@@ -993,7 +993,7 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
    //
    // tree.AddFriend("ft1","friendfile1.root");
    // If the friend tree has the same name as the original tree, you can give it
-   // an alias sin the context of the friendship:
+   // an alias in the context of the friendship:
    //
    // tree.AddFriend("tree1 = tree","friendfile1.root");
    // Once the tree has friends, we can use TTree::Draw as if the friend's
@@ -2877,12 +2877,12 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          if (!addr) {
             if (branch->IsA() == TBranch::Class()) {
                // If the branch was created using a leaflist, the branch itself may not have 
-               // an address but the leat might already do.
+               // an address but the leaf might already.
                TLeaf *firstleaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
                if (!firstleaf || firstleaf->GetValuePointer()) {
                   // Either there is no leaf (and thus no point in copying the address)
                   // or the leaf has an address but we can not copy it via the branche
-                  // this will be copied via the the next loop (over the leaf).
+                  // this will be copied via the next loop (over the leaf).
                   continue;
                }
             } 
@@ -2923,7 +2923,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          continue;
       }
       if (undo) {
-         // Now we know wether the address has been transfered
+         // Now we know whether the address has been transfered
          tree->ResetBranchAddress(tbranch);
       } else {
          if (!branch->GetAddress() && !leaf->GetValuePointer()) {
@@ -2931,7 +2931,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             // something like:
             //(TBranchElement*)branch->GetMother()->SetAddress(0)
             //plus a few more subtilities (see TBranchElement::GetEntry).
-            //but for now we go the simpliest route:
+            //but for now we go the simplest route:
             //
             // Note: This may result in the allocation of an object.
             branch->SetupAddresses();
@@ -3062,8 +3062,8 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    //    DropIndexOnError    : if any of the underlying TTree object do no have a TTreeIndex,
    //                          they are all dropped.
    //    AsIsIndexOnError [default]: In case of missing TTreeIndex, the resulting TTree index has gaps.
-   //    BuildIndexOnError : If any of the underlying TTree object do no have a TTreeIndex,
-   //                          all TTreeIndex are 'ignored' and the mising piece are rebuilt.
+   //    BuildIndexOnError : If any of the underlying TTree objects do not have a TTreeIndex,
+   //                          all TTreeIndex are 'ignored' and the missing piece are rebuilt.
 
    if (!tree) {
       return 0;
@@ -3362,7 +3362,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //                    versus "e2" versus "e3"
    //   - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
    //                    versus "e2" versus "e3" and "e4" mapped on the color number.
-   //  (to create histograms in the 2, 3, and 4 dimesional case, see section "Saving
+   //  (to create histograms in the 2, 3, and 4 dimensional case, see section "Saving
    //  the result of Draw to an histogram")
    //
    //  Example:
@@ -3406,7 +3406,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  Examples:
    //      selection1 = "x<y && sqrt(z)>3.2"
    //      selection2 = "(x+y)*(sqrt(z)>3.2)"
-   //  selection1 returns a weigth = 0 or 1
+   //  selection1 returns a weight = 0 or 1
    //  selection2 returns a weight = x+y if sqrt(z)>3.2
    //             returns a weight = 0 otherwise.
    //
@@ -3474,7 +3474,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //                                             index of fMatrix.
    //
    //
-   // In summary, TTree::Draw loops through all un-specified dimensions.  To
+   // In summary, TTree::Draw loops through all unspecified dimensions.  To
    // figure out the range of each loop, we match each unspecified dimension
    // from left to right (ignoring ALL dimensions for which an index has been
    // specified), in the equivalent loop matched dimensions use the same index
@@ -3524,7 +3524,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
    //    TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
    //
-   //  For a three and four dimensional Draw the TPloyMarker3D is unnamed, and
+   //  For a three and four dimensional Draw the TPolyMarker3D is unnamed, and
    //  cannot be retrieved.
    //
    //  gPad always contains a TH1 derived object called "htemp" which allows to
@@ -3595,7 +3595,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  or postfixed with '@', the next part of the expression will pertain to
    //  the collection object.  For example:
    //     tree->Draw("event.@fTracks.size()");
-   //  will plot the size of the collection refered to by fTracks (i.e the number
+   //  will plot the size of the collection referred to by fTracks (i.e the number
    //  of Track objects).
    //
    //     Drawing 'objects'
@@ -3675,7 +3675,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
    //                 will draw the sum arr3 for the index 0 to 2 only if the
    //                 actual_size_of_arr3 is greater or equal to 3.
-   //                 Note that the array in 'primary' is flatened/linearilized thus using
+   //                 Note that the array in 'primary' is flattened/linearized thus using
    //                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
    //                 to yield the expected results.  To visualize a bit more what elements
    //                 would be matched by TTree::Draw, TTree::Scan can be used:
@@ -3684,7 +3684,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //                 matched by
    //    tree->Draw("arr1-Alt$(arr2,0)");
    //
-   //  The ternary operator is not directly support in TTree::Draw however, to plot the
+   //  The ternary operator is not directly supported in TTree::Draw however, to plot the
    //  equivalent of 'var2<20 ? -99 : var1', you can use:
    //     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
    //
@@ -3755,7 +3755,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  arbitrary. Giving more than 4 variables without the option=para or
    //  option=candle or option=goff will produce an error.
    //
-   //     Normalizing the ouput histogram to 1
+   //     Normalizing the output histogram to 1
    //     ====================================
    //  When option contains "norm" the output histogram is normalized to 1.
    //
@@ -3913,7 +3913,7 @@ void TTree::DropBaskets()
 //______________________________________________________________________________
 void TTree::DropBuffers(Int_t)
 {
-   // Drop branch buffers to accomodate nbytes below MaxVirtualsize.
+   // Drop branch buffers to accommodate nbytes below MaxVirtualsize.
 
    // Be careful not to remove current read/write buffers.
    Int_t ndrop = 0;
@@ -3948,7 +3948,7 @@ Int_t TTree::Fill()
    //   This machine independent version of the data is copied into a
    //   basket (each branch has its own basket).  When a basket is full
    //   (32k worth of data by default), it is then optionally compressed
-   //   and written to disk (this operation is also called comitting or
+   //   and written to disk (this operation is also called committing or
    //   'flushing' the basket).  The committed baskets are then
    //   immediately removed from memory.
    //
@@ -4160,7 +4160,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
 TBranch* TTree::FindBranch(const char* branchname)
 {
    // Return the branch that correspond to the path 'branchname', which can
-   // include the name of the tree or the ommited name of the parent branches.
+   // include the name of the tree or the omitted name of the parent branches.
    // In case of ambiguity, returns the first match.
 
    // We already have been visited while recursively looking
@@ -4387,7 +4387,7 @@ Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection
    //   =============
    //  The function returns the status of the histogram fit (see TH1::Fit)
    //  If no entries were selected, the function returns -1;
-   //   (ie fitResult is null is the fit is OK)
+   //   (i.e. fitResult is null is the fit is OK)
 
    GetPlayer();
    if (fPlayer) {
@@ -4819,7 +4819,7 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
    // If it finds a pair that maches val, it returns directly the
    // index in the table.
    // If an entry corresponding to major and minor is not found, the function
-   // returns the index of the major,minor pair immediatly lower than the
+   // returns the index of the major,minor pair immediately lower than the
    // requested value, ie it will return -1 if the pair is lower than
    // the first entry in the index.
    //
@@ -4939,7 +4939,7 @@ TTree* TTree::GetFriend(const char *friendname) const
 //______________________________________________________________________________
 const char* TTree::GetFriendAlias(TTree* tree) const
 {
-   // If the the 'tree' is a friend, this method returns its alias name.
+   // If the 'tree' is a friend, this method returns its alias name.
    //
    // This alias is an alternate name for the tree.
    //
@@ -5549,7 +5549,7 @@ Int_t TTree::MakeProxy(const char* proxyClassname, const char* macrofilename, co
    //    nohist : indicates that the generated ProcessFill should not
    //             fill the histogram.
    //
-   // 'maxUnrolling' controls how deep in the class hierachy does the
+   // 'maxUnrolling' controls how deep in the class hierarchy does the
    // system 'unroll' classes that are not split.  Unrolling a class
    // allows direct access to its data members (this emulates the behavior
    // of TTreeFormula).
@@ -5935,7 +5935,7 @@ TPrincipal* TTree::Principal(const char* varexp, const char* selection, Option_t
    //   If option "p" and "d" print results of analysis
    //   If option "p" and "h" generate standard histograms
    //   If option "p" and "c" generate code of conversion functions
-   //   return a pointer to the TPrincipal object. It is the user responsability
+   //   return a pointer to the TPrincipal object. It is the user responsibility
    //   to delete this object.
    //   The option default value is "np"
    //
@@ -6097,7 +6097,7 @@ Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentrie
    // filename must contain a valid class implementation derived from TSelector,
    // where TSelector has the following member functions:
    //
-   //    Begin():        called everytime a loop on the tree starts,
+   //    Begin():        called every time a loop on the tree starts,
    //                    a convenient place to create your histograms.
    //    SlaveBegin():   called after Begin(), when on PROOF called only on the
    //                    slave servers.
@@ -6165,7 +6165,7 @@ Long64_t TTree::Process(TSelector* selector, Option_t* option, Long64_t nentries
    //
    //   The TSelector class has the following member functions:
    //
-   //    Begin():        called everytime a loop on the tree starts,
+   //    Begin():        called every time a loop on the tree starts,
    //                    a convenient place to create your histograms.
    //    SlaveBegin():   called after Begin(), when on PROOF called only on the
    //                    slave servers.
