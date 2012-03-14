@@ -5736,12 +5736,19 @@ Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
    //
 
    if (!li) return 0;
+   Long64_t storeAutoSave = fAutoSave;
+   // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
+   // key would invalidate its iteration (or require costly measure to not use the deleted keys).
+   // Also since this is part of a merging operation, the output file is not as precious as in
+   // the general case since the input file should still be around.
+   fAutoSave = 0; 
    TIter next(li);
    TTree *tree;
    while ((tree = (TTree*)next())) {
       if (tree==this) continue;
       if (!tree->InheritsFrom(TTree::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s", tree->ClassName(), ClassName());
+         fAutoSave = storeAutoSave;
          return -1;
       }
 
@@ -5761,6 +5768,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t* /* option */)
    if (GetTreeIndex()) {
       GetTreeIndex()->Append(0,kFALSE); // Force the sorting
    }
+   fAutoSave = storeAutoSave;
    return GetEntries();
 }
 
@@ -5785,12 +5793,19 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       info->fOutputDirectory->ReadTObject(this,this->GetName());
    }
    if (!li) return 0;
+   Long64_t storeAutoSave = fAutoSave;
+   // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
+   // key would invalidate its iteration (or require costly measure to not use the deleted keys).
+   // Also since this is part of a merging operation, the output file is not as precious as in
+   // the general case since the input file should still be around.
+   fAutoSave = 0; 
    TIter next(li);
    TTree *tree;
    while ((tree = (TTree*)next())) {
       if (tree==this) continue;
       if (!tree->InheritsFrom(TTree::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s", tree->ClassName(), ClassName());
+         fAutoSave = storeAutoSave;
          return -1;
       }
       // Copy MakeClass status.
@@ -5801,6 +5816,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       
       CopyEntries(tree,-1,options);
    }
+   fAutoSave = storeAutoSave;
    return GetEntries();
 }
 
