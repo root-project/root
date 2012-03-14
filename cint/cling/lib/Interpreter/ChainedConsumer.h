@@ -89,7 +89,6 @@ namespace cling {
 
     bool DisableConsumer(EConsumerIndex I) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
-      //assert(I != kCodeGenerator && "You shouldn't disable codegen!");
       bool PrevousState = Enabled[I];
       Enabled.reset(I);
       return PrevousState;
