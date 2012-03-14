@@ -1197,7 +1197,7 @@ Long64_t TTree::AutoSave(Option_t* option)
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
    Long64_t nbytes;
    if (opt.Contains("overwrite")) {
-      nbytes = fDirectory->WriteTObject(this,"","",TObject::kOverwrite);
+      nbytes = fDirectory->WriteTObject(this,"","overwrite");
    } else {
       nbytes = fDirectory->WriteTObject(this); //nbytes will be 0 if Write failed (disk space exceeded)
       if (nbytes && key) {
