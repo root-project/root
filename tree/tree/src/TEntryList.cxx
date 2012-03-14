@@ -86,14 +86,41 @@ void loopChain() {
    Long64_t chainEntries = ch->GetEntries();
    Int_t treenum = 0;
    ch->SetEntryList(myelist);
-   for (Long64_t el = 0; el &lt; listEntries; el++) {
-      Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
-      Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];
-      printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
+ 
+   for (entry=start;entry<end;entry++) {
+      entryNumber = treechain->GetEntryNumber(entry);
+      if (entryNumber < 0) break;
+      localEntry = fTree->LoadTree(entryNumber);
+      if (localEntry < 0) break;
+      // then either call branch->GetEntry(localEntry);
+      // or  entryNumber->GetEntry(entryNumber);
+      // In the later case the LoadTree is then somewhat redudant.
    }
+ }
+</pre>
+
+When using the TEntryList interface directly, you can get the 'tree number' and entry in
+the current tree (i.e. value similar to the return value of LoadTree) from calling
+TEntryList::GetEntryAndTree:
+<pre>
+    Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+</pre>
+to obtain the entry number within the chain you need to add to it the value
+of
+<pre>treeEntry+ch->GetTreeOffset()[treenum]</pre>
+such that the loop in the previous example can also be written as:
+
+<pre>for (Long64_t el = 0; el &lt; listEntries; el++) {
+   Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+   Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];  
+   printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
+ 
+   ch->LoadTree(chainEntry); // this also returns treeEntry
+   needed_branch->GetEntry(treeEntry);
 }
 </pre>
 
+ 
 <h4> TSelectors</h4>
 
   To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
