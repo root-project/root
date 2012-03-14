@@ -367,7 +367,7 @@ void TSelectorDraw::Begin(TTree *tree)
          } // if '(' is found
 
          j = strlen(hname) - 1; // skip ' '  at the end
-         while (j) {
+         while (j > 0) {
             if (hname[j] != ' ') break; // skip ' '  at the end
             hname[j] = 0;
             j--;
