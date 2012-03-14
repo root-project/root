@@ -192,6 +192,7 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string & name, 
       ivar = minuit2Index;
       return false;
    }
+   fState.RemoveLimits(ivar);
 
    return true; 
 }
