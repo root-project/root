@@ -36,6 +36,7 @@
 #include "TGPicture.h"
 #include "TSystem.h"
 #include "Riostream.h"
+#include <stdlib.h>
 
 const TGFont *TGTreeLBEntry::fgDefaultFont = 0;
 TGGC         *TGTreeLBEntry::fgDefaultGC = 0;
@@ -222,7 +223,9 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 
    const char *homeDir = gSystem->HomeDirectory();
 #ifndef ROOTPREFIX
-   const char *rootSys = gSystem->Getenv("ROOTSYS");
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+   char *rootSys = (char *)calloc(strlen(rootsys)+1, sizeof(char));
+   sprintf(rootSys, "%s/", rootsys);
 #else
    // const char *rootSys = ROOTPREFIX;
 #endif
@@ -401,6 +404,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       }
    }
    SetWindowName();
+   free(rootSys);
 }
 
 //______________________________________________________________________________
@@ -434,11 +438,12 @@ void TGFSComboBox::Update(const char *path)
    }
 
    if (tailpath && *tailpath) {
-      if (*tailpath == '/') ++tailpath;
+      if ((*tailpath == '/') || (*tailpath == '\\')) ++tailpath;
       if (*tailpath)
          while (1) {
             const char *picname;
             const char *semi = strchr(tailpath, '/');
+            if (semi == 0) semi = strchr(tailpath, '\\');
             if (semi == 0) {
                strlcpy(dirname, tailpath, 1024);
                picname = "ofolder_t.xpm";
@@ -446,8 +451,10 @@ void TGFSComboBox::Update(const char *path)
                strlcpy(dirname, tailpath, (semi-tailpath)+1);
                picname = "folder_t.xpm";
             }
-            if (mpath[strlen(mpath)-1] != '/') 
+            if ((mpath[strlen(mpath)-1] != '/') && 
+                (mpath[strlen(mpath)-1] != '\\')) {
                strlcat(mpath, "/", 1024-strlen(mpath));
+            }
             strlcat(mpath, dirname, 1024-strlen(mpath));
             int indent = 4 + (indent_lvl * 10);
             const TGPicture *pic = fClient->GetPicture(picname);
