@@ -283,7 +283,7 @@ void HistFactory::AddSystematic( EstimateSummary & sample_channel, TXMLNode* nod
 	if( curAttr->GetName() == TString( "Name" ) ) {
 	  Name = curAttr->GetValue() ;
 	}
-	if( curAttr->GetName() == TString( "InputFileHigh" ) ) {
+	if( curAttr->GetName() == TString( "HistoFileHigh" ) ) {
 	  inputFileHigh = curAttr->GetValue() ;
 	}
 	if( curAttr->GetName() == TString( "HistoPathHigh" ) ) {
@@ -292,7 +292,7 @@ void HistFactory::AddSystematic( EstimateSummary & sample_channel, TXMLNode* nod
 	if( curAttr->GetName() == TString( "HistoNameHigh" ) ) {
 	  histoNameHigh = curAttr->GetValue() ;
 	}
-	if( curAttr->GetName() == TString( "InputFileLow" ) ) {
+	if( curAttr->GetName() == TString( "HistoFileLow" ) ) {
 	  inputFileLow = curAttr->GetValue() ;
 	}
 	if( curAttr->GetName() == TString( "HistoPathLow" ) ) {
