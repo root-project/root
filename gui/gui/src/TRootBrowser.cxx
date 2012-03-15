@@ -950,6 +950,7 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
    if (edit->GetTabContainer(subpos))
       el = (TGFrameElement *)edit->GetTabContainer(subpos)->GetList()->First();
    if (el && el->fFrame) {
+      el->fFrame->Disconnect("ProcessedConfigure(Event_t*)");
       el->fFrame->SetFrameElement(0);
       if (el->fFrame->InheritsFrom("TGMainFrame")) {
          Bool_t sleep = (el->fFrame->InheritsFrom("TRootCanvas")) ? kTRUE : kFALSE;
@@ -1090,8 +1091,15 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
 
    if (fEditFrame != 0) {
       fEditFrame->SetEditable(kFALSE);
+      TGFrameElement *el = (TGFrameElement*) fEditFrame->GetList()->First();
+      if (el && el->fFrame) {
+         // let be notified when the inside frame gets resized, and tell its
+         // container to recompute its layout
+         el->fFrame->Connect("ProcessedConfigure(Event_t*)", "TGCompositeFrame", 
+                             fEditFrame, "Layout()");
+      }
       if (layout) {
-         TGFrameElement *el = (TGFrameElement*) fEditFrame->GetList()->Last();
+         el = (TGFrameElement*) fEditFrame->GetList()->Last();
          // !!!! MT what to do with the old layout? Leak it for now ...
          if (el) el->fLayout = layout;
       }
