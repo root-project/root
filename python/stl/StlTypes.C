@@ -66,7 +66,6 @@ using namespace std;  // instead of std:: to make cint7 happy
 #pragma link C++ class map< std::string, unsigned long >::const_iterator-;
 #pragma link C++ class pair< std::string, unsigned long >-;
 #ifdef G__WIN32
-#pragma link C++ class _Ranit<JustAClass,long,JustAClass*,JustAClass&>-;
 #pragma link C++ class iterator<random_access_iterator_tag,JustAClass,long,JustAClass*,JustAClass&>-;
 #endif
 #endif
