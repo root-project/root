@@ -4238,6 +4238,16 @@ void TProofServ::ProcessNext(TString *slb)
       if (smg >= 0) {
          input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
          PDB(kSubmerger, 2) Info("ProcessNext", "PROOF_UseMergers set to %d", smg);
+         if (gEnv->Lookup("Proof.MergersByHost")) {
+            Int_t mbh = gEnv->GetValue("Proof.MergersByHost", 0);
+            if (mbh != 0) {
+               // Administrator settings have the priority
+               TObject *o = 0;
+               if ((o = input->FindObject("PROOF_MergersByHost"))) { input->Remove(o); delete o; }
+               input->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
+               PDB(kSubmerger, 2) Info("ProcessNext", "submergers setup by host/node");
+            }
+         }
       }
    }
 

@@ -553,6 +553,7 @@ private:
                                      // variables to pass to proofserv
 
    Bool_t          fMergersSet;      // Indicates, if the following variables have been initialized properly
+   Bool_t          fMergersByHost;   // Mergers assigned by host name
    Int_t           fMergersCount;
    Int_t           fWorkersToMerge;  // Current total number of workers, which have not been yet assigned to any merger
    Int_t           fLastAssignedMerger;
