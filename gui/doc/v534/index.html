@@ -12,3 +12,11 @@
    fButton->SetStyle("modern");
 </pre></li>
 </ul>
+
+<h4>TGFSComboBox</h4>
+<ul>
+<li>Fix a problem when the current directory is similar to $ROOTSYS, For example, with $ROOTSYS being /home/user/root and $PWD being /home/user/rootdev, only "dev" was displayed, stripping off $ROOTSYS</li>
+<li>Properly handle backslashes as directory separators on Windows</li>
+</ul>
+
+
