@@ -13,10 +13,47 @@
 </pre></li>
 </ul>
 
+<h4>TRootBrowser</h4>
+<ul>
+<li>Use the <tt>ProcessedConfigure</tt> signal to be notified when an embedded frame change its layout, to properly call <tt>Layout()</tt> on its parent frame, to automatically display the change (for example, showing the EventStatusBar of a TCanvas embedded in a TBrowser was only appearing after manually resizing the window)</li>
+</ul>
+
 <h4>TGFSComboBox</h4>
 <ul>
-<li>Fix a problem when the current directory is similar to $ROOTSYS, For example, with $ROOTSYS being /home/user/root and $PWD being /home/user/rootdev, only "dev" was displayed, stripping off $ROOTSYS</li>
+<li>Fix a problem when the current directory is similar to $ROOTSYS, for example with $ROOTSYS being /home/user/root and $PWD being /home/user/rootdev, only "dev" was displayed, stripping off $ROOTSYS</li>
 <li>Properly handle backslashes as directory separators on Windows</li>
 </ul>
 
+<h4>TGMsgBox</h4>
+<ul>
+<li>Implemented "Enter" and "Escape" key handling in TGMsgBox (used as Ok and Cancel buttons, if they are there)</li>
+</ul>
 
+<h4>TGTextEntry</h4>
+<ul>
+<li>Several issues with text selection and combination of cursor position and text alignment in text entries have been solved</li>
+</ul>
+	  
+<h4>TRootCanvas</h4>
+<ul>
+<li>A check has been added for the case where the canvas is embedded (e.g. in the browser), then the layout of the main frame has to be re-applied when showing/hiding the editor</li>
+<li>Stay in the current (working) directory when using "File -> Save as..." from a canvas or from a text editor (as the file dialog changes the current directory)</li>
+</ul>
+
+<h4>TFitParametersDialog</h4>
+<ul>
+<li>Implemented keyboard navigation (tab and shift+tab) between the different number entry fields of the dialog</li>
+</ul>
+	  
+<h4>TFitEditor</h4>
+<ul>
+<li>Layout improvements and removed useless text in message box</li>
+</ul>
+	  
+<h4>TGWin32</h4>
+<ul>
+<li>Fixed several resource leaks (including GDI & USER objects)</li>
+</ul>
+	  
+	  
+	  
