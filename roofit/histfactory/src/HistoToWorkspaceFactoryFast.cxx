@@ -2044,7 +2044,8 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
   
     // set reasonable ranges for gamma parameters
     gamma.setMax( 1 + 5*sigma );
-    gamma.setMin( 1 - 5*sigma );
+    //    gamma.setMin( TMath::Max(1. - 5*sigma, 0.) );    
+    gamma.setMin( 0. );         
     
 
   // Make Constraint Term
