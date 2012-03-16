@@ -225,7 +225,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 #ifndef ROOTPREFIX
    const char *rootsys = gSystem->Getenv("ROOTSYS");
    char *rootSys = (char *)calloc(strlen(rootsys)+1, sizeof(char));
-   sprintf(rootSys, "%s/", rootsys);
+   if (rootSys) snprintf(rootSys, strlen(rootsys)+1, "%s/", rootsys);
 #else
    // const char *rootSys = ROOTPREFIX;
 #endif
@@ -404,7 +404,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       }
    }
    SetWindowName();
-   free(rootSys);
+   if (rootSys) free(rootSys);
 }
 
 //______________________________________________________________________________
