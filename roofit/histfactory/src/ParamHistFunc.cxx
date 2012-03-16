@@ -181,8 +181,14 @@ ParamHistFunc::~ParamHistFunc()
 //_____________________________________________________________________________
 Int_t ParamHistFunc::getCurrentBin() const {
 
+  // Get the index of the gamma parameter associated
+  // with the current bin
+
   Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
 
+  return dataSetIndex;
+
+  /*
   Int_t currentIndex = -1;
   if( _binMap.find( dataSetIndex ) != _binMap.end() ) {
     currentIndex = _binMap[ dataSetIndex ];
@@ -195,12 +201,27 @@ Int_t ParamHistFunc::getCurrentBin() const {
   }
 
   return currentIndex;
+  */
 
 }
 
 //_____________________________________________________________________________
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
-  return (RooRealVar&) _paramSet[index];
+
+  // Get the parameter associate with the the
+  // input RooDataHist style index
+
+  Int_t gammaIndex = -1;
+  if( _binMap.find( index ) != _binMap.end() ) {
+    gammaIndex = _binMap[ index ];
+  }
+  else {
+    std::cout << "Error: ParamHistFunc internal bin index map "
+	      << "not properly configured" << std::endl;
+    throw -1;
+  }
+
+  return (RooRealVar&) _paramSet[gammaIndex];
 }
 
 //_____________________________________________________________________________
@@ -672,9 +693,12 @@ Double_t ParamHistFunc::evaluate() const
   // Find the bin cooresponding to the current
   // value of the RooRealVar:
 
+  /*
   Int_t currentBin = getCurrentBin();
-
   RooRealVar* param = (RooRealVar*) &(_paramSet[currentBin]);
+  */
+
+  RooRealVar* param = (RooRealVar*) &(getParameter());
 
   Double_t value = param->getVal();
 

@@ -2042,6 +2042,11 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
       continue;
     }
   
+    // set reasonable ranges for gamma parameters
+    gamma.setMax( 1 + 5*sigma );
+    gamma.setMin( 1 - 5*sigma );
+    
+
   // Make Constraint Term
   std::string constrName = string(gamma.GetName()) + "_constraint";
 
