@@ -223,9 +223,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 
    const char *homeDir = gSystem->HomeDirectory();
 #ifndef ROOTPREFIX
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   char *rootSys = (char *)calloc(strlen(rootsys)+1, sizeof(char));
-   if (rootSys) snprintf(rootSys, strlen(rootsys)+1, "%s/", rootsys);
+   const char *rootSys = gSystem->Getenv("ROOTSYS");
 #else
    // const char *rootSys = ROOTPREFIX;
 #endif
@@ -404,7 +402,6 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       }
    }
    SetWindowName();
-   if (rootSys) free(rootSys);
 }
 
 //______________________________________________________________________________
@@ -429,7 +426,9 @@ void TGFSComboBox::Update(const char *path)
             if (slen > len) {
                sel = afterID = gLbc[i].fId;
                indent_lvl = gLbc[i].fIndent + 1;
-               tailpath = path + slen;
+               if ((len > 0) && ((path[slen] == '\\') || (path[slen] == '/') ||
+                   (path[slen] == 0)))
+                  tailpath = path + slen;
                strlcpy(mpath, gLbc[i].fPath, 1024);
                len = slen;
             }
