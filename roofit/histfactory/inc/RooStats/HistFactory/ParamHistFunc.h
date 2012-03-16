@@ -48,17 +48,25 @@ public:
 
   const RooArgList& paramList() const { return _paramSet ; }
 
+
+  Int_t numBins() const { return _dataSet.numEntries(); } // Number of bins (called numEntries in RooDataHist)
+
+  void setParamConst( Int_t, Bool_t=kTRUE );
+
+  RooRealVar& getParameter() const ;
+  RooRealVar& getParameter( Int_t masterIdx ) const ;
+
+  const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; } 
+  const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; } 
+
+
+
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
 
-  Int_t getCurrentBin() const ;
-  RooRealVar& getParameter( Int_t ) const ;
-  RooRealVar& getParameter() const ;
-
-  void setParamConst( Int_t, Bool_t=kTRUE );
 
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars);
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, Double_t, Double_t);
@@ -101,6 +109,7 @@ protected:
   // std::vector< Double_t > _nominalVals; // The nominal vals when gamma = 1.0 ( = 1.0 by default)
   RooArgList   _ownedList ;       // List of owned components
 
+  Int_t getCurrentBin() const ;
   Int_t addVarSet( const RooArgList& vars );
   Int_t addParamSet( const RooArgList& params );
   static Int_t GetNumBins( const RooArgSet& vars );
