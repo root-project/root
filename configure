@@ -1776,6 +1776,9 @@ if test "x$platform" = "xlinux" ; then
        if lsb_release -d | grep -i 'debian' > /dev/null 2>& 1; then
           linuxdist="multiarch"
        fi
+       if lsb_release -d | grep -i 'mint' > /dev/null 2>& 1; then
+          linuxdist="multiarch"
+       fi 
     fi
 
     debmultiarch=
