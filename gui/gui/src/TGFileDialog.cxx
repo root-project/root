@@ -535,10 +535,12 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   if (fFc->NumSelected() > 0) {
                      if ( fFileInfo->fMultipleSelection == kFALSE ) {
                         TGLVEntry *e2 = (TGLVEntry *) fFc->GetNextSelected(&p);
-                        fTbfname->Clear();
-                        if ((e2) && (e2->GetItemName()))
-                           fTbfname->AddText(0, e2->GetItemName()->GetString());
-                        fClient->NeedRedraw(fName);
+                        if ((e2) && !R_ISDIR(((TGFileItem *)e2)->GetType())) {
+                           fTbfname->Clear();
+                           if (e2->GetItemName())
+                              fTbfname->AddText(0, e2->GetItemName()->GetString());
+                           fClient->NeedRedraw(fName);
+                        }
                      }
                      else {
                         TString tmpString;
