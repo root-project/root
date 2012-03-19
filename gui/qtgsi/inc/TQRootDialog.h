@@ -43,6 +43,7 @@ using namespace Qt;
 class TMethod;
 class TCanvas;
 
+class QCloseEvent;
 class QLineEdit;
 class QWidget;
 #ifdef __CINT__
