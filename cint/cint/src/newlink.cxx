@@ -8619,6 +8619,7 @@ void G__cpplink_typetable(FILE *fp, FILE *hfp)
   G__FastAllocString temp(G__ONELINE);
   char *p;
   G__FastAllocString buf(G__ONELINE);
+  G__FastAllocString typedefname(G__ONELINE);
 
 
   fprintf(fp,"\n/*********************************************************\n");
@@ -8643,63 +8644,149 @@ void G__cpplink_typetable(FILE *fp, FILE *hfp)
             )))
         continue;
       if(strncmp("G__p2mf",G__newtype.name[i],7)==0 &&
-         G__CPPLINK==G__globalcomp){
+         G__CPPLINK==G__globalcomp) {
         G__ASSERT(i>0);
         temp = G__newtype.name[i-1];
         p = strstr(temp,"::*");
         *(p+3)='\0';
         fprintf(hfp,"typedef %s%s)%s;\n",temp(),G__newtype.name[i],p+4);
       }
-      if('u'==tolower(G__newtype.type[i]))
-        fprintf(fp,"   G__search_typename2(\"%s\",%d,G__get_linked_tagnum(&%s),%d,"
-                ,G__newtype.name[i]
-                ,G__newtype.type[i]
-                ,G__mark_linked_tagnum(G__newtype.tagnum[i])
+      typedefname = G__newtype.name[i];
+       if('u'==tolower(G__newtype.type[i]))
+          fprintf(fp,"   G__search_typename2(\"%s\",%d,G__get_linked_tagnum(&%s),%d,"
+                  ,typedefname.data()
+                  ,G__newtype.type[i]
+                  ,G__mark_linked_tagnum(G__newtype.tagnum[i])
 #if !defined(G__OLDIMPLEMENTATION1861)
-                ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+                  ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
 #else
-                ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+                  ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
 #endif
-                );
-      else
-        fprintf(fp,"   G__search_typename2(\"%s\",%d,-1,%d,"
-                ,G__newtype.name[i]
-                ,G__newtype.type[i]
+                  );
+       else
+          fprintf(fp,"   G__search_typename2(\"%s\",%d,-1,%d,"
+                  ,typedefname.data()
+                  ,G__newtype.type[i]
 #if !defined(G__OLDIMPLEMENTATION1861)
-                ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+                  ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
 #else
-                ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+                  ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
 #endif
-                );
-      if(G__newtype.parent_tagnum[i] == -1)
-        fprintf(fp,"-1);\n");
-      else
-        fprintf(fp,"G__get_linked_tagnum(&%s));\n"
-               ,G__mark_linked_tagnum(G__newtype.parent_tagnum[i]));
-
-      if(-1!=G__newtype.comment[i].filenum) {
-        G__getcommenttypedef(temp,&G__newtype.comment[i],i);
-        if(temp[0]) G__add_quotation(temp,buf);
-        else buf = "NULL";
-      }
-      else buf = "NULL";
-      if(G__newtype.nindex[i]>G__MAXVARDIM) {
-        /* This is just a work around */
-        G__fprinterr(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
-                ,G__newtype.name[i],G__newtype.nindex[i]
-                ,(long)G__newtype.index[i]);
-        G__newtype.nindex[i] = 0;
-        if(G__newtype.index[i]) free((void*)G__newtype.index[i]);
-      }
-      fprintf(fp,"   G__setnewtype(%d,%s,%d);\n",G__globalcomp,buf()
-              ,G__newtype.nindex[i]);
-      if(G__newtype.nindex[i]) {
-        for(j=0;j<G__newtype.nindex[i];j++) {
-          fprintf(fp,"   G__setnewtypeindex(%d,%d);\n"
-                  ,j,G__newtype.index[i][j]);
-        }
-      }
-
+                  );
+       if(G__newtype.parent_tagnum[i] == -1)
+          fprintf(fp,"-1);\n");
+       else
+          fprintf(fp,"G__get_linked_tagnum(&%s));\n"
+                  ,G__mark_linked_tagnum(G__newtype.parent_tagnum[i]));
+       
+       if(-1!=G__newtype.comment[i].filenum) {
+          G__getcommenttypedef(temp,&G__newtype.comment[i],i);
+          if(temp[0]) G__add_quotation(temp,buf);
+          else buf = "NULL";
+       }
+       else buf = "NULL";
+       if(G__newtype.nindex[i]>G__MAXVARDIM) {
+          /* This is just a work around */
+          G__fprinterr(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
+                       ,G__newtype.name[i],G__newtype.nindex[i]
+                       ,(long)G__newtype.index[i]);
+          G__newtype.nindex[i] = 0;
+          if(G__newtype.index[i]) free((void*)G__newtype.index[i]);
+       }
+       fprintf(fp,"   G__setnewtype(%d,%s,%d);\n",G__globalcomp,buf()
+               ,G__newtype.nindex[i]);
+       if(G__newtype.nindex[i]) {
+          for(j=0;j<G__newtype.nindex[i];j++) {
+             fprintf(fp,"   G__setnewtypeindex(%d,%d);\n"
+                     ,j,G__newtype.index[i][j]);
+          }
+       }       
+       if (G__ignore_stdnamespace && strstr(typedefname.data(),"<std::")) {
+          // strip std:: from the inside of the typedef name ....
+          
+          unsigned int nested = 0;
+          unsigned int len = strlen(typedefname.data());
+          bool needrepeat = false;
+          unsigned int offset = 0;
+          for(unsigned int cursor = 0; cursor < len ; ++cursor)
+          {
+             typedefname[cursor-offset] = typedefname[cursor];
+             switch(typedefname[cursor]) {
+                case '<': {
+                   if (strncmp(&(typedefname[cursor]),"<std::",6)==0) {
+                      needrepeat = true;
+                      offset += 5;
+                      cursor += 5;
+                   }
+                   ++nested; 
+                   break;
+                }
+                case '>': {
+                   if (nested > 0) { --nested; }
+                   else {
+                      // humm something is wrong.
+                      cursor = len;
+                      continue;
+                   }
+                   break;
+                }
+             }               
+          }
+          if (offset) {
+             typedefname[len-offset] = '\0';
+          }
+          if (needrepeat) {
+             if('u'==tolower(G__newtype.type[i]))
+                fprintf(fp,"   G__search_typename2(\"%s\",%d,G__get_linked_tagnum(&%s),%d,"
+                        ,typedefname.data()
+                        ,G__newtype.type[i]
+                        ,G__mark_linked_tagnum(G__newtype.tagnum[i])
+#if !defined(G__OLDIMPLEMENTATION1861)
+                        ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+#else
+                        ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+#endif
+                        );
+             else
+                fprintf(fp,"   G__search_typename2(\"%s\",%d,-1,%d,"
+                        ,typedefname.data()
+                        ,G__newtype.type[i]
+#if !defined(G__OLDIMPLEMENTATION1861)
+                        ,G__newtype.reftype[i] | (G__newtype.isconst[i]*0x100)
+#else
+                        ,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+#endif
+                        );
+             if(G__newtype.parent_tagnum[i] == -1)
+                fprintf(fp,"-1);\n");
+             else
+                fprintf(fp,"G__get_linked_tagnum(&%s));\n"
+                        ,G__mark_linked_tagnum(G__newtype.parent_tagnum[i]));
+             
+             if(-1!=G__newtype.comment[i].filenum) {
+                G__getcommenttypedef(temp,&G__newtype.comment[i],i);
+                if(temp[0]) G__add_quotation(temp,buf);
+             else buf = "NULL";
+             }
+             else buf = "NULL";
+             if(G__newtype.nindex[i]>G__MAXVARDIM) {
+                /* This is just a work around */
+                G__fprinterr(G__serr,"CINT INTERNAL ERROR? typedef %s[%d] 0x%lx\n"
+                             ,G__newtype.name[i],G__newtype.nindex[i]
+                             ,(long)G__newtype.index[i]);
+                G__newtype.nindex[i] = 0;
+                if(G__newtype.index[i]) free((void*)G__newtype.index[i]);
+             }
+             fprintf(fp,"   G__setnewtype(%d,%s,%d);\n",G__globalcomp,buf()
+                     ,G__newtype.nindex[i]);
+             if(G__newtype.nindex[i]) {
+                for(j=0;j<G__newtype.nindex[i];j++) {
+                   fprintf(fp,"   G__setnewtypeindex(%d,%d);\n"
+                           ,j,G__newtype.index[i][j]);
+                }
+             }
+          } // need repeat for std:: removal
+       } // std:: being ignored.
     }
   }
   fprintf(fp,"}\n");
