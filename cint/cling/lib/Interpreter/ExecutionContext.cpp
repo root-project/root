@@ -280,10 +280,10 @@ ExecutionContext::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
 
 bool ExecutionContext::addSymbol(const char* symbolName,  void* symbolAddress){
 
-	void* actualAdress = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
-	if (actualAdress)
-		return false;
+  void* actualAdress = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName);
+  if (actualAdress)
+    return false;
 
-	llvm::sys::DynamicLibrary::AddSymbol(symbolName, symbolAddress);
-	return true;
+  llvm::sys::DynamicLibrary::AddSymbol(symbolName, symbolAddress);
+  return true;
 }

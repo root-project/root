@@ -75,14 +75,14 @@ static bool tryLinker(const std::string& filename,
   } else if (Native) {
     // native shared library, load it!
     llvm::sys::Path SoFile = L.FindLib(filename);
-    assert(!SoFile.isEmpty() && "We know the shared lib exists but can't find it back!");
+    assert(!SoFile.isEmpty() && "The shared lib exists but can't find it!");
     std::string errMsg;
-    bool err =
-      llvm::sys::DynamicLibrary::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
-    if (err) {
-      fprintf(stderr,
-              "Interpreter::loadFile: Could not load shared library!\n");
-      fprintf(stderr, "%s\n", errMsg.c_str());
+    bool hasError = llvm::sys::DynamicLibrary
+      ::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
+    if (hasError) {
+      llvm::errs() << "Could not load shared library!\n" 
+                   << "\n"
+                   << errMsg.c_str();
       L.releaseModule();
       return false;
     }
@@ -162,11 +162,8 @@ namespace cling {
   //  Interpreter
   //
   
-  //---------------------------------------------------------------------------
-  // Constructor
-  //---------------------------------------------------------------------------
-   Interpreter::Interpreter(int argc, const char* const *argv, 
-                            const char* llvmdir /*= 0*/):
+  Interpreter::Interpreter(int argc, const char* const *argv, 
+                           const char* llvmdir /*= 0*/):
   m_UniqueCounter(0),
   m_PrintAST(false),
   m_ValuePrinterEnabled(false),
@@ -200,8 +197,9 @@ namespace cling {
     // Warm them up
     m_IncrParser->Initialize();
 
-    m_ExecutionContext->addSymbol("local_cxa_atexit", (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
-    
+    m_ExecutionContext->addSymbol("local_cxa_atexit", 
+                  (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
+
     if (getCI()->getLangOpts().CPlusPlus) {
       // Set up common declarations which are going to be available
       // only at runtime
@@ -228,7 +226,7 @@ namespace cling {
       (*AEE.m_Func)(AEE.m_Arg);
     }
   }
-   
+
   const char* Interpreter::getVersion() const {
     return "$Id$";
   }
@@ -345,7 +343,7 @@ namespace cling {
       llvm::errs() << Res[i] <<"\n";
     }
   }
-  
+
   CompilerInstance* Interpreter::getCI() const {
     return m_IncrParser->getCI();
   }
@@ -694,11 +692,11 @@ namespace cling {
   }
 
   bool Interpreter::addSymbol(const char* symbolName,  void* symbolAddress){
-	  // Forward to ExecutionContext;
-	  if (!symbolName || !symbolAddress )
-		  return false;
+    // Forward to ExecutionContext;
+    if (!symbolName || !symbolAddress )
+      return false;
 
-	  return m_ExecutionContext->addSymbol(symbolName,  symbolAddress);
+    return m_ExecutionContext->addSymbol(symbolName,  symbolAddress);
   }
   
 } // namespace cling
