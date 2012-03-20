@@ -82,6 +82,9 @@ AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) \
                  $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
                  $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
                  $(CRYPTOLIBDIR) $(CRYPTOLIB)
+ifeq ($(ARCH),win32gcc)
+AUTHLIBS      += -lz
+endif
 
 # used in the main Makefile
 ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
