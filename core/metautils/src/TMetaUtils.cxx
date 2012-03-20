@@ -35,8 +35,7 @@ clang::QualType ROOT::TMetaUtils::LookupTypeDecl(cling::Interpreter& interp,
    std::string code("void ");
    code += funcname + "(" + tyname + "*);";
    const clang::Decl* decl = 0;
-   cling::Value value;
-   interp.processLine(code, true, &value, &decl);
+   interp.processLine(code, true, 0, &decl);
    const clang::FunctionDecl* funcDecl = 0;
    while (decl
           && (!(funcDecl = clang::dyn_cast<clang::FunctionDecl>(decl))
