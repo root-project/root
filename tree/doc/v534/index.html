@@ -6,7 +6,7 @@
 <h4>Performance</h4>
 <ul>
 <li>Automatic support for multiple <tt>TTreeCache</tt> per <tt>TFile</tt>.<p/>
-Multiple <tt>TTreeCache</tt> per <tt>TFile</tt> for reading are supporrted by using the existing <tt>TTree::SetCacheSize(Long64_t)</tt> interface.<p/>
+Multiple <tt>TTreeCache</tt> per <tt>TFile</tt> for reading are supported by using the existing <tt>TTree::SetCacheSize(Long64_t)</tt> interface.<p/>
 In addition, a <tt>TTreeCache</tt> for a <tt>TTree</tt> can be added using <tt>TFile::SetCacheRead(TFileCacheRead*, TObject*)</tt>, where the second (optional) argument is a pointer to the <tt>TTree</tt>. The cache can be removed by setting the pointer to 0.  In that case the user will have to take ownership for the cache.<p/>
 Similarily, a pointer to the <tt>TTreeCache</tt> for a <tt>TTree</tt> can be obtained using <tt>TFile::GetCacheRead(TObject*)</tt>.
 </li>
