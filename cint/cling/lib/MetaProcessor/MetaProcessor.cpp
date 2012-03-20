@@ -35,12 +35,13 @@ cling::MetaProcessor::~MetaProcessor()
 //
 // Return:
 //
-//            0: success
+//            0: success; if result is given it will hold the result (if any)
 // indent level: prompt for more input
 //
 //---------------------------------------------------------------------------
 int
-cling::MetaProcessor::process(const char* input_text)
+cling::MetaProcessor::process(const char* input_text,
+                              cling::Value* result)
 {
    if (!input_text) { // null pointer, nothing to do.
       return 0;
@@ -57,7 +58,7 @@ cling::MetaProcessor::process(const char* input_text)
    //
    bool was_meta = false;
    if ((input_line[0] == '.') && (input_line.size() > 1)) {
-      was_meta = ProcessMeta(input_line);
+     was_meta = ProcessMeta(input_line, result);
    }
    if (was_meta) {
       return 0;
@@ -76,7 +77,7 @@ cling::MetaProcessor::process(const char* input_text)
    //
    std::string input = m_InputValidator->TakeInput();
    m_InputValidator->Reset();
-   m_Interp.processLine(input, m_Options.RawInput);
+   m_Interp.processLine(input, m_Options.RawInput, result);
    //
    //  All done.
    //
@@ -96,7 +97,8 @@ cling::MetaProcessor::getMetaProcessorOpts() {
 // Process possible meta commands (.L,...)
 //---------------------------------------------------------------------------
 bool
-cling::MetaProcessor::ProcessMeta(const std::string& input_line)
+cling::MetaProcessor::ProcessMeta(const std::string& input_line,
+                                  cling::Value* result)
 {
    // The command is the char right after the initial '.' char.
    // Return whether the meta command was known and thus handled.
@@ -157,7 +159,7 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line)
    //  without extension.
    //
    if ((cmd_char == 'x') || (cmd_char == 'X')) {
-      bool success = m_Interp.executeFile(param);
+      bool success = ExecuteFile(param, result);
       if (!success) {
          //fprintf(stderr, "Execute file failed.\n");
       }
@@ -264,3 +266,40 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line)
    return false;
 }
 
+//---------------------------------------------------------------------------
+// Run a file: .x file[(args)]
+//---------------------------------------------------------------------------
+bool
+cling::MetaProcessor::ExecuteFile(const std::string& fileWithArgs,
+                                  cling::Value* result)
+{
+    // Look for start of parameters:
+
+    typedef std::pair<llvm::StringRef,llvm::StringRef> StringRefPair;
+
+    StringRefPair pairFileArgs = llvm::StringRef(fileWithArgs).split('(');
+    if (pairFileArgs.second.empty()) {
+      pairFileArgs.second = ")";
+    }
+    StringRefPair pairPathFile = pairFileArgs.first.rsplit('/');
+    if (pairPathFile.second.empty()) {
+       pairPathFile.second = pairPathFile.first;
+    }
+    StringRefPair pairFuncExt = pairPathFile.second.rsplit('.');
+
+    //fprintf(stderr, "funcname: %s\n", pairFuncExt.first.data());
+
+    Interpreter::CompilationResult interpRes
+       = m_Interp.processLine(std::string("#include \"")
+                              + pairFileArgs.first.str()
+                              + std::string("\""), true /*raw*/);
+    
+    if (interpRes != Interpreter::kFailure) {
+       std::string expression = pairFuncExt.first.str()
+          + "(" + pairFileArgs.second.str();
+       interpRes = m_Interp.processLine(expression, false /*not raw*/, result);
+    }
+    
+    return (interpRes != Interpreter::kFailure);
+   
+}

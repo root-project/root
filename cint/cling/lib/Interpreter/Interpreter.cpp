@@ -37,6 +37,7 @@
 
 using namespace clang;
 
+namespace {
 static bool tryLinker(const std::string& filename,
                       const cling::InvocationOptions& Opts,
                       llvm::Module* module) {
@@ -90,6 +91,16 @@ static bool tryLinker(const std::string& filename,
   L.releaseModule();
   return true;
 }
+
+static bool canWrapForCall(const std::string& input_line) {
+   // Whether input_line can be wrapped into a function.
+   // "1" can, "#include <vector>" can't.
+   if (input_line.length() > 1 && input_line[0] == '#') return false;
+   if (input_line.compare(0, strlen("extern "), "extern ") == 0) return false;
+   return true;
+}
+
+} // unnamed namespace
 
 namespace cling {
 
@@ -358,9 +369,7 @@ namespace cling {
                            const Decl** D /*=0*/) {    
     std::string functName;
     std::string wrapped = input_line;
-    if (strncmp(input_line.c_str(),"#",strlen("#")) != 0 &&
-        strncmp(input_line.c_str(),"extern ",strlen("extern ")) != 0 &&
-        !rawInput && !V) {
+    if (!V && !rawInput && canWrapForCall(input_line)) {
       WrapInput(wrapped, functName);
     }
 
@@ -373,7 +382,7 @@ namespace cling {
                               clang::diag::MAP_IGNORE, SourceLocation());
 
     CompilationResult Result = kSuccess; 
-    if (V)
+    if (V && !rawInput && canWrapForCall(input_line))
       *V = Evaluate(input_line.c_str(), /*DeclContext=*/0);
     else
       Result = handleLine(wrapped, functName, rawInput, D);
@@ -428,7 +437,7 @@ namespace cling {
   Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
                           bool rawInput /*=false*/, const Decl** D /*=0*/) {
     // if we are using the preprocessor
-    if (rawInput || input[0] == '#') {
+    if (rawInput || !canWrapForCall(input)) {
       
       if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
         if (D)
@@ -461,7 +470,6 @@ namespace cling {
   
   bool
   Interpreter::loadFile(const std::string& filename,
-                        const std::string* trailcode /*=0*/,
                         bool allowSharedLib /*=true*/)
   {
     if (allowSharedLib) {
@@ -481,40 +489,9 @@ namespace cling {
     
     std::string code;
     code += "#include \"" + filename + "\"\n";
-    if (trailcode)
-      code += *trailcode;
     return (m_IncrParser->CompileAsIs(code) != IncrementalParser::kFailed);
   }
   
-  bool
-  Interpreter::executeFile(const std::string& fileWithArgs)
-  {
-    // Look for start of parameters:
-
-    typedef std::pair<llvm::StringRef,llvm::StringRef> StringRefPair;
-
-    StringRefPair pairFileArgs = llvm::StringRef(fileWithArgs).split('(');
-    if (pairFileArgs.second.empty()) {
-      pairFileArgs.second = ")";
-    }
-    StringRefPair pairPathFile = pairFileArgs.first.rsplit('/');
-    if (pairPathFile.second.empty()) {
-       pairPathFile.second = pairPathFile.first;
-    }
-    StringRefPair pairFuncExt = pairPathFile.second.rsplit('.');
-
-    //fprintf(stderr, "funcname: %s\n", pairFuncExt.first.data());
-    
-    std::string func;
-    std::string wrapper = pairFuncExt.first.str()+"("+pairFileArgs.second.str();
-    WrapInput(wrapper, func);
-
-    if (loadFile(pairFileArgs.first, &wrapper)) {
-      return RunFunction(func);
-    }
-    return false;
-  }
-
   Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
                                                        const DeclContext* Within) {
     if (!Within)
@@ -566,23 +543,31 @@ namespace cling {
     TheSema.CurContext = TopLevelFD;
     ASTContext& Context(getCI()->getASTContext());
     QualType RetTy;
-    if (Stmt* S = TopLevelFD->getBody())
-      if (CompoundStmt* CS = dyn_cast<CompoundStmt>(S))
-        if (Expr* E = dyn_cast_or_null<Expr>(CS->body_back())) {
-          RetTy = E->getType();
-          if (!RetTy->isVoidType()) {
-            // Change the void function's return type
-            FunctionProtoType::ExtProtoInfo EPI;
-            QualType FuncTy = Context.getFunctionType(RetTy,
-                                                      /*ArgArray*/0,
-                                                      /*NumArgs*/0,
-                                                      EPI);
-            TopLevelFD->setType(FuncTy);
-            // add return stmt
-            Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
-            CS->setLastStmt(RetS);
+    if (Stmt* S = TopLevelFD->getBody()) {
+      if (CompoundStmt* CS = dyn_cast<CompoundStmt>(S)) {
+        for (clang::CompoundStmt::const_reverse_body_iterator iStmt = CS->body_rbegin(),
+               eStmt = CS->body_rend(); iStmt != eStmt; ++iStmt) {
+          // find the trailing expression statement (skip e.g. null statements)
+          if (Expr* E = dyn_cast_or_null<Expr>(*iStmt)) {
+            RetTy = E->getType();
+            if (!RetTy->isVoidType()) {
+              // Change the void function's return type
+              FunctionProtoType::ExtProtoInfo EPI;
+              QualType FuncTy = Context.getFunctionType(RetTy,
+                                                        /*ArgArray*/0,
+                                                        /*NumArgs*/0,
+                                                        EPI);
+              TopLevelFD->setType(FuncTy);
+              // add return stmt
+              Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
+              CS->setLastStmt(RetS);
+            }
+            // even if void: we found an expression
+            break;
           }
         }
+      }
+    }
     TheSema.CurContext = CurContext;
 
     // FIXME: Finish the transaction in better way

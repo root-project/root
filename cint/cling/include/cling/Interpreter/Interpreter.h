@@ -160,10 +160,7 @@ namespace cling {
                                   const clang::Decl** D = 0);
 
     bool loadFile(const std::string& filename,
-                  const std::string* trailcode = 0,
                   bool allowSharedLib = true);
-    
-    bool executeFile(const std::string& fileWithArgs);
     
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled();

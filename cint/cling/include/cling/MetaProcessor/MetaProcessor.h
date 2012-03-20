@@ -15,6 +15,7 @@ namespace cling {
 
   class Interpreter;
   class InputValidator;
+  class Value;
 
   class MetaProcessorOpts {
   public:
@@ -40,11 +41,12 @@ namespace cling {
     llvm::OwningPtr<InputValidator> m_InputValidator; // balanced paren etc
     MetaProcessorOpts m_Options;
   private:
-    bool ProcessMeta(const std::string& input_line);
+    bool ProcessMeta(const std::string& input_line, cling::Value* result);
+    bool ExecuteFile(const std::string& fileWithArgs, cling::Value* result);
   public:
     MetaProcessor(Interpreter& interp);
     ~MetaProcessor();
-    int process(const char* input_line);
+    int process(const char* input_line, cling::Value* result = 0);
     MetaProcessorOpts& getMetaProcessorOpts();
   };
 } // end namespace cling
