@@ -7,7 +7,7 @@ NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
 HISTLIBDEPM            = $(MATRIXLIB) $(MATHCORELIB)
 GRAFLIBDEPM            = $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB) $(IOLIB)
-GPADLIBDEPM            = $(GRAFLIB) $(HISTLIB)
+GPADLIBDEPM            = $(GRAFLIB) $(HISTLIB) $(MATHCORELIB)
 G3DLIBDEPM             = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(MATHCORELIB)
 WIN32GDKLIBDEPM        = $(GRAFLIB)
 ASIMAGELIBDEPM         = $(GRAFLIB) $(MATHCORELIB)
@@ -243,7 +243,7 @@ MATRIXLIBEXTRA          = lib/libMathCore.lib
 HISTLIBEXTRA            = lib/libMatrix.lib lib/libMathCore.lib
 GRAFLIBEXTRA            = lib/libHist.lib lib/libMatrix.lib lib/libRIO.lib \
                           lib/libMathCore.lib
-GPADLIBEXTRA            = lib/libGraf.lib lib/libHist.lib
+GPADLIBEXTRA            = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
 G3DLIBEXTRA             = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib \
                           lib/libMathCore.lib
 WIN32GDKLIBEXTRA        = lib/libGraf.lib
@@ -414,7 +414,7 @@ NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
 HISTLIBEXTRA            = -Llib -lMatrix -lMathCore
 GRAFLIBEXTRA            = -Llib -lHist -lMatrix -lRIO -lMathCore
-GPADLIBEXTRA            = -Llib -lGraf -lHist
+GPADLIBEXTRA            = -Llib -lGraf -lHist -lMathCore
 G3DLIBEXTRA             = -Llib -lGraf -lHist -lGpad -lMathCore
 GEDLIBEXTRA             = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
 GVIZLIBEXTRA            = -Llib -lHist -lGraf
