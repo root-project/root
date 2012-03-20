@@ -1196,6 +1196,7 @@ namespace {
       NFp_t( "float*",             &CreateFloatArrayConverter         ),
       NFp_t( "double*",            &CreateDoubleArrayConverter        ),
       NFp_t( "long long*",         &CreateLongLongArrayConverter      ),
+      NFp_t( "unsigned long long*", &CreateLongLongArrayConverter     ),
       NFp_t( "void*",              &CreateVoidArrayConverter          ),
 
    // factories for special cases

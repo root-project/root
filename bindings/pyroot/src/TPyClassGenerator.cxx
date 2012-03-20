@@ -140,7 +140,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silent )
 {
 // Class generator to make python classes available to CINT.
-   
+
 // called if all other class generators failed, attempt to build from python class
    if ( PyROOT::gDictLookupActive == kTRUE )
       return 0;                              // call originated from python
