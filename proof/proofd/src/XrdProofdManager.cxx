@@ -1157,6 +1157,7 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
    // Resolve special keywords in 's' for client 'pcl'. Recognized keywords
    //     <workdir>          root for working dirs
    //     <host>             local host name
+   //     <port>             daemon port
    //     <homedir>          user home dir
    //     <user>             user name
    //     <group>            user group
@@ -1180,6 +1181,14 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
       nk++;
 
    TRACE(HDBG, "after <host>: " << s);
+
+   // Parse <port>
+   if (s.find("<port>") != STR_NPOS) {
+      XrdOucString sport;
+      sport += Port();
+      if (s.replace("<port>", sport.c_str()))
+         nk++;
+   }
 
    // Parse <user>
    if (pcl)
