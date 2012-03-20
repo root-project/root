@@ -1181,6 +1181,28 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 
 
 //______________________________________________________________________________
+void TPad::DivideSquare(Int_t n, Float_t xmargin, Float_t ymargin, Int_t color)
+{
+   // "n" is the total number of sub-pads. The number of sub-pads along the X
+   // and Y axis are computed according to the square root of n.
+
+   Int_t w = 1, h = 1;
+
+   if (fCanvas->GetWindowWidth() > fCanvas->GetWindowHeight()) {
+      w = TMath::Ceil(TMath::Sqrt(n));
+      h = TMath::Floor(TMath::Sqrt(n));
+      if (w*h < n) w++;
+   } else {
+      h = TMath::Ceil(TMath::Sqrt(n));
+      w = TMath::Floor(TMath::Sqrt(n));
+      if (w*h < n) h++;
+   }
+
+   Divide( w, h, xmargin, ymargin, color);
+}
+
+
+//______________________________________________________________________________
 void TPad::Draw(Option_t *option)
 {
    // Draw Pad in Current pad (re-parent pad if necessary).

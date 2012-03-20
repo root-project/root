@@ -173,6 +173,7 @@ public:
    virtual void      CopyPixmaps();
    virtual void      DeleteExec(const char *name);
    virtual void      Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0); // *MENU*
+   virtual void      DivideSquare(Int_t n, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
    virtual void      Draw(Option_t *option="");
    virtual void      DrawClassObject(const TObject *obj, Option_t *option="");
    static  void      DrawColorTable();
@@ -373,7 +374,7 @@ public:
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
    virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
    virtual void              ReleaseViewer3D(Option_t * type = "");
-   
+
    virtual void      RecordPave(const TObject *obj);              // *SIGNAL*
    virtual void      RecordLatex(const TObject *obj);             // *SIGNAL*
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
