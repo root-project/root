@@ -26,7 +26,7 @@ endif
 endif
 
 ##### Dependencies for all dictionaries
-ifeq ($(BUILDCLING),yes)
+ifeq ($(ROOT_REVERT_TO_ROOTCINT)$(BUILDCLING),yes)
 ROOTCINTTMPDEP = $(ROOTCLINGTMPO) $(ORDER_) $(ROOTCLINGTMPEXE)
 else
 ROOTCINTTMPDEP = $(ROOTCINTTMPO) $(ORDER_) $(ROOTCINTTMPEXE)
@@ -52,7 +52,7 @@ ROOTCINTTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcint_tmp$(EXEEXT))
 ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 
-##### rootcint #####
+##### rootcling #####
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                  $(filter-out %RStl.cxx,$(filter-out %_tmp.cxx,$(filter-out %rlibmap.cxx,$(filter-out %rootcling.cxx,$(filter-out %rootcint.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))))))
@@ -68,7 +68,7 @@ endif
 endif
 
 ##### Dependencies for all dictionaries
-ifeq ($(BUILDCLING),yes)
+ifeq ($(ROOT_REVERT_TO_ROOTCINT)$(BUILDCLING),yes)
 ROOTCINTTMPDEP = $(ROOTCLINGTMPO) $(ORDER_) $(ROOTCLINGTMPEXE)
 else
 ROOTCINTTMPDEP = $(ROOTCINTTMPO) $(ORDER_) $(ROOTCINTTMPEXE)

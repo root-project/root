@@ -3494,6 +3494,8 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
    TString arguments;
    TString io;
    TString fname;
+   int indent = 0;
+   cling::Value result;
    if (!strncmp(sLine.Data(), ".L", 2)
        || !strncmp(sLine.Data(), ".x", 2)
        || !strncmp(sLine.Data(), ".X", 2)) {
@@ -3503,15 +3505,21 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
          TString noACLiC = sLine(0, 2);
          noACLiC += " ";
          noACLiC += fname;
-         ret = fMetaProcessor->process(noACLiC);
+         indent = fMetaProcessor->process(noACLiC, &result);
       } else {
-         ret = fMetaProcessor->process(sLine);
+         indent = fMetaProcessor->process(sLine, &result);
       }
    } else {
-      ret = fMetaProcessor->process(sLine);
+      indent = fMetaProcessor->process(sLine, &result);
    }
 
-   return ret;
+   if (indent) {
+      // incomplete expression, needs something like:
+      /// fMetaProcessor->abortEvaluation();
+      return 0;
+   }
+
+   return result.hasValue() ? result.simplisticCastAs<long>() : 0;
 }
 
 //______________________________________________________________________________
