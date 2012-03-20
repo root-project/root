@@ -334,6 +334,9 @@ $(call stripsrc,$(CINTDIRSD)/vcstrm.o):   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
 $(call stripsrc,$(CINTDIRSD)/%strm.o):    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
 ifeq ($(GCC_MAJOR),4)
 $(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
+ifeq ($(subst $(GCC_MINOR),,12345),12345)
+CINTCXXFLAGS += -Wno-unused-but-set-variable
+endif
 endif
 
 $(MAKECINTO) $(CINTO): $(CINTCONF) $(ORDER_) $(CINTINCLUDES)
