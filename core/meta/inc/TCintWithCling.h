@@ -39,6 +39,11 @@ struct G__dictposition;
 #define TWin32SendClass char
 #endif // WIN32
 
+extern "C" {
+   void TCintWithCling__RegisterModule(const char* modulename,
+                                       const char** headers);
+}
+
 namespace Cint {
 class G__ClassInfo;
 }
@@ -114,6 +119,7 @@ public: // Public Interface
    Long_t  ProcessLineAsynch(const char* line, EErrorCode* error = 0);
    Long_t  ProcessLineSynch(const char* line, EErrorCode* error = 0);
    void    PrintIntro();
+   void    RegisterModule(const char* modulename, const char** headers);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));
    void    Reset();

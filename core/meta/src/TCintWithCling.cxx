@@ -51,6 +51,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Frontend/HeaderSearchOptions.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Serialization/ASTReader.h"
@@ -77,6 +78,41 @@
 using namespace std;
 
 R__EXTERN int optind;
+
+//______________________________________________________________________________
+namespace {
+   // A module and its headers. Intentionally not a copy:
+   // If these strings end up in this struct they are
+   // long lived by definition because they get passed in
+   // before initialization of TCintWithCling.
+   struct ModuleHeaderInfo_t {
+      ModuleHeaderInfo_t(const char* moduleName, const char** headers):
+         fModuleName(moduleName), fHeaders(headers) {}
+      const char* fModuleName; // module name
+      const char** fHeaders; // 0-terminated array of header files
+   };
+
+   llvm::SmallVector<ModuleHeaderInfo_t, 10> gModuleHeaderInfoBuffer;
+}
+
+//______________________________________________________________________________
+extern "C"
+void TCintWithCling__RegisterModule(const char* modulename,
+                                    const char** headers)
+{
+   // Called by static dictionary initialization to register clang modules
+   // for headers. Calls TCintWithCling::RegisterModule() unless gCling
+   // is NULL, i.e. during startup, where the information is buffered in
+   // the global gModuleHeaderInfoBuffer.
+
+   if (gCint) {
+      ((TCintWithCling*)gCint)->RegisterModule(modulename, headers);
+   } else {
+      gModuleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename, headers));
+   }
+}
+
+
 
 //______________________________________________________________________________
 //
@@ -3109,7 +3145,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    interpInclude = ROOTETCDIR;
 #endif // ROOTINCDIR
    interpInclude.Prepend("-I");
-   const char* interpArgs[] = {"cling4root", interpInclude.Data(), 0};
+   const char* interpArgs[] = {"cling4root", interpInclude.Data(), "-Xclang", "-fmodules"};
 
    TString llvmDir;
    if (gSystem->Getenv("$(LLVMDIR)")) {
@@ -3121,7 +3157,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    }
 #endif // R__LLVMDIR
 
-   fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*) - 1,
+   fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*),
                                          interpArgs, llvmDir); 
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
@@ -3138,30 +3174,19 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    TString dictDir = ROOTLIBDIR;
 #endif // ROOTINCDIR
 
-   clang::CompilerInstance * CI = fInterpreter->getCI ();
-   CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.Data());
-   const char* dictEntry = 0;
-   void* dictDirPtr = gSystem->OpenDirectory(dictDir);
-   while ((dictEntry = gSystem->GetDirEntry(dictDirPtr))) {
-      static const char dictExt[] = "_dict.pcm";
-      size_t lenDictEntry = strlen(dictEntry);
-      if (lenDictEntry <= 9 || strcmp(dictEntry + lenDictEntry - 9, dictExt)) {
-         continue;
-      }
-      //TString dictFile = dictDir + "/" + dictEntry;
-      Info("LoadDictionaries", "Loading PCH %s", dictEntry);
-      TString module(dictEntry);
-      module.Remove(module.Length() - 4, 4);
-      cling::Value value;
-      fInterpreter->processLine(std::string("__import_module__ ") + module.Data() + ";",
-                                true /*raw*/,&value);
+   for (size_t i = 0, e = gModuleHeaderInfoBuffer.size(); i < e ; ++i) {
+      // process buffered module registrations
+      ((TCintWithCling*)gCint)->RegisterModule(gModuleHeaderInfoBuffer[i].fModuleName,
+                                               gModuleHeaderInfoBuffer[i].fHeaders);
    }
-   gSystem->FreeDirectory(dictDirPtr);
+   gModuleHeaderInfoBuffer.clear();
 
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
    // to pull in gPluginManager
    fMetaProcessor->process("#include \"TPluginManager.h\"");
+   fMetaProcessor->process("#include \"TGenericClassInfo.h\"");
+   fMetaProcessor->process("#include \"Rtypes.h\"");
 
    // Initialize the CINT interpreter interface.
    fMore      = 0;
@@ -3226,6 +3251,118 @@ TCintWithCling::~TCintWithCling()
    G__scratch_all();
 #endif // R__COMPLETE_MEM_TERMINATION
    //--
+}
+
+//______________________________________________________________________________
+void TCintWithCling::RegisterModule(const char* modulename, const char** headers)
+{
+   // Inject the module named "modulename" into cling; load all headers.
+   // headers is a 0-terminated array of header files to #include after
+   // loading the module. The module is searched for in all $LD_LIBRARY_PATH
+   // entries (or %PATH% on Windows).
+   // This function gets called by the static initialization of dictionary
+   // libraries.
+
+   TString pcmFileName(modulename);
+   pcmFileName += "_dict.pcm";
+
+   // Assemble search path:
+   
+#ifdef R__WIN32
+   TString searchPath = "$(PATH);";
+#else
+   TString searchPath = "$(LD_LIBRARY_PATH):";
+#endif
+#ifndef ROOTLIBDIR
+   TString rootsys = gSystem->Getenv("ROOTSYS");
+# ifdef R__WIN32
+   searchPath += rootsys + "/bin";
+# else
+   searchPath += rootsys + "/lib";
+# endif
+#else // ROOTINCDIR
+# ifdef R__WIN32
+   searchPath += ROOTBINDIR;
+# else
+   searchPath += ROOTLIBDIR;
+# endif
+#endif // ROOTINCDIR
+   gSystem->ExpandPathName(searchPath);
+
+   if (!gSystem->FindFile(searchPath, pcmFileName)) {
+      Error("RegisterModule()", "Cannot find dictionary module %s in %s",
+            pcmFileName.Data(), searchPath.Data());
+      return;
+   }
+
+   clang::CompilerInstance * CI = fInterpreter->getCI ();
+   clang::Preprocessor& PP = CI->getPreprocessor();
+   clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
+
+   TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+
+   std::pair<clang::Module*, bool> modCreation
+      = ModuleMap.findOrCreateModule(modulename, 0 /*ActiveModule*/,
+                                     false /*Framework*/, false /*Explicit*/);
+   if (!modCreation.second) {
+      Error("RegisterModule()",
+            "Duplicate deficition of dictionary module %s in %s.",
+            /*"\nOriginal module was found in %s.", - if only we could...*/
+            pcmFileName.Data(), searchPath.Data());
+      // Go on, add new headers nonetheless.
+   }
+
+   clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
+   for (const char** hdr = headers; *hdr; ++hdr) {
+      const clang::DirectoryLookup* CurDir;
+      const clang::FileEntry* hdrFileEntry
+         =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
+                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
+                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
+      if (!hdrFileEntry) {
+         Warning("RegisterModule()",
+                 "Cannot find header file %s included in dictionary module %s"
+                 " in include search path!",
+                 *hdr, modulename);
+         hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
+                                                    /*CacheFailure=*/false);
+      } else {
+         // Tell HeaderSearch that the header's directory has a module.map
+         llvm::StringRef srHdrDir(hdrFileEntry->getName());
+         srHdrDir = llvm::sys::path::parent_path(srHdrDir);
+         const clang::DirectoryEntry* Dir
+            = PP.getFileManager().getDirectory(srHdrDir);
+         if (Dir) {
+#ifdef R__CINTWITHCLING_MODULES
+NEEDS PATCH IN CLANG >>>
+Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
+===================================================================
+--- /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(revision 153080)
++++ /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(working copy)
+@@ -260,6 +260,11 @@
+   
+   /// \brief Retrieve the path to the module cache.
+   StringRef getModuleCachePath() const { return ModuleCachePath; }
++
++  /// \brief Consider modules when including files from this directory.
++  void setDirectoryHasModuleMap(const DirectoryEntry* Dir) {
++    DirectoryHasModuleMap[Dir] = true;
++  }
+   
+   /// ClearFileInfo - Forget everything we know about headers so far.
+   void ClearFileInfo() {
+<<< NEEDS PATCH IN CLANG
+            HdrSearch.setDirectoryHasModuleMap(Dir);
+#endif
+         }
+      }
+
+#ifdef R__CINTWITHCLING_MODULES
+      ModuleMap.addHeader(modCreation.first, hdrFileEntry);
+      Info("RegisterModule()", "   #including %s...", *hdr);
+#endif
+      fInterpreter->processLine(TString::Format("#include \"%s\"", *hdr).Data());
+   }   
 }
 
 //______________________________________________________________________________
@@ -3336,10 +3473,10 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
    TString sLine(line);
    if ((sLine[0] == '#') || (sLine[0] == '.')) {
       // Preprocessor or special cmd, have cint process it too.
-      // Do not actually run things, load theminstead:
+      // Do not actually run things, load them instead:
       char haveX = sLine[1];
       if (haveX == 'x' || haveX == 'X')
-         sLine[1] = 'L';
+         sLine[1] = 'L'; // CINT only loads, cling will execute
       TString sLineNoArgs(sLine);
       Ssiz_t posOpenParen = sLineNoArgs.Last('(');
       if (posOpenParen != kNPOS && sLineNoArgs.EndsWith(")")) {
@@ -3357,16 +3494,21 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
    TString arguments;
    TString io;
    TString fname;
-   if (!strncmp(sLine.Data(), ".L", 2)) { // Load cmd, check for use of ACLiC.
+   if (!strncmp(sLine.Data(), ".L", 2)
+       || !strncmp(sLine.Data(), ".x", 2)
+       || !strncmp(sLine.Data(), ".X", 2)) {
+      // ACLiC was carried out by CINT above; here just .L/.x without trailing "+"
       fname = gSystem->SplitAclicMode(sLine.Data()+3, aclicMode, arguments, io);
-   }
-   if (aclicMode.Length()) { // ACLiC, pass to cint and not to cling.
-      ret = TCintWithCling::ProcessLine(sLine, error);
-   }
-   else {
-      if (fMetaProcessor->process(sLine) > 0) {
-         printf("...\n");
+      if (aclicMode.Length()) {
+         TString noACLiC = sLine(0, 2);
+         noACLiC += " ";
+         noACLiC += fname;
+         ret = fMetaProcessor->process(noACLiC);
+      } else {
+         ret = fMetaProcessor->process(sLine);
       }
+   } else {
+      ret = fMetaProcessor->process(sLine);
    }
 
    return ret;

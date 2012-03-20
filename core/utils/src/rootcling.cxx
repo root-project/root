@@ -5032,6 +5032,151 @@ void CleanupOnExit(int code)
    }
 }
 
+enum ESourceFileKind {
+   kSFKNotC,
+   kSFKHeader,
+   kSFKSource,
+   kSFKLinkdef
+};
+
+//______________________________________________________________________________
+static ESourceFileKind GetSourceFileKind(const char* filename)
+{
+   // Check whether the file's extension is compatible with C or C++.
+   // Return whether source, header, Linkdef or nothing.
+   if (filename[0] == '-') return kSFKNotC;
+
+   const size_t len = strlen(filename);
+   const char* ext = filename + len - 1;
+   while (ext >= filename && *ext != '.') --ext;
+   if (ext < filename || *ext != '.') return kSFKNotC;
+   ++ext;
+   const size_t lenExt = filename + len - ext;
+
+   ESourceFileKind ret = kSFKNotC;
+   switch (lenExt) {
+   case 1: {
+      const char last = toupper(filename[len - 1]);
+      if (last == 'H') ret = kSFKHeader;
+      else if (last == 'C') ret = kSFKSource;
+      break;
+   }
+   case 2: {
+      if (filename[len - 2] == 'h' && filename[len - 1] == 'h')
+         ret = kSFKHeader;
+      else if (filename[len - 2] == 'c' && filename[len - 1] == 'c')
+         ret = kSFKSource;
+      break;
+   }
+   case 3: {
+      const char last = filename[len - 1];
+      if ((last == 'x' || last == 'p')
+          && filename[len - 2] == last) {
+         if (filename[len - 3] == 'h') ret = kSFKHeader;
+         else if (filename[len - 3] == 'c') ret = kSFKSource;
+      }
+   }
+   } // switch extension length
+
+   static const int lenLinkdefdot = 8;
+   if (ret == kSFKHeader && len - lenExt >= lenLinkdefdot) {
+      if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
+           strstr(filename,"linkdef")) && strstr(filename,".h")) {
+         ret = kSFKLinkdef;
+      }
+   }
+   return ret;
+}
+
+
+//______________________________________________________________________________
+static int GenerateModule(const char* dictname, const std::vector<std::string>& args)
+{
+   // Generate the clang module given the arguments.
+   // Returns != 0 on error.
+   std::string clangInvocation(R__CLANG);
+   std::string dictNameStem(dictname);
+   size_t posDotPcmFile = dictNameStem.find('.');
+   if (posDotPcmFile != std::string::npos) {
+      // remove extension.
+      dictNameStem.erase(posDotPcmFile, dictNameStem.length() - posDotPcmFile);
+   }
+   std::string moduleMapName = std::string("lib/") + dictNameStem + "_dict.map";
+
+   clangInvocation += " -Xclang -emit-module -Xclang -fmodules -Xclang -fmodule-cache-path -Xclang lib -Xclang -fmodule-name=" + dictNameStem + "_dict -o lib/";
+   clangInvocation += dictNameStem + "_dict.pcm -x c++ -c " + moduleMapName;
+
+   // Parse arguments
+   vector<std::string> headers;
+   for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
+        iPcmArg < nPcmArg; ++iPcmArg) {
+      ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
+      if (sfk == kSFKHeader || sfk == kSFKSource) {
+         headers.push_back(args[iPcmArg]);
+      } else if (sfk == kSFKNotC) {
+         clangInvocation += std::string(" ") + args[iPcmArg];
+      }
+   }
+
+   // Generate module map
+   {
+      std::ofstream moduleMap(moduleMapName.c_str());
+      moduleMap << "module " << dictNameStem << "_dict { " << std::endl;
+      for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
+         moduleMap << "header \"" << headers[iH] << "\"" << std::endl;
+      }
+      moduleMap << "}" << std::endl;
+   }
+
+   // Dictionary initialization code for loading the module
+   (*dictSrcOut) << "namespace {\n"
+      "  static struct DictInit {\n"
+      "    DictInit() {\n"
+      "      static const char* headers[] = {\n";
+
+   {
+      char currWorkDir[1024];
+#ifdef WIN32
+      ::_getcwd(currWorkDir, sizeof(currWorkDir));
+#else
+      getcwd(currWorkDir, sizeof(currWorkDir));
+#endif
+      size_t lenCurrWorkDir = strlen(currWorkDir);
+      if (lenCurrWorkDir + 1 < sizeof(currWorkDir)) {
+         currWorkDir[lenCurrWorkDir++] = '/';
+         currWorkDir[lenCurrWorkDir] = 0;
+      }
+      for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
+         if (headers[iH].substr(0, lenCurrWorkDir) == currWorkDir) {
+            // Convert to path relative to $PWD.
+            // If that's not what the caller wants, she should pass -I to rootcint and a
+            // different relative path to the header files.
+            headers[iH].erase(0, lenCurrWorkDir);
+         }
+#ifdef ROOTBUILD
+         // For ROOT, convert module directories like core/base/inc/ to include/
+         int posInc = headers[iH].find("/inc/");
+         if (posInc != -1) {
+            headers[iH] = /*std::string("include") +*/ headers[iH].substr(posInc + 5, -1);
+         }
+#endif
+         (*dictSrcOut) << "             \"" << headers[iH] << "\"," << std::endl;
+      }
+   }
+   (*dictSrcOut) << 
+      "      0 };\n"
+      "      TCintWithCling__RegisterModule(\"" << dictNameStem << "\", headers);\n"
+      "    }\n"
+      "  } __TheInitializer;\n"
+      "}" << std::endl;
+
+   printf("Would like to generate PCM: %s\n",clangInvocation.c_str());
+   int ret = system(clangInvocation.c_str());
+   unlink(moduleMapName.c_str());
+   return ret;
+}
+
+
 // cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
 #if defined(R__IOSSIM) || defined(R__IOS)
 #ifdef __x86_64__
@@ -6049,6 +6194,11 @@ int main(int argc, char **argv)
          WriteNamespaceInit(*ns_iter);         
       }
          
+      if (strstr(dictname,"rootcint_") != dictname) {
+         // Modules only for "regular" dictionaries, not for cintdlls
+         GenerateModule(dictname, pcmArgs);
+      }
+
       iter = scan.fSelectedClasses.begin();
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter) 
@@ -6259,22 +6409,6 @@ int main(int argc, char **argv)
    G__setglobalcomp(-1);  // G__CPPLINK
    CleanupOnExit(0);
 
-   if (strstr(dictname,"rootcint_") != dictname) {
-      std::string clangInvocation(R__CLANG);
-      std::string pcmFile(dictname);
-      size_t posDotPcmFile = pcmFile.find('.');
-      if (posDotPcmFile != std::string::npos) {
-         // remove extension.
-         pcmFile.erase(posDotPcmFile, pcmFile.length() - posDotPcmFile);
-      }
-      clangInvocation += " -Xclang -emit-module -o";
-      clangInvocation += std::string(dictname) + "_dict.pcm -x c++ -c ";
-      for (size_t iPcmArg = 0, nPcmArg = pcmArgs.size(); iPcmArg < nPcmArg; ++iPcmArg) {
-         clangInvocation += pcmArgs[iPcmArg] + " ";
-      }
-      int ret = 0; printf("Would like to generate PCM: %s\n",clangInvocation.c_str());
-      if (ret) return ret;
-   }
    G__exit(0);
    return 0;
 }
