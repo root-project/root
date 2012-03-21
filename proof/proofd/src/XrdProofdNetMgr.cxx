@@ -1136,7 +1136,8 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
    } else {
       // Read portion of remote file
       XrdClientUrlInfo u(file);
-      u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
+      if (u.User.length() <= 0) 
+         u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
       buf = ReadBufferRemote(u.GetUrl().c_str(), file, ofs, lout, grep);
    }
 
