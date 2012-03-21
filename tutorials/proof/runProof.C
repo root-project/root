@@ -123,6 +123,13 @@
 //
 //      root[] runProof("ntuple(inputrndm)")
 //
+//      By default the output will be saved in the local file SimpleNtuple.root;
+//      location and name of the file can be changed via the argument 'outfile',
+//      e.g.
+//
+//      root[] runProof("simplefile(outfile=/data0/testntuple.root)")
+//      root[] runProof("simplefile(outfile=root://aserver//data/testntuple.root)")
+//
 //  7. "dataset"
 //
 //      Selector: ProofNtuple.h.C
@@ -172,6 +179,13 @@
 //      'nhist' to 'simplefile', e.g. to fill 25 histos with 1000000 entries use
 //
 //      root[] runProof("simplefile(nevt=1000000,nhist=25)")
+//
+//      By default the output will be saved in the local file SimpleFile.root;
+//      location and name of the file can be changed via the argument 'outfile',
+//      e.g.
+//
+//      root[] runProof("simplefile(outfile=/data0/testsimple.root)")
+//      root[] runProof("simplefile(outfile=root://aserver//data/testsimple.root)")
 //
 //
 //   General arguments
@@ -252,6 +266,13 @@
 //
 //      root[] runProof("simple","master.do.main")
 //
+//   A rough parsing of the URL is done to determine the locality of the cluster.
+//   If using a tunnel the URL can start by localhost even for external clusters:
+//   in such cases the default locality determination will be wrong, so one has 
+//   to tell explicity that the cluster is external via the option field, e.g.
+//
+//      root[] runProof("simple","localhost:33002/?external")
+//
 //   In the case of local running it is possible to specify the number of
 //   workers to start as third argument (the default is the number of cores
 //   of the machine), e.g.
@@ -302,7 +323,7 @@ const char *pythia8dir = 0;
 const char *pythia8data = 0;
 
 void runProof(const char *what = "simple",
-              const char *url = "proof://localhost:40000",
+              const char *masterurl = "proof://localhost:40000",
               Int_t nwrks = -1)
 {
 #ifdef __CINT__
@@ -313,6 +334,24 @@ void runProof(const char *what = "simple",
    return;
 #endif
    gEnv->SetValue("Proof.StatsHist",1);
+
+   TString u(masterurl);
+   // Determine locality of this session
+   Bool_t isProofLocal = kFALSE;
+   if (!u.IsNull() && u != "lite://") {
+      TUrl uu(masterurl);
+      TString uopts(uu.GetOptions());
+      if ((!strcmp(uu.GetHost(), "localhost") && !uopts.Contains("external")) ||
+         !strcmp(uu.GetHostFQDN(), TUrl(gSystem->HostName()).GetHostFQDN())) {
+         isProofLocal = kTRUE;
+      }
+      // Adjust URL
+      if (!u.BeginsWith(uu.GetProtocol())) uu.SetProtocol("proof");
+      uopts.ReplaceAll("external", "");
+      uu.SetOptions(uopts.Data());
+      u = uu.GetUrl();
+   }
+   const char *url = u.Data();
 
    // Temp dir for PROOF tutorials
    // Force "/tmp/<user>" whenever possible to avoid length problems on MacOsX
@@ -378,13 +417,9 @@ void runProof(const char *what = "simple",
       return;
    }
 
-   // Determine locality of this session
-   Bool_t isProofLocal = kFALSE;
-   TUrl uu(url);
-   if (!strcmp(uu.GetHost(), "localhost") || proof->IsLite() ||
-       !strcmp(uu.GetHostFQDN(), TUrl(gSystem->HostName()).GetHostFQDN())) {
-      isProofLocal = kTRUE;
-   }
+   // Refine locality (PROOF-Lite always local)
+   if (proof->IsLite()) isProofLocal = kTRUE;
+
 #ifdef WIN32
    if (isProofLocal && what && !strcmp(what, "ntuple", 6)) {
       // Not support on windows
@@ -455,7 +490,7 @@ void runProof(const char *what = "simple",
    Printf("runProof: %s: ACLiC mode: '%s'", act.Data(), aMode.Data());
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache,
+   TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache, aOutFile,
            aH1Src("http://root.cern.ch/files/h1"),
            aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root");
    Long64_t suf = 1;
@@ -559,6 +594,14 @@ void runProof(const char *what = "simple",
             if (!(tok.IsNull())) aPerfTree = tok;
          }
          Printf("runProof: %s: saving performance tree to '%s'", act.Data(), aPerfTree.Data());
+      }
+      // Location of the output file, if any
+      if (tok.BeginsWith("outfile")) {
+         if (tok.BeginsWith("outfile=")) {
+            tok.ReplaceAll("outfile=","");
+            if (!(tok.IsNull())) aOutFile = tok;
+         }
+         Printf("runProof: %s: output file: '%s'", act.Data(), aOutFile.Data());
       }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
@@ -953,30 +996,33 @@ void runProof(const char *what = "simple",
       if (usentprndm) Printf("runProof: taking randoms from input ntuple\n");
 
       // Output file
-      TString fout = TString::Format("%s/ProofNtuple.root", gSystem->WorkingDirectory());
-      // Cleanup any existing instance of the output file
-      gSystem->Unlink(fout);
+      TString fout(aOutFile);
+      if (fout.IsNull()) {
+         fout.Form("%s/ProofNtuple.root", gSystem->WorkingDirectory());
+         // Cleanup any existing instance of the output file
+         gSystem->Unlink(fout);
 
-      if (!isProofLocal) {
-         // Setup a local basic xrootd to receive the file
-         Bool_t xrdok = kFALSE;
-         Int_t port = 9000;
-         while (port < 9010) {
-            if (checkXrootdAt(port) != 1) {
-               if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
-                  xrdok = kTRUE;
-                  break;
+         if (!isProofLocal) {
+            // Setup a local basic xrootd to receive the file
+            Bool_t xrdok = kFALSE;
+            Int_t port = 9000;
+            while (port < 9010) {
+               if (checkXrootdAt(port) != 1) {
+                  if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
+                     xrdok = kTRUE;
+                     break;
+                  }
                }
+               port++;
             }
-            port++;
+            if (!xrdok) {
+               Printf("runProof: could not start basic xrootd on ports 9000-9009 - cannot continue");
+               return;
+            }
+            fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
+            // Make a copy of the files on the master before merging
+            proof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
          }
-         if (!xrdok) {
-            Printf("runProof: could not start basic xrootd on ports 9000-9009 - cannot continue");
-            return;
-         }
-         fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
-         // Make a copy of the files on the master before merging
-         proof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
       }
       proof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
 
@@ -1174,30 +1220,33 @@ void runProof(const char *what = "simple",
       proof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
       
       // Output file
-      TString fout = TString::Format("%s/SimpleFile.root", gSystem->WorkingDirectory());
-      // Cleanup any existing instance of the output file
-      gSystem->Unlink(fout);
+      TString fout(aOutFile);
+      if (fout.IsNull()) {
+         fout.Form("%s/SimpleFile.root", gSystem->WorkingDirectory());
+         // Cleanup any existing instance of the output file
+         gSystem->Unlink(fout);
 
-      if (!isProofLocal) {
-         // Setup a local basic xrootd to receive the file
-         Bool_t xrdok = kFALSE;
-         Int_t port = 9000;
-         while (port < 9010) {
-            if (checkXrootdAt(port) != 1) {
-               if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
-                  xrdok = kTRUE;
-                  break;
+         if (!isProofLocal) {
+            // Setup a local basic xrootd to receive the file
+            Bool_t xrdok = kFALSE;
+            Int_t port = 9000;
+            while (port < 9010) {
+               if (checkXrootdAt(port) != 1) {
+                  if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
+                     xrdok = kTRUE;
+                     break;
+                  }
                }
+               port++;
             }
-            port++;
+            if (!xrdok) {
+               Printf("runProof: could not start basic xrootd on ports 9000-9009 - cannot continue");
+               return;
+            }
+            fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
+            // Make a copy of the files on the master before merging
+            proof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
          }
-         if (!xrdok) {
-            Printf("runProof: could not start basic xrootd on ports 9000-9009 - cannot continue");
-            return;
-         }
-         fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
-         // Make a copy of the files on the master before merging
-         proof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
       }
       proof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
       
