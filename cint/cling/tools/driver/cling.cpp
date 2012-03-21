@@ -4,9 +4,9 @@
 // author:  Lukasz Janyst <ljanyst@cern.ch>
 //------------------------------------------------------------------------------
 
-#include <iostream>
-#include <vector>
-#include <string>
+#include "cling/Interpreter/Interpreter.h"
+#include "cling/MetaProcessor/MetaProcessor.h"
+#include "cling/UserInterface/UserInterface.h"
 
 #include "clang/Basic/LangOptions.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -16,34 +16,28 @@
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/ManagedStatic.h"
 
-#include "cling/Interpreter/Interpreter.h"
-#include "cling/UserInterface/UserInterface.h"
+#include <iostream>
+#include <vector>
+#include <string>
 
-//------------------------------------------------------------------------------
-// Let the show begin
-//------------------------------------------------------------------------------
-int main( int argc, char **argv )
-{
+int main( int argc, char **argv ) {
 
-   llvm::llvm_shutdown_obj shutdownTrigger;
+  llvm::llvm_shutdown_obj shutdownTrigger;
 
-   //llvm::sys::PrintStackTraceOnErrorSignal();
-   //llvm::PrettyStackTraceProgram X(argc, argv);
+  //llvm::sys::PrintStackTraceOnErrorSignal();
+  //llvm::PrettyStackTraceProgram X(argc, argv);
 
-   //---------------------------------------------------------------------------
-   // Set up the interpreter
-   //---------------------------------------------------------------------------
-   cling::Interpreter interpreter(argc, argv);
-   if (interpreter.getOptions().Help) {
-      return 0;
-   }
+  // Set up the interpreter
+  cling::Interpreter interp(argc, argv);
+  if (interp.getOptions().Help) {
+    return 0;
+  }
 
-   clang::CompilerInstance* CI = interpreter.getCI();
-  interpreter.AddIncludePath(".");
+  clang::CompilerInstance* CI = interp.getCI();
+  interp.AddIncludePath(".");
   
-  for (size_t I = 0, N = interpreter.getOptions().LibsToLoad.size();
-       I < N; ++I) {
-    interpreter.loadFile(interpreter.getOptions().LibsToLoad[I]);
+  for (size_t I = 0, N = interp.getOptions().LibsToLoad.size(); I < N; ++I) {
+    interp.loadFile(interp.getOptions().LibsToLoad[I]);
   }
 
    bool ret = true;
@@ -51,22 +45,19 @@ int main( int argc, char **argv )
      = CI->getInvocation().getFrontendOpts().Inputs;
 
    // Interactive means no input (or one input that's "-")
-   bool Interactive = Inputs.empty()
-     || (Inputs.size() == 1 && Inputs[0].File == "-");
+   bool Interactive = Inputs.empty() || (Inputs.size() == 1 
+                                         && Inputs[0].File == "-");
+
+   cling::UserInterface ui(interp);
+   // If we are not interactive we're supposed to parse files
    if (!Interactive) {
-     //---------------------------------------------------------------------------
-     // We're supposed to parse files
-     //---------------------------------------------------------------------------
-      for (size_t I = 0, N = Inputs.size(); I < N; ++I) {
-        ret = interpreter.executeFile(Inputs[I].File);
-      }
+     for (size_t I = 0, N = Inputs.size(); I < N; ++I) {
+       ret = ui.getMetaProcessor()->executeFile(Inputs[I].File);
+     }
    }
-   //----------------------------------------------------------------------------
-   // We're interactive
-   //----------------------------------------------------------------------------
    else {
-      cling::UserInterface ui(interpreter);
-      ui.runInteractively(interpreter.getOptions().NoLogo);
+      cling::UserInterface ui(interp);
+      ui.runInteractively(interp.getOptions().NoLogo);
    }
 
    return ret ? 0 : 1;

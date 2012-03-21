@@ -42,12 +42,33 @@ namespace cling {
     MetaProcessorOpts m_Options;
   private:
     bool ProcessMeta(const std::string& input_line, cling::Value* result);
-    bool ExecuteFile(const std::string& fileWithArgs, cling::Value* result);
   public:
     MetaProcessor(Interpreter& interp);
     ~MetaProcessor();
-    int process(const char* input_line, cling::Value* result = 0);
+
     MetaProcessorOpts& getMetaProcessorOpts();
+
+    ///\brief Process the input coming from the prompt and possibli returns
+    /// result of the execution of the last statement
+    /// @param[in] input_line - the user input
+    /// @param[out] result - the cling::Value as result of the execution of the
+    ///             last statement
+    ///
+    ///\returns 0 on success
+    ///
+    int process(const char* input_line, cling::Value* result = 0);
+
+    ///\brief Executes a file given the CINT specific rules. Mainly used as:
+    /// .x filename[(args)], which in turn #include-s the filename and runs a
+    /// function with signature void filename(args)
+    /// @param[in] fileWithArgs - the filename(args)
+    /// @param[out] result - the cling::Value as result of the execution of the
+    ///             last statement
+    ///
+    ///\returns true on success
+    ///
+    bool executeFile(const std::string& fileWithArgs, cling::Value* result = 0);
+
   };
 } // end namespace cling
 

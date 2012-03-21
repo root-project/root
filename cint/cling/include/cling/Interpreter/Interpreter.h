@@ -211,7 +211,7 @@ namespace cling {
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     friend class runtime::internal::LifetimeHandler;
     
-	bool addSymbol(const char* symbolName,  void* symbolAddress);
+    bool addSymbol(const char* symbolName,  void* symbolAddress);
   public:
     ///\brief Evaluates given expression within given declaration context.
     ///

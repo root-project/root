@@ -8,25 +8,26 @@
 #define CLING_USERINTERFACE_H
 
 namespace cling {
-   class Interpreter;
-   class MetaProcessor;
+  class Interpreter;
+  class MetaProcessor;
 
-   //---------------------------------------------------------------------------
-   //! Class for the user interaction with the interpreter
-   //---------------------------------------------------------------------------
-   class UserInterface
-   {
-   public:
-      UserInterface(Interpreter& interp, const char* prompt = "[cling] $");
-      ~UserInterface();
+  ///\brief Makes the interpreter interactive
+  ///
+  class UserInterface {
+  private:
+    MetaProcessor* m_MetaProcessor;
 
-      void runInteractively(bool nologo = false);
+  public:
+    UserInterface(Interpreter& interp, const char* prompt = "[cling] $");
+    ~UserInterface();
 
-   private:
-      MetaProcessor* m_MetaProcessor;
-   };
+    MetaProcessor* getMetaProcessor() { return m_MetaProcessor; }
+
+    ///\brief Drives the interactive prompt talking to the user.
+    /// @param[in] nologo - whether to show cling's welcome logo or not
+    ///
+    void runInteractively(bool nologo = false);
+  };
 }
 
 #endif // CLING_USERINTERFACE_H
-
-

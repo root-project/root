@@ -159,7 +159,7 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line,
    //  without extension.
    //
    if ((cmd_char == 'x') || (cmd_char == 'X')) {
-      bool success = ExecuteFile(param, result);
+      bool success = executeFile(param, result);
       if (!success) {
          //fprintf(stderr, "Execute file failed.\n");
       }
@@ -269,10 +269,8 @@ cling::MetaProcessor::ProcessMeta(const std::string& input_line,
 //---------------------------------------------------------------------------
 // Run a file: .x file[(args)]
 //---------------------------------------------------------------------------
-bool
-cling::MetaProcessor::ExecuteFile(const std::string& fileWithArgs,
-                                  cling::Value* result)
-{
+bool cling::MetaProcessor::executeFile(const std::string& fileWithArgs,
+                                       cling::Value* result) {
     // Look for start of parameters:
 
     typedef std::pair<llvm::StringRef,llvm::StringRef> StringRefPair;
