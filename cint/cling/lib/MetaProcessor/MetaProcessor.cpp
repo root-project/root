@@ -119,7 +119,7 @@ namespace cling {
        // toggle:
        bool print = !m_Interp.isPrintingAST();
        m_Interp.enablePrintAST(print);
-       llvm::errs()<< print?"P":"Not p" << "rinting AST\n";
+       llvm::errs()<< (print?"P":"Not p") << "rinting AST\n";
      } else if (param == "1") {
        m_Interp.enablePrintAST(true);
      } else if (param == "0") {
@@ -138,7 +138,7 @@ namespace cling {
      if (param.empty()) {
        // toggle:
        m_Options.RawInput = !m_Options.RawInput;
-       llvm::errs() << m_Options.RawInput?"U":"Not u" << "sing raw input\n";
+       llvm::errs() << (m_Options.RawInput?"U":"Not u") << "sing raw input\n";
      } else if (param == "1") {
        m_Options.RawInput = true;
      } else if (param == "0") {
@@ -192,14 +192,14 @@ namespace cling {
        // toggle:
        bool dynlookup = !m_Interp.isDynamicLookupEnabled();
        m_Interp.enableDynamicLookup(dynlookup);
-       llvm::errs() << dynlookup?"U":"Not u" <<"sing dynamic lookup extensions\n"
+       llvm::errs() << (dynlookup?"U":"Not u") <<"sing dynamic extensions\n";
      } else if (param == "1") {
        m_Interp.enableDynamicLookup(true);
      } else if (param == "0") {
        m_Interp.enableDynamicLookup(false);
      } else {
        llvm::errs() << ".dynamicExtensions: param must be '0' or '1' or ";
-       llvm::errs() << "nothing\n"
+       llvm::errs() << "nothing\n";
      }
      return true;
    }
