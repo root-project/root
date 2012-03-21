@@ -19,10 +19,21 @@ namespace cling {
 
   class MetaProcessorOpts {
   public:
-    bool Quitting : 1; // is quit requested
-    bool PrintingAST : 1; // is printAST requested;
-    bool RawInput : 1; // is using wrappers requested;
-    bool DynamicLookup : 1; // is using dynamic lookup
+    ///\brief is quit requested
+    ///
+    bool Quitting : 1;
+
+    ///\brief is printAST requested
+    ///
+    bool PrintingAST : 1;
+
+    ///\brief is using wrappers requested
+    ///
+    bool RawInput : 1;
+
+    ///\brief is using dynamic scopes enabled
+    ///
+    bool DynamicLookup : 1;
     
     MetaProcessorOpts() {
       Quitting = 0;
@@ -32,15 +43,36 @@ namespace cling {
     }
   };
 
-  //---------------------------------------------------------------------------
-  // Class for the user interaction with the interpreter
-  //---------------------------------------------------------------------------
+  ///\brief Class that helps processing meta commands, which add extra 
+  /// interactivity. Syntax .Command [arg0 arg1 ... argN]
+  ///
   class MetaProcessor {
   private:
     Interpreter& m_Interp; // the interpreter
     llvm::OwningPtr<InputValidator> m_InputValidator; // balanced paren etc
     MetaProcessorOpts m_Options;
   private:
+
+    ///\brief Handle one of the special commands in cling. 
+    /// Syntax .Command [arg0 arg1 ... argN]
+    ///
+    /// Known commands:
+    /// @code .q @endcode - Quit
+    /// @code .L <filename> @endcode - Load the filename (It might be lib too)
+    /// @code .(x|X) <filename>[(args)] @endcode - Load the filename and 
+    /// execute the function with signature void filename(args)
+    /// @code .printAST [0|1] @endcode - Turns on the printing of input's
+    /// corresponding AST nodes.
+    /// @code .rawInput [0|1] @endcode - Toggle wrapping and value printing of 
+    /// the input
+    /// @code .I [path] @endcode - Dumps the include path. If argument is given
+    /// adds the path to the list of include paths.
+    /// @code .@ @endcode - Cancels multiline input
+    /// @code .dynamicExtensions [0|1] @endcode - Enables/Disables dynamic 
+    /// scopes and the late bining.
+    ///
+    ///\returns true if the command was known and thus handled.
+    ///
     bool ProcessMeta(const std::string& input_line, cling::Value* result);
   public:
     MetaProcessor(Interpreter& interp);
@@ -54,7 +86,8 @@ namespace cling {
     /// @param[out] result - the cling::Value as result of the execution of the
     ///             last statement
     ///
-    ///\returns 0 on success
+    ///\returns 0 on success or the indentation of the next input line should 
+    /// have in case of multi input mode.
     ///
     int process(const char* input_line, cling::Value* result = 0);
 
@@ -73,5 +106,3 @@ namespace cling {
 } // end namespace cling
 
 #endif // CLING_METAPROCESSOR_H
-
-
