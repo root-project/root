@@ -461,11 +461,19 @@ void TSessionServerFrame::OnBtnConnectClicked()
    TQObject::Connect("TProof", "StartupMessage(char *,Bool_t,Int_t,Int_t)",
          "TSessionViewer", fViewer, "StartupMessage(char *,Bool_t,Int_t,Int_t)");
    // collect and set-up configuration
-   TString url = fTxtUsrName->GetText();
-   url += "@"; url += fTxtAddress->GetText();
-   if (fNumPort->GetIntNumber() > 0) {
-      url += ":";
-      url += fNumPort->GetIntNumber();
+   TString address = fTxtAddress->GetText();
+   TString url;
+   if (address == "lite://") {
+      url = address;
+   }
+   else {
+      // collect and set-up configuration
+      url = fTxtUsrName->GetText();
+      url += "@"; url += address.Data();
+      if (fNumPort->GetIntNumber() > 0) {
+         url += ":";
+         url += fNumPort->GetIntNumber();
+      }
    }
 
    TProofDesc *desc;
@@ -548,7 +556,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       if (fViewer->GetActDesc()->fLogLevel < 0)
          fViewer->GetActDesc()->fLogLevel = 0;
       if (fViewer->GetActDesc()->fProof->IsLite())
-         fViewer->GetActDesc()->fAddress = "lite";
+         fViewer->GetActDesc()->fAddress = "lite://";
       else
          fViewer->GetActDesc()->fAddress = fViewer->GetActDesc()->fProof->GetMaster();
       fViewer->GetActDesc()->fConnected = kTRUE;
@@ -3735,7 +3743,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       TSessionDescription *litedesc = new TSessionDescription();
       litedesc->fTag = "";
       litedesc->fName = "PROOF Lite";
-      litedesc->fAddress = "lite";
+      litedesc->fAddress = "lite://";
       litedesc->fPort = 0;
       litedesc->fConfigFile = "";
       litedesc->fLogLevel = 0;
@@ -3995,7 +4003,7 @@ void TSessionViewer::UpdateListOfProofs()
                   newdesc->fConnected  = kTRUE;
                   newdesc->fAttached   = kTRUE;
                   if (p->IsLite())
-                     newdesc->fAddress = "lite";
+                     newdesc->fAddress = "lite://";
                   else
                      newdesc->fAddress = p->GetMaster();
                   newdesc->fConfigFile = p->GetConfFile();
@@ -4077,7 +4085,7 @@ void TSessionViewer::UpdateListOfProofs()
          if (newdesc->fLogLevel < 0)
             newdesc->fLogLevel = 0;
          if (proof->IsLite())
-            newdesc->fAddress = "lite";
+            newdesc->fAddress = "lite://";
          else
             newdesc->fAddress = proof->GetMaster();
          newdesc->fQueries    = new TList();
@@ -4143,7 +4151,7 @@ void TSessionViewer::UpdateListOfSessions()
             if (newdesc->fLogLevel < 0)
                newdesc->fLogLevel = 0;
             if (proof->IsLite())
-               newdesc->fAddress = "lite";
+               newdesc->fAddress = "lite://";
             else
                newdesc->fAddress = proof->GetMaster();
             newdesc->fProof      = proof;
