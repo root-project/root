@@ -2,6 +2,7 @@
 
 #import "PadImageScrollView.h"
 #import "PadImageView.h"
+#import "PadView.h"
 
 //C++ (ROOT) imports.
 #import "TObject.h"
@@ -14,16 +15,14 @@ static const CGFloat minZoom = 1.f;
 
 @implementation PadImageScrollView {
    ROOT::iOS::Pad *pad;
-   
-   PadImageView *nestedView;
-}
 
-@synthesize padImage;
+   PadView *nestedView;
+}
 
 //____________________________________________________________________________________________________
 + (CGRect) defaultImageFrame
 {
-   return CGRectMake(0.f, 0.f, 700.f, 700.f);
+   return CGRectMake(0.f, 0.f, defaultImageW, defaultImageH);
 }
 
 //____________________________________________________________________________________________________
@@ -33,16 +32,17 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) initPadImageView : (CGRect)frame
+- (void) initPadView : (CGRect)frame
 {
    CGRect padFrame = [PadImageScrollView defaultImageFrame];
    padFrame.origin = [self adjustOriginForFrame : frame withSize : padFrame.size];
-   
-   nestedView = [[PadImageView alloc] initWithFrame : padFrame];
+
+   nestedView = [[PadView alloc] initImmutableViewWithFrame : padFrame];
    nestedView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   
+
    [self addSubview : nestedView];
 }
+
 
 //____________________________________________________________________________________________________
 - (void) setContentSize : (CGSize) size contentOffset : (CGPoint)offset minScale : (CGFloat)min maxScale : (CGFloat)max scale : (CGFloat)scale
@@ -84,74 +84,21 @@ static const CGFloat minZoom = 1.f;
 }
 
 #pragma mark - Image/pad/geometry management.
-//____________________________________________________________________________________________________
-- (UIImage *) createPadImage : (CGSize) imageSize
-{
-   UIGraphicsBeginImageContext(imageSize);
-   CGContextRef ctx = UIGraphicsGetCurrentContext();
-
-   if (!ctx) {
-      NSLog(@"UIGraphicsGetCurrentContext failed");
-      UIGraphicsEndImageContext();
-      return nil;
-   }
-
-   //Now draw into this context.
-   CGContextTranslateCTM(ctx, 0.f, imageSize.height);
-   CGContextScaleCTM(ctx, 1.f, -1.f);
-      
-   const CGRect imageFrame = CGRectMake(0.f, 0.f, imageSize.width, imageSize.height);
-   //Fill bitmap with white first.
-   CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
-   CGContextFillRect(ctx, imageFrame);
-   //
-   pad->cd();
-   pad->SetContext(ctx);
-   pad->SetViewWH(imageSize.width, imageSize.height);
-   pad->Paint();
-
-   //Ready.
-   UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-   UIGraphicsEndImageContext();
-       
-   return image;
-}
 
 //____________________________________________________________________________________________________
 - (void) setPad : (ROOT::iOS::Pad *)p
 {
    pad = p;
-   //Generate new image.
-   padImage = [self createPadImage : [PadImageScrollView defaultImageFrame].size];
-   
    pad->SetViewWH(defaultImageW, defaultImageH);
 
    if (nestedView && nestedView.zoomed) {
       [self clearScroll];
-      [self initPadImageView : self.frame];
+      [self initPadView : self.frame];
    } else if (!nestedView) {
-      [self initPadImageView : self.frame];
+      [self initPadView : self.frame];
    }
 
-   nestedView.padImage = padImage;
-   [nestedView setNeedsDisplay];
-}
-
-//____________________________________________________________________________________________________
-- (void) setPad : (ROOT::iOS::Pad *)p andImage : (UIImage *)image
-{
-   pad = p;
-   padImage = image;
-   
-   if (nestedView && nestedView.zoomed) {
-      [self clearScroll];
-      [self initPadImageView : self.frame];
-      
-   } else if (!nestedView) {
-      [self initPadImageView : self.frame];
-   }
-   
-   nestedView.padImage = padImage;
+   [nestedView setPad : pad];
    [nestedView setNeedsDisplay];
 }
 
@@ -163,16 +110,12 @@ static const CGFloat minZoom = 1.f;
    
    if (nestedView.zoomed) {
       [self clearScroll];
-      [self initPadImageView : newFrame];
-      nestedView.padImage = padImage;
+      [self initPadView : newFrame];
+      [nestedView setPad : pad];
       [nestedView setNeedsDisplay];
-   } else {
-      CGRect padFrame = [PadImageScrollView defaultImageFrame];
-      padFrame.origin = [self adjustOriginForFrame : newFrame withSize : padFrame.size];
    }
 }
 
-//
 //_________________________________________________________________
 - (CGRect)centeredFrameForScrollView:(UIScrollView *)scroll andUIView:(UIView *)rView 
 {
@@ -217,10 +160,9 @@ static const CGFloat minZoom = 1.f;
 
    [nestedView removeFromSuperview];
 
-   nestedView = [[PadImageView alloc] initWithFrame : newFrame];
+   nestedView = [[PadView alloc] initImmutableViewWithFrame : newFrame];
+   [nestedView setPad : pad];
 
-   UIImage *image = [self createPadImage : newFrame.size];
-   nestedView.padImage = image;
    [scroll addSubview : nestedView];
 
    scroll.contentSize = newFrame.size;

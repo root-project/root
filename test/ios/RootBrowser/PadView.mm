@@ -29,6 +29,8 @@ const CGFloat tapInterval = 0.15f;
    
    CGPoint tapPt;
    BOOL processSecondTap;
+   
+   BOOL isMutable;
 }
 
 - (void) handleSingleTap;
@@ -39,6 +41,7 @@ const CGFloat tapInterval = 0.15f;
 @implementation PadView
 
 @synthesize selectionView;
+@synthesize zoomed;
 
 //____________________________________________________________________________________________________
 - (id) initWithFrame : (CGRect)frame controller : (ROOTObjectController *)c forPad : (ROOT::iOS::Pad*)pd
@@ -48,6 +51,8 @@ const CGFloat tapInterval = 0.15f;
    if (self) {
       controller = c;
       pad = pd;
+      
+      isMutable = YES;
       
       frame.origin = CGPointZero;
       selectionView = [[SelectionView alloc] initWithFrame : frame withPad : pad];
@@ -60,17 +65,36 @@ const CGFloat tapInterval = 0.15f;
 }
 
 //____________________________________________________________________________________________________
+- (id) initImmutableViewWithFrame : (CGRect)frame
+{
+   if (self = [super initWithFrame : frame]) {
+      controller = nil;
+      pad = nullptr;
+      selectionView = nil;
+      
+      isMutable = NO;
+      
+      self.multipleTouchEnabled = NO;
+   }
+   
+   return self;
+}
+
+//____________________________________________________________________________________________________
 - (void) setPad : (ROOT::iOS::Pad *)newPad
 {
    pad = newPad;
-   [selectionView setPad : newPad];
+   if (isMutable)
+      [selectionView setPad : newPad];
 }
 
 //____________________________________________________________________________________________________
 - (void)drawRect : (CGRect)rect
 {
-   // Drawing code   
-   
+   // Drawing code
+   if (!pad)
+      return;
+
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    CGContextClearRect(ctx, rect);
 
@@ -81,7 +105,7 @@ const CGFloat tapInterval = 0.15f;
    pad->SetContext(ctx);
    pad->Paint();
    
-   if (!selectionView.hidden)
+   if (isMutable && !selectionView.hidden)
       [selectionView setNeedsDisplay];
 }
 
@@ -108,6 +132,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (CGImageRef) initCGImageForPicking
 {
+   if (!isMutable)
+      return nullptr;
+
    using namespace ROOT::iOS::Browser;
    const CGRect rect = CGRectMake(0.f, 0.f, padW, padH);
    //Create bitmap context.
@@ -145,6 +172,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (BOOL) fillPickingBufferFromCGImage : (CGImageRef) cgImage
 {
+   if (!isMutable)
+      return NO;
+
 	const size_t pixelsW = CGImageGetWidth(cgImage);
 	const size_t pixelsH = CGImageGetHeight(cgImage);
 	//Declare the number of bytes per row. Each pixel in the bitmap
@@ -200,6 +230,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (BOOL) initPadPicking
 {
+   if (!isMutable)
+      return NO;
+
    CGImageRef cgImage = [self initCGImageForPicking];
    if (!cgImage)
       return NO;
@@ -221,6 +254,9 @@ const CGFloat tapInterval = 0.15f;
 - (BOOL) pointOnSelectedObject : (CGPoint) pt
 {
    //check if there is any object in pt.
+   
+   if (!isMutable)
+      return NO;
 
    if (!pad->SelectionIsValid() && ![self initPadPicking])
       return NO;
@@ -236,6 +272,10 @@ const CGFloat tapInterval = 0.15f;
 - (void) handleSingleTap
 {
    //Make a selection, fill the editor, disable double tap.
+   
+   if (!isMutable)
+      return;
+   
    const CGPoint scaledTapPt = [self scaledPoint : tapPt];
    if (!pad->SelectionIsValid() && ![self initPadPicking])
       return;
@@ -249,6 +289,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (void) touchesBegan : (NSSet *)touches withEvent : (UIEvent *)event
 {
+   if (!isMutable)
+      return;
+
    UITouch *touch = [touches anyObject];
    if (touch.tapCount == 1) {
       //Interaction has started.
@@ -261,6 +304,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (void) touchesMoved : (NSSet *)touches withEvent : (UIEvent *)event
 {
+   if (!isMutable)
+      return;
+
    if (panActive) {
       processSecondTap = NO;
       TObject *selected = pad->GetSelected();
@@ -289,6 +335,9 @@ const CGFloat tapInterval = 0.15f;
 //____________________________________________________________________________________________________
 - (void) touchesEnded : (NSSet *)touches withEvent : (UIEvent *)event
 {
+   if (!isMutable)
+      return;
+
    UITouch *touch = [touches anyObject];
    if (touch.tapCount == 1 && !panActive) {
       [self performSelector : @selector(handleSingleTap) withObject : nil afterDelay : tapInterval];
@@ -315,6 +364,9 @@ const CGFloat tapInterval = 0.15f;
 - (void) handleDoubleTap
 {
    //This is zoom/unzoom action or axis unzoom.
+   if (!isMutable)
+      return;
+   
    const CGPoint scaledTapPt = [self scaledPoint : tapPt];
    TAxis *axis = dynamic_cast<TAxis *>(pad->GetSelected());
 
