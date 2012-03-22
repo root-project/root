@@ -32,6 +32,10 @@
 #include "TString.h"
 #include "TError.h"
 
+#if defined(__linux__) && !defined(__CINT__)
+#include <pthread.h>
+#endif
+
 class TLorentzVector;
 class TGeoHMatrix;
 class TArrayI;
@@ -479,7 +483,7 @@ public:
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
                         TMCParticleType mcType, 
                         Double_t mass, Double_t charge, Double_t lifetime) = 0;
-                        
+
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
    // already exists and error report is printed.
@@ -797,7 +801,10 @@ public:
    // Initialize MC
    virtual void Init() = 0;
 
-   // Initialize MC physics
+    // Initialize MC in a multi-threaded application
+   virtual void InitMT(Int_t threadRank);
+
+  // Initialize MC physics
    virtual void BuildPhysics() = 0;
 
    // Process one event
@@ -860,7 +867,11 @@ private:
    TVirtualMC(const TVirtualMC &mc);
    TVirtualMC & operator=(const TVirtualMC &);
 
-   static TVirtualMC*  fgMC;     // Monte Carlo singleton instance
+#if defined(__linux__) && !defined(__CINT__)
+   static __thread TVirtualMC*  fgMC; // Monte Carlo singleton instance
+#else
+   static          TVirtualMC*  fgMC; // Monte Carlo singleton instance
+#endif
 
    TVirtualMCStack*    fStack;   //! Particles stack
    TVirtualMCDecayer*  fDecayer; //! External decayer
@@ -889,7 +900,16 @@ inline Bool_t TVirtualMC::GetMaterial(Int_t /*imat*/, TString& /*name*/,
    return kFALSE;           
 }
 
-R__EXTERN TVirtualMC *gMC;
+inline void TVirtualMC::InitMT(Int_t /*threadRank*/) {
+   // Initialize MC in a multi-threaded application
+   Warning("InitMT(Int_t threadRank)", "New function - not yet implemented.");
+}
+
+#if defined(__linux__) && !defined(__CINT__)
+R__EXTERN __thread TVirtualMC *gMC;
+#else
+R__EXTERN          TVirtualMC *gMC;
+#endif
 
 #endif //ROOT_TVirtualMC
 

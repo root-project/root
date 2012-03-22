@@ -26,8 +26,13 @@
 
 ClassImp(TVirtualMC)
 
+#if defined(__linux__) && !defined(__CINT__)
+__thread TVirtualMC* TVirtualMC::fgMC=0;
+__thread TVirtualMC* gMC;
+#else
 TVirtualMC* TVirtualMC::fgMC=0;
 TVirtualMC* gMC;
+#endif
 
 //_____________________________________________________________________________
 TVirtualMC::TVirtualMC(const char *name, const char *title,
