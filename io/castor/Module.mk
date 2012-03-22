@@ -71,6 +71,9 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifeq ($(PLATFORM),win32)
 $(CASTORO): CXXFLAGS += $(CASTORCFLAGS) $(CASTORINCDIR:%=-I%) -DNOGDI -D__INSIDE_CYGWIN__
+ifneq (yes,$(WINRTDEBUG))
+$(CASTORLIB): LDFLAGS += -nodefaultlib:msvcrtd.lib 
+endif
 else
 $(CASTORO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(CASTORO): CXXFLAGS += $(CASTORCFLAGS) $(CASTORINCDIR:%=-I%)

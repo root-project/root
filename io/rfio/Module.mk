@@ -72,6 +72,9 @@ $(RFIOO) $(RFIODO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 
 ifeq ($(PLATFORM),win32)
 $(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) -DNOGDI -D__INSIDE_CYGWIN__
+ifneq (yes,$(WINRTDEBUG))
+$(RFIOLIB): LDFLAGS += -nodefaultlib:msvcrtd.lib 
+endif
 else
 $(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%)
 endif
