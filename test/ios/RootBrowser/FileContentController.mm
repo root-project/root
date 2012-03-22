@@ -206,10 +206,9 @@
    CGContextScaleCTM(ctx, 1.f, -1.f);
       
    //Fill bitmap with white first.
-   CGContextSetRGBFillColor(ctx, 0.f, 0.f, 0.f, 1.f);
+   CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    CGContextFillRect(ctx, rect);
-   //Set context and paint pad's contents
-   //with special colors (color == object's identity)
+   //Set context and paint pad's contents.
    ROOT::iOS::Pad *pad = fileContainer->GetPadAttached(objIndex);
    pad->cd();
    pad->SetViewWH(rect.size.width, rect.size.height);

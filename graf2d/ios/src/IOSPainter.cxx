@@ -258,6 +258,8 @@ Bool_t Painter::PolygonHasStipple()const
    return fillStyle == 3 && pattern >= 1 && pattern <= GraphicUtils::kPredefinedFillPatterns;
 }
 
+extern TObject *po;
+
 //_________________________________________________________________
 void Painter::FillBoxWithPattern(Double_t x1, Double_t y1, Double_t x2, Double_t y2)const
 {
@@ -275,8 +277,7 @@ void Painter::FillBoxWithPattern(Double_t x1, Double_t y1, Double_t x2, Double_t
    
    const float alpha = 1.f;
    CGContextSetFillPattern(fCtx, pattern.Get(), &alpha);
-   
-//   CGContextBeginPath(fCtx);
+
    CGContextFillRect(fCtx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
 }
 
@@ -314,9 +315,13 @@ void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TVirtu
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
       
-   if (mode == TVirtualPadPainter::kFilled) 
+   if (mode == TVirtualPadPainter::kFilled) {
+/*      if (PolygonHasStipple() && fPainterMode != kPaintThumbnail)
+         FillBoxWithPattern(x1p, y1p, x2p, y2p);
+      else
+         FillBox(x1p, y1p, x2p, y2p);*/
       PolygonHasStipple() ? FillBoxWithPattern(x1p, y1p, x2p, y2p) : FillBox(x1p, y1p, x2p, y2p);
-   else
+   }else
       DrawBoxOutline(x1p, y1p, x2p, y2p);
 }
 

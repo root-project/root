@@ -759,6 +759,8 @@ TObject *Pad::GetPrimitive(const char *name) const
    return 0;
 }
 
+TObject *po = 0;
+
 //______________________________________________________________________________
 void Pad::Paint(Option_t *)
 {
@@ -778,6 +780,7 @@ void Pad::Paint(Option_t *)
 
    while (lnk) {
       obj = lnk->GetObject();
+      po = obj;
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
       
@@ -2276,7 +2279,10 @@ void Pad::PaintThumbnail()
    cd();
 
    fPainter.SetPainterMode(Painter::kPaintThumbnail);
-   
+
+   gVirtualX->SetFillStyle(1001);
+   gVirtualX->SetFillColor(0);
+
    PaintBox(fX1,fY1,fX2,fY2);
    PaintBorder(GetFillColor(), kTRUE);
 
