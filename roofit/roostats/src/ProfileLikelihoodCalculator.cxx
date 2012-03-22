@@ -62,6 +62,7 @@ END_HTML
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
+#include "RooMsgService.h"
 
 #include "Math/MinimizerOptions.h"
 //#include "RooProdPdf.h"
@@ -134,18 +135,19 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
    int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel() -1;// RooFit level starts from  -1
-   ooccoutI((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
-   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(strategy),PrintLevel(level),
+   oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
+   // do global fit and store fit result for further use 
+   fFitResult = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(strategy),PrintLevel(level),
                                   Hesse(kFALSE),Save(kTRUE),Minimizer(minimType,minimAlgo));
   
-   // for debug 
-   fit->Print();
+   // print fit result 
+   if (fFitResult) 
+      fFitResult->printStream( oocoutI((TObject*)0,Minimization), fFitResult->defaultPrintContents(0), fFitResult->defaultPrintStyle(0) );
+
+   if (fFitResult->status() != 0) 
+      oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;      
 
    delete constrainedParams; 
-   // store fit result for further use 
-   fFitResult =  fit; 
-   if (fFitResult == 0) 
-      oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed " << std::endl;      
 
 }
 
@@ -294,10 +296,19 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       const char * minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
       const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
       int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1; // RooFit levels starts from -1
+      oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
       RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE),
                                       Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level));
      
       NLLatCondMLE = fit2->minNll();
+      // print fit result 
+      if (fit2) 
+         fit2->printStream( oocoutI((TObject*)0,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
+
+      if (fit2->status() != 0) 
+         oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;      
+
+
       fit2->Print();
    }
    else { 
