@@ -258,8 +258,6 @@ Bool_t Painter::PolygonHasStipple()const
    return fillStyle == 3 && pattern >= 1 && pattern <= GraphicUtils::kPredefinedFillPatterns;
 }
 
-extern TObject *po;
-
 //_________________________________________________________________
 void Painter::FillBoxWithPattern(Double_t x1, Double_t y1, Double_t x2, Double_t y2)const
 {
@@ -316,10 +314,6 @@ void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TVirtu
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
       
    if (mode == TVirtualPadPainter::kFilled) {
-/*      if (PolygonHasStipple() && fPainterMode != kPaintThumbnail)
-         FillBoxWithPattern(x1p, y1p, x2p, y2p);
-      else
-         FillBox(x1p, y1p, x2p, y2p);*/
       PolygonHasStipple() ? FillBoxWithPattern(x1p, y1p, x2p, y2p) : FillBox(x1p, y1p, x2p, y2p);
    }else
       DrawBoxOutline(x1p, y1p, x2p, y2p);

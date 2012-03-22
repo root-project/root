@@ -759,8 +759,6 @@ TObject *Pad::GetPrimitive(const char *name) const
    return 0;
 }
 
-TObject *po = 0;
-
 //______________________________________________________________________________
 void Pad::Paint(Option_t *)
 {
@@ -780,7 +778,6 @@ void Pad::Paint(Option_t *)
 
    while (lnk) {
       obj = lnk->GetObject();
-      po = obj;
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
       
