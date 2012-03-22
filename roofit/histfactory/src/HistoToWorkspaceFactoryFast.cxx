@@ -2098,6 +2098,7 @@ void HistoToWorkspaceFactoryFast::FormatFrameForLikelihood(RooPlot* frame, strin
 
     // Type 2 : RooPoisson
     RooPoisson pois(constrName.c_str(), constrName.c_str(), constrNom, constrMean);
+    pois.setNoRounding(true);
     proto->import( pois, RecycleConflictNodes() );
 
       

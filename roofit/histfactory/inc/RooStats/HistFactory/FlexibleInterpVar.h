@@ -38,6 +38,7 @@ namespace HistFactory{
 
     void setInterpCode(RooAbsReal& param, int code);
     void setAllInterpCodes(int code);
+    void setGlobalBoundary(double boundary) {_interpBoundary = boundary;}
 
     void printAllInterpCodes();
 
@@ -48,16 +49,17 @@ namespace HistFactory{
   protected:
 
     RooListProxy _paramList ;
-    double _nominal;
+    Double_t _nominal;
     vector<double> _low;
     vector<double> _high;
     vector<int> _interpCode;
-    
+    Double_t _interpBoundary;
+
     TIterator* _paramIter ;  //! do not persist
 
     Double_t evaluate() const;
 
-    ClassDef(RooStats::HistFactory::FlexibleInterpVar,1) // flexible interpolation
+    ClassDef(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
   };
 }
 }
