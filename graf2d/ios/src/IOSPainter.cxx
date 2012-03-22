@@ -313,9 +313,9 @@ void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TVirtu
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
       
-   if (mode == TVirtualPadPainter::kFilled) {
+   if (mode == TVirtualPadPainter::kFilled)
       PolygonHasStipple() ? FillBoxWithPattern(x1p, y1p, x2p, y2p) : FillBox(x1p, y1p, x2p, y2p);
-   }else
+   else
       DrawBoxOutline(x1p, y1p, x2p, y2p);
 }
 
