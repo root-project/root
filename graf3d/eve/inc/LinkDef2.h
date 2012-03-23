@@ -154,3 +154,4 @@
 #pragma link C++ class TEveRGBAPalette+;
 #pragma link C++ class TEveRGBAPaletteEditor+;
 #pragma link C++ class TEveRGBAPaletteSubEditor+;
+#pragma link C++ class TEveRGBAPaletteOverlay+;
