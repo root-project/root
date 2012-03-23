@@ -465,9 +465,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                // newdir is now the starting point of another round of merging
                // newdir still knows its depth within the target file via
                // GetPath(), so we can still figure out where we are in the recursion
-               status = MergeRecursive(newdir, sourcelist);
+               status = MergeRecursive(newdir, sourcelist, type);
                if (!status) return status;
-               
             } else if (obj->IsA()->GetMerge()) {
                
                TList inputs;
@@ -691,18 +690,24 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             //!!if the object is a tree, it is stored in globChain...
             if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
+               // Do not delete the directory if it is part of the output
+               // and we are in incremental mode (because it will be reuse
+               // and has not been written to disk (for performance reason).
+               if (!(type&kIncremental) || dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
+                  delete obj;
+               }
             } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
                if ( obj->Write( oldkeyname, TObject::kSingleKey | TObject::kOverwrite ) <= 0 ) {
                   status = kFALSE;
                }
                ((TCollection*)obj)->SetOwner();
+               delete obj;
             } else {
                if ( obj->Write( oldkeyname, TObject::kOverwrite ) <= 0) {
                   status = kFALSE;
                }
+               delete obj;
             }
-            if (obj->IsA()->InheritsFrom(TCollection::Class())) ((TCollection*)obj)->Delete();
-            delete obj;
             info.Reset();
          } // while ( ( TKey *key = (TKey*)nextkey() ) )
       }
