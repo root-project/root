@@ -42,10 +42,10 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
 {
   if (!nologo) {
     std::cerr << std::endl;
-    std::cerr << "**** Welcome to the cling prototype! ****" << std::endl;
-    std::cerr << "* Type C code and press enter to run it *" << std::endl;
-    std::cerr << "* Type .q, exit or ctrl+D to quit       *" << std::endl;
-    std::cerr << "*****************************************" << std::endl;
+    std::cerr << "****************** CLING ******************" << std::endl;
+    std::cerr << "* Type C++ code and press enter to run it *" << std::endl;
+    std::cerr << "*             Type .q to exit             *" << std::endl;
+    std::cerr << "*******************************************" << std::endl;
   }
   static const char* histfile = ".cling_history";
   std::string Prompt("[cling]$ ");
