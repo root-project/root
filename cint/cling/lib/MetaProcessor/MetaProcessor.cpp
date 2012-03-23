@@ -15,8 +15,6 @@
 
 #include "llvm/Support/Path.h"
 
-#include <cstdio>
-
 using namespace clang;
 
 namespace cling {
