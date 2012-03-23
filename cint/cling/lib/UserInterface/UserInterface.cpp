@@ -36,11 +36,7 @@ cling::UserInterface::~UserInterface()
 void cling::UserInterface::runInteractively(bool nologo /* = false */)
 {
   if (!nologo) {
-    llvm::outs() << "\n";
-    llvm::outs() << "****************** CLING ******************" << "\n";
-    llvm::outs() << "* Type C++ code and press enter to run it *" << "\n";
-    llvm::outs() << "*             Type .q to exit             *" << "\n";
-    llvm::outs() << "*******************************************" << "\n";
+    PrintLogo();
   }
   static const char* histfile = ".cling_history";
   std::string Prompt("[cling]$ ");
@@ -75,4 +71,12 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
     TI.SetPrompt(Prompt.c_str());
 
   }
+}
+
+cling::UserInterface::PrintLogo() {
+  llvm::outs() << "\n";
+  llvm::outs() << "****************** CLING ******************" << "\n";
+  llvm::outs() << "* Type C++ code and press enter to run it *" << "\n";
+  llvm::outs() << "*             Type .q to exit             *" << "\n";
+  llvm::outs() << "*******************************************" << "\n";
 }

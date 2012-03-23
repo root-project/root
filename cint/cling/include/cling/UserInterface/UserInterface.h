@@ -17,6 +17,9 @@ namespace cling {
   private:
     MetaProcessor* m_MetaProcessor;
 
+    ///\brief Prints cling's startup logo
+    ///
+    void PrintLogo();
   public:
     UserInterface(Interpreter& interp, const char* prompt = "[cling] $");
     ~UserInterface();
