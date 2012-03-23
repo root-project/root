@@ -93,6 +93,7 @@ public:
    virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299f*fRed + 0.587f*fGreen + 0.114f*fBlue; }
    virtual void  ls(Option_t *option="") const;
    virtual void  Print(Option_t *option="") const;
+   virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
    static void    InitializeColors();
