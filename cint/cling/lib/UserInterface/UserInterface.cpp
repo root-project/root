@@ -73,7 +73,7 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
   }
 }
 
-cling::UserInterface::PrintLogo() {
+void cling::UserInterface::PrintLogo() {
   llvm::outs() << "\n";
   llvm::outs() << "****************** CLING ******************" << "\n";
   llvm::outs() << "* Type C++ code and press enter to run it *" << "\n";
