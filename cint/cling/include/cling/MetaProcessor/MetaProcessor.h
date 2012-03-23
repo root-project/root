@@ -69,18 +69,18 @@ namespace cling {
     /// Syntax .Command [arg0 arg1 ... argN]
     ///
     /// Known commands:
-    /// @code .q @endcode - Quit
-    /// @code .L <filename> @endcode - Load the filename (It might be lib too)
-    /// @code .(x|X) <filename>[(args)] @endcode - Load the filename and 
-    /// execute the function with signature void filename(args)
-    /// @code .printAST [0|1] @endcode - Turns on the printing of input's
+    /// @code .q @endcode - Quits
+    /// @code .L <filename> @endcode - Loads the filename (It might be lib too)
+    /// @code .(x|X) <filename>[(args)] @endcode - Loads the filename and 
+    /// executes the function with signature void filename(args)
+    /// @code .printAST [0|1] @endcode - Toggles the printing of input's
     /// corresponding AST nodes.
-    /// @code .rawInput [0|1] @endcode - Toggle wrapping and value printing of 
+    /// @code .rawInput [0|1] @endcode - Toggles wrapping and value printing of 
     /// the input
     /// @code .I [path] @endcode - Dumps the include path. If argument is given
     /// adds the path to the list of include paths.
     /// @code .@ @endcode - Cancels multiline input
-    /// @code .dynamicExtensions [0|1] @endcode - Enables/Disables dynamic 
+    /// @code .dynamicExtensions [0|1] @endcode - Toggles the use of the dynamic
     /// scopes and the late bining.
     ///
     ///\returns true if the command was known and thus handled.
@@ -95,6 +95,10 @@ namespace cling {
     /// Token.getIdentifierInfo()->getName() for the raw lexer
     ///
     std::string GetRawTokenName(const clang::Token& Tok);
+
+    ///\brief Shows help for the use of interpreter's meta commands
+    ///
+    void PrintCommandHelp();
 
   public:
     MetaProcessor(Interpreter& interp);
