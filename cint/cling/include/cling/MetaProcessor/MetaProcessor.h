@@ -7,6 +7,8 @@
 #ifndef CLING_METAPROCESSOR_H
 #define CLING_METAPROCESSOR_H
 
+#include "clang/Lex/Token.h"
+
 #include "llvm/ADT/OwningPtr.h"
 
 #include <string>
@@ -48,9 +50,19 @@ namespace cling {
   ///
   class MetaProcessor {
   private:
-    Interpreter& m_Interp; // the interpreter
-    llvm::OwningPtr<InputValidator> m_InputValidator; // balanced paren etc
+    ///\brief Reference to the interpreter
+    ///
+    Interpreter& m_Interp;
+
+    ///\brief The input validator is used to figure out whether to switch to 
+    /// multiline mode or not. Checks for balanced parenthesis, etc.
+    ///
+    llvm::OwningPtr<InputValidator> m_InputValidator;
+
+    ///\brief MetaProcessor's options
+    ///
     MetaProcessorOpts m_Options;
+
   private:
 
     ///\brief Handle one of the special commands in cling. 
@@ -74,6 +86,16 @@ namespace cling {
     ///\returns true if the command was known and thus handled.
     ///
     bool ProcessMeta(const std::string& input_line, cling::Value* result);
+
+    ///\brief This method is used to get the token's value. That is usually done
+    /// by the Lexer by attaching the IdentifierInfo directly. However we are 
+    /// in raw lexing mode and we cannot do that.
+    ///
+    ///\returns This function is the implementation of 
+    /// Token.getIdentifierInfo()->getName() for the raw lexer
+    ///
+    std::string GetRawTokenName(const clang::Token& Tok);
+
   public:
     MetaProcessor(Interpreter& interp);
     ~MetaProcessor();

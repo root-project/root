@@ -9,9 +9,15 @@
 #include "InputValidator.h"
 #include "cling/Interpreter/Interpreter.h"
 
+#include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/Preprocessor.h"
+
+#include "llvm/Support/Path.h"
 
 #include <cstdio>
+
+using namespace clang;
 
 namespace cling {
 
@@ -64,91 +70,115 @@ namespace cling {
 
 
   bool MetaProcessor::ProcessMeta(const std::string& input_line, Value* result){
-   const char cmd_char = input_line[1];
+
+   llvm::MemoryBuffer* MB = llvm::MemoryBuffer::getMemBuffer(input_line);
+   const LangOptions& LO = m_Interp.getCI()->getLangOpts();
+   Lexer RawLexer(SourceLocation(), LO, MB->getBufferStart(),
+                  MB->getBufferStart(), MB->getBufferEnd());
+   Token Tok;
+
+   RawLexer.LexFromRawLexer(Tok);
+   if (Tok.isNot(tok::period))
+     return false;
+
+   // Read the command
+   RawLexer.LexFromRawLexer(Tok);
+   if (!Tok.isAnyIdentifier() && Tok.isNot(tok::at))
+     return false;
+
+   const std::string Command = GetRawTokenName(Tok);
+   std::string Param;
 
    //  .q //Quits
-   if (cmd_char == 'q') {
+   if (Command == "q") {
       m_Options.Quitting = true;
       return true;
    }
-
-   //  Extract command and parameter:
-   //    .command parameter
-   std::string cmd = input_line.substr(1, std::string::npos);
-   std::string param;
-   std::string::size_type endcmd = input_line.find_first_of(" \t\n", 2);
-   if (endcmd != std::string::npos) { // have a blank after command
-      cmd = input_line.substr(1, endcmd - 1);
-
-      std::string::size_type firstparam = input_line.find_first_not_of(" \t\n", endcmd);
-      std::string::size_type lastparam = input_line.find_last_not_of(" \t\n");
-
-      if (firstparam != std::string::npos) { // have a parameter
-         //
-         //  Trim blanks from beginning and ending of parameter.
-         //
-         std::string::size_type len = (lastparam + 1) - firstparam;
-         // Construct our parameter.
-         param = input_line.substr(firstparam, len);
-      }
-   }
-
    //  .L <filename>   //  Load code fragment.
-   if (cmd_char == 'L') {
-      bool success = m_Interp.loadFile(param);
-      if (!success) {
-        llvm::errs() << "Load file failed.\n";
-      }
-      return true;
-   }
+   else if (Command == "L") {
+     // Check for params
+     RawLexer.LexFromRawLexer(Tok);
+     if (!Tok.isAnyIdentifier())
+       return false;
 
+     Param = GetRawTokenName(Tok);
+     bool success = m_Interp.loadFile(Param);
+     if (!success) {
+       llvm::errs() << "Load file failed.\n";
+     }
+     return true;
+   } 
    //  .(x|X) <filename> //  Execute function from file, function name is 
    //                    //  filename without extension.
-   if ((cmd_char == 'x') || (cmd_char == 'X')) {
-      bool success = executeFile(param, result);
+   else if ((Command == "x") || (Command == "X")) {
+     // TODO: add extensive checks the folder paths and filenames
+     //RawLexer->LexFromRawLexer(Tok);
+     //if (!Tok.isAnyIdentifier())
+     //  return false;
+
+     const char* CurPtr = RawLexer.getBufferLocation();;
+     Token TmpTok;
+     RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
+     llvm::StringRef Param(CurPtr, 
+                           MB->getBufferSize() - (CurPtr - MB->getBufferStart()));
+     llvm::sys::Path path(Param);
+ 
+     if (!path.isValid())
+       return false;
+
+     bool success = executeFile(path.c_str(), result);
       if (!success) {
         llvm::errs()<< "Execute file failed.\n";
       }
       return true;
    }
-
    //  .printAST [0|1]  // Toggle the printing of the AST or if 1 or 0 is given
    //                   // enable or disable it.
-   if (cmd == "printAST") {
-     if (param.empty()) {
+   else if (Command == "printAST") {
+     // Check for params
+     RawLexer.LexFromRawLexer(Tok);
+     if (Tok.isNot(tok::numeric_constant) && Tok.isNot(tok::eof))
+       return false;
+
+     if (Tok.is(tok::eof)) {
        // toggle:
        bool print = !m_Interp.isPrintingAST();
        m_Interp.enablePrintAST(print);
        llvm::errs()<< (print?"P":"Not p") << "rinting AST\n";
-     } else if (param == "1") {
-       m_Interp.enablePrintAST(true);
-     } else if (param == "0") {
-       m_Interp.enablePrintAST(false);
-     } else {
-       llvm::errs()<< ".printAST: parameter must be '0' or '1' or nothing\n";
+     } else { 
+       Param = GetRawTokenName(Tok);
+
+       if (Param == "0") 
+         m_Interp.enablePrintAST(false);
+       else
+         m_Interp.enablePrintAST(true);
      }
 
-      m_Options.PrintingAST = m_Interp.isPrintingAST();
-      return true;
+     m_Options.PrintingAST = m_Interp.isPrintingAST();
+     return true;
    }
-
    //  .rawInput [0|1]  // Toggle the raw input or if 1 or 0 is given enable 
    //                   // or disable it.
-   if (cmd == "rawInput") {
-     if (param.empty()) {
+   else if (Command == "rawInput") {
+     // Check for params
+     RawLexer.LexFromRawLexer(Tok);
+     if (Tok.isNot(tok::numeric_constant) && Tok.isNot(tok::eof))
+       return false;
+
+     if (Tok.is(tok::eof)) {
        // toggle:
        m_Options.RawInput = !m_Options.RawInput;
        llvm::errs() << (m_Options.RawInput?"U":"Not u") << "sing raw input\n";
-     } else if (param == "1") {
-       m_Options.RawInput = true;
-     } else if (param == "0") {
-       m_Options.RawInput = false;
-     } else {
-       llvm::errs()<< ".rawInput: parameter must be '0' or '1' or nothing\n";
+     } else { 
+       Param = GetRawTokenName(Tok);
+
+       if (Param == "0")
+         m_Options.RawInput = false;
+       else 
+         m_Options.RawInput = true;
      }
      return true;
    }
-
    //
    //  .U <filename>
    //
@@ -170,41 +200,75 @@ namespace cling {
    //  Unrecognized command.
    //
    //fprintf(stderr, "Unrecognized command.\n");
-
-   if (cmd_char == 'I') {
-     if (!param.empty())
-       m_Interp.AddIncludePath(param.c_str());
-     else {
+   else if (Command == "I") {
+     // Check for params
+     RawLexer.LexFromRawLexer(Tok);
+     
+     if (Tok.is(tok::eof))
        m_Interp.DumpIncludePath();
+     else {
+       // TODO: add extensive checks the folder paths and filenames
+       const char* CurPtr = RawLexer.getBufferLocation();;
+       Token TmpTok;
+       RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
+       llvm::StringRef Param(CurPtr, 
+                             MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
+       llvm::sys::Path path(Param);
+       
+       if (path.isValid())
+         m_Interp.AddIncludePath(path.c_str());
+       else
+         return false;
      }
      return true;
    }
-
-   // Cancel the multiline input that has been requested
-   if (cmd_char == '@') {
+  // Cancel the multiline input that has been requested
+   else if (Command == "@") {
      m_InputValidator->Reset();
      return true;
    }
-
    // Enable/Disable DynamicExprTransformer
-   if (cmd == "dynamicExtensions") {
-     if (param.empty()) {
+   else if (Command == "dynamicExtensions") {
+     // Check for params
+     RawLexer.LexFromRawLexer(Tok);
+     if (Tok.isNot(tok::numeric_constant) && Tok.isNot(tok::eof))
+       return false;
+
+     if (Tok.is(tok::eof)) {
        // toggle:
        bool dynlookup = !m_Interp.isDynamicLookupEnabled();
        m_Interp.enableDynamicLookup(dynlookup);
        llvm::errs() << (dynlookup?"U":"Not u") <<"sing dynamic extensions\n";
-     } else if (param == "1") {
-       m_Interp.enableDynamicLookup(true);
-     } else if (param == "0") {
-       m_Interp.enableDynamicLookup(false);
      } else {
-       llvm::errs() << ".dynamicExtensions: param must be '0' or '1' or ";
-       llvm::errs() << "nothing\n";
+       Param = GetRawTokenName(Tok);
+
+       if (Param == "0")
+         m_Interp.enableDynamicLookup(false);
+       else 
+         m_Interp.enableDynamicLookup(true);
      }
+
      return true;
    }
 
    return false;
+  }
+
+  std::string MetaProcessor::GetRawTokenName(const Token& Tok) {
+
+    assert(!Tok.needsCleaning() && "Not implemented yet");
+
+    switch (Tok.getKind()) {
+    default:
+      return "";
+    case tok::numeric_constant:
+      return Tok.getLiteralData();
+    case tok::raw_identifier:
+      return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str(); 
+    case tok::slash:
+      return "/";
+    }
+
   }
 
   // Run a file: .x file[(args)]
