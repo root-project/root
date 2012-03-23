@@ -11,12 +11,7 @@
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
 
-#include <iostream>
-#include <sys/stat.h>
-
-namespace llvm {
-  class Module;
-}
+#include "llvm/Support/raw_ostream.h"
 
 //---------------------------------------------------------------------------
 // Construct an interface for an interpreter
@@ -41,11 +36,11 @@ cling::UserInterface::~UserInterface()
 void cling::UserInterface::runInteractively(bool nologo /* = false */)
 {
   if (!nologo) {
-    std::cerr << std::endl;
-    std::cerr << "****************** CLING ******************" << std::endl;
-    std::cerr << "* Type C++ code and press enter to run it *" << std::endl;
-    std::cerr << "*             Type .q to exit             *" << std::endl;
-    std::cerr << "*******************************************" << std::endl;
+    llvm::outs() << "\n";
+    llvm::outs() << "****************** CLING ******************" << "\n";
+    llvm::outs() << "* Type C++ code and press enter to run it *" << "\n";
+    llvm::outs() << "*             Type .q to exit             *" << "\n";
+    llvm::outs() << "*******************************************" << "\n";
   }
   static const char* histfile = ".cling_history";
   std::string Prompt("[cling]$ ");
