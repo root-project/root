@@ -78,6 +78,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
+#include "RVersion.h"
 #include "TRandom.h"
 #include "TDirectory.h"
 #include "TProcessID.h"
@@ -191,9 +192,13 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
    // the standard but not well know C++ operator "new with placement"
    // is called. If tracks[i] is 0, a new Track object will be created
    // otherwise the previous Track[i] will be overwritten.
-
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,32,0)
    Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
    track->Set(random);
+#else
+   TClonesArray &tracks = *fTracks;
+   Track *track = new(tracks[fNtrack++]) Track(random);
+#endif
    //Save reference to last Track in the collection of Tracks
    fLastTrack = track;
    //Save reference in fHighPt if track is a high Pt track
