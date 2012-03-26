@@ -24,6 +24,8 @@
 #ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
 #endif
+#include <vector>
+
 
 class TPoints;
 
