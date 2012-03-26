@@ -221,7 +221,7 @@ namespace cling {
       // Set up the gCling variable
       processLine("#include \"cling/Interpreter/ValuePrinter.h\"\n");
       std::stringstream initializer;
-      initializer << "gCling=(cling::Interpreter*)" << (long)this << ";";
+      initializer << "gCling=(cling::Interpreter*)" << (uintptr_t)this << ";";
       processLine(initializer.str());
     }
     else {
