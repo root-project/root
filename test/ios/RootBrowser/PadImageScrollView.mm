@@ -1,7 +1,8 @@
 #import <stdlib.h>
 
+#import <QuartzCore/QuartzCore.h>
+
 #import "PadImageScrollView.h"
-#import "PadImageView.h"
 #import "PadView.h"
 
 //C++ (ROOT) imports.

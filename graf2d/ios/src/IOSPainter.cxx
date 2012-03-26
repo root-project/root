@@ -154,7 +154,7 @@ void Painter::SetStrokeParameters()const
       return;
    }
 
-   if (fPainterMode == kPaintSelected) {
+/*   if (fPainterMode == kPaintSelected) {
       CGContextSetRGBStrokeColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
       CGContextSetLineWidth(fCtx, 5.f);
       return;
@@ -164,7 +164,7 @@ void Painter::SetStrokeParameters()const
       CGContextSetRGBStrokeColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
       CGContextSetLineWidth(fCtx, 5.f);
       return;
-   }
+   }*/
 
    if (gVirtualX->GetLineWidth() > 1.f)
       CGContextSetLineWidth(fCtx, gVirtualX->GetLineWidth());
@@ -226,7 +226,7 @@ void Painter::SetPolygonParameters()const
       return;
    }
 
-   if (fPainterMode == kPaintSelected) {
+ /*  if (fPainterMode == kPaintSelected) {
       SetStrokeParameters();
       CGContextSetRGBFillColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
       return;
@@ -236,7 +236,7 @@ void Painter::SetPolygonParameters()const
    //   SetStrokeParameters();
       CGContextSetRGBFillColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
       return;
-   }
+   }*/
 
    const Float_t alpha = 1.f;//must be in gVirtualX.
    Float_t red = 1.f, green = 1.f, blue = 1.f;//White by default.
@@ -389,9 +389,10 @@ void Painter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
    if (!gVirtualX->GetFillStyle())
       return DrawPolyLine(n, x, y);
       
-   if (fPainterMode == kPaintSelected || fPainterMode == kPaintShadow || fPainterMode == kPaintThumbnail)
+//   if (fPainterMode == kPaintSelected || fPainterMode == kPaintShadow || fPainterMode == kPaintThumbnail)
+   if (fPainterMode == kPaintShadow || fPainterMode == kPaintThumbnail)
       return FillArea(n, x, y);
-      
+
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawPolyLine(n, x, y);
          
@@ -438,23 +439,23 @@ void Painter::DrawPolyLineNDC(Int_t, const Double_t *, const Double_t *)
 void Painter::SetMarkerColor()const
 {
    if (MarkerIsFilledPolygon(gVirtualX->GetMarkerStyle())) {
-      if (fPainterMode == kPaintToView) {
+      if (fPainterMode == kPaintToView || fPainterMode == kPaintSelected) {
          SetMarkerFillColor(fCtx, gVirtualX->GetMarkerColor());
       } else if (fPainterMode == kPaintShadow) {
          CGContextSetRGBFillColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);      
-      } else if (fPainterMode == kPaintSelected) {
+      }/* else if (fPainterMode == kPaintSelected) {
          CGContextSetRGBFillColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
-      }
+      }*/
    } else {
-      if (fPainterMode == kPaintToView) {
+      if (fPainterMode == kPaintToView || fPainterMode == kPaintSelected) {
          SetMarkerStrokeColor(fCtx, gVirtualX->GetMarkerColor());
       } else if (fPainterMode == kPaintShadow) {
          CGContextSetRGBStrokeColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
          CGContextSetLineWidth(fCtx, 5.f);
-      } else if (fPainterMode == kPaintSelected) {
+      } /*else if (fPainterMode == kPaintSelected) {
          CGContextSetRGBStrokeColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
          CGContextSetLineWidth(fCtx, 5.f);
-      }   
+      } */
    }
 }
 

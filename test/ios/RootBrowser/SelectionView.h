@@ -15,6 +15,8 @@ class Pad;
 @property (nonatomic, assign) CGPoint currentPanPoint;
 @property (nonatomic, assign) BOOL verticalDirection;
 
++ (CGFloat) shadowOpacity;
+
 - (id)initWithFrame : (CGRect)frame withPad : (ROOT::iOS::Pad *)p;
 - (void) setPad : (ROOT::iOS::Pad *)p;
 

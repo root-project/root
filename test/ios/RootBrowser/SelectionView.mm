@@ -19,6 +19,12 @@ const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
 @synthesize verticalDirection;
 
 //____________________________________________________________________________________________________
++ (CGFloat) shadowOpacity
+{
+   return 0.8;
+}
+
+//____________________________________________________________________________________________________
 - (id)initWithFrame : (CGRect)frame withPad : (ROOT::iOS::Pad *) p
 {
    self = [super initWithFrame:frame];
@@ -26,6 +32,10 @@ const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
    if (self) {
       pad = p;
       self.opaque = NO;
+      
+      self.layer.shadowColor = [UIColor blackColor].CGColor;
+      self.layer.shadowOpacity = [SelectionView shadowOpacity];
+      self.layer.shadowOffset = CGSizeMake(5.f, 5.f);
    }
 
    return self;
@@ -46,9 +56,6 @@ const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
    pad->SetViewWH(rect.size.width, rect.size.height);
    pad->SetContext(ctx);
 
-   CGContextTranslateCTM(ctx, 2.5f, 2.5f);
-   pad->PaintShadowForSelected();
-   CGContextTranslateCTM(ctx, -2.5f, -2.5f);
    pad->PaintSelected();
    
    CGContextRestoreGState(ctx);

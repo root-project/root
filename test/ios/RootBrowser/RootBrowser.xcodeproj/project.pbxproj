@@ -36,7 +36,6 @@
 		702DDD1C1415FEA1009FC6F3 /* LineInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702DDD1A1415FEA1009FC6F3 /* LineInspector.xib */; };
 		702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */; };
 		70360B1A142C7AC6001F77E1 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70360B19142C7AC6001F77E1 /* MessageUI.framework */; };
-		704498091429D0A000E83799 /* PadImageView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 704498081429D0A000E83799 /* PadImageView.mm */; };
 		7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadImageScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
 		705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* ScrollViewWithPadView.mm */; };
@@ -172,9 +171,9 @@
 		702DDD2714161789009FC6F3 /* InspectorWithNavigation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorWithNavigation.h; sourceTree = "<group>"; };
 		702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = InspectorWithNavigation.mm; sourceTree = "<group>"; };
 		70360B19142C7AC6001F77E1 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
-		704498081429D0A000E83799 /* PadImageView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadImageView.mm; sourceTree = "<group>"; };
 		7044980B1429D13D00E83799 /* PadImageScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadImageScrollView.h; sourceTree = "<group>"; };
 		7044980C1429D13D00E83799 /* PadImageScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadImageScrollView.mm; sourceTree = "<group>"; };
+		704B5A211520CC8D00FEF9C8 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
 		7053E8B4143B076F001C364D /* MarkerStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkerStyleCell.h; sourceTree = "<group>"; };
 		7053E8B5143B076F001C364D /* MarkerStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MarkerStyleCell.mm; sourceTree = "<group>"; };
 		705A503414066421004C1C8B /* ScrollViewWithPadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPadView.h; sourceTree = "<group>"; };
@@ -547,6 +546,7 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				704B5A211520CC8D00FEF9C8 /* PadView.h */,
 				70AC541C146966E7009A0942 /* ThumbnailView.mm */,
 				70AC541D146966E7009A0942 /* ThumbnailView.h */,
 				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
@@ -560,7 +560,6 @@
 				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,
 				705F1A66142347CA003045D9 /* SlideView.h */,
 				70C1D67C1468166100514DC0 /* SlideView.mm */,
-				704498081429D0A000E83799 /* PadImageView.mm */,
 				7044980B1429D13D00E83799 /* PadImageScrollView.h */,
 				7044980C1429D13D00E83799 /* PadImageScrollView.mm */,
 				70E4FE591471685700296BFF /* SearchController.h */,
@@ -809,7 +808,6 @@
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,
 				7068FF24141A0EAF003560A1 /* AxisFontInspector.mm in Sources */,
 				7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */,
-				704498091429D0A000E83799 /* PadImageView.mm in Sources */,
 				7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */,
 				702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */,
 				702357E11434658900A95000 /* H1Inspector.mm in Sources */,
