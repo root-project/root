@@ -324,18 +324,12 @@ enum Mode {
 - (void)willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration : (NSTimeInterval) duration
 {
    [self correctFramesForOrientation : interfaceOrientation];
-   
-   //Let's hide shadow during rotation.
-   if (!editablePadView.isHidden && !editablePadView.selectionView.isHidden)
-      editablePadView.selectionView.layer.shadowOpacity = 0.f;
 }
 
 //____________________________________________________________________________________________________
 - (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
    //Now, after rotation is finished we can show the shadow again.
-   if (!editablePadView.isHidden && !editablePadView.selectionView.isHidden)
-      editablePadView.selectionView.layer.shadowOpacity = [SelectionView shadowOpacity];
 }
 
 //____________________________________________________________________________________________________

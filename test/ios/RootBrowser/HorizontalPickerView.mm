@@ -137,6 +137,7 @@ const CGFloat markerPos = 100.f;
    [self notify];
 }
 
+//____________________________________________________________________________________________________
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
    if (!decelerate) {

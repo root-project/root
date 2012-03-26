@@ -159,12 +159,12 @@ void Painter::SetStrokeParameters()const
       CGContextSetLineWidth(fCtx, 5.f);
       return;
    }
-
+*/
    if (fPainterMode == kPaintShadow) {
       CGContextSetRGBStrokeColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
       CGContextSetLineWidth(fCtx, 5.f);
       return;
-   }*/
+   }
 
    if (gVirtualX->GetLineWidth() > 1.f)
       CGContextSetLineWidth(fCtx, gVirtualX->GetLineWidth());
@@ -231,12 +231,14 @@ void Painter::SetPolygonParameters()const
       CGContextSetRGBFillColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
       return;
    }
-
+*/
    if (fPainterMode == kPaintShadow) {
    //   SetStrokeParameters();
       CGContextSetRGBFillColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
+      CGContextSetRGBStrokeColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
+
       return;
-   }*/
+   }
 
    const Float_t alpha = 1.f;//must be in gVirtualX.
    Float_t red = 1.f, green = 1.f, blue = 1.f;//White by default.
@@ -443,7 +445,7 @@ void Painter::SetMarkerColor()const
          SetMarkerFillColor(fCtx, gVirtualX->GetMarkerColor());
       } else if (fPainterMode == kPaintShadow) {
          CGContextSetRGBFillColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);      
-      }/* else if (fPainterMode == kPaintSelected) {
+      } /*else if (fPainterMode == kPaintSelected) {
          CGContextSetRGBFillColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
       }*/
    } else {
@@ -452,10 +454,10 @@ void Painter::SetMarkerColor()const
       } else if (fPainterMode == kPaintShadow) {
          CGContextSetRGBStrokeColor(fCtx, shadowColor[0], shadowColor[1], shadowColor[2], shadowColor[3]);
          CGContextSetLineWidth(fCtx, 5.f);
-      } /*else if (fPainterMode == kPaintSelected) {
+      }/* else if (fPainterMode == kPaintSelected) {
          CGContextSetRGBStrokeColor(fCtx, pinkColor[0], pinkColor[1], pinkColor[2], pinkColor[3]);
          CGContextSetLineWidth(fCtx, 5.f);
-      } */
+      }*/
    }
 }
 
