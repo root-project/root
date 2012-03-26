@@ -66,6 +66,7 @@
 #include <TGraphBentErrors.h>
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
+#include <TParallelCoord.h>
 #include <TImage.h>
 #include <TMath.h>
 #include <TSystem.h>
@@ -2454,6 +2455,10 @@ void parallelcoord()
 
    C->cd(1);
    ntuple->Draw("px:py:pz:random:px*py*pz","","para");
+   TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
+   para->SetLineColor(25);
+   TColor *col25 = gROOT->GetColor(25);
+   col25->SetAlpha(0.05);
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 

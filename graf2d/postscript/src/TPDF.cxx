@@ -85,8 +85,9 @@ const Int_t kObjFont             =  7; // First Font object (14 in total)
 const Int_t kObjColorSpace       = 22; // ColorSpace object
 const Int_t kObjPatternResourses = 23; // Pattern Resources object
 const Int_t kObjPatternList      = 24; // Pattern list object
-const Int_t kObjPattern          = 25; // Pattern object
-const Int_t kObjFirstPage        = 50; // First page object
+const Int_t kObjTransList        = 25; // List of transparencies
+const Int_t kObjPattern          = 26; // First pattern object (25 in total)
+const Int_t kObjFirstPage        = 51; // First page object
 
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
@@ -112,6 +113,7 @@ TPDF::TPDF() : TVirtualPS()
    fRed             = 0.;
    fGreen           = 0.;
    fBlue            = 0.;
+   fAlpha           = 1.;
    fXsize           = 0.;
    fYsize           = 0.;
    fType            = 0;
@@ -145,6 +147,7 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fRed             = 0.;
    fGreen           = 0.;
    fBlue            = 0.;
+   fAlpha           = 1.;
    fXsize           = 0.;
    fYsize           = 0.;
    fType            = 0;
@@ -299,6 +302,17 @@ void TPDF::Close(Option_t *)
    PrintStr("@");
    PrintStr(">>@");
    PrintStr("endobj@");
+
+   NewObject(kObjTransList);
+   PrintStr("<<@");
+   for (i=0; i<(int)fAlphas.size(); i++) {
+      PrintStr(
+      Form("/ca%3.2f << /Type /ExtGState /ca %3.2f >> /CA%3.2f << /Type /ExtGState /CA %3.2f >>@",
+      fAlphas[i],fAlphas[i],fAlphas[i],fAlphas[i]));
+   }
+   PrintStr(">>@");
+   PrintStr("endobj@");
+   if (fAlphas.size()) fAlphas.clear();
 
    // Cross-Reference Table
    Int_t refInd = fNByte;
@@ -920,6 +934,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
             fRed   = -1;
             fGreen = -1;
             fBlue  = -1;
+            fAlpha = -1.;
          }
          SetLineStyle(linestylesav);
          SetLineWidth(linewidthsav);
@@ -1005,6 +1020,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
             fRed   = -1;
             fGreen = -1;
             fBlue  = -1;
+            fAlpha = -1.;
          }
          SetLineStyle(linestylesav);
          SetLineWidth(linewidthsav);
@@ -1253,6 +1269,7 @@ void TPDF::NewPage()
    fRed   = -1;
    fGreen = -1;
    fBlue  = -1;
+   fAlpha = -1.;
 
    PrintStr("1 0 0 1");
    if (fPageOrientation == 2) {
@@ -1308,6 +1325,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fRed       = -1;
    fGreen     = -1;
    fBlue      = -1;
+   fAlpha     = -1.;
    fType      = abs(wtype);
    SetLineScale(gStyle->GetLineScalePS()/4.);
    gStyle->GetPaperSize(fXsize, fYsize);
@@ -1424,6 +1442,11 @@ void TPDF::Open(const char *fname, Int_t wtype)
    }
    PrintStr("@");
    PrintStr(">>@");
+
+   PrintStr("/ExtGState");
+   WriteInteger(kObjTransList);
+   PrintStr(" 0 R @");
+   if (fAlphas.size()) fAlphas.clear();
 
    PrintStr("/ColorSpace << /Cs8");
    WriteInteger(kObjColorSpace);
@@ -1942,16 +1965,40 @@ void TPDF::Range(Float_t xsize, Float_t ysize)
 
 
 //______________________________________________________________________________
+void TPDF::SetAlpha(Float_t a)
+{
+   // Set the alpha channel value.
+
+   if (a == fAlpha) return;
+   fAlpha = a;
+   if (fAlpha  <= 0.000001) fAlpha  = 0;
+
+   Bool_t known = kFALSE;
+   for (int i=0; i<(int)fAlphas.size(); i++) {
+      if (fAlpha == fAlphas[i]) {
+         known = kTRUE;
+         break;
+      }
+   }
+   if (!known) fAlphas.push_back(fAlpha);
+   PrintStr(Form(" /ca%3.2f gs /CA%3.2f gs",fAlpha,fAlpha));
+}
+
+
+//______________________________________________________________________________
 void TPDF::SetColor(Int_t color)
 {
-   // Set color with its color index
+   // Set color with its color index.
 
    if (color < 0) color = 0;
    TColor *col = gROOT->GetColor(color);
+
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+      SetAlpha(col->GetAlpha());
    } else {
       SetColor(1., 1., 1.);
+      SetAlpha(1.);
    }
 }
 
@@ -1959,7 +2006,7 @@ void TPDF::SetColor(Int_t color)
 //______________________________________________________________________________
 void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
 {
-   // Set color with its R G B components
+   // Set color with its R G B components:
    //
    //  r: % of red in [0,1]
    //  g: % of green in [0,1]
