@@ -93,13 +93,8 @@ namespace cling {
    }
    //  .L <filename>   //  Load code fragment.
    else if (Command == "L") {
-     // Check for params
-     RawLexer.LexFromRawLexer(Tok);
-     if (!Tok.isAnyIdentifier())
-       return false;
-
-     Param = GetRawTokenName(Tok);
-     bool success = m_Interp.loadFile(Param);
+     // TODO: Additional checks on params
+     bool success = m_Interp.loadFile(ReadToEndOfBuffer(RawLexer, MB));
      if (!success) {
        llvm::errs() << "Load file failed.\n";
      }
@@ -108,17 +103,8 @@ namespace cling {
    //  .(x|X) <filename> //  Execute function from file, function name is 
    //                    //  filename without extension.
    else if ((Command == "x") || (Command == "X")) {
-     // TODO: add extensive checks the folder paths and filenames
-     //RawLexer->LexFromRawLexer(Tok);
-     //if (!Tok.isAnyIdentifier())
-     //  return false;
-
-     const char* CurPtr = RawLexer.getBufferLocation();;
-     Token TmpTok;
-     RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
-     llvm::StringRef Param(CurPtr, 
-                           MB->getBufferSize() - (CurPtr - MB->getBufferStart()));
-     llvm::sys::Path path(Param);
+     // TODO: Additional checks on params
+     llvm::sys::Path path(ReadToEndOfBuffer(RawLexer, MB));
  
      if (!path.isValid())
        return false;
@@ -204,13 +190,8 @@ namespace cling {
      if (Tok.is(tok::eof))
        m_Interp.DumpIncludePath();
      else {
-       // TODO: add extensive checks the folder paths and filenames
-       const char* CurPtr = RawLexer.getBufferLocation();;
-       Token TmpTok;
-       RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
-       llvm::StringRef Param(CurPtr, 
-                             MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
-       llvm::sys::Path path(Param);
+       // TODO: Additional checks on params
+       llvm::sys::Path path(ReadToEndOfBuffer(RawLexer, MB));
        
        if (path.isValid())
          m_Interp.AddIncludePath(path.c_str());
@@ -271,6 +252,14 @@ namespace cling {
       return "/";
     }
 
+  }
+
+  llvm::StringRef MetaProcessor::ReadToEndOfBuffer(Lexer& RawLexer, 
+                                                   llvm::MemoryBuffer* MB) {
+    const char* CurPtr = RawLexer.getBufferLocation();
+    Token TmpTok;
+    RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
+    return StringRef(CurPtr, MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
   }
 
   void MetaProcessor::PrintCommandHelp() {

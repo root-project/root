@@ -13,6 +13,10 @@
 
 #include <string>
 
+namespace clang {
+  class Lexer;
+}
+
 namespace cling {
 
   class Interpreter;
@@ -95,6 +99,9 @@ namespace cling {
     /// Token.getIdentifierInfo()->getName() for the raw lexer
     ///
     std::string GetRawTokenName(const clang::Token& Tok);
+
+    llvm::StringRef ReadToEndOfBuffer(clang::Lexer& RawLexer, 
+                                      llvm::MemoryBuffer* MB);
 
     ///\brief Shows help for the use of interpreter's meta commands
     ///
