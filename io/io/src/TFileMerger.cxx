@@ -693,6 +693,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                // Do not delete the directory if it is part of the output
                // and we are in incremental mode (because it will be reuse
                // and has not been written to disk (for performance reason).
+               // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed. 
                if (!(type&kIncremental) || dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
                   delete obj;
                }
