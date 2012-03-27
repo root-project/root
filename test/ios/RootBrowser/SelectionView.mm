@@ -65,8 +65,8 @@
    
    CGContextSaveGState(ctx);
 
-   const CGRect intersection = CGRectIntersection(rect, self.superview.superview.bounds);
-   const BOOL useShadows = CGRectEqualToRect(intersection, rect);
+   //const CGRect intersection = CGRectIntersection(rect, self.superview.superview.bounds);
+   //const BOOL useShadows = CGRectEqualToRect(intersection, rect);
 
    CGContextClearRect(ctx, rect);
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
@@ -77,8 +77,8 @@
    pad->SetContext(ctx);
 
    //Selected object will cast a shadow.
-   if (useShadows)
-      [SelectionView setShadowColor : ctx];
+   //if (useShadows)
+   [SelectionView setShadowColor : ctx];
    pad->PaintSelected();
    
    //If we selected object has a polyline or polygon, markers will be painted.
