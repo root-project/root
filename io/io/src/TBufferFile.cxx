@@ -419,18 +419,18 @@ void TBufferFile::ReadWithNbits(Float_t *ptr, Int_t nbits)
    //we read the exponent and the truncated mantissa of the float
    //and rebuild the float.
    union {
-      Float_t xx;
-      Int_t ix;
+      Float_t fFloatValue;
+      Int_t   fIntValue;
    } temp;
    UChar_t  theExp;
    UShort_t theMan;
    frombuf(this->fBufCur,&theExp);
    frombuf(this->fBufCur,&theMan);
-   temp.ix = theExp;
-   temp.ix <<= 23;
-   temp.ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-   if(1<<(nbits+1) & theMan) temp.xx = -temp.xx;
-   ptr[0] = temp.xx;
+   temp.fIntValue = theExp;
+   temp.fIntValue <<= 23;
+   temp.fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+   if(1<<(nbits+1) & theMan) temp.fFloatValue = -temp.fFloatValue;
+   ptr[0] = temp.fFloatValue;
 }
 
 //______________________________________________________________________________
@@ -454,18 +454,18 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
    //we read the exponent and the truncated mantissa of the float
    //and rebuild the float.
    union {
-      Float_t xx;
-      Int_t ix;
+      Float_t fFloatValue;
+      Int_t   fIntValue;
    } temp;
    UChar_t  theExp;
    UShort_t theMan;
    frombuf(this->fBufCur,&theExp);
    frombuf(this->fBufCur,&theMan);
-   temp.ix = theExp;
-   temp.ix <<= 23;
-   temp.ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-   if(1<<(nbits+1) & theMan) temp.xx = -temp.xx;
-   ptr[0] = (Double_t)temp.xx;
+   temp.fIntValue = theExp;
+   temp.fIntValue <<= 23;
+   temp.fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+   if(1<<(nbits+1) & theMan) temp.fFloatValue = -temp.fFloatValue;
+   ptr[0] = (Double_t)temp.fFloatValue;
 }
 
 //______________________________________________________________________________
@@ -546,16 +546,16 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
       //In this case we truncate the mantissa to nbits and we stream
       //the exponent as a UChar_t and the mantissa as a UShort_t.
       union {
-         Float_t xx;
-         Int_t ix;
+         Float_t fFloatValue;
+         Int_t   fIntValue;
       };
-      xx = f[0];
-      UChar_t  theExp = (UChar_t)(0x000000ff & ((ix<<1)>>24));
-      UShort_t theMan = ((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+      fFloatValue = f[0];
+      UChar_t  theExp = (UChar_t)(0x000000ff & ((fIntValue<<1)>>24));
+      UShort_t theMan = ((1<<(nbits+1))-1) & (fIntValue>>(23-nbits-1));
       theMan++;
       theMan = theMan>>1;
       if (theMan&1<<nbits) theMan = (1<<nbits) - 1;
-      if (xx < 0) theMan |= 1<<(nbits+1);
+      if (fFloatValue < 0) theMan |= 1<<(nbits+1);
       *this << theExp;
       *this << theMan;
    }
@@ -643,16 +643,16 @@ void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *ele)
          //In this case we truncate the mantissa to nbits and we stream
          //the exponent as a UChar_t and the mantissa as a UShort_t.
          union {
-            Float_t xx;
-            Int_t ix;
+            Float_t fFloatValue;
+            Int_t   fIntValue;
          };
-         xx = (Float_t)d[0];
-         UChar_t  theExp = (UChar_t)(0x000000ff & ((ix<<1)>>24));
-         UShort_t theMan = ((1<<(nbits+1))-1) & (ix>>(23-nbits-1)) ;
+         fFloatValue = (Float_t)d[0];
+         UChar_t  theExp = (UChar_t)(0x000000ff & ((fIntValue<<1)>>24));
+         UShort_t theMan = ((1<<(nbits+1))-1) & (fIntValue>>(23-nbits-1)) ;
          theMan++;
          theMan = theMan>>1;
          if (theMan&1<<nbits) theMan = (1<<nbits)-1 ;
-         if (xx < 0) theMan |= 1<<(nbits+1);
+         if (fFloatValue < 0) theMan |= 1<<(nbits+1);
          *this << theExp;
          *this << theMan;
       }
@@ -1397,19 +1397,19 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
       //we read the exponent and the truncated mantissa of the float
       //and rebuild the new float.
       union {
-         Float_t xx;
-         Int_t ix;
+         Float_t fFloatValue;
+         Int_t   fIntValue;
       };
       UChar_t  theExp;
       UShort_t theMan;
       for (i = 0; i < n; i++) {
          *this >> theExp;
          *this >> theMan;
-         ix = theExp;
-         ix <<= 23;
-         ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-         if(1<<(nbits+1) & theMan) xx = -xx;
-         f[i] = xx;
+         fIntValue = theExp;
+         fIntValue <<= 23;
+         fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+         if(1<<(nbits+1) & theMan) fFloatValue = -fFloatValue;
+         f[i] = fFloatValue;
       }
    }
 }
@@ -1444,19 +1444,19 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
          //we read the exponent and the truncated mantissa of the float
          //and rebuild the double.
          union {
-            Float_t xx;
-            Int_t ix;
+            Float_t fFloatValue;
+            Int_t   fIntValue;
          };
          UChar_t  theExp;
          UShort_t theMan;
          for (i = 0; i < n; i++) {
             *this >> theExp;
             *this >> theMan;
-            ix = theExp;
-            ix <<= 23;
-            ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-            if (1<<(nbits+1) & theMan) xx = -xx;
-            d[i] = (Double_t)xx;
+            fIntValue = theExp;
+            fIntValue <<= 23;
+            fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+            if (1<<(nbits+1) & theMan) fFloatValue = -fFloatValue;
+            d[i] = (Double_t)fFloatValue;
          }
       }
    }
@@ -2033,17 +2033,17 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
       //In this case we truncate the mantissa to nbits and we stream
       //the exponent as a UChar_t and the mantissa as a UShort_t.
       union {
-         Float_t xx;
-         Int_t ix;
+         Float_t fFloatValue;
+         Int_t   fIntValue;
       };
       for (i = 0; i < n; i++) {
-         xx = f[i];
-         UChar_t  theExp = (UChar_t)(0x000000ff & ((ix<<1)>>24));
-         UShort_t theMan = ((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+         fFloatValue = f[i];
+         UChar_t  theExp = (UChar_t)(0x000000ff & ((fIntValue<<1)>>24));
+         UShort_t theMan = ((1<<(nbits+1))-1) & (fIntValue>>(23-nbits-1));
          theMan++;
          theMan = theMan>>1;
          if (theMan&1<<nbits) theMan = (1<<nbits) - 1;
-         if (xx < 0) theMan |= 1<<(nbits+1);
+         if (fFloatValue < 0) theMan |= 1<<(nbits+1);
          *this << theExp;
          *this << theMan;
       }
@@ -2090,17 +2090,17 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
          //In this case we truncate the mantissa to nbits and we stream
          //the exponent as a UChar_t and the mantissa as a UShort_t.
          union {
-            Float_t xx;
-            Int_t ix;
+            Float_t fFloatValue;
+            Int_t   fIntValue;
          };
          for (i = 0; i < n; i++) {
-            xx = (Float_t)d[i];
-            UChar_t  theExp = (UChar_t)(0x000000ff & ((ix<<1)>>24));
-            UShort_t theMan = ((1<<(nbits+1))-1) & (ix>>(23-nbits-1));
+            fFloatValue = (Float_t)d[i];
+            UChar_t  theExp = (UChar_t)(0x000000ff & ((fIntValue<<1)>>24));
+            UShort_t theMan = ((1<<(nbits+1))-1) & (fIntValue>>(23-nbits-1));
             theMan++;
             theMan = theMan>>1;
             if(theMan&1<<nbits) theMan = (1<<nbits) - 1;
-            if (xx < 0) theMan |= 1<<(nbits+1);
+            if (fFloatValue < 0) theMan |= 1<<(nbits+1);
             *this << theExp;
             *this << theMan;
          }

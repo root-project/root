@@ -42,7 +42,7 @@ void Warning(const char *location, const char *va_(fmt), ...);
 
 static int fgCount = 0;
 
-ROOT::RStl& ROOT::RStl::inst()
+ROOT::RStl& ROOT::RStl::Instance()
 {
    // Return the singleton ROOT::RStl.
 

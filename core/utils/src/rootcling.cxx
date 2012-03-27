@@ -2703,7 +2703,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    if (tcl == 0) {
       tcl = " internal error in rootcint ";
    }
-   //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
+   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string"  );
 
    if (rwmode == 0) {  //Read mode
 
@@ -2840,7 +2840,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      RStl::inst().GenerateTClassFor( m.Type()->Name(), R__SlowRawTypeSearch(m.Type()->Name()) );
+      RStl::Instance().GenerateTClassFor( m.Type()->Name(), R__SlowRawTypeSearch(m.Type()->Name()) );
    }
    if (!m.Type()->IsTmplt() || stltype<=0) return 0;
 
@@ -4164,7 +4164,7 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    G__BaseClassInfo base(cl);
    while (base.Next()) {
       if (IsSTLContainer(base)) {
-         RStl::inst().GenerateTClassFor( base.Name(), R__SlowClassSearch( base.Name() ) );
+         RStl::Instance().GenerateTClassFor( base.Name(), R__SlowClassSearch( base.Name() ) );
       }
    }
 
@@ -4250,7 +4250,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
    {
       int k = IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::inst().GenerateTClassFor( cl.GetRequestedName(), iter->getType()->getAsCXXRecordDecl () );
+         RStl::Instance().GenerateTClassFor( cl.GetRequestedName(), iter->getType()->getAsCXXRecordDecl () );
       }
    }
 
@@ -4298,7 +4298,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",m.Type()->TrueName() );
-         RStl::inst().GenerateTClassFor( "", R__SlowClassSearch(type_name.c_str()) );
+         RStl::Instance().GenerateTClassFor( "", R__SlowClassSearch(type_name.c_str()) );
       }      
    }
    
@@ -4582,7 +4582,7 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
    R__GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::inst().GenerateTClassFor(cl.GetRequestedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()));
+      RStl::Instance().GenerateTClassFor(cl.GetRequestedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()));
       return;
    }
 
@@ -6218,7 +6218,7 @@ int main(int argc, char **argv)
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().data() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
-               RStl::inst().GenerateTClassFor( iter->GetRequestedName(), CRD );
+               RStl::Instance().GenerateTClassFor( iter->GetRequestedName(), CRD );
             } else {
                WriteClassInit(*iter);
             }               
@@ -6257,7 +6257,7 @@ int main(int argc, char **argv)
 
 // LINKDEF SELECTION LOOP
       // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
-      // STL class which is done via RStl::inst().WriteClassInit(0);
+      // STL class which is done via RStl::Instance().WriteClassInit(0);
       // and the ClassInit
       iter = scan.fSelectedClasses.begin();
       end = scan.fSelectedClasses.end();
@@ -6294,9 +6294,9 @@ int main(int argc, char **argv)
          WriteClassCode(*iter);
       }
       
-      //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
+      //RStl::Instance().WriteStreamer(fp); //replaced by new Markus code
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::inst().WriteClassInit(0);
+      RStl::Instance().WriteClassInit(0);
 
       fclose(fpld);
 

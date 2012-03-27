@@ -494,7 +494,7 @@ void TPolyLineShape::Paint3d(Option_t *opt)
 
    Create();
 
-   struct XYZ { Float_t xyz[3]; } *points;
+   struct XYZ { Float_t fValues[3]; } *points;
    points  = (XYZ *)(fPoints->GetP());
    Int_t size      = fPoints->GetN()-1;
 

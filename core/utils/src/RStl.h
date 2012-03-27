@@ -34,7 +34,7 @@ namespace ROOT {
       set<string> fList;
 
    public:
-      static RStl& inst();
+      static RStl& Instance();
       ~RStl() {};
       
       static string DropDefaultArg(const string &classname);

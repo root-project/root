@@ -39,7 +39,7 @@ namespace ROOT {
       list_t fList;
 
    public:
-      static RStl& inst();
+      static RStl& Instance();
       ~RStl() {};
       
       static std::string DropDefaultArg(const std::string &classname);

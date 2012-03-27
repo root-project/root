@@ -428,8 +428,8 @@ Int_t TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option)
 
 class TTreeCacheUnzipData {
 public:
-   TTreeCacheUnzip *inst;
-   Int_t cnt;
+   TTreeCacheUnzip *fInstance;
+   Int_t            fCount;
 };
 
 //_____________________________________________________________________________
@@ -454,8 +454,8 @@ Int_t TTreeCacheUnzip::StartThreadUnzip(Int_t nthreads)
             Info("StartThreadUnzip", "Going to start thread '%s'", nm.Data());
 
          TTreeCacheUnzipData *d = new TTreeCacheUnzipData;
-         d->inst = this;
-         d->cnt = i;
+         d->fInstance = this;
+         d->fCount = i;
 
          fUnzipThread[i] = new TThread(nm.Data(), UnzipLoop, (void*)d);
          if (!fUnzipThread[i])
@@ -509,12 +509,12 @@ void* TTreeCacheUnzip::UnzipLoop(void *arg)
    // series of buffers leaving them in the second cache.
    // Returns 0 when it finishes
    TTreeCacheUnzipData *d = (TTreeCacheUnzipData *)arg;
-   TTreeCacheUnzip *unzipMng = d->inst;
+   TTreeCacheUnzip *unzipMng = d->fInstance;
    
    TThread::SetCancelOn();
    TThread::SetCancelDeferred();
 
-   Int_t thrnum = d->cnt;
+   Int_t thrnum = d->fCount;
    Int_t startindex = thrnum;
    Int_t locbuffsz = 16384;
    char *locbuff = new char[16384];

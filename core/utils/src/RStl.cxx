@@ -33,7 +33,7 @@ void Warning(const char *location, const char *va_(fmt), ...);
 // ROOT::RStl is the rootcint STL handling class.
 //
 
-ROOT::RStl& ROOT::RStl::inst()
+ROOT::RStl& ROOT::RStl::Instance()
 {
    // Return the singleton ROOT::RStl.
 

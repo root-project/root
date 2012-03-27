@@ -1924,7 +1924,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    if (tcl == 0) {
       tcl = " internal error in rootcint ";
    }
-   //    if (strcmp(objType,"string")==0) RStl::inst().GenerateTClassFor( "string"  );
+   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string"  );
 
    if (rwmode == 0) {  //Read mode
 
@@ -2061,7 +2061,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      RStl::inst().GenerateTClassFor( m.Type()->Name() );
+      RStl::Instance().GenerateTClassFor( m.Type()->Name() );
    }
    if (!m.Type()->IsTmplt() || stltype<=0) return 0;
 
@@ -3367,7 +3367,7 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    G__BaseClassInfo base(cl);
    while (base.Next()) {
       if (IsSTLContainer(base)) {
-         RStl::inst().GenerateTClassFor( base.Name() );
+         RStl::Instance().GenerateTClassFor( base.Name() );
       }
    }
 
@@ -3448,7 +3448,7 @@ void WritePointersSTL(G__ClassInfo &cl)
    while (base.Next()) {
       int k = IsSTLContainer(base);
       if (k!=0) {
-         RStl::inst().GenerateTClassFor( base.Name() );
+         RStl::Instance().GenerateTClassFor( base.Name() );
       }
    }
 
@@ -3491,7 +3491,7 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",m.Type()->TrueName() );
-         RStl::inst().GenerateTClassFor( m.Type()->Name() );
+         RStl::Instance().GenerateTClassFor( m.Type()->Name() );
       }
    }
 }
@@ -3761,7 +3761,7 @@ void WriteClassCode(G__ClassInfo &cl, bool force = false)
 
       if ( TClassEdit::IsSTLCont(cl.Name()) ) {
          // coverity[fun_call_w_exception] - that's just fine.
-         RStl::inst().GenerateTClassFor( cl.Name() );
+         RStl::Instance().GenerateTClassFor( cl.Name() );
          return;
       }
 
@@ -5139,7 +5139,7 @@ int main(int argc, char **argv)
             // Write Code for initialization object (except for STL containers)
             if ( TClassEdit::IsSTLCont(clLocal.Name()) ) {
                // coverity[fun_call_w_exception] - that's just fine.
-               RStl::inst().GenerateTClassFor( clLocal.Name() );
+               RStl::Instance().GenerateTClassFor( clLocal.Name() );
             } else {
                WriteClassInit(clLocal);
             }
@@ -5317,9 +5317,9 @@ int main(int argc, char **argv)
          WriteClassCode(clLocal);
       }
 
-      //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
+      //RStl::Instance().WriteStreamer(fp); //replaced by new Markus code
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::inst().WriteClassInit(0);
+      RStl::Instance().WriteClassInit(0);
 
       fclose(fpld);
 
