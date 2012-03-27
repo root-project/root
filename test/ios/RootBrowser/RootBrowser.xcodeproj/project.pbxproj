@@ -546,7 +546,6 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				704B5A211520CC8D00FEF9C8 /* PadView.h */,
 				70AC541C146966E7009A0942 /* ThumbnailView.mm */,
 				70AC541D146966E7009A0942 /* ThumbnailView.h */,
 				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
@@ -555,6 +554,7 @@
 				7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */,
 				7014410D140E18390070459F /* SelectionView.h */,
 				7014410E140E18390070459F /* SelectionView.mm */,
+				704B5A211520CC8D00FEF9C8 /* PadView.h */,
 				70249BDA1403D644006A19E6 /* PadView.mm */,
 				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
 				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,

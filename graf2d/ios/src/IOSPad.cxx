@@ -893,7 +893,7 @@ void Pad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 {
    // Paint fill area in CurrentPad World coordinates.
 
-   if (nn <3) return;
+   if (nn < 3) return;
    Int_t n=0;
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {

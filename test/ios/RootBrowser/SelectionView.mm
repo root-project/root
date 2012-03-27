@@ -1,7 +1,10 @@
 #import <CoreGraphics/CGContext.h>
 
+#import "IOSSelectionMarkers.h"
 #import "SelectionView.h"
+#import "TStopwatch.h"
 #import "PadView.h"
+#import "TAxis.h"
 
 //C++ (ROOT) imports.
 #import "IOSPad.h"
@@ -36,12 +39,41 @@
 }
 
 //____________________________________________________________________________________________________
+- (void) showSelectedAxis : (CGContextRef)ctx withRect : (CGRect)rect
+{
+   //"Special case" function to show axis selection.
+   using namespace ROOT::iOS;
+   const CGFloat xMin = pad->GetUxmin();
+   const CGFloat xMax = pad->GetUxmax();
+   const CGFloat yMin = pad->GetUymin();
+   const CGFloat yMax = pad->GetUymax();
+
+   ROOT::iOS::SpaceConverter converter(rect.size.width, pad->GetX1(), pad->GetX2(), rect.size.height, pad->GetY1(), pad->GetY2());
+   GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMin), converter.YToView(yMin)));
+
+   const TAxis *axis = static_cast<TAxis *>(pad->GetSelected());
+   if (!strcmp(axis->GetName(), "xaxis")) {
+      GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMax), converter.YToView(yMin)));
+   } else if (!strcmp(axis->GetName(), "yaxis")){
+      GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMin), converter.YToView(yMax)));
+   }//else is "Z" but we do not care.
+}
+
+//____________________________________________________________________________________________________
 - (void)drawRect : (CGRect)rect
 {
+
+
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    
    CGContextSaveGState(ctx);
+
+   TStopwatch timer;
+   timer.Start();
    
+   const CGRect intersection = CGRectIntersection(rect, self.superview.superview.bounds);
+   const BOOL useShadows = CGRectEqualToRect(intersection, rect);
+
    CGContextClearRect(ctx, rect);
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
@@ -51,9 +83,16 @@
    pad->SetContext(ctx);
 
    //Selected object will cast a shadow.
-
-   [SelectionView setShadowColor : ctx];
+   if (useShadows)
+      [SelectionView setShadowColor : ctx];
    pad->PaintSelected();
+   
+   //If we selected object has a polyline or polygon, markers will be painted.
+   //But if it's a TAxis, I can not simply draw a marker for a line segment,
+   //since TAxis has a lot of lines (ticks and marks).
+   //I have to find the position for this markers here and paint them.
+   if (dynamic_cast<TAxis *>(pad->GetSelected()))
+      [self showSelectedAxis : ctx withRect : rect];
    
    CGContextRestoreGState(ctx);
    
@@ -64,6 +103,9 @@
       else
          CGContextFillRect(ctx, CGRectMake(0.f, panStart.y, rect.size.width, currentPanPoint.y - panStart.y));
    }
+   
+   timer.Stop();
+   NSLog(@"time %g", timer.RealTime());
 }
 
 //____________________________________________________________________________________________________
