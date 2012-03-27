@@ -1007,7 +1007,7 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
       }
       switch(type) {
          // basic types
-         case TVirtualStreamerInfo::kBool:     fSize = sizeof(bool);      break;
+         case TVirtualStreamerInfo::kBool:     fSize = sizeof(Bool_t);    break;
          case TVirtualStreamerInfo::kShort:    fSize = sizeof(Short_t);   break;
          case TVirtualStreamerInfo::kInt:      fSize = sizeof(Int_t);     break;
          case TVirtualStreamerInfo::kLong:     fSize = sizeof(Long_t);    break; 

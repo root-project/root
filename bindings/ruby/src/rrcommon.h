@@ -86,7 +86,7 @@
 
 extern VALUE cTObject;
 
-VALUE rr_bool (bool q);
+VALUE rr_bool (Bool_t q);
 
 VALUE rr_ary_new (TList *l);
 VALUE rr_arrayc_new (const TArrayC *a);

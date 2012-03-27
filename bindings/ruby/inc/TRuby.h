@@ -11,7 +11,7 @@
 class TRuby {
 
 private:
-  static bool Initialize();
+  static Bool_t Initialize();
 public:
   virtual ~TRuby() { }
   // execute a Ruby statement (e.g. "require 'ruby'")
@@ -21,7 +21,7 @@ public:
   static TObject *Eval(const char *expr);
 
   // bind a ROOT object with, at the ruby side, the name "label"
-  static bool Bind(TObject *obj, const char *label);
+  static Bool_t Bind(TObject *obj, const char *label);
 
   // enter an interactive ruby session (exit with ^D)
   static void Prompt();

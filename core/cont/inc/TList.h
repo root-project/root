@@ -211,8 +211,8 @@ public:
    void               SetOption(Option_t *option);
    TObject           *Next();
    void               Reset();
-   bool               operator!=(const TIterator &aIter) const;
-   bool               operator!=(const TListIter &aIter) const;
+   Bool_t             operator!=(const TIterator &aIter) const;
+   Bool_t             operator!=(const TListIter &aIter) const;
    TObject           *operator*() const { return (fCurCursor ? fCurCursor->GetObject() : nullptr); }
 
    ClassDef(TListIter,0)  //Linked list iterator

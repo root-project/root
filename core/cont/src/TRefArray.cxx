@@ -876,7 +876,7 @@ void TRefArrayIter::Reset()
 }
 
 //______________________________________________________________________________
-bool TRefArrayIter::operator!=(const TIterator &aIter) const
+Bool_t TRefArrayIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -891,7 +891,7 @@ bool TRefArrayIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TRefArrayIter::operator!=(const TRefArrayIter &aIter) const
+Bool_t TRefArrayIter::operator!=(const TRefArrayIter &aIter) const
 {
    // This operator compares two TRefArrayIter objects.
 

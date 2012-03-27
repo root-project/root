@@ -62,7 +62,7 @@ void TMakeProject::ChopFileName(TString &name, Int_t limit)
    // a md5 summary of the name.
 
    if (name.Length() >= limit) {
-      bool has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
+      Bool_t has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
       if (has_extension) {
          name.Remove(name.Length()-2);
       }

@@ -357,7 +357,7 @@ namespace {
    // will have the proper offset, though). Fix this by providing the requested
    // binding if the cast succeeded.
       ObjectProxy* pyclass = 0; PyObject* pyobject = 0;
-      long up = 1;
+      Long_t up = 1;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O|l:DynamicCast" ),
               &ObjectProxy_Type, &pyclass, &pyobject, &up ) )
          return 0;

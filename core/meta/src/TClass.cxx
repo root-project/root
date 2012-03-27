@@ -1820,8 +1820,8 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
          } else {
             R__LOCKGUARD2(gCINTMutex);
             gCint->CallFunc_ResetArg(fInterShowMembers);
-            gCint->CallFunc_SetArg(fInterShowMembers,(long) &insp);
-            void* address = (void*) (((long) obj) + fOffsetStreamer);
+            gCint->CallFunc_SetArg(fInterShowMembers,(Long_t) &insp);
+            void* address = (void*) (((Long_t) obj) + fOffsetStreamer);
             gCint->CallFunc_Exec((CallFunc_t*)fInterShowMembers,address);
             return kTRUE;
          }

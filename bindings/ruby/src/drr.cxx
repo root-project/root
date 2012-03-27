@@ -192,7 +192,7 @@ void * rr_parse_void (VALUE o)
    return (void *) NULL;
 }
 
-VALUE rr_bool (bool q)
+VALUE rr_bool (Bool_t q)
 {
    VALUE res = Qnil;
 
@@ -423,7 +423,7 @@ TObject* drr_grab_object(VALUE self)
    return o;
 }
 
-unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int offset=1, unsigned int reference_map=0x0)
+UInt_t drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, Long_t offset=1, UInt_t reference_map=0x0)
 {
    /* FIXME. Offset reminds me fortran code; make a better interface,
     * and change the function name to a better one.
@@ -441,7 +441,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
    TObject *ptr = NULL;
    VALUE v = 0;
 
-   unsigned int ntobjects = 0;
+   UInt_t ntobjects = 0;
 
    /* Transform Ruby arguments to C/C++.  */
    for (int i = 0; i < nargs; i++)
@@ -450,7 +450,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
          switch (TYPE(arg))
             {
             case T_FIXNUM:
-               if (f) f->SetArg((long) NUM2INT(arg));
+               if (f) f->SetArg((Long_t) NUM2INT(arg));
                if (cproto) strcat(cproto, "int");
                break;
             case T_FLOAT:
@@ -458,7 +458,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                if (cproto) strcat(cproto, "double");
                break;
             case T_STRING:
-               if (f) f->SetArg((long) StringValuePtr(arg));
+               if (f) f->SetArg((Long_t) StringValuePtr(arg));
                if (cproto) strcat(cproto, "char*");
                break;
             case T_ARRAY:
@@ -470,7 +470,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                      arr = ALLOC_N (double, RARRAY_LEN(arg));
                      for (int j = 0; j < RARRAY_LEN(arg); j++)
                         arr[j] = NUM2DBL(rb_ary_entry (arg, j));
-                     f->SetArg((long) arr);
+                     f->SetArg((Long_t) arr);
                   }
                if (cproto) strcat(cproto, "double*");
                break;
@@ -479,7 +479,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
                if (!NIL_P(v))
                   {
                      Data_Get_Struct (v, TObject, ptr);
-                     if (f) f->SetArg((long) ptr);
+                     if (f) f->SetArg((Long_t) ptr);
                      if (cproto) {
                         VALUE tmp = rb_iv_get (arg, "__rr_class__");
                         strcat(cproto, StringValuePtr(tmp));
@@ -501,7 +501,7 @@ unsigned int drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, long int 
    return ntobjects;
 }
 
-void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs, char *cproto, long int offset=1 )
+void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs, char *cproto, Long_t offset=1 )
 {
    /* FIXME: Brute force checking of all combinations of * and & for
     * T_Objects Since we cannot tell which one is needed (we get the type
@@ -509,12 +509,12 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
     */
 
    G__MethodInfo *minfo = 0;
-   long int dummy_offset = 0; // Not read out, but expected by GetMethod
+   Long_t dummy_offset = 0; // Not read out, but expected by GetMethod
 
    // Number of T_OBJECTS in argument list initialized to more than 1
-   unsigned int nobjects = drr_map_args2 (inargs, cproto, 0, offset, 0x0);
+   UInt_t nobjects = drr_map_args2 (inargs, cproto, 0, offset, 0x0);
    // 2^nobjects == number of combinations of "*" and "&"
-   unsigned int bitmap_end = static_cast<unsigned int>( 0x1 << nobjects );
+   UInt_t bitmap_end = static_cast<UInt_t>( 0x1 << nobjects );
 
    // Check if method methname with prototype cproto is present in klass
    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
@@ -523,7 +523,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
     * combination is not correct.
     */
    if( nobjects > 0 and !(minfo->InterfaceMethod()) ) {
-      for( unsigned int reference_map=0x1; reference_map < bitmap_end; reference_map++) {
+      for( UInt_t reference_map=0x1; reference_map < bitmap_end; reference_map++) {
          cproto[0] = static_cast<char>( 0 ); // reset cproto
          drr_map_args2 (inargs, cproto, 0, offset, reference_map);
          minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
@@ -537,7 +537,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
    return;
 }
 
-void drr_set_method_args( VALUE inargs, G__CallFunc *func, long int offset=1 )
+void drr_set_method_args( VALUE inargs, G__CallFunc *func, Long_t offset=1 )
 {
    drr_map_args2( inargs, 0, func, offset );
 }
@@ -675,7 +675,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
    VALUE inargs;
    char *classname = (char*) rb_obj_classname(self);
    char cproto[1024] = "";
-   long addr = 0, offset;
+   Long_t addr = 0, offset;
 
    rb_scan_args (argc, argv, "0*", &inargs);
 
@@ -696,7 +696,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
                 cproto, classname, classname);
 
-   addr = func.ExecInt((void*)((long)0 + offset));
+   addr = func.ExecInt((void*)((Long_t)0 + offset));
    rb_iv_set(self, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject *)addr));
    rb_iv_set(self, "__rr_class__", rb_str_new2 (classname));
 
@@ -704,7 +704,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
    return self;
 }
 
-static VALUE drr_return(int rtype, long value_address, double dvalue_address, VALUE self)
+static VALUE drr_return(int rtype, Long_t value_address, double dvalue_address, VALUE self)
 {
    VALUE vret;
 
@@ -772,7 +772,7 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    VALUE inargs;
    char cproto[1024] = "";
    int nargs;
-   long offset, address = 0;
+   Long_t offset, address = 0;
    double dbladdr = 0;
 
    /* Call a singleton method.  */
@@ -822,7 +822,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
    VALUE inargs;
    char *methname, *classname ;
-   long offset, address = 0;
+   Long_t offset, address = 0;
    double dbladdr = 0;
    char cproto[1024] = "";
    int nargs;
@@ -878,9 +878,9 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
               Data_Wrap_Struct(cTObject, 0, 0, cache));
 
    if (entry->rtype != kfloat)
-      address = func->ExecInt((void*)((long)caller + offset));
+      address = func->ExecInt((void*)((Long_t)caller + offset));
    else
-      dbladdr = func->ExecDouble((void*)((long)caller + offset));
+      dbladdr = func->ExecDouble((void*)((Long_t)caller + offset));
 
    /* Define method.  */
    rb_define_method (rklass, methname, VALUEFUNC(drr_generic_method), -1);
@@ -893,7 +893,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
    VALUE inargs;
    VALUE rklass;
    int nargs;
-   long offset = 0, address = 0;
+   Long_t offset = 0, address = 0;
    double dbladdr = 0;
    char cproto[1024] = "";
 
@@ -931,9 +931,9 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
       rb_warn ("Proto conflict with cache. Expected %s, but found no match for %s", cproto, methname);
 
    if (entry->rtype != kfloat)
-      address = func->ExecInt((void*)((long)caller + offset));
+      address = func->ExecInt((void*)((Long_t)caller + offset));
    else
-      dbladdr = func->ExecDouble((void*)((long)caller + offset));
+      dbladdr = func->ExecDouble((void*)((Long_t)caller + offset));
 
    return(drr_return(entry->rtype, address, dbladdr, self));
 }

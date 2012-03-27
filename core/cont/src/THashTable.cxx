@@ -471,7 +471,7 @@ void THashTableIter::Reset()
 }
 
 //______________________________________________________________________________
-bool THashTableIter::operator!=(const TIterator &aIter) const
+Bool_t THashTableIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -486,7 +486,7 @@ bool THashTableIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool THashTableIter::operator!=(const THashTableIter &aIter) const
+Bool_t THashTableIter::operator!=(const THashTableIter &aIter) const
 {
    // This operator compares two THashTableIter objects.
 

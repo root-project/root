@@ -48,7 +48,7 @@ public:
    CreateIterators_t    fCreateIterators;
    DeleteTwoIterators_t fDeleteTwoIterators;
    
-   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, bool read = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(0), fDeleteTwoIterators(0) 
+   TVirtualCollectionIterators(TVirtualCollectionProxy *proxy, Bool_t read = kTRUE) : fBegin( &(fBeginBuffer[0]) ), fEnd(&(fEndBuffer[0])), fCreateIterators(0), fDeleteTwoIterators(0) 
    {
       //         memset(fBeginBuffer,0,TVirtualCollectionProxy::fgIteratorArenaSize);
       //         memset(fEndBuffer,0,TVirtualCollectionProxy::fgIteratorArenaSize);

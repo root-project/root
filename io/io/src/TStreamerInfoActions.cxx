@@ -229,7 +229,7 @@ namespace TStreamerInfoActions
       TClass          *fNewClass;   // Class of the content in memory.
       TMemberStreamer *fStreamer;
       const char      *fTypeName;   // Type name of the member as typed by ther user.
-      bool             fIsSTLBase;  // aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()
+      Bool_t          fIsSTLBase;  // aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()
 
       TVirtualCollectionProxy::CreateIterators_t    fCreateIterators;
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;

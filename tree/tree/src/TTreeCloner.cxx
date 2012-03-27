@@ -39,7 +39,7 @@
 #include <algorithm>
 
 //______________________________________________________________________________
-bool TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
+Bool_t TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketSeek[i1] ==  fObject->fBasketSeek[i2]) {
       if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
@@ -51,7 +51,7 @@ bool TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 }
 
 //______________________________________________________________________________
-bool TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
+Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
       return i1 < i2;

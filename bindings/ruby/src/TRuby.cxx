@@ -18,7 +18,7 @@ ClassImp(TRuby)
 
 extern VALUE cTObject;
 
-bool TRuby::Initialize()
+Bool_t TRuby::Initialize()
 {
     static int IsInitialized = 0;
 
@@ -72,7 +72,7 @@ TObject *TRuby::Eval(const char* expr)
     return (TObject*)0;
 }
 
-bool TRuby::Bind(TObject *obj, const char *label)
+Bool_t TRuby::Bind(TObject *obj, const char *label)
 {
     VALUE *v = ALLOC(VALUE);
 

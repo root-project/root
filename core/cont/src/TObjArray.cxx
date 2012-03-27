@@ -865,7 +865,7 @@ void TObjArrayIter::Reset()
 }
 
 //______________________________________________________________________________
-bool TObjArrayIter::operator!=(const TIterator &aIter) const
+Bool_t TObjArrayIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -880,7 +880,7 @@ bool TObjArrayIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TObjArrayIter::operator!=(const TObjArrayIter &aIter) const
+Bool_t TObjArrayIter::operator!=(const TObjArrayIter &aIter) const
 {
    // This operator compares two TObjArrayIter objects.
 

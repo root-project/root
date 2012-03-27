@@ -3929,7 +3929,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
 
-   const bool willLoad = (instance==0 || fNeedLoading); fNeedLoading = kFALSE;
+   const Bool_t willLoad = (instance==0 || fNeedLoading); fNeedLoading = kFALSE;
    if (willLoad) fDidBooleanOptimization = kFALSE;
 
    Int_t pos  = 0;

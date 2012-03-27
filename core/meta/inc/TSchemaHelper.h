@@ -39,7 +39,7 @@ namespace ROOT
       std::string fVersion;
       std::string fChecksum;
       std::string fInclude;
-      bool        fEmbed;
+      Bool_t      fEmbed;
       void*       fFunctionPtr;
       std::string fAttributes;
 

@@ -158,7 +158,7 @@ public:
    virtual CallFunc_t   *CallFunc_FactoryCopy(CallFunc_t * /* func */) const {return 0;}
    virtual MethodInfo_t *CallFunc_FactoryMethod(CallFunc_t * /* func */) const {return 0;}
    virtual void   CallFunc_Init(CallFunc_t * /* func */) const {;}
-   virtual bool   CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
+   virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
    virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const {;}
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const {;}
@@ -182,15 +182,15 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const {return 0;}
    virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */) const {return 0;}
-   virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}             
-   virtual bool   ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}             
+   virtual Bool_t ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}             
+   virtual Bool_t ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}             
    virtual void   ClassInfo_Init(ClassInfo_t * /* info */, const char * /* funcname */) const {;}
    virtual void   ClassInfo_Init(ClassInfo_t * /* info */, int /* tagnum */) const {;}
-   virtual bool   ClassInfo_IsBase(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}
-   virtual bool   ClassInfo_IsEnum(const char * /* name */) const {return 0;}
-   virtual bool   ClassInfo_IsLoaded(ClassInfo_t * /* info */) const {return 0;}             
-   virtual bool   ClassInfo_IsValid(ClassInfo_t * /* info */) const {return 0;}             
-   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */) const {return 0;}             
+   virtual Bool_t ClassInfo_IsBase(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}
+   virtual Bool_t ClassInfo_IsEnum(const char * /* name */) const {return 0;}
+   virtual Bool_t ClassInfo_IsLoaded(ClassInfo_t * /* info */) const {return 0;}             
+   virtual Bool_t ClassInfo_IsValid(ClassInfo_t * /* info */) const {return 0;}             
+   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */) const {return 0;}             
    virtual int    ClassInfo_Next(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, int /* n */) const {return 0;}
@@ -224,7 +224,7 @@ public:
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t * /* dminfo */) const {;}
    virtual DataMemberInfo_t  *DataMemberInfo_Factory(ClassInfo_t * /* clinfo */ = 0) const {return 0;}
    virtual DataMemberInfo_t  *DataMemberInfo_FactoryCopy(DataMemberInfo_t * /* dminfo */) const {return 0;}
-   virtual bool   DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
+   virtual Bool_t DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t * /* dminfo */, Int_t  /* dim */) const {return 0;}
    virtual int    DataMemberInfo_Next(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual Long_t DataMemberInfo_Offset(DataMemberInfo_t * /* dminfo */) const {return 0;}
@@ -243,7 +243,7 @@ public:
    virtual MethodInfo_t  *MethodInfo_Factory() const {return 0;}
    virtual MethodInfo_t  *MethodInfo_FactoryCopy(MethodInfo_t * /* minfo */) const {return 0;}
    virtual MethodInfo_t  *MethodInfo_InterfaceMethod(MethodInfo_t * /* minfo */) const {return 0;}
-   virtual bool   MethodInfo_IsValid(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual Bool_t MethodInfo_IsValid(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_NArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_NDefaultArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_Next(MethodInfo_t * /* minfo */) const {return 0;}
@@ -259,7 +259,7 @@ public:
    virtual void   MethodArgInfo_Delete(MethodArgInfo_t * /* marginfo */) const {;}
    virtual MethodArgInfo_t  *MethodArgInfo_Factory() const {return 0;}
    virtual MethodArgInfo_t  *MethodArgInfo_FactoryCopy(MethodArgInfo_t * /* marginfo */) const {return 0;}
-   virtual bool   MethodArgInfo_IsValid(MethodArgInfo_t * /* marginfo */) const {return 0;}
+   virtual Bool_t MethodArgInfo_IsValid(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual int    MethodArgInfo_Next(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual Long_t MethodArgInfo_Property(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_DefaultValue(MethodArgInfo_t * /* marginfo */) const {return 0;}
@@ -273,7 +273,7 @@ public:
    virtual TypeInfo_t *TypeInfo_Factory(G__value * /* value */) const {return 0;}
    virtual TypeInfo_t *TypeInfo_FactoryCopy(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypeInfo_Init(TypeInfo_t * /* tinfo */, const char * /* funcname */) const {;}
-   virtual bool   TypeInfo_IsValid(TypeInfo_t * /* tinfo */) const {return 0;}
+   virtual Bool_t TypeInfo_IsValid(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypeInfo_Name(TypeInfo_t * /* info */) const {return 0;}
    virtual Long_t TypeInfo_Property(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypeInfo_RefType(TypeInfo_t * /* tinfo */) const {return 0;}
@@ -286,7 +286,7 @@ public:
    virtual TypedefInfo_t  *TypedefInfo_Factory() const {return 0;}
    virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypedefInfo_Init(TypedefInfo_t * /* tinfo */, const char * /* funcname */) const {;}
-   virtual bool   TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}
+   virtual Bool_t TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual Long_t TypedefInfo_Property(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypedefInfo_Size(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_TrueName(TypedefInfo_t * /* tinfo */) const {return 0;}

@@ -667,7 +667,7 @@ TObject *TBtreeIter::Next()
 }
 
 //______________________________________________________________________________
-bool TBtreeIter::operator!=(const TIterator &aIter) const
+Bool_t TBtreeIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -682,7 +682,7 @@ bool TBtreeIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TBtreeIter::operator!=(const TBtreeIter &aIter) const
+Bool_t TBtreeIter::operator!=(const TBtreeIter &aIter) const
 {
    // This operator compares two TBtreeIter objects.
 

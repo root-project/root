@@ -2594,7 +2594,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       return;
    }
 
-   bool needGenericTemplate = fElements==0 || fElements->GetEntries() == 0;
+   Bool_t needGenericTemplate = fElements==0 || fElements->GetEntries() == 0;
    Bool_t isTemplate = kFALSE;
    const char *clname = GetName();
    TString template_protoname;
@@ -2661,7 +2661,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 
    // Generate forward declaration nested classes.
    if (subClasses && subClasses->GetEntries()) {
-      bool needheader = true;
+      Bool_t needheader = true;
 
       TIter subnext(subClasses);
       TStreamerInfo *subinfo;

@@ -2525,7 +2525,7 @@ void  TCint::CallFunc_Init(CallFunc_t *func) const
    f->Init();
 }
 //______________________________________________________________________________
-bool  TCint::CallFunc_IsValid(CallFunc_t *func) const
+Bool_t  TCint::CallFunc_IsValid(CallFunc_t *func) const
 {
    // Interface to CINT function
 
@@ -2644,7 +2644,7 @@ void  TCint::ClassInfo_Delete(ClassInfo_t *cinfo, void *arena) const
    info->Delete(arena);
 }
 //______________________________________________________________________________
-void  TCint::ClassInfo_DeleteArray(ClassInfo_t *cinfo, void *arena, bool dtorOnly) const
+void  TCint::ClassInfo_DeleteArray(ClassInfo_t *cinfo, void *arena, Bool_t dtorOnly) const
 {
    // Interface to CINT function
 
@@ -2703,7 +2703,7 @@ int TCint::ClassInfo_GetMethodNArg(ClassInfo_t *cinfo, const char *method,const 
    return -1;
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_HasDefaultConstructor(ClassInfo_t *cinfo) const
+Bool_t  TCint::ClassInfo_HasDefaultConstructor(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function
 
@@ -2711,7 +2711,7 @@ bool  TCint::ClassInfo_HasDefaultConstructor(ClassInfo_t *cinfo) const
    return info->HasDefaultConstructor();
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_HasMethod(ClassInfo_t *cinfo, const char *name) const
+Bool_t  TCint::ClassInfo_HasMethod(ClassInfo_t *cinfo, const char *name) const
 {
    // Interface to CINT function
 
@@ -2735,7 +2735,7 @@ void  TCint::ClassInfo_Init(ClassInfo_t *cinfo, int tagnum) const
 
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_IsBase(ClassInfo_t *cinfo, const char*name) const
+Bool_t  TCint::ClassInfo_IsBase(ClassInfo_t *cinfo, const char*name) const
 {
    // Interface to CINT function
 
@@ -2743,7 +2743,7 @@ bool  TCint::ClassInfo_IsBase(ClassInfo_t *cinfo, const char*name) const
    return info->IsBase(name);
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_IsEnum(const char*name) const
+Bool_t  TCint::ClassInfo_IsEnum(const char*name) const
 {
    // Interface to CINT function
 
@@ -2752,7 +2752,7 @@ bool  TCint::ClassInfo_IsEnum(const char*name) const
    return kFALSE;
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_IsLoaded(ClassInfo_t *cinfo) const
+Bool_t  TCint::ClassInfo_IsLoaded(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function
 
@@ -2760,7 +2760,7 @@ bool  TCint::ClassInfo_IsLoaded(ClassInfo_t *cinfo) const
    return info->IsLoaded();
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_IsValid(ClassInfo_t *cinfo) const
+Bool_t  TCint::ClassInfo_IsValid(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function
 
@@ -2768,7 +2768,7 @@ bool  TCint::ClassInfo_IsValid(ClassInfo_t *cinfo) const
    return info->IsValid();
 }
 //______________________________________________________________________________
-bool  TCint::ClassInfo_IsValidMethod(ClassInfo_t *cinfo,  const char *method,const char *proto, Long_t *offset) const
+Bool_t  TCint::ClassInfo_IsValidMethod(ClassInfo_t *cinfo,  const char *method,const char *proto, Long_t *offset) const
 {
    // Interface to CINT function
 
@@ -3009,7 +3009,7 @@ DataMemberInfo_t *TCint::DataMemberInfo_FactoryCopy(DataMemberInfo_t *dminfo) co
    return info;
 }
 //______________________________________________________________________________
-bool   TCint::DataMemberInfo_IsValid(DataMemberInfo_t *dminfo) const
+Bool_t   TCint::DataMemberInfo_IsValid(DataMemberInfo_t *dminfo) const
 {
    // Interface to CINT function
 
@@ -3178,7 +3178,7 @@ void *TCint::MethodInfo_InterfaceMethod(MethodInfo_t *minfo) const
    return (void*)pfunc;
 }
 //______________________________________________________________________________
-bool  TCint::MethodInfo_IsValid(MethodInfo_t *minfo) const
+Bool_t  TCint::MethodInfo_IsValid(MethodInfo_t *minfo) const
 {
    // Interface to CINT function
 
@@ -3293,7 +3293,7 @@ MethodArgInfo_t *TCint::MethodArgInfo_FactoryCopy(MethodArgInfo_t *marginfo) con
    return info;
 }
 //______________________________________________________________________________
-bool  TCint::MethodArgInfo_IsValid(MethodArgInfo_t *marginfo) const
+Bool_t  TCint::MethodArgInfo_IsValid(MethodArgInfo_t *marginfo) const
 {
    // Interface to CINT function
 
@@ -3385,7 +3385,7 @@ void  TCint::TypeInfo_Init(TypeInfo_t *tinfo, const char *funcname) const
    info->Init(funcname);
 }
 //______________________________________________________________________________
-bool  TCint::TypeInfo_IsValid(TypeInfo_t *tinfo) const
+Bool_t  TCint::TypeInfo_IsValid(TypeInfo_t *tinfo) const
 {
    // Interface to CINT function
 
@@ -3469,7 +3469,7 @@ TypedefInfo_t  TCint::TypedefInfo_Init(TypedefInfo_t *tinfo, const char *funcnam
    info->Init(funcname);
 }
 //______________________________________________________________________________
-bool  TCint::TypedefInfo_IsValid(TypedefInfo_t *tinfo) const
+Bool_t  TCint::TypedefInfo_IsValid(TypedefInfo_t *tinfo) const
 {
    // Interface to CINT function
 

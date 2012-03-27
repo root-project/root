@@ -214,10 +214,10 @@ void TObjectTable::Remove(TObject *op)
 
    Int_t i = FindElement(op);
    if (fTable[i] == 0) {
-      Warning("Remove", "0x%lx not found at %d", (long)op, i);
+      Warning("Remove", "0x%lx not found at %d", (Long_t)op, i);
       for (int j = 0; j < fSize; j++) {
          if (fTable[j] == op) {
-            Error("Remove", "0x%lx found at %d !!!", (long)op, j);
+            Error("Remove", "0x%lx found at %d !!!", (Long_t)op, j);
             i = j;
          }
       }

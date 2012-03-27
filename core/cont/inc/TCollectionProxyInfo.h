@@ -396,16 +396,16 @@ namespace ROOT {
 
    };
 
-   template <> struct TCollectionProxyInfo::Type<std::vector<bool> >
-   : public TCollectionProxyInfo::Address<std::vector<bool>::const_reference>
+   template <> struct TCollectionProxyInfo::Type<std::vector<Bool_t> >
+   : public TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>
    {
-      typedef std::vector<bool>             Cont_t;
-      typedef std::vector<bool>::iterator   Iter_t;
-      typedef std::vector<bool>::value_type Value_t;
-      typedef Environ<Iter_t>               Env_t;
-      typedef Env_t                        *PEnv_t;
-      typedef Cont_t                       *PCont_t;
-      typedef Value_t                      *PValue_t;
+      typedef std::vector<Bool_t>             Cont_t;
+      typedef std::vector<Bool_t>::iterator   Iter_t;
+      typedef std::vector<Bool_t>::value_type Value_t;
+      typedef Environ<Iter_t>                 Env_t;
+      typedef Env_t                          *PEnv_t;
+      typedef Cont_t                         *PCont_t;
+      typedef Value_t                        *PValue_t;
       
       virtual ~Type() {}
       
@@ -456,8 +456,8 @@ namespace ROOT {
       }
    };
    
-   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<bool> > {
-      typedef std::vector<bool>      Cont_t;
+   template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<Bool_t> > {
+      typedef std::vector<Bool_t>    Cont_t;
       typedef Cont_t::iterator       Iter_t;
       typedef Cont_t::value_type     Value_t;
       typedef Environ<Iter_t>        Env_t;
@@ -483,7 +483,7 @@ namespace ROOT {
 
 #ifndef __CINT__
    // Need specialization for boolean references due to stupid STL vector<bool>
-   template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<bool>::const_reference>::address(std::vector<bool>::const_reference ) {
+   template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
       R__ASSERT(0);
       return 0;
    }
@@ -496,15 +496,15 @@ namespace ROOT {
    };
 
 #ifndef __CINT__
-   template <typename Bitset_t> struct TCollectionProxyInfo::Type<ROOT::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const bool &>
+   template <typename Bitset_t> struct TCollectionProxyInfo::Type<ROOT::TStdBitsetHelper<Bitset_t> > : public TCollectionProxyInfo::Address<const Bool_t &>
    {
-      typedef Bitset_t                Cont_t;
-      typedef std::pair<size_t,bool>  Iter_t;
-      typedef bool                    Value_t;
-      typedef Environ<Iter_t>         Env_t;
-      typedef Env_t                  *PEnv_t;
-      typedef Cont_t                 *PCont_t;
-      typedef Value_t                *PValue_t;
+      typedef Bitset_t                 Cont_t;
+      typedef std::pair<size_t,Bool_t> Iter_t;
+      typedef Bool_t                   Value_t;
+      typedef Environ<Iter_t>          Env_t;
+      typedef Env_t                   *PEnv_t;
+      typedef Cont_t                  *PCont_t;
+      typedef Value_t                 *PValue_t;
       
       virtual ~Type() {}
       

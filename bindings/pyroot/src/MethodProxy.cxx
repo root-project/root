@@ -627,7 +627,7 @@ namespace {
 
 
 //____________________________________________________________________________
-   long mp_hash( MethodProxy* pymeth )
+   Long_t mp_hash( MethodProxy* pymeth )
    {
    // Hash of method proxy object for insertion into dictionaries; with actual
    // method (fMethodInfo) shared, its address is best suited.

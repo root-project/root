@@ -66,7 +66,7 @@ namespace ROOT {
       void AddHeader(const char *classname);
       void AddPragma(const char *pragma_text);
 
-      bool NeedToEmulate(TClass *cl, UInt_t level);
+      Bool_t NeedToEmulate(TClass *cl, UInt_t level);
 
       void   ParseOptions();
 

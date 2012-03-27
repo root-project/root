@@ -2979,11 +2979,11 @@ namespace {
 
    enum EOnIndexError { kDrop, kKeep, kBuild };
 
-   static bool R__HandleIndex(EOnIndexError onIndexError, TTree *newtree, TTree *oldtree)
+   static Bool_t R__HandleIndex(EOnIndexError onIndexError, TTree *newtree, TTree *oldtree)
    {
       // Return true if we should continue to handle indices, false otherwise.
 
-      bool withIndex = kTRUE;
+      Bool_t withIndex = kTRUE;
 
       if ( newtree->GetTreeIndex() ) {
          if ( oldtree->GetTree()->GetTreeIndex() == 0 ) {
@@ -6316,7 +6316,7 @@ char TTree::GetNewlineValue(istream &inputStream)
 {
    // Determine which newline this file is using.
 
-   long inPos = inputStream.tellg();
+   Long_t inPos = inputStream.tellg();
    char newline = '\n';
    while(1) {
      char c = 0;

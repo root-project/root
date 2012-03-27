@@ -481,9 +481,9 @@ TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
 
    fFd          = f.fFd;
    fVersion     = f.fVersion;
-   fName        = StrDup((char *)((long)f.fName + offset));
-   fTitle       = StrDup((char *)((long)f.fTitle + offset));
-   fOption      = StrDup((char *)((long)f.fOption + offset));
+   fName        = StrDup((char *)((Long_t)f.fName + offset));
+   fTitle       = StrDup((char *)((Long_t)f.fTitle + offset));
+   fOption      = StrDup((char *)((Long_t)f.fOption + offset));
    fMmallocDesc = f.fMmallocDesc;
    fBaseAddr    = f.fBaseAddr;
    fSize        = f.fSize;

@@ -2225,7 +2225,7 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
    } else if (r == TMethodCall::kString) {
       char *returntext = 0;
       fMethod->Execute(thisobj,&returntext);
-      result = (long) returntext;
+      result = (Long_t) returntext;
 
    } else if (fNext) {
       char * char_result = 0;

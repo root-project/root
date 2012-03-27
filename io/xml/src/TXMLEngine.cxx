@@ -167,7 +167,7 @@ public:
 
    char           *fCurrent;
 
-   TXMLInputStream(bool isfilename, const char* filename, Int_t ibufsize)
+   TXMLInputStream(Bool_t isfilename, const char* filename, Int_t ibufsize)
    {
       if (isfilename) {
          fInp = new std::ifstream(filename);
@@ -709,7 +709,7 @@ Bool_t TXMLEngine::AddDocComment(XMLDocPointer_t xmldoc, const char* comment)
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
    UnlinkNode(rootnode);
 
-   bool res = AddComment(((SXmlDoc_t*)xmldoc)->fRootNode, comment);
+   Bool_t res = AddComment(((SXmlDoc_t*)xmldoc)->fRootNode, comment);
 
    AddChild((XMLNodePointer_t) ((SXmlDoc_t*)xmldoc)->fRootNode, rootnode);
 
@@ -742,7 +742,7 @@ Bool_t TXMLEngine::AddDocRawLine(XMLDocPointer_t xmldoc, const char* line)
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
    UnlinkNode(rootnode);
 
-   bool res = AddRawLine(((SXmlDoc_t*)xmldoc)->fRootNode, line);
+   Bool_t res = AddRawLine(((SXmlDoc_t*)xmldoc)->fRootNode, line);
 
    AddChild((XMLNodePointer_t) ((SXmlDoc_t*)xmldoc)->fRootNode, rootnode);
 
@@ -808,7 +808,7 @@ Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc,
    XMLNodePointer_t rootnode = DocGetRootElement(xmldoc);
    UnlinkNode(rootnode);
 
-   bool res = AddStyleSheet(((SXmlDoc_t*)xmldoc)->fRootNode,
+   Bool_t res = AddStyleSheet(((SXmlDoc_t*)xmldoc)->fRootNode,
                             href,type,title,alternate,media,charset);
 
    AddChild((XMLNodePointer_t) ((SXmlDoc_t*)xmldoc)->fRootNode, rootnode);
@@ -928,7 +928,7 @@ XMLNodePointer_t TXMLEngine::GetNext(XMLNodePointer_t xmlnode)
 }
 
 //______________________________________________________________________________
-void TXMLEngine::ShiftToNext(XMLNodePointer_t &xmlnode, bool tonode)
+void TXMLEngine::ShiftToNext(XMLNodePointer_t &xmlnode, Bool_t tonode)
 {
    // shifts specified node to next
 
@@ -1104,7 +1104,7 @@ XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
 
    XMLDocPointer_t xmldoc = NewDoc(0);
 
-   bool success = false;
+   Bool_t success = false;
 
    Int_t resvalue = 0;
 
@@ -1529,7 +1529,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    }
 
    EXmlNodeType nodetype = kXML_NODE;
-   bool canhaschilds = true;
+   Bool_t canhaschilds = true;
    char endsymbol = '/';
 
    // this is case of processing instructions node

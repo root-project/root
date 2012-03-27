@@ -118,8 +118,8 @@ public:
    const TCollection *GetCollection() const { return fCol; }
    TObject           *Next();
    void               Reset();
-   bool               operator!=(const TIterator &aIter) const;
-   bool               operator!=(const TOrdCollectionIter &aIter) const;
+   Bool_t             operator!=(const TIterator &aIter) const;
+   Bool_t             operator!=(const TOrdCollectionIter &aIter) const;
    TObject           *operator*() const;
 
    ClassDef(TOrdCollectionIter,0)  //Ordered collection iterator

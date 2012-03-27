@@ -538,7 +538,7 @@ void TOrdCollectionIter::Reset()
 }
 
 //______________________________________________________________________________
-bool TOrdCollectionIter::operator!=(const TIterator &aIter) const
+Bool_t TOrdCollectionIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -553,7 +553,7 @@ bool TOrdCollectionIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TOrdCollectionIter::operator!=(const TOrdCollectionIter &aIter) const
+Bool_t TOrdCollectionIter::operator!=(const TOrdCollectionIter &aIter) const
 {
    // This operator compares two TOrdCollectionIter objects.
 

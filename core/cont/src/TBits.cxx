@@ -355,7 +355,7 @@ void TBits::Output(ostream &os) const
    for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[fNbytes - 1 - i];
       for (UInt_t j=0; j<8; ++j) {
-         os << (bool)(val&0x80);
+         os << (Bool_t)(val&0x80);
          val <<= 1;
       }
    }

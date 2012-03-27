@@ -144,8 +144,8 @@ public:
    const TCollection *GetCollection() const { return fArray; }
    TObject           *Next();
    void               Reset();
-   bool               operator!=(const TIterator &aIter) const;
-   bool               operator!=(const TObjArrayIter &aIter) const;
+   Bool_t             operator!=(const TIterator &aIter) const;
+   Bool_t             operator!=(const TObjArrayIter &aIter) const;
    TObject           *operator*() const;
 
    ClassDef(TObjArrayIter,0)  //Object array iterator

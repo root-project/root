@@ -65,7 +65,7 @@ private:
    TFileIter *fNestedIterator;   //! The inner TFidrectory interator;
 
    virtual TIterator &operator=(const TIterator &) { return *this; }
-   virtual bool operator!=(const TIterator &it) const { return TListIter::operator!=(it);}
+   virtual Bool_t operator!=(const TIterator &it) const { return TListIter::operator!=(it);}
    
 protected:
    TDirectory   *fRootFile;       // TDirectory/TFile to be iterated over

@@ -25,7 +25,7 @@
 ClassImp(TIterator)
 
 //______________________________________________________________________________
-bool TIterator::operator!=(const TIterator &) const
+Bool_t TIterator::operator!=(const TIterator &) const
 {
    // Compare two iterator objects.
    // For backward compatibility reasons we have to provide this

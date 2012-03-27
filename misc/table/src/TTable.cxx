@@ -235,7 +235,7 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          out << dec  <<  setw(width) << *(int *)buf;
          break;
       case kLong:
-         out << dec  << setw(width) << *(long *)buf;
+         out << dec  << setw(width) << *(Long_t *)buf;
          break;
       case kShort:
          out << dec  << setw(width) << *(short *)buf;
@@ -247,7 +247,7 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          out << dec  << setw(width) << *(unsigned int *)buf;
          break;
       case kULong:
-         out << dec  << setw(width) << *(unsigned long *)buf;
+         out << dec  << setw(width) << *(ULong_t *)buf;
          break;
       case kUShort:
          out  << setw(width) << "0x" << hex << *(unsigned short *)buf;
@@ -259,7 +259,7 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          out << setw(width) << *(char *)buf;
          break;
       case kBool:
-         out << setw(width) << *(bool *)buf;
+         out << setw(width) << *(Bool_t *)buf;
          break;
       case kPtr:
          out << "->" << setw(width) << *(void **)buf;
@@ -821,10 +821,10 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
    G__CallFunc callfunc;
    callfunc.SetBytecode(pbc);
 
-   callfunc.SetArg((long)(&results[0]));   // give 'Float_t *results[5]'     as 1st argument
-   callfunc.SetArg((long)(addressArray));  // give 'void    *addressArray[]' as 2nd argument
-   callfunc.SetArg((long)(&i));            // give 'int& i$'                 as 3nd argument
-   callfunc.SetArg((long)(&nRows));        // give 'int& n$= nRows           as 4th argument
+   callfunc.SetArg((Long_t)(&results[0]));   // give 'Float_t *results[5]'     as 1st argument
+   callfunc.SetArg((Long_t)(addressArray));  // give 'void    *addressArray[]' as 2nd argument
+   callfunc.SetArg((Long_t)(&i));            // give 'int& i$'                 as 3nd argument
+   callfunc.SetArg((Long_t)(&nRows));        // give 'int& n$= nRows           as 4th argument
 #else
    char buf[200];
    sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld),*(int*)(%ld),*(int*)(%ld))"

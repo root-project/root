@@ -937,7 +937,7 @@ void TListIter::Reset()
 }
 
 //______________________________________________________________________________
-bool TListIter::operator!=(const TIterator &aIter) const
+Bool_t TListIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -952,7 +952,7 @@ bool TListIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TListIter::operator!=(const TListIter &aIter) const
+Bool_t TListIter::operator!=(const TListIter &aIter) const
 {
    // This operator compares two TListIter objects.
 

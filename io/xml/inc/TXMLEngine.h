@@ -47,7 +47,7 @@ public:
    TXMLEngine();
    virtual ~TXMLEngine();
 
-   void              SetSkipComments(bool on = kTRUE) { fSkipComments = on; }
+   void              SetSkipComments(Bool_t on = kTRUE) { fSkipComments = on; }
    Bool_t            GetSkipComments() const { return fSkipComments; }
 
    Bool_t            HasAttr(XMLNodePointer_t xmlnode, const char* name);
@@ -96,7 +96,7 @@ public:
    XMLNodePointer_t  GetChild(XMLNodePointer_t xmlnode);
    XMLNodePointer_t  GetParent(XMLNodePointer_t xmlnode);
    XMLNodePointer_t  GetNext(XMLNodePointer_t xmlnode);
-   void              ShiftToNext(XMLNodePointer_t &xmlnode, bool tonode = true);
+   void              ShiftToNext(XMLNodePointer_t &xmlnode, Bool_t tonode = true);
    Bool_t            IsEmptyNode(XMLNodePointer_t xmlnode);
    void              SkipEmpty(XMLNodePointer_t &xmlnode);
    void              CleanNode(XMLNodePointer_t xmlnode);

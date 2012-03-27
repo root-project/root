@@ -526,7 +526,7 @@ void TMapIter::Reset()
 }
 
 //______________________________________________________________________________
-bool TMapIter::operator!=(const TIterator &aIter) const
+Bool_t TMapIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
@@ -541,7 +541,7 @@ bool TMapIter::operator!=(const TIterator &aIter) const
 }
 
 //______________________________________________________________________________
-bool TMapIter::operator!=(const TMapIter &aIter) const
+Bool_t TMapIter::operator!=(const TMapIter &aIter) const
 {
    // This operator compares two TMapIter objects.
 

@@ -32,7 +32,7 @@ TLeafO::TLeafO(): TLeaf()
    fPointer = 0;
    fMinimum = 0;
    fMaximum = 0;
-   fLenType = sizeof(bool);
+   fLenType = sizeof(Bool_t);
 }
 
 //______________________________________________________________________________
@@ -43,7 +43,7 @@ TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
 //*-*                      ==============
 //*-*
 
-   fLenType = sizeof(bool);
+   fLenType = sizeof(Bool_t);
    fMinimum = 0;
    fMaximum = 0;
    fValue   = 0;
@@ -193,10 +193,10 @@ void TLeafO::SetAddress(void *add)
          }
          fValue = *fPointer;
       } else {
-         fValue = (bool*)add;
+         fValue = (Bool_t*)add;
       }
    } else {
-      fValue = new bool[fNdata];
+      fValue = new Bool_t[fNdata];
       fValue[0] = 0;
    }
 }

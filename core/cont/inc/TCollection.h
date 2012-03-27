@@ -156,7 +156,7 @@ public:
    Option_t          *GetOption() const { return fIterator ? fIterator->GetOption() : ""; }
    void               Reset() { if (fIterator) fIterator->Reset(); }
    TIter             &operator++() { Next(); return *this; }
-   bool               operator!=(const TIter &aIter) const { return ((*fIterator) != *(aIter.fIterator)); }
+   Bool_t             operator!=(const TIter &aIter) const { return ((*fIterator) != *(aIter.fIterator)); }
    TObject           *operator*() const { return *(*fIterator); }
    TIter             &Begin();
    static TIter       End();

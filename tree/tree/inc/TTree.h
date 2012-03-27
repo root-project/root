@@ -292,7 +292,7 @@ public:
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, long address, const char* leaflist, Int_t bufsize = 32000) 
+   TBranch        *Branch(const char* name, Long_t address, const char* leaflist, Int_t bufsize = 32000) 
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
@@ -300,7 +300,7 @@ public:
    TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000) 
    {
       // Overload to avoid confusion between this signature and the template instance.
-      return Branch(name,(void*)(long)address,leaflist,bufsize);
+      return Branch(name,(void*)(Long_t)address,leaflist,bufsize);
    }
 #if !defined(__CINT__)
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
@@ -576,11 +576,11 @@ public:
    Option_t          *GetOption() const;
    TObject           *Next();
    void               Reset() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
-   bool operator !=(const TIterator&) const {
+   Bool_t operator !=(const TIterator&) const {
       // TODO: Implement me
       return false;
    }
-   bool operator !=(const TTreeFriendLeafIter&) const {
+   Bool_t operator !=(const TTreeFriendLeafIter&) const {
       // TODO: Implement me
       return false;
    }

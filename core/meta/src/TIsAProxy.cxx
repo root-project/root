@@ -34,7 +34,7 @@ namespace {
    };
 }
 
-typedef std::map<long, TClass*> ClassMap_t; // Internal type map
+typedef std::map<Long_t, TClass*> ClassMap_t; // Internal type map
 inline ClassMap_t *GetMap(void* p)
 {
    return (ClassMap_t*)p;

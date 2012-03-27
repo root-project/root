@@ -171,9 +171,9 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kUInt_t;
    } else if (!strcmp(typeid(int).name(), typeinfo.name())) {
       retType = kInt_t;
-   } else if (!strcmp(typeid(unsigned long).name(), typeinfo.name())) {
+   } else if (!strcmp(typeid(ULong_t).name(), typeinfo.name())) {
       retType = kULong_t;
-   } else if (!strcmp(typeid(long).name(), typeinfo.name())) {
+   } else if (!strcmp(typeid(Long_t).name(), typeinfo.name())) {
       retType = kLong_t;
    } else if (!strcmp(typeid(ULong64_t).name(), typeinfo.name())) {
       retType = kULong64_t;
@@ -187,7 +187,7 @@ EDataType TDataType::GetType(const type_info &typeinfo)
       retType = kUChar_t;
    } else if (!strcmp(typeid(char).name(), typeinfo.name())) {
       retType = kChar_t;
-   } else if (!strcmp(typeid(bool).name(), typeinfo.name())) {
+   } else if (!strcmp(typeid(Bool_t).name(), typeinfo.name())) {
       retType = kBool_t;
    } else if (!strcmp(typeid(float).name(), typeinfo.name())) {
       retType = kFloat_t;
@@ -227,9 +227,9 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("int", name))
       line.Form( "%d", *(int *)buf);
    else if (!strcmp("unsigned long", name))
-      line.Form( "%lu", *(unsigned long *)buf);
+      line.Form( "%lu", *(ULong_t *)buf);
    else if (!strcmp("long", name))
-      line.Form( "%ld", *(long *)buf);
+      line.Form( "%ld", *(Long_t *)buf);
    else if (!strcmp("unsigned long long", name))
       line.Form( "%llu", *(ULong64_t *)buf);
    else if (!strcmp("long long", name))
@@ -239,7 +239,7 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("short", name))
       line.Form( "%hd", *(short *)buf);
    else if (!strcmp("bool", name))
-      line.Form( "%s", *(bool *)buf ? "true" : "false");
+      line.Form( "%s", *(Bool_t *)buf ? "true" : "false");
    else if (!strcmp("unsigned char", name) || !strcmp("char", name) ) {
       line = (char*)buf;
    } else if (!strcmp("float", name))
