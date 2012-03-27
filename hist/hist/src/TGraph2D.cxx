@@ -1423,7 +1423,7 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 {
    // By default when an 2D graph is created, it is added to the list
    // of 2D graph objects in the current directory in memory.
-   // Remove reference to this 2D graph from current directory and add
+   // This method removes reference to this 2D graph from current directory and add
    // reference to new directory dir. dir can be 0 in which case the
    // 2D graph does not belong to any directory.
 
@@ -1437,7 +1437,16 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 //______________________________________________________________________________
 void TGraph2D::SetHistogram(TH2 *h)
 {
-   // Sets the histogram to be filled
+   // Sets the histogram to be filled.
+   // If the 2D graph needs to be save in a TFile the folllowing set should be
+   // followed to read it back:
+   // 1) Create TGraph2D 
+   // 2) Call g->SetHistogram(h), and do whatever you need to do 
+   // 3) Save g and h to the TFile, exit 
+   // 4) Open the TFile, retrieve g and h 
+   // 5) Call h->SetDirectory(0) 
+   // 6) Call g->SetHistogram(h) again 
+   // 7) Carry on as normal 
 
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
