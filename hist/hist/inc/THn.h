@@ -61,6 +61,7 @@ protected:
       FillBinBase(w);
    }
 
+   void AllocCoordBuf() const;
    void InitStorage(Int_t* nbins, Int_t chunkSize);
 
    THn(): fCoordBuf() {}
@@ -84,12 +85,14 @@ public:
       return GetArray().GetBin(idx);
    }
    Long64_t GetBin(const Double_t* x) const {
+      if (!fCoordBuf) AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindFixBin(x[d]);
       }
       return GetArray().GetBin(fCoordBuf);
    }
    Long64_t GetBin(const char* name[]) const {
+      if (!fCoordBuf) AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindBin(name[d]);
       }

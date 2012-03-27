@@ -175,9 +175,9 @@ THn::THn(const char* name, const char* title,
          Int_t dim, const Int_t* nbins,
          const Double_t* xmin, const Double_t* xmax):
    THnBase(name, title, dim, nbins, xmin, xmax),
-   fSumw2(dim, nbins, kTRUE /*overflow*/) {
+   fSumw2(dim, nbins, kTRUE /*overflow*/),
+   fCoordBuf() {
    // Construct a THn.
-   fCoordBuf = new Int_t[dim];
 }
 
 //______________________________________________________________________________
@@ -205,6 +205,14 @@ void THn::Sumw2() {
 }
 
  
+//______________________________________________________________________________
+void THn::AllocCoordBuf() const
+{
+   // Create the coordinate buffer. Outlined to hide allocation
+   // from inlined functions.
+   fCoordBuf = new Int_t[fNdimensions];
+}
+
 //______________________________________________________________________________
 void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
