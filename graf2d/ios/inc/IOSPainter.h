@@ -68,12 +68,16 @@ private:
 
 class Painter {
 public:
+   enum EMode {
+      kPaintToSelectionBuffer, //A pad draws the scene into the selection buffer.
+      kPaintToView,            //Normal painting (normal colors and styles).
+      kPaintSelected,          //Only selected object is painted.
+      kPaintThumbnail          //Paint into small picture, low level of details.
+   };
+
 
    Painter();
- 
-   Bool_t   IsTransparent() const {return fRootOpacity < 100;}//+
-   void     SetOpacity(Int_t percent);
-   
+    
    //Now, drawing primitives.
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
@@ -95,40 +99,14 @@ public:
    
    void     SetContext(CGContextRef ctx);
    void     SetTransform(UInt_t w, Double_t xMin, Double_t xMax, UInt_t h, Double_t yMin, Double_t yMax);
-   
-   Int_t    CreateDrawable(UInt_t, UInt_t){return 0;}
-   void     ClearDrawable(){}
-   void     CopyDrawable(Int_t, Int_t, Int_t){}
-   void     DestroyDrawable(){}
-   void     SelectDrawable(Int_t) {}
-   
-   void     SaveImage(TVirtualPad *, const char *, Int_t) const{}
 
-   enum EMode {
-      kPaintToSelectionBuffer, //A pad draws the scene into the selection buffer.
-      kPaintToView,            //Normal painting (normal colors and styles).
-      kPaintShadow,            //Paint the gray polygon/line under selected object (shadow).
-      kPaintSelected,          //Only selected object is painted (special style and color).
-      kPaintThumbnail          //Paint into small picture, very low level of details.
-   };
-
-   //Temporary solution for objecti picking in a pad.
-   void     SetPainterMode(EMode mode)
-   {
-      fPainterMode = mode;
-   }
+   void     SetPainterMode(EMode mode);
+   void     SetCurrentObjectID(UInt_t objId);
    
-   void     SetCurrentObjectID(UInt_t objId)
-   {
-      fCurrentObjectID = objId;
-   }
-   
-   void GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
+   void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
 
 private:
 
-   //Polygon parameters.
-   //Polygon stipple here.
    void     SetStrokeParameters()const;
    void     SetPolygonParameters()const;
    void     SetMarkerColor()const;
@@ -148,12 +126,9 @@ private:
    FontManager     fFontManager;
    CGContextRef    fCtx;//Quartz context.
    SpaceConverter  fConverter;   
-
-   Int_t           fRootOpacity;
-
    
    typedef std::vector<TPoint>::size_type size_type;
-   std::vector<TPoint>    fPolyMarker;//Buffer for converted poly-marker coordinates.
+   std::vector<TPoint> fPolyMarker;//Buffer for converted poly-marker coordinates.
 
    //Staff for picking.
    EMode fPainterMode;

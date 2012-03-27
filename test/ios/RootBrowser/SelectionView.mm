@@ -1,13 +1,10 @@
 #import <CoreGraphics/CGContext.h>
-#import <QuartzCore/QuartzCore.h>
 
 #import "SelectionView.h"
 #import "PadView.h"
 
 //C++ (ROOT) imports.
 #import "IOSPad.h"
-
-const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
 
 @implementation SelectionView {
    ROOT::iOS::Pad *pad;
@@ -16,16 +13,16 @@ const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
 @synthesize panActive;
 @synthesize panStart;
 @synthesize currentPanPoint;
-@synthesize verticalDirection;
+@synthesize verticalPanDirection;
 
 //____________________________________________________________________________________________________
-+ (CGFloat) shadowOpacity
++ (void) setShadowColor : (CGContextRef) ctx
 {
-   return 0.;
+   CGContextSetShadowWithColor(ctx, CGSizeMake(3.f, 3.f), 8.f, [UIColor blackColor].CGColor);
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame : (CGRect)frame withPad : (ROOT::iOS::Pad *) p
+- (id) initWithFrame : (CGRect)frame withPad : (ROOT::iOS::Pad *) p
 {
    self = [super initWithFrame:frame];
 
@@ -52,16 +49,16 @@ const CGRect selectionHintFrame = CGRectMake(0.f, 0.f, 250.f, 300.f);
    pad->SetViewWH(rect.size.width, rect.size.height);
    pad->SetContext(ctx);
 
-   CGContextTranslateCTM(ctx, 2.5f, 2.5f);
-   pad->PaintShadowForSelected();
-   CGContextTranslateCTM(ctx, -2.5f, -2.5f);
+   //Selected object will cast a shadow.
+
+   [SelectionView setShadowColor : ctx];
    pad->PaintSelected();
    
    CGContextRestoreGState(ctx);
    
    if (panActive) {
       CGContextSetRGBFillColor(ctx, 0.f, 0.f, 1.f, 0.2f);
-      if (!verticalDirection)
+      if (!verticalPanDirection)
          CGContextFillRect(ctx, CGRectMake(panStart.x, 0.f, currentPanPoint.x - panStart.x, rect.size.height));
       else
          CGContextFillRect(ctx, CGRectMake(0.f, panStart.y, rect.size.width, currentPanPoint.y - panStart.y));

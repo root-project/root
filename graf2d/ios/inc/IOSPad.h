@@ -270,7 +270,6 @@ public:
 
    TObject *GetSelected() const;
 
-   void PaintShadowForSelected() const;
    void PaintSelected() const;
    
    void PushTopLevelSelectable(TObject *top);

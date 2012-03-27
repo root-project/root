@@ -314,9 +314,9 @@ const CGFloat tapInterval = 0.15f;
          if (!selectionView.panActive) {
             selectionView.panActive = YES;
             if (!strcmp(axis->GetName(), "xaxis"))
-               selectionView.verticalDirection = NO;
+               selectionView.verticalPanDirection = NO;
             else
-               selectionView.verticalDirection = YES;
+               selectionView.verticalPanDirection = YES;
             selectionView.panStart = tapPt;
             
             pad->ExecuteEventAxis(kButton1Down, tapPt.x, tapPt.y, axis);
