@@ -32,6 +32,10 @@
    tree->Scan("name:count:first:second","first");
    tree->Scan("name:count:first:second","second");
    
+   // Quiet down ACLiC.
+   gErrorIgnoreLevel = kWarning;
+   tree->Draw("scriptAliasString.C+");
+   
    return error;
    
 }

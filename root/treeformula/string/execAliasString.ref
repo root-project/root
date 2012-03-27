@@ -37,3 +37,9 @@ Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 *        1 *       17B *         2 *         0 *         1 *
 ************************************************************
 ==> 1 selected entry
+the string is 16A
+the string with operator use is 16A
+the string direct is 16A
+the string is 17B
+the string with operator use is 17B
+the string direct is 17B
