@@ -18,7 +18,8 @@
 //____________________________________________________________________________________________________
 + (void) setShadowColor : (CGContextRef) ctx
 {
-   CGContextSetShadowWithColor(ctx, CGSizeMake(3.f, 3.f), 8.f, [UIColor blackColor].CGColor);
+   UIColor *shadowColor = [UIColor colorWithRed : 0.f green : 0.f blue : 0.f alpha : 0.7f];
+   CGContextSetShadowWithColor(ctx, CGSizeMake(3.f, 3.f), 4.f, shadowColor.CGColor);
 }
 
 //____________________________________________________________________________________________________
