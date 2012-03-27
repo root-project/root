@@ -69,6 +69,7 @@ class TStreamerElement;
 #include "TFile.h"
 #include "TFriendElement.h"
 #include "TLeaf.h"
+#include "TLeafC.h"
 #include "TTree.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -1083,7 +1084,10 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       //if (leafcount) {
       //   len = leafcount->GetMaximum();
       //}
-
+      if (dim == 0 && leaf->IsA() == TLeafC::Class()) {
+         // For C style strings.
+         dim = 1;
+      }
 
       TString type;
       switch (dim) {

@@ -340,11 +340,21 @@ namespace ROOT {
          return At(i);
       }
 
+      operator const char*() {
+         if (!Read()) return "";
+         return (const char*)GetStart();
+      }
+      
+      const char* Data() {
+         if (!Read()) return "";
+         return (const char*)GetStart();
+      }
+      
       const char* c_str() {
          if (!Read()) return "";
          return (const char*)GetStart();
       }
-
+      
       operator std::string() {
          if (!Read()) return "";
          return std::string((const char*)GetStart());
