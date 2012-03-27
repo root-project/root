@@ -426,7 +426,8 @@ Int_t TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option)
 }
 
 
-struct TTreeCacheUnzipData {
+class TTreeCacheUnzipData {
+public:
    TTreeCacheUnzip *inst;
    Int_t cnt;
 };
