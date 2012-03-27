@@ -203,7 +203,7 @@ protected:
       kSetBranchStatus   = BIT(12)
    };
    
-   enum SetBranchAddressStatus {
+   enum ESetBranchAddressStatus {
       kMissingBranch = -5,
       kInternalError = -4,
       kMissingCompiledCollectionProxy = -3,

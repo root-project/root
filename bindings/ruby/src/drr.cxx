@@ -542,13 +542,13 @@ void drr_set_method_args( VALUE inargs, G__CallFunc *func, long int offset=1 )
    drr_map_args2( inargs, 0, func, offset );
 }
 
-enum ktype {kint, kfloat, kchar, kunknown, kvoid, kintary, kfloatary, kstring, kroot, kbool};
+enum Ektype {kint, kfloat, kchar, kunknown, kvoid, kintary, kfloatary, kstring, kroot, kbool};
 
 int drr_parse_ret_type (const char *ret)
 {
    char *realtype = strdup(ret), *t = realtype;
    int plevel = 0;
-   enum ktype type;
+   Ektype type;
 
    while (*(t++)) {
       if (*t == '*')
@@ -583,7 +583,7 @@ int drr_parse_ret_type (const char *ret)
       /* Quick hack to move from ordinary types to pointer types,
        * which are essntially arrays of values. For example an integer
        * (kint) is transformed to an array of integers (kintary).  */
-      type = (enum ktype)(type + 5);
+      type = (Ektype)(type + 5);
 
    free (realtype);
 

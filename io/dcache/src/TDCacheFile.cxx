@@ -383,7 +383,7 @@ void TDCacheFile::SetOpenTimeout(UInt_t n)
 }
 
 //______________________________________________________________________________
-void TDCacheFile::SetOnError(OnErrorAction a)
+void TDCacheFile::SetOnError(EOnErrorAction a)
 {
    // Set on error handler.
 

@@ -75,14 +75,14 @@ public:
    static Bool_t CheckFile(const char *path, const char *location = 0);
 
    // Note: This must be kept in sync with values #defined in dcap.h
-   enum OnErrorAction {
+   enum EOnErrorAction {
       kOnErrorRetry   =  1,
       kOnErrorFail    =  0,
       kOnErrorDefault = -1
    };
 
    static void SetOpenTimeout(UInt_t secs);
-   static void SetOnError(OnErrorAction = kOnErrorDefault);
+   static void SetOnError(EOnErrorAction = kOnErrorDefault);
 
    static void SetReplyHostName(const char *host_name);
    static const char *GetDcapVersion();
