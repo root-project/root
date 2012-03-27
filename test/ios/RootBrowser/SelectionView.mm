@@ -2,7 +2,6 @@
 
 #import "IOSSelectionMarkers.h"
 #import "SelectionView.h"
-#import "TStopwatch.h"
 #import "PadView.h"
 #import "TAxis.h"
 
@@ -62,15 +61,10 @@
 //____________________________________________________________________________________________________
 - (void)drawRect : (CGRect)rect
 {
-
-
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    
    CGContextSaveGState(ctx);
 
-   TStopwatch timer;
-   timer.Start();
-   
    const CGRect intersection = CGRectIntersection(rect, self.superview.superview.bounds);
    const BOOL useShadows = CGRectEqualToRect(intersection, rect);
 
@@ -103,9 +97,6 @@
       else
          CGContextFillRect(ctx, CGRectMake(0.f, panStart.y, rect.size.width, currentPanPoint.y - panStart.y));
    }
-   
-   timer.Stop();
-   NSLog(@"time %g", timer.RealTime());
 }
 
 //____________________________________________________________________________________________________
