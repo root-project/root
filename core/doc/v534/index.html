@@ -21,3 +21,8 @@ from <a href="http://code.google.com/p/smhasher/">http://code.google.com/p/smhas
 To accelerate the hash in the case of pointers even further, pointers (and same-sized texts) are hashed using a simple bitwise xor.
 This dramatically increases the hash performance for long texts, and still by a factor 5 for pointers.
 The pointer case is most visible for certain I/O operations (TExMap).</p>
+
+<h4>TColor</h4>
+<p>Add the method <tt>SetAlpha()</tt> to set the alpha value (transparency 
+level) for an existing color.
+</p>
