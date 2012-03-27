@@ -238,7 +238,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
          //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
          //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
 
-         if (fNcodes == 1) {
+         if (fNoper == 1) {
             // If the string is by itself, then it can safely be histogrammed as
             // in a string based axis.  To histogram the number inside the string
             // just make it part of a useless expression (for example: mystring+0)
@@ -251,14 +251,17 @@ void TTreeFormula::Init(const char*name, const char* expression)
          if (IsString(fNoper-1)) SetBit(kIsCharacter);
       }
    }
+   if (fNoper == 1 && GetAction(0)==kStringConst) {
+      SetBit(kIsCharacter);
+   }
    if (fNoper==1 && GetAction(0)==kAliasString) {
       TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
-      if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
+      if (subform->IsString()) SetBit(kIsCharacter);
    } else if (fNoper==2 && GetAction(0)==kAlternateString) {
       TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       R__ASSERT(subform);
-      if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
+      if (subform->IsString()) SetBit(kIsCharacter);
    }
 
    fManager->Sync();
@@ -4053,6 +4056,11 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kStringConst: {
                // String
                pos2++; stringStack[pos2-1] = (char*)fExpr[i].Data();
+               if (fAxis) {
+                  // See TT_EVAL_INIT
+                  Int_t bin = fAxis->FindBin(stringStack[pos2-1]);                                                        \
+                  return bin;
+               }
                continue;
             }
 
@@ -4580,7 +4588,8 @@ Bool_t TTreeFormula::IsString() const
 {
    // return TRUE if the formula is a string
 
-   return TestBit(kIsCharacter) || (fNoper==1 && IsString(0));
+   // See TTreeFormula::Init for the setting of kIsCharacter.
+   return TestBit(kIsCharacter);
 }
 
 //______________________________________________________________________________
@@ -4704,23 +4713,28 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
    } else if (mode == -1) {
       snprintf(value, kMAXLENGTH-1, "%s", GetTitle());
    } else if (mode == 0) {
-      if ( (fNstring && fNval==0 && fNoper==1) ||
-           (TestBit(kIsCharacter)) )
+      if ( (fNstring && fNval==0 && fNoper==1) || IsString() )
       {
          const char * val = 0;
-         if (instance<fNdata[0]) {
-            if (fLookupType[0]==kTreeMember) {
-               val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
-            } else {
-               TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-               TBranch *branch = leaf->GetBranch();
-               Long64_t readentry = branch->GetTree()->GetReadEntry();
-               R__LoadBranch(branch,readentry,fQuickLoad);
-               if (fLookupType[0]==kDirect && fNoper==1) {
-                  val = (const char*)leaf->GetValuePointer();
+         if (GetAction(0)==kStringConst) {
+            val = fExpr[0].Data();
+         } else if (instance<fNdata[0]) {
+            if (fNoper == 1) {
+               if (fLookupType[0]==kTreeMember) {
+                  val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
                } else {
-                  val = ((TTreeFormula*)this)->EvalStringInstance(instance);
+                  TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+                  TBranch *branch = leaf->GetBranch();
+                  Long64_t readentry = branch->GetTree()->GetReadEntry();
+                  R__LoadBranch(branch,readentry,fQuickLoad);
+                  if (fLookupType[0]==kDirect && fNoper==1) {
+                     val = (const char*)leaf->GetValuePointer();
+                  } else {
+                     val = ((TTreeFormula*)this)->EvalStringInstance(instance);
+                  }
                }
+            } else {
+               val = ((TTreeFormula*)this)->EvalStringInstance(instance);
             }
          }
          if (val) {
@@ -4859,7 +4873,7 @@ void TTreeFormula::SetAxis(TAxis *axis)
    // Set the axis (in particular get the type).
 
    if (!axis) {fAxis = 0; return;}
-   if (TestBit(kIsCharacter)) {
+   if (IsString()) {
       fAxis = axis;
       if (fNoper==1 && GetAction(0)==kAliasString){
          TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
@@ -4870,8 +4884,9 @@ void TTreeFormula::SetAxis(TAxis *axis)
          R__ASSERT(subform);
          subform->SetAxis(axis);
       }
+   } else if (IsInteger()) {
+      axis->SetBit(TAxis::kIsInteger);
    }
-   if (IsInteger()) axis->SetBit(TAxis::kIsInteger);
 }
 
 //______________________________________________________________________________

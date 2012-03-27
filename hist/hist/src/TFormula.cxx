@@ -847,7 +847,6 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*- If operator found, analyze left and right part of the statement
 //*-*  ===============================================================
 
-      enum { kIsCharacter = BIT(12) };
       actionParam = 0;
       if (tercond && terelse) {
          if (tercond == 1 || terelse == lchain || tercond == (terelse-1) ) {
@@ -1063,7 +1062,6 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error = "==";
             } else if (isstring) {
                actionCode = kStringEqual;
-               SetBit(kIsCharacter);
             }
             SetAction(fNoper,actionCode,actionParam);
             fNoper++;
@@ -1089,7 +1087,6 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error = "!=";
             } else if (isstring) {
                actionCode = kStringNotEqual;
-               SetBit(kIsCharacter);
             }
             SetAction(fNoper,actionCode,actionParam);
             fNoper++;
