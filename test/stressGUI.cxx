@@ -2170,7 +2170,7 @@ void testSplitFrame()
    // Test TGSplitFrame.
 
    TGMainFrame *mf = new TGMainFrame(gClient->GetDefaultRoot(), 200, 200);
-   mf->SetCleanup(kDeepCleanup);
+   //mf->SetCleanup(kDeepCleanup);
    TGSplitFrame *first = new TGSplitFrame(mf, 200, 200);
    mf->AddFrame(first, new TGLayoutHints(kLHintsExpandX | kLHintsExpandX, 0, 0, 0, 0));
    first->HSplit();
@@ -2323,6 +2323,7 @@ void run_tutorials()
    TSystemDirectory sysdir(dir.Data(), dir.Data());
    TList *files = sysdir.GetListOfFiles();
 
+   gSystem->ChangeDirectory(dir.Data());
    dir = gRootSys + "/tutorials";
    TString reqfile = dir + "/hsimple.root";
    if (gSystem->AccessPathName(reqfile, kFileExists)) {
