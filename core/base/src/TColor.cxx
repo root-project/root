@@ -38,6 +38,7 @@ TArrayI TColor::fgPalette(0);
 <li><a href="#C03">Bright and dark colors</li></a>
 <li><a href="#C04">Gray scale view of of canvas with colors</li></a>
 <li><a href="#C05">Color palettes</li></a>
+<li><a href="#C06">Color transparency</li></a>
 </ul>
 
 <a name="C00"></a><h3>Introduction</h3>
@@ -236,7 +237,27 @@ The following macro illustrate this feature.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
-End_Macro */
+End_Macro 
+Begin_Html
+
+<a name="C06"></a><h3>Color transparency</h3>
+To make a graphics object transparent it is enough to set its color to a 
+transparent one. The color transparency is defined via its alpha component. The 
+alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully 
+opaque). To set the alpha value of an existing color it is enough to do:
+<pre>
+   TColor *col26 = gROOT->GetColor(26);
+   col26->SetAlpha(0.01);
+</pre>
+A new color can be created transparent the following way:
+<pre>
+   Int_t ci = 1756;
+   TColor *color = new TColor(ci, 0.1, 0.2, 0.3, 0.5); // alpha = 0.5
+</pre>
+An example of tranparency usage with parallel coordinates can be found
+in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. <b>Right now the 
+transparency is implemented for PDF output only</b>
+*/
 
 
 //______________________________________________________________________________
