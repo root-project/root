@@ -404,7 +404,8 @@ TGeoManager::TGeoManager()
       ClearThreadsMap();
    } else {
       Init();
-      gGeoIdentity = 0;
+      gGeoIdentity = new TGeoIdentity("Identity");
+      BuildDefaultMaterials();
    }
 }
 
