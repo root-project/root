@@ -256,7 +256,7 @@ namespace ROOT {
    Bool_t TTreeProxyGenerator::NeedToEmulate(TClass *cl, UInt_t /* level */)
    {
       // Return true if we should create a nested class representing this class
-      
+
       return cl!=0 && cl->TestBit(TClass::kIsEmulation);
    }
 
@@ -1612,7 +1612,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // not be needed.
       // (I.e. return kFALSE if a container of this class
       // can not have a "pragma C++ class" 
-      
+
       if (!cl) return kFALSE;
       if (cl->GetCollectionProxy()) {
          TClass *valcl = cl->GetCollectionProxy()->GetValueClass();
@@ -1679,7 +1679,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       fHeaderFileName = fPrefix;
       TString classname = gSystem->BaseName(fPrefix);
-      
+
       // Check if there is already an extension and extract it.
       Ssiz_t pos = classname.Last('.');
       if (pos != kNPOS) {
@@ -1899,7 +1899,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       next = &fListOfFriends;
       TFriendProxyDescriptor *fpd;
       while ( (fpd = (TFriendProxyDescriptor*)next()) ) {
-          fprintf(hf,",\n      %-*s(&fDirector,tree,%d)",
+         fprintf(hf,",\n      %-*s(&fDirector,tree,%d)",
                  fMaxDatamemberType, fpd->GetTitle(), fpd->GetIndex());
       }
 

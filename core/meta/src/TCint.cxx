@@ -89,13 +89,13 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
    //classes then executes CompileMacro on it.
    //The name of the file depends on the class name, and it's not generated again
    //if the file exist.
-   
-   
+
+
    if (classes.empty()) {
       return 0;
    }
    // Use the name of the first class as the main name.
-   
+
    const std::string &className = classes[0];
    //(0) prepare file name
    TString fileName = "AutoDict_";
@@ -265,7 +265,7 @@ int TCint_GenerateDictionary(const std::string &className,
    //classes then executes CompileMacro on it.
    //The name of the file depends on the class name, and it's not generated again
    //if the file exist.
-   
+
    std::vector<std::string> classes;
    classes.push_back(className);
    return TCint_GenerateDictionary(classes, headers, fwdDecls, unknown);
@@ -1163,10 +1163,10 @@ Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0
    //    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
    // or
    //    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
-   
+
    if (classes == 0 || classes[0] == 0) return 0;
    if (!includes) includes = "";
-   
+
    // Split the input list
    std::vector<std::string> listClasses;
    for(const char *current = classes, *prev = classes; *current != 0; ++current) {
@@ -1188,7 +1188,7 @@ Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0
          prev = current+1;
       }
    }
-   
+
    // Generate the temporary dictionary file
    return TCint_GenerateDictionary(listClasses,listIncludes, std::vector<std::string>(), std::vector<std::string>());
 }
@@ -1488,7 +1488,7 @@ const char *TCint::TypeName(const char *typeDesc)
 
    static char *t = 0;
    static unsigned int tlen = 0;
-   
+
    R__LOCKGUARD(gCINTMutex); // Because of the static array.
 
    unsigned int dlen = strlen(typeDesc);
@@ -1940,8 +1940,8 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
    TString deplibs = gInterpreter->GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
      if (gDebug > 0 && gDebug <= 4)
-       ::Info("TCint::AutoLoadCallback", "loaded dependent library %s for class %s",
-	      deplibs.Data(), cls);
+        ::Info("TCint::AutoLoadCallback", "loaded dependent library %s for class %s",
+               deplibs.Data(), cls);
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
       for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {

@@ -223,7 +223,7 @@ void TLeafS::SetAddress(void *add)
              ncountmax > fNdata || *fPointer == 0) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
-           *fPointer = new Short_t[fNdata];
+            *fPointer = new Short_t[fNdata];
          }
          fValue = *fPointer;
       } else {

@@ -4094,7 +4094,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   int toskip = param / 10;
                   i += toskip;
                   if (willLoad) fDidBooleanOptimization = kTRUE;
-              }
+               }
                continue;
             }
 
@@ -4552,13 +4552,13 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kLength:
          case kLengthFunc:
          case kIteration:
-           return kTRUE;
+            return kTRUE;
          case kSum:
          case kMin:
          case kMax:
          case kEntryList:
          default:
-           return kFALSE;
+            return kFALSE;
       }
    }
    if (fAxis) return kTRUE;
@@ -4986,10 +4986,10 @@ void TTreeFormula::UpdateFormulaLeaves()
       if (j<fNval && fCodes[j]<0) {
          TCutG *gcut = (TCutG*)fExternalCuts.At(j);
          if (gcut) {
-           TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-           TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-           if (fx) fx->UpdateFormulaLeaves();
-           if (fy) fy->UpdateFormulaLeaves();
+            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+            if (fx) fx->UpdateFormulaLeaves();
+            if (fy) fy->UpdateFormulaLeaves();
          }
       }
    }
@@ -5122,7 +5122,7 @@ void TTreeFormula::ResetDimensions() {
          if (!gcut) continue;
          TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
          TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-
+         
          if (fx) {
             switch(fx->GetMultiplicity()) {
                case 0: break;
@@ -5139,15 +5139,15 @@ void TTreeFormula::ResetDimensions() {
             }
             fManager->Add(fy);
          }
-
+         
          continue;
       }
 
       if (fLookupType[i]==kIteration) {
-          fMultiplicity = 1;
-          continue;
+         fMultiplicity = 1;
+         continue;
       }
-
+      
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       if (!leaf) continue;
 

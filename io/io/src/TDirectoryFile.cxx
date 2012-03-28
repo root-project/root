@@ -196,7 +196,7 @@ void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
    if (obj == 0 || fList == 0) return;
 
    TDirectory::Append(obj,replace);
-   
+
    if (!fMother) return;
    if (fMother->IsA() == TMapFile::Class()) {
       TMapFile *mfile = (TMapFile*)fMother;
@@ -352,7 +352,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
    // if no default ctor return immediately (error issued by New())
    char *pobj = (char*)obj->IsA()->New();
    if (!pobj) return 0;
-   
+
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
       // cl does not inherit from TObject.
@@ -376,12 +376,12 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       {
          Bool_t isRef = obj->TestBit(kIsReferenced); 
          ((TObject*)obj)->ResetBit(kIsReferenced);	
-         
+
          ((TObject*)obj)->Streamer(buffer);
-         
+
          if (isRef) ((TObject*)obj)->SetBit(kIsReferenced);
       }
-      
+
       // read new object from buffer
       buffer.SetReadMode();
       buffer.ResetMap();
@@ -1263,7 +1263,7 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
       }
       delete [] header;
    }
-   
+
    Int_t nkeys = 0;
    Long64_t fsize = fFile->GetSize();
    if ( fSeekKeys >  0) {
@@ -1327,7 +1327,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    // Directory.  This returns the TDirectoryFile object back to its state
    // before any data has been written to the file.
    // The object in the in-memory list are assumed to also have been reset.
-   
+
    // There is nothing to reset in the base class (TDirectory) since
    // we do want to key the list of in-memory object as is.
    fModified = kFALSE;
@@ -1351,7 +1351,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fKeys) {
       fKeys->Delete("slow");
    }
-   
+
    Init(cl);
 
    // Do the same with the sub-directories.
@@ -1362,7 +1362,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
          ((TDirectoryFile*)idcur)->ResetAfterMerge(info);
       }
    }
-   
+
 }
 
 //______________________________________________________________________________
@@ -1737,7 +1737,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    //
    //  WARNING: in name avoid special characters like '^','$','.' that are used 
    //  by the regular expression parser (see TRegexp).
-    
+
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) {
@@ -1844,7 +1844,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
    //      directory->WriteObject(top,"name of object")
    //
    //   see laso remarks in TDirectoryFile::WriteTObject
-   
+
    TClass *cl = TClass::GetClass(classname);
    if (cl == 0) {
       TObject *info_obj = *(TObject**)obj;

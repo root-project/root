@@ -131,10 +131,10 @@ void TTreeCacheUnzip::Init()
    fUnzipDoneCondition   = new TCondition(fMutexList);
 
    fTotalUnzipBytes = 0;
-   
+
    fCompBuffer = new char[16384];
    fCompBufferSize = 16384;
- 
+
    if (fgParallel == kDisable) {
       fParallel = kFALSE;
    }
@@ -223,24 +223,24 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
       Long64_t entry = tree->GetReadEntry();
-      
+
       // If the entry is in the range we previously prefetched, there is 
       // no point in retrying.   Note that this will also return false
       // during the training phase (fEntryNext is then set intentional to 
       // the end of the training phase).
       if (fEntryCurrent <= entry  && entry < fEntryNext) return kFALSE;
-      
+
       // Triggered by the user, not the learning phase
       if (entry == -1)  entry=0;
-      
+
       TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
       fEntryCurrent = clusterIter();
       fEntryNext = clusterIter.GetNextEntry();
-      
+
       if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
       if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
-      
+
       // Check if owner has a TEventList set. If yes we optimize for this
       // Special case reading only the baskets containing entries in the
       // list.
@@ -253,10 +253,10 @@ Bool_t TTreeCacheUnzip::FillBuffer()
             chainOffset = chain->GetTreeOffset()[t];
          }
       }
-      
+
       //clear cache buffer
       TFileCacheRead::Prefetch(0,0);
-      
+
       //store baskets
       for (Int_t i=0;i<fNbranches;i++) {
          TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
@@ -272,7 +272,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
          for (Int_t j=0;j<nb;j++) {
             // This basket has already been read, skip it
             if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
-            
+
             Long64_t pos = b->GetBasketSeek(j);
             Int_t len = lbaskets[j];
             if (pos <= 0 || len <= 0) continue;
@@ -285,20 +285,20 @@ Bool_t TTreeCacheUnzip::FillBuffer()
                if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
             }
             fNReadPref++;
-            
+
             TFileCacheRead::Prefetch(pos,len);
          }
          if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
       }
-      
-      
+
+
       // Now fix the size of the status arrays
       ResetCache();
-      
+
       fIsLearning = kFALSE;
-      
+
    }
-   
+
    return kTRUE;
 }
 
@@ -465,7 +465,7 @@ Int_t TTreeCacheUnzip::StartThreadUnzip(Int_t nthreads)
 
          // There is at least one active thread
          fActiveThread=kTRUE;
-        
+
       }
    }
 
@@ -510,7 +510,7 @@ void* TTreeCacheUnzip::UnzipLoop(void *arg)
    // Returns 0 when it finishes
    TTreeCacheUnzipData *d = (TTreeCacheUnzipData *)arg;
    TTreeCacheUnzip *unzipMng = d->fInstance;
-   
+
    TThread::SetCancelOn();
    TThread::SetCancelDeferred();
 
@@ -531,7 +531,7 @@ void* TTreeCacheUnzip::UnzipLoop(void *arg)
          if (unzipMng->fNseek) startindex = startindex % unzipMng->fNseek;
          else startindex = -1;
       }
-   
+
 
       if (startindex >= 0)
          res = unzipMng->UnzipCache(startindex, locbuffsz, locbuff);
@@ -615,7 +615,7 @@ void TTreeCacheUnzip::ResetCache()
 
    if (gDebug > 0)
       Info("ResetCache", "Thread: %ld -- Resetting the cache. fNseek:%d fNSeekMax:%d fTotalUnzipBytes:%lld", TThread::SelfId(), fNseek, fNseekMax, fTotalUnzipBytes);
-   
+
    // Reset all the lists and wipe all the chunks
    fCycle++;
    for (Int_t i = 0; i < fNseekMax; i++) {
@@ -736,7 +736,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
 
 
-         
+
          loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
          if ( (fCycle == myCycle) && (loc >= 0) && (loc < fNseek) && (pos == fSeekSort[loc]) ) {
 
@@ -774,9 +774,9 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                      SendUnzipStartSignal(kFALSE);
                      *free = kFALSE;
                   }
-               
+
                   fNFound++;
-               
+
                   return fUnzipLen[seekidx];
                }
 
@@ -885,10 +885,10 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
          fFile->Seek(pos);
          res = fFile->ReadBuffer(fCompBuffer, len);
       }
-   
-      
+
+
       if (res) res = -1;
-      
+
    } // scope of the lock!
 
    if (!res) {
@@ -902,7 +902,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    }
 
    return res;
-   
+
 }
 
 
@@ -922,7 +922,7 @@ void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
    // Sets the size for the unzipping cache... by default it should be
    // two times the size of the prefetching cache
    R__LOCKGUARD(fMutexList);
-   
+
    fUnzipBufferSize = bufferSize;
 }
 
@@ -1077,7 +1077,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       rdoffs = 0;
       rdlen = 0;
       if (fTotalUnzipBytes < fUnzipBufferSize) {
- 
+
 
          if (fBlocksToGo > 0) {
             for (Int_t ii=0; ii < fNseek; ii++) {
@@ -1154,8 +1154,8 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
          fUnzipStatus[idxtounzip] = 2; // Set it as not done
          fUnzipChunks[idxtounzip] = 0;
          fUnzipLen[idxtounzip] = 0;
-	      fUnzipDoneCondition->Signal();
-
+         fUnzipDoneCondition->Signal();
+         
          startindex = 0;
          return 1;
       }
@@ -1213,7 +1213,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
          fUnzipLen[idxtounzip] = 0;
 
          startindex = 0;
-	      fUnzipDoneCondition->Signal();
+         fUnzipDoneCondition->Signal();
          return 1;
       }
 
@@ -1227,7 +1227,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       if (gDebug > 0)
          Info("UnzipCache", "reqi:%d, rdoffs:%lld, rdlen: %d, loclen:%d",
               idxtounzip, rdoffs, rdlen, loclen);
-      
+
       fNUnzip++;
    }
    else {
@@ -1253,7 +1253,7 @@ void  TTreeCacheUnzip::Print(Option_t* option) const {
    printf("Number of hits: %d\n", fNFound);
    printf("Number of stalls: %d\n", fNStalls);
    printf("Number of misses: %d\n", fNMissed);
-   
+
    TTreeCache::Print(option);
 }
 

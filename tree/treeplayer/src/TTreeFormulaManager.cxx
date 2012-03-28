@@ -242,17 +242,17 @@ Bool_t TTreeFormulaManager::Sync()
 
       current->ResetDimensions();
       switch (current->GetMultiplicity()) {
-      case 0:
-         // nothing to do
-         break;
-      case 1:
-         fMultiplicity = 1;
-         break;
-      case 2:
-         if (fMultiplicity!=1) fMultiplicity = 2;
-         break;
-      default:
-        Error("Sync","Unexpected case!");
+         case 0:
+            // nothing to do
+            break;
+         case 1:
+            fMultiplicity = 1;
+            break;
+         case 2:
+            if (fMultiplicity!=1) fMultiplicity = 2;
+            break;
+         default:
+            Error("Sync","Unexpected case!");
       }
 
 

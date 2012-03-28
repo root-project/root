@@ -1089,7 +1089,7 @@ void TBufferSQL2::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /
    // Read a Double32_t from the buffer when the factor and minimun value have been specified
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
    // Currently TBufferXML does not optimize space in this case.
-   
+
    SqlReadBasic(*ptr);
 }
 
@@ -1099,7 +1099,7 @@ void TBufferSQL2::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
    // Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
    // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
    // Currently TBufferXML does not optimize space in this case.
-   
+
    SqlReadBasic(*ptr);
 }
 
@@ -1109,7 +1109,7 @@ void TBufferSQL2::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t 
    // Read a Double32_t from the buffer when the factor and minimun value have been specified
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
    // Currently TBufferXML does not optimize space in this case.
-   
+
    SqlReadBasic(*ptr);
 }
 
@@ -1119,7 +1119,7 @@ void TBufferSQL2::ReadWithNbits(Double_t *ptr, Int_t /* nbits */)
    // Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
    // Currently TBufferXML does not optimize space in this case.
-   
+
    SqlReadBasic(*ptr);
 }
 
@@ -2012,7 +2012,8 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
          res |= WriteObjectAny(start[j],cl);
       }
 
-   } else {	//case //-> in comment
+   } else {
+      //case //-> in comment
 
       for (Int_t j=0;j<n;j++) {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
@@ -2742,10 +2743,10 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
-   
+
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
-   
+
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -2757,7 +2758,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -2769,7 +2770,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter)(*this,obj);
       }
    }
-   
+
    DecrementLevel(info);
    return 0;
 }
@@ -2779,10 +2780,10 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
-   
+
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
-   
+
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -2794,7 +2795,7 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
          (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
          (*iter)(*this,start_collection,end_collection);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -2806,7 +2807,7 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
          (*iter)(*this,start_collection,end_collection);
       }
    }
-   
+
    DecrementLevel(info);
    return 0;
 }
@@ -2815,13 +2816,13 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-   
+
    TVirtualStreamerInfo *info = sequence.fStreamerInfo;
    IncrementLevel(info);
-   
+
    TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
    if (gDebug) {
-      
+
       // Get the address of the first item for the PrintDebug.
       // (Performance is not essential here since we are going to print to
       // the screen anyway).
@@ -2836,7 +2837,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter).PrintDebug(*this,arr0);
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -2848,7 +2849,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
    }
-   
+
    DecrementLevel(info);
    return 0;
 }

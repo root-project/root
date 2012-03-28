@@ -84,7 +84,7 @@ void TBufferSQL::ReadBool(Bool_t &b)
    // Operator>>
 
    b = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -94,7 +94,7 @@ void TBufferSQL::ReadChar(Char_t &c)
    // Operator>>
 
    c = (Char_t)atoi((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -104,7 +104,7 @@ void TBufferSQL::ReadShort(Short_t &h)
    // Operator>>
 
    h = (Short_t)atoi((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -124,7 +124,7 @@ void TBufferSQL::ReadFloat(Float_t &f)
    // Operator>>
 
    f = atof((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -134,7 +134,7 @@ void TBufferSQL::ReadLong(Long_t &l)
    // Operator>>
 
    l = atol((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -144,7 +144,7 @@ void TBufferSQL::ReadDouble(Double_t &d)
    // Operator>>
 
    d = atof((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -218,14 +218,14 @@ void TBufferSQL::WriteDouble(Double_t  d)
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
 }
- 
+
 //________________________________________________________________________
 void TBufferSQL::ReadUChar(UChar_t& uc)
 {
    // Operator>>
 
    uc = (UChar_t)atoi((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -235,7 +235,7 @@ void TBufferSQL::ReadUShort(UShort_t& us)
    // Operator>>
 
    us = (UShort_t)atoi((*fRowPtr)->GetField(*fIter));
-   
+
    if (fIter != fColumnVec->end()) ++fIter;
 }
 
@@ -386,7 +386,7 @@ void TBufferSQL::WriteCharP(const Char_t *str)
    (*fInsertQuery) += "\"";
    (*fInsertQuery) += str;
    (*fInsertQuery) += "\",";
-    ++fIter;
+   ++fIter;
 }
 
 //________________________________________________________________________
@@ -754,29 +754,29 @@ void TBufferSQL::insert_test(const char* dsn, const char* usr,
    TString sql;
    TSQLStatement* stmt; 
    sql = select + "ins";
-   
+
    con = gSQLDriverManager->GetConnection(dsn,usr,pwd);
-   
+
    if(!con)
       printf("\n\n\nConnection NOT Successful\n\n\n");
    else
       printf("\n\n\nConnection Sucessful\n\n\n");
-   
-   
-   
+
+
+
    stmt = con->CreateStatement(0, odbc::ResultSet::CONCUR_READ_ONLY);
-   
+
    ptr = stmt->ExecuteQuery(sql.Data()); 
    if(!ptr) printf("No recorSet found!");	
-   
+
    ptr->Next();
    ptr->MoveToInsertRow();
    cerr << "IsAfterLast(): " << ptr->IsAfterLast() << endl;
    ptr->UpdateInt(1, 5555);
    ptr->InsertRow();
    con->Commit();
-   
+
    ptr1 = stmt->ExecuteQuery(sql.Data());
-   
+
 }
 #endif

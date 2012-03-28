@@ -1534,7 +1534,8 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
          }
       }
 
-   } else {	//case //-> in comment
+   } else { 
+      //case //-> in comment
 
       for (Int_t j=0; j<n; j++){
          if (!start[j]) start[j] = ((TClass*)cl)->New();
@@ -2164,7 +2165,8 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
          res |= WriteObjectAny(start[j],cl);
       }
 
-   } else {	//case //-> in comment
+   } else {
+      //case //-> in comment
 
       for (Int_t j=0;j<n;j++) {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
@@ -2604,12 +2606,12 @@ void TBufferFile::WriteClass(const TClass *cl)
 void TBufferFile::SkipVersion(const TClass *cl)
 {
    // Skip class version from I/O buffer.
-   
+
    Version_t version;
-   
+
    // not interested in byte count
    frombuf(this->fBufCur,&version);
-      
+
    // if this is a byte count, then skip next short and read version
    if (version & kByteCountVMask) {
       frombuf(this->fBufCur,&version);
@@ -2647,7 +2649,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
              cl->GetStreamerInfos()->GetLast()>1 ) {
-            
+
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
             if ( local )  {
@@ -3679,7 +3681,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
-   
+
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3689,7 +3691,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3699,7 +3701,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter)(*this,obj);
       }
    }
-   
+
    return 0;
 }
 
@@ -3708,7 +3710,7 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
-   
+
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3718,7 +3720,7 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
          (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
          (*iter)(*this,start_collection,end_collection);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3728,7 +3730,7 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
          (*iter)(*this,start_collection,end_collection);
       }
    }
-   
+
    return 0;
 }
 
@@ -3736,10 +3738,10 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-   
+
    TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
    if (gDebug) {
-      
+
       // Get the address of the first item for the PrintDebug.
       // (Performance is not essential here since we are going to print to
       // the screen anyway).
@@ -3752,7 +3754,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter).PrintDebug(*this,arr0);
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
-      
+
    } else {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3762,7 +3764,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
    }
-   
+
    return 0;
 }
 

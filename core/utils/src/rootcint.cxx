@@ -1030,17 +1030,17 @@ bool HasDirectoryAutoAdd(G__ClassInfo &cl)
 bool HasNewMerge(G__ClassInfo &cl)
 {
    // Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
-   
+
    // Detect if the class has a 'new' Merge function.
-   
+
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
-   
+
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
+
    return hasMethodWithSignature;
 }
 
@@ -1048,17 +1048,17 @@ bool HasNewMerge(G__ClassInfo &cl)
 bool HasOldMerge(G__ClassInfo &cl)
 {
    // Return true if the class has a method Merge(TCollection*)
-   
+
    // Detect if the class has an old fashion Merge function.
-   
+
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
    const char *proto = "TCollection*";
    const char *name = "Merge";
-   
+
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset,G__ClassInfo::ExactMatch);
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
+
    return hasMethodWithSignature;
 }
 
@@ -1066,18 +1066,18 @@ bool HasOldMerge(G__ClassInfo &cl)
 bool HasResetAfterMerge(G__ClassInfo &cl)
 {
    // Return true if the class has a method ResetAfterMerge(TFileMergeInfo *)
-   
+
    // Detect if the class has a 'new' Merge function.
    // bool hasMethod = cl.HasMethod("DirectoryAutoAdd");
-   
+
    // Detect if the class or one of its parent has a DirectoryAutoAdd
    long offset;
    const char *proto = "TFileMergeInfo*";
    const char *name = "ResetAfterMerge";
-   
+
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
    bool hasMethodWithSignature = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-   
+
    return hasMethodWithSignature;
 }
 
@@ -4760,7 +4760,7 @@ int main(int argc, char **argv)
             string argkeep;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             StrcpyArg(argkeep, argv[i]);
-	    int ncha = argkeep.length()+1;
+            int ncha = argkeep.length()+1;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             argvv[argcc++] = (char*)calloc(ncha,1);
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here

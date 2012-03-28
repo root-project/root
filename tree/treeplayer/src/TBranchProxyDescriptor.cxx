@@ -57,7 +57,7 @@ namespace ROOT {
       fDataName.ReplaceAll("&","rf");
 
    }
-   
+
    const char *TBranchProxyDescriptor::GetDataName() 
    { 
       // Get the name of the data member.
@@ -69,7 +69,7 @@ namespace ROOT {
       // Get the name of the type of the data member
       return GetTitle(); 
    }
-   
+
    const char *TBranchProxyDescriptor::GetBranchName() 
    { 
       // Get the branch name.
@@ -124,8 +124,8 @@ namespace ROOT {
          }
 
          if (fBranchIsSkipped) {
-           fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\", %s\"%s\")",
-                   offset," ", maxVarname, GetDataName(), GetDataName(), above, subbranchname);
+            fprintf(hf,"\n%-*s      %-*s(director, obj.GetProxy(), \"%s\", %s\"%s\")",
+                    offset," ", maxVarname, GetDataName(), GetDataName(), above, subbranchname);
          } else {
             if (fIsLeafList) {
                if (above[0]=='\0') {

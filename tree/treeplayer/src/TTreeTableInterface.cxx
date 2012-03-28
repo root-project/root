@@ -238,8 +238,10 @@ void TTreeTableInterface::InitEntries()
             ndata = fManager->GetNdata(kTRUE);
          else {
             for (ui = 0; ui < fNColumns; ui++){
-               if (ndata < ((TTreeFormula*)fFormulas->At(ui))->GetNdata())
-                   ndata = ((TTreeFormula*)fFormulas->At(ui))->GetNdata();
+               if (ndata < ((TTreeFormula*)fFormulas->At(ui))->GetNdata()) 
+               {
+                  ndata = ((TTreeFormula*)fFormulas->At(ui))->GetNdata();
+               }
             }
             if (fSelect && fSelect->GetNdata() == 0)
                ndata = 0;

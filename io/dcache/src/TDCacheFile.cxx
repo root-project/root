@@ -254,19 +254,19 @@ Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf
 
    Int_t total_len = 0;
    for (Int_t i = 0; i < nbuf; i++) {
-	   vector[i].buf    = &buf[total_len];
-	   vector[i].offset = pos[i] + fArchiveOffset;
-	   vector[i].len    = len[i];
-	   total_len       += len[i];
+      vector[i].buf    = &buf[total_len];
+      vector[i].offset = pos[i] + fArchiveOffset;
+      vector[i].len    = len[i];
+      total_len       += len[i];
    }
-
+   
    Int_t rc = dc_readv2(fD, vector, nbuf);
    free(vector);
 
    if (rc == 0) {
       fBytesRead += total_len;
       SetFileBytesRead(GetFileBytesRead() + total_len);
-	   return kFALSE;
+      return kFALSE;
    }
 
 #endif
