@@ -13,6 +13,7 @@
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
@@ -129,6 +130,18 @@ namespace cling {
                                                        ASTContextRDTy,
                                                        (uint64_t)m_Context);
 
+    // E might contain temporaries. This means that the topmost expr is 
+    // ExprWithCleanups. This contains the information about the temporaries and
+    // signals when they should be destroyed. 
+    // Here we replace E with call to value printer and we must extend the life 
+    // time of those temporaries to the end of the new CallExpr.
+    bool NeedsCleanup = false;
+    if (ExprWithCleanups* EWC = dyn_cast<ExprWithCleanups>(E)) {
+      E = EWC->getSubExpr();
+      NeedsCleanup = true;
+    }
+
+
     ASTOwningVector<Expr*> CallArgs(*m_Sema);
     CallArgs.push_back(RawOStreamTy);
     CallArgs.push_back(ExprTy);
@@ -138,6 +151,15 @@ namespace cling {
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc, 
                                          move_arg(CallArgs), NoSLoc).take();
+
+    Result = m_Sema->ActOnFinishFullExpr(Result).take();
+    if (NeedsCleanup && !isa<ExprWithCleanups>(Result)) {
+      llvm::ArrayRef<ExprWithCleanups::CleanupObject> Cleanups;
+      ExprWithCleanups* EWC 
+        = ExprWithCleanups::Create(*m_Context, Result, Cleanups);
+      Result = EWC;
+    }
+
     assert(Result && "Cannot create value printer!");
 
     return Result;
