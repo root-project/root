@@ -684,6 +684,15 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 endif
 
 all:            rootexecs postbin
+	@echo " "
+	@echo "   ============================================================"
+	@echo "   ===                ROOT BUILD SUCCESSFUL.                ==="
+ifeq ($(USECONFIG),FALSE)
+	@echo "   === Run 'source bin/thisroot.[c]sh' before starting ROOT ==="
+else
+	@echo "   === Run 'make install' now.                              ==="
+endif
+	@echo "   ============================================================"
 
 fast:           rootexecs
 
@@ -761,12 +770,19 @@ config/Makefile.config config/Makefile.comp include/RConfigure.h \
   etc/root.mimes $(ROOTRC) \
   bin/root-config: Makefile
 
-ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+Makefile: $(ROOT_SRCDIR)/Makefile
+endif
+
 Makefile: $(addprefix $(ROOT_SRCDIR)/,configure config/rootrc.in \
   config/RConfigure.in config/Makefile.in config/Makefile.$(ARCH) \
   config/Makefile-comp.in config/root-config.in config/rootauthrc.in \
   config/rootdaemonrc.in config/mimes.unix.in config/mimes.win32.in \
   config/proofserv.in config/roots.in) config.status
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+	cp $(ROOT_SRCDIR)/Makefile $@
+endif
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 	+@( $(RECONFIGURE) "$?" "$(ROOT_SRCDIR)" || ( \
 	   echo ""; echo "Please, run $(ROOT_SRCDIR)/configure again as config option files ($?) have changed."; \
 	   echo ""; exit 1; \
