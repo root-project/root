@@ -100,8 +100,9 @@ namespace cling {
   }
   template <typename T>
   T Value::simplisticCastAs() const {
-    if (type->getTypeClass() == clang::Type::Builtin) {
-      switch (type->getAs<clang::BuiltinType>()->getKind()) {
+    const clang::Type* desugared = type->getUnqualifiedDesugaredType();
+    if (desugared->getTypeClass() == clang::Type::Builtin) {
+      switch (desugared->getAs<clang::BuiltinType>()->getKind()) {
       case clang::BuiltinType::Bool: return (T) getAs<bool>();
       case clang::BuiltinType::Char_U: return (T) getAs<char>();
       case clang::BuiltinType::UChar: return (T) getAs<unsigned char>();
@@ -123,7 +124,7 @@ namespace cling {
         assert("Cannot cast simplistically from value's type!" && 0);
         return T();
       }
-    } else if (type->getTypeClass() == clang::Type::Pointer) {
+    } else if (desugared->getTypeClass() == clang::Type::Pointer) {
       return (T) getAs<void*>();
     }
     assert("unsupported type in Value, cannot cast simplistically!" && 0);
