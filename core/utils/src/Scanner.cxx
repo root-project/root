@@ -650,11 +650,11 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    DumpDecl(D, "");
    std::string qual_name2;
    
-//   if (GetDeclQualName(D, qual_name2))
-//      std::cout<<"\tLooking -> " << qual_name2 << "\n";
-//   if (qual_name2 == "TemplateClass") {
-//      std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
-//   }
+   if (GetDeclQualName(D, qual_name2))
+      std::cout<<"\tLooking -> " << qual_name2 << "\n";
+   if (qual_name2 == "TemplateClass") {
+      std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
+   }
   
    selected = fSelectionRules.IsDeclSelected(D);
    if (selected) {

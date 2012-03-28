@@ -5078,7 +5078,7 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
    }
    } // switch extension length
 
-   static const int lenLinkdefdot = 8;
+   static const size_t lenLinkdefdot = 8;
    if (ret == kSFKHeader && len - lenExt >= lenLinkdefdot) {
       if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
            strstr(filename,"linkdef")) && strstr(filename,".h")) {
