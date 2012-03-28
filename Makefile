@@ -1070,6 +1070,14 @@ releasenotes:
 	@$(MAKERELNOTES)
 
 html: $(ROOTEXE) changelog releasenotes
+ifneq ($(USECONFIG),FALSE)
+	if [ "x`which root.exe`" !=  "x$(DESTDIR)$(BINDIR)/root.exe" ]; then \
+	  echo 'ERROR: available root.exe is '`which root.exe`; \
+	  echo '       should instead be     $(DESTDIR)$(BINDIR)/root.exe'; \
+	  echo '       Run "make install" before running "make html".'; \
+	  exit 1; \
+	fi
+endif
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
