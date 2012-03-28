@@ -32,7 +32,7 @@ extern "C" void cling_PrintValue(void* /*clang::Expr**/ E,
 }
 
 
-static void StreamChar(llvm::raw_ostream& o, char v) {
+static void StreamChar(llvm::raw_ostream& o, const char v) {
   o << '"' << v << "\"\n";
 }
 
