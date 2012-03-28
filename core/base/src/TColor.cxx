@@ -255,8 +255,9 @@ A new color can be created transparent the following way:
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3, 0.5); // alpha = 0.5
 </pre>
 An example of tranparency usage with parallel coordinates can be found
-in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. <b>Right now the 
-transparency is implemented for PDF output only</b>
+in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
+transparency is implemented only for PDF output, and for gif, jpg and png
+when root runs in batch mode.
 */
 
 

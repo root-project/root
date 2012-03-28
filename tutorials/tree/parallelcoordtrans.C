@@ -110,5 +110,11 @@ void parallelcoordtrans() {
    pcv = (TParallelCoordVar*)para2->GetVarList()->FindObject("v"); pcv->SetHistogramHeight(0.);
    pcv = (TParallelCoordVar*)para2->GetVarList()->FindObject("w"); pcv->SetHistogramHeight(0.);
    
+   // Produces transparent lines in interactive and batch mode
    c1->Print("parallelcoordtrans.pdf");
+
+   // Produces transparent lines in batch mode only
+   c1->Print("parallelcoordtrans.gif");
+   c1->Print("parallelcoordtrans.jpg");
+   c1->Print("parallelcoordtrans.png");
 }
