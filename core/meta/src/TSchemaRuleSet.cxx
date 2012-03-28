@@ -17,6 +17,8 @@ using namespace ROOT;
 TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( 0 ), fRemainingRules( 0 ),
                                   fAllRules( 0 ), fVersion(-3), fCheckSum( 0 )
 {
+   // Default constructor.
+
    fPersistentRules = new TObjArray();
    fRemainingRules  = new TObjArray();
    fAllRules        = new TObjArray();
@@ -26,6 +28,8 @@ TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( 0 ), fRemainingRules( 0 ),
 //------------------------------------------------------------------------------
 TSchemaRuleSet::~TSchemaRuleSet()
 {
+   // Destructor.
+
    delete fPersistentRules;
    delete fRemainingRules;
    delete fAllRules;
@@ -343,6 +347,8 @@ void TSchemaRuleSet::RemoveRules( TObjArray* rules )
 //------------------------------------------------------------------------------
 void TSchemaRuleSet::SetClass( TClass* cls )
 {
+   // Set the TClass associated with this rule set.
+
    fClass     = cls;
    fClassName = cls->GetName();
    fVersion   = cls->GetClassVersion();
@@ -352,6 +358,8 @@ void TSchemaRuleSet::SetClass( TClass* cls )
 //------------------------------------------------------------------------------
 const TSchemaRule* TSchemaMatch::GetRuleWithSource( const TString& name ) const
 {
+   // Return the rule that has 'name' as a source.
+
    for( Int_t i = 0; i < GetEntries(); ++i ) {
       TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
       if( rule->HasSource( name ) ) return rule;
@@ -362,6 +370,8 @@ const TSchemaRule* TSchemaMatch::GetRuleWithSource( const TString& name ) const
 //------------------------------------------------------------------------------
 const TSchemaRule* TSchemaMatch::GetRuleWithTarget( const TString& name ) const
 {
+   // Return the rule that has 'name' as a target.
+
    for( Int_t i=0; i<GetEntries(); ++i) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
       if( rule->HasTarget( name ) ) return rule;

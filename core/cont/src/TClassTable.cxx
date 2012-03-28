@@ -109,24 +109,30 @@ namespace ROOT {
       }
 #endif
 
-      void Add(const char *key, TClassRec *&obj) {
+      void Add(const char *key, TClassRec *&obj) 
+      {
+         // Add <key,value> pair to the map.
+
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, (TObject*)obj);
       }
 
       TClassRec *Find(const char *key) const {
+         // Find the value corresponding the key.
          const TPair *a = (const TPair *)fMap.FindObject(key);
          if (a) return (TClassRec*) a->Value();
          return 0;
       }
 
       void Remove(const char *key) {
+         // Remove the value corresponding the key.
          TObjString realkey(key);
          TObject *actual = fMap.Remove(&realkey);
          delete actual;
       }
 
       void Print() {
+         // Print the content of the map.
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          TIter next(&fMap);
          TObjString *key;

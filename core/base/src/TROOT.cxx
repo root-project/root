@@ -616,6 +616,9 @@ Bool_t TROOT::ClassSaved(TClass *cl)
 namespace {
    static void R__ListSlowClose(TList *files)
    {
+      // Routine to close a list of files using the 'slow' techniques
+      // that also for the deletion ot update the list itself.
+
       static TObject harmless;
       TObjLink *cursor = files->FirstLink();
       while (cursor) {

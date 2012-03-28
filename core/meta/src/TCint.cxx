@@ -67,7 +67,10 @@ extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
    TCint::UpdateClassInfo(c, l);
 }
 
-extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
+extern "C" int TCint_AutoLoadCallback(char *c, char *l) 
+{
+   // CINT call back to implement the autoloading.
+
    ULong_t varp = G__getgvp();
    G__setgvp((Long_t)G__PVOID);
    string cls(c);
@@ -76,7 +79,10 @@ extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
    return result;
 }
 
-extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
+extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) 
+{
+   // CINT call back to implement the search for the special objects/items.
+
    return TCint::FindSpecialObject(c, ci, p1, p2);
 }
 

@@ -125,6 +125,8 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 
 static void UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
 {
+   // Remove an address from the repository of address/object.
+
    std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       std::multimap<void*, Version_t>::iterator tmp = cur++;
@@ -141,6 +143,8 @@ static void UnregisterAddressInRepository(const char * /*where*/, void *location
 
 static void MoveAddressInRepository(const char *where, void *oldadd, void *newadd, const TClass *what)
 {
+   // Register in the repository that an object has moved.
+
    UnregisterAddressInRepository(where,oldadd,what);
    RegisterAddressInRepository(where,newadd,what);
 }
@@ -173,16 +177,23 @@ namespace ROOT {
       IdMap_t fMap;
 
    public:
-      void Add(const key_type &key, mapped_type &obj) {
+      void Add(const key_type &key, mapped_type &obj) 
+      {
+         // Add the <key,obj> pair to the map.
          fMap[key] = obj;
       }
-      mapped_type Find(const key_type &key) const {
+      mapped_type Find(const key_type &key) const 
+      {
+         // Find the type corresponding to the key.
          IdMap_t::const_iterator iter = fMap.find(key);
          mapped_type cl = 0;
          if (iter != fMap.end()) cl = iter->second;
          return cl;
       }
-      void Remove(const key_type &key) { fMap.erase(key); }
+      void Remove(const key_type &key) { 
+         // Remove the type corresponding to the key.
+         fMap.erase(key);
+      }
 #else
    private:
       TMap fMap;
@@ -457,6 +468,7 @@ private:
 
 public:
    TBuildRealData(void *obj, TClass *cl) : fBits(0) {
+      // Main constructor.
       fRealDataObject = obj;
       fRealDataClass = cl;
    }
@@ -584,7 +596,9 @@ public:
    Int_t     fCount;
    TBrowser *fBrowser;
 
-   TAutoInspector(TBrowser *b) { fBrowser = b; fCount = 0; }
+   TAutoInspector(TBrowser *b) { 
+      // main constructor.
+      fBrowser = b; fCount = 0; }
    virtual ~TAutoInspector() { }
    virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
@@ -2378,7 +2392,10 @@ namespace {
       TVirtualCollectionProxy *fCollectionProxy;
       TClassStreamer          *fStreamer;
 
-      static TClassLocalStorage *GetStorage(const TClass *cl) {
+      static TClassLocalStorage *GetStorage(const TClass *cl) 
+      {
+         // Return the thread storage for the TClass.
+
          void **thread_ptr = (*gThreadTsd)(0,ROOT::kClassThreadSlot);
          if (thread_ptr) {
             if (*thread_ptr==0) *thread_ptr = new TExMap();

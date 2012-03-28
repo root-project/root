@@ -2381,7 +2381,10 @@ int TSystem::GetProcInfo(ProcInfo_t *) const
 
 //---- Script Compiler ---------------------------------------------------------
 
-void AssignAndDelete(TString& target, char *tobedeleted) {
+void AssignAndDelete(TString& target, char *tobedeleted)
+{
+   // Assign the char* value to the TString and then delete it.
+
    target = tobedeleted;
    delete [] tobedeleted;
 }
@@ -2452,11 +2455,12 @@ static void R__AddPath(TString &target, const TString &path) {
 
 #ifndef WIN32
 static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
+                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
 #else
 static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
+                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
 #endif
+{
    // Generate the dependency via standard output, not searching the
    // standard include directories,
 

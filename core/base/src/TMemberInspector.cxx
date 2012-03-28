@@ -96,8 +96,6 @@ void TMemberInspector::RemoveFromParent(Ssiz_t startingAt)
    fParent->Remove(startingAt);
 }
 
-
-
 void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
                                           Bool_t transientMember) {
    // Call ShowMember() on obj.
@@ -126,20 +124,28 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
    
 }
 
+void TMemberInspector::InspectMember(TObject& obj, const char* name) 
+{
+   // Routine driving the visiting of the class information/data members.
 
-void TMemberInspector::InspectMember(TObject& obj, const char* name) {
    InspectMember<TObject>(obj, name);
 }
 
 void TMemberInspector::InspectMember(const char* topclassname, void* pobj,
-                                     const char* name, Bool_t transient) {
+                                     const char* name, Bool_t transient) 
+{
+   // Routine driving the visiting of the class information/data members.
+
    Ssiz_t len = fParent->GetLength();
    fParent->Append(name);
    GenericShowMembers(topclassname, pobj, transient);
    fParent->Remove(len);
 }
 
-void TMemberInspector::InspectMember(TClass* cl, void* pobj, const char* name) {
+void TMemberInspector::InspectMember(TClass* cl, void* pobj, const char* name) 
+{
+   // Routine driving the visiting of the class information/data members.
+
    Ssiz_t len = fParent->GetLength();
    fParent->Append(name);
    cl->CallShowMembers(pobj, *this);
