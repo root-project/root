@@ -94,7 +94,7 @@ namespace cling {
    //  .L <filename>   //  Load code fragment.
    else if (Command == "L") {
      // TODO: Additional checks on params
-     bool success = m_Interp.loadFile(ReadToEndOfBuffer(RawLexer, MB));
+     bool success = m_Interp.loadFile(LexPath(RawLexer));
      if (!success) {
        llvm::errs() << "Load file failed.\n";
      }
@@ -104,7 +104,7 @@ namespace cling {
    //                    //  filename without extension.
    else if ((Command == "x") || (Command == "X")) {
      // TODO: Additional checks on params
-     llvm::sys::Path path(ReadToEndOfBuffer(RawLexer, MB));
+     llvm::sys::Path path(LexPath(RawLexer));
  
      if (!path.isValid())
        return false;
@@ -191,7 +191,7 @@ namespace cling {
        m_Interp.DumpIncludePath();
      else {
        // TODO: Additional checks on params
-       llvm::sys::Path path(ReadToEndOfBuffer(RawLexer, MB));
+       llvm::sys::Path path(LexPath(RawLexer));
        
        if (path.isValid())
          m_Interp.AddIncludePath(path.c_str());
@@ -244,12 +244,18 @@ namespace cling {
     switch (Tok.getKind()) {
     default:
       return "";
+    case tok::l_paren:
+      return "(";
+    case tok::r_paren:
+      return ")";
+    case tok::period:
+      return ".";
+    case tok::slash:
+      return "/";
     case tok::numeric_constant:
       return Tok.getLiteralData();
     case tok::raw_identifier:
       return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str(); 
-    case tok::slash:
-      return "/";
     }
 
   }
@@ -260,6 +266,18 @@ namespace cling {
     Token TmpTok;
     RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
     return StringRef(CurPtr, MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
+  }
+
+  std::string MetaProcessor::LexPath(clang::Lexer& RawLexer) {
+    Token Tok;
+    std::string Result("");
+    do {
+      RawLexer.LexFromRawLexer(Tok);
+      Result += GetRawTokenName(Tok);
+    }
+    while (Tok.isNot(tok::eof));
+
+    return Result;
   }
 
   void MetaProcessor::PrintCommandHelp() {

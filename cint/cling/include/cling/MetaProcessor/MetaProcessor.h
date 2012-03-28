@@ -95,13 +95,15 @@ namespace cling {
     /// by the Lexer by attaching the IdentifierInfo directly. However we are 
     /// in raw lexing mode and we cannot do that.
     ///
-    ///\returns This function is the implementation of 
+    ///\returns This function is the dummy implementation of 
     /// Token.getIdentifierInfo()->getName() for the raw lexer
     ///
     std::string GetRawTokenName(const clang::Token& Tok);
 
     llvm::StringRef ReadToEndOfBuffer(clang::Lexer& RawLexer, 
                                       llvm::MemoryBuffer* MB);
+
+    std::string LexPath(clang::Lexer& RawLexer);
 
     ///\brief Shows help for the use of interpreter's meta commands
     ///
