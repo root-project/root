@@ -1433,12 +1433,17 @@ ClassImp(ROOT::THnBaseBrowsable);
 
 //______________________________________________________________________________
 ROOT::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
-   TNamed(hist->GetAxis(axis)->GetName(),
-          TString::Format("Projection on %s of %s", hist->GetAxis(axis)->GetName(),
-                          hist->IsA()->GetName()).Data()),
    fHist(hist), fAxis(axis), fProj(0)
 {
    // Construct a THnBaseBrowsable.
+   TString axisName = hist->GetAxis(axis)->GetName();
+   if (axisName.IsNull()) {
+      axisName = TString::Format("axis %d", axis);
+   }
+
+   SetNameTitle(axisName,
+                TString::Format("Projection on %s of %s", axisName.Data(),
+                                hist->IsA()->GetName()).Data());
 }
 
 //______________________________________________________________________________
