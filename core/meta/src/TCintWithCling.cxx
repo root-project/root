@@ -6125,8 +6125,11 @@ const char* TCintWithCling::MethodInfo_Name(MethodInfo_t* minfo) const
 //______________________________________________________________________________
 const char* TCintWithCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 {
+   // Cint::MethodInfo::Type[Name] returns the type[name] of the
+   // return value (and not of the function itself).
+
    tcling_MethodInfo* info = (tcling_MethodInfo*) minfo;
-   return info->Name();
+   return info->TypeName();
 }
 
 //______________________________________________________________________________
