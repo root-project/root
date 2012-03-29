@@ -103,7 +103,9 @@ namespace cling {
     llvm::StringRef ReadToEndOfBuffer(clang::Lexer& RawLexer, 
                                       llvm::MemoryBuffer* MB);
 
-    std::string LexPath(clang::Lexer& RawLexer);
+    ///\brief Removes leading and trailing spaces, new lines and tabs if any
+    ///
+    llvm::StringRef SanitizeArg(const std::string& Str);
 
     ///\brief Shows help for the use of interpreter's meta commands
     ///

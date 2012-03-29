@@ -97,7 +97,8 @@ namespace cling {
    //  .L <filename>   //  Load code fragment.
    else if (Command == "L") {
      // TODO: Additional checks on params
-     bool success = m_Interp.loadFile(LexPath(RawLexer));
+     bool success 
+       = m_Interp.loadFile(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
      if (!success) {
        llvm::errs() << "Load file failed.\n";
      }
@@ -107,7 +108,7 @@ namespace cling {
    //                    //  filename without extension.
    else if ((Command == "x") || (Command == "X")) {
      // TODO: Additional checks on params
-     llvm::sys::Path path(LexPath(RawLexer));
+     llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
  
      if (!path.isValid())
        return false;
@@ -194,7 +195,7 @@ namespace cling {
        m_Interp.DumpIncludePath();
      else {
        // TODO: Additional checks on params
-       llvm::sys::Path path(LexPath(RawLexer));
+       llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
        
        if (path.isValid())
          m_Interp.AddIncludePath(path.c_str());
@@ -273,16 +274,10 @@ namespace cling {
     return StringRef(CurPtr, MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
   }
 
-  std::string MetaProcessor::LexPath(Lexer& RawLexer) {
-    Token Tok;
-    std::string Result("");
-    do {
-      RawLexer.LexFromRawLexer(Tok);
-      Result += GetRawTokenName(Tok);
-    }
-    while (Tok.isNot(tok::eof));
-
-    return Result;
+  llvm::StringRef MetaProcessor::SanitizeArg(const std::string& Str) {
+    size_t begins = Str.find_first_not_of(" \t\n");
+    size_t ends = Str.find_last_not_of(" \t\n") + 1;
+    return Str.substr(begins, ends - begins);
   }
 
   void MetaProcessor::PrintCommandHelp() {
