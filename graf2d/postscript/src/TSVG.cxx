@@ -440,23 +440,14 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
 
    if (nn > 0) {
       n = nn;
-///     SetLineStyle(fLineStyle);
-///     SetLineWidth(fLineWidth);
-///     SetColor(Int_t(fLineColor));
    } else {
       n = -nn;
-///     SetLineStyle(1);
-///     SetLineWidth(1);
-///     SetColor(Int_t(fLineColor));
    }
 
    ixd0 = XtoSVG(xy[0].GetX());
    iyd0 = YtoSVG(xy[0].GetY());
-///  WriteInteger(ixd0);
-///  WriteInteger(iyd0);
    if( n <= 1) {
       if( n == 0) return;
-///     PrintFast(2," m");
       return;
    }
 
@@ -502,10 +493,7 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
    if( idy ) MovePS(0,idy);
 
    if (nn > 0 ) {
-///     if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
-///     PrintFast(2," s");
    } else {
-///     PrintFast(2," f");
    }
 }
 
@@ -526,27 +514,17 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    if (nn > 0) {
       n = nn;
-///     SetLineStyle(fLineStyle);
-///     SetLineWidth(fLineWidth);
-///     SetColor(Int_t(fLineColor));
    } else {
       n = -nn;
-///     SetLineStyle(1);
-///     SetLineWidth(1);
-///     SetColor(Int_t(fLineColor));
    }
 
    ixd0 = UtoSVG(xy[0].GetX());
    iyd0 = VtoSVG(xy[0].GetY());
-///  WriteInteger(ixd0);
-///  WriteInteger(iyd0);
    if( n <= 1) {
       if( n == 0) return;
-///     PrintFast(2," m");
       return;
    }
 
-///  PrintFast(2," m");
    idx = 0;
    idy = 0;
    for (Int_t i=1;i<n;i++) {
@@ -589,9 +567,7 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    if (nn > 0 ) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
-///     PrintFast(2," s");
    } else {
-///     PrintFast(2," f");
    }
 }
 
@@ -1069,12 +1045,6 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    //  If nn>0 a line is drawn.
    //  If nn<0 a closed polygon is drawn.
 
-///static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
-///                              .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
-///                              .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
-///static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
-///                                 180, 90,135, 45,150, 30,120, 60,
-///                                 180, 90,135, 45,150, 30,120, 60};
    Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = 0;
 
@@ -1086,11 +1056,9 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       fasi = fFillStyle%1000;
       if (fais == 3 || fais == 2) {
          if (fasi > 100 && fasi <125) {
-///        DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
             return;
          }
          if (fasi > 0 && fasi < 26) {
-///        SetFillPatterns(fasi, Int_t(fFillColor));
          }
       }
    }
@@ -1164,9 +1132,6 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
          SetColor(fFillColor);
-///      } else if (fais == 3 || fais == 2) {
-///        if (fasi > 0 && fasi < 26) {
-///           Put SVG patterns here
       } else {
          SetColor(fFillColor);
       }
@@ -1384,6 +1349,10 @@ void TSVG::SetColor(Int_t color)
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
    } else {
       SetColor(1., 1., 1.);
+   }
+   Float_t a = col->GetAlpha();
+   if (a<1.) {
+      PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
    }
 }
 
@@ -1654,6 +1623,7 @@ void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
                           Double_t)
 {
    // Begin the Cell Array painting
+
    Warning("TSVG::CellArrayBegin", "not yet implemented");
 }
 
@@ -1662,6 +1632,7 @@ void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
 void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
 {
    // Paint the Cell Array
+
    Warning("TSVG::CellArrayFill", "not yet implemented");
 }
 
@@ -1670,6 +1641,7 @@ void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
 void TSVG::CellArrayEnd()
 {
    // End the Cell Array painting
+
    Warning("TSVG::CellArrayEnd", "not yet implemented");
 }
 
@@ -1678,5 +1650,6 @@ void TSVG::CellArrayEnd()
 void TSVG::DrawPS(Int_t, Float_t *, Float_t *)
 {
    // Not needed in SVG case
+
    Warning("TSVG::DrawPS", "not yet implemented");
 }

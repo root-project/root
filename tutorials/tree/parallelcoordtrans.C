@@ -9,7 +9,7 @@
 
 // Script illustrating the use of transparency (right now in PDF file only) with ||-Coord.
 // It displays the same data set twice. The first time without transparency and
-// the second time with transparency. On the second plot, several clusters 
+// the second time with transparency. On the second plot, several clusters
 // appear.
 //Author: Olivier Couet
 
@@ -37,7 +37,7 @@ void parallelcoordtrans() {
 
    TCanvas *c1 = new TCanvas("c1", "c1",0,0,900,1000);
    c1->Divide(1,2);
-   
+
    TNtuple *nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w:a:b:c");
 
    int n=0;
@@ -45,11 +45,11 @@ void parallelcoordtrans() {
       r->Sphere(s1x, s1y, s1z, 0.1);
       r->Sphere(s2x, s2y, s2z, 0.2);
       r->Sphere(s3x, s3y, s3z, 0.05);
-      
+
       generate_random(i);
       nt->Fill(r1, r2, r3, r4, r5, r6, r7, r8, r9);
       n++;
-      
+
       generate_random(i);
       nt->Fill(s1x, s1y, s1z, s2x, s2y, s2z, r7, r8, r9);
       n++;
@@ -61,7 +61,7 @@ void parallelcoordtrans() {
       generate_random(i);
       nt->Fill(s2x-1, s2y-1, s2z, s1x+.5, s1y+.5, s1z+.5, r7, r8, r9);
       n++;
-      
+
       generate_random(i);
       nt->Fill(r1, r2, r3, r4, r5, r6, r7, r8, r9);
       n++;
@@ -74,11 +74,11 @@ void parallelcoordtrans() {
       nt->Fill(r1, r2, r3, r4, r5, r6, s3x, r8, s3z );
       n++;
    }
-  
+
    TParallelCoordVar* pcv;
-   
+
    c1->cd(1);
-   
+
    // ||-Coord plot without transparency
    nt->Draw("x:y:z:u:v:w:a:b:c","","para");
    TParallelCoord* para1 = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
@@ -109,11 +109,12 @@ void parallelcoordtrans() {
    pcv = (TParallelCoordVar*)para2->GetVarList()->FindObject("u"); pcv->SetHistogramHeight(0.);
    pcv = (TParallelCoordVar*)para2->GetVarList()->FindObject("v"); pcv->SetHistogramHeight(0.);
    pcv = (TParallelCoordVar*)para2->GetVarList()->FindObject("w"); pcv->SetHistogramHeight(0.);
-   
-   // Produces transparent lines in interactive and batch mode
-   c1->Print("parallelcoordtrans.pdf");
 
-   // Produces transparent lines in batch mode only
+   // Produce transparent lines in interactive and batch mode
+   c1->Print("parallelcoordtrans.pdf");
+   c1->Print("parallelcoordtrans.svg");
+
+   // Produce transparent lines in batch mode only
    c1->Print("parallelcoordtrans.gif");
    c1->Print("parallelcoordtrans.jpg");
    c1->Print("parallelcoordtrans.png");
