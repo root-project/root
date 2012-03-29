@@ -36,10 +36,8 @@ TGeoStateInfo::TGeoStateInfo()
                fXtruPoly(0)
 {
 // Constructor
-//   Int_t maxDaughters = TGeoManager::GetMaxDaughters();
-//   Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
-   Int_t maxDaughters = 1000;
-   Int_t maxXtruVert  = 1000;
+   Int_t maxDaughters = TMath::Max(TGeoManager::GetMaxDaughters(),1000);
+   Int_t maxXtruVert  = TMath::Max(TGeoManager::GetMaxXtruVert(),1000);
    fVoxCheckList = new Int_t[maxDaughters];
    fVoxBits1 = new UChar_t[2 + ((maxDaughters-1)>>3)];
    fXtruXc = new Double_t[maxXtruVert];
@@ -80,8 +78,8 @@ TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
 // Copy constructor.
 //   Int_t maxDaughters = TGeoManager::GetMaxDaughters();
 //   Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
-   Int_t maxDaughters = 1000;
-   Int_t maxXtruVert  = 1000;
+   Int_t maxDaughters = TMath::Max(TGeoManager::GetMaxDaughters(),1000);
+   Int_t maxXtruVert  = TMath::Max(TGeoManager::GetMaxXtruVert(),1000);
    fVoxCheckList = new Int_t[maxDaughters];
    fVoxBits1 = new UChar_t[1 + ((maxDaughters-1)>>3)];
    fXtruXc = new Double_t[maxXtruVert];
