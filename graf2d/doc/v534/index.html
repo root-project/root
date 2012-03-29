@@ -82,4 +82,10 @@
          }
       }
    </pre>
+   <li> TPad::Print always use TImageDump to print gif, png and jpeg files, in 
+      interactive and batch mode (previously it was used in the batch case only). 
+      This allows to generate output transparent colors in these formats even in 
+      interactive mode. The generation of gif, png and jpeg files from the 
+      graphics window in interactive mode is kept for OpenGL canvases.
+   </li>
 </ul>
