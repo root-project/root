@@ -69,7 +69,10 @@ namespace cling {
   bool MetaProcessor::ProcessMeta(const std::string& input_line, Value* result){
 
    llvm::MemoryBuffer* MB = llvm::MemoryBuffer::getMemBuffer(input_line);
-   const LangOptions& LO = m_Interp.getCI()->getLangOpts();
+   LangOptions LO;
+   LO.C99 = 1;
+   // necessary for the @ symbol
+   LO.ObjC1 = 1;
    Lexer RawLexer(SourceLocation(), LO, MB->getBufferStart(),
                   MB->getBufferStart(), MB->getBufferEnd());
    Token Tok;
@@ -243,7 +246,10 @@ namespace cling {
 
     switch (Tok.getKind()) {
     default:
+      assert("Unknown token");
       return "";
+    case tok::at:
+      return "@";
     case tok::l_paren:
       return "(";
     case tok::r_paren:
@@ -257,7 +263,6 @@ namespace cling {
     case tok::raw_identifier:
       return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str(); 
     }
-
   }
 
   llvm::StringRef MetaProcessor::ReadToEndOfBuffer(Lexer& RawLexer, 
@@ -268,7 +273,7 @@ namespace cling {
     return StringRef(CurPtr, MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
   }
 
-  std::string MetaProcessor::LexPath(clang::Lexer& RawLexer) {
+  std::string MetaProcessor::LexPath(Lexer& RawLexer) {
     Token Tok;
     std::string Result("");
     do {
