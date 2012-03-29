@@ -98,6 +98,7 @@ public:
    virtual ~TGeoNodeCache();
 
    void                 BuildIdArray();
+   void                 BuildInfoBranch();
    void                 CdNode(Int_t nodeid);
    Bool_t               CdDown(Int_t index);
    Bool_t               CdDown(TGeoNode *node);

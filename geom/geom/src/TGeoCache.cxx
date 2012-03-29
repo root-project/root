@@ -90,7 +90,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
       fNodeBranch[i] = 0;
    }
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
-      fInfoBranch[i] = new TGeoStateInfo();
+      fInfoBranch[i] = 0;
    }   
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fNodeBranch[0] = top;
@@ -135,6 +135,15 @@ void TGeoNodeCache::BuildIdArray()
    Int_t nodeid = 0;
    gGeoManager->GetTopNode()->FillIdArray(ifree, nodeid, fNodeIdArray);
    fIdBranch[0] = 0;
+}
+
+//_____________________________________________________________________________
+void TGeoNodeCache::BuildInfoBranch()
+{
+// Bulds info branch. Navigation is possible only after this step.
+   for (Int_t i=0; i<fGeoInfoStackSize; i++) {
+      fInfoBranch[i] = new TGeoStateInfo();
+   }   
 }
 
 //_____________________________________________________________________________

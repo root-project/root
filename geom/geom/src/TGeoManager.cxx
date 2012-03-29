@@ -1421,18 +1421,16 @@ void TGeoManager::CloseGeometry(Option_t *option)
          }
          SetTopVolume(fMasterVolume);
          if (fStreamVoxels && fgVerboseLevel>0) Info("CloseGeometry","Voxelization retrieved from file");
-      } else {
-         CountLevels();
       }   
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
       Voxelize("ALL");
-      if (nodeid) {
-         for (Int_t i=0; i<nnavigators; i++) {
-            nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
-            nav->GetCache()->BuildIdArray();
-         }   
+      CountLevels();
+      for (Int_t i=0; i<nnavigators; i++) {
+         nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
+         nav->GetCache()->BuildInfoBranch();
+         if (nodeid) nav->GetCache()->BuildIdArray();
       }
       if (!fHashVolumes) {
          Int_t nvol = fVolumes->GetEntriesFast();
@@ -1450,7 +1448,6 @@ void TGeoManager::CloseGeometry(Option_t *option)
       return;
    }
 
-   CountLevels();
    // Create a geometry navigator if not present
    if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
    nnavigators = GetListOfNavigators()->GetEntriesFast();
@@ -1464,11 +1461,11 @@ void TGeoManager::CloseGeometry(Option_t *option)
 //   BuildIdArray();
    Voxelize("ALL");
    if (fgVerboseLevel>0) Info("CloseGeometry","Building cache...");
-   if (nodeid) {
-      for (Int_t i=0; i<nnavigators; i++) {
-         nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
-         nav->GetCache()->BuildIdArray();
-      }   
+   CountLevels();
+   for (Int_t i=0; i<nnavigators; i++) {
+      nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
+      nav->GetCache()->BuildInfoBranch();
+      if (nodeid) nav->GetCache()->BuildIdArray();
    }
    fClosed = kTRUE;
    if (fgVerboseLevel>0) {
@@ -3174,7 +3171,6 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fTopNode->SetNumber(1);
    fTopNode->SetTitle("Top logical node");
    fNodes->AddAt(fTopNode, 0);
-   CountLevels();
    if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
    Int_t nnavigators = GetListOfNavigators()->GetEntriesFast();
    for (Int_t i=0; i<nnavigators; i++) {
