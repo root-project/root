@@ -794,9 +794,6 @@ void tcling_ClassInfo::Init(const char* name)
 {
    //fprintf(stderr, "tcling_ClassInfo::Init(name): looking up class: %s\n",
    //        name);
-   fClassInfo = 0;
-   fDecl = 0;
-   //fIdx = -1;
    fClassInfo->Init(name);
 #if 0
    if (!fClassInfo->IsValid()) {
@@ -837,9 +834,7 @@ void tcling_ClassInfo::Init(int tagnum)
 {
    //fprintf(stderr, "tcling_ClassInfo::Init(tagnum): looking up tagnum: %d\n",
    //        tagnum);
-   fClassInfo = 0;
-   fDecl = 0;
-   //fIdx = -1;
+
    fClassInfo->Init(tagnum);
 #if 0
    if (!fClassInfo->IsValid()) {
