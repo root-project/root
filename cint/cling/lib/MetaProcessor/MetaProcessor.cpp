@@ -259,7 +259,7 @@ namespace cling {
     case tok::slash:
       return "/";
     case tok::numeric_constant:
-      return Tok.getLiteralData();
+      return StringRef(Tok.getLiteralData(), Tok.getLength()).str();
     case tok::raw_identifier:
       return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str(); 
     }
