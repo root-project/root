@@ -92,6 +92,11 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
       }
       EndPopup();
    }
+   else {
+      // reset the dragging flag of the scrollbar when the button is 
+      // released outside the scrollbar itself
+      fListBox->GetScrollBar()->SetDragging(kFALSE);
+   }
    return kTRUE;
 }
 

@@ -128,6 +128,7 @@ public:
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   Layout() = 0;
 
+   virtual void  SetDragging(Bool_t drag) { fDragging = drag; }
    virtual void  SetRange(Int_t range, Int_t page_size) = 0;
    virtual void  SetPosition(Int_t pos) = 0;
    virtual Int_t GetPosition() const { return fPos; }
