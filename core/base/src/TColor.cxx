@@ -257,7 +257,7 @@ A new color can be created transparent the following way:
 An example of tranparency usage with parallel coordinates can be found
 in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
 transparency is implemented only for PDF output, SVG output, and for gif,
-jpg and png outputs, when root runs in batch mode.
+jpg and png outputs.
 */
 
 
