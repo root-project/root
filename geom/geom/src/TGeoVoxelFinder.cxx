@@ -269,9 +269,9 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    if (fBoxes) delete [] fBoxes;
    fNboxes = 6*nd;
    fBoxes = new Double_t[fNboxes];
-   Double_t vert[24];
-   Double_t pt[3];
-   Double_t xyz[6];
+   Double_t vert[24] = {0};
+   Double_t pt[3] = {0};
+   Double_t xyz[6] = {0};
 //   printf("boundaries for %s :\n", GetName());
    TGeoBBox *box = 0;
    for (id=0; id<nd; id++) {

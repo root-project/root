@@ -294,7 +294,7 @@ void TGeoPolygon::OutscribedConvex()
       Fatal("OutscribedConvex","cannot build outscribed convex");
       return;
    }
-   fIndc = new Int_t[fNconvex];
+   fIndc = new Int_t[fNvert];
    memcpy(fIndc, indconv, fNconvex*sizeof(Int_t)); // does not contain real indices yet
    delete [] indconv;
 }
