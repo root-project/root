@@ -8,3 +8,4 @@ double scriptAliasString() {
    printf("the string direct is %s\n",(const char*)name);
    return 0;
 }
+
