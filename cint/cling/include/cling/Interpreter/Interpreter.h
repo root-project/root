@@ -134,8 +134,6 @@ namespace cling {
     InvocationOptions& getOptions() { return m_Opts; }
 
     const char* getVersion() const;
-    std::string createUniqueName();
-
     void createUniqueName(std::string& out);
 
     void AddIncludePath(const char *incpath);

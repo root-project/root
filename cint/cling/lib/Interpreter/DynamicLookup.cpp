@@ -373,8 +373,9 @@ namespace cling {
           ASTNodeInfo NewNode;
           // 2.2 Get unique name for the LifetimeHandler instance and 
           // initialize it
-          IdentifierInfo& II 
-            = m_Context->Idents.get(m_Interpreter->createUniqueName());
+          std::string UniqueName;
+          m_Interpreter->createUniqueName(UniqueName);
+          IdentifierInfo& II = m_Context->Idents.get(UniqueName);
 
           // Prepare the initialization Exprs.
           // We want to call LifetimeHandler(DynamicExprInfo* ExprInfo, 

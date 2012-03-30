@@ -432,14 +432,6 @@ namespace cling {
     return false;
   }
 
-  std::string Interpreter::createUniqueName() {
-    // Create an unique name
-    
-    std::ostringstream swrappername;
-    swrappername << "__cling_Un1Qu3" << m_UniqueCounter++;
-    return swrappername.str();
-  }
-
   void Interpreter::createUniqueName(std::string& out) {
     out = "Un1Qu3";
     llvm::raw_string_ostream(out) << m_UniqueCounter++;
