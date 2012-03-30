@@ -391,10 +391,17 @@ namespace cling {
   }
 
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
-    //fname = createUniqueName();
-    createUniqueName(fname);
+    fname = createUniqueWrapper();
     input.insert(0, "void " + fname + "() {\n ");
     input.append("\n;\n}");
+  }
+
+  llvm::StringRef Interpreter::createUniqueWrapper() {
+    const size_t size = sizeof("__cling_Un1Qu3") + sizeof(m_UniqueCounter);
+    llvm::SmallString<size> out("__cling_Un1Qu3");
+    llvm::raw_svector_ostream(out) << m_UniqueCounter++;
+
+    return (getCI()->getASTContext().Idents.getOwn(out)).getName();
   }
 
   bool Interpreter::RunFunction(llvm::StringRef fname, llvm::GenericValue* res) {

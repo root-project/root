@@ -212,6 +212,7 @@ namespace cling {
                                  const clang::Decl** D = 0);
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
+    llvm::StringRef createUniqueWrapper();
     friend class runtime::internal::LifetimeHandler;
     
     bool addSymbol(const char* symbolName,  void* symbolAddress);
