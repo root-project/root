@@ -86,6 +86,8 @@ namespace cling {
     /// @code .@ @endcode - Cancels multiline input
     /// @code .dynamicExtensions [0|1] @endcode - Toggles the use of the dynamic
     /// scopes and the late bining.
+    /// @code .help @endcode - Show information about the usage of the commands
+    /// @code .file @endcode - Show information about the loaded files
     ///
     ///\returns true if the command was known and thus handled.
     ///
@@ -110,6 +112,10 @@ namespace cling {
     ///\brief Shows help for the use of interpreter's meta commands
     ///
     void PrintCommandHelp();
+
+    ///\brief Shows statistics about the loaded files
+    ///
+    void PrintFileStats();
 
   public:
     MetaProcessor(Interpreter& interp);

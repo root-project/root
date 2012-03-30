@@ -9,6 +9,7 @@
 #include "InputValidator.h"
 #include "cling/Interpreter/Interpreter.h"
 
+#include "clang/Basic/FileManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
@@ -237,6 +238,11 @@ namespace cling {
      PrintCommandHelp();
      return true;
    }
+   // Print the loaded files
+   else if (Command == "file") {
+     PrintFileStats();
+     return true;
+   }
 
    return false;
   }
@@ -298,6 +304,20 @@ namespace cling {
     llvm::outs() << ".printAST [0|1]\t\t\t - Toggles the printing of input's ";
     llvm::outs() << "corresponding AST nodes\n";
     llvm::outs() << ".help\t\t\t\t - Shows this information\n";
+  }
+
+  void MetaProcessor::PrintFileStats() {
+    const SourceManager& SM = m_Interp.getCI()->getSourceManager();
+    SM.getFileManager().PrintStats();
+
+    llvm::outs() << "\n***\n\n";
+
+    for (SourceManager::fileinfo_iterator I = SM.fileinfo_begin(), 
+           E = SM.fileinfo_end(); I != E; ++I) {
+      llvm::outs() << (*I).first->getName();
+      llvm::outs() << "\n";
+    }
+
   }
 
   // Run a file: .x file[(args)]
