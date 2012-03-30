@@ -53,8 +53,10 @@
 #include <TGToolBar.h>
 #include <TGSplitter.h>
 #include <TColor.h>
-#include <TGLViewer.h>
 #include <THtml.h>
+
+#include <TPluginManager.h>
+#include <TVirtualGL.h>
 
 #ifndef _CONSTANTS_H_
 #include "constants.h"
@@ -831,14 +833,20 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
 
                   case M_SHOW_3D:
-                     {
+                     if (gGLManager) {
                         if (fIsRunning) break;
+                        TString cmd;
                         fCA->cd();
                         TVirtualViewer3D *viewer3D = fCA->GetViewer3D("ogl");
-                        TGLViewer *glviewer = (TGLViewer *)viewer3D;
-                        glviewer->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
-                        glviewer->CurrentCamera().RotateRad(0.0, TMath::Pi());
-                        glviewer->CurrentCamera().Dolly(-100, 0, 0);
+                        cmd.Form("((TGLViewer *)0x%lx)->SetCurrentCamera(TGLViewer::kCameraPerspXOY)", 
+                                 (ULong_t)viewer3D);
+                        gROOT->ProcessLine(cmd);
+                        cmd.Form("((TGLViewer *)0x%lx)->CurrentCamera().RotateRad(0.0, TMath::Pi())",
+                                 (ULong_t)viewer3D);
+                        gROOT->ProcessLine(cmd);
+                        cmd.Form("((TGLViewer *)0x%lx)->CurrentCamera().Dolly(-100, 0, 0)",
+                                 (ULong_t)viewer3D);
+                        gROOT->ProcessLine(cmd);
                      }
                      break;
 
@@ -1005,8 +1013,10 @@ void RootShower::Produce()
    }
    fMenuEvent->EnableEntry(M_SHOW_INFOS);
    if (!IsInterrupted()) {
-      fMenuEvent->EnableEntry(M_SHOW_3D);
-      fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+      if (gGLManager) {
+         fMenuEvent->EnableEntry(M_SHOW_3D);
+         fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+      }
       fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonUp);
       fMenuFile->EnableEntry(M_FILE_SAVEAS);
    }
@@ -1258,8 +1268,10 @@ void RootShower::OnOpenFile(const Char_t *filename)
    fCA->Modified();
    fCA->Update();
    fMenuEvent->EnableEntry(M_SHOW_INFOS);
-   fMenuEvent->EnableEntry(M_SHOW_3D);
-   fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+   if (gGLManager) {
+      fMenuEvent->EnableEntry(M_SHOW_3D);
+      fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonUp);
+   }
    fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonUp);
    fMenuFile->EnableEntry(M_FILE_SAVEAS);
    fButtonFrame->SetState(GButtonFrame::kAllActive);
@@ -1457,6 +1469,15 @@ int main(int argc, char **argv)
    gStyle->SetOptStat(1111);
    gStyle->SetOptFit(1111);
    gStyle->SetStatFont(42);
+
+   if (!gGLManager) {
+      TString x = "win32";
+      if (gVirtualX->InheritsFrom("TGX11"))
+         x = "x11";
+      TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager", x);
+      if (ph && ph->LoadPlugin() != -1)
+         ph->ExecPlugin(0);
+   }
 
    gRandom->SetSeed( (UInt_t)time( NULL ) );
    const Int_t NRGBs = 5;

@@ -78,7 +78,7 @@ private:
    TDatime              fEventTime;         // Event generation date
 
    Int_t                fPicIndex;          // Index of animation images
-   Int_t                 fPicNumber;         // Number of images used for animation
+   Int_t                fPicNumber;         // Number of images used for animation
    Int_t                fPicDelay;          // Delay between animation images
    Int_t                fPicReset;          // kTRUE to display first anim picture
 

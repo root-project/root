@@ -132,8 +132,7 @@ $(ROOTSHOWERRES) : $(ROOTSHOWERRC)
 $(ROOTSHOWER):  $(ROOTSHOWERO) $(ROOTSHOWERRES)
 		$(LD) $(LDFLAGS) /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup \
 		$(ROOTSHOWERO) $(ROOTSHOWERRES) $(GLIBS) $(ROOTSYS)\lib\libEG.lib \
-		$(ROOTSYS)\lib\libRGL.lib $(ROOTSYS)\lib\libHtml.lib \
-		$(ROOTSYS)\lib\libGeom.lib $(OutPutOpt)$@
+		$(ROOTSYS)\lib\libHtml.lib $(ROOTSYS)\lib\libGeom.lib $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
