@@ -219,7 +219,7 @@ using <tt>TH1::GetOption</tt>:
 
 <tr><th valign=top>"E"</th><td>
 Draw error bars.
-</td></tr> 
+</td></tr>
 
 <tr><th valign=top>"AXIS"</th><td>
 Draw only axis.
@@ -923,7 +923,7 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
- 
+
 <p>2D histograms can be drawn with error bars as shown is the following example:
 
 End_Html
@@ -5516,7 +5516,10 @@ void THistPainter::PaintFunction(Option_t *)
       if (obj->InheritsFrom(TF2::Class())) {
          if (obj->TestBit(TF2::kNotDraw) == 0) {
             if (Hoption.Lego || Hoption.Surf) {
-               obj->Paint("surf same");
+               TF2 *f2 = (TF2*)obj;
+               f2->SetMinimum(fH->GetMinimum());
+               f2->SetMaximum(fH->GetMaximum());
+               f2->Paint("surf same");
             } else {
                obj->Paint("cont3 same");
             }
