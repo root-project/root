@@ -467,7 +467,10 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
       }
    }
 #else
-   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so")) {
+   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
+   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
+   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
+       lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
       char respath[kMAXPATHLEN];
       if (!realpath(lib, respath)) {
          if (!gSystem->Getenv("ROOTSYS"))
@@ -489,9 +492,23 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    // add all libs loaded before libSystem.B.dylib
    if (!gotFirstSo && (lib.EndsWith(".dylib") || lib.EndsWith(".so"))) {
-      if (linkedDylibs.Length())
-         linkedDylibs += " ";
-      linkedDylibs += lib;
+      sovers = "\\.[0-9]+\\.*[0-9]*\\.so";
+      Ssiz_t idx = lib.Index(sovers);
+      if (idx != kNPOS) {
+         lib.Remove(idx);
+         lib += ".so";
+      }
+      dyvers = "\\.[0-9]+\\.*[0-9]*\\.dylib";
+      idx = lib.Index(dyvers);
+      if (idx != kNPOS) {
+         lib.Remove(idx);
+         lib += ".dylib";
+      }
+      if (!gSystem->AccessPathName(lib, kReadPermission)) {
+         if (linkedDylibs.Length())
+            linkedDylibs += " ";
+         linkedDylibs += lib;
+      }
    }
 }
 #endif

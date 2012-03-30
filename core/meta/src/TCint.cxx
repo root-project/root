@@ -32,6 +32,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TString.h"
+#include "TRegexp.h"
 #include "THashList.h"
 #include "TOrdCollection.h"
 #include "TVirtualPad.h"
@@ -2148,6 +2149,11 @@ const char* TCint::GetSharedLibs()
          for (unsigned int i = 0; !needToSkip && i < excludelistsize; ++i)
             needToSkip = (!strncmp(basename, excludelist[i], excludelen[i]));
       }
+#if defined(R__MACOSX)
+      TRegexp sovers = "\\.[0-9]+\\.*[0-9]*\\.so";
+      TRegexp dyvers = "\\.[0-9]+\\.*[0-9]*\\.dylib";
+      TString fname = filename;
+#endif
       if (!needToSkip &&
            (
 #if defined(R__MACOSX) && defined(MAC_OS_X_VERSION_10_5)
@@ -2159,9 +2165,16 @@ const char* TCint::GetSharedLibs()
                        strcmp(end-3,".so") == 0)) ||
             (len>4 && (strcasecmp(end-4,".dll") == 0)) ||
             (len>6 && (strcasecmp(end-6,".dylib") == 0)))) {
-         if (!fSharedLibs.IsNull())
-            fSharedLibs.Append(" ");
-         fSharedLibs.Append(filename);
+#if defined(R__MACOSX)
+         if ((len>5 && fname.Index(sovers) == kNPOS) &&
+             (len>8 && fname.Index(dyvers) == kNPOS)) {
+#endif               
+            if (!fSharedLibs.IsNull())
+               fSharedLibs.Append(" ");
+            fSharedLibs.Append(filename);
+#if defined(R__MACOSX)
+         }
+#endif
       }
 
       cursor.Next();
