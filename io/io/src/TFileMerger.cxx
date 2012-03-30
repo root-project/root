@@ -654,7 +654,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      ndir->cd();
                      TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                      if (key2) {
-                        if (warned) {
+                        if (!warned) {
                            Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
                                    "Merge(TCollection *) not implemented",
                                    obj->GetName(), obj->GetTitle());
