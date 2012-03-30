@@ -84,8 +84,8 @@ accessed via a global name (third column).
        26                    open triangle up     kOpenTriangleUp
        27                    open diamond         kOpenDiamond
        28                    open cross           kOpenCross
-       29                    full star            kOpenStar
-       30                    open star            kFullStar
+       29                    full star            kFullStar
+       30                    open star            kOpenStark
        31                    *
        32                    open triangle down
        33                    full diamond
