@@ -76,7 +76,7 @@ public:
    Long64_t        Merge(TCollection* list);
    Int_t           RemoveDuplicates();
    Int_t           Update(Long64_t avgsize = -1);
-   void            Sort();
+   void            Sort(Bool_t useindex = kFALSE);
    void            SetAnchor(const char *anchor);
    void            Print(Option_t *option = "") const;
 

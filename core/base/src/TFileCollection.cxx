@@ -72,6 +72,7 @@ Int_t TFileCollection::Add(TFileInfo *info)
    if (fList && info) {
       if (!fList->FindObject(info->GetName())) {
          fList->Add(info);
+         if (info->GetIndex() < 0) info->SetIndex(fList->GetSize());
          return 1;
       } else {
          Warning("Add", "file: '%s' already in the list - ignoring",
@@ -90,7 +91,9 @@ Int_t TFileCollection::Add(TFileCollection *coll)
       TIter nxfi(coll->GetList());
       TFileInfo *fi = 0;
       while ((fi = (TFileInfo *) nxfi())) {
-         fList->Add(new TFileInfo(*fi));
+         TFileInfo *info = new TFileInfo(*fi);
+         fList->Add(info);
+         if (info->GetIndex() < 0) info->SetIndex(fList->GetSize());
       }
       return 1;
    } else {
@@ -126,7 +129,9 @@ Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t fir
             if (!line.IsWhitespace() && !line.BeginsWith("#")) {
                nn++;
                if (all || nn >= ff) {
-                  fList->Add(new TFileInfo(line));
+                  TFileInfo *info = new TFileInfo(line);
+                  fList->Add(info);
+                  if (info->GetIndex() < 0) info->SetIndex(fList->GetSize());
                   nf++;
                }
             }
@@ -552,12 +557,19 @@ void TFileCollection::RemoveMetaData(const char *meta)
 }
 
 //______________________________________________________________________________
-void TFileCollection::Sort()
+void TFileCollection::Sort(Bool_t useindex)
 {
    // Sort the collection.
 
    if (!fList)
      return;
+   
+   // Make sure the relevant bit has teh wanted value
+   if (useindex) {
+      SetBitAll(TFileInfo::kSortWithIndex);
+   } else {
+      ResetBitAll(TFileInfo::kSortWithIndex);
+   }
 
    fList->Sort();
 }
@@ -834,7 +846,12 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude, Bool_t curronly)
    while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
       fc->Update();
       // Fraction of total in permille
-      Long64_t xf = (fc->GetTotalSize() * 1000) / GetTotalSize();
+      Long64_t xf = 0;
+      if (GetTotalSize() > 0) {
+         xf = (fc->GetTotalSize() * 1000) / GetTotalSize();
+      } else {
+         xf = (fc->GetNFiles() * 1000) / GetNFiles();
+      }
       TFileInfoMeta *m = new TFileInfoMeta("FractionOfTotal", "External Info", xf);
       m->SetBit(TFileInfoMeta::kExternal);
       fc->AddMetaData(m);

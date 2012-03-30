@@ -499,7 +499,7 @@ Int_t TDataSetManager::ScanDataSet(const char *uri, const char *opts)
 
    // Extract the directives
    UInt_t o = 0;
-   if (opts) {
+   if (opts && strlen(opts) > 0) {
       // Selection options
       if (strstr(opts, "allfiles:") || strchr(opts, 'A'))
          o |= kAllFiles;
@@ -1204,17 +1204,11 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       ::Info("TDataSetManager::ScanDataSet", "processing a maximum of %d files", maxfiles);
 
    // File selection, Reopen and Touch options
-   Bool_t allf     = (fopt == -1)               ? kTRUE : kFALSE;
    Bool_t checkstg = (fopt >= 100 || fopt < -1) ? kFALSE : kTRUE;
-   if (fopt >= 0) fopt %= 100;
-   Bool_t nonstgf  = (fopt >= 0 && fopt < 10)   ? kTRUE : kFALSE;
-   Bool_t reopen   = (fopt >= 1 && fopt < 10)   ? kTRUE : kFALSE;
-   Bool_t touch    = (fopt >= 2 && fopt < 10)   ? kTRUE : kFALSE;
-   Bool_t stgf     = (fopt == 10)               ? kTRUE : kFALSE;
 
    // File processing options
    Bool_t noaction   = (sopt == -1) ? kTRUE : kFALSE;
-   Bool_t fullproc   = (sopt == 0)  ? kTRUE : kFALSE;
+   //Bool_t fullproc   = (sopt == 0)  ? kTRUE : kFALSE;
    Bool_t locateonly = (sopt == 1)  ? kTRUE : kFALSE;
    Bool_t stageonly  = (sopt == 2)  ? kTRUE : kFALSE;
 
@@ -1222,6 +1216,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
    Bool_t doall       = (ropt == 0) ? kTRUE : kFALSE;
    Bool_t getlistonly = (ropt == 1) ? kTRUE : kFALSE;
    Bool_t scanlist    = (ropt == 2) ? kTRUE : kFALSE;
+
    if (scanlist && !flist) {
       ::Error("TDataSetManager::ScanDataSet", "input list is mandatory for option 'scan file list'");
       return -1;
@@ -1231,7 +1226,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
    Int_t fopened = 0;
    Int_t fdisappeared = 0;
 
-   Bool_t changed = kFALSE;
+   Bool_t bchanged_ds = kFALSE;
 
    TList *newStagedFiles = 0;
    TFileInfo *fileInfo = 0;
@@ -1247,142 +1242,36 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       stager = (mss && strlen(mss) > 0) ? TFileStager::Open(mss) : 0;
       createStager = (stager) ? kFALSE : kTRUE;
 
+      Bool_t bchanged_fi = kFALSE;
+      Bool_t btouched = kFALSE;
+      Bool_t bdisappeared = kFALSE;
+
       // Check which files have been staged, this can be replaced by a bulk command,
       // once it exists in the xrdclient
-      TIter iter2(dataset->GetList());
-      while ((fileInfo = (TFileInfo *) iter2())) {
+      TIter iter(dataset->GetList());
+      while ((fileInfo = (TFileInfo *) iter())) {
 
          // For real time monitoring
          gSystem->DispatchOneEvent(kTRUE);
 
-         if (!allf) {
+         bchanged_fi = kFALSE;
+         btouched = kFALSE;
+         bdisappeared = kFALSE;
+         Bool_t newlystaged = CheckStagedStatus(fileInfo, fopt, maxfiles, newStagedFiles->GetEntries(),
+                                                stager, createStager, dbg, bchanged_fi, btouched,
+                                                bdisappeared);
 
-            fileInfo->ResetUrl();
-            if (!fileInfo->GetCurrentUrl()) {
-               ::Error("TDataSetManager::ScanDataSet", "GetCurrentUrl() returned 0 for %s",
-                                                      fileInfo->GetFirstUrl()->GetUrl());
-               continue;
-            }
-
-            if (nonstgf && fileInfo->TestBit(TFileInfo::kStaged)) {
-
-               // Skip files flagged as corrupted
-               if (fileInfo->TestBit(TFileInfo::kCorrupted)) continue;
-
-               // Skip if we are not asked to re-open the staged files
-               if (!reopen) continue;
-
-               // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
-               // and TFile::Open() with filetype=raw do not accept anchors
-               TUrl *curl = fileInfo->GetCurrentUrl();
-               const char *furl = curl->GetUrl();
-               TString urlmod;
-               if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull()))
-                  furl = urlmod.Data();
-               TUrl url(furl);   
-               url.SetAnchor("");
-
-               // Notify
-               if (dbg && (ftouched+fdisappeared) % 100 == 0)
-                  ::Info("TDataSetManager::ScanDataSet", "opening %d: file: %s",
-                        ftouched + fdisappeared, curl->GetUrl());
-
-               // Check if file is still available, if touch is set actually read from the file
-               TString uopt(url.GetOptions());
-               uopt += "filetype=raw&mxredir=2";
-               url.SetOptions(uopt.Data());
-               TFile *file = TFile::Open(url.GetUrl());
-               if (file) {
-                  if (touch) {
-                     // Actually access the file
-                     char tmpChar = 0;
-                     if (file->ReadBuffer(&tmpChar, 1))
-                        ::Warning("TDataSetManager::ScanDataSet", "problems reading 1 byte from open file");
-                     // Count
-                     ftouched++;
-                  }
-                  file->Close();
-                  delete file;
-               } else {
-                  // File could not be opened, reset staged bit
-                  if (dbg) ::Info("TDataSetManager::ScanDataSet", "file %s disappeared", url.GetUrl());
-                  fileInfo->ResetBit(TFileInfo::kStaged);
-                  fdisappeared++;
-                  changed = kTRUE;
-
-                  // Remove invalid URL, if other one left...
-                  if (fileInfo->GetNUrls() > 1)
-                     fileInfo->RemoveUrl(curl->GetUrl());
-               }
-               // Go to next
-               continue;
-
-            } else if (stgf && !(fileInfo->TestBit(TFileInfo::kStaged))) {
-               // All staged files are processed: skip non staged
-               continue;
-            }
-         }
-
-         // Only open maximum number of 'new' files
-         if (maxfiles > 0 && newStagedFiles->GetEntries() >= maxfiles)
-            continue;
-
-         // Hard check of the staged status, if required
-         if (checkstg) {
-            // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
-            // and TFile::Open() with filetype=raw do not accept anchors
-            TUrl *curl = fileInfo->GetCurrentUrl();
-            const char *furl = curl->GetUrl();
-            TString urlmod;
-            Bool_t mapped = kFALSE;
-            if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull())) {
-               furl = urlmod.Data();
-               mapped = kTRUE;
-            }
-            TUrl url(furl);
-            url.SetAnchor("");
-
-            // Get the stager (either the global one or from the URL)
-            stager = createStager ? TFileStager::Open(url.GetUrl()) : stager;
-
-            Bool_t result = kFALSE;
-            if (stager) {
-               result = stager->IsStaged(url.GetUrl());
-               if (gDebug > 0)
-                  ::Info("TDataSetManager::ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
-               if (createStager)
-                  SafeDelete(stager);
-            } else {
-               ::Warning("TDataSetManager::ScanDataSet",
-                        "could not get stager instance for '%s'", url.GetUrl());
-            }
-
-            // Go to next in case of failure
-            if (!result) {
-               if (fileInfo->TestBit(TFileInfo::kStaged)) {
-                  // Reset the bit
-                  fileInfo->ResetBit(TFileInfo::kStaged);
-                  changed = kTRUE;
-               }
-               continue;
-            } else {
-               if (!(fileInfo->TestBit(TFileInfo::kStaged))) {
-                  // Set the bit
-                  fileInfo->SetBit(TFileInfo::kStaged);
-                  changed = kTRUE;
-               }
-            }
-
-            // If the url was re-mapped add the new url in front of the list
-            if (mapped) {
-               url.SetOptions(curl->GetOptions());
-               url.SetAnchor(curl->GetAnchor());
-               fileInfo->AddUrl(url.GetUrl(), kTRUE);
-            }
-         }
+         if (bchanged_fi) bchanged_ds = kTRUE;
+         if (btouched) ftouched++;
+         if (bdisappeared) fdisappeared++;
+ 
+         // Notify
+         if (dbg && (ftouched+fdisappeared) % 100 == 0)
+            ::Info("TDataSetManager::ScanDataSet", "opening %d: file: %s",
+                   ftouched + fdisappeared, fileInfo->GetCurrentUrl()->GetUrl());
 
          // Register the newly staged file
-         if (!noaction) newStagedFiles->Add(fileInfo);
+         if (!noaction && newlystaged) newStagedFiles->Add(fileInfo);
       }
       SafeDelete(stager);
 
@@ -1392,7 +1281,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
             ::Info("TDataSetManager::ScanDataSet", " %d files appear to be newly staged",
                                                    newStagedFiles->GetEntries());
          if (!flist) SafeDelete(newStagedFiles);
-         return ((changed) ? 2 : 1);
+         return ((bchanged_ds) ? 2 : 1);
       }
    }
 
@@ -1417,8 +1306,10 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       Int_t fqnot = (newStagedFiles->GetSize() > 10) ? newStagedFiles->GetSize() / 10 : 1;
       if (fqnot > 100) fqnot = 100;
       Int_t count = 0;
-      TIter iter3(newStagedFiles);
-      while ((fileInfo = (TFileInfo *) iter3())) {
+      Bool_t bchanged_fi = kFALSE;
+      Bool_t bopened = kFALSE;
+      TIter iter(newStagedFiles);
+      while ((fileInfo = (TFileInfo *) iter())) {
 
          if (dbg && (count%fqnot == 0))
             ::Info("TDataSetManager::ScanDataSet", "processing %d.'new' file: %s",
@@ -1427,78 +1318,14 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
 
          // For real time monitoring
          gSystem->DispatchOneEvent(kTRUE);
+         bchanged_fi = kFALSE; 
+         bopened = kFALSE;
 
-         Int_t rc = -1;
-         // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
-         // and TFile::Open() with filetype=raw do not accept anchors
-         TUrl *curl = fileInfo->GetCurrentUrl();
-         const char *furl = curl->GetUrl();
-         TString urlmod;
-         // Bool_t mapped = kFALSE;
-         if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull())) {
-            furl = urlmod.Data();
-            // mapped = kTRUE;
-         }
-         TUrl url(furl);
-         url.SetOptions("");
-         url.SetAnchor("");
-         // Point to the right stager
-         if (createStager) {
-            if (!stager || (stager && !stager->Matches(url.GetUrl()))) {
-               SafeDelete(stager);
-               if (!(stager = TFileStager::Open(url.GetUrl())) || !(stager->IsValid())) {
-                  ::Error("TDataSetManager::ScanDataSet",
-                           "could not get valid stager instance for '%s'", url.GetUrl());
-                  continue;
-               }
-            }
-         }
-         // Locate the file, if just requested so
-         if (locateonly) {
-            TString eurl;
-            if (stager && stager->Locate(url.GetUrl(), eurl) == 0) {
-               TString opts(curl->GetOptions());
-               TString anch(curl->GetAnchor());
-               // Get the effective end-point Url
-               curl->SetUrl(eurl);
-               // Restore original options and anchor, if any
-               curl->SetOptions(opts);
-               curl->SetAnchor(anch);
-               // Flag and count
-               changed = kTRUE;
-               fopened++;
-            } else {
-               // Failure
-               ::Error("TDataSetManager::ScanDataSet", "could not locate %s", url.GetUrl());
-            }
-         } else if (stageonly) {
-            if (stager && !(stager->IsStaged(url.GetUrl()))) {
-               if (!(stager->Stage(url.GetUrl(), stageopts))) {
-                  // Failure
-                  ::Error("TDataSetManager::ScanDataSet",
-                           "problems issuing stage request for %s", url.GetUrl());
-               }
-            }
-         } else if (fullproc) {
-            // Full file validation
-            rc = -2;
-            Bool_t doscan = kTRUE;
-            if (checkstg) {
-               doscan = kFALSE;
-               if ((doall && fileInfo->TestBit(TFileInfo::kStaged)) ||
-                   (stager && stager->IsStaged(url.GetUrl()))) doscan = kTRUE;
-            }
-            if (doscan) {
-               if ((rc = TDataSetManager::ScanFile(fileInfo, dbg)) < -1) continue;
-               changed = kTRUE;
-            } else if (stager) {
-               ::Warning("TDataSetManager::ScanDataSet",
-                         "required file '%s' does not look as being online (staged)", url.GetUrl());
-            }
-            if (rc < 0) continue;
-            // Count
-            fopened++;
-         }
+         ProcessFile(fileInfo, sopt, checkstg, doall, stager, createStager,
+                      stageopts, dbg, bchanged_fi, bopened);
+
+         bchanged_ds |= bchanged_fi;
+         if (bopened) fopened++;
       }
       if (newStagedFiles != flist) SafeDelete(newStagedFiles);
 
@@ -1506,7 +1333,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       dataset->Update(avgsz);
    }
 
-   Int_t result = (changed) ? 2 : 1;
+   Int_t result = (bchanged_ds) ? 2 : 1;
    if (result > 0 && dbg)
       ::Info("TDataSetManager::ScanDataSet", "%d files 'new'; %d files touched;"
                                              " %d files disappeared", fopened, ftouched, fdisappeared);
@@ -1520,6 +1347,276 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
    gSystem->DispatchOneEvent(kTRUE);
 
    return result;
+}
+
+//______________________________________________________________________________
+Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles, 
+                                          Int_t newstagedfiles, TFileStager* stager,
+                                          Bool_t createStager, Bool_t dbg, Bool_t& changed,
+                                          Bool_t& touched, Bool_t& disappeared)
+{
+   // Check stage status of the file described by "fileInfo". 
+   // fopt is same as "fopt" in TDataSetManager::ScanDataSet, which is repeated below:
+   // The int fopt controls which files have to be processed (or added to the list
+   // if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
+   //                    fopt = sign(fsopt) * csopt * 100 + fsopt
+   // where 'fsopt' controls the actual selection
+   //    -1              all files in the dataset
+   //     0              process only files marked as 'non-staged'
+   //   >=1              as 0 but files that are marked 'staged' are open
+   //   >=2              as 1 but files that are marked 'staged' are touched
+   //    10              process only files marked as 'staged'; files marked as 'non-staged'
+   //                    are ignored
+   // and 'csopt' controls if an actual check on the staged status (via TFileStager) is done
+   //     0              check that the file is staged using TFileStager
+   //     1              do not hard check the staged status
+   // (example: use fopt = -101 to check the staged status of all the files, or fopt = 110
+   //  to re-check the stage status of all the files marked as staged)
+   //
+   // If 'dbg' is true, some information about the ongoing operations is reguraly
+   // printed; this can be useful when processing very large datasets, an operation
+   // which can take a very long time.
+   //
+   // If maxfiles > 0, select for processing a maximum of 'filesmax' files (but if fopt is 1 or 2
+   // all files marked as 'staged' are still open or touched)
+   //
+   // Return code
+   //     kTRUE the file appears newly staged
+   //     kFALSE otherwise
+   //
+   // changed is true if the fileinfo is modified
+   // touched is true if the file is open and read
+   // disappeared is true if the file is marked staged but actually not staged
+
+   // File selection, Reopen and Touch options
+   Bool_t allf     = (fopt == -1)               ? kTRUE : kFALSE;
+   Bool_t checkstg = (fopt >= 100 || fopt < -1) ? kFALSE : kTRUE;
+   if (fopt >= 0) fopt %= 100;
+   Bool_t nonstgf  = (fopt >= 0 && fopt < 10)   ? kTRUE : kFALSE;
+   Bool_t reopen   = (fopt >= 1 && fopt < 10)   ? kTRUE : kFALSE;
+   Bool_t touch    = (fopt >= 2 && fopt < 10)   ? kTRUE : kFALSE;
+   Bool_t stgf     = (fopt == 10)               ? kTRUE : kFALSE;
+
+   changed = kFALSE;
+   touched = kFALSE;
+   disappeared = kFALSE;
+
+   // Check which files have been staged, this can be replaced by a bulk command,
+   // once it exists in the xrdclient
+
+   if (!allf) {
+
+      fileInfo->ResetUrl();
+      if (!fileInfo->GetCurrentUrl()) {
+         ::Error("TDataSetManager::ScanDataSet", "GetCurrentUrl() returned 0 for %s",
+                                                fileInfo->GetFirstUrl()->GetUrl());
+         return kFALSE;
+      }
+
+      if (nonstgf && fileInfo->TestBit(TFileInfo::kStaged)) {
+
+         // Skip files flagged as corrupted
+         if (fileInfo->TestBit(TFileInfo::kCorrupted)) return kFALSE;
+
+         // Skip if we are not asked to re-open the staged files
+         if (!reopen) return kFALSE;
+
+         // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
+         // and TFile::Open() with filetype=raw do not accept anchors
+         TUrl *curl = fileInfo->GetCurrentUrl();
+         const char *furl = curl->GetUrl();
+         TString urlmod;
+         if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull()))
+            furl = urlmod.Data();
+         TUrl url(furl);   
+         url.SetAnchor("");
+
+         // Check if file is still available, if touch is set actually read from the file
+         TString uopt(url.GetOptions());
+         uopt += "filetype=raw&mxredir=2";
+         url.SetOptions(uopt.Data());
+         TFile *file = TFile::Open(url.GetUrl());
+         if (file) {
+            if (touch) {
+               // Actually access the file
+               char tmpChar = 0;
+               if (file->ReadBuffer(&tmpChar, 1))
+                  ::Warning("TDataSetManager::ScanDataSet", "problems reading 1 byte from open file");
+               // Count
+               touched = kTRUE;
+            }
+            file->Close();
+            delete file;
+         } else {
+            // File could not be opened, reset staged bit
+            if (dbg) ::Info("TDataSetManager::ScanDataSet", "file %s disappeared", url.GetUrl());
+            fileInfo->ResetBit(TFileInfo::kStaged);
+            disappeared = kTRUE;
+            changed = kTRUE;
+
+            // Remove invalid URL, if other one left...
+            if (fileInfo->GetNUrls() > 1)
+               fileInfo->RemoveUrl(curl->GetUrl());
+         }
+         // Go to next
+         return kFALSE;
+      } else if (stgf && !(fileInfo->TestBit(TFileInfo::kStaged))) {
+         // All staged files are processed: skip non staged
+         return kFALSE;
+      }
+   }
+
+   // Only open maximum number of 'new' files
+   if (maxfiles > 0 && newstagedfiles >= maxfiles)
+      return kFALSE; 
+
+   // Hard check of the staged status, if required
+   if (checkstg) {
+      // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
+      // and TFile::Open() with filetype=raw do not accept anchors
+      TUrl *curl = fileInfo->GetCurrentUrl();
+      const char *furl = curl->GetUrl();
+      TString urlmod;
+      Bool_t mapped = kFALSE;
+      if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull())) {
+         furl = urlmod.Data();
+         mapped = kTRUE;
+      }
+      TUrl url(furl);
+      url.SetAnchor("");
+
+      // Get the stager (either the global one or from the URL)
+      stager = createStager ? TFileStager::Open(url.GetUrl()) : stager;
+
+      Bool_t result = kFALSE;
+      if (stager) {
+         result = stager->IsStaged(url.GetUrl());
+         if (gDebug > 0)
+            ::Info("TDataSetManager::ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
+         if (createStager)
+            SafeDelete(stager);
+      } else {
+         ::Warning("TDataSetManager::ScanDataSet",
+                  "could not get stager instance for '%s'", url.GetUrl());
+      }
+
+      // Go to next in case of failure
+      if (!result) {
+         if (fileInfo->TestBit(TFileInfo::kStaged)) {
+            // Reset the bit
+            fileInfo->ResetBit(TFileInfo::kStaged);
+            changed = kTRUE;
+         }
+         return kFALSE;
+      } else {
+         if (!(fileInfo->TestBit(TFileInfo::kStaged))) {
+            // Set the bit
+            fileInfo->SetBit(TFileInfo::kStaged);
+            changed = kTRUE;
+         }
+      }
+
+      // If the url was re-mapped add the new url in front of the list
+      if (mapped) {
+         url.SetOptions(curl->GetOptions());
+         url.SetAnchor(curl->GetAnchor());
+         fileInfo->AddUrl(url.GetUrl(), kTRUE);
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TDataSetManager::ProcessFile(TFileInfo *fileInfo, Int_t sopt, Bool_t checkstg, Bool_t doall,
+                                  TFileStager* stager,  Bool_t createStager, const char *stageopts,
+                                  Bool_t dbg, Bool_t& changed, Bool_t& opened)
+{
+// Locate, stage, or fully validate file "fileInfo".
+
+   // File processing options
+   //Bool_t noaction   = (sopt == -1) ? kTRUE : kFALSE;
+   Bool_t fullproc   = (sopt == 0)  ? kTRUE : kFALSE;
+   Bool_t locateonly = (sopt == 1)  ? kTRUE : kFALSE;
+   Bool_t stageonly  = (sopt == 2)  ? kTRUE : kFALSE;
+
+   changed = kFALSE;
+   opened = kFALSE;
+   Int_t rc = -1;
+
+   // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
+   // and TFile::Open() with filetype=raw do not accept anchors
+   TUrl *curl = fileInfo->GetCurrentUrl();
+   const char *furl = curl->GetUrl();
+   TString urlmod;
+   //Bool_t mapped = kFALSE;
+   if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull())) {
+      furl = urlmod.Data();
+      //mapped = kTRUE;
+   }
+   TUrl url(furl);
+   url.SetOptions("");
+   url.SetAnchor("");
+
+   if (createStager){
+      if (!stager || (stager && !stager->Matches(url.GetUrl()))) {
+         SafeDelete(stager);
+         if (!(stager = TFileStager::Open(url.GetUrl())) || !(stager->IsValid())) {
+            ::Error("TDataSetManager::ProcessFile",
+                     "could not get valid stager instance for '%s'", url.GetUrl());
+            return;
+         }
+      }
+   }
+   // Locate the file, if just requested so
+   if (locateonly) {
+      TString eurl;
+      if (stager && stager->Locate(url.GetUrl(), eurl) == 0) {
+         TString opts(curl->GetOptions());
+         TString anch(curl->GetAnchor());
+         // Get the effective end-point Url
+         curl->SetUrl(eurl);
+         // Restore original options and anchor, if any
+         curl->SetOptions(opts);
+         curl->SetAnchor(anch);
+         // Flag and count
+         changed = kTRUE;
+         opened = kTRUE;
+      } else {
+         // Failure
+         ::Error("TDataSetManager::ProcessFile", "could not locate %s", url.GetUrl());
+      }
+
+   } else if (stageonly) {
+      TString eurl;
+      if (stager && !(stager->IsStaged(url.GetUrl()))) {
+         if (!(stager->Stage(url.GetUrl(), stageopts))) {
+            // Failure
+            ::Error("TDataSetManager::ProcessFile",
+                     "problems issuing stage request for %s", url.GetUrl());
+         }
+      }
+   } else if (fullproc) {
+      TString eurl;
+      // Full file validation
+      rc = -2;
+      Bool_t doscan = kTRUE;
+      if (checkstg) {
+         doscan = kFALSE;
+         if ((doall && fileInfo->TestBit(TFileInfo::kStaged)) ||
+             (stager && stager->IsStaged(url.GetUrl()))) doscan = kTRUE;
+      }
+      if (doscan) {
+         if ((rc = TDataSetManager::ScanFile(fileInfo, dbg)) < -1) return;
+         changed = kTRUE;
+      } else if (stager) {
+         ::Warning("TDataSetManager::ProcessFile",
+                   "required file '%s' does not look as being online (staged)", url.GetUrl());
+      }
+      if (rc < 0) return;
+      // Count
+      opened = kTRUE;
+   }
+   return;
 }
 
 //______________________________________________________________________________

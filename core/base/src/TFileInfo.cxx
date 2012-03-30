@@ -31,7 +31,7 @@ ClassImp(TFileInfoMeta)
 TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
                      const char *md5, TObject *meta)
    : fCurrentUrl(0), fUrlList(0), fSize(-1), fUUID(0), fMD5(0),
-     fMetaDataList(0)
+     fMetaDataList(0), fIndex(-1)
 {
    // Constructor.
 
@@ -62,13 +62,16 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
    // Now set the name from the UUID
    SetName(fUUID->AsString());
    SetTitle("TFileInfo");
+
+   // By default we ignore the index
+   ResetBit(TFileInfo::kSortWithIndex);
 }
 
 //______________________________________________________________________________
 TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
                                             fCurrentUrl(0), fUrlList(0),
                                             fSize(fi.fSize), fUUID(0), fMD5(0),
-                                            fMetaDataList(0)
+                                            fMetaDataList(0), fIndex(-1)
 {
    // Copy constructor.
 
@@ -105,6 +108,9 @@ TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
          fMetaDataList->Add(new TFileInfoMeta(*fim));
       }
    }
+
+   // By default we ignore the index
+   ResetBit(TFileInfo::kSortWithIndex);
 }
 
 //______________________________________________________________________________
@@ -141,6 +147,9 @@ void TFileInfo::ParseInput(const char *in)
    //                             the should be in the form <subdir>/obj-name; 'class'
    //                             is the object class; 'entries' is the number of occurences
    //                             for this object.
+   //
+   //   idx:<index>               Index of this file if sorting with index
+   //
    // Multiple occurences of 'tree:' or 'obj:' can be specified.
    // The initializations done via the input string are superseeded by the ones by other
    // parameters in the constructor, if any.
@@ -201,6 +210,10 @@ void TFileInfo::ParseInput(const char *in)
             TFileInfoMeta *meta = new TFileInfoMeta(nm, cl, ent);
             AddMetaData(meta);
          }
+      } else if (t.BeginsWith("idx:")) {
+         // The size
+         t.Replace(0, 4, "");
+         if (t.IsDigit()) sscanf(t.Data(), "%d", &fIndex);
       } else {
          // A (set of) URL(s)
          if (t.BeginsWith("url:")) t.Replace(0, 4, "");
@@ -411,9 +424,29 @@ Int_t TFileInfo::Compare(const TObject *obj) const
 {
    // Compare TFileInfo object by their first urls.
 
-   if (this == obj) return 0;
-   if (TFileInfo::Class() != obj->IsA()) return -1;
-   return (GetFirstUrl()->Compare(((TFileInfo*)obj)->GetFirstUrl()));
+   Int_t rc = 0;
+   if (TestBit(TFileInfo::kSortWithIndex)) {
+      const TFileInfo *fi = dynamic_cast<const TFileInfo *>(obj);
+      if (!fi) {
+         rc = -1;
+      } else {
+         if (fIndex < fi->fIndex) {
+            rc = -1;
+         } else if (fIndex > fi->fIndex) {
+            rc = 1;
+         }
+      }
+   } else {
+      if (this == obj) { 
+         rc = 0;
+      } else if (TFileInfo::Class() != obj->IsA()) {
+         rc = -1;
+      } else {
+         rc = (GetFirstUrl()->Compare(((TFileInfo*)obj)->GetFirstUrl()));
+      }
+   }
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -429,9 +462,10 @@ void TFileInfo::Print(Option_t *option) const
    TString opt(option);
    if (opt.Contains("L", TString::kIgnoreCase)) {
 
-      Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID() ? GetUUID()->AsString() : "undef",
-                                               GetMD5() ? GetMD5()->AsString() : "undef",
-                                               GetSize());
+      Printf("UUID: %s\nMD5:  %s\nSize: %lld\nIndex: %d",
+             GetUUID() ? GetUUID()->AsString() : "undef",
+             GetMD5() ? GetMD5()->AsString() : "undef",
+             GetSize(), GetIndex());
 
       TIter next(fUrlList);
       TUrl *u;

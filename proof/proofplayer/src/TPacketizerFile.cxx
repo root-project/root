@@ -101,6 +101,7 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
    fValid = kFALSE;
    fAssigned = 0;
    fProcNotAssigned = kTRUE;
+   fAddFileInfo = kFALSE;
 
    if (!input || (input && input->GetSize() <= 0)) {
       Error("TPacketizerFile", "input file is undefined or empty!");
@@ -114,6 +115,16 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
       if (procnotass == 0) {
          Info("TPacketizerFile", "files not assigned to workers will not be processed");
          fProcNotAssigned = kFALSE;
+      }
+   }
+
+   // Check if the TFileInfo object has to be added to the packet
+   Int_t addfileinfo = 0;
+   if (TProof::GetParameter(input, "PROOF_IncludeFileInfoInPacket", addfileinfo) == 0) {
+      if (addfileinfo == 1) {
+         Info("TPacketizerFile",
+              "TFileInfo object will be included in the packet as associated object");
+         fAddFileInfo = kTRUE;
       }
    }
 
@@ -366,17 +377,17 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
    // The file name: we support TObjString or TFileInfo
    TString filename;
    TObjString *os = 0;
+   TFileInfo *fi = 0;
    if ((os = dynamic_cast<TObjString *>(nextfile))) {
       filename = os->GetName();
    } else {
-      TFileInfo *fi = 0;
       if ((fi = dynamic_cast<TFileInfo *>(nextfile)))
          filename = fi->GetCurrentUrl()->GetUrl();
    }
    // Nothing to process
    if (filename.IsNull()) {
       Warning("GetNextPacket", "found unsupported object of type '%s' in list: it must"
-                               " be 'TObjString' or 'TFileInfo'", nextfile->GetName());
+                               " be 'TObjString' or 'TFileInfo'", nextfile->ClassName());
       return elem;
    }
    // Prepare the packet
@@ -385,6 +396,12 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
                             wrk->GetOrdinal(), filename.Data(), (fTotalEntries - fAssigned));
    elem = new TDSetElement(filename, "", "", 0, 1);
    elem->SetBit(TDSetElement::kEmpty);
+
+   // Add the element, if required
+   if (fAddFileInfo && fi) {
+      elem->AddAssocObj(fi);
+      PDB(kPacketizer,2) fi->Print("L");
+   }
 
    // Update the total counter
    fAssigned += 1;
