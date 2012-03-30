@@ -4428,9 +4428,9 @@ void TProofServ::ProcessNext(TString *slb)
    }
 
    // Return number of events processed
+   Bool_t abort =
+      (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
-      Bool_t abort =
-         (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
       m.Reset(kPROOF_STOPPROCESS);
       // message sent from worker to the master
       if (fProtocol > 18) {
@@ -4460,7 +4460,7 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Complete filling of the TQueryResult instance
    if (fQMgr && !pq->IsDraw()) {
-      fProof->AskStatistics();
+      if (!abort) fProof->AskStatistics();
       if (fQMgr->FinalizeQuery(pq, fProof, fPlayer))
          fQMgr->SaveQuery(pq, fMaxQueries);
    }
@@ -4534,6 +4534,8 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
       // Only file collections TFileCollection
       TFileCollection *ds = dynamic_cast<TFileCollection*> (o);
       if (ds) {
+         // Origin of this dataset
+         ds->SetTitle(gSystem->HostName());
          // The tag and register option
          TNamed *fcn = 0;
          TString tag = TString::Format("DATASET_%s", ds->GetName());
@@ -4577,8 +4579,8 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
                   } else {
                      Info("RegisterDataSets", "dataset '%s' successfully registered", ds->GetName());
                      msg.Form("Registering and verifying dataset '%s' ... OK", ds->GetName());
-                     // Add tag to the list of processed tags to avoid double processing (there may be more objects with
-                     // the same name, created by each worker)
+                     // Add tag to the list of processed tags to avoid double processing
+                     // (there may be more objects with the same name, created by each worker)
                      tags.Add(new TObjString(tag));
                   }
                   SendAsynMessage(msg.Data(), kTRUE);
@@ -4603,8 +4605,14 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
    // Cleanup all temporary stuff possibly created by each worker
    TIter nxrm(&torm);
    while ((o = nxrm())) out->Remove(o);
-   tags.SetOwner(kTRUE);
    torm.SetOwner(kTRUE);
+   // Remove tags
+   TIter nxtg(&tags);
+   while((o = nxtg())) {
+      TObject *oo = 0;
+      while ((oo = out->FindObject(o->GetName()))) { out->Remove(oo); }
+   }
+   tags.SetOwner(kTRUE);
 
    PDB(kDataset, 1) Info("RegisterDataSets", "exit");
    // Done
