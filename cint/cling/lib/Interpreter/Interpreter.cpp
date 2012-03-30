@@ -391,7 +391,8 @@ namespace cling {
   }
 
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
-    fname = createUniqueName();
+    //fname = createUniqueName();
+    createUniqueName(fname);
     input.insert(0, "void " + fname + "() {\n ");
     input.append("\n;\n}");
   }
@@ -430,6 +431,11 @@ namespace cling {
     std::ostringstream swrappername;
     swrappername << "__cling_Un1Qu3" << m_UniqueCounter++;
     return swrappername.str();
+  }
+
+  void Interpreter::createUniqueName(std::string& out) {
+    out = "__cling_Un1Qu3";
+    llvm::raw_string_ostream(out) << m_UniqueCounter++;
   }
 
   
