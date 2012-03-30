@@ -68,4 +68,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ORACLEO) $(ORACLEDO): CXXFLAGS += -I$(ORACLEINCDIR)
+$(ORACLEO) $(ORACLEDO): CXXFLAGS += $(ORACLEINCDIR:%=-I%)
