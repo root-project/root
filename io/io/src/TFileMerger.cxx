@@ -448,6 +448,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                continue;
             }
             
+            Bool_t canBeMerged = kTRUE;
+
             if ( obj->IsA()->InheritsFrom( TDirectory::Class() ) ) {
                // it's a subdirectory
                
@@ -644,6 +646,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             } else {
                // Object is of no type that we can merge
                Bool_t warned = kFALSE;
+               canBeMerged = kFALSE;
 
                // Loop over all source files and write similar objects directly to the output file
                TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
@@ -698,13 +701,15 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   delete obj;
                }
             } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
-               if ( obj->Write( oldkeyname, TObject::kSingleKey | TObject::kOverwrite ) <= 0 ) {
+               // Don't overwrite, if the object were not merged.
+               if ( obj->Write( oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <= 0 ) {
                   status = kFALSE;
                }
                ((TCollection*)obj)->SetOwner();
                delete obj;
             } else {
-               if ( obj->Write( oldkeyname, TObject::kOverwrite ) <= 0) {
+               // Don't overwrite, if the object were not merged.
+               if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
                   status = kFALSE;
                }
                delete obj;
