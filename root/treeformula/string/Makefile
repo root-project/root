@@ -60,3 +60,13 @@ string: string.neutral.clog string.ref
 	$(TestDiff)
 
 
+generatedSel.h: createAliasStringMakeProxy.C test.txt
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b createAliasStringMakeProxy.C > createAliasStringMakeProxy.log 2>&1 || handleError.sh --result=$$? --log=createAliasStringMakeProxy.log
+
+createAliasStringMakeProxy.log: generatedSel.h
+
+createAliasStringMakeProxy.success: createAliasStringMakeProxy.log generatedSel.h
+	$(SuccessTestDiff) && touch $@
+
+execAliasString.log: generatedSel_h.$(DllSuf) createAliasStringMakeProxy.success
+
