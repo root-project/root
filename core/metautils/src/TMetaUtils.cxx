@@ -30,8 +30,9 @@ clang::QualType ROOT::TMetaUtils::LookupTypeDecl(cling::Interpreter& interp,
                                                  const char* tyname)
 {
    // Look for name's clang::QualType.
-   std::string funcname("TCling_LookupTypeDecl_");
-   funcname += interp.createUniqueName();
+   std::string funcname;
+   interp.createUniqueName(funcname);
+   funcname = "TCling_LookupTypeDecl_" + funcname ;
    std::string code("void ");
    code += funcname + "(" + tyname + "*);";
    const clang::Decl* decl = 0;

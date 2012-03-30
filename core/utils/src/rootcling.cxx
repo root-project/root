@@ -776,11 +776,13 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       // Build int (ClassInfo::*f)(arglist) = &ClassInfo::method;
       // Then we will have the resolved overload of clang::FunctionDecl on the lhs.
       std::string Str("");
-      Str += "void " + gInterp->createUniqueName() + "() {\n";
+      gInterp->createUniqueName(Str);
+      Str += "void " + Str + "() {\n";
       Str += "void (" + cinfo->getNameAsString() + "::*fptr)(" + proto + ") = &" + cinfo->getNameAsString()  + "::" + method + ";;";
       Str += "\n};;";
 
-      std::string uniquename(gInterp->createUniqueName());
+      std::string uniquename;
+      gInterp->createUniqueName(uniquename);
 
       Str = "template<typename CLASS, typename RET> void " + uniquename + "lookup_arg(RET (CLASS::* const arg)(";
       Str += proto;
