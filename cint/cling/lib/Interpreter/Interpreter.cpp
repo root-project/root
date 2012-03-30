@@ -436,9 +436,7 @@ namespace cling {
     // Create an unique name
     
     std::ostringstream swrappername;
-
-    llvm::raw_string_ostream(out) << m_UniqueCounter++;
-    swrappername << "Un1Qu3" << m_UniqueCounter++;
+    swrappername << "__cling_Un1Qu3" << m_UniqueCounter++;
     return swrappername.str();
   }
 
