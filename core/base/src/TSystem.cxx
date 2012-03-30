@@ -2054,8 +2054,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    }
 
    if (opt.IsNull() || opt.First('S') != kNPOS) {
-      // We are done, the statically linked library
-      // are already included.
+      // We are done, the statically linked libraries are already included.
       if (libs.Length() == 0) {
          libs = slinked;
       } else {
