@@ -2863,6 +2863,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    const char *cSOEXT=".a";
 #else
    const char *cSOEXT=".so";
+   TRegexp sovers = "\\.so\\.[0-9]+";
 #endif
 #endif
    FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
@@ -2882,10 +2883,15 @@ const char *TUnixSystem::GetLinkedLibraries()
          }
          if (solibName) {
             TString solib = solibName->String();
-            if (solib.EndsWith(cSOEXT)) {
-               if (!linkedLibs.IsNull())
-                  linkedLibs += " ";
-               linkedLibs += solib;
+            Ssiz_t idx = solib.Index(sovers);
+            if (solib.EndsWith(cSOEXT) || idx != kNPOS) {
+               if (idx != kNPOS)
+                  solib.Remove(idx+3);
+               if (!AccessPathName(solib, kReadPermission)) {
+                  if (!linkedLibs.IsNull())
+                     linkedLibs += " ";
+                  linkedLibs += solib;
+               }
             }
          }
          delete tok;
