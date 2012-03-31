@@ -432,7 +432,13 @@ void TRint::Run(Bool_t retrn)
 
       if (QuitOpt()) {
          if (retrn) return;
-         Terminate(error == 0 ? retval : error);
+         if (error) {
+            retval = error;
+         }
+         // Bring retval into sensible range, 0..125.
+         if (retval < 0) retval = 1;
+         else if (retval > 125) retval = 1;
+         Terminate(retval);
       }
 
       ClearInputFiles();
