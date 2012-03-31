@@ -166,7 +166,7 @@ void TLeafF::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafF::ReadValue(istream &s)
+void TLeafF::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
 // read a float from istream s and store it into the branch buffer
    Float_t *value = (Float_t*)GetValuePointer();

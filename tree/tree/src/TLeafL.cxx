@@ -200,7 +200,7 @@ void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafL::ReadValue(istream &s)
+void TLeafL::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
 // read a long integer from istream s and store it into the branch buffer
 #if defined(_MSC_VER) && (_MSC_VER<1300)

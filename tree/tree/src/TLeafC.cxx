@@ -184,14 +184,15 @@ void TLeafC::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafC::ReadValue(istream &s)
+void TLeafC::ReadValue(istream &s, Char_t delim /*= ' '*/)
 {
-   // Read a string from istream s and store it into the branch buffer.
+   // Read a string from istream s up to delimiter and store it into the branch
+   // buffer.
 
    string temp;
-   s >> temp;
-   if ( TestBit(kNewValue) &&
-        (temp.size()+1 > ((UInt_t)fNdata))) {
+   std::getline(s, temp, delim);
+   if (TestBit(kNewValue) &&
+        (temp.length()+1 > ((UInt_t)fNdata))) {
       // Grow buffer if needed and we created the buffer.
       fNdata = ((UInt_t)temp.size()) + 1;
       if (TestBit(kIndirectAddress) && fPointer) {

@@ -193,7 +193,7 @@ void TLeafS::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafS::ReadValue(istream &s)
+void TLeafS::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
 // read a integer integer from istream s and store it into the branch buffer
    if (fIsUnsigned) {

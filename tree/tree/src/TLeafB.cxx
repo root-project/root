@@ -164,7 +164,7 @@ void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafB::ReadValue(istream &s)
+void TLeafB::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
    // -- Read a string from istream s and store it into the branch buffer.
    char* value = (char*) GetValuePointer();

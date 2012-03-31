@@ -83,7 +83,9 @@ public:
    virtual void     PrintValue(Int_t i = 0) const;
    virtual void     ReadBasket(TBuffer&) {}
    virtual void     ReadBasketExport(TBuffer&, TClonesArray*, Int_t) {}
-   virtual void     ReadValue(istream& /*s*/) {}
+   virtual void     ReadValue(istream& /*s*/, Char_t /*delim*/ = ' ') {
+      Error("ReadValue", "Not implemented!");
+   }
            Int_t    ResetAddress(void* add, Bool_t destructor = kFALSE);
    virtual void     SetAddress(void* add = 0);
    virtual void     SetBranch(TBranch* branch) { fBranch = branch; }

@@ -6270,9 +6270,6 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
    //      x:y:z      (all variables are assumed of type "F"
    //      x/D:y:z    (all variables are of type "D"
    //      x:y/D:z    (x is type "F", y and z of type "D"
-   //  -If the type is a string of characters. This will read
-   //  subsequent characters until a whitespace is found (whitespace
-   //  characters are considered to be blank, newline and tab).
    //
    //  delimiter allows for the use of another delimiter besides whitespace.
    //    This provides support for direct import of common data file formats
@@ -6285,9 +6282,6 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
    //    not specified (besides ' '), the delimiter is automatically set to ','.
    //
    // Lines in the input file starting with "#" are ignored.
-   // This function will read and ignore any whitespace characters
-   // (this includes blank spaces and the newline and tab characters).
-   // Handles newlines specified with '\n', '\r', or "\r\n".
    //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
@@ -6316,6 +6310,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
 char TTree::GetNewlineValue(istream &inputStream)
 {
    // Determine which newline this file is using.
+   // Return '\r' for Windows '\r\n' as that already terminates.
 
    Long_t inPos = inputStream.tellg();
    char newline = '\n';
@@ -6328,11 +6323,8 @@ char TTree::GetNewlineValue(istream &inputStream)
       }
       if(c == newline) break;
       if(c == '\r') { 
-         if(inputStream.get() == newline) break;
-         else {
-            newline = '\r';
-            break;
-         }
+         newline = '\r';
+         break;
       }
    }
    inputStream.clear();
@@ -6350,6 +6342,8 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
    gTree = this;
    char newline = GetNewlineValue(inputStream);
    std::istream& in = inputStream;
+   Long64_t nlines = 0;
+
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntries();
    if (nbranches == 0) {
@@ -6366,6 +6360,7 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
             Error("ReadStream","Error reading stream");
             return 0;
          }
+         ++nlines;
          nch = strlen(bd);
       } else {
          strlcpy(bd,branchDescriptor,100000);
@@ -6409,54 +6404,118 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       delete [] bd;
    }
 
-   //loop on all lines in the file
    nbranches = fBranches.GetEntries();
-   Bool_t status = kTRUE;
-   Long64_t nlines = 0;
-   while(1) {
 
-      while (isspace(in.peek())) {
-         in.get();
+   if (gDebug > 1) {
+      Info("ReadStream", "Will use branches:");
+      for (int i = 0 ; i < nbranches; ++i) {
+         TBranch* br = (TBranch*) fBranches.At(i);
+         Info("ReadStream", "  %s: %s [%s]", br->GetName(),
+              br->GetTitle(), br->GetListOfLeaves()->At(0)->IsA()->GetName());
       }
-      if ( in.peek() != '#' ) {
-         //loop on branches and read the branch values into their buffer
-         for (Int_t i=0;i<nbranches;i++) {
-            branch = (TBranch*)fBranches.At(i);
-            TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-            leaf->ReadValue(in);
-            if (in.eof()) {
-               if(i == nbranches-1) {
-                  // handle no newline char on last line
-                  Fill();
-                  nlines++;
-               }
-               return nlines;
-            }
-            status = in.good();
-            if (!status) {
-               if(in.fail() && ! in.bad()) { // just couldn't interpret formatted data
-                  Warning("ReadStream","Couldn't read formatted data for branch %s on line %lld",branch->GetName(),nlines+1);
-                  in.clear();
-                  status = kTRUE;
-               }
-               else {
-                  Warning("ReadStream","Illegal value after line %lld",nlines);
-                  in.clear();
-                  break;
-               }
-            }
-            if(in.peek() == delimiter) in.get();
-         }
-         //we are now ready to fill the tree
-         if (status) {
-            Fill();
-            nlines++;
-         }
+      if (gDebug > 3) {
+         Info("ReadStream", "Dumping read tokens, format:");
+         Info("ReadStream", "LLLLL:BBB:gfbe:GFBE:T");
+         Info("ReadStream", "   L: line number");
+         Info("ReadStream", "   B: branch number");
+         Info("ReadStream", "   gfbe: good / fail / bad / eof of token");
+         Info("ReadStream", "   GFBE: good / fail / bad / eof of file");
+         Info("ReadStream", "   T: Token being read");
       }
-      in.ignore(8192,newline);
    }
 
-   return nlines;
+   //loop on all lines in the file
+   Long64_t nGoodLines = 0;
+   std::string line;
+   const char sDelim[2] = { delimiter, 0 };
+   while(in.good()) {
+      if (newline == '\r' && in.peek() == '\n') {
+         // Windows, skip '\n':
+         in.get();
+      }
+      std::getline(in, line, newline);
+      ++nlines;
+
+      if (line[0] == '#') {
+         if (gDebug > 2) {
+            Info("ReadStream", "Skipping comment line '%s'", line.c_str());
+         }
+         continue;
+      }
+      if (gDebug > 2) {
+         Info("ReadStream", "Parsing line '%s'", line.c_str());
+      }
+
+      // Loop on branches and read the branch values into their buffer
+      std::stringstream sToken;
+      TString sLine(line);
+      TString tok;
+      Ssiz_t pos = 0;
+      Int_t iBranch = 0;
+      Bool_t goodLine = kTRUE;
+      while (goodLine && iBranch < nbranches
+             && sLine.Tokenize(tok, pos, sDelim)) {
+         branch = (TBranch*)fBranches.At(iBranch++);
+         TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+         sToken.clear();
+         sToken.seekp(0, std::ios_base::beg);
+         sToken.seekg(0, std::ios_base::beg);
+         sToken.str(tok.Data());
+         leaf->ReadValue(sToken, 0 /* 0 = "all" */);
+         if (gDebug > 3) {
+            Info("ReadStream", "%5lld:%3d:%d%d%d%d:%d%d%d%d:%s",
+                 nlines, iBranch,
+                 (int)sToken.good(), (int)sToken.fail(),
+                 (int)sToken.bad(), (int)sToken.eof(),
+                 (int)in.good(), (int)in.fail(),
+                 (int)in.bad(), (int)in.eof(),
+                 sToken.str().c_str());
+         }
+
+         // Error handling
+         if (sToken.bad()) {
+            // How could that happen for a stringstream?
+            Warning("ReadStream",
+                    "Buffer error while reading data for branch %s on line %lld",
+                    branch->GetName(), nlines);
+         } else if (!sToken.eof()) {
+            if (sToken.fail()) {
+               Warning("ReadStream",
+                       "Couldn't read formatted data in \"%s\" for branch %s on line %lld; ignoring line",
+                       tok.Data(), branch->GetName(), nlines);
+               goodLine = kFALSE;
+            } else {
+               std::string remainder;
+               std::getline(sToken, remainder, newline);
+               if (!remainder.empty()) {
+                  Warning("ReadStream",
+                          "Ignoring trailing \"%s\" while reading data for branch %s on line %lld",
+                          remainder.c_str(), branch->GetName(), nlines);
+               }
+            }
+         }
+      } // tokenizer loop
+
+      if (iBranch < nbranches) {
+         Warning("ReadStream",
+                 "Read too few columns (%d < %d) in line %lld; ignoring line",
+                 iBranch, nbranches, nlines);
+         goodLine = kFALSE;
+      } else if (pos != kNPOS) {
+         Warning("ReadStream",
+                 "Ignoring trailing \"%s\" while reading line %lld",
+                 sLine.Data() + pos - 1 /* also print delimiter */,
+                 nlines);
+      }
+
+      //we are now ready to fill the tree
+      if (goodLine) {
+         Fill();
+         ++nGoodLines;
+      }
+   }
+
+   return nGoodLines;
 }
 
 //______________________________________________________________________________

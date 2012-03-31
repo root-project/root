@@ -154,7 +154,7 @@ void TLeafD::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafD::ReadValue(istream &s)
+void TLeafD::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
 // read a double from istream s and store it into the branch buffer
    Double_t *value = (Double_t*)GetValuePointer();
