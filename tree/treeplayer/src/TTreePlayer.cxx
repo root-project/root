@@ -2347,6 +2347,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
               || opt[numpos+numlen] == 'l'
               || opt[numpos+numlen] == 'L'
               || opt[numpos+numlen] == 'h'
+              || opt[numpos+numlen] == 's'
               || opt[numpos+numlen] == '#'
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
