@@ -55,7 +55,7 @@ THnBase::THnBase(const char* name, const char* title, Int_t dim,
 
    for (Int_t i = 0; i < fNdimensions; ++i) {
       TAxis* axis = new TAxis(nbins[i], xmin ? xmin[i] : 0., xmax ? xmax[i] : 1.);
-      axis->SetName(TString::Format("axis %d", i));
+      axis->SetName(TString::Format("axis%d", i));
       fAxes.AddAtAndExpand(axis, i);
    }
    SetTitle(title);
@@ -1438,7 +1438,7 @@ ROOT::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
    // Construct a THnBaseBrowsable.
    TString axisName = hist->GetAxis(axis)->GetName();
    if (axisName.IsNull()) {
-      axisName = TString::Format("axis %d", axis);
+      axisName = TString::Format("axis%d", axis);
    }
 
    SetNameTitle(axisName,
