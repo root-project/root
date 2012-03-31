@@ -6345,7 +6345,7 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
    std::istream& in = inputStream;
    Long64_t nlines = 0;
 
-   TBranch *branch;
+   TBranch *branch = 0;
    Int_t nbranches = fBranches.GetEntries();
    if (nbranches == 0) {
       char *bdname = new char[4000];
@@ -6458,6 +6458,7 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       }
 
       // Loop on branches and read the branch values into their buffer
+      branch = 0;
       TString tok; // one column's data
       TString leafData; // leaf data, possibly multiple tokens for e.g. /I[2]
       std::stringstream sToken; // string stream feeding leafData into leaves
