@@ -6281,7 +6281,8 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
    //    If the filename ends with extensions .csv or .CSV and a delimiter is
    //    not specified (besides ' '), the delimiter is automatically set to ','.
    //
-   // Lines in the input file starting with "#" are ignored.
+   // Lines in the input file starting with "#" are ignored. Leading whitespace
+   //   for each column data is skipped. Empty lines are skipped.
    //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
@@ -6436,31 +6437,69 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       std::getline(in, line, newline);
       ++nlines;
 
-      if (line[0] == '#') {
+      TString sLine(line);
+      sLine = sLine.Strip(TString::kLeading); // skip leading whitespace
+      if (sLine.IsNull()) {
          if (gDebug > 2) {
-            Info("ReadStream", "Skipping comment line '%s'", line.c_str());
+            Info("ReadStream", "Skipping empty line number %lld", nlines);
+         }
+         continue; // silently skip empty lines
+      }
+      if (sLine[0] == '#') {
+         if (gDebug > 2) {
+            Info("ReadStream", "Skipping comment line number %lld: '%s'",
+                 nlines, line.c_str());
          }
          continue;
       }
       if (gDebug > 2) {
-         Info("ReadStream", "Parsing line '%s'", line.c_str());
+         Info("ReadStream", "Parsing line number %lld: '%s'",
+              nlines, line.c_str());
       }
 
       // Loop on branches and read the branch values into their buffer
-      std::stringstream sToken;
-      TString sLine(line);
-      TString tok;
+      TString tok; // one column's data
+      TString leafData; // leaf data, possibly multiple tokens for e.g. /I[2]
+      std::stringstream sToken; // string stream feeding leafData into leaves
       Ssiz_t pos = 0;
       Int_t iBranch = 0;
-      Bool_t goodLine = kTRUE;
+      Bool_t goodLine = kTRUE; // whether the row can be filled into the tree
+      Int_t remainingLeafLen = 0; // remaining columns for the current leaf
       while (goodLine && iBranch < nbranches
              && sLine.Tokenize(tok, pos, sDelim)) {
-         branch = (TBranch*)fBranches.At(iBranch++);
+         tok = tok.Strip(TString::kLeading); // skip leading whitespace
+
+         if (!remainingLeafLen) {
+            // next branch!
+            branch = (TBranch*)fBranches.At(iBranch);
+         }
          TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+         if (!remainingLeafLen) {
+            remainingLeafLen = leaf->GetLen();
+            if (leaf->GetMaximum() > 0) {
+               // This is a dynamic leaf length, i.e. most likely a TLeafC's
+               // string size. This still translates into one token:
+               remainingLeafLen = 1;
+            }
+
+            leafData = tok;
+         } else {
+            // append token to laf data:
+            leafData += " ";
+            leafData += tok;
+         }
+         --remainingLeafLen;
+         if (remainingLeafLen) {
+            // need more columns for this branch:
+            continue;
+         }
+         ++iBranch;
+
+         // initialize stringstream with token
          sToken.clear();
          sToken.seekp(0, std::ios_base::beg);
+         sToken.str(leafData.Data());
          sToken.seekg(0, std::ios_base::beg);
-         sToken.str(tok.Data());
          leaf->ReadValue(sToken, 0 /* 0 = "all" */);
          if (gDebug > 3) {
             Info("ReadStream", "%5lld:%3d:%d%d%d%d:%d%d%d%d:%s",
