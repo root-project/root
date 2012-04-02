@@ -1658,7 +1658,7 @@ void TBranch::KeepCircular(Long64_t maxEntries)
 
    Int_t dentries = (Int_t) (fEntries - maxEntries);
    TBasket* basket = (TBasket*) fBaskets.UncheckedAt(0);
-   basket->MoveEntries(dentries);
+   if (basket) basket->MoveEntries(dentries);
    fEntries = maxEntries;
    fEntryNumber = maxEntries;
    //loop on sub branches
