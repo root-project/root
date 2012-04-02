@@ -32,8 +32,11 @@ TEveRGBAPalette::TEveRGBAPalette() :
    TObject(), TQObject(),
    TEveRefCnt(),
 
+   fUIf(1), fUIc(0),
+
    fLowLimit(0), fHighLimit(0), fMinVal(0), fMaxVal(0),
 
+   fUIDoubleRep     (kFALSE),
    fInterpolate     (kTRUE),
    fShowDefValue    (kTRUE),
    fFixColorRange   (kFALSE),
@@ -62,8 +65,11 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
    TObject(), TQObject(),
    TEveRefCnt(),
 
+   fUIf(1), fUIc(0),
+
    fLowLimit(0), fHighLimit(0), fMinVal(0), fMaxVal(0),
 
+   fUIDoubleRep     (kFALSE),
    fInterpolate     (interp),
    fShowDefValue    (showdef),
    fFixColorRange   (fixcolrng),
@@ -108,7 +114,7 @@ void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
    Float_t f;
    if      (val >= fCAMax) f = nCol - 1;
    else if (val <= fCAMin) f = 0;
-   else                     f = (val - fCAMin)/div*(nCol - 1);
+   else                    f = (val - fCAMin)/div*(nCol - 1);
 
    if (fInterpolate) {
       Int_t  bin = (Int_t) f;
@@ -218,6 +224,21 @@ void TEveRGBAPalette::SetMinMax(Int_t min, Int_t max)
 }
 
 /******************************************************************************/
+
+//______________________________________________________________________________
+void TEveRGBAPalette::SetUIDoubleRep(Bool_t b, Double_t f, Double_t c)
+{
+   // Set flag determining whether GUI editor and overlays should show limits
+   // and axis values as real values with mapping from integer value i to real
+   // value d as: d = f*i + fc
+
+   fUIDoubleRep = b;
+   if (fUIDoubleRep) {
+      fUIf = f;  fUIc = c;
+   } else {
+      fUIf = 1;  fUIc = 0;
+   }
+}
 
 //______________________________________________________________________________
 void TEveRGBAPalette::SetInterpolate(Bool_t b)

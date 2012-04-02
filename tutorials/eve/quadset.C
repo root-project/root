@@ -45,6 +45,14 @@ TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
    // q->SetPickable(1);
    // q->SetAlwaysSecSelect(1);
 
+   TEveRGBAPaletteOverlay *po = new TEveRGBAPaletteOverlay(pal, 0.55, 0.1, 0.4, 0.05);
+   TGLViewer* v = gEve->GetDefaultGLViewer();
+   v->AddOverlayElement(po);
+
+   // To set user-interface (GUI + overlay) to display real values
+   // mapped with a linear function: r = 0.1 * i + 0;
+   // pal->SetUIDoubleRep(kTRUE, 0.1, 0);
+
    if (register)
    {
       gEve->AddElement(q);

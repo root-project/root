@@ -37,6 +37,8 @@ protected:
    TGColorSelect        *fOverColor;
 
    TEveGDoubleValuator  *fMinMax;
+   Double_t              fOldMin;
+   Double_t              fOldMax;
 
    TGCheckButton        *fInterpolate;
    TGCheckButton        *fShowDefValue;

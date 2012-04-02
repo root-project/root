@@ -40,7 +40,7 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    fOverflowAction  (0),
    fOverColor       (0),
 
-   fMinMax(0),
+   fMinMax(0), fOldMin(0), fOldMax(0),
 
    fInterpolate(0),
    fShowDefValue(0),
@@ -146,7 +146,6 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    fMinMax->Connect("ValueSet()",
                     "TEveRGBAPaletteSubEditor", this, "DoMinMax()");
    AddFrame(fMinMax, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
-
 }
 
 /******************************************************************************/
@@ -158,8 +157,21 @@ void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
 
    fM = p;
 
-   fMinMax->SetValues(fM->fMinVal, fM->fMaxVal);
-   fMinMax->SetLimits(fM->fLowLimit, fM->fHighLimit);
+   if (fM->fUIDoubleRep)
+   {
+      fMinMax->SetValues(fM->IntToDouble(fM->fMinVal), fM->IntToDouble(fM->fMaxVal));
+      Double_t ll = fM->IntToDouble(fM->fLowLimit);
+      Double_t hl = fM->IntToDouble(fM->fHighLimit);
+      Int_t   mgk = TMath::Min(3, TMath::Max(0, 3 - TMath::Nint(TMath::Log10(hl-ll))));
+      fMinMax->SetLimits(ll, hl, (TGNumberFormat::EStyle)(TGNumberFormat::kNESInteger + mgk));
+      fOldMin = fMinMax->GetMin();
+      fOldMax = fMinMax->GetMax();
+   }
+   else
+   {
+      fMinMax->SetValues(fM->fMinVal, fM->fMaxVal);
+      fMinMax->SetLimits(fM->fLowLimit, fM->fHighLimit, TGNumberFormat::kNESInteger);
+   }
 
    fInterpolate  ->SetState(fM->fInterpolate ? kButtonDown : kButtonUp);
    fShowDefValue ->SetState(fM->fShowDefValue ? kButtonDown : kButtonUp);
@@ -190,7 +202,31 @@ void TEveRGBAPaletteSubEditor::DoMinMax()
 {
    // Slot for MinMax.
 
-   fM->SetMinMax((Int_t) fMinMax->GetMin(), (Int_t) fMinMax->GetMax());
+   if (fM->fUIDoubleRep)
+   {
+      Double_t min = fMinMax->GetMin();
+      if (min != fOldMin && fM->DoubleToInt(min) == fM->fMinVal)
+      {
+         if (min < fOldMin)
+            min = fM->IntToDouble(fM->fMinVal - 1);
+         else
+            min = fM->IntToDouble(fM->fMinVal + 1);
+      }
+      Double_t max = fMinMax->GetMax();
+      if (max != fOldMax && fM->DoubleToInt(max) == fM->fMaxVal)
+      {
+         if (max < fOldMax)
+            max = fM->IntToDouble(fM->fMaxVal - 1);
+         else
+            max = fM->IntToDouble(fM->fMaxVal + 1);
+      }
+      fM->SetMinMax(fM->DoubleToInt(min), fM->DoubleToInt(max));
+   }
+   else
+   {
+      fM->SetMinMax((Int_t) fMinMax->GetMin(), (Int_t) fMinMax->GetMax());
+   }
+
    Changed();
    fM->MinMaxValChanged();
 }

@@ -35,7 +35,6 @@ TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx,
 {
    // Constructor.
 
-   fAxis.SetLimits(fPalette->GetMinVal(), fPalette->GetMaxVal());
    fAxis.SetNdivisions(900);
    fAxisPainter.SetUseAxisColors(kFALSE);
    fAxisPainter.SetLabelPixelFontSize(10);
@@ -45,6 +44,16 @@ TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx,
 
 void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx) 
 { 
+   // Render the overlay.
+
+   const Double_t ca_min = fPalette->GetCAMinAsDouble();
+   const Double_t ca_max = fPalette->GetCAMaxAsDouble();
+
+   // Uninitialized palette.
+   if (ca_min == ca_max) return;
+
+   fAxis.SetLimits(ca_min, ca_max);
+
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
@@ -71,31 +80,33 @@ void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx)
       glPolygonOffset(0.5f, 0.5f);
 
       glBegin(GL_QUAD_STRIP);
-      TGLUtil::Color4ubv(fPalette->ColorFromValue(fPalette->GetMinVal()));
+      TGLUtil::Color4ubv(fPalette->ColorFromValue(fPalette->fCAMin));
       glVertex2f(0, 0);
       glVertex2f(0, fHeight);
-      Float_t xs = fWidth/(fPalette->GetMaxVal() - fPalette->GetMinVal());
+      Float_t xs = fWidth / (fPalette->fCAMax - fPalette->fCAMin);
       Float_t x  = xs;
-      for (Int_t i = fPalette->GetMinVal() + 1; i < fPalette->GetMaxVal(); i++)
+      for (Int_t i = fPalette->fCAMin + 1; i < fPalette->fCAMax; ++i)
       {
          TGLUtil::Color4ubv(fPalette->ColorFromValue(i));
          glVertex2f(x, 0);
          glVertex2f(x, fHeight);
          x += xs;
       }
-      TGLUtil::Color4ubv(fPalette->ColorFromValue(fPalette->GetMaxVal()));
+      TGLUtil::Color4ubv(fPalette->ColorFromValue(fPalette->fCAMax));
       glVertex2f(fWidth, 0);
       glVertex2f(fWidth, fHeight);
       glEnd();
    }
 
    // axis
-   Float_t sf = fWidth / (fPalette->GetMaxVal() - fPalette->GetMinVal());
+   glPushMatrix();
+   Float_t sf = fWidth / (ca_max - ca_min);
    glScalef(sf, 1, 1);
+   glTranslatef(-ca_min, 0, 0);
    fAxis.SetTickLength(0.05*fWidth);
    fAxisPainter.RefTMOff(0).Set(0, -1, 0);
    fAxisPainter.PaintAxis(rnrCtx, &fAxis);
-   glScalef(1/sf, 1, 1);
+   glPopMatrix();
 
    // frame around palette
    glBegin(GL_LINE_LOOP);

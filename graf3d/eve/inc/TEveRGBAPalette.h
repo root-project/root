@@ -17,12 +17,16 @@
 #include "TObject.h"
 #include "TQObject.h"
 
+#include "TMath.h"
+
 class TEveRGBAPalette : public TObject,
                         public TQObject,
                         public TEveRefCnt
 {
    friend class TEveRGBAPaletteEditor;
    friend class TEveRGBAPaletteSubEditor;
+
+   friend class TEveRGBAPaletteOverlay;
 
 public:
    enum ELimitAction_e { kLA_Cut, kLA_Mark, kLA_Clip, kLA_Wrap };
@@ -32,11 +36,15 @@ private:
    TEveRGBAPalette& operator=(const TEveRGBAPalette&); // Not implemented
 
 protected:
+   Double_t  fUIf;       // UI representation calculated as: d = fUIf*i + fUIc
+   Double_t  fUIc;       // UI representation calculated as: d = fUIf*i + fUIc
+
    Int_t     fLowLimit;  // Low  limit for Min/Max values (used by editor)
    Int_t     fHighLimit; // High limit for Min/Max values (used by editor)
    Int_t     fMinVal;
    Int_t     fMaxVal;
 
+   Bool_t    fUIDoubleRep;    // Represent UI parts with real values.
    Bool_t    fInterpolate;    // Interpolate colors for signal values.
    Bool_t    fShowDefValue;   // Flags whether signals with default value should be shown.
    Bool_t    fFixColorRange;  // If true, map palette to low/high limit otherwise to min/max value.
@@ -56,6 +64,12 @@ protected:
    mutable UChar_t* fColorArray; //[4*fNBins]
 
    void SetupColor(Int_t val, UChar_t* pix) const;
+
+   Double_t IntToDouble(Int_t i)    const { return fUIf*i + fUIc; }
+   Int_t    DoubleToInt(Double_t d) const { return TMath::Nint((d - fUIc) / fUIf); }
+
+   Double_t GetCAMinAsDouble() const { return IntToDouble(fCAMin); }
+   Double_t GetCAMaxAsDouble() const { return IntToDouble(fCAMax); }
 
    static TEveRGBAPalette* fgDefaultPalette;
 
@@ -86,6 +100,9 @@ public:
    Int_t  GetHighLimit() const { return fHighLimit; }
 
    // ================================================================
+
+   Bool_t GetUIDoubleRep() const { return fUIDoubleRep; }
+   void   SetUIDoubleRep(Bool_t b, Double_t f=1, Double_t c=0);
 
    Bool_t GetInterpolate() const { return fInterpolate; }
    void   SetInterpolate(Bool_t b);
