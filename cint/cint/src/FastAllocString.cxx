@@ -222,7 +222,10 @@ G__FastAllocString::~G__FastAllocString()
 {
    // Give our buffer back to the BufMap, i.e. make it available again.
    if (!G__BufferReservoir::Instance().push(Capacity(), fBuf)) {
-      delete [] fBuf;
+      // No instance anymore, we must be in global destruction.
+      // We could delete - but then we rely on being last in the global d'tor
+      // sequence. It's safer to leak...
+      // delete [] fBuf;
    }
 }
 
