@@ -311,7 +311,7 @@ void TGedPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    gVirtualX->GrabPointer(fId,
                           kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
-                          kNone, kNone, fClient->GetResourcePool()->GetGrabCursor());
+                          kNone, fClient->GetResourcePool()->GetGrabCursor());
    gClient->WaitForUnmap(this);
    EndPopup();
 }
