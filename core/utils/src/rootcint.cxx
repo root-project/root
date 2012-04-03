@@ -3405,33 +3405,6 @@ void WriteAutoStreamer(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void WriteStreamerBases(G__ClassInfo &cl)
-{
-   // Write Streamer() method for base classes of cl (unused)
-
-   (*dictSrcOut) << "//_______________________________________"
-                 << "_______________________________________" << std::endl
-                 << "void " << cl.Fullname() << "_StreamerBases(TBuffer &R__b, void *pointer)" << std::endl
-                 << "{" << std::endl
-                 << "   // Stream base classes of class " << cl.Fullname() << "." << std::endl << std::endl
-                 << "   " << cl.Fullname() << " *obj = (" << cl.Fullname() << "*)pointer;" << std::endl
-                 << "   if (R__b.IsReading()) {" << std::endl;
-   G__BaseClassInfo br(cl);
-   while (br.Next())
-      if (br.HasMethod("Streamer")) {
-         (*dictSrcOut) << "      obj->" << br.Name() << "::Streamer(R__b);" << std::endl;
-      }
-   (*dictSrcOut) << "   } else {" << std::endl;
-   G__BaseClassInfo bw(cl);
-   while (bw.Next())
-      if (bw.HasMethod("Streamer")) {
-         (*dictSrcOut) << "      obj->" << bw.Name() << "::Streamer(R__b);" << std::endl;
-      }
-   (*dictSrcOut) << "   }" << std::endl
-                 << "}" << std::endl << std::endl;
-}
-
-//______________________________________________________________________________
 void WritePointersSTL(G__ClassInfo &cl)
 {
    // Write interface function for STL members
@@ -3766,7 +3739,6 @@ void WriteClassCode(G__ClassInfo &cl, bool force = false)
       }
 
       if (cl.HasMethod("Streamer")) {
-         //WriteStreamerBases(cl);
          if (cl.RootFlag()) WritePointersSTL(cl);
          if (!(cl.RootFlag() & G__NOSTREAMER)) {
             if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
