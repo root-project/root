@@ -626,7 +626,7 @@ else
 MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
-ROOTCORELIBS_LIST = Core Cint Tree Hist TreePlayer
+ROOTCORELIBS_LIST = TreePlayer Tree Graf Hist Physics Core Cint
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(LibSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
