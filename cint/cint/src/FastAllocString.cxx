@@ -95,7 +95,7 @@ namespace Cint {
 
       private:
          G__BufferReservoir() {
-            static size_t numBuffers[fgNumBuckets] = {256, 64, 16, 8, 4, 2, 1};
+            static size_t numBuffers[fgNumBuckets] = {256, 64, 16, 8, 4, 4, 2};
             for (size_t i = 0; i < fgNumBuckets; ++i) {
                fMap[i].init(numBuffers[i]);
             }
@@ -183,7 +183,7 @@ namespace Cint {
 
       private:
          static bool fgIsInitialized;
-         static const size_t fgChunkSize = 1024;
+         static const size_t fgChunkSize = G__ONELINE;
          static const size_t fgNumBuckets = 7;
          Bucket fMap[fgNumBuckets]; // the buckets
       };
@@ -222,10 +222,7 @@ G__FastAllocString::~G__FastAllocString()
 {
    // Give our buffer back to the BufMap, i.e. make it available again.
    if (!G__BufferReservoir::Instance().push(Capacity(), fBuf)) {
-      // No instance anymore, we must be in global destruction.
-      // We could delete - but then we rely on being last in the global d'tor
-      // sequence. It's safer to leak...
-      // delete [] fBuf;
+      delete [] fBuf;
    }
 }
 

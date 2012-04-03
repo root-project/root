@@ -3168,7 +3168,8 @@ void G__cpplink_header(FILE *fp)
 **************************************************************************/
 char *G__map_cpp_name(const char *in)
 {
-   static G__FastAllocString out(G__MAXNAME*6);
+   static G__FastAllocString *out_ptr = new G__FastAllocString(G__MAXNAME*6);
+   G__FastAllocString &out( *out_ptr );
    unsigned int i=0,j=0,c;
    while((c=in[i])) {
       if (out.Capacity() < (j+3)) {
