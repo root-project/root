@@ -539,7 +539,9 @@ const char* G__tagtype2string(int tagtype)
 char* G__fulltagname(int tagnum, int mask_dollar)
 {
    // return full tagname, if mask_dollar=1, $ for the typedef class is omitted
-   static G__FastAllocString string(G__ONELINE);
+   static G__FastAllocString *string_ptr = new G__FastAllocString(G__ONELINE);
+   G__FastAllocString &string(*string_ptr);
+
    int p_tagnum[G__MAXBASE];
    int pt;
    int len = 0;
@@ -596,7 +598,9 @@ char* G__fulltagname(int tagnum, int mask_dollar)
 //______________________________________________________________________________
 char* G__type2string(int type, int tagnum, int typenum, int reftype, int isconst)
 {
-   static G__FastAllocString buffer(G__LONGLINE);
+   static G__FastAllocString *buffer_ptr = new G__FastAllocString(G__ONELINE);
+   G__FastAllocString &buffer(*buffer_ptr);
+
    buffer[0] = '\0';
    size_t offset = 0;
    int ref = G__REF(reftype);

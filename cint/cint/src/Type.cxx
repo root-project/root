@@ -117,17 +117,21 @@ int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::TrueName() 
 {
-  static G__FastAllocString buf(G__LONGLINE);
-  buf = G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst);
-  return(buf);
+   static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+   G__FastAllocString &buf(*buf_ptr);
+
+   buf = G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst);
+   return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::Name() 
 {
-  static G__FastAllocString buf(G__LONGLINE);
-  buf = G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
+   static G__FastAllocString *buf_ptr = new G__FastAllocString(G__ONELINE);
+   G__FastAllocString &buf(*buf_ptr);
+
+   buf = G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
                        ,(int)isconst);
-  return(buf);
+   return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__TypeInfo::Size() const

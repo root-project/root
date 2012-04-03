@@ -813,7 +813,9 @@ static int G__initary(G__FastAllocString& new_name)
    // -- Parse and execute an array initialization.
    //
    //printf("Begin G__initary for '%s'...\n", new_name);
-   static G__FastAllocString expr(G__ONELINE);
+   static G__FastAllocString *expr_ptr = new G__FastAllocString(G__LONGLINE);
+   G__FastAllocString &expr(*expr_ptr);
+
    // Separate the array name from the index specification.
    G__FastAllocString name(new_name);
    {

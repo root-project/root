@@ -594,7 +594,9 @@ int Cint::G__MethodInfo::IsBusy()
 ///////////////////////////////////////////////////////////////////////////
 char* Cint::G__MethodInfo::GetPrototype()
 {
-  static G__FastAllocString buf(G__LONGLINE); // valid until the next call of GetPrototype, just like any static
+  static G__FastAllocString *buf_ptr = new G__FastAllocString(G__LONGLINE);
+  G__FastAllocString &buf(*buf_ptr);  // valid until the next call of GetPrototype, just like any static
+
   if (!IsValid()) return 0;
   buf = Type()->Name();
   buf += " ";

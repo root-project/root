@@ -330,7 +330,8 @@ const char *G__getmakeinfo(const char *item)
   char *arg[G__MAXARG];
   int argn;
   char *p;
-  static G__FastAllocString buf(G__ONELINE);
+  static G__FastAllocString *buf_ptr = new G__FastAllocString(G__LONGLINE);
+  G__FastAllocString &buf(*buf_ptr);
 
   buf[0]='\0';
 
