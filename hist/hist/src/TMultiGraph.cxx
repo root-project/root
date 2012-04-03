@@ -995,16 +995,16 @@ void TMultiGraph::Paint(Option_t *option)
    for (i=0;i<nch;i++) chopt[i] = toupper(option[i]);
    chopt[nch] = 0;
 
-   l = strstr(chopt,"3D");
+   l = (char*)strstr(chopt,"3D");
    if (l) {
-      l = strstr(chopt,"L");
+      l = (char*)strstr(chopt,"L");
       if (l) PaintPolyLine3D(chopt);
       return;
    }
 
    TGraph *g;
 
-   l = strstr(chopt,"A");
+   l = (char*)strstr(chopt,"A");
    if (l) {
       *l = ' ';
       TIter   next(fGraphs);
@@ -1217,9 +1217,9 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    frame->SetMinimum(rwymin);
    frame->SetMaximum(rwymax);
    
-   l = strstr(option,"A");
+   l = (char*)strstr(option,"A");
    if (l) frame->Paint("lego0,fb,bb");
-   l = strstr(option,"BB");
+   l = (char*)strstr(option,"BB");
    if (!l) frame->Paint("lego0,fb,a,same");
    
    Double_t *x, *y;
@@ -1247,7 +1247,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       j--;
    }
    
-   l = strstr(option,"FB");
+   l = (char*)strstr(option,"FB");
    if (!l) frame->Paint("lego0,bb,a,same");
    delete frame;
 }
