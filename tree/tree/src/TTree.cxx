@@ -6471,6 +6471,11 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       while (goodLine && iBranch < nbranches
              && sLine.Tokenize(tok, pos, sDelim)) {
          tok = tok.Strip(TString::kLeading); // skip leading whitespace
+         if (tok.IsNull() && delimiter == ' ') {
+            // 1   2 should not be interpreted as 1,,,2 but 1, 2.
+            // Thus continue until we have a non-empty token.
+            continue;
+         }
 
          if (!remainingLeafLen) {
             // next branch!
