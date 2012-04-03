@@ -3430,7 +3430,9 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    - If option COL is specified when varexp has three fields:
    //            tree.Draw("e1:e2:e3","","col");
    //      a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
-   //      table.
+   //      table. The colors for e3 are evaluated once in linear scale before
+   //      painting. Therefore changing the pad to log scale along Z as no effect
+   //      on the colors.
    //    - If option contains the string "goff", no graphics is generated.
    //
    //  nentries is the number of entries to process (default is all)
