@@ -1179,7 +1179,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 {
    // Paint all the graphs of this multigraph as 3D lines
 
-   Int_t i, npt;
+   Int_t i, npt=0;
    char *l;
    Double_t rwxmin, rwxmax, rwymin, rwymax;
    TIter next(fGraphs);
