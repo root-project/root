@@ -79,12 +79,13 @@ namespace cling {
       assert(CG && "No CodeGen?!");
       addConsumer(ChainedConsumer::kCodeGenerator, CG);
     }
-    m_Consumer->Initialize(CI->getASTContext());
-    m_Consumer->InitializeSema(CI->getSema());
-    // Initialize the parser.
     m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema()));
     CI->getPreprocessor().EnterMainSourceFile();
+    // Initialize the parser after we have entered the main source file.
     m_Parser->Initialize();
+    // Perform initialization that occurs after the parser has been initialized 
+    // but before it parses anything. Initializes the consumers too.
+    CI->getSema().Initialize();
   }
 
   // Each input line is contained in separate memory buffer. The SourceManager
@@ -134,9 +135,6 @@ namespace cling {
   }
   
   void IncrementalParser::Initialize() {
-
-    // Init the consumers    
-
     CompileAsIs(""); // Consume initialization.
   }
 
