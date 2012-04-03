@@ -271,7 +271,8 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                          kPointerMotionMask, kNone, kNone);
+                          kPointerMotionMask, kNone, 
+                          fClient->GetResourcePool()->GetGrabCursor());
 
    fLaunchDialog = kFALSE;
 
