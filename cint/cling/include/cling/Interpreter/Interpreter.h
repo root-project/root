@@ -160,6 +160,18 @@ namespace cling {
                                   Value* V = 0,
                                   const clang::Decl** D = 0);
 
+    ///\brief Compiles input line, which doesn't contain statements.
+    ///
+    /// The interface circumvents the most of the extra work necessary to 
+    /// compile and run statements.
+    ///
+    /// @param[in] input - the input containing only declarations (aka 
+    /// TopLevelDecls)
+    /// @param[out] D - the first compiled declaration from the input
+    ///
+    CompilationResult declare(const std::string& input, 
+                              const clang::Decl** D = 0);
+
     bool loadFile(const std::string& filename,
                   bool allowSharedLib = true);
     

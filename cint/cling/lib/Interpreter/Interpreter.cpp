@@ -390,6 +390,17 @@ namespace cling {
     return Result;
   }
 
+  Interpreter::CompilationResult
+  Interpreter::declare(const std::string& input, const Decl** D /* = 0 */) {
+    if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
+      if (D)
+        *D = m_IncrParser->getLastTransaction().getFirstDecl();
+      return Interpreter::kSuccess;
+    }
+
+    return Interpreter::kFailure;
+  }
+
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
     fname = createUniqueWrapper();
     input.insert(0, "void " + fname + "() {\n ");
@@ -443,15 +454,7 @@ namespace cling {
                           bool rawInput /*=false*/, const Decl** D /*=0*/) {
     // if we are using the preprocessor
     if (rawInput || !canWrapForCall(input)) {
-      
-      if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
-        if (D)
-          *D = m_IncrParser->getLastTransaction().getFirstDecl();
-
-        return Interpreter::kSuccess;
-      }
-      else
-        return Interpreter::kFailure;
+      return declare(input);
     }
 
     if (m_IncrParser->CompileLineFromPrompt(input) 
@@ -494,7 +497,7 @@ namespace cling {
     
     std::string code;
     code += "#include \"" + filename + "\"\n";
-    return (m_IncrParser->CompileAsIs(code) != IncrementalParser::kFailed);
+    return declare(code);
   }
   
   Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
