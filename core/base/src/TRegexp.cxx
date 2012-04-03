@@ -313,27 +313,24 @@ Bool_t TString::Tokenize(TString &tok, Ssiz_t &from, const char *delim) const
 
    TRegexp rg(delim);
 
-   while (tok.IsNull()) {
-      // Find delimiter
-      Int_t ext = 0;
-      Int_t pos = Index(rg, &ext, from);
+   // Find delimiter
+   Int_t ext = 0;
+   Int_t pos = Index(rg, &ext, from);
 
-      // Assign to token
-      if (pos == kNPOS || pos > from) {
-         Ssiz_t last = (pos != kNPOS) ? (pos - 1) : len;
-         tok = (*this)(from, last-from+1);
-      }
-      found = kTRUE;
+   // Assign to token
+   if (pos == kNPOS || pos > from) {
+      Ssiz_t last = (pos != kNPOS) ? (pos - 1) : len;
+      tok = (*this)(from, last-from+1);
+   }
+   found = kTRUE;
 
-      // Update start-of-search index
-      from = pos + ext;
-      if (pos == kNPOS) {
-         from = pos;
-         if (tok.IsNull()) {
-            // Empty, last token
-            found = kFALSE;
-            break;
-         }
+   // Update start-of-search index
+   from = pos + ext;
+   if (pos == kNPOS) {
+      from = pos;
+      if (tok.IsNull()) {
+         // Empty, last token
+         found = kFALSE;
       }
    }
    // Make sure that 'from' has a meaningful value
