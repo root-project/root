@@ -2,6 +2,7 @@
 
 #import "IOSSelectionMarkers.h"
 #import "SelectionView.h"
+#import "Constants.h"
 #import "PadView.h"
 #import "TAxis.h"
 
@@ -65,9 +66,6 @@
    
    CGContextSaveGState(ctx);
 
-   //const CGRect intersection = CGRectIntersection(rect, self.superview.superview.bounds);
-   //const BOOL useShadows = CGRectEqualToRect(intersection, rect);
-
    CGContextClearRect(ctx, rect);
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
@@ -78,8 +76,15 @@
 
    //Selected object will cast a shadow.
    //if (useShadows)
-   [SelectionView setShadowColor : ctx];
-   pad->PaintSelected();
+   if (!ROOT::iOS::Browser::deviceIsiPad3) {
+      [SelectionView setShadowColor : ctx];
+      pad->PaintSelected();
+   } else {
+      CGContextTranslateCTM(ctx, 2.5f, 2.5f);
+      pad->PaintShadowForSelected();
+      CGContextTranslateCTM(ctx, -2.5f, -2.5f);
+      pad->PaintSelected();
+   }
    
    //If we selected object has a polyline or polygon, markers will be painted.
    //But if it's a TAxis, I can not simply draw a marker for a line segment,

@@ -71,6 +71,7 @@ public:
    enum EMode {
       kPaintToSelectionBuffer, //A pad draws the scene into the selection buffer.
       kPaintToView,            //Normal painting (normal colors and styles).
+      kPaintShadow,            //Poor man's shadows for selected object (for iPad3).
       kPaintSelected,          //Only selected object is painted.
       kPaintThumbnail          //Paint into small picture, low level of details.
    };

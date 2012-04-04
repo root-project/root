@@ -156,7 +156,6 @@ enum Mode {
    
 //   navigationScrollView.canCancelContentTouches = NO;
 //   navigationScrollView.delaysContentTouches = NO;
-   NSLog(@"delay %d", navigationScrollView.delaysContentTouches);
    navigationScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
    navigationScrollView.bounces = NO;
    navigationScrollView.bouncesZoom = NO;

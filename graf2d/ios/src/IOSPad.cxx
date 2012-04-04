@@ -814,6 +814,22 @@ void Pad::PaintForSelection()
 }
 
 //______________________________________________________________________________
+void Pad::PaintShadowForSelected() const
+{
+   fInHighlightMode = kTRUE;
+   fPainter.SetPainterMode(Painter::kPaintShadow);
+
+   if (fParentOfSelected) {
+      fParentOfSelected->Paint(GetSelectedParentDrawOption());
+   } else if (fSelected) {
+      fSelected->Paint(GetSelectedDrawOption());
+   }
+
+   fPainter.SetPainterMode(Painter::kPaintToView);
+   fInHighlightMode = kFALSE;
+}
+
+//______________________________________________________________________________
 void Pad::PaintSelected() const
 {
    fInHighlightMode = kTRUE;

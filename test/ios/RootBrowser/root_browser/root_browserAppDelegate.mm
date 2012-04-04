@@ -1,7 +1,23 @@
-#import "root_browserAppDelegate.h"
-#import "RootFileController.h"
+#import <cstddef>
+#import <vector>
+
+#import <sys/sysctl.h>
+#import <sys/types.h>
 
 #import "TApplication.h"
+
+#import "root_browserAppDelegate.h"
+#import "RootFileController.h"
+#import "Constants.h"
+
+
+namespace ROOT {
+namespace iOS {
+
+bool deviceIsiPad3 = false;
+
+}
+}
 
 @implementation root_browserAppDelegate {
    TApplication *rootApp;
@@ -37,6 +53,16 @@
    // Override point for customization after application launch.
    rootApp = new TApplication("iosApp", 0, 0);
    [self initRootController];
+
+   std::size_t dataSize = 0;
+   sysctlbyname("hw.machine", nullptr, &dataSize, nullptr, 0);
+   if (dataSize) {
+      std::vector<char> line(dataSize);
+      sysctlbyname("hw.machine", &line[0], &dataSize, nullptr, 0);
+      NSString *machineName = [NSString stringWithCString : &line[0] encoding : NSASCIIStringEncoding];
+      if ([machineName hasPrefix : @"iPad3,"])
+         ROOT::iOS::Browser::deviceIsiPad3 = true;
+   }
 
    return YES;
 }

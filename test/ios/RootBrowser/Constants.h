@@ -79,6 +79,9 @@ extern const unsigned colorIndices[nROOTDefaultColors];
 //Constant for TAttFill, never defined in ROOT, I have to define it here.
 extern const unsigned stippleBase;
 
+//This does not have const qualifier, but set only once during startup (by application delegate).
+extern bool deviceIsiPad3;
+
 }//namespace Browser
 }//namespace iOS
 }//namespace ROOT
