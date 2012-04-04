@@ -453,6 +453,9 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TString lib = _dyld_get_image_name(i++);
 
+   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
+   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
+
 #ifndef ROOTPREFIX
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
    // first loaded is the app so set ROOTSYS to app bundle
@@ -467,8 +470,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
       }
    }
 #else
-   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
-   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
        lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
       char respath[kMAXPATHLEN];
