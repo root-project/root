@@ -331,7 +331,11 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    MapWindow();
    fFc->DisplayDirectory();
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    fClient->WaitFor(this);
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

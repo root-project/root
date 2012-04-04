@@ -113,7 +113,11 @@ ClassImp(TTreeInput)
    MapWindow();
    fTEVars->SetFocus();
 
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    gClient->WaitFor(this);
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

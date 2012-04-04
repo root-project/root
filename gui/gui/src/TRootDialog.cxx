@@ -241,7 +241,11 @@ void TRootDialog::Popup()
                kMWMInputModeless);
 
    MapWindow();
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    fClient->WaitFor(this);
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

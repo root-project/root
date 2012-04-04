@@ -454,7 +454,11 @@ void TGuiBldMenuDialog::Popup()
    Move(x, y);
    SetWMPosition(x, y);
    MapRaised();
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    fClient->WaitFor(this);
+   if (fMain && fMain->GetMainFrame())
+      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 
