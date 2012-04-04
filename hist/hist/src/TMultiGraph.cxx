@@ -1181,7 +1181,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 
    Int_t i, npt=0;
    char *l;
-   Double_t rwxmin, rwxmax, rwymin, rwymax;
+   Double_t rwxmin=0., rwxmax=0., rwymin=0., rwymax=0.;
    TIter next(fGraphs);
    TGraph *g;
 

@@ -1347,12 +1347,10 @@ void TSVG::SetColor(Int_t color)
    TColor *col = gROOT->GetColor(color);
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+      Float_t a = col->GetAlpha();
+      if (a<1.) PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
    } else {
       SetColor(1., 1., 1.);
-   }
-   Float_t a = col->GetAlpha();
-   if (a<1.) {
-      PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
    }
 }
 

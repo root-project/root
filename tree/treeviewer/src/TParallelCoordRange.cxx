@@ -72,6 +72,7 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
    fMax = max;
    
    fVar = var;
+   fSelect = NULL;
    
    if (!sel) {
       TParallelCoordSelect* s = var->GetParallel()->GetCurrentSelection();
