@@ -596,7 +596,7 @@ bool R__IsInt(const clang::Type *type)
 {
    const clang::BuiltinType * builtin = llvm::dyn_cast<clang::BuiltinType>(type->getCanonicalTypeInternal().getTypePtr());
    if (builtin) {
-      return builtin->getKind() == clang::BuiltinType::Int;
+      return builtin->isInteger(); // builtin->getKind() == clang::BuiltinType::Int;
    } else {
       return false;
    }
