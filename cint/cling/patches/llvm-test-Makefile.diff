@@ -1,6 +1,6 @@
 Index: test/Makefile
 ===================================================================
---- test/Makefile	(revision 153954)
+--- test/Makefile	(revision 154005)
 +++ test/Makefile	(working copy)
 @@ -61,6 +61,8 @@
  ifndef TESTSUITE
@@ -11,3 +11,11 @@ Index: test/Makefile
  
  # Force creation of Clang's lit.site.cfg.
  clang-lit-site-cfg: FORCE
+@@ -69,6 +71,7 @@
+ endif
+ endif
+ endif
++endif
+ 
+ IGNORE_TESTS :=
+ 
