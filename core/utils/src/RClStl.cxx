@@ -28,7 +28,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &decl);
 void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &decl);
 std::string R__GetQualifiedName(const clang::NamedDecl &cl);
 
-int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=0);
+int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode,const char *tcl=0);
 
 #ifndef ROOT_Varargs
 #include "Varargs.h"
@@ -134,56 +134,43 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
    }
 }
 
-void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
+void ROOT::RStl::WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl)
 {
    // Write the free standing streamer function for the given
    // STL container class.
 
    std::string streamerName = "stl_streamer_";
 
-   std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault) );
+   std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(R__GetQualifiedName(*stlcl).c_str(),TClassEdit::kDropStlDefault) );
    std::string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
 
    streamerName += G__map_cpp_name((char *)shortTypeName.c_str());
    std::string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
 
-   int nestedLoc=0;
-   std::vector<std::string> splitName;
-   TClassEdit::GetSplit(shortTypeName.c_str(),splitName,nestedLoc);
+   const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (stlcl);
+   if (!tmplt_specialization) return;
 
-   int stltype = TClassEdit::STLKind(splitName[0].c_str());
+   int stltype = TClassEdit::STLKind(tmplt_specialization->getName().data()); 
 
-   G__TypeInfo firstType(splitName[1].c_str());
-   G__TypeInfo secondType;
+   const clang::TemplateArgument &arg0( tmplt_specialization->getTemplateArgs().get(0) );
+
+   clang::QualType firstType = arg0.getAsType();
+   clang::QualType secondType;
+   
    const char *tclFirst=0,*tclSecond=0;
    std::string firstFullName, secondFullName;
 
-   if (ElementStreamer(firstType,0,0)) {
+   if (ElementStreamer(*stlcl, firstType,0,0)) {
       tclFirst = "R__tcl1";
-      const char *name = firstType.Fullname();
-      if (name) {
-         // the value return by ti.Fullname is a static buffer
-         // so we have to copy it immeditately
-         firstFullName = TClassEdit::ShortType(name,TClassEdit::kDropStlDefault);
-      } else {
-         // ti is a simple type name
-         firstFullName = firstType.TrueName();
-      }
+      firstFullName = firstType.getAsString();
    }
    if (stltype==kMap || stltype==kMultiMap) {
-      secondType.Init( splitName[2].c_str());
+      const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
+      secondType = arg1.getAsType();
 
-      if (ElementStreamer(secondType,0,0)) {
+      if (ElementStreamer(*stlcl, secondType,0,0)) {
          tclSecond="R__tcl2";
-         const char *name = secondType.Fullname();
-         if (name) {
-            // the value return by ti.Fullname is a static buffer
-            // so we have to copy it immeditately
-            secondFullName = TClassEdit::ShortType(name,TClassEdit::kDropStlDefault);
-         } else {
-            // ti is a simple type name
-            secondFullName = secondType.TrueName();
-         }
+         secondFullName = secondType.getAsString();
       }
    }
 
@@ -213,9 +200,9 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
    }
    fprintf(file, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
 
-   ElementStreamer(firstType,"R__t",0,tclFirst);
+   ElementStreamer(*stlcl, firstType,"R__t",0,tclFirst);
    if (stltype == kMap || stltype == kMultiMap) {     //Second Arg
-      ElementStreamer(secondType,"R__t2",0,tclSecond);
+      ElementStreamer(*stlcl, secondType,"R__t2",0,tclSecond);
    }
    switch (stltype) {
 
@@ -266,17 +253,17 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
    fprintf(file, "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
 
    if (stltype == kMap || stltype == kMultiMap) {
-      ElementStreamer(firstType ,"((*R__k).first )",1,tclFirst);
-      ElementStreamer(secondType,"((*R__k).second)",1,tclSecond);
+      ElementStreamer(*stlcl, firstType ,"((*R__k).first )",1,tclFirst);
+      ElementStreamer(*stlcl, secondType,"((*R__k).second)",1,tclSecond);
    } else {
-      ElementStreamer(firstType ,"(*R__k)"         ,1,tclFirst);
+      ElementStreamer(*stlcl, firstType ,"(*R__k)"         ,1,tclFirst);
    }
 
    fprintf(file, "            }\n");
    fprintf(file, "         }\n");
 
    fprintf(file, "      }\n");
-   fprintf(file, "   } // end of %s streamer\n",stlcl.Fullname());
+   fprintf(file, "   } // end of %s streamer\n",R__GetQualifiedName(*stlcl).c_str());
    fprintf(file, "} // close namespace ROOT\n\n");
 
    fprintf(file, "// Register the streamer (a typedef is used to avoid problem with macro parameters\n");
@@ -295,9 +282,7 @@ void ROOT::RStl::WriteStreamer(FILE *file)
    // STL container classes
 
    list_t::iterator iter;
-   G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
-      cl.Init( R__GetQualifiedName(*(*iter)).c_str() );
-      WriteStreamer(file,cl);
+      WriteStreamer(file,llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl()));
    }
 }

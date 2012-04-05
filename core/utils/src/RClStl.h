@@ -46,7 +46,7 @@ namespace ROOT {
       void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass);
       void Print();
       void WriteClassInit(FILE *file);
-      void WriteStreamer(FILE *file, G__ClassInfo &stlcl);
+      void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
       void WriteStreamer(FILE *file);
       
    private:
