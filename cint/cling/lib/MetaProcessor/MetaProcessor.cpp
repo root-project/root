@@ -189,14 +189,14 @@ namespace cling {
    //
    //fprintf(stderr, "Unrecognized command.\n");
    else if (Command == "I") {
+
      // Check for params
-     RawLexer.LexFromRawLexer(Tok);
+     llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
      
-     if (Tok.is(tok::eof))
+     if (path.isEmpty())
        m_Interp.DumpIncludePath();
      else {
        // TODO: Additional checks on params
-       llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
        
        if (path.isValid())
          m_Interp.AddIncludePath(path.c_str());
@@ -281,9 +281,15 @@ namespace cling {
   }
 
   llvm::StringRef MetaProcessor::SanitizeArg(const std::string& Str) {
+    
     size_t begins = Str.find_first_not_of(" \t\n");
     size_t ends = Str.find_last_not_of(" \t\n") + 1;
-    return Str.substr(begins, ends - begins);
+    if (begins == std::string::npos)
+      begins = 0;
+    if (ends == std::string::npos)
+      ends = Str.size();
+
+      return Str.substr(begins, ends - begins);
   }
 
   void MetaProcessor::PrintCommandHelp() {
