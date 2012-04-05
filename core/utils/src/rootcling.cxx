@@ -176,6 +176,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/AST/CXXInheritance.h"
 
 
 #ifdef __APPLE__
@@ -404,7 +405,8 @@ bool ClassInfo__HasMethod(const clang::RecordDecl *cl, const char* name)
         MEnd = CRD->method_end();
         M != MEnd;
         ++M
-        ) {
+        ) 
+   {
       if ((*M)->getNameAsString() == given_name) {
          return true;
       }
@@ -520,37 +522,90 @@ const char *R__GetComment(const clang::Decl &decl)
    while ( (isspace(comment[0]) || comment[0]=='/') && comment[0]!='\n' && comment[0]!='\r') {
       ++comment;
    }
-   while (comment[0]!='\n' && comment[0]!='\r') {
-      ++comment;
-   }
+   
+//   while (comment[0]!='\n' && comment[0]!='\r') {
+//      ++comment;
+//   }
 
    return comment;
 }
 
-void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl *cl)
+void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
-   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   type.getAsStringInternal(qual_name,forcontext.getASTContext().getPrintingPolicy());
 }
 
-std::string R__GetQualifiedName(const clang::NamedDecl *cl)
+void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
+{
+   cl.getNameForDiagnostic(qual_name,cl.getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+}
+
+void R__GetQualifiedName(std::string &qual_name, const RScanner::AnnotatedRecordDecl &annotated)
+{
+   R__GetQualifiedName(qual_name,*annotated.GetRecordDecl());
+}
+
+std::string  R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
    std::string result;
-   cl->getNameForDiagnostic(result,cl->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   R__GetQualifiedName(result,type,forcontext);
+   return result;
+}
+
+std::string  R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext)
+{
+   std::string result;
+   R__GetQualifiedName(result,clang::QualType(&type,0),forcontext);
+   return result;
+}
+
+std::string R__GetQualifiedName(const clang::NamedDecl &cl)
+{
+   std::string result;
+   cl.getNameForDiagnostic(result,cl.getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
    return result;
 }
 
 std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base)
 {
    std::string result;
-   R__GetQualifiedName(result,base.getType()->getAsCXXRecordDecl());
+   R__GetQualifiedName(result,*base.getType()->getAsCXXRecordDecl());
    return result;
 }
 
 std::string R__GetQualifiedName(const RScanner::AnnotatedRecordDecl &annotated)
 {
-   return R__GetQualifiedName(annotated.GetRecordDecl());
+   return R__GetQualifiedName(*annotated.GetRecordDecl());
 }
 
+std::string R__TrueName(const clang::FieldDecl &m)
+{
+   // TrueName strips the typedefs and array dimensions.
+   
+   const clang::Type *rawtype = m.getType()->getCanonicalTypeInternal().getTypePtr();   
+   if (rawtype->isArrayType()) {
+      rawtype = rawtype->getBaseElementTypeUnsafe ();
+   }
+   
+   std::string result;
+   R__GetQualifiedName(result, clang::QualType(rawtype,0), m);
+   return result;
+}
+
+bool R__IsInt(const clang::Type *type) 
+{
+   const clang::BuiltinType * builtin = llvm::dyn_cast<clang::BuiltinType>(type->getCanonicalTypeInternal().getTypePtr());
+   if (builtin) {
+      return builtin->getKind() == clang::BuiltinType::Int;
+   } else {
+      return false;
+   }
+}
+
+bool R__IsInt(const clang::FieldDecl *field) 
+{
+   return R__IsInt(field->getType().getTypePtr());
+}
 
 cling::Interpreter *gInterp = 0;
 
@@ -602,7 +657,7 @@ const clang::NamedDecl *R__SlowSearchImpl(const char *name, const clang::DeclCon
          // The template exist, let's look for an instance.
          fullname = "";
          if (ctxt) {
-            R__GetQualifiedName(fullname,llvm::dyn_cast<clang::NamedDecl>(ctxt));
+            R__GetQualifiedName(fullname,*llvm::dyn_cast<clang::NamedDecl>(ctxt));
             fullname += "::";
          }
          fullname += name;
@@ -641,11 +696,17 @@ const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::De
    }
 }
 
-clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type)
+const clang::Type *R__GetUnderlyingType(clang::QualType type)
 {
+   // Return the base/underlying type of a chain of array or pointers type.
+   // Does not yet support the array and pointer part being intermixed.
+   
    const clang::Type *rawtype = type.getTypePtr();
 
-   if (rawtype->isPointerType() || rawtype->isReferenceType()) {
+   if (rawtype->isArrayType()) {
+      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+   }   
+   if (rawtype->isPointerType() || rawtype->isReferenceType() ) {
       //Get to the 'raw' type.
       clang::QualType pointee;
       while ( (pointee = rawtype->getPointeeType()) , pointee.getTypePtrOrNull() && pointee.getTypePtr() != rawtype)
@@ -653,11 +714,33 @@ clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type)
          rawtype = pointee.getTypePtr();
       }
    }
+   if (rawtype->isArrayType()) {
+      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+   }
+   return rawtype;
+}
+
+
+clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type)
+{
+   const clang::Type *rawtype = R__GetUnderlyingType(type);
+
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
       // not an ojbect.
       return 0;
    }
    return rawtype->getAsCXXRecordDecl();
+}
+
+size_t R__GetFullArrayLength(const clang::ConstantArrayType *arrayType)
+{
+   llvm::APInt len = arrayType->getSize();
+   while(const clang::ConstantArrayType *subArrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual()) )
+   {
+      len *= subArrayType->getSize();
+      arrayType = subArrayType;
+   }
+   return len.getLimitedValue();
 }
 
 const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0) 
@@ -792,7 +875,7 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       Str += proto;
       Str += ") ) { };\n";
       Str += "void " + uniquename + "_wrapper() {\n";
-      Str += uniquename + "lookup_arg(& " + R__GetQualifiedName(cinfo)  + "::" + method + ");\n";
+      Str += uniquename + "lookup_arg(& " + R__GetQualifiedName(*cinfo)  + "::" + method + ");\n";
       Str += ";;};;";
 
       const clang::Decl* D = 0;
@@ -849,6 +932,25 @@ bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base)
    }
    return cl->isDerivedFrom(base);
 }
+
+bool R__IsBase(const clang::FieldDecl &m, const char* basename)
+{
+   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(R__GetUnderlyingRecordDecl(m.getType()));
+   if (!CRD) {
+      return false;
+   }
+   
+   // This would be better but is to verbose for now.
+   // clang::QualType basetype = TMetaUtils::LookupTypeDecl(*gInterp, basename);
+   const clang::NamedDecl *base = R__SlowClassSearch(basename);
+   
+   if (base) {
+      const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
+      if (baseCRD) return CRD->isDerivedFrom(baseCRD);
+   }
+   return false;
+}
+
 
 bool InheritsFromTObject(const clang::RecordDecl *cl)
 {
@@ -1469,7 +1571,7 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
 
    bool has_input_error = false;
 
-   G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
+   G__ClassInfo clinfo(R__GetQualifiedName(*cl).c_str());
    return CheckInputOperator(clinfo,dicttype);
 #if 0
    // Need to find out if the operator>> is actually defined for
@@ -1645,7 +1747,7 @@ bool CheckClassDef(const clang::RecordDecl *cl)
    bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx) && !InheritsFromTSelector(clxx)
        && !hasClassDef) {
-      Error(R__GetQualifiedName(cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(cl).c_str());
+      Error(R__GetQualifiedName(*cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(*cl).c_str());
       // We do want to always output the message (hence the Error level)
       // but still want rootcint to succeed.
       result = true;
@@ -1758,7 +1860,7 @@ int GetClassVersion(const clang::RecordDecl *cl)
             if (inst->getBody()) {
                func = llvm::dyn_cast<clang::CompoundStmt>(inst->getBody());
             } else {
-               Error("GetClassVersion","Could not find the body for %s::ClassVersion!",R__GetQualifiedName(cl).c_str());
+               Error("GetClassVersion","Could not find the body for %s::ClassVersion!",R__GetQualifiedName(*cl).c_str());
             }
          }
          if (func && !func->body_empty()) {
@@ -1782,12 +1884,11 @@ int GetClassVersion(const clang::RecordDecl *cl)
    return 0;   
 }
 
-//______________________________________________________________________________
 string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
 {
    // Return the name of the data member so that it can be used
    // by non-const operation (so it includes a const_cast if necessary).
-
+   
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       string ret = "const_cast< ";
       ret += G__ShadowMaker::GetNonConstTypeName(m);
@@ -1798,6 +1899,27 @@ string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
       return ret;
    } else {
       return prefix+m.Name();
+   }
+}
+
+//______________________________________________________________________________
+string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "")
+{
+   // Return the name of the data member so that it can be used
+   // by non-const operation (so it includes a const_cast if necessary).
+
+   if (m.getType().isConstQualified()) {      
+      string ret = "const_cast< ";
+      string type_name;
+      R__GetQualifiedName(type_name, m.getType(), m);
+      ret += type_name;
+      ret += " &>( ";
+      ret += prefix;
+      ret += m.getName().data();
+      ret += " )";
+      return ret;
+   } else {
+      return prefix+m.getName().data();
    }
 }
 
@@ -2371,7 +2493,7 @@ int IsSTLContainer(const clang::CXXBaseSpecifier &base)
       return kNotSTL;
    }
 
-   int k = TClassEdit::IsSTLCont(R__GetQualifiedName(base.getType()->getAsCXXRecordDecl()).c_str(),1);
+   int k = TClassEdit::IsSTLCont(R__GetQualifiedName(*base.getType()->getAsCXXRecordDecl()).c_str(),1);
    //   if (k) printf(" %s==%d\n",type.c_str(),k);
    return k;
 }
@@ -2686,7 +2808,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
       R__BIT_HASSTREAMER = 0x20000000,
       kBIT_ISSTRING    = 0x40000000
    };
-
+   
    long prop = ti.Property();
    string tiName(ti.Name());
    string objType(ShortTypeName(tiName.c_str()));
@@ -2695,13 +2817,180 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
       tiFullname = ti.Fullname();
    int isTObj = (ti.IsBase("TObject") || tiFullname == "TObject");
    int isStre = (ti.HasMethod("Streamer"));
-
+   
    long kase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM);
    if (isTObj)              kase |= R__BIT_ISTOBJECT;
    if (tiName == "string")  kase |= kBIT_ISSTRING;
    if (tiName == "string*") kase |= kBIT_ISSTRING;
    if (isStre)              kase |= R__BIT_HASSTREAMER;
+   
+   if (tcl == 0) {
+      tcl = " internal error in rootcint ";
+   }
+   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string"  );
+   
+   if (rwmode == 0) {  //Read mode
+      
+      if (R__t) (*dictSrcOut) << "            " << tiName << " " << R__t << ";" << std::endl;
+      switch (kase) {
+            
+         case G__BIT_ISFUNDAMENTAL:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            R__b >> " << R__t << ";" << std::endl;
+            break;
+            
+         case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+            if (!R__t)  return 1;
+            (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");"  << std::endl;
+            break;
+            
+         case G__BIT_ISENUM:
+            if (!R__t)  return 0;
+            //             fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
+            // On some platforms enums and not 'Int_t' and casting to a reference to Int_t
+            // induces the silent creation of a temporary which is 'filled' __instead of__
+            // the desired enum.  So we need to take it one step at a time.
+            (*dictSrcOut) << "            Int_t readtemp;" << std::endl
+            << "            R__b >> readtemp;" << std::endl
+            << "            " << R__t << " = static_cast<" << tiName << ">(readtemp);" << std::endl;
+            break;
+            
+         case R__BIT_HASSTREAMER:
+         case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            " << R__t << ".Streamer(R__b);" << std::endl;
+            break;
+            
+         case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+            if (!R__t)  return 1;
+            //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
+            (*dictSrcOut) << "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {" << std::endl;
+            if (ti.Property() & G__BIT_ISABSTRACT) {
+               (*dictSrcOut) << "               R__ASSERT(0);// " << objType << " is abstract. We assume that older file could not be produced using this streaming method." << std::endl;
+            } else {
+               (*dictSrcOut) << "               " << R__t << " = new " << objType << ";" << std::endl
+               << "               " << R__t << "->Streamer(R__b);" << std::endl;
+            }
+            (*dictSrcOut) << "            } else {" << std::endl
+            << "               " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl
+            << "            }" << std::endl;
+            break;
+            
+         case kBIT_ISSTRING:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            {TString R__str;" << std::endl
+            << "             R__str.Streamer(R__b);" << std::endl
+            << "             " << R__t << " = R__str.Data();}" << std::endl;
+            break;
+            
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            {TString R__str;"  << std::endl
+            << "             R__str.Streamer(R__b);" << std::endl
+            << "             " << R__t << " = new string(R__str.Data());}" << std::endl;
+            break;
+            
+         case G__BIT_ISPOINTER:
+            if (!R__t)  return 1;
+            (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl;
+            break;
+            
+         default:
+            if (!R__t) return 1;
+            (*dictSrcOut) << "            R__b.StreamObject(&" << R__t << "," << tcl << ");" << std::endl;
+            break;
+      }
+      
+   } else {     //Write case
+      
+      switch (kase) {
+            
+         case G__BIT_ISFUNDAMENTAL:
+         case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            R__b << " << R__t << ";" << std::endl;
+            break;
+            
+         case G__BIT_ISENUM:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            {  void *ptr_enum = (void*)&" << R__t << ";\n";
+            (*dictSrcOut) << "               R__b >> *reinterpret_cast<Int_t*>(ptr_enum); }" << std::endl;
+            break;
+            
+         case R__BIT_HASSTREAMER:
+         case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            ((" << objType << "&)" << R__t << ").Streamer(R__b);" << std::endl;
+            break;
+            
+         case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+            if (!R__t)  return 1;
+            (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl << ");" << std::endl;
+            break;
+            
+         case kBIT_ISSTRING:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            {TString R__str(" << R__t << ".c_str());" << std::endl
+            << "             R__str.Streamer(R__b);};" << std::endl;
+            break;
+            
+         case kBIT_ISSTRING|G__BIT_ISPOINTER:
+            if (!R__t)  return 0;
+            (*dictSrcOut) << "            {TString R__str(" << R__t << "->c_str());" << std::endl
+            << "             R__str.Streamer(R__b);}" << std::endl;
+            break;
+            
+         case G__BIT_ISPOINTER:
+            if (!R__t)  return 1;
+            (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl <<");" << std::endl;
+            break;
+            
+         default:
+            if (!R__t)  return 1;
+            (*dictSrcOut) << "            R__b.StreamObject((" << objType << "*)&" << R__t << "," << tcl << ");" << std::endl;
+            break;
+      }
+   }
+   return 0;
+}
 
+//______________________________________________________________________________
+int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode,const char *tcl=0)
+{
+   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TObject");
+   enum {
+      R__BIT_ISTOBJECT   = 0x10000000,
+      R__BIT_HASSTREAMER = 0x20000000,
+      kBIT_ISSTRING    = 0x40000000
+   };
+
+   const clang::Type &ti( * qti.getTypePtr() );
+   string tiName;
+   R__GetQualifiedName(tiName, clang::QualType(&ti,0), forcontext);
+   
+   string objType(ShortTypeName(tiName.c_str()));
+
+   const clang::Type *rawtype = R__GetUnderlyingType(clang::QualType(&ti,0));
+   string rawname;
+   R__GetQualifiedName(rawname, clang::QualType(rawtype,0), forcontext);
+   
+   clang::CXXRecordDecl *cxxtype = rawtype->getAsCXXRecordDecl() ;
+   int isStre = cxxtype && ClassInfo__HasMethod(cxxtype,"Streamer");
+   int isTObj = cxxtype && (R__IsBase(cxxtype,TObject_decl) || rawname == "TObject");
+ 
+   long kase = 0;   
+
+   if (ti.isPointerType())           kase |= G__BIT_ISPOINTER;
+   if (rawtype->isFundamentalType()) kase |= G__BIT_ISFUNDAMENTAL;
+   if (rawtype->isEnumeralType())    kase |= G__BIT_ISENUM;
+
+
+   if (isTObj)              kase |= R__BIT_ISTOBJECT;
+   if (isStre)              kase |= R__BIT_HASSTREAMER;
+   if (tiName == "string")  kase |= kBIT_ISSTRING;
+   if (tiName == "string*") kase |= kBIT_ISSTRING;
+   
+   
    if (tcl == 0) {
       tcl = " internal error in rootcint ";
    }
@@ -2743,7 +3032,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
          if (!R__t)  return 1;
          //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
          (*dictSrcOut) << "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {" << std::endl;
-         if (ti.Property() & G__BIT_ISABSTRACT) {
+         if (cxxtype && cxxtype->isAbstract()) {
             (*dictSrcOut) << "               R__ASSERT(0);// " << objType << " is abstract. We assume that older file could not be produced using this streaming method." << std::endl;
          } else {
             (*dictSrcOut) << "               " << R__t << " = new " << objType << ";" << std::endl
@@ -2833,67 +3122,73 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
 }
 
 //______________________________________________________________________________
-int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
+int STLContainerStreamer(const clang::FieldDecl &m, int rwmode)
 {
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
    int stltype = abs(IsSTLContainer(m));
+   std::string mTypename;
+   R__GetQualifiedName(mTypename, m.getType(),m);
+   
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(R__GetUnderlyingRecordDecl(m.getType()));
+
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      RStl::Instance().GenerateTClassFor( m.Type()->Name(), R__SlowRawTypeSearch(m.Type()->Name()) );
+      RStl::Instance().GenerateTClassFor(mTypename.c_str(), clxx );
    }
-   if (!m.Type()->IsTmplt() || stltype<=0) return 0;
+   if (stltype<=0) return 0;
+   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+   
+   const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   if (!tmplt_specialization) return 0;
 
-   int isArr = 0;
-   int len = 1;
-   if (m.Property() & G__BIT_ISARRAY) {
-      isArr = 1;
-      for (int dim = 0; dim < m.ArrayDim(); dim++) len *= m.MaxIndex(dim);
-   }
 
    // string stlType( RStl::DropDefaultArg( m.Type()->Name() ) );
    //    string stlType( TClassEdit::ShortType(m.Type()->Name(),
    //                                          TClassEdit::kDropTrailStar|
    //                                          TClassEdit::kDropStlDefault) );
-   string stlType( ShortTypeName(m.Type()->Name()) );
+   string stlType( ShortTypeName(mTypename.c_str()) );
    string stlName;
-   stlName = ShortTypeName(m.Name());
+   stlName = ShortTypeName(m.getName().data());
 
    string fulName1,fulName2;
    const char *tcl1=0,*tcl2=0;
-   G__TypeInfo &ti = TemplateArg(m);
-   if (ElementStreamer(ti, 0, rwmode)) {
+   const clang::TemplateArgument &arg0( tmplt_specialization->getTemplateArgs().get(0) );
+   clang::QualType ti = arg0.getAsType();
+
+   if (ElementStreamer(m, ti, 0, rwmode)) {
       tcl1="R__tcl1";
-      const char *name = ti.Fullname();
-      if (name) {
-         // the value return by ti.Fullname is a static buffer
-         // so we have to copy it immeditately
-         fulName1 = name;
-      } else {
-         // ti is a simple type name
-         fulName1 = ti.TrueName();
-      }
+      fulName1 = ti.getAsString(); // Should we be passing a context?
    }
    if (stltype==kMap || stltype==kMultiMap) {
-      G__TypeInfo &tmplti = TemplateArg(m,1);
-      if (ElementStreamer(tmplti, 0, rwmode)) {
+      const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
+      clang::QualType tmplti = arg1.getAsType();
+      if (ElementStreamer(m, tmplti, 0, rwmode)) {
          tcl2="R__tcl2";
-         const char *name = tmplti.Fullname();
-         if (name) {
-            // the value return by tmplti.Fullname is a static buffer
-            // so we have to copy it immeditately
-            fulName2 = name;
-         } else {
-            // tmplti is a simple type name
-            fulName2 = tmplti.TrueName();
-         }
+         fulName2 = tmplti.getAsString(); // Should we be passing a context?
       }
    }
 
-   int pa = isArr;
-   if (m.Property() & G__BIT_ISPOINTER) pa+=2;
+   int isArr = 0;
+   int len = 1;
+   int pa = 0;
+   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
+   if (arrayType) {
+      isArr = 1;
+      len =  R__GetFullArrayLength(arrayType);
+      pa = 1;
+      while (arrayType) {
+         if (arrayType->getArrayElementTypeNoTypeQual()->isPointerType()) {
+            pa = 3;
+            break;
+         }
+         arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+      }
+   } else if (m.getType()->isPointerType()) {
+      pa = 2;
+   }
    if (rwmode == 0) {
       // create read code
       (*dictSrcOut) << "      {" << std::endl;
@@ -2947,9 +3242,10 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       }
       (*dictSrcOut) << "         for (R__i = 0; R__i < R__n; R__i++) {" << std::endl;
 
-      ElementStreamer(TemplateArg(m), "R__t", rwmode, tcl1);
+      ElementStreamer(m, arg0.getAsType(), "R__t", rwmode, tcl1);
       if (stltype == kMap || stltype == kMultiMap) {     //Second Arg
-         ElementStreamer(TemplateArg(m,1), "R__t2", rwmode, tcl2);
+         const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
+         ElementStreamer(m, arg1.getAsType(), "R__t2", rwmode, tcl2);
       }
 
       /* Need to go from
@@ -2966,9 +3262,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
       case kMap:
       case kMultiMap: {
-         std::string keyName( TemplateArg(m).Name() );
+         std::string keyName( ti.getAsString() );
          (*dictSrcOut) << "            typedef " << keyName << " Value_t;" << std::endl
-                       << "            std::pair<Value_t const, " << TemplateArg(m,1).Name() << " > R__t3(R__t,R__t2);" << std::endl
+                       << "            std::pair<Value_t const, " << tmplt_specialization->getTemplateArgs().get(1).getAsType().getAsString() << " > R__t3(R__t,R__t2);" << std::endl
                        << "            R__stl.insert(R__t3);" << std::endl;
          //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
          break;
@@ -3035,10 +3331,12 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       (*dictSrcOut) << "            " << stlType.c_str() << "::iterator R__k;" << std::endl
                     << "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {" << std::endl;
       if (stltype == kMap || stltype == kMultiMap) {
-         ElementStreamer(TemplateArg(m,0), "((*R__k).first )",rwmode,tcl1);
-         ElementStreamer(TemplateArg(m,1), "((*R__k).second)",rwmode,tcl2);
+         const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
+         clang::QualType tmplti = arg1.getAsType();
+         ElementStreamer(m, ti, "((*R__k).first )",rwmode,tcl1);
+         ElementStreamer(m, tmplti, "((*R__k).second)",rwmode,tcl2);
       } else {
-         ElementStreamer(TemplateArg(m,0), "(*R__k)"         ,rwmode,tcl1);
+         ElementStreamer(m, ti, "(*R__k)"         ,rwmode,tcl1);
       }
 
       (*dictSrcOut) << "            }" << std::endl
@@ -3050,51 +3348,65 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 }
 
 //______________________________________________________________________________
-int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
+int STLStringStreamer(const clang::FieldDecl &m, int rwmode)
 {
    // Create Streamer code for a standard string object. Returns 1 if data
    // member was a standard string and if Streamer code has been created,
    // 0 otherwise.
 
-   const char *mTypeName = ShortTypeName(m.Type()->Name());
+   std::string mTypenameStr;
+   R__GetQualifiedName(mTypenameStr, m.getType(),m);
+   // Note: here we could to a direct type comparison!
+   const char *mTypeName = ShortTypeName(mTypenameStr.c_str());
    if (!strcmp(mTypeName, "string")) {
+      
+      std::string fieldname =  m.getName().data();
       if (rwmode == 0) {
          // create read mode
-         if ((m.Property() & G__BIT_ISPOINTER) &&
-             (m.Property() & G__BIT_ISARRAY)) {
-
-         } else if (m.Property() & G__BIT_ISARRAY) {
-            std::stringstream fullIdx;
-            for (int dim = 0; dim < m.ArrayDim(); ++dim) {
-               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
-                             << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
-               fullIdx << "[R__i" << dim << "]";
+         if (m.getType()->isConstantArrayType()) {
+            if (m.getType().getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType()) {
+               (*dictSrcOut) << "// Array of pointer to std::string are not supported (" << fieldname << "\n";
+            } else {
+               std::stringstream fullIdx;
+               const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
+               int dim = 0;
+               while (arrayType) {
+                  (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
+                                << arrayType->getSize().getLimitedValue() << "; ++R__i" << dim << " )" << std::endl;
+                  fullIdx << "[R__i" << dim << "]";
+                  arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+                  ++dim;
+               }
+               (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); "
+                             << fieldname << fullIdx.str() << " = R__str.Data();}" << std::endl;
             }
-            (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); "
-                          << m.Name() << fullIdx.str() << " = R__str.Data();}" << std::endl;
          } else {
             (*dictSrcOut) << "      { TString R__str; R__str.Streamer(R__b); ";
-            if (m.Property() & G__BIT_ISPOINTER)
-               (*dictSrcOut) << "if (*" << m.Name() << ") delete *" << m.Name() << "; (*"
-                             << m.Name() << " = new string(R__str.Data())); }" << std::endl;
+            if (m.getType()->isPointerType())
+               (*dictSrcOut) << "if (*" << fieldname << ") delete *" << fieldname << "; (*"
+                             << fieldname << " = new string(R__str.Data())); }" << std::endl;
             else
-               (*dictSrcOut) << m.Name() << " = R__str.Data(); }" << std::endl;
+               (*dictSrcOut) << fieldname << " = R__str.Data(); }" << std::endl;
          }
       } else {
          // create write mode
-         if (m.Property() & G__BIT_ISPOINTER)
-            (*dictSrcOut) << "      { TString R__str; if (*" << m.Name() << ") R__str = (*"
-                          << m.Name() << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
-         else if (m.Property() & G__BIT_ISARRAY) {
+         if (m.getType()->isPointerType())
+            (*dictSrcOut) << "      { TString R__str; if (*" << fieldname << ") R__str = (*"
+                          << fieldname << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
+         else if (m.getType()->isConstantArrayType()) {
             std::stringstream fullIdx;
-            for (int dim = 0; dim < m.ArrayDim(); ++dim) {
+            const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
+            int dim = 0;
+            while (arrayType) {
                (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
-                             << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
+                             << arrayType->getSize().getLimitedValue() << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
+               arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+               ++dim;
             }
-            (*dictSrcOut) << "         { TString R__str(" << m.Name() << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
+            (*dictSrcOut) << "         { TString R__str(" << fieldname << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
          } else
-            (*dictSrcOut) << "      { TString R__str = " << m.Name() << ".c_str(); R__str.Streamer(R__b);}" << std::endl;
+            (*dictSrcOut) << "      { TString R__str = " << fieldname << ".c_str(); R__str.Streamer(R__b);}" << std::endl;
       }
       return 1;
    }
@@ -3102,57 +3414,29 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
 }
 
 //______________________________________________________________________________
-int PointerToPointer(G__DataMemberInfo &m)
+bool isPointerToPointer(const clang::FieldDecl &m)
 {
-   if (strstr(m.Type()->Name(), "**")) return 1;
-   return 0;
+   if (m.getType()->isPointerType()) {
+      if (m.getType()->getPointeeType()->isPointerType()) {
+         return true;
+      }
+   }
+   return false;
 }
 
 //______________________________________________________________________________
-void WriteArrayDimensions(int dim)
+void WriteArrayDimensions(const clang::QualType &type)
 {
-   for (int i = 0; i < dim-1; i++)
-      (*dictSrcOut) << "[0]";
-}
+   // Write "[0]" for all but the 1st dimension.
 
-//______________________________________________________________________________
-void WriteInputOperator(G__ClassInfo &cl)
-{
-   if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject"))
-      return;
-
-   (*dictSrcOut) << "//_______________________________________"
-                 << "_______________________________________" << std::endl;
-
-   char space_prefix[kMaxLen] = "";
-#ifdef WIN32
-   G__ClassInfo space = cl.EnclosingSpace();
-   if (space.Property() & G__BIT_ISNAMESPACE)
-      snprintf(space_prefix,kMaxLen,"%s::",space.Fullname());
-#endif
-
-   if (cl.IsTmplt()) {
-      // Produce specialisation for templates:
-      (*dictSrcOut) << "template<> TBuffer &operator>>"
-                    << "(TBuffer &buf, " << cl.Fullname() << " *&obj)" << std::endl
-                    << "{" << std::endl;
-   } else {
-      (*dictSrcOut) << "template<> TBuffer &" << space_prefix << "operator>>(TBuffer &buf, "
-                    << cl.Fullname() << " *&obj)" << std::endl
-                    << "{" << std::endl;
+   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+   if (arrayType) {
+      arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+      while(arrayType) {
+         (*dictSrcOut) << "[0]";
+         arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+      }
    }
-   (*dictSrcOut) << "   // Read a pointer to an object of class " << cl.Fullname() << "."
-                 << std::endl << std::endl;
-
-   if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject")) {
-      (*dictSrcOut) << "   obj = (" << cl.Fullname() << " *) buf.ReadObjectAny("
-                    << cl.Fullname() << "::Class());" << std::endl;
-   } else {
-      (*dictSrcOut) << "   ::Error(\"" << cl.Fullname() << "::operator>>\", \"objects not inheriting"
-         " from TObject need a specialized operator>>"
-         " function\"); if (obj) { }" << std::endl;
-   }
-   (*dictSrcOut) << "   return buf;" << std::endl << "}" << std::endl << std::endl;
 }
 
 //______________________________________________________________________________
@@ -3163,14 +3447,14 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    bool add_template_keyword = NeedTemplateKeyword(cl);
 
    string fullname;
-   R__GetQualifiedName(fullname,cl);
+   R__GetQualifiedName(fullname,*cl);
 
    string clsname = fullname;
 
    const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
    string nsname;
    if (nsdecl && nsdecl!=cl ) {
-      R__GetQualifiedName(nsname,nsdecl);
+      R__GetQualifiedName(nsname,*nsdecl);
       clsname.erase (0, nsname.size() + 2);
    }
 
@@ -3178,7 +3462,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    if (!nsname.empty()) {
       G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
       //G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
-      G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
+      G__ClassInfo clinfo(R__GetQualifiedName(*cl).c_str());
       enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(clinfo);
    }
 
@@ -3295,8 +3579,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
-   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( R__GetQualifiedName(cl).c_str() );
-   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( R__GetQualifiedName(cl).c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( R__GetQualifiedName(*cl).c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( R__GetQualifiedName(*cl).c_str() );
 
    MembersTypeMap_t nameTypeMap;
    // Note Falling back on CINT for this ....
@@ -3584,7 +3868,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
    // Write the code to initialize the namespace name and the initialization object.
 
    // coverity[fun_call_w_exception] - that's just fine.
-   string classname = GetLong64_Name( RStl::DropDefaultArg( R__GetQualifiedName(cl).c_str() ) );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( R__GetQualifiedName(*cl).c_str() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
    int nesting = 0;
@@ -3739,7 +4023,222 @@ const char *ShortTypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-const char *GrabIndex(G__DataMemberInfo &member, int printError)
+std::string ShortTypeName(const clang::FieldDecl &m)
+{
+   // Return the absolute type of typeDesc.
+   // E.g.: typeDesc = "class TNamed**", returns "TNamed".
+   // we remove * and const keywords. (we do not want to remove & ).
+   // You need to use the result immediately before it is being overwritten.
+   
+   const clang::Type *rawtype = m.getType().getTypePtr();
+   
+   //Get to the 'raw' type.
+   clang::QualType pointee;
+   while ( rawtype->isPointerType() && ((pointee = rawtype->getPointeeType()) , pointee.getTypePtrOrNull()) && pointee.getTypePtr() != rawtype)
+   {
+      rawtype = pointee.getTypePtr();
+   }
+
+   std::string result;
+   R__GetQualifiedName(result, clang::QualType(rawtype,0), m);
+   return result;
+}
+
+const clang::FieldDecl *R__GetDataMemberFromAll(const clang::CXXRecordDecl &cl, const char *what)
+{
+   // Return a data member name 'what' in the class described by 'cl' if any.
+
+   for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
+       field_iter != end;
+       ++field_iter)
+   {
+      if (field_iter->getNameAsString() == what) {
+         return *field_iter;
+      }
+   }
+   return 0;
+   
+}
+
+bool CXXRecordDecl__FindOrdinaryMember 	( const clang::CXXBaseSpecifier *  	Specifier,
+                                           clang::CXXBasePath &  	Path,
+                                           void *  	Name 
+                                           ) 	
+{
+   clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
+   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
+   if (clxx == 0) return false;
+   
+   return 0 != R__GetDataMemberFromAll(*clxx,(const char*)Name);
+}
+
+
+const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRecordDecl &cl, const char *what)
+{
+   // Return a data member name 'what' in any of the base classes of the class described by 'cl' if any.
+
+   clang::CXXBasePaths Paths;
+   Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
+   cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
+                    (void*) what,
+                    Paths);
+   return 0;
+}
+
+// ValidArrayIndex return a static string (so use it or copy it immediatly, do not
+// call GrabIndex twice in the same expression) containing the size of the
+// array data member.
+// In case of error, or if the size is not specified, GrabIndex returns 0.
+// If errnum is not null, *errnum updated with the error number:
+//   Cint::G__DataMemberInfo::G__VALID     : valid array index
+//   Cint::G__DataMemberInfo::G__NOT_INT   : array index is not an int
+//   Cint::G__DataMemberInfo::G__NOT_DEF   : index not defined before array 
+//                                          (this IS an error for streaming to disk)
+//   Cint::G__DataMemberInfo::G__IS_PRIVATE: index exist in a parent class but is private
+//   Cint::G__DataMemberInfo::G__UNKNOWN   : index is not known
+// If errstr is not null, *errstr is updated with the address of a static
+//   string containing the part of the index with is invalid.
+
+enum R__DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
+const char* R__DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, char **errstr) 
+{
+   const char* title = R__GetComment( m );
+   
+   // Let's see if the user provided us with some information
+   // with the format: //[dimension] this is the dim of the array
+   // dimension can be an arithmetical expression containing, literal integer,
+   // the operator *,+ and - and data member of integral type.  In addition the
+   // data members used for the size of the array need to be defined prior to
+   // the array.
+   
+   if (errnum) *errnum = VALID;
+   
+   if ((strncmp(title, "[", 1)!=0) ||
+       (strstr(title,"]")     ==0)  ) return 0;
+   
+   G__FastAllocString working(G__INFO_TITLELEN);
+   static char indexvar[G__INFO_TITLELEN];
+   strncpy(indexvar, title + 1, sizeof(indexvar) - 1);
+   strstr(indexvar,"]")[0] = '\0';
+   
+   // now we should have indexvar=dimension
+   // Let's see if this is legal.
+   // which means a combination of data member and digit separated by '*','+','-'
+   // First we remove white spaces.
+   unsigned int i,j;
+   size_t indexvarlen = strlen(indexvar);
+   for ( i=0,j=0; i<=indexvarlen; i++) {
+      if (!isspace(indexvar[i])) {
+         working.Set(j++, indexvar[i]);
+      }
+   };
+   
+   // Now we go through all indentifiers
+   const char * tokenlist = "*+-";
+   char *current = working;
+   current = strtok(current,tokenlist);
+   
+   while (current!=0) {
+      // Check the token
+      if (isdigit(current[0])) {
+         for(i=0;i<strlen(current);i++) {
+            if (!isdigit(current[0])) {
+               // Error we only access integer.
+               //NOTE: *** Need to print an error;
+               //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not an interger\n",
+               //        member.MemberOf()->Name(), member.Name(), current);
+               if (errstr) *errstr = current;
+               if (errnum) *errnum = NOT_INT;
+               return 0;
+            }
+         }
+      } else { // current token is not a digit
+         // first let's see if it is a data member:
+         int found = 0;
+         const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getParent());
+         const clang::FieldDecl *index1 = R__GetDataMemberFromAll(*parent_clxx, current );
+         if ( index1 ) {
+            if ( R__IsInt(index1) ) {
+               found = 1;
+               // Let's see if it has already been written down in the
+               // Streamer.
+               // Let's see if we already wrote it down in the
+               // streamer.
+               for(clang::RecordDecl::field_iterator field_iter = parent_clxx->field_begin(), end = parent_clxx->field_end();
+                   field_iter != end;
+                   ++field_iter)
+               {
+                  if ( field_iter->getNameAsString() == m.getNameAsString() ) {
+                     // we reached the current data member before
+                     // reaching the index so we have not written it yet!
+                     //NOTE: *** Need to print an error;
+                     //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) has not been defined before the array \n",
+                     //        member.MemberOf()->Name(), member.Name(), current);
+                     if (errstr) *errstr = current;
+                     if (errnum) *errnum = NOT_DEF;
+                     return 0;
+                  }
+                  if ( field_iter->getNameAsString() == index1->getNameAsString() ) {
+                     break;
+                  }
+               } // end of while (m_local.Next())
+            } else {
+               //NOTE: *** Need to print an error;
+               //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not int \n",
+               //        member.MemberOf()->Name(), member.Name(), current);
+               if (errstr) *errstr = current;
+               if (errnum) *errnum = NOT_INT;
+               return 0;
+            }
+         } else {
+            // There is no variable by this name in this class, let see
+            // the base classes!:
+            index1 = R__GetDataMemberFromAllParents( *parent_clxx, current );
+            if ( index1 ) {
+               if ( R__IsInt(index1) ) {
+                  found = 1;
+               } else {
+                  // We found a data member but it is the wrong type
+                  //NOTE: *** Need to print an error;
+                  //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not int \n",
+                  //  member.MemberOf()->Name(), member.Name(), current);
+                  if (errnum) *errnum = NOT_INT;
+                  if (errstr) *errstr = current;
+                  //NOTE: *** Need to print an error;
+                  //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not int \n",
+                  //  member.MemberOf()->Name(), member.Name(), current);
+                  if (errnum) *errnum = NOT_INT;
+                  if (errstr) *errstr = current;
+                  return 0;
+               }
+               if ( found && (index1->getAccess() == clang::AS_private) ) {
+                  //NOTE: *** Need to print an error;
+                  //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is a private member of %s \n",
+                  if (errstr) *errstr = current;
+                  if (errnum) *errnum = IS_PRIVATE;
+                  return 0;
+               }
+            }
+            if (!found) {
+               //NOTE: *** Need to print an error;
+               //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not known \n",
+               //        member.MemberOf()->Name(), member.Name(), indexvar);
+               if (errstr) *errstr = indexvar;
+               if (errnum) *errnum = UNKNOWN;
+               return 0;
+            } // end of if not found
+         } // end of if is a data member of the class
+      } // end of if isdigit
+      
+      current = strtok(0,tokenlist);
+   } // end of while loop on tokens      
+   
+   return indexvar;
+   
+}
+   
+//______________________________________________________________________________
+const char *GrabIndex(const clang::FieldDecl &member, int printError)
 {
    // GrabIndex returns a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
@@ -3749,7 +4248,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
    int error;
    char *where = 0;
 
-   const char *index = member.ValidArrayIndex(&error, &where);
+   const char *index = R__DataMemberInfo__ValidArrayIndex(member,&error, &where);
    if (index==0 && printError) {
       const char *errorstring;
       switch (error) {
@@ -3771,62 +4270,78 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
 
       if (where==0) {
          Error(0, "*** Datamember %s::%s: no size indication!\n",
-               member.MemberOf()->Name(), member.Name());
+               member.getParent()->getName().data(), member.getName().data());
       } else {
          Error(0,"*** Datamember %s::%s: size of array (%s) %s!\n",
-               member.MemberOf()->Name(), member.Name(), where, errorstring);
+               member.getParent()->getName().data(), member.getName().data(), where, errorstring);
       }
    }
    return index;
 }
 
 //______________________________________________________________________________
-void WriteStreamer(G__ClassInfo &cl)
+void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
 {
-   bool add_template_keyword = NeedTemplateKeyword(cl);
-
-   G__ClassInfo ns = cl.EnclosingSpace();
-   string clsname = cl.Fullname();
+   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (clxx == 0) return;
+   
+   bool add_template_keyword = NeedTemplateKeyword(clxx);
+   
+   string fullname;
+   R__GetQualifiedName(fullname,cl);
+   
+   string clsname = fullname;
+   
+   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(clxx->getEnclosingNamespaceContext());
    string nsname;
-   if (ns.IsValid()) {
-      nsname = ns.Fullname();
+   if (nsdecl && nsdecl!=cl ) {
+      R__GetQualifiedName(nsname,*nsdecl);
       clsname.erase (0, nsname.size() + 2);
    }
+   
+   G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
       G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(clinfo);
    }
-
+   
    (*dictSrcOut) << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)"  << std::endl << "{" << std::endl
-                 << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl;
+                 << "   // Stream an object of class " << fullname << "." << std::endl << std::endl;
 
    // In case of VersionID<=0 write dummy streamer only calling
    // its base class Streamer(s). If no base class(es) let Streamer
    // print error message, i.e. this Streamer should never have been called.
-   int version = GetClassVersion(cl);
+   int version = GetClassVersion(clxx);
    if (version <= 0) {
-      G__BaseClassInfo b(cl);
-
+      // We also need to look at the base classes.
       int basestreamer = 0;
-      while (b.Next())
-         if (b.HasMethod("Streamer")) {
-            if (strstr(b.Fullname(),"::")) {
+      for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
+          iter != end;
+          ++iter)
+      {
+         if (ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+            string base_fullname;
+            R__GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
+
+            if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                             << "   typedef " << b.Fullname() << " baseClass" << basestreamer << ";" << std::endl
+                             << "   typedef " << base_fullname << " baseClass" << basestreamer << ";" << std::endl
                              << "   baseClass" << basestreamer << "::Streamer(R__b);" << std::endl;
             }
-            else
-               (*dictSrcOut) << "   " << b.Fullname() << "::Streamer(R__b);" << std::endl;
+            else {
+               (*dictSrcOut) << "   " << base_fullname << "::Streamer(R__b);" << std::endl;
+            }
             basestreamer++;
          }
+      }
       if (!basestreamer) {
-         (*dictSrcOut) << "   ::Error(\"" << cl.Fullname() << "::Streamer\", \"version id <=0 in ClassDef,"
+         (*dictSrcOut) << "   ::Error(\"" << fullname << "::Streamer\", \"version id <=0 in ClassDef,"
             " dummy Streamer() called\"); if (R__b.IsReading()) { }" << std::endl;
       }
       (*dictSrcOut) << "}" << std::endl << std::endl;
@@ -3838,11 +4353,11 @@ void WriteStreamer(G__ClassInfo &cl)
    }
 
    // loop twice: first time write reading code, second time writing code
-   string classname = cl.Fullname();
-   if (strstr(cl.Fullname(),"::")) {
+   string classname = fullname;
+   if (strstr(fullname.c_str(),"::")) {
       // there is a namespace involved, trigger MS VC bug workaround
       (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                    << "   typedef ::" << cl.Fullname() << " thisClass;" << std::endl;
+                    << "   typedef ::" << fullname << " thisClass;" << std::endl;
       classname = "thisClass";
    }
    for (int i = 0; i < 2; i++) {
@@ -3860,27 +4375,40 @@ void WriteStreamer(G__ClassInfo &cl)
       }
 
       // Stream base class(es) when they have the Streamer() method
-      G__BaseClassInfo b(cl);
-
       int base=0;
-      while (b.Next()) {
-         if (b.HasMethod("Streamer")) {
-            if (strstr(b.Fullname(),"::")) {
+      for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
+          iter != end;
+          ++iter)
+      {
+         if (ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+            string base_fullname;
+            R__GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
+            
+            if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
                (*dictSrcOut) << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
-                             << "      typedef " << b.Fullname() << " baseClass" << base << ";" << std::endl
+                             << "      typedef " << base_fullname << " baseClass" << base << ";" << std::endl
                              << "      baseClass" << base << "::Streamer(R__b);" << std::endl;
                ++base;
             }
-            else
-               (*dictSrcOut) << "      " << b.Fullname() << "::Streamer(R__b);" << std::endl;
+            else {
+               (*dictSrcOut) << "      " << base_fullname << "::Streamer(R__b);" << std::endl;
+            }
          }
       }
       // Stream data members
-      G__DataMemberInfo m(cl);
+      // Loop over the non static data member.
+      for(clang::RecordDecl::field_iterator field_iter = clxx->field_begin(), end = clxx->field_end();
+          field_iter != end;
+          ++field_iter)
+      {
+         const char *comment = R__GetComment( *(*field_iter) );
 
-      while (m.Next()) {
+         clang::QualType type = field_iter->getType();
+         std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());
 
+         const clang::Type *underling_type = R__GetUnderlyingType(type);
+         
          // we skip:
          //  - static members
          //  - members with an ! as first character in the title (comment) field
@@ -3888,256 +4416,265 @@ void WriteStreamer(G__ClassInfo &cl)
 
          //special case for Float16_t
          int isFloat16=0;
-         if (strstr(m.Type()->Name(),"Float16_t")) isFloat16=1;
+         if (strstr(type_name.c_str(),"Float16_t")) isFloat16=1;
 
          //special case for Double32_t
          int isDouble32=0;
-         if (strstr(m.Type()->Name(),"Double32_t")) isDouble32=1;
+         if (strstr(type_name.c_str(),"Double32_t")) isDouble32=1;
 
-         if (!(m.Property() & G__BIT_ISSTATIC) &&
-             strncmp(m.Title(), "!", 1)        &&
-             strcmp(m.Name(), "G__virtualinfo")) {
+         // No need to test for static, there are not in this 'list.
+         //   !(m.Property() & G__BIT_ISSTATIC)
+         // No need to test for CINT artifiical members:
+         //   strcmp(m.Name(), "G__virtualinfo")
+         if (strncmp(comment, "!", 1)) {
 
             // fundamental type: short, int, long, etc....
-            if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
-                ((m.Type())->Property() & G__BIT_ISENUM)) {
-               if (m.Property() & G__BIT_ISARRAY &&
-                   m.Property() & G__BIT_ISPOINTER) {
-                  int s = 1;
-                  for (int dim = 0; dim < m.ArrayDim(); dim++)
-                     s *= m.MaxIndex(dim);
+            if (underling_type->isFundamentalType() || underling_type->isEnumeralType()) {
+               if (type.getTypePtr()->isConstantArrayType() &&
+                   type.getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType() ) 
+//               if (m.Property() & G__BIT_ISARRAY &&
+//                   m.Property() & G__BIT_ISPOINTER) 
+               {
+                  const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+                  int s = R__GetFullArrayLength(arrayType);
+
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
                      decli = 1;
                   }
                   (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0) {
-                     Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
-                     (*dictSrcOut) << "         ;//R__b.ReadArray(" << m.Name() << ");" << std::endl;
+                     Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
+                     (*dictSrcOut) << "         ;//R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
                   } else {
-                     (*dictSrcOut) << "         ;//R__b.WriteArray(" << m.Name() << ", __COUNTER__);" << std::endl;
+                     (*dictSrcOut) << "         ;//R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);" << std::endl;
                   }
-               } else if (m.Property() & G__BIT_ISPOINTER) {
-                  const char *indexvar = GrabIndex(m, i==0);
+               } else if (type.getTypePtr()->isPointerType()) {
+                  const char *indexvar = GrabIndex(*(*field_iter), i==0);
                   if (indexvar==0) {
                      if (i == 0) {
-                        Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", cl.Fullname(), m.Name());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << m.Name() << ");" << std::endl;
+                        Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
+                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << m.Name() << ", __COUNTER__);" << std::endl;
+                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);" << std::endl;
                      }
                   } else {
                      if (i == 0) {
-                        (*dictSrcOut) << "      delete [] " << m.Name() << ";" << std::endl
-                                      << "      " << GetNonConstMemberName(m) << " = new "
-                                      << ShortTypeName(m.Type()->Name()) << "[" << indexvar << "];" << std::endl;
+                        (*dictSrcOut) << "      delete [] " << field_iter->getName().data() << ";" << std::endl
+                                      << "      " << GetNonConstMemberName(*(*field_iter)) << " = new "
+                                      << ShortTypeName(*(*field_iter)) << "[" << indexvar << "];" << std::endl;
                         if (isFloat16) {
-                           (*dictSrcOut) << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(m)
+                           (*dictSrcOut) << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(*(*field_iter))
                                          << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
-                           (*dictSrcOut) << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(m)
+                           (*dictSrcOut) << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(*(*field_iter))
                                          << "," << indexvar << ");" << std::endl;
                         } else {
-                           (*dictSrcOut) << "      R__b.ReadFastArray(" << GetNonConstMemberName(m)
+                           (*dictSrcOut) << "      R__b.ReadFastArray(" << GetNonConstMemberName(*(*field_iter))
                                          << "," << indexvar << ");" << std::endl;
                         }
                      } else {
                         if (isFloat16) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayFloat16("
-                                         << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayDouble32("
-                                         << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
                         } else {
                            (*dictSrcOut) << "      R__b.WriteFastArray("
-                                         << m.Name() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
                         }
                      }
                   }
-               } else if (m.Property() & G__BIT_ISARRAY) {
+               } else if (type.getTypePtr()->isArrayType()) {
                   if (i == 0) {
-                     if (m.ArrayDim() > 1) {
-                        if ((m.Type())->Property() & G__BIT_ISENUM)
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << m.Name() << ");" << std::endl;
-                        else
+                     if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) { // if (m.ArrayDim() > 1) {
+                        if ( underling_type->isEnumeralType() )
+                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().data() << ");" << std::endl;
+                        else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
                            }
+                        }
                      } else {
-                        if ((m.Type())->Property() & G__BIT_ISENUM)
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << m.Name() << ");" << std::endl;
-                        else
+                        if ( underling_type->isEnumeralType() ) {
+                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().data() << ");" << std::endl;
+                        } else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << field_iter->getName().data() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().data() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
                            }
+                        }
                      }
                   } else {
-                     int s = 1;
-                     for (int dim = 0; dim < m.ArrayDim(); dim++)
-                        s *= m.MaxIndex(dim);
-                     if (m.ArrayDim() > 1) {
-                        if ((m.Type())->Property() & G__BIT_ISENUM)
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << m.Name() << ", "
+                     const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+                     int s = R__GetFullArrayLength(arrayType);
+
+                     if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) {// if (m.ArrayDim() > 1) {
+                        if ( underling_type->isEnumeralType() )
+                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().data() << ", "
                                          << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray((" << m.Type()->TrueName()
-                                            << "*)" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArray((" << R__TrueName(*(*field_iter))
+                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            }
                      } else {
-                        if ((m.Type())->Property() & G__BIT_ISENUM)
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << m.Name() << ", " << s << ");" << std::endl;
+                        if ( underling_type->isEnumeralType() )
+                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray(" << m.Name() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArray(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
                            }
                      }
                   }
-               } else if ((m.Type())->Property() & G__BIT_ISENUM) {
+               } else if ( underling_type->isEnumeralType() ) {
                   if (i == 0) {
-                     (*dictSrcOut) << "      void *ptr_" << m.Name() << " = (void*)&" << m.Name() << ";\n";
-                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << m.Name() << ");" << std::endl;
+                     (*dictSrcOut) << "      void *ptr_" << field_iter->getName().data() << " = (void*)&" << field_iter->getName().data() << ";\n";
+                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << field_iter->getName().data() << ");" << std::endl;
                   } else
-                     (*dictSrcOut) << "      R__b << (Int_t)" << m.Name() << ";" << std::endl;
+                     (*dictSrcOut) << "      R__b << (Int_t)" << field_iter->getName().data() << ";" << std::endl;
                } else {
                   if (isFloat16) {
                      if (i == 0)
-                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
+                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(*(*field_iter))
                                       << "=Float16_t(R_Dummy);}" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(m) << ");" << std::endl;
+                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(*(*field_iter)) << ");" << std::endl;
                   } else if (isDouble32) {
                      if (i == 0)
-                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(m)
+                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(*(*field_iter))
                                       << "=Double32_t(R_Dummy);}" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(m) << ");" << std::endl;
+                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(*(*field_iter)) << ");" << std::endl;
                   } else {
                      if (i == 0)
-                        (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(m) << ";" << std::endl;
+                        (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(*(*field_iter)) << ";" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(m) << ";" << std::endl;
+                        (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(*(*field_iter)) << ";" << std::endl;
                   }
                }
             } else {
                // we have an object...
 
                // check if object is a standard string
-               if (STLStringStreamer(m, i))
+               if (STLStringStreamer(*(*field_iter), i))
                   continue;
 
                // check if object is an STL container
-               if (STLContainerStreamer(m, i))
+               if (STLContainerStreamer(*(*field_iter), i))
                   continue;
 
                // handle any other type of objects
-               if (m.Property() & G__BIT_ISARRAY &&
-                   m.Property() & G__BIT_ISPOINTER) {
-                  int s = 1;
-                  for (int dim = 0; dim < m.ArrayDim(); dim++)
-                     s *= m.MaxIndex(dim);
+               if (type.getTypePtr()->isConstantArrayType() &&
+                   type.getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType()) 
+               {
+                  const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+                  int s = R__GetFullArrayLength(arrayType);
+
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
                      decli = 1;
                   }
                   (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0)
-                     (*dictSrcOut) << "         R__b >> " << GetNonConstMemberName(m);
+                     (*dictSrcOut) << "         R__b >> " << GetNonConstMemberName(*(*field_iter));
                   else {
-                     if (m.Type()->IsBase("TObject") && m.Type()->IsBase("TArray"))
-                        (*dictSrcOut) << "         R__b << (TObject*)" << m.Name();
+                     if (R__IsBase(*(*field_iter),"TObject") && R__IsBase(*(*field_iter),"TArray"))
+                        (*dictSrcOut) << "         R__b << (TObject*)" << field_iter->getName().data();
                      else
-                        (*dictSrcOut) << "         R__b << " << GetNonConstMemberName(m);
+                        (*dictSrcOut) << "         R__b << " << GetNonConstMemberName(*(*field_iter));
                   }
-                  WriteArrayDimensions(m.ArrayDim());
+                  WriteArrayDimensions(field_iter->getType());
                   (*dictSrcOut) << "[R__i];" << std::endl;
-               } else if (m.Property() & G__BIT_ISPOINTER) {
+               } else if (type.getTypePtr()->isPointerType()) {
                   // This is always good. However, in case of a pointer
                   // to an object that is guarenteed to be there and not
                   // being referenced by other objects we could use
                   //     xx->Streamer(b);
                   // Optimize this with control statement in title.
-                  if (PointerToPointer(m)) {
+                  if (isPointerToPointer(*(*field_iter))) {
                      if (i == 0) {
-                        Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", cl.Fullname(), m.Name());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << m.Name() << ");" << std::endl;
+                        Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
+                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << m.Name() << ", __COUNTER__);";
+                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);";
                      }
                   } else {
-                     if (strstr(m.Type()->Name(), "TClonesArray")) {
-                        (*dictSrcOut) << "      " << m.Name() << "->Streamer(R__b);" << std::endl;
+                     if (R__GetQualifiedName(*R__GetUnderlyingType(field_iter->getType()),*(*field_iter)) == "TClonesArray") {
+                        (*dictSrcOut) << "      " << field_iter->getName().data() << "->Streamer(R__b);" << std::endl;
                      } else {
                         if (i == 0) {
                            // The following:
-                           //    if (strncmp(m.Title(),"->",2) != 0) fprintf(fp, "      delete %s;\n", GetNonConstMemberName(m).c_str());
+                           //    if (strncmp(m.Title(),"->",2) != 0) fprintf(fp, "      delete %s;\n", GetNonConstMemberName(*(*field_iter)).c_str());
                            // could be used to prevent a memory leak since the next statement could possibly create a new object.
                            // In the TStreamerInfo based I/O we made the previous statement conditional on TStreamerInfo::CanDelete
                            // to allow the user to prevent some inadvisable deletions.  So we should be offering this flexibility
                            // here to and should not (technically) rely on TStreamerInfo for it, so for now we leave it as is.
                            // Note that the leak should happen from here only if the object is stored in an unsplit object
                            // and either the user request an old branch or the streamer has been customized.
-                           (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(m) << ";" << std::endl;
+                           (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(*(*field_iter)) << ";" << std::endl;
                         } else {
-                           if (m.Type()->IsBase("TObject") && m.Type()->IsBase("TArray"))
-                              (*dictSrcOut) << "      R__b << (TObject*)" << m.Name() << ";" << std::endl;
+                           if (R__IsBase(*(*field_iter),"TObject") && R__IsBase(*(*field_iter),"TArray"))
+                              (*dictSrcOut) << "      R__b << (TObject*)" << field_iter->getName().data() << ";" << std::endl;
                            else
-                              (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(m) << ";" << std::endl;
+                              (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(*(*field_iter)) << ";" << std::endl;
                         }
                      }
                   }
-               } else if (m.Property() & G__BIT_ISARRAY) {
-                  int s = 1;
-                  for (int dim = 0; dim < m.ArrayDim(); dim++)
-                     s *= m.MaxIndex(dim);
+               } else if (type.getTypePtr()->isArrayType()) {
+                  const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+                  int s = R__GetFullArrayLength(arrayType);
+
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
                      decli = 1;
                   }
                   (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
-                  const char *mTypeName = m.Type()->Name();
+                  std::string mTypeNameStr;
+                  R__GetQualifiedName(mTypeNameStr,field_iter->getType(),*(*field_iter));
+                  const char *mTypeName = mTypeNameStr.c_str();
                   const char *constwd = "const ";
                   if (strncmp(constwd,mTypeName,strlen(constwd))==0) {
                      mTypeName += strlen(constwd);
-                     (*dictSrcOut) << "         const_cast< " << mTypeName << " &>(" << m.Name();
-                     WriteArrayDimensions(m.ArrayDim());
+                     (*dictSrcOut) << "         const_cast< " << mTypeName << " &>(" << field_iter->getName().data();
+                     WriteArrayDimensions(field_iter->getType());
                      (*dictSrcOut) << "[R__i]).Streamer(R__b);" << std::endl;
                   } else {
-                     (*dictSrcOut) << "         " << GetNonConstMemberName(m);
-                     WriteArrayDimensions(m.ArrayDim());
+                     (*dictSrcOut) << "         " << GetNonConstMemberName(*(*field_iter));
+                     WriteArrayDimensions(field_iter->getType());
                      (*dictSrcOut) << "[R__i].Streamer(R__b);" << std::endl;
                   }
                } else {
-                  if ((m.Type())->HasMethod("Streamer"))
-                     (*dictSrcOut) << "      " << GetNonConstMemberName(m) << ".Streamer(R__b);" << std::endl;
+                  if (ClassInfo__HasMethod(R__GetUnderlyingRecordDecl(field_iter->getType()),"Streamer")) 
+                     (*dictSrcOut) << "      " << GetNonConstMemberName(*(*field_iter)) << ".Streamer(R__b);" << std::endl;
                   else {
-                     (*dictSrcOut) << "      R__b.StreamObject(&(" << m.Name() << "),typeid("
-                                   << m.Type()->Name() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
+                     (*dictSrcOut) << "      R__b.StreamObject(&(" << field_iter->getName().data() << "),typeid("
+                                   << field_iter->getName().data() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
                      //VP                     if (i == 0)
                      //VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
-                     //VP                                  cl.Fullname(), m.Name());
+                     //VP                                  fullname, field_iter->getName().data());
                      //VP                     fprintf(fp, "      //%s.Streamer(R__b);\n", m.Name());
                   }
                }
@@ -4156,32 +4693,44 @@ void WriteStreamer(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void WriteAutoStreamer(G__ClassInfo &cl)
+void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl)
 {
 
    // Write Streamer() method suitable for automatic schema evolution.
 
-   bool add_template_keyword = NeedTemplateKeyword(cl);
-
-   G__BaseClassInfo base(cl);
-   while (base.Next()) {
-      if (IsSTLContainer(base)) {
-         RStl::Instance().GenerateTClassFor( base.Name(), R__SlowClassSearch( base.Name() ) );
+   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (clxx == 0) return;
+   
+   bool add_template_keyword = NeedTemplateKeyword(clxx);
+   
+   // We also need to look at the base classes.
+   for(clang::CXXRecordDecl::base_class_const_iterator iter = clxx->bases_begin(), end = clxx->bases_end();
+       iter != end;
+       ++iter)
+   {
+      int k = IsSTLContainer(*iter);
+      if (k!=0) {
+         RStl::Instance().GenerateTClassFor( cl.GetRequestedName(), iter->getType()->getAsCXXRecordDecl () );
       }
    }
+   
+   string fullname;
+   R__GetQualifiedName(fullname,cl);
+   
+   string clsname = fullname;
 
-   G__ClassInfo ns = cl.EnclosingSpace();
-   string clsname = cl.Fullname();
+   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(clxx->getEnclosingNamespaceContext());
    string nsname;
-   if (ns.IsValid()) {
-      nsname = ns.Fullname();
+   if (nsdecl && nsdecl!=cl ) {
+      R__GetQualifiedName(nsname,*nsdecl);
       clsname.erase (0, nsname.size() + 2);
    }
-
+   
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
       G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
-      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(cl);
+      G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
+      enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(clinfo);
    }
 
    (*dictSrcOut) << "//_______________________________________"
@@ -4189,11 +4738,11 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
                  << "{" << std::endl
-                 << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl
+                 << "   // Stream an object of class " << fullname << "." << std::endl << std::endl
                  << "   if (R__b.IsReading()) {" << std::endl
-                 << "      R__b.ReadClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
+                 << "      R__b.ReadClassBuffer(" << fullname << "::Class(),this);" << std::endl
                  << "   } else {" << std::endl
-                 << "      R__b.WriteClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
+                 << "      R__b.WriteClassBuffer(" << fullname << "::Class(),this);" << std::endl
                  << "   }" << std::endl
                  << "}" << std::endl << std::endl;
 
@@ -4201,33 +4750,6 @@ void WriteAutoStreamer(G__ClassInfo &cl)
       (*dictSrcOut) << "} // namespace " << nsname << std::endl;
       --enclSpaceNesting;
    }
-}
-
-//______________________________________________________________________________
-void WriteStreamerBases(G__ClassInfo &cl)
-{
-   // Write Streamer() method for base classes of cl (unused)
-
-   (*dictSrcOut) << "//_______________________________________"
-                 << "_______________________________________" << std::endl
-                 << "void " << cl.Fullname() << "_StreamerBases(TBuffer &R__b, void *pointer)" << std::endl
-                 << "{" << std::endl
-                 << "   // Stream base classes of class " << cl.Fullname() << "." << std::endl << std::endl
-                 << "   " << cl.Fullname() << " *obj = (" << cl.Fullname() << "*)pointer;" << std::endl
-                 << "   if (R__b.IsReading()) {" << std::endl;
-   G__BaseClassInfo br(cl);
-   while (br.Next())
-      if (br.HasMethod("Streamer")) {
-         (*dictSrcOut) << "      obj->" << br.Name() << "::Streamer(R__b);" << std::endl;
-      }
-   (*dictSrcOut) << "   } else {" << std::endl;
-   G__BaseClassInfo bw(cl);
-   while (bw.Next())
-      if (bw.HasMethod("Streamer")) {
-         (*dictSrcOut) << "      obj->" << bw.Name() << "::Streamer(R__b);" << std::endl;
-      }
-   (*dictSrcOut) << "   }" << std::endl
-                 << "}" << std::endl << std::endl;
 }
 
 //______________________________________________________________________________
@@ -4299,7 +4821,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       int k = IsSTLContainer( *(*field_iter) );
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
-         //          fprintf(stderr," %s\n",m.Type()->TrueName() );
+         //          fprintf(stderr," %s\n",R__TrueName(*(*field_iter)) );
          RStl::Instance().GenerateTClassFor( "", R__SlowClassSearch(type_name.c_str()) );
       }      
    }
@@ -4591,13 +5113,12 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
    G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
 
    if (ClassInfo__HasMethod(cl,"Streamer")) {
-      //WriteStreamerBases(cl);
       if (clinfo.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          if ((cl.RequestStreamerInfo() /*G__AUTOSTREAMER*/)) {
-            WriteAutoStreamer(clinfo);
+            WriteAutoStreamer(cl);
          } else {
-            WriteStreamer(clinfo);
+            WriteStreamer(cl);
          }
       } else
          Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", clinfo.Fullname());
@@ -6206,15 +6727,15 @@ int main(int argc, char **argv)
       for( ; iter != end; ++iter) 
       {
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
+            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             continue;
          }
          if (iter->RequestOnlyTClass()) {
-            fprintf(stderr,"Skipping %s\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
+            fprintf(stderr,"Skipping %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             // For now delay those for later.
             continue;
          }
-         fprintf(stderr,"Seeing %s\n",R__GetQualifiedName(iter->GetRecordDecl()).c_str());
+         fprintf(stderr,"Seeing %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
             std::string qualname( CRD->getQualifiedNameAsString() );

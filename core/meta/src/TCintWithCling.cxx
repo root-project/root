@@ -1991,6 +1991,8 @@ const char* tcling_DataMemberInfo::Title() const
 
 const char* tcling_DataMemberInfo::ValidArrayIndex() const
 {
+   // A clang version of the underlying CINT routine has been ported in
+   // rootcling.cxx
    return fDataMemberInfo->ValidArrayIndex();
 }
 

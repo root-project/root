@@ -26,7 +26,7 @@ using namespace TClassEdit;
 // From the not-existing yet rootcint.h
 void WriteClassInit(const RScanner::AnnotatedRecordDecl &decl);
 void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &decl);
-std::string R__GetQualifiedName(const clang::NamedDecl *cl);
+std::string R__GetQualifiedName(const clang::NamedDecl &cl);
 
 int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=0);
 
@@ -59,7 +59,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
 
    if (templateCl == 0) {
       Error("RStl::GenerateTClassFor","%s not in a template",
-            R__GetQualifiedName(stlclass).c_str());      
+            R__GetQualifiedName(*stlclass).c_str());      
    }
    
    
@@ -102,7 +102,7 @@ void ROOT::RStl::Print()
    fprintf(stderr,"ROOT::RStl singleton\n");
    list_t::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
-      fprintf(stderr, "need TClass for %s\n", R__GetQualifiedName((*iter)).c_str());
+      fprintf(stderr, "need TClass for %s\n", R__GetQualifiedName(*(*iter)).c_str());
    }
 }
 
@@ -297,7 +297,7 @@ void ROOT::RStl::WriteStreamer(FILE *file)
    list_t::iterator iter;
    G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
-      cl.Init( R__GetQualifiedName((*iter)).c_str() );
+      cl.Init( R__GetQualifiedName(*(*iter)).c_str() );
       WriteStreamer(file,cl);
    }
 }
