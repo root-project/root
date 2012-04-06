@@ -484,13 +484,13 @@ namespace cling {
       llvm::Module* module = m_IncrParser->GetCodeGenerator()->GetModule();
       if (module) {
         if (tryLinker(filename, getOptions(), module))
-          return 0;
+          return true;
         if (filename.compare(0, 3, "lib") == 0) {
           // starts with "lib", try without (the llvm::Linker forces
           // a "lib" in front, which makes it liblib...
           if (tryLinker(filename.substr(3, std::string::npos),
                         getOptions(), module))
-            return 0;
+            return true;
         }
       }
     }
