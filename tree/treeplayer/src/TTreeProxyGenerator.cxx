@@ -495,6 +495,74 @@ namespace ROOT {
       }
    }
 
+   void TTreeProxyGenerator::AddMissingClassAsEnum(const char *clname, Bool_t isscope)
+   {
+      // Generate an enum for a given type if it is not known in the list of class
+      // unless the type itself a template.
+      
+      if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
+         
+         TObject *obj = fListOfForwards.FindObject(clname);
+         if (obj) return;
+         
+         // The class does not exist, let's create it if ew can.
+         if (clname[strlen(clname)-1]=='>') {
+            // Template instantiation.
+            fListOfForwards.Add(new TNamed(clname,TString::Format("template <> class %s { public: operator int() { return 0; } };\n", clname).Data()));
+         } else if (isscope) {
+            // a scope 
+            
+         } else {
+            // Class or enum we know nothing about, let's assume it is an enum.
+            fListOfForwards.Add(new TNamed(clname,TString::Format("enum %s { kDefault_%s };\n", clname, clname).Data()));
+         }
+      }
+   }
+
+   void TTreeProxyGenerator::CheckForMissingClass(const char *clname)
+   {
+      // Check if the template parameter refers to an enum and/or a missing class (we can't tell those 2 apart unless
+      // the name as template syntax).
+      
+      UInt_t len = strlen(clname);
+      UInt_t nest = 0;
+      UInt_t last = 0;
+      //Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
+      
+      for (UInt_t i = 0; i < len; ++i) {
+         switch (clname[i]) {
+            case ':':
+               if (nest == 0 && clname[i+1] == ':') {
+                  TString incName(clname, i);
+                  AddMissingClassAsEnum(incName.Data(), kTRUE);
+                  //istemplate = kFALSE;
+               }
+               break;
+            case '<':
+               ++nest;
+               if (nest == 1) last = i + 1;
+               break;
+            case '>':
+               if (nest == 0) return; // The name is not well formed, give up.
+               --nest; /* intentional fall throught to the next case */
+            case ',':
+               if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
+                  TString incName(clname + last, i - last);
+                  incName = TClassEdit::ShortType(incName.Data(), TClassEdit::kDropTrailStar | TClassEdit::kLong64);
+                  if (clname[i] == '>' && nest == 1) incName.Append(">");
+                  
+                  if (isdigit(incName[0])) {
+                     // Not a class name, nothing to do.
+                  } else {
+                     AddMissingClassAsEnum(incName.Data(),kFALSE);
+                  }
+                  last = i + 1;
+               }
+         }
+      }
+      AddMissingClassAsEnum(TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),kFALSE);
+   }
+   
 static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
 {
    TString cname = branch->GetClonesName();
@@ -817,6 +885,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                   TClass *valueClass = cl->GetCollectionProxy()->GetValueClass();
                   if (valueClass) cname = valueClass->GetName();
                   else {
+                     CheckForMissingClass(cname);
                      proxyTypeName = Form("TStlSimpleProxy<%s >", cl->GetName());
 //                   AddPragma(Form("#pragma create TClass %s;\n", cl->GetName()));
                      if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
@@ -1257,6 +1326,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                if (cl->GetCollectionProxy()->GetValueClass()) {
                   cl = cl->GetCollectionProxy()->GetValueClass();
                } else {
+                  CheckForMissingClass(cl->GetName());
                   type = Form("TStlSimpleProxy<%s >", cl->GetName());
                   AddHeader(cl);
                   if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
@@ -1271,6 +1341,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                      ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                   desc = new TBranchProxyClassDescriptor(cl->GetName(), beinfo, branchname,
                      isclones, branch->GetSplitLevel(),containerName);
+                  info = beinfo;
                } else {
                   type = Form("TObjProxy<%s >",cl->GetName());
                }
