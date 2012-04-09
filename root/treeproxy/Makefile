@@ -2,13 +2,14 @@
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
-	withfriend.h vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h 
+	withfriend.h vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h \
+	btagobjsSel.h
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += search reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain
+TEST_TARGETS += search reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain btagobjsProxy
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -162,4 +163,14 @@ friendchain.log: runfriendchain.C vertex.C make_chains.cxx  $(CORELIBS)
 		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 friendchain: friendchain.log
+	$(TestDiff)
+	
+btagobjsSel.h: btagobjsScript.h btagobjsScript.cxx $(CORELIBS) runbtagobjs.C btagobjs.root
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runbtagobjs.C(4)' > btagProxySel_h.create.log 2>&1 || handleError.sh --result=$$? --log=btagProxySel_h.create.log --test=$@ --rm=$@
+
+btagobjsProxy.clog: btagobjsSel_h.$(DllSuf) $(CORELIBS) btagobjs.root runbtagobjs.C 
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runbtagobjs.C(5)'  > $@ 2>&1 ; result=$$? ; \
+		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
+	
+btagobjsProxy: btagobjsProxy.clog
 	$(TestDiff)
