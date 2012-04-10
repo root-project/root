@@ -64,7 +64,7 @@ Reflex::TypeTemplateName::TypeTemplateName(const char* name,
    fTypeTemplateImpl(typeTemplateImpl) {
    // Constructor.
    fThisTypeTemplate = new TypeTemplate(this);
-   sTypeTemplates().insert(std::make_pair<const std::string* const, TypeTemplate>(&fName, *fThisTypeTemplate));
+   sTypeTemplates().insert(std::pair<const std::string* const, TypeTemplate>(&fName, *fThisTypeTemplate));
    sTypeTemplateVec().push_back(*fThisTypeTemplate);
 }
 

@@ -439,7 +439,7 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
    fSamplingEventList.at( treeIdx ).reserve( nEvts );
    fSamplingSelected.at( treeIdx ).reserve( fSamplingNEvents.at(treeIdx) );
    for (Long64_t ievt=0; ievt<nEvts; ievt++) {
-      std::pair<Float_t,Long64_t> *p = new std::pair<Float_t,Long64_t>(std::make_pair<Float_t,Long64_t>(1.0,ievt));
+      std::pair<Float_t,Long64_t> *p = new std::pair<Float_t,Long64_t>(1.0,ievt);
       fSamplingEventList.at( treeIdx ).push_back( p );
    }
 

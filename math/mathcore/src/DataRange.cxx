@@ -82,12 +82,12 @@ std::pair<double, double> DataRange::operator() (unsigned int icoord,unsigned in
       // return [-inf +inf] for the other dimension 
       double xmin = 0; double xmax = 0; 
       GetInfRange(xmin,xmax);
-      return std::make_pair<double,double>(xmin,xmax);     
+      return std::make_pair(xmin,xmax);     
    }                                               
    else { 
       // in case the irange-th does not exist for the given coordinate
       MATH_ERROR_MSG("DataRange::operator()","invalid range number - return (0,0)");
-      return std::make_pair<double,double>(0,0);     
+      return std::pair<double,double>(0,0);     
    }
 }  
 

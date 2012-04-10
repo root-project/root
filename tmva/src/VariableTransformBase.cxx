@@ -132,42 +132,42 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
 	    variables.Remove(0,1); // remove "V"
 	    if( variables.Length() == 0 ){
 	       for( UInt_t ivar = 0; ivar < nvars; ++ivar ) {
-		  fGet.push_back( std::make_pair<Char_t,UInt_t>('v',ivar) );
+		  fGet.push_back( std::pair<Char_t,UInt_t>('v',ivar) );
 		  varIndices.insert( ivar );
 	       }
 	    } else {
 	       UInt_t idx = variables.Atoi();
 	       if( idx >= nvars )
 		  Log() << kFATAL << "You selected variable with index : " << idx << " of only " << nvars << " variables." << Endl;
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('v',idx) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('v',idx) );
 	       varIndices.insert( idx );
 	    }
 	 }else if( variables.BeginsWith("T") ) {       // targets
 	    variables.Remove(0,1); // remove "T"
 	    if( variables.Length() == 0 ){
 	       for( UInt_t itgt = 0; itgt < ntgts; ++itgt ) {
-		  fGet.push_back( std::make_pair<Char_t,UInt_t>('t',itgt) );
+		  fGet.push_back( std::pair<Char_t,UInt_t>('t',itgt) );
 		  tgtIndices.insert( itgt );
 	       }
 	    } else {
 	       UInt_t idx = variables.Atoi();
 	       if( idx >= ntgts )
 		  Log() << kFATAL << "You selected target with index : " << idx << " of only " << ntgts << " targets." << Endl;
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('t',idx) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('t',idx) );
 	       tgtIndices.insert( idx );
 	    }
 	 }else if( variables.BeginsWith("S") ) {       // spectators
 	    variables.Remove(0,1); // remove "S"
 	    if( variables.Length() == 0 ){
 	       for( UInt_t ispct = 0; ispct < nspcts; ++ispct ) {
-		  fGet.push_back( std::make_pair<Char_t,UInt_t>('s',ispct) );
+		  fGet.push_back( std::pair<Char_t,UInt_t>('s',ispct) );
 		  spctIndices.insert( ispct );
 	       }
 	    } else {
 	       UInt_t idx = variables.Atoi();
 	       if( idx >= nspcts )
 		  Log() << kFATAL << "You selected spectator with index : " << idx << " of only " << nspcts << " spectators." << Endl;
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('s',idx) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('s',idx) );
 	       spctIndices.insert( idx );
 	    }
 	 }else if( TString("REARRANGE").BeginsWith(variables) ) {       // toggle rearrange sorting (take sort order given in the options)
@@ -180,21 +180,21 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
 	 Int_t numIndices = varIndices.size()+tgtIndices.size()+spctIndices.size();
 	 for( UInt_t ivar = 0; ivar < nvars; ++ivar ) { // search all variables
 	    if( fDsi.GetVariableInfo( ivar ).GetLabel() == variables ) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('v',ivar) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('v',ivar) );
 	       varIndices.insert( ivar );
 	       break;
 	    }
 	 }
 	 for( UInt_t itgt = 0; itgt < ntgts; ++itgt ) { // search all targets
 	    if( fDsi.GetTargetInfo( itgt ).GetLabel() == variables ) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('t',itgt) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('t',itgt) );
 	       tgtIndices.insert( itgt );
 	       break;
 	    }
 	 }
 	 for( UInt_t ispct = 0; ispct < nspcts; ++ispct ) { // search all spectators
 	    if( fDsi.GetSpectatorInfo( ispct ).GetLabel() == variables ) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('s',ispct) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('s',ispct) );
 	       spctIndices.insert( ispct );
 	       break;
 	    }
@@ -210,29 +210,29 @@ void TMVA::VariableTransformBase::SelectInput( const TString& _inputVariables, B
    if( putIntoVariables ) {
       Int_t idx = 0;
       for( SelectedIndices::iterator it = varIndices.begin(), itEnd = varIndices.end(); it != itEnd; ++it ) {
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('v',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('v',idx) );
 	 ++idx;
       }
       for( SelectedIndices::iterator it = tgtIndices.begin(), itEnd = tgtIndices.end(); it != itEnd; ++it ) {
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('t',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('t',idx) );
 	 ++idx;
       }
       for( SelectedIndices::iterator it = spctIndices.begin(), itEnd = spctIndices.end(); it != itEnd; ++it ) {
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('s',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('s',idx) );
 	 ++idx;
       }
    }else {
       for( SelectedIndices::iterator it = varIndices.begin(), itEnd = varIndices.end(); it != itEnd; ++it ) {
 	 Int_t idx = (*it);
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('v',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('v',idx) );
       }
       for( SelectedIndices::iterator it = tgtIndices.begin(), itEnd = tgtIndices.end(); it != itEnd; ++it ) {
 	 Int_t idx = (*it);
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('t',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('t',idx) );
       }
       for( SelectedIndices::iterator it = spctIndices.begin(), itEnd = spctIndices.end(); it != itEnd; ++it ) {
 	 Int_t idx = (*it);
-	 fPut.push_back( std::make_pair<Char_t,UInt_t>('s',idx) );
+	 fPut.push_back( std::pair<Char_t,UInt_t>('s',idx) );
       }
 
       // if sorting is turned on, fGet should have the indices sorted as fPut has them.
@@ -693,7 +693,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t ivar = 0; ivar < nvars; ++ivar ) { // search all variables
 	    if( fDsi.GetVariableInfo( ivar ).GetLabel() == label ||
 	        fDsi.GetVariableInfo( ivar ).GetExpression() == expression) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('v',ivar) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('v',ivar) );
 	       break;
 	    }
 	 }
@@ -701,7 +701,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t itgt = 0; itgt < ntgts; ++itgt ) { // search all targets
 	    if( fDsi.GetTargetInfo( itgt ).GetLabel() == label ||
 	        fDsi.GetTargetInfo( itgt ).GetExpression() == expression ) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('t',itgt) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('t',itgt) );
 	       break;
 	    }
 	 }
@@ -709,7 +709,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t ispct = 0; ispct < nspcts; ++ispct ) { // search all spectators
 	    if( fDsi.GetSpectatorInfo( ispct ).GetLabel() == label ||
 	        fDsi.GetSpectatorInfo( ispct ).GetExpression() == expression ) {
-	       fGet.push_back( std::make_pair<Char_t,UInt_t>('s',ispct) );
+	       fGet.push_back( std::pair<Char_t,UInt_t>('s',ispct) );
 	       break;
 	    }
 	 }
@@ -741,7 +741,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t ivar = 0; ivar < nvars; ++ivar ) { // search all variables
 	    if( fDsi.GetVariableInfo( ivar ).GetLabel() == label ||
 	        fDsi.GetVariableInfo( ivar ).GetExpression() == expression ) {
-	       fPut.push_back( std::make_pair<Char_t,UInt_t>('v',ivar) );
+	       fPut.push_back( std::pair<Char_t,UInt_t>('v',ivar) );
 	       break;
 	    }
 	 }
@@ -749,7 +749,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t itgt = 0; itgt < ntgts; ++itgt ) { // search all targets
 	    if( fDsi.GetTargetInfo( itgt ).GetLabel() == label ||
 	        fDsi.GetTargetInfo( itgt ).GetExpression() == expression ) {
-	       fPut.push_back( std::make_pair<Char_t,UInt_t>('t',itgt) );
+	       fPut.push_back( std::pair<Char_t,UInt_t>('t',itgt) );
 	       break;
 	    }
 	 }
@@ -757,7 +757,7 @@ void TMVA::VariableTransformBase::ReadFromXML( void* selnode )
 	 for( UInt_t ispct = 0; ispct < nspcts; ++ispct ) { // search all spectators
 	    if( fDsi.GetSpectatorInfo( ispct ).GetLabel() == label ||
 	        fDsi.GetSpectatorInfo( ispct ).GetExpression() == expression ) {
-	       fPut.push_back( std::make_pair<Char_t,UInt_t>('s',ispct) );
+	       fPut.push_back( std::pair<Char_t,UInt_t>('s',ispct) );
 	       break;
 	    }
 	 }

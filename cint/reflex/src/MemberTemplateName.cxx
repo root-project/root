@@ -64,7 +64,7 @@ Reflex::MemberTemplateName::MemberTemplateName(const char* name,
    fMemberTemplateImpl(memberTemplateImpl) {
    // Constructor.
    fThisMemberTemplate = new MemberTemplate(this);
-   sMemberTemplates().insert(std::make_pair<const std::string* const, MemberTemplate>(&fName, *fThisMemberTemplate));
+   sMemberTemplates().insert(std::pair<const std::string* const, MemberTemplate>(&fName, *fThisMemberTemplate));
    sMemberTemplateVec().push_back(*fThisMemberTemplate);
 }
 
