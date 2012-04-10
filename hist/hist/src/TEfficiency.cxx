@@ -1522,8 +1522,8 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
 
    //check for unit weights
    if(!option.Contains("w")) {      
-      Double_t statpass[10];
-      Double_t stattotal[10];
+      Double_t statpass[TH1::kNstat];
+      Double_t stattotal[TH1::kNstat];
 
       pass.GetStats(statpass);
       total.GetStats(stattotal);
@@ -3129,7 +3129,7 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
 	 fFunctions->Delete();
 
       //check whether histogram is filled with weights
-      Double_t statpass[10];
+      Double_t statpass[TH1::kNstat];
       rPassed.GetStats(statpass);
       //require: sum of weights == sum of weights^2
       if(TMath::Abs(statpass[0]-statpass[1]) > 1e-5)
@@ -3314,7 +3314,7 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 	 fFunctions->Delete();
 
       //check whether histogram is filled with weights
-      Double_t stattotal[10];
+      Double_t stattotal[TH1::kNstat];
       rTotal.GetStats(stattotal);
       //require: sum of weights == sum of weights^2
       if(TMath::Abs(stattotal[0]-stattotal[1]) > 1e-5)

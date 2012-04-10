@@ -429,7 +429,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //entries
    Bool_t bEffective = false;
    //compare sum of weights with sum of squares of weights
-   Double_t stats[10];
+   Double_t stats[TH1::kNstat];
    pass->GetStats(stats);
    if (TMath::Abs(stats[0] -stats[1]) > 1e-6)
       bEffective = true;
