@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/textinout package
 ############################################################################
 
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx 
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx 
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/textinput/*.cpp)
 
 ROOT_GENERATE_DICTIONARY(G__TextInput *.h LINKDEF LinkDef.h)

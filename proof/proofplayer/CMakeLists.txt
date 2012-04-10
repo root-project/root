@@ -6,12 +6,12 @@
 ROOT_USE_PACKAGE(proof/proof)
 ROOT_USE_PACKAGE(tree/treeplayer)
 
-file(GLOB headers inc/*.h)
+ROOT_GLOB_HEADERS(headers inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TProofDraw.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefDraw.h)
 
-file(GLOB sources src/*.cxx)
+ROOT_GLOB_SOURCES(sources src/*.cxx)
 list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TProofDraw.cxx)
 
 

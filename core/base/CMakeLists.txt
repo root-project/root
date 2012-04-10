@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-file(GLOB headers1 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
+ROOT_GLOB_HEADERS(headers1 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 set(headers3 GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h 
              TVirtualPerfStats.h TVirtualX.h TParameter.h 
              TVirtualAuth.h TFileInfo.h TFileCollection.h 
@@ -11,7 +11,7 @@ set(headers3 GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h
              TBase64.h)
 list(REMOVE_ITEM headers1 ${headers3})
 
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__Base1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__Base2 ${headers1} LINKDEF LinkDef2.h)

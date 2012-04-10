@@ -2,8 +2,8 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 if(BuildCling)
   add_definitions(-DR__WITH_CLING)

@@ -6,7 +6,7 @@
 ROOT_USE_PACKAGE(net/net)
 ROOT_USE_PACKAGE(io/io)
 
-file(GLOB headers inc/*.h)
+ROOT_GLOB_HEADERS(headers inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefAFS.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefRoot.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/DaemonUtils.h
@@ -14,7 +14,7 @@ list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDefAFS.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/AFSAuthTypes.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/TAFS.h)
 
-file(GLOB sources src/*.cxx)
+ROOT_GLOB_SOURCES(sources src/*.cxx)
 list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/DaemonUtils.cxx
                          ${CMAKE_CURRENT_SOURCE_DIR}/src/AFSAuth.cxx
                          ${CMAKE_CURRENT_SOURCE_DIR}/src/TAFS.cxx)

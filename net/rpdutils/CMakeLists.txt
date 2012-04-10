@@ -6,7 +6,7 @@
 ROOT_USE_PACKAGE(net/net)
 ROOT_USE_PACKAGE(net/auth)
 
-file(GLOB rpdutilsrcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_SOURCES(rpdutilsrcs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 list(REMOVE_ITEM rpdutilsrcs src/rpdpriv.cxx src/rpdconn.cxx)
 
 if(GLOBUS_FOUND)

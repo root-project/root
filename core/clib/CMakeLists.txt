@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/clib package
 ############################################################################
 
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 
 ROOT_GENERATE_DICTIONARY(G__Clib strlcpy.h snprintf.h LINKDEF LinkDef.h)
 

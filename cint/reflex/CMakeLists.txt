@@ -8,7 +8,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   ROOT_USE_PACKAGE(core/cont)  
   ROOT_USE_PACKAGE(cint/cint)
   
-  file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc 
+  ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc 
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Reflex/*.h 
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Reflex/Builder/*.h )
   list(REMOVE_ITEM headers Reflex/Builder/ReflexBuilder.h Reflex/Reflex.h 

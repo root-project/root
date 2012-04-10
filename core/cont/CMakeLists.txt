@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/cont package
 ############################################################################
 
-file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 ROOT_GENERATE_DICTIONARY(G__Cont *.h LINKDEF LinkDef.h)
 

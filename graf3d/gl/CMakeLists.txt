@@ -10,10 +10,10 @@ if(builtin_ftgl)
 endif()
 include_directories(${OPENGL_INCLUDE_DIR})
 
-file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 list(REMOVE_ITEM headers  gl2ps.h CsgOps.h TGLIncludes.h TGLWSIncludes.h TGLContextPrivate.h 
                      TGLMarchingCubes.h TKDEAdapter.h TGL5DPainter.h TKDEFGT.h TGLIsoMesh.h)
-file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 if(WIN32)
   list(REMOVE_ITEM headers TX11GL.h)

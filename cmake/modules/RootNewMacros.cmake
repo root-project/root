@@ -68,6 +68,34 @@ set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 include(CMakeMacroParseArguments)
 
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_GLOB_FILES( <variable> [REALTIVE path] [FILTER regexp] <sources> ...)
+#---------------------------------------------------------------------------------------------------
+macro(ROOT_GLOB_FILES variable filter)
+  PARSE_ARGUMENTS(ARG "RELATIVE" "" ${ARGN})  
+  if(ARG_RELATIVE)
+    file(GLOB sources RELATIVE ${ARG_RELATIVE} ${ARG_DEFAULT_ARGS})
+  else()
+    file(GLOB sources ${ARG_DEFAULT_ARGS})
+  endif()
+  foreach(s ${sources})
+    if(s MATCHES ${filter})
+      list(REMOVE_ITEM sources ${s})
+    endif()
+  endforeach()
+  set(${variable} ${sources} PARENT_SCOPE)
+endmacro()
+
+function(ROOT_GLOB_SOURCES variable)
+  ROOT_GLOB_FILES(${variable} "(^|/)G__" ${ARGN})
+endfunction()
+
+function(ROOT_GLOB_HEADERS variable)
+  ROOT_GLOB_FILES(${variable} "LinkDef" ${ARGN})
+endfunction()
+
+
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GET_SOURCES( <variable> cwd <sources> ...)
 #---------------------------------------------------------------------------------------------------

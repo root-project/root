@@ -12,8 +12,8 @@ if(WIN32)
   set(sources TXProofMgr.cxx TXSlave.cxx TXSocket.cxx TXSocketHandler.cxx TXHandler.cxx 
                ../proofd/src/XrdProofConn.cxx ../proofd/src/XrdProofPhyConn.cxx ../proofd/src/XProofProtUtils.cxx)
 else()
-  file(GLOB headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
-  file(GLOB sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+  ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+  ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 endif()
 
 include_directories(${XROOTD_INCLUDE_DIR})
