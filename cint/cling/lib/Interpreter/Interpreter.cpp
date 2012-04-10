@@ -400,6 +400,15 @@ namespace cling {
     return Declare(input, CO, D);
   }
 
+  Interpreter::CompilationResult
+  Interpreter::evaluate(const std::string& input, const Value** V /* = 0 */) {
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+
+    return Evaluate(input, CO, V);
+  }
+
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
     fname = createUniqueWrapper();
     input.insert(0, "void " + fname + "() {\n ");
@@ -494,7 +503,63 @@ namespace cling {
     return Interpreter::kFailure;
   }
 
-  
+  Interpreter::CompilationResult
+  Interpreter::Evaluate(const std::string& input, const CompilationOptions& CO,
+                        const Value** V /* = 0 */) {
+
+    Sema& TheSema = getCI()->getSema();
+
+    // Wrap the expression
+    std::string WrapperName;
+    std::string Wrapper = input;
+    WrapInput(Wrapper, WrapperName);
+
+    llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
+    m_IncrParser->Parse(Wrapper, DGRs);
+    assert((DGRs.size() || DGRs.size() > 2) && "Only FunctionDecl expected!");
+
+    // get the Type
+    FunctionDecl* TopLevelFD 
+      = dyn_cast<FunctionDecl>(DGRs.front().getSingleDecl());
+    assert(TopLevelFD && "No Decls Parsed?");
+    DeclContext* CurContext = TheSema.CurContext;
+    TheSema.CurContext = TopLevelFD;
+    ASTContext& Context(getCI()->getASTContext());
+    QualType RetTy;
+    // We expect only one expression statement 
+    if (CompoundStmt* CS = dyn_cast<CompoundStmt>(TopLevelFD->getBody())) {
+      assert((CS->size() || CS->size() > 2) && "Only one ExprStmt expected!");
+      
+      if (Expr* E = dyn_cast_or_null<Expr>(CS->body_back())) {
+        RetTy = E->getType();
+        if (!RetTy->isVoidType()) {
+          // Change the void function's return type
+          FunctionProtoType::ExtProtoInfo EPI;
+          QualType FuncTy = Context.getFunctionType(RetTy, /*ArgArray*/0,
+                                                    /*NumArgs*/0, EPI);
+          TopLevelFD->setType(FuncTy);
+          // add return stmt
+          Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
+          CS->setLastStmt(RetS);
+        }
+      }
+    }
+
+    TheSema.CurContext = CurContext;
+
+    // FIXME: Finish the transaction in better way
+    m_IncrParser->CompileAsIs("");
+
+    // get the result
+    llvm::GenericValue val;
+    RunFunction(WrapperName, &val);
+
+    if (V)
+      *V = new Value(val, RetTy.getTypePtrOrNull());
+
+    return Interpreter::kFailure;
+  }
+
   bool
   Interpreter::loadFile(const std::string& filename,
                         bool allowSharedLib /*=true*/)
