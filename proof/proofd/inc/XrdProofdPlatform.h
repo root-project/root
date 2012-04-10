@@ -23,6 +23,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_RConfig
+#include "RConfig.h"
+#endif
+
 // 32 or 64 bits
 #if ((defined(__hpux) && defined(__LP64__)) || \
      (defined(__alpha) && !defined(linux) && !defined(__VMS)) || \
