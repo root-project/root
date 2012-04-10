@@ -185,6 +185,16 @@ namespace cling {
     CompilationResult evaluate(const std::string& input, 
                                const Value** V = 0);
 
+    ///\brief Compiles input line, which contains only expressions and prints out
+    /// the result of its execution.
+    ///
+    /// The interface circumvents the most of the extra work necessary extract
+    /// the declarations from the input.
+    ///
+    /// @param[in] input - the input containing only expressions
+    ///
+    CompilationResult echo(const std::string& input);
+
 
     bool loadFile(const std::string& filename,
                   bool allowSharedLib = true);

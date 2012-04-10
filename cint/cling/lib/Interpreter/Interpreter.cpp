@@ -409,6 +409,15 @@ namespace cling {
     return Evaluate(input, CO, V);
   }
 
+  Interpreter::CompilationResult
+  Interpreter::echo(const std::string& input) {
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 1;
+
+    return Evaluate(input, CO);
+  }
+
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
     fname = createUniqueWrapper();
     input.insert(0, "void " + fname + "() {\n ");
