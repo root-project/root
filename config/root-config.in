@@ -446,6 +446,9 @@ freebsd* | openbsd* | linux*)
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
    done
+   if echo $configargs | grep 'c++11' > /dev/null 2>& 1 ; then
+      auxcflags="-std=c++11 $auxcflags"
+   fi
    ;;
 macosx*)
    for f in $features ; do
@@ -464,6 +467,9 @@ macosx*)
          fi
       fi
    done
+   if echo $configargs | grep 'c++11' > /dev/null 2>& 1 ; then
+      auxcflags="-std=c++11 $auxcflags"
+   fi
    ;;
 hpuxacc | hpuxia64acc)
    for f in $features ; do

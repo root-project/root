@@ -13,15 +13,18 @@ else
 OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
+ifeq (c++11,$(findstring c++11,$(ROOTBUILD)))
+CXX11         = -std=c++11
+endif
 
 # Compiler:
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -m32 -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS)
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11)
 CFLAGS        = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -m32 -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) \
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 -DG__STD_EXCEPTION

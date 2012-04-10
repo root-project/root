@@ -55,7 +55,6 @@ options="                    \
    enable_clarens            \
    enable_cling              \
    enable_dcache             \
-   enable_exceptions         \
    enable_explicitlink       \
    enable_fftw3              \
    enable_fitsio             \
@@ -1402,7 +1401,7 @@ FIRST argument one of the architecures given at the end of this message.
    FLAG            DESCRIPTION               DEFAULT
    --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)
    --bindir        Binary installation dir   (<prefix>/bin)
-   --build         Build configuration [debug, exceptions, ...],
+   --build         Build configuration [debug, c++11, ...],
                    overrides the ROOTBUILD shell variable
    --cintincdir    CINT interpeted headers   (<libdir>/cint)
    --datadir       Data installation dir     (<prefix>/share/root)
@@ -1447,7 +1446,6 @@ enable/disable options, prefix with either --enable- or --disable-
   clarens            Clarens RPC support, optionally used by PROOF
   cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
   dcache             dCache support, requires libdcap from DESY
-  exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
   fftw3              Fast Fourier Transform support, requires libfftw3
   fitsio             Read images and data from FITS files, requires cfitsio
@@ -2360,18 +2358,6 @@ fi
 hasxft="undef"
 if test "x$enable_xft" = "xyes"; then
    hasxft="define"
-fi
-
-######################################################################
-#
-### echo %%% Exceptions - compiler feature
-#
-if test "x$EXCEPTIONS" = "xno" ; then
-    enable_exceptions=no
-fi
-e=`echo $rootbuild | sed 's/.*exceptions.*/1/'`
-if test "x$e" = "x1" ; then
-    enable_exceptions=no
 fi
 
 ######################################################################
@@ -6491,7 +6477,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildmemstat@|$enable_memstat|"      \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
-    -e "s|@exceptions@|$enable_exceptions|"     \
     -e "s|@explicitlink@|$enable_explicitlink|" \
     -e "s|@gfalincdir@|$gfalincdir|"            \
     -e "s|@gfallib@|$gfallib|"                  \

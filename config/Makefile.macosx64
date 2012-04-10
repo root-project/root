@@ -38,20 +38,23 @@ endif
 ifeq ($(subst $(APPLE_CLANG),,12),12)
 CXX           = clang++
 CC            = clang
+ifeq (c++11,$(findstring c++11,$(ROOTBUILD)))
+CXX11         = -std=c++11
+endif
 else
 CXX           = g++
 CC            = gcc
 endif
 CXXFLAGS      = -m64 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                $(TARGETFLAGS)
+                $(TARGETFLAGS) $(CXX11)
 CFLAGS        = -m64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
 CINTCXXFLAGS  = -m64 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION $(TARGETFLAGS)
+                -DG__STD_EXCEPTION $(TARGETFLAGS) $(CXX11)
 CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
