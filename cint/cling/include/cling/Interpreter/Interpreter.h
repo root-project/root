@@ -205,8 +205,6 @@ namespace cling {
     bool isPrintingAST() { return m_PrintAST; }
     void enablePrintAST(bool print = true);
     
-    void dumpAST(bool showAST = true, int last = -1);
-    
     clang::CompilerInstance* getCI() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));

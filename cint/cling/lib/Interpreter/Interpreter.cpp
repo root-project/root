@@ -708,61 +708,6 @@ namespace cling {
     m_PrintAST = !m_PrintAST;
   }
 
-  void Interpreter::dumpAST(bool showAST, int last) {
-    Decl* D = m_LastDump;
-    PrintingPolicy Policy = m_IncrParser->getCI()->getASTContext().getPrintingPolicy();
-    
-    if (!D && last == -1 ) {
-      fprintf(stderr, "No last dump found! Assuming ALL \n");
-      last = 0;
-      showAST = false;        
-    }
-    
-    Policy.Dump = showAST;
-    
-    if (last == -1) {
-      while ((D = D->getNextDeclInContext())) {
-        D->print(llvm::errs(), Policy);
-      }
-    }
-    else if (last == 0) {
-      m_IncrParser->getCI()->getASTContext().getTranslationUnitDecl()->print(llvm::errs(), Policy);
-    } else {
-      // First Decl to print
-      Decl *FD = m_IncrParser->getFirstTopLevelDecl();
-      Decl *LD = FD;
-      
-      // FD and LD are first
-      
-      Decl *NextLD = 0;
-      for (int i = 1; i < last; ++i) {
-        NextLD = LD->getNextDeclInContext();
-        if (NextLD) {
-          LD = NextLD;
-        }
-      }
-      
-      // LD is last Decls after FD: [FD x y z LD a b c d]
-      
-      while ((NextLD = LD->getNextDeclInContext())) {
-        // LD not yet at end: move window
-        FD = FD->getNextDeclInContext();
-        LD = NextLD;
-      }
-      
-      // Now LD is == getLastDeclinContext(), and FD is last decls before
-      // LD is last Decls after FD: [x y z a FD b c LD]
-      
-      while (FD) {
-        FD->print(llvm::errs(), Policy);
-        fprintf(stderr, "\n"); // New line for every decl
-        FD = FD->getNextDeclInContext();
-      }        
-    }
-    
-    m_LastDump = m_IncrParser->getLastTopLevelDecl();     
-  }
-
   void Interpreter::runStaticInitializersOnce() const {
     // Forward to ExecutionContext; should not be called by
     // anyone except for IncrementalParser.
