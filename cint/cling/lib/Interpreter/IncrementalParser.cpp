@@ -172,6 +172,30 @@ namespace cling {
     return Result;
   }
 
+  IncrementalParser::EParseResult
+  IncrementalParser::Compile(llvm::StringRef input, 
+                             const CompilationOptions& Opts) {
+
+    // Set the state of the chained consumer
+    if (Opts.DeclarationExtraction)
+      m_Consumer->EnableConsumer(ChainedConsumer::kDeclExtractor);
+
+    if (Opts.ValuePrinting)
+      m_Consumer->EnableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
+
+    if (Opts.DynamicScoping)
+      m_Consumer->EnableConsumer(ChainedConsumer::kEvaluateTSynthesizer);
+
+    if (Opts.Debug)
+      m_Consumer->EnableConsumer(ChainedConsumer::kASTDumper);
+
+    if (Opts.CodeGeneration)
+      m_Consumer->EnableConsumer(ChainedConsumer::kCodeGenerator);
+
+    return Compile(input);
+  }
+
+
   void IncrementalParser::Parse(llvm::StringRef input, 
                                 llvm::SmallVector<DeclGroupRef, 4>& DGRs){
     if (!m_SyntaxOnly)

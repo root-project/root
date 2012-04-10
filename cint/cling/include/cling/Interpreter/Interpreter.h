@@ -32,6 +32,8 @@ namespace clang {
 }
 
 namespace cling {
+  class CompilationOptions;
+
   class DynamicExprInfo;
   namespace runtime {
     namespace internal {
@@ -220,6 +222,10 @@ namespace cling {
                                  llvm::StringRef FunctionName,
                                  bool rawInput = false,
                                  const clang::Decl** D = 0);
+    CompilationResult Declare(const std::string& input, 
+                              const CompilationOptions& CO,
+                              const clang::Decl** D = 0);
+
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
     llvm::StringRef createUniqueWrapper();

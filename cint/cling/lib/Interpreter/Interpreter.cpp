@@ -11,6 +11,7 @@
 #include "IncrementalParser.h"
 
 #include "cling/Interpreter/CIFactory.h"
+#include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Value.h"
 
@@ -392,13 +393,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, const Decl** D /* = 0 */) {
-    if (m_IncrParser->CompileAsIs(input) != IncrementalParser::kFailed) {
-      if (D)
-        *D = m_IncrParser->getLastTransaction().getFirstDecl();
-      return Interpreter::kSuccess;
-    }
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
 
-    return Interpreter::kFailure;
+    return Declare(input, CO, D);
   }
 
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
@@ -454,7 +453,13 @@ namespace cling {
                           bool rawInput /*=false*/, const Decl** D /*=0*/) {
     // if we are using the preprocessor
     if (rawInput || !canWrapForCall(input)) {
-      return declare(input);
+      CompilationOptions CO;
+      CO.DeclarationExtraction = 1;
+      CO.ValuePrinting = m_ValuePrinterEnabled;
+      CO.DynamicScoping = isDynamicLookupEnabled();
+      CO.Debug = isPrintingAST();
+      
+      return Declare(input,CO, D);
     }
 
     if (m_IncrParser->CompileLineFromPrompt(input) 
@@ -475,6 +480,20 @@ namespace cling {
 
     return Interpreter::kFailure;
   }
+
+  Interpreter::CompilationResult
+  Interpreter::Declare(const std::string& input, const CompilationOptions& CO,
+                       const clang::Decl** D /* = 0 */) {
+
+    if (m_IncrParser->Compile(input, CO) != IncrementalParser::kFailed) {
+      if (D)
+        *D = m_IncrParser->getLastTransaction().getFirstDecl();
+      return Interpreter::kSuccess;
+    }
+
+    return Interpreter::kFailure;
+  }
+
   
   bool
   Interpreter::loadFile(const std::string& filename,
