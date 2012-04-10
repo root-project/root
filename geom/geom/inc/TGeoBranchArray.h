@@ -58,6 +58,7 @@ public:
    Int_t             GetLevel() const   {return fLevel;}
    TGeoHMatrix      *GetMatrix() const  {return fMatrix;}
    TGeoNode         *GetNode(Int_t level) const {return fArray[level];}
+   TGeoNode         *GetCurrentNode() const {return fArray[fLevel];}
    void              GetPath(TString &path) const;
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}
