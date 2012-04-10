@@ -274,10 +274,7 @@ namespace cling {
                                                /*LoadedID*/0,
                                                /*LoadedOffset*/0, NewLoc);
       
-      PP.EnterSourceFile(FID, 0, NewLoc);
-      
-      //Token &tok = const_cast<Token&>(m_Parser->getCurToken());
-      //tok.setKind(tok::semi);
+      PP.EnterSourceFile(FID, 0, NewLoc);      
     }
 
     Parser::DeclGroupPtrTy ADecl;
