@@ -112,7 +112,7 @@ namespace {
    PyObject* name##_buffer_str( PyObject* self )                             \
    {                                                                         \
       Py_ssize_t l = buffer_length( self );                                  \
-      return PyROOT_PyUnicode_FromFormat( "<"#type" buffer, size "PY_SSIZE_T_FORMAT">", l );\
+      return PyROOT_PyUnicode_FromFormat( "<"#type" buffer, size " PY_SSIZE_T_FORMAT ">", l );\
    }                                                                         \
                                                                              \
    PyObject* name##_buffer_item( PyObject* self, Py_ssize_t idx ) {          \
