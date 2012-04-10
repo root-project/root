@@ -275,6 +275,10 @@ namespace cling {
   llvm::StringRef MetaProcessor::ReadToEndOfBuffer(Lexer& RawLexer, 
                                                    llvm::MemoryBuffer* MB) {
     const char* CurPtr = RawLexer.getBufferLocation();
+    if (CurPtr == MB->getBufferEnd()) {
+      // Already at end of the buffer, return just the zero byte at the end.
+      return StringRef(CurPtr, 1);
+    }
     Token TmpTok;
     RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
     return StringRef(CurPtr, MB->getBufferSize()-(CurPtr-MB->getBufferStart()));
