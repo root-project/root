@@ -45,7 +45,7 @@ END_HTML
 
 #include <limits>
 #define NaN numeric_limits<float>::quiet_NaN()
-#define IsNaN(a) isnan(a)
+#define IsNaN(a) std::isnan(a)
 
 ClassImp(RooStats::HypoTestResult) ;
 

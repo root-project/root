@@ -331,7 +331,7 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
 
   // check for a math error or negative value
   Bool_t error(kFALSE) ;
-  if (isnan(value)) {
+  if (TMath::IsNaN(value)) {
     logEvalError(Form("p.d.f value is Not-a-Number (%f), forcing value to zero",value)) ;
     error=kTRUE ;
   }
@@ -542,7 +542,7 @@ Bool_t RooAbsPdf::traceEvalHook(Double_t value) const
   // Floating point error checking and tracing for given float value
 
   // check for a math error or negative value
-  Bool_t error= isnan(value) || (value < 0);
+  Bool_t error= TMath::IsNaN(value) || (value < 0);
 
   // do nothing if we are no longer tracing evaluations and there was no error
   if(!error && _traceCount <= 0) return error ;
