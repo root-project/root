@@ -177,20 +177,18 @@ namespace cling {
                              const CompilationOptions& Opts) {
 
     // Set the state of the chained consumer
-    if (Opts.DeclarationExtraction)
-      m_Consumer->EnableConsumer(ChainedConsumer::kDeclExtractor);
+    m_Consumer->RestorePreviousState(ChainedConsumer::kDeclExtractor,
+                                     Opts.DeclarationExtraction);
 
-    if (Opts.ValuePrinting)
-      m_Consumer->EnableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
+    m_Consumer->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer,
+                                     Opts.ValuePrinting);
+    m_Consumer->RestorePreviousState(ChainedConsumer::kEvaluateTSynthesizer,
+                                     Opts.DynamicScoping);
 
-    if (Opts.DynamicScoping)
-      m_Consumer->EnableConsumer(ChainedConsumer::kEvaluateTSynthesizer);
+    m_Consumer->RestorePreviousState(ChainedConsumer::kASTDumper, Opts.Debug);
 
-    if (Opts.Debug)
-      m_Consumer->EnableConsumer(ChainedConsumer::kASTDumper);
-
-    if (Opts.CodeGeneration)
-      m_Consumer->EnableConsumer(ChainedConsumer::kCodeGenerator);
+    m_Consumer->RestorePreviousState(ChainedConsumer::kCodeGenerator, 
+                                     Opts.CodeGeneration);
 
     return Compile(input);
   }
