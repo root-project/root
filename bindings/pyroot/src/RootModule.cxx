@@ -275,7 +275,7 @@ namespace {
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 2 ) {
          PyErr_Format( PyExc_TypeError,
-           "BindObject takes exactly 2 argumenst ("PY_SSIZE_T_FORMAT" given)", argc );
+           "BindObject takes exactly 2 argumenst (" PY_SSIZE_T_FORMAT " given)", argc );
          return 0;
       }
 
@@ -306,7 +306,7 @@ namespace {
       Py_ssize_t argc = PyTuple_GET_SIZE( args );
       if ( argc != 0 && argc != 1 ) {
          PyErr_Format( PyExc_TypeError,
-            "MakeNullPointer takes at most 1 argument ("PY_SSIZE_T_FORMAT" given)", argc );
+            "MakeNullPointer takes at most 1 argument (" PY_SSIZE_T_FORMAT " given)", argc );
          return 0;
       }
 

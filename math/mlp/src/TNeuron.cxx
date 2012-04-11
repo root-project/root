@@ -907,7 +907,7 @@ Double_t TNeuron::GetBranch() const
 {
    // Returns the formula value.
    Double_t branch = fFormula->EvalInstance(fIndex);
-   if (isnan(branch))
+   if (TMath::IsNaN(branch))
       branch = 0.;
    return branch;
 }

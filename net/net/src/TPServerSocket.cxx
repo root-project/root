@@ -104,7 +104,7 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
    // wait for the incoming connections to the server and accept them
    setupSocket = TServerSocket::Accept(Opt);
 
-   if (setupSocket <= 0) return 0;
+   if (setupSocket == 0) return 0;
 
    // receive the port number and number of parallel sockets from the
    // client and establish 'n' connections

@@ -87,7 +87,7 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
             func->SetArg( para.fl );                                          \
       } else {                                                                \
          PyErr_Format( PyExc_TypeError,                                       \
-            #type" expected, got string of size "PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );\
+            #type" expected, got string of size " PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );\
          return kFALSE;                                                       \
       }                                                                       \
    } else {                                                                   \

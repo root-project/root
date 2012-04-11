@@ -404,10 +404,10 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
    // coverity[tainted_data_argument]
 
    for( UInt_t ivar = 0; ivar < nvars; ++ivar ){
-      fGet.push_back(std::make_pair<Char_t,UInt_t>('v',ivar));
+      fGet.push_back(std::pair<Char_t,UInt_t>('v',ivar));
    }
    for( UInt_t itgt = 0; itgt < ntgts; ++itgt ){
-      fGet.push_back(std::make_pair<Char_t,UInt_t>('t',itgt));
+      fGet.push_back(std::pair<Char_t,UInt_t>('t',itgt));
    }
    void* ch = gTools().GetChild( trfnode );
    while(ch) {
@@ -483,10 +483,10 @@ void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istrea
    UInt_t nvars = GetNVariables();
    UInt_t ntgts = GetNTargets();
    for( UInt_t ivar = 0; ivar < nvars; ++ivar ){
-      fGet.push_back(std::make_pair<Char_t,UInt_t>('v',ivar));
+      fGet.push_back(std::pair<Char_t,UInt_t>('v',ivar));
    }
    for( UInt_t itgt = 0; itgt < ntgts; ++itgt ){
-      fGet.push_back(std::make_pair<Char_t,UInt_t>('t',itgt));
+      fGet.push_back(std::pair<Char_t,UInt_t>('t',itgt));
    }
    char buf[512];
    char buf2[512];

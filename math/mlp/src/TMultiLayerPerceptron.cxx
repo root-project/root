@@ -906,7 +906,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
       }
       // Security: would the learning lead to non real numbers,
       // the learning should stop now.
-      if (isnan(GetError(TMultiLayerPerceptron::kTraining))) {
+      if (TMath::IsNaN(GetError(TMultiLayerPerceptron::kTraining))) {
          Error("TMultiLayerPerceptron::Train()","Stop.");
          iepoch = nEpoch;
       }

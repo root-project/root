@@ -325,7 +325,7 @@ Bool_t RooResolutionModel::traceEvalHook(Double_t value) const
   // Floating point error checking and tracing for given float value
 
   // check for a math error or negative value
-  return isnan(value) ;
+   return TMath::IsNaN(value) ;
 }
 
 

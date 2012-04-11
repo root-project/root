@@ -1152,7 +1152,7 @@ void TSQLFile::CreateBasicTables()
 
    #define WrintCfg(name, type, value)                              \
    {                                                                \
-      sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s"type"%s)", \
+      sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s%s%s, %s" type "%s)", \
                   quote, sqlio::ConfigTable, quote,                 \
                   vquote, name, vquote,                             \
                   vquote, value, vquote);                           \

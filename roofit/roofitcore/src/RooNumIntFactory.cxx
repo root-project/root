@@ -151,7 +151,7 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
   }
 
   // Add to factory 
-  _map[name.Data()] = make_pair<RooAbsIntegrator*,std::string>(proto,depName) ;
+  _map[name.Data()] = std::pair<RooAbsIntegrator*,std::string>(proto,depName) ;
 
   // Add default config to master config
   RooNumIntConfig::defaultConfig().addConfigSection(proto,defConfig) ;
