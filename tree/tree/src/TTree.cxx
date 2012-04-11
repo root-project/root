@@ -3888,11 +3888,12 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //    to the parameter fEstimate.  The content will be the last
    //            GetSelectedRows() % GetEstimate()
    //    values calculated.
-   //    By default fEstimate=10000 and can be modified
-   //    via TTree::SetEstimate. A possible recipee is to do
-   //       tree->SetEstimate(tree->GetEntries());
+   //    By default fEstimate=1000000 and can be modified
+   //    via TTree::SetEstimate. To keep in memory all the results (in case
+   //    where there is only one result per entry), use 
+   //       tree->SetEstimate(tree->GetEntries()+1); // same as tree->SetEstimate(-1);
    //    You must call SetEstimate if the expected number of selected rows
-   //    is greater than 10000.
+   //    you need to look at is greater than 1000000.
    //
    //    You can use the option "goff" to turn off the graphics output
    //    of TTree::Draw in the above example.
@@ -7523,7 +7524,7 @@ void TTree::SetEventList(TEventList *evlist)
 }
 
 //_______________________________________________________________________
-void TTree::SetEstimate(Long64_t n /* = 10000 */)
+void TTree::SetEstimate(Long64_t n /* = 1000000 */)
 {
    // Set number of entries to estimate variable limits.
    // If n is -1, the estimate is set to be the current maximum

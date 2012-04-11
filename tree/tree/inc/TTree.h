@@ -517,7 +517,7 @@ public:
    virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting = kFALSE);
    virtual void            SetDirectory(TDirectory* dir);
    virtual Long64_t        SetEntries(Long64_t n = -1);
-   virtual void            SetEstimate(Long64_t nentries = 10000);
+   virtual void            SetEstimate(Long64_t nentries = 1000000);
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
