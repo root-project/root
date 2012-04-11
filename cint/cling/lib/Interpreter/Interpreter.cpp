@@ -401,7 +401,7 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  Interpreter::evaluate(const std::string& input, const Value** V /* = 0 */) {
+  Interpreter::evaluate(const std::string& input, Value* V /* = 0 */) {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
@@ -410,12 +410,12 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  Interpreter::echo(const std::string& input) {
+  Interpreter::echo(const std::string& input, Value* V /* = 0 */) {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 1;
 
-    return Evaluate(input, CO);
+    return Evaluate(input, CO, V);
   }
 
   void Interpreter::WrapInput(std::string& input, std::string& fname) {
@@ -514,7 +514,7 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::Evaluate(const std::string& input, const CompilationOptions& CO,
-                        const Value** V /* = 0 */) {
+                        Value* V /* = 0 */) {
 
     Sema& TheSema = getCI()->getSema();
 
@@ -559,12 +559,18 @@ namespace cling {
     // FIXME: Finish the transaction in better way
     m_IncrParser->CompileAsIs("");
 
+    // Attach the value printer
+    if (CO.ValuePrinting) {
+      std::string VPAttached = WrapperName + "()";
+      WrapInput(VPAttached, WrapperName);
+      m_IncrParser->Compile(VPAttached, CO);
+    }
     // get the result
     llvm::GenericValue val;
     RunFunction(WrapperName, &val);
 
     if (V)
-      *V = new Value(val, RetTy.getTypePtrOrNull());
+      *V = Value(val, RetTy.getTypePtrOrNull());
 
     return Interpreter::kFailure;
   }
@@ -609,13 +615,6 @@ namespace cling {
     Sema& TheSema = getCI()->getSema();
     if (!DC)
       DC = TheSema.getASTContext().getTranslationUnitDecl();
-    // Execute and get the result
-    Value Result;
-
-    // Wrap the expression
-    std::string WrapperName;
-    std::string Wrapper = expr;
-    WrapInput(Wrapper, WrapperName);
     
     // Set up the declaration context
     DeclContext* CurContext;
@@ -623,69 +622,18 @@ namespace cling {
     CurContext = TheSema.CurContext;
     TheSema.CurContext = DC;
 
-    llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
+    Value Result;
     if (TheSema.ExternalSource) {
       DynamicIDHandler* DIDH = 
         static_cast<DynamicIDHandler*>(TheSema.ExternalSource);
       DIDH->Callbacks->setEnabled();
-      m_IncrParser->Parse(Wrapper, DGRs);
+      (ValuePrinterReq) ? echo(expr, &Result) : evaluate(expr, &Result);
       DIDH->Callbacks->setEnabled(false);
     }
     else 
-      m_IncrParser->Parse(Wrapper, DGRs);
-    assert((DGRs.size() || DGRs.size() > 2) && "Only FunctionDecl expected!");
+      (ValuePrinterReq) ? echo(expr, &Result) : evaluate(expr, &Result);
 
-    TheSema.CurContext = CurContext;
-    // get the Type
-    FunctionDecl* TopLevelFD 
-      = dyn_cast<FunctionDecl>(DGRs.front().getSingleDecl());
-    assert(TopLevelFD && "No Decls Parsed?");
-    CurContext = TheSema.CurContext;
-    TheSema.CurContext = TopLevelFD;
-    ASTContext& Context(getCI()->getASTContext());
-    QualType RetTy;
-    if (Stmt* S = TopLevelFD->getBody()) {
-      if (CompoundStmt* CS = dyn_cast<CompoundStmt>(S)) {
-        for (clang::CompoundStmt::const_reverse_body_iterator iStmt = CS->body_rbegin(),
-               eStmt = CS->body_rend(); iStmt != eStmt; ++iStmt) {
-          // find the trailing expression statement (skip e.g. null statements)
-          if (Expr* E = dyn_cast_or_null<Expr>(*iStmt)) {
-            RetTy = E->getType();
-            if (!RetTy->isVoidType()) {
-              // Change the void function's return type
-              FunctionProtoType::ExtProtoInfo EPI;
-              QualType FuncTy = Context.getFunctionType(RetTy,
-                                                        /*ArgArray*/0,
-                                                        /*NumArgs*/0,
-                                                        EPI);
-              TopLevelFD->setType(FuncTy);
-              // add return stmt
-              Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
-              CS->setLastStmt(RetS);
-            }
-            // even if void: we found an expression
-            break;
-          }
-        }
-      }
-    }
-    TheSema.CurContext = CurContext;
-
-    // FIXME: Finish the transaction in better way
-    m_IncrParser->CompileAsIs("");
-
-    // Attach the value printer
-    if (ValuePrinterReq) {
-      std::string VPAttached = WrapperName + "()";
-      WrapInput(VPAttached, WrapperName);
-      m_IncrParser->CompileLineFromPrompt(VPAttached);
-    }
-
-    // get the result
-    llvm::GenericValue val;
-    RunFunction(WrapperName, &val);
-
-    return Value(val, RetTy.getTypePtrOrNull());
+    return Result;
   }
 
   void Interpreter::setCallbacks(InterpreterCallbacks* C) {

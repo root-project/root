@@ -183,7 +183,7 @@ namespace cling {
     /// @param[out] V - the value of the executed input
     ///
     CompilationResult evaluate(const std::string& input, 
-                               const Value** V = 0);
+                               Value* V = 0);
 
     ///\brief Compiles input line, which contains only expressions and prints out
     /// the result of its execution.
@@ -192,8 +192,9 @@ namespace cling {
     /// the declarations from the input.
     ///
     /// @param[in] input - the input containing only expressions
+    /// @param[out] V - the value of the executed input
     ///
-    CompilationResult echo(const std::string& input);
+    CompilationResult echo(const std::string& input, Value* V = 0);
 
 
     bool loadFile(const std::string& filename,
@@ -248,7 +249,7 @@ namespace cling {
 
     CompilationResult Evaluate(const std::string& input, 
                                const CompilationOptions& CO,
-                               const Value** V = 0);
+                               Value* V = 0);
 
     void WrapInput(std::string& input, std::string& fname);
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
