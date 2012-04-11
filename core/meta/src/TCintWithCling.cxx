@@ -3469,18 +3469,20 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
    // and we get called recursively through G__process_cmd.
    TString sLine(line);
    if ((sLine[0] == '#') || (sLine[0] == '.')) {
-      // Preprocessor or special cmd, have cint process it too.
-      // Do not actually run things, load them instead:
-      char haveX = sLine[1];
-      if (haveX == 'x' || haveX == 'X')
-         sLine[1] = 'L'; // CINT only loads, cling will execute
-      TString sLineNoArgs(sLine);
-      Ssiz_t posOpenParen = sLineNoArgs.Last('(');
-      if (posOpenParen != kNPOS && sLineNoArgs.EndsWith(")")) {
-         sLineNoArgs.Remove(posOpenParen, sLineNoArgs.Length() - posOpenParen);
+      if (sLine[1] != 'I') {
+         // Preprocessor or special cmd, have cint process it too.
+         // Do not actually run things, load them instead:
+         char haveX = sLine[1];
+         if (haveX == 'x' || haveX == 'X')
+            sLine[1] = 'L'; // CINT only loads, cling will execute
+         TString sLineNoArgs(sLine);
+         Ssiz_t posOpenParen = sLineNoArgs.Last('(');
+         if (posOpenParen != kNPOS && sLineNoArgs.EndsWith(")")) {
+            sLineNoArgs.Remove(posOpenParen, sLineNoArgs.Length() - posOpenParen);
+         }
+         ret = ProcessLineCintOnly(sLineNoArgs, error);
+         sLine[1] = haveX;
       }
-      ret = ProcessLineCintOnly(sLineNoArgs, error);
-      sLine[1] = haveX;
    }
    static const char *fantomline = "TRint::EndOfLineAction();";
    if (sLine == fantomline) {
