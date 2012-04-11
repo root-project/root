@@ -252,6 +252,8 @@ namespace cling {
     Opts.Exceptions = 1;
     Opts.CXXExceptions = 1;
     Opts.Deprecated = 1;
+    // We need C++11 for lookupClass() to find enums.
+    Opts.CPlusPlus0x = 1;
   }
 
   void CIFactory::SetClingTargetLangOpts(LangOptions& Opts,

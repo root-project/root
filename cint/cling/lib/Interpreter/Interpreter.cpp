@@ -23,12 +23,17 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/Lex/Preprocessor.h"
+#define private public
+#include "clang/Parse/Parser.h"
+#undef private
+#include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaInternal.h"
 
 #include "llvm/Linker.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
 
@@ -360,6 +365,10 @@ namespace cling {
     return m_IncrParser->getCI();
   }
 
+  Parser* Interpreter::getParser() const {
+    return m_IncrParser->getParser();
+  }
+
   ///\brief Maybe transform the input line to implement cint command line 
   /// semantics (declarations are global) and compile to produce a module.
   ///
@@ -525,11 +534,16 @@ namespace cling {
 
     llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
     m_IncrParser->Parse(Wrapper, DGRs);
-    assert((DGRs.size() || DGRs.size() > 2) && "Only FunctionDecl expected!");
+    assert(DGRs.size() && "No decls created by Parse!");
 
-    // get the Type
+    // Find the wrapper function declaration.
+    //
+    // Note: The parse may have created a whole set of decls if a template
+    //       instantiation happened.  Our wrapper function should be the
+    //       last decl in the set.
+    //
     FunctionDecl* TopLevelFD 
-      = dyn_cast<FunctionDecl>(DGRs.front().getSingleDecl());
+      = dyn_cast<FunctionDecl>(DGRs.back().getSingleDecl());
     assert(TopLevelFD && "No Decls Parsed?");
     DeclContext* CurContext = TheSema.CurContext;
     TheSema.CurContext = TopLevelFD;
@@ -599,6 +613,143 @@ namespace cling {
     return declare(code);
   }
   
+  Decl*
+  Interpreter::lookupClass(const std::string& className)
+  {
+    //
+    //  Our return value.
+    //
+    Decl* TheDecl = 0;
+    //
+    //  Some utilities.
+    //
+    CompilerInstance* CI = getCI();
+    Parser* P = getParser();
+    Preprocessor& PP = CI->getPreprocessor();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Tell the diagnostic consumer we are switching files.
+    //
+    DiagnosticConsumer& DClient = CI->getDiagnosticClient();
+    DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+    //
+    //  Convert the class name to a nested name specifier for parsing.
+    //
+    std::string classNameAsNNS = className + "::\n";
+    //
+    //  Create a fake file to parse the class name.
+    //
+    llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+      classNameAsNNS, "lookup.class.by.name.file");
+    FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    bool ResetIncrementalProcessing = false;
+    if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+    }
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, 0, SourceLocation());
+    PP.Lex(const_cast<Token&>(P->getCurToken()));
+    //
+    //  Parse the class name as a nested-name-specifier.
+    //
+    CXXScopeSpec SS;
+    bool MayBePseudoDestructor = false;
+    if (P->ParseOptionalCXXScopeSpecifier(
+        SS, /*ObjectType*/ParsedType(), /*EnteringContext*/false,
+        &MayBePseudoDestructor, /*IsTypename*/false)) {
+      // error path
+      goto lookupClassDone;
+    }
+    //
+    //  Check for a valid result.
+    //
+    if (!SS.isValid()) {
+      // error path
+      goto lookupClassDone;
+    }
+    //
+    //  Be careful, not all nested name specifiers refer to classes
+    //  and namespaces, and those are the only things we want.
+    //
+    {
+      NestedNameSpecifier* NNS = SS.getScopeRep();
+      NestedNameSpecifier::SpecifierKind Kind = NNS->getKind();
+      switch (Kind) {
+        case NestedNameSpecifier::Identifier:
+        case NestedNameSpecifier::Global:
+          // We do not want these.
+          break;
+        case NestedNameSpecifier::Namespace: {
+            NamespaceDecl* NSD = NNS->getAsNamespace();
+            NSD = NSD->getCanonicalDecl();
+            TheDecl = NSD;
+          }
+          break;
+        case NestedNameSpecifier::NamespaceAlias: {
+            // Note: In the future, should we return the alias instead? 
+            NamespaceAliasDecl* NSAD = NNS->getAsNamespaceAlias();
+            NamespaceDecl* NSD = NSAD->getNamespace();
+            NSD = NSD->getCanonicalDecl();
+            TheDecl = NSD;
+          }
+          break;
+        case NestedNameSpecifier::TypeSpec:
+        case NestedNameSpecifier::TypeSpecWithTemplate: {
+            // Note: Do we need to check for a dependent type here?
+            const Type* Ty = NNS->getAsType();
+            const TagType* TagTy = Ty->getAs<TagType>();
+            if (TagTy) {
+              // It is a class, struct, union, or enum.
+              TagDecl* TD = TagTy->getDecl();
+              if (TD) {
+                // Make sure it is not just forward declared, and instantiate
+                // any templates.
+                if (!CI->getSema().RequireCompleteDeclContext(SS, TD)) {
+                  // Success, type is complete, instantiations have been done.
+                  TagDecl* Def = TD->getDefinition();
+                  if (Def) {
+                    TheDecl = Def;
+                  }
+                }
+              }
+            }
+          }
+          break;
+      }
+    }
+  lookupClassDone:
+    //
+    // Advance the parser to the end of the file, and pop the include stack.
+    //
+    // Note: Consuming the EOF token will pop the include stack.
+    //
+    P->SkipUntil(tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+    }
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    return TheDecl;
+  }
+
   Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
                                                        const DeclContext* Within) {
     if (!Within)

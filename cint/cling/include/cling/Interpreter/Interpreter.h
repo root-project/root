@@ -29,6 +29,7 @@ namespace clang {
   class DeclContext;
   class Expr;
   class NamedDecl;
+  class Parser;
 }
 
 namespace cling {
@@ -200,6 +201,10 @@ namespace cling {
     bool loadFile(const std::string& filename,
                   bool allowSharedLib = true);
     
+    ///\brief Lookup a class declaration by name, starting from the global
+    // namespace, also handles struct, union, namespace, and enum.
+    clang::Decl* lookupClass(const std::string& className);
+
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled();
 
@@ -207,6 +212,7 @@ namespace cling {
     void enablePrintAST(bool print = true);
     
     clang::CompilerInstance* getCI() const;
+    clang::Parser* getParser() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
     
