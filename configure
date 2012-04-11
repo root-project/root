@@ -54,6 +54,7 @@ options="                    \
    enable_cintex             \
    enable_clarens            \
    enable_cling              \
+   enable_cocoa              \
    enable_dcache             \
    enable_explicitlink       \
    enable_fftw3              \
@@ -136,6 +137,7 @@ done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cling=no
+enable_cocoa=no
 enable_afs=no
 enable_alloc=no
 enable_gdml=no
@@ -1445,6 +1447,7 @@ enable/disable options, prefix with either --enable- or --disable-
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
+  cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
   dcache             dCache support, requires libdcap from DESY
   explicitlink       Explicitly link with all dependent libraries
   fftw3              Fast Fourier Transform support, requires libfftw3
@@ -2221,6 +2224,22 @@ if test ! "x$host" = "x"; then
 
     compmsgextra=""
     arch=$archbak
+fi
+
+######################################################################
+#
+### echo %%% Check if native MacOS X Cocoa/Quartz backend should be build
+#
+if test ! "x$platform" = "xmacosx"; then
+    enable_cocoa="no"
+fi
+
+hascocoa="undef"
+if test "x$enable_cocoa" = "xyes"; then
+    message "Checking whether to build native MacOS X Cocoa backend"
+    hascocoa="define"
+    enable_x11="no"
+    result "yes"
 fi
 
 ######################################################################
@@ -6649,6 +6668,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
+    -e "s|@buildcocoa@|$enable_cocoa|"          \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
@@ -6700,6 +6720,7 @@ sed \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascling@|$hascling|"           \
+    -e "s|@hascocoa@|$hascocoa|"           \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 
