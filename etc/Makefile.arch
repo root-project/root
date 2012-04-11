@@ -100,18 +100,8 @@ LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),aix)
-# IBM AIX xlC 4.x
-CXX           = xlC
-CXXFLAGS      = $(OPT)
-LD            = xlC
-LDFLAGS       = $(OPT)
-SOFLAGS       =
-DllSuf        = a
-endif
-
 ifeq ($(ARCH),aix5)
-# IBM AIX xlC 5.x
+# IBM AIX >5.x xlC
 CXX           = xlC
 CXXFLAGS      = $(OPT)
 LD            = xlC
@@ -121,7 +111,7 @@ DllSuf        = a
 endif
 
 ifeq ($(ARCH),aixgcc)
-# IBM AIX with GCC
+# IBM AIX >5.x with GCC
 CXX           = g++
 CXXFLAGS      = $(OPT)
 LD            = g++

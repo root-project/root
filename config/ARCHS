@@ -1,4 +1,3 @@
-aix                  for AIX 4.x with xlC
 aix5                 for AIX 5.x with xlC
 aixgcc               for AIX 5.x with gcc >= 3
 alphacxx6            for DEC Unix with cxx6
