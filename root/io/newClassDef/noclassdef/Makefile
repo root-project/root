@@ -54,7 +54,7 @@ endif
 endif
 
 ifeq ($(PLATFORM),win32)
-CXXFLAGS += -TP -GX 
+CXXFLAGS += -TP
 LIBSFORLINK = $(LIBS)
 CLDFLAGS := -link $(LDFLAGS) -debug
 SYSLIBS += msvcprt.lib 

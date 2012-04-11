@@ -92,7 +92,7 @@ missingInfo: missingInfo.log
 	$(TestDiff)
 
 ifeq ($(PLATFORM),win32)
-CXXFLAGS += -TP -GX 
+CXXFLAGS += -TP
 LIBSFORLINK = $(LIBS)
 CLDFLAGS := -link $(LDFLAGS)
 SYSLIBS += msvcprt.lib 
