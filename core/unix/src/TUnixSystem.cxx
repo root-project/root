@@ -2875,10 +2875,12 @@ const char *TUnixSystem::GetLinkedLibraries()
       delete [] exe;
       exe = longerexe;
    }
+   TRegexp sovers = "\\.so\\.[0-9]+";
 #else
    const char *cLDD="ldd";
 #if defined(R__AIX)
    const char *cSOEXT=".a";
+   TRegexp sovers = "\\.a\\.[0-9]+";
 #else
    const char *cSOEXT=".so";
    TRegexp sovers = "\\.so\\.[0-9]+";
