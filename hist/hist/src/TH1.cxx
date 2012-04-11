@@ -3449,7 +3449,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //      When the fit is drawn (by default), the parameter goption may be used
 //      to specify a list of graphics options. See TH1::Draw for a complete
 //      list of these options.
-//
+
 //      In order to use the Range option, one must first create a function
 //      with the expression to be fitted. For example, if your histogram
 //      has a defined range between -4 and 4 and you want to fit a gaussian
@@ -8094,8 +8094,9 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
       return GetBinError(bin);
    }
 
-   // return an upper limit for N == 0
-   if (n == 0) return ROOT::Math::gamma_quantile_c(alpha,n+1,1);
+   // for N==0 return an upper limit at 0.68 or (1-alpha)/2 ?
+   // decide to return always (1-alpha)/2 upper interval
+   //if (n == 0) return ROOT::Math::gamma_quantile_c(alpha,n+1,1);
    return ROOT::Math::gamma_quantile_c( alpha/2, n+1, 1) - c;   
 }
 
