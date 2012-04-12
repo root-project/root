@@ -458,7 +458,7 @@ TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO \
                           -lMathCore
 GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed \
                           -lMathCore -lTree -lTreePlayer -lRIO
-COCOALIBEXTRA           = -lGui -lGQuartz
+COCOALIBEXTRA           = -Llib -lGui -lGQuartz
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer \
                           -lRIO -lminicern
 GEOMLIBEXTRA            = -Llib -lRIO -lThread -lMathCore
