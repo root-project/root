@@ -1419,6 +1419,12 @@ void TVirtualX::SendEvent(Window_t /*id*/, Event_t * /*ev*/)
 }
 
 //______________________________________________________________________________
+void TVirtualX::DispatchClientMessage(UInt_t /*messageID*/)
+{
+   // Force processing of event, sent by SendEvent before.
+}
+
+//______________________________________________________________________________
 void TVirtualX::WMDeleteNotify(Window_t /*id*/)
 {
    // Tells WM to send message when window is closed via WM.

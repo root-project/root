@@ -490,7 +490,7 @@ TVirtualPad *TPad::cd(Int_t subpadnumber)
 
    if (!subpadnumber) {
       gPad = this;
-      if (!gPad->IsBatch()) GetPainter()->SelectDrawable(fPixmapID);
+      if (!gPad->IsBatch() && GetPainter()) GetPainter()->SelectDrawable(fPixmapID);
       return gPad;
    }
 
@@ -2748,7 +2748,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
-   if (GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+   if (GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
       //When doing a DrawClone from the GUI you would do
       //  - select an empty pad -
       //  - right click on object -

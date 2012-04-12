@@ -1,0 +1,73 @@
+# Module.mk for cocoa module
+# Copyright (c) 2011 Rene Brun and Fons Rademakers
+#
+# Author: Timur Pocheptsov, 22/11/2011
+
+MODNAME      := cocoa
+MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
+MODDIRS      := $(MODDIR)/src
+MODDIRI      := $(MODDIR)/inc
+
+COCOADIR     := $(MODDIR)
+COCOADIRS    := $(COCOADIR)/src
+COCOADIRI    := $(COCOADIR)/inc
+
+##### libGCocoa #####
+COCOAL       := $(MODDIRI)/LinkDef.h
+COCOADS      := $(call stripsrc,$(MODDIRS)/G__Cocoa.cxx)
+COCOADO      := $(COCOADS:.cxx=.o)
+COCOADH      := $(COCOADS:.cxx=.h)
+
+COCOAH1      := $(wildcard $(MODDIRI)/T*.h)
+COCOAH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+COCOAS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+COCOAO       := $(call stripsrc,$(COCOAS:.cxx=.o))
+COCOAOBJCPPS := $(wildcard $(MODDIRS)/*.mm)
+COCOAOBJCPPO := $(call stripsrc,$(COCOAOBJCPPS:.mm=.o))
+
+COCOADEP     := $(COCOAO:.o=.d) $(COCOADO:.o=.d) $(COCOAOBJCPPO:.o=.d)
+
+COCOALIB     := $(LPATH)/libGCocoa.$(SOEXT)
+COCOAMAP     := $(COCOALIB:.$(SOEXT)=.rootmap)
+
+# used in the main Makefile
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(COCOAH))
+ALLLIBS      += $(COCOALIB)
+ALLMAPS      += $(COCOAMAP)
+
+# include all dependency files
+INCLUDEFILES += $(COCOADEP)
+
+##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
+include/%.h:    $(COCOADIRI)/%.h
+		cp $< $@
+
+$(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(ORDER_) $(MAINLIBS) \
+                $(COCOALIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
+		   "$(SOFLAGS)" libGCocoa.$(SOEXT) $@ \
+		   "$(COCOAO) $(COCOAOBJCPPO) $(COCOADO)" \
+		   "$(COCOALIBEXTRA) -framework Cocoa"
+
+$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(COCOAH1) $(COCOAL)
+
+$(COCOAMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(COCOAL)
+		$(RLIBMAP) -o $@ -l $(COCOALIB) \
+		   -d $(COCOALIBDEPM) -c $(COCOAL)
+
+all-$(MODNAME): $(COCOALIB) $(COCOAMAP)
+
+clean-$(MODNAME):
+		@rm -f $(COCOAO) $(COCOADO) $(COCOAOBJCPPO)
+
+clean::         clean-$(MODNAME)
+
+distclean-$(MODNAME): clean-$(MODNAME)
+		@rm -f $(COCOADEP) $(COCOADS) $(COCOADH) $(COCOALIB) $(COCOAMAP)
+
+distclean::     distclean-$(MODNAME)

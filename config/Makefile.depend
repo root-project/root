@@ -69,6 +69,7 @@ SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
 QUADPLIBDEPM           = $(MATRIXLIB)
 GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
                          $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
+COCOALIBDEPM           = $(GUILIB) $(QUARTZLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB) $(MINICERNLIB)
 GEOMLIBDEPM            = $(IOLIB) $(THREADLIB) $(MATHCORELIB)
@@ -186,6 +187,7 @@ GENETICLIBDEP          = $(GENETICLIBDEPM)
 SPLOTLIBDEP            = $(SPLOTLIBDEPM)
 QUADPLIBDEP            = $(QUADPLIBDEPM)
 GLLIBDEP               = $(GLLIBDEPM)
+COCOALIBDEP            = $(COCOALIBDEPM)
 HBOOKLIBDEP            = $(HBOOKLIBDEPM)
 GEOMLIBDEP             = $(GEOMLIBDEPM)
 GEOMPAINTERLIBDEP      = $(GEOMPAINTERLIBDEPM)
@@ -456,6 +458,7 @@ TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO \
                           -lMathCore
 GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed \
                           -lMathCore -lTree -lTreePlayer -lRIO
+COCOALIBEXTRA           = -lGui -lGQuartz
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer \
                           -lRIO -lminicern
 GEOMLIBEXTRA            = -Llib -lRIO -lThread -lMathCore

@@ -155,6 +155,7 @@
 #pragma link C++ class TRootIOCtor+;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
+#pragma link C++ class TColorGradient+;
 #pragma link C++ class TContextMenu+;
 #pragma link C++ class TContextMenuImp+;
 #pragma link C++ class TControlBarImp+;

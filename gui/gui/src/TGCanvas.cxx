@@ -187,11 +187,17 @@ void TGViewPort::SetHPos(Int_t xpos)
 
    if (-xpos < 0) return;
    else diff = xpos - fX0;
-   UInt_t adiff = TMath::Abs(diff);
 
    if (!diff) return;
 
    fX0 = xpos;
+
+#if defined(R__HAS_COCOA)
+   //In the current version of cocoa back-end, it's very expensive
+   //to read window's pixels, skip "optimization".
+   ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
+#else
+   UInt_t adiff = TMath::Abs(diff);
 
    if (adiff < fWidth) {
       if (diff < 0) {
@@ -208,6 +214,7 @@ void TGViewPort::SetHPos(Int_t xpos)
    } else {
       ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
    }
+#endif
 }
 
 //______________________________________________________________________________
@@ -232,11 +239,17 @@ void TGViewPort::SetVPos(Int_t ypos)
 
    if (-ypos < 0) return;
    else diff = ypos - fY0;
-   UInt_t adiff = TMath::Abs(diff);
 
    if (!diff) return;
 
    fY0 = ypos;
+
+#if defined(R__HAS_COCOA)
+   //In the current version of cocoa back-end, it's very expensive
+   //to read window's pixels, skip "optimization".
+   ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
+#else
+   UInt_t adiff = TMath::Abs(diff);
 
    if (adiff < fHeight) {
       if (diff < 0) {
@@ -253,6 +266,7 @@ void TGViewPort::SetVPos(Int_t ypos)
    } else {
       ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
    }
+#endif
 }
 
 //______________________________________________________________________________

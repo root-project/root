@@ -106,6 +106,15 @@ endif
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
+ifeq ($(BUILDCOCOA),yes)
+MODULES      += graf2d/quartz
+MODULES      += graf2d/cocoa
+MODULES      += core/macosx
+SYSTEML      += $(MACOSXL)
+SYSTEMO      += $(MACOSXO)
+SYSTEMDO     += $(MACOSXDO)
+CORELIBEXTRA += -framework Cocoa
+endif
 ifeq ($(BUILDX11),yes)
 MODULES      += graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 endif
@@ -555,7 +564,7 @@ INCLUDEFILES :=
 
 ##### RULES #####
 
-.SUFFIXES: .cxx .d
+.SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
 
 # special rules (need to be defined before generic ones)
@@ -632,6 +641,11 @@ $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CFLAGS) -- $$<
 	$$(CC) $$(OPT) $$(CFLAGS) $$(CXXOUT)$$@ -c $$<
 
+$(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
+	$$(MAKEDIR)
+	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
+	$$(CXX) $$(OPT) $$(CXXFLAGS) -ObjC++ -std=c++11 $$(CXXOUT)$$@ -c $$<
+
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
 ifeq ($$(F77),f2c)
@@ -658,6 +672,10 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 %.o: %.c
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CFLAGS) -- $<
 	$(CC) $(OPT) $(CFLAGS) $(CXXOUT)$@ -c $<
+
+%.o: %.mm
+	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXFLAGS) -ObjC++ -std=c++11 $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)

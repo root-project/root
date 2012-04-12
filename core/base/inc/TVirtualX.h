@@ -238,6 +238,7 @@ public:
    virtual void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
    virtual void         SendEvent(Window_t id, Event_t *ev);
+   virtual void         DispatchClientMessage(UInt_t messageID);
    virtual void         WMDeleteNotify(Window_t id);
    virtual void         SetKeyAutoRepeat(Bool_t on = kTRUE);
    virtual void         GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE);

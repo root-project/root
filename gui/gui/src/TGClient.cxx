@@ -350,6 +350,12 @@ void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 }
 
 //______________________________________________________________________________
+void TGClient::CancelRedraw(TGWindow *w)
+{
+   w->fNeedRedraw = kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
 {
    // Get a color by name. If color is found return kTRUE and pixel is

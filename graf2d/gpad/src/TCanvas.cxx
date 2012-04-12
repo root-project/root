@@ -266,6 +266,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       form     = -form;
       SetBit(kMenuBar,0);
    }
+   
+   fCanvas = this;
+   
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) {
@@ -303,6 +306,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
       if (!fCanvasImp) return;
+      
+      if (!gROOT->IsBatch() && fCanvasID == -1)
+         fCanvasID = fCanvasImp->InitWindow();
+      
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -375,6 +382,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
       if (!fCanvasImp) return;
+      
+      if (!gROOT->IsBatch() && fCanvasID == -1)
+         fCanvasID = fCanvasImp->InitWindow();
+
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -453,11 +464,13 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
       if (!fCanvasImp) return;
+
+      if (!gROOT->IsBatch() && fCanvasID == -1)
+         fCanvasID = fCanvasImp->InitWindow();      
+      CreatePainter();
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
-
-   CreatePainter();
 
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
@@ -2069,6 +2082,8 @@ void TCanvas::Update()
    // Update canvas pad buffers.
 
    if (fUpdating) return;
+   
+   if (fPixmapID == -1) return;
 
    if (gThreadXAR) {
       void *arr[2];

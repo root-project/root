@@ -936,7 +936,7 @@ void TGCompositeFrame::Cleanup()
    while ((el = (TGFrameElement *) next())) {
       if (el->fFrame) {
          el->fFrame->SetFrameElement(0);
-         if (!gVirtualX->InheritsFrom("TGX11"))
+         if (!gVirtualX->InheritsFrom("TGX11") && !gVirtualX->InheritsFrom("TGCocoa"))
             el->fFrame->DestroyWindow();
          delete el->fFrame;
       }

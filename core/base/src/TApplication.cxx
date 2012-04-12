@@ -574,14 +574,19 @@ void TApplication::LoadGraphicsLibs()
    TString title1 = "ROOT interface to ";
    TString nativex, title;
    TString nativeg = "root";
-#ifndef R__WIN32
-   nativex = "x11";
-   name    = "X11";
-   title   = title1 + "X11";
-#else
+   
+#ifdef R__WIN32
    nativex = "win32gdk";
    name    = "Win32gdk";
    title   = title1 + "Win32gdk";
+#elif defined(R__HAS_COCOA)
+   nativex = "quartz";
+   name    = "quartz";
+   title   = title1 + "Quartz"; 
+#else
+   nativex = "x11";
+   name    = "X11";
+   title   = title1 + "X11";
 #endif
 
    TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));

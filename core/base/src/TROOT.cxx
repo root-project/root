@@ -114,7 +114,11 @@
 namespace std {} using namespace std;
 
 #if defined(R__UNIX)
+#if defined(R__HAS_COCOA)
+#include "TMacOSXSystem.h"
+#else
 #include "TUnixSystem.h"
+#endif
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
 #endif
@@ -1347,7 +1351,11 @@ void TROOT::InitSystem()
 
    if (gSystem == 0) {
 #if defined(R__UNIX)
+#if defined(R__HAS_COCOA)
+      gSystem = new TMacOSXSystem;
+#else
       gSystem = new TUnixSystem;
+#endif
 #elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
 #else
