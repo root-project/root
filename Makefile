@@ -301,7 +301,8 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
-                proof/proofbench proof/afdsmgrd cint/cling graf2d/ios
+                proof/proofbench proof/afdsmgrd cint/cling graf2d/ios \
+                graf2d/quartz graf2d/cocoa core/macosx
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
