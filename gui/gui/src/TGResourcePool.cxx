@@ -88,7 +88,6 @@ TGResourcePool::TGResourcePool(TGClient *client)
    TString line;
 
 #ifndef R__WIN32
-#ifndef R__VMS
 # ifdef ROOTICONPATH
    icon_path = TString::Format("%s/icons:%s:.:", gSystem->HomeDirectory(),
                                ROOTICONPATH);
@@ -103,11 +102,6 @@ TGResourcePool::TGResourcePool(TGClient *client)
    icon_path += gEnv->GetValue("Gui.IconPath", "");
 # endif
    line = TString::Format("%s/.root.mimes", gSystem->HomeDirectory());
-#else
-   line = TString::Format("[%s.ICONS]", gSystem->Getenv("ROOTSYS"));
-   icon_path = gEnv->GetValue("Gui.IconPath", line.Data());
-   line = TString::Format("%sroot.mimes", gSystem->HomeDirectory());
-#endif
 
    mime_file = gEnv->GetValue("Gui.MimeTypeFile", line.Data());
    char *mf = gSystem->ExpandPathName(mime_file.Data());
@@ -116,14 +110,10 @@ TGResourcePool::TGResourcePool(TGClient *client)
       delete [] mf;
    }
    if (gSystem->AccessPathName(mime_file, kReadPermission))
-#ifdef R__VMS
-      mime_file = TString::Format("[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
-#else
-# ifdef ROOTETCDIR
+#ifdef ROOTETCDIR
       mime_file = TString::Format("%s/root.mimes", ROOTETCDIR);
-# else
+#else
       mime_file = TString::Format("%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
-# endif
 #endif
 #else // R__WIN32
    icon_path = TString::Format("%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));

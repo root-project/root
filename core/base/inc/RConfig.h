@@ -102,11 +102,6 @@
 #      else
 #         define R__TEMPLATE_OVERLOAD_BUG
 #      endif
-#   else
-#      define R__VMS
-#      define cxxbug
-#      define NEED_STRCASECMP
-#      define R__NONSCALARFPOS
 #   endif
 #endif
 

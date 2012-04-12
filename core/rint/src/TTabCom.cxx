@@ -44,7 +44,7 @@
 //     eg, this will work: gROOT->GetListOfG[TAB]                         //
 //     but this will not:  gROOT->GetListOfGlobals()->Conta[TAB]          //
 //                                                                        //
-//  2. nothing is guaranteed to work on windows or VMS                    //
+//  2. nothing is guaranteed to work on windows                           //
 //     (for one thing, /bin/env and /etc/passwd are hardcoded)            //
 //                                                                        //
 //  3. CINT shortcut #2 is deliberately not supported.                    //

@@ -28,11 +28,6 @@
 #   define R__HAVE_LIMITS_H
 #   define R__HAVE_MMAP
 #   define NO_SBRK_MALLOC
-#elif defined (R__VMS)
-#   define R__HAVE_UNISTD_H
-#   define R__HAVE_STDLIB_H
-#   define R__HAVE_STDDEF_H
-#   define NO_SBRK_MALLOC
 #else
 #   define R__HAVE_STDDEF_H
 #   define R__HAVE_LIMITS_H

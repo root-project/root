@@ -29,7 +29,7 @@
 
 // 32 or 64 bits
 #if ((defined(__hpux) && defined(__LP64__)) || \
-     (defined(__alpha) && !defined(linux) && !defined(__VMS)) || \
+     (defined(__alpha) && !defined(linux)) || \
      (defined(__sgi) && (defined(__mips64) || defined(_ABI64))) || \
      (defined(linux) && (defined(__ia64__) || defined(__x86_64__) || defined(__alpha__))) || \
      (defined(__linux) && defined(__mips__) && (_MIPS_SIM == _ABI64)) || \
