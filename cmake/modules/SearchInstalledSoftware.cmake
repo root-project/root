@@ -91,6 +91,16 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)
+if(cocoa)
+  if(APPLE)
+    set(x11 OFF CACHE BOOL "" FORCE)
+  else()
+    message(STATUS "Cocoa option can only be enabled on MacOSX platform")
+    set(cocoa OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
   message(STATUS "Looking for X11")
