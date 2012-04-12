@@ -279,9 +279,9 @@ public: \
    static Version_t Class_Version() { return id; } \
    static void Dictionary(); \
    virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector &insp); \
-   virtual void Streamer(TBuffer &b); \
-   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
+   virtual void ShowMembers(TMemberInspector&); \
+   virtual void Streamer(TBuffer&); \
+   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; } \
    static int ImplFileLine(); \
    static const char *ImplFileName();
@@ -296,9 +296,9 @@ static const char *Class_Name(); \
 static Version_t Class_Version() { return id; } \
 static void Dictionary(); \
 TClass *IsA() const { return name::Class(); } \
-void ShowMembers(TMemberInspector &insp); \
-void Streamer(TBuffer &b); \
-void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
+void ShowMembers(TMemberInspector&); \
+void Streamer(TBuffer&); \
+void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
 static const char *DeclFileName() { return __FILE__; } \
 static int ImplFileLine(); \
 static const char *ImplFileName();
@@ -319,12 +319,12 @@ static const char *ImplFileName();
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
+   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
+   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif
@@ -333,14 +333,14 @@ static const char *ImplFileName();
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
-   friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
+   friend TBuffer &operator>>(TBuffer&, name *&); \
+   friend TBuffer &operator>>(TBuffer&, const name *&); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
-   friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
+   friend TBuffer &operator>>(TBuffer&, name *&); \
+   friend TBuffer &operator>>(TBuffer&, const name *&); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif
