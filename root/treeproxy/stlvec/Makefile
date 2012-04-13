@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 tlorentzvecProxy.h: $(ROOTCORELIBS) createtlorentzvecproxy.C tlorentzvec.root analyze.C analyze.h cutting.C cutting.h
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q createtlorentzvecproxy.C > createtlorentzvecproxy.log 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q createtlorentzvecproxy.C > createtlorentzvecproxy.log 2>&1
 
 tlorentzvec.log: tlorentzvecProxy_h.$(DllSuf)
 
