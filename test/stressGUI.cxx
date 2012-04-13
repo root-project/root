@@ -2170,7 +2170,7 @@ void testSplitFrame()
    // Test TGSplitFrame.
 
    TGMainFrame *mf = new TGMainFrame(gClient->GetDefaultRoot(), 200, 200);
-   //mf->SetCleanup(kDeepCleanup);
+   mf->SetCleanup(kDeepCleanup);
    TGSplitFrame *first = new TGSplitFrame(mf, 200, 200);
    mf->AddFrame(first, new TGLayoutHints(kLHintsExpandX | kLHintsExpandX, 0, 0, 0, 0));
    first->HSplit();

@@ -297,6 +297,7 @@ TGTextEditor::~TGTextEditor()
 {
    // TGTextEditor destructor.
 
+   gApplication->Disconnect("Terminate(Int_t)");
    if (fTimer) delete fTimer;
    if (fMenuFile) delete fMenuFile;
    if (fMenuEdit) delete fMenuEdit;
@@ -310,6 +311,7 @@ void TGTextEditor::DeleteWindow()
 {
    // Delete TGTextEditor Window.
 
+   gApplication->Disconnect("Terminate(Int_t)");
    delete fTimer; fTimer = 0;
    delete fMenuFile; fMenuFile = 0;
    delete fMenuEdit; fMenuEdit = 0;
