@@ -467,10 +467,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
          fCanvasID = fCanvasImp->InitWindow();      
-      CreatePainter();
+
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
+
+   CreatePainter();
 
    SetName(name);
    SetTitle(title); // requires fCanvasImp set
@@ -589,7 +591,7 @@ void TCanvas::Build()
       SetPad(0, 0, 1, 1);
       Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
 
-      fPainter->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
+      GetCanvasPainter()->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
       PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
 
