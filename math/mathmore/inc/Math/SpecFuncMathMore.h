@@ -767,53 +767,74 @@ namespace Math {
 
   /**
   
-  Calculates the Wigner 3j coupling coefficients
+   Calculates the Wigner 3j coupling coefficients
+  
+           (ja jb jc 
+           ma mb mc) 
 
+   where ja,ma,...etc are integers or half integers. 
+   The function takes as input arguments only integers which corresponds 
+   to half integer units, e.g two_ja = 2 * ja 
 
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/Wigner3j-Symbol.html.html">
-  Mathworld</A>.
-  The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/3_002dj-Symbols.html#g_t3_002dj-Symbols">GSL</A>.
-
-  @ingroup SpecFunc
+   For detailed description see 
+   <A HREF="http://mathworld.wolfram.com/Wigner3j-Symbol.html.html">
+   Mathworld</A>.
+   The implementation used is that of 
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/3_002dj-Symbols.html#g_t3_002dj-Symbols">GSL</A>.
+   
+   @ingroup SpecFunc
 
   */
 
-  double wigner_3j(int ja, int jb, int jc, int ma, int mb, int mc);
+  double wigner_3j(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int two_mc);
 
   /**
   
   Calculates the Wigner 6j coupling coefficients
 
+          (ja jb jc 
+           jd je jf) 
 
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/Wigner6j-Symbol.html">
-  Mathworld</A>.
-  The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/6_002dj-Symbols.html#g_t6_002dj-Symbols">GSL</A>.
+   where ja,jb,...etc are integers or half integers. 
+   The function takes as input arguments only integers which corresponds 
+   to half integer units, e.g two_ja = 2 * ja 
 
-  @ingroup SpecFunc
+   For detailed description see 
+   <A HREF="http://mathworld.wolfram.com/Wigner6j-Symbol.html">
+   Mathworld</A>.
+   The implementation used is that of 
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/6_002dj-Symbols.html#g_t6_002dj-Symbols">GSL</A>.
+   
+   @ingroup SpecFunc
 
   */
 
-  double wigner_6j(int ja, int jb, int jc, int jd, int je, int jf);
+  double wigner_6j(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf);
 
   /**
   
   Calculates the Wigner 9j coupling coefficients
 
-  For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/Wigner9j-Symbol.html">
-  Mathworld</A>.
-  The implementation used is that of 
-  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/9_002dj-Symbols.html#g_t9_002dj-Symbols">GSL</A>.
+          (ja jb jc 
+           jd je jf 
+           jg jh ji) 
 
-  @ingroup SpecFunc
+   where ja,jb...etc are integers or half integers. 
+   The function takes as input arguments only integers which corresponds 
+   to half integer units, e.g two_ja = 2 * ja 
+
+
+   For detailed description see 
+   <A HREF="http://mathworld.wolfram.com/Wigner9j-Symbol.html">
+   Mathworld</A>.
+   The implementation used is that of 
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/9_002dj-Symbols.html#g_t9_002dj-Symbols">GSL</A>.
+   
+   @ingroup SpecFunc
 
   */
 
-   double wigner_9j(int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji);
+   double wigner_9j(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf, int two_jg, int two_jh, int two_ji);
 
 
 

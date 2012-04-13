@@ -59,4 +59,11 @@
 #pragma link C++ function ROOT::MathMore::chisquared_quantile(double,double);
 #pragma link C++ function ROOT::MathMore::gamma_quantile(double,double,double);
 
+
+// for auto-loading
+#ifdef USE_FOR_AUTLOADING
+#pragma link C++ class ROOT::Math;
+#endif
+
+
 #endif
