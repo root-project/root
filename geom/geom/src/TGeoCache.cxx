@@ -141,6 +141,7 @@ void TGeoNodeCache::BuildIdArray()
 void TGeoNodeCache::BuildInfoBranch()
 {
 // Bulds info branch. Navigation is possible only after this step.
+   if (fInfoBranch && fInfoBranch[0]) return;
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
       fInfoBranch[i] = new TGeoStateInfo();
    }   

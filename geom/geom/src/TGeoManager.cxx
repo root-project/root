@@ -818,6 +818,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
       fNavigators.insert(NavigatorsMap_t::value_type(threadId, array));
    }
    TGeoNavigator *nav = array->AddNavigator();
+   if (fClosed) nav->GetCache()->BuildInfoBranch();
    if (fMultiThread) TThread::UnLock();
    return nav;
 }   
@@ -3171,7 +3172,10 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fTopNode->SetNumber(1);
    fTopNode->SetTitle("Top logical node");
    fNodes->AddAt(fTopNode, 0);
-   if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
+   if (!GetCurrentNavigator()) {
+      fCurrentNavigator = AddNavigator();
+      return;
+   }      
    Int_t nnavigators = GetListOfNavigators()->GetEntriesFast();
    for (Int_t i=0; i<nnavigators; i++) {
       TGeoNavigator *nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
