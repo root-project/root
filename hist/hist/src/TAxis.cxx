@@ -367,6 +367,9 @@ Int_t TAxis::FindBin(const char *label)
 Int_t TAxis::FindFixBin(Double_t x) const
 {
    // Find bin number corresponding to abscissa x
+   //
+   // Identical to TAxis::FindBin except that if x is an underflow/overflow 
+   // no attempt is made to rebin the histogram if TH1::kCanRebin bit is set
 
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
