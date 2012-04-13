@@ -48,8 +48,6 @@ private:
    TObject     *fParent;         //!Object owning this axis
    THashList   *fLabels;         //List of labels
 
-   TAxis& operator=(const TAxis&); // Not implemented
-
 public:
    // TAxis status bits
    enum { kTickPlus      = BIT(9),
@@ -73,6 +71,8 @@ public:
    TAxis(Int_t nbins, const Double_t *xbins);
    TAxis(const TAxis &axis);
    virtual ~TAxis();
+   TAxis& operator=(const TAxis&);
+
    virtual void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
    virtual void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
    const char        *ChooseTimeFormat(Double_t axislength=0);
