@@ -45,9 +45,10 @@ ClassImp(TProfile2D)
 //      e(I,J)  =  s(I,J)/sqrt(L(I,J))
 //
 //  In the special case where s(I,J) is zero (eg, case of 1 entry only in one cell)
-//  e(I,J) is computed from the average of the s(I,J) for all cells.
+//  the bin error e(I,J) is computed from the average of the s(I,J) for all cells 
+//  if the static function TProfile2D::Approximate has been called. 
 //  This simple/crude approximation was suggested in order to keep the cell
-//  during a fit operation.
+//  during a fit operation. But note that this approximation is not the default behaviour.
 //
 //           Example of a profile2D histogram
 //{
@@ -165,44 +166,14 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 //*-*-*-*-*-*-*Set Profile2D histogram structure and options*-*-*-*-*-*-*-*-*
 //*-*          =============================================
 //
-//    If a cell has N data points all with the same value Z (especially
-//    possible when dealing with integers), the spread in Z for that cell
-//    is zero, and the uncertainty assigned is also zero, and the cell is
-//    ignored in making subsequent fits. If SQRT(Z) was the correct error
-//    in the case above, then SQRT(Z)/SQRT(N) would be the correct error here.
-//    In fact, any cell with non-zero number of entries N but with zero spread
-//    should have an uncertainty SQRT(Z)/SQRT(N).
+//    zmin:  minimum value allowed for z 
+//    zmax:  maximum value allowed for z 
+//            if (zmin = zmax = 0) there are no limits on the allowed z values (zmin = -inf, zmax = +inf)
 //
-//    Now, is SQRT(Z)/SQRT(N) really the correct uncertainty?
-//    that it is only in the case where the Z variable is some sort
-//    of counting statistics, following a Poisson distribution. This should
-//    probably be set as the default case. However, Z can be any variable
-//    from an original NTUPLE, not necessarily distributed "Poissonly".
-//    The computation of errors is based on the parameter option:
-//    option:
-//     ' '  (Default) Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  SQRT(Z)/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     's'            Errors are Spread  for Spread.ne.0. ,
-//                      "     "  SQRT(Z)  for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     'i'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  1./SQRT(12.*N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//
-//    The third case above corresponds to Integer Z values for which the
-//    uncertainty is +-0.5, with the assumption that the probability that Z
-//    takes any value between Z-0.5 and Z+0.5 is uniform (the same argument
-//    goes for Z uniformly distributed between Z and Z+1); this would be
-//    useful if Z is an ADC measurement, for example. Other, fancier options
-//    would be possible, at the cost of adding one more parameter to the PROFILE2D
-//    For example, if all Z variables are distributed according to some
-//    known Gaussian of standard deviation Sigma, then:
-//     'G'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  Sigma/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//    For example, this would be useful when all Z's are experimental quantities
-//    measured with the same instrument with precision Sigma.
+//    option:  this is the option for the computation of the t error of the profile ( TProfile2D::GetBinError )
+//             possible values for the options are documented in TProfile2D::SetErrorOption
+
+//   See TProfile::BuildOptions  for a detailed  deescription
 //
 //
 
@@ -1795,26 +1766,29 @@ void TProfile2D::SetErrorOption(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*Set option to compute profile2D errors*-*-*-*-*-*-*-*
 //*-*                =======================================
-//
-//    The computation of errors is based on the parameter option:
+//    The computation of the bin errors is based on the parameter option:
 //    option:
-//     ' '  (Default) Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  SQRT(Z)/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     's'            Errors are Spread  for Spread.ne.0. ,
-//                      "     "  SQRT(Z)  for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     'i'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  1./SQRT(12.*N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//   See TProfile2D::BuildOptions for explanation of all options
+//     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (Z), 
+//                    i.e. the standard error of the bin contents.
+//                    Note that if TProfile::Approximate()  is called, an approximation is used when 
+//                    the spread in Z is 0 and the number of bin entries  is > 0
+//
+//     's'            The bin errors are the standard deviations of the Z bin values 
+//                    Note that if TProfile::Approximate()  is called, an approximation is used when 
+//                    the spread in Z is 0 and the number of bin entries is > 0
+//
+//     'i'            Errors are as in default case (standard errors of the bin contents)
+//                    The only difference is for the case when the spread in Z is zero. 
+//                    In this case for N > 0 the error is  1./SQRT(12.*N) 
+//
+//     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
+//                    W is the sum in the bin of the weights of the profile. 
+//                    This option is for combining measurements z +/- dz,  
+//                    and  the profile is filled with values y and weights z = 1/dz**2
+//
+//   See TProfile::BuildOptions for a detailed explanation of all options
 
-   TString opt = option;
-   opt.ToLower();
-   fErrorMode = kERRORMEAN;
-   if (opt.Contains("s")) fErrorMode = kERRORSPREAD;
-   if (opt.Contains("i")) fErrorMode = kERRORSPREADI;
-   if (opt.Contains("g")) fErrorMode = kERRORSPREADG;
+   TProfileHelper::SetErrorOption(this, option);
 }
 
 //______________________________________________________________________________

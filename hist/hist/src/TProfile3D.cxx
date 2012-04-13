@@ -46,9 +46,10 @@ ClassImp(TProfile3D)
 //      e(I,J,K)  =  s(I,J,K)/sqrt(L(I,J,K))
 //
 //  In the special case where s(I,J,K) is zero (eg, case of 1 entry only in one cell)
-//  e(I,J,K) is computed from the average of the s(I,J,K) for all cells.
+//  e(I,J,K) is computed from the average of the s(I,J,K) for all cells,
+//  if the static function TProfile3D::Approximate has been called. 
 //  This simple/crude approximation was suggested in order to keep the cell
-//  during a fit operation.
+//  during a fit operation. But note that this approximation is not the default behaviour.
 //
 //           Example of a profile3D histogram
 //{
@@ -131,46 +132,14 @@ void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
 //*-*-*-*-*-*-*Set Profile3D histogram structure and options*-*-*-*-*-*-*-*-*
 //*-*          =============================================
 //
-//    If a cell has N data points all with the same value T (especially
-//    possible when dealing with integers), the spread in T for that cell
-//    is zero, and the uncertainty assigned is also zero, and the cell is
-//    ignored in making subsequent fits. If SQRT(T) was the correct error
-//    in the case above, then SQRT(T)/SQRT(N) would be the correct error here.
-//    In fact, any cell with non-zero number of entries N but with zero spread
-//    should have an uncertainty SQRT(T)/SQRT(N).
+//    tmin:  minimum value allowed for t 
+//    tmax:  maximum value allowed for t 
+//            if (tmin = tmax = 0) there are no limits on the allowed t values (tmin = -inf, tmax = +inf)
 //
-//    Now, is SQRT(T)/SQRT(N) really the correct uncertainty?
-//    that it is only in the case where the T variable is some sort
-//    of counting statistics, following a Poisson distribution. This should
-//    probably be set as the default case. However, T can be any variable
-//    from an original NTUPLE, not necessarily distributed "Poissonly".
-//    The computation of errors is based on the parameter option:
-//    option:
-//     ' '  (Default) Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  SQRT(T)/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     's'            Errors are Spread  for Spread.ne.0. ,
-//                      "     "  SQRT(T)  for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     'i'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  1./SQRT(12.*N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//
-//    The third case above corresponds to Integer T values for which the
-//    uncertainty is +-0.5, with the assumption that the probability that T
-//    takes any value between T-0.5 and T+0.5 is uniform (the same argument
-//    goes for T uniformly distributed between T and T+1); this would be
-//    useful if T is an ADC measurement, for example. Other, fancier options
-//    would be possible, at the cost of adding one more parameter to the PROFILE2D
-//    For example, if all T variables are distributed according to some
-//    known Gaussian of standard deviation Sigma, then:
-//     'G'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  Sigma/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//    For example, this would be useful when all T's are experimental quantities
-//    measured with the same instrument with precision Sigma.
-//
-//
+//    option:  this is the option for the computation of the t error of the profile ( TProfile3D::GetBinError )
+//             possible values for the options are documented in TProfile3D::SetErrorOption
+// 
+//    see also TProfile::BuildOptions for a detailed description
 
    SetErrorOption(option);
 
@@ -1309,28 +1278,32 @@ void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
 //______________________________________________________________________________
 void TProfile3D::SetErrorOption(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Set option to compute profile2D errors*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*Set option to compute profile3D errors*-*-*-*-*-*-*-*
 //*-*                =======================================
 //
-//    The computation of errors is based on the parameter option:
+//    The computation of the bin errors is based on the parameter option:
 //    option:
-//     ' '  (Default) Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  SQRT(T)/SQRT(N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     's'            Errors are Spread  for Spread.ne.0. ,
-//                      "     "  SQRT(T)  for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//     'i'            Errors are Spread/SQRT(N) for Spread.ne.0. ,
-//                      "     "  1./SQRT(12.*N) for Spread.eq.0,N.gt.0 ,
-//                      "     "  0.  for N.eq.0
-//   See TProfile3D::BuildOptions for explanation of all options
+//     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (T), 
+//                    i.e. the standard error of the bin contents.
+//                    Note that if TProfile3D::Approximate()  is called, an approximation is used when 
+//                    the spread in T is 0 and the number of bin entries  is > 0
+//
+//     's'            The bin errors are the standard deviations of the T bin values 
+//                    Note that if TProfile3D::Approximate()  is called, an approximation is used when 
+//                    the spread in T is 0 and the number of bin entries is > 0
+//
+//     'i'            Errors are as in default case (standard errors of the bin contents)
+//                    The only difference is for the case when the spread in T is zero. 
+//                    In this case for N > 0 the error is  1./SQRT(12.*N) 
+//
+//     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
+//                    W is the sum in the bin of the weights of the profile. 
+//                    This option is for combining measurements t +/- dt,  
+//                    and  the profile is filled with values t and weights w = 1/dt**2
+//
+//   See TProfile::BuildOptions for explanation of all options
 
-   TString opt = option;
-   opt.ToLower();
-   fErrorMode = kERRORMEAN;
-   if (opt.Contains("s")) fErrorMode = kERRORSPREAD;
-   if (opt.Contains("i")) fErrorMode = kERRORSPREADI;
-   if (opt.Contains("g")) fErrorMode = kERRORSPREADG;
+   TProfileHelper::SetErrorOption(this, option);
 }
 
 //______________________________________________________________________________
