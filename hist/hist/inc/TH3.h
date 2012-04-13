@@ -114,10 +114,10 @@ public:
          TH1       *Project3D(Option_t *option="x") const; // *MENU*
    TProfile2D      *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
-   virtual TH3     *RebinX(Int_t ngroup, const char *newname);
-   virtual TH3     *RebinY(Int_t ngroup, const char *newname);
-   virtual TH3     *RebinZ(Int_t ngroup, const char *newname);
-   virtual TH3     *Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newname);
+   virtual TH3     *RebinX(Int_t ngroup = 2, const char *newname = "");
+   virtual TH3     *RebinY(Int_t ngroup = 2, const char *newname = "");
+   virtual TH3     *RebinZ(Int_t ngroup = 2, const char *newname = "");
+   virtual TH3     *Rebin3D(Int_t nxgroup = 2, Int_t nygroup = 2, Int_t nzgroup = 2, const char *newname = "");
    virtual void     Reset(Option_t *option="");
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
 
