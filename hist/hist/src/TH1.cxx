@@ -5074,7 +5074,7 @@ Long64_t TH1::Merge(TCollection *li)
    // }
 
    if (!li) return 0;
-   if (li->IsEmpty()) return (Int_t) GetEntries();
+   if (li->IsEmpty()) return (Long64_t) GetEntries();
 
    // is this really needed ? 
    TList inlist;
@@ -5216,7 +5216,7 @@ Long64_t TH1::Merge(TCollection *li)
             inlist.Remove(hclone);
             delete hclone; 
          }
-         return (Int_t) GetEntries();  
+         return (Long64_t) GetEntries();  
       }
       next.Reset();
    }

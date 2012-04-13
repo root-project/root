@@ -1436,7 +1436,7 @@ Long64_t TH2::Merge(TCollection *list)
    //be a multiple of the bin width.
 
    if (!list) return 0;
-   if (list->IsEmpty()) return (Int_t) GetEntries();
+   if (list->IsEmpty()) return (Long64_t) GetEntries();
 
    TList inlist;
    inlist.AddAll(list);
@@ -1544,7 +1544,7 @@ Long64_t TH2::Merge(TCollection *list)
             inlist.Remove(hclone);
             delete hclone; 
          }
-         return (Int_t) GetEntries();  // all histograms have been processed
+         return (Long64_t) GetEntries();  // all histograms have been processed
       }
       next.Reset();
    }
