@@ -1,8 +1,8 @@
 Index: test/Makefile
 ===================================================================
---- test/Makefile	(revision 154005)
+--- test/Makefile	(revision 154661)
 +++ test/Makefile	(working copy)
-@@ -61,6 +61,8 @@
+@@ -61,14 +61,22 @@
  ifndef TESTSUITE
  ifeq ($(shell test -f $(PROJ_OBJ_DIR)/../tools/clang/Makefile && echo OK), OK)
  LIT_ALL_TESTSUITES += $(PROJ_OBJ_DIR)/../tools/clang/test
@@ -11,7 +11,13 @@ Index: test/Makefile
  
  # Force creation of Clang's lit.site.cfg.
  clang-lit-site-cfg: FORCE
-@@ -69,6 +71,7 @@
+ 	$(MAKE) -C $(PROJ_OBJ_DIR)/../tools/clang/test lit.site.cfg Unit/lit.site.cfg
+ extra-lit-site-cfgs:: clang-lit-site-cfg
++
++# Force creation of Cling's lit.site.cfg.
++cling-lit-site-cfg: FORCE
++	$(MAKE) -C $(PROJ_OBJ_DIR)/../tools/cling/test lit.site.cfg
++extra-lit-site-cfgs:: cling-lit-site-cfg
  endif
  endif
  endif
