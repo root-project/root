@@ -103,6 +103,7 @@ private:
 };
 
 void MapUnicharToKeySym(unichar key, char *buf, Int_t len, UInt_t &rootKeySym);
+Int_t MapKeySymToKeyCode(Int_t keySym);
 
 }//X11
 }//MacOSX

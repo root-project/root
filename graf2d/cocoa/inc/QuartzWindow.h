@@ -89,6 +89,19 @@
 
 @end
 
+//////////////////////////////////////////////////////////////
+//                                                          //
+// I have to attach passive key grabs to a view.            //
+//                                                          //
+//////////////////////////////////////////////////////////////
+
+@interface PassiveKeyGrab : NSObject
+- (Int_t) fKeyCode;
+- (UInt_t) fModifiers;
+- (id) initWithKey : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+- (BOOL) matchKey : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+@end
+
 ////////////////////////////////////////
 //                                    //
 // QuartzView class - child window.   //
@@ -176,6 +189,11 @@
 //
 - (void)     configureNotifyTree;
 - (void)     updateLevel : (unsigned) newLevel;
+
+//Keyboard:
+- (void)     addPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+- (void)     removePassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+- (PassiveKeyGrab *) findPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
 
 @end
 

@@ -23,13 +23,14 @@ namespace {
 
 //Convert unichar (from [NSEvent characters]) into
 //ROOT's key symbol (from KeySymbols.h).
-struct CharKeyPair {
-   unichar fUnichar;
-   EKeySym fRootKeySym;
+template<typename T1, typename T2>
+struct KeySymPair {
+   T1 fFirst;
+   T2 fSecond;
    
-   bool operator < (const CharKeyPair &rhs)const
+   bool operator < (const KeySymPair &rhs)const
    {
-      return fUnichar < rhs.fUnichar;
+      return fFirst < rhs.fFirst;
    }
 };
 
@@ -40,7 +41,7 @@ void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySy
 {
    assert(buf != nullptr && "MapUnicharToKeySym, buf parameter is null");
 
-   static const CharKeyPair keyMap[] = {
+   static const KeySymPair<unichar, EKeySym> keyMap[] = {
         {NSEnterCharacter, kKey_Enter},
         {NSTabCharacter, kKey_Tab},
         {NSCarriageReturnCharacter, kKey_Return},
@@ -102,18 +103,98 @@ void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySy
    
    buf[1] = 0;
 
-   CharKeyPair valueToFind = {};
-   valueToFind.fUnichar = key;
+   KeySymPair<unichar, EKeySym> valueToFind = {};
+   valueToFind.fFirst = key;
    auto iter = std::lower_bound(keyMap, keyMap + nEntries, valueToFind);
    
-   if (iter != keyMap + nEntries && iter->fUnichar == key) {
+   if (iter != keyMap + nEntries && iter->fFirst == key) {
       buf[0] = 0;
-      rootKeySym = iter->fRootKeySym;
+      rootKeySym = iter->fSecond;
    } else {
       buf[0] = key;//????
       rootKeySym = key;   
    }
 }
+
+//______________________________________________________________________________
+Int_t MapKeySymToKeyCode(Int_t keySym)
+{
+   static const KeySymPair<EKeySym, unichar> keyMap[] = {
+      {kKey_Escape, 27},
+      {kKey_Tab, NSTabCharacter},
+      {kKey_Backtab, NSBackTabCharacter},
+      {kKey_Backspace, NSDeleteCharacter},
+      {kKey_Return, NSCarriageReturnCharacter},
+      {kKey_Enter, NSEnterCharacter},
+      {kKey_Insert, NSInsertFunctionKey},
+      {kKey_Delete, NSDeleteFunctionKey},
+      {kKey_Pause, NSPauseFunctionKey},
+      {kKey_Print, NSPrintScreenFunctionKey},
+      {kKey_SysReq, NSSysReqFunctionKey},
+      {kKey_Home, NSHomeFunctionKey},
+      {kKey_End, NSEndFunctionKey},
+      {kKey_Left, NSLeftArrowFunctionKey},
+      {kKey_Up, NSUpArrowFunctionKey},
+      {kKey_Right, NSRightArrowFunctionKey},
+      {kKey_Down, NSDownArrowFunctionKey},
+      {kKey_PageUp, NSPageUpFunctionKey},
+      {kKey_PageDown, NSPageDownFunctionKey},
+      //This part is bad.
+      {kKey_Shift, 0},
+      {kKey_Control, 0},
+      {kKey_Alt, 0},
+      {kKey_CapsLock, 0},
+      {kKey_NumLock, 0},
+      //
+      {kKey_ScrollLock, NSScrollLockFunctionKey},
+      {kKey_F1, NSF1FunctionKey},
+      {kKey_F2, NSF2FunctionKey},
+      {kKey_F3, NSF3FunctionKey},
+      {kKey_F4, NSF4FunctionKey},
+      {kKey_F5, NSF5FunctionKey},
+      {kKey_F6, NSF6FunctionKey},
+      {kKey_F7, NSF7FunctionKey},
+      {kKey_F8, NSF8FunctionKey},
+      {kKey_F8, NSF9FunctionKey},
+      {kKey_F10, NSF10FunctionKey},
+      {kKey_F11, NSF11FunctionKey},
+      {kKey_F12, NSF12FunctionKey},
+      {kKey_F13, NSF13FunctionKey},
+      {kKey_F14, NSF14FunctionKey},
+      {kKey_F15, NSF15FunctionKey},
+      {kKey_F16, NSF16FunctionKey},
+      {kKey_F17, NSF17FunctionKey},
+      {kKey_F18, NSF18FunctionKey},
+      {kKey_F19, NSF19FunctionKey},
+      {kKey_F20, NSF20FunctionKey},
+      {kKey_F21, NSF21FunctionKey},
+      {kKey_F22, NSF22FunctionKey},
+      {kKey_F23, NSF23FunctionKey},
+      {kKey_F24, NSF24FunctionKey},
+      {kKey_F25, NSF25FunctionKey},
+      {kKey_F26, NSF26FunctionKey},
+      {kKey_F27, NSF27FunctionKey},
+      {kKey_F28, NSF28FunctionKey},
+      {kKey_F29, NSF29FunctionKey},
+      {kKey_F30, NSF30FunctionKey},
+      {kKey_F31, NSF31FunctionKey},
+      {kKey_F32, NSF32FunctionKey},
+      {kKey_F33, NSF33FunctionKey},
+      {kKey_F34, NSF34FunctionKey},
+      {kKey_F35, NSF35FunctionKey}
+   };
+
+   const unsigned nEntries = sizeof keyMap / sizeof keyMap[0];
+
+   KeySymPair<EKeySym, unichar> valueToFind = {};
+   valueToFind.fFirst = static_cast<EKeySym>(keySym);
+   auto iter = std::lower_bound(keyMap, keyMap + nEntries, valueToFind);   
+   if (iter != keyMap + nEntries && iter->fFirst == keySym)
+      return iter->fSecond;
+
+   return 0;
+}
+
 
 namespace Detail {
 

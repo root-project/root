@@ -2633,8 +2633,7 @@ void TGCocoa::SetKeyAutoRepeat(Bool_t /*on = kTRUE*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::GrabKey(Window_t /*wid*/, Int_t /*keycode*/, UInt_t /*modifier*/,
-                        Bool_t /*grab = kTRUE*/)
+void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t modifiers, Bool_t grab)
 {
    // Establishes a passive grab on the keyboard. In the future, the
    // keyboard is actively grabbed, the last-keyboard-grab time is set
@@ -2658,6 +2657,16 @@ void TGCocoa::GrabKey(Window_t /*wid*/, Int_t /*keycode*/, UInt_t /*modifier*/,
    // grab     - a switch between grab/ungrab key
    //            grab = kTRUE  grab the key and modifier
    //            grab = kFALSE ungrab the key and modifier
+
+   assert(!fPimpl->IsRootWindow(wid) && "GrabKey, called for 'root' window");
+   
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
+   QuartzView *view = drawable.fContentView;
+
+   if (grab)
+      [view addPassiveKeyGrab : keyCode modifiers : modifiers];
+   else
+      [view removePassiveKeyGrab : keyCode modifiers : modifiers];
 }
 
 //______________________________________________________________________________
@@ -2712,14 +2721,14 @@ void TGCocoa::SetWMTransientHint(Window_t /*wid*/, Window_t /*main_id*/)
 }
 
 //______________________________________________________________________________
-Int_t TGCocoa::KeysymToKeycode(UInt_t /*keysym*/)
+Int_t TGCocoa::KeysymToKeycode(UInt_t keySym)
 {
    // Converts the "keysym" to the appropriate keycode. For example,
    // keysym is a letter and keycode is the matching keyboard key (which
    // is dependend on the current keyboard mapping). If the specified
    // "keysym" is not defined for any keycode, returns zero.
 
-   return 0;
+   return X11::MapKeySymToKeyCode(keySym);
 }
 
 //______________________________________________________________________________
