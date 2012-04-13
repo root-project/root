@@ -106,7 +106,7 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
       qw.contentView = nil;
    }
 
-   fFreeDrawableIDs.push_back(drawableID);
+//   fFreeDrawableIDs.push_back(drawableID);
    fDrawables.erase(drawableIter);//StrongReference should do work here.
 }
 
