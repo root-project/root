@@ -7,6 +7,8 @@
 #ifndef CLING_CHAINED_CONSUMER_H
 #define CLING_CHAINED_CONSUMER_H
 
+#include "cling/Interpreter/CompilationOptions.h"
+
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -76,34 +78,95 @@ namespace cling {
 
     bool EnableConsumer(EConsumerIndex I) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
-      bool PrevousState = Enabled[I];
-      Enabled.set(I);
-      return PrevousState;
+      bool prev;
+      CompilationOptions CO = getCompilationOpts();
+      switch(I) {
+      case kEvaluateTSynthesizer : 
+        prev = CO.DynamicScoping; CO.DynamicScoping = 1; break;
+      case kDeclExtractor :
+        prev = CO.DeclarationExtraction; CO.DeclarationExtraction = 1; break;
+      case kValuePrinterSynthesizer : 
+        prev = CO.ValuePrinting; CO.ValuePrinting = 1; break;
+      case kASTDumper : 
+        prev = CO.Debug; CO.Debug = 1; break;
+      case kCodeGenerator : 
+        prev = CO.CodeGeneration; CO.CodeGeneration = 1; break;
+      case kConsumersCount : break;
+      }
+
+      return prev;
     }
 
     bool DisableConsumer(EConsumerIndex I) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
-      bool PrevousState = Enabled[I];
-      Enabled.reset(I);
-      return PrevousState;
+      bool prev = false;
+      CompilationOptions CO = getCompilationOpts();
+      switch(I) {
+      case kEvaluateTSynthesizer : 
+        prev = CO.DynamicScoping; CO.DynamicScoping = 0; break;
+      case kDeclExtractor :
+        prev = CO.DeclarationExtraction; CO.DeclarationExtraction = 0; break;
+      case kValuePrinterSynthesizer : 
+        prev = CO.ValuePrinting; CO.ValuePrinting = 0; break;
+      case kASTDumper : 
+        prev = CO.Debug; CO.Debug = 0; break;
+      case kCodeGenerator : 
+        prev = CO.CodeGeneration; CO.CodeGeneration = 0; break;
+      case kConsumersCount : break;
+      }
+
+      return prev;
     }
 
     void RestorePreviousState(EConsumerIndex I, bool Previous) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
-      Enabled.set(I, Previous);
+
+      CompilationOptions CO = getCompilationOpts();
+      switch(I) {
+      case kEvaluateTSynthesizer : CO.DynamicScoping = Previous; break;
+      case kDeclExtractor : CO.DeclarationExtraction = Previous; break;
+      case kValuePrinterSynthesizer : CO.ValuePrinting = Previous; break;
+      case kASTDumper : CO.Debug = Previous; break;
+      case kCodeGenerator : CO.CodeGeneration = Previous; break;
+      case kConsumersCount : break;
+      }
     }
 
     bool IsConsumerEnabled(EConsumerIndex I) {
-      return Enabled[I];
+      if (!Exists(I))
+        return false;
+
+      const CompilationOptions CO = getCompilationOpts();
+      switch(I) {
+      case kEvaluateTSynthesizer : return CO.DynamicScoping;
+      case kDeclExtractor : return CO.DeclarationExtraction;
+      case kValuePrinterSynthesizer : return CO.ValuePrinting == 1;
+      case kASTDumper : return CO.Debug;
+      case kCodeGenerator : return CO.CodeGeneration;
+      case kConsumersCount : return false;
+      }
     }
 
     bool IsQueueing() { return m_Queueing; }
 
     void DumpQueue();
     void Update(VerifyingSemaConsumer* ESSC);
+    void pushCompilationOpts(CompilationOptions CO) {
+      COStack.push_back(CO);
+    }
+
+    void popCompilationOpts() {
+      assert(COStack.size() && "Cannot pop elements back.");
+      COStack.pop_back();
+    }
+
+    const CompilationOptions& getCompilationOpts() {
+      return COStack.back();
+    }
+
   private:
     clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
-    std::bitset<kConsumersCount> Enabled;
+    llvm::SmallVector<CompilationOptions, 2> COStack;
     llvm::OwningPtr<ASTNodeEraser> NodeEraser;
     llvm::OwningPtr<ChainedMutationListener> MutationListener;
     llvm::OwningPtr<ChainedDeserializationListener> DeserializationListener;

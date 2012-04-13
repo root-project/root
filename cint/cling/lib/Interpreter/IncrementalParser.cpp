@@ -143,55 +143,33 @@ namespace cling {
   IncrementalParser::CompileLineFromPrompt(llvm::StringRef input) {
     assert(input.str()[0] != '#' 
            && "Preprocessed line! Call CompilePreprocessed instead");
-    
-    bool p, q;
-    m_Consumer->RestorePreviousState(ChainedConsumer::kEvaluateTSynthesizer,
-                                     isDynamicLookupEnabled());
+    CompilationOptions CO;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.DeclarationExtraction = 1;
+    CO.ValuePrinting = 1;
 
-    p = m_Consumer->EnableConsumer(ChainedConsumer::kDeclExtractor);
-    q = m_Consumer->EnableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
-    EParseResult Result = Compile(input);
-    m_Consumer->RestorePreviousState(ChainedConsumer::kDeclExtractor, p);
-    m_Consumer->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer, q);
-
-    return Result;
-
+    return Compile(input, CO);
   }
 
   IncrementalParser::EParseResult 
   IncrementalParser::CompileAsIs(llvm::StringRef input) {
-    bool p, q;
-    m_Consumer->RestorePreviousState(ChainedConsumer::kEvaluateTSynthesizer,
-                                     isDynamicLookupEnabled());
+    CompilationOptions CO;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
 
-    p = m_Consumer->DisableConsumer(ChainedConsumer::kDeclExtractor);
-    q = m_Consumer->DisableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
-    EParseResult Result = Compile(input);
-    m_Consumer->RestorePreviousState(ChainedConsumer::kDeclExtractor, p);
-    m_Consumer->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer, q);
-
-    return Result;
+    return Compile(input, CO);
   }
 
   IncrementalParser::EParseResult
   IncrementalParser::Compile(llvm::StringRef input, 
                              const CompilationOptions& Opts) {
 
-    // Set the state of the chained consumer
-    m_Consumer->RestorePreviousState(ChainedConsumer::kDeclExtractor,
-                                     Opts.DeclarationExtraction);
+    m_Consumer->pushCompilationOpts(Opts);
+    EParseResult Result = Compile(input);
+    m_Consumer->popCompilationOpts();
 
-    m_Consumer->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer,
-                                     Opts.ValuePrinting);
-    m_Consumer->RestorePreviousState(ChainedConsumer::kEvaluateTSynthesizer,
-                                     Opts.DynamicScoping);
-
-    m_Consumer->RestorePreviousState(ChainedConsumer::kASTDumper, Opts.Debug);
-
-    m_Consumer->RestorePreviousState(ChainedConsumer::kCodeGenerator, 
-                                     Opts.CodeGeneration);
-
-    return Compile(input);
+    return Result;
   }
 
 
