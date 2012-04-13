@@ -98,9 +98,9 @@ void SetStrokeDashFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
 }
 
 //______________________________________________________________________________
-void SetStrokeDoubleDashFromX11Context(CGContextRef ctx, const GCValues_t & /*gcVals*/)
+void SetStrokeDoubleDashFromX11Context(CGContextRef /*ctx*/, const GCValues_t & /*gcVals*/)
 {
-   assert(ctx != nullptr && "SetStrokeDoubleDashFromX11Context, ctx parameter is null");
+   //assert(ctx != nullptr && "SetStrokeDoubleDashFromX11Context, ctx parameter is null");
    ::Warning("SetStrokeDoubleDashFromX11Context", "Not implemented yet, kick tpochep!");
 }
 
@@ -1759,9 +1759,7 @@ void TGCocoa::DeletePixmapAux(Pixmap_t pixmapID)
 void TGCocoa::DeletePixmap(Pixmap_t pixmapID)
 {
    // Explicitely deletes the pixmap resource "pmap".
-   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(pixmapID);
-   assert(drawable.fIsPixmap == YES && "DeletePixmap, object is not a pixmap");
-   
+   assert(fPimpl->GetDrawable(pixmapID).fIsPixmap == YES && "DeletePixmap, object is not a pixmap");   
    fPimpl->fX11CommandBuffer.AddDeletePixmap(pixmapID);
 }
 

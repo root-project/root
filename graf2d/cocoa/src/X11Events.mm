@@ -1054,17 +1054,19 @@ void EventTranslator::GeneratePointerMotionEventNoGrab(QuartzView *eventView, NS
 }
 
 //______________________________________________________________________________
-void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView *eventView, NSEvent *theEvent)
+void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventView*/, NSEvent *theEvent)
 {
    //More complex case. Grab can be result of button press and set by SetPointerGrab.
    //In case of button press (this is either passive->active or implicit grab),
    //Cocoa has it's own grab, so view (and window) can be not under cursor (but still
    //it receives events). So I can not simple use eventView here.
    
+   //TODO: change interface? - remove eventView parameter declaration.
+   
    if (!fCurrentGrabView)//Implicit grab when nobody has PressButtonMask
       return;
    
-   assert(eventView != nil && "GeneratePointerMotionEventActiveGrab, view parameter is nil");
+   //assert(eventView != nil && "GeneratePointerMotionEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GeneratePointerMotionEventActiveGrab, event parameter is nil");
 
    if (fOwnerEvents) {
@@ -1113,9 +1115,11 @@ void EventTranslator::GenerateButtonPressEventNoGrab(QuartzView *view, NSEvent *
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, NSEvent *theEvent, EMouseButton btn)
 {
-   assert(view != nil && "GenerateButtonPressEventActiveGrab, view parameter is nil");
+   //TODO: change interface? remove view parameter from declaration.
+
+   //assert(view != nil && "GenerateButtonPressEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonPressEventActiveGrab, event parameter is nil");
 
    //I did not find in X11 spec. the case when I have two passive grabs on window A and window B,

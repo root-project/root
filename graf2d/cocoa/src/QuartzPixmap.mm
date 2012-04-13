@@ -597,16 +597,14 @@ bool AdjustCropArea(QuartzPixmap *srcPixmap, Rectangle_t &cropArea)
 }
 
 //______________________________________________________________________________
-bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned h, unsigned i, unsigned j)
+bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned i, unsigned j)
 {
    //Test if a bit (i,j) is set in a bitmap (w, h).
    
    //Code in ROOT's GUI suggests, that byte is octet.
    assert(bitmap != nullptr && "TestBitmapBit, bitmap parameter is null");
    assert(w != 0 && "TestBitmapBit, w parameter is 0");
-   assert(h != 0 && "TestBitmapBit, h parameter is 0");
    assert(i < w && "TestBitmapBit, i parameter is >= w");
-   assert(j < h && "TestBitmapBit, j parameter is >= h");
    
    const unsigned bytesPerLine = (w + 7) / 8;
    const unsigned char *line = bitmap + j * bytesPerLine;
@@ -634,7 +632,7 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
          for (unsigned i = 0; i < width; ++i) {
             const unsigned pixel = line + i * 4;
             
-            if (TestBitmapBit(bitmap, width, height, i, j)) {
+            if (TestBitmapBit(bitmap, width, i, j)) {
                //Foreground color.
                imageData[pixel] = foregroundColor[0];
                imageData[pixel + 1] = foregroundColor[1];
@@ -653,7 +651,7 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
          const unsigned line = j * width;
          for (unsigned i = 0; i < width; ++i) {
             const unsigned pixel = line + i;
-            if (TestBitmapBit(bitmap, width, height, i, j))
+            if (TestBitmapBit(bitmap, width, i, j))
                imageData[pixel] = 0;
             else
                imageData[pixel] = 255;//mask out pixel.
