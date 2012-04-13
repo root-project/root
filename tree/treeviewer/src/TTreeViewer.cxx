@@ -1241,7 +1241,7 @@ const char* TTreeViewer::EmptyBrackets(const char* name)
       if (end == kNPOS) {
          objstr = new TObjString(retstr.Data());
          fWidgets->Add(objstr);
-         return (objstr->GetString()).Data();
+         return (objstr->String()).Data();
       }
       index = start+2;
       retstr = stripped.Remove(start+1, end-start-1);
@@ -1249,7 +1249,7 @@ const char* TTreeViewer::EmptyBrackets(const char* name)
    }
    objstr = new TObjString(retstr.Data());
    fWidgets->Add(objstr);
-   return (objstr->GetString()).Data();
+   return (objstr->String()).Data();
 }
 
 //______________________________________________________________________________
