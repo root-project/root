@@ -277,7 +277,7 @@ namespace cling {
     const char* CurPtr = RawLexer.getBufferLocation();
     if (CurPtr == MB->getBufferEnd()) {
       // Already at end of the buffer, return just the zero byte at the end.
-      return StringRef(CurPtr, 1);
+      return StringRef(CurPtr, 0);
     }
     Token TmpTok;
     RawLexer.getAndAdvanceChar(CurPtr, TmpTok);
@@ -285,15 +285,16 @@ namespace cling {
   }
 
   llvm::StringRef MetaProcessor::SanitizeArg(const std::string& Str) {
-    
+    if(Str.empty())
+      return Str;
+
     size_t begins = Str.find_first_not_of(" \t\n");
     size_t ends = Str.find_last_not_of(" \t\n") + 1;
-    if (begins == std::string::npos)
-      begins = 0;
-    if (ends == std::string::npos)
-      ends = Str.size();
 
-      return Str.substr(begins, ends - begins);
+    if (begins == std::string::npos)
+      ends = begins + 1;
+
+    return llvm::StringRef(Str.c_str(), ends - begins);
   }
 
   void MetaProcessor::PrintCommandHelp() {
