@@ -79,7 +79,7 @@ namespace cling {
       assert(CG && "No CodeGen?!");
       addConsumer(ChainedConsumer::kCodeGenerator, CG);
     }
-    m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema(),
+    m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema()
                               false /*skipFuncBodies*/));
     CI->getPreprocessor().EnterMainSourceFile();
     // Initialize the parser after we have entered the main source file.
@@ -146,7 +146,7 @@ namespace cling {
     CompilationOptions CO;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.DeclarationExtraction = 1;
-    CO.ValuePrinting = 1;
+    CO.ValuePrinting = 2;
 
     return Compile(input, CO);
   }

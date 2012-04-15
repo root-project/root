@@ -376,13 +376,7 @@ namespace cling {
   Interpreter::processLine(const std::string& input_line, 
                            bool rawInput /*=false*/,
                            Value* V, /*=0*/
-                           const Decl** D /*=0*/) {    
-    std::string functName;
-    std::string wrapped = input_line;
-    if (!V && !rawInput && canWrapForCall(input_line)) {
-      WrapInput(wrapped, functName);
-    }
-
+                           const Decl** D /*=0*/) {
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()
@@ -391,13 +385,43 @@ namespace cling {
     Diag.setDiagnosticMapping(clang::diag::warn_unused_call,
                               clang::diag::MAP_IGNORE, SourceLocation());
 
-    CompilationResult Result = kSuccess; 
-    if (V && !rawInput && canWrapForCall(input_line))
-      *V = Evaluate(input_line.c_str(), /*DeclContext=*/0);
-    else
-      Result = handleLine(wrapped, functName, rawInput, D);
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 1;
+    CO.ValuePrinting = 2;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingAST();
 
-    return Result;
+    if (rawInput)
+      return Declare(input_line, CO, D);
+
+    if (!canWrapForCall(input_line))
+      return declare(input_line, D);
+
+
+    if (V) {
+      return Evaluate(input_line, CO, V);
+    }
+    
+    std::string functName;
+    std::string wrapped = input_line;
+    WrapInput(wrapped, functName);
+
+    if (m_IncrParser->Compile(wrapped, CO) == IncrementalParser::kFailed)
+        return Interpreter::kFailure;
+
+    if (D)
+      *D = m_IncrParser->getLastTransaction().getFirstDecl();
+
+    //
+    //  Run it using the JIT.
+    //
+    // TODO: Handle the case when RunFunction wasn't able to run the function
+    bool RunRes = RunFunction(functName);
+
+    if (RunRes)
+      return Interpreter::kSuccess;
+
+    return Interpreter::kFailure;
   }
 
   Interpreter::CompilationResult
@@ -411,6 +435,10 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::evaluate(const std::string& input, Value* V /* = 0 */) {
+    // Here we might want to enforce further restrictions like: Only one
+    // ExprStmt can be evaluated and etc. Such enforcement cannot happen in the
+    // worker, because it is used from various places, where there is no such
+    // rule
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
@@ -422,7 +450,7 @@ namespace cling {
   Interpreter::echo(const std::string& input, Value* V /* = 0 */) {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 1;
+    CO.ValuePrinting = 2;
 
     return Evaluate(input, CO, V);
   }
@@ -474,40 +502,6 @@ namespace cling {
     llvm::raw_string_ostream(out) << m_UniqueCounter++;
   }
 
-  
-  Interpreter::CompilationResult
-  Interpreter::handleLine(llvm::StringRef input, llvm::StringRef FunctionName,
-                          bool rawInput /*=false*/, const Decl** D /*=0*/) {
-    // if we are using the preprocessor
-    if (rawInput || !canWrapForCall(input)) {
-      CompilationOptions CO;
-      CO.DeclarationExtraction = 1;
-      CO.ValuePrinting = m_ValuePrinterEnabled;
-      CO.DynamicScoping = isDynamicLookupEnabled();
-      CO.Debug = isPrintingAST();
-      
-      return Declare(input,CO, D);
-    }
-
-    if (m_IncrParser->CompileLineFromPrompt(input) 
-        == IncrementalParser::kFailed)
-        return Interpreter::kFailure;
-
-    if (D)
-      *D = m_IncrParser->getLastTransaction().getFirstDecl();
-
-    //
-    //  Run it using the JIT.
-    //
-    // TODO: Handle the case when RunFunction wasn't able to run the function
-    bool RunRes = RunFunction(FunctionName);
-
-    if (RunRes)
-      return Interpreter::kSuccess;
-
-    return Interpreter::kFailure;
-  }
-
   Interpreter::CompilationResult
   Interpreter::Declare(const std::string& input, const CompilationOptions& CO,
                        const clang::Decl** D /* = 0 */) {
@@ -549,36 +543,64 @@ namespace cling {
     TheSema.CurContext = TopLevelFD;
     ASTContext& Context(getCI()->getASTContext());
     QualType RetTy;
-    // We expect only one expression statement 
+    // We have to be able to mark the expression for printout. There are three
+    // scenarios:
+    // 0: Expression printing disabled - don't do anything just disable the 
+    //    consumer
+    //    is our marker, even if there wasn't missing ';'.
+    // 1: Expression printing enabled - make sure we don't have NullStmt, which
+    //    is used as a marker to suppress the print out.
+    // 2: Expression printing auto - do nothing - rely on the omitted ';' to 
+    //    not produce the suppress marker.
     if (CompoundStmt* CS = dyn_cast<CompoundStmt>(TopLevelFD->getBody())) {
-      assert((CS->size() || CS->size() > 2) && "Only one ExprStmt expected!");
-      
-      if (Expr* E = dyn_cast_or_null<Expr>(CS->body_back())) {
-        RetTy = E->getType();
-        if (!RetTy->isVoidType()) {
-          // Change the void function's return type
-          FunctionProtoType::ExtProtoInfo EPI;
-          QualType FuncTy = Context.getFunctionType(RetTy, /*ArgArray*/0,
-                                                    /*NumArgs*/0, EPI);
-          TopLevelFD->setType(FuncTy);
-          // add return stmt
-          Stmt* RetS = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
-          CS->setLastStmt(RetS);
+      // Collect all Stmts, contained in the CompoundStmt
+      llvm::SmallVector<Stmt *, 4> Stmts;
+      for (CompoundStmt::body_iterator iStmt = CS->body_begin(), 
+             eStmt = CS->body_end(); iStmt != eStmt; ++iStmt)
+        Stmts.push_back(*iStmt);
+
+      size_t indexOfLastExpr = Stmts.size();
+      while(indexOfLastExpr--) {
+        // find the trailing expression statement (skip e.g. null statements)
+        if (Expr* E = dyn_cast_or_null<Expr>(Stmts[indexOfLastExpr])) {
+          RetTy = E->getType();
+          if (!RetTy->isVoidType()) {
+            // Change the void function's return type
+            FunctionProtoType::ExtProtoInfo EPI;
+            QualType FuncTy = Context.getFunctionType(RetTy,/* ArgArray = */0,
+                                                      /* NumArgs = */0, EPI);
+            TopLevelFD->setType(FuncTy);
+            // Strip the parenthesis if any
+            //if (ParenExpr* PE = dyn_cast<ParenExpr>(E))
+            //  E = PE->getSubExpr();
+
+            // Change it with return stmt
+            Stmts[indexOfLastExpr] 
+              = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
+          }
+          // even if void: we found an expression
+          break;
         }
       }
+
+      // case 1:
+      if (CO.ValuePrinting) 
+        if (indexOfLastExpr < Stmts.size() - 1 && 
+            isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
+          Stmts.erase(Stmts.begin() + indexOfLastExpr);
+          // Stmts.insert(Stmts.begin() + indexOfLastExpr + 1, 
+          //              TheSema.ActOnNullStmt(SourceLocation()).take());
+
+      // Update the CompoundStmt body
+      CS->setStmts(TheSema.getASTContext(), Stmts.data(), Stmts.size());
+
     }
 
     TheSema.CurContext = CurContext;
 
     // FIXME: Finish the transaction in better way
-    m_IncrParser->CompileAsIs("");
+    m_IncrParser->Compile("", CO);
 
-    // Attach the value printer
-    if (CO.ValuePrinting) {
-      std::string VPAttached = WrapperName + "()";
-      WrapInput(VPAttached, WrapperName);
-      m_IncrParser->Compile(VPAttached, CO);
-    }
     // get the result
     llvm::GenericValue val;
     RunFunction(WrapperName, &val);
@@ -792,7 +814,6 @@ namespace cling {
     assert(S.ExternalSource && "No ExternalSource set!");
     static_cast<DynamicIDHandler*>(S.ExternalSource)->Callbacks = C;
   }
-      
 
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
     m_IncrParser->enableDynamicLookup(value);

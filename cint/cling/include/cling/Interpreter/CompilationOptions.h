@@ -21,7 +21,9 @@ namespace cling {
 
     ///\brief Whether or not to print the result of the run input
     ///
-    unsigned ValuePrinting : 1;
+    /// 0 -> Disabled; 1 -> Enabled; 2 -> Auto;
+    ///
+    unsigned ValuePrinting : 2;
 
     ///\brief Whether or not to extend the static scope with new information
     /// about the names available only at runtime
@@ -34,11 +36,12 @@ namespace cling {
 
     ///\brief Whether or not to generate executable (LLVM IR) code for the input
     /// or to cache the incoming declarations in a queue
+    ///
     unsigned CodeGeneration : 1;
 
     CompilationOptions() {
       DeclarationExtraction = 1;
-      ValuePrinting = 1;
+      ValuePrinting = 2;
       DynamicScoping = 0;
       Debug = 0;
       CodeGeneration = 1;

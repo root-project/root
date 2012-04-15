@@ -197,7 +197,6 @@ namespace cling {
     ///
     CompilationResult echo(const std::string& input, Value* V = 0);
 
-
     bool loadFile(const std::string& filename,
                   bool allowSharedLib = true);
     
@@ -245,10 +244,6 @@ namespace cling {
 
   private:
     void handleFrontendOptions();
-    CompilationResult handleLine(llvm::StringRef Input,
-                                 llvm::StringRef FunctionName,
-                                 bool rawInput = false,
-                                 const clang::Decl** D = 0);
     CompilationResult Declare(const std::string& input, 
                               const CompilationOptions& CO,
                               const clang::Decl** D = 0);

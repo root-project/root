@@ -38,8 +38,13 @@ namespace cling {
         if (CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody())) {
           for (CompoundStmt::body_iterator 
                  J = CS->body_begin(), E = CS->body_end(); J != E; ++J) {
-            if (J+1 == E || !isa<NullStmt>(*(J+1))) {
-              if (Expr* To = dyn_cast<Expr>(*J)) {
+            if (J+1 ==  E || !isa<NullStmt>(*(J+1))) {
+              Expr* To = 0;
+              if (ReturnStmt* RS = dyn_cast<ReturnStmt>(*J))
+                To = RS->getRetValue();
+              else
+                To = dyn_cast<Expr>(*J);
+              if (To) {
                 ChainedConsumer* C = dyn_cast<ChainedConsumer>(&m_Sema->Consumer);
                 bool p, q;
                 p = C->DisableConsumer(ChainedConsumer::kDeclExtractor);

@@ -86,7 +86,7 @@ namespace cling {
       case kDeclExtractor :
         prev = CO.DeclarationExtraction; CO.DeclarationExtraction = 1; break;
       case kValuePrinterSynthesizer : 
-        prev = CO.ValuePrinting; CO.ValuePrinting = 1; break;
+        prev = CO.ValuePrinting; CO.ValuePrinting = 2; break;
       case kASTDumper : 
         prev = CO.Debug; CO.Debug = 1; break;
       case kCodeGenerator : 
@@ -140,7 +140,7 @@ namespace cling {
       switch(I) {
       case kEvaluateTSynthesizer : return CO.DynamicScoping;
       case kDeclExtractor : return CO.DeclarationExtraction;
-      case kValuePrinterSynthesizer : return CO.ValuePrinting == 1;
+      case kValuePrinterSynthesizer : return CO.ValuePrinting == 2;
       case kASTDumper : return CO.Debug;
       case kCodeGenerator : return CO.CodeGeneration;
       case kConsumersCount : return false;
