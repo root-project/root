@@ -79,7 +79,7 @@ namespace cling {
       assert(CG && "No CodeGen?!");
       addConsumer(ChainedConsumer::kCodeGenerator, CG);
     }
-    m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema()
+    m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema(),
                               false /*skipFuncBodies*/));
     CI->getPreprocessor().EnterMainSourceFile();
     // Initialize the parser after we have entered the main source file.
