@@ -591,7 +591,8 @@ void TCanvas::Build()
       SetPad(0, 0, 1, 1);
       Range(0, 0, 1, 1);   //pad range is set by default to [0,1] in x and y
 
-      GetCanvasPainter()->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
+      TVirtualPadPainter *vpp = GetCanvasPainter();
+      if (vpp) vpp->SelectDrawable(fPixmapID);//gVirtualX->SelectPixmap(fPixmapID);    //pixmap must be selected
       PaintBorder(GetFillColor(), kTRUE);    //paint background
    }
 
