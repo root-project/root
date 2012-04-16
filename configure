@@ -57,6 +57,7 @@ options="                    \
    enable_dcache             \
    enable_exceptions         \
    enable_explicitlink       \
+   enable_fink               \
    enable_fftw3              \
    enable_fitsio             \
    enable_gviz               \
@@ -1449,6 +1450,7 @@ enable/disable options, prefix with either --enable- or --disable-
   dcache             dCache support, requires libdcap from DESY
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
+  fink               Use libraries from an extra MacOS X package manager (Fink, MacPorts, ...) (default: enabled)
   fftw3              Fast Fourier Transform support, requires libfftw3
   fitsio             Read images and data from FITS files, requires cfitsio
   gviz               Graphs visualization support, requires graphviz
@@ -1527,6 +1529,7 @@ with options, prefix with --with-, enables corresponding support
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
   dnssd-libdir       Bonjour support, location of libdns_sd
   dnssd-incdir       Bonjour support, location of dns_sd.h
+  finkdir            Prefix of extra MacOS X package manager (Fink, MacPorts, ...)
   ftgl-incdir        FTGL support, location of FTGL.h
   ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
@@ -1735,23 +1738,13 @@ else
    cwhich="which"
 fi
 
-# check for Fink on MacOS X
-# and for sanity of source e.g. pcre-*.tar.gz must exist
+# Check for sanity of source on Mac OS X: e.g. pcre-*.tar.gz must exist
 # which might not be the case if source was unpacked with StuffIt
 if test "x$platform" = "xmacosx" ; then
    if test ! -f ${ac_srcdir}/core/pcre/src/pcre-*.tar.gz ; then
       echo "Source tree does not contain expected files, please unpack"
       echo "using tar and not StuffIt"
       exit 1
-   fi
-   logmsg "Checking Fink directory"
-   finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-   logmsg "$finkdir"
-
-   if test -d /opt/local; then
-      logmsg "Checking MacPorts directory"
-      finkdir=/opt/local
-      logmsg "$finkdir"
    fi
 
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
@@ -1856,6 +1849,7 @@ if test $# -gt 0 ; then
       --with-dnssd-libdir=*)   dnssdlibdir=$optarg   ; enable_bonjour="yes" ;;
       --with-avahi-incdir=*)   avahiincdir=$optarg   ; enable_bonjour="yes" ;;
       --with-avahi-libdir=*)   avahilibdir=$optarg   ; enable_bonjour="yes" ;;
+      --with-finkdir=*)        finkdir=$optarg       ; enable_fink="yes"    ;;
       --with-ftgl-incdir=*)    ftglincdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
@@ -2069,6 +2063,34 @@ fi
 if test "x$platform" = "xwin32"; then
     enable_shared="no"
     enable_x11="no"
+fi
+
+######################################################################
+#
+### echo %%% Check for Fink or MacPorts on Mac OS X
+#
+message "Checking for Fink/MacPorts directory"
+if test "x$platform" = "xmacosx" -a "x$enable_fink" = "xyes"; then
+    if test -d "$finkdir"; then
+        # User specified a directory with --with-finkdir=...
+        logmsg "Using user-specified Fink directory"
+        logmsg "$finkdir"
+    else
+        # Fink has precedence over MacPorts
+        logmsg "Checking Fink directory"
+        finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+        logmsg "$finkdir"
+
+        if test "x$finkdir" = "x"; then
+            logmsg "Checking MacPorts directory"
+            finkdir=`$cwhich port 2>&1 | sed -ne "s/\/bin\/port//p"`
+            logmsg "$finkdir"
+        fi
+    fi
+    result "$finkdir"
+else
+    logmsg "Fink/MacPorts disabled"
+    result "disabled"
 fi
 
 ######################################################################
