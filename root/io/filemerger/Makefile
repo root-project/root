@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged.root input*.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged.root input*.root freidt_merge.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += 
+TEST_TARGETS += notmergeable
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -59,4 +59,8 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+notmergeable.log:
+	$(CMDECHO) hadd -f freidt_merge.root  freidt_CDMeson_0000.root freidt_CDMeson_0001.root > notmergeable.log 2>&1
 
+notmergeable: notmergeable.log
+	$(TestDiff)
