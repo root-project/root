@@ -145,6 +145,8 @@ namespace cling {
       case kCodeGenerator : return CO.CodeGeneration;
       case kConsumersCount : return false;
       }
+
+      return false;
     }
 
     bool IsQueueing() { return m_Queueing; }
