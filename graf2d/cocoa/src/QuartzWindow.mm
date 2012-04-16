@@ -1,7 +1,7 @@
 //Author: Timur Pocheptsov 16/02/2012
 //#define DEBUG_ROOT_COCOA
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifdef DEBUG_ROOT_COCOA
 #import <iostream>

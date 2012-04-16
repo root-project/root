@@ -1,6 +1,6 @@
 #define DEBUG_ROOT_COCOA
 
-#define NDEBUG
+//#define NDEBUG
 
 #ifdef DEBUG_ROOT_COCOA
 #include <algorithm>

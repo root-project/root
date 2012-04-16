@@ -1,6 +1,6 @@
 //Author: Timur Pocheptsov 28/11/2011
 
-#define NDEBUG
+//#define NDEBUG
 
 #include "X11Colors.h"
 #include "TError.h"

@@ -1,6 +1,6 @@
 //Author: Timur Pocheptsov 16/02/2012
 
-#define NDEBUG
+//#define NDEBUG
 
 #include <algorithm>
 #include <cassert>
