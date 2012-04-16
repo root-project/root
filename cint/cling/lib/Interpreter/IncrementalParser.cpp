@@ -136,29 +136,7 @@ namespace cling {
   }
   
   void IncrementalParser::Initialize() {
-    CompileAsIs(""); // Consume initialization.
-  }
-
-  IncrementalParser::EParseResult 
-  IncrementalParser::CompileLineFromPrompt(llvm::StringRef input) {
-    assert(input.str()[0] != '#' 
-           && "Preprocessed line! Call CompilePreprocessed instead");
-    CompilationOptions CO;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.DeclarationExtraction = 1;
-    CO.ValuePrinting = 2;
-
-    return Compile(input, CO);
-  }
-
-  IncrementalParser::EParseResult 
-  IncrementalParser::CompileAsIs(llvm::StringRef input) {
-    CompilationOptions CO;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 0;
-
-    return Compile(input, CO);
+    Compile("", CompilationOptions()); // Consume initialization.
   }
 
   IncrementalParser::EParseResult

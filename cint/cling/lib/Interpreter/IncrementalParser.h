@@ -83,8 +83,6 @@ namespace cling {
     void Initialize();
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
-    EParseResult CompileLineFromPrompt(llvm::StringRef input);
-    EParseResult CompileAsIs(llvm::StringRef input);
 
     ///\brief Compiles the given input with the given compilation options.
     ///
