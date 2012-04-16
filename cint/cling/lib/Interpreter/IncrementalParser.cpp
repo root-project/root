@@ -153,7 +153,6 @@ namespace cling {
     return Result;
   }
 
-
   void IncrementalParser::Parse(llvm::StringRef input, 
                                 llvm::SmallVector<DeclGroupRef, 4>& DGRs){
     if (!m_SyntaxOnly)
@@ -198,14 +197,9 @@ namespace cling {
     return Result;
   }
 
+  // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult 
   IncrementalParser::Parse(llvm::StringRef input) {
-
-    // Add src to the memory buffer, parse it, and add it to
-    // the AST. Returns the CompilerInstance (and thus the AST).
-    // Diagnostics are reset for each call of parse: they are only covering
-    // src.
-
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticConsumer& DClient = m_CI->getDiagnosticClient();
 

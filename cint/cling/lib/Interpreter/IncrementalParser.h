@@ -104,13 +104,14 @@ namespace cling {
     clang::Decl* getLastTopLevelDecl() const { return m_LastTopLevelDecl; }
     Transaction& getLastTransaction() { return m_LastTransaction; }
     
-    void addConsumer(ChainedConsumer::EConsumerIndex I, clang::ASTConsumer* consumer);
     clang::CodeGenerator* GetCodeGenerator() const;
 
   private:
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
+    void addConsumer(ChainedConsumer::EConsumerIndex I, 
+                     clang::ASTConsumer* consumer);
 
     Interpreter* m_Interpreter; // our interpreter context
     llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.
