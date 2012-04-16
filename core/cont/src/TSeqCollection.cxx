@@ -172,8 +172,9 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    // list have to contain a histogram and a tree. In case the list contains
    // collections, the objects in the input lists must also be collections with
    // the same structure and number of objects.
-   // The objects inside the collection do not have a Merge function (like TObjString)
-   // rather than being merged all the instances are appended to the output.
+   // If some objects inside the collection are instances of a class that do not 
+   // have a Merge function (like TObjString), rather than merging, a copy of each
+   // instance (via a call to Clone) is appended to the output.
    //
    // Example
    // =========
@@ -278,7 +279,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    if (notmergeable && notmergeable->GetSize() > 0) {
       TIter nxnm(notmergeable);
       TObject *onm = 0;
-      while ((onm = nxnm())) { Add(onm); }
+      while ((onm = nxnm())) { Add(onm->Clone()); }
       SafeDelete(notmergeable);
    }
 
