@@ -51,10 +51,15 @@ public:
 
    void GenerateCrossingEvent(QuartzView *viewUnderPointer, NSEvent *theEvent);
    void GeneratePointerMotionEvent(QuartzView *eventView, NSEvent *theEvent);
+   
+   //TODO: instead of passing EMouseButton, use info from NSEvent???
    void GenerateButtonPressEvent(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEvent(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn);
    
    void GenerateKeyPressEvent(QuartzView *eventView, NSEvent *theEvent);
+   //void GenerateKeyReleaseEvent(QuartzView *eventView, NSEvent *theEvent);
+   
+   void GenerateFocusChangeEvent(QuartzView *eventView);
    
    void SetPointerGrab(QuartzView *grabView, unsigned eventMask, bool ownerEvents);
    void CancelPointerGrab();
@@ -98,6 +103,7 @@ private:
 
 
    QuartzView *fCurrentGrabView;
+   QuartzView *fFocusView;
    
    std::vector<QuartzWindow *> fWindowStack;
 };

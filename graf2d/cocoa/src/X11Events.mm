@@ -672,6 +672,38 @@ void SendKeyPressEvent(QuartzView *view, NSEvent *theEvent, NSPoint windowPoint)
    SendEvent(window, keyPressEvent);
 }
 
+//______________________________________________________________________________
+void SendFocusInEvent(QuartzView *view, EXMagic mode)
+{
+   assert(view != nil && "SendFocusInEvent, view parameter is nil");
+   //
+   TGWindow *window = gClient->GetWindowById(view.fID);
+   assert(window != nullptr && "SendFocusInEvent, window was not found");
+   
+   Event_t focusInEvent = {};
+   focusInEvent.fType = kFocusIn;
+   focusInEvent.fCode = mode;
+//   focusInEvent.fState = ;
+
+   SendEvent(window, focusInEvent);
+}
+
+//______________________________________________________________________________
+void SendFocusOutEvent(QuartzView *view, EXMagic mode)
+{
+   assert(view != nil && "SendFocusOutEvent, view parameter is nil");
+   //
+   TGWindow *window = gClient->GetWindowById(view.fID);
+   assert(window != nullptr && "SendFocusOutEvent, window was not found");
+
+   Event_t focusOutEvent = {};
+   focusOutEvent.fType = kFocusOut;
+   focusOutEvent.fCode = mode;//code mode :)
+   //focusOutEvent.fState = ;
+   
+   SendEvent(window, focusOutEvent);
+}
+
 //Aux. functions to send events to view's branch.
 
 //______________________________________________________________________________
@@ -824,7 +856,8 @@ EventTranslator::EventTranslator()
                        fPointerGrab(PointerGrab::noGrab),
                        fGrabEventMask(0),
                        fOwnerEvents(true),
-                       fCurrentGrabView(nil)
+                       fCurrentGrabView(nil),
+                       fFocusView(nil)
                        
 {
 }
@@ -1063,6 +1096,22 @@ void EventTranslator::GenerateKeyPressEvent(QuartzView *view, NSEvent *theEvent)
       return;
 
    GenerateKeyPressEventNoGrab(view, theEvent);
+}
+
+//______________________________________________________________________________
+void EventTranslator::GenerateFocusChangeEvent(QuartzView *eventView)
+{
+   if (eventView == fFocusView)
+      return;
+
+   if (fFocusView)
+      Detail::SendFocusOutEvent(fFocusView, kNotifyNormal);
+   
+   if (eventView) {
+      Detail::SendFocusInEvent(eventView, kNotifyNormal);
+      fFocusView = eventView;
+   } else
+      fFocusView = nil;
 }
 
 //______________________________________________________________________________

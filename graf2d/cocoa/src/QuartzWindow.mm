@@ -1607,13 +1607,6 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (BOOL) acceptsFirstResponder
-{
-   //Temporary version, will be more complex (grabs, focus, etc.).
-   return YES;
-}
-
-//______________________________________________________________________________
 - (void) mouseMoved : (NSEvent *) theEvent
 {
    assert(fID != 0 && "mouseMoved, fID is 0");
@@ -1709,6 +1702,36 @@ void print_mask_info(ULong_t mask)
    }
 
    return nil;
+}
+
+//First responder staff.
+
+//______________________________________________________________________________
+- (BOOL) acceptsFirstResponder
+{
+   //NSResponder (base) returns NO.
+   return YES;
+}
+
+//______________________________________________________________________________
+- (BOOL) becomeFirstResponder
+{
+   //Change focus.
+   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != nullptr && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
+   vx->GetEventTranslator()->GenerateFocusChangeEvent(self);
+
+   //NSResponder returns YES, so do I.
+   return YES;
+}
+
+//______________________________________________________________________________
+- (BOOL) resignFirstResponder
+{
+   //Change focus.
+   
+   //NSResponder returns YES, so do I.
+   return YES;
 }
 
 @end
