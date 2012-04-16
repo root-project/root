@@ -9,7 +9,8 @@ namespace Outer { struct Inner { enum E{i = 2}; }; };
 .rawInput
 
 Outer::Inner::i
-// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f]{8,}.}}
+// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f]{7,12}.}} 
+// CHECK: (Outer::Inner::E::i) : (int) 2
 
 enum A{a}; // 
 enum A{a}; // expected-error {{redefinition of 'A'}} expected-note {{previous definition is here}}
