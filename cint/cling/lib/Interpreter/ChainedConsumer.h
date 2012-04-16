@@ -15,8 +15,6 @@
 #include "clang/AST/DeclGroup.h"
 #include "clang/Sema/SemaConsumer.h"
 
-#include <bitset>
-
 namespace clang {
   class ASTContext;
 }
