@@ -26,6 +26,7 @@
 #include "TClassTable.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
+#include "TMemberInspector.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TObjArray.h"
@@ -3549,13 +3550,177 @@ void TCintWithCling::AddIncludePath(const char *path)
 
 //______________________________________________________________________________
 void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
-                                    const char* clname)
+                                    TClass* cl)
 {
+   // Visit all members over members, recursing over base classes.
+   
+   char* cobj = (char*) obj; // for ptr arithmetics
+
+   static clang::PrintingPolicy
+      printPol(fInterpreter->getCI()->getLangOpts());
+   if (printPol.Indentation) {
+      // not yet inialized
+      printPol.Indentation = 0;
+      printPol.SuppressInitializers = true;
+   }
+   
+   const char* clname = cl->GetName();
    Printf("Inspecting class %s\n", clname);
+
    clang::QualType qualClass
       = ROOT::TMetaUtils::LookupTypeDecl(*fInterpreter, clname);
-   if (qualClass.isNull()) { printf("ERROR: CANNOT FIND %s", clname); }
-   //R_insp.Inspect(
+   if (qualClass.isNull()) {
+      Error("InspectMembers", "Cannot find QualType for class %s", clname);
+      return;
+   }
+   const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
+   const clang::CXXRecordDecl* recordDecl
+      = qualClass.getDesugaredType(astContext)->getAsCXXRecordDecl();
+   if (!recordDecl) {
+      Error("InspectMembers", "Cannot find RecordDecl for class %s", clname);
+      return;
+   }
+   
+   const clang::ASTRecordLayout& recLayout
+      = astContext.getASTRecordLayout(recordDecl);
+
+   unsigned iNField = 0;
+   // iterate over fields
+   // FieldDecls are non-static, else it would be a VarDecl.
+   for (clang::RecordDecl::field_iterator iField = recordDecl->field_begin(),
+        eField = recordDecl->field_end(); iField != eField;
+        ++iField, ++iNField) {
+
+      clang::QualType memberQT = iField->getType().getDesugaredType(astContext);
+      if (memberQT.isNull()) {
+         std::string memberName;
+         iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+         Error("InspectMembers",
+               "Cannot retrieve QualType for member %s while inspecting class %s",
+               memberName.c_str(), clname);
+         continue; // skip member
+      }
+      const clang::Type* memType = memberQT.getTypePtr();
+      if (!memType) {
+         std::string memberName;
+         iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+         Error("InspectMembers",
+               "Cannot retrieve Type for member %s while inspecting class %s",
+               memberName.c_str(), clname);
+         continue; // skip member
+      }
+      
+      const clang::Type* memNonPtrType = memType;
+      if (memNonPtrType->isPointerType()) {
+         clang::QualType ptrQT
+            = memNonPtrType->getAs<clang::PointerType>()->getPointeeType();
+         ptrQT = ptrQT.getDesugaredType(astContext);
+         if (ptrQT.isNull()) {
+            std::string memberName;
+            iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+            Error("InspectMembers",
+                  "Cannot retrieve pointee Type for member %s while inspecting class %s",
+                  memberName.c_str(), clname);
+            continue; // skip member
+         }
+         memNonPtrType = ptrQT.getTypePtr();
+      }
+
+      // assemble array size(s): "[12][4][]"
+      llvm::SmallString<8> arraySize;
+      const clang::ArrayType* arrType = memNonPtrType->getAsArrayTypeUnsafe();
+      unsigned arrLevel = 0;
+      bool haveErrorDueToArray = false;
+      while (arrType) {
+         ++arrLevel;
+         arraySize += '[';
+         const clang::ConstantArrayType* constArrType =
+         clang::dyn_cast<clang::ConstantArrayType>(arrType);
+         if (constArrType) {
+            constArrType->getSize().toStringUnsigned(arraySize);
+         }
+         arraySize += ']';
+         clang::QualType subArrQT = arrType->getElementType();
+         if (subArrQT.isNull()) {
+            std::string memberName;
+            iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+            Error("InspectMembers",
+                  "Cannot retrieve QualType for array level %d (i.e. element type of %s) for member %s while inspecting class %s",
+                  arrLevel, subArrQT.getAsString(printPol).c_str(),
+                  memberName.c_str(), clname);
+            haveErrorDueToArray = true;
+            break;
+         }
+         arrType = subArrQT.getTypePtr()->getAsArrayTypeUnsafe();
+      }
+      if (haveErrorDueToArray) {
+         continue; // skip member
+      }
+
+      // construct member name
+      std::string fieldName;
+      if (memType->isPointerType()) {
+         fieldName = "*";
+      }
+      fieldName += iField->getName();
+      fieldName += arraySize;
+      
+      // get member offset
+      ptrdiff_t fieldOffset = recLayout.getFieldOffset(iNField);
+
+      // R__insp.Inspect(R__cl, R__insp.GetParent(), "fBits[2]", fBits);
+      // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
+      // R__insp.InspectMember(fName, "fName.");
+      // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
+      insp.Inspect(cl, insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
+
+      const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
+      if (fieldRecDecl) {
+         // nested objects get an extra call to InspectMember
+         // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
+         std::string sFieldRecName;
+         fieldRecDecl->getNameForDiagnostic(sFieldRecName,
+                                            printPol, true /*fqi*/);
+         bool transient = false;
+         insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
+                            (fieldName + '.').c_str(), transient);
+      }
+   } // loop over fields
+   
+   // inspect bases
+   // TNamed::ShowMembers(R__insp);
+   unsigned iNBase = 0;
+   for (clang::CXXRecordDecl::base_class_const_iterator iBase
+        = recordDecl->bases_begin(), eBase = recordDecl->bases_end();
+        iBase != eBase; ++iBase, ++iNBase) {
+      clang::QualType baseQT = iBase->getType();
+      if (baseQT.isNull()) {
+         Error("InspectMembers",
+               "Cannot find QualType for base number %d while inspecting class %s",
+               iNBase, clname);
+         continue;
+      }
+      const clang::CXXRecordDecl* baseDecl
+         = baseQT->getAsCXXRecordDecl();
+      if (!baseDecl) {
+         Error("InspectMembers",
+               "Cannot find CXXRecordDecl for base number %d while inspecting class %s",
+               iNBase, clname);
+         continue;
+      }
+      std::string sBaseName;
+      baseDecl->getNameForDiagnostic(sBaseName, printPol, true /*fqi*/);
+      TClass* baseCl = TClass::GetClass(sBaseName.c_str());
+      if (!baseCl) {
+         Error("InspectMembers",
+               "Cannot find TClass for base %s while inspecting class %s",
+               sBaseName.c_str(), clname);
+         continue;
+      }
+      int64_t baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();      
+      baseCl->CallShowMembers(cobj + baseOffset,
+                              insp, -1 /*don't know whether TObject*/);
+   } // loop over bases
 }
 
 //______________________________________________________________________________

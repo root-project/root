@@ -4834,7 +4834,15 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
    //#define R__SHOWMEMBERS_IN_TCLING
 #ifdef R__SHOWMEMBERS_IN_TCLING
-   (*dictSrcOut) << "      ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, \"" << cl.Fullname() << "\");" << std::endl;
+   std::string getClass;
+   if (cl.HasMethod("IsA") && !outside) {
+      getClass = csymbol + "::IsA();
+   } else {
+      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
+      getClass += csymbol + "*)0x0)->GetClass()";
+   }
+   (*dictSrcOut) << "      ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, "
+      << getClass << ");" << std::endl;
 #else
    string csymbol = cl.Fullname();
    if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
