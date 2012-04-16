@@ -136,7 +136,10 @@ namespace cling {
   }
   
   void IncrementalParser::Initialize() {
-    Compile("", CompilationOptions()); // Consume initialization.
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    Compile("", CO); // Consume initialization.
   }
 
   IncrementalParser::EParseResult
