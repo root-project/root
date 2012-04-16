@@ -31,7 +31,7 @@ class TProfileHelper {
 
 public:
    template <typename T>
-   static void Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Double_t c2=1);
+   static Bool_t Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Double_t c2=1);
 
    template <typename T>
    static Double_t GetBinEffectiveEntries(T* p, Int_t bin);
@@ -62,7 +62,7 @@ public:
 };
 
 template <typename T>
-void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Double_t c2)
+Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Double_t c2)
 {
    // Performs the operation: this = c1*h1 + c2*h2
 
@@ -81,7 +81,7 @@ void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Doubl
         ny != p1->GetNbinsY() ||  ny != p2->GetNbinsY() ||
         nz != p1->GetNbinsZ() ||  nz != p2->GetNbinsZ() ) {
       Error("TProfileHelper::Add","Attempt to add profiles with different number of bins");
-      return;
+      return kFALSE;
    }
 
 // Add statistics
@@ -117,6 +117,7 @@ void TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Doubl
       p->fBinEntries.fArray[bin] = ac1*en1[bin] + ac2*en2[bin];
       if (p->fBinSumw2.fN ) p->fBinSumw2.fArray[bin]  = ac1*ac1*ew1[bin] + ac2*ac2*ew2[bin];
    }
+   return kTRUE;
 }
 
 template <typename T>

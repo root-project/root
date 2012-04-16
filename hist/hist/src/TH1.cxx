@@ -758,7 +758,7 @@ void TH1::Build()
 }
 
 //______________________________________________________________________________
-void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
+Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 {
 // Performs the operation: this = this + c1*f1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -774,7 +774,7 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 
    if (!f1) {
       Error("Add","Attempt to add a non-existing function");
-      return;
+      return kFALSE;
    }
 
    TString opt = option;
@@ -832,15 +832,19 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
          }
       }
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TH1::Add(const TH1 *h1, Double_t c1)
+Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 {
 // Performs the operation: this = this + c1*h1
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 // Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 // if not already set.
+// Note also that adding histogram with labels is not supported, histogram will be 
+// added merging them by bin number independently of the labels. 
+// For adding histogram with labels one should use TH1::Merge
 //
 // SPECIAL CASE (Average/Efficiency histograms)
 // For histograms representing averages or efficiencies, one should compute the average
@@ -859,7 +863,7 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 
    if (!h1) {
       Error("Add","Attempt to add a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -873,12 +877,15 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Add","Attempt to add histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Add","Attempt to add histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Add","Attempt to add histograms with different bin limits");
    }
+  
+   if (h1->GetXaxis()->GetLabels()  || fXaxis.GetLabels() )
+      Warning("Add","Attempt to add histograms with labels");
 
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
@@ -976,10 +983,11 @@ void TH1::Add(const TH1 *h1, Double_t c1)
       PutStats(s1);
       SetEntries(entries);
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
+Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 //   -*-*-*Replace contents of this histogram by the addition of h1 and h2*-*-*
 //         ===============================================================
@@ -988,6 +996,9 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 //   if errors are defined (see TH1::Sumw2), errors are also recalculated
 //   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
+//   Note also that adding histogram with labels is not supported, histogram will be 
+//   added merging them by bin number independently of the labels. 
+//   For adding histogram ith labels one should use TH1::Merge
 //
 // SPECIAL CASE (Average/Efficiency histograms)
 // For histograms representing averages or efficiencies, one should compute the average
@@ -1007,7 +1018,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -1024,12 +1035,17 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Add","Attempt to add histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Add","Attempt to add histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Add","Attempt to add histograms with different bin limits");
    }
+
+   if (h1->GetXaxis()->GetLabels() || 
+       h2->GetXaxis()->GetLabels()  )
+      Warning("Add","Attempt to add histograms with labels");
+
 
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
@@ -1159,6 +1175,8 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    if (canRebin) SetBit(kCanRebin);
    if (timeDisplayX)  fXaxis.SetTimeDisplay(1);
+
+   return kTRUE;
 }
 
 

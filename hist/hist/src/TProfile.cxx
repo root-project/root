@@ -260,34 +260,34 @@ TProfile::TProfile(const TProfile &profile) : TH1D()
 
 
 //______________________________________________________________________________
-void TProfile::Add(TF1 *, Double_t, Option_t * )
+Bool_t TProfile::Add(TF1 *, Double_t, Option_t * )
 {
    // Performs the operation: this = this + c1*f1
 
    Error("Add","Function not implemented for TProfile");
-   return;
+   return kFALSE;
 }
 
 
 //______________________________________________________________________________
-void TProfile::Add(const TH1 *h1, Double_t c1)
+Bool_t TProfile::Add(const TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
    if (!h1) {
       Error("Add","Attempt to add a non-existing profile");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
-      return;
+      return kFALSE;
    }
    
-   TProfileHelper::Add(this, this, h1, 1, c1);
+   return TProfileHelper::Add(this, this, h1, 1, c1);
 }
 
 //______________________________________________________________________________
-void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
+Bool_t TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile by the addition of h1 and h2*-*-*
 //*-*      =============================================================
@@ -300,17 +300,17 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing profile");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
-      return;
+      return kFALSE;
    }
    if (!h2->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
-      return;
+      return kFALSE;
    }
-   TProfileHelper::Add(this, h1, h2, c1, c2);
+   return TProfileHelper::Add(this, h1, h2, c1, c2);
 }
 
 

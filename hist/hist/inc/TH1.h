@@ -174,9 +174,9 @@ public:
    TH1(const TH1&);
    virtual ~TH1();
 
-   virtual void     Add(TF1 *h1, Double_t c1=1, Option_t *option="");
-   virtual void     Add(const TH1 *h1, Double_t c1=1);
-   virtual void     Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+   virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
+   virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
+   virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    static  void     AddDirectory(Bool_t add=kTRUE);

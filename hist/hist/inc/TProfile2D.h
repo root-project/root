@@ -82,9 +82,9 @@ public:
                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
    TProfile2D(const TProfile2D &profile);
    virtual ~TProfile2D();
-   virtual void      Add(TF1 *h1, Double_t c1=1, Option_t *option="");
-   virtual void      Add(const TH1 *h1, Double_t c1=1);
-   virtual void      Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+   virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
+   virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
+   virtual Bool_t    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
    virtual Int_t     BufferEmpty(Int_t action=0);
