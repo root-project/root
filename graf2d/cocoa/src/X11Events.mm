@@ -1187,9 +1187,10 @@ namespace {
 //______________________________________________________________________________
 void ClearPointerIfViewIsRelated(QuartzView *&view, Window_t winID) 
 {
-   if (view) {
-      for (; view; view = view.fParentView) {
-         if (view.fID == winID) {
+   QuartzView *v = view;
+   if (v) {
+      for (; v; v = v.fParentView) {
+         if (v.fID == winID) {
             view = nil;
             break;
          }
