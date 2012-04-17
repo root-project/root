@@ -55,6 +55,16 @@ Add support for drawing the asymmetric errors for the TH1 and TH2
 The fit function was not drawn in the correct range when a fitted 2D histogram was painted 
 with the option lego or surf.
 </li>
+<li>
+With option TEXT, do not draw the bins with 0 content for 1D
+histograms to be consistent with the 2D histograms case. 
+Example:
+<pre>
+root [0] TH1D * histo = new TH1D ("histo","",20,-5.,5.) ;
+root [1] histo->FillRandom("gaus",1000) ; 
+root [2] histo->Draw("hist,text") ;
+</pre>
+</li>
 </ul>
 
 <h3>TGraph2DPainter</h3>
