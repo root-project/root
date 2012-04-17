@@ -203,8 +203,8 @@ namespace cling {
     // children, and create a multiplex listener each if so.
     // NOTE: It would make sense once we add the consumers in the constructor
     // as package.
-    ASTMutationListener* mListeners[kConsumersCount];
-    ASTDeserializationListener* sListeners[kConsumersCount];
+    ASTMutationListener* mListeners[kConsumersCount] = {0};
+    ASTDeserializationListener* sListeners[kConsumersCount] = {0};
     for (size_t i = 0; i < kConsumersCount; ++i) {
       if (Exists((EConsumerIndex)i)) {
         ASTMutationListener* mListener = Consumers[i]->GetASTMutationListener();
