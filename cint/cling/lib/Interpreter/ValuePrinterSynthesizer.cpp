@@ -40,7 +40,8 @@ namespace cling {
                  J = CS->body_begin(), E = CS->body_end(); J != E; ++J) {
             if (J+1 ==  E || !isa<NullStmt>(*(J+1))) {
               Expr* To = 0;
-              if (ReturnStmt* RS = dyn_cast<ReturnStmt>(*J))
+              ReturnStmt* RS = dyn_cast<ReturnStmt>(*J);
+              if (RS)
                 To = RS->getRetValue();
               else
                 To = dyn_cast<Expr>(*J);
@@ -52,7 +53,7 @@ namespace cling {
                   Result = SynthesizeVP(To);
 
                 if (Result)
-                  if (ReturnStmt* RS = dyn_cast<ReturnStmt>(*J))
+                  if (RS)
                     RS->setRetValue(Result);
                   else
                     *J = Result;
