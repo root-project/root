@@ -98,10 +98,11 @@
 //////////////////////////////////////////////////////////////
 
 @interface PassiveKeyGrab : NSObject
-- (Int_t) fKeyCode;
-- (UInt_t) fModifiers;
-- (id) initWithKey : (Int_t) keyCode modifiers : (UInt_t) modifiers;
-- (BOOL) matchKey : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+- (unichar) fKeyCode;
+- (NSUInteger) fModifiers;
+- (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (BOOL) matchKey : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (BOOL) matchKey : (unichar) keyCode;
 @end
 
 ////////////////////////////////////////
@@ -195,9 +196,10 @@
 - (void)     updateLevel : (unsigned) newLevel;
 
 //Keyboard:
-- (void)     addPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
-- (void)     removePassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
-- (PassiveKeyGrab *) findPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers;
+- (void)     addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (void)     removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode;
 
 @end
 

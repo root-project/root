@@ -57,7 +57,7 @@ public:
    void GenerateButtonReleaseEvent(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn);
    
    void GenerateKeyPressEvent(QuartzView *eventView, NSEvent *theEvent);
-   //void GenerateKeyReleaseEvent(QuartzView *eventView, NSEvent *theEvent);
+   void GenerateKeyReleaseEvent(QuartzView *eventView, NSEvent *theEvent);
    
    void GenerateFocusChangeEvent(QuartzView *eventView);
    
@@ -86,9 +86,16 @@ private:
    void GenerateButtonReleaseEventNoGrab(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn);
    
-   void GenerateKeyPressEventNoGrab(QuartzView *view, NSEvent *theEvent);
+   void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
+   void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
+   
+   void GenerateKeyEventActiveGrab(NSEvent *theEvent);//Both press/release events.
+   void GenerateKeyEventForView(QuartzView *view, NSEvent *theEvent);//Both press/release events.
 
-   void FindGrabView(QuartzView *fromView, NSEvent *theEvent, EMouseButton btn);
+   void FindButtonGrabView(QuartzView *fromView, NSEvent *theEvent, EMouseButton btn);
+   void FindKeyGrabView(QuartzView *fromView, NSEvent *theEvent);
+   QuartzView *FindViewUnderPointer();
+   
    Ancestry FindRelation(QuartzView *view1, QuartzView *view2, QuartzView **lca);
    void SortTopLevelWindows();
    QuartzWindow *FindTopLevelWindowForMouseEvent();
@@ -102,7 +109,8 @@ private:
    bool fOwnerEvents;
 
 
-   QuartzView *fCurrentGrabView;
+   QuartzView *fButtonGrabView;
+   QuartzView *fKeyGrabView;
    QuartzView *fFocusView;
    
    std::vector<QuartzWindow *> fWindowStack;
@@ -110,6 +118,7 @@ private:
 
 void MapUnicharToKeySym(unichar key, char *buf, Int_t len, UInt_t &rootKeySym);
 Int_t MapKeySymToKeyCode(Int_t keySym);
+NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootKeyModifiers);
 
 }//X11
 }//MacOSX

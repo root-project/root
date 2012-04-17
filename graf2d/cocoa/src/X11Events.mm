@@ -195,6 +195,24 @@ Int_t MapKeySymToKeyCode(Int_t keySym)
    return 0;
 }
 
+//______________________________________________________________________________
+NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootModifiers)
+{
+   NSUInteger cocoaModifiers = 0;
+
+   if (rootModifiers & kKeyLockMask)
+      cocoaModifiers |= NSAlphaShiftKeyMask;
+   if (rootModifiers & kKeyShiftMask)
+      cocoaModifiers |= NSShiftKeyMask;
+   if (rootModifiers & kKeyControlMask)
+      cocoaModifiers |= NSControlKeyMask;
+   if (rootModifiers & kKeyMod1Mask)
+      cocoaModifiers |= NSAlternateKeyMask;
+   if (rootModifiers & kKeyMod2Mask)
+      cocoaModifiers |= NSCommandKeyMask;
+   
+   return cocoaModifiers;
+}
 
 namespace Detail {
 
@@ -635,7 +653,7 @@ void SendButtonReleaseEvent(QuartzView *view, NSEvent *theEvent, EMouseButton bt
 }
 
 //______________________________________________________________________________
-void SendKeyPressEvent(QuartzView *view, NSEvent *theEvent, NSPoint windowPoint)
+void SendKeyPressEvent(QuartzView *view, QuartzView *childView, NSEvent *theEvent, NSPoint windowPoint)
 {
    assert(view != nil && "SendKeyPressEvent, view parameter is nil");
    assert(theEvent != nil && "SendKeyPressEvent, event parameter is nil");
@@ -661,13 +679,9 @@ void SendKeyPressEvent(QuartzView *view, NSEvent *theEvent, NSPoint windowPoint)
    const NSPoint screenPoint = TranslateToScreen(view, viewPoint);
    keyPressEvent.fXRoot = screenPoint.x;
    keyPressEvent.fYRoot = screenPoint.y;
-   //Find subwindow.
-   for (QuartzView *child in [view subviews]) {
-      if (!child.fIsOverlapped && [child hitTest : viewPoint]) {//Hit test goes down along the tree.
-         keyPressEvent.fUser[0] = child.fID;
-         break;
-      }
-   }
+   //Subwindow.
+   if (childView)
+      keyPressEvent.fUser[0] = childView.fID;
    
    SendEvent(window, keyPressEvent);
 }
@@ -856,7 +870,8 @@ EventTranslator::EventTranslator()
                        fPointerGrab(PointerGrab::noGrab),
                        fGrabEventMask(0),
                        fOwnerEvents(true),
-                       fCurrentGrabView(nil),
+                       fButtonGrabView(nil),
+                       fKeyGrabView(nil),
                        fFocusView(nil)
                        
 {
@@ -939,7 +954,7 @@ void EventTranslator::GenerateCrossingEventActiveGrab(QuartzView *view, NSEvent 
    assert(view != nil && "GenerateCrossingEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateCrossingEventActiveGrab, event parameter is nil");
 
-   if (!fCurrentGrabView)//implicit grab with 'root'?
+   if (!fButtonGrabView)//implicit grab with 'root'?
       return;
       
    if (fOwnerEvents) {
@@ -951,24 +966,24 @@ void EventTranslator::GenerateCrossingEventActiveGrab(QuartzView *view, NSEvent 
          candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView)
             //Do propagation.
-            candidateView = Detail::FindViewToPropagateEvent(candidateView, kEnterWindowMask | kLeaveWindowMask, fCurrentGrabView, fGrabEventMask);
+            candidateView = Detail::FindViewToPropagateEvent(candidateView, kEnterWindowMask | kLeaveWindowMask, fButtonGrabView, fGrabEventMask);
       }
       
       GenerateCrossingEvent(candidateView, theEvent, kNotifyNormal);
       //NSLog(@"crossing event for %u", ((QuartzView *)candidateView).fID);
       //GenerateCrossingEvent((QuartzView *)candidateView, theEvent, kNotifyNormal);
    } else {
-      if (view == fCurrentGrabView) {//We enter or leave grab view.
+      if (view == fButtonGrabView) {//We enter or leave grab view.
          const NSEventType type = [theEvent type];
-         if (type == NSMouseEntered && (fCurrentGrabView.fGrabButtonEventMask & kEnterWindowMask)) {
-            if (fViewUnderPointer != fCurrentGrabView) {//Can it be false???
-               Detail::SendEnterEvent(fCurrentGrabView, theEvent, kNotifyNormal);
-               fViewUnderPointer = fCurrentGrabView;
+         if (type == NSMouseEntered && (fButtonGrabView.fGrabButtonEventMask & kEnterWindowMask)) {
+            if (fViewUnderPointer != fButtonGrabView) {//Can it be false???
+               Detail::SendEnterEvent(fButtonGrabView, theEvent, kNotifyNormal);
+               fViewUnderPointer = fButtonGrabView;
             }
          } 
          
-         if (type == NSMouseExited && (fCurrentGrabView.fGrabButtonEventMask & kEnterWindowMask)) {
-            Detail::SendLeaveEvent(fCurrentGrabView, theEvent, kNotifyNormal);
+         if (type == NSMouseExited && (fButtonGrabView.fGrabButtonEventMask & kEnterWindowMask)) {
+            Detail::SendLeaveEvent(fButtonGrabView, theEvent, kNotifyNormal);
             //Who is now under pointer?
             fViewUnderPointer = nil;
          }
@@ -1090,12 +1105,34 @@ void EventTranslator::GenerateButtonReleaseEvent(QuartzView *eventView, NSEvent 
 void EventTranslator::GenerateKeyPressEvent(QuartzView *view, NSEvent *theEvent)
 {
    assert(view != nil && "GenerateKeyPressEvent, view parameter is nil");
+   (void)view;//TODO: change interface?
    assert(theEvent != nil && "GenerateKeyPressEvent, theEvent parameter is nil");
    
    if (![[theEvent charactersIgnoringModifiers] length])
       return;
 
-   GenerateKeyPressEventNoGrab(view, theEvent);
+   if (!fKeyGrabView && !fFocusView)
+      return;
+   
+   !fKeyGrabView ? GenerateKeyPressEventNoGrab(theEvent) : 
+                   GenerateKeyEventActiveGrab(theEvent);
+}
+
+//______________________________________________________________________________
+void EventTranslator::GenerateKeyReleaseEvent(QuartzView *view, NSEvent *theEvent)
+{
+   assert(view != nil && "GenerateKeyReleaseEvent, view parameter is nil");
+   (void)view;//TODO: change interface?
+   assert(theEvent != nil && "GenerateKeyReleaseEvent, theEvent parameter is nil");
+
+   if (![[theEvent charactersIgnoringModifiers] length])
+      return;
+
+   if (!fKeyGrabView && !fFocusView)
+      return;
+   
+   !fKeyGrabView ? GenerateKeyReleaseEventNoGrab(theEvent) : 
+                   GenerateKeyEventActiveGrab(theEvent);
 }
 
 //______________________________________________________________________________
@@ -1125,7 +1162,7 @@ void EventTranslator::SetPointerGrab(QuartzView *grabView, unsigned eventMask, b
    if (eventMask & kPointerMotionMask)
       [[grabView window] setAcceptsMouseMovedEvents : YES];
    
-   fCurrentGrabView = grabView;
+   fButtonGrabView = grabView;
    fPointerGrab = PointerGrab::activeGrab;
    fGrabEventMask = eventMask;
    fOwnerEvents = ownerEvents;
@@ -1134,12 +1171,12 @@ void EventTranslator::SetPointerGrab(QuartzView *grabView, unsigned eventMask, b
 //______________________________________________________________________________
 void EventTranslator::CancelPointerGrab()
 {
-   if (!fCurrentGrabView)
+   if (!fButtonGrabView)
       return;
       
-   [[fCurrentGrabView window] setAcceptsMouseMovedEvents : NO];//Do not track mouse move events outside window anymore.
+   [[fButtonGrabView window] setAcceptsMouseMovedEvents : NO];//Do not track mouse move events outside window anymore.
    
-   fCurrentGrabView = nil;
+   fButtonGrabView = nil;
    fPointerGrab = PointerGrab::noGrab;
    fGrabEventMask = 0;
    fOwnerEvents = true;
@@ -1165,8 +1202,8 @@ void ClearPointerIfViewIsRelated(QuartzView *&view, Window_t winID)
 //______________________________________________________________________________
 void EventTranslator::CheckUnmappedView(Window_t winID)
 {
-   if (fCurrentGrabView) {
-      for (QuartzView *view = fCurrentGrabView; view; view = view.fParentView) {
+   if (fButtonGrabView) {
+      for (QuartzView *view = fButtonGrabView; view; view = view.fParentView) {
          if (view.fID == winID) {
             CancelPointerGrab();
             break;
@@ -1174,8 +1211,9 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
       }
    }
    
-   ClearPointerIfViewIsRelated(fViewUnderPointer, winID);
-   ClearPointerIfViewIsRelated(fFocusView, winID);
+   ClearPointerIfViewIsRelated(fViewUnderPointer, winID);//TODO: send event to this view first?
+   ClearPointerIfViewIsRelated(fFocusView, winID);//TODO: send event to this view first?
+   ClearPointerIfViewIsRelated(fKeyGrabView, winID);//TODO: send event to this view first??
 }
 
 //______________________________________________________________________________
@@ -1206,7 +1244,7 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventV
    
    //TODO: change interface? - remove eventView parameter declaration.
    
-   if (!fCurrentGrabView)//Implicit grab when nobody has PressButtonMask
+   if (!fButtonGrabView)//Implicit grab when nobody has PressButtonMask
       return;
    
    //assert(eventView != nil && "GeneratePointerMotionEventActiveGrab, view parameter is nil");
@@ -1220,7 +1258,7 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventV
          QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             //Do propagation.
-            candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask, fCurrentGrabView, fGrabEventMask);
+            candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask, fButtonGrabView, fGrabEventMask);
             if (candidateView) {//We have such a view, send event to a corresponding ROOT's window.
                Detail::SendPointerMotionEvent(candidateView, theEvent);
             }
@@ -1228,12 +1266,12 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventV
       } else {
          //No such window - dispatch to the grab view.
          if (fGrabEventMask & kPointerMotionMask)
-            Detail::SendPointerMotionEvent(fCurrentGrabView, theEvent);
+            Detail::SendPointerMotionEvent(fButtonGrabView, theEvent);
       }      
    } else {
       //Else: either implicit grab, or user requested grab with owner_grab == False.
       if (fGrabEventMask & kPointerMotionMask)
-         Detail::SendPointerMotionEvent(fCurrentGrabView, theEvent);
+         Detail::SendPointerMotionEvent(fButtonGrabView, theEvent);
    }   
 }
 
@@ -1243,7 +1281,7 @@ void EventTranslator::GenerateButtonPressEventNoGrab(QuartzView *view, NSEvent *
    assert(view != nil && "GenerateButtonPressEventNoGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonPressEventNoGrab, event parameter is nil");
 
-   FindGrabView(view, theEvent, btn);
+   FindButtonGrabView(view, theEvent, btn);
    //And now something badly defined. I tried X11 on mac and on linux, they do different things.
    //I'll do what was said in a spec and I do not care, if it's right or not, since there
    //is nothing 'right' in all this crap and mess. Since I'm activating grab,
@@ -1251,10 +1289,10 @@ void EventTranslator::GenerateButtonPressEventNoGrab(QuartzView *view, NSEvent *
    //required (previously entered view and current view are different).
    //If nothing was selected, on linux it looks like 'root' window
    //becomes a grab and all pointer events are discarded until ungrab.
-   GenerateCrossingEvent(fCurrentGrabView, theEvent, kNotifyGrab);
+   GenerateCrossingEvent(fButtonGrabView, theEvent, kNotifyGrab);
    
-   if (fCurrentGrabView)
-      Detail::SendButtonPressEvent(fCurrentGrabView, theEvent, btn);
+   if (fButtonGrabView)
+      Detail::SendButtonPressEvent(fButtonGrabView, theEvent, btn);
 }
 
 //______________________________________________________________________________
@@ -1269,7 +1307,7 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, 
    //say left button on A and right button on B. What should happen if I press left button in A, move to
    //B and press the right button? In my test programm on X11 (Ubuntu) I can see, that now they BOTH
    //are active grabs. I'm not going to implement this mess, unless I have a correct formal description.
-   if (!fCurrentGrabView)
+   if (!fButtonGrabView)
       return;
       
    if (fOwnerEvents) {
@@ -1279,17 +1317,17 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, 
          QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             //Do propagation.
-            candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonPressMask, fCurrentGrabView, fGrabEventMask);
+            candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonPressMask, fButtonGrabView, fGrabEventMask);
             if (candidateView)//We have such a view, send event to a corresponding ROOT's window.
                Detail::SendButtonPressEvent(candidateView, theEvent, btn);
          }
       } else {
          if (fGrabEventMask & kButtonPressMask)
-            Detail::SendButtonPressEvent(fCurrentGrabView, theEvent, btn);
+            Detail::SendButtonPressEvent(fButtonGrabView, theEvent, btn);
       }
    } else {
       if (fGrabEventMask & kButtonPressMask)
-         Detail::SendButtonPressEvent(fCurrentGrabView, theEvent, btn);
+         Detail::SendButtonPressEvent(fButtonGrabView, theEvent, btn);
    }
 }
 
@@ -1309,9 +1347,9 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView
    assert(eventView != nil && "GenerateButtonReleaseEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonReleaseEventActiveGrab, event parameter is nil");
 
-   if (!fCurrentGrabView) {
+   if (!fButtonGrabView) {
       if (fPointerGrab == PointerGrab::passiveGrab || fPointerGrab == PointerGrab::implicitGrab) {
-         fCurrentGrabView = nil;
+         fButtonGrabView = nil;
          fPointerGrab = PointerGrab::noGrab;
          GenerateCrossingEvent(eventView, theEvent, kNotifyUngrab);
       }
@@ -1327,27 +1365,27 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView
          if (candidateView) {
             /*
             bool continueSearch = true;
-            if (fPointerGrab == PointerGrab::passiveGrab && candidateView == fCurrentGrabView) {
+            if (fPointerGrab == PointerGrab::passiveGrab && candidateView == fButtonGrabView) {
                if (fGrabEventMask & kButtonReleaseMask)
                   continueSearch = false;
             }
             //Do propagation.
             if (continueSearch)*/
-            candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonReleaseMask, fCurrentGrabView, fGrabEventMask);
+            candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonReleaseMask, fButtonGrabView, fGrabEventMask);
             if (candidateView)//We have such a view, send event to a corresponding ROOT's window.
                Detail::SendButtonReleaseEvent(candidateView, theEvent, btn);
          }
       } else {//Report to the grab view, if it has a corresponding bit set.
          if (fGrabEventMask & kButtonReleaseMask)
-            Detail::SendButtonReleaseEvent(fCurrentGrabView, theEvent, btn);
+            Detail::SendButtonReleaseEvent(fButtonGrabView, theEvent, btn);
       }
    } else {//Either implicit grab or XGrabPointer with owner_events == False.
       if (fGrabEventMask & kButtonReleaseMask)
-         Detail::SendButtonReleaseEvent(fCurrentGrabView, theEvent, btn);   
+         Detail::SendButtonReleaseEvent(fButtonGrabView, theEvent, btn);   
    }
    
    if (fPointerGrab == PointerGrab::passiveGrab || fPointerGrab == PointerGrab::implicitGrab) {
-      fCurrentGrabView = nil;
+      fButtonGrabView = nil;
       fPointerGrab = PointerGrab::noGrab;
 
       GenerateCrossingEvent(eventView, theEvent, kNotifyUngrab);
@@ -1355,33 +1393,108 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyPressEventNoGrab(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyPressEventNoGrab(NSEvent *theEvent)
 {
-   assert(view != nil && "GenerateKeyPressEventNoGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateKeyPressEventNoGrab, theEvent parameter is nil");
+   assert(fFocusView != nil && "GenerateKeyPressEventNoGrab, fFocusView is nil");
 
-   QuartzWindow *window = (QuartzWindow *)[view window];
-   assert(window != nil && "GenerateKeyPressEventNoGrab, view.window is nil");
+   FindKeyGrabView(fFocusView, theEvent);
 
-   const NSPoint windowPoint = [window mouseLocationOutsideOfEventStream];
-   NSPoint viewPoint = {};
+   if (!fKeyGrabView) {
+      QuartzView *candidateView = nil;
+
+      if ((candidateView = FindViewUnderPointer())) {
+         if (Detail::IsParent(fFocusView, candidateView)) {
+            FindKeyGrabView(candidateView, theEvent);
+         }
+      }
+      
+      if (!fKeyGrabView) {
+         if (candidateView && Detail::IsParent(fFocusView, candidateView)) {
+            GenerateKeyEventForView(candidateView, theEvent);
+         } else
+            GenerateKeyEventForView(fFocusView, theEvent);
+         return;
+      }
+   }
    
-   if (NSView *contentParentView = [[window fContentView] superview])
-      viewPoint = [contentParentView convertPointFromBase : windowPoint];
-   else
-      viewPoint = windowPoint;
+   GenerateKeyEventActiveGrab(theEvent);
+}
 
-   if (QuartzView *candidateView = (QuartzView *)[[window fContentView] hitTest : viewPoint]) {
-      if ((candidateView = Detail::FindViewToPropagateEvent(candidateView, kKeyPressMask)))
-         Detail::SendKeyPressEvent(candidateView, theEvent, windowPoint);
+//______________________________________________________________________________
+void EventTranslator::GenerateKeyEventActiveGrab(NSEvent *theEvent)
+{
+   assert(theEvent != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
+   assert(fKeyGrabView != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
+   
+   if (QuartzView *candidateView = FindViewUnderPointer()) {
+      //Since owner_events is always true in ROOT ...
+      GenerateKeyEventForView(candidateView, theEvent);
+   } else {// else part for grab view??
+      GenerateKeyEventForView(fKeyGrabView, theEvent);
+   }
+   
+   if (theEvent.type == NSKeyUp && fKeyGrabView) {
+      //Cancel grab?
+      NSString *characters = [theEvent charactersIgnoringModifiers];
+      assert(characters != nil && "GenerateKeyEventActiveGrab, [theEvent characters] returned nil");
+      assert([characters length] > 0 && "GenerateKeyEventActiveGrab, characters is an empty string");
+
+      if ([fKeyGrabView findPassiveKeyGrab : [characters characterAtIndex : 0]])
+         fKeyGrabView = nil;//Cancel grab.
    }
 }
 
 //______________________________________________________________________________
-void EventTranslator::FindGrabView(QuartzView *fromView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateKeyReleaseEventNoGrab(NSEvent *theEvent)
 {
-   assert(fromView != nil && "FindGrabView, view parameter is nil");
-   assert(theEvent != nil && "FindGrabView, event parameter is nil");
+   assert(theEvent != nil && "GenerateKeyReleaseEventNoGrab, theEvent parameter is nil");
+   
+   QuartzView *candidateView = FindViewUnderPointer();
+
+   if (candidateView && Detail::IsParent(fFocusView, candidateView))
+      GenerateKeyEventForView(candidateView, theEvent);
+   else 
+      GenerateKeyEventForView(fFocusView, theEvent);
+}
+
+//______________________________________________________________________________
+void EventTranslator::GenerateKeyEventForView(QuartzView *view, NSEvent *theEvent)
+{
+   //Generate key press event for a view without grab.
+   assert(view != nil && "GenerateKeyEventForView, view parameter is nil");
+   assert(theEvent != nil && "GenerateKeyEventForView, theEvent parameter is nil");
+   assert(theEvent.type == NSKeyDown || theEvent.type == NSKeyUp && 
+          "GenerateKeyEvenForView, event's type must be keydown or keyup");
+   
+   const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
+   QuartzView *childView = nil;
+
+   for (;;) {
+      if (!view.isHidden && (view.fEventMask & eventType))
+         break;
+      if (!view.fParentView)
+         return;
+      //TODO: Also, check do not propagate mask here?
+      childView = view.isHidden ? nil : view;
+      view = view.fParentView;
+   }
+      
+   NSPoint mousePosition = {};
+   SortTopLevelWindows();
+   if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent())
+      mousePosition = [topLevel mouseLocationOutsideOfEventStream];
+
+   if (eventType == kKeyPressMask)
+      Detail::SendKeyPressEvent(view, childView, theEvent, mousePosition);
+   else;
+}
+
+//______________________________________________________________________________
+void EventTranslator::FindButtonGrabView(QuartzView *fromView, NSEvent *theEvent, EMouseButton btn)
+{
+   assert(fromView != nil && "FindButtonGrabView, view parameter is nil");
+   assert(theEvent != nil && "FindButtonGrabView, event parameter is nil");
 
    const unsigned keyModifiers = Detail::GetKeyboardModifiersFromCocoaEvent(theEvent);
    
@@ -1402,25 +1515,56 @@ void EventTranslator::FindGrabView(QuartzView *fromView, NSEvent *theEvent, EMou
    }
    
    if (grabView) {
-      fCurrentGrabView = grabView;
+      fButtonGrabView = grabView;
       fPointerGrab = PointerGrab::passiveGrab;
       fGrabEventMask = grabView.fGrabButtonEventMask;
       fOwnerEvents = grabView.fOwnerEvents;
    } else if (buttonPressView) {
       //This is implicit grab.
-      fCurrentGrabView = buttonPressView;
+      fButtonGrabView = buttonPressView;
       fPointerGrab = PointerGrab::implicitGrab;
       fGrabEventMask = buttonPressView.fEventMask;//?
       fOwnerEvents = false;
    } else {
       //Implicit grab with 'root' window?
-      fCurrentGrabView = nil;
+      fButtonGrabView = nil;
       fPointerGrab = PointerGrab::implicitGrab;
       fGrabEventMask = 0;
       fOwnerEvents = false;
    }
 }
 
+//______________________________________________________________________________
+void EventTranslator::FindKeyGrabView(QuartzView *fromView, NSEvent *theEvent)
+{
+   assert(fromView != nil && "FindKeyGrabView, fromView parameter is nil");
+   assert(theEvent != nil && "FindKeyGrabView, theEvent parameter is nil");
+
+   NSString *characters = [theEvent charactersIgnoringModifiers];
+   assert(characters != nil && "FindKeyGrabView, [theEvent characters] returned nil");
+   assert([characters length] > 0 && "FindKeyGrabView, characters is an empty string");
+
+   const NSUInteger modifiers = [theEvent modifierFlags];
+   const unichar keyCode = [characters characterAtIndex : 0];
+
+   for (QuartzView *v = fromView; v; v = v.fParentView) {
+      if ([v findPassiveKeyGrab : keyCode modifiers : modifiers])
+         fKeyGrabView = v;
+   }
+}
+
+//______________________________________________________________________________
+QuartzView *EventTranslator::FindViewUnderPointer()
+{
+   SortTopLevelWindows();
+   if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
+      const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
+      if (QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition])
+         return candidateView;
+   }
+   
+   return nil;
+}
 
 //______________________________________________________________________________
 Ancestry EventTranslator::FindRelation(QuartzView *view1, QuartzView *view2, QuartzView **lca)
@@ -1435,6 +1579,7 @@ Ancestry EventTranslator::FindRelation(QuartzView *view1, QuartzView *view2, Qua
    if (Detail::IsParent(view2, view1))
       return Ancestry::view2IsParent;
    
+   //TODO: check if I can use [view1 ancestorSharedWithView : view2];
    return Detail::FindLowestCommonAncestor(view1, fBranch1, view2, fBranch2, lca);
 }
 

@@ -2703,7 +2703,7 @@ void TGCocoa::SetKeyAutoRepeat(Bool_t /*on = kTRUE*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t modifiers, Bool_t grab)
+void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t rootKeyModifiers, Bool_t grab)
 {
    // Establishes a passive grab on the keyboard. In the future, the
    // keyboard is actively grabbed, the last-keyboard-grab time is set
@@ -2728,15 +2728,20 @@ void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t modifiers, Bool_t grab
    //            grab = kTRUE  grab the key and modifier
    //            grab = kFALSE ungrab the key and modifier
 
+   //Key code already must be Cocoa's key code, this is done by GUI classes,
+   //they call KeySymToKeyCode.
+
    assert(!fPimpl->IsRootWindow(wid) && "GrabKey, called for 'root' window");
    
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
    QuartzView *view = drawable.fContentView;
+   
+   const NSUInteger cocoaKeyModifiers = X11::GetCocoaKeyModifiersFromROOTKeyModifiers(rootKeyModifiers);
 
    if (grab)
-      [view addPassiveKeyGrab : keyCode modifiers : modifiers];
+      [view addPassiveKeyGrab : keyCode modifiers : cocoaKeyModifiers];
    else
-      [view removePassiveKeyGrab : keyCode modifiers : modifiers];
+      [view removePassiveKeyGrab : keyCode modifiers : cocoaKeyModifiers];
 }
 
 //______________________________________________________________________________

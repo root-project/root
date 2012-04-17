@@ -897,12 +897,12 @@ void print_mask_info(ULong_t mask)
 //Passive key grab info.
 
 @implementation PassiveKeyGrab {
-   Int_t fKeyCode;
-   UInt_t fModifiers;
+   unichar fKeyCode;
+   NSUInteger fModifiers;
 }
 
 //______________________________________________________________________________
-- (id) initWithKey : (Int_t) keyCode modifiers : (UInt_t) modifiers
+- (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    if (self = [super init]) {
       fKeyCode = keyCode;
@@ -913,19 +913,25 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (BOOL) matchKey : (Int_t) keyCode modifiers : (UInt_t) modifiers
+- (BOOL) matchKey : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    return keyCode == fKeyCode && modifiers == fModifiers;
 }
 
 //______________________________________________________________________________
-- (Int_t) fKeyCode 
+- (BOOL) matchKey : (unichar) keyCode
+{
+   return keyCode == fKeyCode;
+}
+
+//______________________________________________________________________________
+- (unichar) fKeyCode 
 {
    return fKeyCode;
 }
 
 //______________________________________________________________________________
-- (UInt_t) fModifiers
+- (NSUInteger) fModifiers
 {
    return fModifiers;
 }
@@ -1687,7 +1693,7 @@ void print_mask_info(ULong_t mask)
 
 //Key grabs.
 //______________________________________________________________________________
-- (void) addPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers
+- (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    //Remove and add (not to traverse twice).
    [self removePassiveKeyGrab : keyCode modifiers : modifiers];
@@ -1697,7 +1703,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) removePassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers
+- (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    const NSUInteger count = [fPassiveKeyGrabs count];
    for (NSUInteger i = 0; i < count; ++i) {
@@ -1710,11 +1716,24 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (PassiveKeyGrab *) findPassiveKeyGrab : (Int_t) keyCode modifiers : (UInt_t) modifiers
+- (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    NSEnumerator *enumerator = [fPassiveKeyGrabs objectEnumerator];
    while (PassiveKeyGrab *grab = (PassiveKeyGrab *)[enumerator nextObject]) {
       if ([grab matchKey : keyCode modifiers : modifiers])
+         return grab;
+   }
+
+   return nil;
+}
+
+//______________________________________________________________________________
+- (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode
+{
+   //Do not check modifiers.
+   NSEnumerator *enumerator = [fPassiveKeyGrabs objectEnumerator];
+   while (PassiveKeyGrab *grab = (PassiveKeyGrab *)[enumerator nextObject]) {
+      if ([grab matchKey : keyCode])
          return grab;
    }
 
