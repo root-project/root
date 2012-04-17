@@ -358,7 +358,7 @@ namespace cling {
     if (interpRes != Interpreter::kFailure) {
        std::string expression = pairFuncExt.first.str()
           + "(" + pairFileArgs.second.str();
-       interpRes = m_Interp.processLine(expression, false /*not raw*/, result);
+       interpRes = m_Interp.evaluate(expression, result);
     }
     
     return (interpRes != Interpreter::kFailure);   
