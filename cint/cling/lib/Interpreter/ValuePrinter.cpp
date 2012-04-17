@@ -101,7 +101,14 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
     case clang::BuiltinType::UChar:
     case clang::BuiltinType::Char_S:
     case clang::BuiltinType::SChar:  StreamChar(o, *(char*)p); break;
+    case clang::BuiltinType::Short:  o << *(short*)p << "\n"; break;
+    case clang::BuiltinType::UShort: o << *(unsigned short*)p << "\n"; break;
     case clang::BuiltinType::Int:    o << *(int*)p << "\n"; break;
+    case clang::BuiltinType::UInt:   o << *(unsigned int*)p << "\n"; break;
+    case clang::BuiltinType::Long:   o << *(long*)p << "\n"; break;
+    case clang::BuiltinType::ULong:  o << *(unsigned long*)p << "\n"; break;
+    case clang::BuiltinType::LongLong:  o << *(long long*)p << "\n"; break;
+    case clang::BuiltinType::ULongLong: o << *(unsigned long long*)p << "\n"; break;
     case clang::BuiltinType::Float:  o << *(float*)p << "\n"; break;
     case clang::BuiltinType::Double: o << *(double*)p << "\n"; break;
     default:
