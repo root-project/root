@@ -771,6 +771,8 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
+//
+// The function return kFALSE if the Add operation failed
 
    if (!f1) {
       Error("Add","Attempt to add a non-existing function");
@@ -860,6 +862,8 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 // IMPORTANT NOTE2: if h1 has a normalisation factor, the normalisation factor
 // is used , ie  this = this + c1*factor*h1
 // Use the other TH1::Add function if you do not want this feature
+//
+// The function return kFALSE if the Add operation failed
 
    if (!h1) {
       Error("Add","Attempt to add a non-existing histogram");
@@ -1014,6 +1018,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 //ANOTHER SPECIAL CASE : h1 = h2 and c2 < 0 
 // do a scaling   this = c1 * h1 / (bin Volume)
 //
+// The function return kFALSE if the Add operation failed
 
 
    if (!h1 || !h2) {
@@ -2428,7 +2433,7 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TH1::Divide(TF1 *f1, Double_t c1)
+Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 {
 // Performs the operation: this = this/(c1*f1)
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -2437,10 +2442,12 @@ void TH1::Divide(TF1 *f1, Double_t c1)
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Divide
+//
+// The function return kFALSE if the divide operation failed
 
    if (!f1) {
       Error("Add","Attempt to divide by a non-existing function");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -2490,10 +2497,11 @@ void TH1::Divide(TF1 *f1, Double_t c1)
       }
    }
    ResetStats();
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TH1::Divide(const TH1 *h1)
+Bool_t TH1::Divide(const TH1 *h1)
 {
 //   -*-*-*-*-*-*-*-*-*Divide this histogram by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ===========================
@@ -2509,10 +2517,12 @@ void TH1::Divide(const TH1 *h1)
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Scale
+//
+// The function return kFALSE if the divide operation failed
 
    if (!h1) {
       Error("Divide","Attempt to divide by a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -2527,7 +2537,7 @@ void TH1::Divide(const TH1 *h1)
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Divide","Attempt to divide histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Divide","Attempt to divide histograms with different axis limits");
    } catch(DifferentBinLimits&) {
@@ -2568,11 +2578,12 @@ void TH1::Divide(const TH1 *h1)
       }
    }
    ResetStats();
+   return kTRUE;
 }
 
 
 //______________________________________________________________________________
-void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //   -*-*-*Replace contents of this histogram by the division of h1 by h2*-*-*
 //         ==============================================================
@@ -2595,6 +2606,9 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 //  If you prefer to have efficiency errors not going to zero when the efficiency is 1, you must
 //  use the function TGraphAsymmErrors::BayesDivide, which will return an asymmetric and non-zero lower
 //  error for the case b1=b2.
+//
+// The function return kFALSE if the divide operation failed
+
 
    TString opt = option;
    opt.ToLower();
@@ -2602,7 +2616,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
       Error("Divide","Attempt to divide by a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -2617,7 +2631,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Divide","Attempt to divide histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Divide","Attempt to divide histograms with different axis limits");
    } catch(DifferentBinLimits&) {
@@ -2626,7 +2640,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 
    if (!c2) {
       Error("Divide","Coefficient of dividing histogram cannot be zero");
-      return;
+      return kFALSE;
    }
 
    if (fDimension < 2) nbinsy = -1;
@@ -2685,6 +2699,8 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    if (binomial)
       // in case of binomial division use denominator for number of entries
       SetEntries ( h2->GetEntries() );
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -5346,7 +5362,7 @@ Long64_t TH1::Merge(TCollection *li)
 }
 
 //______________________________________________________________________________
-void TH1::Multiply(TF1 *f1, Double_t c1)
+Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 {
    // Performs the operation: this = this*c1*f1
    // if errors are defined (see TH1::Sumw2), errors are also recalculated.
@@ -5355,10 +5371,12 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
    // you should call Sumw2 before making this operation.
    // This is particularly important if you fit the histogram after TH1::Multiply
+   //
+   // The function return kFALSE if the Multiply operation failed
 
    if (!f1) {
       Error("Add","Attempt to multiply by a non-existing function");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -5405,10 +5423,11 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
       }
    }
    ResetStats();
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TH1::Multiply(const TH1 *h1)
+Bool_t TH1::Multiply(const TH1 *h1)
 {
    //   -*-*-*-*-*-*-*-*-*Multiply this histogram by h1*-*-*-*-*-*-*-*-*-*-*-*-*
    //                     =============================
@@ -5422,10 +5441,12 @@ void TH1::Multiply(const TH1 *h1)
    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
    // you should call Sumw2 before making this operation.
    // This is particularly important if you fit the histogram after TH1::Multiply
+   //
+   // The function return kFALSE if the Multiply operation failed
 
    if (!h1) {
       Error("Multiply","Attempt to multiply by a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    Int_t nbinsx = GetNbinsX();
@@ -5439,7 +5460,7 @@ void TH1::Multiply(const TH1 *h1)
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Multiply","Attempt to multiply histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
@@ -5480,11 +5501,12 @@ void TH1::Multiply(const TH1 *h1)
       }
    }
    ResetStats();
+   return kTRUE;
 }
 
 
 //______________________________________________________________________________
-void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
    //   -*-*-*Replace contents of this histogram by multiplication of h1 by h2*-*
    //         ================================================================
@@ -5498,6 +5520,8 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
    // you should call Sumw2 before making this operation.
    // This is particularly important if you fit the histogram after TH1::Multiply
+   //
+   // The function return kFALSE if the Multiply operation failed
 
    TString opt = option;
    opt.ToLower();
@@ -5505,7 +5529,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    //   if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
       Error("Multiply","Attempt to multiply by a non-existing histogram");
-      return;
+      return kFALSE;
    }
 
    // delete buffer if it is there since it will become invalid
@@ -5520,7 +5544,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
       Error("Multiply","Attempt to multiply histograms with different number of bins");
-      return;
+      return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
@@ -5563,6 +5587,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       }
    }
    ResetStats();
+   return kTRUE; 
 }
 
 //______________________________________________________________________________

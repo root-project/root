@@ -387,30 +387,33 @@ void TProfile2D::Copy(TObject &obj) const
 
 
 //______________________________________________________________________________
-void TProfile2D::Divide(TF1 *, Double_t )
+Bool_t TProfile2D::Divide(TF1 *, Double_t )
 {
    // Performs the operation: this = this/(c1*f1)
+   // This function is not implemented
 
    Error("Divide","Function not implemented for TProfile2D");
-   return;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TProfile2D::Divide(const TH1 *h1)
+Bool_t TProfile2D::Divide(const TH1 *h1)
 {
 //*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
 //
 //   this = this/h1
 //
+//   This function return kFALSE if the divide operation failed
+
 
    if (!h1) {
       Error("Divide","Attempt to divide a non-existing profile2D");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TProfile2D::Class())) {
       Error("Divide","Attempt to divide a non-profile2D object");
-      return;
+      return kFALSE;
    }
    TProfile2D *p1 = (TProfile2D*)h1;
 
@@ -421,12 +424,12 @@ void TProfile2D::Divide(const TH1 *h1)
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
    Int_t ny = GetNbinsY();
    if (ny != p1->GetNbinsY()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
 
 //*-*- Reset statistics
@@ -474,17 +477,19 @@ void TProfile2D::Divide(const TH1 *h1)
       Warning("Divide","Cannot preserve during the division of profiles the sum of bin weight square");
       fBinSumw2 = TArrayD();
    }
+   return kTRUE;
 }
 
 
 //______________________________________________________________________________
-void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
 //*-*      ==============================================================
 //
 //   this = c1*h1/(c2*h2)
 //
+//   This function return kFALSE if the divide operation failed
 
    TString opt = option;
    opt.ToLower();
@@ -492,16 +497,16 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
       Error("Divide","Attempt to divide a non-existing profile2D");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TProfile2D::Class())) {
       Error("Divide","Attempt to divide a non-profile2D object");
-      return;
+      return kFALSE;
    }
    TProfile2D *p1 = (TProfile2D*)h1;
    if (!h2->InheritsFrom(TProfile2D::Class())) {
       Error("Divide","Attempt to divide a non-profile2D object");
-      return;
+      return kFALSE;
    }
    TProfile2D *p2 = (TProfile2D*)h2;
 
@@ -512,16 +517,16 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX() || nx != p2->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
    Int_t ny = GetNbinsY();
    if (ny != p1->GetNbinsY() || ny != p2->GetNbinsY()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
    if (!c2) {
       Error("Divide","Coefficient of dividing profile cannot be zero");
-      return;
+      return kFALSE;
    }
 
 //*-*- Reset statistics
@@ -575,6 +580,7 @@ void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
          else           fBinEntries.fArray[bin] = en1[bin]/en2[bin];
       }
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1137,16 +1143,16 @@ Long64_t TProfile2D::Merge(TCollection *li)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(TF1 *, Double_t )
+Bool_t TProfile2D::Multiply(TF1 *, Double_t )
 {
    // Performs the operation: this = this*c1*f1
 
    Error("Multiply","Function not implemented for TProfile2D");
-   return;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(const TH1 *)
+Bool_t TProfile2D::Multiply(const TH1 *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
@@ -1154,11 +1160,12 @@ void TProfile2D::Multiply(const TH1 *)
 //   this = this*h1
 //
    Error("Multiply","Multiplication of profile2D histograms not implemented");
+   return kFALSE;
 }
 
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
+Bool_t TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -1167,6 +1174,7 @@ void TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t
 //
 
    Error("Multiply","Multiplication of profile2D histograms not implemented");
+   return kFALSE;
 }
 
 //______________________________________________________________________________

@@ -442,16 +442,17 @@ void TProfile::Copy(TObject &obj) const
 
 
 //______________________________________________________________________________
-void TProfile::Divide(TF1 *, Double_t )
+Bool_t TProfile::Divide(TF1 *, Double_t )
 {
    // Performs the operation: this = this/(c1*f1)
+   // This function is not implemented for the TProfile
 
    Error("Divide","Function not implemented for TProfile");
-   return;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TProfile::Divide(const TH1 *h1)
+Bool_t TProfile::Divide(const TH1 *h1)
 {
 //*-*-*-*-*-*-*-*-*-*-*Divide this profile by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -459,14 +460,15 @@ void TProfile::Divide(const TH1 *h1)
 //   this = this/h1
 // This function accepts to divide a TProfile by a histogram
 //
+// The function return kFALSE if the divide operation failed
 
    if (!h1) {
       Error("Divide","Attempt to divide a non-existing profile");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TH1::Class())) {
       Error("Divide","Attempt to divide by a non-profile or non-histogram object");
-      return;
+      return kFALSE;
    }
    TProfile *p1 = (TProfile*)h1;
 
@@ -478,7 +480,7 @@ void TProfile::Divide(const TH1 *h1)
 //*-*- Check profile compatibility
    if (nbinsx != p1->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
 
 //*-*- Reset statistics
@@ -527,17 +529,19 @@ void TProfile::Divide(const TH1 *h1)
       fBinSumw2 = TArrayD();
    }
    
+   return kTRUE;
 }
 
 
 //______________________________________________________________________________
-void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+Bool_t TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile by the division of h1 by h2*-*-*
 //*-*      ============================================================
 //
 //   this = c1*h1/(c2*h2)
 //
+// The function return kFALSE if the divide operation failed
 
    TString opt = option;
    opt.ToLower();
@@ -545,16 +549,16 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
       Error("Divide","Attempt to divide a non-existing profile");
-      return;
+      return kFALSE;
    }
    if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Divide","Attempt to divide a non-profile object");
-      return;
+      return kFALSE;
    }
    TProfile *p1 = (TProfile*)h1;
    if (!h2->InheritsFrom(TProfile::Class())) {
       Error("Divide","Attempt to divide by a non-profile object");
-      return;
+      return kFALSE;
    }
    TProfile *p2 = (TProfile*)h2;
 
@@ -565,11 +569,11 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
 //*-*- Check histogram compatibility
    if (nbinsx != p1->GetNbinsX() || nbinsx != p2->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
-      return;
+      return kFALSE;
    }
    if (!c2) {
       Error("Divide","Coefficient of dividing profile cannot be zero");
-      return;
+      return kFALSE;
    }
 
    //THE ALGORITHM COMPUTING THE ERRORS IS WRONG. HELP REQUIRED
@@ -634,6 +638,7 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       fBinSumw2 = TArrayD();
    }
 
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1142,13 +1147,16 @@ Long64_t TProfile::Merge(TCollection *li)
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(TF1 *f1, Double_t c1)
+Bool_t TProfile::Multiply(TF1 *f1, Double_t c1)
 {
    // Performs the operation: this = this*c1*f1
+   //
+   // The function return kFALSE if the Multiply operation failed
+
 
    if (!f1) {
       Error("Multiply","Attempt to multiply by a null function");
-      return;
+      return kFALSE;
    }
 
    Int_t nbinsx = GetNbinsX();
@@ -1177,10 +1185,11 @@ void TProfile::Multiply(TF1 *f1, Double_t c1)
       fSumw2.fArray[bin]      *= ac1*cf1*cf1;
       //fBinEntries.fArray[bin] *= ac1*TMath::Abs(cf1);
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TProfile::Multiply(const TH1 *)
+Bool_t TProfile::Multiply(const TH1 *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Multiply this profile by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
@@ -1188,19 +1197,20 @@ void TProfile::Multiply(const TH1 *)
 //   this = this*h1
 //
    Error("Multiply","Multiplication of profile histograms not implemented");
+   return kFALSE;
 }
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
+Bool_t TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile by multiplication of h1 by h2*-*
 //*-*      ================================================================
 //
 //   this = (c1*h1)*(c2*h2)
 //
-
    Error("Multiply","Multiplication of profile histograms not implemented");
+   return kFALSE;
 }
 
 //______________________________________________________________________________

@@ -86,9 +86,9 @@ public:
    void              BuildOptions(Double_t tmin, Double_t tmax, Option_t *option);
    virtual Int_t     BufferEmpty(Int_t action=0);
    virtual void      Copy(TObject &hnew) const;
-   virtual void      Divide(TF1 *h1, Double_t c1=1);
-   virtual void      Divide(const TH1 *h1);
-   virtual void      Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t    Divide(TF1 *h1, Double_t c1=1);
+   virtual Bool_t    Divide(const TH1 *h1);
+   virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual TH1      *DrawCopy(Option_t *option="") const;
    Int_t             Fill(Double_t) {return -1;} //MayNotUse
    Int_t             Fill(const char*, Double_t) {return -1;} //MayNotUse
@@ -119,9 +119,9 @@ public:
    virtual Double_t  GetTmin() const {return fTmin;}
    virtual Double_t  GetTmax() const {return fTmax;}
    virtual Long64_t  Merge(TCollection *list);
-   virtual void      Multiply(TF1 *h1, Double_t c1=1);
-   virtual void      Multiply(const TH1 *h1);
-   virtual void      Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t    Multiply(TF1 *h1, Double_t c1=1);
+   virtual Bool_t    Multiply(const TH1 *h1);
+   virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    TH3D             *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
