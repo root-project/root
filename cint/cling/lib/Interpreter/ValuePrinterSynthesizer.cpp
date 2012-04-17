@@ -45,10 +45,6 @@ namespace cling {
               else
                 To = dyn_cast<Expr>(*J);
               if (To) {
-                ChainedConsumer* C = dyn_cast<ChainedConsumer>(&m_Sema->Consumer);
-                bool p, q;
-                p = C->DisableConsumer(ChainedConsumer::kDeclExtractor);
-                q = C->DisableConsumer(ChainedConsumer::kValuePrinterSynthesizer);
                 Expr* Result = 0;
                 if (m_Sema->getLangOpts().CPlusPlus)
                   Result = SynthesizeCppVP(To);
@@ -60,9 +56,6 @@ namespace cling {
                     RS->setRetValue(Result);
                   else
                     *J = Result;
-
-                C->RestorePreviousState(ChainedConsumer::kDeclExtractor, p);
-                C->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer, q);
               }
             }
           }
