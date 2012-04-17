@@ -54,11 +54,10 @@ namespace cling {
                   Result = SynthesizeVP(To);
 
                 if (Result) {
-                  if (RS) {
+                  if (RS)
                     RS->setRetValue(Result);
-                  } else {
+                  else
                     *J = Result;
-                  }
                 }
               }
             }
