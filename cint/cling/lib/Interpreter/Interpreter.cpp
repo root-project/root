@@ -571,8 +571,8 @@ namespace cling {
                                                       /* NumArgs = */0, EPI);
             TopLevelFD->setType(FuncTy);
             // Strip the parenthesis if any
-            //if (ParenExpr* PE = dyn_cast<ParenExpr>(E))
-            //  E = PE->getSubExpr();
+            if (ParenExpr* PE = dyn_cast<ParenExpr>(E))
+              E = PE->getSubExpr();
 
             // Change it with return stmt
             Stmts[indexOfLastExpr] 
