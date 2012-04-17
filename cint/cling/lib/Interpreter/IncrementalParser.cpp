@@ -154,19 +154,14 @@ namespace cling {
   }
 
   void IncrementalParser::Parse(llvm::StringRef input, 
-                                llvm::SmallVector<DeclGroupRef, 4>& DGRs){
-    if (!m_SyntaxOnly)
-      m_Consumer->DisableConsumer(ChainedConsumer::kCodeGenerator);
+                                llvm::SmallVector<DeclGroupRef, 4>& DGRs) {
 
     Parse(input);
     for (llvm::SmallVector<ChainedConsumer::DGRInfo, 64>::iterator 
-           I = m_Consumer->DeclsQueue.begin(), E = m_Consumer->DeclsQueue.end(); 
+           I = m_Consumer->DeclsQueue.begin(), E = m_Consumer->DeclsQueue.end();
          I != E; ++I) {
       DGRs.push_back((*I).D);
     }
-
-    if (!m_SyntaxOnly)
-      m_Consumer->EnableConsumer(ChainedConsumer::kCodeGenerator);
   }
 
   IncrementalParser::EParseResult 
@@ -290,8 +285,6 @@ namespace cling {
       return;
 
     m_Consumer->Add(I, consumer);
-    if (I == ChainedConsumer::kCodeGenerator)
-      m_Consumer->EnableConsumer(I);
   }
 
   CodeGenerator* IncrementalParser::GetCodeGenerator() const { 

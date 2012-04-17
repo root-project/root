@@ -74,48 +74,6 @@ namespace cling {
       return Consumers[I];
     }
 
-    bool EnableConsumer(EConsumerIndex I) {
-      assert(Exists(I) && "Cannot disable. Consumer not set!");
-      bool prev;
-      CompilationOptions CO = getCompilationOpts();
-      switch(I) {
-      case kEvaluateTSynthesizer : 
-        prev = CO.DynamicScoping; CO.DynamicScoping = 1; break;
-      case kDeclExtractor :
-        prev = CO.DeclarationExtraction; CO.DeclarationExtraction = 1; break;
-      case kValuePrinterSynthesizer : 
-        prev = CO.ValuePrinting; CO.ValuePrinting = CompilationOptions::Auto; break;
-      case kASTDumper : 
-        prev = CO.Debug; CO.Debug = 1; break;
-      case kCodeGenerator : 
-        prev = CO.CodeGeneration; CO.CodeGeneration = 1; break;
-      case kConsumersCount : break;
-      }
-
-      return prev;
-    }
-
-    bool DisableConsumer(EConsumerIndex I) {
-      assert(Exists(I) && "Cannot disable. Consumer not set!");
-      bool prev = false;
-      CompilationOptions CO = getCompilationOpts();
-      switch(I) {
-      case kEvaluateTSynthesizer : 
-        prev = CO.DynamicScoping; CO.DynamicScoping = 0; break;
-      case kDeclExtractor :
-        prev = CO.DeclarationExtraction; CO.DeclarationExtraction = 0; break;
-      case kValuePrinterSynthesizer : 
-        prev = CO.ValuePrinting; CO.ValuePrinting = 0; break;
-      case kASTDumper : 
-        prev = CO.Debug; CO.Debug = 0; break;
-      case kCodeGenerator : 
-        prev = CO.CodeGeneration; CO.CodeGeneration = 0; break;
-      case kConsumersCount : break;
-      }
-
-      return prev;
-    }
-
     void RestorePreviousState(EConsumerIndex I, bool Previous) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
 
