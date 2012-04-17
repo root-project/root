@@ -87,6 +87,8 @@
 - (void)     copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
              clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
 
+- (unsigned char *) readColorBits : (Rectangle_t) area;
+
 @end
 
 //////////////////////////////////////////////////////////////
@@ -185,6 +187,8 @@
 //
 - (void)     copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
              clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+
+- (unsigned char *) readColorBits : (Rectangle_t) area;
 
 //
 - (void)     configureNotifyTree;

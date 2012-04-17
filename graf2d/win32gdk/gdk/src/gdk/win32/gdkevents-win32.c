@@ -5320,6 +5320,7 @@ gdk_event_translate(GdkEvent * event,
       if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
          event->key.state |= GDK_MOD1_MASK;
 
+      //GOVNO1.
 
       //vo check if key is grabbed 
       if (!k_grab_window &&

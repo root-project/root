@@ -225,27 +225,34 @@ bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)
    assert(xlfdName.length() && "XLFD name is a string with a zero length");
 
    if (!xlfdName.length()) {
-      ::Warning("ROOT::MacOSX::Quartz::ParseXLFDName: ", "XLFD name is a string with a zero length");
+      ::Warning("ROOT::MacOSX::X11::ParseXLFDName: ", "XLFD name is a string with a zero length");
       return false;
    }
 
    try {
-      std::string::size_type pos = 0;
+      if (xlfdName == "fixed" || xlfdName == "*") {
+         //TODO: find out, what X11 does for such XLFD name.
+         ::Warning("ROOT::MacOSX::X11::ParseXLFDName: ", "\"fixed\" or \"*\" font was requested");
+         dst.fFamilyName = "Courier";
+         dst.fPixelSize = 11;
+      } else {
+         std::string::size_type pos = 0;
 
-      pos = ParseFoundry(xlfdName, pos, dst);
-      pos = ParseFamilyName(xlfdName, pos, dst);
-      pos = ParseWeight(xlfdName, pos, dst);
-      pos = ParseSlant(xlfdName, pos, dst);
-      pos = ParseSetwidth(xlfdName, pos, dst);
-      pos = ParseAddstyle(xlfdName, pos, dst);
-      pos = ParsePixelSize(xlfdName, pos, dst);
-      pos = ParsePointSize(xlfdName, pos, dst);
-      pos = ParseHoriz(xlfdName, pos, dst);
-      pos = ParseVert(xlfdName, pos, dst);
-      pos = ParseSpacing(xlfdName, pos, dst);
-      pos = ParseAvgwidth(xlfdName, pos, dst);
-      pos = ParseRgstry(xlfdName, pos, dst);
-      pos = ParseEncoding(xlfdName, pos, dst);
+         pos = ParseFoundry(xlfdName, pos, dst);
+         pos = ParseFamilyName(xlfdName, pos, dst);
+         pos = ParseWeight(xlfdName, pos, dst);
+         pos = ParseSlant(xlfdName, pos, dst);
+         pos = ParseSetwidth(xlfdName, pos, dst);
+         pos = ParseAddstyle(xlfdName, pos, dst);
+         pos = ParsePixelSize(xlfdName, pos, dst);
+         pos = ParsePointSize(xlfdName, pos, dst);
+         pos = ParseHoriz(xlfdName, pos, dst);
+         pos = ParseVert(xlfdName, pos, dst);
+         pos = ParseSpacing(xlfdName, pos, dst);
+         pos = ParseAvgwidth(xlfdName, pos, dst);
+         pos = ParseRgstry(xlfdName, pos, dst);
+         pos = ParseEncoding(xlfdName, pos, dst);
+      }
 
       return true;
    } catch (const std::exception &e) {

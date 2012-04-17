@@ -715,6 +715,14 @@ void print_mask_info(ULong_t mask)
    [fContentView copy : src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
 }
 
+//______________________________________________________________________________
+- (unsigned char *) readColorBits : (Rectangle_t) area
+{
+   assert(fContentView != nil && "readColorBits:, fContentView is nil");
+   
+   return [fContentView readColorBits : area];
+}
+
 
 //End of SetWindowAttributes_t/WindowAttributes_t.
 /////////////////////////////////////////////////////////////
@@ -1431,6 +1439,15 @@ void print_mask_info(ULong_t mask)
    } else {
       assert(0 && "copy:area:withMask:clipOrigin:toPoint:, src is of unknown type");
    }
+}
+
+//______________________________________________________________________________
+- (unsigned char *) readColorBits : (Rectangle_t) area
+{
+   (void)area;
+   NSLog(@"Warning: QuartzView -readColorBits: not implemented yet");
+   
+   return 0;
 }
 
 //End of X11Drawable protocol.
