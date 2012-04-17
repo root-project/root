@@ -3519,7 +3519,9 @@ Long_t TCintWithCling::ProcessLine(const char *line, EErrorCode *error /*=0*/)
       return 0;
    }
 
-   return result.hasValue() ? result.simplisticCastAs<long>() : 0;
+   Bool_t resultHasValue = result.hasValue(fInterpreter->getCI()->getASTContext());
+   if (resultHasValue) return result.simplisticCastAs<long>();
+   return 0;
 }
 
 //______________________________________________________________________________

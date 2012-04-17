@@ -10,35 +10,43 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "clang/AST/Type.h"
 
-namespace llvm {
-  struct GenericValue;
-}
 namespace clang {
-  class Type;
+  class ASTContext;
 }
 
 namespace cling {
-  // The class represents a llvm::GenericValue with its corresponding 
-  // clang::Type. There are two use-cases for that:
-  // 1. Expression evaluation: we need to know the type of the GenericValue
-  // that we have gotten from the JIT
-  // 2. Value printer: needs to know the type in order to skip the printing of
-  // void types
+  ///\brief A type, value pair.
+  //
+  /// Type-safe value access and setting. Simple (built-in) casting is
+  /// available, but better extract the value using the template
+  /// parameter that matches the Value's type.
+  ///
+  /// The class represents a llvm::GenericValue with its corresponding 
+  /// clang::QualType. Use-cases:
+  /// 1. Expression evaluation: we need to know the type of the GenericValue
+  /// that we have gotten from the JIT
+  /// 2. Value printer: needs to know the type in order to skip the printing of
+  /// void types
+  /// 3. Parameters for calls given an llvm::Function and a clang::FunctionDecl.
   class Value {
   private:
   public:
+    /// \brief value
     llvm::GenericValue value;
-    const clang::Type* type;
+    /// \brief the value's type
+    clang::QualType type;
     template <typename T> struct TypedAccess;
-    Value() : value(0), type(0) {}
-    Value(const llvm::GenericValue& v, const clang::Type* t) :
+    Value() {}
+    Value(const llvm::GenericValue& v, clang::QualType t) :
       value(v), type(t){}
     ~Value() {}
 
-    bool isValid() const { return (type); }
-    bool isInvalid() const { return !type; }
-    bool isVoid() const { return isValid() && type->isVoidType(); }
-    bool hasValue() const { return isValid() && !type->isVoidType(); }
+    bool isValid() const { return !type.isNull(); }
+    bool isInvalid() const { return !isValid(); }
+    bool isVoid(const clang::ASTContext& ASTContext) const {
+      return isValid() && type.getDesugaredType(ASTContext)->isVoidType(); }
+    bool hasValue(const clang::ASTContext& ASTContext) const {
+      return isValid() && !isVoid(ASTContext); }
 
     template <typename T>
     T getAs() const;

@@ -611,7 +611,7 @@ namespace cling {
     llvm::GenericValue val;
     if (RunFunction(WrapperName, &val)) {
       if (V)
-        *V = Value(val, RetTy.getTypePtrOrNull());
+        *V = Value(val, RetTy);
 
       return Interpreter::kSuccess;
     }
