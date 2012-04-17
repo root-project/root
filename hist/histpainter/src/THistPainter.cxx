@@ -8350,6 +8350,7 @@ void THistPainter::PaintText(Option_t *)
          yt = y;
          if (gStyle->GetHistMinimumZero() && y<0) y = 0;
          if (getentries) yt = hp->GetBinEntries(i);
+         if (yt == 0.) continue;
          snprintf(value,50,format,yt);
          if (Hoption.Logx) {
             if (x > 0)  x  = TMath::Log10(x);
