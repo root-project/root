@@ -689,6 +689,20 @@ const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::De
 {
    const clang::NamedDecl *result = R__SlowSearch(name,0);
 
+   // Now, let's check with cling's lookupClass 
+   const clang::CXXRecordDecl *result_cxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(result);
+   const clang::CXXRecordDecl *result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupClass(name));
+   if (!result_new) {
+      std::string std_name("std::");
+      std_name += name;
+      result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupClass(std_name));
+   }
+   if (result_cxx != result_new) {
+      // Humm ok, we are not the same
+      fprintf(stderr,"Error: lookupClass disagree with R__SlowSearchImpl on %s: lookupClass: %s slowClassSearch: %s\n",
+              name, result_new ? R__GetQualifiedName(*result_new).c_str() : " nothing ", result ? R__GetQualifiedName(*result_cxx).c_str() : " nothing ");
+   }
+
    if (result) {
       return llvm::dyn_cast<clang::CXXRecordDecl>(result);
    } else {
@@ -4836,7 +4850,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 #ifdef R__SHOWMEMBERS_IN_TCLING
    std::string getClass;
    if (cl.HasMethod("IsA") && !outside) {
-      getClass = csymbol + "::IsA();
+      getClass = csymbol + "::IsA()";
    } else {
       getClass = "::ROOT::GenerateInitInstanceLocal((const ";
       getClass += csymbol + "*)0x0)->GetClass()";
