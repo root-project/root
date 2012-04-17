@@ -294,7 +294,7 @@ namespace cling {
     if (begins == std::string::npos)
       ends = begins + 1;
 
-    return llvm::StringRef(Str.c_str(), ends - begins);
+    return llvm::StringRef(Str.c_str() + begins, ends - begins);
   }
 
   void MetaProcessor::PrintCommandHelp() {
