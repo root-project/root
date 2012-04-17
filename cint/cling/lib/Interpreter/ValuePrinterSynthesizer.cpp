@@ -55,10 +55,12 @@ namespace cling {
                 else 
                   Result = SynthesizeVP(To);
 
-                if (ReturnStmt* RS = dyn_cast<ReturnStmt>(*J))
-                  RS->setRetValue(Result);
-                else
-                  *J = Result;
+                if (Result)
+                  if (ReturnStmt* RS = dyn_cast<ReturnStmt>(*J))
+                    RS->setRetValue(Result);
+                  else
+                    *J = Result;
+
                 C->RestorePreviousState(ChainedConsumer::kDeclExtractor, p);
                 C->RestorePreviousState(ChainedConsumer::kValuePrinterSynthesizer, q);
               }
