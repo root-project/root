@@ -45,6 +45,7 @@ namespace cling {
                 To = RS->getRetValue();
               else
                 To = dyn_cast<Expr>(*J);
+
               if (To) {
                 Expr* Result = 0;
                 if (m_Sema->getLangOpts().CPlusPlus)

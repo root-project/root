@@ -375,10 +375,6 @@ namespace cling {
   void ChainedConsumer::Add(EConsumerIndex I, clang::ASTConsumer* C) {
     assert(!Exists(I) && "Consumer already registered at this index!");
     Consumers[I] = C;
-    if (I == kCodeGenerator)
-      EnableConsumer(I);
-    else
-      DisableConsumer(I);
 
     MutationListener->AddListener(I, C->GetASTMutationListener());
     DeserializationListener->AddListener(I, C->GetASTDeserializationListener());
