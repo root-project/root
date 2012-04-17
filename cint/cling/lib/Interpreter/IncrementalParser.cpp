@@ -213,7 +213,9 @@ namespace cling {
     if (input.size()) {
       std::ostringstream source_name;
       source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
-      m_MemoryBuffer.push_back(llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str()));
+      llvm::MemoryBuffer* MB  
+        = llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str());
+      m_MemoryBuffer.push_back(MB);
       SourceManager& SM = getCI()->getSourceManager();
 
       // Create SourceLocation, which will allow clang to order the overload

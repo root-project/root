@@ -188,7 +188,7 @@ namespace cling {
   void EvaluateTSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
     // include the DynamicLookup specific builtins
     if (!m_EvalDecl) {
-      m_Interpreter->processLine("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
+      m_Interpreter->declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
       TemplateDecl* D 
         = cast_or_null<TemplateDecl>(m_Interpreter->LookupDecl("cling").
                                      LookupDecl("runtime").
