@@ -701,71 +701,120 @@ namespace cling {
     PP.EnterSourceFile(FID, 0, SourceLocation());
     PP.Lex(const_cast<Token&>(P->getCurToken()));
     //
-    //  Parse the class name as a nested-name-specifier.
+    //  Try parsing the name as a nested-name-specifier.
     //
     CXXScopeSpec SS;
-    bool MayBePseudoDestructor = false;
-    if (P->ParseOptionalCXXScopeSpecifier(
-        SS, /*ObjectType*/ParsedType(), /*EnteringContext*/false,
-        &MayBePseudoDestructor, /*IsTypename*/false)) {
+    if (P->TryAnnotateCXXScopeToken(false)) {
       // error path
       goto lookupClassDone;
     }
-    //
-    //  Check for a valid result.
-    //
-    if (!SS.isValid()) {
-      // error path
-      goto lookupClassDone;
-    }
-    //
-    //  Be careful, not all nested name specifiers refer to classes
-    //  and namespaces, and those are the only things we want.
-    //
-    {
-      NestedNameSpecifier* NNS = SS.getScopeRep();
-      NestedNameSpecifier::SpecifierKind Kind = NNS->getKind();
-      switch (Kind) {
-        case NestedNameSpecifier::Identifier:
-        case NestedNameSpecifier::Global:
-          // We do not want these.
-          break;
-        case NestedNameSpecifier::Namespace: {
-            NamespaceDecl* NSD = NNS->getAsNamespace();
-            NSD = NSD->getCanonicalDecl();
-            TheDecl = NSD;
-          }
-          break;
-        case NestedNameSpecifier::NamespaceAlias: {
-            // Note: In the future, should we return the alias instead? 
-            NamespaceAliasDecl* NSAD = NNS->getAsNamespaceAlias();
-            NamespaceDecl* NSD = NSAD->getNamespace();
-            NSD = NSD->getCanonicalDecl();
-            TheDecl = NSD;
-          }
-          break;
-        case NestedNameSpecifier::TypeSpec:
-        case NestedNameSpecifier::TypeSpecWithTemplate: {
-            // Note: Do we need to check for a dependent type here?
-            const Type* Ty = NNS->getAsType();
-            const TagType* TagTy = Ty->getAs<TagType>();
-            if (TagTy) {
-              // It is a class, struct, union, or enum.
-              TagDecl* TD = TagTy->getDecl();
-              if (TD) {
-                // Make sure it is not just forward declared, and instantiate
-                // any templates.
-                if (!CI->getSema().RequireCompleteDeclContext(SS, TD)) {
-                  // Success, type is complete, instantiations have been done.
-                  TagDecl* Def = TD->getDefinition();
-                  if (Def) {
-                    TheDecl = Def;
+    if (P->getCurToken().getKind() == tok::annot_cxxscope) {
+      CI->getSema().RestoreNestedNameSpecifierAnnotation(
+        P->getCurToken().getAnnotationValue(),
+        P->getCurToken().getAnnotationRange(),
+        SS);
+      if (SS.isValid()) {
+        NestedNameSpecifier* NNS = SS.getScopeRep();
+        NestedNameSpecifier::SpecifierKind Kind = NNS->getKind();
+        // Only accept the parse if we consumed all of the name.
+        if (P->NextToken().getKind() == clang::tok::eof) {
+          //
+          //  Be careful, not all nested name specifiers refer to classes
+          //  and namespaces, and those are the only things we want.
+          //
+          switch (Kind) {
+            case NestedNameSpecifier::Identifier: {
+                // Dependent type.
+                // We do not accept these.
+              }
+              break;
+            case NestedNameSpecifier::Namespace: {
+                // Namespace.
+                NamespaceDecl* NSD = NNS->getAsNamespace();
+                NSD = NSD->getCanonicalDecl();
+                TheDecl = NSD;
+              }
+              break;
+            case NestedNameSpecifier::NamespaceAlias: {
+                // Namespace alias.
+                // Note: In the future, should we return the alias instead? 
+                NamespaceAliasDecl* NSAD = NNS->getAsNamespaceAlias();
+                NamespaceDecl* NSD = NSAD->getNamespace();
+                NSD = NSD->getCanonicalDecl();
+                TheDecl = NSD;
+              }
+              break;
+            case NestedNameSpecifier::TypeSpec:
+                // Type name.
+            case NestedNameSpecifier::TypeSpecWithTemplate: {
+                // Type name qualified with "template".
+                // Note: Do we need to check for a dependent type here?
+                const Type* Ty = NNS->getAsType();
+                const TagType* TagTy = Ty->getAs<TagType>();
+                if (TagTy) {
+                  // It is a class, struct, or union.
+                  TagDecl* TD = TagTy->getDecl();
+                  if (TD) {
+                    // Make sure it is not just forward declared, and
+                    // instantiate any templates.
+                    if (!CI->getSema().RequireCompleteDeclContext(SS, TD)) {
+                      // Success, type is complete, instantiations have
+                      // been done.
+                      TagDecl* Def = TD->getDefinition();
+                      if (Def) {
+                        TheDecl = Def;
+                      }
+                    }
                   }
                 }
               }
-            }
+              break;
+            case clang::NestedNameSpecifier::Global: {
+                // Name was just "::" and nothing more.
+                // Note: We could return the translation unit decl here.
+              }
+              break;
           }
-          break;
+          goto lookupClassDone;
+        }
+      }
+    }
+    //
+    //  Cleanup after failed parse as a nested-name-specifier.
+    //
+    P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    //
+    //  Setup to reparse as a type.
+    //
+    DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+    {
+      llvm::MemoryBuffer* SB =
+        llvm::MemoryBuffer::getMemBufferCopy(className + "\n",
+          "lookup.type.file");
+      clang::FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+      CI->getPreprocessor().EnterSourceFile(FID, 0, clang::SourceLocation());
+      CI->getPreprocessor().Lex(const_cast<clang::Token&>(P->getCurToken()));
+    }
+    //
+    //  Now try to parse the name as a type.
+    //
+    if (P->TryAnnotateTypeOrScopeToken(false, false)) {
+      // error path
+      goto lookupClassDone;
+    }
+    if (P->getCurToken().getKind() == tok::annot_typename) {
+      ParsedType T = Parser::getTypeAnnotation(
+        const_cast<Token&>(P->getCurToken()));
+      // Only accept the parse if we consumed all of the name.
+      if (P->NextToken().getKind() == clang::tok::eof) {
+        QualType QT = T.get();
+        if (const EnumType* ET = QT->getAs<EnumType>()) {
+           EnumDecl* ED = ET->getDecl();
+           TheDecl = ED->getDefinition();
+        }
       }
     }
   lookupClassDone:
