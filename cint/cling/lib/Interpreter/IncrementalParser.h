@@ -110,8 +110,6 @@ namespace cling {
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
-    void addConsumer(ChainedConsumer::EConsumerIndex I, 
-                     clang::ASTConsumer* consumer);
 
     Interpreter* m_Interpreter; // our interpreter context
     llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.

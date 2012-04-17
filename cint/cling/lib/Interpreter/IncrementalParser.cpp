@@ -60,16 +60,16 @@ namespace cling {
     // Add consumers to the ChainedConsumer, which owns them
     EvaluateTSynthesizer* ES = new EvaluateTSynthesizer(interp);
     ES->Attach(m_Consumer);
-    addConsumer(ChainedConsumer::kEvaluateTSynthesizer, ES);
+    m_Consumer->Add(ChainedConsumer::kEvaluateTSynthesizer, ES);
 
     DeclExtractor* DE = new DeclExtractor();
     DE->Attach(m_Consumer);
-    addConsumer(ChainedConsumer::kDeclExtractor, DE);
+    m_Consumer->Add(ChainedConsumer::kDeclExtractor, DE);
 
     ValuePrinterSynthesizer* VPS = new ValuePrinterSynthesizer(interp);
     VPS->Attach(m_Consumer);
-    addConsumer(ChainedConsumer::kValuePrinterSynthesizer, VPS);
-    addConsumer(ChainedConsumer::kASTDumper, new ASTDumper());
+    m_Consumer->Add(ChainedConsumer::kValuePrinterSynthesizer, VPS);
+    m_Consumer->Add(ChainedConsumer::kASTDumper, new ASTDumper());
     if (!m_SyntaxOnly) {
       CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(), 
                                             "cling input",
@@ -77,7 +77,7 @@ namespace cling {
                                   /*Owned by codegen*/ * new llvm::LLVMContext()
                                             );
       assert(CG && "No CodeGen?!");
-      addConsumer(ChainedConsumer::kCodeGenerator, CG);
+      m_Consumer->Add(ChainedConsumer::kCodeGenerator, CG);
     }
     m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema(),
                               false /*skipFuncBodies*/));
@@ -278,13 +278,6 @@ namespace cling {
       delete S.ExternalSource;
       S.ExternalSource = 0;
     }      
-  }
-
-  void IncrementalParser::addConsumer(ChainedConsumer::EConsumerIndex I, ASTConsumer* consumer) {
-    if (m_Consumer->Exists(I))
-      return;
-
-    m_Consumer->Add(I, consumer);
   }
 
   CodeGenerator* IncrementalParser::GetCodeGenerator() const { 
