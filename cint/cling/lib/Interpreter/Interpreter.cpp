@@ -584,7 +584,7 @@ namespace cling {
       }
 
       // case 1:
-      if (CO.ValuePrinting == CompilationOptions::Enabled) 
+      if (CO.ValuePrinting == CompilationOptions::VPEnabled) 
         if (indexOfLastExpr < Stmts.size() - 1 && 
             isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
           Stmts.erase(Stmts.begin() + indexOfLastExpr);

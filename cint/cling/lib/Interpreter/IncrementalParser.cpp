@@ -51,7 +51,8 @@ namespace cling {
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
-    m_SyntaxOnly = (CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly);
+    m_SyntaxOnly 
+      = CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly;
 
     CreateSLocOffsetGenerator();
 
