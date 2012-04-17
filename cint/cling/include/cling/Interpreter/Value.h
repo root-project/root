@@ -30,26 +30,52 @@ namespace cling {
   /// 3. Parameters for calls given an llvm::Function and a clang::FunctionDecl.
   class Value {
   private:
+    /// \brief Forward decl for typed access specializations
+    template <typename T> struct TypedAccess;
+
   public:
     /// \brief value
     llvm::GenericValue value;
     /// \brief the value's type
     clang::QualType type;
-    template <typename T> struct TypedAccess;
+
+    /// \brief Default constructor, creates a value that IsInvalid().
     Value() {}
+    /// \brief Construct a valid Value.
     Value(const llvm::GenericValue& v, clang::QualType t) :
       value(v), type(t){}
-    ~Value() {}
 
+    /// \brief Determine whether the Value has been set.
+    //
+    /// Determine whether the Value has been set by checking
+    /// whether the type is valid.
     bool isValid() const { return !type.isNull(); }
+
+    /// \brief Determine whether the Value is unset.
+    //
+    /// Determine whether the Value is unset by checking
+    /// whether the type is invalid.
     bool isInvalid() const { return !isValid(); }
+
+    /// \brief Determine whether the Value is set but void.
     bool isVoid(const clang::ASTContext& ASTContext) const {
       return isValid() && type.getDesugaredType(ASTContext)->isVoidType(); }
+
+    /// \brief Determine whether the Value is set and not void.
+    //
+    /// Determine whether the Value is set and not void.
+    /// Only in this case can getAs() or simplisticCastAs() be called.
     bool hasValue(const clang::ASTContext& ASTContext) const {
       return isValid() && !isVoid(ASTContext); }
 
+    /// \brief Get the value without type checking.
     template <typename T>
     T getAs() const;
+
+    /// \brief Get the value.
+    //
+    /// Get the value cast to T. This is similar to reinterpret_cast<T>(value),
+    /// but only works for builtin types and pointers.
     template <typename T>
     T simplisticCastAs() const;
   };
