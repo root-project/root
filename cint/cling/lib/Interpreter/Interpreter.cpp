@@ -526,81 +526,85 @@ namespace cling {
     std::string WrapperName;
     std::string Wrapper = input;
     WrapInput(Wrapper, WrapperName);
+    QualType RetTy = getCI()->getASTContext().VoidTy;
 
-    llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
-    m_IncrParser->Parse(Wrapper, DGRs);
-    assert(DGRs.size() && "No decls created by Parse!");
+    if (V) {
+      llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
+      m_IncrParser->Parse(Wrapper, DGRs);
+      assert(DGRs.size() && "No decls created by Parse!");
 
-    // Find the wrapper function declaration.
-    //
-    // Note: The parse may have created a whole set of decls if a template
-    //       instantiation happened.  Our wrapper function should be the
-    //       last decl in the set.
-    //
-    FunctionDecl* TopLevelFD 
-      = dyn_cast<FunctionDecl>(DGRs.back().getSingleDecl());
-    assert(TopLevelFD && "No Decls Parsed?");
-    DeclContext* CurContext = TheSema.CurContext;
-    TheSema.CurContext = TopLevelFD;
-    ASTContext& Context(getCI()->getASTContext());
-    QualType RetTy;
-    // We have to be able to mark the expression for printout. There are three
-    // scenarios:
-    // 0: Expression printing disabled - don't do anything just disable the 
-    //    consumer
-    //    is our marker, even if there wasn't missing ';'.
-    // 1: Expression printing enabled - make sure we don't have NullStmt, which
-    //    is used as a marker to suppress the print out.
-    // 2: Expression printing auto - do nothing - rely on the omitted ';' to 
-    //    not produce the suppress marker.
-    if (CompoundStmt* CS = dyn_cast<CompoundStmt>(TopLevelFD->getBody())) {
-      // Collect all Stmts, contained in the CompoundStmt
-      llvm::SmallVector<Stmt *, 4> Stmts;
-      for (CompoundStmt::body_iterator iStmt = CS->body_begin(), 
-             eStmt = CS->body_end(); iStmt != eStmt; ++iStmt)
-        Stmts.push_back(*iStmt);
+      // Find the wrapper function declaration.
+      //
+      // Note: The parse may have created a whole set of decls if a template
+      //       instantiation happened.  Our wrapper function should be the
+      //       last decl in the set.
+      //
+      FunctionDecl* TopLevelFD 
+        = dyn_cast<FunctionDecl>(DGRs.back().getSingleDecl());
+      assert(TopLevelFD && "No Decls Parsed?");
+      DeclContext* CurContext = TheSema.CurContext;
+      TheSema.CurContext = TopLevelFD;
+      ASTContext& Context(getCI()->getASTContext());
+      // We have to be able to mark the expression for printout. There are three
+      // scenarios:
+      // 0: Expression printing disabled - don't do anything just disable the 
+      //    consumer
+      //    is our marker, even if there wasn't missing ';'.
+      // 1: Expression printing enabled - make sure we don't have NullStmt, which
+      //    is used as a marker to suppress the print out.
+      // 2: Expression printing auto - do nothing - rely on the omitted ';' to 
+      //    not produce the suppress marker.
+      if (CompoundStmt* CS = dyn_cast<CompoundStmt>(TopLevelFD->getBody())) {
+        // Collect all Stmts, contained in the CompoundStmt
+        llvm::SmallVector<Stmt *, 4> Stmts;
+        for (CompoundStmt::body_iterator iStmt = CS->body_begin(), 
+               eStmt = CS->body_end(); iStmt != eStmt; ++iStmt)
+          Stmts.push_back(*iStmt);
 
-      size_t indexOfLastExpr = Stmts.size();
-      while(indexOfLastExpr--) {
-        // find the trailing expression statement (skip e.g. null statements)
-        if (Expr* E = dyn_cast_or_null<Expr>(Stmts[indexOfLastExpr])) {
-          RetTy = E->getType();
-          if (!RetTy->isVoidType()) {
-            // Change the void function's return type
-            FunctionProtoType::ExtProtoInfo EPI;
-            QualType FuncTy = Context.getFunctionType(RetTy,/* ArgArray = */0,
-                                                      /* NumArgs = */0, EPI);
-            TopLevelFD->setType(FuncTy);
-            // Strip the parenthesis if any
-            if (ParenExpr* PE = dyn_cast<ParenExpr>(E))
-              E = PE->getSubExpr();
+        size_t indexOfLastExpr = Stmts.size();
+        while(indexOfLastExpr--) {
+          // find the trailing expression statement (skip e.g. null statements)
+          if (Expr* E = dyn_cast_or_null<Expr>(Stmts[indexOfLastExpr])) {
+            RetTy = E->getType();
+            if (!RetTy->isVoidType()) {
+              // Change the void function's return type
+              FunctionProtoType::ExtProtoInfo EPI;
+              QualType FuncTy = Context.getFunctionType(RetTy,/* ArgArray = */0,
+                                                        /* NumArgs = */0, EPI);
+              TopLevelFD->setType(FuncTy);
+              // Strip the parenthesis if any
+              if (ParenExpr* PE = dyn_cast<ParenExpr>(E))
+                E = PE->getSubExpr();
 
-            // Change it with return stmt
-            Stmts[indexOfLastExpr] 
-              = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
+              // Change it with return stmt
+              Stmts[indexOfLastExpr] 
+                = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
+            }
+            // even if void: we found an expression
+            break;
           }
-          // even if void: we found an expression
-          break;
         }
+
+        // case 1:
+        if (CO.ValuePrinting == CompilationOptions::VPEnabled) 
+          if (indexOfLastExpr < Stmts.size() - 1 && 
+              isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
+            Stmts.erase(Stmts.begin() + indexOfLastExpr);
+        // Stmts.insert(Stmts.begin() + indexOfLastExpr + 1, 
+        //              TheSema.ActOnNullStmt(SourceLocation()).take());
+
+        // Update the CompoundStmt body
+        CS->setStmts(TheSema.getASTContext(), Stmts.data(), Stmts.size());
+
       }
 
-      // case 1:
-      if (CO.ValuePrinting == CompilationOptions::VPEnabled) 
-        if (indexOfLastExpr < Stmts.size() - 1 && 
-            isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
-          Stmts.erase(Stmts.begin() + indexOfLastExpr);
-          // Stmts.insert(Stmts.begin() + indexOfLastExpr + 1, 
-          //              TheSema.ActOnNullStmt(SourceLocation()).take());
+      TheSema.CurContext = CurContext;
 
-      // Update the CompoundStmt body
-      CS->setStmts(TheSema.getASTContext(), Stmts.data(), Stmts.size());
-
+      // FIXME: Finish the transaction in better way
+      m_IncrParser->Compile("", CO);
     }
-
-    TheSema.CurContext = CurContext;
-
-    // FIXME: Finish the transaction in better way
-    m_IncrParser->Compile("", CO);
+    else 
+      m_IncrParser->Compile(Wrapper, CO);
 
     // get the result
     llvm::GenericValue val;
