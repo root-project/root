@@ -24,6 +24,7 @@ namespace cling {
     /// 0 -> Disabled; 1 -> Enabled; 2 -> Auto;
     ///
     unsigned ValuePrinting : 2;
+    enum ValuePrinting { Disabled, Enabled, Auto };
 
     ///\brief Whether or not to extend the static scope with new information
     /// about the names available only at runtime
