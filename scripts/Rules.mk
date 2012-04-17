@@ -97,6 +97,9 @@ endif
 ifeq ($(R__EXPLICITLINK),)
    export R__EXPLICITLINK := $(shell root-config --has-explicitlink)
 endif
+ifeq ($(R__FEATURES),)
+   R__FEATURES := $(shell root-config --features)
+endif
 
 ifeq ($(ROOTTEST_LOC),)
 

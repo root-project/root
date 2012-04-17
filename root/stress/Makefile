@@ -12,16 +12,20 @@ STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressRooFit_tests-test,\
 	$(filter-out stressRooStats_tests-test,\
 	$(notdir $(STRESSSRC:.cxx=-test))))))
-ifeq ($(findstring roofit,$(shell root-config --features)),)
+ifeq ($(ARCH)$(FAIL),win32)
+   for_echoing := $(shell echo Known failures: stressMathCore skipped tests in root/stress 1>&2)
+STRESSTESTS  := $(filter-out stressMathCore-test,$(STRESSTEST))
+endif
+ifeq ($(findstring roofit,$(R_FEATURES)),)
 STRESSTESTS  := $(filter-out stressRooStats-test,$(filter-out stressRooFit-test,$(STRESSTESTS)))
 endif
-ifeq ($(findstring mathmore,$(shell root-config --features)),)
+ifeq ($(findstring mathmore,$(R_FEATURES)),)
 STRESSTESTS  := $(filter-out stressMathMore-test,$(STRESSTESTS))
 endif
-ifeq ($(findstring unuran,$(shell root-config --features)),)
+ifeq ($(findstring unuran,$(R_FEATURES)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
-ifeq ($(findstring minuit2,$(shell root-config --features)),)
+ifeq ($(findstring minuit2,$(R_FEATURES)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
 
