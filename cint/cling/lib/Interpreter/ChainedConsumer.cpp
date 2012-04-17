@@ -136,8 +136,7 @@ namespace cling {
     : Consumer(C) {
     // Good compiler would unroll it
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Listeners[i])
-        Listeners[i] = L[i];
+      Listeners[i] = L[i];
   }
   
   ChainedMutationListener::~ChainedMutationListener() { }
@@ -150,7 +149,7 @@ namespace cling {
   }
   
   void ChainedMutationListener::AddedVisibleDecl(const DeclContext* DC,
-                                                    const Decl* D) {
+                                                 const Decl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
       if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
@@ -207,13 +206,8 @@ namespace cling {
     ASTDeserializationListener* sListeners[kConsumersCount] = {0};
     for (size_t i = 0; i < kConsumersCount; ++i) {
       if (Exists((EConsumerIndex)i)) {
-        ASTMutationListener* mListener = Consumers[i]->GetASTMutationListener();
-        if (mListener)
-          mListeners[i] = mListener;
-        ASTDeserializationListener* sListener = 
-          Consumers[i]->GetASTDeserializationListener();
-        if (sListener)
-          sListeners[i] = sListener;
+        mListeners[i] = Consumers[i]->GetASTMutationListener();
+        sListeners[i] = Consumers[i]->GetASTDeserializationListener();
       }
     }
 
