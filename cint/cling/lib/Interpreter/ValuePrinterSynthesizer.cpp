@@ -53,11 +53,13 @@ namespace cling {
                 else 
                   Result = SynthesizeVP(To);
 
-                if (Result)
-                  if (RS)
+                if (Result) {
+                  if (RS) {
                     RS->setRetValue(Result);
-                  else
+                  } else {
                     *J = Result;
+                  }
+                }
               }
             }
           }
