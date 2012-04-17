@@ -663,6 +663,11 @@ namespace cling {
       PP.getDiagnostics().getSuppressAllDiagnostics();
     PP.getDiagnostics().setSuppressAllDiagnostics(true);
     //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    //
     //  Tell the diagnostic consumer we are switching files.
     //
     DiagnosticConsumer& DClient = CI->getDiagnosticClient();
@@ -777,6 +782,7 @@ namespace cling {
     DClient.EndSourceFile();
     CI->getDiagnostics().Reset();
     PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;
     return TheDecl;
   }
 
