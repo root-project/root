@@ -1104,11 +1104,13 @@ void EventTranslator::GenerateFocusChangeEvent(QuartzView *eventView)
    if (eventView == fFocusView)
       return;
 
-   if (fFocusView)
+   if (fFocusView && (fFocusView.fEventMask & kFocusChangeMask))
       Detail::SendFocusOutEvent(fFocusView, kNotifyNormal);
-   
+
    if (eventView) {
-      Detail::SendFocusInEvent(eventView, kNotifyNormal);
+      if (eventView.fEventMask & kFocusChangeMask)
+         Detail::SendFocusInEvent(eventView, kNotifyNormal);
+
       fFocusView = eventView;
    } else
       fFocusView = nil;
@@ -1143,6 +1145,23 @@ void EventTranslator::CancelPointerGrab()
    fOwnerEvents = true;
 }
 
+namespace {
+
+//______________________________________________________________________________
+void ClearPointerIfViewIsRelated(QuartzView *&view, Window_t winID) 
+{
+   if (view) {
+      for (; view; view = view.fParentView) {
+         if (view.fID == winID) {
+            view = nil;
+            break;
+         }
+      }
+   }
+}
+
+}//unnamed namespace.
+
 //______________________________________________________________________________
 void EventTranslator::CheckUnmappedView(Window_t winID)
 {
@@ -1155,14 +1174,8 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
       }
    }
    
-   if (fViewUnderPointer) {
-      for (QuartzView *view = fViewUnderPointer; view; view = view.fParentView) {
-         if (view.fID == winID) {
-            fViewUnderPointer = nil;
-            break;
-         }
-      }
-   }
+   ClearPointerIfViewIsRelated(fViewUnderPointer, winID);
+   ClearPointerIfViewIsRelated(fFocusView, winID);
 }
 
 //______________________________________________________________________________

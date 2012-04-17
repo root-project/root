@@ -1726,7 +1726,6 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) acceptsFirstResponder
 {
-   //NSResponder (base) returns NO.
    return YES;
 }
 
@@ -1734,11 +1733,21 @@ void print_mask_info(ULong_t mask)
 - (BOOL) becomeFirstResponder
 {
    //Change focus.
+   QuartzView *focusView = nil;
+   for (QuartzView *view = self; view; view = view.fParentView) {
+      if (view.fEventMask & kFocusChangeMask) {
+         focusView = view;
+         break;
+      }
+   }
+
+   if (!focusView)
+      focusView = ((QuartzWindow *)[self window]).fContentView;
+   
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != nullptr && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
-   vx->GetEventTranslator()->GenerateFocusChangeEvent(self);
+   vx->GetEventTranslator()->GenerateFocusChangeEvent(focusView);
 
-   //NSResponder returns YES, so do I.
    return YES;
 }
 
