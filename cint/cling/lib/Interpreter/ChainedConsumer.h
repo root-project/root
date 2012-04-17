@@ -88,24 +88,7 @@ namespace cling {
       }
     }
 
-    bool IsConsumerEnabled(EConsumerIndex I) {
-      if (!Exists(I))
-        return false;
-
-      const CompilationOptions CO = getCompilationOpts();
-      switch(I) {
-      case kEvaluateTSynthesizer : return CO.DynamicScoping;
-      case kDeclExtractor : return CO.DeclarationExtraction;
-      case kValuePrinterSynthesizer : 
-        return CO.ValuePrinting == CompilationOptions::VPAuto;
-      case kASTDumper : return CO.Debug;
-      case kCodeGenerator : return CO.CodeGeneration;
-      case kConsumersCount : return false;
-      }
-
-      return false;
-    }
-
+    bool IsConsumerEnabled(EConsumerIndex I);
     bool IsQueueing() { return m_Queueing; }
 
     void DumpQueue();
