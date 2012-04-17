@@ -328,7 +328,6 @@ namespace cling {
       llvm::outs() << (*I).first->getName();
       llvm::outs() << "\n";
     }
-
   }
 
   // Run a file: .x file[(args)]
@@ -348,12 +347,10 @@ namespace cling {
     }
     StringRefPair pairFuncExt = pairPathFile.second.rsplit('.');
 
-    //fprintf(stderr, "funcname: %s\n", pairFuncExt.first.data());
-
     Interpreter::CompilationResult interpRes
-       = m_Interp.processLine(std::string("#include \"")
-                              + pairFileArgs.first.str()
-                              + std::string("\""), true /*raw*/);
+       = m_Interp.declare(std::string("#include \"")
+                          + pairFileArgs.first.str()
+                          + std::string("\""));
     
     if (interpRes != Interpreter::kFailure) {
        std::string expression = pairFuncExt.first.str()
