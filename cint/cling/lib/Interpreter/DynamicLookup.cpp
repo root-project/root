@@ -380,7 +380,7 @@ namespace cling {
           // Prepare the initialization Exprs.
           // We want to call LifetimeHandler(DynamicExprInfo* ExprInfo, 
           //                                 DeclContext DC,
-          //                                 llvm::StringRef type)
+          //                                 const char* type)
           ASTOwningVector<Expr*> Inits(*m_Sema);
           // Add MyClass in LifetimeHandler unique(DynamicExprInfo* ExprInfo
           //                                       DC,
@@ -403,7 +403,7 @@ namespace cling {
           Policy.SuppressTagKeyword = 1;
           std::string Res;
           CuredDeclTy.getAsStringInternal(Res, Policy);
-          Inits.push_back(ConstructllvmStringRefExpr(Res.c_str()));
+          Inits.push_back(ConstructConstCharPtrExpr(Res.c_str()));
 
           // 2.3 Create a variable from LifetimeHandler.
           QualType HandlerTy = m_Context->getTypeDeclType(Handler);
@@ -706,29 +706,6 @@ namespace cling {
                                          TSI,
                                          m_NoELoc,
                                          Result).take();
-    return Result;
-  }
-
-  // Construct initializer (llvm::StringRef(Str))
-  Expr* EvaluateTSynthesizer::ConstructllvmStringRefExpr(const char* Val) {
-    // Try to find llvm::StringRef
-    CXXRecordDecl* CXXRD = dyn_cast<CXXRecordDecl>(m_Interpreter->
-                                                   LookupDecl("llvm").
-                                                   LookupDecl("StringRef").
-                                                   getSingleDecl());
-    assert(CXXRD && "llvm::StringRef not found. Are you missing StringRef.h?");
-
-    QualType CXXRDTy = m_Context->getTypeDeclType(CXXRD);
-    TypeSourceInfo* TSI = m_Context->getTrivialTypeSourceInfo(CXXRDTy, m_NoSLoc);
-    ParsedType PT = m_Sema->CreateParsedType(CXXRDTy, TSI);
-
-    Expr* Result = ConstructConstCharPtrExpr(Val);
-    // create the temporary in the expr
-    Result = m_Sema->ActOnCXXTypeConstructExpr(PT,
-                                               m_NoSLoc,
-                                               MultiExprArg(&Result, 1U),
-                                               m_NoELoc
-                                               ).take();
     return Result;
   }
 

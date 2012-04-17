@@ -282,11 +282,6 @@ namespace cling {
     ///
     clang::Expr* ConstructCStyleCasePtrExpr(clang::QualType Ty, uint64_t Ptr);
 
-    ///\brief Creates llvm::StringRef expression class with given const char*
-    /// value.
-    ///
-    clang::Expr* ConstructllvmStringRefExpr(const char* Val);
-
     ///\brief Creates const char* expression from given value.
     clang::Expr* ConstructConstCharPtrExpr(const char* Val);
 

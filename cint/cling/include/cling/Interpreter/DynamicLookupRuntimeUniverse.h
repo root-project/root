@@ -103,7 +103,7 @@ namespace cling {
         ///
         LifetimeHandler(DynamicExprInfo* ExprInfo,
                         clang::DeclContext* DC,
-                        llvm::StringRef type) {
+                        const char* type) {
           m_Type = type;
           std::string ctor("new ");
           ctor += type;
