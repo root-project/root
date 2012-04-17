@@ -3359,7 +3359,7 @@ Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
       ModuleMap.addHeader(modCreation.first, hdrFileEntry);
       Info("RegisterModule()", "   #including %s...", *hdr);
 #endif
-      fInterpreter->processLine(TString::Format("#include \"%s\"", *hdr).Data());
+      fInterpreter->declare(TString::Format("#include \"%s\"", *hdr).Data());
    }   
 }
 

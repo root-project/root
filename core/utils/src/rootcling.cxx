@@ -881,7 +881,7 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
       const clang::Decl* D = 0;
       const clang::FunctionDecl* ResultFD = 0;
       cling::Value value;
-      if (gInterp->processLine(Str, /*rawInput*/true, &value, &D)
+      if (gInterp->declare(Str, &D)
           == cling::Interpreter::kSuccess) {
          if (D) {
             FDVisitor FDV = FDVisitor();
@@ -6163,7 +6163,7 @@ int main(int argc, char **argv)
    }
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              getenv("LLVMDIR"));
-   interp.processLine("namespace std {} using namespace std;",true);
+   interp.declare("namespace std {} using namespace std;");
    gInterp = &interp;
 
    // flags used only for the pragma parser:
@@ -6300,7 +6300,7 @@ int main(int argc, char **argv)
                insertedBundle = true;
             }
          }
-         interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
+         interp.declare(std::string("#include \"") + argv[i] + "\"");
          interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
          pcmArgs.push_back(argv[i]);
       } else {
@@ -6317,7 +6317,7 @@ int main(int argc, char **argv)
 
             if (*argv[i] != '-' && *argv[i] != '+') {
                // Looks like a file
-               interp.processLine(std::string("#include \"") + argv[i] + "\"", true /*raw*/);
+               interp.declare(std::string("#include \"") + argv[i] + "\"");
                interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
                pcmArgs.push_back(argv[i]);
             }
