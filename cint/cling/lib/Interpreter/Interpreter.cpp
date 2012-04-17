@@ -584,7 +584,7 @@ namespace cling {
       }
 
       // case 1:
-      if (CO.ValuePrinting) 
+      if (CO.ValuePrinting == CompilationOptions::Enabled) 
         if (indexOfLastExpr < Stmts.size() - 1 && 
             isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
           Stmts.erase(Stmts.begin() + indexOfLastExpr);
@@ -603,10 +603,12 @@ namespace cling {
 
     // get the result
     llvm::GenericValue val;
-    RunFunction(WrapperName, &val);
+    if (RunFunction(WrapperName, &val)) {
+      if (V)
+        *V = Value(val, RetTy.getTypePtrOrNull());
 
-    if (V)
-      *V = Value(val, RetTy.getTypePtrOrNull());
+      return Interpreter::kSuccess;
+    }
 
     return Interpreter::kFailure;
   }
