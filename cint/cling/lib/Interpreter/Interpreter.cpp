@@ -430,6 +430,7 @@ namespace cling {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
 
     return Declare(input, CO, D);
   }
