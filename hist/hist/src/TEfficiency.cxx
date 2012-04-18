@@ -2653,6 +2653,9 @@ void TEfficiency::Paint(const Option_t* opt)
    // which will trigger a re-calculation of the axis of the graph
    // TEfficiency::GetPaintedGraph()->Set(0)
    //
+   // Note that in order to access the painted graph via GetPaintedGraph() you need either to call Paint or better 
+   // gPad->Update();
+   //
 
 
    
@@ -2730,7 +2733,6 @@ void TEfficiency::Paint(const Option_t* opt)
       
       //paint graph      
 
-      std::cout << option << std::endl;
       fPaintGraph->Paint(option.Data());
 
       //paint all associated functions
