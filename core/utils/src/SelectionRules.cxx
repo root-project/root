@@ -1484,7 +1484,7 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
                std::string instantiate("template class ");
                instantiate += name_value;
                instantiate += " ;";
-               interp.processLine(instantiate.c_str(),true /* raw */);
+               interp.declare(instantiate.c_str());
                target = R__SlowRawTypeSearch(name_value.c_str());
             }
             if (target) {
