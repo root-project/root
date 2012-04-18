@@ -57,10 +57,9 @@ namespace cling {
     std::string input = m_InputValidator->TakeInput();
     m_InputValidator->Reset();
     if (m_Options.RawInput)
-      // FIXME: What kind of result we are looking for in that case?
       m_Interp.declare(input);
     else
-      m_Interp.processLine(input, result);
+      m_Interp.process(input, result);
 
     return 0;
   }
