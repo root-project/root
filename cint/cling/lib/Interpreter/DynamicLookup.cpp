@@ -713,7 +713,8 @@ namespace cling {
     const QualType CChar = m_Context->CharTy.withConst();
     llvm::StringRef Value(Val);
 
-    llvm::APInt ArraySize(m_Context->getTypeSize(CChar), Value.size() + 1);
+    unsigned bitSize = m_Context->getTypeSize(m_Context->VoidPtrTy);
+    llvm::APInt ArraySize(bitSize, Value.size() + 1);
     const QualType CCArray = m_Context->getConstantArrayType(CChar,
                                                             ArraySize,
                                                             ArrayType::Normal,
