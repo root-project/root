@@ -478,7 +478,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       }
 
    } else {
-      //fImageData has 1 byte per pixel.
+      //fImageData has 4 bytes per pixel.
       const unsigned char *line = fImageData + area.fY * fWidth * 4;
       const unsigned char *srcPixel = line + area.fX * 4;
       

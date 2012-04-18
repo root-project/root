@@ -71,6 +71,7 @@ namespace X11 {//X11 emulation. But must go into quartz module later.
 
 CGImageRef CreateSubImage(QuartzImage *image, const Rectangle_t &area);
 //
+bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea);
 bool AdjustCropArea(QuartzImage *srcImage, Rectangle_t &cropArea);
 bool AdjustCropArea(QuartzPixmap *srcImage, Rectangle_t &cropArea);
 

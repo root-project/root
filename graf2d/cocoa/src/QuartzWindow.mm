@@ -22,12 +22,10 @@
 #import "TGCocoa.h"
 
 /*
-This class is a stupid work-around to create a snapshot of view's contents.
+This class is a work-around to create a snapshot of view's contents.
 I do not use QuartzView's drawRect directly, since I had some strange problems
-I do not have time to investigate and I've got a 99 problems and a bitchin' one.
 
-Apple's documentation about making a snapshot is useless completely,
-you have to try and got all problems before you understand how this crap works.
+TODO: SnapshotView is correct only if you do not have children views (good reason to get rid of it at all :))).
 */
 
 @interface SnapshotView : NSView
@@ -1450,10 +1448,60 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (unsigned char *) readColorBits : (Rectangle_t) area
 {
-   (void)area;
-   NSLog(@"Warning: QuartzView -readColorBits: not implemented yet");
+   //TODO: make the part, reading pixels
+   //from NSBitmapImageRep not so lame.
+
+   using ROOT::MacOSX::X11::AdjustCropArea;
+
+   const NSRect visRect = [self visibleRect];
+   Rectangle_t srcRect = {};
+   srcRect.fX = visRect.origin.x;
+   srcRect.fY = visRect.origin.y;
+   srcRect.fWidth = visRect.size.width;
+   srcRect.fHeight = visRect.size.height;
    
-   return 0;
+   if (!AdjustCropArea(srcRect, area)) {
+      NSLog(@"QuartzView: -readColorBits:, visible rect of view and copy area do not intersect");
+      return 0;
+   }
+
+   NSBitmapImageRep *imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];
+   if (!imageRep) {
+      NSLog(@"QuartzView: -readColorBits: failed");
+      return 0;
+   }
+   
+   CGContextRef ctx = self.fContext; //Save old context if any.
+   [self cacheDisplayInRect : visRect toBitmapImageRep : imageRep];
+   self.fContext = ctx; //Restore old context.
+   //
+   const unsigned char *srcData = [imageRep bitmapData];
+   //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
+   unsigned char *data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
+   const NSInteger bitsPerPixel = [imageRep bitsPerPixel];
+   //TODO: ohhh :(((
+   assert(bitsPerPixel == 32 && "-readColorBits:, no alpha channel???");
+
+   const NSInteger bytesPerRow = [imageRep bytesPerRow];
+   const unsigned dataWidth = bytesPerRow / (bitsPerPixel / 8);//assume an octet :(
+   
+   unsigned char *dstPixel = data;
+   const unsigned char *line = srcData + area.fY * dataWidth * 4;
+   const unsigned char *srcPixel = line + area.fX * 4;
+      
+   for (UShort_t i = 0; i < area.fHeight; ++i) {
+      for (UShort_t j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
+         dstPixel[0] = srcPixel[2];
+         dstPixel[1] = srcPixel[1];
+         dstPixel[2] = srcPixel[0];
+         dstPixel[3] = srcPixel[3];
+      }
+
+      line += dataWidth * 4;
+      srcPixel = line + area.fX * 4;
+   }
+   
+   return data;
 }
 
 //End of X11Drawable protocol.
