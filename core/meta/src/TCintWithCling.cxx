@@ -3182,9 +3182,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
    // to pull in gPluginManager
-   fMetaProcessor->process("#include \"TPluginManager.h\"");
-   fMetaProcessor->process("#include \"TGenericClassInfo.h\"");
-   fMetaProcessor->process("#include \"Rtypes.h\"");
+   fInterpreter->declare("#include \"TPluginManager.h\"");
+   fInterpreter->declare("#include \"TGenericClassInfo.h\"");
+   fInterpreter->declare("#include \"Rtypes.h\"");
 
    // Initialize the CINT interpreter interface.
    fMore      = 0;
