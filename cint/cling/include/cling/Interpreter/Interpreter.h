@@ -94,34 +94,8 @@ namespace cling {
   /// incremental compilation.
   ///
   class Interpreter {
-  public:
 
-    ///\brief Implements named parameter idiom - allows the idiom 
-    /// LookupDecl().LookupDecl()...
-    /// 
-    class NamedDeclResult {
-    private:
-      Interpreter* m_Interpreter;
-      clang::ASTContext& m_Context;
-      const clang::DeclContext* m_CurDeclContext;
-      clang::NamedDecl* m_Result;
-      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp, 
-                      const clang::DeclContext* Within = 0);
-    public:
-      NamedDeclResult& LookupDecl(llvm::StringRef);
-      operator clang::NamedDecl* () const { return getSingleDecl(); }
-      clang::NamedDecl* getSingleDecl() const;
-      template<class T> T* getAs(){
-        clang::NamedDecl *result = getSingleDecl();
-        if (result) {
-           return llvm::dyn_cast<T>(result);
-        } else {
-           return 0;
-        }
-      }
-      
-      friend class Interpreter;
-    };
+  public:
 
     ///\brief Describes the return result of the different routines that do the
     /// incremental compilation.
@@ -132,109 +106,8 @@ namespace cling {
       kMoreInputExpected
     };
 
-    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0);
-    virtual ~Interpreter();
-
-    const InvocationOptions& getOptions() const { return m_Opts; }
-    InvocationOptions& getOptions() { return m_Opts; }
-
-    ///\brief Shows the current version of the project.
-    ///
-    ///\returns The current svn revision (svn Id). 
-    ///
-    const char* getVersion() const;
-
-    ///\brief Creates unique name that can be used for various aims.
-    ///
-    void createUniqueName(std::string& out);
-
-    ///\brief Adds an include path (-I).
-    ///
-    void AddIncludePath(const char *incpath);
-
-    ///\brief Prints the current include paths that are used.
-    ///
-    void DumpIncludePath();
- 
-    ///\brief Compiles input line. 
-    ///
-    /// This is top most interface, which helps running statements and 
-    /// expressions on the global scope. If rawInput mode disabled the
-    /// input will be wrapped into wrapper function. Declaration extraction
-    /// will be enabled and all declarations will be extracted as global.
-    /// After compilation the wrapper will be executed.
-    /// 
-    /// If rawInput enabled no execution or declaration extraction is done
-    ///
-    /// @param[in] input_line - the input to be compiled
-    /// @param[in] rawInput - turns on or off the wrapping of the input
-    /// @param[out] V - returns the tuple llvm::GenericValue and clang::Type
-    /// @param[out] D - returns the first declaration that was parsed from the
-    ///                 input
-    ///
-    CompilationResult processLine(const std::string& input_line, 
-                                  bool rawInput = false,
-                                  Value* V = 0,
-                                  const clang::Decl** D = 0);
-
-    ///\brief Compiles input line, which doesn't contain statements.
-    ///
-    /// The interface circumvents the most of the extra work necessary to 
-    /// compile and run statements.
-    ///
-    /// @param[in] input - the input containing only declarations (aka 
-    /// TopLevelDecls)
-    /// @param[out] D - the first compiled declaration from the input
-    ///
-    CompilationResult declare(const std::string& input, 
-                              const clang::Decl** D = 0);
-
-    ///\brief Compiles input line, which contains only expressions.
-    ///
-    /// The interface circumvents the most of the extra work necessary extract
-    /// the declarations from the input.
-    ///
-    /// @param[in] input - the input containing only expressions
-    /// @param[out] V - the value of the executed input
-    ///
-    CompilationResult evaluate(const std::string& input, 
-                               Value* V = 0);
-
-    ///\brief Compiles input line, which contains only expressions and prints out
-    /// the result of its execution.
-    ///
-    /// The interface circumvents the most of the extra work necessary extract
-    /// the declarations from the input.
-    ///
-    /// @param[in] input - the input containing only expressions
-    /// @param[out] V - the value of the executed input
-    ///
-    CompilationResult echo(const std::string& input, Value* V = 0);
-
-    bool loadFile(const std::string& filename, bool allowSharedLib = true);
-    
-    ///\brief Lookup a class declaration by name, starting from the global
-    /// namespace, also handles struct, union, namespace, and enum.
-    ///
-    clang::Decl* lookupClass(const std::string& className);
-
-    void enableDynamicLookup(bool value = true);
-    bool isDynamicLookupEnabled();
-
-    bool isPrintingAST() { return m_PrintAST; }
-    void enablePrintAST(bool print = true);
-    
-    clang::CompilerInstance* getCI() const;
-    clang::Parser* getParser() const;
-
-    void installLazyFunctionCreator(void* (*fp)(const std::string&));
-    
-    llvm::raw_ostream& getValuePrinterStream() const { return *m_ValuePrintStream; }
-
-    void runStaticInitializersOnce() const;
-
-    int CXAAtExit(void (*func) (void*), void* arg, void* dso);    
   private:
+
     ///\brief Interpreter invocation options.
     ///
     InvocationOptions m_Opts;
@@ -316,28 +189,228 @@ namespace cling {
     ///
     llvm::SmallVector<CXAAtExitElement, 20> m_AtExitFuncs;
 
-  private:
+    ///\brief Processes the invocation options.
+    ///
     void handleFrontendOptions();
+
+    ///\brief Worker function, building block for interpreter's public 
+    /// interfaces.
+    ///
+    ///\param [in] input - The input being compiled.
+    ///\param [in] CompilationOptions - The option set driving the compilation.
+    ///\param [out] D - The first declaration of the compiled input.
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
     CompilationResult Declare(const std::string& input, 
                               const CompilationOptions& CO,
                               const clang::Decl** D = 0);
 
+    ///\brief Worker function, building block for interpreter's public 
+    /// interfaces.
+    ///
+    ///\param [in] input - The input being compiled.
+    ///\param [in] CompilationOptions - The option set driving the compilation.
+    ///\param [out] V - The result of the evaluation of the input.
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
     CompilationResult Evaluate(const std::string& input, 
                                const CompilationOptions& CO,
                                Value* V = 0);
 
+    ///\brief Wraps a given input.
+    ///
+    /// The interpreter must be able to run statements on the fly, which is not
+    /// C++ standard-compliant operation. In order to do that we must wrap the
+    /// input into a artificial function, containing the statements and run it.
+    ///\param [out] input - The input to wrap.
+    ///\param [out] fname - The wrapper function's name.
+    ///
     void WrapInput(std::string& input, std::string& fname);
+
+    ///\brief Runs given function.
+    ///
+    ///\param [in] fname - The function name.
+    ///\param [out] res - The return result of the run function.
+    ///
+    ///\returns true if successful otherwise false.
+    ///
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
+
+    ///\brief Super efficient way of creating unique names, which will be used 
+    /// as a part of the compilation process.
+    ///
+    /// Creates the name directly in the compiler's identifier table, so that
+    /// next time the compiler looks for that name it will find it directly
+    /// there.
+    ///
     llvm::StringRef createUniqueWrapper();
-    friend class runtime::internal::LifetimeHandler;
-    
+
+    ///\brief Forwards to cling::ExecutionContext::addSymbol.
+    ///
     bool addSymbol(const char* symbolName,  void* symbolAddress);
+
   public:
+
+    ///\brief Implements named parameter idiom - allows the idiom 
+    /// LookupDecl().LookupDecl()...
+    /// 
+    class NamedDeclResult {
+    private:
+      Interpreter* m_Interpreter;
+      clang::ASTContext& m_Context;
+      const clang::DeclContext* m_CurDeclContext;
+      clang::NamedDecl* m_Result;
+      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp, 
+                      const clang::DeclContext* Within = 0);
+    public:
+      NamedDeclResult& LookupDecl(llvm::StringRef);
+      operator clang::NamedDecl* () const { return getSingleDecl(); }
+      clang::NamedDecl* getSingleDecl() const;
+      template<class T> T* getAs(){
+        clang::NamedDecl *result = getSingleDecl();
+        if (result) {
+           return llvm::dyn_cast<T>(result);
+        } else {
+           return 0;
+        }
+      }
+      
+      friend class Interpreter;
+    };
+
+    Interpreter(int argc, const char* const *argv, const char* llvmdir = 0);
+    virtual ~Interpreter();
+
+    const InvocationOptions& getOptions() const { return m_Opts; }
+    InvocationOptions& getOptions() { return m_Opts; }
+
+    ///\brief Shows the current version of the project.
+    ///
+    ///\returns The current svn revision (svn Id). 
+    ///
+    const char* getVersion() const;
+
+    ///\brief Creates unique name that can be used for various aims.
+    ///
+    void createUniqueName(std::string& out);
+
+    ///\brief Adds an include path (-I).
+    ///
+    void AddIncludePath(const char *incpath);
+
+    ///\brief Prints the current include paths that are used.
+    ///
+    void DumpIncludePath();
+ 
+    ///\brief Compiles input line. 
+    ///
+    /// This is top most interface, which helps running statements and 
+    /// expressions on the global scope. If rawInput mode disabled the
+    /// input will be wrapped into wrapper function. Declaration extraction
+    /// will be enabled and all declarations will be extracted as global.
+    /// After compilation the wrapper will be executed.
+    /// 
+    /// If rawInput enabled no execution or declaration extraction is done
+    ///
+    /// @param[in] input_line - the input to be compiled
+    /// @param[in] rawInput - turns on or off the wrapping of the input
+    /// @param[out] V - returns the tuple llvm::GenericValue and clang::Type
+    /// @param[out] D - returns the first declaration that was parsed from the
+    ///                 input
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult processLine(const std::string& input_line, 
+                                  bool rawInput = false,
+                                  Value* V = 0,
+                                  const clang::Decl** D = 0);
+
+    ///\brief Compiles input line, which doesn't contain statements.
+    ///
+    /// The interface circumvents the most of the extra work necessary to 
+    /// compile and run statements.
+    ///
+    /// @param[in] input - the input containing only declarations (aka 
+    /// TopLevelDecls)
+    /// @param[out] D - the first compiled declaration from the input
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult declare(const std::string& input, 
+                              const clang::Decl** D = 0);
+
+    ///\brief Compiles input line, which contains only expressions.
+    ///
+    /// The interface circumvents the most of the extra work necessary extract
+    /// the declarations from the input.
+    ///
+    /// @param[in] input - the input containing only expressions
+    /// @param[out] V - the value of the executed input
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult evaluate(const std::string& input, 
+                               Value* V = 0);
+
+    ///\brief Compiles input line, which contains only expressions and prints out
+    /// the result of its execution.
+    ///
+    /// The interface circumvents the most of the extra work necessary extract
+    /// the declarations from the input.
+    ///
+    /// @param[in] input - the input containing only expressions
+    /// @param[out] V - the value of the executed input
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult echo(const std::string& input, Value* V = 0);
+
+    ///\brief Loads header file or shared library.
+    ///
+    ///\param [in] filename - The file to loaded.
+    ///\param [in] allowSharedLib - Whether to try to load the file as shared
+    ///                             library.
+    ///
+    ///\returns true for happiness.
+    ///
+    bool loadFile(const std::string& filename, bool allowSharedLib = true);
+    
+    ///\brief Lookup a class declaration by name, starting from the global
+    /// namespace, also handles struct, union, namespace, and enum.
+    ///
+    ///\param [in] className - The class we are looking up.
+    ///
+    ///\returns The found declaration or null.
+    ///
+    clang::Decl* lookupClass(const std::string& className);
+
+    void enableDynamicLookup(bool value = true);
+    bool isDynamicLookupEnabled();
+
+    bool isPrintingAST() { return m_PrintAST; }
+    void enablePrintAST(bool print = true);
+    
+    clang::CompilerInstance* getCI() const;
+    clang::Parser* getParser() const;
+
+    void installLazyFunctionCreator(void* (*fp)(const std::string&));
+    
+    llvm::raw_ostream& getValuePrinterStream() const { return *m_ValuePrintStream; }
+
+    void runStaticInitializersOnce() const;
+
+    int CXAAtExit(void (*func) (void*), void* arg, void* dso);    
+
     ///\brief Evaluates given expression within given declaration context.
     ///
-    /// @param[in] expr The expression.
-    /// @param[in] DC The declaration context in which the expression is going
-    /// to be evaluated.
+    ///@param[in] expr - The expression.
+    ///@param[in] DC - The declaration context in which the expression is going
+    ///                to be evaluated.
+    ///
+    ///\returns The result of the evaluation if the expression.
+    ///
     Value Evaluate(const char* expr, clang::DeclContext* DC, 
                    bool ValuePrinterReq = false);
 
@@ -353,6 +426,8 @@ namespace cling {
     ///\brief Sets callbacks needed for the dynamic lookup.
     ///
     void setCallbacks(InterpreterCallbacks* C);
+
+    friend class runtime::internal::LifetimeHandler;
   };
   
 } // namespace cling

@@ -611,10 +611,8 @@ namespace cling {
     return Interpreter::kFailure;
   }
 
-  bool
-  Interpreter::loadFile(const std::string& filename,
-                        bool allowSharedLib /*=true*/)
-  {
+  bool Interpreter::loadFile(const std::string& filename,
+                             bool allowSharedLib /*=true*/) {
     if (allowSharedLib) {
       llvm::Module* module = m_IncrParser->GetCodeGenerator()->GetModule();
       if (module) {
@@ -629,15 +627,13 @@ namespace cling {
         }
       }
     }
-    
+
     std::string code;
     code += "#include \"" + filename + "\"\n";
     return declare(code);
   }
   
-  Decl*
-  Interpreter::lookupClass(const std::string& className)
-  {
+  Decl* Interpreter::lookupClass(const std::string& className) {
     //
     //  Our return value.
     //
