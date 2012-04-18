@@ -335,16 +335,15 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
    assert(impl != nullptr && "Flush, impl parameter is null");
- 
-  // NSLog(@"FLUSH");
+
    //All magic is here.
    CGContextRef prevContext = nullptr;
    CGContextRef currContext = nullptr;
 
    for (auto cmd : fCommands) {
       //assert(cmd != nullptr && "Flush, command is null");
-      //if (!cmd)//Command was deleted because of DestroyWindow call.
-      //   continue;
+      if (!cmd)//Command was deleted by RemoveOperation/RemoveGraphicsOperation.
+         continue;
       
       NSObject<X11Drawable> *drawable = impl->GetDrawable(cmd->fID);
       if (drawable.fIsPixmap) {
@@ -386,40 +385,26 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
    ClearCommands();
 }
 
-namespace {
-
-//______________________________________________________________________________
-bool IsNullCmd(const Command *cmd)
-{
-   return !cmd;
-}
-
-}
-
 //______________________________________________________________________________
 void CommandBuffer::RemoveOperationsForDrawable(Drawable_t drawable)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
-      if (fCommands[i]->HasOperand(drawable)) {
+      if (fCommands[i] && fCommands[i]->HasOperand(drawable)) {
          delete fCommands[i];
          fCommands[i] = 0;
       }
    }
-   
-   fCommands.erase(std::remove_if(fCommands.begin(), fCommands.end(), IsNullCmd), fCommands.end());
 }
 
 //______________________________________________________________________________
 void CommandBuffer::RemoveGraphicsOperationsForWindow(Window_t wid)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
-      if (fCommands[i]->HasOperand(wid) && fCommands[i]->IsGraphicsCommand()) {
+      if (fCommands[i] && fCommands[i]->HasOperand(wid) && fCommands[i]->IsGraphicsCommand()) {
          delete fCommands[i];
          fCommands[i] = 0;
       }
    }
-
-   fCommands.erase(std::remove_if(fCommands.begin(), fCommands.end(), IsNullCmd), fCommands.end());
 }
 
 //______________________________________________________________________________

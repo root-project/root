@@ -150,6 +150,7 @@
 @property (nonatomic, assign) BOOL fOwnerEvents;
 //modifier also.
 
+@property (nonatomic, assign) BOOL fSnapshotDraw;
 
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;

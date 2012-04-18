@@ -21,50 +21,6 @@
 #import "TGClient.h"
 #import "TGCocoa.h"
 
-/*
-This class is a work-around to create a snapshot of view's contents.
-I do not use QuartzView's drawRect directly, since I had some strange problems
-
-TODO: SnapshotView is correct only if you do not have children views (good reason to get rid of it at all :))).
-*/
-
-@interface SnapshotView : NSView
-@property (nonatomic, assign) QuartzView *fView;
-@end
-
-@implementation SnapshotView
-@synthesize fView;
-
-//______________________________________________________________________________
-- (void) drawRect : (NSRect) dirtyRect
-{
-   assert(fView != nil && "drawRect, fView is nil");
-
-   TGWindow *window = gClient->GetWindowById(fView.fID);
-   assert(window != nullptr && "drawRect, no window was found");
-   
-   CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-   assert(ctx != nullptr && "drawRect, bitmap ctx is null");
-
-   fView.fContext = ctx;
-   
-   TGCocoa *vx = (TGCocoa *)gVirtualX;
-   vx->CocoaDrawON();
-
-   CGContextSaveGState(ctx);
-
-   if (window->InheritsFrom("TGContainer"))//It always has an ExposureMask.
-      vx->GetEventTranslator()->GenerateExposeEvent(fView, dirtyRect);
-
-   gClient->NeedRedraw(window, kTRUE);
-
-   vx->CocoaDrawOFF();
-   CGContextRestoreGState(ctx);
-}
-
-
-@end
-
 namespace ROOT {
 namespace MacOSX {
 namespace X11 {
@@ -962,6 +918,8 @@ void print_mask_info(ULong_t mask)
 @synthesize fGrabKeyModifiers;
 @synthesize fOwnerEvents;
 
+@synthesize fSnapshotDraw;
+
 @synthesize fContext;
 
 //______________________________________________________________________________
@@ -1302,9 +1260,8 @@ void print_mask_info(ULong_t mask)
 
    assert(srcView != nil && "copyView:area:toPoint:, srcView parameter is nil");
 
-   const NSRect visRect = [srcView visibleRect];
-   SnapshotView *snapshot = [[SnapshotView alloc] initWithFrame : visRect];
-   NSBitmapImageRep *imageRep = [snapshot bitmapImageRepForCachingDisplayInRect : visRect];
+   const NSRect frame = [srcView frame];   
+   NSBitmapImageRep *imageRep = [srcView bitmapImageRepForCachingDisplayInRect : frame];
    if (!imageRep) {
       NSLog(@"QuartzView: -copyView:area:toPoint failed");
       return;
@@ -1317,24 +1274,26 @@ void print_mask_info(ULong_t mask)
    //cacheDisplayInRect calls drawRect with bitmap context 
    //(and this will reset self.fContext: I have to save/restore it.
    CGContextRef ctx = srcView.fContext;
-
-   snapshot.fView = srcView;
-   [snapshot cacheDisplayInRect : visRect toBitmapImageRep : imageRep];
+   srcView.fSnapshotDraw = YES;
+   [srcView cacheDisplayInRect : frame toBitmapImageRep : imageRep];
+   srcView.fSnapshotDraw = NO;
    srcView.fContext = ctx;
 
    const CGRect subImageRect = CGRectMake(area.fX, area.fY, area.fWidth, area.fHeight);
    CGImageRef subImage = CGImageCreateWithImageInRect(imageRep.CGImage, subImageRect);
 
    CGContextSaveGState(self.fContext);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
-   CGContextDrawImage(self.fContext, imageRect, subImage);
 
-   CGContextFlush(self.fContext);
-   
-   [snapshot release];
+   const CGRect imageRect = CGRectMake(dstPoint.fX, [self visibleRect].size.height - (dstPoint.fY + area.fHeight), area.fWidth, area.fHeight);
+
+   CGContextTranslateCTM(self.fContext, 0., [self visibleRect].size.height); 
+   CGContextScaleCTM(self.fContext, 1., -1.);
+
+   CGContextDrawImage(self.fContext, imageRect, subImage);
 
    //Restore context state.
    CGContextRestoreGState(self.fContext);
+
    //imageRep in autorelease pool now.
    CGImageRelease(subImage);
 }
@@ -1533,8 +1492,11 @@ void print_mask_info(ULong_t mask)
          if (fEventMask & kExposureMask) {
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
-            gClient->CancelRedraw(window);
-            vx->GetCommandBuffer()->RemoveGraphicsOperationsForWindow(fID);
+            
+            if (!fSnapshotDraw) {
+               gClient->CancelRedraw(window);
+               vx->GetCommandBuffer()->RemoveGraphicsOperationsForWindow(fID);
+            }
          }
 
          if (fBackBuffer) {
@@ -1553,7 +1515,10 @@ void print_mask_info(ULong_t mask)
          CGContextSetRGBStrokeColor(fContext, 1., 0., 0., 1.);
          CGContextStrokeRect(fContext, dirtyRect);
 #endif
+
          fContext = nullptr;
+         
+         
       } else {
          NSLog(@"QuartzView: -drawRect method, no window for id %u was found", fID);
       }
