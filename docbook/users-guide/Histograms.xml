@@ -327,7 +327,7 @@ TH1F h3 = (*h1)*(*h2);
 <listitem><para>"<code>CONT1</code>": Draw a contour plot using line styles to distinguish contours</para></listitem>
 <listitem><para>"<code>CONT2</code>": Draw a contour plot using the same line style for all contours</para></listitem>
 <listitem><para>"<code>CONT3</code>": Draw a contour plot using fill area colors</para></listitem>
-<listitem><para>"<code>CONT4</code>": Draw a contour plot using surface colors (<code>SURF</code> option at theta = 0)</para></listitem>
+<listitem><para>"<code>CONT4</code>": Draw a contour plot using surface colors (<code>SURF2</code> option at theta = 0)</para></listitem>
 <listitem><para><code>"CONT5":</code>Use Delaunay triangles to compute the contours</para></listitem>
 <listitem><para>"<code>LIST</code>": Generate a list of <emphasis role="bold"><code>TGraph</code></emphasis> objects for each contour</para></listitem>
 <listitem><para>"<code>FB</code>": To be used with <code>LEGO</code> or <code>SURFACE</code>, suppress the Front-Box</para></listitem>
@@ -438,7 +438,7 @@ h-&gt;Draw("e1same");
 <listitem><para><code>"CONT1":</code>Draw a contour plot using line styles to distinguish contours</para></listitem>
 <listitem><para><code>"CONT2":</code>Draw a contour plot using the same line style for all contours</para></listitem>
 <listitem><para><code>"CONT3":</code>Draw a contour plot using fill area colors</para></listitem>
-<listitem><para><code>"CONT4":</code>Draw a contour plot using surface colors (SURF option at theta = 0); see also options "<code>AITOFF</code>", "<code>MERCATOR</code>", etc. below</para></listitem>
+<listitem><para><code>"CONT4":</code>Draw a contour plot using surface colors (SURF2 option at theta = 0); see also options "<code>AITOFF</code>", "<code>MERCATOR</code>", etc. below</para></listitem>
 <listitem><para><code>"CONT5":</code>Use Delaunay triangles to compute the contours</para></listitem>
 </itemizedlist>
 
