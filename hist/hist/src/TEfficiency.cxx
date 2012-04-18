@@ -2011,6 +2011,14 @@ void TEfficiency::Draw(Option_t* opt)
 
    if(gPad && !option.Contains("same"))
       gPad->Clear();
+   else { 
+      // add always "a" if not present
+      if (!option.Contains("a") ) option += "a";   
+   }
+
+   // add always p to the option
+   if (!option.Contains("p") ) option += "p";   
+
 
    AppendPad(option.Data());
 }
@@ -2721,6 +2729,8 @@ void TEfficiency::Paint(const Option_t* opt)
       fPaintGraph->GetHistogram();
       
       //paint graph      
+
+      std::cout << option << std::endl;
       fPaintGraph->Paint(option.Data());
 
       //paint all associated functions
@@ -3236,8 +3246,7 @@ void TEfficiency::SetTitle(const char* title)
    //<div class="clear"></div>
    //End_Html
    
-   TNamed::SetTitle(title);
-   
+    
    //setting the titles (looking for the first semicolon and insert the tokens there)
    TString title_passed = title; 
    TString title_total = title; 
@@ -3252,6 +3261,13 @@ void TEfficiency::SetTitle(const char* title)
    }
    fPassedHistogram->SetTitle(title_passed);
    fTotalHistogram->SetTitle(title_total);
+
+   // strip (total) for the TEfficiency title
+   // HIstogram SetTitle has already stripped the axis 
+   TString teffTitle = fTotalHistogram->GetTitle();
+   teffTitle.ReplaceAll(" (total)","");
+   TNamed::SetTitle(teffTitle);
+   
 }
 
 //______________________________________________________________________________
