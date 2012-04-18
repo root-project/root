@@ -56,7 +56,11 @@ namespace cling {
     //  We have a complete statement, compile and execute it.
     std::string input = m_InputValidator->TakeInput();
     m_InputValidator->Reset();
-    m_Interp.processLine(input, m_Options.RawInput, result);
+    if (m_Options.RawInput)
+      // FIXME: What kind of result we are looking for in that case?
+      m_Interp.declare(input);
+    else
+      m_Interp.processLine(input, 0, result);
 
     return 0;
   }
