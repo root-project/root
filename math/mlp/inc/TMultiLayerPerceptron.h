@@ -114,8 +114,8 @@ class TMultiLayerPerceptron : public TObject {
    inline TString GetStructure() const { return fStructure; }
    inline TNeuron::ENeuronType GetType() const { return fType; }
    void DrawResult(Int_t index = 0, Option_t* option = "test") const;
-   void DumpWeights(Option_t* filename = "-") const;
-   void LoadWeights(Option_t* filename = "");
+   Bool_t DumpWeights(Option_t* filename = "-") const;
+   Bool_t LoadWeights(Option_t* filename = "");
    Double_t Evaluate(Int_t index, Double_t* params) const;
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++") const;
    virtual void Draw(Option_t *option="");

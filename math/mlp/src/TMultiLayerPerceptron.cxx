@@ -1512,14 +1512,16 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option) const
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
+Bool_t TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
 {
    // Dumps the weights to a text file.
    // Set filename to "-" (default) to dump to the standard output
    TString filen = filename;
    ostream * output;
-   if (filen == "")
-      return;
+   if (filen == "") {   
+      Error("TMultiLayerPerceptron::DumpWeights()","Invalid file name");
+      return kFALSE;
+   }
    if (filen == "-")
       output = &cout;
    else
@@ -1555,17 +1557,20 @@ void TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
       ((ofstream *) output)->close();
       delete output;
    }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
+Bool_t TMultiLayerPerceptron::LoadWeights(Option_t * filename)
 {
    // Loads the weights from a text file conforming to the format
    // defined by DumpWeights.
    TString filen = filename;
    Double_t w;
-   if (filen == "")
-      return;
+   if (filen == "") {
+      Error("TMultiLayerPerceptron::LoadWeights()","Invalid file name");
+      return kFALSE;
+   }
    char *buff = new char[100];
    ifstream input(filen.Data());
    // input normalzation
@@ -1607,6 +1612,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    }
    delete it;
    delete[] buff;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
