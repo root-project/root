@@ -119,7 +119,10 @@ distclean::     distclean-$(MODNAME)
 $(sort $(GQTMOCO) $(GQTO)): CXXFLAGS += $(GQTCXXFLAGS)
 $(GQTDO): CXXFLAGS += $(GQTCXXFLAGS)
 ifeq ($(GCC_MAJOR),4)
+ifeq ($(subst $(GCC_MINOR),,0 1),0 1)
+# GCC >= 4.2
 $(GQTO): CXXFLAGS += -Wno-strict-overflow
+endif
 endif
 
 $(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
