@@ -90,10 +90,9 @@ namespace cling {
     bool isValuePrinterRequested() { return m_ValuePrinterReq; }
   };
 
-  //---------------------------------------------------------------------------
-  //! Class for managing many translation units supporting automatic
-  //! forward declarations and linking
-  //---------------------------------------------------------------------------
+  ///\brief Class that implements the interpreter-like behavior. It manages the
+  /// incremental compilation.
+  ///
   class Interpreter {
   public:
 
@@ -124,6 +123,9 @@ namespace cling {
       friend class Interpreter;
     };
 
+    ///\brief Describes the return result of the different routines that do the
+    /// incremental compilation.
+    ///
     enum CompilationResult {
       kSuccess,
       kFailure,
@@ -136,10 +138,22 @@ namespace cling {
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 
+    ///\brief Shows the current version of the project.
+    ///
+    ///\returns The current svn revision (svn Id). 
+    ///
     const char* getVersion() const;
+
+    ///\brief Creates unique name that can be used for various aims.
+    ///
     void createUniqueName(std::string& out);
 
+    ///\brief Adds an include path (-I).
+    ///
     void AddIncludePath(const char *incpath);
+
+    ///\brief Prints the current include paths that are used.
+    ///
     void DumpIncludePath();
  
     ///\brief Compiles input line. 
@@ -197,11 +211,11 @@ namespace cling {
     ///
     CompilationResult echo(const std::string& input, Value* V = 0);
 
-    bool loadFile(const std::string& filename,
-                  bool allowSharedLib = true);
+    bool loadFile(const std::string& filename, bool allowSharedLib = true);
     
     ///\brief Lookup a class declaration by name, starting from the global
-    // namespace, also handles struct, union, namespace, and enum.
+    /// namespace, also handles struct, union, namespace, and enum.
+    ///
     clang::Decl* lookupClass(const std::string& className);
 
     void enableDynamicLookup(bool value = true);
@@ -221,25 +235,89 @@ namespace cling {
 
     int CXAAtExit(void (*func) (void*), void* arg, void* dso);    
   private:
-    InvocationOptions m_Opts; // Interpreter options
-    llvm::OwningPtr<ExecutionContext> m_ExecutionContext;
-    llvm::OwningPtr<IncrementalParser> m_IncrParser; // incremental AST and its parser
-    unsigned long long m_UniqueCounter; // number of generated call wrappers
-    bool m_PrintAST; // whether to print the AST to be processed
-    bool m_ValuePrinterEnabled; // whether the value printer is loaded
-    llvm::OwningPtr<llvm::raw_ostream> m_ValuePrintStream; // stream to dump values into
-    clang::Decl *m_LastDump; // last dump point
+    ///\brief Interpreter invocation options.
+    ///
+    InvocationOptions m_Opts;
 
+    ///\brief Cling's execution engine - a well wrapped llvm execution engine.
+    ///
+    llvm::OwningPtr<ExecutionContext> m_ExecutionContext;
+
+    ///\brief Cling's worker class implementing the incremental compilation.
+    ///
+    llvm::OwningPtr<IncrementalParser> m_IncrParser;
+
+    ///\brief Counter used when we need unique names.
+    ///
+    unsigned long long m_UniqueCounter;
+
+    ///\brief Flag toggling the AST printing on or off.
+    ///
+    bool m_PrintAST;
+
+    bool m_ValuePrinterEnabled; // whether the value printer is loaded
+
+    ///\brief Stream to dump values into.
+    ///
+    /// TODO: Since it is only used by the ValuePrinterSynthesizer it should be
+    /// somewhere else.
+    ///
+    llvm::OwningPtr<llvm::raw_ostream> m_ValuePrintStream;
+
+    ///\Brief Last dump point.
+    ///
+    clang::Decl *m_LastDump;
+
+    ///\breif Helper that manages when the destructor of an object to be called.
+    ///
+    /// The object is registered first as an CXAAtExitElement and then cling
+    /// takes the control of it's destruction.
+    ///
     struct CXAAtExitElement {
+      ///\brief Constructs an element, whose destruction time will be managed by
+      /// the interpreter. (By registering a function to be called by exit 
+      /// or when a shared library is unloaded.)
+      ///
+      /// Registers destructors for objects with static storage duration with 
+      /// the _cxa atexit function rather than the atexit function. This option 
+      /// is required for fully standards-compliant handling of static 
+      /// destructors(many of them created by cling), but will only work if 
+      /// your C library supports __cxa_atexit (means we have our own work 
+      /// around for Windows). More information about __cxa_atexit could be 
+      /// found in the Itanium C++ ABI spec.
+      ///
+      ///\param [in] func - The function to be called on exit or unloading of 
+      ///                   shared lib.(The destructor of the object.)
+      ///\param [in] arg - The argument the func to be called with.
+      ///\param [in] dso - The dynamic shared object handle.
+      ///\param [in] fromTLD - The unloading of this top level declaration will
+      ///                      trigger the atexit function.
+      ///
       CXAAtExitElement(void (*func) (void*), void* arg, void* dso,
                        clang::Decl* fromTLD):
         m_Func(func), m_Arg(arg), m_DSO(dso), m_FromTLD(fromTLD) {}
+   
+      ///\brief The function to be called.
+      ///
       void (*m_Func)(void*);
-      void* m_Arg;
-      void* m_DSO;
-      clang::Decl* m_FromTLD; // when unloading this top level decl, call this atexit func.
-    };
 
+      ///\brief The single argument passed to the function.
+      ///
+      void* m_Arg;
+
+      /// \brief The DSO handle.
+      ///
+      void* m_DSO;
+
+      ///\brief Clang's top level declaration, whose unloading will trigger the 
+      /// call this atexit function.
+      ///
+      clang::Decl* m_FromTLD;
+    };
+ 
+    ///\brief Static object, which are bound to unloading of certain declaration
+    /// to be destructed.
+    ///
     llvm::SmallVector<CXAAtExitElement, 20> m_AtExitFuncs;
 
   private:
@@ -277,6 +355,7 @@ namespace cling {
                                const clang::DeclContext* Within = 0);
 
     ///\brief Sets callbacks needed for the dynamic lookup.
+    ///
     void setCallbacks(InterpreterCallbacks* C);
   };
   
