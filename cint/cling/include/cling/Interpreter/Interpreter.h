@@ -264,10 +264,6 @@ namespace cling {
     ///
     llvm::OwningPtr<llvm::raw_ostream> m_ValuePrintStream;
 
-    ///\Brief Last dump point.
-    ///
-    clang::Decl *m_LastDump;
-
     ///\breif Helper that manages when the destructor of an object to be called.
     ///
     /// The object is registered first as an CXAAtExitElement and then cling

@@ -175,17 +175,9 @@ namespace cling {
     return m_Result.c_str();
   }
 
-  //
-  //  Interpreter
-  //
-  
   Interpreter::Interpreter(int argc, const char* const *argv, 
-                           const char* llvmdir /*= 0*/):
-  m_UniqueCounter(0),
-  m_PrintAST(false),
-  m_ValuePrinterEnabled(false),
-  m_LastDump(0)
-  {
+                           const char* llvmdir /*= 0*/) :
+    m_UniqueCounter(0), m_PrintAST(false), m_ValuePrinterEnabled(false) {
 
     std::vector<unsigned> LeftoverArgsIdx;
     m_Opts = InvocationOptions::CreateFromArgs(argc, argv, LeftoverArgsIdx);
