@@ -5,7 +5,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-class MyClass { public:  MyClass(){ gCling->processLine("gCling->getVersion()");} };
+class MyClass { public:  MyClass(){ gCling->process("gCling->getVersion()");} };
 
 MyClass *My = new MyClass(); // CHECK: {{.*Interpreter.*}}
 

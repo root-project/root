@@ -304,37 +304,32 @@ namespace cling {
     ///
     void DumpIncludePath();
  
-    ///\brief Compiles input line. 
+    ///\brief Compiles the given input.
     ///
-    /// This is top most interface, which helps running statements and 
-    /// expressions on the global scope. If rawInput mode disabled the
-    /// input will be wrapped into wrapper function. Declaration extraction
-    /// will be enabled and all declarations will be extracted as global.
-    /// After compilation the wrapper will be executed.
-    /// 
-    /// If rawInput enabled no execution or declaration extraction is done
+    /// This interface helps to run everything that cling can run. From
+    /// declaring header files to running or evaluating single statements.
+    /// Note that this should be used when there is no idea of what kind of 
+    /// input is going to be processed. Otherwise if is known, for example 
+    /// only header files are going to be processed it is much faster to run the
+    /// specific interface for doing that - in the particular case - declare().
     ///
-    /// @param[in] input_line - the input to be compiled
-    /// @param[in] rawInput - turns on or off the wrapping of the input
-    /// @param[out] V - returns the tuple llvm::GenericValue and clang::Type
-    /// @param[out] D - returns the first declaration that was parsed from the
-    ///                 input
+    ///\param [in] input - The input to be compiled.
+    ///\param [out] V - The result of the evaluation of the input.
+    ///\param [out] D - The first declaration of the compiled input.
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult processLine(const std::string& input_line, 
-                                  bool rawInput = false,
-                                  Value* V = 0,
-                                  const clang::Decl** D = 0);
+    CompilationResult process(const std::string& input, Value* V = 0,
+                              const clang::Decl** D = 0);
 
     ///\brief Compiles input line, which doesn't contain statements.
     ///
     /// The interface circumvents the most of the extra work necessary to 
     /// compile and run statements.
     ///
-    /// @param[in] input - the input containing only declarations (aka 
-    /// TopLevelDecls)
-    /// @param[out] D - the first compiled declaration from the input
+    /// @param[in] input - The input containing only declarations (aka 
+    ///                    Top Level Declarations)
+    /// @param[out] D - The first compiled declaration from the input
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -346,8 +341,8 @@ namespace cling {
     /// The interface circumvents the most of the extra work necessary extract
     /// the declarations from the input.
     ///
-    /// @param[in] input - the input containing only expressions
-    /// @param[out] V - the value of the executed input
+    /// @param[in] input - The input containing only expressions
+    /// @param[out] V - The value of the executed input
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -360,8 +355,8 @@ namespace cling {
     /// The interface circumvents the most of the extra work necessary extract
     /// the declarations from the input.
     ///
-    /// @param[in] input - the input containing only expressions
-    /// @param[out] V - the value of the executed input
+    /// @param[in] input - The input containing only expressions.
+    /// @param[out] V - The value of the executed input.
     ///
     ///\returns Whether the operation was fully successful.
     ///

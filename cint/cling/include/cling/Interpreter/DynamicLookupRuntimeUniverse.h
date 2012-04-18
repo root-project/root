@@ -125,7 +125,7 @@ namespace cling {
           llvm::raw_string_ostream stream(str);
           stream<<"delete ("<< m_Type << "*) "<< m_Memory << ";";
           stream.flush();
-          gCling->processLine(str);
+          gCling->evaluate(str);
         }
       };
     }

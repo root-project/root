@@ -60,7 +60,7 @@ namespace cling {
       // FIXME: What kind of result we are looking for in that case?
       m_Interp.declare(input);
     else
-      m_Interp.processLine(input, 0, result);
+      m_Interp.processLine(input, result);
 
     return 0;
   }

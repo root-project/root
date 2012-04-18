@@ -366,10 +366,8 @@ namespace cling {
   /// semantics (declarations are global) and compile to produce a module.
   ///
   Interpreter::CompilationResult
-  Interpreter::processLine(const std::string& input_line, 
-                           bool rawInput /*=false*/,
-                           Value* V, /*=0*/
-                           const Decl** D /*=0*/) {
+  Interpreter::process(const std::string& input, Value* V /* = 0 */,
+                       const Decl** D /* = 0 */) {
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()
@@ -380,23 +378,19 @@ namespace cling {
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 1;
-    CO.ValuePrinting = 2;
+    CO.ValuePrinting = CompilationOptions::VPAuto;
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingAST();
 
-    if (rawInput)
-      return Declare(input_line, CO, D);
-
-    if (!canWrapForCall(input_line))
-      return declare(input_line, D);
-
+    if (!canWrapForCall(input))
+      return declare(input, D);
 
     if (V) {
-      return Evaluate(input_line, CO, V);
+      return Evaluate(input, CO, V);
     }
     
     std::string functName;
-    std::string wrapped = input_line;
+    std::string wrapped = input;
     WrapInput(wrapped, functName);
 
     if (m_IncrParser->Compile(wrapped, CO) == IncrementalParser::kFailed)

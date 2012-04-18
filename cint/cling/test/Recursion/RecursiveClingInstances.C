@@ -6,9 +6,9 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-gCling->processLine("const char * const argV = \"cling\";");
-gCling->processLine("cling::Interpreter *DefaultInterp;");
+gCling->process("const char * const argV = \"cling\";");
+gCling->process("cling::Interpreter *DefaultInterp;");
 
-gCling->processLine("DefaultInterp = new cling::Interpreter(1, &argV);");
-gCling->processLine("DefaultInterp->processLine(\"#include \\\"cling/Interpreter/Interpreter.h\\\"\");");
-gCling->processLine("DefaultInterp->processLine(\"gCling->createUniqueName()\");");
+gCling->process("DefaultInterp = new cling::Interpreter(1, &argV);");
+gCling->process("DefaultInterp->process(\"#include \\\"cling/Interpreter/Interpreter.h\\\"\");");
+gCling->process("DefaultInterp->process(\"gCling->createUniqueName()\");");
