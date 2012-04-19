@@ -240,6 +240,11 @@ templateClassImp(TKDTree)
 // fBoundaries : nodes boundaries
 // | 1st node {1st dim * 2 elements | 2nd dim * 2 elements | ...} | 2nd node {...} | ...
 // The nodes are arranged in the order described in section 3a.
+//
+//
+// Note: the storage of the TKDTree in a file which include also the contained data is not
+//       supported. One must store the data separatly in a file (e.g. using a TTree) and then 
+//       re-creating the TKDTree from the data, after having read them from the file 
 //////////////////////////////////////////////////////////////////////////
 
 
