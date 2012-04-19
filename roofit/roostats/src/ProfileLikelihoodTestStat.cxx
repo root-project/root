@@ -11,6 +11,17 @@
 
 #include "RooStats/ProfileLikelihoodTestStat.h"
 
+#include "RooProfileLL.h"
+#include "RooNLLVar.h"
+#include "RooMsgService.h"
+#include "RooMinimizer.h"
+#include "RooArgSet.h"
+#include "RooAbsData.h"
+#include "TStopwatch.h"
+
+#include "RooStats/RooStatsUtils.h"
+
+
 Bool_t RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = kTRUE ;
 
 Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
@@ -51,14 +62,12 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
           fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 
-          //	 fNll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE));
-          //	 fProfile = (RooProfileLL*) fNll->createProfile(paramsOfInterest);
           created = kTRUE ;
           delete allParams;
-          if (fPrintLevel > 1) cout << "creating profile LL " << fNll << " " << fProfile << " data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
-          if (fPrintLevel > 1) cout << "reusing profile LL " << fNll << " new data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
           fNll->setData(data,kFALSE) ;
        }
 
@@ -206,8 +215,6 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (!reuse) {
 	 delete fNll;
 	 fNll = 0; 
-	 //	 delete fProfile;
-	 fProfile = 0 ;
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);

@@ -33,25 +33,23 @@ END_HTML
 #include "Rtypes.h"
 #endif
 
-#include <vector>
-
-#include "RooStats/RooStatsUtils.h"
-
-//#include "RooStats/DistributionCreator.h"
-#include "RooStats/SamplingDistribution.h"
+#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
+#endif
 
-#include "RooStats/RooStatsUtils.h"
 
+#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#include "RooProfileLL.h"
-#include "RooNLLVar.h"
-#include "RooMsgService.h"
+#endif
 
-#include "RooMinuit.h"
-#include "RooMinimizer.h"
+#ifndef ROO_NLL_VAR
+#include "RooNLLVar.h"
+#endif
+
+#ifndef ROOTT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#include "TStopwatch.h"
+#endif
+
 
 namespace RooStats {
 
@@ -63,7 +61,6 @@ namespace RooStats {
      ProfileLikelihoodTestStat() {
         // Proof constructor. Do not use.
         fPdf = 0;
-        fProfile = 0;
         fNll = 0;
         fCachedBestFitParams = 0;
         fLastData = 0;
@@ -87,7 +84,6 @@ namespace RooStats {
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
-       fProfile = 0;
        fNll = 0;
        fCachedBestFitParams = 0;
        fLastData = 0;
@@ -110,13 +106,11 @@ namespace RooStats {
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
      virtual ~ProfileLikelihoodTestStat() {
-       //       delete fRand;
-       //       delete fTestStatistic;
-       if(fProfile) delete fProfile;
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
        if(fDetailedOutput) delete fDetailedOutput;
      }
+
      void SetOneSided(Bool_t flag=true) {fLimitType = (flag ? oneSided : twoSided);}
      void SetOneSidedDiscovery(Bool_t flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
      void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
@@ -151,7 +145,7 @@ namespace RooStats {
      double GetMinNLL(int& status);
 
    private:
-      RooProfileLL* fProfile; //!
+
       RooAbsPdf* fPdf;
       RooNLLVar* fNll; //!
       const RooArgSet* fCachedBestFitParams;

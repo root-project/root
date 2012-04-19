@@ -35,6 +35,8 @@ END_HTML
 #include "RooRealVar.h"
 #include "RooMinimizer.h"
 #include "Math/MinimizerOptions.h"
+#include "RooStats/RooStatsUtils.h"
+
 
 
 namespace RooStats {

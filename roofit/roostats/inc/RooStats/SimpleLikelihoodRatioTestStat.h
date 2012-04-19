@@ -30,10 +30,14 @@
 #include "RooNLLVar.h"
 #endif
 
+#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
+#endif
 
+#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#include "RooWorkspace.h"
+#endif
+
 
 namespace RooStats {
 

@@ -26,6 +26,9 @@ END_HTML
 #include "Rtypes.h"
 #endif
 
+class RooArgSet; 
+class RooAbsData; 
+
 namespace RooStats {
 
 class TestStatistic {
