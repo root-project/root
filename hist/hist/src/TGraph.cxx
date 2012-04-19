@@ -1766,9 +1766,15 @@ Int_t TGraph::InsertPoint()
 Double_t TGraph::Integral(Int_t first, Int_t last) const
 {
    // Integrate the TGraph data within a given (index) range
+   // Note that this function computes the area of the polygon enclosed by the points of the TGraph.
+   // The polygon segments, which are defined by the points of the TGraph, do not need to form a closed polygon,
+   // since the last polygon segment, which closes the polygon, is taken as the line connecting the last TGraph point
+   // with the first one. It is clear that the order of the point is essential in defining the polygon. 
+   // Also note that the segments should not intersect. 
+   //   
    // NB: if last=-1 (default) last is set to the last point.
    //     if (first <0) the first point (0) is taken.
-   //   : The graph segments should not intersect.
+   //   
    //Method:
    // There are many ways to calculate the surface of a polygon. It all depends on what kind of data
    // you have to deal with. The most evident solution would be to divide the polygon in triangles and
