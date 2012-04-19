@@ -627,7 +627,89 @@ namespace cling {
     return declare(code);
   }
   
-  Decl* Interpreter::lookupClass(const std::string& className) {
+  QualType
+  Interpreter::lookupType(const std::string& typeName)
+  {
+    //
+    //  Our return value.
+    //
+    QualType TheQT;
+    //
+    //  Some utilities.
+    //
+    CompilerInstance* CI = getCI();
+    Parser* P = getParser();
+    Preprocessor& PP = CI->getPreprocessor();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    //
+    //  Tell the diagnostic consumer we are switching files.
+    //
+    DiagnosticConsumer& DClient = CI->getDiagnosticClient();
+    DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+    //
+    //  Create a fake file to parse the type name.
+    //
+    llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+      std::string(typeName) + "\n", "lookup.type.by.name.file");
+    FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    bool ResetIncrementalProcessing = false;
+    if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+    }
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, 0, SourceLocation());
+    PP.Lex(const_cast<Token&>(P->getCurToken()));
+    //
+    //  Try parsing the type name.
+    //
+    TypeResult Res(P->ParseTypeName());
+    if (Res.isUsable()) {
+      // Accept it only if the whole name was parsed.
+      if (P->NextToken().getKind() == clang::tok::eof) {
+        TheQT = Res.get().get();
+      }
+    }
+    //
+    // Advance the parser to the end of the file, and pop the include stack.
+    //
+    // Note: Consuming the EOF token will pop the include stack.
+    //
+    P->SkipUntil(tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+    }
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;
+    return TheQT;
+  }
+
+  Decl*
+  Interpreter::lookupClass(const std::string& className)
+  {
     //
     //  Our return value.
     //

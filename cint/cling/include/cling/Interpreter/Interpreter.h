@@ -13,6 +13,8 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 
+#include "clang/AST/Type.h"
+
 #include <string>
 
 namespace llvm {
@@ -372,11 +374,20 @@ namespace cling {
     ///
     bool loadFile(const std::string& filename, bool allowSharedLib = true);
     
+    ///\brief Lookup a type by name, starting from the global
+    /// namespace.
+    ///
+    /// \param [in] typeName - The type to lookup.
+    ///
+    /// \retval retval - On a failed lookup retval.isNull() will be true.
+    ///
+    clang::QualType lookupType(const std::string& typeName);
+
     ///\brief Lookup a class declaration by name, starting from the global
     /// namespace, also handles struct, union, namespace, and enum.
     ///
-    ///\param [in] className - The class we are looking up.
-    ///
+    /// \param [in] className - The name of the class, struct, union,
+    ///                        namespace, or enum to lookup.
     ///\returns The found declaration or null.
     ///
     clang::Decl* lookupClass(const std::string& className);
