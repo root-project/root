@@ -110,11 +110,7 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
                kMWMInputModeless);
 
    // popup dialog and wait till user replies
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    gClient->WaitFor(this);
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

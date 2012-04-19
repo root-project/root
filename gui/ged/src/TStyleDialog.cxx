@@ -190,11 +190,7 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
    fOK->Connect("Clicked()", "TStyleDialog", this, "DoOK()");
    fCancel->Connect("Clicked()", "TStyleDialog", this, "DoCancel()");
 
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    gClient->WaitFor(this);
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

@@ -258,11 +258,7 @@ TFunctionParametersDialog::TFunctionParametersDialog(const TGWindow *p,
       }
    }
 
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    gClient->WaitFor(this);
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________

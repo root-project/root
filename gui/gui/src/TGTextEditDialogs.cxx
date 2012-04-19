@@ -166,11 +166,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    if (fType->fClose) {
       MapWindow();
       fSearch->RequestFocus();
-      if (fMain && fMain->GetMainFrame())
-         ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
       fClient->WaitFor(this);
-      if (fMain && fMain->GetMainFrame())
-         ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
    }
 }
 
@@ -405,11 +401,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
 
    fPrinterEntry->RequestFocus();
    MapWindow();
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    fClient->WaitFor(this);
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________
@@ -618,11 +610,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
 
    MapWindow();
    fGoTo->RequestFocus();
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->SetBit(kDontCallClose);
    fClient->WaitFor(this);
-   if (fMain && fMain->GetMainFrame())
-      ((TGMainFrame *)fMain->GetMainFrame())->ResetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________
