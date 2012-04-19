@@ -1520,7 +1520,9 @@ void print_mask_info(ULong_t mask)
          
          
       } else {
+#ifdef DEBUG_ROOT_COCOA
          NSLog(@"QuartzView: -drawRect method, no window for id %u was found", fID);
+#endif
       }
    }
 }
