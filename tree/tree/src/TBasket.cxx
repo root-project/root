@@ -456,6 +456,10 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       readBufferRef = fCompressedBufferRef;
    }
 
+   // fBufferSize is likely to be change in the Streamer call (below)
+   // and we will re-add the new size later on.
+   fBranch->GetTree()->IncrementTotalBuffers(-fBufferSize);
+
    // Initialize the buffer to hold the compressed data.
    readBufferRef = R__InitializeReadBasketBuffer(readBufferRef, len, file);
    if (!readBufferRef) {
