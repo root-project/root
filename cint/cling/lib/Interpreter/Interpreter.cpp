@@ -1030,12 +1030,13 @@ namespace cling {
             goto lookupFuncProtoDone;
           }
           clang::QualType QT(Res.get().get());
-          GivenArgTypes.push_back(QT.getCanonicalType()); // FIXME: Just QT?
+          QT = QT.getCanonicalType();
+          GivenArgTypes.push_back(QT);
           {
             // FIXME: Stop leaking these!
+            clang::QualType NonRefQT(QT.getNonReferenceType());
             Expr* val = new (CI->getSema().getASTContext()) OpaqueValueExpr(
-              SourceLocation(), QT.getCanonicalType(), // FIXME: Just QT?
-              Expr::getValueKindForType(QT));
+              SourceLocation(), NonRefQT, Expr::getValueKindForType(NonRefQT));
             GivenArgs.push_back(val);
           }
           if (first_time) {
@@ -1044,7 +1045,7 @@ namespace cling {
           else {
             proto += ',';
           }
-          proto += QT.getCanonicalType().getAsString(Policy);
+          proto += QT.getAsString(Policy);
           fprintf(stderr, "%s\n", proto.c_str());
           // Type names should be comma separated.
           if (!P->getCurToken().is(clang::tok::comma)) {
