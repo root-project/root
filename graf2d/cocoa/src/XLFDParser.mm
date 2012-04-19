@@ -231,8 +231,6 @@ bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)
 
    try {
       if (xlfdName == "fixed" || xlfdName == "*") {
-         //TODO: find out, what X11 does for such XLFD name.
-         ::Warning("ROOT::MacOSX::X11::ParseXLFDName: ", "\"fixed\" or \"*\" font was requested");
          dst.fFamilyName = "Courier";
          dst.fPixelSize = 11;
       } else {
