@@ -972,8 +972,11 @@ void TGCocoa::TranslateCoordinates(Window_t srcWin, Window_t dstWin, Int_t srcX,
    const bool dstIsRoot = fPimpl->IsRootWindow(dstWin);
    
    if (srcIsRoot && dstIsRoot) {
-      //TODO: can this ever happen? If this is ok, I'll simply remove warning.
-      Warning("TranslateCoordinates", "both source and destination windows are 'root' window");
+      //This can happen with ROOT's GUI. Set dstX/Y equal to srcX/Y.
+      //From man for XTranslateCoordinates it's not clear, what should be in child.
+      dstX = srcX;
+      dstY = srcY;
+      child = 0;//TODO: check, if X11 searches for any window.
       return;
    }
    
