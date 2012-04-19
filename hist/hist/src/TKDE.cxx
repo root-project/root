@@ -753,6 +753,7 @@ TGraphErrors* TKDE::GetGraphWithErrors(UInt_t npx, double xmin, double xmax) {
    for (UInt_t i = 0; i <= n; ++i) {
       x[i] = xmin + i * (xmax - xmin) / n;
       y[i] = (*this)(x[i]);
+      ex[i] = 0;
       ey[i] = this->GetError(x[i]);
    }
    TGraphErrors* ge = new TGraphErrors(n, &x[0], &y[0], &ex[0], &ey[0]);
