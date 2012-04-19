@@ -29,6 +29,7 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaInternal.h"
+#include "clang/Sema/TemplateDeduction.h"
 
 #include "llvm/Linker.h"
 #include "llvm/Support/DynamicLibrary.h"
@@ -40,6 +41,7 @@
 #include <cstdio>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 using namespace clang;
 
@@ -836,6 +838,7 @@ namespace cling {
             case clang::NestedNameSpecifier::Global: {
                 // Name was just "::" and nothing more.
                 // Note: We could return the translation unit decl here.
+                TheDecl = CI->getASTContext().getTranslationUnitDecl();
               }
               break;
           }
@@ -882,6 +885,379 @@ namespace cling {
       }
     }
   lookupClassDone:
+    //
+    // Advance the parser to the end of the file, and pop the include stack.
+    //
+    // Note: Consuming the EOF token will pop the include stack.
+    //
+    P->SkipUntil(tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+    }
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;
+    return TheDecl;
+  }
+
+  static
+  bool
+  FuncArgTypesMatch(CompilerInstance* CI, std::vector<QualType>& GivenArgTypes,
+    const FunctionProtoType* FPT)
+  {
+    FunctionProtoType::arg_type_iterator ATI = FPT->arg_type_begin();
+    FunctionProtoType::arg_type_iterator E = FPT->arg_type_end();
+    std::vector<QualType>::iterator GAI = GivenArgTypes.begin();
+    for (; ATI && (ATI != E); ++ATI, ++GAI) {
+      if (!CI->getASTContext().hasSameType(*ATI, *GAI)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static
+  bool
+  IsOverload(CompilerInstance* CI,
+    const TemplateArgumentListInfo* FuncTemplateArgs,
+    std::vector<QualType>& GivenArgTypes, FunctionDecl* FD,
+    bool UseUsingDeclRules)
+  {
+    FunctionTemplateDecl* FTD = FD->getDescribedFunctionTemplate();
+    QualType FQT = CI->getASTContext().getCanonicalType(FD->getType());
+    if (llvm::isa<FunctionNoProtoType>(FQT.getTypePtr())) {
+      // A K&R-style function (no prototype), is considered to match the args.
+      return false;
+    }
+    const FunctionProtoType* FPT = llvm::cast<FunctionProtoType>(FQT);
+    if (
+      (GivenArgTypes.size() != FPT->getNumArgs()) ||
+      //(GivenArgsAreEllipsis != FPT->isVariadic()) ||
+      !FuncArgTypesMatch(CI, GivenArgTypes, FPT)) {
+      return true;
+    }
+    return false;
+  }
+
+  Decl*
+  Interpreter::lookupFunctionProto(Decl* classDecl,
+    const std::string& funcName, const std::string& funcProto)
+  {
+    //
+    //  Our return value.
+    //
+    Decl* TheDecl = 0;
+    //
+    //  Some utilities.
+    //
+    CompilerInstance* CI = getCI();
+    Parser* P = getParser();
+    Preprocessor& PP = CI->getPreprocessor();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    //
+    //  Get the DeclContext we will search for the function.
+    //
+    DeclContext* foundDC = llvm::dyn_cast<DeclContext>(classDecl);
+    //if (foundDC->isDependentContext()) {
+    //  // error path
+    //  cleanup();
+    //  return 0;
+    //}
+    //if (CI->getSema().RequireCompleteDeclContext(SS, foundDC)) {
+    //  // error path
+    //  cleanup();
+    //  return 0;
+    //}
+    //
+    //  Tell the diagnostic consumer we are switching files.
+    //
+    DiagnosticConsumer& DClient = CI->getDiagnosticClient();
+    DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+    //
+    //  Create a fake file to parse the prototype.
+    //
+    llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+      funcProto + "\n", "func.prototype.file");
+    FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    bool ResetIncrementalProcessing = false;
+    if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+    }
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, 0, SourceLocation());
+    PP.Lex(const_cast<Token&>(P->getCurToken()));
+    //
+    //  Parse the prototype now.
+    //
+    std::vector<QualType> GivenArgTypes;
+    std::vector<Expr*> GivenArgs;
+    {
+      PrintingPolicy Policy(CI->getASTContext().getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      Policy.SuppressInitializers = true;
+      Policy.AnonymousTagLocations = false;
+      std::string proto;
+      {
+        bool first_time = true;
+        while (P->getCurToken().isNot(tok::eof)) {
+          TypeResult Res(P->ParseTypeName());
+          if (!Res.isUsable()) {
+            // Bad parse, done.
+            goto lookupFuncProtoDone;
+          }
+          clang::QualType QT(Res.get().get());
+          GivenArgTypes.push_back(QT.getCanonicalType()); // FIXME: Just QT?
+          {
+            // FIXME: Stop leaking these!
+            Expr* val = new (CI->getSema().getASTContext()) OpaqueValueExpr(
+              SourceLocation(), QT.getCanonicalType(), // FIXME: Just QT?
+              Expr::getValueKindForType(QT));
+            GivenArgs.push_back(val);
+          }
+          if (first_time) {
+            first_time = false;
+          }
+          else {
+            proto += ',';
+          }
+          proto += QT.getCanonicalType().getAsString(Policy);
+          fprintf(stderr, "%s\n", proto.c_str());
+          // Type names should be comma separated.
+          if (!P->getCurToken().is(clang::tok::comma)) {
+            break;
+          }
+          // Eat the comma.
+          P->ConsumeToken();
+        }
+      }
+    }
+    if (P->getCurToken().isNot(tok::eof)) {
+      // We did not consume all of the prototype, bad parse.
+      goto lookupFuncProtoDone;
+    }
+    //
+    //  Cleanup after prototype parse.
+    //
+    P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    //
+    //  Create a fake file to parse the function name.
+    //
+    {
+      llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+        funcName + "\n", "lookup.funcname.file");
+      clang::FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+      CI->getPreprocessor().EnterSourceFile(FID, 0, clang::SourceLocation());
+      CI->getPreprocessor().Lex(const_cast<clang::Token&>(P->getCurToken()));
+    }
+    {
+      //
+      //  Parse the function name.
+      //
+      SourceLocation TemplateKWLoc;
+      UnqualifiedId FuncId;
+      CXXScopeSpec SS;
+      if (P->ParseUnqualifiedId(SS, /*EnteringContext*/false,
+          /*AllowDestructName*/false, // FIXME: true!
+          /*AllowConstructorName*/false, // FIXME: true!
+          clang::ParsedType(), TemplateKWLoc, FuncId)) {
+        // Bad parse.
+        goto lookupFuncProtoDone;
+      }
+      //
+      //  Get any template args in the function name.
+      //
+      TemplateArgumentListInfo FuncTemplateArgsBuffer;
+      DeclarationNameInfo FuncNameInfo;
+      const TemplateArgumentListInfo* FuncTemplateArgs;
+      CI->getSema().DecomposeUnqualifiedId(FuncId, FuncTemplateArgsBuffer,
+        FuncNameInfo, FuncTemplateArgs);
+      //
+      //  Lookup the function name in the given class now.
+      //
+      DeclarationName FuncName = FuncNameInfo.getName();
+      SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
+      LookupResult Result(CI->getSema(), FuncName, FuncNameLoc,
+        Sema::LookupMemberName, Sema::ForRedeclaration);
+      if (!CI->getSema().LookupQualifiedName(Result, foundDC)) {
+        // Lookup failed.
+        goto lookupFuncProtoDone;
+      }
+      //
+      //  Check for lookup failure.
+      //
+      switch (Result.getResultKind()) {
+        case LookupResult::NotFound:
+          // Lookup failed.
+          goto lookupFuncProtoDone;
+          break;
+        case LookupResult::NotFoundInCurrentInstantiation:
+          // Lookup failed.
+          goto lookupFuncProtoDone;
+          break;
+        case LookupResult::Found:
+          {
+            NamedDecl* ND = Result.getFoundDecl();
+            std::string buf;
+            PrintingPolicy Policy(ND->getASTContext().getPrintingPolicy());
+            ND->getNameForDiagnostic(buf, Policy, /*Qualified*/true);
+            fprintf(stderr, "Found: %s\n", buf.c_str());
+          }
+          break;
+        case LookupResult::FoundOverloaded:
+          {
+            fprintf(stderr, "Found overload set!\n");
+            Result.print(llvm::outs());
+          }
+          break;
+        case LookupResult::FoundUnresolvedValue:
+          // Lookup failed.
+          goto lookupFuncProtoDone;
+          break;
+        case LookupResult::Ambiguous:
+          // Lookup failed.
+          goto lookupFuncProtoDone;
+          switch (Result.getAmbiguityKind()) {
+            case LookupResult::AmbiguousBaseSubobjectTypes:
+              // Lookup failed.
+              goto lookupFuncProtoDone;
+              break;
+            case LookupResult::AmbiguousBaseSubobjects:
+              // Lookup failed.
+              goto lookupFuncProtoDone;
+              break;
+            case LookupResult::AmbiguousReference:
+              // Lookup failed.
+              goto lookupFuncProtoDone;
+              break;
+            case LookupResult::AmbiguousTagHiding:
+              // Lookup failed.
+              goto lookupFuncProtoDone;
+              break;
+          }
+          break;
+      }
+      //
+      //  Now that we have a set of matching function names
+      //  in the class, we have to choose the one being asked
+      //  for given the passed template args and prototype.
+      //
+      NamedDecl* Match = 0;
+      for (LookupResult::iterator I = Result.begin(), E = Result.end();
+          I != E; ++I) {
+        NamedDecl* ND = *I;
+        //
+        //  Check if this decl is from a using decl, it will not
+        //  be a match in some cases.
+        //
+        bool IsUsingDecl = false;
+        if (llvm::isa<UsingShadowDecl>(ND)) {
+          IsUsingDecl = true;
+          ND = llvm::cast<UsingShadowDecl>(ND)->getTargetDecl();
+        }
+        //
+        //  If found declaration was introduced by a using declaration,
+        //  we'll need to use slightly different rules for matching.
+        //  Essentially, these rules are the normal rules, except that
+        //  function templates hide function templates with different
+        //  return types or template parameter lists.
+        //
+        bool UseMemberUsingDeclRules = IsUsingDecl && foundDC->isRecord();
+        if (FunctionTemplateDecl* FTD =
+            llvm::dyn_cast<FunctionTemplateDecl>(ND)) {
+          // This decl is a function template.
+          {
+            std::string buf;
+            PrintingPolicy P(FTD->getASTContext().getPrintingPolicy());
+            FTD->getNameForDiagnostic(buf, P, true);
+            fprintf(stderr, "Considering func template: %s\n", buf.c_str());
+          }
+          //
+          //  Do template argument deduction and function argument matching.
+          //
+          FunctionDecl* Specialization;
+          sema::TemplateDeductionInfo TDI(CI->getASTContext(),
+            SourceLocation());
+          Sema::TemplateDeductionResult TDR =
+            CI->getSema().DeduceTemplateArguments(
+                FTD
+              , const_cast<TemplateArgumentListInfo*>(FuncTemplateArgs)
+              , llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size())
+              , Specialization
+              , TDI
+            );
+          if (TDR == Sema::TDK_Success) {
+            // We have a template argument match and func arg match.
+            Match = Specialization;
+            break;
+          }
+        } else if (FunctionDecl* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
+          // This decl is a function.
+          {
+            std::string buf;
+            PrintingPolicy P(FD->getASTContext().getPrintingPolicy());
+            FD->getNameForDiagnostic(buf, P, true);
+            fprintf(stderr, "Considering func: %s\n", buf.c_str());
+          }
+          if (!IsOverload(CI, FuncTemplateArgs, GivenArgTypes, FD,
+              UseMemberUsingDeclRules)) {
+            // We have a function argument match.
+            if (UseMemberUsingDeclRules && IsUsingDecl) {
+              // But it came from a using decl and we are
+              // looking up a class member func, ignore it.
+              continue;
+            }
+            Match = *I;
+            break;
+          }
+        }
+      }
+      //
+      //  Handle no match found.
+      //
+      if (!Match) {
+        // No matching function found.
+        goto lookupFuncProtoDone;
+      }
+      //
+      //  Handle success.
+      //
+      TheDecl = Match;
+      {
+        std::string buf;
+        PrintingPolicy Policy(CI->getASTContext().getPrintingPolicy());
+        Match->getNameForDiagnostic(buf, Policy, true);
+        fprintf(stderr, "Match: %s\n", buf.c_str());
+        Match->dump();
+      }
+    }
+  lookupFuncProtoDone:
     //
     // Advance the parser to the end of the file, and pop the include stack.
     //

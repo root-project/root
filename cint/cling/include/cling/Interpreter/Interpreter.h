@@ -392,6 +392,10 @@ namespace cling {
     ///
     clang::Decl* lookupClass(const std::string& className);
 
+    clang::Decl* lookupFunctionProto(clang::Decl* classDecl,
+                                     const std::string& funcName,
+                                     const std::string& funcProto);
+
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled();
 
