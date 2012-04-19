@@ -20,6 +20,15 @@ USEDLIBS = clingUserInterface.a clingMetaProcessor.a clingInterpreter.a clingUIT
 LLVMLIBS = LLVMSupport.a
 include $(CLING_LEVEL)/Makefile
 
+# Inform the sources about their location
+CPPFLAGS += -I$(PROJ_SRC_DIR)/../../include -I$(PROJ_SRC_DIR)/../../../clang/include \
+-I$(PROJ_SRC_DIR)/../../../clang/lib -I$(PROJ_OBJ_DIR)/../../include \
+-I$(PROJ_OBJ_DIR)/../../../clang/include \
+'-DCLANG_SYS_HEADERS="-I$(PROJ_SRC_DIR)../../../clang/lib/Headers"' \
+'-DCLING_INSTDIR_INCL="$(DESTDIR)$(PROJ_includedir)"' \
+'-DCLING_SRCDIR_INCL="$(LLVM_SRC_ROOT)/tools/cling/include"'
+
+
 ##===----------------------------------------------------------------------===##
 # FIXME: This is copied from the 'lto' makefile.  Should we share this?
 ##===----------------------------------------------------------------------===##
