@@ -511,7 +511,12 @@ void SendEnterEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
    assert(view.fID != 0 && "SendEnterEvent, view.fID is 0");
 
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendEnterEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendEnterEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
 
    Event_t enterEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    enterEvent.fType = kEnterNotify;
@@ -542,7 +547,12 @@ void SendLeaveEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
    assert(view.fID != 0 && "SendLeaveEvent, view.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendLeaveEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendLeaveEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
 
    Event_t leaveEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    leaveEvent.fType = kLeaveNotify;
@@ -569,7 +579,12 @@ void SendPointerMotionEvent(QuartzView *view, NSEvent *theEvent)
    assert(view.fID != 0 && "SendPointerMotionEvent, view.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendPointerMotionEvent, no window found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendPointerMotionEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
    
    Event_t motionEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    motionEvent.fType = kMotionNotify;
@@ -597,7 +612,12 @@ void SendButtonPressEvent(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
    assert(view.fID != 0 && "SendButtonPressEvent, view.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendButtonPressEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendButtonpressEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
 
    Event_t pressEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    pressEvent.fType = kButtonPress;
@@ -640,7 +660,12 @@ void SendButtonReleaseEvent(QuartzView *view, NSEvent *theEvent, EMouseButton bt
    assert(view.fID != 0 && "SendButtonReleaseEvent, view.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendButtonReleaseEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendButtonReleaseEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
  
    Event_t releaseEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    releaseEvent.fType = kButtonRelease;
@@ -660,7 +685,12 @@ void SendKeyPressEvent(QuartzView *view, QuartzView *childView, NSEvent *theEven
    assert(view.fID != 0 && "SendKeyPressEvent, view.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendKeyPressEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendKeyPressEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
    
    Event_t keyPressEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
    keyPressEvent.fType = kGKeyPress;
@@ -692,8 +722,13 @@ void SendFocusInEvent(QuartzView *view, EXMagic mode)
    assert(view != nil && "SendFocusInEvent, view parameter is nil");
    //
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendFocusInEvent, window was not found");
-   
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendFocusInEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
+
    Event_t focusInEvent = {};
    focusInEvent.fType = kFocusIn;
    focusInEvent.fCode = mode;
@@ -708,7 +743,12 @@ void SendFocusOutEvent(QuartzView *view, EXMagic mode)
    assert(view != nil && "SendFocusOutEvent, view parameter is nil");
    //
    TGWindow *window = gClient->GetWindowById(view.fID);
-   assert(window != nullptr && "SendFocusOutEvent, window was not found");
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendFocusOutEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
 
    Event_t focusOutEvent = {};
    focusOutEvent.fType = kFocusOut;
