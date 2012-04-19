@@ -18,7 +18,7 @@ else()
   add_definitions(-DR__SSL)
 endif()
 
-if(NOT crypto)
+if(NOT ssl AND NOT CRYPTLIBS)
   list(REMOVE_ITEM headers TAS3File.h)
   list(REMOVE_ITEM headers TGSFile.h)
   list(REMOVE_ITEM headers THTTPMessage.h)

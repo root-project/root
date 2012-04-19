@@ -73,14 +73,50 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      #settings for cint
      set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
      set(CXXOUT "-o ")
-     set(EXPLICITLINK "no") #TODO
-
      set(EXEEXT "")
      set(SOEXT "so")
 
-  else (CMAKE_COMPILER_IS_GNUCXX)
+  elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  
+     message(STATUS "Found LLVM compiler collection")
+     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common")
+     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
+     SET(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -std=legacy")
+     SET(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+     SET(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+  
+     SET(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -flat_namespace -single_module -undefined dynamic_lookup")
+     SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -flat_namespace -single_module -undefined dynamic_lookup")
+  
+     set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
+     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
+
+     # Select flags.
+     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+     set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
+     set(CMAKE_CXX_FLAGS_DEBUG          "-g -O2 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
+     set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3 -fno-inline")
+     set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
+     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g")
+     set(CMAKE_C_FLAGS_RELEASE          "-O2")
+     set(CMAKE_C_FLAGS_DEBUG            "-g -O2 -fno-reorder-blocks -fno-schedule-insns -fno-inline")
+     set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
+     set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
+   
+     #settings for cint
+     set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+     set(CXXOUT "-o ")
+     set(EXEEXT "")
+     set(SOEXT "so")
+  else()
     MESSAGE(FATAL_ERROR "There is no setup for this compiler up to now. Don't know waht to do. Stop cmake at this point.")
-  endif (CMAKE_COMPILER_IS_GNUCXX)
+  endif()
+  
+  #---Set Linker flags----------------------------------------------------------------------
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@loader_path/../lib")
+
   
 else (CMAKE_SYSTEM_NAME MATCHES Darwin)
   MESSAGE(FATAL_ERROR "There is no setup for this this Apple system up to now. Don't know waht to do. Stop cmake at this point.")

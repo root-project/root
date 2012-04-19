@@ -23,5 +23,9 @@ endif()
 if(fitsio)
   add_subdirectory(fitsio)
 endif()
+if(cocoa)
+  add_subdirectory(quartz)
+  add_subdirectory(cocoa)
+endif()
 
 
