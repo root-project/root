@@ -2882,7 +2882,7 @@ void TGCocoa::LookupString(Event_t *event, char *buf, Int_t length, UInt_t &keys
    // keysym - returns the "keysym" computed from the event
    //          if this argument is not NULL
    assert(buf != nullptr && "LookupString, buf parameter is null");
-   assert(length > 2 && "LookupString, length parameter - not enough memory to return null-terminated ASCII string");
+   assert(length >= 2 && "LookupString, length parameter - not enough memory to return null-terminated ASCII string");
 
    X11::MapUnicharToKeySym(event->fCode, buf, length, keysym);
 }
