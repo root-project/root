@@ -97,12 +97,14 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
    
    //Probably, I'll need some additional cleanup here later. Now just delete NSObject and
    //reuse its id.
-   NSObject *base = drawableIter->second.Get();
-   if ([base isKindOfClass : [QuartzView class]])
+   NSObject<X11Drawable> *base = drawableIter->second.Get();
+   if ([base isKindOfClass : [QuartzView class]]) {
       [(QuartzView *)base removeFromSuperview];
-   else if ([base isKindOfClass : [QuartzWindow class]]) {
+      ((QuartzView *)base).fParentView = nil;
+   } else if ([base isKindOfClass : [QuartzWindow class]]) {
       QuartzWindow *qw = (QuartzWindow *)base;
       [qw.fContentView removeFromSuperview];
+      qw.fContentView.fParentView = nil;
       qw.contentView = nil;
    }
 

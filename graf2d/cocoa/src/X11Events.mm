@@ -1387,9 +1387,12 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView
 {
    assert(eventView != nil && "GenerateButtonReleaseEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonReleaseEventActiveGrab, event parameter is nil");
+   
+   const Util::NSStrongReference<QuartzView *> eventViewGuard(eventView);//What if view is deleted in the middle of this function?
 
    if (!fButtonGrabView) {
       if (fPointerGrab == PointerGrab::passiveGrab || fPointerGrab == PointerGrab::implicitGrab) {
+         //'root' window was a grab window.
          fButtonGrabView = nil;
          fPointerGrab = PointerGrab::noGrab;
          GenerateCrossingEvent(eventView, theEvent, kNotifyUngrab);
