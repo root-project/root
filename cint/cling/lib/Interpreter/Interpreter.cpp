@@ -1310,6 +1310,8 @@ namespace cling {
     else 
       (ValuePrinterReq) ? echo(expr, &Result) : evaluate(expr, &Result);
 
+    TheSema.CurContext = CurContext;
+
     return Result;
   }
 
