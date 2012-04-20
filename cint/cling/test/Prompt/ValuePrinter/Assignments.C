@@ -1,5 +1,5 @@
 // RUN: cat %s | %cling | FileCheck %s
-
+// XFAIL: *
 int a = 12;
 a // CHECK: (int) 12
 
