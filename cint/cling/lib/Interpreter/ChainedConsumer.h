@@ -77,7 +77,7 @@ namespace cling {
     void RestorePreviousState(EConsumerIndex I, bool Previous) {
       assert(Exists(I) && "Cannot disable. Consumer not set!");
 
-      CompilationOptions CO = getCompilationOpts();
+      CompilationOptions& CO = getCompilationOpts();
       switch(I) {
       case kEvaluateTSynthesizer : CO.DynamicScoping = Previous; break;
       case kDeclExtractor : CO.DeclarationExtraction = Previous; break;
@@ -102,7 +102,7 @@ namespace cling {
       COStack.pop_back();
     }
 
-    const CompilationOptions& getCompilationOpts() {
+    CompilationOptions& getCompilationOpts() {
       return COStack.back();
     }
 

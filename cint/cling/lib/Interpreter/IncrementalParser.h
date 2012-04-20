@@ -95,7 +95,7 @@ namespace cling {
       return m_MemoryBuffer.back();
     }
     void enablePrintAST(bool print /*=true*/) {
-      m_Consumer->RestorePreviousState(ChainedConsumer::kASTDumper, print);
+      m_Consumer->getCompilationOpts().Debug = print;
     }
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
