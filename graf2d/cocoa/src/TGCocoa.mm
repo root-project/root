@@ -260,7 +260,6 @@ TGCocoa::~TGCocoa()
    //
 }
 
-/////////////////////////////////////////
 //General part (empty, since it's not an X server.
 
 //______________________________________________________________________________
@@ -1195,7 +1194,6 @@ void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    CGContextStrokeRect(ctx, rect);
 }
 
-
 //______________________________________________________________________________
 void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
@@ -1493,7 +1491,6 @@ void TGCocoa::ClearWindow(Window_t wid)
    ClearArea(wid, 0, 0, 0, 0);
 }
 
-/////////////////////////////////////////
 //Pixmap management.
 
 //______________________________________________________________________________
@@ -1780,8 +1777,6 @@ unsigned char *TGCocoa::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w,
    return 0;
 }
 
-
-/////////////////////////////////////////
 //Mouse related code.
 
 //______________________________________________________________________________
@@ -1835,7 +1830,6 @@ void TGCocoa::GrabPointer(Window_t wid, UInt_t eventMask, Window_t /*confine*/, 
    }
 }
 
-/////////////////////////////////////////
 //Font management.
 
 //______________________________________________________________________________
@@ -1919,8 +1913,8 @@ void TGCocoa::FreeFontNames(char ** /*fontlist*/)
    // Frees the specified the array of strings "fontlist".
 }
 
-/////////////////////////////////////////
 //Color management.
+
 //______________________________________________________________________________
 Bool_t TGCocoa::ParseColor(Colormap_t /*cmap*/, const char *colorName, ColorStruct_t &color)
 {
@@ -1997,8 +1991,8 @@ Colormap_t TGCocoa::GetColormap() const
    return Colormap_t();
 }
 
-/////////////////////////////////////////
 //"Context management".
+
 //______________________________________________________________________________
 GContext_t TGCocoa::CreateGC(Drawable_t /*wid*/, GCValues_t *gval)
 {
@@ -2275,14 +2269,7 @@ void TGCocoa::SetCursor(Int_t /*win*/, ECursor /*cursor*/)
 //______________________________________________________________________________
 void TGCocoa::SetDoubleBuffer(Int_t wid, Int_t mode)
 {
-   // Sets the double buffer on/off on the window "wid".
-   // wid  - window identifier.
-   //        999 means all opened windows.
-   // mode - the on/off switch
-   //        mode = 1 double buffer is on
-   //        mode = 0 double buffer is off
-   
-   //In ROOT, canvas has a "double buffer" - pixmap attached to window 'wid'.
+   //In ROOT, canvas has a "double buffer" - pixmap attached to 'wid'.
    assert(wid > fPimpl->GetRootWindowID() && "SetDoubleBuffer called for 'root' window");
    
    if (wid == 999) {//Comment in TVirtaulX suggests, that 999 means all windows.
@@ -2773,8 +2760,7 @@ Int_t TGCocoa::KeysymToKeycode(UInt_t keySym)
 }
 
 //______________________________________________________________________________
-void TGCocoa::DrawSegments(Drawable_t /*wid*/, GContext_t /*gc*/,
-                             Segment_t * /*seg*/, Int_t /*nseg*/)
+void TGCocoa::DrawSegments(Drawable_t /*wid*/, GContext_t /*gc*/, Segment_t * /*seg*/, Int_t /*nseg*/)
 {
    // Draws multiple line segments. Each line is specified by a pair of points.
    // Segment_t *seg - specifies an array of segments
@@ -2911,8 +2897,7 @@ void TGCocoa::DestroyRegion(Region_t /*reg*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/,
-                                  Region_t /*dest*/)
+void TGCocoa::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/, Region_t /*dest*/)
 {
    // Updates the destination region from a union of the specified rectangle
    // and the specified source region.
@@ -2923,8 +2908,7 @@ void TGCocoa::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/,
 }
 
 //______________________________________________________________________________
-Region_t TGCocoa::PolygonRegion(Point_t * /*points*/, Int_t /*np*/,
-                                Bool_t /*winding*/)
+Region_t TGCocoa::PolygonRegion(Point_t * /*points*/, Int_t /*np*/, Bool_t /*winding*/)
 {
    // Returns a region for the polygon defined by the points array.
    //
@@ -2936,8 +2920,7 @@ Region_t TGCocoa::PolygonRegion(Point_t * /*points*/, Int_t /*np*/,
 }
 
 //______________________________________________________________________________
-void TGCocoa::UnionRegion(Region_t /*rega*/, Region_t /*regb*/,
-                          Region_t /*result*/)
+void TGCocoa::UnionRegion(Region_t /*rega*/, Region_t /*regb*/, Region_t /*result*/)
 {
    // Computes the union of two regions.
    //
@@ -2948,8 +2931,7 @@ void TGCocoa::UnionRegion(Region_t /*rega*/, Region_t /*regb*/,
 }
 
 //______________________________________________________________________________
-void TGCocoa::IntersectRegion(Region_t /*rega*/, Region_t /*regb*/,
-                              Region_t /*result*/)
+void TGCocoa::IntersectRegion(Region_t /*rega*/, Region_t /*regb*/, Region_t /*result*/)
 {
    // Computes the intersection of two regions.
    //
@@ -2959,8 +2941,7 @@ void TGCocoa::IntersectRegion(Region_t /*rega*/, Region_t /*regb*/,
 }
 
 //______________________________________________________________________________
-void TGCocoa::SubtractRegion(Region_t /*rega*/, Region_t /*regb*/,
-                             Region_t /*result*/)
+void TGCocoa::SubtractRegion(Region_t /*rega*/, Region_t /*regb*/, Region_t /*result*/)
 {
    // Subtracts regb from rega and stores the results in result.
 }
@@ -3076,7 +3057,6 @@ void TGCocoa::ShapeCombineMask(Window_t, Int_t, Int_t, Pixmap_t)
    // The Nonrectangular Window Shape Extension adds nonrectangular
    // windows to the System.
    // This allows for making shaped (partially transparent) windows
-
 }
 
 //______________________________________________________________________________
@@ -3234,11 +3214,13 @@ bool TGCocoa::IsCocoaDraw()const
 //______________________________________________________________________________
 void *TGCocoa::GetCurrentContext()
 {
- //  assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "GetCurrentContext, no context for 'root' window");
-   NSObject<X11Drawable> *pixmap = fPimpl->GetDrawable(fSelectedDrawable);
- //  assert(pixmap.fIsPixmap == YES && "GetCurrentContext, the selected drawable is not a pixmap");
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
+   if (!drawable.fIsPixmap) {
+      Error("GetCurrentContext", "TCanvas/TPad's internal error, selected drawable is not a pixmap!");
+      return nullptr;
+   }
    
-   return pixmap.fContext;
+   return drawable.fContext;
 }
 
 //______________________________________________________________________________

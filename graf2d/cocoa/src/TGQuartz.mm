@@ -64,6 +64,11 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       return;
 
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawBox", "Current context is null");
+      return;
+   }
+
    const Quartz::CGStateGuard ctxGuard(ctx);
 
    const TColor *fillColor = gROOT->GetColor(GetFillColor());
@@ -104,6 +109,11 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint * xy)
       return;
 
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawFillArea", "Current context is null");
+      return;
+   }
+   
    const Quartz::CGStateGuard ctxGuard(ctx);
 
    const TColor *fillColor = gROOT->GetColor(GetFillColor());
@@ -148,7 +158,12 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
       
-   CGContextRef ctx = (CGContextRef)GetCurrentContext();   
+   CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawLine", "Current context is null");
+      return;
+   }
+   
    const Quartz::CGStateGuard ctxGuard(ctx);
 
    if (!SetContextStrokeColor(GetLineColor())) {
@@ -172,8 +187,12 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
+   CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawPolyLine", "Current context is null");
+      return;
+   }
 
-   CGContextRef ctx = (CGContextRef)GetCurrentContext();   
    const Quartz::CGStateGuard ctxGuard(ctx);
    
    if (!SetContextStrokeColor(GetLineColor())) {
@@ -198,6 +217,11 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
       return;
 
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawPolyMarker", "Current context is null");
+      return;
+   }
+
    const Quartz::CGStateGuard ctxGuard(ctx);
 
    if (!SetContextFillColor(GetMarkerColor())) {
@@ -237,6 +261,12 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
    assert(pixmap.fIsPixmap == YES && "DrawText, selected drawable is not a pixmap");
    
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
+   if (!ctx) {
+      Error("DrawText", "Current context is null");
+      
+      return;
+   }
+   
    const Quartz::CGStateGuard ctxGuard(ctx);
 
    //Before any core text drawing operations, reset text matrix.
