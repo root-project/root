@@ -92,6 +92,10 @@ namespace cling {
       return COStack.back();
     }
 
+    const CompilationOptions& getCompilationOpts_const() {
+      return COStack.back();
+    }
+
   private:
     clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
     llvm::SmallVector<CompilationOptions, 2> COStack;

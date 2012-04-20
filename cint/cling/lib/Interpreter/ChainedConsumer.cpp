@@ -418,7 +418,7 @@ namespace cling {
       if (!Exists(I))
         return false;
 
-      const CompilationOptions CO = getCompilationOpts();
+      const CompilationOptions& CO(getCompilationOpts_const());
       switch(I) {
       case kEvaluateTSynthesizer : return CO.DynamicScoping;
       case kDeclExtractor : return CO.DeclarationExtraction;
