@@ -84,12 +84,12 @@ void SetStrokeDashFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
 {
    //Set line dash pattern (X11's LineOnOffDash line style).
    assert(ctx != nullptr && "SetStrokeDashFromX11Context, ctx parameter is null");
+
    SetStrokeForegroundColorFromX11Context(ctx, gcVals);
    
-   static const std::size_t maxLength = sizeof gcVals.fDashes / sizeof gcVals.fDashes[0];
-   
+   static const std::size_t maxLength = sizeof gcVals.fDashes / sizeof gcVals.fDashes[0];   
    assert(maxLength >= std::size_t(gcVals.fDashLen) && "SetStrokeDashFromX11Context, x11 context has bad dash length > sizeof(fDashes)");
-   
+
    CGFloat dashes[maxLength] = {};
    for (Int_t i = 0; i < gcVals.fDashLen; ++i)
       dashes[i] = gcVals.fDashes[i];
@@ -275,60 +275,47 @@ Bool_t TGCocoa::Init(void * /*display*/)
 //______________________________________________________________________________
 Int_t TGCocoa::OpenDisplay(const char * /*dpyName*/)
 {
-   //
+   //Noop.
    return 0;
 }
 
 //______________________________________________________________________________
 const char *TGCocoa::DisplayName(const char *)
 {
-   // Returns hostname on which the display is opened.
+   //Noop.
    return "dummy";
 }
 
 //______________________________________________________________________________
 void TGCocoa::CloseDisplay()
 {
-   // Closes connection to display server and destroys all windows.
+   //Noop.
 }
 
 //______________________________________________________________________________
 Display_t TGCocoa::GetDisplay() const
 {
-   // Returns handle to display (might be usefull in some cases where
-   // direct X11 manipulation outside of TGCocoa is needed, e.g. GL
-   // interface).
-
+   //Noop.
    return 0;
 }
 
 //______________________________________________________________________________
 Visual_t TGCocoa::GetVisual() const
 {
-   // Returns handle to visual.
-   //
-   // Might be usefull in some cases where direct X11 manipulation outside
-   // of TGCocoa is needed, e.g. GL interface.
-
+   //Noop.
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TGCocoa::GetScreen() const
 {
-   // Returns screen number.
-   //
-   // Might be usefull in some cases where direct X11 manipulation outside
-   // of TGCocoa is needed, e.g. GL interface.
-
+   //Noop.
    return 0;
 }
 
 //______________________________________________________________________________
 Int_t TGCocoa::GetDepth() const
 {
-   // Returns depth of screen (number of bit planes).
-   // Equivalent to GetPlanes().
    NSArray *screens = [NSScreen screens];
    assert(screens != nil && "screens array is nil");
    
@@ -341,9 +328,8 @@ Int_t TGCocoa::GetDepth() const
 //______________________________________________________________________________
 void TGCocoa::Update(Int_t mode)
 {
-   // Flushes (mode = 0, default) or synchronizes (mode = 1) X output buffer.
-   // Flush flushes output buffer. Sync flushes buffer and waits till all
-   // requests have been processed by X server.
+   //Mode == 2 - force widgets to redraw,
+   //Mode == 3 - execute graphics requests.
    if (mode == 2) {
       gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.
    } else if (mode > 0) {
@@ -351,13 +337,12 @@ void TGCocoa::Update(Int_t mode)
    }
 }
 
-/////////////////////////////////////////
 //Window management part.
 
 //______________________________________________________________________________
 Window_t TGCocoa::GetDefaultRootWindow() const
 {
-   //Some index, fixed and used by 'root' window.
+   //Index, fixed and used only by 'root' window.
    return fPimpl->GetRootWindowID();
 }
 
@@ -402,12 +387,12 @@ void TGCocoa::SelectWindow(Int_t wid)
 //______________________________________________________________________________
 void TGCocoa::ClearWindow()
 {
-   //Clear the selected drawable (can be window or pixmap).
-
+   //Clear the selected drawable (can be window or pixmap, so the name is ambiguous).
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "ClearWindow, fSelectedDrawable is invalid");
 
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
    if (drawable.fIsPixmap) {
+      //Pixmaps are white by default.
       CGContextRef pixmapCtx = drawable.fContext;
       const Quartz::CGStateGuard ctxGuard(pixmapCtx);
       CGContextSetRGBFillColor(pixmapCtx, 1., 1., 1., 1.);
@@ -462,6 +447,7 @@ void TGCocoa::MoveWindow(Int_t wid, Int_t x, Int_t y)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "MoveWindow, called for 'root' window");
+
    [fPimpl->GetWindow(wid) setX : x Y : y];
 }
 
@@ -501,6 +487,8 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
    NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
 
    if (QuartzPixmap *pixmap = window.fBackBuffer) {
+      assert([window.fContentView isKindOfClass : [QuartzView class]] && "UpdateWindow, content view is not a QuartzView");
+      
       QuartzView *dstView = (QuartzView *)window.fContentView;
       assert(dstView != nil && "UpdateWindow, destination view is nil");
       
@@ -564,17 +552,19 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
          const Util::NSScopeGuard<QuartzWindow> winGuard(newWindow);
          const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
          newWindow.fID = result;
+
          return result;
       } catch (const std::exception &) {//Bad alloc.
          throw;
       }
    } else {
       NSObject<X11Window> *parentWin = fPimpl->GetWindow(parentID);
+      //OpenGL view can not have children.
+      assert([parentWin.fContentView isKindOfClass : [QuartzView class]] && "CreateWindow, parent view must be QuartzView");
       try {
          QuartzView *childView = X11::CreateChildView((QuartzView *)parentWin.fContentView, x, y, w, h, border, depth, clss, visual, attr, wtype);//Can throw.
          const Util::NSScopeGuard<QuartzView> viewGuard(childView);
          const Window_t result = fPimpl->RegisterDrawable(childView);//Can throw.
-      
          childView.fID = result;
          [parentWin addChild : childView];
          
@@ -609,24 +599,21 @@ void TGCocoa::DestroyWindow(Window_t wid)
    const Util::AutoreleasePool pool;//TODO: check.
 
    fPimpl->fX11EventTranslator.CheckUnmappedView(wid);
-   
-   NSObject<X11Window> *drawable = fPimpl->GetWindow(wid);
-   //TODO: check OpenGL view type also.
-   assert([drawable isKindOfClass : [QuartzWindow class]] || [drawable isKindOfClass : [QuartzView class]] && 
-          "DestroyWindow, can be called only for QuartzWindow or QuartzView object");
 
-   if (drawable.fBackBuffer) {
+   assert(fPimpl->GetDrawable(wid).fIsPixmap == NO &&  "DestroyWindow, can not be called for QuartzPixmap or QuartzImage object");
+   
+   NSObject<X11Window> *window = fPimpl->GetWindow(wid);
+   if (window.fBackBuffer) {
       if (fPimpl->fX11CommandBuffer.BufferSize())
-         fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(drawable.fBackBuffer.fID);
-      fPimpl->DeleteDrawable(drawable.fBackBuffer.fID);
+         fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
+      fPimpl->DeleteDrawable(window.fBackBuffer.fID);
    }
    
    if (fPimpl->fX11CommandBuffer.BufferSize())
       fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(wid);
 
-
    DestroySubwindows(wid);
-   if (drawable.fEventMask & kStructureNotifyMask)
+   if (window.fEventMask & kStructureNotifyMask)
       fPimpl->fX11EventTranslator.GenerateDestroyNotify(wid);
 
    //Interrupt modal loop (TGClient::WaitFor).
@@ -634,9 +621,7 @@ void TGCocoa::DestroyWindow(Window_t wid)
    if (gClient->GetWaitForEvent() == kDestroyNotify && wid == gClient->GetWaitForWindow())
       gClient->SetWaitForWindow(kNone);
 
-   //
    RemoveEventsForWindow(wid);
-
    fPimpl->DeleteDrawable(wid);
 }
 
@@ -654,17 +639,16 @@ void TGCocoa::DestroySubwindows(Window_t wid)
    
    const Util::AutoreleasePool pool;
 
-   NSObject<X11Window> *drawable = fPimpl->GetWindow(wid);
-   //TODO: check OpenGL view type also.
-   assert([drawable isKindOfClass : [QuartzView class]] || [drawable isKindOfClass : [QuartzWindow class]] &&
-          "DestroySubwindows, can be called only for QuartzView or QuartzWindow object");
+   assert(fPimpl->GetDrawable(wid).fIsPixmap == NO && "DestroySubwindows, can not be called for QuartzPixmap or QuartzImage object");
+
+   NSObject<X11Window> *window = fPimpl->GetWindow(wid);
    
    //I can not iterate on subviews array directly, since it'll be modified
    //during this iteration - create a copy (and it'll also increase references,
    //which will be decreased by guard's dtor).
-   const Util::NSScopeGuard<NSArray> children([[drawable.fContentView subviews] copy]);
-   
-   for (QuartzView *child in children.Get())
+   const Util::NSScopeGuard<NSArray> children([[window.fContentView subviews] copy]);
+
+   for (NSView<X11Window> *child in children.Get())
       DestroyWindow(child.fID);
 }
 
@@ -678,8 +662,7 @@ void TGCocoa::GetWindowAttributes(Window_t wid, WindowAttributes_t &attr)
       //'root' window.
       ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
    } else {
-      NSObject<X11Window> *window = fPimpl->GetWindow(wid);
-      [window getAttributes : &attr];
+      [fPimpl->GetWindow(wid) getAttributes : &attr];
    }
 }
 
