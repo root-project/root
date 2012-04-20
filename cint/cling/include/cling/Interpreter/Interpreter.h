@@ -386,7 +386,7 @@ namespace cling {
     ///\brief Lookup a class declaration by name, starting from the global
     /// namespace, also handles struct, union, namespace, and enum.
     ///
-    /// \param [in] className - The name of the class, struct, union,
+    ///\param [in] className - The name of the class, struct, union,
     ///                        namespace, or enum to lookup.
     ///\returns The found declaration or null.
     ///
@@ -415,9 +415,10 @@ namespace cling {
 
     ///\brief Evaluates given expression within given declaration context.
     ///
-    ///@param[in] expr - The expression.
-    ///@param[in] DC - The declaration context in which the expression is going
+    ///\param[in] expr - The expression.
+    ///\param[in] DC - The declaration context in which the expression is going
     ///                to be evaluated.
+    ///\param[in] ValuePrinterReq - Whether the value printing is requested.
     ///
     ///\returns The result of the evaluation if the expression.
     ///
